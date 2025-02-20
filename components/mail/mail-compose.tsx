@@ -10,14 +10,22 @@ import {
   FileIcon,
   Send,
 } from "lucide-react";
-import * as React from "react";
-
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { compressText, decompressText, truncateFileName } from "@/lib/utils";
+import { Popover, PopoverTrigger, PopoverContent } from "../ui/popover";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { useOpenComposeModal } from "@/hooks/use-open-compose-modal";
+import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group";
+import { TooltipPortal } from "@radix-ui/react-tooltip";
 import { Separator } from "@/components/ui/separator";
+import { DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { sendEmail } from "@/actions/send";
+import { useQueryState } from "nuqs";
+import { Badge } from "../ui/badge";
 import Image from "next/image";
-
-import { DialogTitle } from "@/components/ui/dialog";
+import * as React from "react";
 
 interface MailComposeProps {
   onClose: () => void;
@@ -27,23 +35,8 @@ interface MailComposeProps {
   };
 }
 
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { Popover, PopoverTrigger, PopoverContent } from "../ui/popover";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { useOpenComposeModal } from "@/hooks/use-open-compose-modal";
-
-import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group";
-import { compressText, decompressText } from "@/lib/utils";
-import { draftsAtom } from "@/store/draftStates";
-import { useQueryState } from "nuqs";
-
-import { TooltipPortal } from "@radix-ui/react-tooltip";
-import { Badge } from "../ui/badge";
-import { useAtom } from "jotai";
-
 export function MailCompose({ onClose, replyTo }: MailComposeProps) {
   const editorRef = React.useRef<HTMLDivElement>(null);
-  const [, setDraftStates] = useAtom(draftsAtom);
   const [attachments, setAttachments] = React.useState<File[]>([]);
   const [toInput, setToInput] = React.useState(replyTo?.email || "");
   const [showSuggestions, setShowSuggestions] = React.useState(false);
@@ -53,6 +46,7 @@ export function MailCompose({ onClose, replyTo }: MailComposeProps) {
     parse: (value) => decompressText(value),
     serialize: (value) => compressText(value),
   });
+
   const [messageContent, setMessageContent] = useQueryState("body", {
     defaultValue: "",
     parse: (value) => decompressText(value),
@@ -61,6 +55,7 @@ export function MailCompose({ onClose, replyTo }: MailComposeProps) {
 
   const { isOpen } = useOpenComposeModal();
 
+  // TODO: get past emails from driver/provider
   const pastEmails = [
     "alice@example.com",
     "bob@example.com",
@@ -69,17 +64,6 @@ export function MailCompose({ onClose, replyTo }: MailComposeProps) {
     "eve@example.com",
   ];
 
-  // saving as draft
-  const handleDraft = () => {
-    const newDraft = {
-      id: Math.random().toString(8).substring(7),
-      message: messageContent,
-      subject,
-    };
-    setDraftStates((drafts) => {
-      return [newDraft, ...drafts];
-    });
-  };
   React.useEffect(() => {
     if (!isOpen) {
       setMessageContent(null);
@@ -131,16 +115,6 @@ export function MailCompose({ onClose, replyTo }: MailComposeProps) {
     () => attachments.length > MAX_VISIBLE_ATTACHMENTS,
     [attachments],
   );
-
-  const truncateFileName = (name: string, maxLength = 15) => {
-    if (name.length <= maxLength) return name;
-    const extIndex = name.lastIndexOf(".");
-    if (extIndex !== -1 && name.length - extIndex <= 5) {
-      // Preserve file extension if possible
-      return `${name.slice(0, maxLength - 5)}...${name.slice(extIndex)}`;
-    }
-    return `${name.slice(0, maxLength)}...`;
-  };
 
   const renderAttachments = React.useCallback(() => {
     if (attachments.length === 0) return null;
@@ -428,20 +402,20 @@ export function MailCompose({ onClose, replyTo }: MailComposeProps) {
                 </label>
                 <div className="flex gap-2">
                   <Button
-                    tabIndex={11}
-                    variant="outline"
-                    onClick={() => {
-                      handleDraft();
-                      onClose();
-                    }}
-                  >
-                    Save as draft
-                  </Button>
-                  <Button
                     tabIndex={12}
-                    onClick={() => {
-                      // TODO: Implement send functionality
-                      onClose();
+                    onClick={async () => {
+                      try {
+                        await sendEmail({
+                          to: toInput,
+                          subject: subject,
+                          message: messageContent,
+                          attachments: attachments,
+                        });
+                        onClose();
+                      } catch (error) {
+                        console.error("Error sending email:", error);
+                        // You might want to show an error toast here
+                      }
                     }}
                   >
                     Send

@@ -34,3 +34,16 @@ export const formatDate = (date: string) => {
     return "";
   }
 };
+
+export const cleanEmailAddress = (email: string = "") => {
+  return email.replace(/[<>]/g, "").trim();
+};
+
+export const truncateFileName = (name: string, maxLength = 15) => {
+  if (name.length <= maxLength) return name;
+  const extIndex = name.lastIndexOf(".");
+  if (extIndex !== -1 && name.length - extIndex <= 5) {
+    return `${name.slice(0, maxLength - 5)}...${name.slice(extIndex)}`;
+  }
+  return `${name.slice(0, maxLength)}...`;
+};

@@ -17,7 +17,7 @@ import { MailDisplaySkeleton, MailHeaderSkeleton } from "./mail-skeleton";
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useThread } from "@/hooks/use-threads";
-import ReplyCompose from "./reply-compose";
+import ReplyCompose from "./reply-composer";
 import MailDisplay from "./mail-display";
 import { useMail } from "./use-mail";
 import { cn } from "@/lib/utils";

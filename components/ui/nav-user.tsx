@@ -47,40 +47,12 @@ export function NavUser() {
       });
   };
 
-  const handleLogout = () => {
-    if (!session) return;
-
-    const remainingConnections = connections?.filter(
-      (connection) => connection.id !== session.connectionId,
-    );
-
-    if (remainingConnections?.length) {
-      // Delete current connection and switch to the next
-      return axios
-        .delete(`/api/v1/mail/connections/${session.connectionId}`)
-        .then(() => handleAccountSwitch(remainingConnections[0])())
-        .catch((err) => {
-          toast.error("Error logging out", {
-            description: err.response?.data?.message,
-          });
-        });
-    } else {
-      // No remaining accounts, delete connection and proceed with full better-auth sign out
-      return toast.promise(
-        axios.delete(`/api/v1/mail/connections/${session.connectionId}`).then(() =>
-          signOut({
-            fetchOptions: {
-              onSuccess: () => router.push("/"),
-            },
-          }),
-        ),
-        {
-          loading: "Signing out...",
-          success: "Signed out successfully!",
-          error: "Error signing out",
-        },
-      );
-    }
+  const handleLogout = async () => {
+    toast.promise(signOut(), {
+      loading: "Signing out...",
+      success: () => "Signed out successfully!",
+      error: "Error signing out",
+    });
   };
 
   return (

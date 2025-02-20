@@ -1,24 +1,20 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Reply, X, FileIcon, Paperclip, Send } from "lucide-react";
+import { FileIcon, Paperclip, Reply, Send, X } from "lucide-react";
+import { cleanEmailAddress, truncateFileName } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Mail } from "@/components/mail/data";
+import { sendEmail } from "@/actions/send";
+import { useRef, useState } from "react";
+import { ParsedMessage } from "@/types";
 import { Badge } from "../ui/badge";
-import { useState } from "react";
 import Image from "next/image";
 
-export default function ReplyComposer({ currentMail }: { currentMail: Mail | null }) {
-  const [isUploading, setIsUploading] = useState(false);
+export default function ReplyCompose({ emailData }: { emailData: ParsedMessage[] }) {
+  const editorRef = useRef<HTMLTextAreaElement>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
-  const truncateFileName = (name: string, maxLength = 15) => {
-    if (name.length <= maxLength) return name;
-    const extIndex = name.lastIndexOf(".");
-    if (extIndex !== -1 && name.length - extIndex <= 5) {
-      return `${name.slice(0, maxLength - 5)}...${name.slice(extIndex)}`;
-    }
-    return `${name.slice(0, maxLength)}...`;
-  };
+  const [messageContent, setMessageContent] = useState("");
 
   const handleAttachment = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -37,22 +33,27 @@ export default function ReplyComposer({ currentMail }: { currentMail: Mail | nul
   };
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 z-10 bg-background px-4 pb-4 pt-2">
-      <form className="relative space-y-2.5 rounded-[calc(var(--radius)-2px)] border bg-secondary/50 p-4 shadow-sm">
+    <div className="relative bottom-0 left-0 right-0 z-10 mb-5 bg-card px-2 pb-2 pt-2">
+      <form className="relative mb-[2px] space-y-2.5 rounded-[10px] border p-2">
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <Reply className="h-4 w-4" />
-            <p className="whitespace-break-spaces">
-              {currentMail?.name} ({currentMail?.email})
+            <p className="truncate">
+              {emailData[emailData.length - 1]?.sender?.name} (
+              {emailData[emailData.length - 1]?.sender?.email})
             </p>
           </div>
         </div>
 
         <Textarea
-          className="min-h-[120px] w-full resize-none border-0 leading-relaxed placeholder:text-muted-foreground/70 focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-[#18181A] md:text-base"
+          ref={editorRef}
+          className="min-h-[40px] w-full resize-none rounded-2xl border-0 bg-transparent leading-relaxed placeholder:text-muted-foreground/70 focus-visible:ring-0 focus-visible:ring-offset-0 md:text-base"
           placeholder="Write your reply..."
           spellCheck={true}
-          autoFocus
+          value={messageContent}
+          onChange={(e) => {
+            setMessageContent(e.target.value);
+          }}
         />
 
         {(attachments.length > 0 || isUploading) && (
@@ -119,7 +120,7 @@ export default function ReplyComposer({ currentMail }: { currentMail: Mail | nul
           </div>
         )}
 
-        <div className="flex items-center justify-between">
+        <div className="mb-2 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -152,7 +153,75 @@ export default function ReplyComposer({ currentMail }: { currentMail: Mail | nul
             <Button variant="ghost" size="sm" className="h-8">
               Save draft
             </Button>
-            <Button size="sm" className="h-8">
+            <Button
+              size="sm"
+              className="h-8"
+              onClick={async (e) => {
+                e.preventDefault();
+                try {
+                  const originalSubject = emailData[0]?.subject || "";
+                  const subject = originalSubject.startsWith("Re:")
+                    ? originalSubject
+                    : `Re: ${originalSubject}`;
+
+                  const originalSender = emailData[0]?.sender;
+                  const cleanedToEmail = cleanEmailAddress(
+                    emailData[emailData.length - 1]?.sender?.email,
+                  );
+                  const originalDate = new Date(emailData[0]?.receivedOn || "").toLocaleString();
+                  const quotedMessage = emailData[0]?.decodedBody;
+                  const messageId = emailData[0]?.messageId;
+                  const threadId = emailData[0]?.threadId;
+
+                  const formattedMessage = messageContent
+                    .split("\n")
+                    .map((line) => `<div>${line || "<br/>"}</div>`)
+                    .join("");
+
+                  const replyBody = `
+                    <div style="font-family: Arial, sans-serif;">
+                      <div style="margin-bottom: 20px;">
+                        ${formattedMessage}
+                      </div>
+                      <div style="padding-left: 1em; margin-top: 1em; border-left: 2px solid #ccc; color: #666;">
+                        <div style="margin-bottom: 1em;">
+                          On ${originalDate}, ${originalSender?.name ? `${originalSender.name} ` : ""}${originalSender?.email ? `&lt;${cleanedToEmail}&gt;` : ""} wrote:
+                        </div>
+                        <div style="white-space: pre-wrap;">
+                          ${quotedMessage}
+                        </div>
+                      </div>
+                    </div>
+                  `;
+
+                  const inReplyTo = messageId;
+
+                  const existingRefs = emailData[0]?.references?.split(" ") || [];
+                  const references = [
+                    ...existingRefs,
+                    emailData[0]?.inReplyTo,
+                    cleanEmailAddress(messageId),
+                  ]
+                    .filter(Boolean)
+                    .join(" ");
+
+                  await sendEmail({
+                    to: cleanedToEmail,
+                    subject,
+                    message: replyBody,
+                    attachments,
+                    headers: {
+                      "In-Reply-To": inReplyTo,
+                      References: references,
+                      "Thread-Id": threadId,
+                    },
+                  });
+                } catch (error) {
+                  console.error("Error sending email:", error);
+                  // TODO: SHOW TOAST
+                }
+              }}
+            >
               Send <Send className="ml-2 h-3 w-3" />
             </Button>
           </div>

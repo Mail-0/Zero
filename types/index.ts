@@ -45,6 +45,10 @@ export interface ParsedMessage {
   processedHtml: string;
   blobUrl: string;
   decodedBody?: string;
+  references?: string;
+  inReplyTo?: string;
+  messageId?: string;
+  threadId?: string;
 }
 
 export interface IConnection {
@@ -66,4 +70,6 @@ export interface InitialThread {
   unread: boolean;
   subject: string;
   totalReplies: number;
+  references?: string;
+  inReplyTo?: string;
 }

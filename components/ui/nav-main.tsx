@@ -53,6 +53,28 @@ export function NavMain({ items }: NavMainProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  /**
+   * Validates URLs to prevent open redirect vulnerabilities.
+   * Only allows two types of URLs:
+   * 1. Absolute paths that start with '/' (e.g., '/mail', '/settings')
+   * 2. Full URLs that match our application's base URL
+   *
+   * @param url - The URL to validate
+   * @returns boolean - True if the URL is internal and safe to use
+   */
+  const isValidInternalUrl = useCallback((url: string) => {
+    if (!url) return false;
+    // Accept absolute paths as they are always internal
+    if (url.startsWith("/")) return true;
+    try {
+      const urlObj = new URL(url, BASE_URL);
+      // Prevent redirects to external domains by checking against our base URL
+      return urlObj.origin === BASE_URL;
+    } catch {
+      return false;
+    }
+  }, []);
+
   const getHref = useCallback(
     (item: NavItemProps) => {
       // Get the current 'from' parameter
@@ -70,12 +92,25 @@ export function NavMain({ items }: NavMainProps) {
 
       // Handle settings pages navigation
       if (item.isSettingsPage && currentFrom) {
-        return `${item.url}?from=${encodeURIComponent(currentFrom)}`;
+        // Validate and sanitize the 'from' parameter to prevent open redirects
+        const decodedFrom = decodeURIComponent(currentFrom);
+        if (isValidInternalUrl(decodedFrom)) {
+          return `${item.url}?from=${encodeURIComponent(currentFrom)}`;
+        }
+        // Fall back to safe default if URL validation fails
+        return `${item.url}?from=/mail`;
       }
 
-      // Handle back button
+      // Handle back button with redirect protection
       if (item.isBackButton) {
-        return currentFrom ? decodeURIComponent(currentFrom) : "/mail";
+        if (currentFrom) {
+          const decodedFrom = decodeURIComponent(currentFrom);
+          if (isValidInternalUrl(decodedFrom)) {
+            return decodedFrom;
+          }
+        }
+        // Fall back to safe default if URL is missing or invalid
+        return "/mail";
       }
 
       // Handle category links
@@ -85,7 +120,7 @@ export function NavMain({ items }: NavMainProps) {
 
       return item.url;
     },
-    [pathname, searchParams],
+    [pathname, searchParams, isValidInternalUrl],
   );
 
   const isUrlActive = useCallback(

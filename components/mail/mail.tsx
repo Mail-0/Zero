@@ -30,6 +30,8 @@ import { type Mail } from "@/components/mail/data";
 import { useSearchParams } from "next/navigation";
 import { useThreads } from "@/hooks/use-threads";
 import { Button } from "@/components/ui/button";
+import { useSession } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 import { SearchBar } from "./search-bar";
 
 interface MailProps {
@@ -46,13 +48,22 @@ interface MailProps {
 }
 
 export function Mail({ folder }: MailProps) {
+  const [searchMode, setSearchMode] = useState(false);
   const [searchValue] = useSearchValue();
   const [mail, setMail] = useMail();
   const [isCompact, setIsCompact] = useState(false);
   const searchParams = useSearchParams();
-
   const [isMobile, setIsMobile] = useState(false);
   const [filterValue, setFilterValue] = useState<"all" | "unread">("all");
+  const router = useRouter();
+  const { data: session, isPending } = useSession();
+
+  useEffect(() => {
+    if (!session?.user && !isPending) {
+      router.push("/login");
+    }
+  }, [session?.user, isPending]);
+
   const labels = useMemo(() => {
     if (filterValue === "all") {
       if (searchParams.has("category")) {
@@ -71,11 +82,10 @@ export function Mail({ folder }: MailProps) {
     }
     return undefined;
   }, [filterValue, searchParams]);
-  const { data: threadsResponse, isLoading } = useThreads(folder, labels, searchValue.value);
 
+  const { data: threadsResponse, isLoading } = useThreads(folder, labels, searchValue.value);
   const [open, setOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
-
   const [isTransitioning, setIsTransitioning] = useState(true);
 
   // Check if we're on mobile on mount and when window resizes
@@ -114,8 +124,6 @@ export function Mail({ folder }: MailProps) {
     setOpen(false);
     setMail((mail) => ({ ...mail, selected: null }));
   }, [setMail]);
-
-  const [searchMode, setSearchMode] = useState(false);
 
   return (
     <TooltipProvider delayDuration={0}>

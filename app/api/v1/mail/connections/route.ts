@@ -24,8 +24,6 @@ export async function GET(request: NextRequest) {
       .from(connection)
       .where(eq(connection.userId, userId));
 
-    console.log("Found connections:", connections);
-
     return NextResponse.json({ connections });
   } catch (error) {
     console.error("Failed to fetch connections:", error);
