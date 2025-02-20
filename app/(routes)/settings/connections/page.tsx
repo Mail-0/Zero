@@ -24,29 +24,31 @@ import axios from "axios";
 export default function ConnectionsPage() {
   const { data: connections, isLoading, mutate } = useConnections();
   const [openTooltip, setOpenTooltip] = useState<string | null>(null);
-  const { data: session } = useSession();
+  const { data: session, refetch } = useSession();
 
-  const handleDelete = (connectionId: string) => {
+  const handleDelete = async (connectionId: string) => {
     if (!session) return;
 
     const remainingConnections = connections?.filter(
       (connection) => connection.id !== connectionId,
     );
 
-    return axios
-      .delete(`/api/v1/mail/connections/${connectionId}`)
-      .then(() => {
-        if (remainingConnections?.length) {
-          return axios.put(`/api/v1/mail/connections/${remainingConnections[0].id}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
-        }
-      })
-      .then(() => mutate())
-      .catch(console.error);
+    try {
+      await axios.delete(`/api/v1/mail/connections/${connectionId}`);
+
+      if (remainingConnections?.length) {
+        await axios.put(`/api/v1/mail/connections/${remainingConnections[0].id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+      }
+      await refetch();
+      await mutate();
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
