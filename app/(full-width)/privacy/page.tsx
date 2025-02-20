@@ -185,7 +185,7 @@ const sections = [
             <li>All Google user data is permanently deleted when you revoke application access</li>
             <li>
               You can request immediate deletion of all your Google user data by contacting
-              privacy@mail0.io
+              nizabizaher@gmail.com
             </li>
           </ul>
         </div>
@@ -236,11 +236,11 @@ const sections = [
         <p>For privacy-related questions or concerns:</p>
         <div className="flex flex-col space-y-2">
           <a
-            href="mailto:privacy@mail0.io"
+            href="mailto:nizabizaher@gmail.com"
             className="inline-flex items-center text-blue-600 hover:text-blue-800"
           >
             <Mail className="mr-2 h-4 w-4" />
-            privacy@mail0.io
+            nizabizaher@gmail.com
           </a>
           <a
             href="https://github.com/nizzyabi/mail0"

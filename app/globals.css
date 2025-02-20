@@ -166,6 +166,11 @@
   @apply bg-blue-200 hover:bg-blue-300 dark:bg-blue-500/40 dark:text-blue-50 dark:hover:bg-blue-400/50;
 }
 
+.dark [data-hide-on-theme="dark"],
+.light [data-hide-on-theme="light"] {
+  display: none;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   ::view-transition-new(theme-transition) {
     clip-path: inset(0 0 100% 0);

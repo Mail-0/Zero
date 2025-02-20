@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useSearchParams } from "next/navigation";
-import { useRef, useEffect, useMemo } from "react";
+import { useRef, useCallback } from "react";
 import * as React from "react";
 import Link from "next/link";
 
@@ -13,6 +13,7 @@ import {
   SidebarMenuButton,
 } from "./sidebar";
 import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { BASE_URL } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
@@ -52,55 +53,47 @@ export function NavMain({ items }: NavMainProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const getHref = (item: NavItemProps) => {
-    // Get the current 'from' parameter
-    const currentFrom = searchParams.get("from");
-    const category = searchParams.get("category");
+  const getHref = useCallback(
+    (item: NavItemProps) => {
+      // Get the current 'from' parameter
+      const currentFrom = searchParams.get("from");
+      const category = searchParams.get("category");
 
-    // Handle settings navigation
-    if (item.isSettingsButton) {
-      // Include current path with category query parameter if present
-      const currentPath = category
-        ? `${pathname}?category=${encodeURIComponent(category)}`
-        : pathname;
-      return `${item.url}?from=${encodeURIComponent(currentPath)}`;
-    }
+      // Handle settings navigation
+      if (item.isSettingsButton) {
+        // Include current path with category query parameter if present
+        const currentPath = category
+          ? `${pathname}?category=${encodeURIComponent(category)}`
+          : pathname;
+        return `${item.url}?from=${encodeURIComponent(currentPath)}`;
+      }
 
-    // Handle settings pages navigation
-    if (item.isSettingsPage && currentFrom) {
-      return `${item.url}?from=${encodeURIComponent(currentFrom)}`;
-    }
+      // Handle settings pages navigation
+      if (item.isSettingsPage && currentFrom) {
+        return `${item.url}?from=${encodeURIComponent(currentFrom)}`;
+      }
 
-    // Handle back button
-    if (item.isBackButton) {
-      return currentFrom ? decodeURIComponent(currentFrom) : "/mail";
-    }
+      // Handle back button
+      if (item.isBackButton) {
+        return currentFrom ? decodeURIComponent(currentFrom) : "/mail";
+      }
 
-    // Handle category links
-    if (category && item.url.includes("category=")) {
+      // Handle category links
+      if (category && item.url.includes("category=")) {
+        return item.url;
+      }
+
       return item.url;
-    }
+    },
+    [pathname, searchParams],
+  );
 
-    return item.url;
-  };
-
-  const iconRefs = useRef<{ [key: string]: React.RefObject<IconRefType | null> }>({});
-
-  // Initialize refs for all items
-  useEffect(() => {
-    items.forEach((section) => {
-      section.items.forEach((item) => {
-        if (item.icon && !iconRefs.current[item.title]) {
-          iconRefs.current[item.title] = React.createRef<IconRefType>();
-        }
-      });
-    });
-  }, [items]);
-
-  // Checks if the given URL matches the current URL path and required search parameters.
-  const isUrlActive = useMemo(() => {
-    return (url: string) => {
-      const urlObj = new URL(url, typeof window === "undefined" ? "/" : window.location.origin);
+  const isUrlActive = useCallback(
+    (url: string) => {
+      const urlObj = new URL(
+        url,
+        typeof window === "undefined" ? BASE_URL : window.location.origin,
+      );
       const cleanPath = pathname.replace(/\/$/, "");
       const cleanUrl = urlObj.pathname.replace(/\/$/, "");
 
@@ -112,10 +105,10 @@ export function NavMain({ items }: NavMainProps) {
       for (const [key, value] of urlParams) {
         if (currentParams.get(key) !== value) return false;
       }
-
       return true;
-    };
-  }, [pathname, searchParams]);
+    },
+    [pathname, searchParams],
+  );
 
   return (
     <SidebarGroup className="space-y-2.5 py-0">
@@ -133,44 +126,13 @@ export function NavMain({ items }: NavMainProps) {
                 )}
               </CollapsibleTrigger>
               <div className="space-y-1">
-                {section.items.map((item, j) => (
-                  <Collapsible defaultOpen={item.isActive} key={j}>
-                    <CollapsibleTrigger asChild>
-                      <Link
-                        href={getHref(item)}
-                        onClick={item.onClick}
-                        onMouseEnter={() => {
-                          const iconRef = iconRefs.current[item.title]?.current;
-                          if (iconRef?.startAnimation) {
-                            iconRef.startAnimation();
-                          }
-                        }}
-                        onMouseLeave={() => {
-                          const iconRef = iconRefs.current[item.title]?.current;
-                          if (iconRef?.stopAnimation) {
-                            iconRef.stopAnimation();
-                          }
-                        }}
-                      >
-                        <SidebarMenuButton
-                          tooltip={item.title}
-                          className={cn(
-                            "flex items-center",
-                            (item.isActive || isUrlActive(item.url)) &&
-                              "bg-accent text-accent-foreground",
-                          )}
-                        >
-                          {item.icon && (
-                            <item.icon
-                              ref={iconRefs.current[item.title]}
-                              className="relative mr-3 h-3 w-3.5"
-                            />
-                          )}
-                          <p className="mt-0.5 text-[13px]">{item.title}</p>
-                        </SidebarMenuButton>
-                      </Link>
-                    </CollapsibleTrigger>
-                  </Collapsible>
+                {section.items.map((item) => (
+                  <NavItem
+                    key={item.url}
+                    {...item}
+                    isActive={isUrlActive(item.url)}
+                    href={getHref(item)}
+                  />
                 ))}
               </div>
             </SidebarMenuItem>
@@ -178,5 +140,29 @@ export function NavMain({ items }: NavMainProps) {
         ))}
       </SidebarMenu>
     </SidebarGroup>
+  );
+}
+
+function NavItem(item: NavItemProps & { href: string }) {
+  const iconRef = useRef<IconRefType>(null);
+  return (
+    <Collapsible defaultOpen={item.isActive}>
+      <CollapsibleTrigger asChild>
+        <Link
+          href={item.href}
+          onClick={item.onClick}
+          onMouseEnter={() => iconRef.current?.startAnimation?.()}
+          onMouseLeave={() => iconRef.current?.stopAnimation?.()}
+        >
+          <SidebarMenuButton
+            tooltip={item.title}
+            className={cn("flex items-center", item.isActive && "bg-accent text-accent-foreground")}
+          >
+            {item.icon && <item.icon ref={iconRef} className="relative mr-3 h-3 w-3.5" />}
+            <p className="mt-0.5 text-[13px]">{item.title}</p>
+          </SidebarMenuButton>
+        </Link>
+      </CollapsibleTrigger>
+    </Collapsible>
   );
 }
