@@ -22,6 +22,21 @@ export async function DELETE(
       .delete(connection)
       .where(and(eq(connection.id, connectionId), eq(connection.userId, userId)));
 
+    const [remainingConnection] = await db
+      .select()
+      .from(connection)
+      .where(eq(connection.userId, userId))
+      .limit(1);
+
+    if (remainingConnection) {
+      await db
+        .update(user)
+        .set({
+          defaultConnectionId: remainingConnection.id,
+        })
+        .where(eq(user.id, userId));
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Failed to delete connection:", error);
