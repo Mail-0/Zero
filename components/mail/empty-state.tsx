@@ -92,9 +92,12 @@ function EmptyState({ folder, className }: EmptyStateProps) {
   const Icon = config.icon;
   const connections = useConnections();
   const noConnection = useMemo(
-    () => !connections?.data || connections?.data?.length === 0,
+    () => connections.data && connections.data.length === 0,
     [connections?.data],
   );
+
+  // Don't render anything while loading
+  if (connections.isLoading) return null;
 
   return (
     <div>

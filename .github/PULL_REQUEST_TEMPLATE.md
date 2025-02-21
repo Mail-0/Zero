@@ -1,12 +1,12 @@
+---
+Remove bullet points that are not relevant. If your PR doesn't follow this template or [contributing guide](https://github.com/Mail-0/Mail-0/blob/main/.github/CONTRIBUTING.md) it will not be accepted.
+---
+
 ## Description
 
 Please provide a clear description of your changes. Include screenshots/recordings for UI changes and any relevant context.
 
-Remove points that are not relevant. If your PR doesn't follow this template or [contributing guide](https://github.com/Mail-0/Mail-0/blob/main/.github/CONTRIBUTING.md) it will not be accepted.
-
 ---
-
-Fixes # (issue number)
 
 ## Type of Change
 

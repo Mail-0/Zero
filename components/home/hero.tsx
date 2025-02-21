@@ -75,18 +75,16 @@ export default function Hero() {
 
   return (
     <div className="mx-auto w-full max-w-2xl animate-fade-in pt-20 md:px-0 md:pt-20">
-      <Balancer className="px-1 text-center text-5xl font-medium sm:text-7xl md:px-0">
-        Your open source email
-      </Balancer>
+      <p className="px-1 text-center text-5xl font-medium sm:text-6xl md:px-0">Email, reimagined</p>
       <Balancer className="mx-auto mt-3 max-w-2xl text-center text-lg text-muted-foreground">
-        Connect and take control of your email with an open source, secure, and customizable
-        platform built for everyone.
+        Chat with your inbox using a modern, open source, and secure platform that puts you in
+        control.
       </Balancer>
 
       <Card className="mt-3 w-full border-none bg-transparent shadow-none">
         <CardContent className="flex items-center justify-center px-0">
           {process.env.NODE_ENV === "development" ? (
-            <Button variant="default" className="group h-9" asChild>
+            <Button variant="outline" className="group h-9" asChild>
               <Link href="/login">
                 Get Started
                 <ArrowRightIcon />

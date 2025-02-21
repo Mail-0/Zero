@@ -1,12 +1,11 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GitHub, Google } from "@/components/icons/icons";
 import { signIn, useSession } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
-import { CircleUserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import Image from "next/image";
 import { toast } from "sonner";
 
 export default function Login() {
@@ -22,20 +21,19 @@ export default function Login() {
   if (isPending || (session && session.connectionId)) return null;
 
   return (
-    <div className="flex max-h-dvh min-h-screen w-screen items-center justify-center overflow-hidden border-2 bg-grid-small-black/[0.39] dark:bg-grid-small-white/[0.025]">
-      <Card className="relative z-[20] flex h-fit w-[350px] flex-col items-center justify-center overflow-hidden rounded-2xl bg-background/20 py-2 backdrop-blur-xl">
-        <CardHeader className="flex items-center justify-center">
-          <div className="mb-4 flex size-14 items-center justify-center rounded-full bg-primary/20">
-            <CircleUserRound />
-          </div>
-          <CardTitle className="text-center text-lg font-normal">
-            Login into your <span className="font-bold">Mail0</span> account
-          </CardTitle>
-          <CardDescription className="text-center text-xs">
-            Login to your account to continue{" "}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="my-4 flex w-full flex-col gap-4">
+    <div className="flex min-h-screen w-full items-center justify-center bg-grid-small-black/[0.39] dark:bg-grid-small-white/[0.025]">
+      <div className="max-w-[500px] space-y-8 px-4 duration-500 animate-in slide-in-from-bottom-4 sm:px-12 md:px-0">
+        <p className="text-center font-mono text-4xl font-bold md:text-5xl">Welcome to 0</p>
+        <div className="flex w-full items-center justify-center">
+          <Image
+            src="/mail.svg"
+            alt="logo"
+            className="w-[300px] sm:w-[500px]"
+            width={500}
+            height={500}
+          />
+        </div>
+        <div className="relative z-10 mx-auto flex w-full flex-col items-center justify-center gap-2 sm:flex-row">
           <Button
             onClick={async () => {
               toast.promise(
@@ -50,10 +48,10 @@ export default function Login() {
                 },
               );
             }}
-            className="h-9 w-full bg-gradient-to-b from-primary/85 via-primary to-primary/85 hover:bg-primary/40"
+            className="h-9 w-full rounded-lg border-2 border-input bg-background bg-black text-primary hover:bg-accent hover:text-accent-foreground"
           >
             <Google />
-            Log In with Google
+            Continue with Google
           </Button>
           <Button
             onClick={async () => {
@@ -69,13 +67,13 @@ export default function Login() {
                 },
               );
             }}
-            className="h-9 w-full bg-gradient-to-b from-primary/85 via-primary to-primary/85 hover:bg-primary/40"
+            className="h-9 w-full rounded-lg border-2 border-input bg-background bg-black text-primary hover:bg-accent hover:text-accent-foreground"
           >
             <GitHub />
-            Log In with Github
+            Continue with Github
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

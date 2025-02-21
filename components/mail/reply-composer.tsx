@@ -33,7 +33,7 @@ export default function ReplyCompose({ emailData }: { emailData: ParsedMessage[]
   };
 
   return (
-    <div className="relative bottom-0 left-0 right-0 z-10 mb-5 bg-card px-2 pb-2 pt-2">
+    <div className="relative bottom-0 left-0 right-0 z-10 mb-6 bg-card px-2 pb-2 pt-2">
       <form className="relative mb-[2px] space-y-2.5 rounded-[10px] border p-2">
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
@@ -211,9 +211,9 @@ export default function ReplyCompose({ emailData }: { emailData: ParsedMessage[]
                     message: replyBody,
                     attachments,
                     headers: {
-                      "In-Reply-To": inReplyTo,
+                      "In-Reply-To": inReplyTo ?? "",
                       References: references,
-                      "Thread-Id": threadId,
+                      "Thread-Id": threadId ?? "",
                     },
                   });
                 } catch (error) {

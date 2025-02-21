@@ -17,9 +17,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
 
 function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
   const [isMobile, setIsMobile] = useState(false);
-  // const isDesktop = useMediaQuery("(min-width: 768px)");
 
-  // Check if we're on mobile on mount and when window resizes
   useEffect(() => {
     const checkIsMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -39,19 +37,19 @@ function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
           <ResizablePanelGroup
             direction="horizontal"
             autoSaveId="settings-panel-layout"
-            className="rounded-inherit gap-1.5 overflow-hidden rounded-tl-md"
+            className="rounded-inherit gap-1.5 overflow-hidden"
           >
             <ResizablePanel
               className="border-none !bg-transparent"
               defaultSize={isMobile ? 100 : 35}
               minSize={isMobile ? 100 : 35}
             >
-              <div className="flex-1 flex-col overflow-y-auto border bg-card shadow-sm md:flex md:rounded-2xl md:shadow-sm">
+              <div className="flex-1 flex-col overflow-y-auto bg-card shadow-sm md:flex md:rounded-2xl md:shadow-sm">
                 <div className="sticky top-0 z-10 flex items-center justify-between gap-1.5 p-2">
                   <SidebarToggle className="h-fit px-2" />
                   <h1 className="flex-1 text-center text-sm font-medium">Settings</h1>
                 </div>
-                <ScrollArea className="h-[calc(100svh-(8px+8px+14px+44px-2px))] p-2 pt-0">
+                <ScrollArea className="h-[calc(100dvh-56px)] p-2 pt-0 md:h-[calc(100dvh-(8px+8px+14px+44px))]">
                   <div className="p-4 md:p-6">{children}</div>
                 </ScrollArea>
               </div>

@@ -31,6 +31,7 @@ export interface SidebarData {
 
 export interface ParsedMessage {
   id: string;
+  threadId?: string;
   connectionId?: string;
   title: string;
   subject: string;
@@ -60,6 +61,7 @@ export interface IConnection {
 
 export interface InitialThread {
   id: string;
+  threadId?: string;
   title: string;
   tags: string[];
   sender: {

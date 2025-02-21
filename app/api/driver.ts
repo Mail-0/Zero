@@ -67,7 +67,7 @@ const googleDriver = async (config: IConfig): Promise<MailManager> => {
 
   const getScope = () =>
     [
-      "https://mail.google.com/",
+      "https://www.googleapis.com/auth/gmail.modify",
       "https://www.googleapis.com/auth/userinfo.profile",
       "https://www.googleapis.com/auth/userinfo.email",
     ].join(" ");
@@ -80,6 +80,7 @@ const googleDriver = async (config: IConfig): Promise<MailManager> => {
   }
   const parse = ({
     id,
+    threadId,
     snippet,
     labelIds,
     payload,
@@ -102,6 +103,7 @@ const googleDriver = async (config: IConfig): Promise<MailManager> => {
     const [name, email] = sender.split("<");
     return {
       id: id || "ERROR",
+      threadId: threadId || "",
       title: snippet ? he.decode(snippet).trim() : "ERROR",
       tags: labelIds || [],
       references,

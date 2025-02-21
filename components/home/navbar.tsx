@@ -39,7 +39,7 @@ export default function Navbar() {
       </div>
 
       {process.env.NODE_ENV === "development" ? (
-        <Button variant="default" className="hidden h-9 w-[180px] md:inline-flex" asChild>
+        <Button variant="outline" className="hidden h-9 w-[180px] md:inline-flex" asChild>
           <Link href="/login">
             Get Started
             <ArrowRightIcon />

@@ -32,7 +32,7 @@ const options = {
       // Remove this before going to prod, it's to force to get `refresh_token` from google, some users don't have it yet.
       prompt: "consent",
       accessType: "offline",
-      scope: ["https://mail.google.com/"],
+      scope: ["https://www.googleapis.com/auth/gmail.modify"],
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,
     },

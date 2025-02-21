@@ -48,17 +48,18 @@ export function MailIframe({ html }: { html: string }) {
         </div>
       )}
       <iframe
+        scrolling="no"
         height={height}
         ref={iframeRef}
         className={cn(
-          "w-full flex-1 overflow-hidden rounded-md border-none transition-opacity duration-200",
+          "w-full flex-1 overflow-hidden transition-opacity duration-200",
           loaded ? "opacity-100" : "opacity-0",
         )}
         title="Email Content"
         sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-scripts"
         style={{
           width: "100%",
-          overflow: "auto",
+          overflow: "hidden",
         }}
       />
     </>

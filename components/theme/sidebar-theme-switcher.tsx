@@ -3,7 +3,6 @@
 import { useTheme } from "next-themes";
 
 import { MoonIcon } from "../icons/animated/moon";
-import { Button } from "@/components/ui/button";
 import { SunIcon } from "../icons/animated/sun";
 import { useEffect, useState } from "react";
 
@@ -33,13 +32,9 @@ export function SidebarThemeSwitch() {
   if (!isRendered) return null;
 
   return (
-    <Button
-      size="icon"
-      variant="ghost"
-      onClick={handleThemeToggle}
-      className="!cursor-pointer text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-    >
-      {theme === "dark" ? <MoonIcon /> : <SunIcon />}
-    </Button>
+    <div onClick={handleThemeToggle} className="flex cursor-pointer items-center gap-2 text-[13px]">
+      {theme === "dark" ? <MoonIcon className="opacity-60" /> : <SunIcon className="opacity-60" />}
+      <p className="text-[13px] opacity-60">App Theme</p>
+    </div>
   );
 }

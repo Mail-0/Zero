@@ -9,10 +9,13 @@ import {
   Copy,
   Maximize2,
   Minimize2,
+  Check,
 } from "lucide-react";
 import { DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { MailDisplaySkeleton, MailHeaderSkeleton } from "./mail-skeleton";
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
@@ -81,7 +84,7 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
           )}
         >
           <MailHeaderSkeleton isFullscreen={isFullscreen} />
-          <div className="h-full space-y-4 overflow-y-scroll">
+          <div className="h-full space-y-4 overflow-hidden">
             <MailDisplaySkeleton isFullscreen={isFullscreen} />
           </div>
         </div>
@@ -147,8 +150,17 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
                   disabled={!emailData}
                   onClick={handleCopy}
                 >
-                  <Copy className="h-4 w-4" />
-                  <span className="sr-only">Copy email data</span>
+                  {copySuccess ? (
+                    <>
+                      <Check className="h-4 w-4" />
+                      <span className="sr-only">Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4" />
+                      <span className="sr-only">Copy email data</span>
+                    </>
+                  )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>{copySuccess ? "Copied!" : "Copy email data"}</TooltipContent>
@@ -195,23 +207,24 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
             </DropdownMenu>
           </div>
         </div>
-
-        <div className="h-full overflow-y-scroll">
-          {[...(emailData || [])].reverse().map((message, index) => (
-            <div
-              key={message.id}
-              className={cn("transition-all duration-200", index > 0 && "border-t border-border")}
-            >
-              <MailDisplay
-                emailData={message}
-                isFullscreen={isFullscreen}
-                isMuted={isMuted}
-                isLoading={isLoading}
-                index={index}
-              />
-            </div>
-          ))}
-        </div>
+        <ScrollArea className="h-full" type="scroll">
+          <div className="h-full">
+            {[...(emailData || [])].reverse().map((message, index) => (
+              <div
+                key={message.id}
+                className={cn("transition-all duration-200", index > 0 && "border-t border-border")}
+              >
+                <MailDisplay
+                  emailData={message}
+                  isFullscreen={isFullscreen}
+                  isMuted={isMuted}
+                  isLoading={isLoading}
+                  index={index}
+                />
+              </div>
+            ))}
+          </div>{" "}
+        </ScrollArea>
         {!isFullscreen && <ReplyCompose emailData={emailData} />}
       </div>
     </div>

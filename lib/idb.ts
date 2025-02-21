@@ -1,16 +1,71 @@
-"use client";
-import Dexie, { type EntityTable } from "dexie";
-import { ParsedMessage } from "@/types";
+import type { Cache, State } from "swr";
+import Dexie from "dexie";
 
-const idb = new Dexie("mail0") as Dexie & {
-  threads: EntityTable<
-    ParsedMessage,
-    "id" // primary key "id" (for the typings only)
-  >;
-};
+interface CacheEntry {
+  key: string;
+  state: State<any>;
+  timestamp: number;
+}
 
-idb.version(1).stores({
-  threads: "++id, title, tags, sender, receivedOn, unread, body, processedHtml, blobUrl, q", // primary key "id" (for the runtime!)
-});
+class SWRDatabase extends Dexie {
+  cache!: Dexie.Table<CacheEntry, string>;
 
-export { idb };
+  constructor() {
+    super("SWRCache");
+    this.version(1).stores({
+      cache: "key,timestamp",
+    });
+  }
+}
+
+const db = new SWRDatabase();
+const ONE_DAY = 1000 * 60 * 60 * 24;
+
+export function dexieStorageProvider(_: Readonly<Cache>): Cache {
+  const memoryCache = new Map<string, State<any>>();
+
+  db.cache
+    .each((entry) => {
+      if (Date.now() - entry.timestamp <= ONE_DAY) {
+        memoryCache.set(entry.key, entry.state);
+      } else {
+        db.cache.delete(entry.key).catch(console.error);
+      }
+    })
+    .catch(console.error);
+
+  return {
+    keys() {
+      return memoryCache.keys();
+    },
+
+    get(key: string) {
+      return memoryCache.get(key);
+    },
+
+    set(key: string, value: State) {
+      // Don't cache promises or undefined data
+      if (value.data instanceof Promise || value.data === undefined) return;
+
+      console.log(key, value);
+
+      memoryCache.set(key, value);
+
+      // Sync to IndexedDB in the background
+      db.cache
+        .put({
+          key,
+          state: value,
+          timestamp: Date.now(),
+        })
+        .catch(console.error);
+    },
+
+    delete(key: string) {
+      memoryCache.delete(key);
+
+      // Sync to IndexedDB in the background
+      db.cache.delete(key).catch(console.error);
+    },
+  };
+}

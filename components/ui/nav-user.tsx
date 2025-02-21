@@ -1,6 +1,6 @@
 "use client";
 
-import { Book, ChevronDown, HelpCircle, LogIn, LogOut, UserPlus } from "lucide-react";
+import { Book, ChevronDown, HelpCircle, LogIn, LogOut, MoonIcon, UserPlus } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import {
@@ -14,8 +14,10 @@ import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui
 import { useConnections } from "@/hooks/use-connections";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut, useSession } from "@/lib/auth-client";
+import { useEffect, useMemo, useState } from "react";
+import { SunIcon } from "../icons/animated/sun";
+import { useTheme } from "next-themes";
 import { IConnection } from "@/types";
-import { useMemo } from "react";
 import { toast } from "sonner";
 import axios from "axios";
 
@@ -24,11 +26,34 @@ export function NavUser() {
   const router = useRouter();
   const { data: connections, isLoading, mutate } = useConnections();
   const pathname = usePathname();
+  const [isRendered, setIsRendered] = useState(false);
+  const { theme, resolvedTheme, setTheme } = useTheme();
 
   const activeAccount = useMemo(() => {
     if (!session) return null;
     return connections?.find((connection) => connection.id === session?.connectionId);
   }, [session, connections]);
+
+  // Prevents hydration error
+  useEffect(() => setIsRendered(true), []);
+
+  async function handleThemeToggle() {
+    const newTheme = theme === "dark" ? "light" : "dark";
+
+    function update() {
+      setTheme(newTheme);
+    }
+
+    if (document.startViewTransition && newTheme !== resolvedTheme) {
+      document.documentElement.style.viewTransitionName = "theme-transition";
+      await document.startViewTransition(update).finished;
+      document.documentElement.style.viewTransitionName = "";
+    } else {
+      update();
+    }
+  }
+
+  if (!isRendered) return null;
 
   const handleAccountSwitch = (connection: IConnection) => () => {
     return axios
@@ -78,13 +103,15 @@ export function NavUser() {
                       }
                       alt={activeAccount?.name || session?.user.name || "User"}
                     />
-                    <AvatarFallback className="rounded-lg">
-                      {(activeAccount?.name || session?.user.name || "User")
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .toUpperCase()
-                        .slice(0, 2)}
+                    <AvatarFallback className="relative overflow-hidden rounded-lg bg-black dark:bg-white">
+                      <span className="relative z-10 text-white dark:text-black">
+                        {(activeAccount?.name || session?.user.name || "User")
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase()
+                          .slice(0, 2)}
+                      </span>
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex min-w-0 flex-col gap-0.5 leading-none">
@@ -120,6 +147,16 @@ export function NavUser() {
           <div className="flex cursor-pointer items-center gap-2 text-[13px]">
             <Book size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
             <p className="text-[13px] opacity-60">Documentation</p>
+          </div>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleThemeToggle}>
+          <div className="flex cursor-pointer items-center gap-2 text-[13px]">
+            {theme === "dark" ? (
+              <MoonIcon className="opacity-60" />
+            ) : (
+              <SunIcon className="opacity-60" />
+            )}
+            <p className="text-[13px] opacity-60">App Theme</p>
           </div>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
