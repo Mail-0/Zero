@@ -29,21 +29,8 @@ export default function ConnectionsPage() {
   const handleDelete = async (connectionId: string) => {
     if (!session) return;
 
-    const remainingConnections = connections?.filter(
-      (connection) => connection.id !== connectionId,
-    );
-
     try {
       await axios.delete(`/api/v1/mail/connections/${connectionId}`);
-
-      if (remainingConnections?.length) {
-        await axios.put(`/api/v1/mail/connections/${remainingConnections[0].id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-      }
       await refetch();
       await mutate();
     } catch (error) {
