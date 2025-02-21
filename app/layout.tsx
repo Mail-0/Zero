@@ -5,9 +5,7 @@ import { siteConfig } from "@/lib/site-config";
 import { Toast } from "@/components/ui/toast";
 import { Providers } from "@/lib/providers";
 import { cn } from "@/lib/utils";
-import Script from "next/script";
 import { Suspense } from "react";
-import { env } from "@/lib/env";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -29,11 +27,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        {env.NODE_ENV === "development" && (
-          <Script src="https://unpkg.com/react-scan/dist/auto.global.js"></Script>
-        )}
-      </head>
       <body className={cn(geistSans.variable, geistMono.variable, "antialiased")}>
         <Providers attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <Suspense>
