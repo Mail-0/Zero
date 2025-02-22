@@ -54,6 +54,7 @@
     "dexie": "^4.0.11",
     "dexie-react-hooks": "^1.1.7",
     "drizzle-orm": "^0.39.3",
+    "framer-motion": "^12.4.7",
     "googleapis": "^144.0.0",
     "he": "^1.2.0",
     "husky": "^9.1.7",
