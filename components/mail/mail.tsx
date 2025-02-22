@@ -15,6 +15,12 @@ import {
   SearchIcon,
   X,
 } from "lucide-react";
+import {
+  addPageTokenAtom,
+  currentPageAtom,
+  getPageTokenAtom,
+  setFolderAtom,
+} from "@/store/paginationState";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -22,6 +28,7 @@ import { useState, useCallback, useMemo, useEffect, ReactNode } from "react";
 import { ThreadDisplay } from "@/components/mail/thread-display";
 import { useMediaQuery } from "../../hooks/use-media-query";
 import { useSearchValue } from "@/hooks/use-search-value";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { MailList } from "@/components/mail/mail-list";
 import { useMail } from "@/components/mail/use-mail";
 import { SidebarToggle } from "../ui/sidebar-toggle";
@@ -32,6 +39,7 @@ import { useThreads } from "@/hooks/use-threads";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { Pagination } from "./pagination";
 import { SearchBar } from "./search-bar";
 import { cn } from "@/lib/utils";
 
@@ -84,13 +92,30 @@ export function Mail({ folder }: MailProps) {
     return undefined;
   }, [filterValue, searchParams]);
 
+  const currentPage = useAtomValue(currentPageAtom);
+  const pageToken = useAtomValue(getPageTokenAtom);
+  const setPageToken = useSetAtom(addPageTokenAtom);
+  const setLabelIds = useSetAtom(setFolderAtom);
+
+  useEffect(() => {
+    if (folder) {
+      setLabelIds(folder);
+    }
+  }, [folder, setLabelIds]);
+
   const {
     data: threadsResponse,
     isLoading,
     isValidating,
-  } = useThreads(folder, labels, searchValue.value);
+  } = useThreads(folder, labels, searchValue.value, undefined, pageToken);
   const [open, setOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
+
+  useEffect(() => {
+    if (threadsResponse?.nextPageToken) {
+      setPageToken({ pageNo: currentPage + 1, pageToken: String(threadsResponse.nextPageToken) });
+    }
+  }, [threadsResponse, setPageToken]);
 
   // Check if we're on mobile on mount and when window resizes
   useEffect(() => {
@@ -199,6 +224,7 @@ export function Mail({ folder }: MailProps) {
                     )}
                   </>
                 )}
+                <Pagination />
                 {mail.bulkSelected.length === 0 && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

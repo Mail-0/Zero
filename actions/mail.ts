@@ -12,16 +12,17 @@ export const getMails = async ({
   q,
   max,
   labelIds,
+  pageToken,
 }: {
   folder: string;
   q?: string;
   max?: number;
   labelIds?: string[];
+  pageToken: string;
 }) => {
   if (!folder) {
     throw new Error("Missing required fields");
   }
-
   const headersList = await headers();
   const session = await auth.api.getSession({ headers: headersList });
 
@@ -46,7 +47,7 @@ export const getMails = async ({
     },
   });
 
-  return await driver.list(folder, q, max, labelIds);
+  return await driver.list(folder, q, max, labelIds, pageToken);
 };
 
 export const getMail = async ({ id }: { id: string }) => {
