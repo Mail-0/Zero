@@ -14,6 +14,7 @@ interface MailManager {
     query?: string,
     maxResults?: number,
     labelIds?: string[],
+    pageToken?: string,
   ): Promise<(T & { threads: InitialThread[] }) | undefined>;
   count(): Promise<any>;
   generateConnectionAuthUrl(userId: string): string;
@@ -177,7 +178,7 @@ const googleDriver = async (config: IConfig): Promise<MailManager> => {
         }),
       );
     },
-    list: async (folder, q, maxResults = 10, _labelIds: string[] = []) => {
+    list: async (folder, q, maxResults = 10, _labelIds: string[] = [], pageToken?: string) => {
       const { folder: normalizedFolder, q: normalizedQ } = normalizeSearch(folder, q ?? "");
       const labelIds = [..._labelIds];
       if (normalizedFolder) labelIds.push(normalizedFolder.toUpperCase());
@@ -186,6 +187,7 @@ const googleDriver = async (config: IConfig): Promise<MailManager> => {
         q: normalizedQ ? normalizedQ : undefined,
         labelIds,
         maxResults,
+        pageToken: pageToken ? pageToken : undefined,
       });
       const threads = await Promise.all(
         (res.data.threads || [])

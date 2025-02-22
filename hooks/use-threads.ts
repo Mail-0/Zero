@@ -14,7 +14,7 @@ export const preloadThread = (userId: string, threadId: string, connectionId: st
 
 // TODO: improve the filters
 const fetchEmails = async (args: any[]) => {
-  const [_, folder, query, max, labelIds] = args;
+  const [_, folder, query, max, labelIds, pageToken] = args;
 
   const searchParams = new URLSearchParams();
   if (max) searchParams.set("max", max.toString());
@@ -22,7 +22,7 @@ const fetchEmails = async (args: any[]) => {
   if (folder) searchParams.set("folder", folder.toString());
   if (labelIds) searchParams.set("labelIds", labelIds.join(","));
 
-  const data = await getMails({ folder, q: query, max, labelIds });
+  const data = await getMails({ folder, q: query, max, labelIds, pageToken });
 
   return data;
 };
@@ -40,11 +40,17 @@ interface RawResponse {
   resultSizeEstimate: number;
 }
 
-export const useThreads = (folder: string, labelIds?: string[], query?: string, max?: number) => {
+export const useThreads = (
+  folder: string,
+  labelIds?: string[],
+  query?: string,
+  max?: number,
+  pageToken?: string,
+) => {
   const { data: session } = useSession();
   const { data, isLoading, error, isValidating } = useSWR<RawResponse>(
     session?.user.id
-      ? [session?.user.id, folder, query, max, labelIds, session.connectionId]
+      ? [session?.user.id, folder, query, max, labelIds, pageToken, session.connectionId]
       : null,
     fetchEmails,
   );
