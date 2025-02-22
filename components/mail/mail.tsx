@@ -28,7 +28,6 @@ import { useState, useCallback, useMemo, useEffect, ReactNode } from "react";
 import { ThreadDisplay } from "@/components/mail/thread-display";
 import { useMediaQuery } from "../../hooks/use-media-query";
 import { useSearchValue } from "@/hooks/use-search-value";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { MailList } from "@/components/mail/mail-list";
 import { useMail } from "@/components/mail/use-mail";
 import { SidebarToggle } from "../ui/sidebar-toggle";
@@ -36,6 +35,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { type Mail } from "@/components/mail/data";
 import { useSearchParams } from "next/navigation";
 import { useThreads } from "@/hooks/use-threads";
+import { useAtomValue, useSetAtom } from "jotai";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
@@ -115,7 +115,7 @@ export function Mail({ folder }: MailProps) {
     if (threadsResponse?.nextPageToken) {
       setPageToken({ pageNo: currentPage + 1, pageToken: String(threadsResponse.nextPageToken) });
     }
-  }, [threadsResponse, setPageToken]);
+  }, [threadsResponse, setPageToken, currentPage]);
 
   // Check if we're on mobile on mount and when window resizes
   useEffect(() => {
