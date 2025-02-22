@@ -16,7 +16,6 @@ import { useConnections } from "@/hooks/use-connections";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/auth-client";
-import { revalidatePath } from "next/cache";
 import { Plus, Trash } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
@@ -31,15 +30,9 @@ export default function ConnectionsPage() {
     if (!session) return;
 
     try {
-      const isActiveConnection = connectionId === session.connectionId;
-
       await axios.delete(`/api/v1/mail/connections/${connectionId}`);
       await refetch();
       await mutate();
-
-      if (isActiveConnection) {
-        revalidatePath("/mail");
-      }
     } catch (error) {
       console.error(error);
     }
