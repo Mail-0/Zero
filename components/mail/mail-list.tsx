@@ -35,7 +35,7 @@ const Thread = ({ message: initialMessage, selectMode, onSelect, isCompact }: Th
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const isHovering = useRef<boolean>(false);
   const hasPrefetched = useRef<boolean>(false);
-  const [searchValue] = useSearchValue();
+  const { highlight: searchValue } = useSearchValue();
 
   const isMailSelected = message.id === mail.selected;
   const isMailBulkSelected = mail.bulkSelected.includes(message.id);
