@@ -1,16 +1,15 @@
 "use client";
-import Dexie, { type EntityTable } from "dexie";
 import { ParsedMessage } from "@/types";
+import Dexie, { Table } from "dexie";
 
-const idb = new Dexie("mail0") as Dexie & {
-  threads: EntityTable<
-    ParsedMessage,
-    "id" // primary key "id" (for the typings only)
-  >;
-};
+interface MailDatabase extends Dexie {
+  threads: Table<ParsedMessage>;
+}
+
+const idb = new Dexie("mail0") as MailDatabase;
 
 idb.version(1).stores({
-  threads: "++id, title, tags, sender, receivedOn, unread, body, processedHtml, blobUrl, q", // primary key "id" (for the runtime!)
+  threads: "++id, title, tags, sender, receivedOn, unread, body, processedHtml, blobUrl, q",
 });
 
 export { idb };

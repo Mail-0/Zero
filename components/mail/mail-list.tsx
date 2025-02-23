@@ -35,7 +35,7 @@ const Thread = ({ message: initialMessage, selectMode, onSelect, isCompact }: Th
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const isHovering = useRef<boolean>(false);
   const hasPrefetched = useRef<boolean>(false);
-  const { highlight: searchValue } = useSearchValue();
+  const searchValue = useSearchValue();
 
   const isMailSelected = message.id === mail.selected;
   const isMailBulkSelected = mail.bulkSelected.includes(message.id);
@@ -151,7 +151,7 @@ const Thread = ({ message: initialMessage, selectMode, onSelect, isCompact }: Th
               "text-md flex items-baseline gap-1 group-hover:opacity-100",
             )}
           >
-            {highlightText(message.sender.name, searchValue.highlight)}{" "}
+            {highlightText(message.sender.name, searchValue.highlight)}
             {message.totalReplies !== 1 ? (
               <span className="ml-0.5 text-xs opacity-70">{message.totalReplies}</span>
             ) : null}
