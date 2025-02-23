@@ -19,6 +19,7 @@ import { useSession } from "@/lib/auth-client";
 import { Plus, Trash } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
+import { toast } from "sonner";
 import axios from "axios";
 
 export default function ConnectionsPage() {
@@ -31,8 +32,9 @@ export default function ConnectionsPage() {
 
     try {
       await axios.delete(`/api/v1/mail/connections/${connectionId}`);
-      await refetch();
-      await mutate();
+      toast.success("Account disconnected successfully!");
+      refetch();
+      mutate();
     } catch (error) {
       console.error(error);
     }
