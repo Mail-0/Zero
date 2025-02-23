@@ -1,31 +1,26 @@
-import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
-/**
- * Hook that triggers a callback when a key combination is pressed
- * @param keys Array to represent a key combination. ORDER MATTERS!
- * @param action Callback to be triggered when the key combination is pressed
- */
-export const useKeyCombinationPressed = ({
-  keys,
-  action,
+export const useKeyCombinationActions = ({
+  config,
 }: {
-  keys: string[];
-  action: () => void;
+  config: Array<{ shortcut: string[]; action: () => void }>;
 }) => {
-  const callbackRef = useRef(action);
-  useLayoutEffect(() => {
-    callbackRef.current = action;
-  });
-  const pressed = useRef<string[]>([]);
+  const pressed = useRef<Array<string>>([]);
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
+      //dont allow duplicate keys in pressed array
       if (pressed.current.includes(e.key)) return;
       pressed.current.push(e.key);
-      if (keys.every((key, i) => pressed.current[i] === key)) {
-        callbackRef.current();
-      }
+      config.forEach(({ shortcut, action }) => {
+        if (
+          shortcut.every((key, i) => pressed.current[i] === key) &&
+          shortcut.length === pressed.current.length
+        ) {
+          action();
+        }
+      });
     },
-    [keys],
+    [config],
   );
 
   const handleKeyUp = useCallback((e: KeyboardEvent) => {
