@@ -62,7 +62,7 @@ export function Mail({ folder }: MailProps) {
     if (!session?.user && !isPending) {
       router.push("/login");
     }
-  }, [session?.user, isPending]);
+  }, [session?.user, isPending, router]);
 
   const labels = useMemo(() => {
     if (filterValue === "all") {
