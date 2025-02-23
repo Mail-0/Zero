@@ -1,3 +1,4 @@
+// app/layout.tsx
 import MailComposeModal from "@/components/mail/mail-compose-modal";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
@@ -7,6 +8,9 @@ import { Providers } from "@/lib/providers";
 import { cn } from "@/lib/utils";
 import { Suspense } from "react";
 import "./globals.css";
+
+// Import your CommandPaletteProvider
+import { CommandPaletteProvider } from "@/components/ui/command-palette";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,12 +33,14 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={cn(geistSans.variable, geistMono.variable, "antialiased")}>
         <Providers attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <Suspense>
-            <MailComposeModal />
-          </Suspense>
-          {children}
-          <Toast />
-          <Analytics />
+          <CommandPaletteProvider>
+            <Suspense>
+              <MailComposeModal />
+            </Suspense>
+            {children}
+            <Toast />
+            <Analytics />
+          </CommandPaletteProvider>
         </Providers>
       </body>
     </html>

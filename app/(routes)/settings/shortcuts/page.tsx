@@ -1,30 +1,12 @@
+"use client";
+
 import { SettingsCard } from "@/components/settings/settings-card";
+import { keyboardShortcuts } from "@/config/shortcuts"; //import the shortcuts
 import { Button } from "@/components/ui/button";
 import { ReactNode } from "react";
 
 export default function ShortcutsPage() {
-  const shortcuts = [
-    { keys: ["⌘", "n"], action: "New Email" },
-    { keys: ["⌘", "Enter"], action: "Send Email" },
-    { keys: ["⌘", "r"], action: "Reply" },
-    { keys: ["⌘", "Shift", "r"], action: "Reply All" },
-    { keys: ["⌘", "f"], action: "Forward" },
-    { keys: ["⌘", "Shift", "d"], action: "Drafts" },
-    { keys: ["⌘", "Shift", "i"], action: "Inbox" },
-    { keys: ["⌘", "Shift", "s"], action: "Sent Mail" },
-    { keys: ["⌘", "Backspace"], action: "Delete" },
-    { keys: ["⌘", "/"], action: "Search" },
-    { keys: ["⌘", "Shift", "u"], action: "Mark as Unread" },
-    { keys: ["⌘", "Shift", "m"], action: "Mute Thread" },
-    { keys: ["⌘", "Shift", "p"], action: "Print Email" },
-    { keys: ["⌘", "Shift", "h"], action: "Archive Email" },
-    { keys: ["⌘", "Shift", "j"], action: "Mark as Spam" },
-    { keys: ["⌘", "Shift", "e"], action: "Move to Folder" },
-    { keys: ["⌘", "Shift", "t"], action: "Undo Last Action" },
-    { keys: ["⌘", "Shift", "v"], action: "View Email Details" },
-    { keys: ["⌘", "Shift", "g"], action: "Go to Drafts" },
-    { keys: ["⌘", "Shift", "x"], action: "Expand Email View" },
-  ];
+  const shortcuts = keyboardShortcuts; //now gets shortcuts from the config file
 
   return (
     <div className="grid gap-6">
