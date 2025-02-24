@@ -274,7 +274,7 @@ export default function Envelop() {
         <div className="absolute left-0 top-0 h-[303.33px] w-[455px] rounded-[28.61px] border-4 border-white/40" />
       </div>
       <div className="absolute left-[170px] top-[32px]">
-        <div className="flex flex-col font-mono text-[9px] font-semibold leading-tight text-[#e7e7e7]">
+        <div className="flex flex-col font-mono text-[9px] font-semibold leading-tight text-white/70">
           <span>0 Email</span>
           <span>123 Open Source Way</span>
           <span>Freemail City, FS 98765</span>

@@ -150,7 +150,7 @@ const Thread = ({ message: initialMessage, selectMode, onSelect, isCompact }: Th
             {message.totalReplies !== 1 ? (
               <span className="ml-0.5 text-xs opacity-70">{message.totalReplies}</span>
             ) : null}
-            {message.unread ? <span className="ml-0.5 size-2 rounded-full bg-[#006FFE]" /> : null}
+            {message.unread ? <span className="ml-0.5 size-2 rounded-full bg-skyBlue" /> : null}
           </p>
         </div>
         {message.receivedOn ? (

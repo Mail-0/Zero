@@ -15,8 +15,12 @@ export default {
         offsetDark: "#0A0A0A",
         offsetLight: "#F5F5F5",
         logout: "#D93036",
+        subtleWhite: "#EAEAEA",
+        subtleBlack: "#1F1F1F",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        skyBlue: "#0066FF",
+        shinyGray: "#A1A1A1",
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",

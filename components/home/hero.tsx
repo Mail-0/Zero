@@ -58,10 +58,10 @@ export default function Hero() {
   return (
     <div className="mx-auto w-full animate-fade-in pt-20 md:px-0 md:pt-20">
       <p className="text-center text-4xl font-semibold leading-tight tracking-[-0.03em] sm:text-6xl md:px-0">
-        The future of email <span className="text-[#A1A1A1]">is here</span>
+        The future of email <span className="text-shinyGray">is here</span>
       </p>
       <div className="mx-auto w-full max-w-4xl">
-        <Balancer className="mx-auto mt-3 text-center text-[15px] leading-tight text-[#A1A1A1] sm:text-[22px]">
+        <Balancer className="mx-auto mt-3 text-center text-[15px] leading-tight text-shinyGray sm:text-[22px]">
           Experience email the way you want with <span className="font-mono">0</span> – the first
           open source email app that puts your privacy and safety first.
         </Balancer>

@@ -203,8 +203,8 @@ function NavItem(item: NavItemProps & { href: string }) {
     <SidebarMenuButton
       tooltip={item.title}
       className={cn(
-        "flex items-center hover:bg-[#eaeaea] dark:hover:bg-[#1F1F1F]",
-        item.isActive && "bg-[#eaeaea] text-accent-foreground dark:bg-[#1F1F1F]",
+        "flex items-center hover:bg-subtleWhite dark:hover:bg-subtleBlack",
+        item.isActive && "bg-subtleWhite text-accent-foreground dark:bg-subtleBlack",
       )}
     >
       {item.icon && (
