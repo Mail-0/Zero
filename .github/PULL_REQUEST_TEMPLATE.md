@@ -1,12 +1,18 @@
+# READ CAREFULLY THEN REMOVE
+
+Remove bullet points that are not relevant.
+
+PLEASE REFRAIN FROM USING AI TO WRITE YOUR CODE AND PR DESCRIPTION. IF YOU DO USE AI TO WRITE YOUR CODE PLEASE PROVIDE A DESCRIPTION AND REVIEW IT CAREFULLY. MAKE SURE YOU UNDERSTAND THE CODE YOU ARE SUBMITTING USING AI.
+
+- Pull requests that do not follow these guidelines will be closed without review or comment.
+- If you use AI to write your PR description your pr will be close without review or comment.
+- If you are unsure about anything, feel free to ask for clarification.
+
 ## Description
 
-Please provide a clear description of your changes. Include screenshots/recordings for UI changes and any relevant context.
-
-Remove points that are not relevant. If your PR doesn't follow this template or [contributing guide](https://github.com/Mail-0/Mail-0/blob/main/.github/CONTRIBUTING.md) it will not be accepted.
+Please provide a clear description of your changes.
 
 ---
-
-Fixes # (issue number)
 
 ## Type of Change
 

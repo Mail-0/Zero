@@ -42,7 +42,3 @@ next-env.d.ts
 
 # ide
 .idea
-.vscode
-.turbo
-packages/tailwind-config/node_modules/@zero/tsconfig
-packages/db/node_modules/@zero/tsconfig
