@@ -160,8 +160,8 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     >
       <CommandDialog open={open} onOpenChange={setOpen}>
         <VisuallyHidden>
-          <DialogTitle>Mail 0 - Command Palette</DialogTitle>
-          <DialogDescription>Quick navigation and actions for Mail 0.</DialogDescription>
+          <DialogTitle>0 - Command Palette</DialogTitle>
+          <DialogDescription>Quick navigation and actions for 0.</DialogDescription>
         </VisuallyHidden>
         <CommandInput
           autoFocus
