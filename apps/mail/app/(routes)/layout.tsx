@@ -1,21 +1,20 @@
-"use client";
-
-import { CommandPaletteProvider } from "@/components/context/command-palette-context";
-import { dexieStorageProvider } from "@/lib/idb";
 import { SWRConfig } from "swr";
+import { CommandPaletteProvider } from "@/components/context/command-palette-context";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }) {
   return (
-    <div className="flex h-screen w-screen overflow-hidden">
-      <SWRConfig
-        value={{
-          provider: typeof window !== "undefined" ? dexieStorageProvider : undefined,
-          keepPreviousData: true,
-          revalidateOnFocus: false,
-        }}
-      >
-        <CommandPaletteProvider>{children}</CommandPaletteProvider>
-      </SWRConfig>
-    </div>
+    <html lang="en">
+      <body>
+        <SWRConfig
+          value={{
+            // your SWR config
+          }}
+        >
+          <CommandPaletteProvider>
+            {children}
+          </CommandPaletteProvider>
+        </SWRConfig>
+      </body>
+    </html>
   );
 }

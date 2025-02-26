@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Trash } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
+import SWRConfig from "swr";
 
 export default function ConnectionsPage() {
   const { data: connections, isLoading } = useConnections();
