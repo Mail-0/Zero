@@ -10,7 +10,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useSession } from "@/lib/auth-client";
 import React, { useMemo, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { EnableBrain } from "@/actions/brain";
 import { useRouter } from "next/navigation";
 import { useAISidebar } from "./ai-sidebar";
 import { mailCount } from "@/actions/mail";
@@ -80,18 +79,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </motion.div>
             )}
           </AnimatePresence>
-          <Button
-            onClick={async () => {
-              toast.promise(EnableBrain(), {
-                loading: "Enabling brain... takes around 8 seconds...",
-                success: "Enabled successfully!",
-                error: "Enable brain failed",
-              });
-            }}
-            className="bg-secondary bg-subtleWhite text-primary hover:bg-subtleWhite dark:bg-subtleBlack dark:hover:bg-subtleBlack relative isolate h-8 w-[calc(100%)] overflow-hidden whitespace-nowrap shadow-inner"
-          >
-            <Brain />
-          </Button>
         </SidebarHeader>
         <SidebarContent className="py-0 pt-0">
           <AnimatePresence mode="wait">

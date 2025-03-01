@@ -129,13 +129,6 @@ export function Mail({ folder }: MailProps) {
                 )}
               >
                 <SidebarToggle className="h-fit px-2" />
-                <Button
-                  variant="ghost"
-                  className="md:h-fit md:px-2"
-                  onClick={() => setIsCompact(!isCompact)}
-                >
-                  <AlignVerticalSpaceAround />
-                </Button>
                 {searchMode && (
                   <div className="flex flex-1 items-center justify-center gap-1.5">
                     <SearchBar />
