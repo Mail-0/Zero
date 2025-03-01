@@ -11,8 +11,10 @@ import { useMail } from "@/components/mail/use-mail";
 import { useSession } from "@/lib/auth-client";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatDate } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { InitialThread } from "@/types";
 import { markAsRead } from "@/actions/mail";
+import { EmailContextMenu } from "./email-context-menu";
 
 interface MailListProps {
   items: InitialThread[];
@@ -33,15 +35,19 @@ type ThreadProps = {
 
 const Thread = ({ message: initialMessage, selectMode, onSelect, isCompact }: ThreadProps) => {
   const [message, setMessage] = useState(initialMessage);
-  const [mail] = useMail();
+  const [mail, setMail] = useMail();
   const { data: session } = useSession();
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const longPressTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const isHovering = useRef<boolean>(false);
   const hasPrefetched = useRef<boolean>(false);
+  const isLongPressing = useRef<boolean>(false);
   const [searchValue] = useSearchValue();
+  const isMobile = useIsMobile();
 
   const isMailSelected = message.id === mail.selected;
   const isMailBulkSelected = mail.bulkSelected.includes(message.id);
+  const isBulkSelectionMode = mail.bulkSelected.length > 0;
 
   const highlightText = (text: string, highlight: string) => {
     if (!highlight?.trim()) return text;
@@ -64,6 +70,15 @@ const Thread = ({ message: initialMessage, selectMode, onSelect, isCompact }: Th
   };
 
   const handleMailClick = async () => {
+    if (isMobile && isBulkSelectionMode) {
+      const updatedBulkSelected = mail.bulkSelected.includes(message.id)
+        ? mail.bulkSelected.filter((id) => id !== message.id)
+        : [...mail.bulkSelected, message.id];
+
+      setMail({ ...mail, bulkSelected: updatedBulkSelected });
+      return;
+    }
+    
     onSelect(message);
     if (!isMailSelected && message.unread) {
       try {
@@ -71,6 +86,34 @@ const Thread = ({ message: initialMessage, selectMode, onSelect, isCompact }: Th
         await markAsRead({ id: message.id });
       } catch (error) {
         console.error("Error marking message as read:", error);
+      }
+    }
+  };
+
+  const handleTouchStart = () => {
+    if (isMobile) {
+      isLongPressing.current = false;
+      longPressTimeoutRef.current = setTimeout(() => {
+        isLongPressing.current = true;
+        console.log('Long press detected, activating bulk selection mode');
+        
+        if (!mail.bulkSelected.includes(message.id)) {
+          setMail({ 
+            ...mail, 
+            bulkSelected: [...mail.bulkSelected, message.id]
+          });
+        }
+      }, 500);
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (isMobile && longPressTimeoutRef.current) {
+      clearTimeout(longPressTimeoutRef.current);
+      
+      if (isLongPressing.current) {
+        e.preventDefault();
+        isLongPressing.current = false;
       }
     }
   };
@@ -116,68 +159,143 @@ const Thread = ({ message: initialMessage, selectMode, onSelect, isCompact }: Th
       if (hoverTimeoutRef.current) {
         clearTimeout(hoverTimeoutRef.current);
       }
+      if (longPressTimeoutRef.current) {
+        clearTimeout(longPressTimeoutRef.current);
+      }
     };
   }, []);
 
-  return (
-    <div
-      onClick={handleMailClick}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      key={message.id}
-      className={cn(
-        "group relative flex cursor-pointer flex-col items-start overflow-clip rounded-lg border border-transparent px-4 py-3 text-left text-sm transition-all hover:bg-offsetLight hover:bg-primary/5 hover:opacity-100",
-        !message.unread && "opacity-50",
-        (isMailSelected || isMailBulkSelected) && "border-border bg-primary/5 opacity-100",
-        isCompact && "py-2",
-      )}
-    >
+  if (isMobile) {
+    return (
       <div
+        onClick={handleMailClick}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onContextMenu={(e) => e.preventDefault()}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        key={message.id}
         className={cn(
-          "absolute inset-y-0 left-0 w-1 -translate-x-2 bg-primary transition-transform ease-out",
-          isMailBulkSelected && "translate-x-0",
-        )}
-      />
-      <div className="flex w-full items-center justify-between">
-        <div className="flex items-center gap-2">
-          <p
-            className={cn(
-              message.unread ? "font-bold" : "font-medium",
-              "text-md flex items-baseline gap-1 group-hover:opacity-100",
-            )}
-          >
-            <span className={cn(mail.selected && "max-w-[120px] truncate")}>
-              {highlightText(message.sender.name, searchValue.highlight)}
-            </span>{" "}
-            {message.totalReplies !== 1 ? (
-              <span className="ml-0.5 text-xs opacity-70">{message.totalReplies}</span>
-            ) : null}
-            {message.unread ? <span className="ml-0.5 size-2 rounded-full bg-skyBlue" /> : null}
-          </p>
-        </div>
-        {message.receivedOn ? (
-          <p
-            className={cn(
-              "text-xs font-normal opacity-70 transition-opacity group-hover:opacity-100",
-              isMailSelected && "opacity-100",
-            )}
-          >
-            {formatDate(message.receivedOn.split(".")[0] ?? '')}
-          </p>
-        ) : null}
-      </div>
-      <p
-        className={cn(
-          "mt-1 text-xs opacity-70 transition-opacity",
-          mail.selected ? "line-clamp-1" : "line-clamp-2",
-          isCompact && "line-clamp-1",
-          isMailSelected && "opacity-100",
+          "group relative flex cursor-pointer flex-col items-start overflow-clip rounded-lg border border-transparent px-4 py-3 text-left text-sm transition-all hover:bg-offsetLight hover:bg-primary/5 hover:opacity-100",
+          !message.unread && "opacity-50",
+          (isMailSelected || isMailBulkSelected) && "border-border bg-primary/5 opacity-100",
+          isCompact && "py-2",
         )}
       >
-        {highlightText(message.title, searchValue.highlight)}
-      </p>
-      {!isCompact && <MailLabels labels={message.tags} />}
-    </div>
+        <div
+          className={cn(
+            "absolute inset-y-0 left-0 w-1 -translate-x-2 bg-primary transition-transform ease-out",
+            isMailBulkSelected && "translate-x-0",
+          )}
+        />
+        <div className="flex w-full items-center justify-between">
+          <div className="flex items-center gap-2">
+            <p
+              className={cn(
+                message.unread ? "font-bold" : "font-medium",
+                "text-md flex items-baseline gap-1 group-hover:opacity-100",
+              )}
+            >
+              <span className={cn(mail.selected && "max-w-[120px] truncate")}>
+                {highlightText(message.sender.name, searchValue.highlight)}
+              </span>{" "}
+              {message.totalReplies !== 1 ? (
+                <span className="ml-0.5 text-xs opacity-70">{message.totalReplies}</span>
+              ) : null}
+              {message.unread ? <span className="ml-0.5 size-2 rounded-full bg-skyBlue" /> : null}
+            </p>
+          </div>
+          {message.receivedOn ? (
+            <p
+              className={cn(
+                "text-xs font-normal opacity-70 transition-opacity group-hover:opacity-100",
+                isMailSelected && "opacity-100",
+              )}
+            >
+              {formatDate(message.receivedOn.split(".")[0] ?? '')}
+            </p>
+          ) : null}
+        </div>
+        <p
+          className={cn(
+            "mt-1 text-xs opacity-70 transition-opacity",
+            mail.selected ? "line-clamp-1" : "line-clamp-2",
+            isCompact && "line-clamp-1",
+            isMailSelected && "opacity-100",
+          )}
+        >
+          {highlightText(message.title, searchValue.highlight)}
+        </p>
+        {!isCompact && <MailLabels labels={message.tags} />}
+      </div>
+    );
+  }
+
+  return (
+    <EmailContextMenu 
+      emailId={message.id} 
+      hasInboxLabel={message.tags.includes('INBOX')}
+      hasSpamLabel={message.tags.includes('SPAM')}
+    >
+      <div
+        onClick={handleMailClick}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        key={message.id}
+        className={cn(
+          "group relative flex cursor-pointer flex-col items-start overflow-clip rounded-lg border border-transparent px-4 py-3 text-left text-sm transition-all hover:bg-offsetLight hover:bg-primary/5 hover:opacity-100",
+          !message.unread && "opacity-50",
+          (isMailSelected || isMailBulkSelected) && "border-border bg-primary/5 opacity-100",
+          isCompact && "py-2",
+        )}
+      >
+        <div
+          className={cn(
+            "absolute inset-y-0 left-0 w-1 -translate-x-2 bg-primary transition-transform ease-out",
+            isMailBulkSelected && "translate-x-0",
+          )}
+        />
+        <div className="flex w-full items-center justify-between">
+          <div className="flex items-center gap-2">
+            <p
+              className={cn(
+                message.unread ? "font-bold" : "font-medium",
+                "text-md flex items-baseline gap-1 group-hover:opacity-100",
+              )}
+            >
+              <span className={cn(mail.selected && "max-w-[120px] truncate")}>
+                {highlightText(message.sender.name, searchValue.highlight)}
+              </span>{" "}
+              {message.totalReplies !== 1 ? (
+                <span className="ml-0.5 text-xs opacity-70">{message.totalReplies}</span>
+              ) : null}
+              {message.unread ? <span className="ml-0.5 size-2 rounded-full bg-skyBlue" /> : null}
+            </p>
+          </div>
+          {message.receivedOn ? (
+            <p
+              className={cn(
+                "text-xs font-normal opacity-70 transition-opacity group-hover:opacity-100",
+                isMailSelected && "opacity-100",
+              )}
+            >
+              {formatDate(message.receivedOn.split(".")[0] ?? '')}
+            </p>
+          ) : null}
+        </div>
+        <p
+          className={cn(
+            "mt-1 text-xs opacity-70 transition-opacity",
+            mail.selected ? "line-clamp-1" : "line-clamp-2",
+            isCompact && "line-clamp-1",
+            isMailSelected && "opacity-100",
+          )}
+        >
+          {highlightText(message.title, searchValue.highlight)}
+        </p>
+        {!isCompact && <MailLabels labels={message.tags} />}
+      </div>
+    </EmailContextMenu>
   );
 };
 

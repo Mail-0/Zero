@@ -23,6 +23,9 @@ interface MailManager {
   getUserInfo(tokens: IConfig["auth"]): Promise<any>;
   getScope(): string;
   markAsRead(id: string): Promise<void>;
+  modifyLabels(id: string, options: { addLabels: string[], removeLabels: string[] }): Promise<void>;
+  modifyThreadLabels(threadId: string, options: { addLabels: string[], removeLabels: string[] }): Promise<void>;
+  batchModifyLabels(ids: string[], options: { addLabels: string[], removeLabels: string[] }): Promise<void>;
 }
 
 interface IConfig {
@@ -122,6 +125,12 @@ const googleDriver = async (config: IConfig): Promise<MailManager> => {
     if (folder === "trash") {
       return { folder: undefined, q: `in:trash ${q}` };
     }
+    if (folder === "archive") {
+      return { folder: undefined, q: `(-in:inbox -in:trash -in:spam -in:draft) ${q}`.trim() };
+    }
+    if (folder === "spam") {
+      return { folder: undefined, q: `in:spam ${q}`.trim() };
+    }
     return { folder, q };
   };
   const gmail = google.gmail({ version: "v1", auth });
@@ -134,6 +143,86 @@ const googleDriver = async (config: IConfig): Promise<MailManager> => {
           removeLabelIds: ["UNREAD"],
         },
       });
+    },
+    modifyLabels: async (id: string, options: { addLabels: string[], removeLabels: string[] }) => {
+      await gmail.users.messages.modify({
+        userId: "me",
+        id,
+        requestBody: {
+          addLabelIds: options.addLabels,
+          removeLabelIds: options.removeLabels,
+        },
+      });
+    },
+    modifyThreadLabels: async (threadId: string, options: { addLabels: string[], removeLabels: string[] }) => {
+      console.log(`Driver: Modifying labels for all messages in thread: ${threadId}`);
+      console.log(`Driver: Adding labels: ${options.addLabels.join(', ')}`);
+      console.log(`Driver: Removing labels: ${options.removeLabels.join(', ')}`);
+      
+      try {
+        const thread = await gmail.users.threads.get({ 
+          userId: "me", 
+          id: threadId,
+          format: "minimal" // Only fetch basic info to save bandwidth
+        });
+        
+        if (!thread.data.messages || thread.data.messages.length === 0) {
+          console.log("Driver: No messages found in thread");
+          return;
+        }
+        
+        const messageIds = thread.data.messages.map(message => message.id as string);
+        console.log(`Driver: Found ${messageIds.length} messages in thread:`, messageIds);
+        
+        if (messageIds.length === 1) {
+          console.log("Driver: Only one message in thread, using single message modify");
+          await gmail.users.messages.modify({
+            userId: "me",
+            id: messageIds[0],
+            requestBody: {
+              addLabelIds: options.addLabels,
+              removeLabelIds: options.removeLabels,
+            },
+          });
+        } else {
+          console.log(`Driver: Modifying ${messageIds.length} messages in batch`);
+          await gmail.users.messages.batchModify({
+            userId: "me",
+            requestBody: {
+              ids: messageIds,
+              addLabelIds: options.addLabels,
+              removeLabelIds: options.removeLabels,
+            },
+          });
+        }
+        
+        console.log("Driver: Successfully modified labels for all messages in thread");
+      } catch (error) {
+        console.error("Driver: Error modifying thread labels:", error);
+        throw error;
+      }
+    },
+    batchModifyLabels: async (ids: string[], options: { addLabels: string[], removeLabels: string[] }) => {
+      if (!ids.length) return;
+      
+      console.log(`Driver: Batch modifying labels for ${ids.length} messages`);
+      console.log(`Driver: Adding labels: ${options.addLabels.join(', ')}`);
+      console.log(`Driver: Removing labels: ${options.removeLabels.join(', ')}`);
+      
+      try {
+        await gmail.users.messages.batchModify({
+          userId: "me",
+          requestBody: {
+            ids,
+            addLabelIds: options.addLabels,
+            removeLabelIds: options.removeLabels,
+          },
+        });
+        console.log("Driver: Successfully batch modified labels");
+      } catch (error) {
+        console.error("Driver: Error batch modifying labels:", error);
+        throw error;
+      }
     },
     getScope,
     getUserInfo: (tokens: { access_token: string; refresh_token: string }) => {
@@ -187,7 +276,7 @@ const googleDriver = async (config: IConfig): Promise<MailManager> => {
       const res = await gmail.users.threads.list({
         userId: "me",
         q: normalizedQ ? normalizedQ : undefined,
-        labelIds,
+        labelIds: labelIds.length > 0 ? labelIds : undefined,
         maxResults,
         pageToken: pageToken ? pageToken : undefined,
       });

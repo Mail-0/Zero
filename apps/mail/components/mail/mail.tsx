@@ -3,7 +3,7 @@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-import { AlignVerticalSpaceAround, ArchiveX, BellOff, SearchIcon, X } from "lucide-react";
+import { AlignVerticalSpaceAround, ArchiveX, BellOff, SearchIcon, X, Archive, BanIcon, InboxIcon } from "lucide-react";
 import { useState, useCallback, useMemo, useEffect, ReactNode } from "react";
 import { ThreadDisplay } from "@/components/mail/thread-display";
 import { useMediaQuery } from "../../hooks/use-media-query";
@@ -13,13 +13,15 @@ import { useMail } from "@/components/mail/use-mail";
 import { SidebarToggle } from "../ui/sidebar-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
 import { type Mail } from "@/components/mail/data";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useParams } from "next/navigation";
 import { useThreads } from "@/hooks/use-threads";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { SearchBar } from "./search-bar";
 import { cn } from "@/lib/utils";
+import { useMailMutation } from "@/hooks/use-mail-mutation";
+import { toast } from "sonner";
 
 interface MailProps {
   accounts: {
@@ -168,7 +170,7 @@ export function Mail({ folder }: MailProps) {
                             <TooltipContent>Clear Selection</TooltipContent>
                           </Tooltip>
                         </div>
-                        <BulkSelectActions />
+                        <BulkSelectActions selected={mail.bulkSelected} setSelected={(selected) => setMail({ ...mail, bulkSelected: selected })} />
                       </>
                     ) : (
                       <>
@@ -256,25 +258,145 @@ export function Mail({ folder }: MailProps) {
   );
 }
 
-function BulkSelectActions() {
+interface BulkSelectActionsProps {
+  selected: string[];
+  setSelected: (selected: string[]) => void;
+}
+
+function BulkSelectActions({ selected, setSelected }: BulkSelectActionsProps) {
+  const params = useParams();
+  const currentFolder = typeof params?.folder === 'string' ? params.folder : 'inbox';
+  
+  const { archiveMultiple, moveToSpamMultiple, moveToInboxMultiple } = useMailMutation(currentFolder);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleArchive = async () => {
+    if (selected.length === 0) return;
+    
+    setIsProcessing(true);
+    console.log(`BulkSelectActions: Archiving ${selected.length} items`, selected);
+    
+    try {
+      const success = await archiveMultiple(selected);
+      
+      if (success) {
+        toast.success(`${selected.length} ${selected.length === 1 ? 'item' : 'items'} archived`);
+        setSelected([]);
+      } else {
+        toast.error("Unable to archive some items. Items with SPAM label cannot be archived.");
+      }
+    } catch (error) {
+      console.error('Error archiving items:', error);
+      toast.error('Error archiving selected items');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleMoveToSpam = async () => {
+    if (selected.length === 0) return;
+    
+    setIsProcessing(true);
+    console.log(`BulkSelectActions: Moving ${selected.length} items to spam`, selected);
+    
+    try {
+      const success = await moveToSpamMultiple(selected);
+      
+      if (success) {
+        toast.success(`${selected.length} ${selected.length === 1 ? 'item' : 'items'} marked as spam`);
+        setSelected([]);
+      } else {
+        toast.error("Unable to mark some items as spam. Only items in inbox can be marked as spam.");
+      }
+    } catch (error) {
+      console.error('Error marking items as spam:', error);
+      toast.error('Error marking selected items as spam');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleMoveToInbox = async () => {
+    if (selected.length === 0) return;
+    
+    setIsProcessing(true);
+    console.log(`BulkSelectActions: Moving ${selected.length} items to inbox`, selected);
+    
+    try {
+      const success = await moveToInboxMultiple(selected);
+      
+      if (success) {
+        toast.success(`${selected.length} ${selected.length === 1 ? 'item' : 'items'} moved to inbox`);
+        setSelected([]);
+      } else {
+        toast.error("Failed to move some items to inbox");
+      }
+    } catch (error) {
+      console.error('Error moving items to inbox:', error);
+      toast.error('Error moving selected items to inbox');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const isSpamFolder = currentFolder === 'spam';
+  const isArchiveFolder = currentFolder === 'archive';
+
+  if (isArchiveFolder) {
+    return (
+      <div className="flex items-center gap-2 ml-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={handleMoveToInbox}
+          title="Move to inbox"
+          disabled={isProcessing}
+        >
+          <InboxIcon className="h-4 w-4" />
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex items-center gap-1.5">
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button variant="ghost" className="md:h-fit md:px-2">
-            <BellOff />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>Mute</TooltipContent>
-      </Tooltip>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button variant="ghost" className="md:h-fit md:px-2">
-            <ArchiveX />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>Move to Junk</TooltipContent>
-      </Tooltip>
+    <div className="flex items-center gap-2 ml-1">
+      {!isSpamFolder && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={handleArchive}
+          title="Archive"
+          disabled={isProcessing}
+        >
+          <Archive className="h-4 w-4" />
+        </Button>
+      )}
+      {!isSpamFolder && !isArchiveFolder && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={handleMoveToSpam}
+          title="Report spam"
+          disabled={isProcessing}
+        >
+          <BanIcon className="h-4 w-4" />
+        </Button>
+      )}
+      {isSpamFolder && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={handleMoveToInbox}
+          title="Move to inbox"
+          disabled={isProcessing}
+        >
+          <InboxIcon className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 }

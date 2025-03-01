@@ -66,7 +66,6 @@ export const navigationConfig: Record<string, NavConfig> = {
             title: "Archive",
             url: "/mail/archive",
             icon: ArchiveIcon,
-            disabled: true,
           },
           {
             title: "Social",

@@ -10,6 +10,7 @@ import {
   Maximize2,
   Minimize2,
   Check,
+  Inbox,
 } from "lucide-react";
 import { DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -25,6 +26,9 @@ import MailDisplay from "./mail-display";
 import { useMail } from "./use-mail";
 import { cn } from "@/lib/utils";
 import React from "react";
+import { useMailMutation } from "@/hooks/use-mail-mutation";
+import { toast } from "sonner";
+import { useParams } from "next/navigation";
 
 interface ThreadDisplayProps {
   mail: string | null;
@@ -36,6 +40,9 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
   const [, setMail] = useMail();
   const { data: emailData, isLoading } = useThread(mail ?? "");
   const [isMuted, setIsMuted] = useState(false);
+  const params = useParams();
+  const currentFolder = typeof params?.folder === 'string' ? params.folder : 'inbox';
+  const { archiveMail, moveToSpam, moveToInbox } = useMailMutation(currentFolder);
 
   const [copySuccess, setCopySuccess] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -72,6 +79,83 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
       }
     }
   };
+
+  const handleArchive = async () => {
+    if (!mail || !emailData || !emailData[0]) return;
+    
+    if (emailData[0].tags.includes('SPAM')) {
+      toast.error("Cannot archive emails with SPAM label");
+      return;
+    }
+    
+    try {
+      const mailId = mail.startsWith('thread:') ? mail : `thread:${emailData[0].threadId}`;
+      console.log(`Thread: Archiving email: ${mailId}`);
+      
+      const success = await archiveMail(mailId);
+      if (success) {
+        toast.success("Email archived");
+        handleClose();
+      } else {
+        throw new Error("Failed to archive email");
+      }
+    } catch (error) {
+      console.error("Error archiving email:", error);
+      toast.error("Error archiving email");
+    }
+  };
+
+  const handleMoveToSpam = async () => {
+    if (!mail || !emailData || !emailData[0]) return;
+    
+    if (!emailData[0].tags.includes('INBOX')) {
+      toast.error("Can only mark emails as spam from inbox");
+      return;
+    }
+    
+    try {
+      const mailId = mail.startsWith('thread:') ? mail : `thread:${emailData[0].threadId}`;
+      console.log(`Thread: Moving email to spam: ${mailId}`);
+      
+      const success = await moveToSpam(mailId);
+      if (success) {
+        toast.success("Email marked as spam");
+        handleClose();
+      } else {
+        throw new Error("Failed to mark email as spam");
+      }
+    } catch (error) {
+      console.error("Error marking email as spam:", error);
+      toast.error("Error marking email as spam");
+    }
+  };
+
+  const handleMoveToInbox = async () => {
+    if (!mail || !emailData || !emailData[0]) return;
+    
+    try {
+      const mailId = mail.startsWith('thread:') ? mail : `thread:${emailData[0].threadId}`;
+      console.log(`Thread: Moving email to inbox: ${mailId}`);
+      
+      const success = await moveToInbox(mailId);
+      if (success) {
+        toast.success("Email moved to inbox");
+        handleClose();
+      } else {
+        throw new Error("Failed to move email to inbox");
+      }
+    } catch (error) {
+      console.error("Error moving email to inbox:", error);
+      toast.error("Error moving email to inbox");
+    }
+  };
+
+  const canArchive = emailData && emailData[0] && !emailData[0].tags.includes('SPAM');
+  
+  const canMarkAsSpam = emailData && emailData[0] && emailData[0].tags.includes('INBOX');
+  
+  const isArchiveFolder = currentFolder === 'archive';
+  const isSpamFolder = currentFolder === 'spam';
 
   if (!emailData)
     return (
@@ -169,15 +253,38 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
               </TooltipTrigger>
               <TooltipContent>{copySuccess ? "Copied!" : "Copy email data"}</TooltipContent>
             </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" className="md:h-fit md:px-2" disabled={!emailData}>
-                  <Archive className="h-4 w-4" />
-                  <span className="sr-only">Archive</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Archive</TooltipContent>
-            </Tooltip>
+            {!isArchiveFolder && !isSpamFolder && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="md:h-fit md:px-2" 
+                    disabled={!emailData || !canArchive}
+                    onClick={handleArchive}
+                  >
+                    <Archive className="h-4 w-4" />
+                    <span className="sr-only">Archive</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Archive</TooltipContent>
+              </Tooltip>
+            )}
+            {(isArchiveFolder || isSpamFolder) && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="md:h-fit md:px-2" 
+                    disabled={!emailData}
+                    onClick={handleMoveToInbox}
+                  >
+                    <Inbox className="h-4 w-4" />
+                    <span className="sr-only">Move to inbox</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Move to inbox</TooltipContent>
+              </Tooltip>
+            )}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" className="md:h-fit md:px-2" disabled={!emailData}>
@@ -195,9 +302,19 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>
-                  <ArchiveX className="mr-2 h-4 w-4" /> Move to spam
-                </DropdownMenuItem>
+                {isSpamFolder ? (
+                  <DropdownMenuItem onClick={handleMoveToInbox}>
+                    <Inbox className="mr-2 h-4 w-4" /> Not spam
+                  </DropdownMenuItem>
+                ) : isArchiveFolder ? (
+                  <DropdownMenuItem onClick={handleMoveToInbox}>
+                    <Inbox className="mr-2 h-4 w-4" /> Move to inbox
+                  </DropdownMenuItem>
+                ) : canMarkAsSpam ? (
+                  <DropdownMenuItem onClick={handleMoveToSpam}>
+                    <ArchiveX className="mr-2 h-4 w-4" /> Move to spam
+                  </DropdownMenuItem>
+                ) : null}
                 <DropdownMenuItem>
                   <ReplyAll className="mr-2 h-4 w-4" /> Reply all
                 </DropdownMenuItem>
