@@ -152,7 +152,9 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
 
   const canArchive = emailData && emailData[0] && !emailData[0].tags.includes('SPAM');
   
-  const canMarkAsSpam = emailData && emailData[0] && emailData[0].tags.includes('INBOX');
+  const hasSentLabel = emailData && emailData.some(msg => msg.tags?.includes('SENT'));
+  
+  const canMarkAsSpam = emailData && emailData[0] && !emailData[0].tags.includes('SPAM') && !hasSentLabel;
   
   const isArchiveFolder = currentFolder === 'archive';
   const isSpamFolder = currentFolder === 'spam';

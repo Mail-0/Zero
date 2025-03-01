@@ -44,6 +44,7 @@ interface EmailContextMenuProps {
   threadId?: string;
   hasInboxLabel?: boolean;
   hasSpamLabel?: boolean;
+  hasSentLabel?: boolean;
   refreshCallback?: () => void;
 }
 
@@ -53,6 +54,7 @@ export function EmailContextMenu({
   threadId = emailId,
   hasInboxLabel = true,
   hasSpamLabel = false,
+  hasSentLabel = false,
   refreshCallback,
 }: EmailContextMenuProps) {
   const params = useParams();
@@ -165,6 +167,19 @@ export function EmailContextMenu({
           label: "Move to Inbox",
           icon: <Inbox className="mr-2.5 h-4 w-4" />,
           action: handleMoveToInbox,
+          disabled: false,
+        }
+      ];
+    }
+    
+    if (hasSentLabel) {
+      return [
+        {
+          id: "archive",
+          label: "Archive",
+          icon: <Archive className="mr-2.5 h-4 w-4" />,
+          shortcut: "E",
+          action: handleArchive,
           disabled: false,
         }
       ];

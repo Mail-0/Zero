@@ -133,6 +133,11 @@ export function useMailMutation(
       return false;
     }
     
+    if (tags.includes('SENT')) {
+      console.error("Cannot mark sent emails as spam");
+      return false;
+    }
+    
     console.log(`Moving ${isThreadId(emailId) ? 'thread' : 'email'} to spam: ${emailId}`);
     const success = await updateEmailLabels(emailId, ['SPAM'], ['INBOX']);
     
@@ -219,8 +224,27 @@ export function useMailMutation(
           return false;
         }
         
+        const filteredIds = await Promise.all(
+          ids.map(async (id) => {
+            const tags = await checkEmailTags(id);
+            const isSent = tags.includes('SENT');
+            return { id, isSent };
+          })
+        ).then(results => 
+          results.filter(item => !item.isSent).map(item => item.id)
+        );
+        
+        if (filteredIds.length === 0) {
+          console.log("No eligible emails to mark as spam (all are sent emails)");
+          return false;
+        }
+        
+        if (filteredIds.length !== ids.length) {
+          console.log(`Filtered out ${ids.length - filteredIds.length} sent emails from spam operation`);
+        }
+        
         const result = await batchUpdateLabels({
-          messageIds: ids,
+          messageIds: filteredIds,
           addLabels: ['SPAM'],
           removeLabels: ['INBOX']
         });
@@ -228,7 +252,7 @@ export function useMailMutation(
         if (result.success) {
           removeEmailsFromCache(currentFolder, ids);
           invalidateFolders(['inbox', 'spam']);
-          console.log(`Bulk move to spam completed successfully for ${ids.length} items`);
+          console.log(`Bulk move to spam completed successfully for ${filteredIds.length} items`);
           return true;
         } else {
           console.error('Error in bulk move to spam operation:', result.error);
@@ -239,7 +263,7 @@ export function useMailMutation(
         throw error;
       }
     },
-    [removeEmailsFromCache, invalidateFolders, currentFolder]
+    [removeEmailsFromCache, invalidateFolders, currentFolder, checkEmailTags]
   );
 
   const moveToInboxMultiple = useCallback(

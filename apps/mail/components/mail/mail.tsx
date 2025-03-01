@@ -269,6 +269,16 @@ function BulkSelectActions({ selected, setSelected }: BulkSelectActionsProps) {
   
   const { archiveMultiple, moveToSpamMultiple, moveToInboxMultiple } = useMailMutation(currentFolder);
   const [isProcessing, setIsProcessing] = useState(false);
+  const { data } = useThreads(currentFolder);
+  
+  const hasSentEmails = useMemo(() => {
+    if (!data?.threads) return false;
+    
+    return selected.some(selectedId => {
+      const thread = data.threads.find(thread => thread.id === selectedId);
+      return thread?.tags?.includes('SENT');
+    });
+  }, [selected, data]);
 
   const handleArchive = async () => {
     if (selected.length === 0) return;
@@ -373,16 +383,16 @@ function BulkSelectActions({ selected, setSelected }: BulkSelectActionsProps) {
           <Archive className="h-4 w-4" />
         </Button>
       )}
-      {!isSpamFolder && !isArchiveFolder && (
+      {!isSpamFolder && !isArchiveFolder && !hasSentEmails && (
         <Button
           variant="ghost"
           size="icon"
           className="h-7 w-7"
           onClick={handleMoveToSpam}
-          title="Report spam"
+          title="Mark as spam"
           disabled={isProcessing}
         >
-          <BanIcon className="h-4 w-4" />
+          <ArchiveX className="h-4 w-4" />
         </Button>
       )}
       {isSpamFolder && (

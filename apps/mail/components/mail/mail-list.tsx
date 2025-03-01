@@ -1,6 +1,6 @@
 "use client";
 
-import { ComponentProps, useCallback, useEffect, useRef, useState } from "react";
+import { ComponentProps, useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { preloadThread, useThreads } from "@/hooks/use-threads";
 import { EmptyState, type FolderType } from "@/components/mail/empty-state";
 import { useSearchValue } from "@/hooks/use-search-value";
@@ -236,6 +236,7 @@ const Thread = ({ message: initialMessage, selectMode, onSelect, isCompact }: Th
       emailId={message.id} 
       hasInboxLabel={message.tags.includes('INBOX')}
       hasSpamLabel={message.tags.includes('SPAM')}
+      hasSentLabel={message.tags.includes('SENT')}
     >
       <div
         onClick={handleMailClick}
@@ -339,12 +340,22 @@ export function MailList({ items: initialItems, isCompact, folder }: MailListPro
     }
   }, [data]);
 
+  const displayItems = useMemo(() => {
+    if (folder.toLowerCase() === 'inbox') {
+      return items.filter(item => !item.tags.includes('SENT'));
+    }
+    if (folder.toLowerCase() === 'sent') {
+      return items.filter(item => item.tags.includes('SENT'));
+    }
+    return items;
+  }, [items, folder]);
+
   const parentRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const itemHeight = isCompact ? 64 : 96;
 
   const virtualizer = useVirtualizer({
-    count: items.length,
+    count: displayItems.length,
     getScrollElement: () => scrollRef.current,
     estimateSize: () => itemHeight,
     overscan: 5,
