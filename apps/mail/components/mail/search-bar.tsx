@@ -33,7 +33,7 @@ function DateFilter({ date, setDate }: { date: DateRange; setDate: (date: DateRa
             className={cn(
               "justify-start text-left font-normal",
               !date && "text-muted-foreground",
-              "h-10 rounded-xl bg-muted/50",
+              "h-10 rounded-md bg-muted/50",
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
@@ -50,7 +50,7 @@ function DateFilter({ date, setDate }: { date: DateRange; setDate: (date: DateRa
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto rounded-xl p-0" align="start">
+        <PopoverContent className="w-auto rounded-md p-0" align="start">
           <Calendar
             initialFocus
             mode="range"
@@ -158,7 +158,7 @@ export function SearchBar() {
         <Input
           placeholder="Search"
           autoFocus
-          className="h-8 w-full rounded-[8px] border-none bg-muted/50 pl-9 pr-14 text-muted-foreground shadow-none ring-1 ring-muted transition-colors placeholder:text-muted-foreground/70 hover:bg-muted focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-ring"
+          className="h-8 w-full rounded-md border-none bg-muted/50 pl-9 pr-14 text-muted-foreground shadow-none ring-1 ring-muted transition-colors placeholder:text-muted-foreground/70 hover:bg-muted focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-ring"
           {...form.register("q")}
         />
         <div className="absolute right-2 flex items-center gap-1.5">
@@ -166,7 +166,7 @@ export function SearchBar() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-5 w-5 rounded-lg p-0 text-muted-foreground/70 transition-colors hover:bg-muted/50 hover:text-foreground"
+              className="h-5 w-5 rounded-md p-0 text-muted-foreground/70 transition-colors hover:bg-muted/50 hover:text-foreground"
               onClick={resetSearch}
             >
               <Trash2 className="h-4 w-4 text-inherit" aria-hidden="true" />
@@ -177,7 +177,7 @@ export function SearchBar() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-5 w-5 rounded-lg p-0 text-muted-foreground/70 transition-colors hover:bg-muted/50 hover:text-foreground"
+                className="h-5 w-5 rounded-md p-0 text-muted-foreground/70 transition-colors hover:bg-muted/50 hover:text-foreground"
               >
                 <SlidersHorizontal
                   className="h-4 w-4 text-inherit transition-colors"
@@ -186,7 +186,7 @@ export function SearchBar() {
               </Button>
             </PopoverTrigger>
             <PopoverContent
-              className="w-[min(calc(100vw-2rem),400px)] rounded-xl border bg-card/95 p-4 shadow-lg sm:w-[500px] md:w-[600px]"
+              className="w-[min(calc(100vw-2rem),400px)] rounded-md border bg-popover p-4 shadow-lg sm:w-[500px] md:w-[600px]"
               side="bottom"
               sideOffset={15}
               alignOffset={-8}
@@ -199,7 +199,7 @@ export function SearchBar() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-7 rounded-xl bg-muted/50 text-xs hover:bg-muted"
+                      className="h-7 rounded-md bg-muted/50 text-xs hover:bg-muted"
                       onClick={() => form.setValue("q", "is:unread")}
                     >
                       Unread
@@ -207,7 +207,7 @@ export function SearchBar() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-7 rounded-xl bg-muted/50 text-xs hover:bg-muted"
+                      className="h-7 rounded-md bg-muted/50 text-xs hover:bg-muted"
                       onClick={() => form.setValue("q", "has:attachment")}
                     >
                       Has Attachment
@@ -215,7 +215,7 @@ export function SearchBar() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-7 rounded-xl bg-muted/50 text-xs hover:bg-muted"
+                      className="h-7 rounded-md bg-muted/50 text-xs hover:bg-muted"
                       onClick={() => form.setValue("q", "is:starred")}
                     >
                       Starred
@@ -232,10 +232,10 @@ export function SearchBar() {
                       onValueChange={(value) => form.setValue("folder", value)}
                       value={form.watch("folder")}
                     >
-                      <SelectTrigger className="h-8 rounded-xl bg-muted/50 capitalize">
+                      <SelectTrigger className="h-8 rounded-md bg-muted/50 capitalize">
                         <SelectValue placeholder="All Mail" />
                       </SelectTrigger>
-                      <SelectContent className="rounded-xl">
+                      <SelectContent className="rounded-md">
                         {inboxes.map((inbox) => (
                           <SelectItem key={inbox} value={inbox} className="capitalize">
                             {inbox}
@@ -250,7 +250,7 @@ export function SearchBar() {
                     <Input
                       placeholder="Email subject"
                       {...form.register("subject")}
-                      className="h-8 rounded-xl bg-muted/50"
+                      className="h-8 rounded-md bg-muted/50"
                     />
                   </div>
 
@@ -260,7 +260,7 @@ export function SearchBar() {
                       <Input
                         placeholder="Sender"
                         {...form.register("from")}
-                        className="h-8 rounded-xl bg-muted/50"
+                        className="h-8 rounded-md bg-muted/50"
                       />
                     </div>
 
@@ -269,7 +269,7 @@ export function SearchBar() {
                       <Input
                         placeholder="Recipient"
                         {...form.register("to")}
-                        className="h-8 rounded-xl bg-muted/50"
+                        className="h-8 rounded-md bg-muted/50"
                       />
                     </div>
                   </div>
@@ -291,7 +291,7 @@ export function SearchBar() {
                     <Toggle
                       variant="outline"
                       size="sm"
-                      className="h-7 rounded-xl bg-muted/50 text-xs transition-colors data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:ring-1 data-[state=on]:ring-primary/20"
+                      className="h-7 rounded-md bg-muted/50 text-xs transition-colors data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:ring-1 data-[state=on]:ring-primary/20"
                       pressed={form.watch("category") === "primary"}
                       onPressedChange={(pressed) =>
                         form.setValue("category", pressed ? "primary" : "")
@@ -302,7 +302,7 @@ export function SearchBar() {
                     <Toggle
                       variant="outline"
                       size="sm"
-                      className="h-7 rounded-xl bg-muted/50 text-xs transition-colors data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:ring-1 data-[state=on]:ring-primary/20"
+                      className="h-7 rounded-md bg-muted/50 text-xs transition-colors data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:ring-1 data-[state=on]:ring-primary/20"
                       pressed={form.watch("category") === "updates"}
                       onPressedChange={(pressed) =>
                         form.setValue("category", pressed ? "updates" : "")
@@ -313,7 +313,7 @@ export function SearchBar() {
                     <Toggle
                       variant="outline"
                       size="sm"
-                      className="h-7 rounded-xl bg-muted/50 text-xs transition-colors data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:ring-1 data-[state=on]:ring-primary/20"
+                      className="h-7 rounded-md bg-muted/50 text-xs transition-colors data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:ring-1 data-[state=on]:ring-primary/20"
                       pressed={form.watch("category") === "promotions"}
                       onPressedChange={(pressed) =>
                         form.setValue("category", pressed ? "promotions" : "")
@@ -324,7 +324,7 @@ export function SearchBar() {
                     <Toggle
                       variant="outline"
                       size="sm"
-                      className="h-7 rounded-xl bg-muted/50 text-xs transition-colors data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:ring-1 data-[state=on]:ring-primary/20"
+                      className="h-7 rounded-md bg-muted/50 text-xs transition-colors data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:ring-1 data-[state=on]:ring-primary/20"
                       pressed={form.watch("category") === "social"}
                       onPressedChange={(pressed) =>
                         form.setValue("category", pressed ? "social" : "")
@@ -340,13 +340,13 @@ export function SearchBar() {
                     onClick={resetSearch}
                     variant="ghost"
                     size="sm"
-                    className="h-8 rounded-xl text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    className="h-8 rounded-md text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   >
                     Reset
                   </Button>
                   <Button
                     size="sm"
-                    className="h-8 rounded-xl bg-primary text-xs text-primary-foreground shadow-none transition-colors hover:bg-primary/90"
+                    className="h-8 rounded-md bg-primary text-xs text-primary-foreground shadow-none transition-colors hover:bg-primary/90"
                     type="submit"
                     onClick={() => setPopoverOpen(false)}
                   >

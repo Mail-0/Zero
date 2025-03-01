@@ -33,6 +33,7 @@ interface EmailState {
   attachments: File[];
   resetEditorKey: number;
   isAISidebarOpen: boolean;
+  isDragging: boolean;
 }
 
 type EmailAction =
@@ -45,6 +46,7 @@ type EmailAction =
   | { type: "REMOVE_ATTACHMENT"; payload: number }
   | { type: "RESET_EDITOR" }
   | { type: "TOGGLE_AI_SIDEBAR"; payload: boolean }
+  | { type: "SET_DRAGGING"; payload: boolean }
   | { type: "RESET_FORM" };
 
 function emailReducer(state: EmailState, action: EmailAction): EmailState {
@@ -77,6 +79,8 @@ function emailReducer(state: EmailState, action: EmailAction): EmailState {
       return { ...state, resetEditorKey: state.resetEditorKey + 1 };
     case "TOGGLE_AI_SIDEBAR":
       return { ...state, isAISidebarOpen: action.payload };
+    case "SET_DRAGGING":
+      return { ...state, isDragging: action.payload };
     case "RESET_FORM":
       return {
         ...state,
@@ -99,9 +103,10 @@ export function CreateEmail() {
     attachments: [],
     resetEditorKey: 0,
     isAISidebarOpen: false,
+    isDragging: false,
   });
 
-  const { toInput, toEmails, subjectInput, attachments, resetEditorKey, isAISidebarOpen } = state;
+  const { toInput, subjectInput, attachments, resetEditorKey, isAISidebarOpen, isDragging } = state;
 
   const [messageContent, setMessageContent] = useQueryState("body", {
     defaultValue: "",
@@ -172,8 +177,43 @@ export function CreateEmail() {
     }
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dispatch({ type: "SET_DRAGGING", payload: true });
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dispatch({ type: "SET_DRAGGING", payload: false });
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dispatch({ type: "SET_DRAGGING", payload: false });
+    
+    if (e.dataTransfer.files) {
+      dispatch({ type: "ADD_ATTACHMENTS", payload: Array.from(e.dataTransfer.files) });
+    }
+  };
+
   return (
-    <div className="bg-offsetLight dark:bg-offsetDark flex h-full flex-col overflow-hidden shadow-inner md:rounded-2xl md:border md:shadow-sm">
+    <div 
+      className="bg-offsetLight dark:bg-offsetDark flex h-full flex-col overflow-hidden shadow-inner md:rounded-2xl md:border md:shadow-sm relative"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {isDragging && (
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center border-2 border-dashed border-primary/30 rounded-2xl m-4">
+          <div className="flex flex-col items-center gap-2 text-muted-foreground">
+            <Paperclip className="h-12 w-12 text-muted-foreground" />
+            <p className="text-lg font-medium">Drop files to attach</p>
+          </div>
+        </div>
+      )}
       <div className="sticky top-0 z-10 flex items-center justify-between gap-1.5 p-2 transition-colors">
         <SidebarToggle className="h-fit px-2" />
       </div>
