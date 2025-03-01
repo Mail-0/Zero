@@ -216,12 +216,7 @@ function NavItem(item: NavItemProps & { href: string }) {
         item.isActive && "bg-subtleWhite text-accent-foreground dark:bg-subtleBlack",
       )}
     >
-      {item.icon && (
-        <item.icon
-          ref={!item.isBackButton ? iconRef : undefined}
-          className="relative mr-3 h-3 w-3.5"
-        />
-      )}
+      {item.icon && <item.icon ref={!item.isBackButton ? iconRef : undefined} className="" />}
       <p className="mt-0.5 text-[13px]">{item.title}</p>
       {stats && stats.find((stat) => stat.folder === item.title.toLowerCase()) && (
         <Badge className="ml-auto" variant="outline">

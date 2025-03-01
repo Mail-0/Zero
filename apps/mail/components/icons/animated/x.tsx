@@ -73,7 +73,6 @@ const XIcon = forwardRef<XIconHandle, HTMLAttributes<HTMLDivElement>>(
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="relative bottom-0.5"
         >
           <motion.path variants={pathVariants} animate={controls} d="M18 6 6 18" />
           <motion.path

@@ -126,7 +126,7 @@ export function CreateEmail() {
 
     if (!trimmedEmail) return;
 
-    if (toEmails.includes(trimmedEmail)) {
+    if (state.toEmails.includes(trimmedEmail)) {
       dispatch({ type: "SET_TO_INPUT", payload: "" });
       return;
     }
@@ -146,7 +146,7 @@ export function CreateEmail() {
   };
 
   const handleSendEmail = async () => {
-    if (!toEmails.length) {
+    if (!state.toEmails.length) {
       toast.error("Please enter at least one recipient email address");
       return;
     }
@@ -163,7 +163,7 @@ export function CreateEmail() {
 
     try {
       await sendEmail({
-        to: toEmails.join(","),
+        to: state.toEmails.join(","),
         subject: subjectInput,
         message: messageContent,
         attachments: attachments,
@@ -227,7 +227,7 @@ export function CreateEmail() {
                   To
                 </div>
                 <div className="group relative left-[2px] flex w-full flex-wrap items-center gap-1 rounded-md border border-none bg-transparent p-1 transition-all focus-within:border-none focus:outline-none">
-                  {toEmails.map((email, index) => (
+                  {state.toEmails.map((email, index) => (
                     <div
                       key={index}
                       className="bg-muted flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium"
@@ -247,15 +247,15 @@ export function CreateEmail() {
                   <input
                     type="email"
                     className="placeholder:text-muted-foreground text-md min-w-[120px] flex-1 bg-transparent placeholder:opacity-50 focus:outline-none"
-                    placeholder={toEmails.length ? "" : "luke@example.com"}
+                    placeholder={state.toEmails.length ? "" : "luke@example.com"}
                     value={toInput}
                     onChange={(e) => dispatch({ type: "SET_TO_INPUT", payload: e.target.value })}
                     onKeyDown={(e) => {
                       if ((e.key === "," || e.key === "Enter") && toInput.trim()) {
                         e.preventDefault();
                         handleAddEmail(toInput);
-                      } else if (e.key === "Backspace" && !toInput && toEmails.length > 0) {
-                        dispatch({ type: "REMOVE_EMAIL", payload: toEmails.length - 1 });
+                      } else if (e.key === "Backspace" && !toInput && state.toEmails.length > 0) {
+                        dispatch({ type: "REMOVE_EMAIL", payload: state.toEmails.length - 1 });
                       }
                     }}
                     onBlur={() => {
@@ -371,7 +371,7 @@ export function CreateEmail() {
               className="group relative w-9 overflow-hidden transition-all duration-200 hover:w-24"
               onClick={handleSendEmail}
               disabled={
-                !toEmails.length ||
+                !state.toEmails.length ||
                 !messageContent.trim() ||
                 messageContent === JSON.stringify(defaultValue)
               }

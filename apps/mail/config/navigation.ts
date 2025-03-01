@@ -178,11 +178,11 @@ export const navigationConfig: Record<string, NavConfig> = {
             url: "/settings/shortcuts",
             icon: KeyboardIcon,
           },
-          {
-            title: "Notifications",
-            url: "/settings/notifications",
-            icon: BellIcon,
-          },
+          // {
+          //   title: "Notifications",
+          //   url: "/settings/notifications",
+          //   icon: BellIcon,
+          // },
         ].map((item) => ({
           ...item,
           isSettingsPage: true,

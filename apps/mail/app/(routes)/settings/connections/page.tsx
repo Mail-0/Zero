@@ -41,20 +41,32 @@ export default function ConnectionsPage() {
 
   return (
     <div className="grid gap-6">
-      <SettingsCard title="Email Connections" description="Connect your email accounts to Mail0.">
+      <SettingsCard title="Email Connections" description="Connect your email accounts to Zero.">
         <div className="space-y-6">
           {isLoading ? (
-            <div className="grid gap-4">
-              {[...Array(2)].map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full rounded-xl" />
+            <div className="grid md:grid-cols-3 gap-4">
+              {[...Array(3)].map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between rounded-lg border p-4 bg-popover"
+                >
+                  <div className="flex min-w-0 items-center gap-4">
+                    <Skeleton className="h-12 w-12 rounded-lg" />
+                    <div className="flex-col gap-1 flex">
+                      <Skeleton className="h-4 w-full lg:w-32" />
+                      <Skeleton className="h-3 w-full lg:w-48" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-8 w-8 rounded-full ml-4" />
+                </div>
               ))}
             </div>
           ) : connections?.length ? (
-            <div className="grid gap-4">
+            <div className="grid md:grid-cols-3 gap-4">
               {connections.map((connection) => (
                 <div
                   key={connection.id}
-                  className="flex items-center justify-between rounded-xl border p-4"
+                  className="flex items-center justify-between rounded-lg border p-4 bg-popover"
                 >
                   <div className="flex min-w-0 items-center gap-4">
                     {connection.picture ? (
@@ -102,8 +114,6 @@ export default function ConnectionsPage() {
                             <div className="font-mono">{connection.email}</div>
                           </TooltipContent>
                         </Tooltip>
-                        <span className="bg-muted-foreground/30 h-1 w-1 shrink-0 rounded-full" />
-                        <span className="shrink-0">Connected</span>
                       </div>
                     </div>
                   </div>
@@ -112,7 +122,7 @@ export default function ConnectionsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="text-muted-foreground hover:text-primary shrink-0"
+                        className="text-muted-foreground hover:text-primary shrink-0 ml-4"
                       >
                         <Trash className="h-4 w-4" />
                       </Button>
@@ -141,9 +151,9 @@ export default function ConnectionsPage() {
 
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="w-full gap-2">
+              <Button className="max-w-64 w-full gap-2">
                 <Plus className="h-4 w-4" />
-                Add Email Account
+                Add Email
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">

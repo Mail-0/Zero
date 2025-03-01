@@ -51,7 +51,7 @@ function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
                   <SidebarToggle className="h-fit px-2" />
                 </div>
                 <ScrollArea className="h-[calc(100dvh-56px)] p-2 pt-0 md:h-[calc(100dvh-(8px+8px+14px+44px))]">
-                  <div className="p-4 md:p-6">{children}</div>
+                  <div className="p-2 md:p-3 md:pt-5">{children}</div>
                 </ScrollArea>
               </div>
             </ResizablePanel>

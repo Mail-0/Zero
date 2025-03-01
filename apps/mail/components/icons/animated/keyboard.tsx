@@ -83,7 +83,7 @@ const KeyboardIcon = forwardRef<KeyboardIconHandle, HTMLAttributes<HTMLDivElemen
 
     return (
       <div
-        className="flex cursor-pointer select-none items-center justify-center rounded-md p-2 transition-colors duration-200 hover:bg-accent"
+        className="flex cursor-pointer select-none items-center justify-center rounded-md transition-colors duration-200 hover:bg-accent"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         {...props}
@@ -98,6 +98,7 @@ const KeyboardIcon = forwardRef<KeyboardIconHandle, HTMLAttributes<HTMLDivElemen
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
+          
         >
           <rect width="20" height="16" x="2" y="4" rx="2" />
           <AnimatePresence>

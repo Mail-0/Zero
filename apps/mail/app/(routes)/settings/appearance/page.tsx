@@ -39,51 +39,14 @@ export default function AppearancePage() {
       <SettingsCard
         title="Appearance"
         description="Customize colors, fonts and view options."
-        footer={
-          <div className="flex justify-end">
-            <Button type="submit" form="appearance-form" disabled={isSaving}>
-              {isSaving ? "Saving..." : "Save changes"}
-            </Button>
-          </div>
-        }
       >
         <Form {...form}>
           <form id="appearance-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Theme</Label>
-                <ModeToggle className="w-full justify-start" />
+                <ModeToggle className="w-36 bg-popover" />
               </div>
-
-              <FormField
-                control={form.control}
-                name="inboxType"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <FormLabel>Inbox Layout</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="grid gap-4 sm:grid-cols-3"
-                      >
-                        <div className="flex items-center space-x-2 rounded-lg border p-4">
-                          <RadioGroupItem value="default" id="default" />
-                          <Label htmlFor="default">Default</Label>
-                        </div>
-                        <div className="flex items-center space-x-2 rounded-lg border p-4">
-                          <RadioGroupItem value="important" id="important" />
-                          <Label htmlFor="important">Important First</Label>
-                        </div>
-                        <div className="flex items-center space-x-2 rounded-lg border p-4">
-                          <RadioGroupItem value="unread" id="unread" />
-                          <Label htmlFor="unread">Unread First</Label>
-                        </div>
-                      </RadioGroup>
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
             </div>
           </form>
         </Form>

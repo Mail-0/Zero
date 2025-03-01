@@ -14,7 +14,7 @@ export default function ShortcutsPage() {
         title="Keyboard Shortcuts"
         description="View and customize keyboard shortcuts for quick actions."
         footer={
-          <div className="flex justify-between">
+          <div className="flex gap-4">
             <Button variant="outline">Reset to Defaults</Button>
             <Button>Save Changes</Button>
           </div>
@@ -34,7 +34,7 @@ export default function ShortcutsPage() {
 
 function Shortcut({ children, keys }: { children: ReactNode; keys: string[] }) {
   return (
-    <div className="flex items-center justify-between gap-2 rounded-lg border bg-card/50 p-2 text-sm text-muted-foreground">
+    <div className="flex items-center justify-between gap-2 rounded-lg border bg-popover p-2 text-sm text-muted-foreground">
       <span className="font-medium">{children}</span>
       <div className="flex select-none gap-1">
         {keys.map((key) => (
