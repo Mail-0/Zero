@@ -97,24 +97,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </div>
 
       <div
-        className="mb-4 ml-1.5 mt-auto cursor-pointer pl-1.5"
+        className="mb-4 ml-2 mt-auto cursor-pointer pl-1.5"
         onClick={toggleAISidebar}
         title="Open AI Assistant (Cmd+S)"
       >
-        <Image
-          src="/black-icon.svg"
-          alt="Mail0 Logo"
-          width={28}
-          height={28}
-          className="dark:hidden"
-        />
-        <Image
-          src="/white-icon.svg"
-          alt="Mail0 Logo"
-          width={28}
-          height={28}
-          className="hidden dark:block"
-        />
+        <div className="">
+          <Image
+            src="/white-icon.svg"
+            alt="Mail0 Logo"
+            width={28}
+            height={28}
+            className="hidden dark:block transition-transform duration-300 hover:rotate-90"
+          />
+          <Image
+            src="/black-icon.svg"
+            alt="Mail0 Logo"
+            width={28}
+            height={28}
+            className="dark:hidden transition-transform duration-300 hover:rotate-90"
+          />
+        </div>
       </div>
     </Sidebar>
   );
