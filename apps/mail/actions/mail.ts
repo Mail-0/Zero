@@ -175,7 +175,7 @@ export const updateLabels = async ({
   });
 
   try {
-    const normalizedId = emailId.startsWith('thread:') ? emailId.substring(7) : emailId;
+    const normalizedId = driver.normalizeId(emailId);
     
     if (addLabels.length > 0 || removeLabels.length > 0) {
       await driver.modifyLabels(normalizedId, {
@@ -231,8 +231,7 @@ export const updateThreadLabels = async ({
   });
 
   try {
-    const normalizedId = threadId.startsWith('thread:') ? threadId.substring(7) : threadId;
-    console.log(`Server: Using normalized thread ID: ${normalizedId}`);
+    const normalizedId = driver.normalizeId(threadId);
     
     if (addLabels.length > 0 || removeLabels.length > 0) {
       await driver.modifyThreadLabels(normalizedId, {
@@ -295,16 +294,7 @@ export const batchUpdateLabels = async ({
   });
 
   try {
-    const normalizedIds: string[] = [];
-    const threadIds: string[] = [];
-    
-    for (const id of messageIds) {
-      if (id.startsWith('thread:')) {
-        threadIds.push(id.substring(7));
-      } else {
-        normalizedIds.push(id);
-      }
-    }
+    const { normalizedIds, threadIds } = driver.normalizeIds(messageIds);
     
     if (normalizedIds.length > 0) {
       console.log(`Server: Batch updating ${normalizedIds.length} messages`);

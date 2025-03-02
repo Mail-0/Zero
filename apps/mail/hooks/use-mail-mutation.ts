@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useSWRConfig } from "swr";
 import { useSession } from "@/lib/auth-client";
 import { updateLabels, updateThreadLabels, batchUpdateLabels } from "@/actions/mail";
+import { FOLDERS, LABELS, getFolderTags } from "@/lib/utils";
 
 export type FolderType = 'inbox' | 'archive' | 'spam' | 'sent' | 'trash' | string;
 
@@ -91,17 +92,9 @@ export function useMailMutation(
     });
   }, [mutate, session?.user.id]);
   
-  const checkEmailTags = useCallback(async (emailId: string): Promise<string[]> => {
+  const checkEmailTags = useCallback((emailId: string): string[] => {
     try {
-      if (currentFolder === 'spam') {
-        return ['SPAM'];
-      } else if (currentFolder === 'inbox') {
-        return ['INBOX'];
-      } else if (currentFolder === 'archive') {
-        return [];
-      }
-      
-      return [];
+      return getFolderTags(currentFolder);
     } catch (error) {
       console.error('Error checking email tags:', error);
       return [];
@@ -109,14 +102,14 @@ export function useMailMutation(
   }, [currentFolder]);
   
   const archiveMail = useCallback(async (emailId: string) => {
-    const tags = await checkEmailTags(emailId);
-    if (tags.includes('SPAM')) {
+    const tags = checkEmailTags(emailId);
+    if (tags.includes(LABELS.SPAM)) {
       console.error("Cannot archive emails with SPAM label");
       return false;
     }
     
     console.log(`Archiving ${isThreadId(emailId) ? 'email' : 'thread'}: ${emailId}`);
-    const success = await updateEmailLabels(emailId, [], ['INBOX']);
+    const success = await updateEmailLabels(emailId, [], [LABELS.INBOX]);
     
     if (success) {
       removeEmailsFromCache(currentFolder, [emailId]);
@@ -127,19 +120,19 @@ export function useMailMutation(
   }, [updateEmailLabels, removeEmailsFromCache, invalidateFolders, currentFolder, checkEmailTags, isThreadId]);
   
   const moveToSpam = useCallback(async (emailId: string) => {
-    const tags = await checkEmailTags(emailId);
-    if (!tags.includes('INBOX') && currentFolder !== 'inbox') {
+    const tags = checkEmailTags(emailId);
+    if (!tags.includes(LABELS.INBOX) && currentFolder !== FOLDERS.INBOX) {
       console.error("Can only mark emails as spam from inbox");
       return false;
     }
     
-    if (tags.includes('SENT')) {
+    if (tags.includes(LABELS.SENT)) {
       console.error("Cannot mark sent emails as spam");
       return false;
     }
     
     console.log(`Moving ${isThreadId(emailId) ? 'thread' : 'email'} to spam: ${emailId}`);
-    const success = await updateEmailLabels(emailId, ['SPAM'], ['INBOX']);
+    const success = await updateEmailLabels(emailId, [LABELS.SPAM], [LABELS.INBOX]);
     
     if (success) {
       removeEmailsFromCache(currentFolder, [emailId]);
@@ -151,7 +144,7 @@ export function useMailMutation(
   
   const moveToInbox = useCallback(async (emailId: string) => {
     console.log(`Moving ${isThreadId(emailId) ? 'thread' : 'email'} to inbox: ${emailId}`);
-    const success = await updateEmailLabels(emailId, ['INBOX'], ['SPAM']);
+    const success = await updateEmailLabels(emailId, [LABELS.INBOX], [LABELS.SPAM]);
     
     if (success) {
       removeEmailsFromCache(currentFolder, [emailId]);
@@ -162,7 +155,7 @@ export function useMailMutation(
   }, [updateEmailLabels, removeEmailsFromCache, invalidateFolders, currentFolder, isThreadId]);
   
   const archiveEmails = useCallback(async (emailIds: string[]) => {
-    if (currentFolder === 'spam') {
+    if (currentFolder === FOLDERS.SPAM) {
       console.error("Cannot archive emails from spam folder");
       return false;
     }
@@ -175,7 +168,7 @@ export function useMailMutation(
   }, [archiveMail, currentFolder]);
 
   const moveEmailsToSpam = useCallback(async (emailIds: string[]) => {
-    if (currentFolder !== 'inbox') {
+    if (currentFolder !== FOLDERS.INBOX) {
       console.error("Can only mark emails as spam from inbox");
       return false;
     }
@@ -194,7 +187,7 @@ export function useMailMutation(
       try {
         const result = await batchUpdateLabels({
           messageIds: ids,
-          removeLabels: ['INBOX']
+          removeLabels: [LABELS.INBOX]
         });
         
         if (result.success) {
@@ -219,15 +212,15 @@ export function useMailMutation(
       console.log('Starting bulk move to spam operation for', ids.length, 'items');
       
       try {
-        if (currentFolder !== 'inbox') {
+        if (currentFolder !== FOLDERS.INBOX) {
           console.error("Can only mark emails as spam from inbox");
           return false;
         }
         
         const filteredIds = await Promise.all(
           ids.map(async (id) => {
-            const tags = await checkEmailTags(id);
-            const isSent = tags.includes('SENT');
+            const tags = checkEmailTags(id);
+            const isSent = tags.includes(LABELS.SENT);
             return { id, isSent };
           })
         ).then(results => 
@@ -245,8 +238,8 @@ export function useMailMutation(
         
         const result = await batchUpdateLabels({
           messageIds: filteredIds,
-          addLabels: ['SPAM'],
-          removeLabels: ['INBOX']
+          addLabels: [LABELS.SPAM],
+          removeLabels: [LABELS.INBOX]
         });
         
         if (result.success) {
@@ -273,8 +266,8 @@ export function useMailMutation(
       try {
         const result = await batchUpdateLabels({
           messageIds: ids,
-          addLabels: ['INBOX'],
-          removeLabels: ['SPAM']
+          addLabels: [LABELS.INBOX],
+          removeLabels: [LABELS.SPAM]
         });
         
         if (result.success) {

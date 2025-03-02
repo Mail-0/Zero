@@ -26,7 +26,28 @@ interface MailManager {
   modifyLabels(id: string, options: { addLabels: string[], removeLabels: string[] }): Promise<void>;
   modifyThreadLabels(threadId: string, options: { addLabels: string[], removeLabels: string[] }): Promise<void>;
   batchModifyLabels(ids: string[], options: { addLabels: string[], removeLabels: string[] }): Promise<void>;
+  normalizeId(id: string): string;
+  normalizeIds(ids: string[]): { normalizedIds: string[], threadIds: string[] };
 }
+
+export const normalizeId = (id: string): string => {
+  return id.startsWith('thread:') ? id.substring(7) : id;
+};
+
+export const normalizeIds = (ids: string[]): { normalizedIds: string[], threadIds: string[] } => {
+  const normalizedIds: string[] = [];
+  const threadIds: string[] = [];
+  
+  for (const id of ids) {
+    if (id.startsWith('thread:')) {
+      threadIds.push(id.substring(7));
+    } else {
+      normalizedIds.push(id);
+    }
+  }
+  
+  return { normalizedIds, threadIds };
+};
 
 interface IConfig {
   auth?: {
@@ -361,6 +382,8 @@ const googleDriver = async (config: IConfig): Promise<MailManager> => {
       const res = await gmail.users.messages.delete({ userId: "me", id });
       return res.data;
     },
+    normalizeId,
+    normalizeIds,
   };
 };
 
