@@ -48,6 +48,9 @@ export default function Hero() {
   }, []);
 
   const onSubmit = async (values: z.infer<typeof betaSignupSchema>) => {
+    if (!token) {
+      return toast.error("Please complete the captcha before submitting");
+    }
     setIsSubmitting(true);
     try {
       console.log("Starting form submission with email:", values.email);
@@ -159,11 +162,7 @@ export default function Hero() {
               </form>
             </Form>
           )}
-
-          {!showSuccess && (
-            <Turnstile siteKey={process.env.TURNSTILE_SITE_KEY!} onSuccess={setToken} />
-          )}
-
+          <Turnstile siteKey={process.env.TURNSTILE_SITE_KEY!} onSuccess={setToken} />
           {signupCount !== null && (
             <div className="text-shinyGray mt-4 text-center text-sm">
               <span className="font-semibold text-white">
