@@ -3,7 +3,6 @@
 import { ComponentProps, useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { preloadThread, useThreads } from "@/hooks/use-threads";
 import { EmptyState, type FolderType } from "@/components/mail/empty-state";
-import { preloadThread, useThreads } from "@/hooks/use-threads";
 import { useSearchValue } from "@/hooks/use-search-value";
 import { markAsRead, markAsUnread } from "@/actions/mail";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -15,7 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { cn, formatDate } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { InitialThread } from "@/types";
-import { markAsRead } from "@/actions/mail";
 import { EmailContextMenu } from "./email-context-menu";
 import { toast } from "sonner";
 
