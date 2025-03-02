@@ -74,7 +74,7 @@ const sections = [
     title: "Our Commitment to Privacy",
     content: (
       <p>
-        At Mail0.io, we believe that privacy is a fundamental right. Our open-source email solution
+        At Zero, we believe that privacy is a fundamental right. Our open-source email solution
         is built with privacy at its core, and we&apos;re committed to being transparent about how
         we handle your data.
       </p>
@@ -84,7 +84,7 @@ const sections = [
     title: "Google Account Integration",
     content: (
       <>
-        <p className="mb-4">When you use Mail0.io with your Google Account:</p>
+        <p className="mb-4">When you use Zero with your Google Account:</p>
         <ul className="ml-4 list-disc space-y-2">
           <li>We request access to your Gmail data only after receiving your explicit consent</li>
           <li>We access only the necessary Gmail API scopes required for email functionality</li>
@@ -122,7 +122,7 @@ const sections = [
           <h3 className="mb-3 text-lg font-medium">Self-Hosted Instances</h3>
           <ul className="ml-4 list-disc space-y-2">
             <li>
-              When you self-host Mail0.io, your email data remains entirely under your control
+              When you self-host Zero, your email data remains entirely under your control
             </li>
             <li>No data is sent to our servers or third parties without your explicit consent</li>
             <li>You maintain complete ownership and responsibility for your data</li>
@@ -154,7 +154,7 @@ const sections = [
               We access the following Google user data: email content, attachments, and metadata
               through Gmail API
             </li>
-            <li>This data is used exclusively for providing email functionality within Mail0.io</li>
+            <li>This data is used exclusively for providing email functionality within Zero</li>
             <li>No Google user data is used for advertising or marketing purposes</li>
             <li>We maintain detailed logs of all data access for security and compliance</li>
           </ul>

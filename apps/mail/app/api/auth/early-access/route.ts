@@ -97,6 +97,7 @@ export async function POST(req: NextRequest) {
       });
 
       if (pgError.code === "23505") {
+        // Return 200 for existing emails
         return NextResponse.json(
           { message: "Email already registered for early access" },
           {
@@ -112,6 +113,8 @@ export async function POST(req: NextRequest) {
 
       throw err;
     }
+
+    // This line is now unreachable due to the returns in the try/catch above
   } catch (error) {
     console.error("Early access registration error:", {
       error,

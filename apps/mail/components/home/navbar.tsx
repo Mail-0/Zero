@@ -25,10 +25,9 @@ export default function Navbar() {
       <Image src="/white-icon.svg" alt="Mail0" className="h-9 w-9" width={180} height={180} />
 
       {/* Desktop Navigation */}
-      <div className="absolute left-1/2 hidden -translate-x-1/2 gap-10 text-sm text-muted-foreground lg:flex">
+      <div className="text-muted-foreground absolute left-1/2 hidden -translate-x-1/2 gap-10 text-sm lg:flex">
         <Link href="/">About us</Link>
         <Link href="https://github.com/nizzyabi/Mail0">Github</Link>
-        <Link href="/">Pricing</Link>
         <Link href="/privacy">Privacy</Link>
       </div>
 
@@ -36,7 +35,7 @@ export default function Navbar() {
       <div className="lg:hidden">
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild className="cursor-pointer">
-            <Menu className="h-9 w-9 rounded-md p-2 hover:bg-accent" />
+            <Menu className="hover:bg-accent h-9 w-9 rounded-md p-2" />
           </SheetTrigger>
           <SheetContent
             side="top"
@@ -57,23 +56,24 @@ export default function Navbar() {
                   height={180}
                 />
                 <SheetTrigger asChild>
-                  <X className="h-9 w-9 cursor-pointer rounded-md p-2 hover:bg-accent" />
+                  <X className="hover:bg-accent h-9 w-9 cursor-pointer rounded-md p-2" />
                 </SheetTrigger>
               </div>
               <div className="mt-7 space-y-4 px-3">
-                <Button variant="outline" className="w-full bg-black" asChild>
+                {/* <Button variant="outline" className="w-full bg-black" asChild>
                   <Link href="/login">Log In</Link>
                 </Button>
                 <Button className="w-full" asChild>
                   <Link href="/login">Sign Up</Link>
+                </Button> */}
+                <Button className="w-full" asChild>
+                  <Link href="https://cal.com/team/0/chat">Contact Us</Link>
                 </Button>
               </div>
               <div className="mt-6 flex flex-col space-y-8 bg-gradient-to-r from-gray-300 via-gray-100 to-gray-200 bg-clip-text px-3 text-lg text-transparent transition-opacity hover:opacity-80">
                 <Link href="/">About us</Link>
 
                 <Link href="https://github.com/nizzyabi/Mail0">Github</Link>
-
-                <Link href="/">Pricing</Link>
 
                 <Link href="/privacy">Privacy</Link>
               </div>
@@ -96,7 +96,11 @@ export default function Navbar() {
             </Button>
           </div>
         </>
-      ) : null}
+      ) : (
+        <Button className="hidden h-[32px] w-[110px] rounded-md lg:flex" asChild>
+          <Link href="https://cal.com/team/0/chat">Contact Us</Link>
+        </Button>
+      )}
     </div>
   );
 }
