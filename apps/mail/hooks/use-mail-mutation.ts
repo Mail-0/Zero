@@ -92,17 +92,8 @@ export function useMailMutation(
     });
   }, [mutate, session?.user.id]);
   
-  const checkEmailTags = useCallback((emailId: string): string[] => {
-    try {
-      return getFolderTags(currentFolder);
-    } catch (error) {
-      console.error('Error checking email tags:', error);
-      return [];
-    }
-  }, [currentFolder]);
-  
   const archiveMail = useCallback(async (emailId: string) => {
-    const tags = checkEmailTags(emailId);
+    const tags = getFolderTags(currentFolder);
     if (tags.includes(LABELS.SPAM)) {
       console.error("Cannot archive emails with SPAM label");
       return false;
@@ -117,10 +108,10 @@ export function useMailMutation(
     }
     
     return success;
-  }, [updateEmailLabels, removeEmailsFromCache, invalidateFolders, currentFolder, checkEmailTags, isThreadId]);
+  }, [updateEmailLabels, removeEmailsFromCache, invalidateFolders, currentFolder, isThreadId]);
   
   const moveToSpam = useCallback(async (emailId: string) => {
-    const tags = checkEmailTags(emailId);
+    const tags = getFolderTags(currentFolder);
     if (!tags.includes(LABELS.INBOX) && currentFolder !== FOLDERS.INBOX) {
       console.error("Can only mark emails as spam from inbox");
       return false;
@@ -140,7 +131,7 @@ export function useMailMutation(
     }
     
     return success;
-  }, [updateEmailLabels, removeEmailsFromCache, invalidateFolders, currentFolder, checkEmailTags, isThreadId]);
+  }, [updateEmailLabels, removeEmailsFromCache, invalidateFolders, currentFolder, isThreadId]);
   
   const moveToInbox = useCallback(async (emailId: string) => {
     console.log(`Moving ${isThreadId(emailId) ? 'thread' : 'email'} to inbox: ${emailId}`);
@@ -219,7 +210,7 @@ export function useMailMutation(
         
         const filteredIds = await Promise.all(
           ids.map(async (id) => {
-            const tags = checkEmailTags(id);
+            const tags = getFolderTags(currentFolder);
             const isSent = tags.includes(LABELS.SENT);
             return { id, isSent };
           })
@@ -256,7 +247,7 @@ export function useMailMutation(
         throw error;
       }
     },
-    [removeEmailsFromCache, invalidateFolders, currentFolder, checkEmailTags]
+    [removeEmailsFromCache, invalidateFolders, currentFolder]
   );
 
   const moveToInboxMultiple = useCallback(
