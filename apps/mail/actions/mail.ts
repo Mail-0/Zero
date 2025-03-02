@@ -83,7 +83,7 @@ export const getMail = async ({ id }: { id: string }) => {
   return await driver.get(id);
 };
 
-export const markAsRead = async ({ id }: { id: string }) => {
+export const markAsRead = async ({ ids }: { ids: string[] }) => {
   const headersList = await headers();
   const session = await auth.api.getSession({ headers: headersList });
 
@@ -109,9 +109,45 @@ export const markAsRead = async ({ id }: { id: string }) => {
   });
 
   try {
-    await driver.markAsRead(id);
+    await driver.markAsRead(ids);
+    return { success: true };
   } catch (error) {
     console.error("Error marking message as read:", error);
+    return { success: false };
+  }
+};
+
+export const markAsUnread = async ({ ids }: { ids: string[] }) => {
+  const headersList = await headers();
+  const session = await auth.api.getSession({ headers: headersList });
+
+  if (!session || !session.connectionId) {
+    throw new Error("Unauthorized, reconnect");
+  }
+
+  const [_connection] = await db
+    .select()
+    .from(connection)
+    .where(and(eq(connection.userId, session.user.id), eq(connection.id, session.connectionId)));
+
+  if (!_connection?.accessToken || !_connection.refreshToken) {
+    throw new Error("Unauthorized, reconnect");
+  }
+
+  const driver = await createDriver(_connection.providerId, {
+    // Assuming "google" is the provider ID
+    auth: {
+      access_token: _connection.accessToken,
+      refresh_token: _connection.refreshToken,
+    },
+  });
+
+  try {
+    await driver.markAsUnread(ids);
+    return { success: true };
+  } catch (error) {
+    console.error("Error marking message as unread:", error);
+    return { success: false };
   }
 };
 

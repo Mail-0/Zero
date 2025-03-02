@@ -21,7 +21,8 @@ export interface MailManager {
   ): Promise<{ tokens: { access_token?: any; refresh_token?: any; expiry_date?: number } }>;
   getUserInfo(tokens: IConfig["auth"]): Promise<any>;
   getScope(): string;
-  markAsRead(id: string): Promise<void>;
+  markAsRead(id: string[]): Promise<void>;
+  markAsUnread(id: string[]): Promise<void>;
   modifyLabels(id: string, options: { addLabels: string[], removeLabels: string[] }): Promise<void>;
   modifyThreadLabels(threadId: string, options: { addLabels: string[], removeLabels: string[] }): Promise<void>;
   batchModifyLabels(ids: string[], options: { addLabels: string[], removeLabels: string[] }): Promise<void>;

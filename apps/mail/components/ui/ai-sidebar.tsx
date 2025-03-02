@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { X, MessageSquare } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { AIChat } from "@/components/create/ai-chat";
+import { Button } from "@/components/ui/button";
+import { X, MessageSquare } from "lucide-react";
+import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 import Image from "next/image";
 
 interface AISidebarProps {
@@ -13,6 +13,7 @@ interface AISidebarProps {
 
 // Create a context to manage the AI sidebar state globally
 import { createContext, useContext } from "react";
+import { useHotKey } from "@/hooks/use-hot-key";
 
 type AISidebarContextType = {
   open: boolean;
@@ -32,13 +33,13 @@ export function useAISidebar() {
 
 export function AISidebarProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
-  
-  const toggleOpen = () => setOpen(prev => !prev);
-  
+
+  const toggleOpen = () => setOpen((prev) => !prev);
+
   return (
     <AISidebarContext.Provider value={{ open, setOpen, toggleOpen }}>
       {children}
-      <AISidebar />
+      {/* <AISidebar /> */}
     </AISidebarContext.Provider>
   );
 }
@@ -46,34 +47,26 @@ export function AISidebarProvider({ children }: { children: React.ReactNode }) {
 export function AISidebar({ className }: AISidebarProps) {
   const { open, setOpen } = useAISidebar();
 
-  // Global keyboard shortcut to open sidebar (Command+S)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
-        e.preventDefault();
-        setOpen(!open);
-      } else if (e.key === "Escape" && open) {
-        setOpen(false);
-      }
-    };
+  useHotKey("Meta+0", () => {
+    setOpen(!open);
+  });
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, setOpen]);
+  useHotKey("Control+0", () => {
+    setOpen(!open);
+  });
 
   return (
     <>
-      {/* Floating sidebar */}
       <aside
         className={cn(
-          "fixed my-2 mr-2 inset-y-4 right-4 z-40",
-          "w-[400px] bg-background",
+          "fixed inset-y-4 right-4 z-40 my-2 mr-2",
+          "bg-background w-[400px]",
           "rounded-xl border shadow-lg",
           "transition-all duration-300 ease-in-out",
           "flex flex-col",
           "bg-offsetLight dark:bg-offsetDark overflow-y-auto",
           open ? "translate-x-0 opacity-100" : "translate-x-full opacity-0",
-          className
+          className,
         )}
       >
         <div className="flex h-full flex-col">
@@ -91,12 +84,7 @@ export function AISidebar({ className }: AISidebarProps) {
             <div className="flex flex-1 flex-col items-center justify-center gap-4">
               <div className="relative h-20 w-20">
                 <Image src="/black-icon.svg" alt="Zero Logo" fill className="dark:hidden" />
-                <Image
-                  src="/white-icon.svg"
-                  alt="Zero Logo"
-                  fill
-                  className="hidden dark:block"
-                />
+                <Image src="/white-icon.svg" alt="Zero Logo" fill className="hidden dark:block" />
               </div>
               <p className="animate-shine mt-2 hidden bg-gradient-to-r from-neutral-500 via-neutral-300 to-neutral-500 bg-[length:200%_100%] bg-clip-text text-lg text-transparent opacity-50 md:block">
                 Ask Zero a question...

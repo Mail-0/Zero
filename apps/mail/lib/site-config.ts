@@ -1,9 +1,8 @@
 import { Metadata } from "next";
 
-const TITLE = "0 Email";
-const DESCRIPTION = "An Open Source Gmail Alternative.";
-
-const BASE_URL = "https://mail0.io";
+const TITLE = "0";
+const DESCRIPTION =
+  "Experience email the way you want with 0 - the first open source email app that puts your privacy and safety first.";
 
 export const siteConfig: Metadata = {
   title: TITLE,
@@ -11,12 +10,23 @@ export const siteConfig: Metadata = {
   icons: {
     icon: "/favicon.ico",
   },
-  applicationName: "0 Email",
-  creator: "Open Source Developers",
-
-  category: "AU",
+  applicationName: "0",
+  creator: "@nizzyabi @bruvimtired @ripgrim @user12224 @praashh @mrgsub",
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    images: [
+      {
+        url: `${process.env.NEXT_PUBLIC_APP_URL}/api/og/home`,
+        width: 1200,
+        height: 630,
+        alt: TITLE,
+      },
+    ],
+  },
+  category: "Email Client",
   alternates: {
-    canonical: BASE_URL,
+    canonical: process.env.NEXT_PUBLIC_APP_URL,
   },
   keywords: [
     "Mail",
@@ -40,5 +50,5 @@ export const siteConfig: Metadata = {
     "Email Service",
     "Web Application",
   ],
-  metadataBase: new URL(BASE_URL),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL!),
 };

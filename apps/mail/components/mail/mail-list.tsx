@@ -3,11 +3,13 @@
 import { ComponentProps, useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { preloadThread, useThreads } from "@/hooks/use-threads";
 import { EmptyState, type FolderType } from "@/components/mail/empty-state";
+import { preloadThread, useThreads } from "@/hooks/use-threads";
 import { useSearchValue } from "@/hooks/use-search-value";
+import { markAsRead, markAsUnread } from "@/actions/mail";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useKeyPressed } from "@/hooks/use-key-pressed";
 import { useMail } from "@/components/mail/use-mail";
+import { useHotKey } from "@/hooks/use-hot-key";
 import { useSession } from "@/lib/auth-client";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatDate } from "@/lib/utils";
@@ -15,6 +17,7 @@ import { useIsMobile } from "@/hooks/use-is-mobile";
 import { InitialThread } from "@/types";
 import { markAsRead } from "@/actions/mail";
 import { EmailContextMenu } from "./email-context-menu";
+import { toast } from "sonner";
 
 interface MailListProps {
   items: InitialThread[];
@@ -24,7 +27,7 @@ interface MailListProps {
 
 const HOVER_DELAY = 300; // ms before prefetching
 
-type MailSelectMode = "mass" | "range" | "single";
+type MailSelectMode = "mass" | "range" | "single" | "selectAllBelow";
 
 type ThreadProps = {
   message: InitialThread;
@@ -59,7 +62,7 @@ const Thread = ({ message: initialMessage, selectMode, onSelect, isCompact }: Th
       return i % 2 === 1 ? (
         <span
           key={i}
-          className="ring-0.5 inline-flex items-center justify-center rounded bg-primary/10 px-1"
+          className="ring-0.5 bg-primary/10 inline-flex items-center justify-center rounded px-1"
         >
           {part}
         </span>
@@ -80,10 +83,10 @@ const Thread = ({ message: initialMessage, selectMode, onSelect, isCompact }: Th
     }
     
     onSelect(message);
-    if (!isMailSelected && message.unread) {
+    if (!selectMode && !isMailSelected && message.unread) {
       try {
         setMessage((prev) => ({ ...prev, unread: false }));
-        await markAsRead({ id: message.id });
+        await markAsRead({ ids: [message.id] });
       } catch (error) {
         console.error("Error marking message as read:", error);
       }
@@ -358,8 +361,9 @@ export function MailList({ items: initialItems, isCompact, folder }: MailListPro
     count: displayItems.length,
     getScrollElement: () => scrollRef.current,
     estimateSize: () => itemHeight,
-    overscan: 5,
   });
+
+  const virtualItems = virtualizer.getVirtualItems();
 
   const handleScroll = useCallback(
     (e: React.UIEvent<HTMLDivElement>) => {
@@ -378,10 +382,186 @@ export function MailList({ items: initialItems, isCompact, folder }: MailListPro
     [hasMore, isLoading, data?.nextPageToken, itemHeight],
   );
 
-  const massSelectMode = useKeyPressed(["Control", "Meta"]);
-  const rangeSelectMode = useKeyPressed("Shift");
+  const [massSelectMode, setMassSelectMode] = useState(false);
+  const [rangeSelectMode, setRangeSelectMode] = useState(false);
+  const [selectAllBelowMode, setSelectAllBelowMode] = useState(false);
 
-  const selectMode: MailSelectMode = massSelectMode ? "mass" : rangeSelectMode ? "range" : "single";
+  const selectAll = useCallback(() => {
+    // If there are already items selected, deselect them all
+    if (mail.bulkSelected.length > 0) {
+      setMail((prev) => ({
+        ...prev,
+        bulkSelected: [],
+      }));
+      toast.success("Deselected all emails");
+    }
+    // Otherwise select all items
+    else if (items.length > 0) {
+      const allIds = items.map((item) => item.id);
+      setMail((prev) => ({
+        ...prev,
+        bulkSelected: allIds,
+      }));
+      toast.success(`Selected ${allIds.length} emails`);
+    } else {
+      toast.info("No emails to select");
+    }
+  }, [items, setMail, mail.bulkSelected]);
+
+  const resetSelectMode = () => {
+    setMassSelectMode(false);
+    setRangeSelectMode(false);
+    setSelectAllBelowMode(false);
+  };
+
+  useHotKey("Control", () => {
+    resetSelectMode();
+    setMassSelectMode(true);
+  });
+
+  useHotKey("Meta", () => {
+    resetSelectMode();
+    setMassSelectMode(true);
+  });
+
+  useHotKey("Shift", () => {
+    resetSelectMode();
+    setRangeSelectMode(true);
+  });
+
+  useHotKey("Alt+Shift", () => {
+    resetSelectMode();
+    setSelectAllBelowMode(true);
+  });
+
+  useHotKey("Meta+Shift+u", async () => {
+    resetSelectMode();
+    const res = await markAsUnread({ ids: mail.bulkSelected });
+    if (res.success) {
+      toast.success("Marked as unread");
+      setMail((prev) => ({
+        ...prev,
+        bulkSelected: [],
+      }));
+    } else toast.error("Failed to mark as unread");
+  });
+
+  useHotKey("Control+Shift+u", async () => {
+    resetSelectMode();
+    const res = await markAsUnread({ ids: mail.bulkSelected });
+    if (res.success) {
+      toast.success("Marked as unread");
+      setMail((prev) => ({
+        ...prev,
+        bulkSelected: [],
+      }));
+    } else toast.error("Failed to mark as unread");
+  });
+
+  useHotKey("Meta+Shift+i", async () => {
+    resetSelectMode();
+    const res = await markAsRead({ ids: mail.bulkSelected });
+    if (res.success) {
+      toast.success("Marked as read");
+      setMail((prev) => ({
+        ...prev,
+        bulkSelected: [],
+      }));
+    } else toast.error("Failed to mark as read");
+  });
+
+  useHotKey("Control+Shift+i", async () => {
+    resetSelectMode();
+    const res = await markAsRead({ ids: mail.bulkSelected });
+    if (res.success) {
+      toast.success("Marked as read");
+      setMail((prev) => ({
+        ...prev,
+        bulkSelected: [],
+      }));
+    } else toast.error("Failed to mark as read");
+  });
+
+  // useHotKey("Meta+Shift+j", async () => {
+  //   resetSelectMode();
+  //   const res = await markAsJunk({ ids: mail.bulkSelected });
+  //   if (res.success) toast.success("Marked as junk");
+  //   else toast.error("Failed to mark as junk");
+  // });
+
+  // useHotKey("Control+Shift+j", async () => {
+  //   resetSelectMode();
+  //   const res = await markAsJunk({ ids: mail.bulkSelected });
+  //   if (res.success) toast.success("Marked as junk");
+  //   else toast.error("Failed to mark as junk");
+  // });
+
+  useHotKey("Meta+a", async (event) => {
+    // @ts-expect-error
+    event.preventDefault();
+    resetSelectMode();
+    selectAll();
+  });
+
+  useHotKey("Control+a", async (event) => {
+    // @ts-expect-error
+    event.preventDefault();
+    resetSelectMode();
+    selectAll();
+  });
+
+  useHotKey("Meta+n", async (event) => {
+    // @ts-expect-error
+    event.preventDefault();
+    resetSelectMode();
+    selectAll();
+  });
+
+  useHotKey("Control+n", async (event) => {
+    // @ts-expect-error
+    event.preventDefault();
+    resetSelectMode();
+    selectAll();
+  });
+
+  useEffect(() => {
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === "Control" || e.key === "Meta") {
+        setMassSelectMode(false);
+      }
+      if (e.key === "Shift") {
+        setRangeSelectMode(false);
+      }
+      if (e.key === "Alt") {
+        setSelectAllBelowMode(false);
+      }
+    };
+
+    const handleBlur = () => {
+      setMassSelectMode(false);
+      setRangeSelectMode(false);
+      setSelectAllBelowMode(false);
+    };
+
+    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("blur", handleBlur);
+
+    return () => {
+      window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("blur", handleBlur);
+      setMassSelectMode(false);
+      setRangeSelectMode(false);
+      setSelectAllBelowMode(false);
+    };
+  }, []);
+
+  const selectMode: MailSelectMode = massSelectMode
+    ? "mass"
+    : rangeSelectMode
+      ? "range"
+      : selectAllBelowMode
+        ? "selectAllBelow"
+        : "single";
 
   const handleMailClick = (message: InitialThread) => {
     if (selectMode === "mass") {
@@ -406,6 +586,18 @@ export function MailList({ items: initialItems, isCompact, folder }: MailListPro
           Math.min(startIdx, endIdx),
           Math.max(startIdx, endIdx) + 1,
         );
+
+        setMail({ ...mail, bulkSelected: selectedRange });
+      }
+      return;
+    }
+
+    if (selectMode === "selectAllBelow") {
+      const mailsIndex = items.map((m) => m.id);
+      const startIdx = mailsIndex.indexOf(message.id);
+
+      if (startIdx !== -1) {
+        const selectedRange = mailsIndex.slice(startIdx);
 
         setMail({ ...mail, bulkSelected: selectedRange });
       }
@@ -437,7 +629,7 @@ export function MailList({ items: initialItems, isCompact, folder }: MailListPro
   }
 
   return (
-    <ScrollArea ref={scrollRef} className="h-full" type="scroll" onScrollCapture={handleScroll}>
+    <ScrollArea ref={scrollRef} className="h-full pb-2" type="scroll" onScrollCapture={handleScroll}>
       <div
         ref={parentRef}
         className={cn(
@@ -448,39 +640,35 @@ export function MailList({ items: initialItems, isCompact, folder }: MailListPro
           height: `${virtualizer.getTotalSize()}px`,
         }}
       >
-        {virtualizer.getVirtualItems().map((virtualRow) => {
-          const item = items[virtualRow.index];
-          return item ? (
-            <div
-              key={virtualRow.key}
-              data-index={virtualRow.index}
-              ref={virtualizer.measureElement}
-              style={{
-                transform: `translateY(${virtualRow.start}px)`,
-                height: `${virtualRow.size}px`,
-              }}
-              className="absolute left-0 top-0 w-full p-[8px]"
-            >
-              <Thread
-                message={item}
-                selectMode={selectMode}
-                onSelect={handleMailClick}
-                isCompact={isCompact}
-              />
-            </div>
-          ) : null;
-        })}
-        {hasMore && (
-          <div className="absolute bottom-0 left-0 w-full py-4 text-center">
-            {isLoading ? (
-              <div className="text-center">
-                <div className="mx-auto h-4 w-4 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
+        <div
+          style={{ transform: `translateY(${virtualItems[0]?.start ?? 0}px)` }}
+          className="absolute left-0 top-0 w-full p-[8px]"
+        >
+          {virtualItems.map(({ index, key }) => {
+            const item = items[index];
+            return item ? (
+              <div className="mb-2" data-index={index} key={key} ref={virtualizer.measureElement} >
+                <Thread
+                  message={item}
+                  selectMode={selectMode}
+                  onSelect={handleMailClick}
+                  isCompact={isCompact}
+                />
               </div>
-            ) : (
-              <div className="h-4" />
-            )}
-          </div>
-        )}
+            ) : null;
+          })}
+          {hasMore && (
+            <div className="w-full pt-2 text-center">
+              {isLoading ? (
+                <div className="text-center">
+                  <div className="mx-auto h-4 w-4 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
+                </div>
+              ) : (
+                <div className="h-4" />
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </ScrollArea>
   );

@@ -16,6 +16,7 @@ import { type Mail } from "@/components/mail/data";
 import { useSearchParams, useParams } from "next/navigation";
 import { useThreads } from "@/hooks/use-threads";
 import { Button } from "@/components/ui/button";
+import { useHotKey } from "@/hooks/use-hot-key";
 import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { SearchBar } from "./search-bar";
@@ -105,6 +106,18 @@ export function Mail({ folder }: MailProps) {
     setMail((mail) => ({ ...mail, selected: null }));
   }, [setMail]);
 
+  useHotKey("/", () => {
+    setSearchMode(true);
+  });
+
+  useHotKey("Esc", (event) => {
+    // @ts-expect-error
+    event.preventDefault();
+    if (searchMode) {
+      setSearchMode(false);
+    }
+  });
+
   return (
     <TooltipProvider delayDuration={0}>
       <div className="rounded-inherit flex">
@@ -121,7 +134,7 @@ export function Mail({ folder }: MailProps) {
             defaultSize={isMobile ? 100 : 25}
             minSize={isMobile ? 100 : 25}
           >
-            <div className="flex-1 flex-col overflow-y-auto bg-offsetLight shadow-inner dark:bg-offsetDark md:flex md:rounded-2xl md:border md:shadow-sm">
+            <div className="bg-offsetLight dark:bg-offsetDark flex-1 flex-col overflow-y-auto shadow-inner md:flex md:rounded-2xl md:border md:shadow-sm">
               <div
                 className={cn(
                   "sticky top-0 z-10 flex items-center justify-between gap-1.5 border-b-2 p-2 transition-colors",
@@ -129,6 +142,13 @@ export function Mail({ folder }: MailProps) {
                 )}
               >
                 <SidebarToggle className="h-fit px-2" />
+                <Button
+                  variant="ghost"
+                  className="md:h-fit md:px-2"
+                  onClick={() => setIsCompact(!isCompact)}
+                >
+                  <AlignVerticalSpaceAround />
+                </Button>
                 {searchMode && (
                   <div className="flex flex-1 items-center justify-center gap-1.5">
                     <SearchBar />
@@ -154,7 +174,7 @@ export function Mail({ folder }: MailProps) {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="ml-1.5 h-8 w-fit px-2 text-muted-foreground"
+                                className="text-muted-foreground ml-1.5 h-8 w-fit px-2"
                                 onClick={() => setMail({ ...mail, bulkSelected: [] })}
                               >
                                 <X />
@@ -234,7 +254,7 @@ export function Mail({ folder }: MailProps) {
         {/* Mobile Drawer */}
         {isMobile && (
           <Drawer open={open} onOpenChange={setOpen}>
-            <DrawerContent className="h-[calc(100vh-3rem)] overflow-hidden bg-offsetLight p-0 dark:bg-offsetDark">
+            <DrawerContent className="bg-offsetLight dark:bg-offsetDark h-[calc(100vh-3rem)] overflow-hidden p-0">
               <DrawerHeader className="sr-only">
                 <DrawerTitle>Email Details</DrawerTitle>
               </DrawerHeader>
