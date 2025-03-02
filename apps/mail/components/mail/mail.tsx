@@ -239,11 +239,11 @@ export function Mail({ folder }: MailProps) {
             <>
               <ResizableHandle className="opacity-0" />
               <ResizablePanel
-                className="shadow-sm md:flex md:rounded-2xl md:border md:shadow-sm"
+                className="shadow-sm md:flex md:rounded-2xl md:border md:shadow-sm bg-offsetLight dark:bg-offsetDark"
                 defaultSize={75}
                 minSize={25}
               >
-                <div className="hidden h-[calc(100vh-(12px+14px))] flex-1 md:block">
+                <div className="hidden h-[calc(100vh-(12px+14px))] flex-1 md:block relative top-2">
                   <ThreadDisplay mail={mail.selected} onClose={handleClose} />
                 </div>
               </ResizablePanel>

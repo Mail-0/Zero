@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     const verifyResponse = await verifyRequest.json()
 
     if (!verifyResponse.success) {
-      console.log("Turnstile verification failed:", verifyResponse.error)
+      console.warn("Turnstile verification failed:", verifyResponse.error)
       return NextResponse.json({ error: "Invalid turnstile verification" }, { status: 400 });
     }
 

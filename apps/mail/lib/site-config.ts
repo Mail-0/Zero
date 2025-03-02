@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 
-const TITLE = "0";
+const TITLE = "Zero";
 const DESCRIPTION =
   "Experience email the way you want with 0 - the first open source email app that puts your privacy and safety first.";
 
@@ -10,7 +10,7 @@ export const siteConfig: Metadata = {
   icons: {
     icon: "/favicon.ico",
   },
-  applicationName: "0",
+  applicationName: "Zero",
   creator: "@nizzyabi @bruvimtired @ripgrim @user12224 @praashh @mrgsub",
   openGraph: {
     title: TITLE,

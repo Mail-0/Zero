@@ -289,6 +289,7 @@ export function CreateEmail() {
                     initialValue={defaultValue}
                     onChange={(newContent) => setMessageContent(newContent)}
                     key={resetEditorKey}
+                    placeholder="Write your message here..."
                   />
                 </div>
               </div>

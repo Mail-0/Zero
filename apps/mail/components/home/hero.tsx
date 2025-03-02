@@ -8,6 +8,7 @@ import { Card, CardContent } from "../ui/card";
 import { useState, useEffect } from "react";
 import Balancer from "react-wrap-balancer";
 import { useForm } from "react-hook-form";
+import confetti from "canvas-confetti";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import Image from "next/image";
@@ -22,6 +23,7 @@ const betaSignupSchema = z.object({
 
 export default function Hero() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [signupCount, setSignupCount] = useState<number>(0);
   const [token, setToken] = useState<string>();
 
@@ -59,7 +61,13 @@ export default function Hero() {
 
       form.reset();
       console.log("Form submission successful");
-      toast.success("Thanks for signing up for early access!");
+      confetti({
+        particleCount: 180,
+        spread: 120,
+        origin: { y: -0.2, x: 0.5 },
+        angle: 270,
+      });
+      setShowSuccess(true);
 
       // Increment the signup count if it was a new signup
       if (response.status === 201 && signupCount !== null) {
@@ -91,7 +99,14 @@ export default function Hero() {
 
       <Card className="mt-4 w-full border-none bg-transparent shadow-none">
         <CardContent className="flex flex-col items-center justify-center px-0">
-          {process.env.NODE_ENV !== "development" ? (
+          {showSuccess ? (
+            <div className="flex flex-col items-center justify-center gap-4 text-center">
+              <p className="text-2xl font-semibold text-white">You're on the list! 🎉</p>
+              <p className="text-shinyGray text-lg">
+                We'll let you know when we're ready to revolutionize your email experience.
+              </p>
+            </div>
+          ) : process.env.NODE_ENV === "development" ? (
             <div className="flex items-center justify-center gap-4">
               <Button
                 variant="outline"
@@ -145,7 +160,9 @@ export default function Hero() {
             </Form>
           )}
 
-          <Turnstile siteKey={process.env.TURNSTILE_SITE_KEY!} onSuccess={setToken} />
+          {!showSuccess && (
+            <Turnstile siteKey={process.env.TURNSTILE_SITE_KEY!} onSuccess={setToken} />
+          )}
 
           {signupCount !== null && (
             <div className="text-shinyGray mt-4 text-center text-sm">

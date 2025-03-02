@@ -47,6 +47,7 @@
     "@zero/db": "workspace:*",
     "axios": "^1.7.9",
     "better-auth": "^1.1.18",
+    "canvas-confetti": "^1.9.3",
     "cheerio": "^1.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -95,6 +96,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@tailwindcss/typography": "^0.5.16",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/he": "^1.2.3",
     "@types/node": "^22.13.4",
     "@types/react": "^19.0.8",

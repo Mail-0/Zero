@@ -19,7 +19,8 @@ import { uploadFn } from "@/components/create/image-upload";
 import { handleImageDrop, handleImagePaste } from "novel";
 import EditorMenu from "@/components/create/editor-menu";
 import { Separator } from "@/components/ui/separator";
-import { useReducer } from "react";
+import { useReducer, useRef } from "react";
+import "./editor.css";
 
 const hljs = require("highlight.js");
 
@@ -38,6 +39,7 @@ export const defaultEditorContent = {
 interface EditorProps {
   initialValue?: JSONContent;
   onChange: (content: string) => void;
+  placeholder?: string;
 }
 
 interface EditorState {
@@ -68,24 +70,35 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
   }
 }
 
-export default function Editor({ initialValue, onChange }: EditorProps) {
+export default function Editor({ initialValue, onChange, placeholder = "Write something..." }: EditorProps) {
   const [state, dispatch] = useReducer(editorReducer, {
     openNode: false,
     openColor: false,
     openLink: false,
     openAI: false,
   });
+  
+  // Add a ref to store the editor content to prevent losing it on refresh
+  const contentRef = useRef<string>("");
 
   const { openNode, openColor, openLink, openAI } = state;
 
   return (
-    <div className="relative w-full max-w-[220px] sm:max-w-[400px]">
+    <div 
+      className="relative w-full max-w-[450px] sm:max-w-[600px]"
+      onKeyDown={(e) => {
+        // Prevent form submission on Enter key
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.stopPropagation();
+        }
+      }}
+    >
       <EditorRoot>
         <EditorContent
           immediatelyRender={false}
           initialContent={initialValue}
           extensions={extensions}
-          className="min-h-96 max-w-[220px] sm:max-w-[400px]"
+          className="min-h-96 max-w-[450px] sm:max-w-[600px]"
           editorProps={{
             handleDOMEvents: {
               keydown: (_view, event) => handleCommandNavigation(event),
@@ -96,14 +109,28 @@ export default function Editor({ initialValue, onChange }: EditorProps) {
             attributes: {
               class:
                 "prose dark:prose-invert prose-headings:font-title font-default focus:outline-none max-w-full",
+              "data-placeholder": placeholder,
             },
           }}
           onUpdate={({ editor }) => {
+            // Store the content in the ref to prevent losing it
+            contentRef.current = editor.getHTML();
             onChange(editor.getHTML());
           }}
           slotAfter={<ImageResizer />}
         >
-          <EditorCommand className="border-muted bg-background z-50 h-auto max-h-[330px] overflow-y-auto rounded-md border px-1 py-2 shadow-md transition-all">
+          {/* Make sure the command palette doesn't cause a refresh */}
+          <EditorCommand 
+            className="border-muted bg-background z-50 h-auto max-h-[330px] overflow-y-auto rounded-md border px-1 py-2 shadow-md transition-all"
+            onKeyDown={(e) => {
+              // Prevent form submission on any key that might trigger it
+              if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            }}
+          >
+            {/* Rest of the command palette */}
             <EditorCommandEmpty className="text-muted-foreground px-2">
               No results
             </EditorCommandEmpty>
@@ -111,7 +138,11 @@ export default function Editor({ initialValue, onChange }: EditorProps) {
               {suggestionItems.map((item) => (
                 <EditorCommandItem
                   value={item.title}
-                  onCommand={(val) => item.command?.(val)}
+                  onCommand={(val) => {
+                    // Prevent default behavior that might cause refresh
+                    item.command?.(val);
+                    return false;
+                  }}
                   className="hover:bg-accent aria-selected:bg-accent flex w-full items-center space-x-2 rounded-md px-2 py-1 text-left text-[10px]"
                   key={item.title}
                 >
@@ -127,6 +158,7 @@ export default function Editor({ initialValue, onChange }: EditorProps) {
             </EditorCommandList>
           </EditorCommand>
 
+          {/* Rest of the editor menu */}
           <EditorMenu
             open={openAI}
             onOpenChange={(open) => dispatch({ type: "TOGGLE_AI", payload: open })}
