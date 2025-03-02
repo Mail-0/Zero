@@ -162,7 +162,7 @@ export default function Hero() {
               </form>
             </Form>
           )}
-          <Turnstile siteKey={process.env.TURNSTILE_SITE_KEY!} onSuccess={setToken} />
+          <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!} onSuccess={setToken} />
           {signupCount !== null && (
             <div className="text-shinyGray mt-4 text-center text-sm">
               <span className="font-semibold text-white">
