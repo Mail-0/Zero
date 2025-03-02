@@ -27,6 +27,13 @@ const options = {
     updateAge: 60 * 60 * 24, // 1 day (every 1 day the session expiration is updated)
   },
   socialProviders: {
+    microsoft: {
+      tenantId: '0.email',
+      clientId: process.env.ZERO_CLIENT_ID!,
+      clientSecret: process.env.ZERO_CLIENT_SECRET!,
+      scope: ["openid", "offline_access", "email", "User.Read"],
+      // requireSelectAccount: 'consent',
+    },
     google: {
       // Remove this before going to prod, it's to force to get `refresh_token` from google, some users don't have it yet.
       prompt: "consent",

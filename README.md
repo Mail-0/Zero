@@ -1,4 +1,4 @@
-# Mail0.io
+# Zero
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnizzyabi%2FMail0&env=DATABASE_URL,BETTER_AUTH_SECRET,BETTER_AUTH_URL,BETTER_AUTH_TRUSTED_ORIGINS,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,GOOGLE_REDIRECT_URI,GITHUB_CLIENT_ID,GITHUB_CLIENT_SECRET,GITHUB_REDIRECT_URI&envDescription=For%20more%20info%20on%20setting%20up%20your%20API%20keys%2C%20checkout%20the%20Readme%20below&envLink=https%3A%2F%2Fgithub.com%2Fnizzyabi%2FMail0%2Fblob%2Fmain%2FREADME.md&project-name=0&repository-name=0&redirect-url=0.email&demo-title=0&demo-description=An%20open%20source%20email%20app&demo-url=0.email)
 
@@ -6,38 +6,40 @@ An Open-Source Gmail Alternative for the Future of Email
 
 ## Table of Contents <!-- omit from toc -->
 
-- [What is Mail0.io?](#what-is-mail0io)
-- [Why Mail0.io?](#why-mail0io)
-- [Our Mission](#our-mission)
-- [Documentation](#documentation)
-- [Roadmap 🛤️](#roadmap-️)
-  - [1. Core Email Connectivity](#1-core-email-connectivity)
-  - [2. Email Usage Improvements](#2-email-usage-improvements)
-  - [3. Infrastructure](#3-infrastructure)
-- [Development Priorities](#development-priorities)
-- [Join the Movement 🚀](#join-the-movement-)
-  - [Stay Tuned](#stay-tuned)
-- [Tech Stack](#tech-stack)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Environment Variables](#environment-variables)
-  - [Running Locally](#running-locally)
-- [Contribute](#contribute)
-- [Issues](#issues)
-  - [Create a new issue](#create-a-new-issue)
-  - [Solve an issue](#solve-an-issue)
-- [Pull Request](#pull-request)
-- [License](#license)
+- [Zero](#zero)
+  - [What is Zero?](#what-is-zero)
+  - [Why Zero?](#why-zero)
+  - [Our Mission](#our-mission)
+  - [Documentation](#documentation)
+  - [Roadmap 🛤️](#roadmap-️)
+    - [1. Core Email Connectivity](#1-core-email-connectivity)
+    - [2. Email Usage Improvements](#2-email-usage-improvements)
+    - [3. Infrastructure](#3-infrastructure)
+  - [Development Priorities](#development-priorities)
+  - [Join the Movement 🚀](#join-the-movement-)
+    - [Stay Tuned](#stay-tuned)
+  - [Tech Stack](#tech-stack)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Environment Variables](#environment-variables)
+    - [Update the PostgreSQL database accordingly](#update-the-postgresql-database-accordingly)
+    - [Running Locally](#running-locally)
+  - [Contribute](#contribute)
+  - [Issues](#issues)
+    - [Create a new issue](#create-a-new-issue)
+    - [Solve an issue](#solve-an-issue)
+  - [Pull Request](#pull-request)
+  - [License](#license)
 
-## What is Mail0.io?
+## What is Zero?
 
-Mail0.io is an open-source email solution that gives users the power to **self-host** their own email app while also integrating external services like Gmail and other email providers. Our goal is to put **control, privacy, and customization** back into the hands of users—whether they choose to host their email independently or manage multiple inboxes from a single, customizable platform.
+Zero is an open-source email solution that gives users the power to **self-host** their own email app while also integrating external services like Gmail and other email providers. Our goal is to put **control, privacy, and customization** back into the hands of users—whether they choose to host their email independently or manage multiple inboxes from a single, customizable platform.
 
-## Why Mail0.io?
+## Why Zero?
 
 Most email services today are either **closed-source**, **data-hungry**, or **too complex to self-host**. Mail0.io is different:
 
-✅ **Fully Open-Source** – No hidden agendas, no walled gardens. 100% transparency.
+✅ **Open-Source** – No hidden agendas, fully transparent.
 🔒 **Data Privacy First** – Your emails, your data. No tracking, no selling, no middlemen.
 ⚙️ **Self-Hosting Freedom** – Run your own email app with ease.
 📬 **Unified Inbox** – Connect multiple email providers like Gmail, Outlook, and more.
@@ -60,7 +62,7 @@ We believe email should be:
 
 ## Roadmap 🛤️
 
-This document outlines the development roadmap for Mail0.io. Our vision is to create a powerful, user-friendly, and privacy-focused email experience.
+This document outlines the development roadmap for Zero. Our vision is to create a powerful, user-friendly, and privacy-focused email experience.
 
 ### 1. Core Email Connectivity
 
@@ -100,9 +102,9 @@ This roadmap is a living document and will be updated as development progresses 
 
 ## Join the Movement 🚀
 
-Mail0.io is not just another email app—it's a **vision** for a better, more open, and user-controlled email ecosystem. If you believe in **privacy**, **open-source software**, and **giving users control**, we'd love for you to join us!
+Zero is not just another email app—it's a **vision** for a better, more open, and user-controlled email ecosystem. If you believe in **privacy**, **open-source software**, and **giving users control**, we'd love for you to join us!
 
-📢 **Follow our progress** – Stay updated on GitHub as we build Mail0.io.
+📢 **Follow our progress** – Stay updated on GitHub as we build Zero.
 💡 **Contribute** – Share your ideas, suggest features, and help shape the project.
 🤝 **Community-driven** – Our goal is to create an email solution **for the people, by the people**.
 
@@ -112,11 +114,11 @@ We're just getting started. If you're excited about a future where **email belon
 
 ---
 
-🤍 **Mail0.io – Email, Reimagined.**
+🤍 **Zero – Email, Reimagined.**
 
 ## Tech Stack
 
-Mail0.io is built with modern and reliable technologies:
+Zero is built with modern and reliable technologies:
 
 - **Frontend**: Next.js, React, TypeScript, TailwindCSS, Shadcn UI
 - **Backend**: Node.js, Drizzle ORM
@@ -254,6 +256,7 @@ pnpm db:push
 Run the development server:
 
 ```bash
+cd apps/mail
 pnpm dev
 ```
 

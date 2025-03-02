@@ -15,10 +15,11 @@
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:clean": "docker-compose down -v",
-    "db:generate": "cd packages/db && drizzle-kit generate",
-    "db:migrate": "cd packages/db && drizzle-kit migrate",
-    "db:push": "cd packages/db && drizzle-kit push",
-    "db:studio": "cd packages/db && drizzle-kit studio"
+    "db:depencies": "cd packages/db && pnpm install",
+    "db:generate": "cd packages/db && pnpm run db:generate",
+    "db:migrate": "cd packages/db && pnpm run db:migrate",
+    "db:push": "cd packages/db && pnpm run db:push",
+    "db:studio": "cd packages/db && pnpm run db:studio"
   },
   "devDependencies": {
     "@zero/tsconfig": "workspace:*",

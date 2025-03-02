@@ -6,6 +6,12 @@
     "postgres": "^3.4.5",
     "drizzle-orm": "^0.39.2"
   },
+  "scripts": {
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
+  },
   "devDependencies": {
     "@zero/tsconfig": "workspace:*",
     "@types/node": "^22.10.7",

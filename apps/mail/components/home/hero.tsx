@@ -3,12 +3,12 @@
 import { Form, FormControl, FormField, FormItem } from "../ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent } from "../ui/card";
-import { ArrowRightIcon } from "lucide-react";
+import { Turnstile } from '@marsidev/react-turnstile'
 import Balancer from "react-wrap-balancer";
 import { useForm } from "react-hook-form";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -21,6 +21,8 @@ const betaSignupSchema = z.object({
 
 export default function Hero() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [signupCount, setSignupCount] = useState<number | null>(null);
+  const [token, setToken] = useState<string>()
 
   const form = useForm<z.infer<typeof betaSignupSchema>>({
     resolver: zodResolver(betaSignupSchema),
@@ -29,6 +31,19 @@ export default function Hero() {
     },
   });
 
+  useEffect(() => {
+    const fetchSignupCount = async () => {
+      try {
+        const response = await axios.get("/api/auth/early-access/count");
+        setSignupCount(response.data.count);
+      } catch (error) {
+        console.error("Failed to fetch signup count:", error);
+      }
+    };
+
+    fetchSignupCount();
+  }, []);
+
   const onSubmit = async (values: z.infer<typeof betaSignupSchema>) => {
     setIsSubmitting(true);
     try {
@@ -36,6 +51,7 @@ export default function Hero() {
 
       const response = await axios.post("/api/auth/early-access", {
         email: values.email,
+        token
       });
 
       console.log("Response data:", response.data);
@@ -43,6 +59,11 @@ export default function Hero() {
       form.reset();
       console.log("Form submission successful");
       toast.success("Thanks for signing up for early access!");
+      
+      // Increment the signup count if it was a new signup
+      if (response.status === 201 && signupCount !== null) {
+        setSignupCount(signupCount + 1);
+      }
     } catch (error) {
       console.error("Form submission error:", {
         error,
@@ -57,7 +78,7 @@ export default function Hero() {
 
   return (
     <div className="mx-auto w-full animate-fade-in pt-20 md:px-0 md:pt-20">
-      <p className="text-center text-4xl font-semibold leading-tight tracking-[-0.03em] sm:text-6xl md:px-0">
+      <p className="text-center text-4xl font-semibold leading-tight tracking-[-0.03em] sm:text-6xl md:px-0 text-white">
         The future of email <span className="text-shinyGray">is here</span>
       </p>
       <div className="mx-auto w-full max-w-4xl">
@@ -68,8 +89,8 @@ export default function Hero() {
       </div>
 
       <Card className="mt-4 w-full border-none bg-transparent shadow-none">
-        <CardContent className="flex items-center justify-center px-0">
-          {process.env.NODE_ENV === "development" ? (
+        <CardContent className="flex flex-col items-center justify-center px-0">
+          {process.env.NODE_ENV !== "development" ? (
             <div className="flex items-center justify-center gap-4">
               <Button
                 variant="outline"
@@ -121,6 +142,14 @@ export default function Hero() {
                 </div>
               </form>
             </Form>
+          )}
+
+          <Turnstile siteKey={process.env.TURNSTILE_SITE_KEY!} onSuccess={setToken} />
+          
+          {signupCount !== null && (
+            <div className="mt-4 text-center text-sm text-shinyGray">
+              <span className="font-semibold text-white">{signupCount.toLocaleString()}</span> people have already joined the waitlist
+            </div>
           )}
         </CardContent>
       </Card>
