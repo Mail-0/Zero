@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
 
     const verifyRequest = await fetch(verifyEndpoint, {
       method: 'POST',
-      body: `secret=${encodeURIComponent(secret)}&response=${encodeURIComponent(token)}`,
+      body: `secret=${encodeURIComponent(secret)}&response=${encodeURIComponent(token)}&remoteip=${ip}`,
       headers: {
         'content-type': 'application/x-www-form-urlencoded'
       }
