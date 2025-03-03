@@ -1,3 +1,49 @@
 <svg width="191" height="191" viewBox="0 0 191 191" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M38.125 190.625V152.5H0V38.125H38.125V0H152.5V38.125H190.625V152.5H152.5V190.625H38.125ZM38.125 114.375H76.25V150.975H152.5V76.25H114.375V114.375H76.25V76.25H114.375V39.65H38.125V114.375Z" fill="white"/>
+  <defs>
+    <linearGradient id="shineGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1" />
+      <stop offset="50%" stop-color="#e0e7ff" stop-opacity="1" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="1" />
+    </linearGradient>
+    
+    <!-- Enhanced glow -->
+    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    
+    <!-- Enhanced shine effect -->
+    <linearGradient id="highlightGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="white" stop-opacity="1" />
+      <stop offset="100%" stop-color="white" stop-opacity="0.2" />
+      <animate attributeName="x1" values="0%;100%;0%" dur="4s" repeatCount="indefinite" />
+      <animate attributeName="y1" values="0%;100%;0%" dur="4s" repeatCount="indefinite" />
+    </linearGradient>
+    
+    <!-- Outer shine halo -->
+    <radialGradient id="haloGradient" cx="50%" cy="50%" r="70%" fx="50%" fy="50%">
+      <stop offset="0%" stop-color="white" stop-opacity="0" />
+      <stop offset="80%" stop-color="white" stop-opacity="0.1" />
+      <stop offset="100%" stop-color="white" stop-opacity="0.3" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Outer halo -->
+  <circle cx="95" cy="95" r="90" fill="url(#haloGradient)" opacity="0.6">
+    <animate attributeName="opacity" values="0.4;0.7;0.4" dur="5s" repeatCount="indefinite" />
+  </circle>
+  
+  <!-- Base with enhanced glow -->
+  <path d="M38.125 190.625V152.5H0V38.125H38.125V0H152.5V38.125H190.625V152.5H152.5V190.625H38.125ZM38.125 114.375H76.25V150.975H152.5V76.25H114.375V114.375H76.25V76.25H114.375V39.65H38.125V114.375Z" fill="url(#shineGradient)" filter="url(#softGlow)" />
+  
+  <!-- Enhanced shine overlay -->
+  <path d="M38.125 190.625V152.5H0V38.125H38.125V0H152.5V38.125H190.625V152.5H152.5V190.625H38.125ZM38.125 114.375H76.25V150.975H152.5V76.25H114.375V114.375H76.25V76.25H114.375V39.65H38.125V114.375Z" fill="url(#highlightGradient)" opacity="0.5">
+    <animate attributeName="opacity" values="0.3;0.6;0.3" dur="4s" repeatCount="indefinite" />
+  </path>
+  
+  <!-- Enhanced edge highlight -->
+  <path d="M38.125 190.625V152.5H0V38.125H38.125V0H152.5V38.125H190.625V152.5H152.5V190.625H38.125ZM38.125 114.375H76.25V150.975H152.5V76.25H114.375V114.375H76.25V76.25H114.375V39.65H38.125V114.375Z" stroke="white" stroke-width="1.5" fill="none" opacity="0.8">
+    <animate attributeName="stroke-opacity" values="0.6;0.9;0.6" dur="3s" repeatCount="indefinite" />
+    <animate attributeName="stroke-width" values="1.2;2;1.2" dur="4s" repeatCount="indefinite" />
+  </path>
 </svg>

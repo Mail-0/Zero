@@ -199,6 +199,23 @@ export function CreateEmail() {
     }
   };
 
+  // Add ref for to input
+  const toInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Add keyboard shortcut handler
+  React.useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Only trigger if "/" is pressed and no input/textarea is focused
+      if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
+        e.preventDefault();
+        toInputRef.current?.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, []);
+
   return (
     <div 
       className="bg-offsetLight dark:bg-offsetDark flex h-full flex-col overflow-hidden shadow-inner md:rounded-2xl md:border md:shadow-sm relative"
@@ -230,7 +247,7 @@ export function CreateEmail() {
                   {state.toEmails.map((email, index) => (
                     <div
                       key={index}
-                      className="bg-muted flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium"
+                      className="border flex items-center gap-1 rounded-md px-2 py-1  font-medium text-sm"
                     >
                       <span className="max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap">
                         {email}
@@ -245,13 +262,14 @@ export function CreateEmail() {
                     </div>
                   ))}
                   <input
+                    ref={toInputRef}
                     type="email"
-                    className="placeholder:text-muted-foreground text-md min-w-[120px] flex-1 bg-transparent placeholder:opacity-50 focus:outline-none"
+                    className="text-md min-w-[120px] flex-1 bg-transparent placeholder:text-[#616161] opacity-50 focus:outline-none relative left-[3px]"
                     placeholder={state.toEmails.length ? "" : "luke@example.com"}
                     value={toInput}
                     onChange={(e) => dispatch({ type: "SET_TO_INPUT", payload: e.target.value })}
                     onKeyDown={(e) => {
-                      if ((e.key === "," || e.key === "Enter") && toInput.trim()) {
+                      if ((e.key === "," || e.key === "Enter" || e.key === " ") && toInput.trim()) {
                         e.preventDefault();
                         handleAddEmail(toInput);
                       } else if (e.key === "Backspace" && !toInput && state.toEmails.length > 0) {
@@ -273,7 +291,7 @@ export function CreateEmail() {
                 </div>
                 <input
                   type="text"
-                  className="placeholder:text-muted-foreground text-md relative left-[6px] w-full bg-transparent placeholder:opacity-50 focus:outline-none"
+                  className="placeholder:text-[#616161] text-md relative left-[7.5px] w-full bg-transparent placeholder:opacity-50 focus:outline-none"
                   placeholder="Subject"
                   value={subjectInput}
                   onChange={(e) => dispatch({ type: "SET_SUBJECT_INPUT", payload: e.target.value })}

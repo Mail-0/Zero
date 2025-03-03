@@ -128,8 +128,8 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         <CommandInput autoFocus placeholder="Type a command or search..." />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
-          <CommandGroup>
-            <CommandItem onSelect={() => runCommand(() => openComposeModal())}>
+          <CommandGroup className="pb-0">
+            <CommandItem onSelect={() => window.location.href = "/mail/create"}>
               <Pencil size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
               <span>Compose message</span>
               <CommandShortcut>
@@ -143,7 +143,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             <React.Fragment key={groupIndex}>
               {group.items.length > 0 && (
                 <CommandGroup heading={group.group}>
-                  {group.items.map((item) => (
+                  {group.items.map((item: any) => (
                     <CommandItem
                       key={item.url}
                       onSelect={() =>
