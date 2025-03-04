@@ -1,0 +1,26 @@
+{
+  "name": "@zero/db",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "drizzle-orm": "0.39.3",
+    "postgres": "3.4.5"
+  },
+  "scripts": {
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
+  },
+  "devDependencies": {
+    "@types/node": "22.13.8",
+    "@zero/tsconfig": "workspace:*",
+    "dotenv": "16.4.7",
+    "drizzle-kit": "0.30.5",
+    "typescript": "5.8.2"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema.ts"
+  }
+}

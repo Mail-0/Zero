@@ -1,0 +1,66 @@
+License
+
+0.EMAIL SOFTWARE LICENSE
+                    Version 1.0, February 2025
+
+Copyright (c) 2025 0.EMAIL
+
+                           PREAMBLE
+
+This license is designed to ensure that users of the 0.EMAIL software retain their freedom to use, modify, and share the software. When we speak of free software, we refer to freedom, not price.
+
+                      TERMS AND CONDITIONS
+
+0. Definitions.
+
+"This License" refers to version 1.0 of the 0.email Software License.
+"The Program" refers to the 0.EMAIL software and any copyrightable work licensed under this License.
+"You" refers to the licensee or user of the software.
+
+1. Basic Permissions.
+
+You are granted permission to use, modify, and distribute the 0.email software, provided you comply with the terms of this License.
+
+2. Source Code Access.
+
+If you distribute or make available the 0.email software or modified versions to users interacting with it remotely through a computer network, you must make the corresponding source code available to these users, at no charge, through some standard means of facilitating software copying.
+
+3. Modifications.
+
+You may modify your copy of the 0.email software and distribute the resulting modified work, provided that:
+   a) You clearly indicate that you modified the software
+   b) Any modified version carries prominent notices stating it is released under this License
+   c) You license the entire modified work as a whole under this License
+
+4. No Warranty.
+
+THE 0.EMAIL SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM IS WITH YOU.
+
+5. Limitation of Liability.
+
+IN NO EVENT WILL THE COPYRIGHT HOLDER BE LIABLE FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE THE PROGRAM.
+
+6. Accepting License Not Required for Use.
+
+You are not required to accept this License in order to receive or run a copy of the Program. However, nothing else grants you permission to modify or distribute the Program or its derivative works.
+
+7. Automatic Licensing of Recipients.
+
+Each time you redistribute the Program, the recipient automatically receives a license from the original licensor to copy, distribute or modify the Program subject to these terms and conditions.
+
+                  END OF TERMS AND CONDITIONS
+
+To apply this license to your 0.email software, include the following notice at the beginning of each source file:
+
+    0.EMAIL - Open Source Email
+    Copyright (C) 2025 0.EMAIL
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the 0.email Software License as published
+    by 0.EMAIL, version 1.0, or (at your option)
+    any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    0.EMAIL Software License for more details. 

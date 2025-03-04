@@ -2,6 +2,8 @@
 
 # dependencies
 /node_modules
+/apps/*/node_modules
+/packages/*/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -43,3 +45,4 @@ next-env.d.ts
 # ide
 .idea
 .vscode
+.turbo
