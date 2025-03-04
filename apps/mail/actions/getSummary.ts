@@ -26,9 +26,9 @@ export const GetSummary = async (threadId: string) => {
         const [_summary] = await db
             .select()
             .from(summary)
-            .where(and(eq(summary.messageId, threadId), eq(summary.connectionId, _connection.id)));
+            .where(and(eq(summary.messageId, threadId), eq(summary.connectionId, _connection.id),));
 
-        return _summary ?? null
+        return _summary?.content.startsWith('Unable') ? null : _summary ?? null
     } catch (error) {
         console.error("Error getting summary:", error);
         return null
