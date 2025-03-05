@@ -5,6 +5,13 @@ import HeroImage from "@/components/home/hero-image";
 import Navbar from "@/components/home/navbar";
 import Hero from "@/components/home/hero";
 
+/**
+ * Renders the home page layout.
+ *
+ * This component displays the navigation bar and hero section, and conditionally renders
+ * a demo mail layout on medium and larger screens or a hero image on smaller screens.
+ * A footer section with the company address is also included.
+ */
 export default function Home() {
   return (
     <div className="relative h-screen min-h-screen w-full overflow-auto bg-black">
