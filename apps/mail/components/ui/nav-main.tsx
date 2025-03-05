@@ -149,7 +149,7 @@ export function NavMain({ items }: NavMainProps) {
 
   return (
     <SidebarGroup className="space-y-2.5 py-0">
-      <SidebarMenu className="space-y-">
+      <SidebarMenu>
         {items.map((section) => (
           <Collapsible
             key={section.title}
@@ -185,7 +185,7 @@ function NavItem(item: NavItemProps & { href: string }) {
         tooltip={item.title}
         className="flex cursor-not-allowed items-center opacity-50"
       >
-        {item.icon && <item.icon ref={iconRef} className="relative mr-3 h-3 w-3.5" />}
+        {item.icon && <item.icon ref={iconRef} className="relative mr-2.5 h-3 w-3.5" />}
         <p className="mt-0.5 text-[13px]">{item.title}</p>
       </SidebarMenuButton>
     );
@@ -209,11 +209,11 @@ function NavItem(item: NavItemProps & { href: string }) {
         item.isActive && "bg-subtleWhite text-accent-foreground dark:bg-subtleBlack",
       )}
     >
-      {item.icon && <item.icon ref={!item.isBackButton ? iconRef : undefined} className="" />}
+      {item.icon && <item.icon ref={!item.isBackButton ? iconRef : undefined} className="mr-2" />}
       <p className="mt-0.5 text-[13px]">{item.title}</p>
-      {stats && stats.find((stat) => stat.label.toLowerCase() === item.title.toLowerCase()) && (
-        <Badge className="ml-auto" variant="outline">
-          {stats.find((stat) => stat.label.toLowerCase() === item.title.toLowerCase())?.count}
+      {stats && stats.find((stat) => stat.label?.toLowerCase() === item.title?.toLowerCase()) && (
+        <Badge className="ml-auto rounded-md" variant="outline">
+          {stats.find((stat) => stat.label?.toLowerCase() === item.title?.toLowerCase())?.count?.toLocaleString()}
         </Badge>
       )}
     </SidebarMenuButton>

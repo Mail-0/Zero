@@ -191,8 +191,63 @@
 /* Compose gradient styles */
 .compose-gradient {
   background: linear-gradient(90deg, rgba(255, 213, 208, 1) 0%, rgba(219, 255, 228, 1) 50%, rgba(226, 214, 255, 1) 100%);
-  border-radius: 0.5rem;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+.compose-gradient-animated {
+  background: linear-gradient(90deg, rgba(255, 213, 208, 1), rgba(219, 255, 228, 1), rgba(226, 214, 255, 1), rgba(255, 213, 208, 1));
+  background-size: 300% 100%;
+  animation: gradient-animation 8s ease infinite;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+@keyframes gradient-animation {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.compose-gradient-text {
+  background: linear-gradient(90deg, rgba(255, 213, 208, 1) 0%, rgba(219, 255, 228, 1) 50%, rgba(226, 214, 255, 1) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+}
+
+.compose-gradient-text-shiny {
+  background: linear-gradient(
+    90deg, 
+    rgba(255, 213, 208, 1) 0%, 
+    rgba(255, 255, 255, 1) 25%,
+    rgba(219, 255, 228, 1) 50%, 
+    rgba(255, 255, 255, 1) 75%,
+    rgba(226, 214, 255, 1) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.compose-gradient-text-shiny::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  mix-blend-mode: overlay;
+  animation: shine-slow 3s ease-in-out infinite;
 }
 
 .compose-gradient-inner {

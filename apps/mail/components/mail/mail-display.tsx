@@ -58,12 +58,13 @@ type Props = {
   isMuted: boolean;
   isLoading: boolean;
   index: number;
+  demo?: boolean;
 };
 
-const MailDisplay = ({ emailData, isFullscreen, isMuted, index }: Props) => {
+const MailDisplay = ({ emailData, isMuted, index, demo }: Props) => {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(true);
   const [openDetailsPopover, setOpenDetailsPopover] = useState<boolean>(false);
-  const { data } = useSummary(emailData.id)
+  const { data } = demo ? { data: { content: 'This email talks about how Zero Email is the future of email. It is a new way to send and receive emails that is more secure and private.' } } : useSummary(emailData.id)
 
   useEffect(() => {
     if (index === 0) {
@@ -77,16 +78,16 @@ const MailDisplay = ({ emailData, isFullscreen, isMuted, index }: Props) => {
         <div className="flex flex-col gap-4 p-4 py-5 transition-all duration-200">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-4">
-              <Avatar>
-                <AvatarImage alt={emailData?.sender?.name} />
-                <AvatarFallback>
+              <Avatar className="rounded-md">
+                <AvatarImage alt={emailData?.sender?.name} className="rounded-md" />
+                <AvatarFallback className={cn("rounded-md", demo && "compose-gradient-animated text-black font-bold")}>
                   {emailData?.sender?.name
                     .split(" ")
                     .map((chunk) => chunk[0])
                     .join("")}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1 space-y-1">
+              <div className="flex-1">
                 <div className="flex items-center justify-start gap-2">
                   <span className="font-semibold">{emailData?.sender?.name}</span>
                   <span className="flex grow-0 items-center gap-2 text-sm text-muted-foreground">
@@ -103,14 +104,14 @@ const MailDisplay = ({ emailData, isFullscreen, isMuted, index }: Props) => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-auto p-0 text-xs underline"
+                        className="h-auto p-0 text-xs underline hover:bg-transparent"
                         onClick={() => setOpenDetailsPopover(true)}
                       >
                         Details
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
-                      className="w-[420px] rounded-lg border p-3 shadow-lg"
+                      className="w-[420px] rounded-lg p-3 shadow-lg border"
                       onBlur={() => setOpenDetailsPopover(false)}
                     >
                       <div className="space-y-1 text-sm">
@@ -164,24 +165,25 @@ const MailDisplay = ({ emailData, isFullscreen, isMuted, index }: Props) => {
                       </div>
                     </PopoverContent>
                   </Popover>
-                  <Button variant="ghost" size="icon" onClick={() => setIsCollapsed(!isCollapsed)}>
-                    {isCollapsed ? (
+                  <p onClick={() => setIsCollapsed(!isCollapsed)} className="cursor-pointer">
+                    <span className={cn(
+                      "transition-transform duration-300 inline-block relative top-0.5",
+                      !isCollapsed && "rotate-180"
+                    )}>
                       <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronUp className="h-4 w-4" />
-                    )}
-                  </Button>
+                    </span>
+                  </p>
                 </div>
               </div>
             </div>
-            {data ? <div className="relative">
+            {data ? <div className="relative top-1">
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button size={'icon'} variant='ghost' className='rounded-full'>
-                    <Image src="/ai.svg" alt="logo" className="h-4 w-4" width={100} height={100} />
+                  <Button size={'icon'} variant='ghost' className='rounded-md'>
+                    <Image src="/ai.svg" alt="logo" className="h-6 w-6" width={100} height={100} />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="rounded-lg border p-3 shadow-lg">
+                <PopoverContent className="rounded-lg border p-3 shadow-lg relative -left-24">
                   <StreamingText text={data.content} />
                 </PopoverContent>
               </Popover>

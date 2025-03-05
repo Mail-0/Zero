@@ -2,6 +2,7 @@ import { EMAIL_HTML_TEMPLATE } from "./constants";
 import Color from "color";
 
 export const template = (html: string) => {
+  if (typeof DOMParser === "undefined") return html;
   const htmlParser = new DOMParser();
   const doc = htmlParser.parseFromString(html, "text/html");
   const template = htmlParser.parseFromString(EMAIL_HTML_TEMPLATE, "text/html");

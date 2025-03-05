@@ -27,9 +27,140 @@ import { cn } from "@/lib/utils";
 import React from "react";
 
 interface ThreadDisplayProps {
-  mail: string | null;
+  mail: any;
   onClose?: () => void;
   isMobile?: boolean;
+}
+
+export function ThreadDemo({ mail: emailData, onClose, isMobile }: ThreadDisplayProps) {
+  const isFullscreen = false
+  return <div
+    className={cn(
+      "flex flex-col",
+      isFullscreen ? "h-screen" : isMobile ? "h-full" : "h-[calc(100vh-2rem)]",
+    )}
+  >
+    <div
+      className={cn(
+        "bg-offsetLight dark:bg-offsetDark relative flex flex-col overflow-hidden transition-all duration-300",
+        isMobile ? "h-full" : "h-full",
+        !isMobile && !isFullscreen && "rounded-r-lg",
+        isFullscreen ? "fixed inset-0 z-50" : "",
+      )}
+    >
+      <div className="flex flex-shrink-0 items-center border-b p-2">
+        <div className="flex flex-1 items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                className="md:h-fit md:px-2"
+                disabled={!emailData}
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Close</TooltipContent>
+          </Tooltip>
+        </div>
+        <div className="flex items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                className="md:h-fit md:px-2"
+                disabled={!emailData}
+              >
+                {isFullscreen ? (
+                  <Minimize2 className="h-4 w-4" />
+                ) : (
+                  <Maximize2 className="h-4 w-4" />
+                )}
+                <span className="sr-only">
+                  {isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                </span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" className="md:h-fit md:px-2" disabled={!emailData}>
+                <Archive className="h-4 w-4" />
+                <span className="sr-only">Archive</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Archive</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                className="md:h-fit md:px-2"
+                disabled={!emailData}
+              >
+                <Reply className="h-4 w-4" />
+                <span className="sr-only">Reply</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Reply</TooltipContent>
+          </Tooltip>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="md:h-fit md:px-2" disabled={!emailData}>
+                <MoreVertical className="h-4 w-4" />
+                <span className="sr-only">More</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                <ArchiveX className="mr-2 h-4 w-4" /> Move to spam
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <ReplyAll className="mr-2 h-4 w-4" /> Reply all
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Forward className="mr-2 h-4 w-4" /> Forward
+              </DropdownMenuItem>
+              <DropdownMenuItem>Mark as unread</DropdownMenuItem>
+              <DropdownMenuItem>Add label</DropdownMenuItem>
+              <DropdownMenuItem>Mute thread</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <ScrollArea className="flex-1" type="scroll">
+          <div className="pb-4">
+            {[...(emailData || [])].reverse().map((message, index) => (
+              <div
+                key={message.id}
+                className={cn(
+                  "transition-all duration-200",
+                  index > 0 && "border-border border-t",
+                )}
+              >
+                <MailDisplay
+                  demo
+                  emailData={message}
+                  isFullscreen={isFullscreen}
+                  isMuted={false}
+                  isLoading={false}
+                  index={index}
+                />
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+        <div className="flex-shrink-0 relative top-1">
+          <ReplyCompose emailData={emailData} isOpen={false} setIsOpen={() => { }} />
+        </div>
+      </div>
+    </div>
+  </div>
 }
 
 export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {

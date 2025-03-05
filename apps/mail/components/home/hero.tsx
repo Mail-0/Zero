@@ -85,10 +85,10 @@ export default function Hero() {
   return (
     <div className="animate-fade-in mx-auto w-full pt-20 md:px-0 md:pt-20">
       <p className="text-center text-4xl font-semibold leading-tight tracking-[-0.03em] text-white sm:text-6xl md:px-0">
-        The future of email <span className="text-shinyGray">is here</span>
+        The future of email <span className="compose-gradient-text-shiny">is here</span>
       </p>
       <div className="mx-auto w-full max-w-4xl">
-        <Balancer className="text-shinyGray mx-auto mt-3 text-center text-[15px] leading-tight sm:text-[22px]">
+        <Balancer className="text-shinyGray mx-auto mt-3 text-center text-[15px] leading-tight sm:text-[22px] ">
           Experience email the way you want with <span className="font-mono">0</span> – the first
           open source email app that puts your privacy and safety first.
         </Balancer>
@@ -149,7 +149,7 @@ export default function Hero() {
                   )}
                 />
                 <div>
-                  <Button type="submit" className="w-full px-4" disabled={isSubmitting}>
+                  <Button type="submit" className="w-full px-4 compose-gradient-animated" disabled={isSubmitting}>
                     Join waitlist
                   </Button>
                 </div>

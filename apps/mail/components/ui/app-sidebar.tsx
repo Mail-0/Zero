@@ -33,12 +33,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     if (navigationConfig[currentSection]) {
       const items = [...navigationConfig[currentSection].sections];
 
-      if (currentSection === "mail" && stats) {
+      if (currentSection === "mail" && stats && stats.length) {
         if (items[0]?.items[0]) {
-          items[0].items[0].badge = stats.find((stat) => stat.label.toLowerCase() === FOLDERS.INBOX)?.count ?? 0;
+          items[0].items[0].badge = stats.find((stat) => stat.label?.toLowerCase() === FOLDERS.INBOX)?.count ?? 0;
         }
         if (items[0]?.items[3]) {
-          items[0].items[3].badge = stats.find((stat) => stat.label.toLowerCase() === FOLDERS.SENT)?.count ?? 0;
+          items[0].items[3].badge = stats.find((stat) => stat.label?.toLowerCase() === FOLDERS.SENT)?.count ?? 0;
         }
       }
 
@@ -56,7 +56,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { toggleOpen: toggleAISidebar } = useAISidebar();
 
   return (
-    <Sidebar collapsible="icon" {...props} className="flex flex-col items-center">
+    <Sidebar collapsible="icon" {...props} className="flex flex-col items-center pl-1.5 bg-offsetWhite dark:bg-offsetDark">
       <div className="flex w-full flex-col">
         <SidebarHeader className="flex flex-col gap-2 p-2">
           <NavUser />
@@ -94,7 +94,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         onClick={toggleAISidebar}
         title="Open AI Assistant (Cmd+S)"
       >
-        <div className="">
+        <div>
           <Image
             src="/ai.svg"
             alt="Mail0 Logo"

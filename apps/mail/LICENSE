@@ -1,66 +1,107 @@
-License
+                    0.EMAIL SOFTWARE
+                 Dual Licensing Agreement
+                    Version 2.0, 2025
 
-0.EMAIL SOFTWARE LICENSE
-                    Version 1.0, February 2025
+This software is available under two distinct licenses:
 
-Copyright (c) 2025 0.EMAIL
+1. GNU Affero General Public License version 3 (AGPL-3.0)
+   - For open source usage
+   - Full text available at: https://www.gnu.org/licenses/agpl-3.0.html
+
+2. 0.EMAIL Commercial License
+   - For commercial usage without AGPL-3.0 obligations
+   - Contact nizzy@0.email for pricing and terms
 
                            PREAMBLE
 
-This license is designed to ensure that users of the 0.EMAIL software retain their freedom to use, modify, and share the software. When we speak of free software, we refer to freedom, not price.
+The 0.EMAIL software is committed to maintaining both open source principles
+and sustainable business practices. This dual-licensing approach ensures that:
+- Open source users retain all freedoms under AGPL-3.0
+- Commercial users can obtain flexible licensing terms
 
-                      TERMS AND CONDITIONS
+                      OPEN SOURCE LICENSE
 
-0. Definitions.
+For open source usage under AGPL-3.0, the following notice applies:
 
-"This License" refers to version 1.0 of the 0.email Software License.
-"The Program" refers to the 0.EMAIL software and any copyrightable work licensed under this License.
-"You" refers to the licensee or user of the software.
-
-1. Basic Permissions.
-
-You are granted permission to use, modify, and distribute the 0.email software, provided you comply with the terms of this License.
-
-2. Source Code Access.
-
-If you distribute or make available the 0.email software or modified versions to users interacting with it remotely through a computer network, you must make the corresponding source code available to these users, at no charge, through some standard means of facilitating software copying.
-
-3. Modifications.
-
-You may modify your copy of the 0.email software and distribute the resulting modified work, provided that:
-   a) You clearly indicate that you modified the software
-   b) Any modified version carries prominent notices stating it is released under this License
-   c) You license the entire modified work as a whole under this License
-
-4. No Warranty.
-
-THE 0.EMAIL SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM IS WITH YOU.
-
-5. Limitation of Liability.
-
-IN NO EVENT WILL THE COPYRIGHT HOLDER BE LIABLE FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE THE PROGRAM.
-
-6. Accepting License Not Required for Use.
-
-You are not required to accept this License in order to receive or run a copy of the Program. However, nothing else grants you permission to modify or distribute the Program or its derivative works.
-
-7. Automatic Licensing of Recipients.
-
-Each time you redistribute the Program, the recipient automatically receives a license from the original licensor to copy, distribute or modify the Program subject to these terms and conditions.
-
-                  END OF TERMS AND CONDITIONS
-
-To apply this license to your 0.email software, include the following notice at the beginning of each source file:
-
-    0.EMAIL - Open Source Email
+    0.EMAIL - Enterprise Email Solution
     Copyright (C) 2025 0.EMAIL
 
     This program is free software: you can redistribute it and/or modify
-    it under the terms of the 0.email Software License as published
-    by 0.EMAIL, version 1.0, or (at your option)
-    any later version.
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    0.EMAIL Software License for more details. 
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+                     COMMERCIAL LICENSE
+
+The 0.EMAIL Commercial License allows you to use 0.EMAIL for commercial purposes
+without the restrictions of the AGPL-3.0 license. This includes:
+
+1. The ability to make modifications to the software without being required to
+   distribute those modifications under the AGPL-3.0.
+   
+2. The ability to integrate the software with your proprietary systems without
+   triggering AGPL-3.0 requirements for those systems.
+   
+3. Priority support and maintenance options.
+
+4. Legal indemnification protections.
+
+For commercial licensing inquiries, please contact:
+Email: nizzy@0.email
+Website: https://0.email/commercial-license
+
+                    LICENSE COMPLIANCE
+
+If you are using 0.EMAIL under the AGPL-3.0 license:
+
+1. Any modifications you make to the software must be made available under
+   the same AGPL-3.0 license.
+   
+2. If you provide network access to functionality of the software (e.g., as a
+   SaaS offering), you must make the source code available to your users.
+   
+3. You must include appropriate copyright notices and license information in
+   your distribution.
+
+If you are using 0.EMAIL under a Commercial License, you must comply with the
+terms of that specific license agreement as provided to you.
+
+                      NO WARRANTY DISCLAIMER
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+                  END OF TERMS AND CONDITIONS
+
+To apply this license to your 0.EMAIL software, include the following notice at the beginning of each source file:
+
+    0.EMAIL - Enterprise Email Solution
+    Copyright (C) 2025 0.EMAIL
+
+    This program is dual-licensed under the AGPL-3.0 and the 0.EMAIL Commercial License.
+    
+    For open source usage:
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU Affero General Public License for more details.
+    
+    For commercial licensing options, please contact nizzy@0.email 

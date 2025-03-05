@@ -1,0 +1,322 @@
+[
+  {
+    "id": "imp-001",
+    "threadId": "imp-001",
+    "tags": ["important", "personal"],
+    "title": "🚨 Welcome to Zero: The Future of Email is Here 🚨",
+    "body": "We're building the future of email at Zero, and we'd love for you to be part of it!",
+    "receivedOn": "2024-02-14",
+    "sender": {
+      "name": "Zero Team",
+      "email": "hello@0.email"
+    },
+    "unread": true,
+    "subject": "The Email Experience You've Been Waiting For",
+    "totalReplies": 3,
+    "decodedBody": "<p>We're building the future of email at Zero, and we'd love for you to be part of it!</p><p>Email hasn't changed much in decades, but we're changing that. Zero combines the reliability of email with modern features you'll actually love using. Our mission is to transform how you communicate online.</p><p>We're excited to have you on this journey with us as we reimagine what email can be in today's world. Welcome to Zero!</p>"
+  },
+  {
+    "id": "upd-001",
+    "threadId": "upd-001",
+    "tags": ["updates", "important"],
+    "title": "⚡ URGENT: Someone Wants to Pay You to Exist",
+    "body": "Okay, not quite, but we do have a job for you. Are you in?",
+    "receivedOn": "2024-03-05",
+    "sender": {
+      "name": "Tech Recruiter",
+      "email": "hr@desperateforhelp.com"
+    },
+    "unread": false,
+    "subject": "Please Work for Us, We Are Begging",
+    "totalReplies": 4,
+    "decodedBody": "<p>Okay, not quite, but we do have a job for you. Are you in?</p><p>We've been stalking your profile for weeks and we're convinced you're exactly what our team needs. The position offers competitive salary, flexible hours, and a desk that's at least 70% stable.</p><p>Our last three developers mysteriously disappeared (unrelated to workload, we promise), so we're in a bit of a hurry. When can you start?</p>"
+  },
+  {
+    "id": "imp-002",
+    "threadId": "imp-002",
+    "tags": ["important"],
+    "title": "🎉 You Got a Job! (Just Kidding, But Let's Talk)",
+    "body": "Hey, you look like someone who needs a paycheck. Want a job?",
+    "receivedOn": "2024-03-01",
+    "sender": {
+      "name": "HR Recruiter",
+      "email": "hireme@company.com"
+    },
+    "unread": false,
+    "subject": "Work 9-5, Make Money, Repeat",
+    "totalReplies": 5,
+    "decodedBody": "<p>Hey, you look like someone who needs a paycheck. Want a job?</p>"
+  },
+  {
+    "id": "per-001",
+    "threadId": "per-001",
+    "tags": ["personal"],
+    "title": "💔 I Wrote You a Poem (And It's Terrible)",
+    "body": "Roses are red, violets are blue, coffee this weekend, or should I be sad forever? ☕",
+    "receivedOn": "2024-02-10",
+    "sender": {
+      "name": "Maha",
+      "email": "maha@romantic.com"
+    },
+    "unread": true,
+    "subject": "Worst Poem Ever, But With Love",
+    "totalReplies": 2,
+    "decodedBody": "<p>Roses are red, violets are blue, coffee this weekend, or should I be sad forever? ☕</p>"
+  },
+  {
+    "id": "promo-001",
+    "threadId": "promo-001",
+    "tags": ["promotions"],
+    "title": "💰 Work From Home & Become a Millionaire*",
+    "body": "*Okay, maybe not a millionaire, but you'll at least afford coffee. Interested?",
+    "receivedOn": "2024-03-04",
+    "sender": {
+      "name": "John Doe",
+      "email": "john.doe@scamfreejobs.com"
+    },
+    "unread": false,
+    "subject": "No Boss, No Office, Just You & A Laptop",
+    "totalReplies": 1,
+    "decodedBody": "<p>*Okay, maybe not a millionaire, but you'll at least afford coffee. Interested?</p>"
+  },
+  {
+    "id": "per-002",
+    "threadId": "per-002",
+    "tags": ["personal"],
+    "title": "📅 Our First Date Was a Simulation (Or Was It?)",
+    "body": "I had an amazing time! Unless it was all a dream. Let's do it again to confirm.",
+    "receivedOn": "2024-02-20",
+    "sender": {
+      "name": "Lily",
+      "email": "lily@maybearealperson.com"
+    },
+    "unread": true,
+    "subject": "Glitch in the Matrix? Or Just a Great Night?",
+    "totalReplies": 1,
+    "decodedBody": "<p>I had an amazing time! Unless it was all a dream. Let's do it again to confirm.</p>"
+  },
+  {
+    "id": "upd-002",
+    "threadId": "upd-002",
+    "tags": ["updates"],
+    "title": "🔄 Your Account Settings Have Changed",
+    "body": "Someone (hopefully you) updated your account settings. If this wasn't you, panic immediately.",
+    "receivedOn": "2024-03-10",
+    "sender": {
+      "name": "Security Team",
+      "email": "noreply@securityalerts.com"
+    },
+    "unread": true,
+    "subject": "Important Security Update",
+    "totalReplies": 0,
+    "decodedBody": "<p>Someone (hopefully you) updated your account settings. If this wasn't you, panic immediately.</p>"
+  },
+  {
+    "id": "promo-002",
+    "threadId": "promo-002",
+    "tags": ["promotions"],
+    "title": "🛍️ FLASH SALE: 50% Off Things You Don't Need!",
+    "body": "For the next 24 hours, everything you've been wisely avoiding is now half-price!",
+    "receivedOn": "2024-03-15",
+    "sender": {
+      "name": "Online Shop",
+      "email": "sales@buystuff.com"
+    },
+    "unread": false,
+    "subject": "Limited Time Offer - Don't Miss Out!",
+    "totalReplies": 0,
+    "decodedBody": "<p>For the next 24 hours, everything you've been wisely avoiding is now half-price!</p>"
+  },
+  {
+    "id": "imp-003",
+    "threadId": "imp-003",
+    "tags": ["important"],
+    "title": "📊 Your Financial Future Is... Interesting",
+    "body": "We've analyzed your spending habits. The good news: you're alive. The bad news: everything else.",
+    "receivedOn": "2024-03-12",
+    "sender": {
+      "name": "Your Bank",
+      "email": "statements@bankofmoney.com"
+    },
+    "unread": true,
+    "subject": "Monthly Statement Available",
+    "totalReplies": 0,
+    "decodedBody": "<p>We've analyzed your spending habits. The good news: you're alive. The bad news: everything else.</p>"
+  },
+  {
+    "id": "per-003",
+    "threadId": "per-003",
+    "tags": ["personal"],
+    "title": "🎂 Happy Birthday! (I Remembered Without Facebook)",
+    "body": "Congratulations on completing another trip around the sun without major incident!",
+    "receivedOn": "2024-03-20",
+    "sender": {
+      "name": "Best Friend",
+      "email": "friend@friendship.com"
+    },
+    "unread": false,
+    "subject": "Birthday Wishes & Plans",
+    "totalReplies": 2,
+    "decodedBody": "<p>Congratulations on completing another trip around the sun without major incident!</p>"
+  },
+  {
+    "id": "upd-003",
+    "threadId": "upd-003",
+    "tags": ["updates", "important"],
+    "title": "🚀 Your Project Launch: T-Minus 3 Days",
+    "body": "Everything is on track for launch! Unless it isn't, in which case, we'll let you know... eventually.",
+    "receivedOn": "2024-03-18",
+    "sender": {
+      "name": "Project Manager",
+      "email": "pm@bigproject.com"
+    },
+    "unread": true,
+    "subject": "Project Status Update",
+    "totalReplies": 3,
+    "decodedBody": "<p>Everything is on track for launch! Unless it isn't, in which case, we'll let you know... eventually.</p>"
+  },
+  {
+    "id": "promo-003",
+    "threadId": "promo-003",
+    "tags": ["promotions"],
+    "title": "🍕 Your Stomach Called, It Misses Pizza",
+    "body": "Order now and get a second pizza free! (Your diet plan can start tomorrow.)",
+    "receivedOn": "2024-03-22",
+    "sender": {
+      "name": "Pizza Palace",
+      "email": "deals@pizzapalace.com"
+    },
+    "unread": false,
+    "subject": "2-for-1 Deal This Weekend Only!",
+    "totalReplies": 0,
+    "decodedBody": "<p>Order now and get a second pizza free! (Your diet plan can start tomorrow.)</p>"
+  },
+  {
+    "id": "per-004",
+    "threadId": "per-004",
+    "tags": ["personal", "important"],
+    "title": "👋 Long Time No See (Literally, Answer Your Door)",
+    "body": "I'm in town next weekend! Let's catch up before we become those friends who only like each other's social media posts.",
+    "receivedOn": "2024-03-25",
+    "sender": {
+      "name": "Old Friend",
+      "email": "blast@fromthepast.com"
+    },
+    "unread": true,
+    "subject": "Reunion Plans?",
+    "totalReplies": 1,
+    "decodedBody": "<p>I'm in town next weekend! Let's catch up before we become those friends who only like each other's social media posts.</p>"
+  },
+  {
+    "id": "upd-004",
+    "threadId": "upd-004",
+    "tags": ["updates"],
+    "title": "📱 Your App Just Got Better (We Think)",
+    "body": "We've updated our app with features you didn't ask for and moved everything you knew how to find!",
+    "receivedOn": "2024-03-28",
+    "sender": {
+      "name": "App Team",
+      "email": "updates@appcompany.com"
+    },
+    "unread": false,
+    "subject": "New Version Available",
+    "totalReplies": 0,
+    "decodedBody": "<p>We've updated our app with features you didn't ask for and moved everything you knew how to find!</p>"
+  },
+  {
+    "id": "promo-004",
+    "threadId": "promo-004",
+    "tags": ["promotions"],
+    "title": "✈️ Escape Your Life for 50% Less!",
+    "body": "Incredible travel deals to destinations where no one knows your embarrassing stories!",
+    "receivedOn": "2024-04-01",
+    "sender": {
+      "name": "Travel Agency",
+      "email": "deals@travelaway.com"
+    },
+    "unread": true,
+    "subject": "Spring Getaway Specials",
+    "totalReplies": 0,
+    "decodedBody": "<p>Incredible travel deals to destinations where no one knows your embarrassing stories!</p>"
+  },
+  {
+    "id": "imp-004",
+    "threadId": "imp-004",
+    "tags": ["important"],
+    "title": "📝 Your To-Do List Called: It's Feeling Neglected",
+    "body": "This is a friendly reminder about that thing you were supposed to do last week. And the week before.",
+    "receivedOn": "2024-04-03",
+    "sender": {
+      "name": "Your Conscience",
+      "email": "reminder@productivity.com"
+    },
+    "unread": true,
+    "subject": "Pending Task Reminder",
+    "totalReplies": 0,
+    "decodedBody": "<p>This is a friendly reminder about that thing you were supposed to do last week. And the week before.</p>"
+  },
+  {
+    "id": "per-005",
+    "threadId": "per-005",
+    "tags": ["personal"],
+    "title": "🎮 Game Night: Friendship on the Line",
+    "body": "We're having a game night on Saturday. Bring snacks and your ability to remain friends after competitive board games.",
+    "receivedOn": "2024-04-05",
+    "sender": {
+      "name": "Game Master",
+      "email": "host@gamenight.com"
+    },
+    "unread": false,
+    "subject": "Saturday Game Night Invitation",
+    "totalReplies": 4,
+    "decodedBody": "<p>We're having a game night on Saturday. Bring snacks and your ability to remain friends after competitive board games.</p>"
+  },
+  {
+    "id": "upd-005",
+    "threadId": "upd-005",
+    "tags": ["updates"],
+    "title": "🔒 Privacy Policy Update (We Know You Won't Read This)",
+    "body": "Our privacy policy has changed. The short version: we're collecting more data, and you're still clicking 'I Agree'.",
+    "receivedOn": "2024-04-08",
+    "sender": {
+      "name": "Legal Team",
+      "email": "noreply@termsupdate.com"
+    },
+    "unread": false,
+    "subject": "Important Policy Changes",
+    "totalReplies": 0,
+    "decodedBody": "<p>Our privacy policy has changed. The short version: we're collecting more data, and you're still clicking 'I Agree'.</p>"
+  },
+  {
+    "id": "promo-005",
+    "threadId": "promo-005",
+    "tags": ["promotions"],
+    "title": "📚 Books That Will Sit Unread on Your Shelf",
+    "body": "Our spring collection is here! Perfect for impressing guests with your intellectual aspirations.",
+    "receivedOn": "2024-04-10",
+    "sender": {
+      "name": "Bookstore",
+      "email": "reads@bookshop.com"
+    },
+    "unread": true,
+    "subject": "New Arrivals You'll Pretend to Read",
+    "totalReplies": 0,
+    "decodedBody": "<p>Our spring collection is here! Perfect for impressing guests with your intellectual aspirations.</p>"
+  },
+  {
+    "id": "imp-005",
+    "threadId": "imp-005",
+    "tags": ["important", "updates"],
+    "title": "💼 Meeting That Could Have Been an Email (But Isn't)",
+    "body": "Please join us for a two-hour discussion on something that could be resolved in a three-sentence email.",
+    "receivedOn": "2024-04-12",
+    "sender": {
+      "name": "Calendar Overlord",
+      "email": "meetings@workplace.com"
+    },
+    "unread": true,
+    "subject": "Mandatory Team Sync",
+    "totalReplies": 2,
+    "decodedBody": "<p>Please join us for a two-hour discussion on something that could be resolved in a three-sentence email.</p>"
+  }
+]

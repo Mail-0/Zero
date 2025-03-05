@@ -3,7 +3,7 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { EmptyState, type FolderType } from "@/components/mail/empty-state";
-import { preloadThread, useThread, useThreads } from "@/hooks/use-threads";
+import { preloadThread, useThreads } from "@/hooks/use-threads";
 import { useSearchValue } from "@/hooks/use-search-value";
 import { markAsRead, markAsUnread } from "@/actions/mail";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -20,6 +20,8 @@ import { toast } from "sonner";
 import { ThreadContextMenu } from "../context/thread-context";
 import { useParams } from "next/navigation";
 import { useSummary } from "@/hooks/use-summary";
+import { AlertTriangle, Tag, User, Bell, Briefcase, Users } from "lucide-react";
+import items from './demo.json'
 
 interface MailListProps {
   isCompact?: boolean;
@@ -34,6 +36,7 @@ type ThreadProps = {
   selectMode: MailSelectMode;
   onSelect: (message: InitialThread) => void;
   isCompact?: boolean;
+  demo?: boolean;
 };
 
 const highlightText = (text: string, highlight: string) => {
@@ -56,7 +59,7 @@ const highlightText = (text: string, highlight: string) => {
   });
 };
 
-const Thread = ({ message, selectMode, onSelect, isCompact }: ThreadProps) => {
+const Thread = ({ message, selectMode, onSelect, isCompact, demo }: ThreadProps) => {
   const { folder } = useParams<{ folder: string }>()
   const [mail] = useMail();
   const { data: session } = useSession();
@@ -64,17 +67,17 @@ const Thread = ({ message, selectMode, onSelect, isCompact }: ThreadProps) => {
   const isHovering = useRef<boolean>(false);
   const hasPrefetched = useRef<boolean>(false);
   const [searchValue] = useSearchValue();
-  const { mutate } = useThreads(folder, undefined, searchValue.value, 20);
-  const { data } = useSummary(message.id)
+  const { mutate } = demo ? { mutate: async () => { } } : useThreads(folder, undefined, searchValue.value, 20);
 
   const isMailSelected = message.id === mail.selected;
   const isMailBulkSelected = mail.bulkSelected.includes(message.id);
 
   const handleMailClick = async () => {
+    if (demo) return;
     onSelect(message);
     if ((!selectMode || selectMode === 'single') && !isMailSelected && message.unread) {
       try {
-        await markAsRead({ ids: [message.id] }).then(() => mutate()).catch(console.error);
+        await markAsRead({ ids: [message.id] }).then(() => mutate() as any).catch(console.error);
       } catch (error) {
         console.error("Error marking message as read:", error);
       }
@@ -82,6 +85,7 @@ const Thread = ({ message, selectMode, onSelect, isCompact }: ThreadProps) => {
   };
 
   const handleMouseEnter = () => {
+    if (demo) return;
     isHovering.current = true;
 
     // Prefetch only in single select mode
@@ -163,7 +167,9 @@ const Thread = ({ message, selectMode, onSelect, isCompact }: ThreadProps) => {
                 {message.unread ? (
                   <span className="ml-0.5 size-2 rounded-full bg-[#006FFE]" />
                 ) : null}
+                
               </p>
+              <MailLabels labels={message.tags} />
             </div>
             {message.receivedOn ? (
               <p
@@ -235,6 +241,37 @@ const StreamingText = ({ text }: { text: string }) => {
     </div>
   );
 };
+
+export function MailListDemo({ isCompact }: MailListProps) {
+  return <ScrollArea
+    className="h-full pb-2"
+    type="scroll"
+  >
+    <div
+      className={cn(
+        "relative min-h-[calc(100vh-4rem)] w-full",
+
+      )}
+    >
+      <div
+        className="absolute left-0 top-0 w-full p-[8px]"
+      >
+        {items.map((item) => {
+          return item ? (
+            <Thread
+              demo
+              key={item.id}
+              message={item}
+              selectMode={'single'}
+              onSelect={() => console.log('Selected')}
+              isCompact={isCompact}
+            />
+          ) : null;
+        })}
+      </div>
+    </div>
+  </ScrollArea>
+}
 
 export function MailList({ isCompact }: MailListProps) {
   const { folder } = useParams<{ folder: string }>()
@@ -579,17 +616,41 @@ function MailLabels({ labels }: { labels: string[] }) {
   if (!visibleLabels.length) return null;
 
   return (
-    // TODO: When clicking on a label, apply filter to show only messages with that label.
-    <div className={cn("mt-1.5 flex select-none items-center gap-2")}>
-      {visibleLabels.map((label) => (
-        <Badge key={label} className="rounded-full" variant={getDefaultBadgeStyle(label)}>
-          <p className="text-xs font-medium lowercase">
-            {label.replace(/^category_/i, "").replace(/_/g, " ")}
-          </p>
-        </Badge>
-      ))}
+    <div className={cn("flex select-none items-center gap-1")}>
+      {visibleLabels.map((label) => {
+        const style = getDefaultBadgeStyle(label);
+        // Skip rendering if style is "secondary" (default case)
+        if (style === "secondary") return null;
+        
+        return (
+          <Badge key={label} className="rounded-full p-1" variant={style}>
+            {getLabelIcon(label)}
+          </Badge>
+        );
+      })}
     </div>
   );
+}
+
+function getLabelIcon(label: string) {
+  const normalizedLabel = label.toLowerCase().replace(/^category_/i, "");
+
+  switch (normalizedLabel) {
+    case "important":
+      return <AlertTriangle className="h-3 w-3" />;
+    case "promotions":
+      return <Tag className="h-3 w-3 rotate-90" />;
+    case "personal":
+      return <User className="h-3 w-3" />;
+    case "updates":
+      return <Bell className="h-3 w-3" />;
+    case "work":
+      return <Briefcase className="h-3 w-3" />;
+    case "forums":
+      return <Users className="h-3 w-3" />;
+    default:
+      return null;
+  }
 }
 
 function getDefaultBadgeStyle(label: string): ComponentProps<typeof Badge>["variant"] {
