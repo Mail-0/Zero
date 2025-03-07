@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
       { protocol: "https", hostname: "mail0.io" },
+      { protocol: "https", hostname: "0.email" },
       { protocol: "https", hostname: "avatars.githubusercontent.com" },
     ],
   },

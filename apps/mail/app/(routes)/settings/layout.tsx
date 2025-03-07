@@ -34,7 +34,7 @@ function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
     <>
       <AppSidebar className="hidden lg:flex" />
       <AISidebar />
-      <div className="w-full bg-white dark:bg-black md:p-3">
+      <div className="w-full bg-white dark:bg-black pt-3 pr-3">
         <div className="rounded-inherit flex">
           <ResizablePanelGroup
             direction="horizontal"
@@ -47,7 +47,7 @@ function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
               minSize={isMobile ? 100 : 35}
             >
               <div className="md:shadow-s flex-1 flex-col overflow-y-auto bg-offsetLight shadow-inner dark:bg-offsetDark md:flex md:rounded-2xl md:border">
-                <div className="sticky top-0 z-10 flex items-center justify-between gap-1.5 p-2">
+                <div className="sticky top-0 z-10 flex items-center justify-between gap-1.5 p-2 border-b">
                   <SidebarToggle className="h-fit px-2" />
                 </div>
                 <ScrollArea className="h-[calc(100dvh-56px)] p-2 pt-0 md:h-[calc(100dvh-(8px+8px+14px+44px))]">

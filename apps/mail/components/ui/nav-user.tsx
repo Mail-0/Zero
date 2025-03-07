@@ -1,6 +1,15 @@
 "use client";
 
-import { Book, ChevronDown, HelpCircle, LogIn, LogOut, MoonIcon, UserPlus } from "lucide-react";
+import {
+  Book,
+  ChevronDown,
+  HelpCircle,
+  LogIn,
+  LogOut,
+  MoonIcon,
+  Settings2Icon,
+  UserPlus,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import {
@@ -11,15 +20,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
+import { SettingsGearIcon } from "../icons/animated/settings-gear";
 import { useConnections } from "@/hooks/use-connections";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut, useSession } from "@/lib/auth-client";
+import { AddConnectionDialog } from "../connection/add";
 import { putConnection } from "@/actions/connections";
 import { useEffect, useMemo, useState } from "react";
 import { SunIcon } from "../icons/animated/sun";
 import { useTheme } from "next-themes";
 import { IConnection } from "@/types";
+import { Button } from "./button";
 import { toast } from "sonner";
+import Link from "next/link";
 import axios from "axios";
 
 export function NavUser() {
@@ -133,7 +146,7 @@ export function NavUser() {
           </div>
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => window.open("https://github.com/nizzyabi/mail0", "_blank")}
+          onClick={() => window.open("https://github.com/Mail-0/Mail-0", "_blank")}
         >
           <div className="flex cursor-pointer items-center gap-2 text-[13px]">
             <Book size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
@@ -154,7 +167,8 @@ export function NavUser() {
         <div className="space-y-1">
           {session ? (
             <>
-              <div className="text-muted-foreground px-1 py-1.5 text-[11px]">Accounts</div>
+              <p className="text-muted-foreground px-1 py-0.5 text-[11px]">Accounts</p>
+
               {connections?.map((connection) => (
                 <DropdownMenuItem
                   key={connection.id}
@@ -190,17 +204,9 @@ export function NavUser() {
                   </div>
                 </DropdownMenuItem>
               ))}
-              <DropdownMenuItem
-                className="mt-1 cursor-pointer"
-                onClick={() => router.push(`/settings/connections?from=${pathname}`)}
-              >
-                <div className="flex items-center gap-2">
-                  <UserPlus size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
-                  <p className="text-[13px] opacity-60">Add email</p>
-                </div>
-              </DropdownMenuItem>
+              <AddConnectionDialog />
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
+              <DropdownMenuItem className="cursor-pointer text-muted-foreground" onClick={handleLogout}>
                 <LogOut size={16} strokeWidth={2} className="mr-1" aria-hidden="true" />
                 <p className="text-[13px]">Log out</p>
               </DropdownMenuItem>

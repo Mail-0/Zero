@@ -52,7 +52,7 @@ const options = {
     requireEmailVerification: true,
     sendResetPassword: async ({ user, url }) => {
       await resend.emails.send({
-        from: "Mail0 <onboarding@zero.io>",
+        from: "0.email <onboarding@0.email>",
         to: user.email,
         subject: "Reset your password",
         html: `
@@ -71,11 +71,11 @@ const options = {
       const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/verify-email?token=${token}&callbackURL=/settings/connections`;
 
       await resend.emails.send({
-        from: "Mail0 <onboarding@zero.io>",
+        from: "0.email <onboarding@0.email>",
         to: user.email,
-        subject: "Verify your Mail0 account",
+        subject: "Verify your 0.email account",
         html: `
-          <h2>Verify Your Mail0 Account</h2>
+          <h2>Verify Your 0.email Account</h2>
           <p>Click the link below to verify your email:</p>
           <a href="${verificationUrl}">${verificationUrl}</a>
         `,

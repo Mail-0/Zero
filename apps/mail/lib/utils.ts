@@ -22,6 +22,7 @@ export const LABELS = {
   SENT: 'SENT',
 } as const;
 
+export const FOLDER_NAMES = ["inbox", "spam", "trash", "unread", "starred", "important", "sent", "draft"];
 export const FOLDER_TAGS: Record<string, string[]> = {
   [FOLDERS.SPAM]: [LABELS.SPAM],
   [FOLDERS.INBOX]: [LABELS.INBOX],
@@ -78,3 +79,26 @@ export const truncateFileName = (name: string, maxLength = 15) => {
 };
 
 export const fetcher = (url: string) => axios.get(url).then((res) => res.data);
+
+export type FilterSuggestion = {
+  filter: string;
+  description: string;
+  icon: React.ReactNode;
+  prefix: string;
+};
+
+
+export const extractFilterValue = (filter: string): string => {
+  if (!filter || !filter.includes(':')) return '';
+  
+  const colonIndex = filter.indexOf(':');
+  const value = filter.substring(colonIndex + 1);
+  
+  return value || '';
+};
+
+export const defaultPageSize = 20
+
+export function createSectionId(title: string) {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+} 

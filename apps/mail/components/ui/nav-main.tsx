@@ -191,15 +191,13 @@ function NavItem(item: NavItemProps & { href: string }) {
     );
   }
 
-  // Remove animation handlers for back button since ChevronLeft doesn't have animation
-  const linkProps = item.isBackButton
-    ? { href: item.href, onClick: item.onClick }
-    : {
-        href: item.href,
-        onClick: item.onClick,
-        onMouseEnter: () => iconRef.current?.startAnimation?.(),
-        onMouseLeave: () => iconRef.current?.stopAnimation?.(),
-      };
+  // Apply animation handlers to all buttons including back buttons
+  const linkProps = {
+    href: item.href,
+    onClick: item.onClick,
+    onMouseEnter: () => iconRef.current?.startAnimation?.(),
+    onMouseLeave: () => iconRef.current?.stopAnimation?.(),
+  };
 
   const buttonContent = (
     <SidebarMenuButton
@@ -209,7 +207,7 @@ function NavItem(item: NavItemProps & { href: string }) {
         item.isActive && "bg-subtleWhite text-accent-foreground dark:bg-subtleBlack",
       )}
     >
-      {item.icon && <item.icon ref={!item.isBackButton ? iconRef : undefined} className="mr-2" />}
+      {item.icon && <item.icon ref={iconRef} className="mr-2" />}
       <p className="mt-0.5 text-[13px]">{item.title}</p>
       {stats && stats.find((stat) => stat.label?.toLowerCase() === item.title?.toLowerCase()) && (
         <Badge className="ml-auto rounded-md" variant="outline">

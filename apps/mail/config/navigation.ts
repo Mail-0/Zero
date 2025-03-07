@@ -1,6 +1,5 @@
 import { SettingsGearIcon } from "@/components/icons/animated/settings-gear";
 import { CheckCheckIcon } from "@/components/icons/animated/check-check";
-import { MessageCircleIcon } from "@/components/icons/animated/message";
 import { ArrowLeftIcon } from "@/components/icons/animated/arrow-left";
 import { BookTextIcon } from "@/components/icons/animated/book-text";
 import { ShieldCheckIcon } from "@/components/icons/animated/shield";
@@ -9,12 +8,8 @@ import { SparklesIcon } from "@/components/icons/animated/sparkles";
 import { ArchiveIcon } from "@/components/icons/animated/archive";
 import { UsersIcon } from "@/components/icons/animated/users";
 import { InboxIcon } from "@/components/icons/animated/inbox";
-import { CartIcon } from "@/components/icons/animated/cart";
-import { BellIcon } from "@/components/icons/animated/bell";
+import { DeleteIcon } from "@/components/icons/animated/trash";
 import { XIcon } from "@/components/icons/animated/x";
-import { Mail, Shield, Palette } from "lucide-react";
-import { ChevronLeft } from "lucide-react";
-
 export interface NavItem {
   title: string;
   url: string;
@@ -69,27 +64,9 @@ export const navigationConfig: Record<string, NavConfig> = {
             disabled: true,
           },
           {
-            title: "Social",
-            url: "/mail/inbox?category=social",
-            icon: UsersIcon,
-            disabled: true,
-          },
-          {
-            title: "Updates",
-            url: "/mail/inbox?category=updates",
-            icon: BellIcon,
-            disabled: true,
-          },
-          {
-            title: "Forums",
-            url: "/mail/inbox?category=forums",
-            icon: MessageCircleIcon,
-            disabled: true,
-          },
-          {
-            title: "Shopping",
-            url: "/mail/inbox?category=shopping",
-            icon: CartIcon,
+            title: "Bin",
+            url: "/mail/bin",
+            icon: DeleteIcon,
             disabled: true,
           },
           {

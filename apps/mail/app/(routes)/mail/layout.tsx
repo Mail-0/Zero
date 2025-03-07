@@ -7,7 +7,7 @@ export default function MailLayout({ children }: { children: React.ReactNode }) 
     <>
       <AppSidebar />
       <KeyboardShortcuts />
-      <div className="w-full bg-white md:p-3 dark:bg-black">{children}</div>
+      <div className="w-full bg-white py-3 pr-3 dark:bg-black">{children}</div>
       <AISidebar />
     </>
   );

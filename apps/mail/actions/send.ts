@@ -53,7 +53,7 @@ export async function sendEmail({
   const domain = fromEmail.split("@")[1];
   const randomPart = Math.random().toString(36).substring(2);
   const timestamp = Date.now();
-  const messageId = `<${timestamp}.${randomPart}.mail0@${domain}>`;
+  const messageId = `<${timestamp}.${randomPart}.zerodotemail@${domain}>`;
 
   const date = new Date().toUTCString();
   const boundary = `----=_NextPart_${Date.now().toString(36)}_${Math.random().toString(36).substr(2, 9)}`;
@@ -92,7 +92,7 @@ export async function sendEmail({
       : []),
 
     // Security headers
-    "X-Mailer: Mail0",
+    "X-Mailer: zerodotemail",
     `X-Originating-IP: [PRIVATE]`,
     `X-Priority: 3`,
     `X-MSMail-Priority: Normal`,

@@ -55,7 +55,7 @@ interface ActivityData {
 }
 
 const excludedUsernames = ["bot1", "dependabot", "github-actions"];
-const coreTeamMembers = ["nizzyabi", "ahmetskilinc", "ripgrim", "user12224", "praashh", "mrgsub"];
+const coreTeamMembers = ["nizzyabi", "ahmetskilinc", "ripgrim", "needlexo", "praashh", "mrgsub"];
 const REPOSITORY = "Mail-0/Mail-0";
 
 const specialRoles: Record<string, { role: string; twitter?: string; website?: string }> = {
@@ -73,9 +73,9 @@ const specialRoles: Record<string, { role: string; twitter?: string; website?: s
     twitter: "fuckgrimlabs",
     website: "https://ripgrim.com",
   },
-  user12224: {
+  needlexo: {
     role: "Maintainer",
-    twitter: "user12224",
+    twitter: "needleXO",
     website: "https://needle.rip",
   },
   praashh: {
@@ -84,6 +84,7 @@ const specialRoles: Record<string, { role: string; twitter?: string; website?: s
   },
   mrgsub: {
     role: "Maintainer",
+    twitter: "cmdhaus",
   },
 };
 
@@ -202,7 +203,7 @@ export default function OpenPage() {
       const dateStr = date.toISOString().split("T")[0];
 
       const dayCommits = commitsData.filter((commit: { commit: { author: { date: string } } }) =>
-        commit.commit.author.date.startsWith(dateStr),
+        commit.commit.author.date.startsWith(dateStr ?? ''),
       ).length;
 
       const dayIndex = i + 1;
@@ -231,7 +232,7 @@ export default function OpenPage() {
       const dateStr = date.toISOString().split("T")[0];
 
       const dayCommits = commitsData.filter((commit: { commit: { author: { date: string } } }) =>
-        commit.commit.author.date.startsWith(dateStr),
+        commit.commit.author.date.startsWith(dateStr ?? ''),
       ).length;
 
       const commits = dayCommits || Math.floor(Math.random() * 5) + 1;
@@ -324,14 +325,14 @@ export default function OpenPage() {
               <div className="flex items-center gap-2">
                 <Image
                   src="/black-icon.svg"
-                  alt="Mail0 Logo"
+                  alt="0.email Logo"
                   width={32}
                   height={32}
                   className="dark:hidden"
                 />
                 <Image
                   src="/white-icon.svg"
-                  alt="Mail0 Logo"
+                  alt="0.email Logo"
                   width={32}
                   height={32}
                   className="hidden dark:block"
@@ -474,7 +475,7 @@ export default function OpenPage() {
                                   Stars:
                                 </span>
                                 <span className="font-medium text-neutral-900 dark:text-white">
-                                  {payload[0].value}
+                                  {payload[0]?.value}
                                 </span>
                               </div>
                               <div className="flex items-center gap-2">
@@ -483,7 +484,7 @@ export default function OpenPage() {
                                   Forks:
                                 </span>
                                 <span className="font-medium text-neutral-900 dark:text-white">
-                                  {payload[1].value}
+                                  {payload[1]?.value}
                                 </span>
                               </div>
                             </div>
@@ -548,7 +549,7 @@ export default function OpenPage() {
                                   Commits:
                                 </span>
                                 <span className="font-medium text-neutral-900 dark:text-white">
-                                  {payload[0].value}
+                                  {payload[0]?.value}
                                 </span>
                               </div>
                               <div className="flex items-center gap-2">
@@ -557,7 +558,7 @@ export default function OpenPage() {
                                   Issues:
                                 </span>
                                 <span className="font-medium text-neutral-900 dark:text-white">
-                                  {payload[1].value}
+                                  {payload[1]?.value}
                                 </span>
                               </div>
                               <div className="flex items-center gap-2">
@@ -566,7 +567,7 @@ export default function OpenPage() {
                                   PRs:
                                 </span>
                                 <span className="font-medium text-neutral-900 dark:text-white">
-                                  {payload[2].value}
+                                  {payload[2]?.value}
                                 </span>
                               </div>
                             </div>
@@ -603,7 +604,7 @@ export default function OpenPage() {
             <h1 className="text-3xl font-semibold tracking-tight text-neutral-900/80 dark:text-white">
               Core Team
             </h1>
-            <p className="mt-2 text-muted-foreground">Meet the people behind Mail0</p>
+            <p className="mt-2 text-muted-foreground">Meet the people behind 0.email</p>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -826,7 +827,7 @@ export default function OpenPage() {
                         cursor={{ fill: "rgb(0 0 0 / 0.05)" }}
                         content={({ active, payload }) => {
                           if (active && payload && payload.length) {
-                            const data = payload[0].payload;
+                            const data = payload[0]?.payload;
                             return (
                               <div className="rounded-lg border border-neutral-200 bg-white p-3 shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
                                 <div className="flex items-center gap-2">

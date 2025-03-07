@@ -56,7 +56,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { toggleOpen: toggleAISidebar } = useAISidebar();
 
   return (
-    <Sidebar collapsible="icon" {...props} className="flex flex-col items-center pl-1.5 bg-offsetWhite dark:bg-offsetDark">
+    <Sidebar collapsible="icon" {...props} className="flex flex-col items-center bg-offsetWhite dark:bg-offsetDark">
       <div className="flex w-full flex-col">
         <SidebarHeader className="flex flex-col gap-2 p-2">
           <NavUser />
@@ -90,21 +90,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </div>
 
       <div
-        className="mb-4 ml-2 mt-auto cursor-pointer pl-1.5"
+        className="mb-4 mt-auto cursor-pointer pl-2.5"
         onClick={toggleAISidebar}
-        title="Open AI Assistant (Cmd+S)"
+        title="Open AI Assistant (Cmd+0)"
       >
         <div>
           <Image
             src="/ai.svg"
-            alt="Mail0 Logo"
+            alt="0.email Logo"
             width={28}
             height={28}
             className="hidden transition-transform duration-300 hover:rotate-90 dark:block"
           />
           <Image
             src="/ai.svg"
-            alt="Mail0 Logo"
+            alt="0.email Logo"
             width={28}
             height={28}
             className="transition-transform duration-300 hover:rotate-90 dark:hidden"

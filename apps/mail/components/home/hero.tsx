@@ -84,11 +84,11 @@ export default function Hero() {
 
   return (
     <div className="animate-fade-in mx-auto w-full pt-20 md:px-0 md:pt-20">
-      <p className="text-center text-4xl font-semibold leading-tight tracking-[-0.03em] text-white sm:text-6xl md:px-0">
-        The future of email <span className="compose-gradient-text-shiny">is here</span>
+      <p className="text-center text-4xl font-semibold leading-tight tracking-[-0.03em] text-gray-900 dark:text-white sm:text-6xl md:px-0">
+        The future of email is here
       </p>
       <div className="mx-auto w-full max-w-4xl">
-        <Balancer className="text-shinyGray mx-auto mt-3 text-center text-[15px] leading-tight sm:text-[22px] ">
+        <Balancer className="text-gray-600 dark:text-shinyGray mx-auto mt-3 text-center text-[15px] leading-tight sm:text-[22px] ">
           Experience email the way you want with <span className="font-mono">0</span> – the first
           open source email app that puts your privacy and safety first.
         </Balancer>
@@ -98,8 +98,8 @@ export default function Hero() {
         <CardContent className="flex flex-col items-center justify-center px-0">
           {showSuccess ? (
             <div className="flex flex-col items-center justify-center gap-4 text-center">
-              <p className="text-2xl font-semibold text-white">You're on the list! 🎉</p>
-              <p className="text-shinyGray text-lg">
+              <p className="text-2xl font-semibold text-gray-900 dark:text-white">You're on the list! 🎉</p>
+              <p className="text-gray-600 dark:text-shinyGray text-lg">
                 We'll let you know when we're ready to revolutionize your email experience.
               </p>
             </div>
@@ -107,18 +107,17 @@ export default function Hero() {
             <div className="flex items-center justify-center gap-4">
               <Button
                 variant="outline"
-                className="hover:bg-accent flex h-[40px] w-[170px] items-center justify-center rounded-md bg-black text-white hover:text-white"
+                className="hover:bg-gray-100 dark:hover:bg-accent flex h-[40px] w-[170px] items-center justify-center rounded-md bg-white dark:bg-black text-gray-900 dark:text-white hover:text-gray-900 dark:hover:text-white"
                 asChild
               >
                 <Link href="/login">
                   {" "}
-                  <Image src="/white-icon.svg" alt="Email" width={15} height={15} />
+                  <Image src="/white-icon.svg" alt="Email" width={15} height={15} className="dark:invert-0 invert" />
                   Start Emailing
                 </Link>
               </Button>
               <Button
-                variant="outline"
-                className="group h-[40px] w-[170px] rounded-md bg-white text-black hover:bg-white hover:text-black"
+                className="group h-[40px] w-[170px] rounded-md bg-gray-900 text-white hover:bg-black dark:bg-white dark:text-black dark:hover:bg-white"
                 asChild
               >
                 <Link target="_blank" href="https://cal.link/0-email">
@@ -158,8 +157,8 @@ export default function Hero() {
           )}
 
           {signupCount !== null && (
-            <div className="text-shinyGray mt-4 text-center text-sm">
-              <span className="font-semibold text-white">
+            <div className="text-gray-600 dark:text-shinyGray mt-4 text-center text-sm">
+              <span className="font-semibold text-gray-900 dark:text-white">
                 <AnimatedNumber
                   springOptions={{
                     bounce: 0,

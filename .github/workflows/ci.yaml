@@ -35,4 +35,4 @@ jobs:
         run: pnpm install
 
       - name: Check 🚨
-        run: pnpm check
+        run: pnpm format

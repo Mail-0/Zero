@@ -1,7 +1,7 @@
 "use client";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ComponentProps, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { EmptyState, type FolderType } from "@/components/mail/empty-state";
 import { preloadThread, useThreads } from "@/hooks/use-threads";
 import { useSearchValue } from "@/hooks/use-search-value";
@@ -12,7 +12,7 @@ import { useMail } from "@/components/mail/use-mail";
 import { useHotKey } from "@/hooks/use-hot-key";
 import { useSession } from "@/lib/auth-client";
 import { Badge } from "@/components/ui/badge";
-import { cn, formatDate, LABELS } from "@/lib/utils";
+import { cn, defaultPageSize, formatDate } from "@/lib/utils";
 import { InitialThread } from "@/types";
 import { useTheme } from "next-themes";
 import Image from "next/image";
@@ -34,7 +34,7 @@ type MailSelectMode = "mass" | "range" | "single" | "selectAllBelow";
 type ThreadProps = {
   message: InitialThread;
   selectMode: MailSelectMode;
-  onSelect: (message: InitialThread) => void;
+  onClick?: (message: InitialThread) => () => Promise<any> | undefined;
   isCompact?: boolean;
   demo?: boolean;
 };
@@ -59,31 +59,16 @@ const highlightText = (text: string, highlight: string) => {
   });
 };
 
-const Thread = ({ message, selectMode, onSelect, isCompact, demo }: ThreadProps) => {
-  const { folder } = useParams<{ folder: string }>()
+const Thread = memo(({ message, selectMode, demo, onClick }: ThreadProps) => {
   const [mail] = useMail();
   const { data: session } = useSession();
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const isHovering = useRef<boolean>(false);
   const hasPrefetched = useRef<boolean>(false);
   const [searchValue] = useSearchValue();
-  const { mutate } = demo ? { mutate: async () => { } } : useThreads(folder, undefined, searchValue.value, 20);
 
   const isMailSelected = message.id === mail.selected;
   const isMailBulkSelected = mail.bulkSelected.includes(message.id);
-
-  const handleMailClick = async () => {
-    if (demo) return;
-    onSelect(message);
-    if ((!selectMode || selectMode === 'single') && !isMailSelected && message.unread) {
-      try {
-        await markAsRead({ ids: [message.id] }).then(() => mutate() as any).catch(console.error);
-      } catch (error) {
-        console.error("Error marking message as read:", error);
-      }
-    }
-  };
-
   const handleMouseEnter = () => {
     if (demo) return;
     isHovering.current = true;
@@ -130,119 +115,71 @@ const Thread = ({ message, selectMode, onSelect, isCompact, demo }: ThreadProps)
   }, []);
 
   return (
-    <Tooltip delayDuration={1500}>
-      <TooltipTrigger asChild>
-        <div
-          onClick={handleMailClick}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-          key={message.id}
-          className={cn(
-            "hover:bg-offsetLight hover:bg-primary/5 group relative flex cursor-pointer flex-col items-start overflow-clip rounded-lg border border-transparent px-4 py-3 text-left text-sm transition-all hover:opacity-100",
-            !message.unread && "opacity-50",
-            (isMailSelected || isMailBulkSelected) && "border-border bg-primary/5 opacity-100",
-            isCompact && "py-2",
-          )}
-        >
-          <div
-            className={cn(
-              "bg-primary absolute inset-y-0 left-0 w-1 -translate-x-2 transition-transform ease-out",
-              isMailBulkSelected && "translate-x-0",
-            )}
-          />
-          <div className="flex w-full items-center justify-between">
-            <div className="flex items-center gap-2">
-              <p
-                className={cn(
-                  message.unread ? "font-bold" : "font-medium",
-                  "text-md flex items-baseline gap-1 group-hover:opacity-100",
-                )}
-              >
-                <span className={cn(mail.selected && "max-w-[120px] truncate")}>
-                  {highlightText(message.sender.name, searchValue.highlight)}
-                </span>{" "}
-                {message.totalReplies !== 1 ? (
-                  <span className="ml-0.5 text-xs opacity-70">{message.totalReplies}</span>
-                ) : null}
-                {message.unread ? (
-                  <span className="ml-0.5 size-2 rounded-full bg-[#006FFE]" />
-                ) : null}
-                
-              </p>
-              <MailLabels labels={message.tags} />
-            </div>
-            {message.receivedOn ? (
-              <p
-                className={cn(
-                  "text-xs font-normal opacity-70 transition-opacity group-hover:opacity-100",
-                  isMailSelected && "opacity-100",
-                )}
-              >
-                {formatDate(message.receivedOn.split(".")[0] || "")}
-              </p>
-            ) : null}
-          </div>
+    <div
+      onClick={onClick ? onClick(message) : undefined}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      key={message.id}
+      className={cn(
+        "hover:bg-offsetLight hover:bg-primary/5 group relative flex cursor-pointer flex-col items-start overflow-clip rounded-lg border border-transparent px-4 py-3 text-left text-sm transition-all hover:opacity-100",
+        !message.unread && "opacity-50",
+        (isMailSelected || isMailBulkSelected) && "border-border bg-primary/5 opacity-100",
+        // isCompact && "py-2",
+      )}
+    >
+      <div
+        className={cn(
+          "bg-primary absolute inset-y-0 left-0 w-1 -translate-x-2 transition-transform ease-out",
+          isMailBulkSelected && "translate-x-0",
+        )}
+      />
+      <div className="flex w-full items-center justify-between">
+        <div className="flex items-center gap-1">
           <p
             className={cn(
-              "mt-1 text-xs opacity-70 transition-opacity",
-              mail.selected ? "line-clamp-1" : "line-clamp-2",
-              isCompact && "line-clamp-1",
+              message.unread ? "font-bold" : "font-medium",
+              "text-md flex items-baseline gap-1 group-hover:opacity-100",
+            )}
+          >
+            <span className={cn(mail.selected && "max-w-[120px] truncate")}>
+              {highlightText(message.sender.name, searchValue.highlight)}
+            </span>{" "}
+            {message.unread ? (
+              <span className=" size-2 rounded-full bg-[#006FFE]" />
+            ) : null}
+
+          </p>
+          <MailLabels labels={message.tags} />
+          {message.totalReplies !== 1 ? (
+              <span className="text-xs opacity-70 border border-dotted rounded-full px-[5px] py-[1px]">{message.totalReplies}</span>
+            ) : null}
+        </div>
+        {message.receivedOn ? (
+          <p
+            className={cn(
+              "text-xs font-normal opacity-70 transition-opacity group-hover:opacity-100",
               isMailSelected && "opacity-100",
             )}
           >
-            {highlightText(message.subject, searchValue.highlight)}
+            {formatDate(message.receivedOn.split(".")[0] || "")}
           </p>
-          {!isCompact && <MailLabels labels={message.tags} />}
-        </div>
-      </TooltipTrigger>
-    </Tooltip>
-  );
-};
-
-const StreamingText = ({ text }: { text: string }) => {
-  const [displayText, setDisplayText] = useState("");
-  const [isComplete, setIsComplete] = useState(false);
-
-  useEffect(() => {
-    let currentIndex = 0;
-    setIsComplete(false);
-    setDisplayText("");
-
-    const interval = setInterval(() => {
-      if (currentIndex < text.length) {
-        const nextChar = text[currentIndex];
-        setDisplayText((prev) => prev + nextChar);
-        currentIndex++;
-      } else {
-        setIsComplete(true);
-        clearInterval(interval);
-      }
-    }, 40); // Slower typing speed for better readability
-
-    return () => clearInterval(interval);
-  }, [text]);
-
-  return (
-    <div className="flex items-center gap-2">
-      <div className="flex-shrink-0">
-        <Image src="/ai.svg" alt="logo" className="h-4 w-4" width={100} height={100} />
+        ) : null}
       </div>
-      <div
+      <p
         className={cn(
-          "bg-gradient-to-r from-neutral-500 via-neutral-300 to-neutral-500 bg-[length:200%_100%] bg-clip-text text-sm leading-relaxed text-transparent",
-          isComplete ? "animate-shine-slow" : "",
+          "mt-1 text-xs opacity-70 transition-opacity line-clamp-1",
+          mail.selected ? "line-clamp-1" : "line-clamp-2",
+          isMailSelected && "opacity-100",
         )}
       >
-        {displayText}
-        {isComplete ? null : (
-          <span className="animate-blink bg-primary ml-0.5 inline-block h-4 w-0.5"></span>
-        )}
-      </div>
+        {highlightText(message.subject, searchValue.highlight)}
+      </p>
     </div>
   );
-};
+});
 
-export function MailListDemo({ isCompact }: MailListProps) {
+
+export function MailListDemo({ items: filteredItems = items }) {
   return <ScrollArea
     className="h-full pb-2"
     type="scroll"
@@ -250,21 +187,18 @@ export function MailListDemo({ isCompact }: MailListProps) {
     <div
       className={cn(
         "relative min-h-[calc(100vh-4rem)] w-full",
-
       )}
     >
       <div
         className="absolute left-0 top-0 w-full p-[8px]"
       >
-        {items.map((item) => {
+        {filteredItems.map((item) => {
           return item ? (
             <Thread
               demo
               key={item.id}
               message={item}
               selectMode={'single'}
-              onSelect={() => console.log('Selected')}
-              isCompact={isCompact}
             />
           ) : null;
         })}
@@ -272,14 +206,14 @@ export function MailListDemo({ isCompact }: MailListProps) {
     </div>
   </ScrollArea>
 }
-
+              
 export function MailList({ isCompact }: MailListProps) {
   const { folder } = useParams<{ folder: string }>()
   const [mail, setMail] = useMail();
   const { data: session } = useSession();
   const [searchValue] = useSearchValue();
 
-  const { data: { threads: items, nextPageToken }, isValidating, isLoading, loadMore } = useThreads(folder, undefined, searchValue.value, 20);
+  const { data: { threads: items, nextPageToken }, mutate, isValidating, isLoading, loadMore } = useThreads(folder, undefined, searchValue.value, defaultPageSize);
 
   const parentRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -490,7 +424,7 @@ export function MailList({ isCompact }: MailListProps) {
         ? "selectAllBelow"
         : "single";
 
-  const handleMailClick = (message: InitialThread) => {
+  const handleMailClick = useCallback((message: InitialThread) => () => {
     if (selectMode === "mass") {
       const updatedBulkSelected = mail.bulkSelected.includes(message.id)
         ? mail.bulkSelected.filter((id) => id !== message.id)
@@ -543,7 +477,10 @@ export function MailList({ isCompact }: MailListProps) {
         bulkSelected: [],
       });
     }
-  };
+    if (message.unread) {
+      return markAsRead({ ids: [message.id] }).then(() => mutate() as any).catch(console.error);
+    }
+  }, [mail, setMail, selectMode]);
 
   const isEmpty = items.length === 0;
   const isFiltering = searchValue.value.trim().length > 0;
@@ -570,25 +507,23 @@ export function MailList({ isCompact }: MailListProps) {
         )}
         style={{
           height: `${virtualizer.getTotalSize()}px`,
+          willChange: "transform", contain: 'paint'
         }}
       >
         <div
-          style={{ transform: `translateY(${virtualItems[0]?.start ?? 0}px)` }}
+          style={{ transform: `translateY(${virtualItems[0]?.start ?? 0}px)`, willChange: "transform", contain: 'paint' }}
           className="absolute left-0 top-0 w-full p-[8px]"
         >
           {virtualItems.map(({ index, key }) => {
             const item = items[index];
             return item ? (
-              <ThreadContextMenu isSpam={item.tags.includes(LABELS.SPAM)} isInbox={item.tags.includes(LABELS.INBOX)} isSent={item.tags.includes(LABELS.SENT)} key={key} emailId={item.id} threadId={item.threadId}>
-                <div className="mb-2" data-index={index} ref={virtualizer.measureElement}>
                   <Thread
+                key={item.id}
+                onClick={handleMailClick}
                     message={item}
-                    selectMode={selectMode}
-                    onSelect={handleMailClick}
+                selectMode={selectMode}
                     isCompact={isCompact}
-                  />
-                </div>
-              </ThreadContextMenu>
+              />
             ) : null;
           })}
           <div className="w-full pt-2 text-center">
@@ -606,7 +541,7 @@ export function MailList({ isCompact }: MailListProps) {
   );
 }
 
-function MailLabels({ labels }: { labels: string[] }) {
+const MailLabels = memo(({ labels }: { labels: string[] }) => {
   if (!labels.length) return null;
 
   const visibleLabels = labels.filter(
@@ -630,7 +565,9 @@ function MailLabels({ labels }: { labels: string[] }) {
       })}
     </div>
   );
-}
+}, (prev, next) => {
+  return prev.labels === next.labels;
+});
 
 function getLabelIcon(label: string) {
   const normalizedLabel = label.toLowerCase().replace(/^category_/i, "");

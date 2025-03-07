@@ -184,7 +184,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             </CommandItem>
             <CommandItem
               onSelect={() =>
-                runCommand(() => window.open("https://github.com/nizzyabi/mail0", "_blank"))
+                runCommand(() => window.open("https://github.com/Mail-0/Mail-0", "_blank"))
               }
             >
               <ArrowUpRight size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />

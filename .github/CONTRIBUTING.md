@@ -1,6 +1,6 @@
-# Contributing to Mail0
+# Contributing to 0.email
 
-Thank you for your interest in contributing to Mail0! We're excited to have you join our mission to create an open-source email solution that prioritizes privacy, transparency, and user empowerment.
+Thank you for your interest in contributing to 0.email! We're excited to have you join our mission to create an open-source email solution that prioritizes privacy, transparency, and user empowerment.
 
 ## Table of Contents
 
@@ -136,4 +136,4 @@ If you have questions or need help, you can:
 
 ---
 
-Thank you for contributing to Mail0! Your efforts help make email more open, private, and user-centric. 🚀
+Thank you for contributing to 0.email! Your efforts help make email more open, private, and user-centric. 🚀

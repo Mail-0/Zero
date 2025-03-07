@@ -69,7 +69,7 @@ export default function SignUp() {
     <div className="flex h-dvh w-screen items-center justify-center bg-background">
       <Card className="w-full max-w-md border-none shadow-none">
         <CardHeader className="py-5">
-          <CardTitle className="text-center">Create your Mail0 account</CardTitle>
+          <CardTitle className="text-center">Create your 0.email account</CardTitle>
           <p className="text-center text-sm text-gray-500 dark:text-zinc-400">
             Create an account to continue
           </p>

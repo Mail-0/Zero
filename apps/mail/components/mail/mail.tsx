@@ -4,7 +4,7 @@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-import { AlignVerticalSpaceAround, ArchiveX, BellOff, SearchIcon, X, Inbox, Tag, Users, AlertTriangle, MessageSquare, User, Bell } from "lucide-react";
+import { ArchiveX, BellOff, X, Inbox, Tag, AlertTriangle, User, Bell } from "lucide-react";
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { ThreadDisplay, ThreadDemo } from "@/components/mail/thread-display";
 import { MailList, MailListDemo } from "@/components/mail/mail-list";
@@ -20,20 +20,44 @@ import { useHotKey } from "@/hooks/use-hot-key";
 import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { SearchBar } from "./search-bar";
-import { cn } from "@/lib/utils";
+import { cn, defaultPageSize } from "@/lib/utils";
 import items from "./demo.json";
+import { XIcon } from "../icons/animated/x";
+import { SearchIcon } from "../icons/animated/search";
 
 export function DemoMailLayout() {
-  const mail = {
+  const [mail, setMail] = useState({
     selected: "demo",
-  };
+    bulkSelected: [],
+  });
   const isMobile = false;
   const isValidating = false;
   const isLoading = false;
   const isDesktop = true;
-  const [isCompact, setIsCompact] = useState(true);
+
   const [open, setOpen] = useState(false);
   const handleClose = () => setOpen(false);
+  const [activeCategory, setActiveCategory] = useState("Primary");
+  const [filteredItems, setFilteredItems] = useState(items);
+
+  useEffect(() => {
+    if (activeCategory === "Primary") {
+      setFilteredItems(items);
+    } else {
+      const categoryMap = {
+        "Important": "important",
+        "Personal": "personal",
+        "Updates": "updates",
+        "Promotions": "promotions"
+      };
+      
+      const filterTag = categoryMap[activeCategory as keyof typeof categoryMap];
+      const filtered = items.filter(item => 
+        item.tags && item.tags.includes(filterTag)
+      );
+      setFilteredItems(filtered);
+    }
+  }, [activeCategory]);
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -65,7 +89,11 @@ export function DemoMailLayout() {
               >
                 <SidebarToggle className="h-fit px-2" />
                 <div>
-                  <MailCategoryTabs iconsOnly={true} />
+                  <MailCategoryTabs 
+                    iconsOnly={true} 
+                    onCategoryChange={setActiveCategory}
+                    initialCategory={activeCategory}
+                  />
                 </div>
               </div>
 
@@ -90,7 +118,7 @@ export function DemoMailLayout() {
                     ))}
                   </div>
                 ) : (
-                  <MailListDemo isCompact={isCompact} />
+                    <MailListDemo items={filteredItems} />
                 )}
               </div>
             </div>
@@ -105,7 +133,7 @@ export function DemoMailLayout() {
                 minSize={25}
               >
                 <div className="relative hidden h-[calc(100vh-(12px+14px))] flex-1 md:block">
-                  <ThreadDemo mail={[items[0]]} onClose={handleClose} />
+                  <ThreadDemo mail={[filteredItems[0]]} onClose={handleClose} />
                 </div>
               </ResizablePanel>
             </>
@@ -137,9 +165,7 @@ export function MailLayout() {
   const [searchMode, setSearchMode] = useState(false);
   const [searchValue] = useSearchValue();
   const [mail, setMail] = useMail();
-  const searchParams = useSearchParams();
   const [isMobile, setIsMobile] = useState(false);
-  const [filterValue, setFilterValue] = useState<"all" | "unread">("all");
   const router = useRouter();
   const { data: session, isPending } = useSession();
 
@@ -149,26 +175,7 @@ export function MailLayout() {
     }
   }, [session?.user, isPending]);
 
-  const labels = useMemo(() => {
-    if (filterValue === "all") {
-      if (searchParams.has("category")) {
-        return [`CATEGORY_${searchParams.get("category")!.toUpperCase()}`];
-      }
-      return undefined;
-    }
-    if (filterValue) {
-      if (searchParams.has("category")) {
-        return [
-          filterValue.toUpperCase(),
-          `CATEGORY_${searchParams.get("category")!.toUpperCase()}`,
-        ];
-      }
-      return [filterValue.toUpperCase()];
-    }
-    return undefined;
-  }, [filterValue, searchParams]);
-
-  const { isLoading, isValidating } = useThreads(folder, undefined, searchValue.value, 20);
+  const { isLoading, isValidating } = useThreads(folder, undefined, searchValue.value, defaultPageSize);
 
   const [open, setOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -210,6 +217,8 @@ export function MailLayout() {
     }
   });
 
+  const searchIconRef = useRef<any>(null);
+
   return (
     <TooltipProvider delayDuration={0}>
       <div className="rounded-inherit flex">
@@ -221,7 +230,6 @@ export function MailLayout() {
           <ResizablePanel
             className={cn(
               "border-none !bg-transparent",
-              mail?.selected ? "md:hidden lg:block" : "",
               mail?.selected ? "md:hidden lg:block" : "",
             )}
             defaultSize={isMobile ? 100 : 25}
@@ -236,19 +244,19 @@ export function MailLayout() {
               />
               <div
                 className={cn(
-                  "sticky top-0 z-10 flex items-center justify-between gap-1.5 p-2 transition-colors",
+                  "sticky top-0 z-10 flex items-center justify-between gap-1.5 p-2 transition-colors border-b",
                 )}
               >
                 <SidebarToggle className="h-fit px-2" />
                 {searchMode && (
-                  <div className="flex flex-1 items-center justify-center gap-1.5">
+                  <div className="flex flex-1 items-center justify-center gap-3">
                     <SearchBar />
                     <Button
                       variant="ghost"
                       className="md:h-fit md:px-2"
                       onClick={() => setSearchMode(false)}
                     >
-                      <X />
+                      <XIcon className="h-4 w-4" />
                     </Button>
                   </div>
                 )}
@@ -280,15 +288,17 @@ export function MailLayout() {
                     ) : (
                       <>
                         <div className="flex-1 text-center text-sm font-medium capitalize">
-                          <MailCategoryTabs />
+                            <MailCategoryTabs iconsOnly={!!mail.selected} />
                         </div>
                         <div className="flex items-center gap-1.5">
                           <Button
                             variant="ghost"
                             className="md:h-fit md:px-2"
                             onClick={() => setSearchMode(true)}
+                            onMouseEnter={() => searchIconRef.current?.startAnimation?.()}
+                            onMouseLeave={() => searchIconRef.current?.stopAnimation?.()}
                           >
-                            <SearchIcon />
+                            <SearchIcon ref={searchIconRef} className="h-4 w-4" />
                           </Button>
                         </div>
                       </>
@@ -327,7 +337,6 @@ export function MailLayout() {
 
           {isDesktop && mail.selected && (
             <>
-              <ResizableHandle className="opacity-0" />
               <ResizablePanel
                 className="bg-offsetLight dark:bg-offsetDark shadow-sm md:flex md:rounded-2xl md:border md:shadow-sm"
                 defaultSize={75}
@@ -344,7 +353,7 @@ export function MailLayout() {
         {/* Mobile Drawer */}
         {isMobile && (
           <Drawer open={open} onOpenChange={setOpen}>
-            <DrawerContent className="bg-offsetLight dark:bg-offsetDark h-[calc(100vh-3rem)] overflow-hidden p-0">
+            <DrawerContent className="bg-offsetLight dark:bg-offsetDark h-[calc(100vh-4rem)] overflow-hidden p-0">
               <DrawerHeader className="sr-only">
                 <DrawerTitle>Email Details</DrawerTitle>
               </DrawerHeader>
@@ -384,103 +393,156 @@ function BulkSelectActions() {
   );
 }
 
-function MailCategoryTabs({ iconsOnly = false }: { iconsOnly?: boolean }) {
+const categories = [
+  {
+    name: "Primary",
+    searchValue: "",
+    icon: <Inbox className="h-4 w-4" />,
+    colors: "border-0 bg-gray-200 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400 dark:hover:bg-gray-800/70"
+  },
+  {
+    name: "Important",
+    searchValue: "is:important",
+    icon: <AlertTriangle className="h-4 w-4" />,
+    colors: "border-0 text-amber-800 bg-amber-100 dark:bg-amber-900/20 dark:text-amber-500 dark:hover:bg-amber-900/30"
+  },
+  {
+    name: "Personal",
+    searchValue: "is:personal",
+    icon: <User className="h-4 w-4" />,
+    colors: "border-0 text-green-800 bg-green-100 dark:bg-green-900/20 dark:text-green-500 dark:hover:bg-green-900/30"
+  },
+  {
+    name: "Updates",
+    searchValue: "is:updates",
+    icon: <Bell className="h-4 w-4" />,
+    colors: "border-0 text-purple-800 bg-purple-100 dark:bg-purple-900/20 dark:text-purple-500 dark:hover:bg-purple-900/30"
+  },
+  {
+    name: "Promotions",
+    searchValue: "is:promotions",
+    icon: <Tag className="h-4 w-4 rotate-90" />,
+    colors: "border-0 text-red-800 bg-red-100 dark:bg-red-900/20 dark:text-red-500 dark:hover:bg-red-900/30"
+  },
+];
+
+function MailCategoryTabs({ 
+  iconsOnly = false, 
+  isLoading = false,
+  onCategoryChange,
+  initialCategory
+}: { 
+  iconsOnly?: boolean, 
+  isLoading?: boolean,
+  onCategoryChange?: (category: string) => void,
+  initialCategory?: string
+}) {
   const [, setSearchValue] = useSearchValue();
-  const [activeCategory, setActiveCategory] = useState("Primary");
+  
+  // Initialize from localStorage with fallback to "Primary" or initialCategory
+  const [activeCategory, setActiveCategory] = useState(() => {
+    // Only run in browser environment
+    if (typeof window !== 'undefined') {
+      return initialCategory || localStorage.getItem('mailActiveCategory') || "Primary";
+    }
+    return initialCategory || "Primary";
+  });
+  
   const containerRef = useRef<HTMLDivElement>(null);
   const activeTabElementRef = useRef<HTMLButtonElement>(null);
 
-  const categories = [
-    { 
-      name: "Primary", 
-      searchValue: "",
-      icon: <Inbox className="h-4 w-4" />,
-      colors: "border-0 bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800/50 dark:text-gray-400 dark:hover:bg-gray-800/70"
-    },
-    { 
-      name: "Important", 
-      searchValue: "is:important",
-      icon: <AlertTriangle className="h-4 w-4" />,
-      colors: "border-0 bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/20 dark:text-amber-500 dark:hover:bg-amber-900/30"
-    },
-    { 
-      name: "Personal", 
-      searchValue: "is:personal",
-      icon: <User className="h-4 w-4" />,
-      colors: "border-0 bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/20 dark:text-green-500 dark:hover:bg-green-900/30"
-    },
-    { 
-      name: "Updates", 
-      searchValue: "is:updates",
-      icon: <Bell className="h-4 w-4" />,
-      colors: "border-0 bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/20 dark:text-purple-500 dark:hover:bg-purple-900/30"
-    },
-    { 
-      name: "Promotions", 
-      searchValue: "is:promotions",
-      icon: <Tag className="h-4 w-4 rotate-90" />,
-      colors: "border-0 bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/20 dark:text-red-500 dark:hover:bg-red-900/30"
-    },
-  ];
+  const activeTab = useMemo(() => categories.find(cat => cat.name === activeCategory), [activeCategory]);
 
-  const activeTab = categories.find(cat => cat.name === activeCategory);
+  // Save to localStorage when activeCategory changes
+  useEffect(() => {
+    localStorage.setItem('mailActiveCategory', activeCategory);
+    if (onCategoryChange) {
+      onCategoryChange(activeCategory);
+    }
+  }, [activeCategory, onCategoryChange]);
 
   useEffect(() => {
-    if (activeTab) {
-      const value = activeTab.name === "Primary" 
-        ? ""
-        : `has:${activeTab.searchValue.toLowerCase()}`
-      
+    if (activeTab && !isLoading) {
       setSearchValue({
         value: activeTab.searchValue,
         highlight: "",
         folder: "",
       });
     }
-  }, [activeCategory, setSearchValue]);
+  }, [activeCategory, setSearchValue, isLoading]);
 
-  useEffect(() => {
+  // Function to update clip path
+  const updateClipPath = useCallback(() => {
     const container = containerRef.current;
+    const activeTabElement = activeTabElementRef.current;
 
-    if (activeCategory && container) {
-      const activeTabElement = activeTabElementRef.current;
-
-      if (activeTabElement) {
-        const { offsetLeft, offsetWidth } = activeTabElement;
-
-        const clipLeft = offsetLeft;
-        const clipRight = offsetLeft + offsetWidth;
-        const containerWidth = container?.offsetWidth;
-        if (containerWidth) {
-          container.style.clipPath = `inset(0 ${Number(100 - (clipRight / containerWidth) * 100).toFixed()}% 0 ${Number((clipLeft / containerWidth) * 100).toFixed()}% round 17px)`;
-        }
+    if (activeCategory && container && activeTabElement) {
+      const { offsetLeft, offsetWidth } = activeTabElement;
+      const clipLeft = Math.max(0, offsetLeft - 2);
+      const clipRight = Math.min(container.offsetWidth, offsetLeft + offsetWidth + 2);
+      const containerWidth = container.offsetWidth;
+      
+      if (containerWidth) {
+        container.style.clipPath = `inset(0 ${Number(100 - (clipRight / containerWidth) * 100).toFixed(2)}% 0 ${Number((clipLeft / containerWidth) * 100).toFixed(2)}%)`;
       }
     }
-  }, [activeCategory, activeTabElementRef, containerRef]);
+  }, [activeCategory]);
+
+  // Update clip path when active category changes
+  useEffect(() => {
+    updateClipPath();
+  }, [activeCategory, updateClipPath]);
+
+  // Update clip path when iconsOnly changes
+  useEffect(() => {
+    // Small delay to ensure DOM has updated with new sizes
+    const timer = setTimeout(() => {
+      updateClipPath();
+    }, 10);
+    
+    return () => clearTimeout(timer);
+  }, [iconsOnly, updateClipPath]);
+
+  // Update clip path on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      updateClipPath();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [updateClipPath]);
 
   return (
     <div className="relative w-fit mx-auto">
       <ul className="flex justify-center gap-1.5">
         {categories.map((category) => (
           <li key={category.name}>
-            <button
-              ref={activeCategory === category.name ? activeTabElementRef : null}
-              data-tab={category.name}
-              onClick={() => {
-                setActiveCategory(category.name);
-              }}
-              className={cn(
-                "flex h-7 items-center gap-1.5 px-2.5 text-xs font-medium rounded-full transition-all duration-200",
-                activeCategory === category.name 
-                  ? category.colors
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              )}
-            >
-              {category.icon}
-              <span className={cn("hidden", (!iconsOnly && "md:inline"))}>
-                {category.name}
-              </span>
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  ref={activeCategory === category.name ? activeTabElementRef : null}
+                  data-tab={category.name}
+                  onClick={() => {
+                    setActiveCategory(category.name);
+                  }}
+                  className={cn(
+                    "flex h-7 items-center gap-1.5 px-2 text-xs font-medium rounded-full transition-all duration-200",
+                    activeCategory === category.name 
+                      ? category.colors
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
+                >
+                    {category.icon}
+                    <span className={cn("hidden", (!iconsOnly && "md:inline"))}>
+                      {category.name}
+                    </span>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <span>{category.name}</span>
+              </TooltipContent>
+            </Tooltip>
           </li>
         ))}
       </ul>
@@ -499,7 +561,7 @@ function MailCategoryTabs({ iconsOnly = false }: { iconsOnly?: boolean }) {
                   setActiveCategory(category.name);
                 }}
                 className={cn(
-                  "flex h-7 items-center gap-1.5 px-2.5 text-xs font-medium rounded-full",
+                  "flex h-7 items-center gap-1.5 px-2 text-xs font-medium rounded-full",
                   category.colors
                 )}
                 tabIndex={-1}

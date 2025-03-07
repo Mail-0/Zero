@@ -5,52 +5,134 @@ import { cn } from "@/lib/utils";
 
 export const MailDisplaySkeleton = ({ isFullscreen }: { isFullscreen?: boolean }) => {
   return (
-    <div
-      className={cn(
-        "relative m-4 flex-1 overflow-hidden rounded-lg border border-border bg-secondary/50 p-4",
-        isFullscreen && "h-[calc(100vh-4rem)]",
-      )}
-    >
-      <div className="relative inset-0 h-full overflow-y-auto pb-0">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-4">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <div className="flex-1 space-y-2">
-                <div className="flex items-center gap-2">
-                  <Skeleton className="h-5 w-32" />
-                  <Skeleton className="h-4 w-48" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Skeleton className="h-3 w-24" />
-                  <Skeleton className="h-3 w-16" />
+    <>
+      <div
+        className={cn(
+          "border-border bg-secondary/50 relative m-4 flex-1 overflow-hidden rounded-lg border p-4",
+          isFullscreen && "h-[calc(100vh-4rem)]",
+        )}
+      >
+        <div className="relative inset-0 h-full overflow-y-auto pb-0">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <Skeleton className="h-10 w-10 rounded-md" />
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-4 w-48" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
                 </div>
               </div>
+              <Skeleton className="h-6 w-6" />
             </div>
-            <Skeleton className="h-6 w-6" />
-          </div>
-          <Skeleton className="h-[1px] w-full" />
-          <div className="space-y-4">
-            <div className="flex flex-col space-y-2">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-[90%]" />
-              <Skeleton className="h-4 w-[95%]" />
-            </div>
-            <div className="flex flex-col space-y-2">
-              <Skeleton className="h-4 w-[88%]" />
-              <Skeleton className="h-4 w-[92%]" />
-              <Skeleton className="h-4 w-[85%]" />
+            <Skeleton className="h-[1px] w-full" />
+            <div className="space-y-4">
+              <div className="flex flex-col space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-[90%]" />
+                <Skeleton className="h-4 w-[95%]" />
+              </div>
+              <div className="flex flex-col space-y-2">
+                <Skeleton className="h-4 w-[88%]" />
+                <Skeleton className="h-4 w-[92%]" />
+                <Skeleton className="h-4 w-[85%]" />
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+      <div
+        className={cn(
+          "border-border bg-secondary/50 relative m-4 flex-1 overflow-hidden rounded-lg border p-4",
+          isFullscreen && "h-[calc(100vh-4rem)]",
+        )}
+      >
+        <div className="relative inset-0 h-full overflow-y-auto pb-0">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <Skeleton className="h-10 w-10 rounded-md" />
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-4 w-48" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                </div>
+              </div>
+              <Skeleton className="h-6 w-6" />
+            </div>
+            <Skeleton className="h-[1px] w-full" />
+            <div className="space-y-4">
+              <div className="flex flex-col space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-[90%]" />
+                <Skeleton className="h-4 w-[95%]" />
+              </div>
+              <div className="flex flex-col space-y-2">
+                <Skeleton className="h-4 w-[88%]" />
+                <Skeleton className="h-4 w-[92%]" />
+                <Skeleton className="h-4 w-[85%]" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        className={cn(
+          "border-border bg-secondary/50 relative m-4 flex-1 overflow-hidden rounded-lg border p-4",
+          isFullscreen && "h-[calc(100vh-4rem)]",
+        )}
+      >
+        <div className="relative inset-0 h-full overflow-y-auto pb-0">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <Skeleton className="h-10 w-10 rounded-md" />
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-4 w-48" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                </div>
+              </div>
+              <Skeleton className="h-6 w-6" />
+            </div>
+            <Skeleton className="h-[1px] w-full" />
+            <div className="space-y-4">
+              <div className="flex flex-col space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-[90%]" />
+                <Skeleton className="h-4 w-[95%]" />
+              </div>
+              <div className="flex flex-col space-y-2">
+                <Skeleton className="h-4 w-[88%]" />
+                <Skeleton className="h-4 w-[92%]" />
+                <Skeleton className="h-4 w-[85%]" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 };
 
 export const MailHeaderSkeleton = ({ isFullscreen }: { isFullscreen?: boolean }) => {
   return (
-    <div className="flex items-center border-b p-[7px]">
+    <div className="flex items-center p-[7px] border-b">
       <div className="flex flex-1 items-center gap-2">
         <Button variant="ghost" className="md:h-fit md:px-2" disabled={true}>
           <X className="h-4 w-4" />
