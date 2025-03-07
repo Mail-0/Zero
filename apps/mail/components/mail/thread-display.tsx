@@ -69,9 +69,9 @@ export function ThreadDemo({ mail: emailData, onClose, isMobile }: ThreadDisplay
               <TooltipTrigger asChild>
                 <Button variant="ghost" className="md:h-fit md:px-2" disabled={!emailData}>
                   {isFullscreen ? (
-                    <Minimize2 className="h-4 w-4" />
+                    <ExpandIcon className="h-4 w-4" />
                   ) : (
-                    <Maximize2 className="h-4 w-4" />
+                    <ExpandIcon className="h-4 w-4" />
                   )}
                   <span className="sr-only">
                     {isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
@@ -85,7 +85,7 @@ export function ThreadDemo({ mail: emailData, onClose, isMobile }: ThreadDisplay
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" className="md:h-fit md:px-2" disabled={!emailData}>
-                  <Archive className="h-4 w-4" />
+                  <ArchiveIcon className="h-4 w-4 relative top-0.5" />
                   <span className="sr-only">Archive</span>
                 </Button>
               </TooltipTrigger>
@@ -94,7 +94,7 @@ export function ThreadDemo({ mail: emailData, onClose, isMobile }: ThreadDisplay
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" className="md:h-fit md:px-2" disabled={!emailData}>
-                  <Reply className="h-4 w-4" />
+                  <ReplyIcon className="h-4 w-4" />
                   <span className="sr-only">Reply</span>
                 </Button>
               </TooltipTrigger>
@@ -103,7 +103,7 @@ export function ThreadDemo({ mail: emailData, onClose, isMobile }: ThreadDisplay
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="md:h-fit md:px-2" disabled={!emailData}>
-                  <MoreVertical className="h-4 w-4" />
+                  <MoreVerticalIcon className="h-4 w-4" />
                   <span className="sr-only">More</span>
                 </Button>
               </DropdownMenuTrigger>

@@ -134,7 +134,7 @@ const Thread = memo(({ message, selectMode, demo, onClick }: ThreadProps) => {
         )}
       />
       <div className="flex w-full items-center justify-between">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           <p
             className={cn(
               message.unread ? "font-bold" : "font-medium",
@@ -149,10 +149,19 @@ const Thread = memo(({ message, selectMode, demo, onClick }: ThreadProps) => {
             ) : null}
 
           </p>
-          <MailLabels labels={message.tags} />
-          {message.totalReplies !== 1 ? (
-              <span className="text-xs opacity-70 border border-dotted rounded-full px-[5px] py-[1px]">{message.totalReplies}</span>
-            ) : null}
+          <div className="flex items-center gap-1">
+            <MailLabels labels={message.tags} />
+            {message.totalReplies > 1 ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-xs opacity-70 border border-dotted rounded-full px-[5px] py-[1px]">{message.totalReplies}</span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {message.totalReplies} Replies
+                  </TooltipContent>
+                </Tooltip>
+              ) : null}
+            </div>
         </div>
         {message.receivedOn ? (
           <p

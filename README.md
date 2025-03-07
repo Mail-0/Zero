@@ -9,16 +9,15 @@ An Open-Source Gmail Alternative for the Future of Email
 Zero is an open-source AI email solution that gives users the power to **self-host** their own email app while also integrating external services like Gmail and other email providers. Our goal is to modernize and improve emails through AI agents to truly modernize emails.
 
 ## Why Zero?
-
-Most email services today are either **closed-source**, **data-hungry**, or **too complex to self-host**. 0.email is different:
-
-✅ **Open-Source** – No hidden agendas, fully transparent.
-🦾 **AI Driven** - Enhance your emails with Agents & LLMs.
-🔒 **Data Privacy First** – Your emails, your data. No tracking, no selling, no middlemen.
-⚙️ **Self-Hosting Freedom** – Run your own email app with ease.
-📬 **Unified Inbox** – Connect multiple email providers like Gmail, Outlook, and more.
-🎨 **Customizable UI & Features** – Tailor your email experience the way you want it.
-🚀 **Developer-Friendly** – Built with extensibility and integrations in mind.
+Most email services today are either **closed-source**, **data-hungry**, or **too complex to self-host**.
+0.email is different:
+  - ✅ **Open-Source** – No hidden agendas, fully transparent.
+  - 🦾 **AI Driven** - Enhance your emails with Agents & LLMs.
+  - 🔒 **Data Privacy First** – Your emails, your data. No tracking, no selling, no middlemen.
+  - ⚙️ **Self-Hosting Freedom** – Run your own email app with ease.
+  - 📬 **Unified Inbox** – Connect multiple email providers like Gmail, Outlook, and more.
+  - 🎨 **Customizable UI & Features** – Tailor your email experience the way you want it.
+  - 🚀 **Developer-Friendly** – Built with extensibility and integrations in mind.
 
 ## Tech Stack
 
@@ -41,6 +40,9 @@ Zero is built with modern and reliable technologies:
 - Docker >= 20.10.0
 
 Before running the application, you'll need to set up several services and environment variables:
+
+For more in-depth information on environment variables, please refer to the [Environment Variables](#environment-variables) section.
+
 
 1. **Setup Local Services with Dev Container and Docker**
 
@@ -130,7 +132,7 @@ Before running the application, you'll need to set up several services and envir
 
 ### Environment Variables
 
-Copy `.env.example` to `.env` and configure the following variables:
+Copy `.env.example` located in the `apps/mail` folder to `.env` in the same folder and configure the following variables:
 
 ```env
 # Auth
@@ -142,8 +144,17 @@ GOOGLE_CLIENT_SECRET=   # Required for Gmail integration
 GOOGLE_REDIRECT_URI=    # Required for Gmail integration
 
 # Database
-DATABASE_URL=          # Required: PostgreSQL connection string
+DATABASE_URL=           # Required: PostgreSQL connection string for backend connection
 ```
+
+To be able to run `pnpm db:push` and push the schemas to the database you also have to add a `.env` file to the `packages/db` folder (so `packages/db/.env`) with the following content:
+
+```env
+DATABASE_URL=          # Required: PostgreSQL connection string for migrations
+```
+For local development a connection string example is provided in the `.env.example` file located in the same folder as the database.
+
+**Note:** The `DATABASE_URL` connection string in the `apps/mail/.env` has to be the same as the one in `packages/db/.env`
 
 ### Update the PostgreSQL database accordingly
 
@@ -164,6 +175,10 @@ cd apps/mail
 pnpm dev
 ```
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## Contribute
+
+Please refer to the [contributing guide](.github/CONTRIBUTING.md).
 
 ## Star History
 

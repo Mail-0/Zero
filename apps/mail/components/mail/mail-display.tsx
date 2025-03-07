@@ -1,6 +1,6 @@
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { BellOff, Lock } from "lucide-react";
 import { Separator } from "../ui/separator";
 import { useState, useEffect } from "react";
@@ -11,28 +11,20 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useSummary } from "@/hooks/use-summary";
+import { TextShimmer } from "../ui/text-shimmer";
 
 const StreamingText = ({ text }: { text: string }) => {
   const [displayText, setDisplayText] = useState("");
   const [isComplete, setIsComplete] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
 
   useEffect(() => {
     let currentIndex = 0;
     setIsComplete(false);
     setIsThinking(true);
     
-    // Dots animation
-    const dotsInterval = setInterval(() => {
-      setThinkingDots(prev => {
-        if (prev === "...") return ".";
-        if (prev === "..") return "...";
-        if (prev === ".") return "..";
-        return ".";
-      });
-    }, 450);
     
     const thinkingTimeout = setTimeout(() => {
-      clearInterval(dotsInterval);
       setIsThinking(false);
       setDisplayText("");
 
@@ -52,7 +44,6 @@ const StreamingText = ({ text }: { text: string }) => {
 
     return () => {
       clearTimeout(thinkingTimeout);
-      clearInterval(dotsInterval);
     };
   }, [text]);
 
@@ -65,7 +56,7 @@ const StreamingText = ({ text }: { text: string }) => {
         )}
       >
         {isThinking ? (
-          <span className="animate-pulse">Thinking{thinkingDots}</span>
+          <TextShimmer duration={1}>Thinking...</TextShimmer>
         ) : (
           <span>{displayText}</span>
         )}

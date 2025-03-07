@@ -539,9 +539,11 @@ function MailCategoryTabs({
                     </span>
                 </button>
               </TooltipTrigger>
-              <TooltipContent>
-                <span>{category.name}</span>
-              </TooltipContent>
+              {iconsOnly && (
+                <TooltipContent>
+                  <span>{category.name}</span>
+                </TooltipContent>
+              )}
             </Tooltip>
           </li>
         ))}
