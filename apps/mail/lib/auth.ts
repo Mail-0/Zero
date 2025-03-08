@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { connection, user as _user, account } from "@zero/db/schema";
+import { connection, user as _user, account, userSettings } from "@zero/db/schema";
+import { createAuthMiddleware, customSession } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth, type BetterAuthOptions } from "better-auth";
-import { customSession } from "better-auth/plugins";
+import { TIMEZONES } from "@/utils/timezones";
 import { eq } from "drizzle-orm";
 import { Resend } from "resend";
 import { db } from "@zero/db";
@@ -150,6 +151,32 @@ const options = {
       };
     }),
   ],
+  hooks: {
+    after: createAuthMiddleware(async (ctx) => {
+      // all hooks that run on sign-up routes
+      if (ctx.path.startsWith("/sign-up")) {
+        // only true if this request is from a new user
+        const newSession = ctx.context.newSession;
+        if (newSession) {
+          // get timezone from vercel's header
+          const headerTimezone = ctx.headers?.get("x-vercel-ip-timezone");
+          // get the timezone from the TIMEZONES object, fallback to UTC
+          const timezone = TIMEZONES[headerTimezone as keyof typeof TIMEZONES] ?? "UTC";
+          // write default settings against the user
+          await db.insert(userSettings).values({
+            id: crypto.randomUUID(),
+            userId: newSession.user.id,
+            timezone,
+            language: "en",
+            dynamicContent: true,
+            externalImages: true,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+        }
+      }
+    }),
+  },
 } satisfies BetterAuthOptions;
 
 export const auth = betterAuth({

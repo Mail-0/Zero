@@ -101,3 +101,16 @@ export const note = createTable("note", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
+export const userSettings = createTable("user_settings", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id)
+    .unique(),
+  language: text("language").notNull().default("en"),
+  timezone: text("timezone").notNull().default("UTC"),
+  dynamicContent: boolean("dynamic_content").notNull().default(false),
+  externalImages: boolean("external_images").notNull().default(true),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
+});
