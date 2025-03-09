@@ -33,19 +33,18 @@ import {
 import { TextButtons } from "@/components/create/selectors/text-buttons";
 import { suggestionItems } from "@/components/create/slash-command";
 import { defaultExtensions } from "@/components/create/extensions";
+import { AnyExtension, useCurrentEditor } from "@tiptap/react";
 import { ImageResizer, handleCommandNavigation } from "novel";
 import { uploadFn } from "@/components/create/image-upload";
 import { handleImageDrop, handleImagePaste } from "novel";
 import EditorMenu from "@/components/create/editor-menu";
 import { Button } from "@/components/ui/button";
-import { useCurrentEditor } from "@tiptap/react";
 import { Input } from "@/components/ui/input";
+import { Markdown } from "tiptap-markdown";
 import { useReducer, useRef } from "react";
 import { useState } from "react";
 
-const hljs = require("highlight.js");
-
-const extensions = [...defaultExtensions];
+const extensions: AnyExtension[] = [...defaultExtensions, Markdown];
 
 export const defaultEditorContent = {
   type: "doc",
