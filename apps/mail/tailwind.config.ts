@@ -91,6 +91,10 @@ export default {
             transform: "translateY(0)",
           },
         },
+        "caret-blink": {
+          "0%,70%,100%": { opacity: "1" },
+          "20%,50%": { opacity: "0" },
+        },
         moveUp: {
           "0%": {
             transform: "translateY(90px)",
@@ -124,6 +128,7 @@ export default {
         "fade-in": "fadeIn 3s cubic-bezier(0.16, 1, 0.3, 1) forwards",
         "shine": "shine 4s linear infinite",
         "shine-slow": "shine-slow 8s linear infinite",
+        "caret-blink": "caret-blink 1.25s ease-out infinite",
       },
     },
   },
