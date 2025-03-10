@@ -100,6 +100,23 @@ export default function LoginZero() {
           </form>
         </Form>
       </div>
+      
+      <footer className="absolute bottom-0 w-full py-4 px-6">
+        <div className="max-w-6xl mx-auto flex justify-center items-center gap-6">
+          <a 
+            href="/terms" 
+            className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors"
+          >
+            Terms of Service
+          </a>
+          <a 
+            href="/privacy" 
+            className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors"
+          >
+            Privacy Policy
+          </a>
+        </div>
+      </footer>
     </div>
   );
 }
