@@ -6,6 +6,7 @@ import { customSession } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { Resend } from "resend";
 import { db } from "@zero/db";
+import { getSocialProviders } from "./auth-providers";
 
 // If there is no resend key, it might be a local dev environment
 // In that case, we don't want to send emails and just log them
@@ -26,27 +27,7 @@ const options = {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day (every 1 day the session expiration is updated)
   },
-  socialProviders: {
-    microsoft: {
-      tenantId: '0.email',
-      clientId: process.env.ZERO_CLIENT_ID!,
-      clientSecret: process.env.ZERO_CLIENT_SECRET!,
-      scope: ["openid", "offline_access", "email", "User.Read"],
-      // requireSelectAccount: 'consent',
-    },
-    google: {
-      // Remove this before going to prod, it's to force to get `refresh_token` from google, some users don't have it yet.
-      prompt: "consent",
-      accessType: "offline",
-      scope: ["https://www.googleapis.com/auth/gmail.modify"],
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    },
-    github: {
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-    },
-  },
+  socialProviders: getSocialProviders(),
   emailAndPassword: {
     enabled: false,
     requireEmailVerification: true,
