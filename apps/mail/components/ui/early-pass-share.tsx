@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   LinkedinIcon,
   LinkedinShareButton,
@@ -9,8 +8,9 @@ import {
 } from 'next-share';
 
 const EarlyPassShare = () => {
+  
   const shareUrl = 'https://0.email';
-  const shareTitle = `Just got my Early Access Pass from 0.email.`;
+  const shareTitle = `Just got my Early Access Pass from @zerodotemail.`;
 
   return (
     <div className='flex items-center gap-2'>
