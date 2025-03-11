@@ -20,6 +20,7 @@ import { handleImageDrop, handleImagePaste } from "novel";
 import EditorMenu from "@/components/create/editor-menu";
 import { Separator } from "@/components/ui/separator";
 import { useReducer, useRef } from "react";
+import { Button } from "../ui/button";
 import "./editor.css";
 
 const hljs = require("highlight.js");
@@ -70,25 +71,29 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
   }
 }
 
-export default function Editor({ initialValue, onChange, placeholder = "Write something..." }: EditorProps) {
+export default function Editor({
+  initialValue,
+  onChange,
+  placeholder = "Write something...",
+}: EditorProps) {
   const [state, dispatch] = useReducer(editorReducer, {
     openNode: false,
     openColor: false,
     openLink: false,
     openAI: false,
   });
-  
+
   // Add a ref to store the editor content to prevent losing it on refresh
   const contentRef = useRef<string>("");
 
   const { openNode, openColor, openLink, openAI } = state;
 
   return (
-    <div 
+    <div
       className="relative w-full max-w-[450px] sm:max-w-[600px]"
       onKeyDown={(e) => {
         // Prevent form submission on Enter key
-        if (e.key === 'Enter' && !e.shiftKey) {
+        if (e.key === "Enter" && !e.shiftKey) {
           e.stopPropagation();
         }
       }}
@@ -120,11 +125,11 @@ export default function Editor({ initialValue, onChange, placeholder = "Write so
           slotAfter={<ImageResizer />}
         >
           {/* Make sure the command palette doesn't cause a refresh */}
-          <EditorCommand 
+          <EditorCommand
             className="border-muted bg-background z-50 h-auto max-h-[330px] overflow-y-auto rounded-md border px-1 py-2 shadow-md transition-all"
             onKeyDown={(e) => {
               // Prevent form submission on any key that might trigger it
-              if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+              if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
                 e.preventDefault();
                 e.stopPropagation();
               }

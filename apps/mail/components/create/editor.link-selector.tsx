@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useRef } from "react";
 import { Popover, PopoverTrigger } from "@radix-ui/react-popover";
 import { PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Check, Trash } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { useEditor } from "novel";
 import { cn } from "@/lib/utils";
 

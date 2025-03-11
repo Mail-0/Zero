@@ -2,9 +2,9 @@
 
 import { AIChat } from "@/components/create/ai-chat";
 import { Button } from "@/components/ui/button";
-import { X, MessageSquare } from "lucide-react";
-import { useState, useEffect } from "react";
+import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 import Image from "next/image";
 
 interface AISidebarProps {

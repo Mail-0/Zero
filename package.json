@@ -6,6 +6,7 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "start": "turbo run start",
+    "launch": "pnpm docker:up && pnpm dev",
     "lint": "next lint",
     "format": "prettier --write .",
     "check": "pnpm run check:format && pnpm run lint",

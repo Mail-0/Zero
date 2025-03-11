@@ -1,17 +1,22 @@
+
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
   BoldIcon,
   CodeIcon,
   ItalicIcon,
+  SparkleIcon,
   StrikethroughIcon,
   UnderlineIcon
 } from 'lucide-react'
 import { EditorBubbleItem, useEditor } from 'novel'
 import type { SelectorItem } from './node-selector'
+import { useAIInline } from '@/components/ui/ai-inline'
 
 export const TextButtons = () => {
   const { editor } = useEditor()
+  const { toggleOpen, setPosition } = useAIInline()
+  
   if (!editor) return null
   const items: SelectorItem[] = [
     {
@@ -43,6 +48,23 @@ export const TextButtons = () => {
       isActive: editor => (editor ? editor.isActive('code') : false),
       command: editor => editor?.chain().focus().toggleCode().run(),
       icon: CodeIcon
+    },
+    {
+      name: 'AI',
+      isActive: () => false,
+      command: editor => {
+        // Get cursor position
+        const { view } = editor
+        if (!view) return
+        
+        const { from } = view.state.selection
+        const coords = view.coordsAtPos(from)
+        
+        // Set position and open the AI inline component
+        setPosition({ x: coords.left, y: coords.bottom + 10 })
+        toggleOpen()
+      },
+      icon: SparkleIcon
     }
   ]
   return (

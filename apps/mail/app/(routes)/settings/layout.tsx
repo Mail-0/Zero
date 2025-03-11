@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState, useEffect } from "react";
 import { Suspense } from "react";
 import AISidebar from "@/components/ui/ai-sidebar";
+import AIInline from "@/components/ui/ai-inline";
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -34,6 +35,7 @@ function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
     <>
       <AppSidebar className="hidden lg:flex" />
       <AISidebar />
+      <AIInline />
       <div className="w-full bg-white dark:bg-black md:p-3">
         <div className="rounded-inherit flex">
           <ResizablePanelGroup
