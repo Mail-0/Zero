@@ -276,7 +276,13 @@
         "title": "Appearance",
         "description": "Customize colors, fonts and view options.",
         "theme": "Theme",
-        "inboxType": "Inbox Type"
+        "inboxType": "Inbox Type",
+        "threadDisplayStyle": "Thread Display Style",
+        "threadDisplayStyleDescription": "Choose how emails are displayed in the thread.",
+        "threadDisplayStyleOptions": {
+          "default": "Default",
+          "chat": "Chat"
+        }
       },
       "shortcuts": {
         "title": "Keyboard Shortcuts",
