@@ -16,14 +16,12 @@ export const AddConnectionDialog = ({
 }) => {
     return <Dialog onOpenChange={onOpenChange}>
         <DialogTrigger asChild>
-            <Button size={'dropdownItem'} variant={'dropdownItem'} className={cn("gap-2 w-full justify-start", className)}>
-                {children || (
-                    <>
-                        <UserPlus size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
-                        <p className="text-[13px] opacity-60">Add email</p>
-                    </>
-                )}
-            </Button>
+            {children || (
+                <Button size={'dropdownItem'} variant={'dropdownItem'} className={cn("gap-2 w-full justify-start", className)}>
+                    <UserPlus size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
+                    <p className="text-[13px] opacity-60">Add email</p>
+                </Button>
+            )}
         </DialogTrigger>
         <DialogContent className="sm:max-w-md">
             <DialogHeader>
@@ -48,7 +46,7 @@ export const AddConnectionDialog = ({
                     >
                         <Button
                             variant="outline"
-                            className="h-24 w-full flex-col items-center justify-center gap-2"
+                            className="h-24 flex-col items-center justify-center gap-2 w-full"
                         >
                             <svg viewBox="0 0 24 24" className="h-12 w-12">
                                 <path fill="currentColor" d={provider.icon} />
@@ -66,7 +64,7 @@ export const AddConnectionDialog = ({
                 >
                     <Button
                         variant="outline"
-                        className="h-24 flex-col items-center justify-center gap-2 border-dashed"
+                        className="h-24 flex-col items-center justify-center gap-2 border-dashed w-full"
                     >
                         <Plus className="h-12 w-12" />
                         <span className="text-xs">More Coming Soon</span>

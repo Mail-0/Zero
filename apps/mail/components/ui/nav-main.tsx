@@ -152,7 +152,7 @@ export function NavMain({ items }: NavMainProps) {
             className="group/collapsible"
           >
             <SidebarMenuItem>
-              <div className="space-y-1">
+              <div className="space-y-1 pb-2">
                 {section.items.map((item) => (
                   <NavItem
                     key={item.url}

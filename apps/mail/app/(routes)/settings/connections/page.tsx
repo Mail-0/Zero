@@ -150,7 +150,7 @@ export default function ConnectionsPage() {
             </div>
           ) : null}
 
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-start">
             <AddConnectionDialog>
               <Button 
                 variant="outline" 
