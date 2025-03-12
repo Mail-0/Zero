@@ -3,11 +3,13 @@
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { useState, useEffect, useRef, createContext, useContext } from "react";
 import { Textarea } from "@/components/ui/textarea";
+import { generateInlineAIEdit } from "@/actions/ai";
 import { Button } from "@/components/ui/button";
-import { X, SendIcon } from "lucide-react";
+import type { Editor } from "@tiptap/react";
 import { useForm } from "react-hook-form";
+import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
+import { toast } from "sonner";
 
 type AIInlineContextType = {
   open: boolean;
@@ -15,6 +17,8 @@ type AIInlineContextType = {
   toggleOpen: () => void;
   position: { x: number; y: number };
   setPosition: (position: { x: number; y: number }) => void;
+  editor: Editor | null; // Add this line
+  setEditor: (editor: Editor | null) => void; // Add this line
 };
 
 export const AIInlineContext = createContext<AIInlineContextType | undefined>(undefined);
@@ -30,11 +34,14 @@ export function useAIInline() {
 export function AIInlineProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [editor, setEditor] = useState<Editor | null>(null);
 
   const toggleOpen = () => setOpen((prev) => !prev);
 
   return (
-    <AIInlineContext.Provider value={{ open, setOpen, toggleOpen, position, setPosition }}>
+    <AIInlineContext.Provider
+      value={{ open, setOpen, toggleOpen, position, setPosition, editor, setEditor }}
+    >
       {children}
       <AIInline />
     </AIInlineContext.Provider>
@@ -50,7 +57,7 @@ type FormValues = {
 };
 
 export function AIInline({ className }: AIInlineProps) {
-  const { open, setOpen, position } = useAIInline();
+  const { open, setOpen, position, editor, setEditor } = useAIInline();
   const cardRef = useRef<HTMLDivElement>(null);
   const { register, handleSubmit, formState, watch, setValue } = useForm<FormValues>({
     defaultValues: {
@@ -84,10 +91,45 @@ export function AIInline({ className }: AIInlineProps) {
     card.style.transform = `translate(${x}px, ${y}px)`;
   }, [position, open]);
 
-  const onSubmit = (data: FormValues) => {
-      
-    // After handling, reset the form (do not close the inline editor)
-    setValue("aiPrompt", "");
+  const onSubmit = async (data: FormValues) => {
+    try {
+      // Get current text selection or editing context
+      const selected_text = editor
+        ? editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to, " ")
+        : "";
+
+      // Create the payload
+      const aiRequestPayload = {
+        prompt: data.aiPrompt,
+        selection: selected_text,
+      };
+
+      // Use SWR's mutate to call the server action directly
+      const result = await generateInlineAIEdit(aiRequestPayload);
+
+      if ("error" in result) {
+        console.error("AI edit error:", result.error);
+        return toast.error("Failed to process AI edit request");
+      } else if ("data" in result) {
+        try {
+          const editedText = JSON.parse(result.data).edit;
+
+          // Apply the edited text to the editor
+          if (editor) {
+            editor.chain().focus().deleteSelection().insertContent(editedText).run();
+
+            toast.success("Applied AI edit");
+          }
+        } catch (parseError) {
+          console.error("Error parsing AI response:", parseError);
+          toast.error("Failed to apply AI edit");
+        }
+      }
+    } catch (error) {
+      console.error("Error sending AI edit request:", error);
+      toast.error("Failed to process AI edit request");
+      throw error;
+    }
   };
 
   // Handle Cmd+Enter submission
@@ -95,6 +137,9 @@ export function AIInline({ className }: AIInlineProps) {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
       e.preventDefault();
       formRef.current?.requestSubmit();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      setOpen(false);
     }
   };
 
@@ -113,56 +158,42 @@ export function AIInline({ className }: AIInlineProps) {
         transform: `translate(${position.x}px, ${position.y}px)`,
       }}
     >
-      <Card className="bg-background w-[500px] border shadow-lg">
-        <CardHeader className="flex flex-row items-center justify-between p-3 pb-0 pt-2">
-          <div className="flex items-center gap-2">
-            <div className="relative h-4 w-4">
-              <Image src="/black-icon.svg" alt="Zero Logo" fill className="dark:hidden" />
-              <Image src="/white-icon.svg" alt="Zero Logo" fill className="hidden dark:block" />
-            </div>
-            <span className="text-sm font-medium">Inline AI Editor</span>
-          </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setOpen(false)}>
-            <X size={16} />
-          </Button>
-        </CardHeader>
+      <Card className="bg-background w-[500px] border-none shadow-lg">
         <form ref={formRef} onSubmit={handleSubmit(onSubmit)}>
-          <CardContent className="p-3 pt-2">
+          <CardContent className="p-3">
             <Textarea
               {...register("aiPrompt")}
               placeholder="Write what to change..."
-              className="min-h-[80px] resize-y border-none bg-zinc-900"
+              className="max-h-96 min-h-[80px] resize-y overflow-hidden rounded-md border-none bg-zinc-950/80 px-3 py-2 text-sm placeholder:text-zinc-500 focus:ring-1 focus:ring-zinc-800"
               onKeyDown={handleKeyDown}
             />
           </CardContent>
           <CardFooter className="flex items-center justify-between p-3 pt-0">
-            <p className="text-muted-foreground text-xs">
-              <span className="ml-2 opacity-70">(⌘ + ↵ to submit)</span>
-            </p>
-            <Button type="submit" size="sm" className="gap-1" disabled={formState.isSubmitting}>
-              <SendIcon size={14} />
+            <Button
+              type="submit"
+              size="sm"
+              variant="secondary"
+              disabled={formState.isSubmitting}
+              className="border-border/30 hover:bg-secondary/80 h-6 border px-2 text-xs shadow-sm"
+            >
+              <span className="flex items-center text-sm opacity-70">
+                <X className="mr-2" /> Esc
+              </span>
+            </Button>
+            <Button
+              type="submit"
+              size="sm"
+              variant="secondary"
+              disabled={formState.isSubmitting}
+              className="border-border/30 hover:bg-secondary/80 h-6 border px-2 text-xs shadow-sm"
+            >
+              <span className="text-sm opacity-70">⌘ + ↵</span>
             </Button>
           </CardFooter>
         </form>
       </Card>
     </div>
   );
-}
-
-// Update the AI button in TextButtons to trigger this component
-export function triggerAIInline(editor: any) {
-  const { toggleOpen, setPosition } = useAIInline();
-
-  // Get current selection coordinates
-  const { view } = editor;
-  if (!view) return;
-
-  const { from } = view.state.selection;
-  const start = view.coordsAtPos(from);
-
-  // Position card below the cursor
-  setPosition({ x: start.left, y: start.bottom + 10 });
-  toggleOpen();
 }
 
 export default AIInline;
