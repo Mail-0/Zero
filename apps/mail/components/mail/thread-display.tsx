@@ -1,7 +1,7 @@
 import { DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { DropdownMenu, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { ArchiveX, Forward, ReplyAll } from 'lucide-react';
+import { ArchiveX, Forward, ReplyAll, MessageSquare, MessageSquareText } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSearchParams } from 'next/navigation';
 
@@ -21,6 +21,7 @@ import { NotesPanel } from './note-panel';
 import MailDisplay from './mail-display';
 import { useMail } from './use-mail';
 import { cn } from '@/lib/utils';
+import MailMessageDisplay from './mail-message-display';
 
 interface ThreadDisplayProps {
   mail?: any;
@@ -195,6 +196,7 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
   const [isReplyOpen, setIsReplyOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const t = useTranslations();
+  const [displayMode, setDisplayMode] = useState<'classic' | 'chat'>('classic');
 
   const moreVerticalIconRef = useRef<any>(null);
 
@@ -343,6 +345,11 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
               onClick={() => setIsFullscreen(!isFullscreen)}
             />
             <ThreadActionButton
+              icon={displayMode === 'classic' ? MessageSquare : MessageSquareText}
+              label={displayMode === 'classic' ? "Switch to Chat View" : "Switch to Classic View"}
+              onClick={() => setDisplayMode(displayMode === 'classic' ? 'chat' : 'classic')}
+            />
+            <ThreadActionButton
               icon={ArchiveIcon}
               label={t('common.threadDisplay.archive')}
               disabled={!emailData}
@@ -387,23 +394,41 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <ScrollArea className="h-full flex-1" type="auto">
             <div className="pb-4">
-              {[...(emailData || [])].reverse().map((message, index) => (
-                <div
-                  key={message.id}
-                  className={cn(
-                    'transition-all duration-200',
-                    index > 0 && 'border-border border-t',
-                  )}
-                >
-                  <MailDisplay
-                    emailData={message}
-                    isFullscreen={isFullscreen}
-                    isMuted={isMuted}
-                    isLoading={isLoading}
-                    index={index}
-                  />
-                </div>
-              ))}
+            {[...(emailData || [])].map((message, index) => (
+								<div key={message.id} className="overflow-hidden">
+									<div
+										className={cn(
+											"transition-all duration-300",
+											displayMode === "classic"
+												? "transform-none opacity-100"
+												: "transform -translate-y-full h-0 opacity-0"
+										)}
+									>
+										<MailDisplay
+											emailData={message}
+											isFullscreen={isFullscreen}
+											isMuted={isMuted}
+											isLoading={isLoading}
+											index={index}
+										/>
+									</div>
+									<div
+										className={cn(
+											"transition-all duration-300",
+											displayMode === "classic"
+												? "transform translate-y-full h-0 opacity-0"
+												: "transform-none opacity-100"
+										)}
+									>
+										<MailMessageDisplay
+											emailData={message}
+											isFullscreen={isFullscreen}
+											isMuted={isMuted}
+											isLoading={isLoading}
+										/>
+									</div>
+								</div>
+							))}
             </div>
           </ScrollArea>
           <div className={`relative ${isFullscreen ? '' : 'top-1'} flex-shrink-0`}>

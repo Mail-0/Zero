@@ -1,7 +1,12 @@
 'use client';
 
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from '@/components/ui/form';
 import { SettingsCard } from '@/components/settings/settings-card';
 import { ModeToggle } from '@/components/theme/theme-switcher';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,10 +16,13 @@ import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
 import * as z from 'zod';
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MessageSquareText } from 'lucide-react';
+    
 // TODO: More customization options
 const formSchema = z.object({
   inboxType: z.enum(['default', 'important', 'unread']),
+  threadDisplayStyle: z.enum(['default', 'chat']),
 });
 
 export default function AppearancePage() {
@@ -25,6 +33,7 @@ export default function AppearancePage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       inboxType: 'default',
+      threadDisplayStyle: 'default',
     },
   });
 
@@ -55,6 +64,27 @@ export default function AppearancePage() {
                 <ModeToggle className="bg-popover w-36" />
               </div>
             </div>
+            <FormField
+                control={form.control}
+                name="threadDisplayStyle"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('pages.settings.appearance.threadDisplayStyle')}</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="w-36">
+                          <MessageSquareText className="mr-2 h-4 w-4" />
+                          <SelectValue placeholder="Select a language" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="default">{t('pages.settings.appearance.threadDisplayStyleOptions.default')}</SelectItem>
+                        <SelectItem value="chat">{t('pages.settings.appearance.threadDisplayStyleOptions.chat')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
           </form>
         </Form>
       </SettingsCard>
