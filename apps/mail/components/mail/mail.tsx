@@ -111,8 +111,8 @@ export function DemoMailLayout() {
                         <Skeleton className="mt-2 h-3 w-32" />
                         <Skeleton className="mt-2 h-3 w-full" />
                         <div className="mt-2 flex gap-2">
-                          <Skeleton className="h-4 w-16 rounded-full" />
-                          <Skeleton className="h-4 w-16 rounded-full" />
+                          <Skeleton className="h-4 w-16 rounded-md" />
+                          <Skeleton className="h-4 w-16 rounded-md" />
                         </div>
                       </div>
                     ))}
@@ -320,8 +320,8 @@ export function MailLayout() {
                         <Skeleton className="mt-2 h-3 w-32" />
                         <Skeleton className="mt-2 h-3 w-full" />
                         <div className="mt-2 flex gap-2">
-                          <Skeleton className="h-4 w-16 rounded-full" />
-                          <Skeleton className="h-4 w-16 rounded-full" />
+                          <Skeleton className="h-4 w-16 rounded-md" />
+                          <Skeleton className="h-4 w-16 rounded-md" />
                         </div>
                       </div>
                     ))}
@@ -439,14 +439,17 @@ function MailCategoryTabs({
 }) {
   const [, setSearchValue] = useSearchValue();
   
-  // Initialize from localStorage with fallback to "Primary" or initialCategory
-  const [activeCategory, setActiveCategory] = useState(() => {
-    // Only run in browser environment
-    if (typeof window !== 'undefined') {
-      return initialCategory || localStorage.getItem('mailActiveCategory') || "Primary";
+  // Initialize with just the initialCategory or "Primary"
+  const [activeCategory, setActiveCategory] = useState(initialCategory || "Primary");
+  
+  // Move localStorage logic to a useEffect
+  useEffect(() => {
+    // Check localStorage only after initial render
+    const savedCategory = localStorage.getItem('mailActiveCategory');
+    if (savedCategory && !initialCategory) {
+      setActiveCategory(savedCategory);
     }
-    return initialCategory || "Primary";
-  });
+  }, [initialCategory]);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const activeTabElementRef = useRef<HTMLButtonElement>(null);
@@ -527,7 +530,7 @@ function MailCategoryTabs({
                     setActiveCategory(category.name);
                   }}
                   className={cn(
-                    "flex h-7 items-center gap-1.5 px-2 text-xs font-medium rounded-full transition-all duration-200",
+                    "flex h-7 items-center gap-1.5 px-2 text-xs font-medium rounded-md transition-all duration-200",
                     activeCategory === category.name 
                       ? category.colors
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -563,7 +566,7 @@ function MailCategoryTabs({
                   setActiveCategory(category.name);
                 }}
                 className={cn(
-                  "flex h-7 items-center gap-1.5 px-2 text-xs font-medium rounded-full",
+                  "flex h-7 items-center gap-1.5 px-2 text-xs font-medium rounded-md",
                   category.colors
                 )}
                 tabIndex={-1}

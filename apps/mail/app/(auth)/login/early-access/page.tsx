@@ -3,7 +3,7 @@
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useEffect, Suspense } from "react";
 import { Button } from "@/components/ui/button";

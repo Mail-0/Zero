@@ -3,7 +3,7 @@ import { Button } from "../ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog"
 import { emailProviders } from "@/constants/emailProviders"
 import { cn } from "@/lib/utils"
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 
 export const AddConnectionDialog = ({ 
     children, 

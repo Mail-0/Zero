@@ -6,23 +6,33 @@ import LZString from "lz-string";
 import axios from "axios";
 
 export const FOLDERS = {
-  SPAM: 'spam',
-  INBOX: 'inbox',
-  ARCHIVE: 'archive',
-  TRASH: 'trash',
-  DRAFT: 'draft',
-  SENT: 'sent',
+  SPAM: "spam",
+  INBOX: "inbox",
+  ARCHIVE: "archive",
+  TRASH: "trash",
+  DRAFT: "draft",
+  SENT: "sent",
 } as const;
 
 export const LABELS = {
-  SPAM: 'SPAM',
-  INBOX: 'INBOX',
-  UNREAD: 'UNREAD',
-  IMPORTANT: 'IMPORTANT',
-  SENT: 'SENT',
+  SPAM: "SPAM",
+  INBOX: "INBOX",
+  UNREAD: "UNREAD",
+  IMPORTANT: "IMPORTANT",
+  SENT: "SENT",
 } as const;
 
-export const FOLDER_NAMES = ["inbox", "spam", "trash", "unread", "starred", "important", "sent", "draft"];
+export const FOLDER_NAMES = [
+  "inbox",
+  "spam",
+  "trash",
+  "unread",
+  "starred",
+  "important",
+  "sent",
+  "draft",
+];
+
 export const FOLDER_TAGS: Record<string, string[]> = {
   [FOLDERS.SPAM]: [LABELS.SPAM],
   [FOLDERS.INBOX]: [LABELS.INBOX],
@@ -32,7 +42,7 @@ export const FOLDER_TAGS: Record<string, string[]> = {
 
 export const getFolderTags = (folder: string): string[] => {
   return FOLDER_TAGS[folder] || [];
-}; 
+};
 
 export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
 
@@ -87,18 +97,34 @@ export type FilterSuggestion = {
   prefix: string;
 };
 
-
 export const extractFilterValue = (filter: string): string => {
-  if (!filter || !filter.includes(':')) return '';
-  
-  const colonIndex = filter.indexOf(':');
+  if (!filter || !filter.includes(":")) return "";
+
+  const colonIndex = filter.indexOf(":");
   const value = filter.substring(colonIndex + 1);
-  
-  return value || '';
+
+  return value || "";
 };
 
-export const defaultPageSize = 20
+export const defaultPageSize = 20;
 
 export function createSectionId(title: string) {
-  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-} 
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+}
+
+export const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+};
+
+export const getFileIcon = (mimeType: string): string => {
+  if (mimeType === "application/pdf") return "📄";
+  if (mimeType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") return "📊";
+  if (mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    return "📝";
+  if (mimeType.includes("image")) return ""; // Empty for images as they're handled separately
+  return "📎"; // Default icon
+};

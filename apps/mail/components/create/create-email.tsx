@@ -300,7 +300,6 @@ export function CreateEmail() {
                     </div>
                   ))}
                   <input
-                    ref={toInputRef}
                     type="email"
                     className="text-md relative left-[3px] min-w-[120px] flex-1 bg-transparent opacity-50 placeholder:text-[#616161] focus:outline-none"
                     placeholder={toEmails.length ? "" : "luke@example.com"}
@@ -359,7 +358,7 @@ export function CreateEmail() {
           </div>
         </div>
 
-        <div className="bg-offsetLight dark:bg-offsetDark sticky bottom-0 left-0 right-0 flex items-center justify-between p-4 pb-6">
+        <div className="bg-offsetLight dark:bg-offsetDark sticky bottom-0 left-0 right-0 flex items-center justify-between p-4 pb-4">
           <div>
             {attachments.length > 0 && (
               <Popover>
@@ -416,13 +415,10 @@ export function CreateEmail() {
           <div className="flex justify-end gap-4">
             <Button
               variant="outline"
-              className="group relative w-9 overflow-hidden transition-all duration-200 hover:w-32"
               onClick={() => document?.getElementById("file-upload")?.click()}
             >
-              <Plus className="absolute left-[9px] h-6 w-6" />
-              <span className="whitespace-nowrap pl-7 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                Attachments
-              </span>
+              <Plus className="mr-1 h-4 w-4" />
+              Attachments
             </Button>
             <input
               id="file-upload"

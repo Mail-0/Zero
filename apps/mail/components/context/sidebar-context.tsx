@@ -87,19 +87,6 @@ export const SidebarProvider = React.forwardRef<
       _setOpen(isDefaultOpen);
     }, [defaultOpen]);
 
-    // Adds a keyboard shortcut to toggle the sidebar.
-    React.useEffect(() => {
-      const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.key === SIDEBAR_KEYBOARD_SHORTCUT && (event.metaKey || event.ctrlKey)) {
-          event.preventDefault();
-          toggleSidebar();
-        }
-      };
-
-      window.addEventListener("keydown", handleKeyDown);
-      return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [toggleSidebar]);
-
     // We add a state so that we can do data-state="expanded" or "collapsed".
     // This makes it easier to style the sidebar with Tailwind classes.
     const state = open ? "expanded" : "collapsed";

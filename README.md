@@ -61,7 +61,7 @@ You can set up Zero in two ways:
    ```bash
    # Clone the repository
    git clone https://github.com/Mail-0/Zero.git
-   cd Mail-0
+   cd Zero
    
    # Install dependencies
    pnpm install
@@ -76,8 +76,11 @@ You can set up Zero in two ways:
 2. **Set Up Environment**
 
    - Copy `.env.example` to `.env` in both `apps/mail` and `packages/db` folders
+     ```bash
+     cp apps/mail/.env.example apps/mail/.env && cp packages/db/.env.example packages/db/.env
+     ```
    - Configure your environment variables (see below)
-   - Install database dependencies: `pnpm db:dependencies`
+   - Install database dependencies: `pnpm db:dependencies`   
    - Initialize the database: `pnpm db:push`
 
 3. **Start the App**
@@ -277,5 +280,6 @@ Zero uses PostgreSQL for storing data. Here's how to set it up:
 Please refer to the [contributing guide](.github/CONTRIBUTING.md).
 
 ## Star History
+
 
 [![Star History Chart](https://api.star-history.com/svg?repos=Mail-0/Zero&type=Timeline)](https://star-history.com/#Mail-0/Zero&Timeline)
