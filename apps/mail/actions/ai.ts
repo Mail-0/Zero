@@ -1,5 +1,6 @@
 "use server";
 
+import { openaiRateLimiter } from "@/lib/rateLimit";
 import { getOpenAIClient } from "@/lib/openai";
 import OpenAI from "openai";
 
@@ -20,6 +21,17 @@ export async function generateInlineAIEdit(
   const openai_client = await getOpenAIClient();
   if (openai_client == null)
     return { error: "OpenAI client not instantiated. Check API key configuration." };
+
+  // Add this rate limiting code
+  const limiter = await openaiRateLimiter();
+  const identifier = "ai-inline-edit"; // You can use a more specific identifier if needed
+  const { success, limit, reset, remaining } = await limiter.limit(identifier);
+
+  if (!success) {
+    return {
+      error: `Rate limit exceeded. Please try again in ${Math.ceil(reset / 1000)} seconds.`,
+    };
+  }
 
   try {
     const { prompt, selection } = payload;

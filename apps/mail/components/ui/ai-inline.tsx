@@ -17,8 +17,8 @@ type AIInlineContextType = {
   toggleOpen: () => void;
   position: { x: number; y: number };
   setPosition: (position: { x: number; y: number }) => void;
-  editor: Editor | null; // Add this line
-  setEditor: (editor: Editor | null) => void; // Add this line
+  editor: Editor | null;
+  setEditor: (editor: Editor | null) => void;
 };
 
 export const AIInlineContext = createContext<AIInlineContextType | undefined>(undefined);
@@ -42,7 +42,7 @@ export function AIInlineProvider({ children }: { children: React.ReactNode }) {
     <AIInlineContext.Provider
       value={{ open, setOpen, toggleOpen, position, setPosition, editor, setEditor }}
     >
-      {children}
+      {/* {children} */}
       <AIInline />
     </AIInlineContext.Provider>
   );
