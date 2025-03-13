@@ -81,10 +81,15 @@ export interface MailListProps {
 
 export type MailSelectMode = "mass" | "range" | "single" | "selectAllBelow";
 
-export interface ThreadProps {
+export type ThreadProps = {
   message: InitialThread;
   selectMode: MailSelectMode;
   onClick?: (message: InitialThread) => () => Promise<any> | undefined;
   isCompact?: boolean;
-  demo?: boolean;
-}
+};
+
+export type ConditionalThreadProps = ThreadProps &
+  (
+    | { demo?: true; sessionData?: { userId: string; connectionId: string | null } }
+    | { demo?: false; sessionData: { userId: string; connectionId: string | null } }
+  );

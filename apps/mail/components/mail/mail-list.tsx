@@ -1,7 +1,7 @@
 "use client";
 
-import { ComponentProps, memo, useCallback, useEffect, useRef, useState } from "react";
-import { InitialThread, MailListProps, MailSelectMode, ThreadProps } from "@/types";
+import { ComponentProps, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ConditionalThreadProps, InitialThread, MailListProps, MailSelectMode } from "@/types";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertTriangle, Bell, Briefcase, Tag, User, Users } from "lucide-react";
 import { EmptyState, type FolderType } from "@/components/mail/empty-state";
@@ -41,9 +41,9 @@ const highlightText = (text: string, highlight: string) => {
   });
 };
 
-const Thread = memo(({ message, selectMode, demo, onClick }: ThreadProps) => {
+const Thread = memo(({ message, selectMode, demo, onClick, sessionData }: ConditionalThreadProps) => {
   const [mail] = useMail();
-  const { data: session } = useSession();
+  // const { data: session } = useSession();
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const isHovering = useRef<boolean>(false);
   const hasPrefetched = useRef<boolean>(false);
@@ -56,7 +56,7 @@ const Thread = memo(({ message, selectMode, demo, onClick }: ThreadProps) => {
     isHovering.current = true;
 
     // Prefetch only in single select mode
-    if (selectMode === "single" && session?.user.id && !hasPrefetched.current) {
+    if (selectMode === "single" && sessionData?.userId && !hasPrefetched.current) {
       // Clear any existing timeout
       if (hoverTimeoutRef.current) {
         clearTimeout(hoverTimeoutRef.current);
@@ -68,7 +68,7 @@ const Thread = memo(({ message, selectMode, demo, onClick }: ThreadProps) => {
           const messageId = message.threadId ?? message.id;
           // Only prefetch if still hovering and hasn't been prefetched
           console.log(`🕒 Hover threshold reached for email ${messageId}, initiating prefetch...`);
-          preloadThread(session.user.id, messageId, session.connectionId!);
+          preloadThread(sessionData.userId, messageId, sessionData.connectionId!);
           hasPrefetched.current = true;
         }
       }, HOVER_DELAY);
@@ -188,6 +188,15 @@ export function MailList({ isCompact }: MailListProps) {
   const { folder } = useParams<{ folder: string }>();
   const [mail, setMail] = useMail();
   const { data: session } = useSession();
+
+  const sessionData = useMemo(
+    () => ({
+      userId: session?.user?.id ?? "",
+      connectionId: session?.connectionId ?? null,
+    }),
+    [session]
+  );
+
   const [searchValue] = useSearchValue();
 
   const {
@@ -205,7 +214,8 @@ export function MailList({ isCompact }: MailListProps) {
   const virtualizer = useVirtualizer({
     count: items.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => itemHeight,
+    estimateSize: useCallback(() => itemHeight, []),
+    gap: 6
   });
 
   const virtualItems = virtualizer.getVirtualItems();
@@ -490,46 +500,48 @@ export function MailList({ isCompact }: MailListProps) {
       <div
         ref={parentRef}
         className={cn(
-          "relative min-h-[calc(100vh-4rem)] w-full",
+          "w-full",
           selectMode === "range" && "select-none",
         )}
         style={{
           height: `${virtualizer.getTotalSize()}px`,
-          willChange: "transform",
-          contain: "paint",
+          position: "relative"
         }}
       >
-        <div
-          style={{
-            transform: `translateY(${virtualItems[0]?.start ?? 0}px)`,
-            willChange: "transform",
-            contain: "paint",
-          }}
-          className="absolute left-0 top-0 w-full p-[8px]"
-        >
-          {virtualItems.map(({ index, key }) => {
-            const item = items[index];
-            return item ? (
+
+        {virtualItems.map(({ index, key, start }) => {
+          const item = items[index];
+          return item ? (
+            <div
+              key={key}
+              style={{
+                position: "absolute",
+                transform: `translateY(${start ?? 0}px)`,
+                top: 0, left: 0,
+                width: "100%",
+                padding: "8px"
+              }}>
               <Thread
-                key={item.id}
                 onClick={handleMailClick}
                 message={item}
                 selectMode={selectMode}
                 isCompact={isCompact}
+                sessionData={sessionData}
               />
-            ) : null;
-          })}
-          <div className="w-full pt-2 text-center">
-            {isLoading || isValidating ? (
-              <div className="text-center">
-                <div className="mx-auto h-4 w-4 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
-              </div>
-            ) : (
-              <div className="h-4" />
-            )}
-          </div>
-        </div>
+            </div>
+          ) : null;
+        })}
       </div>
+      <div className="w-full pt-4 text-center">
+        {isLoading || isValidating ? (
+          <div className="text-center">
+            <div className="mx-auto h-4 w-4 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
+          </div>
+        ) : (
+          <div className="h-4" />
+        )}
+      </div>
+
     </ScrollArea>
   );
 }
