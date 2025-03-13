@@ -2,8 +2,8 @@
 
 import OpenAI from "openai";
 
-let openai_client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+const openai_client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY ?? "",
 });
 
 export async function getOpenAIClient() {
