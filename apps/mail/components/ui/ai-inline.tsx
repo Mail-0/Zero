@@ -157,6 +157,9 @@ export function AIInline({ className }: AIInlineProps) {
         width: "350px",
         transform: `translate(${position.x}px, ${position.y}px)`,
       }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="ai-inline-editor-title"
     >
       <Card className="bg-background w-[500px] border-none shadow-lg">
         <form ref={formRef} onSubmit={handleSubmit(onSubmit)}>
@@ -166,15 +169,17 @@ export function AIInline({ className }: AIInlineProps) {
               placeholder="Write what to change..."
               className="max-h-96 min-h-[80px] resize-y overflow-hidden rounded-md border-none bg-zinc-950/80 px-3 py-2 text-sm placeholder:text-zinc-500 focus:ring-1 focus:ring-zinc-800"
               onKeyDown={handleKeyDown}
+              aria-label="AI prompt input"
             />
           </CardContent>
           <CardFooter className="flex items-center justify-between p-3 pt-0">
             <Button
-              type="submit"
+              type="button"
               size="sm"
               variant="secondary"
               disabled={formState.isSubmitting}
               className="border-border/30 hover:bg-secondary/80 h-6 border px-2 text-xs shadow-sm"
+              onClick={() => setOpen(false)}
             >
               <span className="flex items-center text-sm opacity-70">
                 <X className="mr-2" /> Esc
