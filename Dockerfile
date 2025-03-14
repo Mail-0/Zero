@@ -1,26 +1,33 @@
-FROM node:22-slim
-
+# use the official Bun image
+FROM oven/bun:slim AS base
 WORKDIR /zero
+
+# install dependencies into temp directory
+FROM base AS install
 COPY . .
 
-# rename the example env files
-RUN cp apps/mail/.env.example apps/mail/.env
-RUN cp packages/db/.env.example packages/db/.env
+# rename the example env files and setup
+RUN cp apps/mail/.env.example apps/mail/.env && \
+    cp packages/db/.env.example packages/db/.env && \
+    bun install --frozen-lockfile && \
+    bun run db:dependencies && \
+    bun run db:push
 
-# install pnpm before we start
-RUN npm install --global corepack@latest
-RUN corepack enable pnpm
+# build prod image
+FROM base AS prerelease
+COPY --from=install /zero/node_modules node_modules
+COPY --from=install /zero .
 
-# setup init db + deps
-RUN pnpm db:dependencies
-RUN pnpm db:push
+# building
+ENV NODE_ENV=production
+RUN bun run build
 
-# install everything in prod mode
-RUN pnpm install
-RUN pnpm build
+# final production image
+FROM base AS release
+COPY --from=install /zero/node_modules node_modules
+COPY --from=prerelease /zero .
 
-
-# env vars, overriden by the `.env` file via compose
+# env vars, overridden by the .env file via compose
 ENV NODE_ENV=production \
     BASE_URL=http://localhost:3000 \
     DATABASE_URL=postgresql://postgres:super-secret-password@localhost:5432/mail0 \
@@ -35,4 +42,4 @@ ENV NODE_ENV=production \
 
 EXPOSE 3000
 
-CMD ["pnpm", "start"]
+ENTRYPOINT ["bun", "run", "start"]

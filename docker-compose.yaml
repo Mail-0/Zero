@@ -20,7 +20,7 @@ services:
       - db
     build: .
     container_name: zerodotemail-interface
-    image: node:22-slim
+    image: oven/bun:slim
     restart: always
     env_file:
       - path: ./apps/mail/.env
