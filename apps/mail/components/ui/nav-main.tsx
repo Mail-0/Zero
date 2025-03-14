@@ -5,17 +5,14 @@ import { useRef, useCallback } from "react";
 import * as React from "react";
 import Link from "next/link";
 
-import {
-  SidebarGroup,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-} from "./sidebar";
+import { SidebarGroup, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "./sidebar";
 import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { MessageKeys, useTranslations } from "next-intl";
+import { MessageKey } from "@/config/navigation";
 import { Badge } from "@/components/ui/badge";
+import { useStats } from "@/hooks/use-stats";
 import { BASE_URL } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { useStats } from "@/hooks/use-stats";
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
   ref?: React.Ref<SVGSVGElement>;
@@ -92,17 +89,6 @@ export function NavMain({ items }: NavMainProps) {
         return `${item.url}?from=${encodeURIComponent(currentPath)}`;
       }
 
-      // Handle settings pages navigation
-      if (item.isSettingsPage && currentFrom) {
-        // Validate and sanitize the 'from' parameter to prevent open redirects
-        const decodedFrom = decodeURIComponent(currentFrom);
-        if (isValidInternalUrl(decodedFrom)) {
-          return `${item.url}?from=${encodeURIComponent(currentFrom)}`;
-        }
-        // Fall back to safe default if URL validation fails
-        return `${item.url}?from=/mail`;
-      }
-
       // Handle back button with redirect protection
       if (item.isBackButton) {
         if (currentFrom) {
@@ -113,6 +99,17 @@ export function NavMain({ items }: NavMainProps) {
         }
         // Fall back to safe default if URL is missing or invalid
         return "/mail";
+      }
+
+      // Handle settings pages navigation
+      if (item.isSettingsPage && currentFrom) {
+        // Validate and sanitize the 'from' parameter to prevent open redirects
+        const decodedFrom = decodeURIComponent(currentFrom);
+        if (isValidInternalUrl(decodedFrom)) {
+          return `${item.url}?from=${encodeURIComponent(currentFrom)}`;
+        }
+        // Fall back to safe default if URL validation fails
+        return `${item.url}?from=/mail`;
       }
 
       // Handle category links
@@ -157,7 +154,7 @@ export function NavMain({ items }: NavMainProps) {
             className="group/collapsible"
           >
             <SidebarMenuItem>
-              <div className="space-y-1">
+              <div className="space-y-1 pb-2">
                 {section.items.map((item) => (
                   <NavItem
                     key={item.url}
@@ -179,6 +176,8 @@ function NavItem(item: NavItemProps & { href: string }) {
   const iconRef = useRef<IconRefType>(null);
   const { data: stats } = useStats();
 
+  const t = useTranslations();
+
   if (item.disabled) {
     return (
       <SidebarMenuButton
@@ -186,7 +185,7 @@ function NavItem(item: NavItemProps & { href: string }) {
         className="flex cursor-not-allowed items-center opacity-50"
       >
         {item.icon && <item.icon ref={iconRef} className="relative mr-2.5 h-3 w-3.5" />}
-        <p className="mt-0.5 text-[13px]">{item.title}</p>
+        <p className="mt-0.5 text-[13px]">{t(item.title as MessageKey)}</p>
       </SidebarMenuButton>
     );
   }
@@ -208,10 +207,14 @@ function NavItem(item: NavItemProps & { href: string }) {
       )}
     >
       {item.icon && <item.icon ref={iconRef} className="mr-2" />}
-      <p className="mt-0.5 text-[13px]">{item.title}</p>
+      <p className="mt-0.5 text-[13px]">{t(item.title as MessageKey)}</p>
       {stats && stats.find((stat) => stat.label?.toLowerCase() === item.title?.toLowerCase()) && (
         <Badge className="ml-auto rounded-md" variant="outline">
-          {stats.find((stat) => stat.label?.toLowerCase() === item.title?.toLowerCase())?.count?.toLocaleString()}
+          {stats
+
+            .find((stat) => stat.label?.toLowerCase() === item.title?.toLowerCase())
+
+            ?.count?.toLocaleString() || "0"}
         </Badge>
       )}
     </SidebarMenuButton>

@@ -18,15 +18,16 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { ArchiveIcon } from "../icons/animated/archive";
 import { ExpandIcon } from "../icons/animated/expand";
 import { MailDisplaySkeleton } from "./mail-skeleton";
+import { ReplyIcon } from "../icons/animated/reply";
 import { Button } from "@/components/ui/button";
 import { useThread } from "@/hooks/use-threads";
 import { XIcon } from "../icons/animated/x";
 import ReplyCompose from "./reply-composer";
+import { useTranslations } from "next-intl";
 import MailDisplay from "./mail-display";
 import { useMail } from "./use-mail";
 import { cn } from "@/lib/utils";
 import React from "react";
-import { ReplyIcon } from "../icons/animated/reply";
 
 interface ThreadDisplayProps {
   mail: any;
@@ -85,7 +86,7 @@ export function ThreadDemo({ mail: emailData, onClose, isMobile }: ThreadDisplay
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" className="md:h-fit md:px-2" disabled={!emailData}>
-                  <ArchiveIcon className="h-4 w-4 relative top-0.5" />
+                  <ArchiveIcon className="relative top-0.5 h-4 w-4" />
                   <span className="sr-only">Archive</span>
                 </Button>
               </TooltipTrigger>
@@ -147,7 +148,7 @@ export function ThreadDemo({ mail: emailData, onClose, isMobile }: ThreadDisplay
               ))}
             </div>
           </ScrollArea>
-          <div className="relative top-1 flex-shrink-0">
+          <div className="relative md:top-2 flex-shrink-0">
             <ReplyCompose emailData={emailData} isOpen={false} setIsOpen={() => {}} />
           </div>
         </div>
@@ -195,6 +196,7 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
   const [isMuted, setIsMuted] = useState(false);
   const [isReplyOpen, setIsReplyOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const t = useTranslations();
 
   const moreVerticalIconRef = useRef<any>(null);
 
@@ -237,52 +239,60 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
         >
           <div className="flex flex-shrink-0 items-center border-b px-1 pb-1 md:px-3 md:pb-2 md:pt-[10px]">
             <div className="flex flex-1 items-center">
-              <ThreadActionButton icon={XIcon} label="Close" onClick={handleClose} />
+              <ThreadActionButton
+                icon={XIcon}
+                label={t("common.actions.close")}
+                onClick={handleClose}
+              />
             </div>
             <div className="flex items-center gap-1 sm:gap-2 md:gap-6">
               <ThreadActionButton
                 icon={isFullscreen ? ExpandIcon : ExpandIcon}
-                label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                label={
+                  isFullscreen
+                    ? t("common.threadDisplay.exitFullscreen")
+                    : t("common.threadDisplay.enterFullscreen")
+                }
                 onClick={() => setIsFullscreen(!isFullscreen)}
               />
-              
+
               <ThreadActionButton
                 icon={ArchiveIcon}
-                label="Archive"
+                label={t("common.threadDisplay.archive")}
                 disabled={true}
                 className="relative top-0.5"
               />
-              
+
               <ThreadActionButton
                 icon={ReplyIcon}
-                label="Reply"
+                label={t("common.threadDisplay.reply")}
                 disabled={true}
               />
-              
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    className="h-8 w-8 p-0 md:h-fit md:w-auto md:px-2" 
+                  <Button
+                    variant="ghost"
+                    className="h-8 w-8 p-0 md:h-fit md:w-auto md:px-2"
                     disabled={true}
                   >
                     <MoreVerticalIcon className="h-4 w-4" />
-                    <span className="sr-only">More options</span>
+                    <span className="sr-only">{t("common.threadDisplay.moreOptions")}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem>
-                    <ArchiveX className="mr-2 h-4 w-4" /> Move to spam
+                    <ArchiveX className="mr-2 h-4 w-4" /> {t("common.threadDisplay.moveToSpam")}
                   </DropdownMenuItem>
                   <DropdownMenuItem>
-                    <ReplyAll className="mr-2 h-4 w-4" /> Reply all
+                    <ReplyAll className="mr-2 h-4 w-4" /> {t("common.threadDisplay.replyAll")}
                   </DropdownMenuItem>
                   <DropdownMenuItem>
-                    <Forward className="mr-2 h-4 w-4" /> Forward
+                    <Forward className="mr-2 h-4 w-4" /> {t("common.threadDisplay.forward")}
                   </DropdownMenuItem>
-                  <DropdownMenuItem>Mark as unread</DropdownMenuItem>
-                  <DropdownMenuItem>Add label</DropdownMenuItem>
-                  <DropdownMenuItem>Mute thread</DropdownMenuItem>
+                  <DropdownMenuItem>{t("common.threadDisplay.markAsUnread")}</DropdownMenuItem>
+                  <DropdownMenuItem>{t("common.threadDisplay.addLabel")}</DropdownMenuItem>
+                  <DropdownMenuItem>{t("common.threadDisplay.muteThread")}</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -317,7 +327,7 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
           <div className="flex flex-1 items-center">
             <ThreadActionButton
               icon={XIcon}
-              label="Close"
+              label={t("common.actions.close")}
               disabled={!emailData}
               onClick={handleClose}
             />
@@ -325,19 +335,23 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
           <div className="flex items-center md:gap-6">
             <ThreadActionButton
               icon={isFullscreen ? ExpandIcon : ExpandIcon}
-              label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+              label={
+                isFullscreen
+                  ? t("common.threadDisplay.exitFullscreen")
+                  : t("common.threadDisplay.enterFullscreen")
+              }
               disabled={!emailData}
               onClick={() => setIsFullscreen(!isFullscreen)}
             />
             <ThreadActionButton
               icon={ArchiveIcon}
-              label="Archive"
+              label={t("common.threadDisplay.archive")}
               disabled={!emailData}
               className="relative top-0.5"
             />
             <ThreadActionButton
               icon={ReplyIcon}
-              label="Reply"
+              label={t("common.threadDisplay.reply")}
               disabled={!emailData}
               onClick={() => setIsReplyOpen(true)}
             />
@@ -351,22 +365,22 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
                   onMouseLeave={() => moreVerticalIconRef.current?.stopAnimation?.()}
                 >
                   <MoreVerticalIcon ref={moreVerticalIconRef} className="h-4 w-4" />
-                  <span className="sr-only">More options</span>
+                  <span className="sr-only">{t("common.threadDisplay.moreOptions")}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem>
-                  <ArchiveX className="mr-2 h-4 w-4" /> Move to spam
+                  <ArchiveX className="mr-2 h-4 w-4" /> {t("common.threadDisplay.moveToSpam")}
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <ReplyAll className="mr-2 h-4 w-4" /> Reply all
+                  <ReplyAll className="mr-2 h-4 w-4" /> {t("common.threadDisplay.replyAll")}
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <Forward className="mr-2 h-4 w-4" /> Forward
+                  <Forward className="mr-2 h-4 w-4" /> {t("common.threadDisplay.forward")}
                 </DropdownMenuItem>
-                <DropdownMenuItem>Mark as unread</DropdownMenuItem>
-                <DropdownMenuItem>Add label</DropdownMenuItem>
-                <DropdownMenuItem>Mute thread</DropdownMenuItem>
+                <DropdownMenuItem>{t("common.threadDisplay.markAsUnread")}</DropdownMenuItem>
+                <DropdownMenuItem>{t("common.threadDisplay.addLabel")}</DropdownMenuItem>
+                <DropdownMenuItem>{t("common.threadDisplay.muteThread")}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -393,7 +407,7 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
               ))}
             </div>
           </ScrollArea>
-          <div className="relative top-1 flex-shrink-0">
+          <div className={`relative ${isFullscreen ? "" : "top-1"} flex-shrink-0`}>
             <ReplyCompose emailData={emailData} isOpen={isReplyOpen} setIsOpen={setIsReplyOpen} />
           </div>
         </div>

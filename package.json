@@ -15,7 +15,7 @@
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:clean": "docker-compose down -v",
-    "db:depencies": "cd packages/db && pnpm install",
+    "db:dependencies": "cd packages/db && pnpm install",
     "db:generate": "cd packages/db && pnpm run db:generate",
     "db:migrate": "cd packages/db && pnpm run db:migrate",
     "db:push": "cd packages/db && pnpm run db:push",
@@ -38,6 +38,11 @@
   },
   "packageManager": "pnpm@10.2.0",
   "dependencies": {
-    "@vercel/analytics": "1.5.0"
+    "@tiptap/extension-link": "^2.11.5",
+    "@tiptap/pm": "2.11.5",
+    "@tiptap/react": "2.11.5",
+    "@tiptap/starter-kit": "^2.11.5",
+    "@vercel/analytics": "1.5.0",
+    "input-otp": "^1.4.2"
   }
 }

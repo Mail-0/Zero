@@ -1,29 +1,30 @@
 "use client";
 
-
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { ArchiveX, BellOff, X, Inbox, Tag, AlertTriangle, User, Bell } from "lucide-react";
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { ThreadDisplay, ThreadDemo } from "@/components/mail/thread-display";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { MailList, MailListDemo } from "@/components/mail/mail-list";
 import { useParams, useSearchParams } from "next/navigation";
 import { useMediaQuery } from "../../hooks/use-media-query";
 import { useSearchValue } from "@/hooks/use-search-value";
+import { SearchIcon } from "../icons/animated/search";
 import { useMail } from "@/components/mail/use-mail";
 import { SidebarToggle } from "../ui/sidebar-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn, defaultPageSize } from "@/lib/utils";
 import { useThreads } from "@/hooks/use-threads";
+import { MessageKey } from "@/config/navigation";
 import { Button } from "@/components/ui/button";
 import { useHotKey } from "@/hooks/use-hot-key";
 import { useSession } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
-import { SearchBar } from "./search-bar";
-import { cn, defaultPageSize } from "@/lib/utils";
-import items from "./demo.json";
 import { XIcon } from "../icons/animated/x";
-import { SearchIcon } from "../icons/animated/search";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { SearchBar } from "./search-bar";
+import items from "./demo.json";
 
 export function DemoMailLayout() {
   const [mail, setMail] = useState({
@@ -45,16 +46,14 @@ export function DemoMailLayout() {
       setFilteredItems(items);
     } else {
       const categoryMap = {
-        "Important": "important",
-        "Personal": "personal",
-        "Updates": "updates",
-        "Promotions": "promotions"
+        Important: "important",
+        Personal: "personal",
+        Updates: "updates",
+        Promotions: "promotions",
       };
-      
+
       const filterTag = categoryMap[activeCategory as keyof typeof categoryMap];
-      const filtered = items.filter(item => 
-        item.tags && item.tags.includes(filterTag)
-      );
+      const filtered = items.filter((item) => item.tags && item.tags.includes(filterTag));
       setFilteredItems(filtered);
     }
   }, [activeCategory]);
@@ -89,8 +88,8 @@ export function DemoMailLayout() {
               >
                 <SidebarToggle className="h-fit px-2" />
                 <div>
-                  <MailCategoryTabs 
-                    iconsOnly={true} 
+                  <MailCategoryTabs
+                    iconsOnly={true}
                     onCategoryChange={setActiveCategory}
                     initialCategory={activeCategory}
                   />
@@ -111,14 +110,14 @@ export function DemoMailLayout() {
                         <Skeleton className="mt-2 h-3 w-32" />
                         <Skeleton className="mt-2 h-3 w-full" />
                         <div className="mt-2 flex gap-2">
-                          <Skeleton className="h-4 w-16 rounded-full" />
-                          <Skeleton className="h-4 w-16 rounded-full" />
+                          <Skeleton className="h-4 w-16 rounded-md" />
+                          <Skeleton className="h-4 w-16 rounded-md" />
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                    <MailListDemo items={filteredItems} />
+                  <MailListDemo items={filteredItems} />
                 )}
               </div>
             </div>
@@ -175,7 +174,12 @@ export function MailLayout() {
     }
   }, [session?.user, isPending]);
 
-  const { isLoading, isValidating } = useThreads(folder, undefined, searchValue.value, defaultPageSize);
+  const { isLoading, isValidating } = useThreads(
+    folder,
+    undefined,
+    searchValue.value,
+    defaultPageSize,
+  );
 
   const [open, setOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -244,7 +248,7 @@ export function MailLayout() {
               />
               <div
                 className={cn(
-                  "sticky top-0 z-10 flex items-center justify-between gap-1.5 p-2 transition-colors border-b",
+                  "sticky top-0 z-10 flex items-center justify-between gap-1.5 border-b p-2 transition-colors",
                 )}
               >
                 <SidebarToggle className="h-fit px-2" />
@@ -260,7 +264,7 @@ export function MailLayout() {
                     </Button>
                   </div>
                 )}
-                
+
                 {!searchMode && (
                   <>
                     {mail.bulkSelected.length > 0 ? (
@@ -288,7 +292,7 @@ export function MailLayout() {
                     ) : (
                       <>
                         <div className="flex-1 text-center text-sm font-medium capitalize">
-                            <MailCategoryTabs iconsOnly={!!mail.selected} />
+                          <MailCategoryTabs iconsOnly={!!mail.selected} />
                         </div>
                         <div className="flex items-center gap-1.5">
                           <Button
@@ -320,16 +324,14 @@ export function MailLayout() {
                         <Skeleton className="mt-2 h-3 w-32" />
                         <Skeleton className="mt-2 h-3 w-full" />
                         <div className="mt-2 flex gap-2">
-                          <Skeleton className="h-4 w-16 rounded-full" />
-                          <Skeleton className="h-4 w-16 rounded-full" />
+                          <Skeleton className="h-4 w-16 rounded-md" />
+                          <Skeleton className="h-4 w-16 rounded-md" />
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                    <MailList
-                      isCompact={true}
-                  />
+                  <MailList isCompact={true} />
                 )}
               </div>
             </div>
@@ -395,67 +397,79 @@ function BulkSelectActions() {
 
 const categories = [
   {
-    name: "Primary",
+    name: "common.mailCategories.primary",
     searchValue: "",
     icon: <Inbox className="h-4 w-4" />,
-    colors: "border-0 bg-gray-200 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400 dark:hover:bg-gray-800/70"
+    colors:
+      "border-0 bg-gray-200 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400 dark:hover:bg-gray-800/70",
   },
   {
-    name: "Important",
+    name: "common.mailCategories.important",
     searchValue: "is:important",
     icon: <AlertTriangle className="h-4 w-4" />,
-    colors: "border-0 text-amber-800 bg-amber-100 dark:bg-amber-900/20 dark:text-amber-500 dark:hover:bg-amber-900/30"
+    colors:
+      "border-0 text-amber-800 bg-amber-100 dark:bg-amber-900/20 dark:text-amber-500 dark:hover:bg-amber-900/30",
   },
   {
-    name: "Personal",
+    name: "common.mailCategories.personal",
     searchValue: "is:personal",
     icon: <User className="h-4 w-4" />,
-    colors: "border-0 text-green-800 bg-green-100 dark:bg-green-900/20 dark:text-green-500 dark:hover:bg-green-900/30"
+    colors:
+      "border-0 text-green-800 bg-green-100 dark:bg-green-900/20 dark:text-green-500 dark:hover:bg-green-900/30",
   },
   {
-    name: "Updates",
+    name: "common.mailCategories.updates",
     searchValue: "is:updates",
     icon: <Bell className="h-4 w-4" />,
-    colors: "border-0 text-purple-800 bg-purple-100 dark:bg-purple-900/20 dark:text-purple-500 dark:hover:bg-purple-900/30"
+    colors:
+      "border-0 text-purple-800 bg-purple-100 dark:bg-purple-900/20 dark:text-purple-500 dark:hover:bg-purple-900/30",
   },
   {
-    name: "Promotions",
+    name: "common.mailCategories.promotions",
     searchValue: "is:promotions",
     icon: <Tag className="h-4 w-4 rotate-90" />,
-    colors: "border-0 text-red-800 bg-red-100 dark:bg-red-900/20 dark:text-red-500 dark:hover:bg-red-900/30"
+    colors:
+      "border-0 text-red-800 bg-red-100 dark:bg-red-900/20 dark:text-red-500 dark:hover:bg-red-900/30",
   },
 ];
 
-function MailCategoryTabs({ 
-  iconsOnly = false, 
+function MailCategoryTabs({
+  iconsOnly = false,
   isLoading = false,
   onCategoryChange,
-  initialCategory
-}: { 
-  iconsOnly?: boolean, 
-  isLoading?: boolean,
-  onCategoryChange?: (category: string) => void,
-  initialCategory?: string
+  initialCategory,
+}: {
+  iconsOnly?: boolean;
+  isLoading?: boolean;
+  onCategoryChange?: (category: string) => void;
+  initialCategory?: string;
 }) {
   const [, setSearchValue] = useSearchValue();
-  
-  // Initialize from localStorage with fallback to "Primary" or initialCategory
-  const [activeCategory, setActiveCategory] = useState(() => {
-    // Only run in browser environment
-    if (typeof window !== 'undefined') {
-      return initialCategory || localStorage.getItem('mailActiveCategory') || "Primary";
+  const t = useTranslations();
+
+  // Initialize with just the initialCategory or "Primary"
+  const [activeCategory, setActiveCategory] = useState(initialCategory || "Primary");
+
+  // Move localStorage logic to a useEffect
+  useEffect(() => {
+    // Check localStorage only after initial render
+    const savedCategory = localStorage.getItem("mailActiveCategory");
+    if (savedCategory && !initialCategory) {
+      setActiveCategory(savedCategory);
     }
-    return initialCategory || "Primary";
-  });
-  
+  }, [initialCategory]);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const activeTabElementRef = useRef<HTMLButtonElement>(null);
 
-  const activeTab = useMemo(() => categories.find(cat => cat.name === activeCategory), [activeCategory]);
+  const activeTab = useMemo(
+    () => categories.find((cat) => cat.name === activeCategory),
+    [activeCategory],
+  );
 
   // Save to localStorage when activeCategory changes
   useEffect(() => {
-    localStorage.setItem('mailActiveCategory', activeCategory);
+    localStorage.setItem("mailActiveCategory", activeCategory);
     if (onCategoryChange) {
       onCategoryChange(activeCategory);
     }
@@ -481,7 +495,7 @@ function MailCategoryTabs({
       const clipLeft = Math.max(0, offsetLeft - 2);
       const clipRight = Math.min(container.offsetWidth, offsetLeft + offsetWidth + 2);
       const containerWidth = container.offsetWidth;
-      
+
       if (containerWidth) {
         container.style.clipPath = `inset(0 ${Number(100 - (clipRight / containerWidth) * 100).toFixed(2)}% 0 ${Number((clipLeft / containerWidth) * 100).toFixed(2)}%)`;
       }
@@ -499,7 +513,7 @@ function MailCategoryTabs({
     const timer = setTimeout(() => {
       updateClipPath();
     }, 10);
-    
+
     return () => clearTimeout(timer);
   }, [iconsOnly, updateClipPath]);
 
@@ -509,12 +523,12 @@ function MailCategoryTabs({
       updateClipPath();
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, [updateClipPath]);
 
   return (
-    <div className="relative w-fit mx-auto">
+    <div className="relative mx-auto w-fit">
       <ul className="flex justify-center gap-1.5">
         {categories.map((category) => (
           <li key={category.name}>
@@ -527,21 +541,21 @@ function MailCategoryTabs({
                     setActiveCategory(category.name);
                   }}
                   className={cn(
-                    "flex h-7 items-center gap-1.5 px-2 text-xs font-medium rounded-full transition-all duration-200",
-                    activeCategory === category.name 
+                    "flex h-7 items-center gap-1.5 rounded-full px-2 text-xs font-medium transition-all duration-200",
+                    activeCategory === category.name
                       ? category.colors
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
                   )}
                 >
-                    {category.icon}
-                    <span className={cn("hidden", (!iconsOnly && "md:inline"))}>
-                      {category.name}
-                    </span>
+                  {category.icon}
+                  <span className={cn("hidden", !iconsOnly && "md:inline")}>
+                    {t(category.name as MessageKey)}
+                  </span>
                 </button>
               </TooltipTrigger>
               {iconsOnly && (
                 <TooltipContent>
-                  <span>{category.name}</span>
+                  <span>{t(category.name as MessageKey)}</span>
                 </TooltipContent>
               )}
             </Tooltip>
@@ -549,9 +563,9 @@ function MailCategoryTabs({
         ))}
       </ul>
 
-      <div 
-        aria-hidden 
-        className="absolute inset-0 z-10 overflow-hidden transition-[clip-path] duration-300 ease-in-out shadow-sm " 
+      <div
+        aria-hidden
+        className="absolute inset-0 z-10 overflow-hidden shadow-sm transition-[clip-path] duration-300 ease-in-out"
         ref={containerRef}
       >
         <ul className="flex justify-center gap-1.5">
@@ -563,14 +577,14 @@ function MailCategoryTabs({
                   setActiveCategory(category.name);
                 }}
                 className={cn(
-                  "flex h-7 items-center gap-1.5 px-2 text-xs font-medium rounded-full",
-                  category.colors
+                  "flex h-7 items-center gap-1.5 rounded-full px-2 text-xs font-medium",
+                  category.colors,
                 )}
                 tabIndex={-1}
               >
                 {category.icon}
-                <span className={cn("hidden", (!iconsOnly && "md:inline"))}>
-                  {category.name}
+                <span className={cn("hidden", !iconsOnly && "md:inline")}>
+                  {t(category.name as MessageKey)}
                 </span>
               </button>
             </li>

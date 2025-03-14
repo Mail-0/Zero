@@ -1,10 +1,14 @@
+import createNextIntlPlugin from "next-intl/plugin";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   compiler: {
-    removeConsole: process.env.NODE_ENV === "production" ? {
-      exclude: ["warn", "error"]
-    } : undefined,
+    removeConsole:
+      process.env.NODE_ENV === "production"
+        ? {
+            exclude: ["warn", "error"],
+          }
+        : undefined,
   },
   images: {
     remotePatterns: [
@@ -41,4 +45,6 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
+
+export default withNextIntl(nextConfig);

@@ -26,8 +26,10 @@ import {
   filterSuggestionsFunction,
   filterSuggestions
 } from "@/lib/filter";
-
+import { useTranslations } from "next-intl";
 function DateFilter({ date, setDate }: { date: DateRange; setDate: (date: DateRange) => void }) {
+  const t = useTranslations("common.searchBar");
+
   return (
     <div className="grid gap-2">
       <Popover>
@@ -51,7 +53,7 @@ function DateFilter({ date, setDate }: { date: DateRange; setDate: (date: DateRa
                 format(date.from, "LLL dd, y")
               )
             ) : (
-              <span>Pick a date or a range</span>
+              <span>{t('pickDateRange')}</span>
             )}
           </Button>
         </PopoverTrigger>
@@ -96,6 +98,8 @@ export function SearchBar() {
     },
     category: "",
   });
+  
+  const t = useTranslations();
   
   const [suggestionsState, setSuggestionsState] = useState({
     show: false,
@@ -543,7 +547,7 @@ export function SearchBar() {
       <form className="relative flex items-center" onSubmit={form.handleSubmit(submitSearch)}>
         <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground" aria-hidden="true" />
         <Input
-          placeholder="Search"
+          placeholder={t("common.searchBar.search")}
           autoFocus
           ref={inputRef}
           className="h-8 w-full rounded-md border-none bg-muted/50 pl-9 pr-14 text-muted-foreground shadow-none ring-1 ring-muted transition-colors placeholder:text-muted-foreground/70 hover:bg-muted focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-ring"
@@ -561,7 +565,7 @@ export function SearchBar() {
               className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             >
               <X className="h-4 w-4" />
-              <span className="sr-only">Clear search</span>
+              <span className="sr-only">{t("common.searchBar.clearSearch")}</span>
             </button>
           )}
           <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
@@ -576,7 +580,7 @@ export function SearchBar() {
                 type="button"
               >
                 <SlidersHorizontal className="h-4 w-4" />
-                <span className="sr-only">Advanced search</span>
+                <span className="sr-only">{t("common.searchBar.advancedSearch")}</span>
               </Button>
             </PopoverTrigger>
             <PopoverContent
@@ -588,7 +592,7 @@ export function SearchBar() {
             >
               <div className="space-y-5">
                 <div>
-                  <h2 className="mb-3 text-xs font-semibold">Quick Filters</h2>
+                  <h2 className="mb-3 text-xs font-semibold">{t("common.searchBar.quickFilters")}</h2>
                   <div className="flex flex-wrap gap-2">
                     <Button
                       variant="outline"
@@ -596,7 +600,7 @@ export function SearchBar() {
                       className="h-7 rounded-md bg-muted/50 text-xs hover:bg-muted"
                       onClick={() => form.setValue("q", "is:unread")}
                     >
-                      Unread
+                      {t("common.searchBar.unread")}
                     </Button>
                     <Button
                       variant="outline"
@@ -604,7 +608,7 @@ export function SearchBar() {
                       className="h-7 rounded-md bg-muted/50 text-xs hover:bg-muted"
                       onClick={() => form.setValue("q", "has:attachment")}
                     >
-                      Has Attachment
+                      {t("common.searchBar.hasAttachment")}
                     </Button>
                     <Button
                       variant="outline"
@@ -612,7 +616,7 @@ export function SearchBar() {
                       className="h-7 rounded-md bg-muted/50 text-xs hover:bg-muted"
                       onClick={() => form.setValue("q", "is:starred")}
                     >
-                      Starred
+                      {t("common.searchBar.starred")}
                     </Button>
                   </div>
                 </div>
@@ -621,7 +625,7 @@ export function SearchBar() {
 
                 <div className="grid gap-5">
                   <div className="space-y-2">
-                    <label className="text-xs font-semibold">Search in</label>
+                    <label className="text-xs font-semibold">{t("common.searchBar.searchIn")}</label>
                     <Select
                       onValueChange={(value) => form.setValue("folder", value)}
                       value={form.watch("folder")}
@@ -640,9 +644,9 @@ export function SearchBar() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-semibold">Subject</label>
+                    <label className="text-xs font-semibold">{t("common.searchBar.subject")}</label>
                     <Input
-                      placeholder="Email subject"
+                      placeholder={t("common.searchBar.subject")}
                       {...form.register("subject")}
                       className="h-8 rounded-md bg-muted/50"
                     />
@@ -650,18 +654,18 @@ export function SearchBar() {
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <label className="text-xs font-semibold">From</label>
+                      <label className="text-xs font-semibold">{t("common.mailDisplay.from")}</label>
                       <Input
-                        placeholder="Sender"
+                        placeholder={t("common.searchBar.sender")}
                         {...form.register("from")}
                         className="h-8 rounded-md bg-muted/50"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-xs font-semibold">To</label>
+                      <label className="text-xs font-semibold">{t("common.mailDisplay.to")}</label>
                       <Input
-                        placeholder="Recipient"
+                        placeholder={t("common.searchBar.recipient")}
                         {...form.register("to")}
                         className="h-8 rounded-md bg-muted/50"
                       />
@@ -669,7 +673,7 @@ export function SearchBar() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-semibold">Date Range</label>
+                    <label className="text-xs font-semibold">{t("common.searchBar.dateRange")}</label>
                     <DateFilter
                       date={value.dateRange}
                       setDate={(range) => form.setValue("dateRange", range)}
@@ -680,7 +684,7 @@ export function SearchBar() {
                 <Separator className="bg-border/50" />
 
                 <div>
-                  <h2 className="mb-3 text-xs font-semibold">Category</h2>
+                  <h2 className="mb-3 text-xs font-semibold">{t("common.searchBar.category")}</h2>
                   <div className="flex flex-wrap gap-2">
                     <Toggle
                       variant="outline"
@@ -691,7 +695,7 @@ export function SearchBar() {
                         form.setValue("category", pressed ? "primary" : "")
                       }
                     >
-                      Primary
+                      {t("common.mailCategories.primary")}
                     </Toggle>
                     <Toggle
                       variant="outline"
@@ -702,7 +706,7 @@ export function SearchBar() {
                         form.setValue("category", pressed ? "updates" : "")
                       }
                     >
-                      Updates
+                      {t("common.mailCategories.updates")}
                     </Toggle>
                     <Toggle
                       variant="outline"
@@ -713,7 +717,7 @@ export function SearchBar() {
                         form.setValue("category", pressed ? "promotions" : "")
                       }
                     >
-                      Promotions
+                      {t("common.mailCategories.promotions")}
                     </Toggle>
                     <Toggle
                       variant="outline"
@@ -724,7 +728,7 @@ export function SearchBar() {
                         form.setValue("category", pressed ? "social" : "")
                       }
                     >
-                      Social
+                      {t("common.mailCategories.social")}
                     </Toggle>
                   </div>
                 </div>
@@ -736,7 +740,7 @@ export function SearchBar() {
                     size="sm"
                     className="h-8 rounded-md text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   >
-                    Reset
+                    {t("common.searchBar.reset")}
                   </Button>
                   <Button
                     size="sm"
@@ -744,7 +748,7 @@ export function SearchBar() {
                     type="submit"
                     onClick={() => setPopoverOpen(false)}
                   >
-                    Apply Filters
+                    {t("common.searchBar.applyFilters")}
                   </Button>
                 </div>
               </div>

@@ -49,6 +49,7 @@ export interface ParsedMessage {
   inReplyTo?: string;
   messageId?: string;
   threadId?: string;
+  attachments?: Attachment[];
 }
 
 export interface IConnection {
@@ -74,3 +75,31 @@ export interface InitialThread {
   references?: string;
   inReplyTo?: string;
 }
+
+export interface Attachment {
+  attachmentId: string;
+  filename: string;
+  mimeType: string;
+  size: number;
+  body: string;
+  // TODO: Fix typing
+  headers: any;
+}
+export interface MailListProps {
+  isCompact?: boolean;
+}
+
+export type MailSelectMode = "mass" | "range" | "single" | "selectAllBelow";
+
+export type ThreadProps = {
+  message: InitialThread;
+  selectMode: MailSelectMode;
+  onClick?: (message: InitialThread) => () => Promise<any> | undefined;
+  isCompact?: boolean;
+};
+
+export type ConditionalThreadProps = ThreadProps &
+  (
+    | { demo?: true; sessionData?: { userId: string; connectionId: string | null } }
+    | { demo?: false; sessionData: { userId: string; connectionId: string | null } }
+  );

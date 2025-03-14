@@ -17,6 +17,7 @@ import { navigationConfig, NavItem } from "@/config/navigation";
 import { useRouter, usePathname } from "next/navigation";
 import { keyboardShortcuts } from "@/config/shortcuts";
 import { ArrowUpRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { CircleHelp } from "lucide-react";
 import { Pencil } from "lucide-react";
 import * as React from "react";
@@ -63,6 +64,8 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     command();
   }, []);
 
+  const t = useTranslations();
+
   const allCommands = React.useMemo(() => {
     const mailCommands: { group: string; item: NavItem }[] = [];
     const settingsCommands: { group: string; item: NavItem }[] = [];
@@ -70,7 +73,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
 
     for (const sectionKey in navigationConfig) {
       const section = navigationConfig[sectionKey];
-      section.sections.forEach((group) => {
+      section?.sections.forEach((group) => {
         group.items.forEach((item) => {
           if (!(sectionKey === "settings" && item.isBackButton)) {
             if (sectionKey === "mail") {
@@ -88,25 +91,33 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     }
 
     const combinedCommands = [
-      { group: "Mail", items: mailCommands.map((c) => c.item) },
-      { group: "Settings", items: settingsCommands.map((c) => c.item) },
+      { group: t("common.commandPalette.groups.mail"), items: mailCommands.map((c) => c.item) },
+      {
+        group: t("common.commandPalette.groups.settings"),
+        items: settingsCommands.map((c) => c.item),
+      },
       ...otherCommands.map((section) => ({ group: section.group, items: section.item })),
     ];
 
     const filteredCommands = combinedCommands.map((group) => {
-      if (group.group === "Settings") {
-        return {
-          ...group,
-          items: group.items.filter((item: NavItem) => {
-            return pathname.startsWith("/settings") || !item.isBackButton;
-          }),
-        };
+      if (group.group === t("common.commandPalette.groups.settings")) {
+        if (Array.isArray(group.items)) {
+          return {
+            ...group,
+            items: group.items.filter((item: NavItem) => {
+              return pathname.startsWith("/settings") || !item.isBackButton;
+            }),
+          };
+        }
       }
-      return group;
+      return {
+        ...group,
+        items: Array.isArray(group.items) ? group.items : [group.items],
+      };
     });
 
     return filteredCommands;
-  }, [pathname]);
+  }, [pathname, t]);
 
   return (
     <CommandPaletteContext.Provider
@@ -122,19 +133,19 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     >
       <CommandDialog open={open} onOpenChange={setOpen}>
         <VisuallyHidden>
-          <DialogTitle>0 - Command Palette</DialogTitle>
-          <DialogDescription>Quick navigation and actions for 0.</DialogDescription>
+          <DialogTitle>{t("common.commandPalette.title")}</DialogTitle>
+          <DialogDescription>{t("common.commandPalette.description")}</DialogDescription>
         </VisuallyHidden>
-        <CommandInput autoFocus placeholder="Type a command or search..." />
+        <CommandInput autoFocus placeholder={t("common.commandPalette.placeholder")} />
         <CommandList>
-          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandEmpty>{t("common.commandPalette.noResults")}</CommandEmpty>
           <CommandGroup className="pb-0">
-            <CommandItem onSelect={() => window.location.href = "/mail/create"}>
+            <CommandItem onSelect={() => (window.location.href = "/mail/create")}>
               <Pencil size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
-              <span>Compose message</span>
+              <span>{t("common.commandPalette.commands.composeMessage")}</span>
               <CommandShortcut>
                 {keyboardShortcuts
-                  .find((s: { action: string; keys: string[] }) => s.action === "New Email")
+                  .find((s: { action: string; keys: string[] }) => s.action === "newEmail")
                   ?.keys.join(" ")}
               </CommandShortcut>
             </CommandItem>
@@ -160,7 +171,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                           aria-hidden="true"
                         />
                       )}
-                      <span>{item.title}</span>
+                      <span>{t(item.title)}</span>
                       {item.shortcut && <CommandShortcut>{item.shortcut}</CommandShortcut>}
                     </CommandItem>
                   ))}
@@ -170,25 +181,23 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             </React.Fragment>
           ))}
           <CommandSeparator />
-          <CommandGroup heading="Help">
+          <CommandGroup heading={t("common.commandPalette.groups.help")}>
             <CommandItem onSelect={() => runCommand(() => console.log("Help with shortcuts"))}>
               <CircleHelp size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
-              <span>Help with shortcuts</span>
+              <span>{t("common.commandPalette.commands.helpWithShortcuts")}</span>
               <CommandShortcut>
                 {keyboardShortcuts
-                  .find(
-                    (s: { action: string; keys: string[] }) => s.action === "Help with shortcuts",
-                  )
+                  .find((s: { action: string; keys: string[] }) => s.action === "helpWithShortcuts")
                   ?.keys.join(" ")}
               </CommandShortcut>
             </CommandItem>
             <CommandItem
               onSelect={() =>
-                runCommand(() => window.open("https://github.com/Mail-0/Mail-0", "_blank"))
+                runCommand(() => window.open("https://github.com/Mail-0/Zero", "_blank"))
               }
             >
               <ArrowUpRight size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
-              <span>Go to docs</span>
+              <span>{t("common.commandPalette.commands.goToDocs")}</span>
             </CommandItem>
           </CommandGroup>
         </CommandList>

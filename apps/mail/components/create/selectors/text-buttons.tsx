@@ -1,65 +1,56 @@
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
-  BoldIcon,
-  CodeIcon,
-  ItalicIcon,
-  StrikethroughIcon,
-  UnderlineIcon
+  MessageSquare,
+  FileText,
+  Edit
 } from 'lucide-react'
 import { EditorBubbleItem, useEditor } from 'novel'
 import type { SelectorItem } from './node-selector'
+import Image from 'next/image'
 
 export const TextButtons = () => {
   const { editor } = useEditor()
   if (!editor) return null
-  const items: SelectorItem[] = [
+  
+  // Define AI action handlers
+  const handleChatWithAI = () => {
+    // Get selected text
+    const selection = editor.state.selection
+    const selectedText = selection.empty 
+      ? '' 
+      : editor.state.doc.textBetween(selection.from, selection.to)
+    
+    console.log("Chat with AI about:", selectedText)
+    // Implement chat with AI functionality
+  }
+
+  const items = [
     {
-      name: 'bold',
-      isActive: editor => (editor ? editor.isActive('bold') : false),
-      command: editor => editor?.chain().focus().toggleBold().run(),
-      icon: BoldIcon
+      name: 'chat-with-zero',
+      label: 'Chat with Zero',
+      action: handleChatWithAI,
+      useImage: true,
+      imageSrc: '/ai.svg'
     },
-    {
-      name: 'italic',
-      isActive: editor => (editor ? editor.isActive('italic') : false),
-      command: editor => editor?.chain().focus().toggleItalic().run(),
-      icon: ItalicIcon
-    },
-    {
-      name: 'underline',
-      isActive: editor => (editor ? editor.isActive('underline') : false),
-      command: editor => editor?.chain().focus().toggleUnderline().run(),
-      icon: UnderlineIcon
-    },
-    {
-      name: 'strike',
-      isActive: editor => (editor ? editor.isActive('strike') : false),
-      command: editor => editor?.chain().focus().toggleStrike().run(),
-      icon: StrikethroughIcon
-    },
-    {
-      name: 'code',
-      isActive: editor => (editor ? editor.isActive('code') : false),
-      command: editor => editor?.chain().focus().toggleCode().run(),
-      icon: CodeIcon
-    }
   ]
+  
   return (
     <div className='flex'>
       {items.map(item => (
         <EditorBubbleItem
           key={item.name}
-          onSelect={editor => {
-            item.command(editor)
+          onSelect={() => {
+            item.action()
           }}
         >
-          <Button size='sm' className='rounded-none' variant='ghost'>
-            <item.icon
-              className={cn('h-4 w-4', {
-                'text-blue-500': item.isActive(editor)
-              })}
-            />
+          <Button size='sm' className='rounded-none flex items-center gap-1.5 px-3' variant='ghost'>
+            {item.useImage ? (
+              <Image src={item.imageSrc} alt={item.label} width={16} height={16} className="h-4 w-4" />
+            ) : (
+              <item.icon className='h-4 w-4' />
+            )}
+            <span className='text-xs'>{item.label}</span>
           </Button>
         </EditorBubbleItem>
       ))}

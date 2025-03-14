@@ -173,7 +173,7 @@ const sections = [
         <p>For questions about these terms:</p>
         <div className="flex flex-col space-y-2">
           <a
-            href="https://github.com/Mail-0/Mail-0"
+            href="https://github.com/Mail-0/Zero"
             className="inline-flex items-center text-blue-600 hover:text-blue-800"
           >
             <Github className="mr-2 h-4 w-4" />

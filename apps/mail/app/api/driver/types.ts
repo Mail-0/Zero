@@ -1,32 +1,38 @@
 import { InitialThread, ParsedMessage } from "@/types";
 
 export interface MailManager {
-    get(id: string): Promise<ParsedMessage[] | undefined>;
-    create(data: any): Promise<any>;
-    delete(id: string): Promise<any>;
-    list<T>(
-        folder: string,
-        query?: string,
-        maxResults?: number,
-        labelIds?: string[],
-        pageToken?: string,
-    ): Promise<(T & { threads: InitialThread[] }) | undefined>;
-    count(): Promise<any>;
-    generateConnectionAuthUrl(userId: string): string;
-    getTokens(
-        code: string,
-    ): Promise<{ tokens: { access_token?: any; refresh_token?: any; expiry_date?: number } }>;
-    getUserInfo(tokens: IConfig["auth"]): Promise<any>;
-    getScope(): string;
-    markAsRead(id: string[]): Promise<void>;
-    markAsUnread(id: string[]): Promise<void>;
-    normalizeIds(id: string[]): { normalizedIds: string[], threadIds: string[] };
-    modifyLabels(id: string[], options: { addLabels: string[], removeLabels: string[] }): Promise<void>;
+  get(id: string): Promise<ParsedMessage[] | undefined>;
+  create(data: any): Promise<any>;
+  createDraft(data: any): Promise<any>;
+  getDraft: (id: string) => Promise<any>;
+  listDrafts: (q?: string, maxResults?: number, pageToken?: string) => Promise<any>;
+  delete(id: string): Promise<any>;
+  list<T>(
+    folder: string,
+    query?: string,
+    maxResults?: number,
+    labelIds?: string[],
+    pageToken?: string,
+  ): Promise<(T & { threads: InitialThread[] }) | undefined>;
+  count(): Promise<any>;
+  generateConnectionAuthUrl(userId: string): string;
+  getTokens(
+    code: string,
+  ): Promise<{ tokens: { access_token?: any; refresh_token?: any; expiry_date?: number } }>;
+  getUserInfo(tokens: IConfig["auth"]): Promise<any>;
+  getScope(): string;
+  markAsRead(id: string[]): Promise<void>;
+  markAsUnread(id: string[]): Promise<void>;
+  normalizeIds(id: string[]): { normalizedIds: string[]; threadIds: string[] };
+  modifyLabels(
+    id: string[],
+    options: { addLabels: string[]; removeLabels: string[] },
+  ): Promise<void>;
 }
 
 export interface IConfig {
-    auth?: {
-        access_token: string;
-        refresh_token: string;
-    };
+  auth?: {
+    access_token: string;
+    refresh_token: string;
+  };
 }

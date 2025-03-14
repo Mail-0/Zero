@@ -1,5 +1,6 @@
 import { fixNonReadableColors, template } from "@/lib/email-utils";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
@@ -11,6 +12,8 @@ export function MailIframe({ html }: { html: string }) {
   const [loaded, setLoaded] = useState(false);
 
   const iframeDoc = useMemo(() => template(html), [html]);
+
+  const t = useTranslations();
 
   useEffect(() => {
     if (!iframeRef.current) return;
@@ -44,7 +47,7 @@ export function MailIframe({ html }: { html: string }) {
       {!loaded && (
         <div className="flex h-full w-full items-center justify-center gap-4 p-8">
           <Loader2 className="size-4 animate-spin" />
-          <span>Loading email content...</span>
+          <span>{t("common.mailDisplay.loadingMailContent")}</span>
         </div>
       )}
       <iframe

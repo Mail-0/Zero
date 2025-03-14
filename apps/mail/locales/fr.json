@@ -1,0 +1,226 @@
+{
+  "common": {
+    "actions": {
+      "logout": "Déconnexion",
+      "back": "Retour",
+      "create": "Créer un email",
+      "saveChanges": "Enregistrer les modifications",
+      "saving": "Enregistrement...",
+      "resetToDefaults": "Réinitialiser par défaut",
+      "close": "Fermer",
+      "signingOut": "Déconnexion...",
+      "signedOutSuccess": "Déconnexion réussie!",
+      "signOutError": "Erreur de déconnexion"
+    },
+    "themes": {
+      "dark": "Sombre",
+      "light": "Clair",
+      "system": "Système"
+    },
+    "commandPalette": {
+      "title": "Palette de commandes",
+      "description": "Navigation rapide et actions pour Mail-0",
+      "placeholder": "Tapez une commande ou recherchez...",
+      "noResults": "Aucun résultat trouvé",
+      "groups": {
+        "mail": "Email",
+        "settings": "Paramètres",
+        "actions": "Actions",
+        "help": "Aide",
+        "navigation": "Navigation"
+      },
+      "commands": {
+        "goToInbox": "Aller à la boîte de réception",
+        "goToDrafts": "Aller aux brouillons",
+        "goToSent": "Aller aux envoyés",
+        "goToSpam": "Aller au spam",
+        "goToArchive": "Aller à l'archive",
+        "goToBin": "Aller à la corbeille",
+        "goToSettings": "Aller aux paramètres",
+        "newEmail": "Nouvel email",
+        "composeMessage": "Composer un message",
+        "searchEmails": "Rechercher des emails",
+        "toggleTheme": "Changer de thème",
+        "backToMail": "Retour aux emails",
+        "goToDocs": "Voir la documentation",
+        "helpWithShortcuts": "Aide sur les raccourcis"
+      }
+    },
+    "searchBar": {
+      "pickDateRange": "Choisir une date ou une plage",
+      "search": "Rechercher",
+      "clearSearch": "Effacer la recherche",
+      "advancedSearch": "Recherche avancée",
+      "quickFilters": "Filtres rapides",
+      "searchIn": "Rechercher dans",
+      "recipient": "Destinataire",
+      "sender": "Expéditeur",
+      "subject": "Sujet",
+      "dateRange": "Plage de dates",
+      "category": "Catégorie",
+      "folder": "Dossier",
+      "allMail": "Tous les emails",
+      "unread": "Non lu",
+      "hasAttachment": "Avec pièce jointe",
+      "starred": "Étoilé",
+      "applyFilters": "Appliquer les filtres",
+      "reset": "Réinitialiser"
+    },
+    "navUser": {
+      "customerSupport": "Support client",
+      "documentation": "Documentation",
+      "appTheme": "Thème de l'application",
+      "accounts": "Comptes",
+      "signIn": "Se connecter"
+    },
+    "mailCategories": {
+      "primary": "Principale",
+      "important": "Important",
+      "personal": "Personnel",
+      "updates": "Mises à jour",
+      "promotions": "Promotions",
+      "social": "Social"
+    },
+    "replyCompose": {
+      "replyTo": "Répondre à",
+      "thisEmail": "cet email",
+      "dropFiles": "Déposer les fichiers à joindre",
+      "attachments": "Pièces jointes",
+      "attachmentCount": "{count, plural, =0 {pièces jointes} one {pièce jointe} other {pièces jointes}}",
+      "fileCount": "{count, plural, =0 {fichiers} one {fichier} other {fichiers}}",
+      "saveDraft": "Enregistrer le brouillon",
+      "send": "Envoyer"
+    },
+    "mailDisplay": {
+      "details": "Détails",
+      "from": "De",
+      "to": "À",
+      "cc": "Cc",
+      "date": "Date",
+      "mailedBy": "Expédié par",
+      "signedBy": "Signé par",
+      "security": "Sécurité",
+      "standardEncryption": "Chiffrement standard (TLS)",
+      "loadingMailContent": "Chargement du contenu de l'email..."
+    },
+    "threadDisplay": {
+      "exitFullscreen": "Quitter le mode plein écran",
+      "enterFullscreen": "Passer en mode plein écran",
+      "archive": "Archiver",
+      "reply": "Répondre",
+      "moreOptions": "Plus d'options",
+      "moveToSpam": "Déplacer vers le spam",
+      "replyAll": "Répondre à tous",
+      "forward": "Transférer",
+      "markAsUnread": "Marquer comme non lu",
+      "addLabel": "Ajouter un label",
+      "muteThread": "Mettre en sourdine"
+    }
+  },
+  "navigation": {
+    "sidebar": {
+      "inbox": "Boîte de réception",
+      "drafts": "Brouillons",
+      "sent": "Envoyés",
+      "spam": "Spam",
+      "archive": "Archive",
+      "bin": "Corbeille",
+      "settings": "Paramètres"
+    },
+    "settings": {
+      "general": "Général",
+      "connections": "Connexions",
+      "security": "Sécurité",
+      "appearance": "Apparence",
+      "shortcuts": "Raccourcis"
+    }
+  },
+  "pages": {
+    "error": {
+      "notFound": {
+        "title": "Page Non Trouvée",
+        "description": "Oups ! La page que vous recherchez n'existe pas ou a été déplacée.",
+        "goBack": "Retour"
+      },
+      "settingsNotFound": "404 - Page des paramètres non trouvée"
+    },
+    "settings": {
+      "general": {
+        "title": "Paramètres généraux",
+        "description": "Gérez les paramètres de votre langue et vos préférences de visualisation des emails.",
+        "language": "Langue",
+        "timezone": "Fuseau horaire",
+        "dynamicContent": "Contenu dynamique",
+        "dynamicContentDescription": "Autoriser les emails à afficher du contenu dynamique.",
+        "externalImages": "Afficher les images externes",
+        "externalImagesDescription": "Autoriser les emails à afficher des images provenant de sources externes.",
+        "languageChangedTo": "Langue changée en {language}"
+      },
+      "connections": {
+        "title": "Connexions Email",
+        "description": "Connectez vos comptes email à Zero.",
+        "disconnectTitle": "Déconnecter le compte email",
+        "disconnectDescription": "Êtes-vous sûr de vouloir déconnecter cet email ?",
+        "cancel": "Annuler",
+        "remove": "Supprimer",
+        "disconnectSuccess": "Compte déconnecté avec succès",
+        "disconnectError": "Échec de la déconnexion du compte",
+        "addEmail": "Ajouter une connexion",
+        "connectEmail": "Connecter un email",
+        "connectEmailDescription": "Sélectionnez un fournisseur de courrier pour vous connecter",
+        "moreComingSoon": "Plus bientôt"
+      },
+      "security": {
+        "title": "Sécurité",
+        "description": "Gérez vos préférences de sécurité et la protection de votre compte.",
+        "twoFactorAuth": "Authentification à deux facteurs",
+        "twoFactorAuthDescription": "Ajoutez une couche de sécurité supplémentaire à votre compte",
+        "loginNotifications": "Notifications de connexion",
+        "loginNotificationsDescription": "Soyez informé des nouvelles tentatives de connexion",
+        "deleteAccount": "Supprimer le compte"
+      },
+      "appearance": {
+        "title": "Apparence",
+        "description": "Personnalisez les couleurs, les polices et les options d'affichage.",
+        "theme": "Thème",
+        "inboxType": "Type de boîte de réception"
+      },
+      "shortcuts": {
+        "title": "Raccourcis clavier",
+        "description": "Consultez et personnalisez les raccourcis clavier pour des actions rapides.",
+        "actions": {
+          "newEmail": "Nouvel email",
+          "sendEmail": "Envoyer l'email",
+          "reply": "Répondre",
+          "replyAll": "Répondre à tous",
+          "forward": "Transférer",
+          "drafts": "Brouillons",
+          "inbox": "Boîte de réception",
+          "sentMail": "Emails envoyés",
+          "delete": "Supprimer",
+          "search": "Rechercher",
+          "markAsUnread": "Marquer comme non lu",
+          "muteThread": "Mettre en sourdine",
+          "printEmail": "Imprimer l'email",
+          "archiveEmail": "Archiver l'email",
+          "markAsSpam": "Marquer comme spam",
+          "moveToFolder": "Déplacer vers un dossier",
+          "undoLastAction": "Annuler la dernière action",
+          "viewEmailDetails": "Voir les détails de l'email",
+          "goToDrafts": "Aller aux brouillons",
+          "expandEmailView": "Agrandir la vue de l'email",
+          "helpWithShortcuts": "Aide sur les raccourcis"
+        }
+      }
+    },
+    "createEmail": {
+      "body": "Corps",
+      "example": "zero@0.email",
+      "attachments": "Pièces jointes",
+      "dropFilesToAttach": "Déposez des fichiers pour les joindre",
+      "writeYourMessageHere": "Écrivez votre message ici...",
+      "emailSentSuccessfully": "Email envoyé avec succès",
+      "failedToSendEmail": "Échec d'envoi de l'email. Veuillez réessayer."
+    }
+  }
+}

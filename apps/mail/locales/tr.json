@@ -1,0 +1,226 @@
+{
+  "common": {
+    "actions": {
+      "logout": "Çıkış Yap",
+      "back": "Geri",
+      "create": "Email Oluştur",
+      "saveChanges": "Değişiklikleri Kaydet",
+      "saving": "Kaydediliyor...",
+      "resetToDefaults": "Varsayılanlara Sıfırla",
+      "close": "Kapat",
+      "signingOut": "Çıkış yapılıyor...",
+      "signedOutSuccess": "Çıkış yapıldı!",
+      "signOutError": "Çıkış yapılırken hata oluştu"
+    },
+    "themes": {
+      "dark": "Koyu",
+      "light": "Açık",
+      "system": "Sistem"
+    },
+    "commandPalette": {
+      "title": "Komut Paleti",
+      "description": "Mail-0 için hızlı gezinme ve işlemler",
+      "placeholder": "Bir komut yazın veya arayın...",
+      "noResults": "Sonuç bulunamadı",
+      "groups": {
+        "mail": "E-posta",
+        "settings": "Ayarlar",
+        "actions": "İşlemler",
+        "help": "Yardım",
+        "navigation": "Gezinme"
+      },
+      "commands": {
+        "goToInbox": "Gelen Kutusuna Git",
+        "goToDrafts": "Taslaklara Git",
+        "goToSent": "Gönderilenlere Git",
+        "goToSpam": "Spam'a Git",
+        "goToArchive": "Arşive Git",
+        "goToBin": "Çöp Kutusuna Git",
+        "goToSettings": "Ayarlara Git",
+        "newEmail": "Yeni E-posta",
+        "composeMessage": "Mesaj oluştur",
+        "searchEmails": "E-postaları Ara",
+        "toggleTheme": "Temayı Değiştir",
+        "backToMail": "E-postaya Geri Dön",
+        "goToDocs": "Dokümanlara Git",
+        "helpWithShortcuts": "Kısayollar Hakkında Yardım"
+      }
+    },
+    "searchBar": {
+      "pickDateRange": "Tarih seçin veya aralık seçin",
+      "search": "Ara",
+      "clearSearch": "Aramayı temizle",
+      "advancedSearch": "Gelişmiş arama",
+      "quickFilters": "Hızlı filtreler",
+      "searchIn": "Ara",
+      "recipient": "Alıcı",
+      "sender": "Gönderen",
+      "subject": "Konu",
+      "dateRange": "Tarih aralığı",
+      "category": "Kategori",
+      "folder": "Klasör",
+      "allMail": "Tüm E-postalar",
+      "unread": "Okunmamış",
+      "hasAttachment": "Ekli",
+      "starred": "Yıldızlı",
+      "applyFilters": "Filtreleri Uygula",
+      "reset": "Sıfırla"
+    },
+    "navUser": {
+      "customerSupport": "Müşteri Desteği",
+      "documentation": "Dokümantasyon",
+      "appTheme": "Uygulama Teması",
+      "accounts": "Hesaplar",
+      "signIn": "Giriş Yap"
+    },
+    "mailCategories": {
+      "primary": "Birincil",
+      "important": "Önemli",
+      "personal": "Kişisel",
+      "updates": "Güncellemeler",
+      "promotions": "Tanıtımlar",
+      "social": "Social"
+    },
+    "replyCompose": {
+      "replyTo": "Yanıtla",
+      "thisEmail": "bu e-postaya",
+      "dropFiles": "Eklemek için dosyaları bırakın",
+      "attachments": "Ekler",
+      "attachmentCount": "{count, plural, =0 {ekler} one {ek} other {ekler}}",
+      "fileCount": "{count, plural, =0 {dosyalar} one {dosya} other {dosyalar}}",
+      "saveDraft": "Taslağı kaydet",
+      "send": "Gönder"
+    },
+    "mailDisplay": {
+      "details": "Detaylar",
+      "from": "Kimden",
+      "to": "Kime",
+      "cc": "Cc",
+      "date": "Tarih",
+      "mailedBy": "Gönderen",
+      "signedBy": "İmzalayan",
+      "security": "Güvenlik",
+      "standardEncryption": "Standart şifreleme (TLS)",
+      "loadingMailContent": "E-posta içeriği yükleniyor..."
+    },
+    "threadDisplay": {
+      "exitFullscreen": "Tam ekrandan çık",
+      "enterFullscreen": "Tam ekrana geç",
+      "archive": "Arşivle",
+      "reply": "Yanıtla",
+      "moreOptions": "Daha fazla seçenek",
+      "moveToSpam": "Spam'a taşı",
+      "replyAll": "Tümünü yanıtla",
+      "forward": "İlet",
+      "markAsUnread": "Okunmamış olarak işaretle",
+      "addLabel": "Etiket ekle",
+      "muteThread": "Konuyu sessize al"
+    }
+  },
+  "navigation": {
+    "sidebar": {
+      "inbox": "Posta Kutusu",
+      "drafts": "Taslaklar",
+      "sent": "Gönderilenler",
+      "spam": "Spam",
+      "archive": "Arşiv",
+      "bin": "Çöp",
+      "settings": "Ayarlar"
+    },
+    "settings": {
+      "general": "Genel",
+      "connections": "Bağlantılar",
+      "security": "Güvenlik",
+      "appearance": "Görünüm",
+      "shortcuts": "Kısayollar"
+    }
+  },
+  "pages": {
+    "error": {
+      "notFound": {
+        "title": "Sayfa Bulunamadı",
+        "description": "Üzgünüz! Aradığınız sayfa mevcut değil veya taşınmış.",
+        "goBack": "Geri Dön"
+      },
+      "settingsNotFound": "404 - Ayarlar sayfası bulunamadı"
+    },
+    "settings": {
+      "general": {
+        "title": "Genel Ayarlar",
+        "description": "Dil ve email görünümü ayarlarını yönetin.",
+        "language": "Dil",
+        "timezone": "Saat Dilimi",
+        "dynamicContent": "Dinamik İçerik",
+        "dynamicContentDescription": "E-postaların dinamik içerik göstermesine izin verin.",
+        "externalImages": "Harici Görselleri Göster",
+        "externalImagesDescription": "E-postaların harici kaynaklardan görselleri göstermesine izin verin.",
+        "languageChangedTo": "Language changed to {language}"
+      },
+      "connections": {
+        "title": "E-posta Bağlantıları",
+        "description": "E-posta hesaplarınızı Zero'ya bağlayın.",
+        "disconnectTitle": "E-posta Hesabını Bağlantıyı Kes",
+        "disconnectDescription": "Bu e-posta bağlantısını kesmek istediğinizden emin misiniz?",
+        "cancel": "İptal",
+        "remove": "Kaldır",
+        "disconnectSuccess": "Hesap bağlantısı başarıyla kesildi",
+        "disconnectError": "Hesap bağlantısı kesilirken hata oluştu",
+        "addEmail": "E-posta Bağlantısı Ekle",
+        "connectEmail": "E-posta Bağlantısı",
+        "connectEmailDescription": "E-posta sağlayıcısını seçin",
+        "moreComingSoon": "Yakında daha fazla geliyor"
+      },
+      "security": {
+        "title": "Güvenlik",
+        "description": "Güvenlik tercihlerinizi ve hesap korumanızı yönetin.",
+        "twoFactorAuth": "İki Faktörlü Kimlik Doğrulama",
+        "twoFactorAuthDescription": "Hesabınıza ekstra bir güvenlik katmanı ekleyin",
+        "loginNotifications": "Giriş Bildirimleri",
+        "loginNotificationsDescription": "Yeni giriş denemeleri hakkında bildirim alın",
+        "deleteAccount": "Hesabı Sil"
+      },
+      "appearance": {
+        "title": "Görünüm",
+        "description": "Renkleri, yazı tiplerini ve görünüm seçeneklerini özelleştirin.",
+        "theme": "Tema",
+        "inboxType": "Gelen Kutusu Tipi"
+      },
+      "shortcuts": {
+        "title": "Klavye Kısayolları",
+        "description": "Hızlı işlemler için klavye kısayollarını görüntüleyin ve özelleştirin.",
+        "actions": {
+          "newEmail": "Yeni E-posta",
+          "sendEmail": "E-posta Gönder",
+          "reply": "Yanıtla",
+          "replyAll": "Tümünü Yanıtla",
+          "forward": "İlet",
+          "drafts": "Taslaklar",
+          "inbox": "Gelen Kutusu",
+          "sentMail": "Gönderilen Postalar",
+          "delete": "Sil",
+          "search": "Ara",
+          "markAsUnread": "Okunmadı Olarak İşaretle",
+          "muteThread": "Konuyu Sessize Al",
+          "printEmail": "E-postayı Yazdır",
+          "archiveEmail": "E-postayı Arşivle",
+          "markAsSpam": "Spam Olarak İşaretle",
+          "moveToFolder": "Klasöre Taşı",
+          "undoLastAction": "Son İşlemi Geri Al",
+          "viewEmailDetails": "E-posta Detaylarını Görüntüle",
+          "goToDrafts": "Taslaklara Git",
+          "expandEmailView": "E-posta Görünümünü Genişlet",
+          "helpWithShortcuts": "Kısayollar Hakkında Yardım"
+        }
+      }
+    },
+    "createEmail": {
+      "body": "İçerik",
+      "example": "zero@0.email",
+      "attachments": "Ekler",
+      "dropFilesToAttach": "Eklemek için dosyaları bırakın",
+      "writeYourMessageHere": "Mesajınızı buraya yazın...",
+      "emailSentSuccessfully": "Email sent successfully",
+      "failedToSendEmail": "Failed to send email. Please try again."
+    }
+  }
+}

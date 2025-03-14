@@ -20,7 +20,7 @@ export const getMails = async ({
 
   try {
     const driver = await getActiveDriver();
-  return await driver.list(folder, q, max, labelIds, pageToken);
+    return await driver.list(folder, q, max, labelIds, pageToken);
   } catch (error) {
     console.error("Error getting threads:", error);
     throw error;
@@ -41,7 +41,6 @@ export const getMail = async ({ id }: { id: string }) => {
 };
 
 export const markAsRead = async ({ ids }: { ids: string[] }) => {
-
   try {
     const driver = await getActiveDriver();
     await driver.markAsRead(ids);
@@ -76,15 +75,15 @@ export const mailCount = async () => {
 export const modifyLabels = async ({
   threadId,
   addLabels = [],
-  removeLabels = []
+  removeLabels = [],
 }: {
-    threadId: string[];
+  threadId: string[];
   addLabels?: string[];
   removeLabels?: string[];
 }) => {
   console.log(`Server: updateThreadLabels called for thread ${threadId}`);
-  console.log(`Adding labels: ${addLabels.join(', ')}`);
-  console.log(`Removing labels: ${removeLabels.join(', ')}`);
+  console.log(`Adding labels: ${addLabels.join(", ")}`);
+  console.log(`Removing labels: ${removeLabels.join(", ")}`);
 
   try {
     const driver = await getActiveDriver();
@@ -93,7 +92,7 @@ export const modifyLabels = async ({
     if (threadIds.length) {
       await driver.modifyLabels(threadIds, {
         addLabels,
-        removeLabels
+        removeLabels,
       });
       console.log("Server: Successfully updated thread labels");
       return { success: true };

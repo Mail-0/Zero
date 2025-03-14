@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { Github } from "lucide-react"
 import { Discord, Twitter } from "@/components/icons/icons";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 const socialLinks = [
   {
     name: "GitHub",
-    href: "https://github.com/Mail-0/Mail-0",
+    href: "https://github.com/Mail-0/Zero",
     icon: Github,
     ariaLabel: "GitHub"
   },
@@ -72,8 +73,11 @@ export default function Footer() {
             </Link>
           </div>
 
-          <div className="text-center md:text-right text-sm text-gray-500 dark:text-gray-400">
-            Zero Email Inc. © 2025
+          <div className="flex items-center justify-center md:justify-end gap-3">
+            <ThemeToggle className="ml-3" />
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Zero Email Inc. © 2025
+            </div>
           </div>
         </div>
         

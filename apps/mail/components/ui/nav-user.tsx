@@ -28,6 +28,7 @@ import { AddConnectionDialog } from "../connection/add";
 import { putConnection } from "@/actions/connections";
 import { useEffect, useMemo, useState } from "react";
 import { SunIcon } from "../icons/animated/sun";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { IConnection } from "@/types";
 import { Button } from "./button";
@@ -42,6 +43,7 @@ export function NavUser() {
   const pathname = usePathname();
   const [isRendered, setIsRendered] = useState(false);
   const { theme, resolvedTheme, setTheme } = useTheme();
+  const t = useTranslations();
 
   const activeAccount = useMemo(() => {
     if (!session) return null;
@@ -142,16 +144,16 @@ export function NavUser() {
         <DropdownMenuItem onClick={() => router.push("/support")}>
           <div className="flex cursor-pointer items-center gap-2 text-[13px]">
             <HelpCircle size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
-            <p className="text-[13px] opacity-60">Customer Support</p>
+            <p className="text-[13px] opacity-60">{t("common.navUser.customerSupport")}</p>
           </div>
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => window.open("https://github.com/Mail-0/Mail-0", "_blank")}
-        >
-          <div className="flex cursor-pointer items-center gap-2 text-[13px]">
-            <Book size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
-            <p className="text-[13px] opacity-60">Documentation</p>
-          </div>
+        <DropdownMenuItem asChild>
+          <a href="https://github.com/Mail-0/Zero" target="_blank">
+            <div className="flex cursor-pointer items-center gap-2 text-[13px]">
+              <Book size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
+              <p className="text-[13px] opacity-60">{t("common.navUser.documentation")}</p>
+            </div>
+          </a>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleThemeToggle}>
           <div className="flex cursor-pointer items-center gap-2 text-[13px]">
@@ -160,14 +162,16 @@ export function NavUser() {
             ) : (
               <SunIcon className="opacity-60" />
             )}
-            <p className="text-[13px] opacity-60">App Theme</p>
+            <p className="text-[13px] opacity-60">{t("common.navUser.appTheme")}</p>
           </div>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <div className="space-y-1">
           {session ? (
             <>
-              <p className="text-muted-foreground px-1 py-0.5 text-[11px]">Accounts</p>
+              <p className="text-muted-foreground px-1 py-0.5 text-[11px]">
+                {t("common.navUser.accounts")}
+              </p>
 
               {connections?.map((connection) => (
                 <DropdownMenuItem
@@ -206,16 +210,19 @@ export function NavUser() {
               ))}
               <AddConnectionDialog />
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer text-muted-foreground" onClick={handleLogout}>
+              <DropdownMenuItem
+                className="text-muted-foreground cursor-pointer"
+                onClick={handleLogout}
+              >
                 <LogOut size={16} strokeWidth={2} className="mr-1" aria-hidden="true" />
-                <p className="text-[13px]">Log out</p>
+                <p className="text-[13px]">{t("common.actions.logout")}</p>
               </DropdownMenuItem>
             </>
           ) : (
             <>
               <DropdownMenuItem className="cursor-pointer" onClick={() => router.push("/login")}>
                 <LogIn size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
-                <p className="text-[13px] opacity-60">Sign in</p>
+                <p className="text-[13px] opacity-60">{t("common.navUser.signIn")}</p>
               </DropdownMenuItem>
             </>
           )}

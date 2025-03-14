@@ -1,5 +1,7 @@
+import { getLocale, getMessages } from "next-intl/server";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
+import { NextIntlClientProvider } from "next-intl";
 import { siteConfig } from "@/lib/site-config";
 import { Toast } from "@/components/ui/toast";
 import { Providers } from "@/lib/providers";
@@ -19,18 +21,22 @@ const geistMono = Geist_Mono({
 
 export const metadata = siteConfig;
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body className={cn(geistSans.variable, geistMono.variable, "antialiased")}>
         <Providers attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          {children}
-          <Toast />
-          <Analytics />
+          <NextIntlClientProvider messages={messages}>
+            {children}
+            <Toast />
+            <Analytics />
+          </NextIntlClientProvider>
         </Providers>
       </body>
     </html>
