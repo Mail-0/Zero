@@ -1,6 +1,6 @@
 FROM node:22-slim
 
-WORKDIR /mail0
+WORKDIR /zero
 COPY package*.json ./
 
 # install pnpm before we start

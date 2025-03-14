@@ -13,11 +13,11 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
-  mail0:
+  zero:
     depends_on:
       - db
     build: .
-    container_name: mail0-interface
+    container_name: zerodotemail-interface
     image: node:22-slim
     restart: always
     env_file: .env
