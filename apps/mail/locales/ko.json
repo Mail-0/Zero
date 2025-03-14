@@ -1,0 +1,226 @@
+{
+  "common": {
+    "actions": {
+      "logout": "로그아웃",
+      "back": "뒤로",
+      "create": "이메일 작성",
+      "saveChanges": "변경 사항 저장",
+      "saving": "저장 중...",
+      "resetToDefaults": "설정 초기화",
+      "close": "닫기",
+      "signingOut": "로그아웃 중...",
+      "signedOutSuccess": "로그아웃에 성공했습니다!",
+      "signOutError": "로그아웃 오류 발생"
+    },
+    "themes": {
+      "dark": "다크 모드",
+      "light": "라이트 모드",
+      "system": "시스템"
+    },
+    "commandPalette": {
+      "title": "명령 팔레트",
+      "description": "Mail-0에 대한 빠른 탐색 및 동작",
+      "placeholder": "명령어 입력 또는 검색...",
+      "noResults": "검색 결과 없음",
+      "groups": {
+        "mail": "메일",
+        "settings": "설정",
+        "actions": "동작",
+        "help": "도움말",
+        "navigation": "탐색"
+      },
+      "commands": {
+        "goToInbox": "받은 편지함으로 이동",
+        "goToDrafts": "임시 보관함으로 이동",
+        "goToSent": "보낸 편지함으로 이동",
+        "goToSpam": "스팸 편지함으로 이동",
+        "goToArchive": "보관함으로 이동",
+        "goToBin": "휴지통으로 이동",
+        "goToSettings": "설정으로 이동",
+        "newEmail": "새 이메일",
+        "composeMessage": "메시지 작성",
+        "searchEmails": "이메일 검색",
+        "toggleTheme": "테마 전환",
+        "backToMail": "메일로 돌아가기",
+        "goToDocs": "문서로 이동",
+        "helpWithShortcuts": "단축키 도움말"
+      }
+    },
+    "searchBar": {
+      "pickDateRange": "날짜 또는 범위 선택",
+      "search": "검색",
+      "clearSearch": "검색 지우기",
+      "advancedSearch": "고급 검색",
+      "quickFilters": "빠른 필터",
+      "searchIn": "다음에서 검색",
+      "recipient": "받는 사람",
+      "sender": "보낸 사람",
+      "subject": "제목",
+      "dateRange": "날짜 범위",
+      "category": "카테고리",
+      "folder": "폴더",
+      "allMail": "모든 메일",
+      "unread": "읽지 않음",
+      "hasAttachment": "첨부 파일 있음",
+      "starred": "별표 처리됨",
+      "applyFilters": "필터 적용",
+      "reset": "초기화"
+    },
+    "navUser": {
+      "customerSupport": "고객 지원",
+      "documentation": "문서",
+      "appTheme": "앱 테마",
+      "accounts": "계정",
+      "signIn": "로그인"
+    },
+    "mailCategories": {
+      "primary": "기본",
+      "important": "중요",
+      "personal": "개인",
+      "updates": "업데이트",
+      "promotions": "프로모션",
+      "social": "소셜"
+    },
+    "replyCompose": {
+      "replyTo": "회신",
+      "thisEmail": "이 이메일",
+      "dropFiles": "첨부할 파일 끌어놓기",
+      "attachments": "첨부 파일",
+      "attachmentCount": "{count, plural, =0 {첨부 파일} other {첨부 파일}}",
+      "fileCount": "{count, plural, =0 {파일} other {파일}}",
+      "saveDraft": "임시 저장",
+      "send": "전송"
+    },
+    "mailDisplay": {
+      "details": "세부 사항",
+      "from": "보낸 사람",
+      "to": "받는 사람",
+      "cc": "참조",
+      "date": "날짜",
+      "mailedBy": "발신자",
+      "signedBy": "서명자",
+      "security": "보안",
+      "standardEncryption": "표준 암호화 (TLS)",
+      "loadingMailContent": "메일 내용 로드 중..."
+    },
+    "threadDisplay": {
+      "exitFullscreen": "전체 화면 종료",
+      "enterFullscreen": "전체 화면",
+      "archive": "보관",
+      "reply": "답장",
+      "moreOptions": "더보기",
+      "moveToSpam": "스팸 편지함으로 이동",
+      "replyAll": "전체 답장",
+      "forward": "전달",
+      "markAsUnread": "읽지 않음으로 표시",
+      "addLabel": "라벨 추가",
+      "muteThread": "스레드 음소거"
+    }
+  },
+  "navigation": {
+    "sidebar": {
+      "inbox": "받은 편지함",
+      "drafts": "임시 보관함",
+      "sent": "보낸 편지함",
+      "spam": "스팸",
+      "archive": "보관함",
+      "bin": "휴지통",
+      "settings": "설정"
+    },
+    "settings": {
+      "general": "일반",
+      "connections": "연결",
+      "security": "보안",
+      "appearance": "외관",
+      "shortcuts": "단축키"
+    }
+  },
+  "pages": {
+    "error": {
+      "notFound": {
+        "title": "페이지를 찾을 수 없음",
+        "description": "죄송합니다! 찾고 계신 페이지가 존재하지 않거나 이동되었습니다.",
+        "goBack": "뒤로"
+      },
+      "settingsNotFound": "404 - 설정 페이지를 찾을 수 없음"
+    },
+    "settings": {
+      "general": {
+        "title": "일반",
+        "description": "언어 및 이메일 표시 환경설정에 대한 설정을 관리합니다.",
+        "language": "언어",
+        "timezone": "시간대",
+        "dynamicContent": "동적 콘텐츠",
+        "dynamicContentDescription": "이메일에 동적 콘텐츠를 표시하도록 허용합니다.",
+        "externalImages": "외부 이미지 표시",
+        "externalImagesDescription": "이메일에 외부 소스의 이미지를 표시하도록 허용합니다.",
+        "languageChangedTo": "언어가 {language}(으)로 변경되었습니다"
+      },
+      "connections": {
+        "title": "이메일 연결",
+        "description": "이메일 계정을 Zero에 연결합니다.",
+        "disconnectTitle": "이메일 계정 연결 해제",
+        "disconnectDescription": "이 이메일의 연결을 해제하시겠습니까?",
+        "cancel": "취소",
+        "remove": "삭제",
+        "disconnectSuccess": "계정 연결이 성공적으로 해제되었습니다",
+        "disconnectError": "계정 연결 해제 실패",
+        "addEmail": "연결 추가",
+        "connectEmail": "이메일 연결",
+        "connectEmailDescription": "연결할 이메일 제공자를 선택하세요",
+        "moreComingSoon": "곧 추가됩니다"
+      },
+      "security": {
+        "title": "보안",
+        "description": "보안 환경설정 및 계정 보호를 관리합니다.",
+        "twoFactorAuth": "이중 인증",
+        "twoFactorAuthDescription": "계정에 보안 단계 추가",
+        "loginNotifications": "로그인 알림",
+        "loginNotificationsDescription": "새 로그인 시도 알림 받기",
+        "deleteAccount": "계정 삭제"
+      },
+      "appearance": {
+        "title": "외관",
+        "description": "색상, 서체 및 보기 옵션을 사용자 지정합니다.",
+        "theme": "테마",
+        "inboxType": "받은 편지함 종류"
+      },
+      "shortcuts": {
+        "title": "키보드 단축키",
+        "description": "빠른 동작을 위한 키보드 단축키를 확인하고 사용자 지정합니다.",
+        "actions": {
+          "newEmail": "새 이메일",
+          "sendEmail": "이메일 전송",
+          "reply": "답장",
+          "replyAll": "전체 답장",
+          "forward": "전달",
+          "drafts": "임시 보관함",
+          "inbox": "받은 편지함",
+          "sentMail": "보낸 편지함",
+          "delete": "삭제",
+          "search": "검색",
+          "markAsUnread": "읽지 않음으로 표시",
+          "muteThread": "스레드 음소거",
+          "printEmail": "이메일 인쇄",
+          "archiveEmail": "보관",
+          "markAsSpam": "스팸으로 표시",
+          "moveToFolder": "폴더로 이동",
+          "undoLastAction": "마지막 작업 실행 취소",
+          "viewEmailDetails": "이메일 세부 사항 보기",
+          "goToDrafts": "임시보관함으로 이동",
+          "expandEmailView": "이메일 뷰 확장",
+          "helpWithShortcuts": "단축키 도움말"
+        }
+      }
+    },
+    "createEmail": {
+      "body": "본문",
+      "example": "zero@0.email",
+      "attachments": "첨부 파일",
+      "dropFilesToAttach": "첨부할 파일 끌어놓기",
+      "writeYourMessageHere": "이곳에 메시지를 작성하세요...",
+      "emailSentSuccessfully": "이메일이 성공적으로 전송되었습니다",
+      "failedToSendEmail": "이메일 전송에 실패했습니다. 다시 시도해 주세요."
+    }
+  }
+}

@@ -1,0 +1,226 @@
+{
+  "common": {
+    "actions": {
+      "logout": "लॉग आउट",
+      "back": "वापस जाएं",
+      "create": "ईमेल बनाएं",
+      "saveChanges": "परिवर्तन सेव करें",
+      "saving": "सेव कर रहे है...",
+      "resetToDefaults": "डिफ़ॉल्ट पर पुनः सेट करें",
+      "close": "बंद करे",
+      "signingOut": "साइनआउट कर रहे हैं...",
+      "signedOutSuccess": "सफलतापूर्वक साइन आउट हो गया!",
+      "signOutError": "साइन आउट करने में एरर"
+    },
+    "themes": {
+      "dark": "काला",
+      "light": "सफ़ेद",
+      "system": "सिस्टम"
+    },
+    "commandPalette": {
+      "title": "कमांड पैलेट",
+      "description": "मेल-0 के लिए क्विक नेविगेशन और एक्शन्स",
+      "placeholder": "कोई आदेश लिखें या खोजें...",
+      "noResults": "कोई परिणाम नहीं मिला",
+      "groups": {
+        "mail": "मेल",
+        "settings": "सेटिंग्स",
+        "actions": "एक्शन",
+        "help": "सहायता",
+        "navigation": "नेविगेशन"
+      },
+      "commands": {
+        "goToInbox": "इनबॉक्स में जाएं",
+        "goToDrafts": "ड्राफ्ट पर जाएं",
+        "goToSent": "भेजे गए पे जाएं",
+        "goToSpam": "स्पैम पे जाएं",
+        "goToArchive": "संग्रह पर जाएं",
+        "goToBin": "बिन पर जाएँ",
+        "goToSettings": "सेटिंग्स पर जाएँ",
+        "newEmail": "नया ईमेल",
+        "composeMessage": "संदेश लिखें",
+        "searchEmails": "ईमेल खोजें",
+        "toggleTheme": "थीम टॉगल करें",
+        "backToMail": "मेल पर वापस जाएं",
+        "goToDocs": "डॉक्स पर जाएं",
+        "helpWithShortcuts": "शॉर्टकट से मदद करें"
+      }
+    },
+    "searchBar": {
+      "pickDateRange": "कोई तिथि या सीमा चुनें",
+      "search": "खोजें",
+      "clearSearch": "सर्च मिटाएँ",
+      "advancedSearch": "एडवांस्ड सर्च",
+      "quickFilters": "क्विक फिल्टर्स",
+      "searchIn": "में खोजें",
+      "recipient": "प्राप्तकर्ता",
+      "sender": "सेंडर",
+      "subject": "विषय",
+      "dateRange": "तारीख़ रेंज",
+      "category": "वर्ग",
+      "folder": "फोल्डर",
+      "allMail": "सभी मेल",
+      "unread": "नहीं पढ़ा हुआ",
+      "hasAttachment": "अटैचमेंट है",
+      "starred": "स्टार के निशान वाले",
+      "applyFilters": "फिल्टर लगाएं",
+      "reset": "रीसेट करें"
+    },
+    "navUser": {
+      "customerSupport": "कस्टमर सपोर्ट",
+      "documentation": "डॉक्यूमेंटेशन",
+      "appTheme": "एप थीम",
+      "accounts": "खाता",
+      "signIn": "साइन इन करें"
+    },
+    "mailCategories": {
+      "primary": "प्राइमरी",
+      "important": "महत्वपूर्ण",
+      "personal": "पर्सनल",
+      "updates": "अपडेट",
+      "promotions": "प्रोमोशन",
+      "social": "सोशल"
+    },
+    "replyCompose": {
+      "replyTo": "जवाब दें",
+      "thisEmail": "यह ईमेल",
+      "dropFiles": "अटैच करने के लिए फाइलें यहां छोड़ें",
+      "attachments": "अटैचमेंटस",
+      "attachmentCount": "{count, plural, =0 {अटैचमेंटस} one {अटैचमेंट} other {अटैचमेंटस}}",
+      "fileCount": "{count, plural, =0 {फ़ाइलें} one {फाइल्} other {फ़ाइलें}}",
+      "saveDraft": "ड्राफ्ट सेव करें",
+      "send": "भेजें"
+    },
+    "mailDisplay": {
+      "details": "डिटेल्स",
+      "from": "से",
+      "to": "को",
+      "cc": "सीसी",
+      "date": "तारीख",
+      "mailedBy": "द्वारा मेल किया गया",
+      "signedBy": "द्वारा हस्ताक्षर किया गया",
+      "security": "सुरक्षा",
+      "standardEncryption": "स्टैंडर्ड एन्क्रिप्शन (TLS)",
+      "loadingMailContent": "मेल कंटेंट लोड हो रहा है..."
+    },
+    "threadDisplay": {
+      "exitFullscreen": "फ़ुल स्क्रीन से बाहर निकलें",
+      "enterFullscreen": "फ़ुलस्क्रीन में जाएँ",
+      "archive": "आर्काइव",
+      "reply": "जवाब दें",
+      "moreOptions": "अधिक विकल्प",
+      "moveToSpam": "स्पैम में डालें",
+      "replyAll": "सभी को जवाब दें",
+      "forward": "आगे भेजें ",
+      "markAsUnread": "'नहीं पढ़ा गया' के रूप में निशान लगाए",
+      "addLabel": "लेबल जोड़ें",
+      "muteThread": "थ्रेड म्यूट करें"
+    }
+  },
+  "navigation": {
+    "sidebar": {
+      "inbox": "इनबॉक्स",
+      "drafts": "ड्राफ़्ट",
+      "sent": "भेजा गया",
+      "spam": "स्पैम",
+      "archive": "आर्काइव",
+      "bin": "बिन",
+      "settings": "सेटिंग्स"
+    },
+    "settings": {
+      "general": "सामान्य",
+      "connections": "कनेक्शन",
+      "security": "सुरक्षा",
+      "appearance": "अपियरेंस",
+      "shortcuts": "शॉर्टकट"
+    }
+  },
+  "pages": {
+    "error": {
+      "notFound": {
+        "title": "पेज नहीं मिला",
+        "description": "ऊप्स! जिस पेज को आप ढूंढ रहे हैं, वह मौजूद नहीं है या उसे स्थानांतरित कर दिया गया है।",
+        "goBack": "वापस जाएं"
+      },
+      "settingsNotFound": "404 - सेटिंग्स पेज नहीं मिला"
+    },
+    "settings": {
+      "general": {
+        "title": "सामान्य",
+        "description": "अपनी भाषा और ईमेल डिस्प्ले प्राथमिकताओं के लिए सेटिंग्स प्रबंधित करें।",
+        "language": "भाषा",
+        "timezone": "टाइमज़ोन",
+        "dynamicContent": "डायनामिक कंटेंट",
+        "dynamicContentDescription": "ईमेल्स को डायनामिक कंटेंट दिखाने की अनुमति दें।",
+        "externalImages": "बाहरी इमेजेस प्रदर्शित करें",
+        "externalImagesDescription": "ईमेल्स को बाहरी स्रोतों से इमेजेस दिखाने की अनुमति दें।",
+        "languageChangedTo": "भाषा {language} में बदली गई"
+      },
+      "connections": {
+        "title": "ईमेल कनेक्शन्स",
+        "description": "अपने ईमेल अकाउंट्स को ज़ीरो से कनेक्ट करें।",
+        "disconnectTitle": "ईमेल खाता डिस्कनेक्ट करें",
+        "disconnectDescription": "क्या आप वाकई इस ईमेल को डिस्कनेक्ट करना चाहते हैं?",
+        "cancel": "कैन्सल करें",
+        "remove": "हटाएँ",
+        "disconnectSuccess": "खाता सफलतापूर्वक डिस्कनेक्ट हो गया",
+        "disconnectError": "खाता डिस्कनेक्ट करने में विफल",
+        "addEmail": "कनेक्शन जोड़ें",
+        "connectEmail": "ईमेल जोड़ें",
+        "connectEmailDescription": "कनेक्ट करने के लिए एक ईमेल प्रोवाइडर चुनें",
+        "moreComingSoon": "अधिक जल्द ही आ रहा"
+      },
+      "security": {
+        "title": "सुरक्षा",
+        "description": "अपनी सुरक्षा प्राथमिकताओं और अकाउंट सुरक्षा को प्रबंधित करें।",
+        "twoFactorAuth": "टू-फैक्टर ऑथेंटिकेशन",
+        "twoFactorAuthDescription": "अपने अकाउंट में सुरक्षा की एक अतिरिक्त परत जोड़ें",
+        "loginNotifications": "लॉगिन नोटिफिकेशन्स",
+        "loginNotificationsDescription": "नए लॉगिन प्रयासों के बारे में सूचित करें",
+        "deleteAccount": "अकाउंट डिलीट करें"
+      },
+      "appearance": {
+        "title": "अपियरेंस",
+        "description": "रंग, फोंट और व्यू विकल्प कस्टमाइज़ करें।",
+        "theme": "थीम",
+        "inboxType": "इनबॉक्स प्रकार"
+      },
+      "shortcuts": {
+        "title": "कीबोर्ड शॉर्टकट्स",
+        "description": "तेज़ कार्यों के लिए कीबोर्ड शॉर्टकट्स देखें और कस्टमाइज़ करें।",
+        "actions": {
+          "newEmail": "नया ईमेल",
+          "sendEmail": "ईमेल भेजें",
+          "reply": "जवाब दें",
+          "replyAll": "सभी का जवाब दें",
+          "forward": "फारवर्ड",
+          "drafts": "ड्राफ़्ट",
+          "inbox": "इनबॉक्स",
+          "sentMail": "भेजी गई मेल",
+          "delete": "डिलीट करें",
+          "search": "खोजें",
+          "markAsUnread": "'नहीं पढ़ा गया' के रूप में निशान लगाए",
+          "muteThread": "थ्रेड म्यूट करें",
+          "printEmail": "ईमेल प्रिंट करें",
+          "archiveEmail": "ईमेल आर्काइव करें",
+          "markAsSpam": "स्पैम के रूप में चिह्नित करें",
+          "moveToFolder": "फोल्डर में भेजें",
+          "undoLastAction": "अन्डू लास्ट एक्शन",
+          "viewEmailDetails": "ईमेल विवरण देखें",
+          "goToDrafts": "ड्राफ्ट पर जाएं",
+          "expandEmailView": "ईमेल व्यू विस्तारित करें",
+          "helpWithShortcuts": "शॉर्टकट से मदद करें"
+        }
+      }
+    },
+    "createEmail": {
+      "body": "बॉडी",
+      "example": "zero@0.email",
+      "attachments": "अटैचमेंटस",
+      "dropFilesToAttach": "अटैच करने के लिए फाइलें यहां छोड़ें",
+      "writeYourMessageHere": "अपना संदेश यहां लिखें...",
+      "emailSentSuccessfully": "ई-मेल सफलतापूर्वक भेजा गया",
+      "failedToSendEmail": "ईमेल भेजने में विफल। कृपया फिर से प्रयास करें।"
+    }
+  }
+}

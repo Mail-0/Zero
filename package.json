@@ -2,24 +2,25 @@
   "name": "zero",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "bun@1.2.5",
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
     "start": "turbo run start",
-    "lint": "next lint",
+    "lint": "turbo run lint",
     "format": "prettier --write .",
-    "check": "pnpm run check:format && pnpm run lint",
+    "check": "bun run check:format && bun run lint",
     "check:format": "prettier . --check",
     "prepare": "husky",
     "lint-staged": "prettier --write --ignore-unknown",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:clean": "docker-compose down -v",
-    "db:dependencies": "cd packages/db && pnpm install",
-    "db:generate": "cd packages/db && pnpm run db:generate",
-    "db:migrate": "cd packages/db && pnpm run db:migrate",
-    "db:push": "cd packages/db && pnpm run db:push",
-    "db:studio": "cd packages/db && pnpm run db:studio"
+    "db:dependencies": "cd packages/db && bun install",
+    "db:generate": "cd packages/db && bun run db:generate",
+    "db:migrate": "cd packages/db && bun run db:migrate",
+    "db:push": "cd packages/db && bun run db:push",
+    "db:studio": "cd packages/db && bun run db:studio"
   },
   "devDependencies": {
     "@types/node": "22.13.8",
@@ -31,12 +32,10 @@
     "turbo": "2.4.4",
     "typescript": "5.8.2"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "sharp"
-    ]
-  },
-  "packageManager": "pnpm@10.2.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "dependencies": {
     "@tiptap/extension-link": "^2.11.5",
     "@tiptap/pm": "2.11.5",

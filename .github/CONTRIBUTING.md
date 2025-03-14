@@ -4,15 +4,20 @@ Thank you for your interest in contributing to 0.email! We're excited to have yo
 
 ## Table of Contents
 
-- [Getting Started](#getting-started)
-- [Development Workflow](#development-workflow)
-- [Database Management](#database-management)
-- [Coding Guidelines](#coding-guidelines)
-- [Testing](#testing)
-- [Documentation](#documentation)
-- [Areas of Contribution](#areas-of-contribution)
-- [Community](#community)
-- [Questions or Need Help?](#questions-or-need-help)
+- [Contributing to 0.email](#contributing-to-0email)
+  - [Table of Contents](#table-of-contents)
+  - [Getting Started](#getting-started)
+  - [Development Workflow](#development-workflow)
+  - [Database Management](#database-management)
+  - [Coding Guidelines](#coding-guidelines)
+    - [General Principles](#general-principles)
+    - [JavaScript/TypeScript Guidelines](#javascripttypescript-guidelines)
+    - [React Guidelines](#react-guidelines)
+  - [Testing](#testing)
+  - [Documentation](#documentation)
+  - [Areas of Contribution](#areas-of-contribution)
+  - [Community](#community)
+  - [Questions or Need Help?](#questions-or-need-help)
 
 ## Getting Started
 
@@ -21,14 +26,13 @@ Thank you for your interest in contributing to 0.email! We're excited to have yo
    - Clone your fork locally: `git clone https://github.com/YOUR-USERNAME/Zero.git`
 
 2. **Set Up Development Environment**
-   - Install [Node.js](https://nodejs.org/en/download) (v18 or higher)
-   - Install pnpm: `npm install -g pnpm`
-   - Install dependencies: `pnpm install`
-   - Start the database locally: `pnpm docker:up`
+   - Install [Bun](https://bun.sh)
+   - Clone the repository and install dependencies: `bun install`
+   - Start the database locally: `bun docker:up`
    - Copy `.env.example` to `.env` in both `apps/mail` and `packages/db` folders
    - Set up your Google OAuth credentials (see [README.md](../README.md))
-   - Install database dependencies: `pnpm db:dependencies`
-   - Initialize the database: `pnpm db:push`
+   - Install database dependencies: `bun db:dependencies`
+   - Initialize the database: `bun db:push`
 
 ## Development Workflow
 
@@ -36,10 +40,10 @@ Thank you for your interest in contributing to 0.email! We're excited to have yo
 
    ```bash
    # Start database locally
-   pnpm docker:up
+   bun docker:up
    
    # Start the development server
-   pnpm dev
+   bun dev
    ```
 
 2. **Create a New Branch**
@@ -63,8 +67,8 @@ Thank you for your interest in contributing to 0.email! We're excited to have yo
 
    - Make sure the app runs without errors
    - Test your feature thoroughly
-   - Run linting: `pnpm lint`
-   - Format code: `pnpm format`
+   - Run linting: `bun lint`
+   - Format code: `bun format`
 
 5. **Commit Your Changes**
 
@@ -110,19 +114,19 @@ Zero uses PostgreSQL with Drizzle ORM. Here's how to work with it:
 
    ```bash
    # Install database dependencies
-   pnpm db:dependencies
+   bun db:dependencies
    
    # Apply schema changes to development database
-   pnpm db:push
+   bun db:push
    
    # Create migration files after schema changes
-   pnpm db:generate
+   bun db:generate
    
    # Apply migrations (for production)
-   pnpm db:migrate
+   bun db:migrate
    
    # View and edit data with Drizzle Studio
-   pnpm db:studio
+   bun db:studio
    ```
 
 3. **Database Connection**

@@ -1,35 +1,28 @@
-export type Locale = (typeof locales)[number];
+const LANGUAGES = {
+  en: "English",
+  ar: "Arabic",
+  ca: "Catalan",
+  de: "German",
+  es: "Spanish",
+  fr: "French",
+  hi: "Hindi",
+  ja: "Japanese",
+  ko: "Korean",
+  pl: "Polish",
+  pt: "Portuguese",
+  ru: "Russian",
+  tr: "Turkish"
+} as const;
 
-export const availableLocales = [
-  {
-    code: "en",
-    name: "English",
-  },
-  {
-    code: "ar",
-    name: "Arabic",
-  },
-  {
-    code: "fr",
-    name: "French",
-  },
-  {
-    code: "tr",
-    name: "Turkish",
-  },
-  {
-    code: "es-ES",
-    name: "Spanish",
-  },
-  {
-    code: "de",
-    name: "German",
-  },
-  {
-    code: "pt-PT",
-    name: "Portuguese",
-  },
-];
+export type Locale = keyof typeof LANGUAGES;
 
-export const locales = availableLocales.map((locale) => locale.code);
+export const languageConfig = LANGUAGES;
+
 export const defaultLocale: Locale = "en";
+
+export const locales: Locale[] = Object.keys(LANGUAGES) as Locale[];
+
+export const availableLocales = locales.map(code => ({
+  code, 
+  name: LANGUAGES[code]
+}));

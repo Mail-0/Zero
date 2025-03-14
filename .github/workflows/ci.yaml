@@ -22,17 +22,13 @@ jobs:
       - name: Checkout Code 🛎
         uses: actions/checkout@v4
 
-      - name: Setup pnpm 📦
-        uses: pnpm/action-setup@v3
-
-      - name: Setup Node.js 🟩
-        uses: actions/setup-node@v4
+      - name: Setup Bun 🌟
+        uses: oven-sh/setup-bun@v1
         with:
-          cache: "pnpm"
-          node-version: "22"
+          bun-version: latest
 
       - name: Install Dependencies 📦
-        run: pnpm install
+        run: bun install
 
       - name: Check 🚨
-        run: pnpm format
+        run: bun format

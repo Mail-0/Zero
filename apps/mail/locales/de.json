@@ -1,189 +1,189 @@
 {
   "common": {
     "actions": {
-      "logout": "Logout",
-      "back": "Back",
-      "create": "Create Email",
-      "saveChanges": "Save changes",
-      "saving": "Saving...",
-      "resetToDefaults": "Reset to Defaults",
-      "close": "Close",
-      "signingOut": "Signing out...",
-      "signedOutSuccess": "Signed out successfully!",
-      "signOutError": "Error signing out"
+      "logout": "Abmelden",
+      "back": "Zurück",
+      "create": "Neue E-Mail verfassen",
+      "saveChanges": "Änderungen speichern",
+      "saving": "Speichern",
+      "resetToDefaults": "Zurücksetzen",
+      "close": "Schließen",
+      "signingOut": "Abmelden...",
+      "signedOutSuccess": "Erfolgreich abgemeldet!",
+      "signOutError": "Fehler beim Abmelden"
     },
     "themes": {
-      "dark": "Dark",
-      "light": "Light",
+      "dark": "Dunkel",
+      "light": "Hell",
       "system": "System"
     },
     "commandPalette": {
       "title": "Command Palette",
-      "description": "Quick navigation and actions for Mail-0",
-      "placeholder": "Type a command or search...",
-      "noResults": "No results found",
+      "description": "Schnellzugriff für Mail-0",
+      "placeholder": "Befehl eingeben oder suchen...",
+      "noResults": "Keine Ergebnisse gefunden",
       "groups": {
         "mail": "Mail",
-        "settings": "Settings",
-        "actions": "Actions",
-        "help": "Help",
-        "navigation": "Navigation"
+        "settings": "Einstellungen",
+        "actions": "Aktionen",
+        "help": "Hilfe",
+        "navigation": "Navigationen"
       },
       "commands": {
-        "goToInbox": "Go to Inbox",
-        "goToDrafts": "Go to Drafts",
-        "goToSent": "Go to Sent",
-        "goToSpam": "Go to Spam",
-        "goToArchive": "Go to Archive",
-        "goToBin": "Go to Bin",
-        "goToSettings": "Go to Settings",
-        "newEmail": "New Email",
-        "composeMessage": "Compose message",
-        "searchEmails": "Search Emails",
-        "toggleTheme": "Toggle Theme",
-        "backToMail": "Back to Mail",
-        "goToDocs": "Go to docs",
-        "helpWithShortcuts": "Help with shortcuts"
+        "goToInbox": "Zum Posteingang",
+        "goToDrafts": "Zu Entwürfen",
+        "goToSent": "Zu den gesendeten E-Mails",
+        "goToSpam": "Zum Spam-Ordner",
+        "goToArchive": "Zum Archiv",
+        "goToBin": "Zum Papierkorb",
+        "goToSettings": "Zu den Einstellungen",
+        "newEmail": "Neue E-Mail verfassen",
+        "composeMessage": "Nachricht verfassen",
+        "searchEmails": "E-Mails suchen",
+        "toggleTheme": "Theme wechseln",
+        "backToMail": "Zurück zu den Mails",
+        "goToDocs": "Zur Dokumentation",
+        "helpWithShortcuts": "Hilfe für Tastenkürzel"
       }
     },
     "searchBar": {
-      "pickDateRange": "Pick a date or a range",
-      "search": "Search",
-      "clearSearch": "Clear search",
-      "advancedSearch": "Advanced search",
-      "quickFilters": "Quick filters",
-      "searchIn": "Search in",
-      "recipient": "Recipient",
-      "sender": "Sender",
-      "subject": "Subject",
-      "dateRange": "Date range",
-      "category": "Category",
-      "folder": "Folder",
-      "allMail": "All Mail",
-      "unread": "Unread",
-      "hasAttachment": "Has Attachment",
-      "starred": "Starred",
-      "applyFilters": "Apply filters",
-      "reset": "Reset"
+      "pickDateRange": "Wähle ein Datum oder Zeitraum",
+      "search": "Suchen",
+      "clearSearch": "Suche leeren",
+      "advancedSearch": "Erweiterte Suche",
+      "quickFilters": "Schnellfilter",
+      "searchIn": "Suche in:",
+      "recipient": "Empfänger",
+      "sender": "Absender",
+      "subject": "Betreff",
+      "dateRange": "Zeitraum",
+      "category": "Kategorie",
+      "folder": "Ordner",
+      "allMail": "Alle Mails",
+      "unread": "Ungelesene",
+      "hasAttachment": "Anhang vorhanden",
+      "starred": "Favoriten",
+      "applyFilters": "Filter anwenden",
+      "reset": "Zurücksetzen"
     },
     "navUser": {
-      "customerSupport": "Customer Support",
-      "documentation": "Documentation",
+      "customerSupport": "Kundensupport",
+      "documentation": "Dokumentation",
       "appTheme": "App Theme",
-      "accounts": "Accounts",
-      "signIn": "Sign in"
+      "accounts": "Benutzerkonten",
+      "signIn": "Anmelden"
     },
     "mailCategories": {
-      "primary": "Primary",
-      "important": "Important",
-      "personal": "Personal",
+      "primary": "Primär",
+      "important": "Wichtig",
+      "personal": "Persönlich",
       "updates": "Updates",
-      "promotions": "Promotions",
-      "social": "Social"
+      "promotions": "Werbung",
+      "social": "Sozial"
     },
     "replyCompose": {
-      "replyTo": "Reply to",
-      "thisEmail": "this email",
-      "dropFiles": "Drop files to attach",
-      "attachments": "Attachments",
+      "replyTo": "Antwort an",
+      "thisEmail": "Diese E-Mail",
+      "dropFiles": "Datei ablegen, um sie anzuhängen",
+      "attachments": "Anhänge",
       "attachmentCount": "{count, plural, =0 {attachments} one {attachment} other {attachments}}",
       "fileCount": "{count, plural, =0 {files} one {file} other {files}}",
-      "saveDraft": "Save draft",
-      "send": "Send"
+      "saveDraft": "Entwurf speichern",
+      "send": "Senden"
     },
     "mailDisplay": {
       "details": "Details",
-      "from": "From",
-      "to": "To",
+      "from": "Von",
+      "to": "An",
       "cc": "Cc",
-      "date": "Date",
+      "date": "Datum",
       "mailedBy": "Mailed-By",
       "signedBy": "Signed-By",
-      "security": "Security",
-      "standardEncryption": "Standard encryption (TLS)",
-      "loadingMailContent": "Loading mail content..."
+      "security": "Sicherheit",
+      "standardEncryption": "Standardverschlüsselung (TLS)",
+      "loadingMailContent": "Mailinhalt wird geladen..."
     },
     "threadDisplay": {
-      "exitFullscreen": "Exit fullscreen",
-      "enterFullscreen": "Enter fullscreen",
-      "archive": "Archive",
-      "reply": "Reply",
-      "moreOptions": "More options",
-      "moveToSpam": "Move to spam",
-      "replyAll": "Reply all",
-      "forward": "Forward",
-      "markAsUnread": "Mark as unread",
-      "addLabel": "Add label",
-      "muteThread": "Mute thread"
+      "exitFullscreen": "Vollbildansicht beenden",
+      "enterFullscreen": "Vollbildansicht starten",
+      "archive": "Archiv",
+      "reply": "Antworten",
+      "moreOptions": "Mehr Optionen",
+      "moveToSpam": "In Spam verschieben",
+      "replyAll": "Allen antworten",
+      "forward": "Weiterleiten",
+      "markAsUnread": "Als ungelesen markieren",
+      "addLabel": "Label hinzufügen",
+      "muteThread": "Thread stummschalten"
     }
   },
   "navigation": {
     "sidebar": {
-      "inbox": "Inbox",
-      "drafts": "Drafts",
-      "sent": "Sent",
+      "inbox": "Posteingang",
+      "drafts": "Entwürfe",
+      "sent": "Gesendet",
       "spam": "Spam",
-      "archive": "Archive",
-      "bin": "Bin",
-      "settings": "Settings"
+      "archive": "Archiv",
+      "bin": "Papierkorb",
+      "settings": "Einstellungen"
     },
     "settings": {
-      "general": "General",
-      "connections": "Connections",
-      "security": "Security",
-      "appearance": "Appearance",
+      "general": "Allgemein",
+      "connections": "Verbindungen",
+      "security": "Sicherheit",
+      "appearance": "Gestaltung",
       "shortcuts": "Shortcuts"
     }
   },
   "pages": {
     "error": {
       "notFound": {
-        "title": "Page Not Found",
-        "description": "Oops! The page you're looking for doesn't exist or has been moved.",
-        "goBack": "Go Back"
+        "title": "Seite nicht gefunden",
+        "description": "Hoppla! Diese Seite existiert nicht, oder wurde verschoben.",
+        "goBack": "Zurück"
       },
-      "settingsNotFound": "404 - Settings page not found"
+      "settingsNotFound": "404 - Einstellungen nicht gefunden"
     },
     "settings": {
       "general": {
-        "title": "General",
-        "description": "Manage settings for your language and email display preferences.",
-        "language": "Language",
-        "timezone": "Timezone",
-        "dynamicContent": "Dynamic Content",
-        "dynamicContentDescription": "Allow emails to display dynamic content.",
-        "externalImages": "Display External Images",
-        "externalImagesDescription": "Allow emails to display images from external sources.",
-        "languageChangedTo": "Language changed to {language}"
+        "title": "Allgemein",
+        "description": "Einstellungen für Sprach- und E-Mail Anzeige verwalten.",
+        "language": "Sprache",
+        "timezone": "Zeitzone",
+        "dynamicContent": "Dynamischer Inhalt",
+        "dynamicContentDescription": "Dynamischen Inhalt erlauben",
+        "externalImages": "Externe Bilder anzeigen",
+        "externalImagesDescription": "Externe Bilder erlauben",
+        "languageChangedTo": "Sprache zu {language} geändert"
       },
       "connections": {
-        "title": "Email Connections",
-        "description": "Connect your email accounts to Zero.",
+        "title": "E-Mail Verbindungen",
+        "description": "Verbinde deine E-Mail Benutzerkonten zu Zero.",
         "disconnectTitle": "Disconnect Email Account",
         "disconnectDescription": "Are you sure you want to disconnect this email?",
-        "cancel": "Cancel",
-        "remove": "Remove",
-        "disconnectSuccess": "Account disconnected successfully",
-        "disconnectError": "Failed to disconnect account",
-        "addEmail": "Add Connection",
-        "connectEmail": "Connect Email",
-        "connectEmailDescription": "Select an email provider to connect",
-        "moreComingSoon": "More coming soon"
+        "cancel": "Abbrechen",
+        "remove": "Löschen",
+        "disconnectSuccess": "Konto erfolgreich getrennt",
+        "disconnectError": "Konto konnte nicht getrennt werden",
+        "addEmail": "Verbindung hinzufügen",
+        "connectEmail": "E-Mail verbinden",
+        "connectEmailDescription": "Wähle einen E-Mail Anbieter zum Verbinden",
+        "moreComingSoon": "Mehr kommt bald"
       },
       "security": {
-        "title": "Security",
+        "title": "Sicherheit",
         "description": "Manage your security preferences and account protection.",
-        "twoFactorAuth": "Two-Factor Authentication",
+        "twoFactorAuth": "Zwei-Faktor Authentifizierung",
         "twoFactorAuthDescription": "Add an extra layer of security to your account",
-        "loginNotifications": "Login Notifications",
+        "loginNotifications": "Anmeldebenachrichtigungen",
         "loginNotificationsDescription": "Get notified about new login attempts",
-        "deleteAccount": "Delete Account"
+        "deleteAccount": "Benutzerkonto löschen"
       },
       "appearance": {
-        "title": "Appearance",
-        "description": "Customize colors, fonts and view options.",
+        "title": "Gestaltung",
+        "description": "Farben, Schriften und Ansicht anpassen",
         "theme": "Theme",
-        "inboxType": "Inbox Type"
+        "inboxType": ""
       },
       "shortcuts": {
         "title": "Keyboard Shortcuts",

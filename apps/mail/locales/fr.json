@@ -3,13 +3,13 @@
     "actions": {
       "logout": "Déconnexion",
       "back": "Retour",
-      "create": "Créer un email",
+      "create": "Créer un courriel",
       "saveChanges": "Enregistrer les modifications",
       "saving": "Enregistrement...",
-      "resetToDefaults": "Réinitialiser par défaut",
+      "resetToDefaults": "Réinitialiser aux paramètres par défaut",
       "close": "Fermer",
       "signingOut": "Déconnexion...",
-      "signedOutSuccess": "Déconnexion réussie!",
+      "signedOutSuccess": "Déconnecté avec succès!",
       "signOutError": "Erreur de déconnexion"
     },
     "themes": {
@@ -23,7 +23,7 @@
       "placeholder": "Tapez une commande ou recherchez...",
       "noResults": "Aucun résultat trouvé",
       "groups": {
-        "mail": "Email",
+        "mail": "Courriel",
         "settings": "Paramètres",
         "actions": "Actions",
         "help": "Aide",
@@ -33,15 +33,15 @@
         "goToInbox": "Aller à la boîte de réception",
         "goToDrafts": "Aller aux brouillons",
         "goToSent": "Aller aux envoyés",
-        "goToSpam": "Aller au spam",
-        "goToArchive": "Aller à l'archive",
+        "goToSpam": "Aller aux pourriels",
+        "goToArchive": "Aller aux archives",
         "goToBin": "Aller à la corbeille",
         "goToSettings": "Aller aux paramètres",
-        "newEmail": "Nouvel email",
+        "newEmail": "Nouveau courriel",
         "composeMessage": "Composer un message",
-        "searchEmails": "Rechercher des emails",
+        "searchEmails": "Rechercher des courriels",
         "toggleTheme": "Changer de thème",
-        "backToMail": "Retour aux emails",
+        "backToMail": "Retour aux courriels",
         "goToDocs": "Voir la documentation",
         "helpWithShortcuts": "Aide sur les raccourcis"
       }
@@ -59,7 +59,7 @@
       "dateRange": "Plage de dates",
       "category": "Catégorie",
       "folder": "Dossier",
-      "allMail": "Tous les emails",
+      "allMail": "Tous les courriels",
       "unread": "Non lu",
       "hasAttachment": "Avec pièce jointe",
       "starred": "Étoilé",
@@ -67,7 +67,7 @@
       "reset": "Réinitialiser"
     },
     "navUser": {
-      "customerSupport": "Support client",
+      "customerSupport": "Support aux clients",
       "documentation": "Documentation",
       "appTheme": "Thème de l'application",
       "accounts": "Comptes",
@@ -122,8 +122,8 @@
       "inbox": "Boîte de réception",
       "drafts": "Brouillons",
       "sent": "Envoyés",
-      "spam": "Spam",
-      "archive": "Archive",
+      "spam": "Pourriels",
+      "archive": "Archives",
       "bin": "Corbeille",
       "settings": "Paramètres"
     },
@@ -138,7 +138,7 @@
   "pages": {
     "error": {
       "notFound": {
-        "title": "Page Non Trouvée",
+        "title": "Page introuvable",
         "description": "Oups ! La page que vous recherchez n'existe pas ou a été déplacée.",
         "goBack": "Retour"
       },
@@ -147,28 +147,28 @@
     "settings": {
       "general": {
         "title": "Paramètres généraux",
-        "description": "Gérez les paramètres de votre langue et vos préférences de visualisation des emails.",
+        "description": "Gérez les paramètres de votre langue et vos préférences d'affichage des courriels.",
         "language": "Langue",
         "timezone": "Fuseau horaire",
         "dynamicContent": "Contenu dynamique",
-        "dynamicContentDescription": "Autoriser les emails à afficher du contenu dynamique.",
+        "dynamicContentDescription": "Autoriser les courriels à afficher du contenu dynamique.",
         "externalImages": "Afficher les images externes",
-        "externalImagesDescription": "Autoriser les emails à afficher des images provenant de sources externes.",
+        "externalImagesDescription": "Autoriser les courriels à afficher des images provenant de sources externes.",
         "languageChangedTo": "Langue changée en {language}"
       },
       "connections": {
-        "title": "Connexions Email",
-        "description": "Connectez vos comptes email à Zero.",
-        "disconnectTitle": "Déconnecter le compte email",
-        "disconnectDescription": "Êtes-vous sûr de vouloir déconnecter cet email ?",
+        "title": "Connexions de courriels",
+        "description": "Connectez vos adresses courriel à Zero.",
+        "disconnectTitle": "Déconnecter l'adresse courriel",
+        "disconnectDescription": "Êtes-vous sûr de vouloir déconnecter ce courriel?",
         "cancel": "Annuler",
         "remove": "Supprimer",
         "disconnectSuccess": "Compte déconnecté avec succès",
         "disconnectError": "Échec de la déconnexion du compte",
         "addEmail": "Ajouter une connexion",
-        "connectEmail": "Connecter un email",
-        "connectEmailDescription": "Sélectionnez un fournisseur de courrier pour vous connecter",
-        "moreComingSoon": "Plus bientôt"
+        "connectEmail": "Connecter une adresse courriel",
+        "connectEmailDescription": "Sélectionnez un fournisseur de courriel pour vous connecter",
+        "moreComingSoon": "Plus à venir"
       },
       "security": {
         "title": "Sécurité",
@@ -176,7 +176,7 @@
         "twoFactorAuth": "Authentification à deux facteurs",
         "twoFactorAuthDescription": "Ajoutez une couche de sécurité supplémentaire à votre compte",
         "loginNotifications": "Notifications de connexion",
-        "loginNotificationsDescription": "Soyez informé des nouvelles tentatives de connexion",
+        "loginNotificationsDescription": "Soyez notifié des nouvelles tentatives de connexion",
         "deleteAccount": "Supprimer le compte"
       },
       "appearance": {

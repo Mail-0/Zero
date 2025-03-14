@@ -20,11 +20,11 @@
     "commandPalette": {
       "title": "Paleta de Comandos",
       "description": "Navegación rápida y acciones para Mail-0",
-      "placeholder": "Escriba un comando o buscar...",
+      "placeholder": "Escriba un comando o búsqueda...",
       "noResults": "No se han encontrado resultados",
       "groups": {
         "mail": "Correo",
-        "settings": "Configuraciones",
+        "settings": "Configuración",
         "actions": "Acciones",
         "help": "Ayuda",
         "navigation": "Navegación"
@@ -53,7 +53,7 @@
       "advancedSearch": "Búsqueda avanzada",
       "quickFilters": "Filtros rápidos",
       "searchIn": "Buscar en",
-      "recipient": "Recipiente",
+      "recipient": "Destinatario",
       "sender": "Remitente",
       "subject": "Asunto",
       "dateRange": "Rango de fechas",
@@ -67,23 +67,23 @@
       "reset": "Restablecer"
     },
     "navUser": {
-      "customerSupport": "Soporte al cliente",
+      "customerSupport": "Atención al cliente",
       "documentation": "Documentación",
-      "appTheme": "Tema de la app",
+      "appTheme": "Tema de aplicación",
       "accounts": "Cuentas",
       "signIn": "Registrarse"
     },
     "mailCategories": {
       "primary": "Principal",
       "important": "Importante",
-      "personal": "Particular",
+      "personal": "Personal",
       "updates": "Actualizaciones",
       "promotions": "Promociones",
       "social": "Social"
     },
     "replyCompose": {
       "replyTo": "Responder a",
-      "thisEmail": "Este correo electrónico",
+      "thisEmail": "este correo electrónico",
       "dropFiles": "Suelte los archivos para adjuntarlos",
       "attachments": "Adjuntos",
       "attachmentCount": "{count, plural, =0 {sin adjuntos} one {adjunto} other {adjuntos}}",
@@ -119,13 +119,13 @@
   },
   "navigation": {
     "sidebar": {
-      "inbox": "Buzón",
+      "inbox": "Bandeja de entrada",
       "drafts": "Borradores",
       "sent": "Enviado",
       "spam": "Spam",
       "archive": "Archivar",
       "bin": "Papelera de reciclaje",
-      "settings": "Configuraciones"
+      "settings": "Configuración"
     },
     "settings": {
       "general": "General",
@@ -154,7 +154,7 @@
         "dynamicContentDescription": "Permitir que los correos electrónicos muestren contenido dinámico.",
         "externalImages": "Mostrar imágenes externas",
         "externalImagesDescription": "Permitir que los correos electrónicos muestren imágenes de fuentes externas.",
-        "languageChangedTo": "Language changed to {language}"
+        "languageChangedTo": "Idioma cambiado a {language}"
       },
       "connections": {
         "title": "Conexiones de correo",
@@ -165,7 +165,7 @@
         "remove": "Eliminar",
         "disconnectSuccess": "Cuenta desconectada correctamente",
         "disconnectError": "Error al desconectar la cuenta",
-        "addEmail": "Añadir Conexión",
+        "addEmail": "Añadir conexión",
         "connectEmail": "Conectar correo electrónico",
         "connectEmailDescription": "Seleccione un proveedor de correo electrónico para conectar",
         "moreComingSoon": "Próximamente más"
@@ -174,7 +174,7 @@
         "title": "Seguridad",
         "description": "Administre sus preferencias de seguridad y protección de cuenta.",
         "twoFactorAuth": "Autenticación de dos factores",
-        "twoFactorAuthDescription": "Añade una capa extra de seguridad a su cuenta.",
+        "twoFactorAuthDescription": "Añade una capa extra de seguridad a su cuenta",
         "loginNotifications": "Notificaciones de inicio de sesión",
         "loginNotificationsDescription": "Recibir notificaciones de nuevos intentos de inicio de sesión",
         "deleteAccount": "Eliminar cuenta"
@@ -195,16 +195,16 @@
           "replyAll": "Responder a todos",
           "forward": "Reenviar",
           "drafts": "Borradores",
-          "inbox": "Buzón",
+          "inbox": "Bandeja de entrada",
           "sentMail": "Enviados",
           "delete": "Borrar",
           "search": "Buscar",
           "markAsUnread": "Marcar como no leído",
-          "muteThread": "Silencia hilos",
+          "muteThread": "Silencia hilo",
           "printEmail": "Imprimir correo electrónico",
-          "archiveEmail": "Archivo Correo",
+          "archiveEmail": "Archivar correo",
           "markAsSpam": "Marcar como Spam",
-          "moveToFolder": "Mover a Directorio",
+          "moveToFolder": "Mover a directorio",
           "undoLastAction": "Deshacer última acción",
           "viewEmailDetails": "Ver detalles de email",
           "goToDrafts": "Ir a la carpeta de borradores",
@@ -216,7 +216,7 @@
     "createEmail": {
       "body": "Cuerpo",
       "example": "zero@0.email",
-      "attachments": "Adjuntos",
+      "attachments": "Archivos adjuntos",
       "dropFilesToAttach": "Suelte los archivos para adjuntarlos",
       "writeYourMessageHere": "Escribe tu mensaje aquí...",
       "emailSentSuccessfully": "E-mail enviado con éxito",

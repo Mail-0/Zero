@@ -42,7 +42,7 @@ Zero is built with modern and reliable technologies:
 **Required Versions:**
 
 - [Node.js](https://nodejs.org/en/download) (v18 or higher)
-- [pnpm](https://pnpm.io/installation) (v8 or higher)
+- [Bun](https://bun.sh) (v1.0 or higher)
 - [Docker](https://docs.docker.com/engine/install/) (v20 or higher)
 
 Before running the application, you'll need to set up services and configure environment variables. For more details on environment variables, see the [Environment Variables](#environment-variables) section.
@@ -64,13 +64,13 @@ You can set up Zero in two ways:
    cd Zero
    
    # Install dependencies
-   pnpm install
+   bun install
 
    # Install database dependencies
-   pnpm db:dependencies
+   bun db:dependencies
    
    # Start database locally
-   pnpm docker:up
+   bun docker:up
    ```
 
 2. **Set Up Environment**
@@ -80,13 +80,13 @@ You can set up Zero in two ways:
      cp apps/mail/.env.example apps/mail/.env && cp packages/db/.env.example packages/db/.env
      ```
    - Configure your environment variables (see below)
-   - Install database dependencies: `pnpm db:dependencies`   
-   - Initialize the database: `pnpm db:push`
+   - Install database dependencies: `bun db:dependencies`   
+   - Initialize the database: `bun db:push`
 
 3. **Start the App**
 
    ```bash
-   pnpm dev
+   bun dev
    ```
 
 4. **Open in Browser**
@@ -118,8 +118,8 @@ This option uses VS Code's Dev Containers feature to provide a fully configured 
    - For dependency issues inside the container:
      ```bash
      rm -rf node_modules
-     rm pnpm-lock.yaml
-     pnpm install
+     rm bun.lockb
+     bun install
      ```
 </details>
 
@@ -210,7 +210,7 @@ REDIS_URL=              # Redis URL for caching (http://localhost:8079 for local
 REDIS_TOKEN=            # Redis token (upstash-local-token for local dev)
 ```
 
-To be able to run `pnpm db:push` and push the schemas to the database you also have to add a `.env` file to the `packages/db` folder (so `packages/db/.env`) with the following content:
+To be able to run `bun db:push` and push the schemas to the database you also have to add a `.env` file to the `packages/db` folder (so `packages/db/.env`) with the following content:
 
 ```env
 DATABASE_URL=          # Required: PostgreSQL connection string for migrations
@@ -228,7 +228,7 @@ Zero uses PostgreSQL for storing data. Here's how to set it up:
    Run this command to start a local PostgreSQL instance:
 
    ```bash
-   pnpm docker:up
+   bun docker:up
    ```
 
    This creates a database with:
@@ -252,27 +252,27 @@ Zero uses PostgreSQL for storing data. Here's how to set it up:
 
    - **Install database dependencies**:
      ```bash
-     pnpm db:dependencies
+     bun db:dependencies
      ```
 
    - **Set up database tables**:
      ```bash
-     pnpm db:push
+     bun db:push
      ```
 
    - **Create migration files** (after schema changes):
      ```bash
-     pnpm db:generate
+     bun db:generate
      ```
 
    - **Apply migrations**:
      ```bash
-     pnpm db:migrate
+     bun db:migrate
      ```
 
    - **View database content**:
      ```bash
-     pnpm db:studio
+     bun db:studio
      ```
 
 ## Contribute
