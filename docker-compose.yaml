@@ -3,6 +3,8 @@ services:
     container_name: zerodotemail-db
     image: postgres:17
     restart: unless-stopped
+    env_file:
+      - path: ./apps/db/.env
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -20,7 +22,8 @@ services:
     container_name: zerodotemail-interface
     image: node:22-slim
     restart: always
-    env_file: .env
+    env_file:
+      - path: ./apps/mail/.env
     ports:
       - "3000:3000"
       

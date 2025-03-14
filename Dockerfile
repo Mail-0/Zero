@@ -1,15 +1,22 @@
 FROM node:22-slim
 
 WORKDIR /zero
-COPY package*.json ./
+COPY . .
+
+# rename the example env files
+RUN cp apps/mail/.env.example apps/mail/.env
+RUN cp packages/db/.env.example packages/db/.env
 
 # install pnpm before we start
 RUN npm install --global corepack@latest
 RUN corepack enable pnpm
 
-# install deps
+# setup init db + deps
+RUN pnpm db:dependencies
+RUN pnpm db:push
+
+# install everything in prod mode
 RUN pnpm install
-COPY . .
 RUN pnpm build
 
 
@@ -17,7 +24,7 @@ RUN pnpm build
 ENV NODE_ENV=production \
     BASE_URL=http://localhost:3000 \
     DATABASE_URL=postgresql://postgres:super-secret-password@localhost:5432/mail0 \
-    BETTER_AUTH_SECRET= \
+    BETTER_AUTH_SECRET=your_secret_key \
     BETTER_AUTH_URL= \
     GOOGLE_CLIENT_ID= \
     GOOGLE_CLIENT_SECRET= \
