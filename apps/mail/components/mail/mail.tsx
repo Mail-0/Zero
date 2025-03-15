@@ -565,7 +565,7 @@ function MailCategoryTabs({
 
       <div
         aria-hidden
-        className="absolute inset-0 z-10 overflow-hidden shadow-sm transition-[clip-path] duration-300 ease-in-out"
+        className="absolute inset-0 z-10 overflow-hidden transition-[clip-path] duration-300 ease-in-out"
         ref={containerRef}
       >
         <ul className="flex justify-center gap-1.5">
