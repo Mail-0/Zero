@@ -95,15 +95,9 @@ export default function GeneralPage() {
         title={t("pages.settings.general.title")}
         description={t("pages.settings.general.description")}
         footer={
-          <div className="flex gap-4">
-            <Button variant="destructive" onClick={handleSignOut}>
-              <LogOut className="mr-2 h-4 w-4" />
-              {t("common.actions.logout")}
-            </Button>
-            <Button type="submit" form="general-form" disabled={isSaving}>
-              {isSaving ? t("common.actions.saving") : t("common.actions.saveChanges")}
-            </Button>
-          </div>
+          <Button type="submit" form="general-form" disabled={isSaving}>
+            {isSaving ? t("common.actions.saving") : t("common.actions.saveChanges")}
+          </Button>
         }
       >
         <Form {...form}>
