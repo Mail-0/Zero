@@ -220,6 +220,7 @@ export function MailList({ isCompact }: MailListProps) {
   const {
     data: { threads: items, nextPageToken },
     mutate,
+    optimisticUpdate,
     isValidating,
     isLoading,
     loadMore,
@@ -495,6 +496,8 @@ export function MailList({ isCompact }: MailListProps) {
         });
       }
       if (message.unread) {
+        optimisticUpdate(message.id, { unread: false });
+
         return markAsRead({ ids: [message.id] })
           .then(() => mutate())
           .catch(console.error);

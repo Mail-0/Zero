@@ -93,6 +93,25 @@ export const useThreads = (folder: string, labelIds?: string[], query?: string, 
     await setSize(size + 1);
   };
 
+  const optimisticUpdate = (id: string, update: Partial<InitialThread>) => {
+    mutate((currentPages) => {
+      if (!currentPages) return currentPages;
+
+      return currentPages.map((page) => ({
+        ...page,
+        threads: page.threads.map((thread) => {
+          if (thread.id === id) {
+            return {
+              ...thread,
+              ...update,
+            };
+          }
+          return thread;
+        }),
+      }));
+    }, false);
+  };
+
   return {
     data: {
       threads,
@@ -104,6 +123,7 @@ export const useThreads = (folder: string, labelIds?: string[], query?: string, 
     loadMore,
     isReachingEnd,
     mutate,
+    optimisticUpdate,
   };
 };
 
