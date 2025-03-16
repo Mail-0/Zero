@@ -498,9 +498,10 @@ export function MailList({ isCompact }: MailListProps) {
       if (message.unread) {
         optimisticUpdate(message.id, { unread: false });
 
-        return markAsRead({ ids: [message.id] })
-          .then(() => mutate())
-          .catch(console.error);
+        return markAsRead({ ids: [message.id] }).catch((error) => {
+          console.error(error);
+          optimisticUpdate(message.id, { unread: true });
+        });
       }
     },
     [mail, setMail, selectMode],
