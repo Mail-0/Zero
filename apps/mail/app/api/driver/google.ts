@@ -114,7 +114,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
     const sender =
       payload?.headers?.find((h) => h.name?.toLowerCase() === "from")?.value || "Failed";
     const subject =
-      payload?.headers?.find((h) => h.name?.toLowerCase() === "subject")?.value || "Failed";
+      payload?.headers?.find((h) => h.name?.toLowerCase() === "subject")?.value || "";
     const references =
       payload?.headers?.find((h) => h.name?.toLowerCase() === "references")?.value || "";
     const inReplyTo =
@@ -143,7 +143,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       },
       unread: labelIds ? labelIds.includes("UNREAD") : false,
       receivedOn,
-      subject: subject ? subject.replace(/"/g, "").trim() : "No subject",
+      subject: subject ? subject.replace(/"/g, "").trim() : "(no subject)",
       messageId,
     };
   };

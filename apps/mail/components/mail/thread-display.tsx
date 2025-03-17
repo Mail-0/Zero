@@ -21,6 +21,7 @@ import { MailDisplaySkeleton } from "./mail-skeleton";
 import { ReplyIcon } from "../icons/animated/reply";
 import { Button } from "@/components/ui/button";
 import { useThread } from "@/hooks/use-threads";
+import ThreadSubject from "./thread-subject";
 import { XIcon } from "../icons/animated/x";
 import ReplyCompose from "./reply-composer";
 import { useTranslations } from "next-intl";
@@ -64,6 +65,7 @@ export function ThreadDemo({ mail: emailData, onClose, isMobile }: ThreadDisplay
               </TooltipTrigger>
               <TooltipContent>Close</TooltipContent>
             </Tooltip>
+            <ThreadSubject subject={"Join the Email Revolution with Zero!"} isMobile={isMobile}/>
           </div>
           <div className="flex items-center gap-2">
             <Tooltip>
@@ -324,13 +326,14 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
         )}
       >
         <div className="flex flex-shrink-0 items-center border-b px-1 pb-1 md:px-3 md:pb-2 md:pt-[10px]">
-          <div className="flex flex-1 items-center">
+          <div className="flex flex-1 items-center gap-2">
             <ThreadActionButton
               icon={XIcon}
               label={t("common.actions.close")}
               disabled={!emailData}
               onClick={handleClose}
             />
+            <ThreadSubject subject={emailData[0]?.subject} isMobile={isMobile}/>
           </div>
           <div className="flex items-center md:gap-6">
             <ThreadActionButton
