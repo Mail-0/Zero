@@ -39,6 +39,8 @@ export interface ParsedMessage {
     name: string;
     email: string;
   };
+  listUnsubscribe?: string;
+  listUnsubscribePost?: string;
   receivedOn: string;
   unread: boolean;
   body: string;

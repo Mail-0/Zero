@@ -8,7 +8,7 @@
     "build": "turbo run build",
     "start": "turbo run start",
     "lint": "turbo run lint",
-    "format": "prettier --write .",
+    "format": "prettier --write apps/**/*.{ts,tsx} --log-level silent",
     "check": "bun run check:format && bun run lint",
     "check:format": "prettier . --check",
     "prepare": "husky",
@@ -35,13 +35,5 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ],
-  "dependencies": {
-    "@tiptap/extension-link": "^2.11.5",
-    "@tiptap/pm": "2.11.5",
-    "@tiptap/react": "2.11.5",
-    "@tiptap/starter-kit": "^2.11.5",
-    "@vercel/analytics": "1.5.0",
-    "input-otp": "^1.4.2"
-  }
+  ]
 }

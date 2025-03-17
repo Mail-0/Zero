@@ -1,4 +1,5 @@
-import { pgTableCreator, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTableCreator, text, timestamp, boolean, uuid, integer } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const createTable = pgTableCreator((name) => `mail0_${name}`);
 
@@ -86,4 +87,18 @@ export const summary = createTable("summary", {
   saved: boolean("saved").notNull().default(false),
   tags: text("tags"),
   suggestedReply: text("suggested_reply")
+});
+
+export const note = createTable("note", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  threadId: text("thread_id").notNull(),
+  content: text("content").notNull(),
+  color: text("color").notNull().default("default"),
+  isPinned: boolean("is_pinned").default(false),
+  order: integer("order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
