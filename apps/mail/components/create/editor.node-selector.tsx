@@ -101,7 +101,7 @@ export const NodeSelector = ({ open, onOpenChange }: NodeSelectorProps) => {
     <Popover modal={true} open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger
         asChild
-        className="gap-2 rounded-none border-none hover:bg-accent focus:ring-0"
+        className="hover:bg-accent gap-2 rounded-none border-none focus:ring-0"
       >
         <Button variant="ghost" className="gap-2">
           <span className="whitespace-nowrap text-sm">{activeItem.name}</span>
@@ -116,7 +116,7 @@ export const NodeSelector = ({ open, onOpenChange }: NodeSelectorProps) => {
               item.command(editor);
               onOpenChange(false);
             }}
-            className="flex cursor-pointer items-center justify-between rounded-sm px-2 py-1 text-sm hover:bg-accent"
+            className="hover:bg-accent flex cursor-pointer items-center justify-between rounded-sm px-2 py-1 text-sm"
           >
             <div className="flex items-center space-x-2">
               <div className="rounded-sm border p-1">

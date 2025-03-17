@@ -11,7 +11,6 @@ import {
   LayoutGrid,
   FileCode,
 } from "lucide-react";
-import { Discord, Twitter } from "@/components/icons/icons";
 import {
   Area,
   AreaChart,
@@ -24,12 +23,13 @@ import {
 } from "recharts";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { Discord, Twitter } from "@/components/icons/icons";
 import { Separator } from "@/components/ui/separator";
 import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { fetcher } from "@/lib/utils";
-import { ThemeToggle } from "@/components/theme/theme-toggle";
 import Image from "next/image";
 import Link from "next/link";
 import useSWR from "swr";
@@ -339,10 +339,10 @@ export default function OpenPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-white dark:bg-neutral-950 text-black dark:text-white">
+    <div className="min-h-screen w-full bg-white text-black dark:bg-neutral-950 dark:text-white">
       <div className="container mx-auto max-w-6xl px-4 py-8">
         {/* Header with theme toggle */}
-        <div className="flex justify-end mb-6">
+        <div className="mb-6 flex justify-end">
           <ThemeToggle />
         </div>
 
@@ -714,7 +714,7 @@ export default function OpenPage() {
         </div>
 
         {/* Contributors Section */}
-        <div className="space-y-6 mb-16">
+        <div className="mb-16 space-y-6">
           <div className="text-center">
             <h1 className="text-3xl font-semibold tracking-tight text-neutral-900/80 dark:text-white">
               Contributors
@@ -818,7 +818,9 @@ export default function OpenPage() {
                         interval={0}
                         tick={(props) => {
                           const { x, y, payload } = props;
-                          const contributor = allContributors?.find((c) => c.login === payload.value);
+                          const contributor = allContributors?.find(
+                            (c) => c.login === payload.value,
+                          );
 
                           return (
                             <g transform={`translate(${x},${y})`}>
@@ -889,11 +891,10 @@ export default function OpenPage() {
 
         <div className="mb-8">
           <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-neutral-50 to-white shadow-sm dark:border-neutral-800 dark:from-neutral-900/80 dark:to-neutral-900/30">
-            <div className="absolute inset-0 opacity-20 dark:opacity-20">
-            </div>
+            <div className="absolute inset-0 opacity-20 dark:opacity-20"></div>
 
             <div className="relative p-6">
-              <div className="flex flex-col md:flex-row items-center gap-8">
+              <div className="flex flex-col items-center gap-8 md:flex-row">
                 <div className="w-full md:w-2/3">
                   <div className="inline-flex items-center rounded-full bg-neutral-900 px-3 py-1 text-xs font-medium text-white dark:bg-white dark:text-neutral-900">
                     <Github className="mr-1.5 h-3.5 w-3.5" />
@@ -903,14 +904,18 @@ export default function OpenPage() {
                     Let&apos;s build the future of email together
                   </h2>
                   <p className="mt-3 text-neutral-600 dark:text-neutral-300">
-                    Whether you&apos;re fixing bugs, adding features, or improving documentation, every contribution matters.
+                    Whether you&apos;re fixing bugs, adding features, or improving documentation,
+                    every contribution matters.
                   </p>
                   <div className="mt-5 flex flex-wrap gap-3">
                     <Button
                       asChild
                       className="relative overflow-hidden bg-neutral-900 text-white transition-all hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100"
                     >
-                      <Link href={`https://github.com/${REPOSITORY}/blob/main/.github/CONTRIBUTING.md`} target="_blank">
+                      <Link
+                        href={`https://github.com/${REPOSITORY}/blob/main/.github/CONTRIBUTING.md`}
+                        target="_blank"
+                      >
                         <span className="relative z-10 flex items-center">
                           <GitGraph className="mr-2 h-4 w-4" />
                           Start Contributing
@@ -986,11 +991,11 @@ export default function OpenPage() {
           </div>
         </div>
 
-        <div className="flex items-center justify-center gap-4 mb-6 mt-2">
+        <div className="mb-6 mt-2 flex items-center justify-center gap-4">
           <Link
             href="https://discord.gg/BCFr6FFt"
             target="_blank"
-            className="text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 transition-colors"
+            className="text-neutral-500 transition-colors hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
             aria-label="Join our Discord"
           >
             <Discord className="h-4 w-4" />
@@ -998,13 +1003,12 @@ export default function OpenPage() {
           <Link
             href="https://x.com/zerodotemail"
             target="_blank"
-            className="text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 transition-colors"
+            className="text-neutral-500 transition-colors hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
             aria-label="Follow us on X (Twitter)"
           >
             <Twitter className="h-4 w-4" />
           </Link>
         </div>
-
       </div>
     </div>
   );

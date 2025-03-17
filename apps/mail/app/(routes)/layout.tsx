@@ -13,7 +13,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             provider: typeof window !== "undefined" ? dexieStorageProvider : undefined,
             revalidateOnFocus: false,
             revalidateIfStale: false,
-            shouldRetryOnError: false
+            shouldRetryOnError: false,
           }}
         >
           {children}

@@ -15,7 +15,5 @@ export default async function MailPage({ params }: MailPageProps) {
     return <div>Invalid folder</div>;
   }
 
-  return (
-    <MailLayout />
-  );
+  return <MailLayout />;
 }

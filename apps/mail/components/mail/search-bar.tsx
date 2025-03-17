@@ -5,28 +5,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { matchFilterPrefix, filterSuggestionsFunction, filterSuggestions } from "@/lib/filter";
+import { cn, extractFilterValue, type FilterSuggestion, FOLDER_NAMES } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Search, SlidersHorizontal, CalendarIcon, X } from "lucide-react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useSearchValue } from "@/hooks/use-search-value";
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { type DateRange } from "react-day-picker";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { useDebounce } from "react-use";
 import { Toggle } from "../ui/toggle";
 import { format } from "date-fns";
-import { cn, extractFilterValue, type FilterSuggestion, FOLDER_NAMES } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/use-mobile";
 import React from "react";
-import { 
-  matchFilterPrefix, 
-  filterSuggestionsFunction,
-  filterSuggestions
-} from "@/lib/filter";
-import { useTranslations } from "next-intl";
 function DateFilter({ date, setDate }: { date: DateRange; setDate: (date: DateRange) => void }) {
   const t = useTranslations("common.searchBar");
 
@@ -40,7 +36,7 @@ function DateFilter({ date, setDate }: { date: DateRange; setDate: (date: DateRa
             className={cn(
               "justify-start text-left font-normal",
               !date && "text-muted-foreground",
-              "h-10 rounded-md bg-muted/50",
+              "bg-muted/50 h-10 rounded-md",
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
@@ -53,7 +49,7 @@ function DateFilter({ date, setDate }: { date: DateRange; setDate: (date: DateRa
                 format(date.from, "LLL dd, y")
               )
             ) : (
-              <span>{t('pickDateRange')}</span>
+              <span>{t("pickDateRange")}</span>
             )}
           </Button>
         </PopoverTrigger>
@@ -98,22 +94,22 @@ export function SearchBar() {
     },
     category: "",
   });
-  
+
   const t = useTranslations();
-  
+
   const [suggestionsState, setSuggestionsState] = useState({
     show: false,
     filtered: [] as FilterSuggestion[],
     activeIndex: 0,
-    activePrefix: null as string | null
+    activePrefix: null as string | null,
   });
-  
+
   const [datePickerState, setDatePickerState] = useState({
     show: false,
-    filterType: null as 'after' | 'before' | null,
-    position: { left: 0, top: 0 }
+    filterType: null as "after" | "before" | null,
+    position: { left: 0, top: 0 },
   });
-  
+
   const inputRef = useRef<HTMLInputElement>(null);
   const datePickerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -122,164 +118,178 @@ export function SearchBar() {
     defaultValues: value,
   });
 
-  const formValues = useMemo(() => ({
-    q: form.watch('q'),
-  }), [form.watch('q')]);
-  
-  const filtering = useMemo(() => 
-    value.q.length > 0 ||
-    value.from.length > 0 ||
-    value.to.length > 0 ||
-    value.dateRange.from ||
-    value.dateRange.to ||
-    value.category ||
-    value.folder,
-  [value]);
+  const formValues = useMemo(
+    () => ({
+      q: form.watch("q"),
+    }),
+    [form.watch("q")],
+  );
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const inputValue = e.target.value;
-    const cursorPosition = e.target.selectionStart || 0;
-    
-    if (!inputValue.trim()) {
-      setSuggestionsState(prev => ({ ...prev, show: false }));
-      setDatePickerState(prev => ({ ...prev, show: false }));
-      form.setValue('q', '');
-      return;
-    }
-    
-    const textBeforeCursor = inputValue.substring(0, cursorPosition);
-    
-    const match = matchFilterPrefix(textBeforeCursor);
-    
-    if (match) {
-      const [, prefix, query] = match;
-      const suggestions = filterSuggestionsFunction(filterSuggestions, prefix, query);
-      
-      if (prefix === 'after' || prefix === 'before') {
-        setDatePickerState(prev => ({
-          ...prev,
-          filterType: prefix as 'after' | 'before'
-        }));
-        
-        const inputEl = inputRef.current;
-        if (inputEl) {
-          const span = document.createElement('span');
-          span.style.visibility = 'hidden';
-          span.style.position = 'absolute';
-          span.style.whiteSpace = 'pre';
-          span.style.font = window.getComputedStyle(inputEl).font;
-          span.textContent = textBeforeCursor;
-          document.body.appendChild(span);
-          
-          const rect = inputEl.getBoundingClientRect();
-          const spanWidth = span.getBoundingClientRect().width;
-          
-          document.body.removeChild(span);
-          
-          setDatePickerState(prev => ({
+  const filtering = useMemo(
+    () =>
+      value.q.length > 0 ||
+      value.from.length > 0 ||
+      value.to.length > 0 ||
+      value.dateRange.from ||
+      value.dateRange.to ||
+      value.category ||
+      value.folder,
+    [value],
+  );
+
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const inputValue = e.target.value;
+      const cursorPosition = e.target.selectionStart || 0;
+
+      if (!inputValue.trim()) {
+        setSuggestionsState((prev) => ({ ...prev, show: false }));
+        setDatePickerState((prev) => ({ ...prev, show: false }));
+        form.setValue("q", "");
+        return;
+      }
+
+      const textBeforeCursor = inputValue.substring(0, cursorPosition);
+
+      const match = matchFilterPrefix(textBeforeCursor);
+
+      if (match) {
+        const [, prefix, query] = match;
+        const suggestions = filterSuggestionsFunction(filterSuggestions, prefix, query);
+
+        if (prefix === "after" || prefix === "before") {
+          setDatePickerState((prev) => ({
             ...prev,
-            position: {
-              left: Math.min(spanWidth, rect.width - 320),
-              top: rect.height
-            }
+            filterType: prefix as "after" | "before",
+          }));
+
+          const inputEl = inputRef.current;
+          if (inputEl) {
+            const span = document.createElement("span");
+            span.style.visibility = "hidden";
+            span.style.position = "absolute";
+            span.style.whiteSpace = "pre";
+            span.style.font = window.getComputedStyle(inputEl).font;
+            span.textContent = textBeforeCursor;
+            document.body.appendChild(span);
+
+            const rect = inputEl.getBoundingClientRect();
+            const spanWidth = span.getBoundingClientRect().width;
+
+            document.body.removeChild(span);
+
+            setDatePickerState((prev) => ({
+              ...prev,
+              position: {
+                left: Math.min(spanWidth, rect.width - 320),
+                top: rect.height,
+              },
+            }));
+          }
+        }
+
+        setSuggestionsState({
+          show: true,
+          filtered: suggestions,
+          activeIndex: 0,
+          activePrefix: prefix,
+        });
+      } else {
+        setSuggestionsState((prev) => ({ ...prev, show: false, activePrefix: null }));
+        setDatePickerState((prev) => ({ ...prev, show: false, filterType: null }));
+      }
+
+      form.setValue("q", inputValue);
+    },
+    [form],
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (!suggestionsState.show) return;
+
+      if (e.key === "Tab") {
+        e.preventDefault();
+        if (e.shiftKey) {
+          setSuggestionsState((prev) => ({
+            ...prev,
+            activeIndex: prev.activeIndex > 0 ? prev.activeIndex - 1 : prev.filtered.length - 1,
+          }));
+        } else {
+          setSuggestionsState((prev) => ({
+            ...prev,
+            activeIndex: prev.activeIndex < prev.filtered.length - 1 ? prev.activeIndex + 1 : 0,
           }));
         }
+        return;
       }
-      
-      setSuggestionsState({
-        show: true,
-        filtered: suggestions,
-        activeIndex: 0,
-        activePrefix: prefix
-      });
-    } else {
-      setSuggestionsState(prev => ({ ...prev, show: false, activePrefix: null }));
-      setDatePickerState(prev => ({ ...prev, show: false, filterType: null }));
-    }
-    
-    form.setValue('q', inputValue);
-  }, [form]);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!suggestionsState.show) return;
-    
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      if (e.shiftKey) {
-        setSuggestionsState(prev => ({
-          ...prev,
-          activeIndex: prev.activeIndex > 0 ? prev.activeIndex - 1 : prev.filtered.length - 1
-        }));
-      } else {
-        setSuggestionsState(prev => ({
-          ...prev,
-          activeIndex: prev.activeIndex < prev.filtered.length - 1 ? prev.activeIndex + 1 : 0
-        }));
-      }
-      return;
-    }
-    
-    const handleArrowNavigation = (direction: 'right' | 'left' | 'down' | 'up') => {
-      e.preventDefault();
-      // Estimate columns based on container width and button width
-      const containerWidth = 600; // Max width of the dropdown
-      const buttonWidth = isMobile ? 80 : 100; // The minmax value from grid
-      const gap = 12; // gap-3 is 12px
-      const columns = Math.floor((containerWidth + gap) / (buttonWidth + gap));
-      
-      setSuggestionsState(prev => {
-        let nextIndex = prev.activeIndex;
-        
-        switch (direction) {
-          case 'right':
-            nextIndex = prev.activeIndex < prev.filtered.length - 1 ? prev.activeIndex + 1 : prev.activeIndex;
-            break;
-          case 'left':
-            nextIndex = prev.activeIndex > 0 ? prev.activeIndex - 1 : 0;
-            break;
-          case 'down':
-            nextIndex = prev.activeIndex + columns;
-            nextIndex = nextIndex < prev.filtered.length ? nextIndex : prev.activeIndex;
-            break;
-          case 'up':
-            nextIndex = prev.activeIndex - columns;
-            nextIndex = nextIndex >= 0 ? nextIndex : prev.activeIndex;
-            break;
+      const handleArrowNavigation = (direction: "right" | "left" | "down" | "up") => {
+        e.preventDefault();
+        // Estimate columns based on container width and button width
+        const containerWidth = 600; // Max width of the dropdown
+        const buttonWidth = isMobile ? 80 : 100; // The minmax value from grid
+        const gap = 12; // gap-3 is 12px
+        const columns = Math.floor((containerWidth + gap) / (buttonWidth + gap));
+
+        setSuggestionsState((prev) => {
+          let nextIndex = prev.activeIndex;
+
+          switch (direction) {
+            case "right":
+              nextIndex =
+                prev.activeIndex < prev.filtered.length - 1
+                  ? prev.activeIndex + 1
+                  : prev.activeIndex;
+              break;
+            case "left":
+              nextIndex = prev.activeIndex > 0 ? prev.activeIndex - 1 : 0;
+              break;
+            case "down":
+              nextIndex = prev.activeIndex + columns;
+              nextIndex = nextIndex < prev.filtered.length ? nextIndex : prev.activeIndex;
+              break;
+            case "up":
+              nextIndex = prev.activeIndex - columns;
+              nextIndex = nextIndex >= 0 ? nextIndex : prev.activeIndex;
+              break;
+          }
+
+          return { ...prev, activeIndex: nextIndex };
+        });
+      };
+
+      if (e.key === "ArrowRight") handleArrowNavigation("right");
+      else if (e.key === "ArrowLeft") handleArrowNavigation("left");
+      else if (e.key === "ArrowDown") handleArrowNavigation("down");
+      else if (e.key === "ArrowUp") handleArrowNavigation("up");
+
+      if (e.key === "Enter" && suggestionsState.show) {
+        e.preventDefault();
+        const suggestion = suggestionsState.filtered?.[suggestionsState.activeIndex];
+        if (suggestion) {
+          handleSuggestionClick(suggestion.filter);
         }
-        
-        return { ...prev, activeIndex: nextIndex };
-      });
-    };
-    
-    if (e.key === 'ArrowRight') handleArrowNavigation('right');
-    else if (e.key === 'ArrowLeft') handleArrowNavigation('left');
-    else if (e.key === 'ArrowDown') handleArrowNavigation('down');
-    else if (e.key === 'ArrowUp') handleArrowNavigation('up');
-    
-    if (e.key === 'Enter' && suggestionsState.show) {
-      e.preventDefault();
-      const suggestion = suggestionsState.filtered?.[suggestionsState.activeIndex];
-      if (suggestion) {
-        handleSuggestionClick(suggestion.filter);
+        return;
       }
-      return;
-    }
-    
-    if (e.key === 'Escape') {
-      setSuggestionsState(prev => ({ ...prev, show: false }));
-    }
-  }, [suggestionsState, isMobile]);
+
+      if (e.key === "Escape") {
+        setSuggestionsState((prev) => ({ ...prev, show: false }));
+      }
+    },
+    [suggestionsState, isMobile],
+  );
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (inputRef.current && !inputRef.current.contains(e.target as Node)) {
-        setSuggestionsState(prev => ({ ...prev, show: false }));
+        setSuggestionsState((prev) => ({ ...prev, show: false }));
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -291,169 +301,183 @@ export function SearchBar() {
     [value],
   );
 
-  const submitSearch = useCallback((data: SearchForm) => {
-    let searchTerms = [];
-    
-    if (data.q) {
-      const processedQuery = data.q
-        .replace(/from:([^\s]+)/g, (_, address) => 
-          address.toLowerCase() === 'me' ? 'from:me' : `from:${address.toLowerCase()}`
-        )
-        .replace(/to:([^\s]+)/g, (_, address) => 
-          address.toLowerCase() === 'me' ? 'to:me' : `to:${address.toLowerCase()}`
-        );
-      
-      searchTerms.push(processedQuery);
-    }
-    
-    if (data.from) searchTerms.push(`from:${data.from.toLowerCase()}`);
-    if (data.to) searchTerms.push(`to:${data.to.toLowerCase()}`);
-    if (data.subject) searchTerms.push(`subject:(${data.subject})`);
-    if (data.dateRange.from) searchTerms.push(`after:${format(data.dateRange.from, "yyyy/MM/dd")}`);
-    if (data.dateRange.to) searchTerms.push(`before:${format(data.dateRange.to, "yyyy/MM/dd")}`);
-    
-    const searchQuery = searchTerms.join(' ');
-    const folder = data.folder ? data.folder.toUpperCase() : "";
+  const submitSearch = useCallback(
+    (data: SearchForm) => {
+      let searchTerms = [];
 
-    setSearchValue({
-      value: searchQuery,
-      highlight: data.q,
-      folder: folder,
-    });
-  }, [setSearchValue]);
+      if (data.q) {
+        const processedQuery = data.q
+          .replace(/from:([^\s]+)/g, (_, address) =>
+            address.toLowerCase() === "me" ? "from:me" : `from:${address.toLowerCase()}`,
+          )
+          .replace(/to:([^\s]+)/g, (_, address) =>
+            address.toLowerCase() === "me" ? "to:me" : `to:${address.toLowerCase()}`,
+          );
 
-  const handleSuggestionClick = useCallback((suggestion: string) => {
-    const inputValue = form.getValues().q || '';
-    const cursorPosition = inputRef.current?.selectionStart || 0;
-    
-    const textBeforeCursor = inputValue.substring(0, cursorPosition);
-    const textAfterCursor = inputValue.substring(cursorPosition);
-    
-    const match = matchFilterPrefix(textBeforeCursor);
-    
-    if (match) {
-      const [fullMatch] = match;
-      const startPos = textBeforeCursor.lastIndexOf(fullMatch);
-      
-      if ((match[1] === 'after' || match[1] === 'before') && suggestion.endsWith('date')) {
-        setDatePickerState(prev => ({ ...prev, show: true }));
-        setSuggestionsState(prev => ({ ...prev, show: false }));
-        return;
+        searchTerms.push(processedQuery);
       }
-      
-      const newValue = inputValue.substring(0, startPos) + suggestion + " " + textAfterCursor;
-      
-      form.setValue('q', newValue);
-      
-      submitSearch({
-        ...form.getValues(),
-        q: newValue
+
+      if (data.from) searchTerms.push(`from:${data.from.toLowerCase()}`);
+      if (data.to) searchTerms.push(`to:${data.to.toLowerCase()}`);
+      if (data.subject) searchTerms.push(`subject:(${data.subject})`);
+      if (data.dateRange.from)
+        searchTerms.push(`after:${format(data.dateRange.from, "yyyy/MM/dd")}`);
+      if (data.dateRange.to) searchTerms.push(`before:${format(data.dateRange.to, "yyyy/MM/dd")}`);
+
+      const searchQuery = searchTerms.join(" ");
+      const folder = data.folder ? data.folder.toUpperCase() : "";
+
+      setSearchValue({
+        value: searchQuery,
+        highlight: data.q,
+        folder: folder,
       });
-    }
-    
-    setSuggestionsState(prev => ({ ...prev, show: false }));
-    inputRef.current?.focus();
-  }, [form, submitSearch]);
+    },
+    [setSearchValue],
+  );
 
-  const handleDateSelect = useCallback((dateRange: DateRange | undefined) => {
-    if (!dateRange || !datePickerState.filterType) return;
-    
-    let filterText = '';
-    
-    if (datePickerState.filterType === 'after' && dateRange.from) {
-      const formattedDate = format(dateRange.from, "yyyy/MM/dd");
-      filterText = `after:${formattedDate}`;
-      
-      if (dateRange.to) {
-        const formattedEndDate = format(dateRange.to, "yyyy/MM/dd");
-        filterText += ` before:${formattedEndDate}`;
+  const handleSuggestionClick = useCallback(
+    (suggestion: string) => {
+      const inputValue = form.getValues().q || "";
+      const cursorPosition = inputRef.current?.selectionStart || 0;
+
+      const textBeforeCursor = inputValue.substring(0, cursorPosition);
+      const textAfterCursor = inputValue.substring(cursorPosition);
+
+      const match = matchFilterPrefix(textBeforeCursor);
+
+      if (match) {
+        const [fullMatch] = match;
+        const startPos = textBeforeCursor.lastIndexOf(fullMatch);
+
+        if ((match[1] === "after" || match[1] === "before") && suggestion.endsWith("date")) {
+          setDatePickerState((prev) => ({ ...prev, show: true }));
+          setSuggestionsState((prev) => ({ ...prev, show: false }));
+          return;
+        }
+
+        const newValue = inputValue.substring(0, startPos) + suggestion + " " + textAfterCursor;
+
+        form.setValue("q", newValue);
+
+        submitSearch({
+          ...form.getValues(),
+          q: newValue,
+        });
       }
-    } else if (datePickerState.filterType === 'before' && dateRange.to) {
-      const formattedDate = format(dateRange.to, "yyyy/MM/dd");
-      filterText = `before:${formattedDate}`;
-      
-      if (dateRange.from) {
-        const formattedStartDate = format(dateRange.from, "yyyy/MM/dd");
-        filterText = `after:${formattedStartDate} before:${formattedDate}`;
+
+      setSuggestionsState((prev) => ({ ...prev, show: false }));
+      inputRef.current?.focus();
+    },
+    [form, submitSearch],
+  );
+
+  const handleDateSelect = useCallback(
+    (dateRange: DateRange | undefined) => {
+      if (!dateRange || !datePickerState.filterType) return;
+
+      let filterText = "";
+
+      if (datePickerState.filterType === "after" && dateRange.from) {
+        const formattedDate = format(dateRange.from, "yyyy/MM/dd");
+        filterText = `after:${formattedDate}`;
+
+        if (dateRange.to) {
+          const formattedEndDate = format(dateRange.to, "yyyy/MM/dd");
+          filterText += ` before:${formattedEndDate}`;
+        }
+      } else if (datePickerState.filterType === "before" && dateRange.to) {
+        const formattedDate = format(dateRange.to, "yyyy/MM/dd");
+        filterText = `before:${formattedDate}`;
+
+        if (dateRange.from) {
+          const formattedStartDate = format(dateRange.from, "yyyy/MM/dd");
+          filterText = `after:${formattedStartDate} before:${formattedDate}`;
+        }
       }
-    }
-    
-    if (!filterText) return;
-    
-    const inputValue = form.getValues().q || '';
-    const cursorPosition = inputRef.current?.selectionStart || 0;
-    
-    const textBeforeCursor = inputValue.substring(0, cursorPosition);
-    const textAfterCursor = inputValue.substring(cursorPosition);
-    
-    const match = matchFilterPrefix(textBeforeCursor);
-    
-    if (match) {
-      const [fullMatch] = match;
-      const startPos = textBeforeCursor.lastIndexOf(fullMatch);
-      const newValue = inputValue.substring(0, startPos) + filterText + " " + textAfterCursor;
-      
-      form.setValue('q', newValue);
-      
-      submitSearch({
-        ...form.getValues(),
-        q: newValue
-      });
-    }
-    
-    setDatePickerState(prev => ({ ...prev, show: false }));
-    inputRef.current?.focus();
-  }, [datePickerState.filterType, form, submitSearch]);
+
+      if (!filterText) return;
+
+      const inputValue = form.getValues().q || "";
+      const cursorPosition = inputRef.current?.selectionStart || 0;
+
+      const textBeforeCursor = inputValue.substring(0, cursorPosition);
+      const textAfterCursor = inputValue.substring(cursorPosition);
+
+      const match = matchFilterPrefix(textBeforeCursor);
+
+      if (match) {
+        const [fullMatch] = match;
+        const startPos = textBeforeCursor.lastIndexOf(fullMatch);
+        const newValue = inputValue.substring(0, startPos) + filterText + " " + textAfterCursor;
+
+        form.setValue("q", newValue);
+
+        submitSearch({
+          ...form.getValues(),
+          q: newValue,
+        });
+      }
+
+      setDatePickerState((prev) => ({ ...prev, show: false }));
+      inputRef.current?.focus();
+    },
+    [datePickerState.filterType, form, submitSearch],
+  );
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (datePickerRef.current && !datePickerRef.current.contains(e.target as Node) && 
-          inputRef.current && !inputRef.current.contains(e.target as Node)) {
-        setDatePickerState(prev => ({ ...prev, show: false }));
+      if (
+        datePickerRef.current &&
+        !datePickerRef.current.contains(e.target as Node) &&
+        inputRef.current &&
+        !inputRef.current.contains(e.target as Node)
+      ) {
+        setDatePickerState((prev) => ({ ...prev, show: false }));
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   const renderSuggestions = useCallback(() => {
     const { show, filtered = [] } = suggestionsState;
     if (!show || filtered.length === 0) return null;
-    
+
     return (
-      <div 
-        className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-border bg-background shadow-md animate-in fade-in-50 slide-in-from-top-2 duration-150"
+      <div
+        className="border-border bg-background animate-in fade-in-50 slide-in-from-top-2 absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border shadow-md duration-150"
         role="listbox"
         aria-label="Search filter suggestions"
-        style={{ 
-          maxWidth: isMobile ? 'calc(100vw - 24px)' : '600px',
-          maxHeight: isMobile ? '50vh' : '400px'
+        style={{
+          maxWidth: isMobile ? "calc(100vw - 24px)" : "600px",
+          maxHeight: isMobile ? "50vh" : "400px",
         }}
       >
         <div className="p-3">
           {suggestionsState.activePrefix && (
             <div className="mb-2 px-1">
-              <div className="text-xs text-muted-foreground">
+              <div className="text-muted-foreground text-xs">
                 <span className="font-medium">{suggestionsState.activePrefix}:</span> filters
               </div>
             </div>
           )}
-          
-          <div 
-            className="grid gap-3" 
-            style={{ 
-              gridTemplateColumns: `repeat(auto-fit, minmax(${isMobile ? '80px' : '100px'}, 1fr))`,
-              maxHeight: '300px',
-              overflowY: 'auto'
+
+          <div
+            className="grid gap-3"
+            style={{
+              gridTemplateColumns: `repeat(auto-fit, minmax(${isMobile ? "80px" : "100px"}, 1fr))`,
+              maxHeight: "300px",
+              overflowY: "auto",
             }}
           >
             {filtered.map((suggestion, index) => {
               const value = extractFilterValue(suggestion.filter);
-              const isEmailFilter = suggestion.prefix === 'from' || suggestion.prefix === 'to';
-              
+              const isEmailFilter = suggestion.prefix === "from" || suggestion.prefix === "to";
+
               return (
                 <button
                   key={index}
@@ -461,35 +485,40 @@ export function SearchBar() {
                   role="option"
                   aria-selected={index === suggestionsState.activeIndex}
                   className={cn(
-                    "flex flex-col items-center justify-center py-3 px-2 rounded-md transition-all gap-1.5",
-                    "border hover:border-accent/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "flex flex-col items-center justify-center gap-1.5 rounded-md px-2 py-3 transition-all",
+                    "hover:border-accent/30 focus-visible:ring-ring border focus:outline-none focus-visible:ring-2",
                     "h-[80px]",
-                    index === suggestionsState.activeIndex ? 
-                      "bg-accent/15 border-accent/30 text-accent-foreground" : 
-                      "border-transparent hover:bg-muted/50"
+                    index === suggestionsState.activeIndex
+                      ? "bg-accent/15 border-accent/30 text-accent-foreground"
+                      : "hover:bg-muted/50 border-transparent",
                   )}
-                  onMouseEnter={() => !isMobile && setSuggestionsState(prev => ({ ...prev, activeIndex: index }))}
+                  onMouseEnter={() =>
+                    !isMobile && setSuggestionsState((prev) => ({ ...prev, activeIndex: index }))
+                  }
                   title={suggestion.description}
                 >
-                  <div className="w-6 h-6 flex items-center justify-center text-foreground">
+                  <div className="text-foreground flex h-6 w-6 items-center justify-center">
                     {suggestion.icon}
                   </div>
-                  
-                  <div className={cn(
-                    "text-xs text-center truncate w-full",
-                    isEmailFilter ? "" : "capitalize"
-                  )}>
+
+                  <div
+                    className={cn(
+                      "w-full truncate text-center text-xs",
+                      isEmailFilter ? "" : "capitalize",
+                    )}
+                  >
                     {isEmailFilter ? value.toLowerCase() : value}
                   </div>
                 </button>
               );
             })}
           </div>
-          
+
           {!isMobile && filtered.length > 1 && (
-            <div className="mt-2 text-center text-[9px] text-muted-foreground border-t border-border/15 pt-2">
-              <kbd className="px-1 rounded text-[9px] border border-border/30">↹</kbd> to navigate • 
-              <kbd className="px-1 rounded text-[9px] border border-border/30 ml-1">↵</kbd> to select
+            <div className="text-muted-foreground border-border/15 mt-2 border-t pt-2 text-center text-[9px]">
+              <kbd className="border-border/30 rounded border px-1 text-[9px]">↹</kbd> to navigate •
+              <kbd className="border-border/30 ml-1 rounded border px-1 text-[9px]">↵</kbd> to
+              select
             </div>
           )}
         </div>
@@ -499,12 +528,12 @@ export function SearchBar() {
 
   const renderDatePicker = useCallback(() => {
     if (!datePickerState.show) return null;
-    
+
     return (
-      <div 
+      <div
         ref={datePickerRef}
-        className="absolute z-50 mt-1 overflow-hidden rounded-lg border border-border bg-background shadow-md animate-in fade-in-50 slide-in-from-top-2 duration-150"
-        style={{ 
+        className="border-border bg-background animate-in fade-in-50 slide-in-from-top-2 absolute z-50 mt-1 overflow-hidden rounded-lg border shadow-md duration-150"
+        style={{
           left: Math.max(0, datePickerState.position.left - (isMobile ? 160 : 320)), // Adjust based on device
           top: `${datePickerState.position.top}px`,
         }}
@@ -518,7 +547,7 @@ export function SearchBar() {
             onSelect={handleDateSelect}
             numberOfMonths={isMobile ? 1 : 2}
             disabled={(date) => date > new Date()}
-            className="rounded-md border-none" 
+            className="rounded-md border-none"
           />
         </div>
       </div>
@@ -545,12 +574,12 @@ export function SearchBar() {
   return (
     <div className="relative flex-1 md:max-w-[600px]">
       <form className="relative flex items-center" onSubmit={form.handleSubmit(submitSearch)}>
-        <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+        <Search className="text-muted-foreground absolute left-2.5 h-4 w-4" aria-hidden="true" />
         <Input
           placeholder={t("common.searchBar.search")}
           autoFocus
           ref={inputRef}
-          className="h-8 w-full rounded-md border-none bg-muted/50 pl-9 pr-14 text-muted-foreground shadow-none ring-1 ring-muted transition-colors placeholder:text-muted-foreground/70 hover:bg-muted focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-ring"
+          className="bg-muted/50 text-muted-foreground ring-muted placeholder:text-muted-foreground/70 hover:bg-muted focus-visible:bg-background focus-visible:ring-ring h-8 w-full rounded-md border-none pl-9 pr-14 shadow-none ring-1 transition-colors focus-visible:ring-2"
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           value={formValues.q}
@@ -562,7 +591,7 @@ export function SearchBar() {
             <button
               type="button"
               onClick={resetSearch}
-              className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              className="ring-offset-background focus:ring-ring rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2"
             >
               <X className="h-4 w-4" />
               <span className="sr-only">{t("common.searchBar.clearSearch")}</span>
@@ -574,8 +603,8 @@ export function SearchBar() {
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "h-7 w-7 rounded-md p-0 text-muted-foreground hover:bg-muted/70 hover:text-foreground",
-                  popoverOpen && "bg-muted/70 text-foreground"
+                  "text-muted-foreground hover:bg-muted/70 hover:text-foreground h-7 w-7 rounded-md p-0",
+                  popoverOpen && "bg-muted/70 text-foreground",
                 )}
                 type="button"
               >
@@ -584,7 +613,7 @@ export function SearchBar() {
               </Button>
             </PopoverTrigger>
             <PopoverContent
-              className="w-[min(calc(100vw-2rem),400px)] rounded-md border bg-popover p-4 shadow-lg sm:w-[500px] md:w-[600px]"
+              className="bg-popover w-[min(calc(100vw-2rem),400px)] rounded-md border p-4 shadow-lg sm:w-[500px] md:w-[600px]"
               side="bottom"
               sideOffset={15}
               alignOffset={-8}
@@ -592,12 +621,14 @@ export function SearchBar() {
             >
               <div className="space-y-5">
                 <div>
-                  <h2 className="mb-3 text-xs font-semibold">{t("common.searchBar.quickFilters")}</h2>
+                  <h2 className="mb-3 text-xs font-semibold">
+                    {t("common.searchBar.quickFilters")}
+                  </h2>
                   <div className="flex flex-wrap gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-7 rounded-md bg-muted/50 text-xs hover:bg-muted"
+                      className="bg-muted/50 hover:bg-muted h-7 rounded-md text-xs"
                       onClick={() => form.setValue("q", "is:unread")}
                     >
                       {t("common.searchBar.unread")}
@@ -605,7 +636,7 @@ export function SearchBar() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-7 rounded-md bg-muted/50 text-xs hover:bg-muted"
+                      className="bg-muted/50 hover:bg-muted h-7 rounded-md text-xs"
                       onClick={() => form.setValue("q", "has:attachment")}
                     >
                       {t("common.searchBar.hasAttachment")}
@@ -613,7 +644,7 @@ export function SearchBar() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-7 rounded-md bg-muted/50 text-xs hover:bg-muted"
+                      className="bg-muted/50 hover:bg-muted h-7 rounded-md text-xs"
                       onClick={() => form.setValue("q", "is:starred")}
                     >
                       {t("common.searchBar.starred")}
@@ -625,12 +656,14 @@ export function SearchBar() {
 
                 <div className="grid gap-5">
                   <div className="space-y-2">
-                    <label className="text-xs font-semibold">{t("common.searchBar.searchIn")}</label>
+                    <label className="text-xs font-semibold">
+                      {t("common.searchBar.searchIn")}
+                    </label>
                     <Select
                       onValueChange={(value) => form.setValue("folder", value)}
                       value={form.watch("folder")}
                     >
-                      <SelectTrigger className="h-8 rounded-md bg-muted/50 capitalize">
+                      <SelectTrigger className="bg-muted/50 h-8 rounded-md capitalize">
                         <SelectValue placeholder="All Mail" />
                       </SelectTrigger>
                       <SelectContent className="rounded-md">
@@ -648,17 +681,19 @@ export function SearchBar() {
                     <Input
                       placeholder={t("common.searchBar.subject")}
                       {...form.register("subject")}
-                      className="h-8 rounded-md bg-muted/50"
+                      className="bg-muted/50 h-8 rounded-md"
                     />
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <label className="text-xs font-semibold">{t("common.mailDisplay.from")}</label>
+                      <label className="text-xs font-semibold">
+                        {t("common.mailDisplay.from")}
+                      </label>
                       <Input
                         placeholder={t("common.searchBar.sender")}
                         {...form.register("from")}
-                        className="h-8 rounded-md bg-muted/50"
+                        className="bg-muted/50 h-8 rounded-md"
                       />
                     </div>
 
@@ -667,13 +702,15 @@ export function SearchBar() {
                       <Input
                         placeholder={t("common.searchBar.recipient")}
                         {...form.register("to")}
-                        className="h-8 rounded-md bg-muted/50"
+                        className="bg-muted/50 h-8 rounded-md"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-semibold">{t("common.searchBar.dateRange")}</label>
+                    <label className="text-xs font-semibold">
+                      {t("common.searchBar.dateRange")}
+                    </label>
                     <DateFilter
                       date={value.dateRange}
                       setDate={(range) => form.setValue("dateRange", range)}
@@ -689,7 +726,7 @@ export function SearchBar() {
                     <Toggle
                       variant="outline"
                       size="sm"
-                      className="h-7 rounded-md bg-muted/50 text-xs transition-colors data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:ring-1 data-[state=on]:ring-primary/20"
+                      className="bg-muted/50 data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:ring-primary/20 h-7 rounded-md text-xs transition-colors data-[state=on]:ring-1"
                       pressed={form.watch("category") === "primary"}
                       onPressedChange={(pressed) =>
                         form.setValue("category", pressed ? "primary" : "")
@@ -700,7 +737,7 @@ export function SearchBar() {
                     <Toggle
                       variant="outline"
                       size="sm"
-                      className="h-7 rounded-md bg-muted/50 text-xs transition-colors data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:ring-1 data-[state=on]:ring-primary/20"
+                      className="bg-muted/50 data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:ring-primary/20 h-7 rounded-md text-xs transition-colors data-[state=on]:ring-1"
                       pressed={form.watch("category") === "updates"}
                       onPressedChange={(pressed) =>
                         form.setValue("category", pressed ? "updates" : "")
@@ -711,7 +748,7 @@ export function SearchBar() {
                     <Toggle
                       variant="outline"
                       size="sm"
-                      className="h-7 rounded-md bg-muted/50 text-xs transition-colors data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:ring-1 data-[state=on]:ring-primary/20"
+                      className="bg-muted/50 data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:ring-primary/20 h-7 rounded-md text-xs transition-colors data-[state=on]:ring-1"
                       pressed={form.watch("category") === "promotions"}
                       onPressedChange={(pressed) =>
                         form.setValue("category", pressed ? "promotions" : "")
@@ -722,7 +759,7 @@ export function SearchBar() {
                     <Toggle
                       variant="outline"
                       size="sm"
-                      className="h-7 rounded-md bg-muted/50 text-xs transition-colors data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:ring-1 data-[state=on]:ring-primary/20"
+                      className="bg-muted/50 data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:ring-primary/20 h-7 rounded-md text-xs transition-colors data-[state=on]:ring-1"
                       pressed={form.watch("category") === "social"}
                       onPressedChange={(pressed) =>
                         form.setValue("category", pressed ? "social" : "")
@@ -738,13 +775,13 @@ export function SearchBar() {
                     onClick={resetSearch}
                     variant="ghost"
                     size="sm"
-                    className="h-8 rounded-md text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    className="text-muted-foreground hover:bg-muted hover:text-foreground h-8 rounded-md text-xs transition-colors"
                   >
                     {t("common.searchBar.reset")}
                   </Button>
                   <Button
                     size="sm"
-                    className="h-8 rounded-md bg-primary text-xs text-primary-foreground shadow-none transition-colors hover:bg-primary/90"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 rounded-md text-xs shadow-none transition-colors"
                     type="submit"
                     onClick={() => setPopoverOpen(false)}
                   >

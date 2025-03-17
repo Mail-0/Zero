@@ -65,7 +65,7 @@ export function ThreadDemo({ mail: emailData, onClose, isMobile }: ThreadDisplay
               </TooltipTrigger>
               <TooltipContent>Close</TooltipContent>
             </Tooltip>
-            <ThreadSubject subject={"Join the Email Revolution with Zero!"} isMobile={isMobile}/>
+            <ThreadSubject subject={"Join the Email Revolution with Zero!"} isMobile={isMobile} />
           </div>
           <div className="flex items-center gap-2">
             <Tooltip>
@@ -150,7 +150,7 @@ export function ThreadDemo({ mail: emailData, onClose, isMobile }: ThreadDisplay
               ))}
             </div>
           </ScrollArea>
-          <div className="relative md:top-2 flex-shrink-0">
+          <div className="relative flex-shrink-0 md:top-2">
             <ReplyCompose emailData={emailData} isOpen={false} setIsOpen={() => {}} />
           </div>
         </div>
@@ -333,7 +333,7 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
               disabled={!emailData}
               onClick={handleClose}
             />
-            <ThreadSubject subject={emailData[0]?.subject} isMobile={isMobile}/>
+            <ThreadSubject subject={emailData[0]?.subject} isMobile={isMobile} />
           </div>
           <div className="flex items-center md:gap-6">
             <ThreadActionButton

@@ -26,7 +26,8 @@ export default function ThreadSubject({ subject, isMobile }: ThreadSubjectProps)
   }, [subject]);
 
   const handleCopySubject = () => {
-    navigator.clipboard.writeText(subjectContent)
+    navigator.clipboard
+      .writeText(subjectContent)
       .then(() => {
         toast.success("Subject copied to clipboard");
       })
@@ -43,7 +44,7 @@ export default function ThreadSubject({ subject, isMobile }: ThreadSubjectProps)
           <span
             ref={textRef}
             className={cn(
-              "block cursor-pointer font-semibold line-clamp-1",
+              "line-clamp-1 block cursor-pointer font-semibold",
               !subject && "opacity-50",
             )}
           >
@@ -51,27 +52,22 @@ export default function ThreadSubject({ subject, isMobile }: ThreadSubjectProps)
           </span>
         </TooltipTrigger>
         {isOverflowing && (
-          <TooltipContent
-            className="max-w-[600px] break-words text-base">
+          <TooltipContent className="max-w-[600px] break-words text-base">
             {subjectContent}
           </TooltipContent>
         )}
       </Tooltip>
-      {(subject && isMobile && isOverflowing) &&
-        (<Tooltip>
+      {subject && isMobile && isOverflowing && (
+        <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              className="md:h-fit md:px-2"
-              onClick={handleCopySubject}
-            >
+            <Button variant="ghost" className="md:h-fit md:px-2" onClick={handleCopySubject}>
               <Copy className="h-4 w-4" />
               <span className="sr-only">Copy subject</span>
             </Button>
           </TooltipTrigger>
           <TooltipContent>Copy subject</TooltipContent>
-        </Tooltip>)
-      }
+        </Tooltip>
+      )}
     </div>
   );
 }

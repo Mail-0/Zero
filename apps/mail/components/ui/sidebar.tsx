@@ -2,8 +2,8 @@
 
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { SidebarProvider } from "../context/sidebar-context";
 import { type VariantProps, cva } from "class-variance-authority";
+import { SidebarProvider } from "../context/sidebar-context";
 import { useSidebar } from "../context/sidebar-context";
 import { SIDEBAR_WIDTH_MOBILE } from "@/lib/constants";
 import { Separator } from "@/components/ui/separator";

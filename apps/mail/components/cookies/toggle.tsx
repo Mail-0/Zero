@@ -1,8 +1,8 @@
 "use client";
 
 import { updateCookiePreferences } from "@/actions/cookies";
-import { CookieCategory } from "@/lib/cookies";
 import { useGeoLocation } from "@/hooks/use-geo-location";
+import { CookieCategory } from "@/lib/cookies";
 import React, { startTransition } from "react";
 import { Switch } from "../ui/switch";
 

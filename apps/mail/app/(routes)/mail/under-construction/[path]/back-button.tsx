@@ -10,7 +10,7 @@ export default function BackButton() {
     <Button
       variant="outline"
       onClick={() => router.push("/mail")}
-      className="gap-2 text-muted-foreground"
+      className="text-muted-foreground gap-2"
     >
       <ArrowLeft className="h-4 w-4" />
       Go Back

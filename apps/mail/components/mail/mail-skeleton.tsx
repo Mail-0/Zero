@@ -132,7 +132,7 @@ export const MailDisplaySkeleton = ({ isFullscreen }: { isFullscreen?: boolean }
 
 export const MailHeaderSkeleton = ({ isFullscreen }: { isFullscreen?: boolean }) => {
   return (
-    <div className="flex items-center p-[7px] border-b">
+    <div className="flex items-center border-b p-[7px]">
       <div className="flex flex-1 items-center gap-2">
         <Button variant="ghost" className="md:h-fit md:px-2" disabled={true}>
           <X className="h-4 w-4" />

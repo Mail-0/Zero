@@ -14,7 +14,7 @@ const getLogo = (mimetype: string): string => {
     return "/assets/attachment-icons/excel.svg";
   } else if (mimetype.includes("zip")) {
     return "/assets/attachment-icons/zip.svg";
-  }  else if (mimetype.includes("audio")) {
+  } else if (mimetype.includes("audio")) {
     return "/assets/attachment-icons/audio.svg";
   } else if (mimetype.includes("video")) {
     return "/assets/attachment-icons/video.svg";

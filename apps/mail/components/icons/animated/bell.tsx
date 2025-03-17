@@ -52,7 +52,7 @@ const BellIcon = forwardRef<BellIconHandle, HTMLAttributes<HTMLDivElement>>(
     );
     return (
       <div
-        className="flex cursor-pointer select-none items-center justify-center rounded-md p-2 transition-colors duration-200 hover:bg-accent"
+        className="hover:bg-accent flex cursor-pointer select-none items-center justify-center rounded-md p-2 transition-colors duration-200"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         {...props}

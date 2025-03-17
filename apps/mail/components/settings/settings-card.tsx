@@ -16,7 +16,12 @@ export function SettingsCard({
   className,
 }: SettingsCardProps) {
   return (
-    <Card className={cn("w-full border-none bg-offsetLight px-0 dark:bg-offsetDark shadow-none", className)}>
+    <Card
+      className={cn(
+        "bg-offsetLight dark:bg-offsetDark w-full border-none px-0 shadow-none",
+        className,
+      )}
+    >
       <CardHeader className="px-0 pt-0">
         <CardTitle>{title}</CardTitle>
         {description && <CardDescription>{description}</CardDescription>}

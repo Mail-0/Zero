@@ -49,7 +49,7 @@ export function AccountSwitcher({ accounts }: AccountSwitcherProps) {
             >
               <div
                 className={cn(
-                  "flex aspect-square size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-sidebar-primary-foreground",
+                  "bg-primary/10 text-sidebar-primary-foreground flex aspect-square size-10 shrink-0 items-center justify-center rounded-lg",
                   collapsed && "w-full",
                 )}
               >
@@ -77,7 +77,7 @@ export function AccountSwitcher({ accounts }: AccountSwitcherProps) {
             <span>{account.name}</span>
             <div className="ml-auto flex items-center gap-2">
               {account === selectedAccount && <Check className="size-4" />}
-              <span className="rounded-md bg-muted px-1 text-xs">
+              <span className="bg-muted rounded-md px-1 text-xs">
                 ⌘<span className="font-mono">{index + 1}</span>
               </span>
             </div>

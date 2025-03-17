@@ -27,7 +27,7 @@ export default function SignupZero() {
   function onSubmit(values: z.infer<typeof formSchema>) {
     // Append the @0.email suffix to the username
     const fullEmail = `${values.email}@0.email`;
-    
+
     // Use the correct sonner toast API
     toast.success(`Trying to signup with ${fullEmail}`, {
       description: "Signup attempt",
@@ -38,14 +38,14 @@ export default function SignupZero() {
 
   return (
     <div className="flex h-full min-h-screen w-full items-center justify-center bg-black">
-      <div className="w-full max-w-md px-6 py-8 animate-in slide-in-from-bottom-4 duration-500">
+      <div className="animate-in slide-in-from-bottom-4 w-full max-w-md px-6 py-8 duration-500">
         <div className="mb-4 text-center">
           <h1 className="mb-2 text-4xl font-bold text-white">Signup with Zero</h1>
           <p className="text-muted-foreground">Enter your email below to signup to your account</p>
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 mx-auto">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="mx-auto space-y-3">
             <FormField
               control={form.control}
               name="name"
@@ -74,9 +74,11 @@ export default function SignupZero() {
                       <Input
                         placeholder="adam"
                         {...field}
-                        className="bg-black text-sm text-white placeholder:text-sm w-full pr-16"
+                        className="w-full bg-black pr-16 text-sm text-white placeholder:text-sm"
                       />
-                      <span className="absolute bg-popover px-3 py-2 right-0 top-0 bottom-0 flex items-center text-sm rounded-r-md text-muted-foreground border border-l-0 border-input">@0.email</span>
+                      <span className="bg-popover text-muted-foreground border-input absolute bottom-0 right-0 top-0 flex items-center rounded-r-md border border-l-0 px-3 py-2 text-sm">
+                        @0.email
+                      </span>
                     </div>
                   </FormControl>
                 </FormItem>
@@ -90,7 +92,6 @@ export default function SignupZero() {
                 <FormItem>
                   <div className="flex items-center justify-between">
                     <FormLabel className="text-muted-foreground">Password</FormLabel>
-                   
                   </div>
                   <FormControl>
                     <Input
@@ -119,18 +120,18 @@ export default function SignupZero() {
           </form>
         </Form>
       </div>
-      
-      <footer className="absolute bottom-0 w-full py-4 px-6">
-        <div className="max-w-6xl mx-auto flex justify-center items-center gap-6">
-          <a 
-            href="/terms" 
-            className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors"
+
+      <footer className="absolute bottom-0 w-full px-6 py-4">
+        <div className="mx-auto flex max-w-6xl items-center justify-center gap-6">
+          <a
+            href="/terms"
+            className="text-[10px] text-gray-500 transition-colors hover:text-gray-300"
           >
             Terms of Service
           </a>
-          <a 
-            href="/privacy" 
-            className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors"
+          <a
+            href="/privacy"
+            className="text-[10px] text-gray-500 transition-colors hover:text-gray-300"
           >
             Privacy Policy
           </a>
