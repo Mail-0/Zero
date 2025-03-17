@@ -15,17 +15,29 @@ export function MailIframe({ html }: { html: string }) {
 
   const t = useTranslations();
 
+  const calculateAndSetHeight = () => {
+    if (!iframeRef.current?.contentWindow?.document.body) return;
+
+    const body = iframeRef.current.contentWindow.document.body;
+    const boundingRectHeight = body.getBoundingClientRect().height;
+    const scrollHeight = body.scrollHeight;
+
+    // Use the larger of the two values to ensure all content is visible
+    setHeight(Math.max(boundingRectHeight, scrollHeight));
+  };
+
   useEffect(() => {
     if (!iframeRef.current) return;
     const url = URL.createObjectURL(new Blob([iframeDoc], { type: "text/html" }));
     iframeRef.current.src = url;
     const handler = () => {
       if (iframeRef.current?.contentWindow?.document.body) {
-        const { height } = iframeRef.current.contentWindow.document.body.getBoundingClientRect();
-        setHeight(height);
+        calculateAndSetHeight();
         fixNonReadableColors(iframeRef.current.contentWindow.document.body);
       }
       setLoaded(true);
+      // Recalculate after a slight delay to catch any late-loading content
+      setTimeout(calculateAndSetHeight, 500);
     };
     iframeRef.current.onload = handler;
 
