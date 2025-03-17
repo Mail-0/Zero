@@ -31,4 +31,4 @@ jobs:
         run: bun install
 
       - name: Check 🚨
-        run: bun format
+        run: bun prettier . --check
