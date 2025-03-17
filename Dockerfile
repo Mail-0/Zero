@@ -7,9 +7,7 @@ FROM base AS install
 COPY . .
 
 # rename the example env files and setup
-RUN cp apps/mail/.env.example apps/mail/.env && \
-    cp packages/db/.env.example packages/db/.env && \
-    bun install --frozen-lockfile && \
+RUN bun install --frozen-lockfile && \
     bun run db:dependencies && \
     bun run db:push
 
