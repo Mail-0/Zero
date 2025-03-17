@@ -42,7 +42,7 @@ Zero is built with modern and reliable technologies:
 **Required Versions:**
 
 - [Node.js](https://nodejs.org/en/download) (v18 or higher)
-- [Bun](https://bun.sh) (v1.0 or higher)
+- [Bun](https://bun.sh) (v1.2 or higher)
 - [Docker](https://docs.docker.com/engine/install/) (v20 or higher)
 
 Before running the application, you'll need to set up services and configure environment variables. For more details on environment variables, see the [Environment Variables](#environment-variables) section.
