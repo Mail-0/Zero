@@ -30,7 +30,7 @@ COPY --from=prerelease /zero .
 # env vars, overridden by the .env file via compose
 ENV NODE_ENV=production \
     BASE_URL=http://localhost:3000 \
-    DATABASE_URL=postgresql://postgres:super-secret-password@localhost:5432/mail0 \
+    DATABASE_URL=postgresql://postgres:postgres@localhost:5432/zerodotemail \
     BETTER_AUTH_SECRET=your_secret_key \
     BETTER_AUTH_URL= \
     GOOGLE_CLIENT_ID= \
