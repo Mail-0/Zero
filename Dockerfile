@@ -35,8 +35,6 @@ ENV NODE_ENV=production \
     BETTER_AUTH_URL= \
     GOOGLE_CLIENT_ID= \
     GOOGLE_CLIENT_SECRET= \
-    NEXT_PUBLIC_POSTHOG_KEY= \
-    NEXT_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com \
     REDIS_URL= \
     REDIS_TOKEN=
 
