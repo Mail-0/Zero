@@ -1,25 +1,18 @@
 "use client";
 
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { useState, useEffect, useRef, createContext, useContext } from "react";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { generateInlineAIEdit } from "@/actions/ai";
 import { Button } from "@/components/ui/button";
+import { AIInlineContextType } from "@/types";
 import type { Editor } from "@tiptap/react";
 import { useForm } from "react-hook-form";
+import DOMPurify from "dompurify";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-
-type AIInlineContextType = {
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  toggleOpen: () => void;
-  position: { x: number; y: number };
-  setPosition: (position: { x: number; y: number }) => void;
-  editor: Editor | null;
-  setEditor: (editor: Editor | null) => void;
-};
+import * as Diff from "diff";
 
 export const AIInlineContext = createContext<AIInlineContextType | undefined>(undefined);
 
@@ -36,35 +29,60 @@ export function AIInlineProvider({ children }: { children: React.ReactNode }) {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [editor, setEditor] = useState<Editor | null>(null);
 
+  // Diff-related states
+  const [previewDiff, setPreviewDiff] = useState<Diff.Change[]>([]);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [selectedText, setSelectedText] = useState("");
+
   const toggleOpen = () => setOpen((prev) => !prev);
 
   return (
     <AIInlineContext.Provider
-      value={{ open, setOpen, toggleOpen, position, setPosition, editor, setEditor }}
+      value={{
+        open,
+        setOpen,
+        toggleOpen,
+        position,
+        setPosition,
+        editor,
+        setEditor,
+        previewDiff,
+        setPreviewDiff,
+        isPreviewMode,
+        setIsPreviewMode,
+        selectedText,
+        setSelectedText,
+      }}
     >
-      {/* {children} */}
+      {children}
       <AIInline />
     </AIInlineContext.Provider>
   );
-}
-
-interface AIInlineProps {
-  className?: string;
 }
 
 type FormValues = {
   aiPrompt: string;
 };
 
-export function AIInline({ className }: AIInlineProps) {
-  const { open, setOpen, position, editor, setEditor } = useAIInline();
+export function AIInline({ className }: { className?: string }) {
+  const {
+    open,
+    setOpen,
+    position,
+    editor,
+    previewDiff,
+    setPreviewDiff,
+    setIsPreviewMode,
+    selectedText,
+    setSelectedText,
+  } = useAIInline();
+
   const cardRef = useRef<HTMLDivElement>(null);
-  const { register, handleSubmit, formState, watch, setValue } = useForm<FormValues>({
+  const { register, handleSubmit, formState } = useForm<FormValues>({
     defaultValues: {
       aiPrompt: "",
     },
   });
-
   const formRef = useRef<HTMLFormElement>(null);
 
   // Adjust position to prevent card from going off-screen
@@ -94,17 +112,19 @@ export function AIInline({ className }: AIInlineProps) {
   const onSubmit = async (data: FormValues) => {
     try {
       // Get current text selection or editing context
-      const selected_text = editor
+      const selected = editor
         ? editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to, " ")
         : "";
+
+      // Store selection in context
+      setSelectedText(selected);
 
       // Create the payload
       const aiRequestPayload = {
         prompt: data.aiPrompt,
-        selection: selected_text,
+        selection: selected,
       };
 
-      // Use SWR's mutate to call the server action directly
       const result = await generateInlineAIEdit(aiRequestPayload);
 
       if ("error" in result) {
@@ -112,14 +132,14 @@ export function AIInline({ className }: AIInlineProps) {
         return toast.error("Failed to process AI edit request");
       } else if ("data" in result) {
         try {
-          const editedText = JSON.parse(result.data).edit;
+          const editedText = result.data.edit;
 
-          // Apply the edited text to the editor
-          if (editor) {
-            editor.chain().focus().deleteSelection().insertContent(editedText).run();
+          // Generate diff between selection and edited text
+          const diffResult = Diff.diffLines(selected, editedText);
+          setPreviewDiff(diffResult);
+          setIsPreviewMode(true);
 
-            toast.success("Applied AI edit");
-          }
+          // Don't close the dialog yet, as we now show apply/cancel buttons
         } catch (parseError) {
           console.error("Error parsing AI response:", parseError);
           toast.error("Failed to apply AI edit");
@@ -130,6 +150,27 @@ export function AIInline({ className }: AIInlineProps) {
       toast.error("Failed to process AI edit request");
       throw error;
     }
+  };
+
+  const handleApplyChanges = () => {
+    const editedText = previewDiff
+      .filter((part) => !part.removed)
+      .map((part) => part.value)
+      .join("");
+
+    const sanitizedContent = DOMPurify.sanitize(editedText);
+
+    if (!editor) return null;
+
+    if (editor.can().chain().focus().deleteSelection().run()) {
+      editor.commands.deleteSelection();
+      editor.commands.insertContent(sanitizedContent);
+    }
+
+    toast.success("Applied AI edit");
+    setIsPreviewMode(false);
+    setPreviewDiff([]);
+    setOpen(false);
   };
 
   // Handle Cmd+Enter submission
@@ -144,7 +185,6 @@ export function AIInline({ className }: AIInlineProps) {
   };
 
   if (!open) return null;
-
   return (
     <div
       ref={cardRef}
@@ -173,32 +213,61 @@ export function AIInline({ className }: AIInlineProps) {
             />
           </CardContent>
           <CardFooter className="flex items-center justify-between p-3 pt-0">
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              disabled={formState.isSubmitting}
-              className="border-border/30 hover:bg-secondary/80 h-6 border px-2 text-xs shadow-sm"
-              onClick={() => setOpen(false)}
-            >
-              <span className="flex items-center text-sm opacity-70">
-                <X className="mr-2" /> Esc
-              </span>
-            </Button>
-            <Button
-              type="submit"
-              size="sm"
-              variant="secondary"
-              disabled={formState.isSubmitting}
-              className="border-border/30 hover:bg-secondary/80 h-6 border px-2 text-xs shadow-sm"
-            >
-              <span className="text-sm opacity-70">⌘ + ↵</span>
-            </Button>
+            {previewDiff.length > 0 ? (
+              <>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  className="border-border/30 hover:bg-secondary/80 h-6 border px-2 text-xs shadow-sm"
+                  onClick={() => {
+                    setIsPreviewMode(false);
+                    setPreviewDiff([]);
+                  }}
+                >
+                  <span className="flex items-center text-sm opacity-70">
+                    <X className="mr-2" /> Esc
+                  </span>
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  className="h-6 border border-green-500 bg-green-700 px-2 text-xs shadow-sm hover:bg-green-600"
+                  onClick={handleApplyChanges}
+                >
+                  <span className="text-sm opacity-70">Apply ↵</span>
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  disabled={formState.isSubmitting}
+                  className="border-border/30 hover:bg-secondary/80 h-6 border px-2 text-xs shadow-sm"
+                  onClick={() => setOpen(false)}
+                >
+                  <span className="flex items-center text-sm opacity-70">
+                    <X className="mr-2" /> Esc
+                  </span>
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  variant="secondary"
+                  disabled={formState.isSubmitting}
+                  className="border-border/30 hover:bg-secondary/80 h-6 border px-2 text-xs shadow-sm"
+                >
+                  <span className="text-sm opacity-70">⌘ + ↵</span>
+                </Button>
+              </>
+            )}
           </CardFooter>
         </form>
       </Card>
     </div>
   );
 }
-
 export default AIInline;

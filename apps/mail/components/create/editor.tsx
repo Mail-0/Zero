@@ -19,11 +19,9 @@ import { uploadFn } from "@/components/create/image-upload";
 import { handleImageDrop, handleImagePaste } from "novel";
 import EditorMenu from "@/components/create/editor-menu";
 import { Separator } from "@/components/ui/separator";
+import { useAIInline } from "../ui/ai-inline";
 import { useReducer, useRef } from "react";
-import { Button } from "../ui/button";
 import "./editor.css";
-
-const hljs = require("highlight.js");
 
 const extensions = [...defaultExtensions];
 
@@ -71,6 +69,29 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
   }
 }
 
+const DiffOverlay = ({ previewDiff }: Pick<ReturnType<typeof useAIInline>, "previewDiff">) => {
+  return (
+    <div className="bg-offsetLight dark:bg-offsetDark absolute left-0 top-0 z-50 min-h-96 w-full overflow-y-auto rounded-md p-4">
+      <div className="mb-4">
+        {previewDiff.map((part, index) => (
+          <span
+            key={index}
+            className={
+              part.added
+                ? "bg-green-200 text-green-800"
+                : part.removed
+                  ? "bg-red-200 text-red-800"
+                  : "text-gray-500"
+            }
+          >
+            {part.value}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export default function Editor({
   initialValue,
   onChange,
@@ -83,7 +104,8 @@ export default function Editor({
     openAI: false,
   });
 
-  // Add a ref to store the editor content to prevent losing it on refresh
+  const { previewDiff, isPreviewMode, setEditor } = useAIInline();
+
   const contentRef = useRef<string>("");
 
   const { openNode, openColor, openLink, openAI } = state;
@@ -121,6 +143,7 @@ export default function Editor({
             // Store the content in the ref to prevent losing it
             contentRef.current = editor.getHTML();
             onChange(editor.getHTML());
+            setEditor(editor);
           }}
           slotAfter={<ImageResizer />}
         >
@@ -185,6 +208,8 @@ export default function Editor({
           </EditorMenu>
         </EditorContent>
       </EditorRoot>
+
+      {isPreviewMode && <DiffOverlay previewDiff={previewDiff} />}
     </div>
   );
 }

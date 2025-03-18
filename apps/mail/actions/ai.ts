@@ -17,7 +17,7 @@ type AIRequestPayload = {
  */
 export async function generateInlineAIEdit(
   payload: AIRequestPayload,
-): Promise<{ data: string } | { error: string }> {
+): Promise<{ data: { edit: string } } | { error: string }> {
   const openai_client = await getOpenAIClient();
   if (openai_client == null)
     return { error: "OpenAI client not instantiated. Check API key configuration." };

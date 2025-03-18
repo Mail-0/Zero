@@ -1,3 +1,5 @@
+import type { Editor } from "@tiptap/react";
+
 export interface User {
   name: string;
   email: string;
@@ -73,4 +75,24 @@ export interface InitialThread {
   totalReplies: number;
   references?: string;
   inReplyTo?: string;
+}
+
+export interface AIInlineContextType {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  toggleOpen: () => void;
+  position: { x: number; y: number };
+  setPosition: (position: { x: number; y: number }) => void;
+
+  // Editor-related states
+  editor: Editor | null;
+  setEditor: (editor: Editor | null) => void;
+
+  // Diff-related states
+  previewDiff: Diff.Change[];
+  setPreviewDiff: (diff: Diff.Change[]) => void;
+  isPreviewMode: boolean;
+  setIsPreviewMode: (isPreview: boolean) => void;
+  selectedText: string;
+  setSelectedText: (text: string) => void;
 }
