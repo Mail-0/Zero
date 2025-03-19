@@ -3,7 +3,13 @@ import { createEnv } from '@t3-oss/env-nextjs';
 import { z } from 'zod';
 
 export const env = createEnv({
+	/**
+	 * Extend the environment variables schema with the database keys
+	 */
 	extends: [database()],
+	/**
+	 * Server-side environment variables schema
+	 */
 	server: {
 		BETTER_AUTH_SECRET: z.string().min(1),
 		BETTER_AUTH_URL: z.string().url(),
@@ -20,9 +26,16 @@ export const env = createEnv({
 		OPENAI_API_KEY: z.string().min(1),
 		AI_SYSTEM_PROMPT: z.string().optional(),
 	},
+	/**
+	 * Client-side environment variables schema
+	 */
 	client: {
 		NEXT_PUBLIC_APP_URL: z.string().url(),
 	},
+	/**
+	 * You can't destructure `process.env` as a regular object in the Next.js edge runtimes (e.g.
+	 * middlewares) or client-side so we need to destruct manually.
+	 */
 	runtimeEnv: {
 		BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
 		BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
