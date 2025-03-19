@@ -81,9 +81,9 @@ const parseDraft = (draft: gmail_v1.Schema$Draft): ParsedDraft | null => {
 
 export const driver = async (config: IConfig): Promise<MailManager> => {
   const auth = new google.auth.OAuth2(
-    env.GOOGLE_CLIENT_ID as string,
-    env.GOOGLE_CLIENT_SECRET as string,
-    env.GOOGLE_REDIRECT_URI as string,
+    env.GOOGLE_CLIENT_ID,
+    env.GOOGLE_CLIENT_SECRET,
+    env.GOOGLE_REDIRECT_URI,
   );
 
   const getScope = () =>
