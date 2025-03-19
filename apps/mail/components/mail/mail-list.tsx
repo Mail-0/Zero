@@ -220,9 +220,6 @@ export function MailList({ isCompact }: MailListProps) {
     estimateSize: useCallback(() => itemHeight, []),
     gap: 6,
   });
-  useEffect(() => {
-    mutate();
-  }, [items]);
 
   const virtualItems = virtualizer.getVirtualItems();
 
