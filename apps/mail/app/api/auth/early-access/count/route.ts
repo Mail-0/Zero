@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { earlyAccess } from "@zero/db/schema";
-import { db } from "@zero/db";
-import { count } from "drizzle-orm";
 import { Ratelimit } from "@upstash/ratelimit";
+import { earlyAccess } from "@zero/db/schema";
+import { count } from "drizzle-orm";
 import { redis } from "@/lib/redis";
+import { db } from "@zero/db";
 
 const ratelimit = new Ratelimit({
   redis,
@@ -19,7 +19,12 @@ export async function GET(req: NextRequest) {
       console.log("No IP detected");
       return NextResponse.json({ error: "No IP detected" }, { status: 400 });
     }
-    console.log("Request from IP:", ip, req.headers.get("x-forwarded-for"), req.headers.get('CF-Connecting-IP'));
+    console.log(
+      "Request from IP:",
+      ip,
+      req.headers.get("x-forwarded-for"),
+      req.headers.get("CF-Connecting-IP"),
+    );
     const { success, limit, reset, remaining } = await ratelimit.limit(ip);
 
     const headers = {
@@ -37,14 +42,11 @@ export async function GET(req: NextRequest) {
     }
     const result = await db.select({ count: count() }).from(earlyAccess);
     const signupCount = result[0]?.count || 0;
-    
+
     return NextResponse.json({ count: signupCount }, { status: 200 });
   } catch (error) {
     console.error("Error fetching early access count:", error);
-    
-    return NextResponse.json(
-      { error: "Failed to fetch signup count" },
-      { status: 500 }
-    );
+
+    return NextResponse.json({ error: "Failed to fetch signup count" }, { status: 500 });
   }
-} 
+}

@@ -38,4 +38,4 @@ export const Spinner = ({ size = 24, color = "currentColor" }: SpinnerProps) => 
       />
     </motion.svg>
   );
-}; 
+};

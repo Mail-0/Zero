@@ -1,14 +1,14 @@
 "use client";
 
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { Github, ArrowLeft, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
-import React from "react";
 import Footer from "@/components/home/footer";
-import { toast } from "sonner";
-import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { createSectionId } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import React from "react";
 
 const LAST_UPDATED = "February 13, 2025";
 
@@ -22,15 +22,15 @@ export default function TermsOfService() {
   };
 
   return (
-    <div className="relative flex flex-col min-h-screen w-full overflow-auto bg-white dark:bg-black">
-      <div className="relative z-10 flex-grow flex flex-col">
+    <div className="relative flex min-h-screen w-full flex-col overflow-auto bg-white dark:bg-black">
+      <div className="relative z-10 flex flex-grow flex-col">
         {/* Back Button */}
         <div className="absolute left-4 top-4 md:left-8 md:top-8">
           <Button
             variant="ghost"
             size="sm"
-            className="gap-2 text-gray-600 hover:text-gray-900 dark:text-muted-foreground dark:hover:text-white"
-            onClick={() => router.push('/')}
+            className="dark:text-muted-foreground gap-2 text-gray-600 hover:text-gray-900 dark:hover:text-white"
+            onClick={() => router.push("/")}
           >
             <ArrowLeft className="h-4 w-4" />
             Back
@@ -41,9 +41,13 @@ export default function TermsOfService() {
           <Card className="overflow-hidden rounded-xl border-none bg-gray-50/80 shadow-xl backdrop-blur-lg dark:bg-black/40">
             <CardHeader className="space-y-4 bg-gray-100/90 px-8 py-8 dark:bg-black/60">
               <div className="space-y-2 text-center">
-                <CardTitle className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white md:text-4xl">Terms of Service</CardTitle>
+                <CardTitle className="text-3xl font-bold tracking-tight text-gray-900 md:text-4xl dark:text-white">
+                  Terms of Service
+                </CardTitle>
                 <div className="flex items-center justify-center gap-2">
-                  <p className="text-sm text-gray-500 dark:text-muted-foreground">Last updated: {LAST_UPDATED}</p>
+                  <p className="dark:text-muted-foreground text-sm text-gray-500">
+                    Last updated: {LAST_UPDATED}
+                  </p>
                 </div>
               </div>
             </CardHeader>
@@ -58,26 +62,27 @@ export default function TermsOfService() {
                     className="group rounded-xl border border-gray-200 bg-white/70 p-6 transition-all hover:border-gray-300 hover:bg-white dark:border-gray-800/10 dark:bg-black/20 dark:hover:border-gray-700/30 dark:hover:bg-black/30"
                   >
                     <div className="mb-4 flex items-center justify-between">
-                      <h2 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">{section.title}</h2>
-                      <button 
+                      <h2 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+                        {section.title}
+                      </h2>
+                      <button
                         onClick={() => handleCopyLink(sectionId)}
-                        className="text-gray-400 transition-all hover:text-gray-700 dark:text-muted-foreground dark:hover:text-white"
+                        className="dark:text-muted-foreground text-gray-400 transition-all hover:text-gray-700 dark:hover:text-white"
                         aria-label={`Copy link to ${section.title} section`}
                       >
-                        <Link2 
-                          className={`h-4 w-4 ${copiedSection === sectionId ? 'text-green-500 dark:text-green-400' : ''}`} 
+                        <Link2
+                          className={`h-4 w-4 ${copiedSection === sectionId ? "text-green-500 dark:text-green-400" : ""}`}
                         />
                       </button>
                     </div>
-                    <div className="prose prose-sm max-w-none text-gray-700 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:text-blue-800 dark:prose-invert dark:text-gray-300 dark:prose-a:text-blue-300 dark:hover:prose-a:text-blue-200">
+                    <div className="prose prose-sm prose-a:text-blue-600 prose-a:no-underline hover:prose-a:text-blue-800 dark:prose-invert dark:prose-a:text-blue-300 dark:hover:prose-a:text-blue-200 max-w-none text-gray-700 dark:text-gray-300">
                       {section.content}
                     </div>
                   </div>
                 );
               })}
 
-              <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
-              </div>
+              <div className="mt-12 flex flex-wrap items-center justify-center gap-4"></div>
             </div>
           </Card>
         </div>
@@ -93,9 +98,8 @@ const sections = [
     title: "Overview",
     content: (
       <p>
-        0.email is an open-source email solution that enables users to self-host their email
-        service or integrate with external email providers. By using 0.email, you agree to these
-        terms.
+        0.email is an open-source email solution that enables users to self-host their email service
+        or integrate with external email providers. By using 0.email, you agree to these terms.
       </p>
     ),
   },
@@ -104,7 +108,7 @@ const sections = [
     content: (
       <div className="space-y-8">
         <div>
-          <h3 className="mb-3 text-xl font-medium text-card-foreground">Self-Hosted Service</h3>
+          <h3 className="text-card-foreground mb-3 text-xl font-medium">Self-Hosted Service</h3>
           <ul className="ml-4 list-disc space-y-2">
             <li>0.email provides software that users can deploy on their own infrastructure</li>
             <li>Users are responsible for their own hosting, maintenance, and compliance</li>
@@ -112,7 +116,7 @@ const sections = [
           </ul>
         </div>
         <div>
-          <h3 className="mb-3 text-xl font-medium text-card-foreground">
+          <h3 className="text-card-foreground mb-3 text-xl font-medium">
             External Email Integration
           </h3>
           <ul className="ml-4 list-disc space-y-2">
@@ -127,7 +131,7 @@ const sections = [
   {
     title: "User Responsibilities",
     content: (
-      <div className="mt-4 space-y-3 text-muted-foreground">
+      <div className="text-muted-foreground mt-4 space-y-3">
         <p>Users agree to:</p>
         <ul className="ml-4 list-disc space-y-2">
           <li>Comply with all applicable laws and regulations</li>
@@ -142,7 +146,7 @@ const sections = [
   {
     title: "Software License",
     content: (
-      <div className="mt-4 space-y-3 text-muted-foreground">
+      <div className="text-muted-foreground mt-4 space-y-3">
         <p>0.email is licensed under the MIT License:</p>
         <ul className="ml-4 list-disc space-y-2">
           <li>Users can freely use, modify, and distribute the software</li>
@@ -155,7 +159,7 @@ const sections = [
   {
     title: "Community Guidelines",
     content: (
-      <div className="mt-4 space-y-3 text-muted-foreground">
+      <div className="text-muted-foreground mt-4 space-y-3">
         <p>Users participating in our community agree to:</p>
         <ul className="ml-4 list-disc space-y-2">
           <li>Follow our code of conduct</li>
@@ -169,7 +173,7 @@ const sections = [
   {
     title: "Contact Information",
     content: (
-      <div className="mt-4 space-y-3 text-muted-foreground">
+      <div className="text-muted-foreground mt-4 space-y-3">
         <p>For questions about these terms:</p>
         <div className="flex flex-col space-y-2">
           <a

@@ -93,12 +93,8 @@
           "name": "mail0_account_user_id_mail0_user_id_fk",
           "tableFrom": "mail0_account",
           "tableTo": "mail0_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -192,12 +188,8 @@
           "name": "mail0_connection_user_id_mail0_user_id_fk",
           "tableFrom": "mail0_connection",
           "tableTo": "mail0_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -207,9 +199,7 @@
         "mail0_connection_email_unique": {
           "name": "mail0_connection_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -252,9 +242,7 @@
         "mail0_early_access_email_unique": {
           "name": "mail0_early_access_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -320,12 +308,8 @@
           "name": "mail0_session_user_id_mail0_user_id_fk",
           "tableFrom": "mail0_session",
           "tableTo": "mail0_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -335,9 +319,7 @@
         "mail0_session_token_unique": {
           "name": "mail0_session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -404,9 +386,7 @@
         "mail0_user_email_unique": {
           "name": "mail0_user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},

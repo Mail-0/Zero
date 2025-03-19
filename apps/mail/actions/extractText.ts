@@ -1,5 +1,5 @@
 "use server";
-import * as cheerio from 'cheerio';
+import * as cheerio from "cheerio";
 
 export async function extractTextFromHTML(decodedBody: string): Promise<string> {
   try {
@@ -7,14 +7,14 @@ export async function extractTextFromHTML(decodedBody: string): Promise<string> 
     const $ = cheerio.load(decodedBody);
 
     // Remove script and style elements
-    $('script').remove();
-    $('style').remove();
+    $("script").remove();
+    $("style").remove();
 
     // Get text content and clean it up
-    const textOnly = $('body')
+    const textOnly = $("body")
       .text()
-      .replace(/\r?\n|\r/g, ' ') // Remove line breaks
-      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .replace(/\r?\n|\r/g, " ") // Remove line breaks
+      .replace(/\s+/g, " ") // Replace multiple spaces with single space
       .trim();
 
     return textOnly;

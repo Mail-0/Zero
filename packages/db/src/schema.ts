@@ -85,5 +85,5 @@ export const summary = createTable("summary", {
   connectionId: text("connection_id").notNull(),
   saved: boolean("saved").notNull().default(false),
   tags: text("tags"),
-  suggestedReply: text("suggested_reply")
+  suggestedReply: text("suggested_reply"),
 });

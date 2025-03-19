@@ -376,18 +376,18 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       return res.data;
     },
     normalizeIds: (ids: string[]) => {
-      const normalizedIds: string[] = [];
+      // const normalizedIds: string[] = [];
       const threadIds: string[] = [];
 
       for (const id of ids) {
         if (id.startsWith("thread:")) {
           threadIds.push(id.substring(7));
         } else {
-          normalizedIds.push(id);
+          threadIds.push(id);
         }
       }
 
-      return { normalizedIds, threadIds };
+      return { threadIds };
     },
     async modifyLabels(id: string[], options: { addLabels: string[]; removeLabels: string[] }) {
       await gmail.users.messages.batchModify({

@@ -1,7 +1,7 @@
 .ProseMirror {
   @apply p-3;
   font-size: 1rem;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   font-weight: 400;
   line-height: 1.4;
 }
@@ -35,7 +35,7 @@
   position: relative;
 
   &:before {
-    content: '';
+    content: "";
     box-sizing: border-box;
     position: absolute;
     top: 50%;
@@ -57,18 +57,18 @@
 
 /* Custom TODO list checkboxes – shoutout to this awesome tutorial: https://moderncss.dev/pure-css-custom-checkbox-style/ */
 
-ul[data-type='taskList'] li > label {
+ul[data-type="taskList"] li > label {
   margin-right: 0.2rem;
   user-select: none;
 }
 
 @media screen and (max-width: 768px) {
-  ul[data-type='taskList'] li > label {
+  ul[data-type="taskList"] li > label {
     margin-right: 0.5rem;
   }
 }
 
-ul[data-type='taskList'] li > label input[type='checkbox'] {
+ul[data-type="taskList"] li > label input[type="checkbox"] {
   -webkit-appearance: none;
   appearance: none;
   background-color: hsl(var(--background));
@@ -92,7 +92,7 @@ ul[data-type='taskList'] li > label input[type='checkbox'] {
   }
 
   &::before {
-    content: '';
+    content: "";
     width: 0.65em;
     height: 0.65em;
     transform: scale(0);
@@ -107,7 +107,7 @@ ul[data-type='taskList'] li > label input[type='checkbox'] {
   }
 }
 
-ul[data-type='taskList'] li[data-checked='true'] > div > p {
+ul[data-type="taskList"] li[data-checked="true"] > div > p {
   color: var(--muted-foreground);
   text-decoration: line-through;
   text-decoration-thickness: 2px;
@@ -125,8 +125,6 @@ ul[data-type='taskList'] li[data-checked='true'] > div > p {
   transition: background-color 0.2s;
   box-shadow: none;
 }
-
-
 
 /* Custom Youtube Video CSS */
 iframe {
@@ -172,21 +170,21 @@ mark[style] > strong {
 
 /* Add specific heading styles */
 .ProseMirror h1 {
-  font-size: 1.5rem;  /* text-2xl equivalent */
+  font-size: 1.5rem; /* text-2xl equivalent */
   font-weight: bold;
   margin-top: 1rem;
   margin-bottom: 0.5rem;
 }
 
 .ProseMirror h2 {
-  font-size: 1.25rem;  /* text-xl equivalent */
+  font-size: 1.25rem; /* text-xl equivalent */
   font-weight: bold;
   margin-top: 0.75rem;
   margin-bottom: 0.5rem;
 }
 
 .ProseMirror h3 {
-  font-size: 1.125rem;  /* text-lg equivalent */
+  font-size: 1.125rem; /* text-lg equivalent */
   font-weight: bold;
   margin-top: 0.75rem;
   margin-bottom: 0.5rem;
@@ -194,7 +192,7 @@ mark[style] > strong {
 
 /* Add these new rules to fix list placeholder issues */
 .ProseMirror li .is-editor-empty::before {
-  content: none !important;  /* Disable placeholder in list items */
+  content: none !important; /* Disable placeholder in list items */
 }
 
 /* Ensure list items don't show placeholders */
@@ -216,14 +214,14 @@ mark[style] > strong {
 /* Adjust spacing between list items */
 .ProseMirror ul li,
 .ProseMirror ol li {
-  margin-bottom: 0.75rem;  /* Reduced from 1rem to 0.75rem */
-  line-height: 1.4;        /* Reduced from 1.6 to 1.4 */
+  margin-bottom: 0.75rem; /* Reduced from 1rem to 0.75rem */
+  line-height: 1.4; /* Reduced from 1.6 to 1.4 */
 }
 
 /* Adjust space between paragraphs */
 .ProseMirror p {
-  margin-bottom: 1.25rem;  /* Reduced from 1.5rem to 1.25rem */
-  line-height: 1.4;        /* Reduced from 1.6 to 1.4 */
+  margin-bottom: 1.25rem; /* Reduced from 1.5rem to 1.25rem */
+  line-height: 1.4; /* Reduced from 1.6 to 1.4 */
 }
 
 /* Keep the list indentation the same */

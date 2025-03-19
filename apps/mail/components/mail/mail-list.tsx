@@ -41,131 +41,135 @@ const highlightText = (text: string, highlight: string) => {
   });
 };
 
-const Thread = memo(({ message, selectMode, demo, onClick, sessionData }: ConditionalThreadProps) => {
-  const [mail] = useMail();
-  // const { data: session } = useSession();
-  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const isHovering = useRef<boolean>(false);
-  const hasPrefetched = useRef<boolean>(false);
-  const [searchValue] = useSearchValue();
+const Thread = memo(
+  ({ message, selectMode, demo, onClick, sessionData }: ConditionalThreadProps) => {
+    const [mail] = useMail();
+    // const { data: session } = useSession();
+    const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+    const isHovering = useRef<boolean>(false);
+    const hasPrefetched = useRef<boolean>(false);
+    const [searchValue] = useSearchValue();
 
-  const isMailSelected = message.id === mail.selected;
-  const isMailBulkSelected = mail.bulkSelected.includes(message.id);
-  const handleMouseEnter = () => {
-    if (demo) return;
-    isHovering.current = true;
+    const isMailSelected = message.id === mail.selected;
+    const isMailBulkSelected = mail.bulkSelected.includes(message.id);
+    const handleMouseEnter = () => {
+      if (demo) return;
+      isHovering.current = true;
 
-    // Prefetch only in single select mode
-    if (selectMode === "single" && sessionData?.userId && !hasPrefetched.current) {
-      // Clear any existing timeout
-      if (hoverTimeoutRef.current) {
-        clearTimeout(hoverTimeoutRef.current);
-      }
-
-      // Set new timeout for prefetch
-      hoverTimeoutRef.current = setTimeout(() => {
-        if (isHovering.current) {
-          const messageId = message.threadId ?? message.id;
-          // Only prefetch if still hovering and hasn't been prefetched
-          console.log(`🕒 Hover threshold reached for email ${messageId}, initiating prefetch...`);
-          preloadThread(sessionData.userId, messageId, sessionData.connectionId!);
-          hasPrefetched.current = true;
+      // Prefetch only in single select mode
+      if (selectMode === "single" && sessionData?.userId && !hasPrefetched.current) {
+        // Clear any existing timeout
+        if (hoverTimeoutRef.current) {
+          clearTimeout(hoverTimeoutRef.current);
         }
-      }, HOVER_DELAY);
-    }
-  };
 
-  const handleMouseLeave = () => {
-    isHovering.current = false;
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-    }
-  };
+        // Set new timeout for prefetch
+        hoverTimeoutRef.current = setTimeout(() => {
+          if (isHovering.current) {
+            const messageId = message.threadId ?? message.id;
+            // Only prefetch if still hovering and hasn't been prefetched
+            console.log(
+              `🕒 Hover threshold reached for email ${messageId}, initiating prefetch...`,
+            );
+            preloadThread(sessionData.userId, messageId, sessionData.connectionId!);
+            hasPrefetched.current = true;
+          }
+        }, HOVER_DELAY);
+      }
+    };
 
-  // Reset prefetch flag when message changes
-  useEffect(() => {
-    hasPrefetched.current = false;
-  }, [message.id]);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
+    const handleMouseLeave = () => {
+      isHovering.current = false;
       if (hoverTimeoutRef.current) {
         clearTimeout(hoverTimeoutRef.current);
       }
     };
-  }, []);
 
-  return (
-    <div
-      onClick={onClick ? onClick(message) : undefined}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      key={message.id}
-      className={cn(
-        "hover:bg-offsetLight hover:bg-primary/5 group relative flex cursor-pointer flex-col items-start overflow-clip rounded-lg border border-transparent px-4 py-3 text-left text-sm transition-all hover:opacity-100",
-        !message.unread && "opacity-50",
-        (isMailSelected || isMailBulkSelected) && "border-border bg-primary/5 opacity-100",
-      )}
-    >
+    // Reset prefetch flag when message changes
+    useEffect(() => {
+      hasPrefetched.current = false;
+    }, [message.id]);
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+      return () => {
+        if (hoverTimeoutRef.current) {
+          clearTimeout(hoverTimeoutRef.current);
+        }
+      };
+    }, []);
+
+    return (
       <div
+        onClick={onClick ? onClick(message) : undefined}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        key={message.id}
         className={cn(
-          "bg-primary absolute inset-y-0 left-0 w-1 -translate-x-2 transition-transform ease-out",
-          isMailBulkSelected && "translate-x-0",
-        )}
-      />
-      <div className="flex w-full items-center justify-between">
-        <div className="flex items-center gap-1">
-          <p
-            className={cn(
-              message.unread ? "font-bold" : "font-medium",
-              "text-md flex items-baseline gap-1 group-hover:opacity-100",
-            )}
-          >
-            <span className={cn(mail.selected && "max-w-[120px] truncate")}>
-              {highlightText(message.sender.name, searchValue.highlight)}
-            </span>{" "}
-            {message.unread ? <span className="size-2 rounded bg-[#006FFE]" /> : null}
-          </p>
-          <MailLabels labels={message.tags} />
-          <div className="flex items-center gap-1">
-            {message.totalReplies > 1 ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="rounded-md border border-dotted px-[5px] py-[1px] text-xs opacity-70">
-                    {message.totalReplies}
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent className="px-1 py-0 text-xs">
-                  {message.totalReplies} Replies
-                </TooltipContent>
-              </Tooltip>
-            ) : null}
-          </div>
-        </div>
-        {message.receivedOn ? (
-          <p
-            className={cn(
-              "text-xs font-normal opacity-70 transition-opacity group-hover:opacity-100",
-              isMailSelected && "opacity-100",
-            )}
-          >
-            {formatDate(message.receivedOn.split(".")[0] || "")}
-          </p>
-        ) : null}
-      </div>
-      <p
-        className={cn(
-          "mt-1 line-clamp-1 text-xs opacity-70 transition-opacity",
-          mail.selected ? "line-clamp-1" : "line-clamp-2",
-          isMailSelected && "opacity-100",
+          "hover:bg-offsetLight hover:bg-primary/5 group relative flex cursor-pointer flex-col items-start overflow-clip rounded-lg border border-transparent px-4 py-3 text-left text-sm transition-all hover:opacity-100",
+          !message.unread && "opacity-50",
+          (isMailSelected || isMailBulkSelected) && "border-border bg-primary/5 opacity-100",
         )}
       >
-        {highlightText(message.subject, searchValue.highlight)}
-      </p>
-    </div>
-  );
-});
+        <div
+          className={cn(
+            "bg-primary absolute inset-y-0 left-0 w-1 -translate-x-2 transition-transform ease-out",
+            isMailBulkSelected && "translate-x-0",
+          )}
+        />
+        <div className="flex w-full items-center justify-between">
+          <div className="flex items-center gap-1">
+            <p
+              className={cn(
+                message.unread ? "font-bold" : "font-medium",
+                "text-md flex items-baseline gap-1 group-hover:opacity-100",
+              )}
+            >
+              <span className={cn(mail.selected && "max-w-[120px] truncate")}>
+                {highlightText(message.sender.name, searchValue.highlight)}
+              </span>{" "}
+              {message.unread ? <span className="size-2 rounded bg-[#006FFE]" /> : null}
+            </p>
+            <MailLabels labels={message.tags} />
+            <div className="flex items-center gap-1">
+              {message.totalReplies > 1 ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="rounded-md border border-dotted px-[5px] py-[1px] text-xs opacity-70">
+                      {message.totalReplies}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent className="px-1 py-0 text-xs">
+                    {message.totalReplies} Replies
+                  </TooltipContent>
+                </Tooltip>
+              ) : null}
+            </div>
+          </div>
+          {message.receivedOn ? (
+            <p
+              className={cn(
+                "text-xs font-normal opacity-70 transition-opacity group-hover:opacity-100",
+                isMailSelected && "opacity-100",
+              )}
+            >
+              {formatDate(message.receivedOn.split(".")[0] || "")}
+            </p>
+          ) : null}
+        </div>
+        <p
+          className={cn(
+            "mt-1 line-clamp-1 text-xs opacity-70 transition-opacity",
+            mail.selected ? "line-clamp-1" : "line-clamp-2",
+            isMailSelected && "opacity-100",
+          )}
+        >
+          {highlightText(message.subject, searchValue.highlight)}
+        </p>
+      </div>
+    );
+  },
+);
 
 Thread.displayName = "Thread";
 
@@ -193,7 +197,7 @@ export function MailList({ isCompact }: MailListProps) {
       userId: session?.user?.id ?? "",
       connectionId: session?.connectionId ?? null,
     }),
-    [session]
+    [session],
   );
 
   const [searchValue] = useSearchValue();
@@ -214,8 +218,11 @@ export function MailList({ isCompact }: MailListProps) {
     count: items.length,
     getScrollElement: () => scrollRef.current,
     estimateSize: useCallback(() => itemHeight, []),
-    gap: 6
+    gap: 6,
   });
+  useEffect(() => {
+    mutate();
+  }, [items]);
 
   const virtualItems = virtualizer.getVirtualItems();
 
@@ -484,16 +491,12 @@ export function MailList({ isCompact }: MailListProps) {
     >
       <div
         ref={parentRef}
-        className={cn(
-          "w-full",
-          selectMode === "range" && "select-none",
-        )}
+        className={cn("w-full", selectMode === "range" && "select-none")}
         style={{
           height: `${virtualizer.getTotalSize()}px`,
-          position: "relative"
+          position: "relative",
         }}
       >
-
         {virtualItems.map(({ index, key, start }) => {
           const item = items[index];
           return item ? (
@@ -502,10 +505,12 @@ export function MailList({ isCompact }: MailListProps) {
               style={{
                 position: "absolute",
                 transform: `translateY(${start ?? 0}px)`,
-                top: 0, left: 0,
+                top: 0,
+                left: 0,
                 width: "100%",
-                padding: "8px"
-              }}>
+                padding: "8px",
+              }}
+            >
               <Thread
                 onClick={handleMailClick}
                 message={item}
@@ -526,7 +531,6 @@ export function MailList({ isCompact }: MailListProps) {
           <div className="h-4" />
         )}
       </div>
-
     </ScrollArea>
   );
 }

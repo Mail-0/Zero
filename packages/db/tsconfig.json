@@ -1,10 +1,5 @@
 {
-    "extends": "@zero/tsconfig/react-library.json",
-    "include": [
-        "src",
-        "migrations"
-    ],
-    "exclude": [
-        "node_modules"
-    ]
+  "extends": "@zero/tsconfig/react-library.json",
+  "include": ["src", "migrations"],
+  "exclude": ["node_modules"]
 }

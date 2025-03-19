@@ -1,14 +1,14 @@
 "use client";
 
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { Github, Mail, ArrowLeft, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
-import React from "react";
 import Footer from "@/components/home/footer";
-import { toast } from "sonner";
-import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { createSectionId } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import React from "react";
 
 const LAST_UPDATED = "February 13, 2025";
 
@@ -22,14 +22,14 @@ export default function PrivacyPolicy() {
   };
 
   return (
-    <div className="relative flex flex-col min-h-screen w-full overflow-auto bg-white dark:bg-black">
-      <div className="relative z-10 flex-grow flex flex-col">
+    <div className="relative flex min-h-screen w-full flex-col overflow-auto bg-white dark:bg-black">
+      <div className="relative z-10 flex flex-grow flex-col">
         <div className="absolute left-4 top-4 md:left-8 md:top-8">
           <Button
             variant="ghost"
             size="sm"
-            className="gap-2 text-gray-600 hover:text-gray-900 dark:text-muted-foreground dark:hover:text-white"
-            onClick={() => router.push('/')}
+            className="dark:text-muted-foreground gap-2 text-gray-600 hover:text-gray-900 dark:hover:text-white"
+            onClick={() => router.push("/")}
           >
             <ArrowLeft className="h-4 w-4" />
             Back
@@ -40,9 +40,13 @@ export default function PrivacyPolicy() {
           <Card className="overflow-hidden rounded-xl border-none bg-gray-50/80 shadow-xl backdrop-blur-lg dark:bg-black/40">
             <CardHeader className="space-y-4 bg-gray-100/90 px-8 py-8 dark:bg-black/60">
               <div className="space-y-2 text-center">
-                <CardTitle className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white md:text-4xl">Privacy Policy</CardTitle>
+                <CardTitle className="text-3xl font-bold tracking-tight text-gray-900 md:text-4xl dark:text-white">
+                  Privacy Policy
+                </CardTitle>
                 <div className="flex items-center justify-center gap-2">
-                  <p className="text-sm text-gray-500 dark:text-muted-foreground">Last updated: {LAST_UPDATED}</p>
+                  <p className="dark:text-muted-foreground text-sm text-gray-500">
+                    Last updated: {LAST_UPDATED}
+                  </p>
                 </div>
               </div>
             </CardHeader>
@@ -57,26 +61,27 @@ export default function PrivacyPolicy() {
                     className="group rounded-xl border border-gray-200 bg-white/70 p-6 transition-all hover:border-gray-300 hover:bg-white dark:border-gray-800/10 dark:bg-black/20 dark:hover:border-gray-700/30 dark:hover:bg-black/30"
                   >
                     <div className="mb-4 flex items-center justify-between">
-                      <h2 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">{section.title}</h2>
-                      <button 
+                      <h2 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+                        {section.title}
+                      </h2>
+                      <button
                         onClick={() => handleCopyLink(sectionId)}
-                        className="text-gray-400 transition-all hover:text-gray-700 dark:text-muted-foreground dark:hover:text-white"
+                        className="dark:text-muted-foreground text-gray-400 transition-all hover:text-gray-700 dark:hover:text-white"
                         aria-label={`Copy link to ${section.title} section`}
                       >
-                        <Link2 
-                          className={`h-4 w-4 ${copiedSection === sectionId ? 'text-green-500 dark:text-green-400' : ''}`} 
+                        <Link2
+                          className={`h-4 w-4 ${copiedSection === sectionId ? "text-green-500 dark:text-green-400" : ""}`}
                         />
                       </button>
                     </div>
-                    <div className="prose prose-sm max-w-none text-gray-700 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:text-blue-800 dark:prose-invert dark:text-gray-300 dark:prose-a:text-blue-300 dark:hover:prose-a:text-blue-200">
+                    <div className="prose prose-sm prose-a:text-blue-600 prose-a:no-underline hover:prose-a:text-blue-800 dark:prose-invert dark:prose-a:text-blue-300 dark:hover:prose-a:text-blue-200 max-w-none text-gray-700 dark:text-gray-300">
                       {section.content}
                     </div>
                   </div>
                 );
               })}
 
-              <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
-              </div>
+              <div className="mt-12 flex flex-wrap items-center justify-center gap-4"></div>
             </div>
           </Card>
         </div>
@@ -92,9 +97,9 @@ const sections = [
     title: "Our Commitment to Privacy",
     content: (
       <p>
-        At Zero, we believe that privacy is a fundamental right. Our open-source email solution
-        is built with privacy at its core, and we&apos;re committed to being transparent about how
-        we handle your data.
+        At Zero, we believe that privacy is a fundamental right. Our open-source email solution is
+        built with privacy at its core, and we&apos;re committed to being transparent about how we
+        handle your data.
       </p>
     ),
   },
@@ -139,9 +144,7 @@ const sections = [
         <div>
           <h3 className="mb-3 text-lg font-medium">Self-Hosted Instances</h3>
           <ul className="ml-4 list-disc space-y-2">
-            <li>
-              When you self-host Zero, your email data remains entirely under your control
-            </li>
+            <li>When you self-host Zero, your email data remains entirely under your control</li>
             <li>No data is sent to our servers or third parties without your explicit consent</li>
             <li>You maintain complete ownership and responsibility for your data</li>
           </ul>

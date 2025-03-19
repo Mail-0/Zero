@@ -23,7 +23,7 @@ export interface MailManager {
   getScope(): string;
   markAsRead(id: string[]): Promise<void>;
   markAsUnread(id: string[]): Promise<void>;
-  normalizeIds(id: string[]): { normalizedIds: string[]; threadIds: string[] };
+  normalizeIds(id: string[]): { threadIds: string[] };
   modifyLabels(
     id: string[],
     options: { addLabels: string[]; removeLabels: string[] },

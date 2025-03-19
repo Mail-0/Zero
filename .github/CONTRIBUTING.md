@@ -23,6 +23,7 @@ Thank you for your interest in contributing to 0.email! We're excited to have yo
 ## Getting Started
 
 1. **Fork the Repository**
+
    - Click the 'Fork' button at the top right of this repository
    - Clone your fork locally: `git clone https://github.com/YOUR-USERNAME/Zero.git`
 
@@ -42,7 +43,7 @@ Thank you for your interest in contributing to 0.email! We're excited to have yo
    ```bash
    # Start database locally
    bun docker:up
-   
+
    # Start the development server
    bun dev
    ```
@@ -116,16 +117,16 @@ Zero uses PostgreSQL with Drizzle ORM. Here's how to work with it:
    ```bash
    # Install database dependencies
    bun db:dependencies
-   
+
    # Apply schema changes to development database
    bun db:push
-   
+
    # Create migration files after schema changes
    bun db:generate
-   
+
    # Apply migrations (for production)
    bun db:migrate
-   
+
    # View and edit data with Drizzle Studio
    bun db:studio
    ```
@@ -133,10 +134,12 @@ Zero uses PostgreSQL with Drizzle ORM. Here's how to work with it:
 3. **Database Connection**
 
    Make sure your database connection string is in both:
+
    - `apps/mail/.env`
    - `packages/db/.env`
 
    For local development:
+
    ```
    DATABASE_URL="postgresql://postgres:postgres@localhost:5432/zerodotemail"
    ```
@@ -181,13 +184,15 @@ Zero uses PostgreSQL with Drizzle ORM. Here's how to work with it:
 When implementing new features, follow these guidelines:
 
 1. **Add English Source Strings**
+
    - Place all user-facing text in `apps/mail/locales/en.json`
    - Organize strings according to the existing structure
    - Use descriptive, hierarchical keys that identify the feature and context
    - Example: `"pages.settings.connections.disconnectSuccess": "Account disconnected successfully"`
 
 2. **Follow i18n Formatting Standards**
-   - Variables: `{variableName}` 
+
+   - Variables: `{variableName}`
    - Pluralization: `{count, plural, =0 {items} one {item} other {items}}`
    - Avoid string concatenation to ensure proper translation
 

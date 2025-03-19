@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { availableLocales, defaultLocale } from "@/i18n/config";
+import { useTranslations, useLocale } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Globe, Clock, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,6 @@ import { Switch } from "@/components/ui/switch";
 import { signOut } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { changeLocale } from "@/i18n/utils";
-import { useTranslations, useLocale } from "next-intl";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -61,7 +61,9 @@ export default function GeneralPage() {
     changeLocale(values.language);
 
     if (values.language !== locale) {
-      const localeName = new Intl.DisplayNames([values.language], { type: 'language' }).of(values.language);
+      const localeName = new Intl.DisplayNames([values.language], { type: "language" }).of(
+        values.language,
+      );
       toast.success(t("pages.settings.general.languageChangedTo", { language: localeName }));
     }
 

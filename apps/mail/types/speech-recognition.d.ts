@@ -49,5 +49,5 @@ interface SpeechRecognition extends EventTarget {
 
 declare var SpeechRecognition: {
   prototype: SpeechRecognition;
-  new(): SpeechRecognition;
-}; 
+  new (): SpeechRecognition;
+};

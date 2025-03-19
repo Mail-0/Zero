@@ -1,26 +1,26 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import type { Transition, Variants } from "motion/react"
-import { motion, useAnimation } from "motion/react"
-import type { HTMLAttributes } from "react"
-import { forwardRef, useCallback, useImperativeHandle, useRef } from "react"
-import { cn } from "@/lib/utils"
+import { forwardRef, useCallback, useImperativeHandle, useRef } from "react";
+import type { Transition, Variants } from "motion/react";
+import { motion, useAnimation } from "motion/react";
+import type { HTMLAttributes } from "react";
+import { cn } from "@/lib/utils";
 
 export interface ReplyIconHandle {
-  startAnimation: () => void
-  stopAnimation: () => void
+  startAnimation: () => void;
+  stopAnimation: () => void;
 }
 
 interface ReplyIconProps extends HTMLAttributes<HTMLDivElement> {
-  size?: number
+  size?: number;
 }
 
 const transition: Transition = {
   duration: 0.4,
   opacity: { delay: 0.1 },
-}
+};
 
 const pathVariants: Variants = {
   normal: {
@@ -34,7 +34,7 @@ const pathVariants: Variants = {
       ...transition,
     },
   },
-}
+};
 
 const arrowVariants: Variants = {
   normal: {
@@ -49,48 +49,48 @@ const arrowVariants: Variants = {
       delay: 0.2,
     },
   },
-}
+};
 
 const ReplyIcon = forwardRef<ReplyIconHandle, ReplyIconProps>(
   ({ onMouseEnter, onMouseLeave, className, size = 28, ...props }, ref) => {
-    const controls = useAnimation()
-    const isControlledRef = useRef(false)
+    const controls = useAnimation();
+    const isControlledRef = useRef(false);
 
     useImperativeHandle(ref, () => {
-      isControlledRef.current = true
+      isControlledRef.current = true;
 
       return {
         startAnimation: () => controls.start("animate"),
         stopAnimation: () => controls.start("normal"),
-      }
-    })
+      };
+    });
 
     const handleMouseEnter = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
         if (!isControlledRef.current) {
-          controls.start("animate")
+          controls.start("animate");
         } else {
-          onMouseEnter?.(e)
+          onMouseEnter?.(e);
         }
       },
       [controls, onMouseEnter],
-    )
+    );
 
     const handleMouseLeave = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
         if (!isControlledRef.current) {
-          controls.start("normal")
+          controls.start("normal");
         } else {
-          onMouseLeave?.(e)
+          onMouseLeave?.(e);
         }
       },
       [controls, onMouseLeave],
-    )
+    );
 
     return (
       <div
         className={cn(
-          `cursor-pointer select-none p-2 hover:bg-accent rounded-md transition-colors duration-200 flex items-center justify-center`,
+          `hover:bg-accent flex cursor-pointer select-none items-center justify-center rounded-md p-2 transition-colors duration-200`,
           className,
         )}
         onMouseEnter={handleMouseEnter}
@@ -112,11 +112,10 @@ const ReplyIcon = forwardRef<ReplyIconHandle, ReplyIconProps>(
           <motion.path d="M20 18v-2a4 4 0 0 0-4-4H4" variants={pathVariants} animate={controls} />
         </svg>
       </div>
-    )
+    );
   },
-)
+);
 
-ReplyIcon.displayName = "ReplyIcon"
+ReplyIcon.displayName = "ReplyIcon";
 
-export { ReplyIcon }
-
+export { ReplyIcon };

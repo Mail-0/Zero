@@ -79,7 +79,8 @@
       "personal": "個人用",
       "updates": "更新",
       "promotions": "プロモーション",
-      "social": "ソーシャル"
+      "social": "ソーシャル",
+      "favourites": "お気に入り"
     },
     "replyCompose": {
       "replyTo": "次に返信",

@@ -42,6 +42,7 @@ Here's an example from our English locale file:
 ```
 
 In this example:
+
 - `{count}` is a variable that should not be translated
 - `plural` is a formatter that handles pluralization
 - The words inside `{}` should be translated, but the structure must remain intact
@@ -58,4 +59,4 @@ You can see your translations in context by:
 
 If you have any questions about translation or encounter any issues, please [open an issue](https://github.com/Mail-0/Zero/issues) or join our [Discord server](https://discord.gg/NaK85MSzND)
 
-Thank you for helping make 0.email accessible to users in your language! 
+Thank you for helping make 0.email accessible to users in your language!

@@ -34,10 +34,12 @@ export default function LoginZero() {
 
   return (
     <div className="flex h-full min-h-screen w-full items-center justify-center bg-black">
-      <div className="w-full max-w-md px-6 py-8 animate-in slide-in-from-bottom-4 duration-500">
+      <div className="animate-in slide-in-from-bottom-4 w-full max-w-md px-6 py-8 duration-500">
         <div className="mb-4 text-center">
           <h1 className="mb-2 text-4xl font-bold text-white">Login with Zero</h1>
-          <p className="text-muted-foreground">Enter your Zero email below to login to your account</p>
+          <p className="text-muted-foreground">
+            Enter your Zero email below to login to your account
+          </p>
         </div>
 
         <Form {...form}>
@@ -100,18 +102,18 @@ export default function LoginZero() {
           </form>
         </Form>
       </div>
-      
-      <footer className="absolute bottom-0 w-full py-4 px-6">
-        <div className="max-w-6xl mx-auto flex justify-center items-center gap-6">
-          <a 
-            href="/terms" 
-            className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors"
+
+      <footer className="absolute bottom-0 w-full px-6 py-4">
+        <div className="mx-auto flex max-w-6xl items-center justify-center gap-6">
+          <a
+            href="/terms"
+            className="text-[10px] text-gray-500 transition-colors hover:text-gray-300"
           >
             Terms of Service
           </a>
-          <a 
-            href="/privacy" 
-            className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors"
+          <a
+            href="/privacy"
+            className="text-[10px] text-gray-500 transition-colors hover:text-gray-300"
           >
             Privacy Policy
           </a>

@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useRef } from "react";
 import { Popover, PopoverTrigger } from "@radix-ui/react-popover";
 import { PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Check, Trash } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { useEditor } from "novel";
 import { cn } from "@/lib/utils";
 
@@ -69,7 +69,7 @@ export const LinkSelector = ({ open, onOpenChange }: LinkSelectorProps) => {
             ref={inputRef}
             type="text"
             placeholder="Paste a link"
-            className="flex-1 bg-background p-1 text-sm outline-none"
+            className="bg-background flex-1 p-1 text-sm outline-none"
             defaultValue={editor.getAttributes("link").href || ""}
           />
           {editor.getAttributes("link").href ? (

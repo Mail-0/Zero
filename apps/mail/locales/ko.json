@@ -79,7 +79,8 @@
       "personal": "개인",
       "updates": "업데이트",
       "promotions": "프로모션",
-      "social": "소셜"
+      "social": "소셜",
+      "favourites": "즐겨찾기"
     },
     "replyCompose": {
       "replyTo": "회신",

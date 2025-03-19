@@ -2,7 +2,7 @@
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import { ArchiveX, BellOff, X, Inbox, Tag, AlertTriangle, User, Bell } from "lucide-react";
+import { ArchiveX, BellOff, X, Inbox, Tag, AlertTriangle, User, Bell, Star } from "lucide-react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { ThreadDisplay, ThreadDemo } from "@/components/mail/thread-display";
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
@@ -430,6 +430,13 @@ const categories = [
     icon: <Tag className="h-4 w-4 rotate-90" />,
     colors:
       "border-0 text-red-800 bg-red-100 dark:bg-red-900/20 dark:text-red-500 dark:hover:bg-red-900/30",
+  },
+  {
+    name: "common.mailCategories.favourites",
+    searchValue: "is:starred",
+    icon: <Star className="h-4 w-4 rotate-90" />,
+    colors:
+      "border-0 text-pink-800 bg-pink-100 dark:bg-pink-900/20 dark:text-pink-500 dark:hover:bg-pink-900/30",
   },
 ];
 
