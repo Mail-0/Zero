@@ -53,4 +53,9 @@ export const env = createEnv({
 		AI_SYSTEM_PROMPT: process.env.AI_SYSTEM_PROMPT,
 		NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
 	},
+	/**
+	 * Run `build` or `dev` with `SKIP_ENV_VALIDATION` or `CI` to skip environment validation.
+	 * This is especially useful for Docker builds.
+	 */
+	skipValidation: !!process.env.SKIP_ENV_VALIDATION || !!process.env.CI,
 });
