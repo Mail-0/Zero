@@ -1,3 +1,5 @@
+import { env } from "@/env";
+
 export const I18N_LOCALE_COOKIE_NAME = "i18n:locale";
 export const SIDEBAR_COOKIE_NAME = "sidebar:state";
 export const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
@@ -5,7 +7,7 @@ export const SIDEBAR_WIDTH = "12rem";
 export const SIDEBAR_WIDTH_MOBILE = "12rem";
 export const SIDEBAR_WIDTH_ICON = "3rem";
 export const SIDEBAR_KEYBOARD_SHORTCUT = "b";
-export const BASE_URL = process.env.NEXT_PUBLIC_APP_URL;
+export const BASE_URL = env.NEXT_PUBLIC_APP_URL;
 export const MAX_URL_LENGTH = 2000;
 export const ALLOWED_HTML_TAGS = [
   "p",

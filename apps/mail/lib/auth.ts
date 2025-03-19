@@ -7,11 +7,12 @@ import { eq } from "drizzle-orm";
 import { Resend } from "resend";
 import { db } from "@zero/db";
 import { getSocialProviders } from "./auth-providers";
+import { env } from "@/env";
 
 // If there is no resend key, it might be a local dev environment
 // In that case, we don't want to send emails and just log them
-const resend = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
+const resend = env.RESEND_API_KEY
+  ? new Resend(env.RESEND_API_KEY)
   : { emails: { send: async (...args: any[]) => console.log(args) } };
 
 const options = {
@@ -49,7 +50,7 @@ const options = {
     sendOnSignUp: false,
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, token }) => {
-      const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/verify-email?token=${token}&callbackURL=/settings/connections`;
+      const verificationUrl = `${env.NEXT_PUBLIC_APP_URL}/api/auth/verify-email?token=${token}&callbackURL=/settings/connections`;
 
       await resend.emails.send({
         from: "0.email <onboarding@0.email>",
@@ -154,5 +155,5 @@ const options = {
 
 export const auth = betterAuth({
   ...options,
-  trustedOrigins: process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",") ?? [],
+  trustedOrigins: env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",") ?? [],
 });

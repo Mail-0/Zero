@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createDriver } from "@/app/api/driver";
 import { connection } from "@zero/db/schema";
 import { db } from "@zero/db";
+import { env } from "@/env";
 
 export async function GET(
   request: NextRequest,
@@ -13,7 +14,7 @@ export async function GET(
 
   if (!code || !state) {
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/settings/email?error=missing_params`,
+      `${env.NEXT_PUBLIC_APP_URL}/settings/email?error=missing_params`,
     );
   }
 

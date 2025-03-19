@@ -1,5 +1,5 @@
 {
-    "extends": "@zero/tsconfig/react-library.json",
+    "extends": "@zero/tsconfig/nextjs.json",
     "include": [
         "src",
         "migrations"

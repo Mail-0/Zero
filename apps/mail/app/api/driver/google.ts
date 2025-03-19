@@ -4,6 +4,7 @@ import { EnableBrain } from "@/actions/brain";
 import { type ParsedMessage } from "@/types";
 import * as he from "he";
 import { parseFrom } from "@/lib/email-utils";
+import { env } from "@/env";
 
 function fromBase64Url(str: string) {
   return str.replace(/-/g, "+").replace(/_/g, "/");
@@ -80,9 +81,9 @@ const parseDraft = (draft: gmail_v1.Schema$Draft): ParsedDraft | null => {
 
 export const driver = async (config: IConfig): Promise<MailManager> => {
   const auth = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID as string,
-    process.env.GOOGLE_CLIENT_SECRET as string,
-    process.env.GOOGLE_REDIRECT_URI as string,
+    env.GOOGLE_CLIENT_ID as string,
+    env.GOOGLE_CLIENT_SECRET as string,
+    env.GOOGLE_REDIRECT_URI as string,
   );
 
   const getScope = () =>

@@ -45,7 +45,7 @@
         "@radix-ui/react-tooltip": "1.1.8",
         "@radix-ui/react-visually-hidden": "1.1.2",
         "@react-spring/web": "9.7.5",
-        "@t3-oss/env-nextjs": "0.12.0",
+        "@t3-oss/env-nextjs": "^0.12.0",
         "@tanstack/react-virtual": "3.13.2",
         "@tiptap/core": "2.11.5",
         "@tiptap/extension-bold": "^2.11.5",
@@ -114,7 +114,7 @@
         "tiptap-markdown": "^0.8.10",
         "ts-pattern": "5.6.2",
         "vaul": "1.1.2",
-        "zod": "3.24.2",
+        "zod": "^3.24.2",
       },
       "devDependencies": {
         "@eslint/eslintrc": "3.3.0",
@@ -144,8 +144,10 @@
       "name": "@zero/db",
       "version": "0.0.0",
       "dependencies": {
+        "@t3-oss/env-nextjs": "^0.12.0",
         "drizzle-orm": "0.39.3",
         "postgres": "3.4.5",
+        "zod": "^3.24.2",
       },
       "devDependencies": {
         "@types/node": "22.13.8",

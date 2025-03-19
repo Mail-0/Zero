@@ -1,3 +1,5 @@
+import { env } from "@/env";
+
 interface AIResponse {
   id: string;
   content: string;
@@ -30,7 +32,7 @@ export async function generateEmailContent(
     const convId = conversationId || generateConversationId();
     if (!conversationHistories[convId]) {
       conversationHistories[convId] = [
-        { role: 'system', content: process.env.AI_SYSTEM_PROMPT || 'You are an email assistant.' }
+        { role: 'system', content: env.AI_SYSTEM_PROMPT || 'You are an email assistant.' }
       ];
       
       // Add user context if available
@@ -72,7 +74,7 @@ export async function generateEmailContent(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+        'Authorization': `Bearer ${env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
         model: 'gpt-4-turbo',
