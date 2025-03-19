@@ -51,5 +51,5 @@ export const siteConfig: Metadata = {
     "Email Service",
     "Web Application",
   ],
-  metadataBase: new URL(env.NEXT_PUBLIC_APP_URL!),
+  metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),
 };

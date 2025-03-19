@@ -51,8 +51,8 @@ export const authProviders: ProviderConfig[] = [
       prompt: "consent",
       accessType: "offline",
       scope: ["https://www.googleapis.com/auth/gmail.modify"],
-      clientId: env.GOOGLE_CLIENT_ID!,
-      clientSecret: env.GOOGLE_CLIENT_SECRET!,
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
     },
     required: true
   },
