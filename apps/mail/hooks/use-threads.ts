@@ -1,20 +1,19 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 "use client";
 
-import { InitialThread, ParsedMessage } from "@/types";
-import { getMail, getMails } from "@/actions/mail";
-import { useSession } from "@/lib/auth-client";
-import useSWRInfinite from "swr/infinite";
-import useSWR, { preload } from "swr";
-import { useMemo } from "react";
+import type { InitialThread, ParsedMessage } from '@/types';
+import { getMail, getMails } from '@/actions/mail';
+import { useSession } from '@/lib/auth-client';
+import useSWRInfinite from 'swr/infinite';
+import useSWR, { preload } from 'swr';
+import { useMemo } from 'react';
 
-export const preloadThread = (userId: string, threadId: string, connectionId: string) => {
+export const preloadThread = async (userId: string, threadId: string, connectionId: string) => {
   console.log(`🔄 Prefetching email ${threadId}...`);
-  preload([userId, threadId, connectionId], fetchThread);
+  await preload([userId, threadId, connectionId], fetchThread);
 };
 
 type FetchEmailsTuple = [
+	connectionId: string,
   folder: string,
   q?: string,
   max?: number,
@@ -24,20 +23,30 @@ type FetchEmailsTuple = [
 
 // TODO: improve the filters
 const fetchEmails = async ([
+	_,
   folder,
   q,
   max,
   labelIds,
   pageToken,
 ]: FetchEmailsTuple): Promise<RawResponse> => {
-  const data = await getMails({ folder, q, max, labelIds, pageToken });
-  return data as RawResponse;
+  try {
+    const data = await getMails({ folder, q, max, labelIds, pageToken });
+    return data as RawResponse;
+  } catch (error) {
+    console.error("Error fetching emails:", error);
+    throw error;
+  }
 };
 
 const fetchThread = async (args: any[]) => {
   const [_, id] = args;
-  const data = await getMail({ id });
-  return data;
+  try {
+		return await getMail({ id });
+  } catch (error) {
+    console.error("Error fetching email:", error);
+    throw error;
+  }
 };
 
 // Based on gmail
@@ -48,22 +57,21 @@ interface RawResponse {
 }
 
 const getKey = (
-  pageIndex: number,
   previousPageData: RawResponse | null,
-  [folder, query, max, labelIds]: FetchEmailsTuple,
+  [connectionId, folder, query, max, labelIds]: FetchEmailsTuple,
 ): FetchEmailsTuple | null => {
   if (previousPageData && !previousPageData.nextPageToken) return null; // reached the end
 
-  return [folder, query, max, labelIds, previousPageData?.nextPageToken];
+  return [connectionId, folder, query, max, labelIds, previousPageData?.nextPageToken];
 };
 
 export const useThreads = (folder: string, labelIds?: string[], query?: string, max?: number) => {
   const { data: session } = useSession();
 
   const { data, error, size, setSize, isLoading, isValidating, mutate } = useSWRInfinite(
-    (pageIndex, previousPageData) => {
-      if (!session?.user.id) return null;
-      return getKey(pageIndex, previousPageData, [folder, query, max, labelIds]);
+    (_, previousPageData) => {
+      if (!session?.user.id || !session.connectionId) return null;
+      return getKey(previousPageData, [session.connectionId, folder, query, max, labelIds]);
     },
     fetchEmails,
     {
@@ -78,9 +86,9 @@ export const useThreads = (folder: string, labelIds?: string[], query?: string, 
   const threads = data ? data.flatMap((e) => e.threads) : [];
   const isEmpty = data?.[0]?.threads.length === 0;
   const isReachingEnd = isEmpty || (data && !data[data.length - 1]?.nextPageToken);
-  const loadMore = () => {
+  const loadMore = async () => {
     if (isLoading || isValidating) return;
-    setSize(size + 1);
+    await setSize(size + 1);
   };
 
   return {

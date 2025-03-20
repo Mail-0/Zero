@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { connection, user as _user, account } from "@zero/db/schema";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { betterAuth, BetterAuthOptions } from "better-auth";
+import { betterAuth, type BetterAuthOptions } from "better-auth";
 import { customSession } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { Resend } from "resend";
@@ -72,12 +72,43 @@ const options = {
         .from(_user)
         .where(eq(_user.id, user.id))
         .limit(1);
+
+      let activeConnection = null;
+      
+      if (foundUser?.activeConnectionId) {
+        // Get the active connection details
+        const [connectionDetails] = await db
+          .select()
+          .from(connection)
+          .where(eq(connection.id, foundUser.activeConnectionId))
+          .limit(1);
+          
+        if (connectionDetails) {
+          activeConnection = {
+            id: connectionDetails.id,
+            name: connectionDetails.name,
+            email: connectionDetails.email,
+            picture: connectionDetails.picture,
+          };
+        }
+      }
+
       if (!foundUser?.activeConnectionId) {
         const [defaultConnection] = await db
           .select()
           .from(connection)
           .where(eq(connection.userId, user.id))
           .limit(1);
+
+        if (defaultConnection) {
+          activeConnection = {
+            id: defaultConnection.id,
+            name: defaultConnection.name,
+            email: defaultConnection.email,
+            picture: defaultConnection.picture,
+          };
+        }
+
         if (!defaultConnection) {
           // find the user account the user has
           const [userAccount] = await db
@@ -109,15 +140,11 @@ const options = {
             }
           }
         }
-        return {
-          connectionId: defaultConnection ? defaultConnection.id : null,
-          user,
-          session,
-        };
       }
 
       return {
-        connectionId: foundUser?.activeConnectionId,
+        connectionId: activeConnection?.id || null,
+        activeConnection,
         user,
         session,
       };

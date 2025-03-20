@@ -1,7 +1,8 @@
 <p align="center">
-  <a href="https://0.email">
-    <img src="apps/mail/public/white-icon.svg" alt="Zero Logo" width="64" style="background-color: #000; padding: 10px;"/>
-  </a>
+  <picture>
+    <source srcset="apps/mail/public/white-icon.svg" media="(prefers-color-scheme: dark)">
+    <img src="apps/mail/public/black-icon.svg" alt="Zero Logo" width="64" style="background-color: #000; padding: 10px;"/>
+  </picture>
 </p>
 
 # Zero
@@ -42,7 +43,7 @@ Zero is built with modern and reliable technologies:
 **Required Versions:**
 
 - [Node.js](https://nodejs.org/en/download) (v18 or higher)
-- [Bun](https://bun.sh) (v1.0 or higher)
+- [Bun](https://bun.sh) (v1.2 or higher)
 - [Docker](https://docs.docker.com/engine/install/) (v20 or higher)
 
 Before running the application, you'll need to set up services and configure environment variables. For more details on environment variables, see the [Environment Variables](#environment-variables) section.

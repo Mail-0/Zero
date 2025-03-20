@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { createDriver } from "@/app/api/driver";
 import { connection } from "@zero/db/schema";
 import { db } from "@zero/db";

@@ -3,7 +3,7 @@
 import { connection, user } from "@zero/db/schema";
 import { headers } from "next/headers";
 import { and, eq } from "drizzle-orm";
-import { IConnection } from "@/types";
+import { type IConnection } from "@/types";
 import { auth } from "@/lib/auth";
 import { db } from "@zero/db";
 

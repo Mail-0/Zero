@@ -1,4 +1,4 @@
-import { InitialThread, ParsedMessage } from "@/types";
+import { type InitialThread, type ParsedMessage } from "@/types";
 
 export interface MailManager {
   get(id: string): Promise<ParsedMessage[] | undefined>;

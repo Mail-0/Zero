@@ -10,8 +10,10 @@ import { DeleteIcon } from "@/components/icons/animated/trash";
 import { UsersIcon } from "@/components/icons/animated/users";
 import { InboxIcon } from "@/components/icons/animated/inbox";
 import { XIcon } from "@/components/icons/animated/x";
+import { MessageCircleIcon } from "@/components/icons/animated/message";
 import { NestedKeyOf } from "next-intl";
 import { MessageKeys } from "next-intl";
+import { MessageSquareIcon } from "@/components/icons/animated/message-square";
 export interface NavItem {
   title: string;
   url: string;
@@ -20,6 +22,7 @@ export interface NavItem {
   isBackButton?: boolean;
   isSettingsButton?: boolean;
   disabled?: boolean;
+  isFeaturebaseButton?: boolean;
 }
 export type MessageKey = MessageKeys<IntlMessages, NestedKeyOf<IntlMessages>>;
 
@@ -78,6 +81,12 @@ export const navigationConfig: Record<string, NavConfig> = {
             url: "/settings/general",
             icon: SettingsGearIcon,
             isSettingsButton: true,
+          },
+          {
+            title: "navigation.sidebar.contact",
+            url: "#",
+            icon: MessageSquareIcon,
+            isFeaturebaseButton: true,
           },
         ],
       },

@@ -1,5 +1,5 @@
 import { getConnections, deleteConnection, putConnection } from "@/actions/connections";
-import { IConnection } from "@/types";
+import { type IConnection } from "@/types";
 import useSWR from "swr";
 
 export const useConnections = () => {

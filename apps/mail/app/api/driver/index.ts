@@ -1,5 +1,5 @@
 import { driver as googleDriver } from './google'
-import { IConfig, MailManager } from './types';
+import { type IConfig, type MailManager } from './types';
 
 const SupportedProviders = {
     google: googleDriver,

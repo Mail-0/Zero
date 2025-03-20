@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import React, { useEffect } from "react";
-import { Toaster, toast } from "sonner";
-import { useTheme } from "next-themes";
+import React, { useEffect } from 'react';
+import { Toaster, toast } from 'sonner';
+import { useTheme } from 'next-themes';
 
 export const Toast = () => {
-  const { theme } = useTheme();
+	const { theme } = useTheme();
 
-  return <Toaster position="top-center" theme={theme as "dark" | "light" | "system"} />;
+	return <Toaster position="top-center" theme={theme as 'dark' | 'light' | 'system'} />;
 };

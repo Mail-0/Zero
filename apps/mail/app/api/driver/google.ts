@@ -1,8 +1,9 @@
+import { type IConfig, type MailManager } from "./types";
 import { type gmail_v1, google } from "googleapis";
-import { IConfig, MailManager } from "./types";
 import { EnableBrain } from "@/actions/brain";
-import { ParsedMessage } from "@/types";
+import { type ParsedMessage } from "@/types";
 import * as he from "he";
+import { parseFrom } from "@/lib/email-utils";
 
 function fromBase64Url(str: string) {
   return str.replace(/-/g, "+").replace(/_/g, "/");
@@ -92,7 +93,6 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
     ].join(" ");
   if (config.auth) {
     auth.setCredentials({
-      access_token: config.auth.access_token,
       refresh_token: config.auth.refresh_token,
       scope: getScope(),
     });
@@ -115,28 +115,33 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
     const sender =
       payload?.headers?.find((h) => h.name?.toLowerCase() === "from")?.value || "Failed";
     const subject =
-      payload?.headers?.find((h) => h.name?.toLowerCase() === "subject")?.value || "Failed";
+      payload?.headers?.find((h) => h.name?.toLowerCase() === "subject")?.value || "";
     const references =
       payload?.headers?.find((h) => h.name?.toLowerCase() === "references")?.value || "";
     const inReplyTo =
       payload?.headers?.find((h) => h.name?.toLowerCase() === "in-reply-to")?.value || "";
     const messageId =
       payload?.headers?.find((h) => h.name?.toLowerCase() === "message-id")?.value || "";
-    const [name, email] = sender.split("<");
+    const listUnsubscribe =
+      payload?.headers?.find((h) => h.name?.toLowerCase() === "list-unsubscribe")?.value ||
+      undefined;
+    const listUnsubscribePost =
+      payload?.headers?.find((h) => h.name?.toLowerCase() === "list-unsubscribe-post")?.value ||
+      undefined;
+
     return {
       id: id || "ERROR",
       threadId: threadId || "",
       title: snippet ? he.decode(snippet).trim() : "ERROR",
       tags: labelIds || [],
+      listUnsubscribe,
+      listUnsubscribePost,
       references,
       inReplyTo,
-      sender: {
-        name: name ? name.replace(/"/g, "").trim() : "Unknown",
-        email: `<${email}`,
-      },
+      sender: parseFrom(sender),
       unread: labelIds ? labelIds.includes("UNREAD") : false,
       receivedOn,
-      subject: subject ? subject.replace(/"/g, "").trim() : "No subject",
+      subject: subject ? subject.replace(/"/g, "").trim() : "(no subject)",
       messageId,
     };
   };
@@ -258,8 +263,9 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
               format: "metadata",
               metadataHeaders: ["From", "Subject", "Date"],
             });
+            const labelIds = [...new Set(msg.data.messages?.flatMap(message => message.labelIds || []))];
             const message = msg.data.messages?.[0];
-            const parsed = parse(message as any);
+            const parsed = parse({ ...message, labelIds });
             return {
               ...parsed,
               body: "",

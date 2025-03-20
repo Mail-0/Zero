@@ -13,6 +13,7 @@ Thank you for your interest in contributing to 0.email! We're excited to have yo
     - [General Principles](#general-principles)
     - [JavaScript/TypeScript Guidelines](#javascripttypescript-guidelines)
     - [React Guidelines](#react-guidelines)
+  - [Internationalization (i18n)](#internationalization-i18n)
   - [Testing](#testing)
   - [Documentation](#documentation)
   - [Areas of Contribution](#areas-of-contribution)
@@ -67,8 +68,6 @@ Thank you for your interest in contributing to 0.email! We're excited to have yo
 
    - Make sure the app runs without errors
    - Test your feature thoroughly
-   - Run linting: `bun lint`
-   - Format code: `bun format`
 
 5. **Commit Your Changes**
 
@@ -162,6 +161,8 @@ Zero uses PostgreSQL with Drizzle ORM. Here's how to work with it:
 - Use async/await for asynchronous operations
 - Properly handle errors and edge cases
 - Use proper TypeScript types and interfaces
+- Do not use the `any` type. We will enforce strict `"no-explicit-any"` in the future
+- Ensure all code passes type checking, as builds will check for types in the future
 
 ### React Guidelines
 
@@ -170,6 +171,33 @@ Zero uses PostgreSQL with Drizzle ORM. Here's how to work with it:
 - Use proper prop types/TypeScript interfaces
 - Follow React best practices for performance
 - Implement responsive design principles
+
+## Internationalization (i18n)
+
+0.email supports multiple languages through our internationalization (i18n) system. This makes our application accessible to users worldwide. As a contributor, you play a key role in making new features available in all supported languages.
+
+### Adding Translations for New Features
+
+When implementing new features, follow these guidelines:
+
+1. **Add English Source Strings**
+   - Place all user-facing text in `apps/mail/locales/en.json`
+   - Organize strings according to the existing structure
+   - Use descriptive, hierarchical keys that identify the feature and context
+   - Example: `"pages.settings.connections.disconnectSuccess": "Account disconnected successfully"`
+
+2. **Follow i18n Formatting Standards**
+   - Variables: `{variableName}` 
+   - Pluralization: `{count, plural, =0 {items} one {item} other {items}}`
+   - Avoid string concatenation to ensure proper translation
+
+3. **Quality Checklist**
+   - All visible UI text is externalized (not hardcoded)
+   - Strings are organized in logical sections
+   - Context is clear for translators
+   - The feature works properly with the default language
+
+For more details about our translation process and how translators contribute, see [TRANSLATION.md](../TRANSLATION.md).
 
 ## Testing
 
