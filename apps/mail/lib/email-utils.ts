@@ -158,3 +158,23 @@ export const parseFrom = (fromHeader: string) => {
 
   return {name, email}
 }
+
+export const wasSentWithTLS = (receivedHeaders: string[])  => {
+  const tlsIndicators = [
+    /using\s+TLS/i,
+    /with\s+ESMTPS/i,
+    /version=TLS[0-9_.]+/i,
+    /TLSv[0-9.]+/i,
+    /cipher=[A-Z0-9-]+/i
+  ];
+  
+  for (const header of receivedHeaders.reverse()) {
+    for (const indicator of tlsIndicators) {
+      if (indicator.test(header)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}

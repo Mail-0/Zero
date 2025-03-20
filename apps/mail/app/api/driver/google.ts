@@ -3,7 +3,7 @@ import { type gmail_v1, google } from "googleapis";
 import { EnableBrain } from "@/actions/brain";
 import { type ParsedMessage } from "@/types";
 import * as he from "he";
-import { parseFrom } from "@/lib/email-utils";
+import { parseFrom, wasSentWithTLS } from "@/lib/email-utils";
 
 function fromBase64Url(str: string) {
   return str.replace(/-/g, "+").replace(/_/g, "/");
@@ -129,10 +129,15 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       payload?.headers?.find((h) => h.name?.toLowerCase() === "list-unsubscribe-post")?.value ||
       undefined;
 
+    const receivedHeaders = payload?.headers?.filter(header => header.name?.toLowerCase() === 'received')
+      .map(header => header.value || '') || [];
+    const hasTLSReport = payload?.headers?.some(header => header.name?.toLowerCase() === 'tls-report');
+
     return {
       id: id || "ERROR",
       threadId: threadId || "",
       title: snippet ? he.decode(snippet).trim() : "ERROR",
+      tls: wasSentWithTLS(receivedHeaders) || !!hasTLSReport,
       tags: labelIds || [],
       listUnsubscribe,
       listUnsubscribePost,

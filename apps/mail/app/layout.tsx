@@ -13,50 +13,50 @@ import Head from 'next/head';
 import './globals.css';
 
 const geistSans = Geist({
-	variable: '--font-geist-sans',
-	subsets: ['latin'],
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
 });
 
 const geistMono = Geist_Mono({
-	variable: '--font-geist-mono',
-	subsets: ['latin'],
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
 });
 
 export const metadata = siteConfig;
 
 export default async function RootLayout({
-	children,
-	cookies,
+  children,
+  cookies,
 }: Readonly<{
-	children: React.ReactNode;
-	cookies: React.ReactNode;
+  children: React.ReactNode;
+  cookies: React.ReactNode;
 }>) {
-	const isEuRegion = (await headers()).get('x-user-eu-region') === 'true';
-	const locale = await getLocale();
-	const messages = await getMessages();
+  const isEuRegion = (await headers()).get('x-user-eu-region') === 'true';
+  const locale = await getLocale();
+  const messages = await getMessages();
 
-	return (
-		<html lang={locale} suppressHydrationWarning>
-			<head>
-				<meta name="x-user-country" content={(await headers()).get('x-user-country') || ''} />
-				<meta
-					name="x-user-eu-region"
-					content={(await headers()).get('x-user-eu-region') || 'false'}
-				/>
-			</head>
-			<body className={cn(geistSans.variable, geistMono.variable, 'antialiased')}>
-				<Providers attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-					<NextIntlClientProvider messages={messages}>
-						<CookieProvider>
-							{children}
-							{cookies}
-							<Toast />
-							<Analytics />
-							{/* {isEuRegion && <CookieConsent />} */}
-						</CookieProvider>
-					</NextIntlClientProvider>
-				</Providers>
-			</body>
-		</html>
-	);
+  return (
+    <html lang={locale} suppressHydrationWarning>
+      <head>
+        <meta name="x-user-country" content={(await headers()).get('x-user-country') || ''} />
+        <meta
+          name="x-user-eu-region"
+          content={(await headers()).get('x-user-eu-region') || 'false'}
+        />
+      </head>
+      <body className={cn(geistSans.variable, geistMono.variable, 'antialiased')}>
+        <Providers attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+          <NextIntlClientProvider messages={messages}>
+            <CookieProvider>
+              {children}
+              {cookies}
+              <Toast />
+              <Analytics />
+              {/* {isEuRegion && <CookieConsent />} */}
+            </CookieProvider>
+          </NextIntlClientProvider>
+        </Providers>
+      </body>
+    </html>
+  );
 }

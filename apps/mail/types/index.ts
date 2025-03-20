@@ -35,6 +35,7 @@ export interface ParsedMessage {
   title: string;
   subject: string;
   tags: string[];
+  tls: boolean;
   sender: {
     name: string;
     email: string;
