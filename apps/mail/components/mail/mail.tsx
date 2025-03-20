@@ -45,7 +45,7 @@ export function DemoMailLayout() {
 	};
 	const [activeCategory, setActiveCategory] = useState('Primary');
 	const [filteredItems, setFilteredItems] = useState(items);
-	
+
 	useEffect(() => {
 		if (activeCategory === 'Primary') {
 			setFilteredItems(items);
@@ -146,9 +146,12 @@ export function DemoMailLayout() {
 
 				{/* Mobile Drawer */}
 				{isMobile && (
-					<Drawer open={!!threadIdParam} onOpenChange={(isOpen) => {
-						if (!isOpen) handleClose();
-					}}>
+					<Drawer
+						open={!!threadIdParam}
+						onOpenChange={(isOpen) => {
+							if (!isOpen) handleClose();
+						}}
+					>
 						<DrawerContent className="bg-offsetLight dark:bg-offsetDark h-[calc(100vh-3rem)] overflow-hidden p-0">
 							<DrawerHeader className="sr-only">
 								<DrawerTitle>Email Details</DrawerTitle>
@@ -356,9 +359,12 @@ export function MailLayout() {
 
 				{/* Mobile Drawer */}
 				{isMobile && (
-					<Drawer open={!!threadIdParam} onOpenChange={(isOpen) => {
-						if (!isOpen) handleClose();
-					}}>
+					<Drawer
+						open={!!threadIdParam}
+						onOpenChange={(isOpen) => {
+							if (!isOpen) handleClose();
+						}}
+					>
 						<DrawerContent className="bg-offsetLight dark:bg-offsetDark h-[calc(100vh-4rem)] overflow-hidden p-0">
 							<DrawerHeader className="sr-only">
 								<DrawerTitle>Email Details</DrawerTitle>
