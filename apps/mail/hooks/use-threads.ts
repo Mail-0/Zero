@@ -83,7 +83,13 @@ export const useThreads = (folder: string, labelIds?: string[], query?: string, 
     },
   );
 
-  const threads = data ? data.flatMap((e) => e.threads) : [];
+  // Flatten threads from all pages and sort by receivedOn date (newest first)
+  const threads = data ? data.flatMap((e) => e.threads).sort((a, b) => {
+    // Parse dates and compare them (newest first)
+    const dateA = new Date(a.receivedOn || '');
+    const dateB = new Date(b.receivedOn || '');
+    return dateB.getTime() - dateA.getTime();
+  }) : [];
   const isEmpty = data?.[0]?.threads.length === 0;
   const isReachingEnd = isEmpty || (data && !data[data.length - 1]?.nextPageToken);
   const loadMore = async () => {

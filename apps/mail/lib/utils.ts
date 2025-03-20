@@ -64,11 +64,41 @@ export const getCookie = (key: string): string | null => {
 
 export const formatDate = (date: string) => {
   try {
-    if (isToday(date)) return format(date, "h:mm a");
-    if (isThisMonth(date) || differenceInCalendarMonths(new Date(), date) === 1)
-      return format(date, "MMM dd");
+    // Handle empty or invalid input
+    if (!date) {
+      return "";
+    }
 
-    return format(date, "MM/dd/yy");
+    // Parse the date string to a Date object
+    const dateObj = new Date(date);
+    const now = new Date();
+    
+    // Check if the date is valid
+    if (isNaN(dateObj.getTime())) {
+      console.error("Invalid date", date);
+      return "";
+    }
+    
+    // If it's today, always show the time
+    if (isToday(dateObj)) {
+      return format(dateObj, "h:mm a");
+    }
+    
+    // Calculate hours difference between now and the email date
+    const hoursDifference = (now.getTime() - dateObj.getTime()) / (1000 * 60 * 60);
+    
+    // If it's not today but within the last 12 hours, show the time
+    if (hoursDifference <= 12) {
+      return format(dateObj, "h:mm a");
+    }
+    
+    // If it's this month or last month, show the month and day
+    if (isThisMonth(dateObj) || differenceInCalendarMonths(now, dateObj) === 1) {
+      return format(dateObj, "MMM dd");
+    }
+    
+    // Otherwise show the date in MM/DD/YY format
+    return format(dateObj, "MM/dd/yy");
   } catch (error) {
     console.error("Error formatting date", error);
     return "";
