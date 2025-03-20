@@ -111,11 +111,11 @@ export const useThreads = (folder: string, labelIds?: string[], query?: string, 
   };
 };
 
-export const useThread = (id: string) => {
+export const useThread = (id: string | null) => {
   const { data: session } = useSession();
 
   const { data, isLoading, error, mutate } = useSWR<ParsedMessage[]>(
-    session?.user.id ? [session.user.id, id, session.connectionId] : null,
+    session?.user.id && id ? [session.user.id, id, session.connectionId] : null,
     fetchThread as any,
   );
 

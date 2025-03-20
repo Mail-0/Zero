@@ -5,6 +5,7 @@ import { AlertTriangle, Bell, Briefcase, StickyNote, Tag, User, Users } from 'lu
 import { type ComponentProps, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { EmptyState, type FolderType } from '@/components/mail/empty-state';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { preloadThread, useThreads } from '@/hooks/use-threads';
 import { cn, defaultPageSize, formatDate } from '@/lib/utils';
 import { useHotKey, useKeyState } from '@/hooks/use-hot-key';
@@ -15,7 +16,6 @@ import { useMail } from '@/components/mail/use-mail';
 import type { VirtuosoHandle } from 'react-virtuoso';
 import { useSession } from '@/lib/auth-client';
 import { Badge } from '@/components/ui/badge';
-import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Virtuoso } from 'react-virtuoso';
 import items from './demo.json';
@@ -48,13 +48,16 @@ const Thread = memo(
 		const [mail] = useMail();
 		const [searchValue] = useSearchValue();
 		const t = useTranslations();
+		const searchParams = useSearchParams();
+		const threadIdParam = searchParams.get('threadId');
 		const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 		const isHovering = useRef<boolean>(false);
 		const hasPrefetched = useRef<boolean>(false);
 
 		const isMailSelected = useMemo(() => {
-			return message.id === mail.selected;
-		}, [message.id, mail.selected]);
+			const threadId = message.threadId ?? message.id;
+			return threadId === threadIdParam;
+		}, [message.id, message.threadId, threadIdParam]);
 
 		const isMailBulkSelected = mail.bulkSelected.includes(message.id);
 
@@ -136,7 +139,7 @@ const Thread = memo(
 									'text-md flex items-baseline gap-1 group-hover:opacity-100',
 								)}
 							>
-								<span className={cn(mail.selected && 'max-w-[120px] truncate')}>
+								<span className={cn(threadIdParam && 'max-w-[120px] truncate')}>
 									{highlightText(message.sender.name, searchValue.highlight)}
 								</span>{' '}
 								{message.unread ? <span className="size-2 rounded bg-[#006FFE]" /> : null}
@@ -204,6 +207,9 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
 	const [mail, setMail] = useMail();
 	const { data: session } = useSession();
 	const t = useTranslations();
+	const router = useRouter();
+	const searchParams = useSearchParams();
+	const threadIdParam = searchParams.get('threadId');
 
 	const sessionData = useMemo(
 		() => ({
@@ -351,7 +357,7 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
 
 			if (selectMode === 'range') {
 				const lastSelectedItem =
-					mail.bulkSelected[mail.bulkSelected.length - 1] ?? mail.selected ?? message.id;
+					mail.bulkSelected[mail.bulkSelected.length - 1] ?? threadIdParam ?? message.id;
 
 				const mailsIndex = items.map((m) => m.id);
 				const startIdx = mailsIndex.indexOf(lastSelectedItem);
@@ -380,25 +386,38 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
 				return;
 			}
 
-			if (mail.selected === message.threadId || mail.selected === message.id) {
-				setMail({
-					selected: null,
+			const threadId = message.threadId ?? message.id;
+			const currentParams = new URLSearchParams(searchParams.toString());
+
+			if (threadIdParam === threadId) {
+				// Deselect the thread and update URL to remove threadId
+				currentParams.delete('threadId');
+				setMail((prev) => ({
+					...prev,
 					bulkSelected: [],
-				});
+				}));
+
+				// Update URL to remove threadId
+				router.push(`/mail/${folder}?${currentParams.toString()}`);
 			} else {
-				setMail({
-					...mail,
-					selected: message.threadId ?? message.id,
+				// Select the thread and update URL with threadId
+				currentParams.set('threadId', threadId);
+				setMail((prev) => ({
+					...prev,
 					bulkSelected: [],
-				});
+				}));
+
+				// Update URL with threadId
+				router.push(`/mail/${folder}?${currentParams.toString()}`);
 			}
+
 			if (message.unread) {
 				return markAsRead({ ids: [message.id] })
 					.then(() => mutate())
 					.catch(console.error);
 			}
 		},
-		[mail, setMail, items, getSelectMode],
+		[mail, setMail, items, getSelectMode, router, searchParams, folder],
 	);
 
 	const isEmpty = items.length === 0;

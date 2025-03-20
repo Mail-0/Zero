@@ -3,6 +3,7 @@ import { DropdownMenu, DropdownMenuTrigger } from '@/components/ui/dropdown-menu
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ArchiveX, Forward, ReplyAll } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useSearchParams } from 'next/navigation';
 
 import { MoreVerticalIcon } from '../icons/animated/more-vertical';
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -185,7 +186,11 @@ function ThreadActionButton({
 
 export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
 	const [, setMail] = useMail();
-	const { data: emailData, isLoading } = useThread(mail ?? '');
+	const searchParams = useSearchParams();
+	const threadIdParam = searchParams.get('threadId');
+	const threadId = mail ?? threadIdParam ?? '';
+	// Only fetch thread data if we have a valid threadId
+	const { data: emailData, isLoading } = useThread(threadId || null);
 	const [isMuted, setIsMuted] = useState(false);
 	const [isReplyOpen, setIsReplyOpen] = useState(false);
 	const [isFullscreen, setIsFullscreen] = useState(false);
@@ -201,8 +206,7 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
 
 	const handleClose = useCallback(() => {
 		onClose?.();
-		setMail((m) => ({ ...m, selected: null }));
-	}, [onClose, setMail]);
+	}, [onClose]);
 
 	useEffect(() => {
 		const handleEsc = (event: KeyboardEvent) => {
