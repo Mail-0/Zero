@@ -229,10 +229,10 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
         throw error;
       }
     },
-    markAsRead: async (ids: string[]) => {
+    markAsRead: async (id: string[]) => {
 			try {
         const args = {
-          threadIds: ids,
+          threadIds: id,
           addLabelIds: [],
           removeLabelIds: ["UNREAD"]
         }
@@ -242,10 +242,10 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
         throw error
 			}
 		},
-    markAsUnread: async (ids: string[]) => {
+    markAsUnread: async (id: string[]) => {
       try {
         const args = {
-          threadIds: ids,
+          threadIds: id,
           addLabelIds: ["UNREAD"],
           removeLabelIds: []
         }
