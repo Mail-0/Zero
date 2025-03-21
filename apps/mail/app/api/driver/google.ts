@@ -177,14 +177,37 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       }
     },
     markAsRead: async (id: string[]) => {
-      await gmail.users.messages.batchModify({
-        userId: "me",
-        requestBody: {
-          ids: id,
-          removeLabelIds: ["UNREAD"],
-        },
-      });
-    },
+			try {
+
+				if (id.length > 0) {
+					const threadResponse = await gmail.users.threads.get({
+						userId: 'me',
+						id: id[0],
+					});
+
+					const thread = threadResponse.data;
+
+					const messageIds =
+						thread.messages
+							?.map((message) => message.id)
+							.filter((id): id is string => id !== null && id !== undefined) || [];
+
+
+					if (messageIds.length > 0) {
+              await gmail.users.messages.batchModify({
+							userId: 'me',
+							requestBody: {
+								ids: messageIds,
+								removeLabelIds: ['UNREAD'],
+							},
+						});
+					}
+				}
+			} catch (error) {
+				console.error('Error marking messages as read:', error);
+        throw error
+			}
+		},
     markAsUnread: async (id: string[]) => {
       await gmail.users.messages.batchModify({
         userId: "me",
