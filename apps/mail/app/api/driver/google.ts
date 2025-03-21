@@ -99,7 +99,7 @@ async function processMultipleThreads(props: ProcessMultipleThreadsProps){
     throw new Error("No thread IDs provided!")
   }
 
-  if(addLabelIds.length === 0 || removeLabelIds.length === 0){
+  if(addLabelIds.length === 0 && removeLabelIds.length === 0){
     return
   }
 
