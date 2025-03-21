@@ -35,6 +35,12 @@ const findHtmlBody = (parts: any[]): string => {
   return "";
 };
 
+const auth = new google.auth.OAuth2(
+  process.env.GOOGLE_CLIENT_ID as string,
+  process.env.GOOGLE_CLIENT_SECRET as string,
+  process.env.GOOGLE_REDIRECT_URI as string,
+)
+
 interface ParsedDraft {
   id: string;
   to?: string[];
@@ -78,12 +84,59 @@ const parseDraft = (draft: gmail_v1.Schema$Draft): ParsedDraft | null => {
   };
 };
 
+interface ProcessMultipleThreadsProps {
+  threadIds: string[],
+  addLabelIds: string[],
+  removeLabelIds: string[]
+}
+
+async function processMultipleThreads(props: ProcessMultipleThreadsProps){
+
+  const { threadIds, addLabelIds = [], removeLabelIds = [] } = props
+  const gmail = google.gmail({version: 'v1', auth})
+
+  if(threadIds.length === 0){
+    throw new Error("No thread IDs provided!")
+  }
+
+  if(addLabelIds.length === 0 || removeLabelIds.length === 0){
+    return
+  }
+
+  try {
+  const threadPromises = threadIds.map(async (threadId) => {
+    const threadResponse = await gmail.users.threads.get({
+      userId: "me",
+      id: threadId
+    })
+
+    return threadResponse.data.messages?.map(message => message.id).filter((id): id is string => id != null && id != undefined) || []
+  })
+
+  const messageArrays = await Promise.all(threadPromises)
+  const allMessagesIds = messageArrays.flat()
+
+  if(allMessagesIds.length > 0){
+    await gmail.users.messages.batchModify({
+      userId: "me",
+      requestBody: {
+        ids: allMessagesIds,
+        removeLabelIds: removeLabelIds,
+        addLabelIds: addLabelIds
+      }
+    })
+
+
+
+  }
+} catch(error){
+  console.error("Error while processing multiple threads:", error)
+  throw error
+}
+  
+}
+
 export const driver = async (config: IConfig): Promise<MailManager> => {
-  const auth = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID as string,
-    process.env.GOOGLE_CLIENT_SECRET as string,
-    process.env.GOOGLE_REDIRECT_URI as string,
-  );
 
   const getScope = () =>
     [
@@ -176,46 +229,31 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
         throw error;
       }
     },
-    markAsRead: async (id: string[]) => {
+    markAsRead: async (ids: string[]) => {
 			try {
-
-				if (id.length > 0) {
-					const threadResponse = await gmail.users.threads.get({
-						userId: 'me',
-						id: id[0],
-					});
-
-					const thread = threadResponse.data;
-
-					const messageIds =
-						thread.messages
-							?.map((message) => message.id)
-							.filter((id): id is string => id !== null && id !== undefined) || [];
-
-
-					if (messageIds.length > 0) {
-              await gmail.users.messages.batchModify({
-							userId: 'me',
-							requestBody: {
-								ids: messageIds,
-								removeLabelIds: ['UNREAD'],
-							},
-						});
-					}
-				}
+        const args = {
+          threadIds: ids,
+          addLabelIds: [],
+          removeLabelIds: ["UNREAD"]
+        }
+        await processMultipleThreads(args)
 			} catch (error) {
 				console.error('Error marking messages as read:', error);
         throw error
 			}
 		},
-    markAsUnread: async (id: string[]) => {
-      await gmail.users.messages.batchModify({
-        userId: "me",
-        requestBody: {
-          ids: id,
+    markAsUnread: async (ids: string[]) => {
+      try {
+        const args = {
+          threadIds: ids,
           addLabelIds: ["UNREAD"],
-        },
-      });
+          removeLabelIds: []
+        }
+        await processMultipleThreads(args)
+			} catch (error) {
+				console.error('Error marking messages as read:', error);
+        throw error
+			}
     },
     getScope,
     getUserInfo: (tokens: { access_token: string; refresh_token: string }) => {

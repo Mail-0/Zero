@@ -440,14 +440,16 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
           ref={scrollRef}
           style={{ height: '100%' }}
           totalCount={items.length}
-          itemContent={(_: number, data: InitialThread) => <Thread
-            onClick={handleMailClick}
-            selectMode={getSelectMode()}
-            isCompact={isCompact}
-            sessionData={sessionData}
-            message={data}
-            key={data.id}
-          />}
+          itemContent={(_: number, data: InitialThread) => (
+            <Thread
+              onClick={handleMailClick}
+              selectMode={getSelectMode()}
+              isCompact={isCompact}
+              sessionData={sessionData}
+              message={data}
+              key={data.id}
+            />
+          )}
           endReached={handleScroll}
           data={items}
           className="hide-scrollbar"

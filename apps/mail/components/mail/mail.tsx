@@ -501,7 +501,7 @@ function BulkSelectActions() {
 
 const categories = [
   {
-    id:'Primary',
+    id: 'Primary',
     name: 'common.mailCategories.primary',
     searchValue: '',
     icon: <Inbox className="h-4 w-4" />,
@@ -509,7 +509,7 @@ const categories = [
       'border-0 bg-gray-200 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400 dark:hover:bg-gray-800/70',
   },
   {
-    id:'Important',
+    id: 'Important',
     name: 'common.mailCategories.important',
     searchValue: 'is:important',
     icon: <AlertTriangle className="h-4 w-4" />,
@@ -517,7 +517,7 @@ const categories = [
       'border-0 text-amber-800 bg-amber-100 dark:bg-amber-900/20 dark:text-amber-500 dark:hover:bg-amber-900/30',
   },
   {
-    id:'Personal',
+    id: 'Personal',
     name: 'common.mailCategories.personal',
     searchValue: 'is:personal',
     icon: <User className="h-4 w-4" />,
@@ -525,7 +525,7 @@ const categories = [
       'border-0 text-green-800 bg-green-100 dark:bg-green-900/20 dark:text-green-500 dark:hover:bg-green-900/30',
   },
   {
-    id:'Updates',
+    id: 'Updates',
     name: 'common.mailCategories.updates',
     searchValue: 'is:updates',
     icon: <Bell className="h-4 w-4" />,
@@ -533,7 +533,7 @@ const categories = [
       'border-0 text-purple-800 bg-purple-100 dark:bg-purple-900/20 dark:text-purple-500 dark:hover:bg-purple-900/30',
   },
   {
-    id:'Promotions',
+    id: 'Promotions',
     name: 'common.mailCategories.promotions',
     searchValue: 'is:promotions',
     icon: <Tag className="h-4 w-4 rotate-90" />,
