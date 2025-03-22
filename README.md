@@ -16,15 +16,17 @@ An Open-Source Gmail Alternative for the Future of Email
 Zero is an open-source AI email solution that gives users the power to **self-host** their own email app while also integrating external services like Gmail and other email providers. Our goal is to modernize and improve emails through AI agents to truly modernize emails.
 
 ## Why Zero?
+
 Most email services today are either **closed-source**, **data-hungry**, or **too complex to self-host**.
 0.email is different:
-  - ✅ **Open-Source** – No hidden agendas, fully transparent.
-  - 🦾 **AI Driven** - Enhance your emails with Agents & LLMs.
-  - 🔒 **Data Privacy First** – Your emails, your data. No tracking, no selling, no middlemen.
-  - ⚙️ **Self-Hosting Freedom** – Run your own email app with ease.
-  - 📬 **Unified Inbox** – Connect multiple email providers like Gmail, Outlook, and more.
-  - 🎨 **Customizable UI & Features** – Tailor your email experience the way you want it.
-  - 🚀 **Developer-Friendly** – Built with extensibility and integrations in mind.
+
+- ✅ **Open-Source** – No hidden agendas, fully transparent.
+- 🦾 **AI Driven** - Enhance your emails with Agents & LLMs.
+- 🔒 **Data Privacy First** – Your emails, your data. No tracking, no selling, no middlemen.
+- ⚙️ **Self-Hosting Freedom** – Run your own email app with ease.
+- 📬 **Unified Inbox** – Connect multiple email providers like Gmail, Outlook, and more.
+- 🎨 **Customizable UI & Features** – Tailor your email experience the way you want it.
+- 🚀 **Developer-Friendly** – Built with extensibility and integrations in mind.
 
 ## Tech Stack
 
@@ -63,13 +65,13 @@ You can set up Zero in two ways:
    # Clone the repository
    git clone https://github.com/Mail-0/Zero.git
    cd Zero
-   
+
    # Install dependencies
    bun install
 
    # Install database dependencies
    bun db:dependencies
-   
+
    # Start database locally
    bun docker:up
    ```
@@ -81,7 +83,7 @@ You can set up Zero in two ways:
      cp apps/mail/.env.example apps/mail/.env && cp packages/db/.env.example packages/db/.env
      ```
    - Configure your environment variables (see below)
-   - Install database dependencies: `bun db:dependencies`   
+   - Install database dependencies: `bun db:dependencies`
    - Initialize the database: `bun db:push`
 
 3. **Start the App**
@@ -93,7 +95,7 @@ You can set up Zero in two ways:
 4. **Open in Browser**
 
    Visit [http://localhost:3000](http://localhost:3000)
-</details>
+   </details>
 
 <details>
 <summary><b>Option 2: Dev Container Setup (For VS Code Users)</b></summary>
@@ -101,28 +103,31 @@ You can set up Zero in two ways:
 This option uses VS Code's Dev Containers feature to provide a fully configured development environment with all dependencies pre-installed. It's great for ensuring everyone on the team has the same setup.
 
 1. **Prerequisites**
+
    - [Docker](https://docs.docker.com/get-docker/)
    - [VS Code](https://code.visualstudio.com/) or compatible editor
    - [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 
 2. **Open in Dev Container**
+
    - Clone the repository: `git clone https://github.com/Mail-0/Zero.git`
    - Open the folder in VS Code
    - When prompted, click "Reopen in Container" or run the "Dev Containers: Open Folder in Container" command
    - VS Code will build and start the dev container (this may take a few minutes the first time)
 
 3. **Access the App**
+
    - The app will be available at [http://localhost:3000](http://localhost:3000)
 
 4. **Troubleshooting**
    - If you encounter issues with the container, try rebuilding it using the "Dev Containers: Rebuild Container" command
    - For dependency issues inside the container:
-     ```bash
+   `bash
      rm -rf node_modules
      rm bun.lockb
      bun install
-     ```
-</details>
+     `
+   </details>
 
 ### Environment Setup
 
@@ -143,7 +148,10 @@ This option uses VS Code's Dev Containers feature to provide a fully configured 
      - Go to 'APIs and Services' > 'Enable APIs and Services' > Search for 'Google People API' and click 'Enable'
      - Go to 'APIs and Services' > 'Enable APIs and Services' > Search for 'Gmail API' and click 'Enable'
    - Enable the Google OAuth2 API
-   - Create OAuth 2.0 credentials (Web application type)
+   - [Create OAuth 2.0 credentials](https://console.cloud.google.com/apis/credentials) 
+     - Click New Credentials
+     - Select OAuth client ID
+     - Select Web application
    - Add authorized redirect URIs:
      - Development:
        - `http://localhost:3000/api/auth/callback/google`
@@ -184,7 +192,8 @@ This option uses VS Code's Dev Containers feature to provide a fully configured 
      GITHUB_CLIENT_ID=your_client_id
      GITHUB_CLIENT_SECRET=your_client_secret
      ```
-   </details>
+
+     </details>
 
 ### Environment Variables
 
@@ -216,6 +225,7 @@ To be able to run `bun db:push` and push the schemas to the database you also ha
 ```env
 DATABASE_URL=          # Required: PostgreSQL connection string for migrations
 ```
+
 For local development a connection string example is provided in the `.env.example` file located in the same folder as the database.
 
 **Note:** The `DATABASE_URL` connection string in the `apps/mail/.env` has to be the same as the one in `packages/db/.env`
@@ -224,7 +234,7 @@ For local development a connection string example is provided in the `.env.examp
 
 Zero uses PostgreSQL for storing data. Here's how to set it up:
 
-1. **Start the Database** 
+1. **Start the Database**
 
    Run this command to start a local PostgreSQL instance:
 
@@ -233,6 +243,7 @@ Zero uses PostgreSQL for storing data. Here's how to set it up:
    ```
 
    This creates a database with:
+
    - Name: `zerodotemail`
    - Username: `postgres`
    - Password: `postgres`
@@ -241,10 +252,12 @@ Zero uses PostgreSQL for storing data. Here's how to set it up:
 2. **Set Up Database Connection**
 
    Make sure your database connection string is in:
+
    - `apps/mail/.env`
    - `packages/db/.env`
 
    For local development use:
+
    ```
    DATABASE_URL="postgresql://postgres:postgres@localhost:5432/zerodotemail"
    ```
@@ -252,21 +265,25 @@ Zero uses PostgreSQL for storing data. Here's how to set it up:
 3. **Database Commands**
 
    - **Install database dependencies**:
+
      ```bash
      bun db:dependencies
      ```
 
    - **Set up database tables**:
+
      ```bash
      bun db:push
      ```
 
    - **Create migration files** (after schema changes):
+
      ```bash
      bun db:generate
      ```
 
    - **Apply migrations**:
+
      ```bash
      bun db:migrate
      ```
@@ -283,6 +300,5 @@ Please refer to the [contributing guide](.github/CONTRIBUTING.md).
 If you'd like to help with translating Zero to other languages, check out our [translation guide](.github/TRANSLATION.md).
 
 ## Star History
-
 
 [![Star History Chart](https://api.star-history.com/svg?repos=Mail-0/Zero&type=Timeline)](https://star-history.com/#Mail-0/Zero&Timeline)
