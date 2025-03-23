@@ -1,11 +1,12 @@
-"use server";
+'use server';
 
-import { connection, user } from "@zero/db/schema";
-import { headers } from "next/headers";
-import { and, eq } from "drizzle-orm";
-import { type IConnection } from "@/types";
-import { auth } from "@/lib/auth";
-import { db } from "@zero/db";
+import { connection, user } from '@zero/db/schema';
+import { revalidatePath } from 'next/cache';
+import { type IConnection } from '@/types';
+import { headers } from 'next/headers';
+import { and, eq } from 'drizzle-orm';
+import { auth } from '@/lib/auth';
+import { db } from '@zero/db';
 
 export async function getConnections() {
   try {
@@ -13,13 +14,13 @@ export async function getConnections() {
     const session = await auth.api.getSession({ headers: headersList });
 
     if (!session) {
-      throw new Error("Unauthorized, reconnect");
+      throw new Error('Unauthorized, reconnect');
     }
 
     const userId = session?.user?.id;
 
     if (!userId) {
-      throw new Error("Unauthorized, reconnect");
+      throw new Error('Unauthorized, reconnect');
     }
 
     const connections = (await db
@@ -35,8 +36,8 @@ export async function getConnections() {
 
     return connections;
   } catch (error) {
-    console.error("Failed to fetch connections:", error);
-    throw new Error("Failed to fetch connections");
+    console.error('Failed to fetch connections:', error);
+    throw new Error('Failed to fetch connections');
   }
 }
 
@@ -46,13 +47,13 @@ export async function deleteConnection(connectionId: string) {
     const session = await auth.api.getSession({ headers: headersList });
 
     if (!session) {
-      throw new Error("Unauthorized, reconnect");
+      throw new Error('Unauthorized, reconnect');
     }
 
     const userId = session?.user?.id;
 
     if (!userId) {
-      throw new Error("Unauthorized, reconnect");
+      throw new Error('Unauthorized, reconnect');
     }
 
     await db
@@ -67,10 +68,29 @@ export async function deleteConnection(connectionId: string) {
 
     return { success: true };
   } catch (error) {
-    console.error("Failed to delete connection:", error);
-    throw new Error("Failed to delete connection");
+    console.error('Failed to delete connection:', error);
+    throw new Error('Failed to delete connection');
   }
 }
+
+export const deleteActiveConnection = async () => {
+  const headersList = await headers();
+  const session = await auth.api.getSession({ headers: headersList });
+  if (!session || !session.connectionId) {
+    console.error('Server: Unauthorized, no valid session');
+    throw new Error('Unauthorized, reconnect');
+  }
+
+  try {
+    await db
+      .delete(connection)
+      .where(and(eq(connection.userId, session.user.id), eq(connection.id, session.connectionId)));
+    return revalidatePath('/mail');
+  } catch (error) {
+    console.error('Server: Error deleting connection:', error);
+    throw error;
+  }
+};
 
 export async function putConnection(connectionId: string) {
   try {
@@ -78,13 +98,13 @@ export async function putConnection(connectionId: string) {
     const session = await auth.api.getSession({ headers: headersList });
 
     if (!session) {
-      throw new Error("Unauthorized, reconnect");
+      throw new Error('Unauthorized, reconnect');
     }
 
     const userId = session?.user?.id;
 
     if (!userId) {
-      throw new Error("Unauthorized, reconnect");
+      throw new Error('Unauthorized, reconnect');
     }
 
     const [foundConnection] = await db
@@ -94,7 +114,7 @@ export async function putConnection(connectionId: string) {
       .limit(1);
 
     if (!foundConnection) {
-      throw new Error("Connection not found");
+      throw new Error('Connection not found');
     }
 
     await db
@@ -106,7 +126,7 @@ export async function putConnection(connectionId: string) {
 
     return { success: true };
   } catch (error) {
-    console.error("Failed to update connection:", error);
-    throw new Error("Failed to update connection");
+    console.error('Failed to update connection:', error);
+    throw new Error('Failed to update connection');
   }
 }
