@@ -12,7 +12,8 @@ import {
   ListMinusIcon,
   ArrowRightIcon,
   Loader2,
-  Archive
+  Archive,
+  Layers,
 } from 'lucide-react';
 import {
   Dialog,
@@ -24,23 +25,24 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
-	moveThreadsTo,
-	ThreadDestination,
-	isActionAvailable,
-	getAvailableActions,
+  moveThreadsTo,
+  ThreadDestination,
+  isActionAvailable,
+  getAvailableActions,
 } from '@/lib/thread-actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { ThreadDisplay, ThreadDemo } from '@/components/mail/thread-display';
+import { useMail, toggleUnifiedInboxAtom } from '@/components/mail/use-mail';
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { MailList, MailListDemo } from '@/components/mail/mail-list';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useMediaQuery } from '../../hooks/use-media-query';
 import { useSearchValue } from '@/hooks/use-search-value';
+import { useConnections } from '@/hooks/use-connections';
 import { SearchIcon } from '../icons/animated/search';
-import { useMail } from '@/components/mail/use-mail';
 import { SidebarToggle } from '../ui/sidebar-toggle';
 import { Skeleton } from '@/components/ui/skeleton';
 import { clearBulkSelectionAtom } from './use-mail';
@@ -48,6 +50,8 @@ import { cn, defaultPageSize } from '@/lib/utils';
 import { useThreads } from '@/hooks/use-threads';
 import { MessageKey } from '@/config/navigation';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Toggle } from '@/components/ui/toggle';
 import { useHotKey } from '@/hooks/use-hot-key';
 import { useSession } from '@/lib/auth-client';
 import { useStats } from '@/hooks/use-stats';
@@ -61,36 +65,36 @@ import { useAtom } from 'jotai';
 import { toast } from 'sonner';
 
 export function DemoMailLayout() {
-	const [mail, setMail] = useState({
-		selected: 'demo',
-		bulkSelected: [],
-	});
-	const isMobile = false;
-	const isValidating = false;
-	const isLoading = false;
-	const isDesktop = true;
-	const searchParams = useSearchParams();
-	const threadIdParam = searchParams?.get('threadId');
-	const t = useTranslations();
+  const [mail, setMail] = useState({
+    selected: 'demo',
+    bulkSelected: [],
+  });
+  const isMobile = false;
+  const isValidating = false;
+  const isLoading = false;
+  const isDesktop = true;
+  const searchParams = useSearchParams();
+  const threadIdParam = searchParams?.get('threadId');
+  const t = useTranslations();
 
-	const handleClose = () => {
-		// Update URL to remove threadId parameter
-		const currentParams = new URLSearchParams(searchParams?.toString() || '');
-		currentParams.delete('threadId');
-	};
-	const [activeCategory, setActiveCategory] = useState('Primary');
-	const [filteredItems, setFilteredItems] = useState(items);
+  const handleClose = () => {
+    // Update URL to remove threadId parameter
+    const currentParams = new URLSearchParams(searchParams?.toString() || '');
+    currentParams.delete('threadId');
+  };
+  const [activeCategory, setActiveCategory] = useState('Primary');
+  const [filteredItems, setFilteredItems] = useState(items);
 
-	useEffect(() => {
-		if (activeCategory === 'Primary') {
-			setFilteredItems(items);
-		} else {
-			const categoryMap = {
-				Important: 'important',
-				Personal: 'personal',
-				Updates: 'updates',
-				Promotions: 'promotions',
-			};
+  useEffect(() => {
+    if (activeCategory === 'Primary') {
+      setFilteredItems(items);
+    } else {
+      const categoryMap = {
+        Important: 'important',
+        Personal: 'personal',
+        Updates: 'updates',
+        Promotions: 'promotions',
+      };
 
       const filterTag = categoryMap[activeCategory as keyof typeof categoryMap];
       const filtered = items.filter((item) => item.tags && item.tags.includes(filterTag));
@@ -131,7 +135,7 @@ export function DemoMailLayout() {
                   <MailCategoryTabs
                     iconsOnly={true}
                     onCategoryChange={(category) => {
-                      setActiveCategory(category)
+                      setActiveCategory(category);
                     }}
                     initialCategory={activeCategory}
                   />
@@ -181,48 +185,86 @@ export function DemoMailLayout() {
           )}
         </ResizablePanelGroup>
 
-				{/* Mobile Drawer */}
-				{isMobile && (
-					<Drawer
-						open={!!threadIdParam}
-						onOpenChange={(isOpen) => {
-							if (!isOpen) handleClose();
-						}}
-					>
-						<DrawerContent className="bg-offsetLight dark:bg-offsetDark h-[calc(100vh-3rem)] overflow-hidden p-0">
-							<DrawerHeader className="sr-only">
-								<DrawerTitle>Email Details</DrawerTitle>
-							</DrawerHeader>
-							<div className="flex h-full flex-col overflow-hidden">
-								<div className="flex-1 overflow-hidden">
-									<ThreadDisplay onClose={handleClose} isMobile={true} mail={filteredItems[0]} />
-								</div>
-							</div>
-						</DrawerContent>
-					</Drawer>
-				)}
-			</div>
-		</TooltipProvider>
-	);
+        {/* Mobile Drawer */}
+        {isMobile && (
+          <Drawer
+            open={!!threadIdParam}
+            onOpenChange={(isOpen) => {
+              if (!isOpen) handleClose();
+            }}
+          >
+            <DrawerContent className="bg-offsetLight dark:bg-offsetDark h-[calc(100vh-3rem)] overflow-hidden p-0">
+              <DrawerHeader className="sr-only">
+                <DrawerTitle>Email Details</DrawerTitle>
+              </DrawerHeader>
+              <div className="flex h-full flex-col overflow-hidden">
+                <div className="flex-1 overflow-hidden">
+                  <ThreadDisplay onClose={handleClose} isMobile={true} mail={filteredItems[0]} />
+                </div>
+              </div>
+            </DrawerContent>
+          </Drawer>
+        )}
+      </div>
+    </TooltipProvider>
+  );
 }
 
 export function MailLayout() {
-	const { folder } = useParams<{ folder: string }>();
-	const [searchMode, setSearchMode] = useState(false);
-	const [mail, setMail] = useMail();
-	const [, clearBulkSelection] = useAtom(clearBulkSelectionAtom);
-	const [isMobile, setIsMobile] = useState(false);
-	const router = useRouter();
-	const { data: session, isPending } = useSession();
-	const t = useTranslations();
-	const prevFolderRef = useRef(folder);
+  const { folder } = useParams<{ folder: string }>();
+  const [searchMode, setSearchMode] = useState(false);
+  const [mail, setMail] = useMail();
+  const [, clearBulkSelection] = useAtom(clearBulkSelectionAtom);
+  const [toggleUnifiedInbox] = useAtom(toggleUnifiedInboxAtom);
+  const [isMobile, setIsMobile] = useState(false);
+  const router = useRouter();
+  const { data: session, isPending } = useSession();
+  const { data: connections } = useConnections();
+  const t = useTranslations();
+  const prevFolderRef = useRef(folder);
 
-	useEffect(() => {
-		if (prevFolderRef.current !== folder && mail.bulkSelected.length > 0) {
-			clearBulkSelection();
-		}
-		prevFolderRef.current = folder;
-	}, [folder, mail.bulkSelected.length, clearBulkSelection]);
+  // Determine if we can show the unified inbox toggle (need at least 2 connections)
+  const showUnifiedToggle = useMemo(() => {
+    return connections && connections.length > 1;
+  }, [connections]);
+
+  // Add our new component for the unified inbox toggle
+  const UnifiedInboxToggle = () => {
+    const [mail, setMail] = useMail();
+
+    const handleToggleUnified = () => {
+      setMail((prev) => ({ ...prev, unifiedInbox: !prev.unifiedInbox }));
+    };
+
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="flex items-center">
+            <Toggle
+              variant="default"
+              size="sm"
+              onClick={handleToggleUnified}
+              pressed={mail.unifiedInbox}
+            >
+              <Layers className="h-4 w-4" />
+            </Toggle>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">
+          {mail.unifiedInbox
+            ? t('common.mail.disableUnifiedInbox')
+            : t('common.mail.enableUnifiedInbox')}
+        </TooltipContent>
+      </Tooltip>
+    );
+  };
+
+  useEffect(() => {
+    if (prevFolderRef.current !== folder && mail.bulkSelected.length > 0) {
+      clearBulkSelection();
+    }
+    prevFolderRef.current = folder;
+  }, [folder, mail.bulkSelected.length, clearBulkSelection]);
 
   useEffect(() => {
     if (!session?.user && !isPending) {
@@ -309,7 +351,6 @@ export function MailLayout() {
                     </Button>
                   </div>
                 )}
-
                 {!searchMode && (
                   <>
                     {mail.bulkSelected.length > 0 ? (
@@ -336,8 +377,12 @@ export function MailLayout() {
                       </>
                     ) : (
                       <>
-                        <div className="flex-1 text-center text-sm font-medium capitalize">
-                          <MailCategoryTabs iconsOnly={!!threadIdParam} />
+                        <div className="flex flex-1 items-center justify-between">
+                          {/* Show the unified inbox toggle if we have multiple accounts */}
+                          {showUnifiedToggle && <UnifiedInboxToggle />}
+                          <div className="text-center text-sm font-medium capitalize">
+                            <MailCategoryTabs iconsOnly={!!threadIdParam} />
+                          </div>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <Button
@@ -382,44 +427,45 @@ export function MailLayout() {
             </div>
           </ResizablePanel>
 
-					{isDesktop && threadIdParam && (
-						<>
-							<ResizablePanel
-								className="bg-offsetLight dark:bg-offsetDark shadow-sm md:flex md:rounded-2xl md:border md:shadow-sm"
-								defaultSize={75}
-								minSize={25}
-							>
-								<div className="relative hidden h-[calc(100vh-(12px+14px))] flex-1 md:block">
-									<ThreadDisplay onClose={handleClose} mail={threadIdParam} />
-								</div>
-							</ResizablePanel>
-						</>
-					)}
-				</ResizablePanelGroup>
+          {isDesktop && threadIdParam && (
+            <>
+              <ResizableHandle />
+              <ResizablePanel
+                className="bg-offsetLight dark:bg-offsetDark shadow-sm md:flex md:rounded-2xl md:border md:shadow-sm"
+                defaultSize={75}
+                minSize={25}
+              >
+                <div className="relative hidden h-[calc(100vh-(12px+14px))] flex-1 md:block">
+                  <ThreadDisplay onClose={handleClose} mail={threadIdParam} />
+                </div>
+              </ResizablePanel>
+            </>
+          )}
+        </ResizablePanelGroup>
 
-				{/* Mobile Drawer */}
-				{isMobile && (
-					<Drawer
-						open={!!threadIdParam}
-						onOpenChange={(isOpen) => {
-							if (!isOpen) handleClose();
-						}}
-					>
-						<DrawerContent className="bg-offsetLight dark:bg-offsetDark h-[calc(100vh-4rem)] overflow-hidden p-0">
-							<DrawerHeader className="sr-only">
-								<DrawerTitle>Email Details</DrawerTitle>
-							</DrawerHeader>
-							<div className="flex h-full flex-col overflow-hidden">
-								<div className="flex-1 overflow-hidden">
-									<ThreadDisplay onClose={handleClose} isMobile={true} mail={threadIdParam} />
-								</div>
-							</div>
-						</DrawerContent>
-					</Drawer>
-				)}
-			</div>
-		</TooltipProvider>
-	);
+        {/* Mobile Drawer */}
+        {isMobile && (
+          <Drawer
+            open={!!threadIdParam}
+            onOpenChange={(isOpen) => {
+              if (!isOpen) handleClose();
+            }}
+          >
+            <DrawerContent className="bg-offsetLight dark:bg-offsetDark h-[calc(100vh-4rem)] overflow-hidden p-0">
+              <DrawerHeader className="sr-only">
+                <DrawerTitle>Email Details</DrawerTitle>
+              </DrawerHeader>
+              <div className="flex h-full flex-col overflow-hidden">
+                <div className="flex-1 overflow-hidden">
+                  <ThreadDisplay onClose={handleClose} isMobile={true} mail={threadIdParam} />
+                </div>
+              </div>
+            </DrawerContent>
+          </Drawer>
+        )}
+      </div>
+    </TooltipProvider>
+  );
 }
 
 function BulkSelectActions() {
@@ -555,50 +601,50 @@ function BulkSelectActions() {
 }
 
 const Categories = () => {
-	const t = useTranslations();
+  const t = useTranslations();
 
-	return [
-		{
+  return [
+    {
       id: 'Primary',
-			name: t('common.mailCategories.primary'),
-			searchValue: '',
-			icon: <Inbox className="h-4 w-4" />,
-			colors:
-				'border-0 bg-gray-200 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400 dark:hover:bg-gray-800/70',
-		},
-		{
-			id: 'Important',
-			name: t('common.mailCategories.important'),
-			searchValue: 'is:important',
-			icon: <AlertTriangle className="h-4 w-4" />,
-			colors:
-				'border-0 text-amber-800 bg-amber-100 dark:bg-amber-900/20 dark:text-amber-500 dark:hover:bg-amber-900/30',
-		},
-		{
-			id: 'Personal',
-			name: t('common.mailCategories.personal'),
-			searchValue: 'is:personal',
-			icon: <User className="h-4 w-4" />,
-			colors:
-				'border-0 text-green-800 bg-green-100 dark:bg-green-900/20 dark:text-green-500 dark:hover:bg-green-900/30',
-		},
-		{
-			id: 'Updates',
-			name: t('common.mailCategories.updates'),
-			searchValue: 'is:updates',
-			icon: <Bell className="h-4 w-4" />,
-			colors:
-				'border-0 text-purple-800 bg-purple-100 dark:bg-purple-900/20 dark:text-purple-500 dark:hover:bg-purple-900/30',
-		},
-		{
-			id: 'Promotions',
-			name: t('common.mailCategories.promotions'),
-			searchValue: 'is:promotions',
-			icon: <Tag className="h-4 w-4 rotate-90" />,
-			colors:
-				'border-0 text-red-800 bg-red-100 dark:bg-red-900/20 dark:text-red-500 dark:hover:bg-red-900/30',
-		},
-	];
+      name: t('common.mailCategories.primary'),
+      searchValue: '',
+      icon: <Inbox className="h-4 w-4" />,
+      colors:
+        'border-0 bg-gray-200 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400 dark:hover:bg-gray-800/70',
+    },
+    {
+      id: 'Important',
+      name: t('common.mailCategories.important'),
+      searchValue: 'is:important',
+      icon: <AlertTriangle className="h-4 w-4" />,
+      colors:
+        'border-0 text-amber-800 bg-amber-100 dark:bg-amber-900/20 dark:text-amber-500 dark:hover:bg-amber-900/30',
+    },
+    {
+      id: 'Personal',
+      name: t('common.mailCategories.personal'),
+      searchValue: 'is:personal',
+      icon: <User className="h-4 w-4" />,
+      colors:
+        'border-0 text-green-800 bg-green-100 dark:bg-green-900/20 dark:text-green-500 dark:hover:bg-green-900/30',
+    },
+    {
+      id: 'Updates',
+      name: t('common.mailCategories.updates'),
+      searchValue: 'is:updates',
+      icon: <Bell className="h-4 w-4" />,
+      colors:
+        'border-0 text-purple-800 bg-purple-100 dark:bg-purple-900/20 dark:text-purple-500 dark:hover:bg-purple-900/30',
+    },
+    {
+      id: 'Promotions',
+      name: t('common.mailCategories.promotions'),
+      searchValue: 'is:promotions',
+      icon: <Tag className="h-4 w-4 rotate-90" />,
+      colors:
+        'border-0 text-red-800 bg-red-100 dark:bg-red-900/20 dark:text-red-500 dark:hover:bg-red-900/30',
+    },
+  ];
 };
 
 function MailCategoryTabs({
@@ -612,13 +658,11 @@ function MailCategoryTabs({
   onCategoryChange?: (category: string) => void;
   initialCategory?: string;
 }) {
-	const [, setSearchValue] = useSearchValue();
-	const categories = Categories();
+  const [, setSearchValue] = useSearchValue();
+  const categories = Categories();
 
-	// Initialize with just the initialCategory or "Primary"
-	const [activeCategory, setActiveCategory] = useState(
-		initialCategory || 'Primary',
-	);
+  // Initialize with just the initialCategory or "Primary"
+  const [activeCategory, setActiveCategory] = useState(initialCategory || 'Primary');
 
   // Move localStorage logic to a useEffect
   useEffect(() => {
@@ -696,67 +740,67 @@ function MailCategoryTabs({
     return () => window.removeEventListener('resize', handleResize);
   }, [updateClipPath]);
 
-	return (
-		<div className="relative mx-auto w-fit">
-			<ul className="flex justify-center gap-1.5">
-				{categories.map((category) => (
-					<li key={category.name}>
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<button
-									ref={activeCategory === category.id ? activeTabElementRef : null}
-									data-tab={category.id}
-									onClick={() => {
-										setActiveCategory(category.id);
+  return (
+    <div className="relative mx-auto w-fit">
+      <ul className="flex justify-center gap-1.5">
+        {categories.map((category) => (
+          <li key={category.name}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  ref={activeCategory === category.id ? activeTabElementRef : null}
+                  data-tab={category.id}
+                  onClick={() => {
+                    setActiveCategory(category.id);
                     localStorage.setItem('mailActiveCategory', category.id);
-									}}
-									className={cn(
-										'flex h-7 items-center gap-1.5 rounded-full px-2 text-xs font-medium transition-all duration-200',
-										activeCategory === category.id
-											? category.colors
-											: 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
-									)}
-								>
-									{category.icon}
-									<span className={cn('hidden', !iconsOnly && 'md:inline')}>{category.name}</span>
-								</button>
-							</TooltipTrigger>
-							{iconsOnly && (
-								<TooltipContent>
-									<span>{category.name}</span>
-								</TooltipContent>
-							)}
-						</Tooltip>
-					</li>
-				))}
-			</ul>
+                  }}
+                  className={cn(
+                    'flex h-7 items-center gap-1.5 rounded-full px-2 text-xs font-medium transition-all duration-200',
+                    activeCategory === category.id
+                      ? category.colors
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
+                  )}
+                >
+                  {category.icon}
+                  <span className={cn('hidden', !iconsOnly && 'md:inline')}>{category.name}</span>
+                </button>
+              </TooltipTrigger>
+              {iconsOnly && (
+                <TooltipContent>
+                  <span>{category.name}</span>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </li>
+        ))}
+      </ul>
 
-			<div
-				aria-hidden
-				className="absolute inset-0 z-10 overflow-hidden transition-[clip-path] duration-300 ease-in-out"
-				ref={containerRef}
-			>
-				<ul className="flex justify-center gap-1.5">
-					{categories.map((category) => (
-						<li key={category.id}>
-							<button
-								data-tab={category.id}
-								onClick={() => {
-									setActiveCategory(category.id);
-								}}
-								className={cn(
-									'flex h-7 items-center gap-1.5 rounded-full px-2 text-xs font-medium',
-									category.colors,
-								)}
-								tabIndex={-1}
-							>
-								{category.icon}
-								<span className={cn('hidden', !iconsOnly && 'md:inline')}>{category.name}</span>
-							</button>
-						</li>
-					))}
-				</ul>
-			</div>
-		</div>
-	);
+      <div
+        aria-hidden
+        className="absolute inset-0 z-10 overflow-hidden transition-[clip-path] duration-300 ease-in-out"
+        ref={containerRef}
+      >
+        <ul className="flex justify-center gap-1.5">
+          {categories.map((category) => (
+            <li key={category.id}>
+              <button
+                data-tab={category.id}
+                onClick={() => {
+                  setActiveCategory(category.id);
+                }}
+                className={cn(
+                  'flex h-7 items-center gap-1.5 rounded-full px-2 text-xs font-medium',
+                  category.colors,
+                )}
+                tabIndex={-1}
+              >
+                {category.icon}
+                <span className={cn('hidden', !iconsOnly && 'md:inline')}>{category.name}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
 }

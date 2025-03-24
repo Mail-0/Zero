@@ -212,7 +212,8 @@
       "forward": "Forward",
       "labels": "Labels",
       "createNewLabel": "Create New Label",
-      "noLabelsAvailable": "No labels available"
+      "enableUnifiedInbox": "Enable unified inbox to view all accounts",
+      "disableUnifiedInbox": "Disable unified inbox to view accounts separately"
     }
   },
   "navigation": {

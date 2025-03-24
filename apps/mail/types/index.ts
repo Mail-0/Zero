@@ -78,6 +78,9 @@ export interface InitialThread {
   totalReplies: number;
   references?: string;
   inReplyTo?: string;
+  connectionId?: string;
+  connectionEmail?: string;
+  connectionName?: string;
 }
 
 export interface Attachment {
@@ -93,7 +96,7 @@ export interface MailListProps {
   isCompact?: boolean;
 }
 
-export type MailSelectMode = "mass" | "range" | "single" | "selectAllBelow";
+export type MailSelectMode = 'mass' | 'range' | 'single' | 'selectAllBelow';
 
 export type ThreadProps = {
   message: InitialThread;
