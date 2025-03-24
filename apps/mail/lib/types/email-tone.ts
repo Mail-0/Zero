@@ -1,0 +1,1 @@
+export type EmailTone = 'professional' | 'friendly' | 'formal' | 'casual' | 'urgent' | 'apologetic'; 

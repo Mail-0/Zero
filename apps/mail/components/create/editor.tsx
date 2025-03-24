@@ -33,7 +33,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { AnyExtension, Editor as TiptapEditor, useCurrentEditor } from '@tiptap/react';
+import {
+  AnyExtension,
+  Editor as TiptapEditor,
+  useCurrentEditor,
+  type Editor as TiptapEditorType,
+} from '@tiptap/react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TextButtons } from '@/components/create/selectors/text-buttons';
 import { suggestionItems } from '@/components/create/slash-command';
@@ -43,6 +48,7 @@ import { uploadFn } from '@/components/create/image-upload';
 import { handleImageDrop, handleImagePaste } from 'novel';
 import EditorMenu from '@/components/create/editor-menu';
 import { UploadedFileIcon } from './uploaded-file-icon';
+import { GhostText, ThreadContext } from './ghost-text';
 import { Separator } from '@/components/ui/separator';
 import { cn, truncateFileName } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -50,6 +56,8 @@ import { Input } from '@/components/ui/input';
 import { Markdown } from 'tiptap-markdown';
 import { useReducer, useRef } from 'react';
 import { useState } from 'react';
+import { useMemo } from 'react';
+import './ghost-text.css';
 import React from 'react';
 
 // Fix the extensions type error by using a type assertion
@@ -74,6 +82,7 @@ interface EditorProps {
   className?: string;
   onCommandEnter?: () => void;
   onAttachmentsChange?: (attachments: File[]) => void;
+  threadContext?: ThreadContext;
 }
 
 interface EditorState {
@@ -81,13 +90,15 @@ interface EditorState {
   openColor: boolean;
   openLink: boolean;
   openAI: boolean;
+  showProfanityDialog: boolean;
 }
 
 type EditorAction =
   | { type: 'TOGGLE_NODE'; payload: boolean }
   | { type: 'TOGGLE_COLOR'; payload: boolean }
   | { type: 'TOGGLE_LINK'; payload: boolean }
-  | { type: 'TOGGLE_AI'; payload: boolean };
+  | { type: 'TOGGLE_AI'; payload: boolean }
+  | { type: 'TOGGLE_PROFANITY_DIALOG'; payload: boolean };
 
 function editorReducer(state: EditorState, action: EditorAction): EditorState {
   switch (action.type) {
@@ -99,6 +110,8 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
       return { ...state, openLink: action.payload };
     case 'TOGGLE_AI':
       return { ...state, openAI: action.payload };
+    case 'TOGGLE_PROFANITY_DIALOG':
+      return { ...state, showProfanityDialog: action.payload };
     default:
       return state;
   }
@@ -379,12 +392,14 @@ export default function Editor({
   className,
   onCommandEnter,
   onAttachmentsChange,
+  threadContext,
 }: EditorProps) {
   const [state, dispatch] = useReducer(editorReducer, {
     openNode: false,
     openColor: false,
     openLink: false,
     openAI: false,
+    showProfanityDialog: false,
   });
 
   // Add a ref to store the editor content to prevent losing it on refresh
@@ -394,12 +409,25 @@ export default function Editor({
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { openNode, openColor, openLink, openAI } = state;
+  const { openNode, openColor, openLink, openAI, showProfanityDialog } = state;
+
+  // Initialize editor with configured extensions
+  const editor = useEditor({
+    extensions: defaultExtensions,
+    content: initialValue,
+    editorProps: {
+      attributes: {
+        class: 'prose dark:prose-invert max-w-full focus:outline-none',
+      },
+    },
+    onFocus: () => onFocus?.(),
+    onBlur: () => onBlur?.(),
+  });
 
   // Function to focus the editor
   const focusEditor = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === containerRef.current) {
-      editorRef.current?.commands.focus('end');
+      onFocus?.();
     }
   };
 
@@ -468,6 +496,19 @@ export default function Editor({
     }, 200);
   }, [onCommandEnter, clearEditorContent]);
 
+  // Configure extensions with thread context
+  const configuredExtensions = useMemo(() => {
+    return defaultExtensions.map((ext) => {
+      // Only configure ghost text extension with thread context
+      if ('name' in ext && ext.name === 'ghostText') {
+        return GhostText.configure({
+          threadContext: threadContext || undefined,
+        });
+      }
+      return ext;
+    });
+  }, [threadContext]);
+
   return (
     <div
       className={`relative w-full max-w-[450px] sm:max-w-[600px] ${className || ''}`}
@@ -490,7 +531,7 @@ export default function Editor({
         <EditorContent
           immediatelyRender={false}
           initialContent={initialValue || defaultEditorContent}
-          extensions={extensions}
+          extensions={configuredExtensions}
           ref={containerRef}
           className="min-h-52 cursor-text"
           editorProps={{
@@ -527,8 +568,18 @@ export default function Editor({
           }}
           onUpdate={({ editor }) => {
             // Store the content in the ref to prevent losing it
-            contentRef.current = editor.getHTML();
-            onChange(editor.getHTML());
+            const content = editor.getHTML();
+            contentRef.current = content;
+            onChange(content);
+
+            // Simple profanity check (you can expand this list)
+            const profanityList = ['fuck', 'shit', 'damn', 'ass'];
+            const lowercaseContent = content.toLowerCase();
+            const hasProfanity = profanityList.some(word => lowercaseContent.includes(word));
+
+            if (hasProfanity && !showProfanityDialog) {
+              dispatch({ type: 'TOGGLE_PROFANITY_DIALOG', payload: true });
+            }
           }}
           slotBefore={<MenuBar onAttachmentsChange={onAttachmentsChange} />}
           slotAfter={<ImageResizer />}
@@ -582,6 +633,35 @@ export default function Editor({
           </EditorMenu>
         </EditorContent>
       </EditorRoot>
+
+      {/* Profanity Warning Dialog */}
+      <Dialog open={showProfanityDialog} onOpenChange={(open) => dispatch({ type: 'TOGGLE_PROFANITY_DIALOG', payload: open })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Take a Moment to Reflect</DialogTitle>
+            <DialogDescription className="space-y-4">
+              <p>
+                We noticed some strong language in your email. While we understand that emotions can run high,
+                sending an email when upset often leads to regret.
+              </p>
+              <p>
+                Consider:
+                <ul className="list-disc pl-6 mt-2">
+                  <li>Taking a short break and returning with a fresh perspective</li>
+                  <li>Writing a draft but waiting to send it until tomorrow</li>
+                  <li>Having a constructive conversation in person instead</li>
+                  <li>Speaking with a professional if you're experiencing ongoing stress</li>
+                </ul>
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => dispatch({ type: 'TOGGLE_PROFANITY_DIALOG', payload: false })}>
+              I Understand
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

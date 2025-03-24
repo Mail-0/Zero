@@ -1,4 +1,4 @@
-interface AIResponse {
+export interface AIResponse {
   id: string;
   content: string;
   type: 'email' | 'question' | 'system';
@@ -6,24 +6,60 @@ interface AIResponse {
 }
 
 // Define user context type
-interface UserContext {
+export interface UserContext {
   name?: string;
   email?: string;
 }
 
-const conversationHistories: Record<string, {role: 'user' | 'assistant' | 'system', content: string}[]> = {};
+// Store conversation histories
+export const conversationHistories: Record<string, {role: 'user' | 'assistant' | 'system', content: string}[]> = {};
 
 export const generateConversationId = (): string => {
   return `conv_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 };
 
+// Define the base interface for AI generation strategies
+export interface AIGenerationStrategy {
+  generate(prompt: string, context: AIGenerationContext): Promise<AIResponse[]>;
+}
+
+// Define the context that will be passed to generation strategies
+export interface AIGenerationContext {
+  currentContent?: string;
+  recipients?: string[];
+  conversationId?: string;
+  userContext?: UserContext;
+  additionalContext?: Record<string, any>; // For RAG and other extensions
+  signal?: AbortSignal;
+}
+
+// Define the base class for email generation
+export abstract class BaseEmailGenerator implements AIGenerationStrategy {
+  protected abstract generateWithStrategy(prompt: string, context: AIGenerationContext): Promise<AIResponse[]>;
+  
+  async generate(prompt: string, context: AIGenerationContext): Promise<AIResponse[]> {
+    // Add any common preprocessing here
+    return this.generateWithStrategy(prompt, context);
+  }
+}
+
+// Define the interface for RAG providers
+export interface RAGProvider {
+  retrieveRelevantContext(prompt: string, context: AIGenerationContext): Promise<Record<string, any>>;
+}
+
+// Define the interface for prompt modifiers
+export interface PromptModifier {
+  modifyPrompt(prompt: string, context: AIGenerationContext): string;
+}
 
 export async function generateEmailContent(
   prompt: string,
   currentContent?: string,
   recipients?: string[],
   conversationId?: string,
-  userContext?: UserContext
+  userContext?: UserContext,
+  signal?: AbortSignal
 ): Promise<AIResponse[]> {
   try {
     // Get or initialize conversation
@@ -80,7 +116,8 @@ export async function generateEmailContent(
         temperature: 0.7,
         max_tokens: isQuestion ? 150 : 1000,
         top_p: 1
-      })
+      }),
+      signal
     });
     
     if (!response.ok) {
@@ -114,12 +151,15 @@ export async function generateEmailContent(
       }];
     }
   } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw error;
+    }
     console.error("Error generating email content:", error);
     throw error;
   }
 }
 
-function formatEmailContent(content: string, prompt: string, recipients?: string[]): string {
+export function formatEmailContent(content: string, prompt: string, recipients?: string[]): string {
   // Remove any "Subject:" line at the beginning
   let formattedContent = content
     .replace(/^Subject:.*?(\n|$)/i, '')
@@ -135,8 +175,7 @@ function formatEmailContent(content: string, prompt: string, recipients?: string
   return formattedContent;
 }
 
-
-function checkIfQuestion(prompt: string): boolean {
+export function checkIfQuestion(prompt: string): boolean {
   const trimmedPrompt = prompt.trim().toLowerCase();
   
   // Check if the prompt ends with a question mark

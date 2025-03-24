@@ -1,0 +1,13 @@
+.ghost-text {
+	color: #717378;
+	pointer-events: none;
+	user-select: none;
+	white-space: pre;
+	display: inline;
+	position: relative;
+	padding-left: 1px;
+	opacity: 0.6;
+	font-family: inherit;
+	font-size: inherit;
+	line-height: inherit;
+}
