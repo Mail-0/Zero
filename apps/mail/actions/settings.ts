@@ -31,20 +31,22 @@ export async function getUserSettings() {
       throw new Error("Unauthorized");
     }
 
-    const [settings] = await db
+    const [result] = await db
       .select()
       .from(userSettings)
       .where(eq(userSettings.userId, userId))
       .limit(1);
 
     // Returning null here when there are no settings so we can use the default settings with timezone from the browser
-    if (!settings) return null;
+    if (!result) return null;
+
+    const parsedSettings = settingsSchema.parse(result.settings);
 
     return {
-      language: settings.language,
-      timezone: settings.timezone,
-      dynamicContent: settings.dynamicContent,
-      externalImages: settings.externalImages,
+      language: parsedSettings.language,
+      timezone: parsedSettings.timezone,
+      dynamicContent: parsedSettings.dynamicContent,
+      externalImages: parsedSettings.externalImages,
     };
   } catch (error) {
     console.error("Failed to fetch user settings:", error);
@@ -81,10 +83,7 @@ export async function saveUserSettings(settings: UserSettings) {
       await db
         .update(userSettings)
         .set({
-          language: parsedSettings.language,
-          timezone: parsedSettings.timezone,
-          dynamicContent: parsedSettings.dynamicContent,
-          externalImages: parsedSettings.externalImages,
+          settings: parsedSettings,
           updatedAt: new Date(),
         })
         .where(eq(userSettings.userId, userId));
@@ -93,10 +92,7 @@ export async function saveUserSettings(settings: UserSettings) {
       await db.insert(userSettings).values({
         id: crypto.randomUUID(),
         userId,
-        language: parsedSettings.language,
-        timezone: parsedSettings.timezone,
-        dynamicContent: parsedSettings.dynamicContent,
-        externalImages: parsedSettings.externalImages,
+        settings: parsedSettings,
         createdAt: new Date(),
         updatedAt: new Date(),
       });

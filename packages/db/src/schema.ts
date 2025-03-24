@@ -1,4 +1,5 @@
-import { pgTableCreator, text, timestamp, boolean, integer } from "drizzle-orm/pg-core";
+import { pgTableCreator, text, timestamp, boolean, integer, jsonb } from "drizzle-orm/pg-core";
+import { userSettingsDefault } from "@zero/db/user_settings_default";
 
 export const createTable = pgTableCreator((name) => `mail0_${name}`);
 
@@ -107,10 +108,7 @@ export const userSettings = createTable("user_settings", {
     .notNull()
     .references(() => user.id)
     .unique(),
-  language: text("language").notNull().default("en"),
-  timezone: text("timezone").notNull().default("UTC"),
-  dynamicContent: boolean("dynamic_content").notNull().default(false),
-  externalImages: boolean("external_images").notNull().default(true),
+  settings: jsonb("settings").notNull().default(userSettingsDefault),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
 });

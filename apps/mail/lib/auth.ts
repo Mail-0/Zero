@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { connection, user as _user, account, userSettings } from "@zero/db/schema";
+import { userSettingsDefault } from "@zero/db/user_settings_default";
 import { createAuthMiddleware, customSession } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth, type BetterAuthOptions } from "better-auth";
-import { TIMEZONES } from "@/utils/timezones";
+import { TIMEZONES } from "@/lib/timezones";
 import { eq } from "drizzle-orm";
 import { Resend } from "resend";
 import { db } from "@zero/db";
@@ -166,10 +167,10 @@ const options = {
           await db.insert(userSettings).values({
             id: crypto.randomUUID(),
             userId: newSession.user.id,
-            timezone,
-            language: "en",
-            dynamicContent: true,
-            externalImages: true,
+            settings: {
+              ...userSettingsDefault,
+              timezone,
+            },
             createdAt: new Date(),
             updatedAt: new Date(),
           });
