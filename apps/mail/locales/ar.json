@@ -1,0 +1,320 @@
+{
+  "common": {
+    "actions": {
+      "logout": "Logout",
+      "back": "Back",
+      "create": "Create Email",
+      "saveChanges": "Save changes",
+      "saving": "Saving...",
+      "resetToDefaults": "Reset to Defaults",
+      "close": "Close",
+      "signingOut": "Signing out...",
+      "signedOutSuccess": "Signed out successfully!",
+      "signOutError": "Error signing out"
+    },
+    "themes": {
+      "dark": "Dark",
+      "light": "Light",
+      "system": "System"
+    },
+    "commandPalette": {
+      "title": "Command Palette",
+      "description": "Quick navigation and actions for Mail-0",
+      "placeholder": "Type a command or search...",
+      "noResults": "No results found",
+      "groups": {
+        "mail": "Mail",
+        "settings": "Settings",
+        "actions": "Actions",
+        "help": "Help",
+        "navigation": "Navigation"
+      },
+      "commands": {
+        "goToInbox": "Go to Inbox",
+        "goToDrafts": "Go to Drafts",
+        "goToSent": "Go to Sent",
+        "goToSpam": "Go to Spam",
+        "goToArchive": "Go to Archive",
+        "goToBin": "Go to Bin",
+        "goToSettings": "Go to Settings",
+        "newEmail": "New Email",
+        "composeMessage": "Compose message",
+        "searchEmails": "Search Emails",
+        "toggleTheme": "Toggle Theme",
+        "backToMail": "Back to Mail",
+        "goToDocs": "Go to docs",
+        "helpWithShortcuts": "Help with shortcuts"
+      }
+    },
+    "searchBar": {
+      "pickDateRange": "Pick a date or a range",
+      "search": "Search",
+      "clearSearch": "Clear search",
+      "advancedSearch": "Advanced search",
+      "quickFilters": "Quick filters",
+      "searchIn": "Search in",
+      "recipient": "Recipient",
+      "sender": "Sender",
+      "subject": "Subject",
+      "dateRange": "Date range",
+      "category": "Category",
+      "folder": "Folder",
+      "allMail": "All Mail",
+      "unread": "Unread",
+      "hasAttachment": "Has Attachment",
+      "starred": "Starred",
+      "applyFilters": "Apply filters",
+      "reset": "Reset"
+    },
+    "navUser": {
+      "customerSupport": "Customer Support",
+      "documentation": "Documentation",
+      "appTheme": "App Theme",
+      "accounts": "Accounts",
+      "signIn": "Sign in"
+    },
+    "mailCategories": {
+      "primary": "Primary",
+      "important": "Important",
+      "personal": "Personal",
+      "updates": "Updates",
+      "promotions": "Promotions",
+      "social": "Social",
+      "favourites": "Favourites"
+    },
+    "replyCompose": {
+      "replyTo": "Reply to",
+      "thisEmail": "this email",
+      "dropFiles": "Drop files to attach",
+      "attachments": "Attachments",
+      "attachmentCount": "{count, plural, =0 {attachments} one {attachment} other {attachments}}",
+      "fileCount": "{count, plural, =0 {files} one {file} other {files}}",
+      "saveDraft": "Save draft",
+      "send": "Send"
+    },
+    "mailDisplay": {
+      "details": "Details",
+      "from": "From",
+      "to": "To",
+      "cc": "Cc",
+      "date": "Date",
+      "mailedBy": "Mailed-By",
+      "signedBy": "Signed-By",
+      "security": "Security",
+      "standardEncryption": "Standard encryption (TLS)",
+      "loadingMailContent": "Loading mail content...",
+      "unsubscribe": "Unsubscribe",
+      "unsubscribed": "Unsubscribed",
+      "unsubscribeDescription": "Are you sure you want to unsubscribe from this mailing list?",
+      "unsubscribeOpenSiteDescription": "To stop getting messages from this mailing list, go to their website to unsubscribe.",
+      "cancel": "Cancel",
+      "goToWebsite": "Go to website",
+      "failedToUnsubscribe": "Failed to unsubscribe from mailing list"
+    },
+    "threadDisplay": {
+      "exitFullscreen": "Exit fullscreen",
+      "enterFullscreen": "Enter fullscreen",
+      "archive": "Archive",
+      "reply": "Reply",
+      "moreOptions": "More options",
+      "moveToSpam": "Move to spam",
+      "replyAll": "Reply all",
+      "forward": "Forward",
+      "markAsUnread": "Mark as unread",
+      "addLabel": "Add label",
+      "muteThread": "Mute thread"
+    },
+    "notes": {
+      "title": "Notes",
+      "empty": "No notes for this email",
+      "emptyDescription": "Add notes to keep track of important information or follow-ups.",
+      "addNote": "Add a note",
+      "addYourNote": "Add your note here...",
+      "editNote": "Edit note",
+      "deleteNote": "Delete note",
+      "deleteConfirm": "Are you sure you want to delete this note?",
+      "deleteConfirmDescription": "This action cannot be undone.",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "save": "Save note",
+      "toSave": "to save",
+      "label": "Label:",
+      "search": "Search notes...",
+      "noteCount": "{count, plural, =0 {Add notes} one {# note} other {# notes}}",
+      "notePinned": "Note pinned",
+      "noteUnpinned": "Note unpinned",
+      "colorChanged": "Note color updated",
+      "noteUpdated": "Note updated",
+      "noteDeleted": "Note deleted",
+      "noteCopied": "Copied to clipboard",
+      "noteAdded": "Note added",
+      "notesReordered": "Notes reordered",
+      "noMatchingNotes": "No notes matching \"{query}\"",
+      "clearSearch": "Clear search",
+      "pinnedNotes": "Pinned notes",
+      "otherNotes": "Other notes",
+      "created": "Created",
+      "updated": "Updated",
+      "errors": {
+        "failedToLoadNotes": "Failed to load notes",
+        "failedToLoadThreadNotes": "Failed to load thread notes",
+        "failedToAddNote": "Failed to add note",
+        "failedToUpdateNote": "Failed to update note",
+        "failedToDeleteNote": "Failed to delete note",
+        "failedToUpdateNoteColor": "Failed to update note color",
+        "noValidNotesToReorder": "No valid notes to reorder",
+        "failedToReorderNotes": "Failed to reorder notes"
+      },
+      "colors": {
+        "default": "Default",
+        "red": "Red",
+        "orange": "Orange",
+        "yellow": "Yellow",
+        "green": "Green",
+        "blue": "Blue",
+        "purple": "Purple",
+        "pink": "Pink"
+      },
+      "actions": {
+        "pin": "Pin note",
+        "unpin": "Unpin note",
+        "edit": "Edit note",
+        "delete": "Delete note",
+        "copy": "Copy note",
+        "changeColor": "Change color"
+      }
+    },
+    "mail": {
+      "replies": "{count, plural, =0 {replies} one {# reply} other {# replies}}",
+      "deselectAll": "Deselected all emails",
+      "selectedEmails": "Selected {count} emails",
+      "noEmailsToSelect": "No emails to select",
+      "markedAsRead": "Marked as read",
+      "markedAsUnread": "Marked as unread",
+      "failedToMarkAsRead": "Failed to mark as read",
+      "failedToMarkAsUnread": "Failed to mark as unread",
+      "selected": "{count} selected",
+      "clearSelection": "Clear Selection",
+      "mute": "Mute",
+      "moveToSpam": "Move to Spam",
+      "moveToInbox": "Move to Inbox",
+      "unarchive": "Unarchive",
+      "archive": "Archive",
+      "moveToTrash": "Move to Trash",
+      "markAsUnread": "Mark as Unread",
+      "addStar": "Add Star",
+      "muteThread": "Mute Thread",
+      "moving": "Moving...",
+      "moved": "Moved",
+      "errorMoving": "Error moving"
+    }
+  },
+  "navigation": {
+    "sidebar": {
+      "inbox": "Inbox",
+      "drafts": "Drafts",
+      "sent": "Sent",
+      "spam": "Spam",
+      "archive": "Archive",
+      "bin": "Bin",
+      "feedback": "Feedback",
+      "contact": "Contact",
+      "settings": "Settings"
+    },
+    "settings": {
+      "general": "General",
+      "connections": "Connections",
+      "security": "Security",
+      "appearance": "Appearance",
+      "shortcuts": "Shortcuts"
+    }
+  },
+  "pages": {
+    "error": {
+      "notFound": {
+        "title": "Page Not Found",
+        "description": "Oops! The page you're looking for doesn't exist or has been moved.",
+        "goBack": "Go Back"
+      },
+      "settingsNotFound": "404 - Settings page not found"
+    },
+    "settings": {
+      "general": {
+        "title": "General",
+        "description": "Manage settings for your language and email display preferences.",
+        "language": "Language",
+        "timezone": "Timezone",
+        "dynamicContent": "Dynamic Content",
+        "dynamicContentDescription": "Allow emails to display dynamic content.",
+        "externalImages": "Display External Images",
+        "externalImagesDescription": "Allow emails to display images from external sources.",
+        "languageChangedTo": "Language changed to {language}"
+      },
+      "connections": {
+        "title": "Email Connections",
+        "description": "Connect your email accounts to Zero.",
+        "disconnectTitle": "Disconnect Email Account",
+        "disconnectDescription": "Are you sure you want to disconnect this email?",
+        "cancel": "Cancel",
+        "remove": "Remove",
+        "disconnectSuccess": "Account disconnected successfully",
+        "disconnectError": "Failed to disconnect account",
+        "addEmail": "Add Connection",
+        "connectEmail": "Connect Email",
+        "connectEmailDescription": "Select an email provider to connect",
+        "moreComingSoon": "More coming soon"
+      },
+      "security": {
+        "title": "Security",
+        "description": "Manage your security preferences and account protection.",
+        "twoFactorAuth": "Two-Factor Authentication",
+        "twoFactorAuthDescription": "Add an extra layer of security to your account",
+        "loginNotifications": "Login Notifications",
+        "loginNotificationsDescription": "Get notified about new login attempts",
+        "deleteAccount": "Delete Account"
+      },
+      "appearance": {
+        "title": "Appearance",
+        "description": "Customize colors, fonts and view options.",
+        "theme": "Theme",
+        "inboxType": "Inbox Type"
+      },
+      "shortcuts": {
+        "title": "Keyboard Shortcuts",
+        "description": "View and customize keyboard shortcuts for quick actions.",
+        "actions": {
+          "newEmail": "New Email",
+          "sendEmail": "Send Email",
+          "reply": "Reply",
+          "replyAll": "Reply All",
+          "forward": "Forward",
+          "drafts": "Drafts",
+          "inbox": "Inbox",
+          "sentMail": "Sent Mail",
+          "delete": "Delete",
+          "search": "Search",
+          "markAsUnread": "Mark as Unread",
+          "muteThread": "Mute Thread",
+          "printEmail": "Print Email",
+          "archiveEmail": "Archive Email",
+          "markAsSpam": "Mark as Spam",
+          "moveToFolder": "Move to Folder",
+          "undoLastAction": "Undo Last Action",
+          "viewEmailDetails": "View Email Details",
+          "goToDrafts": "Go to Drafts",
+          "expandEmailView": "Expand Email View",
+          "helpWithShortcuts": "Help with shortcuts"
+        }
+      }
+    },
+    "createEmail": {
+      "body": "Body",
+      "example": "zero@0.email",
+      "attachments": "Attachments",
+      "dropFilesToAttach": "Drop files to attach",
+      "writeYourMessageHere": "Write your message here...",
+      "emailSentSuccessfully": "Email sent successfully",
+      "failedToSendEmail": "Failed to send email. Please try again."
+    }
+  }
+}

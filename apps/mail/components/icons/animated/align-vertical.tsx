@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { forwardRef, useCallback, useImperativeHandle, useRef } from "react";
-import { motion, useAnimation } from "motion/react";
-import type { Variants } from "motion/react";
-import type { HTMLAttributes } from "react";
+import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
+import { motion, useAnimation } from 'motion/react';
+import type { Variants } from 'motion/react';
+import type { HTMLAttributes } from 'react';
 
 export interface AlignVerticalSpaceAroundIconHandle {
   startAnimation: () => void;
@@ -14,7 +14,7 @@ const rectVariants: Variants = {
   normal: {
     y: 0,
     transition: {
-      type: "spring",
+      type: 'spring',
       stiffness: 400,
       damping: 30,
     },
@@ -22,7 +22,7 @@ const rectVariants: Variants = {
   animate: {
     y: [-1, 1],
     transition: {
-      type: "spring",
+      type: 'spring',
       stiffness: 400,
       damping: 15,
       duration: 0.3,
@@ -34,7 +34,7 @@ const pathVariants: Variants = {
   normal: { pathLength: 1 },
   animate: { pathLength: [0.7, 1] },
   transition: {
-    type: "spring",
+    type: 'spring',
   },
 };
 
@@ -49,15 +49,15 @@ const AlignVerticalSpaceAroundIcon = forwardRef<
     isControlledRef.current = true;
 
     return {
-      startAnimation: () => controls.start("animate"),
-      stopAnimation: () => controls.start("normal"),
+      startAnimation: () => controls.start('animate'),
+      stopAnimation: () => controls.start('normal'),
     };
   });
 
   const handleMouseEnter = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       if (!isControlledRef.current) {
-        controls.start("animate");
+        controls.start('animate');
       } else {
         onMouseEnter?.(e);
       }
@@ -68,7 +68,7 @@ const AlignVerticalSpaceAroundIcon = forwardRef<
   const handleMouseLeave = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       if (!isControlledRef.current) {
-        controls.start("normal");
+        controls.start('normal');
       } else {
         onMouseLeave?.(e);
       }
@@ -78,7 +78,7 @@ const AlignVerticalSpaceAroundIcon = forwardRef<
 
   return (
     <div
-      className="flex cursor-pointer select-none items-center justify-center rounded-md transition-colors duration-200 hover:bg-accent"
+      className="hover:bg-accent flex cursor-pointer select-none items-center justify-center rounded-md transition-colors duration-200"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       {...props}
@@ -123,6 +123,6 @@ const AlignVerticalSpaceAroundIcon = forwardRef<
   );
 });
 
-AlignVerticalSpaceAroundIcon.displayName = "AlignVerticalSpaceAroundIcon";
+AlignVerticalSpaceAroundIcon.displayName = 'AlignVerticalSpaceAroundIcon';
 
 export { AlignVerticalSpaceAroundIcon };

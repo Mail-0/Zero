@@ -1,6 +1,6 @@
 import { atom, useAtom } from "jotai";
 
-import { Mail } from "@/components/mail/data";
+import { type Mail } from "@/components/mail/data";
 
 type Config = {
   selected: Mail["id"] | null;
@@ -15,3 +15,11 @@ const configAtom = atom<Config>({
 export function useMail() {
   return useAtom(configAtom);
 }
+
+export const clearBulkSelectionAtom = atom(
+  null,
+  (get, set) => {
+    const current = get(configAtom);
+    set(configAtom, { ...current, bulkSelected: [] });
+  }
+);

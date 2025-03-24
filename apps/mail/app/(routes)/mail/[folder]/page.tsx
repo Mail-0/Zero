@@ -1,4 +1,4 @@
-import { MailLayout } from "@/components/mail/mail";
+import { MailLayout } from '@/components/mail/mail';
 
 interface MailPageProps {
   params: Promise<{
@@ -6,7 +6,7 @@ interface MailPageProps {
   }>;
 }
 
-const ALLOWED_FOLDERS = ["inbox", "draft", "sent", "spam", "trash", "archive"];
+const ALLOWED_FOLDERS = ['inbox', 'draft', 'sent', 'spam', 'trash', 'archive'];
 
 export default async function MailPage({ params }: MailPageProps) {
   const { folder } = await params;
@@ -15,7 +15,5 @@ export default async function MailPage({ params }: MailPageProps) {
     return <div>Invalid folder</div>;
   }
 
-  return (
-    <MailLayout />
-  );
+  return <MailLayout />;
 }

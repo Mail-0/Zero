@@ -1,19 +1,19 @@
-"use client";
+'use client';
 
-import { AIChat } from "@/components/create/ai-chat";
-import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useState } from "react";
-import Image from "next/image";
+import { AIChat } from '@/components/create/ai-chat';
+import { Button } from '@/components/ui/button';
+import { X, MessageSquare } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 interface AISidebarProps {
   className?: string;
 }
 
 // Create a context to manage the AI sidebar state globally
-import { createContext, useContext } from "react";
-import { useHotKey } from "@/hooks/use-hot-key";
+import { createContext, useContext } from 'react';
+import { useHotKey } from '@/hooks/use-hot-key';
 
 type AISidebarContextType = {
   open: boolean;
@@ -26,7 +26,7 @@ export const AISidebarContext = createContext<AISidebarContextType | undefined>(
 export function useAISidebar() {
   const context = useContext(AISidebarContext);
   if (!context) {
-    throw new Error("useAISidebar must be used within an AISidebarProvider");
+    throw new Error('useAISidebar must be used within an AISidebarProvider');
   }
   return context;
 }
@@ -47,11 +47,11 @@ export function AISidebarProvider({ children }: { children: React.ReactNode }) {
 export function AISidebar({ className }: AISidebarProps) {
   const { open, setOpen } = useAISidebar();
 
-  useHotKey("Meta+0", () => {
+  useHotKey('Meta+0', () => {
     setOpen(!open);
   });
 
-  useHotKey("Control+0", () => {
+  useHotKey('Control+0', () => {
     setOpen(!open);
   });
 
@@ -59,13 +59,13 @@ export function AISidebar({ className }: AISidebarProps) {
     <>
       <aside
         className={cn(
-          "fixed inset-y-4 right-4 z-40 my-2 mr-2",
-          "bg-background w-[400px]",
-          "rounded-xl border shadow-lg",
-          "transition-all duration-300 ease-in-out",
-          "flex flex-col",
-          "bg-offsetLight dark:bg-offsetDark overflow-y-auto",
-          open ? "translate-x-0 opacity-100" : "translate-x-full opacity-0",
+          'fixed inset-y-4 right-4 z-40 my-2 mr-2',
+          'bg-background w-[400px]',
+          'rounded-xl border shadow-lg',
+          'transition-all duration-300 ease-in-out',
+          'flex flex-col',
+          'bg-offsetLight dark:bg-offsetDark overflow-y-auto',
+          open ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0',
           className,
         )}
       >

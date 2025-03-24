@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { cva, type VariantProps } from "class-variance-authority";
-import * as LabelPrimitive from "@radix-ui/react-label";
-import * as React from "react";
+import { cva, type VariantProps } from 'class-variance-authority';
+import * as LabelPrimitive from '@radix-ui/react-label';
+import * as React from 'react';
 
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 
 const labelVariants = cva(
-  "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+  'text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
 );
 
 const Label = React.forwardRef<

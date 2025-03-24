@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   ImageIcon,
@@ -10,13 +10,13 @@ import {
   Paperclip,
   PlusIcon,
   Mic,
-} from "lucide-react";
-import { useEffect, useRef, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { AITextarea } from "./ai-textarea";
-import { cn } from "@/lib/utils";
-import { useState } from "react";
-import { toast } from "sonner";
+} from 'lucide-react';
+import { useEffect, useRef, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
+import { AITextarea } from './ai-textarea';
+import { cn } from '@/lib/utils';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface UseAutoResizeTextareaProps {
   minHeight: number;
@@ -61,15 +61,15 @@ function useAutoResizeTextarea({ minHeight, maxHeight }: UseAutoResizeTextareaPr
   // Adjust height on window resize
   useEffect(() => {
     const handleResize = () => adjustHeight();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [adjustHeight]);
 
   return { textareaRef, adjustHeight };
 }
 
 export function AIChat() {
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [audioData, setAudioData] = useState<number[]>(Array(30).fill(0));
   const [isListening, setIsListening] = useState(false);
@@ -101,10 +101,10 @@ export function AIChat() {
   }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       if (value.trim()) {
-        setValue("");
+        setValue('');
         adjustHeight(true);
       }
     }
@@ -118,7 +118,7 @@ export function AIChat() {
     const files = e.target.files;
     if (files && files.length > 0) {
       // Handle file upload here
-      console.log("Selected files:", files);
+      console.log('Selected files:', files);
       // You can implement file upload logic here
     }
   };
@@ -143,7 +143,7 @@ export function AIChat() {
         setIsListening(true);
 
         // Set up speech recognition
-        if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
+        if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
           const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
           recognitionRef.current = new SpeechRecognition();
           recognitionRef.current.continuous = true;
@@ -151,8 +151,8 @@ export function AIChat() {
 
           recognitionRef.current.onresult = (event) => {
             const transcript = Array.from(event.results)
-              .map((result) => result[0]?.transcript || "")
-              .join("");
+              .map((result) => result[0]?.transcript || '')
+              .join('');
 
             setValue((prev) => {
               // Only update if we have new content
@@ -175,7 +175,7 @@ export function AIChat() {
 
           recognitionRef.current.start();
         } else {
-          toast.error("Your browser does not support speech recognition.");
+          toast.error('Your browser does not support speech recognition.');
         }
       } else {
         // Stop recording
@@ -204,7 +204,7 @@ export function AIChat() {
         setAudioData(Array(30).fill(0));
       }
     } catch (error) {
-      console.error("Error accessing microphone:", error);
+      console.error('Error accessing microphone:', error);
     }
   };
 
@@ -261,7 +261,7 @@ export function AIChat() {
                 placeholder="Ask Zero a question..."
                 className="text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground min-h-[60px] w-full resize-none border-none bg-transparent px-4 py-3 text-sm placeholder:text-sm focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 dark:text-white"
                 style={{
-                  overflow: "hidden",
+                  overflow: 'hidden',
                 }}
               />
             )}
@@ -284,7 +284,7 @@ export function AIChat() {
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
-                  className={cn("w-9", isRecording && "bg-red-500 text-white hover:bg-red-600")}
+                  className={cn('w-9', isRecording && 'bg-red-500 text-white hover:bg-red-600')}
                   onClick={handleMicClick}
                 >
                   <Mic className="h-4 w-4" />

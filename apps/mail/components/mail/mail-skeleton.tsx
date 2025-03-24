@@ -1,15 +1,15 @@
-import { Archive, Copy, Maximize2, Minimize2, X, Reply, MoreVertical } from "lucide-react";
-import { Skeleton } from "../ui/skeleton";
-import { Button } from "../ui/button";
-import { cn } from "@/lib/utils";
+import { Archive, Copy, Maximize2, Minimize2, X, Reply, MoreVertical } from 'lucide-react';
+import { Skeleton } from '../ui/skeleton';
+import { Button } from '../ui/button';
+import { cn } from '@/lib/utils';
 
 export const MailDisplaySkeleton = ({ isFullscreen }: { isFullscreen?: boolean }) => {
   return (
     <>
       <div
         className={cn(
-          "border-border bg-secondary/50 relative m-4 flex-1 overflow-hidden rounded-lg border p-4",
-          isFullscreen && "h-[calc(100vh-4rem)]",
+          'border-border bg-secondary/50 relative m-4 flex-1 overflow-hidden rounded-lg border p-4',
+          isFullscreen && 'h-[calc(100vh-4rem)]',
         )}
       >
         <div className="relative inset-0 h-full overflow-y-auto pb-0">
@@ -48,8 +48,8 @@ export const MailDisplaySkeleton = ({ isFullscreen }: { isFullscreen?: boolean }
       </div>
       <div
         className={cn(
-          "border-border bg-secondary/50 relative m-4 flex-1 overflow-hidden rounded-lg border p-4",
-          isFullscreen && "h-[calc(100vh-4rem)]",
+          'border-border bg-secondary/50 relative m-4 flex-1 overflow-hidden rounded-lg border p-4',
+          isFullscreen && 'h-[calc(100vh-4rem)]',
         )}
       >
         <div className="relative inset-0 h-full overflow-y-auto pb-0">
@@ -88,8 +88,8 @@ export const MailDisplaySkeleton = ({ isFullscreen }: { isFullscreen?: boolean }
       </div>
       <div
         className={cn(
-          "border-border bg-secondary/50 relative m-4 flex-1 overflow-hidden rounded-lg border p-4",
-          isFullscreen && "h-[calc(100vh-4rem)]",
+          'border-border bg-secondary/50 relative m-4 flex-1 overflow-hidden rounded-lg border p-4',
+          isFullscreen && 'h-[calc(100vh-4rem)]',
         )}
       >
         <div className="relative inset-0 h-full overflow-y-auto pb-0">
@@ -132,7 +132,7 @@ export const MailDisplaySkeleton = ({ isFullscreen }: { isFullscreen?: boolean }
 
 export const MailHeaderSkeleton = ({ isFullscreen }: { isFullscreen?: boolean }) => {
   return (
-    <div className="flex items-center p-[7px] border-b">
+    <div className="flex items-center border-b p-[7px]">
       <div className="flex flex-1 items-center gap-2">
         <Button variant="ghost" className="md:h-fit md:px-2" disabled={true}>
           <X className="h-4 w-4" />
@@ -143,7 +143,7 @@ export const MailHeaderSkeleton = ({ isFullscreen }: { isFullscreen?: boolean })
       <div className="flex items-center gap-2">
         <Button variant="ghost" className="md:h-fit md:px-2" disabled={true}>
           {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-          <span className="sr-only">{isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}</span>
+          <span className="sr-only">{isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}</span>
         </Button>
 
         <Button variant="ghost" className="md:h-fit md:px-2" disabled={true}>

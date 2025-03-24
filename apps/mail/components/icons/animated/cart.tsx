@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { forwardRef, useCallback, useImperativeHandle, useRef } from "react";
-import { motion, useAnimation } from "motion/react";
-import type { Variants } from "motion/react";
-import type { HTMLAttributes } from "react";
+import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
+import { motion, useAnimation } from 'motion/react';
+import type { Variants } from 'motion/react';
+import type { HTMLAttributes } from 'react';
 
 export interface CartIconHandle {
   startAnimation: () => void;
@@ -17,7 +17,7 @@ const cartVariants: Variants = {
     y: [0, -5, 0],
     transition: {
       duration: 0.3,
-      ease: "easeInOut",
+      ease: 'easeInOut',
       y: { repeat: 1, delay: 0.1, duration: 0.4 },
     },
   },
@@ -32,15 +32,15 @@ const CartIcon = forwardRef<CartIconHandle, HTMLAttributes<HTMLDivElement>>(
       isControlledRef.current = true;
 
       return {
-        startAnimation: () => controls.start("animate"),
-        stopAnimation: () => controls.start("normal"),
+        startAnimation: () => controls.start('animate'),
+        stopAnimation: () => controls.start('normal'),
       };
     });
 
     const handleMouseEnter = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
         if (!isControlledRef.current) {
-          controls.start("animate");
+          controls.start('animate');
         } else {
           onMouseEnter?.(e);
         }
@@ -51,7 +51,7 @@ const CartIcon = forwardRef<CartIconHandle, HTMLAttributes<HTMLDivElement>>(
     const handleMouseLeave = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
         if (!isControlledRef.current) {
-          controls.start("normal");
+          controls.start('normal');
         } else {
           onMouseLeave?.(e);
         }
@@ -60,7 +60,7 @@ const CartIcon = forwardRef<CartIconHandle, HTMLAttributes<HTMLDivElement>>(
     );
     return (
       <div
-        className="flex cursor-pointer select-none items-center justify-center rounded-md p-2 transition-colors duration-200 hover:bg-accent"
+        className="hover:bg-accent flex cursor-pointer select-none items-center justify-center rounded-md p-2 transition-colors duration-200"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         {...props}
@@ -87,6 +87,6 @@ const CartIcon = forwardRef<CartIconHandle, HTMLAttributes<HTMLDivElement>>(
   },
 );
 
-CartIcon.displayName = "CartIcon";
+CartIcon.displayName = 'CartIcon';
 
 export { CartIcon };

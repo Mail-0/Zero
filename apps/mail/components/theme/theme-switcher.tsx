@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   Select,
@@ -6,19 +6,22 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useEffect, useState } from "react";
+} from '@/components/ui/select';
+import { useEffect, useState } from 'react';
 
-import { Laptop, Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
-import { cn } from "@/lib/utils";
-
+import { type MessageKey } from '@/config/navigation';
+import { Laptop, Moon, Sun } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useTheme } from 'next-themes';
+import { cn } from '@/lib/utils';
 interface ModeToggleProps {
   className?: string;
 }
 
 export function ModeToggle({ className }: ModeToggleProps) {
   const [mounted, setMounted] = useState(false);
+
+  const t = useTranslations();
 
   // Fixes SSR hydration
   useEffect(() => {
@@ -30,7 +33,7 @@ export function ModeToggle({ className }: ModeToggleProps) {
   async function handleThemeChange(newTheme: string) {
     let nextResolvedTheme = newTheme;
 
-    if (newTheme === "system" && systemTheme) {
+    if (newTheme === 'system' && systemTheme) {
       nextResolvedTheme = systemTheme;
     }
 
@@ -39,9 +42,9 @@ export function ModeToggle({ className }: ModeToggleProps) {
     }
 
     if (document.startViewTransition && nextResolvedTheme !== resolvedTheme) {
-      document.documentElement.style.viewTransitionName = "theme-transition";
+      document.documentElement.style.viewTransitionName = 'theme-transition';
       await document.startViewTransition(update).finished;
-      document.documentElement.style.viewTransitionName = "";
+      document.documentElement.style.viewTransitionName = '';
     } else {
       update();
     }
@@ -55,11 +58,11 @@ export function ModeToggle({ className }: ModeToggleProps) {
     <Select value={theme} onValueChange={handleThemeChange}>
       <SelectTrigger className={cn(className)}>
         <SelectValue placeholder="Select theme">
-          <div className="flex items-center gap-2">
-            {theme === "dark" && <Moon className="h-4 w-4" />}
-            {theme === "light" && <Sun className="h-4 w-4" />}
-            {theme === "system" && <Laptop className="h-4 w-4" />}
-            {theme?.charAt(0)?.toUpperCase() + theme?.slice(1)}
+          <div className="flex items-center gap-2 capitalize">
+            {theme === 'dark' && <Moon className="h-4 w-4" />}
+            {theme === 'light' && <Sun className="h-4 w-4" />}
+            {theme === 'system' && <Laptop className="h-4 w-4" />}
+            {t(`common.themes.${theme}` as MessageKey)}
           </div>
         </SelectValue>
       </SelectTrigger>
@@ -67,19 +70,19 @@ export function ModeToggle({ className }: ModeToggleProps) {
         <SelectItem value="dark">
           <div className="flex items-center gap-2">
             <Moon className="h-4 w-4" />
-            Dark
+            {t('common.themes.dark')}
           </div>
         </SelectItem>
         <SelectItem value="system">
           <div className="flex items-center gap-2">
             <Laptop className="h-4 w-4" />
-            System
+            {t('common.themes.system')}
           </div>
         </SelectItem>
         <SelectItem value="light">
           <div className="flex items-center gap-2">
             <Sun className="h-4 w-4" />
-            Light
+            {t('common.themes.light')}
           </div>
         </SelectItem>
       </SelectContent>

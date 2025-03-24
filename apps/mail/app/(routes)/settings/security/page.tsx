@@ -1,14 +1,22 @@
-"use client";
+'use client';
 
-import { SettingsCard } from "@/components/settings/settings-card";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from "@/components/ui/form";
-import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
-import { KeyRound } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
-import * as z from "zod";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+} from '@/components/ui/form';
+import { SettingsCard } from '@/components/settings/settings-card';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
+import { useTranslations } from 'next-intl';
+import { useForm } from 'react-hook-form';
+import { KeyRound } from 'lucide-react';
+import { useState } from 'react';
+import * as z from 'zod';
 
 const formSchema = z.object({
   twoFactorAuth: z.boolean(),
@@ -17,6 +25,7 @@ const formSchema = z.object({
 
 export default function SecurityPage() {
   const [isSaving, setIsSaving] = useState(false);
+  const t = useTranslations();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -39,13 +48,13 @@ export default function SecurityPage() {
   return (
     <div className="grid gap-6">
       <SettingsCard
-        title="Security"
-        description="Manage your security preferences and account protection."
+        title={t('pages.settings.security.title')}
+        description={t('pages.settings.security.description')}
         footer={
           <div className="flex gap-4">
-            <Button variant="destructive">Delete Account</Button>
+            <Button variant="destructive">{t('pages.settings.security.deleteAccount')}</Button>
             <Button type="submit" form="security-form" disabled={isSaving}>
-              {isSaving ? "Saving..." : "Save changes"}
+              {isSaving ? t('common.actions.saving') : t('common.actions.saveChanges')}
             </Button>
           </div>
         }
@@ -57,11 +66,13 @@ export default function SecurityPage() {
                 control={form.control}
                 name="twoFactorAuth"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border bg-popover p-4">
+                  <FormItem className="bg-popover flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-base">Two-Factor Authentication</FormLabel>
+                      <FormLabel className="text-base">
+                        {t('pages.settings.security.twoFactorAuth')}
+                      </FormLabel>
                       <FormDescription>
-                        Add an extra layer of security to your account
+                        {t('pages.settings.security.twoFactorAuthDescription')}
                       </FormDescription>
                     </div>
                     <FormControl className="ml-4">
@@ -74,11 +85,13 @@ export default function SecurityPage() {
                 control={form.control}
                 name="loginNotifications"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border bg-popover p-4">
+                  <FormItem className="bg-popover flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-base">Login Notifications</FormLabel>
+                      <FormLabel className="text-base">
+                        {t('pages.settings.security.loginNotifications')}
+                      </FormLabel>
                       <FormDescription>
-                        Get notified about new login attempts
+                        {t('pages.settings.security.loginNotificationsDescription')}
                       </FormDescription>
                     </div>
                     <FormControl className="ml-4">

@@ -10,11 +10,11 @@ import {
   Text,
   TextQuote,
   Twitter,
-  Youtube
-} from 'lucide-react'
-import { createSuggestionItems } from 'novel'
-import { Command, renderItems } from 'novel'
-import { uploadFn } from './image-upload'
+  Youtube,
+} from 'lucide-react';
+import { createSuggestionItems } from 'novel';
+import { Command, renderItems } from 'novel';
+import { uploadFn } from './image-upload';
 
 export const suggestionItems = createSuggestionItems([
   {
@@ -23,28 +23,18 @@ export const suggestionItems = createSuggestionItems([
     searchTerms: ['p', 'paragraph'],
     icon: <Text size={18} />,
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .toggleNode('paragraph', 'paragraph')
-        .run()
-    }
+      editor.chain().focus().deleteRange(range).toggleNode('paragraph', 'paragraph').run();
+    },
   },
-  
+
   {
     title: 'Heading 1',
     description: 'Big section heading.',
     searchTerms: ['title', 'big', 'large'],
     icon: <Heading1 size={18} />,
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .setNode('heading', { level: 1 })
-        .run()
-    }
+      editor.chain().focus().deleteRange(range).setNode('heading', { level: 1 }).run();
+    },
   },
   {
     title: 'Heading 2',
@@ -52,13 +42,8 @@ export const suggestionItems = createSuggestionItems([
     searchTerms: ['subtitle', 'medium'],
     icon: <Heading2 size={18} />,
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .setNode('heading', { level: 2 })
-        .run()
-    }
+      editor.chain().focus().deleteRange(range).setNode('heading', { level: 2 }).run();
+    },
   },
   {
     title: 'Heading 3',
@@ -66,13 +51,8 @@ export const suggestionItems = createSuggestionItems([
     searchTerms: ['subtitle', 'small'],
     icon: <Heading3 size={18} />,
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .setNode('heading', { level: 3 })
-        .run()
-    }
+      editor.chain().focus().deleteRange(range).setNode('heading', { level: 3 }).run();
+    },
   },
   {
     title: 'Bullet List',
@@ -80,8 +60,8 @@ export const suggestionItems = createSuggestionItems([
     searchTerms: ['unordered', 'point'],
     icon: <List size={18} />,
     command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).toggleBulletList().run()
-    }
+      editor.chain().focus().deleteRange(range).toggleBulletList().run();
+    },
   },
   {
     title: 'Numbered List',
@@ -89,8 +69,7 @@ export const suggestionItems = createSuggestionItems([
     searchTerms: ['ordered'],
     icon: <ListOrdered size={18} />,
     command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).toggleOrderedList().run()
-    }
-  }
-])
-
+      editor.chain().focus().deleteRange(range).toggleOrderedList().run();
+    },
+  },
+]);

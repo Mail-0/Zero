@@ -1,0 +1,19 @@
+name: autofix.ci
+on:
+  pull_request:
+  push:
+permissions: {}
+jobs:
+  prettier:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code 🛎
+        uses: actions/checkout@v4
+
+      - name: Setup Bun 🌟
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - uses: actions/setup-node@v4
+      - run: |
+          bun install

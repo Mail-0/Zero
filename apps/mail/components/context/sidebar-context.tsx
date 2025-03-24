@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   SIDEBAR_COOKIE_MAX_AGE,
@@ -6,14 +6,14 @@ import {
   SIDEBAR_KEYBOARD_SHORTCUT,
   SIDEBAR_WIDTH,
   SIDEBAR_WIDTH_ICON,
-} from "@/lib/constants";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { TooltipProvider } from "../ui/tooltip";
-import { cn, getCookie } from "@/lib/utils";
-import * as React from "react";
+} from '@/lib/constants';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { TooltipProvider } from '../ui/tooltip';
+import { cn, getCookie } from '@/lib/utils';
+import * as React from 'react';
 
 export type SidebarContext = {
-  state: "expanded" | "collapsed";
+  state: 'expanded' | 'collapsed';
   open: boolean;
   setOpen: (open: boolean) => void;
   openMobile: boolean;
@@ -27,7 +27,7 @@ export const SidebarContext = React.createContext<SidebarContext | null>(null);
 export function useSidebar() {
   const context = React.useContext(SidebarContext);
   if (!context) {
-    throw new Error("useSidebar must be used within a SidebarProvider.");
+    throw new Error('useSidebar must be used within a SidebarProvider.');
   }
 
   return context;
@@ -35,7 +35,7 @@ export function useSidebar() {
 
 export const SidebarProvider = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<"div"> & {
+  React.ComponentProps<'div'> & {
     defaultOpen?: boolean;
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
@@ -62,7 +62,7 @@ export const SidebarProvider = React.forwardRef<
     const open = openProp ?? _open;
     const setOpen = React.useCallback(
       (value: boolean | ((value: boolean) => boolean)) => {
-        const openState = typeof value === "function" ? value(open) : value;
+        const openState = typeof value === 'function' ? value(open) : value;
         if (setOpenProp) {
           setOpenProp(openState);
         } else {
@@ -83,26 +83,13 @@ export const SidebarProvider = React.forwardRef<
     React.useEffect(() => {
       // In nextjs, browser apis are guarded so we need to do this in a use effect to not get an error that document is not defined.
       const sidebarCookie = getCookie(SIDEBAR_COOKIE_NAME);
-      const isDefaultOpen = sidebarCookie ? sidebarCookie === "true" : defaultOpen;
+      const isDefaultOpen = sidebarCookie ? sidebarCookie === 'true' : defaultOpen;
       _setOpen(isDefaultOpen);
     }, [defaultOpen]);
 
-    // Adds a keyboard shortcut to toggle the sidebar.
-    React.useEffect(() => {
-      const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.key === SIDEBAR_KEYBOARD_SHORTCUT && (event.metaKey || event.ctrlKey)) {
-          event.preventDefault();
-          toggleSidebar();
-        }
-      };
-
-      window.addEventListener("keydown", handleKeyDown);
-      return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [toggleSidebar]);
-
     // We add a state so that we can do data-state="expanded" or "collapsed".
     // This makes it easier to style the sidebar with Tailwind classes.
-    const state = open ? "expanded" : "collapsed";
+    const state = open ? 'expanded' : 'collapsed';
 
     const contextValue = React.useMemo<SidebarContext>(
       () => ({
@@ -123,13 +110,13 @@ export const SidebarProvider = React.forwardRef<
           <div
             style={
               {
-                "--sidebar-width": SIDEBAR_WIDTH,
-                "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
+                '--sidebar-width': SIDEBAR_WIDTH,
+                '--sidebar-width-icon': SIDEBAR_WIDTH_ICON,
                 ...style,
               } as React.CSSProperties
             }
             className={cn(
-              "group/sidebar-wrapper flex min-h-svh w-full has-[[data-variant=inset]]:bg-sidebar",
+              'group/sidebar-wrapper has-[[data-variant=inset]]:bg-sidebar flex min-h-svh w-full',
               className,
             )}
             ref={ref}
@@ -142,4 +129,4 @@ export const SidebarProvider = React.forwardRef<
     );
   },
 );
-SidebarProvider.displayName = "SidebarProvider";
+SidebarProvider.displayName = 'SidebarProvider';

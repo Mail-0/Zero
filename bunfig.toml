@@ -1,0 +1,3 @@
+[install]
+# Configure workspaces for monorepo
+workspaces = ["apps/*", "packages/*"] 

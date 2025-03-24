@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { forwardRef, useCallback, useImperativeHandle, useRef } from "react";
-import { motion, useAnimation } from "motion/react";
-import type { Variants } from "motion/react";
-import type { HTMLAttributes } from "react";
+import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
+import { motion, useAnimation } from 'motion/react';
+import type { Variants } from 'motion/react';
+import type { HTMLAttributes } from 'react';
 
 export interface InboxIconHandle {
   startAnimation: () => void;
@@ -11,16 +11,16 @@ export interface InboxIconHandle {
 }
 
 const polylineVariants: Variants = {
-  normal: { points: "22 12 16 12 14 15 10 15 8 12 2 12" },
-  animate: { points: "22 14 16 14 14 18 10 18 8 14 2 14" },
+  normal: { points: '22 12 16 12 14 15 10 15 8 12 2 12' },
+  animate: { points: '22 14 16 14 14 18 10 18 8 14 2 14' },
 };
 
 const pathVariants: Variants = {
   normal: {
-    d: "M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z",
+    d: 'M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z',
   },
   animate: {
-    d: "M5.45 7.11 2 14v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4l-3.45-6.89A2 2 0 0 0 16.76 6H7.24a2 2 0 0 0-1.79 1.11z",
+    d: 'M5.45 7.11 2 14v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4l-3.45-6.89A2 2 0 0 0 16.76 6H7.24a2 2 0 0 0-1.79 1.11z',
   },
 };
 
@@ -33,15 +33,15 @@ const InboxIcon = forwardRef<InboxIconHandle, HTMLAttributes<HTMLDivElement>>(
       isControlledRef.current = true;
 
       return {
-        startAnimation: () => controls.start("animate"),
-        stopAnimation: () => controls.start("normal"),
+        startAnimation: () => controls.start('animate'),
+        stopAnimation: () => controls.start('normal'),
       };
     });
 
     const handleMouseEnter = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
         if (!isControlledRef.current) {
-          controls.start("animate");
+          controls.start('animate');
         } else {
           onMouseEnter?.(e);
         }
@@ -52,7 +52,7 @@ const InboxIcon = forwardRef<InboxIconHandle, HTMLAttributes<HTMLDivElement>>(
     const handleMouseLeave = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
         if (!isControlledRef.current) {
-          controls.start("normal");
+          controls.start('normal');
         } else {
           onMouseLeave?.(e);
         }
@@ -62,7 +62,7 @@ const InboxIcon = forwardRef<InboxIconHandle, HTMLAttributes<HTMLDivElement>>(
 
     return (
       <div
-        className="flex cursor-pointer select-none items-center justify-center rounded-md p-2 transition-colors duration-200 hover:bg-accent"
+        className="hover:bg-accent flex cursor-pointer select-none items-center justify-center rounded-md p-2 transition-colors duration-200"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         {...props}
@@ -82,13 +82,13 @@ const InboxIcon = forwardRef<InboxIconHandle, HTMLAttributes<HTMLDivElement>>(
             variants={polylineVariants}
             initial="normal"
             animate={controls}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           />
           <motion.path
             variants={pathVariants}
             initial="normal"
             animate={controls}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           />
         </svg>
       </div>
@@ -96,6 +96,6 @@ const InboxIcon = forwardRef<InboxIconHandle, HTMLAttributes<HTMLDivElement>>(
   },
 );
 
-InboxIcon.displayName = "InboxIcon";
+InboxIcon.displayName = 'InboxIcon';
 
 export { InboxIcon };

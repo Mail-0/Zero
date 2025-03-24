@@ -1,0 +1,320 @@
+{
+  "common": {
+    "actions": {
+      "logout": "Tanca la sessió",
+      "back": "Enrere",
+      "create": "Crea un correu electrònic",
+      "saveChanges": "Desa els canvis",
+      "saving": "Desant...",
+      "resetToDefaults": "Restableix per defecte",
+      "close": "Tanca",
+      "signingOut": "S'està tancant la sessió...",
+      "signedOutSuccess": "S'ha tancat la sessió amb èxit!",
+      "signOutError": "Error tancant la sessió"
+    },
+    "themes": {
+      "dark": "Fosc",
+      "light": "Clar",
+      "system": "Sistema"
+    },
+    "commandPalette": {
+      "title": "Paleta de Comandes",
+      "description": "Navegació ràpida i accions per a Mail-0",
+      "placeholder": "Escriu una ordre o cerca...",
+      "noResults": "No s'han trobat resultats",
+      "groups": {
+        "mail": "Correu",
+        "settings": "Preferències",
+        "actions": "Accions",
+        "help": "Ajuda",
+        "navigation": "Navegació"
+      },
+      "commands": {
+        "goToInbox": "Anar a la Safata d'entrada",
+        "goToDrafts": "Anar a Esborranys",
+        "goToSent": "Anar a Enviats",
+        "goToSpam": "Anar al Correu brossa",
+        "goToArchive": "Anar a l'Arxiu",
+        "goToBin": "Anar a la paperera",
+        "goToSettings": "Anar a les configuracions",
+        "newEmail": "Nou correu",
+        "composeMessage": "Escriviu un missatge",
+        "searchEmails": "Buscar correus",
+        "toggleTheme": "Canvia el tema",
+        "backToMail": "Tornar al correu",
+        "goToDocs": "Anar a la documentació",
+        "helpWithShortcuts": "Ajuda amb les dreceres"
+      }
+    },
+    "searchBar": {
+      "pickDateRange": "Selecciona una data o un interval",
+      "search": "Cercar",
+      "clearSearch": "Esborra la cerca",
+      "advancedSearch": "Cerca avançada",
+      "quickFilters": "Filtres ràpids",
+      "searchIn": "Cercar en",
+      "recipient": "Destinatari",
+      "sender": "Remitent",
+      "subject": "Assumpte",
+      "dateRange": "Interval de dates",
+      "category": "Categoria",
+      "folder": "Carpeta",
+      "allMail": "Tot el correu",
+      "unread": "Sense llegir",
+      "hasAttachment": "Té adjunt",
+      "starred": "Destacat",
+      "applyFilters": "Aplicar filtres",
+      "reset": "Restablir"
+    },
+    "navUser": {
+      "customerSupport": "Atenció al client",
+      "documentation": "Documentació",
+      "appTheme": "Tema de l'aplicació",
+      "accounts": "Comptes",
+      "signIn": "Iniciar la sessió"
+    },
+    "mailCategories": {
+      "primary": "Primari",
+      "important": "Important",
+      "personal": "Personal",
+      "updates": "Actualitzacions",
+      "promotions": "Promocions",
+      "social": "Social",
+      "favourites": "Preferits"
+    },
+    "replyCompose": {
+      "replyTo": "Respon a",
+      "thisEmail": "aquest correu",
+      "dropFiles": "Arrossega arxius per adjuntar",
+      "attachments": "Adjunts",
+      "attachmentCount": "{count, plural, =0 {adjunts} one {adjunt} other {adjunts}}",
+      "fileCount": "{count, plural, =0 {fitxers} one {fitxer} other {fitxers}}",
+      "saveDraft": "Desa l'esborrany",
+      "send": "Enviar"
+    },
+    "mailDisplay": {
+      "details": "Detalls",
+      "from": "De",
+      "to": "A",
+      "cc": "Cc",
+      "date": "Data",
+      "mailedBy": "Enviat per",
+      "signedBy": "Signat per",
+      "security": "Seguretat",
+      "standardEncryption": "Cifrat estàndard (TLS)",
+      "loadingMailContent": "Carregant el contingut del correu...",
+      "unsubscribe": "Unsubscribe",
+      "unsubscribed": "Unsubscribed",
+      "unsubscribeDescription": "Are you sure you want to unsubscribe from this mailing list?",
+      "unsubscribeOpenSiteDescription": "To stop getting messages from this mailing list, go to their website to unsubscribe.",
+      "cancel": "Cancel",
+      "goToWebsite": "Go to website",
+      "failedToUnsubscribe": "Failed to unsubscribe from mailing list"
+    },
+    "threadDisplay": {
+      "exitFullscreen": "Sortir de la visualització en pantalla completa",
+      "enterFullscreen": "Veure en pantalla completa",
+      "archive": "Arxivar",
+      "reply": "Respondre",
+      "moreOptions": "Més opcions",
+      "moveToSpam": "Mou a correu brossa",
+      "replyAll": "Respon a tots",
+      "forward": "Reenviar",
+      "markAsUnread": "Marcar com a no llegit",
+      "addLabel": "Afegeix una etiqueta",
+      "muteThread": "Silenciar el fil"
+    },
+    "notes": {
+      "title": "Notes",
+      "empty": "No notes for this email",
+      "emptyDescription": "Add notes to keep track of important information or follow-ups.",
+      "addNote": "Add a note",
+      "addYourNote": "Add your note here...",
+      "editNote": "Edit note",
+      "deleteNote": "Delete note",
+      "deleteConfirm": "Are you sure you want to delete this note?",
+      "deleteConfirmDescription": "This action cannot be undone.",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "save": "Save note",
+      "toSave": "to save",
+      "label": "Label:",
+      "search": "Search notes...",
+      "noteCount": "{count, plural, =0 {Add notes} one {# note} other {# notes}}",
+      "notePinned": "Note pinned",
+      "noteUnpinned": "Note unpinned",
+      "colorChanged": "Note color updated",
+      "noteUpdated": "Note updated",
+      "noteDeleted": "Note deleted",
+      "noteCopied": "Copied to clipboard",
+      "noteAdded": "Note added",
+      "notesReordered": "Notes reordered",
+      "noMatchingNotes": "No notes matching \"{query}\"",
+      "clearSearch": "Clear search",
+      "pinnedNotes": "Pinned notes",
+      "otherNotes": "Other notes",
+      "created": "Created",
+      "updated": "Updated",
+      "errors": {
+        "failedToLoadNotes": "Failed to load notes",
+        "failedToLoadThreadNotes": "Failed to load thread notes",
+        "failedToAddNote": "Failed to add note",
+        "failedToUpdateNote": "Failed to update note",
+        "failedToDeleteNote": "Failed to delete note",
+        "failedToUpdateNoteColor": "Failed to update note color",
+        "noValidNotesToReorder": "No valid notes to reorder",
+        "failedToReorderNotes": "Failed to reorder notes"
+      },
+      "colors": {
+        "default": "Default",
+        "red": "Red",
+        "orange": "Orange",
+        "yellow": "Yellow",
+        "green": "Green",
+        "blue": "Blue",
+        "purple": "Purple",
+        "pink": "Pink"
+      },
+      "actions": {
+        "pin": "Pin note",
+        "unpin": "Unpin note",
+        "edit": "Edit note",
+        "delete": "Delete note",
+        "copy": "Copy note",
+        "changeColor": "Change color"
+      }
+    },
+    "mail": {
+      "replies": "{count, plural, =0 {replies} one {# reply} other {# replies}}",
+      "deselectAll": "Deselected all emails",
+      "selectedEmails": "Selected {count} emails",
+      "noEmailsToSelect": "No emails to select",
+      "markedAsRead": "Marked as read",
+      "markedAsUnread": "Marked as unread",
+      "failedToMarkAsRead": "Failed to mark as read",
+      "failedToMarkAsUnread": "Failed to mark as unread",
+      "selected": "{count} selected",
+      "clearSelection": "Clear Selection",
+      "mute": "Mute",
+      "moveToSpam": "Move to Spam",
+      "moveToInbox": "Move to Inbox",
+      "unarchive": "Unarchive",
+      "archive": "Archive",
+      "moveToTrash": "Move to Trash",
+      "markAsUnread": "Mark as Unread",
+      "addStar": "Add Star",
+      "muteThread": "Mute Thread",
+      "moving": "Moving...",
+      "moved": "Moved",
+      "errorMoving": "Error moving"
+    }
+  },
+  "navigation": {
+    "sidebar": {
+      "inbox": "Safata d'entrada",
+      "drafts": "Esborranys",
+      "sent": "Enviats",
+      "spam": "Contingut no desitjat",
+      "archive": "Arxivats",
+      "bin": "Paperera",
+      "feedback": "Feedback",
+      "contact": "Contact",
+      "settings": "Configuració"
+    },
+    "settings": {
+      "general": "General",
+      "connections": "Connexions",
+      "security": "Seguretat",
+      "appearance": "Aparença",
+      "shortcuts": "Dreceres"
+    }
+  },
+  "pages": {
+    "error": {
+      "notFound": {
+        "title": "Pàgina no trobada",
+        "description": "Vaja! La pàgina que estàs buscant no existeix o ha estat moguda.",
+        "goBack": "Torna enrere"
+      },
+      "settingsNotFound": "404 - Pàgina de configuració no trobada"
+    },
+    "settings": {
+      "general": {
+        "title": "General",
+        "description": "Gestiona la configuració del teu idioma i les preferències de visualització del correu.",
+        "language": "Idioma",
+        "timezone": "Zona horària",
+        "dynamicContent": "Contingut dinàmic",
+        "dynamicContentDescription": "Permet que els correus mostrin contingut dinàmic.",
+        "externalImages": "Mostrar imatges externes",
+        "externalImagesDescription": "Permet que els correus mostrin imatges des de fonts externes.",
+        "languageChangedTo": "Idioma canviat a {language}"
+      },
+      "connections": {
+        "title": "Connexions Correu",
+        "description": "Connecta els teus comptes de correu a Zero.",
+        "disconnectTitle": "Desconnecta el compte de correu.",
+        "disconnectDescription": "Estàs segur que vols desconnectar aquest correu?\n\n\n\n\n\n\n\n",
+        "cancel": "Cancel·lar",
+        "remove": "Esborrar",
+        "disconnectSuccess": "Compte desconnectat correctament.\n\n\n\n\n\n\n\n",
+        "disconnectError": "No s'ha pogut desconnectar el compte.\n\n\n\n\n\n\n\n",
+        "addEmail": "Afegeix una connexió",
+        "connectEmail": "Connecta el correu electrònic\n\n\n\n\n\n\n\n",
+        "connectEmailDescription": "Selecciona un proveïdor de correu per connectar",
+        "moreComingSoon": "Pròximament més"
+      },
+      "security": {
+        "title": "Seguretat",
+        "description": "Gestiona les teves preferències de seguretat i protecció del compte.\n\n\n\n\n",
+        "twoFactorAuth": "Autenticació de dos factors",
+        "twoFactorAuthDescription": "Afegeix una capa extra de seguretat al teu compte.",
+        "loginNotifications": "Notificacions d'inici de sessió.",
+        "loginNotificationsDescription": "Rebre notificacions sobre nous intents d'inici de sessió\n\n\n\n",
+        "deleteAccount": "Elimina el compte"
+      },
+      "appearance": {
+        "title": "Aparença",
+        "description": "Personalitza els colors, les fonts i les opcions de visualització.",
+        "theme": "Tema",
+        "inboxType": "Tipus de safata d'entrada"
+      },
+      "shortcuts": {
+        "title": "Dreceres de Teclat",
+        "description": "Visualitza i personalitza les dreceres de teclat per a accions ràpides.",
+        "actions": {
+          "newEmail": "Nou correu",
+          "sendEmail": "Enviar un correu electrònic",
+          "reply": "Respondre",
+          "replyAll": "Respon a tothom",
+          "forward": "Reenviar",
+          "drafts": "Esborranys",
+          "inbox": "Safata d'entrada",
+          "sentMail": "Correu enviat",
+          "delete": "Eliminar",
+          "search": "Cercar",
+          "markAsUnread": "Marcar com a no llegit",
+          "muteThread": "Silenciar el fil",
+          "printEmail": "Imprimir correu electrónic",
+          "archiveEmail": "Arxivar Correu",
+          "markAsSpam": "Marcar com a correu brossa",
+          "moveToFolder": "Traslladar a la carpeta",
+          "undoLastAction": "Desfer l'última acció",
+          "viewEmailDetails": "Veure els detalls del correu",
+          "goToDrafts": "Anar a Esborranys",
+          "expandEmailView": "Expandir la vista del correu.",
+          "helpWithShortcuts": "Ajuda amb les dreceres"
+        }
+      }
+    },
+    "createEmail": {
+      "body": "Cos",
+      "example": "zero@0.email",
+      "attachments": "Adjunts",
+      "dropFilesToAttach": "Arrossega arxius per adjuntar",
+      "writeYourMessageHere": "Escriu aquí el teu missatge...",
+      "emailSentSuccessfully": "Correu electrònic enviat amb èxit",
+      "failedToSendEmail": "No s'ha pogut enviar el correu. Si us plau, intenta-ho de nou."
+    }
+  }
+}

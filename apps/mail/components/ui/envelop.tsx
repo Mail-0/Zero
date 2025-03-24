@@ -38,10 +38,10 @@ export default function Envelop() {
             <foreignObject x="-16" y="108.743" width="547" height="244.591">
               <div
                 style={{
-                  backdropFilter: "blur(8px)",
-                  clipPath: "url(#bgblur_0_5652_475_clip_path)",
-                  height: "100%",
-                  width: "100%",
+                  backdropFilter: 'blur(8px)',
+                  clipPath: 'url(#bgblur_0_5652_475_clip_path)',
+                  height: '100%',
+                  width: '100%',
                 }}
               ></div>
             </foreignObject>
@@ -125,7 +125,7 @@ export default function Envelop() {
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <g style={{ mixBlendMode: "multiply" }} opacity="0.7">
+            <g style={{ mixBlendMode: 'multiply' }} opacity="0.7">
               <g filter="url(#filter0_f_5652_482)">
                 <path
                   d="M10.7291 -6.10352e-05L504.271 -6.10352e-05L288.096 194.244C277.28 203.962 271.873 208.822 265.758 210.665C260.372 212.288 254.627 212.288 249.242 210.665C243.127 208.822 237.719 203.962 226.903 194.244L10.7291 -6.10352e-05Z"
@@ -171,10 +171,10 @@ export default function Envelop() {
             <foreignObject x="-16" y="-16.0001" width="547" height="244.59">
               <div
                 style={{
-                  backdropFilter: "blur(8px)",
-                  clipPath: "url(#bgblur_0_5652_482_clip_path)",
-                  height: "100%",
-                  width: "100%",
+                  backdropFilter: 'blur(8px)',
+                  clipPath: 'url(#bgblur_0_5652_482_clip_path)',
+                  height: '100%',
+                  width: '100%',
                 }}
               ></div>
             </foreignObject>

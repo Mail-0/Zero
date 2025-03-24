@@ -189,9 +189,22 @@
 }
 
 /* Compose gradient styles */
+@keyframes gradient-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 .compose-gradient {
-  background: linear-gradient(90deg, rgba(255, 213, 208, 1) 0%, rgba(219, 255, 228, 1) 50%, rgba(226, 214, 255, 1) 100%);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(90deg, rgba(255, 213, 208, 1), rgba(219, 255, 228, 1), rgba(226, 214, 255, 1), rgba(255, 213, 208, 1));
+  background-size: 400% 400%;
+  animation: gradient-flow 3s ease infinite;
 }
 
 .compose-gradient-animated {

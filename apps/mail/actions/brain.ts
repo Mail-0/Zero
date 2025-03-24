@@ -23,7 +23,11 @@ export const EnableBrain = async () => {
         throw new Error("Unauthorized, reconnect");
     }
 
-    return await axios.put(process.env.BRAIN_URL! + `/subscribe/${_connection.providerId}`, {
+		if (!process.env.BRAIN_URL) {
+			throw new Error('Brain URL not found');
+		}
+
+    return await axios.put(process.env.BRAIN_URL + `/subscribe/${_connection.providerId}`, {
         connectionId: _connection.id,
     })
-} 
+}

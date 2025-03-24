@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import type React from "react";
+import type React from 'react';
 
-import { forwardRef, useCallback, useImperativeHandle, useRef } from "react";
-import { motion, useAnimation } from "motion/react";
-import type { Variants } from "motion/react";
-import type { HTMLAttributes } from "react";
+import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
+import { motion, useAnimation } from 'motion/react';
+import type { Variants } from 'motion/react';
+import type { HTMLAttributes } from 'react';
 
 export interface SquarePenIconHandle {
   startAnimation: () => void;
@@ -34,15 +34,15 @@ const SquarePenIcon = forwardRef<SquarePenIconHandle, HTMLAttributes<HTMLDivElem
       isControlledRef.current = true;
 
       return {
-        startAnimation: () => controls.start("animate"),
-        stopAnimation: () => controls.start("normal"),
+        startAnimation: () => controls.start('animate'),
+        stopAnimation: () => controls.start('normal'),
       };
     });
 
     const handleMouseEnter = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
         if (!isControlledRef.current) {
-          controls.start("animate");
+          controls.start('animate');
         } else {
           onMouseEnter?.(e);
         }
@@ -53,7 +53,7 @@ const SquarePenIcon = forwardRef<SquarePenIconHandle, HTMLAttributes<HTMLDivElem
     const handleMouseLeave = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
         if (!isControlledRef.current) {
-          controls.start("normal");
+          controls.start('normal');
         } else {
           onMouseLeave?.(e);
         }
@@ -63,7 +63,7 @@ const SquarePenIcon = forwardRef<SquarePenIconHandle, HTMLAttributes<HTMLDivElem
 
     return (
       <div
-        className="flex cursor-pointer select-none items-center justify-center rounded-md transition-colors duration-200 hover:bg-accent/10"
+        className="hover:bg-accent/10 flex cursor-pointer select-none items-center justify-center rounded-md transition-colors duration-200"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         {...props}
@@ -78,7 +78,7 @@ const SquarePenIcon = forwardRef<SquarePenIconHandle, HTMLAttributes<HTMLDivElem
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          style={{ overflow: "visible" }}
+          style={{ overflow: 'visible' }}
         >
           <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
           <motion.path
@@ -92,6 +92,6 @@ const SquarePenIcon = forwardRef<SquarePenIconHandle, HTMLAttributes<HTMLDivElem
   },
 );
 
-SquarePenIcon.displayName = "SquarePenIcon";
+SquarePenIcon.displayName = 'SquarePenIcon';
 
 export { SquarePenIcon };

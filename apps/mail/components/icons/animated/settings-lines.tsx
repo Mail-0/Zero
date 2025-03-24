@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { forwardRef, useCallback, useImperativeHandle, useRef } from "react";
-import { motion, useAnimation } from "motion/react";
-import type { Transition } from "motion/react";
-import type { HTMLAttributes } from "react";
+import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
+import { motion, useAnimation } from 'motion/react';
+import type { Transition } from 'motion/react';
+import type { HTMLAttributes } from 'react';
 
 export interface SettingsIconHandle {
   startAnimation: () => void;
@@ -11,7 +11,7 @@ export interface SettingsIconHandle {
 }
 
 const defaultTransition: Transition = {
-  type: "spring",
+  type: 'spring',
   stiffness: 100,
   damping: 12,
   mass: 0.4,
@@ -26,15 +26,15 @@ const SettingsIcon = forwardRef<SettingsIconHandle, HTMLAttributes<HTMLDivElemen
       isControlledRef.current = true;
 
       return {
-        startAnimation: () => controls.start("animate"),
-        stopAnimation: () => controls.start("normal"),
+        startAnimation: () => controls.start('animate'),
+        stopAnimation: () => controls.start('normal'),
       };
     });
 
     const handleMouseEnter = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
         if (!isControlledRef.current) {
-          controls.start("animate");
+          controls.start('animate');
         } else {
           onMouseEnter?.(e);
         }
@@ -45,7 +45,7 @@ const SettingsIcon = forwardRef<SettingsIconHandle, HTMLAttributes<HTMLDivElemen
     const handleMouseLeave = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
         if (!isControlledRef.current) {
-          controls.start("normal");
+          controls.start('normal');
         } else {
           onMouseLeave?.(e);
         }
@@ -55,7 +55,7 @@ const SettingsIcon = forwardRef<SettingsIconHandle, HTMLAttributes<HTMLDivElemen
 
     return (
       <div
-        className="flex cursor-pointer select-none items-center justify-center rounded-md p-2 transition-colors duration-200 hover:bg-accent"
+        className="hover:bg-accent flex cursor-pointer select-none items-center justify-center rounded-md p-2 transition-colors duration-200"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         {...props}
@@ -235,6 +235,6 @@ const SettingsIcon = forwardRef<SettingsIconHandle, HTMLAttributes<HTMLDivElemen
   },
 );
 
-SettingsIcon.displayName = "SettingsIcon";
+SettingsIcon.displayName = 'SettingsIcon';
 
 export { SettingsIcon };
