@@ -4,7 +4,7 @@ import { userSettingsDefault } from "@zero/db/user_settings_default";
 import { createAuthMiddleware, customSession } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth, type BetterAuthOptions } from "better-auth";
-import { TIMEZONES } from "@/lib/timezones";
+import { getBrowserTimezone, isValidTimezone } from "@/lib/timezones";
 import { eq } from "drizzle-orm";
 import { Resend } from "resend";
 import { db } from "@zero/db";
@@ -159,21 +159,32 @@ const options = {
         // only true if this request is from a new user
         const newSession = ctx.context.newSession;
         if (newSession) {
-          // get timezone from vercel's header
-          const headerTimezone = ctx.headers?.get("x-vercel-ip-timezone");
-          // get the timezone from the TIMEZONES object, fallback to UTC
-          const timezone = TIMEZONES[headerTimezone as keyof typeof TIMEZONES] ?? "UTC";
-          // write default settings against the user
-          await db.insert(userSettings).values({
-            id: crypto.randomUUID(),
-            userId: newSession.user.id,
-            settings: {
-              ...userSettingsDefault,
-              timezone,
-            },
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          });
+          // Check if user already has settings
+          const [existingSettings] = await db
+            .select()
+            .from(userSettings)
+            .where(eq(userSettings.userId, newSession.user.id))
+            .limit(1);
+
+          if (!existingSettings) {
+            // get timezone from vercel's header
+            const headerTimezone = ctx.headers?.get("x-vercel-ip-timezone");
+            // validate timezone from header or fallback to browser timezone
+            const timezone = headerTimezone && isValidTimezone(headerTimezone) 
+              ? headerTimezone 
+              : getBrowserTimezone();
+            // write default settings against the user
+            await db.insert(userSettings).values({
+              id: crypto.randomUUID(),
+              userId: newSession.user.id,
+              settings: {
+                ...userSettingsDefault,
+                timezone,
+              },
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            });
+          }
         }
       }
     }),

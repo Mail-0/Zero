@@ -1,4 +1,3 @@
-import { getBrowserTimezone } from "@/lib/timezones";
 import { getUserSettings } from "@/actions/settings";
 import { useSession } from "@/lib/auth-client";
 import useSWR from "swr";

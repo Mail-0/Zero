@@ -24,9 +24,11 @@ import { Switch } from '@/components/ui/switch';
 import { Globe, Clock } from 'lucide-react';
 import { changeLocale } from '@/i18n/utils';
 import { useForm } from 'react-hook-form';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import * as z from 'zod';
+import { getBrowserTimezone } from '@/lib/timezones';
+import { getUserSettings, saveUserSettings } from '@/actions/settings';
 
 const formSchema = z.object({
   language: z.enum(locales as [string, ...string[]]),
@@ -43,32 +45,46 @@ export default function GeneralPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      language: locale as Locale,
-      timezone: 'UTC',
+      language: locale as string,
+      timezone: getBrowserTimezone(),
       dynamicContent: false,
       externalImages: true,
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSaving(true);
-
-    // TODO: Save settings in user's account
-
-    changeLocale(values.language as Locale);
-
-    if (values.language !== locale) {
-      const localeName = new Intl.DisplayNames([values.language], { type: 'language' }).of(
-        values.language,
-      );
-      toast.success(t('pages.settings.general.languageChangedTo', { language: localeName }));
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const settings = await getUserSettings();
+        if (settings) {
+          form.reset(settings);
+        }
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+        toast.error('Failed to load settings');
+      }
     }
+    loadSettings();
+  }, [form, t]);
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log(values);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSaving(true);
+    try {
+      await saveUserSettings(values);
+      if (values.language !== locale) {
+        await changeLocale(values.language as Locale);
+        const localeName = new Intl.DisplayNames([values.language], { type: 'language' }).of(
+          values.language,
+        );
+        toast.success('Language changed to ' + localeName);
+      }
+      toast.success('Settings saved');
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      toast.error('Failed to save settings');
+    } finally {
       setIsSaving(false);
-    }, 1000);
+    }
   }
 
   return (
@@ -113,7 +129,6 @@ export default function GeneralPage() {
                 control={form.control}
                 name="timezone"
                 render={({ field }) => (
-                  // TODO: Add all timezones
                   <FormItem>
                     <FormLabel>{t('pages.settings.general.timezone')}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -124,14 +139,11 @@ export default function GeneralPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="UTC">UTC</SelectItem>
-                        <SelectItem value="America/New_York">Eastern Time (ET)</SelectItem>
-                        <SelectItem value="America/Chicago">Central Time (CT)</SelectItem>
-                        <SelectItem value="America/Denver">Mountain Time (MT)</SelectItem>
-                        <SelectItem value="America/Los_Angeles">Pacific Time (PT)</SelectItem>
-                        <SelectItem value="Europe/London">British Time (BST)</SelectItem>
-                        <SelectItem value="Europe/Paris">Central European Time (CET)</SelectItem>
-                        <SelectItem value="Asia/Tokyo">Japan Standard Time (JST)</SelectItem>
+                        {Intl.supportedValuesOf('timeZone').map((timezone) => (
+                          <SelectItem key={timezone} value={timezone}>
+                            {timezone}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </FormItem>
