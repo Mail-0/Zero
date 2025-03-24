@@ -8,4 +8,5 @@ export default {
   },
   out: './db/migrations',
   tablesFilter: ['mail0_*'],
+  casing: 'snake_case',
 } satisfies Config;
