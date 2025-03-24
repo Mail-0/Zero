@@ -1,9 +1,9 @@
 "use server";
 
 import { userSettings } from "@zero/db/schema";
+import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
-import { eq } from "drizzle-orm";
 import { db } from "@zero/db";
 import * as z from "zod";
 
@@ -22,13 +22,13 @@ export async function getUserSettings() {
     const session = await auth.api.getSession({ headers: headersList });
 
     if (!session) {
-      throw new Error("Unauthorized");
+        throw new Error("Unauthorized, reconnect");
     }
 
     const userId = session?.user?.id;
 
     if (!userId) {
-      throw new Error("Unauthorized");
+      throw new Error("Unauthorized, reconnect");
     }
 
     const [result] = await db
