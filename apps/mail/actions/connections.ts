@@ -85,6 +85,13 @@ export const deleteActiveConnection = async () => {
     await db
       .delete(connection)
       .where(and(eq(connection.userId, session.user.id), eq(connection.id, session.connectionId)));
+    // Update user's defaultConnectionId if this was the default connection
+    await db.update(user).set({
+      defaultConnectionId: null,
+    }).where(and(
+      eq(user.id, session.user.id),
+      eq(user.defaultConnectionId, session.connectionId)
+    ));
     return revalidatePath('/mail');
   } catch (error) {
     console.error('Server: Error deleting connection:', error);
