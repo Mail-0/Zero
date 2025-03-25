@@ -1,19 +1,12 @@
 "use server";
 
-import type { UserSettings } from "@zero/db/user_settings_default";
+import { type UserSettings, userSettingsSchema } from "@zero/db/user_settings_default";
 import { userSettings } from "@zero/db/schema";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { db } from "@zero/db";
-import * as z from "zod";
 
-const settingsSchema = z.object({
-  language: z.string(),
-  timezone: z.string(),
-  dynamicContent: z.boolean(),
-  externalImages: z.boolean(),
-});
 
 export async function getUserSettings() {
   try {
@@ -39,14 +32,16 @@ export async function getUserSettings() {
     // Returning null here when there are no settings so we can use the default settings with timezone from the browser
     if (!result) return null;
 
-    const parsedSettings = settingsSchema.parse(result.settings);
-
-    return {
-      language: parsedSettings.language,
-      timezone: parsedSettings.timezone,
-      dynamicContent: parsedSettings.dynamicContent,
-      externalImages: parsedSettings.externalImages,
-    };
+    try {
+      const parsedSettings = userSettingsSchema.parse(result.settings);
+      return parsedSettings;
+    } catch (error) {
+      console.error("Settings validation error: Schema mismatch", {
+        error,
+        settings: result.settings
+      });
+      throw new Error("Invalid settings format");
+    }
   } catch (error) {
     console.error("Failed to fetch user settings:", error);
     throw new Error("Failed to fetch user settings");
@@ -69,7 +64,16 @@ export async function saveUserSettings(settings: UserSettings) {
     }
 
     // Validate settings
-    const parsedSettings = settingsSchema.parse(settings);
+    try {
+      const parsedSettings = userSettingsSchema.parse(settings);
+      settings = parsedSettings;
+    } catch (error) {
+      console.error("Settings validation error: Schema mismatch", {
+        error,
+        settings: settings
+      });
+      throw new Error("Invalid settings format");
+    }
 
     const [existingSettings] = await db
       .select()
@@ -82,7 +86,7 @@ export async function saveUserSettings(settings: UserSettings) {
       await db
         .update(userSettings)
         .set({
-          settings: parsedSettings,
+          settings: settings,
           updatedAt: new Date(),
         })
         .where(eq(userSettings.userId, userId));
@@ -91,7 +95,7 @@ export async function saveUserSettings(settings: UserSettings) {
       await db.insert(userSettings).values({
         id: crypto.randomUUID(),
         userId,
-        settings: parsedSettings,
+        settings,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
