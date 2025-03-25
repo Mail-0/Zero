@@ -61,7 +61,7 @@ export default function GeneralPage() {
         }
       } catch (error) {
         console.error('Failed to load settings:', error);
-        toast.error('Failed to load settings');
+        toast.error(t('common.settings.notFound'));
       }
     }
     loadSettings();
@@ -78,10 +78,10 @@ export default function GeneralPage() {
         );
         toast.success('Language changed to ' + localeName);
       }
-      toast.success('Settings saved');
+      toast.success(t('common.settings.saved'));
     } catch (error) {
       console.error('Failed to save settings:', error);
-      toast.error('Failed to save settings');
+      toast.error(t('common.settings.failedToSave'));
     } finally {
       setIsSaving(false);
     }
@@ -111,7 +111,7 @@ export default function GeneralPage() {
                       <FormControl>
                         <SelectTrigger className="w-36">
                           <Globe className="mr-2 h-4 w-4" />
-                          <SelectValue placeholder="Select a language" />
+                          <SelectValue placeholder={t('pages.settings.general.selectLanguage')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -135,7 +135,7 @@ export default function GeneralPage() {
                       <FormControl>
                         <SelectTrigger className="w-36">
                           <Clock className="mr-2 h-4 w-4" />
-                          <SelectValue placeholder="Select a timezone" />
+                          <SelectValue placeholder={t('pages.settings.general.selectTimezone')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>

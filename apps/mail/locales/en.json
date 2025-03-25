@@ -184,6 +184,11 @@
         "changeColor": "Change color"
       }
     },
+    "settings": {
+      "notFound": "Settings not found",
+      "saved": "Settings saved",
+      "failedToSave": "Failed to save settings"
+    },
     "mail": {
       "replies": "{count, plural, =0 {replies} one {# reply} other {# replies}}",
       "deselectAll": "Deselected all emails",
@@ -249,7 +254,9 @@
         "title": "General",
         "description": "Manage settings for your language and email display preferences.",
         "language": "Language",
+        "selectLanguage": "Select a language",
         "timezone": "Timezone",
+        "selectTimezone": "Select a timezone",
         "dynamicContent": "Dynamic Content",
         "dynamicContentDescription": "Allow emails to display dynamic content.",
         "externalImages": "Display External Images",
