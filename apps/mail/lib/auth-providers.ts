@@ -16,14 +16,14 @@ export interface ProviderConfig {
 }
 
 export const customProviders: ProviderConfig[] = [
-  {
-    id: "zero",
-    name: "Zero",
-    requiredEnvVars: [],
-    config: {},
-    isCustom: true,
-    customRedirectPath: "/zero/signup"
-  }
+  // {
+  //   id: "zero",
+  //   name: "Zero",
+  //   requiredEnvVars: [],
+  //   config: {},
+  //   isCustom: true,
+  //   customRedirectPath: "/zero/signup"
+  // }
 ];
 
 export const authProviders: ProviderConfig[] = [
@@ -38,10 +38,10 @@ export const authProviders: ProviderConfig[] = [
     envVarInfo: [
       { name: "GOOGLE_CLIENT_ID", source: "Google Cloud Console" },
       { name: "GOOGLE_CLIENT_SECRET", source: "Google Cloud Console" },
-      { 
-        name: "GOOGLE_REDIRECT_URI", 
+      {
+        name: "GOOGLE_REDIRECT_URI",
         source: "Google Cloud Console",
-        defaultValue: "http://localhost:3000/api/v1/mail/auth/google/callback" 
+        defaultValue: "http://localhost:3000/api/v1/mail/auth/google/callback"
       }
     ],
     config: {
@@ -65,10 +65,10 @@ export const authProviders: ProviderConfig[] = [
     envVarInfo: [
       { name: "GITHUB_CLIENT_ID", source: "GitHub Developer Settings" },
       { name: "GITHUB_CLIENT_SECRET", source: "GitHub Developer Settings" },
-      { 
-        name: "GITHUB_REDIRECT_URI", 
+      {
+        name: "GITHUB_REDIRECT_URI",
         source: "GitHub Developer Settings",
-        defaultValue: "http://localhost:3000/api/auth/callback/github" 
+        defaultValue: "http://localhost:3000/api/auth/callback/github"
       }
     ],
     config: {
@@ -77,10 +77,10 @@ export const authProviders: ProviderConfig[] = [
     },
   },
 ];
-  
+
 export function isProviderEnabled(provider: ProviderConfig): boolean {
   if (provider.isCustom) return true;
-  
+
   const hasEnvVars = provider.requiredEnvVars.every(envVar => !!process.env[envVar]);
 
   if (provider.required && !hasEnvVars) {
@@ -90,7 +90,7 @@ export function isProviderEnabled(provider: ProviderConfig): boolean {
 
   return hasEnvVars;
 }
-  
+
 export function getSocialProviders() {
   const socialProviders: Record<string, any> = {};
 
@@ -103,4 +103,4 @@ export function getSocialProviders() {
   });
 
   return socialProviders;
-} 
+}

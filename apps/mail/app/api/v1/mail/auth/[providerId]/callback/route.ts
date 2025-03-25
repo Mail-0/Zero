@@ -59,7 +59,7 @@ export async function GET(
       updatedAt: new Date(),
     });
 
-    return NextResponse.redirect(new URL("/onboarding", request.url));
+    return NextResponse.redirect(new URL("/mail", request.url));
   } catch (error) {
     return new NextResponse(JSON.stringify({ error }));
   }

@@ -1,4 +1,5 @@
 import { Archive, Copy, Maximize2, Minimize2, X, Reply, MoreVertical } from 'lucide-react';
+import { Separator } from '@radix-ui/react-separator';
 import { Skeleton } from '../ui/skeleton';
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
@@ -8,7 +9,7 @@ export const MailDisplaySkeleton = ({ isFullscreen }: { isFullscreen?: boolean }
     <>
       <div
         className={cn(
-          'border-border bg-secondary/50 relative m-4 flex-1 overflow-hidden rounded-lg border p-4',
+          'relative flex-1 overflow-hidden p-4',
           isFullscreen && 'h-[calc(100vh-4rem)]',
         )}
       >
@@ -46,9 +47,10 @@ export const MailDisplaySkeleton = ({ isFullscreen }: { isFullscreen?: boolean }
           </div>
         </div>
       </div>
+      <Separator />
       <div
         className={cn(
-          'border-border bg-secondary/50 relative m-4 flex-1 overflow-hidden rounded-lg border p-4',
+          'relative flex-1 overflow-hidden p-4',
           isFullscreen && 'h-[calc(100vh-4rem)]',
         )}
       >
@@ -86,9 +88,10 @@ export const MailDisplaySkeleton = ({ isFullscreen }: { isFullscreen?: boolean }
           </div>
         </div>
       </div>
+      <Separator />
       <div
         className={cn(
-          'border-border bg-secondary/50 relative m-4 flex-1 overflow-hidden rounded-lg border p-4',
+          'relative flex-1 overflow-hidden p-4',
           isFullscreen && 'h-[calc(100vh-4rem)]',
         )}
       >

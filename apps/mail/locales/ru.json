@@ -1,319 +1,319 @@
 {
-  "common": {
-    "actions": {
-      "logout": "Выйти",
-      "back": "Назад",
-      "create": "Создать Письмо",
-      "saveChanges": "Сохранить изменения",
-      "saving": "Сохранение...",
-      "resetToDefaults": "Сбросить к значениям по умолчанию",
-      "close": "Закрыть",
-      "signingOut": "Выход...",
-      "signedOutSuccess": "Выход успешен",
-      "signOutError": "Ошибка при выходе"
-    },
-    "themes": {
-      "dark": "Тёмный",
-      "light": "Светлый",
-      "system": "Системный"
-    },
-    "commandPalette": {
-      "title": "Команда",
-      "description": "Быстрый переход и действия для Mail-0",
-      "placeholder": "Введите команду или поиск...",
-      "noResults": "Нет результатов",
-      "groups": {
-        "mail": "Почта",
-        "settings": "Настройки",
-        "actions": "Действия",
-        "help": "Помощь",
-        "navigation": "Навигация"
-      },
-      "commands": {
-        "goToInbox": "Перейти в Папку",
-        "goToDrafts": "Перейти в Черновики",
-        "goToSent": "Перейти в Отправленные",
-        "goToSpam": "Перейти в Спам",
-        "goToArchive": "Перейти в Архив",
-        "goToBin": "Перейти в Корзину",
-        "goToSettings": "Перейти в Настройки",
-        "newEmail": "Новое Письмо",
-        "composeMessage": "Сообщение",
-        "searchEmails": "Поиск",
-        "toggleTheme": "Переключить тему",
-        "backToMail": "Вернуться в Почту",
-        "goToDocs": "Перейти в Документацию",
-        "helpWithShortcuts": "Помощь с горячими клавишами"
-      }
-    },
-    "searchBar": {
-      "pickDateRange": "Выбрать дату или диапазон",
-      "search": "Поиск",
-      "clearSearch": "Очистить поиск",
-      "advancedSearch": "Расширенный поиск",
-      "quickFilters": "Быстрый фильтр",
-      "searchIn": "Поиск в",
-      "recipient": "Получатель",
-      "sender": "Отправитель",
-      "subject": "Тема",
-      "dateRange": "Дата диапазона",
-      "category": "Категория",
-      "folder": "Папка",
-      "allMail": "Все Письма",
-      "unread": "Непрочитанные",
-      "hasAttachment": "Есть вложения",
-      "starred": "Звездочечка",
-      "applyFilters": "Применить фильтры",
-      "reset": "Сбросить"
-    },
-    "navUser": {
-      "customerSupport": "Поддержка",
-      "documentation": "Документация",
-      "appTheme": "Тема",
-      "accounts": "Аккаунты",
-      "signIn": "Войти"
-    },
-    "mailCategories": {
-      "primary": "Основные",
-      "important": "Важные",
-      "personal": "Персональные",
-      "updates": "Обновления",
-      "promotions": "Промо",
-      "social": "Социальные"
-    },
-    "replyCompose": {
-      "replyTo": "Ответить",
-      "thisEmail": "это письмо",
-      "dropFiles": "Поместите файлы, чтобы прикрепить",
-      "attachments": "Приложения",
-      "attachmentCount": "{count, plural, =0 {attachments} one {attachment} other {attachments}}",
-      "fileCount": "{count, plural, =0 {files} one {file} other {files}}",
-      "saveDraft": "Сохранить черновик",
-      "send": "Отправить"
-    },
-    "mailDisplay": {
-      "details": "Подробнее",
-      "from": "От",
-      "to": "К",
-      "cc": "Cc",
-      "date": "Дата",
-      "mailedBy": "Прописано",
-      "signedBy": "Подписано",
-      "security": "Безопасность",
-      "standardEncryption": "Стандартная шифровка (TLS)",
-      "loadingMailContent": "Загрузка...",
-      "unsubscribe": "Отменить подписку",
-      "unsubscribed": "Подписка отменена",
-      "unsubscribeDescription": "Вы действительно хотите отписаться от этого списка рассылки?",
-      "unsubscribeOpenSiteDescription": "Чтобы перестать получать сообщения из этого списка рассылки, перейдите на их сайт, чтобы отказаться от подписки.",
-      "cancel": "Отменить",
-      "goToWebsite": "Перейти на сайт",
-      "failedToUnsubscribe": "Не удалось отписаться от списка рассылки"
-    },
-    "threadDisplay": {
-      "exitFullscreen": "Выход в полноэкранный режим",
-      "enterFullscreen": "Вход в полноэкранный режим",
-      "archive": "Архив",
-      "reply": "Ответить",
-      "moreOptions": "Больше опций",
-      "moveToSpam": "Переместить в спам",
-      "replyAll": "Ответить всем",
-      "forward": "Переслать",
-      "markAsUnread": "Отметить как непрочитанное",
-      "addLabel": "Добавить метку",
-      "muteThread": "Выключить поток"
-    },
-    "notes": {
-      "title": "Заметки",
-      "empty": "Нет заметок в этом письме",
-      "emptyDescription": "Добавляйте примечания, чтобы отслеживать важную информацию или последующие меры.",
-      "addNote": "Добавить заметку",
-      "addYourNote": "Напишите заметку сюда...",
-      "editNote": "Редактировать заметку",
-      "deleteNote": "Удалить заметку",
-      "deleteConfirm": "Вы действительно хотите удалить эту заметку?",
-      "deleteConfirmDescription": "Это действие невозможно отменить.",
-      "cancel": "Отменить",
-      "delete": "Удалить",
-      "save": "Сохранить заметку",
-      "toSave": "чтобы сохранить",
-      "label": "Метка:",
-      "search": "Найти заметки...",
-      "noteCount": "{count, plural, =0 {Добавьте заметки} one {# Заметка} few {# заметки} many {# заметки} other {# заметки}}",
-      "notePinned": "Заметка закреплена",
-      "noteUnpinned": "Заметка откреплена",
-      "colorChanged": "Цвет заметки обновлён",
-      "noteUpdated": "Заметка обновлена",
-      "noteDeleted": "Заметка удалена",
-      "noteCopied": "Скопировано в буфер обмена",
-      "noteAdded": "Заметка добавлена",
-      "notesReordered": "Заметки переупорядочены",
-      "noMatchingNotes": "Нет заметок, соответствующих \"{query}\"",
-      "clearSearch": "Очистить поиск",
-      "pinnedNotes": "Закреплённые заметки",
-      "otherNotes": "Другие заметки",
-      "created": "Создана",
-      "updated": "Обновлена",
-      "errors": {
-        "failedToLoadNotes": "Не удалось загрузить заметки",
-        "failedToLoadThreadNotes": "Не удалось загрузить заметки в теме",
-        "failedToAddNote": "Не удалось добавить заметку",
-        "failedToUpdateNote": "Невозможно обновить заметку",
-        "failedToDeleteNote": "Не удалось удалить заметку",
-        "failedToUpdateNoteColor": "Не удалось обновить цвет заметки",
-        "noValidNotesToReorder": "Нет действительных заметок для изменения порядка",
-        "failedToReorderNotes": "Не удалось изменить порядок заметок"
-      },
-      "colors": {
-        "default": "По умолчанию",
-        "red": "Красная",
-        "orange": "Оранжевая",
-        "yellow": "Жёлтая",
-        "green": "Зелёная",
-        "blue": "Синяя",
-        "purple": "Фиолетовая",
-        "pink": "Розовая"
-      },
-      "actions": {
-        "pin": "Закрепить заметку",
-        "unpin": "Открепить заметку",
-        "edit": "Редактировать заметку",
-        "delete": "Удалить заметку",
-        "copy": "Скопировать заметку",
-        "changeColor": "Изменить цвет"
-      }
-    },
-    "mail": {
-      "replies": "{count, plural, =0 {ответы} one {# ответ} few {# ответа} many {# ответов} other {# ответы}}",
-      "deselectAll": "Отменить выбор всех писем",
-      "selectedEmails": "Выбранные {count} письма",
-      "noEmailsToSelect": "Нет писем для выбора",
-      "markedAsRead": "Отметить как прочитанное",
-      "markedAsUnread": "Отметить как непрочитанное",
-      "failedToMarkAsRead": "Не удалось отметить как прочитанное",
-      "failedToMarkAsUnread": "Не удалось пометить как непрочитанное",
-      "selected": "Выбрано {count}",
-      "clearSelection": "Очистить выбор",
-      "mute": "Заглушить",
-      "moveToSpam": "Переместить в спам",
-      "moveToInbox": "Переместить во Входящие",
-      "unarchive": "Разархивировать",
-      "archive": "Архивировать",
-      "moveToTrash": "Переместить в Корзину",
-      "markAsUnread": "Отметить как непрочитанное",
-      "addStar": "В избранное",
-      "muteThread": "Заглушить цепочку",
-      "moving": "Перемещение...",
-      "moved": "Перемещено",
-      "errorMoving": "Ошибка при перемещении"
-    }
-  },
-  "navigation": {
-    "sidebar": {
-      "inbox": "Входящие",
-      "drafts": "Черновики",
-      "sent": "Отправленные",
-      "spam": "Спам",
-      "archive": "Архив",
-      "bin": "Корзина",
-      "feedback": "Feedback",
-      "contact": "Contact",
-      "settings": "Настройки"
-    },
-    "settings": {
-      "general": "Общие",
-      "connections": "Подключения",
-      "security": "Безопасность",
-      "appearance": "Внешний вид",
-      "shortcuts": "Команды"
-    }
-  },
-  "pages": {
-    "error": {
-      "notFound": {
-        "title": "Страница не найдена",
-        "description": "Страница, которую вы ищете, не существует или была перемещена.",
-        "goBack": "Вернуться назад"
-      },
-      "settingsNotFound": "404 - Страница настроек не найдена"
-    },
-    "settings": {
-      "general": {
-        "title": "Общие",
-        "description": "Управление настройками языка и отображения электронной почты.",
-        "language": "Язык",
-        "timezone": "Часовой пояс",
-        "dynamicContent": "Динамический контент",
-        "dynamicContentDescription": "Позволяет электронной почте отображать динамический контент.",
-        "externalImages": "Отображать внешние изображения",
-        "externalImagesDescription": "Позволяет электронной почте отображать изображения из внешних источников.",
-        "languageChangedTo": "Язык изменен на {language}"
-      },
-      "connections": {
-        "title": "Подключения",
-        "description": "Подключите ваши учетные записи электронной почты к Zero.",
-        "disconnectTitle": "Отключить учетную запись электронной почты",
-        "disconnectDescription": "Вы уверены, что хотите отключить эту электронную почту?",
-        "cancel": "Отменить",
-        "remove": "Удалить",
-        "disconnectSuccess": "Учетная запись электронной почты отключена успешно",
-        "disconnectError": "Не удалось отключить учетную запись электронной почты",
-        "addEmail": "Добавить подключение",
-        "connectEmail": "Подключить электронную почту",
-        "connectEmailDescription": "Выберите поставщика электронной почты для подключения",
-        "moreComingSoon": "Больше функций прийдёт скоро"
-      },
-      "security": {
-        "title": "Безопасность",
-        "description": "Управление настройками безопасности и защитой аккаунта.",
-        "twoFactorAuth": "Двухфакторная аутентификация",
-        "twoFactorAuthDescription": "Добавьте дополнительный слой безопасности к вашему аккаунту",
-        "loginNotifications": "Уведомления о входе",
-        "loginNotificationsDescription": "Получайте уведомления о новых попытках входа",
-        "deleteAccount": "Удалить аккаунт"
-      },
-      "appearance": {
-        "title": "Внешний вид",
-        "description": "Кастомизация цветов, шрифтов и опций просмотра.",
-        "theme": "Тема",
-        "inboxType": "Тип почты"
-      },
-      "shortcuts": {
-        "title": "Горячие клавиши",
-        "description": "Просмотр и настройка горячих клавиш для быстрых действий.",
-        "actions": {
-          "newEmail": "Новое письмо",
-          "sendEmail": "Отправить письмо",
-          "reply": "Ответить",
-          "replyAll": "Ответить всем",
-          "forward": "Переслать",
-          "drafts": "Черновики",
-          "inbox": "Входящие",
-          "sentMail": "Отправленные",
-          "delete": "Удалить",
-          "search": "Поиск",
-          "markAsUnread": "Отметить как непрочитанное",
-          "muteThread": "Выключить поток",
-          "printEmail": "Печать письма",
-          "archiveEmail": "Архивировать письмо",
-          "markAsSpam": "Отметить как спам",
-          "moveToFolder": "Переместить в папку",
-          "undoLastAction": "Отменить последнее действие",
-          "viewEmailDetails": "Просмотреть детали письма",
-          "goToDrafts": "Перейти к черновикам",
-          "expandEmailView": "Развернуть письмо",
-          "helpWithShortcuts": "Помощь с горячими клавишами"
-        }
-      }
-    },
-    "createEmail": {
-      "body": "Текст письма",
-      "example": "zero@0.email",
-      "attachments": "Приложения",
-      "dropFilesToAttach": "Поместите файлы, чтобы прикрепить",
-      "writeYourMessageHere": "Напишите свое сообщение здесь...",
-      "emailSentSuccessfully": "Письмо отправлено успешно",
-      "failedToSendEmail": "Не удалось отправить письмо. Попробуйте снова."
-    }
-  }
+	"common": {
+		"actions": {
+			"logout": "Выйти",
+			"back": "Назад",
+			"create": "Создать Письмо",
+			"saveChanges": "Сохранить изменения",
+			"saving": "Сохранение...",
+			"resetToDefaults": "Сбросить к значениям по умолчанию",
+			"close": "Закрыть",
+			"signingOut": "Выход...",
+			"signedOutSuccess": "Выход успешен",
+			"signOutError": "Ошибка при выходе"
+		},
+		"themes": {
+			"dark": "Тёмный",
+			"light": "Светлый",
+			"system": "Системный"
+		},
+		"commandPalette": {
+			"title": "Команда",
+			"description": "Быстрый переход и действия для Mail-0",
+			"placeholder": "Введите команду или поиск...",
+			"noResults": "Нет результатов",
+			"groups": {
+				"mail": "Почта",
+				"settings": "Настройки",
+				"actions": "Действия",
+				"help": "Помощь",
+				"navigation": "Навигация"
+			},
+			"commands": {
+				"goToInbox": "Перейти в Папку",
+				"goToDrafts": "Перейти в Черновики",
+				"goToSent": "Перейти в Отправленные",
+				"goToSpam": "Перейти в Спам",
+				"goToArchive": "Перейти в Архив",
+				"goToBin": "Перейти в Корзину",
+				"goToSettings": "Перейти в Настройки",
+				"newEmail": "Новое Письмо",
+				"composeMessage": "Сообщение",
+				"searchEmails": "Поиск",
+				"toggleTheme": "Переключить тему",
+				"backToMail": "Вернуться в Почту",
+				"goToDocs": "Перейти в Документацию",
+				"helpWithShortcuts": "Помощь с горячими клавишами"
+			}
+		},
+		"searchBar": {
+			"pickDateRange": "Выбрать дату или диапазон",
+			"search": "Поиск",
+			"clearSearch": "Очистить поиск",
+			"advancedSearch": "Расширенный поиск",
+			"quickFilters": "Быстрый фильтр",
+			"searchIn": "Поиск в",
+			"recipient": "Получатель",
+			"sender": "Отправитель",
+			"subject": "Тема",
+			"dateRange": "Дата диапазона",
+			"category": "Категория",
+			"folder": "Папка",
+			"allMail": "Все Письма",
+			"unread": "Непрочитанные",
+			"hasAttachment": "Есть вложения",
+			"starred": "Звездочечка",
+			"applyFilters": "Применить фильтры",
+			"reset": "Сбросить"
+		},
+		"navUser": {
+			"customerSupport": "Поддержка",
+			"documentation": "Документация",
+			"appTheme": "Тема",
+			"accounts": "Аккаунты",
+			"signIn": "Войти"
+		},
+		"mailCategories": {
+			"primary": "Основные",
+			"important": "Важные",
+			"personal": "Персональные",
+			"updates": "Обновления",
+			"promotions": "Промо",
+			"social": "Социальные"
+		},
+		"replyCompose": {
+			"replyTo": "Ответить",
+			"thisEmail": "это письмо",
+			"dropFiles": "Поместите файлы, чтобы прикрепить",
+			"attachments": "Приложения",
+			"attachmentCount": "{count, plural, =0 {attachments} one {attachment} other {attachments}}",
+			"fileCount": "{count, plural, =0 {files} one {file} other {files}}",
+			"saveDraft": "Сохранить черновик",
+			"send": "Отправить"
+		},
+		"mailDisplay": {
+			"details": "Подробнее",
+			"from": "От",
+			"to": "К",
+			"cc": "Cc",
+			"date": "Дата",
+			"mailedBy": "Прописано",
+			"signedBy": "Подписано",
+			"security": "Безопасность",
+			"standardEncryption": "Стандартная шифровка (TLS)",
+			"loadingMailContent": "Загрузка...",
+			"unsubscribe": "Отменить подписку",
+			"unsubscribed": "Подписка отменена",
+			"unsubscribeDescription": "Вы действительно хотите отписаться от этого списка рассылки?",
+			"unsubscribeOpenSiteDescription": "Чтобы перестать получать сообщения из этого списка рассылки, перейдите на их сайт, чтобы отказаться от подписки.",
+			"cancel": "Отменить",
+			"goToWebsite": "Перейти на сайт",
+			"failedToUnsubscribe": "Не удалось отписаться от списка рассылки"
+		},
+		"threadDisplay": {
+			"exitFullscreen": "Выход в полноэкранный режим",
+			"enterFullscreen": "Вход в полноэкранный режим",
+			"archive": "Архив",
+			"reply": "Ответить",
+			"moreOptions": "Больше опций",
+			"moveToSpam": "Переместить в спам",
+			"replyAll": "Ответить всем",
+			"forward": "Переслать",
+			"markAsUnread": "Отметить как непрочитанное",
+			"addLabel": "Добавить метку",
+			"muteThread": "Выключить поток"
+		},
+		"notes": {
+			"title": "Заметки",
+			"empty": "Нет заметок в этом письме",
+			"emptyDescription": "Добавляйте примечания, чтобы отслеживать важную информацию или последующие меры.",
+			"addNote": "Добавить заметку",
+			"addYourNote": "Напишите заметку сюда...",
+			"editNote": "Редактировать заметку",
+			"deleteNote": "Удалить заметку",
+			"deleteConfirm": "Вы действительно хотите удалить эту заметку?",
+			"deleteConfirmDescription": "Это действие невозможно отменить.",
+			"cancel": "Отменить",
+			"delete": "Удалить",
+			"save": "Сохранить заметку",
+			"toSave": "чтобы сохранить",
+			"label": "Метка:",
+			"search": "Найти заметки...",
+			"noteCount": "{count, plural, =0 {Добавьте заметки} one {# Заметка} few {# заметки} many {# заметки} other {# заметки}}",
+			"notePinned": "Заметка закреплена",
+			"noteUnpinned": "Заметка откреплена",
+			"colorChanged": "Цвет заметки обновлён",
+			"noteUpdated": "Заметка обновлена",
+			"noteDeleted": "Заметка удалена",
+			"noteCopied": "Скопировано в буфер обмена",
+			"noteAdded": "Заметка добавлена",
+			"notesReordered": "Заметки переупорядочены",
+			"noMatchingNotes": "Нет заметок, соответствующих \"{query}\"",
+			"clearSearch": "Очистить поиск",
+			"pinnedNotes": "Закреплённые заметки",
+			"otherNotes": "Другие заметки",
+			"created": "Создана",
+			"updated": "Обновлена",
+			"errors": {
+				"failedToLoadNotes": "Не удалось загрузить заметки",
+				"failedToLoadThreadNotes": "Не удалось загрузить заметки в теме",
+				"failedToAddNote": "Не удалось добавить заметку",
+				"failedToUpdateNote": "Невозможно обновить заметку",
+				"failedToDeleteNote": "Не удалось удалить заметку",
+				"failedToUpdateNoteColor": "Не удалось обновить цвет заметки",
+				"noValidNotesToReorder": "Нет действительных заметок для изменения порядка",
+				"failedToReorderNotes": "Не удалось изменить порядок заметок"
+			},
+			"colors": {
+				"default": "По умолчанию",
+				"red": "Красная",
+				"orange": "Оранжевая",
+				"yellow": "Жёлтая",
+				"green": "Зелёная",
+				"blue": "Синяя",
+				"purple": "Фиолетовая",
+				"pink": "Розовая"
+			},
+			"actions": {
+				"pin": "Закрепить заметку",
+				"unpin": "Открепить заметку",
+				"edit": "Редактировать заметку",
+				"delete": "Удалить заметку",
+				"copy": "Скопировать заметку",
+				"changeColor": "Изменить цвет"
+			}
+		},
+		"mail": {
+			"replies": "{count, plural, =0 {ответы} one {# ответ} few {# ответа} many {# ответов} other {# ответы}}",
+			"deselectAll": "Отменить выбор всех писем",
+			"selectedEmails": "Выбранные {count} письма",
+			"noEmailsToSelect": "Нет писем для выбора",
+			"markedAsRead": "Отметить как прочитанное",
+			"markedAsUnread": "Отметить как непрочитанное",
+			"failedToMarkAsRead": "Не удалось отметить как прочитанное",
+			"failedToMarkAsUnread": "Не удалось пометить как непрочитанное",
+			"selected": "Выбрано {count}",
+			"clearSelection": "Очистить выбор",
+			"mute": "Заглушить",
+			"moveToSpam": "Переместить в спам",
+			"moveToInbox": "Переместить во Входящие",
+			"unarchive": "Разархивировать",
+			"archive": "Архивировать",
+			"moveToTrash": "Переместить в Корзину",
+			"markAsUnread": "Отметить как непрочитанное",
+			"addStar": "В избранное",
+			"muteThread": "Заглушить цепочку",
+			"moving": "Перемещение...",
+			"moved": "Перемещено",
+			"errorMoving": "Ошибка при перемещении"
+		}
+	},
+	"navigation": {
+		"sidebar": {
+			"inbox": "Входящие",
+			"drafts": "Черновики",
+			"sent": "Отправленные",
+			"spam": "Спам",
+			"archive": "Архив",
+			"bin": "Корзина",
+			"feedback": "Feedback",
+			"contact": "Contact",
+			"settings": "Настройки"
+		},
+		"settings": {
+			"general": "Общие",
+			"connections": "Подключения",
+			"security": "Безопасность",
+			"appearance": "Внешний вид",
+			"shortcuts": "Команды"
+		}
+	},
+	"pages": {
+		"error": {
+			"notFound": {
+				"title": "Страница не найдена",
+				"description": "Страница, которую вы ищете, не существует или была перемещена.",
+				"goBack": "Вернуться назад"
+			},
+			"settingsNotFound": "404 - Страница настроек не найдена"
+		},
+		"settings": {
+			"general": {
+				"title": "Общие",
+				"description": "Управление настройками языка и отображения электронной почты.",
+				"language": "Язык",
+				"timezone": "Часовой пояс",
+				"dynamicContent": "Динамический контент",
+				"dynamicContentDescription": "Позволяет электронной почте отображать динамический контент.",
+				"externalImages": "Отображать внешние изображения",
+				"externalImagesDescription": "Позволяет электронной почте отображать изображения из внешних источников.",
+				"languageChangedTo": "Язык изменен на {language}"
+			},
+			"connections": {
+				"title": "Подключения",
+				"description": "Подключите ваши учетные записи электронной почты к Zero.",
+				"disconnectTitle": "Отключить учетную запись электронной почты",
+				"disconnectDescription": "Вы уверены, что хотите отключить эту электронную почту?",
+				"cancel": "Отменить",
+				"remove": "Удалить",
+				"disconnectSuccess": "Учетная запись электронной почты отключена успешно",
+				"disconnectError": "Не удалось отключить учетную запись электронной почты",
+				"addEmail": "Добавить подключение",
+				"connectEmail": "Подключить электронную почту",
+				"connectEmailDescription": "Выберите поставщика электронной почты для подключения",
+				"moreComingSoon": "Больше функций прийдёт скоро"
+			},
+			"security": {
+				"title": "Безопасность",
+				"description": "Управление настройками безопасности и защитой аккаунта.",
+				"twoFactorAuth": "Двухфакторная аутентификация",
+				"twoFactorAuthDescription": "Добавьте дополнительный слой безопасности к вашему аккаунту",
+				"loginNotifications": "Уведомления о входе",
+				"loginNotificationsDescription": "Получайте уведомления о новых попытках входа",
+				"deleteAccount": "Удалить аккаунт"
+			},
+			"appearance": {
+				"title": "Внешний вид",
+				"description": "Кастомизация цветов, шрифтов и опций просмотра.",
+				"theme": "Тема",
+				"inboxType": "Тип почты"
+			},
+			"shortcuts": {
+				"title": "Горячие клавиши",
+				"description": "Просмотр и настройка горячих клавиш для быстрых действий.",
+				"actions": {
+					"newEmail": "Новое письмо",
+					"sendEmail": "Отправить письмо",
+					"reply": "Ответить",
+					"replyAll": "Ответить всем",
+					"forward": "Переслать",
+					"drafts": "Черновики",
+					"inbox": "Входящие",
+					"sentMail": "Отправленные",
+					"delete": "Удалить",
+					"search": "Поиск",
+					"markAsUnread": "Отметить как непрочитанное",
+					"muteThread": "Выключить поток",
+					"printEmail": "Печать письма",
+					"archiveEmail": "Архивировать письмо",
+					"markAsSpam": "Отметить как спам",
+					"moveToFolder": "Переместить в папку",
+					"undoLastAction": "Отменить последнее действие",
+					"viewEmailDetails": "Просмотреть детали письма",
+					"goToDrafts": "Перейти к черновикам",
+					"expandEmailView": "Развернуть письмо",
+					"helpWithShortcuts": "Помощь с горячими клавишами"
+				}
+			}
+		},
+		"createEmail": {
+			"body": "Текст письма",
+			"example": "zero@0.email",
+			"attachments": "Приложения",
+			"dropFilesToAttach": "Поместите файлы, чтобы прикрепить",
+			"writeYourMessageHere": "Напишите свое сообщение здесь...",
+			"emailSentSuccessfully": "Письмо отправлено успешно",
+			"failedToSendEmail": "Не удалось отправить письмо. Попробуйте снова."
+		}
+	}
 }

@@ -29,17 +29,21 @@ export interface SidebarData {
   navMain: NavSection[];
 }
 
+export interface Sender {
+  name: string;
+  email: string;
+}
+
 export interface ParsedMessage {
   id: string;
   connectionId?: string;
   title: string;
   subject: string;
   tags: string[];
+  sender: Sender;
+  to: Sender[];
+  cc: Sender[];
   tls: boolean;
-  sender: {
-    name: string;
-    email: string;
-  };
   listUnsubscribe?: string;
   listUnsubscribePost?: string;
   receivedOn: string;
@@ -67,10 +71,7 @@ export interface InitialThread {
   threadId?: string;
   title: string;
   tags: string[];
-  sender: {
-    name: string;
-    email: string;
-  };
+  sender: Sender;
   receivedOn: string;
   unread: boolean;
   subject: string;
@@ -98,7 +99,7 @@ export type ThreadProps = {
   message: InitialThread;
   selectMode: MailSelectMode;
   // TODO: enforce types instead of sprinkling "any"
-  onClick?: (message: InitialThread) => () => Promise<any> | undefined;
+  onClick?: (message: InitialThread) => () => any;
   isCompact?: boolean;
 };
 

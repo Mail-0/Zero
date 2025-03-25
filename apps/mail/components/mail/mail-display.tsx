@@ -12,14 +12,15 @@ import { BellOff, Check, ChevronDown, LoaderCircleIcon, Lock } from 'lucide-reac
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
+import { getListUnsubscribeAction } from '@/lib/email-utils';
 import AttachmentsAccordion from './attachments-accordion';
+import { useEffect, useMemo, useState } from 'react';
 import AttachmentDialog from './attachment-dialog';
 import { useSummary } from '@/hooks/use-summary';
 import { TextShimmer } from '../ui/text-shimmer';
 import { type ParsedMessage } from '@/types';
 import { Separator } from '../ui/separator';
 import { useTranslations } from 'next-intl';
-import { useEffect, useState } from 'react';
 import { MailIframe } from './mail-iframe';
 import { Button } from '../ui/button';
 import { format } from 'date-fns';
@@ -118,6 +119,17 @@ const MailDisplay = ({ emailData, isMuted, index, demo }: Props) => {
   const [unsubscribed, setUnsubscribed] = useState(false);
   const [isUnsubscribing, setIsUnsubscribing] = useState(false);
 
+  const listUnsubscribeAction = useMemo(
+    () =>
+      emailData.listUnsubscribe
+        ? getListUnsubscribeAction({
+            listUnsubscribe: emailData.listUnsubscribe,
+            listUnsubscribePost: emailData.listUnsubscribePost,
+          })
+        : undefined,
+    [emailData.listUnsubscribe, emailData.listUnsubscribePost],
+  );
+
   const _handleUnsubscribe = async () => {
     setIsUnsubscribing(true);
     try {
@@ -160,7 +172,7 @@ const MailDisplay = ({ emailData, isMuted, index, demo }: Props) => {
                   <span className="text-muted-foreground flex grow-0 items-center gap-2 text-sm">
                     <span>{emailData?.sender?.email}</span>
 
-                    {!!emailData.listUnsubscribe && (
+                    {listUnsubscribeAction && (
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button
@@ -241,17 +253,19 @@ const MailDisplay = ({ emailData, isMuted, index, demo }: Props) => {
                             {t('common.mailDisplay.to')}:
                           </span>
                           <span className="text-muted-foreground ml-3">
-                            {emailData?.sender?.email}
+                            {emailData?.to?.map((t) => t.email).join(', ')}
                           </span>
                         </div>
-                        <div className="flex">
-                          <span className="w-24 text-end text-gray-500">
-                            {t('common.mailDisplay.cc')}:
-                          </span>
-                          <span className="text-muted-foreground ml-3">
-                            {emailData?.sender?.email}
-                          </span>
-                        </div>
+                        {emailData?.cc?.length > 0 && (
+                          <div className="flex">
+                            <span className="w-24 text-end text-gray-500">
+                              {t('common.mailDisplay.cc')}:
+                            </span>
+                            <span className="text-muted-foreground ml-3">
+                              {emailData?.cc?.map((t) => t.email).join(', ')}
+                            </span>
+                          </div>
+                        )}
                         <div className="flex">
                           <span className="w-24 text-end text-gray-500">
                             {t('common.mailDisplay.date')}:

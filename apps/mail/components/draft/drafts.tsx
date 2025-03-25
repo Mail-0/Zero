@@ -35,7 +35,7 @@ export function DraftsLayout() {
 
   const { isLoading, isValidating } = useDrafts(searchValue.value, defaultPageSize);
 
-  useHotKey('/', () => {
+  useHotKey('Meta+F', () => {
     setSearchMode(true);
   });
 

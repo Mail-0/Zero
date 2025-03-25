@@ -15,3 +15,11 @@ const configAtom = atom<Config>({
 export function useMail() {
   return useAtom(configAtom);
 }
+
+export const clearBulkSelectionAtom = atom(
+  null,
+  (get, set) => {
+    const current = get(configAtom);
+    set(configAtom, { ...current, bulkSelected: [] });
+  }
+);

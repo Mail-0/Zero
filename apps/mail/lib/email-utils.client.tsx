@@ -3,6 +3,7 @@
 import { getListUnsubscribeAction } from '@/lib/email-utils';
 import type { ParsedMessage } from '@/types';
 import { sendEmail } from '@/actions/send';
+import {track} from '@vercel/analytics'
 
 export const handleUnsubscribe = async ({ emailData }: { emailData: ParsedMessage }) => {
 	try {
@@ -11,7 +12,10 @@ export const handleUnsubscribe = async ({ emailData }: { emailData: ParsedMessag
 				listUnsubscribe: emailData.listUnsubscribe,
 				listUnsubscribePost: emailData.listUnsubscribePost,
 			});
-			if (listUnsubscribeAction) {
+      if (listUnsubscribeAction) {
+        track('Unsubscribe', {
+          domain: emailData.sender.email.split('@')?.[1] ?? 'unknown',
+        });
 				switch (listUnsubscribeAction.type) {
 					case 'get':
 						window.open(listUnsubscribeAction.url, '_blank');
@@ -50,4 +54,24 @@ export const handleUnsubscribe = async ({ emailData }: { emailData: ParsedMessag
 		console.log('Error unsubscribing', emailData);
 		throw error;
 	}
+};
+
+export const highlightText = (text: string, highlight: string) => {
+  if (!highlight?.trim()) return text;
+
+  const regex = new RegExp(`(${highlight})`, 'gi');
+  const parts = text.split(regex);
+
+  return parts.map((part, i) => {
+    return i % 2 === 1 ? (
+      <span
+        key={i}
+        className="ring-0.5 bg-primary/10 inline-flex items-center justify-center rounded px-1"
+      >
+        {part}
+      </span>
+    ) : (
+      part
+    );
+  });
 };

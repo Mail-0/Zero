@@ -79,7 +79,8 @@
       "personal": "Personal",
       "updates": "Actualizaciones",
       "promotions": "Promociones",
-      "social": "Social"
+      "social": "Social",
+      "favourites": "Favoritos"
     },
     "replyCompose": {
       "replyTo": "Responder a",

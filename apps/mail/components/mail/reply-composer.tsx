@@ -1,4 +1,4 @@
-import { type Dispatch, type SetStateAction, useRef, useState, useEffect } from 'react';
+import { type Dispatch, type SetStateAction, useRef, useState, useEffect, useCallback } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { UploadedFileIcon } from '@/components/create/uploaded-file-icon';
 import { ArrowUp, Paperclip, Reply, X, Plus } from 'lucide-react';
@@ -26,6 +26,11 @@ export default function ReplyCompose({ emailData, isOpen, setIsOpen }: ReplyComp
   const [isComposerOpen, setIsComposerOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isEditorFocused, setIsEditorFocused] = useState(false);
+  const [editorHeight, setEditorHeight] = useState(150); // Initial height 150px
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeStartY = useRef(0);
+  const startHeight = useRef(0);
+  const composerRef = useRef<HTMLFormElement>(null);
   const t = useTranslations();
 
   // Use external state if provided, otherwise use internal state
@@ -197,6 +202,66 @@ export default function ReplyCompose({ emailData, isOpen, setIsOpen }: ReplyComp
     }
   }, [composerIsOpen]);
 
+  // Handle dynamic resizing
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (isResizing) {
+        e.preventDefault();
+        // Invert the delta so dragging up grows the editor and dragging down shrinks it
+        const deltaY = resizeStartY.current - e.clientY;
+        let newHeight = Math.max(100, Math.min(500, startHeight.current + deltaY));
+        
+        // Ensure height stays within bounds
+        newHeight = Math.max(100, Math.min(500, newHeight));
+        setEditorHeight(newHeight);
+      }
+    },
+    [isResizing]
+  );
+
+  const handleMouseUp = useCallback(() => {
+    if (isResizing) {
+      setIsResizing(false);
+    }
+  }, [isResizing]);
+
+  // Set up and clean up event listeners for resizing
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing, handleMouseMove, handleMouseUp]);
+
+  // Auto-grow effect when typing
+  useEffect(() => {
+    if (composerIsOpen) {
+      const editorElement = document.querySelector('.ProseMirror');
+      if (editorElement instanceof HTMLElement) {
+        // Observer to watch for content changes and adjust height
+        const resizeObserver = new ResizeObserver((entries) => {
+          for (const entry of entries) {
+            const contentHeight = entry.contentRect.height;
+            
+            // If content exceeds current height but is less than max, grow the container
+            if (contentHeight > editorHeight - 20 && editorHeight < 500) {
+              const newHeight = Math.min(500, contentHeight + 20);
+              setEditorHeight(newHeight);
+            }
+          }
+        });
+        
+        resizeObserver.observe(editorElement);
+        return () => resizeObserver.disconnect();
+      }
+    }
+  }, [composerIsOpen, editorHeight]);
+
   // Check if the message is empty
   const isMessageEmpty =
     !messageContent ||
@@ -235,8 +300,9 @@ export default function ReplyCompose({ emailData, isOpen, setIsOpen }: ReplyComp
   return (
     <div className="bg-offsetLight dark:bg-offsetDark w-full p-2">
       <form
+        ref={composerRef}
         className={cn(
-          'border-border ring-offset-background flex h-[300px] flex-col space-y-2.5 rounded-[10px] border px-2 py-2 transition-shadow duration-300 ease-in-out',
+          'border-border ring-offset-background flex h-fit flex-col space-y-2.5 rounded-[10px] border px-2 py-2 transition-shadow duration-300 ease-in-out',
           isEditorFocused ? 'ring-2 ring-[#3D3D3D] ring-offset-1' : '',
         )}
         onDragOver={handleDragOver}
@@ -278,7 +344,27 @@ export default function ReplyCompose({ emailData, isOpen, setIsOpen }: ReplyComp
           </Button>
         </div>
 
-        <div className="w-full flex-grow overflow-hidden p-1">
+        {/* Resize handle at the top */}
+        <div 
+          className="w-full h-2 cursor-ns-resize flex justify-center items-center transition-colors"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            setIsResizing(true);
+            resizeStartY.current = e.clientY;
+            startHeight.current = editorHeight;
+          }}
+        >
+          <div className="w-10 h-1 rounded-full dark:bg-white bg-black" />
+        </div>
+
+        <div 
+          className="w-full flex-grow overflow-hidden p-1"
+          style={{ 
+            height: `${editorHeight}px`,
+            maxHeight: '500px',
+            transition: isResizing ? 'none' : 'height 0.1s ease-out'
+          }}
+        >
           <div
             className="h-full w-full overflow-y-auto"
             onDragOver={(e) => e.stopPropagation()}
@@ -290,15 +376,6 @@ export default function ReplyCompose({ emailData, isOpen, setIsOpen }: ReplyComp
                 setMessageContent(content);
               }}
               className="sm:max-w-[600px] md:max-w-[2050px]"
-              initialValue={{
-                type: 'doc',
-                content: [
-                  {
-                    type: 'paragraph',
-                    content: [],
-                  },
-                ],
-              }}
               placeholder="Type your reply here..."
               onFocus={() => {
                 setIsEditorFocused(true);
@@ -310,6 +387,7 @@ export default function ReplyCompose({ emailData, isOpen, setIsOpen }: ReplyComp
             />
           </div>
         </div>
+
 
         <div className="mt-auto flex items-center justify-between">
           <div className="flex items-center gap-2">

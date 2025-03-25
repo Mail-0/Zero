@@ -1,13 +1,18 @@
 'use client';
+import { generateHTML, generateJSON } from '@tiptap/core';
 import { useConnections } from '@/hooks/use-connections';
 import { createDraft, getDraft } from '@/actions/drafts';
 import { ArrowUpIcon, Paperclip, X } from 'lucide-react';
 import { SidebarToggle } from '../ui/sidebar-toggle';
+import Paragraph from '@tiptap/extension-paragraph';
+import Document from '@tiptap/extension-document';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/lib/auth-client';
 import { AIAssistant } from './ai-assistant';
 import { useTranslations } from 'next-intl';
 import { sendEmail } from '@/actions/send';
+import Text from '@tiptap/extension-text';
+import Bold from '@tiptap/extension-bold';
 import { type JSONContent } from 'novel';
 import { useQueryState } from 'nuqs';
 import { toast } from 'sonner';
@@ -31,23 +36,19 @@ export function CreateEmail() {
   const [defaultValue, setDefaultValue] = React.useState<JSONContent | null>(null);
   const [editorReady, setEditorReady] = React.useState(false);
 
-  // Get user context from session and connections
   const { data: session } = useSession();
   const { data: connections } = useConnections();
 
-  // Get the active account information
   const activeAccount = React.useMemo(() => {
     if (!session) return null;
     return connections?.find((connection) => connection.id === session?.activeConnection?.id);
   }, [session, connections]);
 
-  // User information for context
   const userName =
     activeAccount?.name || session?.activeConnection?.name || session?.user.name || '';
   const userEmail =
     activeAccount?.email || session?.activeConnection?.email || session?.user.email || '';
 
-  // Initialize the editor with default content if not loading a draft
   React.useEffect(() => {
     if (!draftId && !defaultValue) {
       // Set initial empty content
@@ -96,22 +97,9 @@ export function CreateEmail() {
           setSubjectInput(draft.subject);
         }
 
-        console.log('Draft content:', draft.content);
-
-        // Set message content
         if (draft.content) {
           try {
-            // Use a simpler approach to create JSON content
-            const json: JSONContent = {
-              type: 'doc',
-              content: [
-                {
-                  type: 'paragraph',
-                  content: [{ type: 'text', text: draft.content }],
-                },
-              ],
-            };
-            console.log('JSON:', json);
+            const json = generateJSON(draft.content, [Document, Paragraph, Text, Bold]);
             setDefaultValue(json);
             setMessageContent(draft.content);
           } catch (error) {
@@ -128,8 +116,6 @@ export function CreateEmail() {
 
     loadDraft();
   }, [draftId]);
-
-  const hasHiddenAttachments = attachments.length > MAX_VISIBLE_ATTACHMENTS;
 
   const t = useTranslations();
 
@@ -234,14 +220,12 @@ export function CreateEmail() {
 
       toast.success(t('pages.createEmail.emailSentSuccessfully'));
 
-      // Reset all form fields
       setToInput('');
       setToEmails([]);
       setSubjectInput('');
       setAttachments([]);
       setMessageContent('');
 
-      // Reset the editor content by setting a new default value
       setDefaultValue({
         type: 'doc',
         content: [
@@ -252,10 +236,8 @@ export function CreateEmail() {
         ],
       });
 
-      // Force remount the editor component to ensure it resets properly
       setResetEditorKey((prev) => prev + 1);
 
-      // Reset unsaved changes flag
       setHasUnsavedChanges(false);
     } catch (error) {
       console.error('Error sending email:', error);

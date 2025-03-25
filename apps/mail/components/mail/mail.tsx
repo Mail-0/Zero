@@ -12,6 +12,7 @@ import {
   ListMinusIcon,
   ArrowRightIcon,
   Loader2,
+  Archive
 } from 'lucide-react';
 import {
   Dialog,
@@ -22,6 +23,24 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+	moveThreadsTo,
+	ThreadDestination,
+	isActionAvailable,
+	getAvailableActions,
+} from '@/lib/thread-actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
@@ -33,53 +52,57 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { useMediaQuery } from '../../hooks/use-media-query';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { SearchIcon } from '../icons/animated/search';
-import type { MessageKey } from '@/config/navigation';
 import { useMail } from '@/components/mail/use-mail';
 import { SidebarToggle } from '../ui/sidebar-toggle';
 import { Skeleton } from '@/components/ui/skeleton';
+import { clearBulkSelectionAtom } from './use-mail';
 import { cn, defaultPageSize } from '@/lib/utils';
 import { useThreads } from '@/hooks/use-threads';
+import { MessageKey } from '@/config/navigation';
 import { Button } from '@/components/ui/button';
 import { useHotKey } from '@/hooks/use-hot-key';
 import { useSession } from '@/lib/auth-client';
+import { useStats } from '@/hooks/use-stats';
 import { XIcon } from '../icons/animated/x';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { getMail } from '@/actions/mail';
 import { SearchBar } from './search-bar';
 import items from './demo.json';
+import { useAtom } from 'jotai';
 import { toast } from 'sonner';
 
 export function DemoMailLayout() {
-  const [mail] = useState({
-    selected: 'demo',
-    bulkSelected: [],
-  });
-  const isMobile = false;
-  const isValidating = false;
-  const isLoading = false;
-  const isDesktop = true;
-  const searchParams = useSearchParams();
-  const threadIdParam = searchParams?.get('threadId');
+	const [mail, setMail] = useState({
+		selected: 'demo',
+		bulkSelected: [],
+	});
+	const isMobile = false;
+	const isValidating = false;
+	const isLoading = false;
+	const isDesktop = true;
+	const searchParams = useSearchParams();
+	const threadIdParam = searchParams?.get('threadId');
+	const t = useTranslations();
 
-  const handleClose = () => {
-    // Update URL to remove threadId parameter
-    const currentParams = new URLSearchParams(searchParams?.toString() || '');
-    currentParams.delete('threadId');
-  };
-  const [activeCategory, setActiveCategory] = useState('Primary');
-  const [filteredItems, setFilteredItems] = useState(items);
+	const handleClose = () => {
+		// Update URL to remove threadId parameter
+		const currentParams = new URLSearchParams(searchParams?.toString() || '');
+		currentParams.delete('threadId');
+	};
+	const [activeCategory, setActiveCategory] = useState('Primary');
+	const [filteredItems, setFilteredItems] = useState(items);
 
-  useEffect(() => {
-    if (activeCategory === 'Primary') {
-      setFilteredItems(items);
-    } else {
-      const categoryMap = {
-        Important: 'important',
-        Personal: 'personal',
-        Updates: 'updates',
-        Promotions: 'promotions',
-      };
+	useEffect(() => {
+		if (activeCategory === 'Primary') {
+			setFilteredItems(items);
+		} else {
+			const categoryMap = {
+				Important: 'important',
+				Personal: 'personal',
+				Updates: 'updates',
+				Promotions: 'promotions',
+			};
 
       const filterTag = categoryMap[activeCategory as keyof typeof categoryMap];
       const filtered = items.filter((item) => item.tags && item.tags.includes(filterTag));
@@ -119,7 +142,9 @@ export function DemoMailLayout() {
                 <div>
                   <MailCategoryTabs
                     iconsOnly={true}
-                    onCategoryChange={setActiveCategory}
+                    onCategoryChange={(category) => {
+                      setActiveCategory(category)
+                    }}
                     initialCategory={activeCategory}
                   />
                 </div>
@@ -168,40 +193,47 @@ export function DemoMailLayout() {
           )}
         </ResizablePanelGroup>
 
-        {/* Mobile Drawer */}
-        {isMobile && (
-          <Drawer
-            open={!!threadIdParam}
-            onOpenChange={(isOpen) => {
-              if (!isOpen) handleClose();
-            }}
-          >
-            <DrawerContent className="bg-offsetLight dark:bg-offsetDark h-[calc(100vh-3rem)] overflow-hidden p-0">
-              <DrawerHeader className="sr-only">
-                <DrawerTitle>Email Details</DrawerTitle>
-              </DrawerHeader>
-              <div className="flex h-full flex-col overflow-hidden">
-                <div className="flex-1 overflow-hidden">
-                  <ThreadDisplay onClose={handleClose} isMobile={true} mail={filteredItems[0]} />
-                </div>
-              </div>
-            </DrawerContent>
-          </Drawer>
-        )}
-      </div>
-    </TooltipProvider>
-  );
+				{/* Mobile Drawer */}
+				{isMobile && (
+					<Drawer
+						open={!!threadIdParam}
+						onOpenChange={(isOpen) => {
+							if (!isOpen) handleClose();
+						}}
+					>
+						<DrawerContent className="bg-offsetLight dark:bg-offsetDark h-[calc(100vh-3rem)] overflow-hidden p-0">
+							<DrawerHeader className="sr-only">
+								<DrawerTitle>Email Details</DrawerTitle>
+							</DrawerHeader>
+							<div className="flex h-full flex-col overflow-hidden">
+								<div className="flex-1 overflow-hidden">
+									<ThreadDisplay onClose={handleClose} isMobile={true} mail={filteredItems[0]} />
+								</div>
+							</div>
+						</DrawerContent>
+					</Drawer>
+				)}
+			</div>
+		</TooltipProvider>
+	);
 }
 
 export function MailLayout() {
-  const { folder } = useParams<{ folder: string }>();
-  const [searchMode, setSearchMode] = useState(false);
-  const [searchValue] = useSearchValue();
-  const [mail, setMail] = useMail();
-  const [isMobile, setIsMobile] = useState(false);
-  const router = useRouter();
-  const { data: session, isPending } = useSession();
-  const t = useTranslations();
+	const { folder } = useParams<{ folder: string }>();
+	const [mail, setMail] = useMail();
+	const [, clearBulkSelection] = useAtom(clearBulkSelectionAtom);
+	const [isMobile, setIsMobile] = useState(false);
+	const router = useRouter();
+	const { data: session, isPending } = useSession();
+	const t = useTranslations();
+	const prevFolderRef = useRef(folder);
+
+	useEffect(() => {
+		if (prevFolderRef.current !== folder && mail.bulkSelected.length > 0) {
+			clearBulkSelection();
+		}
+		prevFolderRef.current = folder;
+	}, [folder, mail.bulkSelected.length, clearBulkSelection]);
 
   useEffect(() => {
     if (!session?.user && !isPending) {
@@ -209,12 +241,7 @@ export function MailLayout() {
     }
   }, [session?.user, isPending]);
 
-  const { isLoading, isValidating } = useThreads(
-    folder,
-    undefined,
-    searchValue.value,
-    defaultPageSize,
-  );
+  const { isLoading, isValidating } = useThreads();
 
   const isDesktop = useMediaQuery('(min-width: 768px)');
 
@@ -242,15 +269,10 @@ export function MailLayout() {
     router.push(`/mail/${folder}?${currentParams.toString()}`);
   }, [router, folder, searchParams]);
 
-  useHotKey('/', () => {
-    setSearchMode(true);
-  });
-
+  // Search bar is always visible now, no need for keyboard shortcuts to toggle it
   useHotKey('Esc', (event) => {
     event?.preventDefault();
-    if (searchMode) {
-      setSearchMode(false);
-    }
+    // Handle other Esc key functionality if needed
   });
 
   const searchIconRef = useRef<any>(null);
@@ -281,61 +303,37 @@ export function MailLayout() {
                 )}
               >
                 <SidebarToggle className="h-fit px-2" />
-                {searchMode && (
-                  <div className="flex flex-1 items-center justify-center gap-3">
-                    <SearchBar />
-                    <Button
-                      variant="ghost"
-                      className="md:h-fit md:px-2"
-                      onClick={() => setSearchMode(false)}
-                    >
-                      <XIcon className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-
-                {!searchMode && (
+                
+                {mail.bulkSelected.length > 0 ? (
                   <>
-                    {mail.bulkSelected.length > 0 ? (
-                      <>
-                        <div className="flex flex-1 items-center justify-center">
-                          <span className="text-sm font-medium tabular-nums">
-                            {t('common.mail.selected', { count: mail.bulkSelected.length })}
-                          </span>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-muted-foreground ml-1.5 h-8 w-fit px-2"
-                                onClick={() => setMail({ ...mail, bulkSelected: [] })}
-                              >
-                                <X />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>{t('common.mail.clearSelection')}</TooltipContent>
-                          </Tooltip>
-                        </div>
-                        <BulkSelectActions />
-                      </>
-                    ) : (
-                      <>
-                        <div className="flex-1 text-center text-sm font-medium capitalize">
-                          <MailCategoryTabs iconsOnly={!!threadIdParam} />
-                        </div>
-                        <div className="flex items-center gap-1.5">
+                    <div className="flex flex-1 items-center justify-center">
+                      <span className="text-sm font-medium tabular-nums">
+                        {t('common.mail.selected', { count: mail.bulkSelected.length })}
+                      </span>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
                           <Button
                             variant="ghost"
-                            className="md:h-fit md:px-2"
-                            onClick={() => setSearchMode(true)}
-                            onMouseEnter={() => searchIconRef.current?.startAnimation?.()}
-                            onMouseLeave={() => searchIconRef.current?.stopAnimation?.()}
+                            size="sm"
+                            className="text-muted-foreground ml-1.5 h-8 w-fit px-2"
+                            onClick={() => setMail({ ...mail, bulkSelected: [] })}
                           >
-                            <SearchIcon ref={searchIconRef} className="h-4 w-4" />
+                            <X />
                           </Button>
-                        </div>
-                      </>
-                    )}
+                        </TooltipTrigger>
+                        <TooltipContent>{t('common.mail.clearSelection')}</TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <BulkSelectActions />
+                  </>
+                ) : (
+                  <>
+                    <div className="flex-1 flex justify-center">
+                      <SearchBar />
+                    </div>
+                    <div className="flex items-center">
+                      <CategorySelect />
+                    </div>
                   </>
                 )}
               </div>
@@ -366,49 +364,48 @@ export function MailLayout() {
             </div>
           </ResizablePanel>
 
-          {isDesktop && threadIdParam && (
-            <>
-              <ResizablePanel
-                className="bg-offsetLight dark:bg-offsetDark shadow-sm md:flex md:rounded-2xl md:border md:shadow-sm"
-                defaultSize={75}
-                minSize={25}
-              >
-                <div className="relative hidden h-[calc(100vh-(12px+14px))] flex-1 md:block">
-                  <ThreadDisplay onClose={handleClose} />
-                </div>
-              </ResizablePanel>
-            </>
-          )}
-        </ResizablePanelGroup>
+					{isDesktop && threadIdParam && (
+						<>
+							<ResizablePanel
+								className="bg-offsetLight dark:bg-offsetDark shadow-sm md:flex md:rounded-2xl md:border md:shadow-sm"
+								defaultSize={75}
+								minSize={25}
+							>
+								<div className="relative hidden h-[calc(100vh-(12px+14px))] flex-1 md:block">
+									<ThreadDisplay onClose={handleClose} mail={threadIdParam} />
+								</div>
+							</ResizablePanel>
+						</>
+					)}
+				</ResizablePanelGroup>
 
-        {/* Mobile Drawer */}
-        {isMobile && (
-          <Drawer
-            open={!!threadIdParam}
-            onOpenChange={(isOpen) => {
-              if (!isOpen) handleClose();
-            }}
-          >
-            <DrawerContent className="bg-offsetLight dark:bg-offsetDark h-[calc(100vh-4rem)] overflow-hidden p-0">
-              <DrawerHeader className="sr-only">
-                <DrawerTitle>Email Details</DrawerTitle>
-              </DrawerHeader>
-              <div className="flex h-full flex-col overflow-hidden">
-                <div className="flex-1 overflow-hidden">
-                  <ThreadDisplay onClose={handleClose} isMobile={true} />
-                </div>
-              </div>
-            </DrawerContent>
-          </Drawer>
-        )}
-      </div>
-    </TooltipProvider>
-  );
+				{/* Mobile Drawer */}
+				{isMobile && (
+					<Drawer
+						open={!!threadIdParam}
+						onOpenChange={(isOpen) => {
+							if (!isOpen) handleClose();
+						}}
+					>
+						<DrawerContent className="bg-offsetLight dark:bg-offsetDark h-[calc(100vh-4rem)] overflow-hidden p-0">
+							<DrawerHeader className="sr-only">
+								<DrawerTitle>Email Details</DrawerTitle>
+							</DrawerHeader>
+							<div className="flex h-full flex-col overflow-hidden">
+								<div className="flex-1 overflow-hidden">
+									<ThreadDisplay onClose={handleClose} isMobile={true} mail={threadIdParam} />
+								</div>
+							</div>
+						</DrawerContent>
+					</Drawer>
+				)}
+			</div>
+		</TooltipProvider>
+	);
 }
 
 function BulkSelectActions() {
   const t = useTranslations();
-  const [mail] = useMail();
   const [errorQty, setErrorQty] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isUnsub, setIsUnsub] = useState(false);
@@ -434,12 +431,40 @@ function BulkSelectActions() {
         setIsLoading(false);
       }),
       {
-        description: `Processing a total of ${mail.bulkSelected.length} threads`,
         loading: 'Unsubscribing...',
         success: 'All done! you will no longer receive emails from these mailing lists.',
         error: 'Something went wrong!',
       },
     );
+  };
+  const [mail, setMail] = useMail();
+  const { folder } = useParams<{ folder: string }>();
+  const { mutate: mutateThreads } = useThreads();
+  const { mutate: mutateStats } = useStats();
+
+  const onMoveSuccess = useCallback(async () => {
+    await mutateThreads();
+    await mutateStats();
+    setMail({ ...mail, bulkSelected: [] });
+  }, [mail, setMail, mutateThreads, mutateStats]);
+
+  const availableActions = getAvailableActions(folder).filter(
+    (action): action is Exclude<ThreadDestination, null> => action !== null,
+  );
+
+  const actionButtons = {
+    spam: {
+      icon: <ArchiveX />,
+      tooltip: t('common.mail.moveToSpam'),
+    },
+    archive: {
+      icon: <Archive />,
+      tooltip: t('common.mail.archive'),
+    },
+    inbox: {
+      icon: <Inbox />,
+      tooltip: t('common.mail.moveToInbox'),
+    },
   };
 
   return (
@@ -485,55 +510,137 @@ function BulkSelectActions() {
         </TooltipTrigger>
         <TooltipContent>{t('common.mail.mute')}</TooltipContent>
       </Tooltip>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button variant="ghost" className="md:h-fit md:px-2">
-            <ArchiveX />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>{t('common.mail.moveToSpam')}</TooltipContent>
-      </Tooltip>
+
+      {availableActions.map((action) => (
+        <Tooltip key={action}>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              className="md:h-fit md:px-2"
+              onClick={() => {
+                if (mail.bulkSelected.length === 0) return;
+                moveThreadsTo({
+                  threadIds: mail.bulkSelected,
+                  currentFolder: folder,
+                  destination: action,
+                }).then(onMoveSuccess);
+              }}
+            >
+              {actionButtons[action].icon}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{actionButtons[action].tooltip}</TooltipContent>
+        </Tooltip>
+      ))}
     </div>
   );
 }
 
-const categories = [
-  {
-    name: 'common.mailCategories.primary',
-    searchValue: '',
-    icon: <Inbox className="h-4 w-4" />,
-    colors:
-      'border-0 bg-gray-200 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400 dark:hover:bg-gray-800/70',
-  },
-  {
-    name: 'common.mailCategories.important',
-    searchValue: 'is:important',
-    icon: <AlertTriangle className="h-4 w-4" />,
-    colors:
-      'border-0 text-amber-800 bg-amber-100 dark:bg-amber-900/20 dark:text-amber-500 dark:hover:bg-amber-900/30',
-  },
-  {
-    name: 'common.mailCategories.personal',
-    searchValue: 'is:personal',
-    icon: <User className="h-4 w-4" />,
-    colors:
-      'border-0 text-green-800 bg-green-100 dark:bg-green-900/20 dark:text-green-500 dark:hover:bg-green-900/30',
-  },
-  {
-    name: 'common.mailCategories.updates',
-    searchValue: 'is:updates',
-    icon: <Bell className="h-4 w-4" />,
-    colors:
-      'border-0 text-purple-800 bg-purple-100 dark:bg-purple-900/20 dark:text-purple-500 dark:hover:bg-purple-900/30',
-  },
-  {
-    name: 'common.mailCategories.promotions',
-    searchValue: 'is:promotions',
-    icon: <Tag className="h-4 w-4 rotate-90" />,
-    colors:
-      'border-0 text-red-800 bg-red-100 dark:bg-red-900/20 dark:text-red-500 dark:hover:bg-red-900/30',
-  },
-];
+const Categories = () => {
+	const t = useTranslations();
+
+	return [
+		{
+      id: 'Primary',
+			name: t('common.mailCategories.primary'),
+			searchValue: '',
+			icon: <Inbox className="h-4 w-4" />,
+			colors:
+				'border-0 bg-gray-200 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400 dark:hover:bg-gray-800/70',
+		},
+		{
+			id: 'Important',
+			name: t('common.mailCategories.important'),
+			searchValue: 'is:important',
+			icon: <AlertTriangle className="h-4 w-4" />,
+			colors:
+				'border-0 text-amber-800 bg-amber-100 dark:bg-amber-900/20 dark:text-amber-500 dark:hover:bg-amber-900/30',
+		},
+		{
+			id: 'Personal',
+			name: t('common.mailCategories.personal'),
+			searchValue: 'is:personal',
+			icon: <User className="h-4 w-4" />,
+			colors:
+				'border-0 text-green-800 bg-green-100 dark:bg-green-900/20 dark:text-green-500 dark:hover:bg-green-900/30',
+		},
+		{
+			id: 'Updates',
+			name: t('common.mailCategories.updates'),
+			searchValue: 'is:updates',
+			icon: <Bell className="h-4 w-4" />,
+			colors:
+				'border-0 text-purple-800 bg-purple-100 dark:bg-purple-900/20 dark:text-purple-500 dark:hover:bg-purple-900/30',
+		},
+		{
+			id: 'Promotions',
+			name: t('common.mailCategories.promotions'),
+			searchValue: 'is:promotions',
+			icon: <Tag className="h-4 w-4 rotate-90" />,
+			colors:
+				'border-0 text-red-800 bg-red-100 dark:bg-red-900/20 dark:text-red-500 dark:hover:bg-red-900/30',
+		},
+	];
+};
+
+function CategorySelect() {
+  const [, setSearchValue] = useSearchValue();
+  const categories = Categories();
+  const [defaultCategory, setDefaultCategory] = useState('Primary');
+  
+  // Safely access localStorage on the client side only
+  useEffect(() => {
+    // Check if we're in the browser environment
+    if (typeof window !== 'undefined') {
+      const savedCategory = localStorage.getItem('mailActiveCategory');
+      if (savedCategory) {
+        setDefaultCategory(savedCategory);
+      }
+    }
+  }, []);
+  
+  return (
+    <Select
+      onValueChange={(value: string) => {
+        // Find the category and trigger its selection
+        const category = categories.find(cat => cat.id === value);
+        
+        // Always update the state to match the selected value
+        setDefaultCategory(value);
+        
+        if (category) {
+          // Update search value based on category
+          const searchValueState = {
+            value: category.searchValue || '',
+            highlight: '',
+            folder: ''
+          };
+          setSearchValue(searchValueState);
+          
+          // Save to localStorage (safely on client-side)
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('mailActiveCategory', value);
+          }
+        }
+      }}
+      defaultValue={defaultCategory}
+    >
+      <SelectTrigger className="w-36 h-9 bg-popover">
+        <SelectValue placeholder="Select category" />
+      </SelectTrigger>
+      <SelectContent>
+        {categories.map((category) => (
+          <SelectItem key={category.id} value={category.id} className="cursor-pointer">
+            <div className="flex items-center gap-2">
+              {category.icon}
+              <span>{category.name}</span>
+            </div>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
 
 function MailCategoryTabs({
   iconsOnly = false,
@@ -546,17 +653,19 @@ function MailCategoryTabs({
   onCategoryChange?: (category: string) => void;
   initialCategory?: string;
 }) {
-  const [, setSearchValue] = useSearchValue();
-  const t = useTranslations();
+	const [, setSearchValue] = useSearchValue();
+	const categories = Categories();
 
-  // Initialize with just the initialCategory or "Primary"
-  const [activeCategory, setActiveCategory] = useState(initialCategory || 'Primary');
+	// Initialize with just the initialCategory or "Primary"
+	const [activeCategory, setActiveCategory] = useState(
+		initialCategory || 'Primary',
+	);
 
   // Move localStorage logic to a useEffect
   useEffect(() => {
     // Check localStorage only after initial render
     const savedCategory = localStorage.getItem('mailActiveCategory');
-    if (savedCategory && !initialCategory) {
+    if (savedCategory) {
       setActiveCategory(savedCategory);
     }
   }, [initialCategory]);
@@ -565,13 +674,12 @@ function MailCategoryTabs({
   const activeTabElementRef = useRef<HTMLButtonElement>(null);
 
   const activeTab = useMemo(
-    () => categories.find((cat) => cat.name === activeCategory),
+    () => categories.find((cat) => cat.id === activeCategory),
     [activeCategory],
   );
 
   // Save to localStorage when activeCategory changes
   useEffect(() => {
-    localStorage.setItem('mailActiveCategory', activeCategory);
     if (onCategoryChange) {
       onCategoryChange(activeCategory);
     }
@@ -629,70 +737,67 @@ function MailCategoryTabs({
     return () => window.removeEventListener('resize', handleResize);
   }, [updateClipPath]);
 
-  return (
-    <div className="relative mx-auto w-fit">
-      <ul className="flex justify-center gap-1.5">
-        {categories.map((category) => (
-          <li key={category.name}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  ref={activeCategory === category.name ? activeTabElementRef : null}
-                  data-tab={category.name}
-                  onClick={() => {
-                    setActiveCategory(category.name);
-                  }}
-                  className={cn(
-                    'flex h-7 items-center gap-1.5 rounded-full px-2 text-xs font-medium transition-all duration-200',
-                    activeCategory === category.name
-                      ? category.colors
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
-                  )}
-                >
-                  {category.icon}
-                  <span className={cn('hidden', !iconsOnly && 'md:inline')}>
-                    {t(category.name as MessageKey)}
-                  </span>
-                </button>
-              </TooltipTrigger>
-              {iconsOnly && (
-                <TooltipContent>
-                  <span>{t(category.name as MessageKey)}</span>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </li>
-        ))}
-      </ul>
+	return (
+		<div className="relative mx-auto w-fit">
+			<ul className="flex justify-center gap-1.5">
+				{categories.map((category) => (
+					<li key={category.name}>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<button
+									ref={activeCategory === category.id ? activeTabElementRef : null}
+									data-tab={category.id}
+									onClick={() => {
+										setActiveCategory(category.id);
+                    localStorage.setItem('mailActiveCategory', category.id);
+									}}
+									className={cn(
+										'flex h-7 items-center gap-1.5 rounded-full px-2 text-xs font-medium transition-all duration-200',
+										activeCategory === category.id
+											? category.colors
+											: 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
+									)}
+								>
+									{category.icon}
+									<span className={cn('hidden', !iconsOnly && 'md:inline')}>{category.name}</span>
+								</button>
+							</TooltipTrigger>
+							{iconsOnly && (
+								<TooltipContent>
+									<span>{category.name}</span>
+								</TooltipContent>
+							)}
+						</Tooltip>
+					</li>
+				))}
+			</ul>
 
-      <div
-        aria-hidden
-        className="absolute inset-0 z-10 overflow-hidden transition-[clip-path] duration-300 ease-in-out"
-        ref={containerRef}
-      >
-        <ul className="flex justify-center gap-1.5">
-          {categories.map((category) => (
-            <li key={category.name}>
-              <button
-                data-tab={category.name}
-                onClick={() => {
-                  setActiveCategory(category.name);
-                }}
-                className={cn(
-                  'flex h-7 items-center gap-1.5 rounded-full px-2 text-xs font-medium',
-                  category.colors,
-                )}
-                tabIndex={-1}
-              >
-                {category.icon}
-                <span className={cn('hidden', !iconsOnly && 'md:inline')}>
-                  {t(category.name as MessageKey)}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
+			<div
+				aria-hidden
+				className="absolute inset-0 z-10 overflow-hidden transition-[clip-path] duration-300 ease-in-out"
+				ref={containerRef}
+			>
+				<ul className="flex justify-center gap-1.5">
+					{categories.map((category) => (
+						<li key={category.id}>
+							<button
+								data-tab={category.id}
+								onClick={() => {
+									setActiveCategory(category.id);
+								}}
+								className={cn(
+									'flex h-7 items-center gap-1.5 rounded-full px-2 text-xs font-medium',
+									category.colors,
+								)}
+								tabIndex={-1}
+							>
+								{category.icon}
+								<span className={cn('hidden', !iconsOnly && 'md:inline')}>{category.name}</span>
+							</button>
+						</li>
+					))}
+				</ul>
+			</div>
+		</div>
+	);
 }

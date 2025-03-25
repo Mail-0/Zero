@@ -121,7 +121,8 @@
       "forward": "Forward",
       "markAsUnread": "Mark as unread",
       "addLabel": "Add label",
-      "muteThread": "Mute thread"
+      "muteThread": "Mute thread",
+      "favourites": "Favourites"
     },
     "notes": {
       "title": "Notes",
@@ -205,7 +206,13 @@
       "muteThread": "Mute Thread",
       "moving": "Moving...",
       "moved": "Moved",
-      "errorMoving": "Error moving"
+      "errorMoving": "Error moving",
+      "reply": "Reply",
+      "replyAll": "Reply All",
+      "forward": "Forward",
+      "labels": "Labels",
+      "createNewLabel": "Create New Label",
+      "noLabelsAvailable": "No labels available"
     }
   },
   "navigation": {

@@ -1,15 +1,18 @@
 "use client";
 
+import { getMail, getMails, markAsRead } from '@/actions/mail';
+import { useParams, useSearchParams } from 'next/navigation';
 import type { InitialThread, ParsedMessage } from '@/types';
-import { getMail, getMails } from '@/actions/mail';
+import { useSearchValue } from '@/hooks/use-search-value';
 import { useSession } from '@/lib/auth-client';
+import { defaultPageSize } from '@/lib/utils';
 import useSWRInfinite from 'swr/infinite';
 import useSWR, { preload } from 'swr';
 import { useMemo } from 'react';
 
 export const preloadThread = async (userId: string, threadId: string, connectionId: string) => {
   console.log(`🔄 Prefetching email ${threadId}...`);
-  await preload([userId, threadId, connectionId], fetchThread);
+  await preload([userId, threadId, connectionId], fetchThread(undefined));
 };
 
 type FetchEmailsTuple = [
@@ -39,10 +42,22 @@ const fetchEmails = async ([
   }
 };
 
-const fetchThread = async (args: any[]) => {
+const fetchThread = (cb: any) => async (args: any[]) => {
   const [_, id] = args;
   try {
-		return await getMail({ id });
+		return await getMail({ id }).then((response) => {
+      if (response) {
+        if (cb) {
+          const unreadMessages = response.filter(e=>e.unread).map(e=>e.id)
+          if (unreadMessages.length) {
+            markAsRead({ids: unreadMessages}).then(()=>{
+              if (cb && typeof cb === 'function') cb()
+            });
+          }
+        }
+        return response
+      }
+    });
   } catch (error) {
     console.error("Error fetching email:", error);
     throw error;
@@ -65,13 +80,15 @@ const getKey = (
   return [connectionId, folder, query, max, labelIds, previousPageData?.nextPageToken];
 };
 
-export const useThreads = (folder: string, labelIds?: string[], query?: string, max?: number) => {
+export const useThreads = () => {
+  const { folder } = useParams<{ folder: string }>();
+  const [searchValue] = useSearchValue();
   const { data: session } = useSession();
 
   const { data, error, size, setSize, isLoading, isValidating, mutate } = useSWRInfinite(
     (_, previousPageData) => {
       if (!session?.user.id || !session.connectionId) return null;
-      return getKey(previousPageData, [session.connectionId, folder, query, max, labelIds]);
+      return getKey(previousPageData, [session.connectionId, folder, searchValue.value, defaultPageSize]);
     },
     fetchEmails,
     {
@@ -111,12 +128,15 @@ export const useThreads = (folder: string, labelIds?: string[], query?: string, 
   };
 };
 
-export const useThread = (id: string | null) => {
+export const useThread = () => {
   const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const id = searchParams.get('threadId');
+  const {mutate: mutateThreads} = useThreads()
 
   const { data, isLoading, error, mutate } = useSWR<ParsedMessage[]>(
     session?.user.id && id ? [session.user.id, id, session.connectionId] : null,
-    fetchThread as any,
+    fetchThread(mutateThreads) as any,
   );
 
   const hasUnread = useMemo(() => data?.some((e) => e.unread), [data]);

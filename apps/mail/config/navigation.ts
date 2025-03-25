@@ -15,6 +15,7 @@ import { NestedKeyOf } from "next-intl";
 import { MessageKeys } from "next-intl";
 import { MessageSquareIcon } from "@/components/icons/animated/message-square";
 export interface NavItem {
+  id?:string,
   title: string;
   url: string;
   icon: React.ComponentType<any>;
@@ -45,44 +46,51 @@ export const navigationConfig: Record<string, NavConfig> = {
         title: "",
         items: [
           {
+            id: 'inbox',
             title: "navigation.sidebar.inbox",
             url: "/mail/inbox",
             icon: InboxIcon,
           },
           {
+            id: 'drafts',
             title: "navigation.sidebar.drafts",
             url: "/mail/draft",
             icon: BookTextIcon,
           },
           {
+            id: 'sent',
             title: "navigation.sidebar.sent",
             url: "/mail/sent",
             icon: CheckCheckIcon,
           },
           {
+            id:'spam',
             title: "navigation.sidebar.spam",
             url: "/mail/spam",
             icon: XIcon,
           },
           {
+            id:'archive',
             title: "navigation.sidebar.archive",
             url: "/mail/archive",
             icon: ArchiveIcon,
-            disabled: true,
           },
           {
+            id:'bin',
             title: "navigation.sidebar.bin",
             url: "/mail/bin",
             icon: DeleteIcon,
             disabled: true,
           },
           {
+            id:'settings',
             title: "navigation.sidebar.settings",
             url: "/settings/general",
             icon: SettingsGearIcon,
             isSettingsButton: true,
           },
           {
+            id:'contact',
             title: "navigation.sidebar.contact",
             url: "#",
             icon: MessageSquareIcon,

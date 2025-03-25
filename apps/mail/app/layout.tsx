@@ -1,4 +1,3 @@
-import { CookieConsent } from '@/components/cookies/cookie-dialog';
 import { CookieProvider } from '@/providers/cookie-provider';
 import { getLocale, getMessages } from 'next-intl/server';
 import { Geist, Geist_Mono } from 'next/font/google';
@@ -9,7 +8,6 @@ import { Toast } from '@/components/ui/toast';
 import { Providers } from '@/lib/providers';
 import { headers } from 'next/headers';
 import { cn } from '@/lib/utils';
-import Head from 'next/head';
 import './globals.css';
 
 const geistSans = Geist({
@@ -31,13 +29,14 @@ export default async function RootLayout({
   children: React.ReactNode;
   cookies: React.ReactNode;
 }>) {
-  const isEuRegion = (await headers()).get('x-user-eu-region') === 'true';
+  // const isEuRegion = (await headers()).get('x-user-eu-region') === 'true';
   const locale = await getLocale();
   const messages = await getMessages();
 
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
+        {/*<script src="https://unpkg.com/react-scan/dist/auto.global.js" />*/}
         <meta name="x-user-country" content={(await headers()).get('x-user-country') || ''} />
         <meta
           name="x-user-eu-region"

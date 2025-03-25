@@ -48,7 +48,7 @@ export default function ThreadSubject({ subject, isMobile }: ThreadSubjectProps)
               !subject && 'opacity-50',
             )}
           >
-            {subjectContent}
+            {subjectContent.trim()}
           </span>
         </TooltipTrigger>
         {isOverflowing && (
