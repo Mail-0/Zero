@@ -7,21 +7,32 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { db } from "@zero/db";
 
+async function getAuthenticatedUserId(): Promise<string> {
+  const headersList = await headers();
+  const session = await auth.api.getSession({ headers: headersList });
+  
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized, please reconnect");
+  }
+  
+  return session.user.id;
+}
+
+function validateSettings(settings: unknown): UserSettings {
+  try {
+    return userSettingsSchema.parse(settings);
+  } catch (error) {
+    console.error("Settings validation error: Schema mismatch", {
+      error,
+      settings
+    });
+    throw new Error("Invalid settings format");
+  }
+}
 
 export async function getUserSettings() {
   try {
-    const headersList = await headers();
-    const session = await auth.api.getSession({ headers: headersList });
-
-    if (!session) {
-        throw new Error("Unauthorized, reconnect");
-    }
-
-    const userId = session?.user?.id;
-
-    if (!userId) {
-      throw new Error("Unauthorized, reconnect");
-    }
+    const userId = await getAuthenticatedUserId();
 
     const [result] = await db
       .select()
@@ -32,16 +43,7 @@ export async function getUserSettings() {
     // Returning null here when there are no settings so we can use the default settings with timezone from the browser
     if (!result) return null;
 
-    try {
-      const parsedSettings = userSettingsSchema.parse(result.settings);
-      return parsedSettings;
-    } catch (error) {
-      console.error("Settings validation error: Schema mismatch", {
-        error,
-        settings: result.settings
-      });
-      throw new Error("Invalid settings format");
-    }
+    return validateSettings(result.settings);
   } catch (error) {
     console.error("Failed to fetch user settings:", error);
     throw new Error("Failed to fetch user settings");
@@ -50,30 +52,9 @@ export async function getUserSettings() {
 
 export async function saveUserSettings(settings: UserSettings) {
   try {
-    const headersList = await headers();
-    const session = await auth.api.getSession({ headers: headersList });
-
-    if (!session) {
-      throw new Error("Unauthorized");
-    }
-
-    const userId = session?.user?.id;
-
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
-
-    // Validate settings
-    try {
-      const parsedSettings = userSettingsSchema.parse(settings);
-      settings = parsedSettings;
-    } catch (error) {
-      console.error("Settings validation error: Schema mismatch", {
-        error,
-        settings: settings
-      });
-      throw new Error("Invalid settings format");
-    }
+    const userId = await getAuthenticatedUserId();
+    settings = validateSettings(settings);
+    const timestamp = new Date();
 
     const [existingSettings] = await db
       .select()
@@ -82,22 +63,20 @@ export async function saveUserSettings(settings: UserSettings) {
       .limit(1);
 
     if (existingSettings) {
-      // Update existing settings
       await db
         .update(userSettings)
         .set({
           settings: settings,
-          updatedAt: new Date(),
+          updatedAt: timestamp,
         })
         .where(eq(userSettings.userId, userId));
     } else {
-      // Create new settings
       await db.insert(userSettings).values({
         id: crypto.randomUUID(),
         userId,
         settings,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: timestamp,
+        updatedAt: timestamp,
       });
     }
 

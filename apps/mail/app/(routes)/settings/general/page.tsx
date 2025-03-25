@@ -69,8 +69,10 @@ export default function GeneralPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSaving(true);
+
     try {
       await saveUserSettings(values);
+
       if (values.language !== locale) {
         await changeLocale(values.language as Locale);
         const localeName = new Intl.DisplayNames([values.language], { type: 'language' }).of(
@@ -78,6 +80,7 @@ export default function GeneralPage() {
         );
         toast.success(t('common.settings.languageChanged', { locale: localeName }));
       }
+
       toast.success(t('common.settings.saved'));
     } catch (error) {
       console.error('Failed to save settings:', error);
