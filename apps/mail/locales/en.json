@@ -187,7 +187,8 @@
     "settings": {
       "notFound": "Settings not found",
       "saved": "Settings saved",
-      "failedToSave": "Failed to save settings"
+      "failedToSave": "Failed to save settings",
+      "languageChanged": "Language changed to {locale}"
     },
     "mail": {
       "replies": "{count, plural, =0 {replies} one {# reply} other {# replies}}",

@@ -76,7 +76,7 @@ export default function GeneralPage() {
         const localeName = new Intl.DisplayNames([values.language], { type: 'language' }).of(
           values.language,
         );
-        toast.success('Language changed to ' + localeName);
+        toast.success(t('common.settings.languageChanged', { locale: localeName }));
       }
       toast.success(t('common.settings.saved'));
     } catch (error) {
