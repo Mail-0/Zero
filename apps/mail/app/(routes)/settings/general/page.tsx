@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 import * as z from 'zod';
 import { useSettings } from '@/hooks/use-settings';
 import { getBrowserTimezone } from '@/lib/timezones';
+import { saveUserSettings } from '@/actions/settings';
 
 const formSchema = z.object({
   language: z.enum(locales as [string, ...string[]]),
@@ -63,6 +64,7 @@ export default function GeneralPage() {
     setIsSaving(true);
 
     try {
+      await saveUserSettings(values);
       await mutate(values, { revalidate: false });
 
       if (values.language !== locale) {
