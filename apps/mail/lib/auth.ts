@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { connection, user as _user, account, userSettings } from "@zero/db/schema";
-import { userSettingsDefault } from "@zero/db/user_settings_default";
+import { defaultUserSettings } from "@zero/db/user_settings_default";
 import { createAuthMiddleware, customSession } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth, type BetterAuthOptions } from "better-auth";
@@ -178,7 +178,7 @@ const options = {
               id: crypto.randomUUID(),
               userId: newSession.user.id,
               settings: {
-                ...userSettingsDefault,
+                ...defaultUserSettings,
                 timezone,
               },
               createdAt: new Date(),

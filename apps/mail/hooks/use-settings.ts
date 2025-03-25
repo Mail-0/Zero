@@ -1,7 +1,7 @@
 import { getUserSettings } from "@/actions/settings";
 import { useSession } from "@/lib/auth-client";
 import useSWR from "swr";
-import { userSettingsDefault } from "@zero/db/user_settings_default";
+import { defaultUserSettings } from "@zero/db/user_settings_default";
 
 export function useSettings() {
   const { data: session } = useSession();
@@ -14,7 +14,7 @@ export function useSettings() {
         const userSettings = await getUserSettings();
         // Return default settings if user has no settings saved, getting the current timezone from the browser
         if (!userSettings) {
-          return userSettingsDefault;
+          return defaultUserSettings;
         }
 
         return userSettings;

@@ -1,5 +1,6 @@
 "use server";
 
+import type { UserSettings } from "@zero/db/user_settings_default";
 import { userSettings } from "@zero/db/schema";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
@@ -13,8 +14,6 @@ const settingsSchema = z.object({
   dynamicContent: z.boolean(),
   externalImages: z.boolean(),
 });
-
-export type UserSettings = z.infer<typeof settingsSchema>;
 
 export async function getUserSettings() {
   try {
