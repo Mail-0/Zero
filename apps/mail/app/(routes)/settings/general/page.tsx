@@ -27,8 +27,8 @@ import { useForm } from 'react-hook-form';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import * as z from 'zod';
+import { useSettings } from '@/hooks/use-settings';
 import { getBrowserTimezone } from '@/lib/timezones';
-import { getUserSettings, saveUserSettings } from '@/actions/settings';
 
 const formSchema = z.object({
   language: z.enum(locales as [string, ...string[]]),
@@ -41,6 +41,7 @@ export default function GeneralPage() {
   const [isSaving, setIsSaving] = useState(false);
   const locale = useLocale();
   const t = useTranslations();
+  const { settings, mutate } = useSettings();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -53,25 +54,16 @@ export default function GeneralPage() {
   });
 
   useEffect(() => {
-    async function loadSettings() {
-      try {
-        const settings = await getUserSettings();
-        if (settings) {
-          form.reset(settings);
-        }
-      } catch (error) {
-        console.error('Failed to load settings:', error);
-        toast.error(t('common.settings.notFound'));
-      }
+    if (settings) {
+      form.reset(settings);
     }
-    loadSettings();
-  }, [form, t]);
+  }, [form, settings]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSaving(true);
 
     try {
-      await saveUserSettings(values);
+      await mutate(values, { revalidate: false });
 
       if (values.language !== locale) {
         await changeLocale(values.language as Locale);
@@ -85,6 +77,8 @@ export default function GeneralPage() {
     } catch (error) {
       console.error('Failed to save settings:', error);
       toast.error(t('common.settings.failedToSave'));
+      // Revert the optimistic update
+      await mutate();
     } finally {
       setIsSaving(false);
     }
