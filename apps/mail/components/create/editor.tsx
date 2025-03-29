@@ -24,6 +24,24 @@ import {
   EditorRoot,
   useEditor,
   type JSONContent,
+<<<<<<< HEAD
+} from "novel";
+import { LinkSelector } from "@/components/create/selectors/link-selector";
+import { NodeSelector } from "@/components/create/selectors/node-selector";
+import { TextButtons } from "@/components/create/selectors/text-buttons";
+import { suggestionItems } from "@/components/create/slash-command";
+import { defaultExtensions } from "@/components/create/extensions";
+import { ImageResizer, handleCommandNavigation } from "novel";
+import { uploadFn } from "@/components/create/image-upload";
+import { handleImageDrop, handleImagePaste } from "novel";
+import EditorMenu from "@/components/create/editor-menu";
+import { Separator } from "@/components/ui/separator";
+import { useAIInline } from "../ui/ai-inline";
+import { useReducer, useRef } from "react";
+import "./editor.css";
+
+const extensions = [...defaultExtensions];
+=======
 } from 'novel';
 import {
   Dialog,
@@ -54,6 +72,7 @@ import React from 'react';
 
 // Fix the extensions type error by using a type assertion
 const extensions = [...defaultExtensions, Markdown] as any[];
+>>>>>>> origin/staging
 
 export const defaultEditorContent = {
   type: 'doc',
@@ -104,6 +123,28 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
   }
 }
 
+<<<<<<< HEAD
+const DiffOverlay = ({ previewDiff }: Pick<ReturnType<typeof useAIInline>, "previewDiff">) => {
+  return (
+    <div className="bg-offsetLight dark:bg-offsetDark absolute left-0 top-0 z-50 min-h-96 w-full overflow-y-auto rounded-md p-4">
+      <div className="mb-4">
+        {previewDiff.map((part, index) => (
+          <span
+            key={index}
+            className={
+              part.added
+                ? "bg-green-200 text-green-800"
+                : part.removed
+                  ? "bg-red-200 text-red-800"
+                  : "text-gray-500"
+            }
+          >
+            {part.value}
+          </span>
+        ))}
+      </div>
+    </div>
+=======
 // Update the MenuBar component with icons
 const MenuBar = ({
   onAttachmentsChange,
@@ -367,18 +408,23 @@ const MenuBar = ({
         </DialogContent>
       </Dialog>
     </>
+>>>>>>> origin/staging
   );
 };
 
 export default function Editor({
   initialValue,
   onChange,
+<<<<<<< HEAD
+  placeholder = "Write something...",
+=======
   placeholder = 'Start your email here',
   onFocus,
   onBlur,
   className,
   onCommandEnter,
   onAttachmentsChange,
+>>>>>>> origin/staging
 }: EditorProps) {
   const [state, dispatch] = useReducer(editorReducer, {
     openNode: false,
@@ -387,12 +433,18 @@ export default function Editor({
     openAI: false,
   });
 
+<<<<<<< HEAD
+  const { previewDiff, isPreviewMode, setEditor } = useAIInline();
+
+  const contentRef = useRef<string>("");
+=======
   // Add a ref to store the editor content to prevent losing it on refresh
   const contentRef = useRef<string>('');
   // Add a ref to the editor instance
   const editorRef = useRef<TiptapEditor>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
+>>>>>>> origin/staging
 
   const { openNode, openColor, openLink, openAI } = state;
 
@@ -465,11 +517,15 @@ export default function Editor({
 
   return (
     <div
+<<<<<<< HEAD
+      className="relative w-full max-w-[450px] sm:max-w-[600px]"
+=======
       className={`relative w-full max-w-[450px] sm:max-w-[600px] ${className || ''}`}
       onClick={focusEditor}
+>>>>>>> origin/staging
       onKeyDown={(e) => {
         // Prevent form submission on Enter key
-        if (e.key === 'Enter' && !e.shiftKey) {
+        if (e.key === "Enter" && !e.shiftKey) {
           e.stopPropagation();
         }
 
@@ -524,6 +580,7 @@ export default function Editor({
             // Store the content in the ref to prevent losing it
             contentRef.current = editor.getHTML();
             onChange(editor.getHTML());
+            setEditor(editor);
           }}
           slotBefore={<MenuBar onAttachmentsChange={onAttachmentsChange} />}
           slotAfter={<ImageResizer />}
@@ -533,7 +590,7 @@ export default function Editor({
             className="border-muted bg-background z-50 h-auto max-h-[330px] overflow-y-auto rounded-md border px-1 py-2 shadow-md transition-all"
             onKeyDown={(e) => {
               // Prevent form submission on any key that might trigger it
-              if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+              if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
                 e.preventDefault();
                 e.stopPropagation();
               }
@@ -577,6 +634,8 @@ export default function Editor({
           </EditorMenu>
         </EditorContent>
       </EditorRoot>
+
+      {isPreviewMode && <DiffOverlay previewDiff={previewDiff} />}
     </div>
   );
 }
