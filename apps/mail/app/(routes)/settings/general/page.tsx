@@ -31,14 +31,9 @@ import { useSettings } from '@/hooks/use-settings';
 import { getBrowserTimezone } from '@/lib/timezones';
 import { saveUserSettings } from '@/actions/settings';
 import { Textarea } from '@/components/ui/textarea';
+import { generalSettingsSchema } from '@zero/db/user_settings';
 
-const formSchema = z.object({
-  language: z.enum(locales as [string, ...string[]]),
-  timezone: z.string(),
-  dynamicContent: z.boolean(),
-  externalImages: z.boolean(),
-  customPrompt: z.string(),
-});
+const formSchema = generalSettingsSchema;
 
 export default function GeneralPage() {
   const [isSaving, setIsSaving] = useState(false);
@@ -59,7 +54,7 @@ export default function GeneralPage() {
 
   useEffect(() => {
     if (settings) {
-      form.reset(settings);
+      form.reset(settings.general);
     }
   }, [form, settings]);
 
@@ -67,8 +62,10 @@ export default function GeneralPage() {
     setIsSaving(true);
 
     try {
-      await saveUserSettings(values);
-      await mutate(values, { revalidate: false });
+      if (!settings) throw new Error('Settings not available');
+
+      await saveUserSettings({general: values});
+      await mutate({ ...settings, general: values }, { revalidate: false });
 
       if (values.language !== locale) {
         await changeLocale(values.language as Locale);
@@ -76,13 +73,12 @@ export default function GeneralPage() {
           values.language,
         );
         toast.success(t('common.settings.languageChanged', { locale: localeName }));
+      } else {
+        toast.success(t('common.settings.saved'));
       }
-
-      toast.success(t('common.settings.saved'));
     } catch (error) {
       console.error('Failed to save settings:', error);
       toast.error(t('common.settings.failedToSave'));
-      // Revert the optimistic update
       await mutate();
     } finally {
       setIsSaving(false);

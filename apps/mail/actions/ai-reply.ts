@@ -46,7 +46,7 @@ export async function generateAIResponse(
 
   // Get user settings to check for custom prompt
   const userSettings = await getUserSettings();
-  const customPrompt = userSettings?.customPrompt || '';
+  const customPrompt = userSettings?.general.customPrompt || '';
 
   // Truncate the thread content to fit within token limits
   const truncatedThreadContent = truncateThreadContent(threadContent);

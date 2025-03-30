@@ -21,16 +21,20 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useForm } from 'react-hook-form';
 import { Bell } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import * as z from 'zod';
+import { notificationSettingsSchema } from '@zero/db/user_settings';
+import { useSettings } from '@/hooks/use-settings';
+import { saveUserSettings } from '@/actions/settings';
+import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
-const formSchema = z.object({
-  newMailNotifications: z.enum(['none', 'important', 'all']),
-  marketingCommunications: z.boolean(),
-});
+const formSchema = notificationSettingsSchema;
 
 export default function NotificationsPage() {
   const [isSaving, setIsSaving] = useState(false);
+  const { settings, mutate } = useSettings();
+  const t = useTranslations();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -40,13 +44,30 @@ export default function NotificationsPage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  useEffect(() => {
+    if (settings) {
+      form.reset(settings.notification);
+    }
+  }, [form, settings]);
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSaving(true);
-    setTimeout(() => {
-      console.log(values);
+
+    try {
+      if (!settings) throw new Error('Settings not available');
+
+      await saveUserSettings({notification: values});
+      await mutate({ ...settings, notification: values }, { revalidate: false });
+      toast.success(t('common.settings.saved'));
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      toast.error(t('common.settings.failedToSave'));
+      await mutate();
+    } finally {
       setIsSaving(false);
-    }, 1000);
+    }
   }
+
 
   return (
     <div className="grid gap-6">

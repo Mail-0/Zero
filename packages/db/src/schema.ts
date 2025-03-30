@@ -1,5 +1,5 @@
 import { pgTableCreator, text, timestamp, boolean, integer, jsonb } from "drizzle-orm/pg-core";
-import { defaultUserSettings } from "@zero/db/user_settings_default";
+import { defaultUserSettings } from "@zero/db/user_settings";
 
 export const createTable = pgTableCreator((name) => `mail0_${name}`);
 

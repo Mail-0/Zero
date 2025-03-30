@@ -15,16 +15,18 @@ import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { KeyRound } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import * as z from 'zod';
+import { useSettings } from '@/hooks/use-settings';
+import { saveUserSettings } from '@/actions/settings';
+import { toast } from 'sonner';
+import { securitySettingsSchema } from '@zero/db/user_settings';
 
-const formSchema = z.object({
-  twoFactorAuth: z.boolean(),
-  loginNotifications: z.boolean(),
-});
+const formSchema = securitySettingsSchema;
 
 export default function SecurityPage() {
   const [isSaving, setIsSaving] = useState(false);
+  const { settings, mutate } = useSettings();
   const t = useTranslations();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -35,15 +37,30 @@ export default function SecurityPage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  useEffect(() => {
+    if (settings) {
+      form.reset(settings.security);
+    }
+  }, [form, settings]);
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSaving(true);
 
-    // TODO: Save settings in user's account
-    setTimeout(() => {
-      console.log(values);
+    try {
+      if (!settings) throw new Error('Settings not available');
+
+      await saveUserSettings({security: values});
+      await mutate({ ...settings, security: values }, { revalidate: false });
+      toast.success(t('common.settings.saved'));
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      toast.error(t('common.settings.failedToSave'));
+      await mutate();
+    } finally {
       setIsSaving(false);
-    }, 1000);
+    }
   }
+
 
   return (
     <div className="grid gap-6">

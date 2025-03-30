@@ -2,7 +2,7 @@
 import { connection, user as _user, account, userSettings, earlyAccess } from '@zero/db/schema';
 import { createAuthMiddleware, customSession } from 'better-auth/plugins';
 import { getBrowserTimezone, isValidTimezone } from '@/lib/timezones';
-import { defaultUserSettings } from '@zero/db/user_settings_default';
+import { defaultUserSettings } from '@zero/db/user_settings';
 import { betterAuth, type BetterAuthOptions } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { getSocialProviders } from './auth-providers';

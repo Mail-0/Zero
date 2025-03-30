@@ -1,7 +1,7 @@
 import { getUserSettings } from "@/actions/settings";
 import { useSession } from "@/lib/auth-client";
 import useSWR from "swr";
-import { defaultUserSettings } from "@zero/db/user_settings_default";
+import { defaultUserSettings } from "@zero/db/user_settings";
 import { getBrowserTimezone } from "@/lib/timezones";
 
 export function useSettings() {
@@ -17,7 +17,10 @@ export function useSettings() {
         if (!userSettings) {
           return {
             ...defaultUserSettings,
-            timezone: getBrowserTimezone(),
+            general: {
+              ...defaultUserSettings.general,
+              timezone: getBrowserTimezone(),
+            },
           };
         }
 
