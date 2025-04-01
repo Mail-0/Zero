@@ -25,6 +25,8 @@ const MAX_VISIBLE_ATTACHMENTS = 12;
 export function CreateEmail() {
   const [toInput, setToInput] = React.useState('');
   const [toEmails, setToEmails] = React.useState<string[]>([]);
+  const [editingEmailIndex, setEditingEmailIndex] = React.useState<number | null>(null);
+  const [editingEmailValue, setEditingEmailValue] = React.useState('');
   const [subjectInput, setSubjectInput] = React.useState('');
   const [attachments, setAttachments] = React.useState<File[]>([]);
   const [resetEditorKey, setResetEditorKey] = React.useState(0);
@@ -315,11 +317,48 @@ export function CreateEmail() {
                   {toEmails.map((email, index) => (
                     <div
                       key={index}
-                      className="bg-accent flex items-center gap-1 rounded-md border px-2 text-sm font-medium"
+                      className="bg-accent flex items-center gap-1 rounded-md border px-2 text-sm font-medium mr-1"
                     >
-                      <span className="max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap">
-                        {email}
-                      </span>
+                      {editingEmailIndex === index ? (
+                        <input
+                          type="email"
+                          className="bg-accent max-w-[120px] focus:outline-none"
+                          value={editingEmailValue}
+                          onChange={(e) => setEditingEmailValue(e.target.value)}
+                          onBlur={() => {
+                            const newEmail = editingEmailValue.trim();
+                            if (isValidEmail(newEmail) && newEmail !== email) {
+                              setToEmails((emails) => {
+                                const newEmails = [...emails];
+                                newEmails[index] = newEmail;
+                                return newEmails;
+                              });
+                              setHasUnsavedChanges(true);
+                            }
+                            setEditingEmailIndex(null);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              e.currentTarget.blur();
+                            }
+                            if (e.key === 'Escape') {
+                              setEditingEmailIndex(null);
+                            }
+                          }}
+                          autoFocus
+                        />
+                      ) : (
+                        <span
+                          className="max-w-[150px] cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap"
+                          onClick={() => {
+                            setEditingEmailIndex(index);
+                            setEditingEmailValue(email);
+                          }}
+                        >
+                          {email}
+                        </span>
+                      )}
                       <button
                         type="button"
                         className="text-muted-foreground hover:text-foreground ml-1 rounded-full"
