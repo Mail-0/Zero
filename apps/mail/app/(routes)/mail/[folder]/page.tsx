@@ -16,7 +16,7 @@ export default async function MailPage({ params }: MailPageProps) {
       <div className="flex flex-col items-center justify-center min-h-screen">
         <div className="text-center max-w-md">
           <h1 className="text-2xl font-bold dark:text-gray-300 mb-2">Invalid Folder</h1>
-          <p className="dark:text-gray-600 mb-2">
+          <p className="dark:text-gray-400 mb-2">
             The folder <strong>mail/{folder}</strong> does not exist.
           </p>
         </div>
