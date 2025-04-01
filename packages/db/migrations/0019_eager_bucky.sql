@@ -1,1 +1,0 @@
-ALTER TABLE "mail0_user_settings" ALTER COLUMN "settings" SET DEFAULT '{"general":{"language":"en","timezone":"UTC","dynamicContent":false,"externalImages":true},"security":{"twoFactorAuth":false,"loginNotifications":true},"appearance":{"inboxType":"default"},"notification":{"newMailNotifications":"all","marketingCommunications":false}}'::jsonb;

@@ -1,5 +1,5 @@
 {
-  "id": "44d7cb9a-b907-417e-b325-023c86a603e8",
+  "id": "7aadc18e-9b59-46c8-873f-ce518a735bd8",
   "prevId": "d7e48581-ca57-4fcb-8fe0-87eba8134322",
   "version": "7",
   "dialect": "postgresql",
@@ -581,7 +581,7 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true,
-          "default": "'{\"general\":{\"language\":\"en\",\"timezone\":\"UTC\",\"dynamicContent\":false,\"externalImages\":true},\"security\":{\"twoFactorAuth\":false,\"loginNotifications\":true},\"appearance\":{\"inboxType\":\"default\"},\"notification\":{\"newMailNotifications\":\"all\",\"marketingCommunications\":false}}'::jsonb"
+          "default": "'{\"general\":{\"language\":\"en\",\"timezone\":\"UTC\",\"dynamicContent\":false,\"externalImages\":true,\"customPrompt\":\"\"},\"security\":{\"twoFactorAuth\":false,\"loginNotifications\":true},\"appearance\":{\"inboxType\":\"default\"},\"notification\":{\"newMailNotifications\":\"all\",\"marketingCommunications\":false}}'::jsonb"
         },
         "created_at": {
           "name": "created_at",
