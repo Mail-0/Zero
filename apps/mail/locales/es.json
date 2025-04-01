@@ -10,7 +10,8 @@
       "close": "Cerrar",
       "signingOut": "Cerrando sesión...",
       "signedOutSuccess": "Sesión cerrada correctamente",
-      "signOutError": "Error al cerrar sesión"
+      "signOutError": "Error al cerrar sesión",
+      "refresh": "Refresh"
     },
     "themes": {
       "dark": "Oscuro",
@@ -64,7 +65,13 @@
       "hasAttachment": "Tiene archivos adjuntos",
       "starred": "Favoritos",
       "applyFilters": "Aplicar filtros",
-      "reset": "Restablecer"
+      "reset": "Restablecer",
+      "searching": "Searching...",
+      "aiSuggestions": "AI Suggestions",
+      "aiSearching": "AI is searching...",
+      "aiSearchError": "AI search failed. Please try again.",
+      "aiNoResults": "No AI suggestions found",
+      "aiEnhancedQuery": "Enhanced search query"
     },
     "navUser": {
       "customerSupport": "Atención al cliente",
@@ -79,8 +86,7 @@
       "personal": "Personal",
       "updates": "Actualizaciones",
       "promotions": "Promociones",
-      "social": "Social",
-      "favourites": "Favoritos"
+      "social": "Social"
     },
     "replyCompose": {
       "replyTo": "Responder a",
@@ -90,7 +96,8 @@
       "attachmentCount": "{count, plural, =0 {sin adjuntos} one {adjunto} other {adjuntos}}",
       "fileCount": "{count, plural, =0 {archivos} one {archivo} other {archivos}}",
       "saveDraft": "Guardar borrador",
-      "send": "Enviar"
+      "send": "Enviar",
+      "forward": "Forward"
     },
     "mailDisplay": {
       "details": "Detalles",
@@ -117,12 +124,14 @@
       "archive": "Archivar",
       "reply": "Responder",
       "moreOptions": "Más opciones",
-      "moveToSpam": "Mover a spam",
+      "moveToSpam": "Mover a Spam",
       "replyAll": "Responder a todos",
       "forward": "Reenviar",
       "markAsUnread": "Marcar como no leído",
+      "markAsRead": "Marcar como leído",
       "addLabel": "Añadir etiqueta",
-      "muteThread": "Silenciar hilo"
+      "muteThread": "Silenciar hilo",
+      "favourites": "Favoritos"
     },
     "notes": {
       "title": "Notas",
@@ -184,6 +193,12 @@
         "changeColor": "Cambiar Color"
       }
     },
+    "settings": {
+      "notFound": "Configuración no encontrada",
+      "saved": "Configuración guardada",
+      "failedToSave": "Error al guardar la configuración",
+      "languageChanged": "Idioma cambiado a {locale}"
+    },
     "mail": {
       "replies": "{count, plural, =0 {respuestas} one {# respuesta} other {# respuestas}}",
       "deselectAll": "Deseleccionar todos los correos",
@@ -202,11 +217,18 @@
       "archive": "Archivar",
       "moveToTrash": "Mover a la papelera",
       "markAsUnread": "Marcar como no leído",
+      "markAsRead": "Marcar como leído",
       "addStar": "Destacar",
       "muteThread": "Silencia hilo",
       "moving": "Moviendo...",
       "moved": "Movido",
-      "errorMoving": "Error al mover"
+      "errorMoving": "Error al mover",
+      "reply": "Responder",
+      "replyAll": "Responder a todos",
+      "forward": "Reenviar",
+      "labels": "Etiquetas",
+      "createNewLabel": "Crear nueva etiqueta",
+      "noLabelsAvailable": "No hay etiquetas disponibles"
     }
   },
   "navigation": {
@@ -217,8 +239,8 @@
       "spam": "Spam",
       "archive": "Archivar",
       "bin": "Papelera de reciclaje",
-      "feedback": "Feedback",
-      "contact": "Contact",
+      "feedback": "Sugerencias",
+      "contact": "Contacto",
       "settings": "Configuración"
     },
     "settings": {
@@ -243,12 +265,17 @@
         "title": "General",
         "description": "Administre la configuración de sus preferencias de idioma y correo electrónico.",
         "language": "Idioma",
+        "selectLanguage": "Selecciona un idioma",
         "timezone": "Zona horaria",
+        "selectTimezone": "Selecciona una zona horaria",
         "dynamicContent": "Contenido dinámico",
         "dynamicContentDescription": "Permitir que los correos electrónicos muestren contenido dinámico.",
         "externalImages": "Mostrar imágenes externas",
         "externalImagesDescription": "Permitir que los correos electrónicos muestren imágenes de fuentes externas.",
-        "languageChangedTo": "Idioma cambiado a {language}"
+        "languageChangedTo": "Language changed to {locale}",
+        "customPrompt": "Custom AI Prompt",
+        "customPromptPlaceholder": "Enter your custom prompt for the AI...",
+        "customPromptDescription": "Customize how the AI writes your email replies. This will be added to the base prompt."
       },
       "connections": {
         "title": "Conexiones de correo",

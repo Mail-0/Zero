@@ -53,29 +53,30 @@ export const authProviders: ProviderConfig[] = [
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     },
     required: true
-  },
-  {
-    id: "github",
-    name: "Github",
-    requiredEnvVars: [
-      "GITHUB_CLIENT_ID",
-      "GITHUB_CLIENT_SECRET",
-      "GITHUB_REDIRECT_URI"
-    ],
-    envVarInfo: [
-      { name: "GITHUB_CLIENT_ID", source: "GitHub Developer Settings" },
-      { name: "GITHUB_CLIENT_SECRET", source: "GitHub Developer Settings" },
-      {
-        name: "GITHUB_REDIRECT_URI",
-        source: "GitHub Developer Settings",
-        defaultValue: "http://localhost:3000/api/auth/callback/github"
-      }
-    ],
-    config: {
-      clientId: process.env.GITHUB_CLIENT_ID,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    },
-  },
+  }
+  // Commented out GitHub provider
+  // {
+  //   id: "github",
+  //   name: "Github",
+  //   requiredEnvVars: [
+  //     "GITHUB_CLIENT_ID",
+  //     "GITHUB_CLIENT_SECRET",
+  //     "GITHUB_REDIRECT_URI"
+  //   ],
+  //   envVarInfo: [
+  //     { name: "GITHUB_CLIENT_ID", source: "GitHub Developer Settings" },
+  //     { name: "GITHUB_CLIENT_SECRET", source: "GitHub Developer Settings" },
+  //     {
+  //       name: "GITHUB_REDIRECT_URI",
+  //       source: "GitHub Developer Settings",
+  //       defaultValue: "http://localhost:3000/api/auth/callback/github"
+  //     }
+  //   ],
+  //   config: {
+  //     clientId: process.env.GITHUB_CLIENT_ID,
+  //     clientSecret: process.env.GITHUB_CLIENT_SECRET,
+  //   },
+  // }
 ];
 
 export function isProviderEnabled(provider: ProviderConfig): boolean {

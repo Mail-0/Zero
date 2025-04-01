@@ -36,7 +36,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
-        {/*<script src="https://unpkg.com/react-scan/dist/auto.global.js" />*/}
+        {/* <script src="https://unpkg.com/react-scan/dist/auto.global.js" /> */}
         <meta name="x-user-country" content={(await headers()).get('x-user-country') || ''} />
         <meta
           name="x-user-eu-region"

@@ -44,6 +44,7 @@ import { handleImageDrop, handleImagePaste } from 'novel';
 import EditorMenu from '@/components/create/editor-menu';
 import { UploadedFileIcon } from './uploaded-file-icon';
 import { Separator } from '@/components/ui/separator';
+import { AutoComplete } from './editor-autocomplete';
 import { cn, truncateFileName } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,9 +52,6 @@ import { Markdown } from 'tiptap-markdown';
 import { useReducer, useRef } from 'react';
 import { useState } from 'react';
 import React from 'react';
-
-// Fix the extensions type error by using a type assertion
-const extensions = [...defaultExtensions, Markdown] as any[];
 
 export const defaultEditorContent = {
   type: 'doc',
@@ -74,6 +72,15 @@ interface EditorProps {
   className?: string;
   onCommandEnter?: () => void;
   onAttachmentsChange?: (attachments: File[]) => void;
+  myInfo?: {
+    name?: string;
+    email?: string;
+  };
+  senderInfo?: {
+    name?: string;
+    email?: string;
+  };
+  onTab?: () => boolean;
 }
 
 interface EditorState {
@@ -378,7 +385,10 @@ export default function Editor({
   onBlur,
   className,
   onCommandEnter,
+  onTab,
   onAttachmentsChange,
+  senderInfo,
+  myInfo,
 }: EditorProps) {
   const [state, dispatch] = useReducer(editorReducer, {
     openNode: false,
@@ -398,14 +408,9 @@ export default function Editor({
 
   // Function to focus the editor
   const focusEditor = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === containerRef.current) {
-      editorRef.current?.commands.focus('end');
+    if (e.target === containerRef.current && editorRef.current?.commands) {
+      editorRef.current.commands.focus('end');
     }
-  };
-
-  // Toggle AI menu
-  const toggleAIMenu = () => {
-    dispatch({ type: 'TOGGLE_AI', payload: !openAI });
   };
 
   // Function to clear editor content
@@ -473,7 +478,15 @@ export default function Editor({
       className={`relative w-full max-w-[450px] sm:max-w-[600px] ${className || ''}`}
       onClick={focusEditor}
       onKeyDown={(e) => {
-        // Prevent form submission on Enter key
+        // Handle tab key
+        if (e.key === 'Tab' && !e.shiftKey) {
+          if (onTab && onTab()) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+        }
+
         if (e.key === 'Enter' && !e.shiftKey) {
           e.stopPropagation();
         }
@@ -490,18 +503,57 @@ export default function Editor({
         <EditorContent
           immediatelyRender={false}
           initialContent={initialValue || defaultEditorContent}
-          extensions={extensions}
+          extensions={[
+            ...defaultExtensions,
+            Markdown,
+            AutoComplete.configure({
+              suggestions: {
+                openers: [
+                  'Hi there,',
+                  'Hello,',
+                  'Dear',
+                  'Greetings,',
+                  'Good morning,',
+                  'Good afternoon,',
+                  'Good evening,',
+                ],
+                closers: [
+                  'Best regards,',
+                  'Kind regards,',
+                  'Sincerely,',
+                  'Thanks,',
+                  'Thank you,',
+                  'Cheers,',
+                ],
+                custom: [
+                  'I hope this email finds you well.',
+                  'I look forward to hearing from you.',
+                  'Please let me know if you have any questions.',
+                ],
+              },
+              sender: senderInfo,
+              myInfo: myInfo,
+            }),
+          ]}
           ref={containerRef}
           className="min-h-52 cursor-text"
           editorProps={{
             handleDOMEvents: {
               keydown: (view, event) => {
-                // Handle Command+Enter (Mac) or Ctrl+Enter (Windows/Linux)
-                if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
-                  event.preventDefault();
-                  handleCommandEnter();
-                  return true;
+                // Handle tab key
+                if (event.key === 'Tab' && !event.shiftKey) {
+                  if (onTab && onTab()) {
+                    event.preventDefault();
+                    return true;
+                  }
                 }
+
+                // Handle Command+Enter (Mac) or Ctrl+Enter (Windows/Linux)
+                // if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+                //   event.preventDefault();
+                //   handleCommandEnter();
+                //   return true;
+                // }
                 return handleCommandNavigation(event);
               },
               focus: () => {

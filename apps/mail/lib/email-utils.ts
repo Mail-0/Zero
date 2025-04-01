@@ -50,6 +50,11 @@ export const fixNonReadableColors = (rootElement: HTMLElement, minContrast = 3.5
     const style = getComputedStyle(el);
     if (style.display === 'none' || style.visibility === 'hidden') continue;
 
+    // Skip if the color is a CSS variable or special value
+    if (style.color.startsWith('var(') || style.color === 'transparent' || style.color === 'inherit') {
+      continue;
+    }
+
     const textColor = Color(style.color);
     const effectiveBg = getEffectiveBackgroundColor(el);
 

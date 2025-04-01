@@ -120,6 +120,20 @@
       "when": 1740597012602,
       "tag": "0016_neat_ogun",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1742851453751,
+      "tag": "0017_bouncy_shotgun",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1742937065931,
+      "tag": "0018_far_lady_mastermind",
+      "breakpoints": true
     }
   ]
 }

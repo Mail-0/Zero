@@ -1,4 +1,4 @@
-import { type InitialThread, type ParsedMessage } from "@/types";
+import { type InitialThread, type ParsedMessage } from '@/types';
 
 export interface MailManager {
   get(id: string): Promise<ParsedMessage[] | undefined>;
@@ -12,14 +12,14 @@ export interface MailManager {
     query?: string,
     maxResults?: number,
     labelIds?: string[],
-    pageToken?: string,
+    pageToken?: string | number,
   ): Promise<(T & { threads: InitialThread[] }) | undefined>;
   count(): Promise<any>;
   generateConnectionAuthUrl(userId: string): string;
   getTokens(
     code: string,
   ): Promise<{ tokens: { access_token?: any; refresh_token?: any; expiry_date?: number } }>;
-  getUserInfo(tokens: IConfig["auth"]): Promise<any>;
+  getUserInfo(tokens: IConfig['auth']): Promise<any>;
   getScope(): string;
   markAsRead(id: string[]): Promise<void>;
   markAsUnread(id: string[]): Promise<void>;

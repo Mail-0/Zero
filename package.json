@@ -35,5 +35,9 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "openai": "^4.90.0",
+    "posthog-js": "^1.234.4"
+  }
 }

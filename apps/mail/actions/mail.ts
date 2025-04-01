@@ -1,5 +1,5 @@
-"use server";
-import { deleteActiveConnection, FatalErrors, getActiveDriver } from "./utils";
+'use server';
+import { deleteActiveConnection, FatalErrors, getActiveDriver } from './utils';
 
 export const getMails = async ({
   folder,
@@ -12,32 +12,32 @@ export const getMails = async ({
   q?: string;
   max?: number;
   labelIds?: string[];
-  pageToken: string | undefined;
+  pageToken: string | number | undefined;
 }) => {
   if (!folder) {
-    throw new Error("Missing required fields");
+    throw new Error('Missing required fields');
   }
 
   try {
     const driver = await getActiveDriver();
     return await driver.list(folder, q, max, labelIds, pageToken);
   } catch (error) {
-    if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection()
-    console.error("Error getting threads:", error);
+    if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection();
+    console.error('Error getting threads:', error);
     throw error;
   }
 };
 
 export const getMail = async ({ id }: { id: string }) => {
   if (!id) {
-    throw new Error("Missing required fields");
+    throw new Error('Missing required fields');
   }
   try {
     const driver = await getActiveDriver();
     return await driver.get(id);
   } catch (error) {
-    if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection()
-    console.error("Error getting mail:", error);
+    if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection();
+    console.error('Error getting mail:', error);
     throw error;
   }
 };
@@ -48,8 +48,8 @@ export const markAsRead = async ({ ids }: { ids: string[] }) => {
     await driver.markAsRead(ids);
     return { success: true };
   } catch (error) {
-    if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection()
-    console.error("Error marking message as read:", error);
+    if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection();
+    console.error('Error marking message as read:', error);
     throw error;
   }
 };
@@ -60,8 +60,8 @@ export const markAsUnread = async ({ ids }: { ids: string[] }) => {
     await driver.markAsUnread(ids);
     return { success: true };
   } catch (error) {
-    if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection()
-    console.error("Error marking message as unread:", error);
+    if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection();
+    console.error('Error marking message as unread:', error);
     throw error;
   }
 };
@@ -71,8 +71,8 @@ export const mailCount = async () => {
     const driver = await getActiveDriver();
     return await driver.count();
   } catch (error) {
-    if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection()
-    console.error("Error getting mail count:", error);
+    if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection();
+    console.error('Error getting mail count:', error);
     throw error;
   }
 };
@@ -87,8 +87,8 @@ export const modifyLabels = async ({
   removeLabels?: string[];
 }) => {
   console.log(`Server: updateThreadLabels called for thread ${threadId}`);
-  console.log(`Adding labels: ${addLabels.join(", ")}`);
-  console.log(`Removing labels: ${removeLabels.join(", ")}`);
+  console.log(`Adding labels: ${addLabels.join(', ')}`);
+  console.log(`Removing labels: ${removeLabels.join(', ')}`);
 
   try {
     const driver = await getActiveDriver();
@@ -99,15 +99,15 @@ export const modifyLabels = async ({
         addLabels,
         removeLabels,
       });
-      console.log("Server: Successfully updated thread labels");
+      console.log('Server: Successfully updated thread labels');
       return { success: true };
     }
 
-    console.log("Server: No label changes specified");
-    return { success: false, error: "No label changes specified" };
+    console.log('Server: No label changes specified');
+    return { success: false, error: 'No label changes specified' };
   } catch (error) {
-    if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection()
-    console.error("Server: Error updating thread labels:", error);
+    if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection();
+    console.error('Server: Error updating thread labels:', error);
     throw error;
   }
 };

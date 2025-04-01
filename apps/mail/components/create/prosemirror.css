@@ -3,7 +3,7 @@
   font-size: 1rem;
   font-family: 'Inter', sans-serif;
   font-weight: 400;
-  line-height: 1.4;
+ 
 }
 
 /* Add placeholder styles */
@@ -220,11 +220,7 @@ mark[style] > strong {
   line-height: 1.4;        /* Reduced from 1.6 to 1.4 */
 }
 
-/* Adjust space between paragraphs */
-.ProseMirror p {
-  margin-bottom: 1.25rem;  /* Reduced from 1.5rem to 1.25rem */
-  line-height: 1.4;        /* Reduced from 1.6 to 1.4 */
-}
+
 
 /* Keep the list indentation the same */
 .ProseMirror ul {

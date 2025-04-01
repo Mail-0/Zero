@@ -1,17 +1,9 @@
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { matchFilterPrefix, filterSuggestionsFunction, filterSuggestions } from '@/lib/filter';
-import { cn, extractFilterValue, type FilterSuggestion, FOLDER_NAMES } from '@/lib/utils';
+import { cn, extractFilterValue, type FilterSuggestion } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Search, SlidersHorizontal, CalendarIcon, X } from 'lucide-react';
+import { Search, CalendarIcon } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSearchValue } from '@/hooks/use-search-value';
-import { Separator } from '@/components/ui/separator';
 import { Calendar } from '@/components/ui/calendar';
 import { type DateRange } from 'react-day-picker';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -19,55 +11,65 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
-import { useDebounce } from 'react-use';
-import { Toggle } from '../ui/toggle';
 import { format } from 'date-fns';
 import React from 'react';
-function DateFilter({ date, setDate }: { date: DateRange; setDate: (date: DateRange) => void }) {
-  const t = useTranslations('common.searchBar');
+import { enhanceSearchQuery } from '@/actions/ai-search';
 
-  return (
-    <div className="grid gap-2">
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            id="date"
-            variant={'outline'}
-            className={cn(
-              'justify-start text-left font-normal',
-              !date && 'text-muted-foreground',
-              'bg-muted/50 h-10 rounded-md',
-            )}
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {date?.from ? (
-              date.to ? (
-                <>
-                  {format(date.from, 'LLL dd, y')} - {format(date.to, 'LLL dd, y')}
-                </>
-              ) : (
-                format(date.from, 'LLL dd, y')
-              )
-            ) : (
-              <span>{t('pickDateRange')}</span>
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto rounded-md p-0" align="start">
-          <Calendar
-            initialFocus
-            mode="range"
-            defaultMonth={date?.from}
-            selected={date}
-            onSelect={(range) => range && setDate(range)}
-            numberOfMonths={useIsMobile() ? 1 : 2}
-            disabled={(date) => date > new Date()}
-          />
-        </PopoverContent>
-      </Popover>
-    </div>
-  );
-}
+const SEARCH_SUGGESTIONS = [
+  '"Emails from last week..."',
+  '"Emails with attachments..."',
+  '"Unread emails..."',
+  '"Emails from Caroline and Josh..."',
+  '"Starred emails..."',
+  '"Emails with links..."',
+  '"Emails from last month..."',
+];
+
+// function DateFilter({ date, setDate }: { date: DateRange; setDate: (date: DateRange) => void }) {
+//   const t = useTranslations('common.searchBar');
+
+//   return (
+//     <div className="grid gap-2">
+//       <Popover>
+//         <PopoverTrigger asChild>
+//           <Button
+//             id="date"
+//             variant={'outline'}
+//             className={cn(
+//               'justify-start text-left font-normal',
+//               !date && 'text-muted-foreground',
+//               'bg-muted/50 h-10 rounded-md',
+//             )}
+//           >
+//             <CalendarIcon className="mr-2 h-4 w-4" />
+//             {date?.from ? (
+//               date.to ? (
+//                 <>
+//                   {format(date.from, 'LLL dd, y')} - {format(date.to, 'LLL dd, y')}
+//                 </>
+//               ) : (
+//                 format(date.from, 'LLL dd, y')
+//               )
+//             ) : (
+//               <span>{t('pickDateRange')}</span>
+//             )}
+//           </Button>
+//         </PopoverTrigger>
+//         <PopoverContent className="w-auto rounded-md p-0" align="start">
+//           <Calendar
+//             initialFocus
+//             mode="range"
+//             defaultMonth={date?.from}
+//             selected={date}
+//             onSelect={(range) => range && setDate(range)}
+//             numberOfMonths={useIsMobile() ? 1 : 2}
+//             disabled={(date) => date > new Date()}
+//           />
+//         </PopoverContent>
+//       </Popover>
+//     </div>
+//   );
+// }
 
 type SearchForm = {
   subject: string;
@@ -80,8 +82,10 @@ type SearchForm = {
 };
 
 export function SearchBar() {
-  const [popoverOpen, setPopoverOpen] = useState(false);
+  // const [popoverOpen, setPopoverOpen] = useState(false);
   const [, setSearchValue] = useSearchValue();
+  const [isSearching, setIsSearching] = useState(false);
+  const [isAISearching, setIsAISearching] = useState(false);
   const [value, setValue] = useState<SearchForm>({
     folder: '',
     subject: '',
@@ -137,17 +141,110 @@ export function SearchBar() {
     [value],
   );
 
+  const [isFocused, setIsFocused] = useState(false);
+  const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const suggestionIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (isFocused && !formValues.q) {
+      suggestionIntervalRef.current = setInterval(() => {
+        setIsAnimating(true);
+        setTimeout(() => {
+          setCurrentSuggestionIndex((prev) => (prev + 1) % SEARCH_SUGGESTIONS.length);
+          setIsAnimating(false);
+        }, 300);
+      }, 3000);
+    } else {
+      if (suggestionIntervalRef.current) {
+        clearInterval(suggestionIntervalRef.current);
+      }
+    }
+
+    return () => {
+      if (suggestionIntervalRef.current) {
+        clearInterval(suggestionIntervalRef.current);
+      }
+    };
+  }, [isFocused, formValues.q]);
+
+  const submitSearch = useCallback(
+    async (data: SearchForm) => {
+      setIsSearching(true);
+      let searchTerms = [];
+
+      try {
+        // Only enhance the query if there's a search term
+        if (data.q.trim()) {
+          setIsAISearching(true);
+          const { enhancedQuery, error } = await enhanceSearchQuery(data.q.trim());
+          setIsAISearching(false);
+          
+          if (error) {
+            console.error('AI enhancement error:', error);
+            // Fallback to original query if AI enhancement fails
+            searchTerms.push(data.q.trim());
+          } else {
+            searchTerms.push(enhancedQuery);
+          }
+        }
+
+        // Add any additional filters
+        if (data.from) searchTerms.push(`from:${data.from.toLowerCase()}`);
+        if (data.to) searchTerms.push(`to:${data.to.toLowerCase()}`);
+        if (data.subject) searchTerms.push(`subject:(${data.subject})`);
+        if (data.dateRange.from)
+          searchTerms.push(`after:${format(data.dateRange.from, 'yyyy/MM/dd')}`);
+        if (data.dateRange.to) 
+          searchTerms.push(`before:${format(data.dateRange.to, 'yyyy/MM/dd')}`);
+
+        const searchQuery = searchTerms.join(' ');
+        const folder = data.folder ? data.folder.toUpperCase() : '';
+
+        console.log('Final search query:', searchQuery);
+        
+        setSearchValue({
+          value: searchQuery,
+          highlight: data.q,
+          folder: folder,
+          isLoading: true,
+          isAISearching: isAISearching
+        });
+
+      } catch (error) {
+        console.error('Search error:', error);
+        // Fallback to regular search if AI fails
+        if (data.q) {
+          searchTerms.push(data.q.trim());
+        }
+        const searchQuery = searchTerms.join(' ');
+        const folder = data.folder ? data.folder.toUpperCase() : '';
+        setSearchValue({
+          value: searchQuery,
+          highlight: data.q,
+          folder: folder,
+          isLoading: true,
+          isAISearching: false
+        });
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [setSearchValue, isAISearching],
+  );
+
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const inputValue = e.target.value;
-      const cursorPosition = e.target.selectionStart || 0;
-
+      
       if (!inputValue.trim()) {
         setSuggestionsState((prev) => ({ ...prev, show: false }));
         setDatePickerState((prev) => ({ ...prev, show: false }));
         form.setValue('q', '');
         return;
       }
+
+      const cursorPosition = e.target.selectionStart || 0;
 
       const textBeforeCursor = inputValue.substring(0, cursorPosition);
 
@@ -226,10 +323,9 @@ export function SearchBar() {
 
       const handleArrowNavigation = (direction: 'right' | 'left' | 'down' | 'up') => {
         e.preventDefault();
-        // Estimate columns based on container width and button width
-        const containerWidth = 600; // Max width of the dropdown
-        const buttonWidth = isMobile ? 80 : 100; // The minmax value from grid
-        const gap = 12; // gap-3 is 12px
+        const containerWidth = 600;
+        const buttonWidth = isMobile ? 80 : 100;
+        const gap = 12;
         const columns = Math.floor((containerWidth + gap) / (buttonWidth + gap));
 
         setSuggestionsState((prev) => {
@@ -292,49 +388,6 @@ export function SearchBar() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-
-  useDebounce(
-    () => {
-      submitSearch(value);
-    },
-    250,
-    [value],
-  );
-
-  const submitSearch = useCallback(
-    (data: SearchForm) => {
-      let searchTerms = [];
-
-      if (data.q) {
-        const processedQuery = data.q
-          .replace(/from:([^\s]+)/g, (_, address) =>
-            address.toLowerCase() === 'me' ? 'from:me' : `from:${address.toLowerCase()}`,
-          )
-          .replace(/to:([^\s]+)/g, (_, address) =>
-            address.toLowerCase() === 'me' ? 'to:me' : `to:${address.toLowerCase()}`,
-          );
-
-        searchTerms.push(processedQuery);
-      }
-
-      if (data.from) searchTerms.push(`from:${data.from.toLowerCase()}`);
-      if (data.to) searchTerms.push(`to:${data.to.toLowerCase()}`);
-      if (data.subject) searchTerms.push(`subject:(${data.subject})`);
-      if (data.dateRange.from)
-        searchTerms.push(`after:${format(data.dateRange.from, 'yyyy/MM/dd')}`);
-      if (data.dateRange.to) searchTerms.push(`before:${format(data.dateRange.to, 'yyyy/MM/dd')}`);
-
-      const searchQuery = searchTerms.join(' ');
-      const folder = data.folder ? data.folder.toUpperCase() : '';
-
-      setSearchValue({
-        value: searchQuery,
-        highlight: data.q,
-        folder: folder,
-      });
-    },
-    [setSearchValue],
-  );
 
   const handleSuggestionClick = useCallback(
     (suggestion: string) => {
@@ -534,7 +587,7 @@ export function SearchBar() {
         ref={datePickerRef}
         className="border-border bg-background animate-in fade-in-50 slide-in-from-top-2 absolute z-50 mt-1 overflow-hidden rounded-lg border shadow-md duration-150"
         style={{
-          left: Math.max(0, datePickerState.position.left - (isMobile ? 160 : 320)), // Adjust based on device
+          left: Math.max(0, datePickerState.position.left - (isMobile ? 160 : 320)),
           top: `${datePickerState.position.top}px`,
         }}
       >
@@ -559,7 +612,6 @@ export function SearchBar() {
       setValue(data as SearchForm);
     });
     return () => subscription.unsubscribe();
-    /* eslint-disable-next-line react-hooks/exhaustive-deps */
   }, [form.watch]);
 
   const resetSearch = useCallback(() => {
@@ -568,6 +620,8 @@ export function SearchBar() {
       value: '',
       highlight: '',
       folder: '',
+      isLoading: false,
+      isAISearching: false
     });
   }, [form, setSearchValue]);
 
@@ -575,23 +629,40 @@ export function SearchBar() {
     <div className="relative flex-1 md:max-w-[600px]">
       <form className="relative flex items-center" onSubmit={form.handleSubmit(submitSearch)}>
         <Search className="text-muted-foreground absolute left-2.5 h-4 w-4" aria-hidden="true" />
-        <Input
-          placeholder={t('common.searchBar.search')}
-          autoFocus
-          ref={inputRef}
-          className="bg-muted/50 text-muted-foreground ring-muted placeholder:text-muted-foreground/70 hover:bg-muted focus-visible:bg-background focus-visible:ring-ring h-8 w-full rounded-md border-none pl-9 pr-14 shadow-none ring-1 transition-colors focus-visible:ring-2"
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          value={formValues.q}
-        />
+        <div className="relative w-full">
+          <Input
+            placeholder={isFocused ? "" : "Search..."}
+            ref={inputRef}
+            className="bg-muted/50 text-muted-foreground ring-muted placeholder:text-muted-foreground/70 h-8 w-full rounded-md border-none pl-9 pr-14 shadow-none transition-all duration-300"
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            value={formValues.q}
+            disabled={isSearching}
+          />
+          {isFocused && !formValues.q && (
+            <div 
+              className={cn(
+                "absolute left-9 right-0 bottom-[5.5px] -translate-y-1/2 text-muted-foreground/70 pointer-events-none text-sm",
+                isAnimating 
+                  ? "opacity-0 translate-y-2 transition-all duration-300 ease-out" 
+                  : "opacity-100 translate-y-0 transition-all duration-300 ease-in"
+              )}
+            >
+              {SEARCH_SUGGESTIONS[currentSuggestionIndex]}
+            </div>
+          )}
+        </div>
         {renderSuggestions()}
         {renderDatePicker()}
-        <div className="absolute right-1 z-20 flex items-center gap-1">
+        {/* <div className="absolute right-1 z-20 flex items-center gap-1">
           {filtering && (
             <button
               type="button"
               onClick={resetSearch}
               className="ring-offset-background focus:ring-ring rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2"
+              disabled={isSearching}
             >
               <X className="h-4 w-4" />
               <span className="sr-only">{t('common.searchBar.clearSearch')}</span>
@@ -607,6 +678,7 @@ export function SearchBar() {
                   popoverOpen && 'bg-muted/70 text-foreground',
                 )}
                 type="button"
+                disabled={isSearching}
               >
                 <SlidersHorizontal className="h-4 w-4" />
                 <span className="sr-only">{t('common.searchBar.advancedSearch')}</span>
@@ -791,7 +863,7 @@ export function SearchBar() {
               </div>
             </PopoverContent>
           </Popover>
-        </div>
+        </div> */}
       </form>
     </div>
   );

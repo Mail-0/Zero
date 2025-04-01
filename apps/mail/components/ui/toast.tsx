@@ -7,5 +7,5 @@ import { useTheme } from 'next-themes';
 export const Toast = () => {
   const { theme } = useTheme();
 
-  return <Toaster position="top-center" theme={theme as 'dark' | 'light' | 'system'} />;
+  return <Toaster position="bottom-left" theme={theme as 'dark' | 'light' | 'system'} />;
 };

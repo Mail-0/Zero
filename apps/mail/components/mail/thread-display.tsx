@@ -24,8 +24,8 @@ import { NotesPanel } from './note-panel';
 import { cn, FOLDERS } from '@/lib/utils';
 import MailDisplay from './mail-display';
 import { Inbox } from 'lucide-react';
-import { useMail } from './use-mail';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 interface ThreadDisplayProps {
   mail?: any;
@@ -62,7 +62,7 @@ export function ThreadDemo({ mail: emailData, isMobile }: ThreadDisplayProps) {
               </TooltipTrigger>
               <TooltipContent>Close</TooltipContent>
             </Tooltip>
-            <ThreadSubject subject={'Join the Email Revolution with Zero!'} isMobile={isMobile} />
+            <ThreadSubject subject={'Join the Email Revolution with Zero!'} />
           </div>
           <div className="flex items-center gap-2">
             <Tooltip>
@@ -196,6 +196,7 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
   const [isMuted, setIsMuted] = useState(false);
   const [isReplyOpen, setIsReplyOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isForwardOpen, setIsForwardOpen] = useState(false);
   const t = useTranslations();
   const { mutate: mutateStats } = useStats();
   const { folder } = useParams<{ folder: string }>();
@@ -249,6 +250,10 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
     }
 
     await Promise.all([mutateThread(), mutateThreads()]);
+  };
+
+  const handleForward = () => {
+    setIsForwardOpen(true);
   };
 
   useEffect(() => {
@@ -334,7 +339,7 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
                   <DropdownMenuItem>
                     <ReplyAll className="mr-2 h-4 w-4" /> {t('common.threadDisplay.replyAll')}
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleForward}>
                     <Forward className="mr-2 h-4 w-4" /> {t('common.threadDisplay.forward')}
                   </DropdownMenuItem>
                   <DropdownMenuItem>{t('common.threadDisplay.markAsUnread')}</DropdownMenuItem>
@@ -372,15 +377,12 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
       >
         <div className="flex flex-shrink-0 items-center border-b px-1 pb-1 md:px-3 md:pb-2 md:pt-[10px]">
           <div className="flex flex-1 items-center gap-2">
-            <ThreadActionButton
-              icon={XIcon}
-              label={t('common.actions.close')}
-              disabled={!emailData}
-              onClick={handleClose}
-            />
-            <ThreadSubject subject={emailData[0]?.subject} isMobile={isMobile} />
+            <Link href={`/mail/${folder}`}>
+              <XIcon className="size-6" />
+            </Link>
+            <ThreadSubject subject={emailData[0]?.subject} />
           </div>
-          <div className="flex items-center md:gap-6">
+          <div className="flex items-center md:gap-2">
             <NotesPanel threadId={mail} />
             <ThreadActionButton
               icon={isFullscreen ? ExpandIcon : ExpandIcon}
@@ -437,7 +439,7 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
                 <DropdownMenuItem>
                   <ReplyAll className="mr-2 h-4 w-4" /> {t('common.threadDisplay.replyAll')}
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleForward}>
                   <Forward className="mr-2 h-4 w-4" /> {t('common.threadDisplay.forward')}
                 </DropdownMenuItem>
                 <DropdownMenuItem>{t('common.threadDisplay.markAsUnread')}</DropdownMenuItem>
@@ -470,7 +472,18 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
             </div>
           </ScrollArea>
           <div className={`relative ${isFullscreen ? '' : 'top-1'} flex-shrink-0`}>
-            <ReplyCompose emailData={emailData} isOpen={isReplyOpen} setIsOpen={setIsReplyOpen} />
+            <ReplyCompose
+              emailData={emailData}
+              isOpen={isReplyOpen || isForwardOpen}
+              setIsOpen={(open) => {
+                if (isForwardOpen) {
+                  setIsForwardOpen(open);
+                } else {
+                  setIsReplyOpen(open);
+                }
+              }}
+              mode={isForwardOpen ? 'forward' : 'reply'}
+            />
           </div>
         </div>
       </div>

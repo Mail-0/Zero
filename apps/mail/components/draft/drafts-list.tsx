@@ -7,16 +7,16 @@ import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso';
 import { cn, defaultPageSize, formatDate } from '@/lib/utils';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { markAsRead, markAsUnread } from '@/actions/mail';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { highlightText } from '@/lib/email-utils.client';
 import { useMail } from '@/components/mail/use-mail';
 import { useHotKey } from '@/hooks/use-hot-key';
 import { useDrafts } from '@/hooks/use-drafts';
 import { useSession } from '@/lib/auth-client';
+import { ScrollArea } from '../ui/scroll-area';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'use-intl';
+import { Button } from '../ui/button';
 import { toast } from 'sonner';
-import { highlightText } from '@/lib/email-utils.client';
 
 const Draft = ({ message, onClick }: ThreadProps) => {
   const [mail] = useMail();
@@ -344,6 +344,7 @@ export function DraftsList({ isCompact }: MailListProps) {
     // @ts-expect-error
     (props) => (
       <Draft
+        key={props.data.id}
         onClick={handleMailClick}
         selectMode={selectMode}
         isCompact={isCompact}
@@ -357,16 +358,13 @@ export function DraftsList({ isCompact }: MailListProps) {
   return (
     <>
       <div ref={parentRef} className={cn('h-full w-full', selectMode === 'range' && 'select-none')}>
-        <Virtuoso
-          ref={scrollRef}
-          style={{ height: '100%' }}
-          totalCount={items.length}
-          itemContent={(index: number, data: InitialThread) => rowRenderer({ index, data })}
-          endReached={handleScroll}
-          data={items}
-          className="hide-scrollbar"
-        />
+        <ScrollArea className="hide-scrollbar h-full overflow-auto">
+          {items.map((item, index) => {
+            return rowRenderer({ index, data: item });
+          })}
+        </ScrollArea>
       </div>
+      <Button onClick={handleScroll}>{t('common.mail.loadMore')}</Button>
       <div className="w-full pt-2 text-center">
         {isLoading || isValidating ? (
           <div className="text-center">

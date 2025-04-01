@@ -1,6 +1,7 @@
 'use client';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../ui/sheet';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { useSession } from '@/lib/auth-client';
 import { useEffect, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -9,6 +10,7 @@ import Link from 'next/link';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const { data: session } = useSession();
 
   // Automatically lose sheet on lg screen
   useEffect(() => {
@@ -73,31 +75,22 @@ export default function Navbar() {
         </Sheet>
       </div>
 
-      {process.env.NODE_ENV === 'development' ? (
-        <>
-          <div className="hidden items-center gap-4 lg:flex">
-            <Link
-              href="login"
-              className="text-sm text-gray-800 transition-opacity hover:opacity-80 dark:bg-gradient-to-r dark:from-gray-300 dark:via-gray-100 dark:to-gray-200 dark:bg-clip-text dark:text-transparent"
-            >
-              Sign in
-            </Link>
-            <Button
-              className="h-[32px] w-[110px] rounded-md bg-gray-900 text-white hover:bg-black dark:bg-white dark:text-black dark:hover:bg-white/90"
-              asChild
-            >
-              <Link href="/login">Get Started</Link>
-            </Button>
-          </div>
-        </>
-      ) : (
-        <Button
-          className="hidden h-[32px] w-[110px] rounded-md bg-gray-900 text-white hover:bg-black lg:flex dark:bg-white dark:text-black dark:hover:bg-white/90"
-          asChild
-        >
-          <Link href="https://cal.com/team/0/chat">Contact Us</Link>
-        </Button>
-      )}
+      <>
+        <div className="hidden items-center gap-4 lg:flex">
+          <Link
+            href="login"
+            className="text-sm text-gray-800 transition-opacity hover:opacity-80 dark:bg-gradient-to-r dark:from-gray-300 dark:via-gray-100 dark:to-gray-200 dark:bg-clip-text dark:text-transparent"
+          >
+            {session ? 'Dashboard' : 'Sign in'}
+          </Link>
+          <Button
+            className="h-[32px] w-[110px] rounded-md bg-gray-900 text-white hover:bg-black dark:bg-white dark:text-black dark:hover:bg-white/90"
+            asChild
+          >
+            <Link href="/login">Get Started</Link>
+          </Button>
+        </div>
+      </>
     </div>
   );
 }

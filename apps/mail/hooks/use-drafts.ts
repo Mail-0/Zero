@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-"use client";
+'use client';
 
-import { getDrafts, getDraft } from "@/actions/drafts";
-import { InitialThread, ParsedMessage } from "@/types";
-import { useSession } from "@/lib/auth-client";
-import useSWRInfinite from "swr/infinite";
-import useSWR, { preload } from "swr";
-import { useMemo } from "react";
+import { getDrafts, getDraft } from '@/actions/drafts';
+import { InitialThread, ParsedMessage } from '@/types';
+import { useSession } from '@/lib/auth-client';
+import useSWRInfinite from 'swr/infinite';
+import useSWR, { preload } from 'swr';
+import { useMemo } from 'react';
 
 export const preloadDraft = (userId: string, draftId: string, connectionId: string) => {
   console.log(`🔄 Prefetching draft ${draftId}...`);
@@ -67,20 +67,11 @@ export const useDrafts = (query?: string, max?: number) => {
             )
           : null,
       fetchDrafts,
-      {
-        revalidateOnMount: true,
-        revalidateIfStale: true,
-        revalidateAll: false,
-        revalidateFirstPage: true,
-      },
     );
-
-  console.log("DATA:", data);
 
   const drafts = data
     ? data.flatMap((page) =>
         page.drafts.map((draft) => {
-          console.log("DRAFT:", draft);
           return {
             ...draft,
             id: draft.id,

@@ -5,8 +5,6 @@ import Navbar from '@/components/home/navbar';
 import Footer from '@/components/home/footer';
 import Hero from '@/components/home/hero';
 import { Suspense } from 'react';
-import { ShieldCheckIcon } from '@/components/icons/animated/shield';
-import Link from 'next/link';
 
 export default function Home() {
   return (

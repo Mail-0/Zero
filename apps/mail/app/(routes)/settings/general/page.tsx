@@ -24,51 +24,69 @@ import { Switch } from '@/components/ui/switch';
 import { Globe, Clock } from 'lucide-react';
 import { changeLocale } from '@/i18n/utils';
 import { useForm } from 'react-hook-form';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import * as z from 'zod';
+import { useSettings } from '@/hooks/use-settings';
+import { getBrowserTimezone } from '@/lib/timezones';
+import { saveUserSettings } from '@/actions/settings';
+import { Textarea } from '@/components/ui/textarea';
 
 const formSchema = z.object({
   language: z.enum(locales as [string, ...string[]]),
   timezone: z.string(),
   dynamicContent: z.boolean(),
   externalImages: z.boolean(),
+  customPrompt: z.string(),
 });
 
 export default function GeneralPage() {
   const [isSaving, setIsSaving] = useState(false);
   const locale = useLocale();
   const t = useTranslations();
+  const { settings, mutate } = useSettings();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      language: locale as Locale,
-      timezone: 'UTC',
+      language: locale as string,
+      timezone: getBrowserTimezone(),
       dynamicContent: false,
       externalImages: true,
+      customPrompt: "",
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  useEffect(() => {
+    if (settings) {
+      form.reset(settings);
+    }
+  }, [form, settings]);
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSaving(true);
 
-    // TODO: Save settings in user's account
+    try {
+      await saveUserSettings(values);
+      await mutate(values, { revalidate: false });
 
-    changeLocale(values.language as Locale);
+      if (values.language !== locale) {
+        await changeLocale(values.language as Locale);
+        const localeName = new Intl.DisplayNames([values.language], { type: 'language' }).of(
+          values.language,
+        );
+        toast.success(t('common.settings.languageChanged', { locale: localeName }));
+      }
 
-    if (values.language !== locale) {
-      const localeName = new Intl.DisplayNames([values.language], { type: 'language' }).of(
-        values.language,
-      );
-      toast.success(t('pages.settings.general.languageChangedTo', { language: localeName }));
-    }
-
-    // Simulate API call
-    setTimeout(() => {
-      console.log(values);
+      toast.success(t('common.settings.saved'));
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      toast.error(t('common.settings.failedToSave'));
+      // Revert the optimistic update
+      await mutate();
+    } finally {
       setIsSaving(false);
-    }, 1000);
+    }
   }
 
   return (
@@ -95,7 +113,7 @@ export default function GeneralPage() {
                       <FormControl>
                         <SelectTrigger className="w-36">
                           <Globe className="mr-2 h-4 w-4" />
-                          <SelectValue placeholder="Select a language" />
+                          <SelectValue placeholder={t('pages.settings.general.selectLanguage')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -113,25 +131,21 @@ export default function GeneralPage() {
                 control={form.control}
                 name="timezone"
                 render={({ field }) => (
-                  // TODO: Add all timezones
                   <FormItem>
                     <FormLabel>{t('pages.settings.general.timezone')}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-36">
                           <Clock className="mr-2 h-4 w-4" />
-                          <SelectValue placeholder="Select a timezone" />
+                          <SelectValue placeholder={t('pages.settings.general.selectTimezone')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="UTC">UTC</SelectItem>
-                        <SelectItem value="America/New_York">Eastern Time (ET)</SelectItem>
-                        <SelectItem value="America/Chicago">Central Time (CT)</SelectItem>
-                        <SelectItem value="America/Denver">Mountain Time (MT)</SelectItem>
-                        <SelectItem value="America/Los_Angeles">Pacific Time (PT)</SelectItem>
-                        <SelectItem value="Europe/London">British Time (BST)</SelectItem>
-                        <SelectItem value="Europe/Paris">Central European Time (CET)</SelectItem>
-                        <SelectItem value="Asia/Tokyo">Japan Standard Time (JST)</SelectItem>
+                        {Intl.supportedValuesOf('timeZone').map((timezone) => (
+                          <SelectItem key={timezone} value={timezone}>
+                            {timezone}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </FormItem>
@@ -178,6 +192,25 @@ export default function GeneralPage() {
                 )}
               />
             </div>
+            <FormField
+              control={form.control}
+              name="customPrompt"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('pages.settings.general.customPrompt')}</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder={t('pages.settings.general.customPromptPlaceholder')}
+                      className="min-h-[350px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    {t('pages.settings.general.customPromptDescription')}
+                  </FormDescription>
+                </FormItem>
+              )}
+            />
           </form>
         </Form>
       </SettingsCard>

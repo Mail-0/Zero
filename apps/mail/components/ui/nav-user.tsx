@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  Book,
   ChevronDown,
   HelpCircle,
   LogIn,
@@ -72,6 +71,7 @@ export function NavUser() {
   if (!isRendered) return null;
 
   const handleAccountSwitch = (connection: IConnection) => async () => {
+    router.push('/mail/inbox'); // this is temp, its not good. bad. we change later.
     await putConnection(connection.id);
     refetch();
     mutate();
@@ -141,45 +141,48 @@ export function NavUser() {
         side={'bottom'}
         sideOffset={8}
       >
-        <DropdownMenuItem onClick={() => router.push('/support')}>
-          <div className="flex cursor-pointer items-center gap-2 text-[13px]">
-            <HelpCircle size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
-            <p className="text-[13px] opacity-60">{t('common.navUser.customerSupport')}</p>
-          </div>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <a href="https://github.com/Mail-0/Zero" target="_blank">
-            <div className="flex cursor-pointer items-center gap-2 text-[13px]">
-              <Book size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
-              <p className="text-[13px] opacity-60">{t('common.navUser.documentation')}</p>
+        {session && activeAccount && (
+          <>
+            <div className="p-3 flex flex-col items-center text-center">
+              <Avatar className="size-14 rounded-xl mb-2 border border-border/50">
+                <AvatarImage
+                  className="rounded-xl"
+                  src={
+                    (activeAccount?.picture ?? undefined) || (session?.user.image ?? undefined)
+                  }
+                  alt={activeAccount?.name || session?.user.name || 'User'}
+                />
+                <AvatarFallback className="rounded-xl">
+                  <span>
+                    {(activeAccount?.name || session?.user.name || 'User')
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')
+                      .toUpperCase()
+                      .slice(0, 2)}
+                  </span>
+                </AvatarFallback>
+              </Avatar>
+              <div className="w-full">
+                <div className="font-medium text-sm">{activeAccount?.name || session?.user.name || 'User'}</div>
+                <div className="text-muted-foreground text-xs">{activeAccount.email}</div>
+              </div>
             </div>
-          </a>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleThemeToggle}>
-          <div className="flex cursor-pointer items-center gap-2 text-[13px]">
-            {theme === 'dark' ? (
-              <MoonIcon className="opacity-60" />
-            ) : (
-              <SunIcon className="opacity-60" />
-            )}
-            <p className="text-[13px] opacity-60">{t('common.navUser.appTheme')}</p>
-          </div>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
+            <DropdownMenuSeparator />
+          </>
+        )}
         <div className="space-y-1">
           {session ? (
             <>
-              <p className="text-muted-foreground px-1 py-0.5 text-[11px]">
+              <p className="text-muted-foreground px-2 py-1 text-[11px] font-medium">
                 {t('common.navUser.accounts')}
               </p>
 
-              {connections?.map((connection) => (
+              {connections?.filter(connection => connection.id !== session?.connectionId).map((connection) => (
                 <DropdownMenuItem
                   key={connection.id}
                   onClick={handleAccountSwitch(connection)}
-                  className={`flex cursor-pointer items-center gap-3 py-0.5 ${
-                    connection.id === session?.connectionId ? 'bg-accent' : ''
-                  }`}
+                  className="flex cursor-pointer items-center gap-3 py-1"
                 >
                   <Avatar className="size-7 rounded-lg">
                     <AvatarImage
@@ -196,10 +199,10 @@ export function NavUser() {
                         .slice(0, 2)}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="-space-y-1">
+                  <div className="-space-y-0.5">
                     <p className="text-[12px]">{connection.name || connection.email}</p>
                     {connection.name && (
-                      <p className="text-muted-foreground text-[12px]">
+                      <p className="text-muted-foreground text-[11px]">
                         {connection.email.length > 25
                           ? `${connection.email.slice(0, 25)}...`
                           : connection.email}
@@ -209,24 +212,54 @@ export function NavUser() {
                 </DropdownMenuItem>
               ))}
               <AddConnectionDialog />
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-muted-foreground cursor-pointer"
-                onClick={handleLogout}
-              >
-                <LogOut size={16} strokeWidth={2} className="mr-1" aria-hidden="true" />
-                <p className="text-[13px]">{t('common.actions.logout')}</p>
+              
+              <DropdownMenuSeparator className="my-1" />
+              
+              <DropdownMenuItem onClick={handleThemeToggle} className="cursor-pointer">
+                <div className="flex w-full items-center gap-2">
+                  {theme === 'dark' ? (
+                    <MoonIcon className="size-4 opacity-60" />
+                  ) : (
+                    <SunIcon className="size-4 opacity-60" />
+                  )}
+                  <p className="text-[13px] opacity-60">{t('common.navUser.appTheme')}</p>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push('/support')}>
+                <a href="https://discord.com/0email" target="_blank" className="w-full">
+                  <div className="flex items-center gap-2">
+                    <HelpCircle size={16} className="opacity-60" />
+                    <p className="text-[13px] opacity-60">{t('common.navUser.customerSupport')}</p>
+                  </div>
+                </a>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
+                <div className="flex items-center gap-2">
+                  <LogOut size={16} className="opacity-60" />
+                  <p className="text-[13px] opacity-60">{t('common.actions.logout')}</p>
+                </div>
               </DropdownMenuItem>
             </>
           ) : (
             <>
               <DropdownMenuItem className="cursor-pointer" onClick={() => router.push('/login')}>
-                <LogIn size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
+                <LogIn size={16} className="mr-2 opacity-60" />
                 <p className="text-[13px] opacity-60">{t('common.navUser.signIn')}</p>
               </DropdownMenuItem>
             </>
           )}
         </div>
+        
+        {session && (
+          <>
+            <DropdownMenuSeparator className="mt-1" />
+            <div className="pt-1 pb-2 px-2 flex items-center justify-center gap-1 text-[10px] text-muted-foreground/60">
+              <a href="/privacy" className="hover:underline">Privacy</a>
+              <span>·</span>
+              <a href="/terms" className="hover:underline">Terms</a>
+            </div>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

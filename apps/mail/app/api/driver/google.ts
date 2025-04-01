@@ -96,9 +96,11 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       refresh_token: config.auth.refresh_token,
       scope: getScope(),
     });
-    EnableBrain()
-      .then(() => console.log('✅ Driver: Enabled'))
-      .catch(() => console.log('✅ Driver: Enabled'));
+    if (process.env.NODE_ENV === 'production') {
+      EnableBrain()
+        .then(() => console.log('✅ Driver: Enabled'))
+        .catch(() => console.log('✅ Driver: Enabled'));
+    }
   }
   const parse = ({
     id,
@@ -172,7 +174,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
     if (folder === 'trash') {
       return { folder: undefined, q: `in:trash ${q}` };
     }
-    if (folder === "archive") {
+    if (folder === 'archive') {
       return { folder: undefined, q: `in:archive ${q}` };
     }
     return { folder, q };
@@ -291,7 +293,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
             const labelIds = [
               ...new Set(msg.data.messages?.flatMap((message) => message.labelIds || [])),
             ];
-            const message = msg.data.messages?.[0];
+            const message = msg.data.messages?.[msg.data.messages.length - 1];
             const parsed = parse({ ...message, labelIds });
             return {
               ...parsed,

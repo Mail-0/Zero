@@ -454,7 +454,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
             variant="ghost"
             size="sm"
             className={cn(
-              'h-8 w-8 rounded-full p-0 transition-all duration-200',
+              'h-8 w-8 rounded-lg p-0 transition-all duration-200',
               notes.length > 0 && 'text-amber-500',
               isOpen && 'bg-muted',
             )}

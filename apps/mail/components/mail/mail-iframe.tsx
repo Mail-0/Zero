@@ -77,7 +77,7 @@ export function MailIframe({ html }: { html: string }) {
         </div>
       )}
       <iframe
-        scrolling="no"
+        onClick={calculateAndSetHeight}
         height={height}
         ref={iframeRef}
         className={cn(
