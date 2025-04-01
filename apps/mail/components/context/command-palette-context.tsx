@@ -10,15 +10,29 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from '@/components/ui/command';
+import {
+  ArrowUpRight,
+  Undo,
+  Expand,
+  Reply,
+  Forward,
+  MessageSquare,
+  Search,
+  Archive,
+  Trash,
+  Printer,
+  Sun,
+  Moon,
+} from 'lucide-react';
 import { DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useOpenComposeModal } from '@/hooks/use-open-compose-modal';
 import { navigationConfig, type NavItem } from '@/config/navigation';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { useRouter, usePathname } from 'next/navigation';
 import { keyboardShortcuts } from '@/config/shortcuts';
-import { ArrowUpRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { CircleHelp } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { Pencil } from 'lucide-react';
 import * as React from 'react';
 
@@ -44,10 +58,23 @@ export function useCommandPalette() {
 
 export function CommandPalette({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = React.useState(false);
-  const { open: openComposeModal } = useOpenComposeModal(); // Correctly use open function
+  const { open: openComposeModal } = useOpenComposeModal();
+  const { theme, setTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
+
+  // Only enable command palette in app routes
+  const isAppRoute = React.useMemo(() => {
+    return (
+      pathname?.startsWith('/mail') ||
+      pathname?.startsWith('/settings') ||
+      pathname?.startsWith('/create')
+    );
+  }, [pathname]);
+
   React.useEffect(() => {
+    if (!isAppRoute) return;
+
     const down = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
@@ -57,7 +84,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
 
     document.addEventListener('keydown', down);
     return () => document.removeEventListener('keydown', down);
-  }, []);
+  }, [isAppRoute]);
 
   const runCommand = React.useCallback((command: () => unknown) => {
     setOpen(false);
@@ -65,6 +92,23 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
   }, []);
 
   const t = useTranslations();
+
+  // Use memoized shortcuts to ensure updates are reflected
+  const memoizedShortcuts = React.useMemo(() => keyboardShortcuts, []);
+
+  // Define actions that should be excluded from navigation items to prevent duplication
+  const actionPaths = React.useMemo(
+    () => [
+      '/mail/inbox', // Inbox
+      '/mail/archive', // Archive
+      '/mail/create', // Compose
+      '/mail/draft', // Drafts
+      '/mail/sent', // Sent
+      '/mail/spam', // Spam
+      '/mail/bin', // Bin/Trash
+    ],
+    [],
+  );
 
   const allCommands = React.useMemo(() => {
     const mailCommands: { group: string; item: NavItem }[] = [];
@@ -110,6 +154,19 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           };
         }
       }
+
+      // For navigation items, exclude any that are already in the actions menu
+      if (group.group === t('common.commandPalette.groups.mail')) {
+        if (Array.isArray(group.items)) {
+          return {
+            ...group,
+            items: group.items.filter((item: NavItem) => {
+              return !actionPaths.includes(item.url);
+            }),
+          };
+        }
+      }
+
       return {
         ...group,
         items: Array.isArray(group.items) ? group.items : [group.items],
@@ -117,7 +174,22 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     });
 
     return filteredCommands;
-  }, [pathname, t]);
+  }, [pathname, t, actionPaths]);
+
+  // Only render command palette in app routes
+  if (!isAppRoute) {
+    return (
+      <CommandPaletteContext.Provider
+        value={{
+          open: false,
+          setOpen: () => {},
+          openModal: () => {},
+        }}
+      >
+        {children}
+      </CommandPaletteContext.Provider>
+    );
+  }
 
   return (
     <CommandPaletteContext.Provider
@@ -125,7 +197,6 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         open,
         setOpen,
         openModal: () => {
-          // Use openModal from context
           setOpen(false);
           openComposeModal();
         },
@@ -139,17 +210,103 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         <CommandInput autoFocus placeholder={t('common.commandPalette.placeholder')} />
         <CommandList>
           <CommandEmpty>{t('common.commandPalette.noResults')}</CommandEmpty>
-          <CommandGroup className="pb-0">
-            <CommandItem onSelect={() => (window.location.href = '/mail/create')}>
-              <Pencil size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
-              <span>{t('common.commandPalette.commands.composeMessage')}</span>
+
+          {/* Quick Actions */}
+          <CommandGroup heading="Actions">
+            <CommandItem onSelect={() => runCommand(() => router.push('/mail/create'))}>
+              <Pencil size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+              <span>Compose message</span>
               <CommandShortcut>
-                {keyboardShortcuts
+                {memoizedShortcuts
                   .find((s: { action: string; keys: string[] }) => s.action === 'newEmail')
                   ?.keys.join(' ')}
               </CommandShortcut>
             </CommandItem>
+
+            <CommandItem onSelect={() => runCommand(() => console.log('Reply'))}>
+              <Reply size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+              <span>Reply</span>
+              <CommandShortcut>
+                {memoizedShortcuts
+                  .find((s: { action: string; keys: string[] }) => s.action === 'reply')
+                  ?.keys.join(' ')}
+              </CommandShortcut>
+            </CommandItem>
+
+            <CommandItem onSelect={() => runCommand(() => console.log('Forward'))}>
+              <Forward size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+              <span>Forward</span>
+              <CommandShortcut>
+                {memoizedShortcuts
+                  .find((s: { action: string; keys: string[] }) => s.action === 'forward')
+                  ?.keys.join(' ')}
+              </CommandShortcut>
+            </CommandItem>
+
+            <CommandItem onSelect={() => runCommand(() => console.log('Search'))}>
+              <Search size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+              <span>Search</span>
+              <CommandShortcut>
+                {memoizedShortcuts
+                  .find((s: { action: string; keys: string[] }) => s.action === 'search')
+                  ?.keys.join(' ')}
+              </CommandShortcut>
+            </CommandItem>
+
+            <CommandItem onSelect={() => runCommand(() => console.log('Archive'))}>
+              <Archive size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+              <span>Archive</span>
+              <CommandShortcut>
+                {memoizedShortcuts
+                  .find((s: { action: string; keys: string[] }) => s.action === 'archiveEmail')
+                  ?.keys.join(' ')}
+              </CommandShortcut>
+            </CommandItem>
+
+            <CommandItem onSelect={() => runCommand(() => console.log('Delete'))}>
+              <Trash size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+              <span>Delete</span>
+              <CommandShortcut>
+                {memoizedShortcuts
+                  .find((s: { action: string; keys: string[] }) => s.action === 'delete')
+                  ?.keys.join(' ')}
+              </CommandShortcut>
+            </CommandItem>
+
+            <CommandItem onSelect={() => runCommand(() => console.log('Print'))}>
+              <Printer size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+              <span>Print</span>
+              <CommandShortcut>
+                {memoizedShortcuts
+                  .find((s: { action: string; keys: string[] }) => s.action === 'printEmail')
+                  ?.keys.join(' ')}
+              </CommandShortcut>
+            </CommandItem>
+
+            <CommandItem onSelect={() => runCommand(() => console.log('Expand view'))}>
+              <Expand size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+              <span>Expand view</span>
+              <CommandShortcut>
+                {memoizedShortcuts
+                  .find((s: { action: string; keys: string[] }) => s.action === 'expandEmailView')
+                  ?.keys.join(' ')}
+              </CommandShortcut>
+            </CommandItem>
+
+            <CommandItem onSelect={() => runCommand(() => console.log('Undo'))}>
+              <Undo size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+              <span>Undo</span>
+              <CommandShortcut>
+                {memoizedShortcuts
+                  .find((s: { action: string; keys: string[] }) => s.action === 'undoLastAction')
+                  ?.keys.join(' ')}
+              </CommandShortcut>
+            </CommandItem>
           </CommandGroup>
+
+          <CommandSeparator />
+
+          {/* Navigation */}
           {allCommands.map((group, groupIndex) => (
             <React.Fragment key={groupIndex}>
               {group.items.length > 0 && (
@@ -167,7 +324,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                         <item.icon
                           size={16}
                           strokeWidth={2}
-                          className="opacity-60"
+                          className="opacity-70"
                           aria-hidden="true"
                         />
                       )}
@@ -177,27 +334,54 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                   ))}
                 </CommandGroup>
               )}
-              {groupIndex < allCommands.length - 1 && <CommandSeparator />}
+              {groupIndex < allCommands.length - 1 && group.items.length > 0 && (
+                <CommandSeparator />
+              )}
             </React.Fragment>
           ))}
+
           <CommandSeparator />
-          <CommandGroup heading={t('common.commandPalette.groups.help')}>
-            <CommandItem onSelect={() => runCommand(() => console.log('Help with shortcuts'))}>
-              <CircleHelp size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
-              <span>{t('common.commandPalette.commands.helpWithShortcuts')}</span>
+
+          {/* Appearance */}
+          <CommandGroup heading="Appearance">
+            <CommandItem
+              onSelect={() => runCommand(() => setTheme(theme === 'dark' ? 'light' : 'dark'))}
+            >
+              {theme === 'dark' ? (
+                <Sun size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+              ) : (
+                <Moon size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+              )}
+              <span>{theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}</span>
+            </CommandItem>
+          </CommandGroup>
+
+          <CommandSeparator />
+
+          {/* Help */}
+          <CommandGroup heading="Help">
+            <CommandItem onSelect={() => runCommand(() => router.push('/settings/shortcuts'))}>
+              <CircleHelp size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+              <span>Help with shortcuts</span>
               <CommandShortcut>
-                {keyboardShortcuts
+                {memoizedShortcuts
                   .find((s: { action: string; keys: string[] }) => s.action === 'helpWithShortcuts')
                   ?.keys.join(' ')}
               </CommandShortcut>
             </CommandItem>
+
             <CommandItem
               onSelect={() =>
                 runCommand(() => window.open('https://github.com/Mail-0/Zero', '_blank'))
               }
             >
-              <ArrowUpRight size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
-              <span>{t('common.commandPalette.commands.goToDocs')}</span>
+              <ArrowUpRight size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+              <span>Go to docs</span>
+            </CommandItem>
+
+            <CommandItem onSelect={() => runCommand(() => router.push('/settings/general'))}>
+              <MessageSquare size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+              <span>Send feedback</span>
             </CommandItem>
           </CommandGroup>
         </CommandList>

@@ -45,7 +45,16 @@
         "toggleTheme": "Toggle Theme",
         "backToMail": "Back to Mail",
         "goToDocs": "Go to docs",
-        "helpWithShortcuts": "Help with shortcuts"
+        "helpWithShortcuts": "Help with shortcuts",
+        "reply": "Reply",
+        "forward": "Forward",
+        "search": "Search",
+        "archive": "Archive",
+        "delete": "Delete",
+        "print": "Print",
+        "expandView": "Expand view",
+        "undo": "Undo",
+        "feedback": "Send feedback"
       }
     },
     "searchBar": {
