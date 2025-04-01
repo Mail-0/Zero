@@ -86,6 +86,60 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     return () => document.removeEventListener('keydown', down);
   }, [isAppRoute]);
 
+  // Helper function to handle mail actions
+  const handleMailAction = React.useCallback((action: string) => {
+    // Check for appropriate context
+    const inMailView = pathname.includes('/mail/') && !pathname.includes('/mail/create');
+    
+    switch (action) {
+      case 'search':
+        // Focus search input or open search dialog
+        document.querySelector('[aria-label="Search"]')?.focus();
+        break;
+      case 'archive':
+        if (inMailView) {
+          // Call archive function when implemented
+          console.log('Archive action triggered');
+        }
+        break;
+      case 'delete':
+        if (inMailView) {
+          // Call delete function when implemented
+          console.log('Delete action triggered');
+        }
+        break;
+      case 'print':
+        if (inMailView) {
+          window.print();
+        }
+        break;
+      case 'expand':
+        if (inMailView) {
+          // Call expand view function when implemented
+          console.log('Expand view action triggered');
+        }
+        break;
+      case 'undo':
+        // Call undo function when implemented
+        console.log('Undo action triggered');
+        break;
+      case 'reply':
+        if (inMailView) {
+          // Call reply function when implemented
+          console.log('Reply action triggered');
+        }
+        break;
+      case 'forward':
+        if (inMailView) {
+          // Call forward function when implemented
+          console.log('Forward action triggered');
+        }
+        break;
+      default:
+        console.log(`Action not implemented: ${action}`);
+    }
+  }, [pathname]);
+
   const runCommand = React.useCallback((command: () => unknown) => {
     setOpen(false);
     command();
@@ -223,7 +277,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
               </CommandShortcut>
             </CommandItem>
 
-            <CommandItem onSelect={() => runCommand(() => console.log('Reply'))}>
+            <CommandItem onSelect={() => runCommand(() => handleMailAction('reply'))}>
               <Reply size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
               <span>Reply</span>
               <CommandShortcut>
@@ -233,7 +287,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
               </CommandShortcut>
             </CommandItem>
 
-            <CommandItem onSelect={() => runCommand(() => console.log('Forward'))}>
+            <CommandItem onSelect={() => runCommand(() => handleMailAction('forward'))}>
               <Forward size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
               <span>Forward</span>
               <CommandShortcut>
@@ -243,7 +297,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
               </CommandShortcut>
             </CommandItem>
 
-            <CommandItem onSelect={() => runCommand(() => console.log('Search'))}>
+            <CommandItem onSelect={() => runCommand(() => handleMailAction('search'))}>
               <Search size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
               <span>Search</span>
               <CommandShortcut>
@@ -253,7 +307,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
               </CommandShortcut>
             </CommandItem>
 
-            <CommandItem onSelect={() => runCommand(() => console.log('Archive'))}>
+            <CommandItem onSelect={() => runCommand(() => handleMailAction('archive'))}>
               <Archive size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
               <span>Archive</span>
               <CommandShortcut>
@@ -263,7 +317,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
               </CommandShortcut>
             </CommandItem>
 
-            <CommandItem onSelect={() => runCommand(() => console.log('Delete'))}>
+            <CommandItem onSelect={() => runCommand(() => handleMailAction('delete'))}>
               <Trash size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
               <span>Delete</span>
               <CommandShortcut>
@@ -273,7 +327,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
               </CommandShortcut>
             </CommandItem>
 
-            <CommandItem onSelect={() => runCommand(() => console.log('Print'))}>
+            <CommandItem onSelect={() => runCommand(() => handleMailAction('print'))}>
               <Printer size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
               <span>Print</span>
               <CommandShortcut>
@@ -283,7 +337,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
               </CommandShortcut>
             </CommandItem>
 
-            <CommandItem onSelect={() => runCommand(() => console.log('Expand view'))}>
+            <CommandItem onSelect={() => runCommand(() => handleMailAction('expand'))}>
               <Expand size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
               <span>Expand view</span>
               <CommandShortcut>
@@ -293,7 +347,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
               </CommandShortcut>
             </CommandItem>
 
-            <CommandItem onSelect={() => runCommand(() => console.log('Undo'))}>
+            <CommandItem onSelect={() => runCommand(() => handleMailAction('undo'))}>
               <Undo size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
               <span>Undo</span>
               <CommandShortcut>
