@@ -11,7 +11,8 @@
       "signingOut": "Abmelden...",
       "signedOutSuccess": "Erfolgreich abgemeldet!",
       "signOutError": "Fehler beim Abmelden",
-      "refresh": "Aktualisieren"
+      "refresh": "Aktualisieren",
+      "loading": "Laden..."
     },
     "themes": {
       "dark": "Dunkel",
