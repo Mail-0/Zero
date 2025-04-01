@@ -1,5 +1,4 @@
 import { MailLayout } from '@/components/mail/mail';
-import Link from 'next/link';
 
 interface MailPageProps {
   params: Promise<{
