@@ -1,7 +1,7 @@
 import { modifyLabels } from '@/actions/mail';
 import { LABELS, FOLDERS } from '@/lib/utils';
 
-export type ThreadDestination = 'inbox' | 'archive' | 'spam' | 'bin' | null;
+export type ThreadDestination = 'inbox' | 'archive' | 'spam' | 'trash' | null;
 export type FolderLocation = 'inbox' | 'archive' | 'spam' | 'sent' | string;
 
 interface MoveThreadOptions {
@@ -21,19 +21,19 @@ export function isActionAvailable(folder: FolderLocation, action: ThreadDestinat
       return true;
     case `${FOLDERS.INBOX}_to_archive`:
       return true;
-    case `${FOLDERS.INBOX}_to_bin`:
+    case `${FOLDERS.INBOX}_to_trash`:
       return true;
 
     // From archive rules
     case `${FOLDERS.ARCHIVE}_to_inbox`:
       return true;
-    case `${FOLDERS.ARCHIVE}_to_bin`:
+    case `${FOLDERS.ARCHIVE}_to_trash`:
       return true;
 
     // From spam rules
     case `${FOLDERS.SPAM}_to_inbox`:
       return true;
-    case `${FOLDERS.SPAM}_to_bin`:
+    case `${FOLDERS.SPAM}_to_trash`:
       return true;
 
     // From bin rules (can restore to inbox)
@@ -46,7 +46,7 @@ export function isActionAvailable(folder: FolderLocation, action: ThreadDestinat
 }
 
 export function getAvailableActions(folder: FolderLocation): ThreadDestination[] {
-  const allPossibleActions: ThreadDestination[] = ['inbox', 'archive', 'spam', 'bin'];
+  const allPossibleActions: ThreadDestination[] = ['inbox', 'archive', 'spam', 'trash'];
   return allPossibleActions.filter(action => isActionAvailable(folder, action));
 }
 
@@ -75,8 +75,8 @@ export async function moveThreadsTo({
         addLabel = LABELS.SPAM;
         removeLabel = isInInbox ? LABELS.INBOX : '';
         break;
-      case 'bin':
-        addLabel = LABELS.TRASH || 'TRASH'; // Add trash label
+      case 'trash':
+        addLabel = LABELS.TRASH; // Add trash label
         removeLabel = isInInbox ? LABELS.INBOX : (isInSpam ? LABELS.SPAM : '');
         break;
       default:

@@ -27,6 +27,7 @@ import {
   BrainCircuit,
   Wand2,
 } from 'lucide-react';
+import { findButton, dispatchMailAction, handleUndo, moveThread } from '@/lib/mail-actions-utils';
 import { toast } from 'sonner';
 import { DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useOpenComposeModal } from '@/hooks/use-open-compose-modal';
@@ -114,14 +115,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
 
   // Define action handlers as a mapping from action to handler function
   const actionHandlers = React.useMemo(() => {
-    // Helper function to find a button by various selectors
-    const findButton = (selectors: string[]): HTMLElement | null => {
-      for (const selector of selectors) {
-        const button = document.querySelector(selector);
-        if (button instanceof HTMLElement) return button;
-      }
-      return null;
-    };
+    // Import findButton from shared utilities
     
     return {
       'ai-compose': () => {
@@ -170,18 +164,10 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
       'archive': () => {
         const inThreadView = isViewingThread;
         if (inThreadView && threadId) {
-          // Store current state for undo
-          const currentAction = 'archive';
-          const previousFolder = 'inbox'; // Assume archiving from inbox
-          const currentFolder = 'archive';
-          
-          // Update last action for undo functionality
-          setLastAction({
-            action: currentAction,
-            threadId,
-            previousFolder,
-            currentFolder
-          });
+          // Determine the current path/folder
+          const currentPath = window.location.pathname;
+          const currentFolder = currentPath.includes('/archive') ? 'archive' : 'inbox';
+          const destination = currentFolder === 'archive' ? 'inbox' : 'archive';
           
           // Try to find the archive button in thread display
           const archiveSelectors = [
@@ -197,21 +183,21 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           if (archiveButton) {
             archiveButton.click();
           } else {
-            // Dispatch a custom event as fallback
-            const event = new CustomEvent('mail:archive', {
-              detail: { threadId, previousFolder, currentFolder },
-            });
-            window.dispatchEvent(event);
-            
-            // Also dispatch the general mail:action event for tracking
-            const actionEvent = new CustomEvent('mail:action', {
-              detail: { action: currentAction, threadId, previousFolder, currentFolder },
-            });
-            window.dispatchEvent(actionEvent);
-            
-            // Show toast with undo instructions
-            toast.success(`Email archived`, {
-              description: 'Press ⌘⇧T to undo'
+            // Use our shared utility
+            moveThread({
+              threadId,
+              currentFolder,
+              destination,
+              onSuccess: async () => {
+                // Update last action for undo functionality
+                setLastAction({
+                  action: currentFolder === 'archive' ? 'unarchive' : 'archive',
+                  threadId,
+                  previousFolder: currentFolder,
+                  currentFolder: destination
+                });
+              },
+              t: (key) => key // Simple translation function
             });
           }
         }
@@ -220,20 +206,10 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
       'delete': () => {
         const inThreadView = isViewingThread;
         if (inThreadView && threadId) {
-          // Store current state for undo
-          const currentAction = 'delete';
           // Determine the current folder based on the URL path
           const currentPath = window.location.pathname;
-          const previousFolder = currentPath.includes('/archive') ? 'archive' : 'inbox';
-          const currentFolder = 'bin'; // Destination folder
-          
-          // Update last action for undo functionality
-          setLastAction({
-            action: currentAction,
-            threadId,
-            previousFolder,
-            currentFolder
-          });
+          const currentFolder = currentPath.includes('/archive') ? 'archive' : 'inbox';
+          const destination = 'trash';
           
           // Try to find a delete/trash button
           const deleteSelectors = [
@@ -250,21 +226,21 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           if (deleteButton) {
             deleteButton.click();
           } else {
-            // Dispatch a custom event as fallback
-            const event = new CustomEvent('mail:delete', {
-              detail: { threadId, previousFolder, currentFolder },
-            });
-            window.dispatchEvent(event);
-            
-            // Also dispatch the general mail:action event for tracking
-            const actionEvent = new CustomEvent('mail:action', {
-              detail: { action: currentAction, threadId, previousFolder, currentFolder },
-            });
-            window.dispatchEvent(actionEvent);
-            
-            // Show toast with undo instructions
-            toast.success(`Email moved to trash`, {
-              description: 'Press ⌘⇧T to undo'
+            // Use our shared utility
+            moveThread({
+              threadId,
+              currentFolder,
+              destination,
+              onSuccess: async () => {
+                // Update last action for undo functionality
+                setLastAction({
+                  action: 'delete',
+                  threadId,
+                  previousFolder: currentFolder,
+                  currentFolder: destination
+                });
+              },
+              t: (key) => key // Simple translation function
             });
           }
         }
@@ -304,26 +280,16 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
       
       'undo': () => {
         if (lastAction) {
-          if (lastAction.action === 'archive' || lastAction.action === 'delete' || lastAction.action === 'spam') {
-            // For actions that moved messages between folders, reverse the action
-            const threadIds = Array.isArray(lastAction.threadId) ? lastAction.threadId : [lastAction.threadId];
-            if (threadIds && lastAction.previousFolder) {
-              // Dispatch a custom event to reverse the action
-              const event = new CustomEvent('mail:undo', {
-                detail: { 
-                  threadIds, 
-                  currentFolder: lastAction.currentFolder,
-                  destination: lastAction.previousFolder as 'inbox' | 'archive' | 'spam'
-                },
-              });
-              window.dispatchEvent(event);
-              toast.success(`Undoing last action: ${lastAction.action}`);
+          // Use our shared utility
+          handleUndo({
+            lastAction,
+            onSuccess: async () => {
               // Clear last action after undoing
               setLastAction(null);
-            }
-          } else {
-            toast.info(`Cannot undo action: ${lastAction.action}`);
-          }
+              toast.success(`Undoing last action: ${lastAction.action}`);
+            },
+            t: (key) => key // Simple translation function
+          });
         } else {
           toast.info('Nothing to undo');
         }
@@ -438,7 +404,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     '/mail/draft', // Drafts
     '/mail/sent', // Sent
     '/mail/spam', // Spam
-    '/mail/bin', // Bin/Trash
+    '/mail/trash', // Trash
   ];
 
   // Use the original implementation to avoid breaking changes

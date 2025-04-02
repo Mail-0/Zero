@@ -21,6 +21,7 @@ export const LABELS = {
   UNREAD: 'UNREAD',
   IMPORTANT: 'IMPORTANT',
   SENT: 'SENT',
+  TRASH: 'TRASH',
 } as const;
 
 export const FOLDER_NAMES = [
@@ -38,6 +39,7 @@ export const FOLDER_TAGS: Record<string, string[]> = {
   [FOLDERS.SPAM]: [LABELS.SPAM],
   [FOLDERS.INBOX]: [LABELS.INBOX],
   [FOLDERS.ARCHIVE]: [],
+  [FOLDERS.TRASH]: [LABELS.TRASH],
   [FOLDERS.SENT]: [LABELS.SENT],
 };
 

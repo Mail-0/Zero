@@ -1,11 +1,11 @@
 'use client';
 
-import { moveThreadsTo, ThreadDestination } from '@/lib/thread-actions';
+import { ThreadDestination } from '@/lib/thread-actions';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Archive, Mail, Inbox, Undo } from 'lucide-react';
-import { markAsRead, markAsUnread } from '@/actions/mail';
 import { useCallback, memo, useState, useEffect } from 'react';
-import { cn, FOLDERS, LABELS } from '@/lib/utils';
+import { cn, FOLDERS } from '@/lib/utils';
+import { moveThread, toggleReadStatus, handleUndo } from '@/lib/mail-actions-utils';
 import { useThreads } from '@/hooks/use-threads';
 import { Button } from '@/components/ui/button';
 import { useStats } from '@/hooks/use-stats';
@@ -112,35 +112,19 @@ export const MailQuickActions = memo(
         try {
           const threadId = message.threadId ?? message.id;
           const destination = isArchiveFolder ? FOLDERS.INBOX : FOLDERS.ARCHIVE;
-
-          // Record action for undo capability
-          const actionType = isArchiveFolder ? 'unarchive' : 'archive';
-          const actionEvent = new CustomEvent('mail:action', {
-            detail: { 
-              action: actionType, 
-              threadId: threadId,
-              previousFolder: currentFolder,
-              currentFolder: destination
-            },
-          });
-          window.dispatchEvent(actionEvent);
           
-          await moveThreadsTo({
-            threadIds: [`thread:${threadId}`],
-            currentFolder: currentFolder,
+          await moveThread({
+            threadId,
+            currentFolder,
             destination: destination as ThreadDestination,
-          }).then(async () => {
-            await Promise.all([mutate(), mutateStats()]);
-
-            toast.success(t(`common.mail.${actionType}`), {
-              description: 'Press ⌘⇧T to undo'
-            });
-
-            closeThreadIfOpen();
+            onSuccess: async () => {
+              await Promise.all([mutate(), mutateStats()]);
+              closeThreadIfOpen();
+            },
+            t
           });
         } catch (error) {
           console.error('Error archiving thread', error);
-          toast.error(t('common.mail.errorMoving'));
         } finally {
           setIsProcessing(false);
         }
@@ -166,28 +150,16 @@ export const MailQuickActions = memo(
         setIsProcessing(true);
         try {
           const threadId = message.threadId ?? message.id;
-
-          if (message.unread) {
-            await markAsRead({ ids: [threadId] }).then((response) => {
-              if (response.success) {
-                mutate();
-                toast.success(t('common.mail.markedAsRead'));
-              } else {
-                toast.error(t('common.mail.failedToMarkAsRead'));
-              }
+          
+          await toggleReadStatus({
+            threadId,
+            isUnread: message.unread,
+            onSuccess: async () => {
+              await mutate();
               closeThreadIfOpen();
-            });
-          } else {
-            await markAsUnread({ ids: [threadId] }).then((response) => {
-              if (response.success) {
-                mutate();
-                toast.success(t('common.mail.markedAsUnread'));
-              } else {
-                toast.error(t('common.mail.failedToMarkAsUnread'));
-              }
-              closeThreadIfOpen();
-            });
-          }
+            },
+            t
+          });
         } catch (error) {
           console.error('Error toggling read status', error);
         } finally {
@@ -206,34 +178,18 @@ export const MailQuickActions = memo(
         try {
           const threadId = message.threadId ?? message.id;
           
-          // Record action for undo capability
-          const actionEvent = new CustomEvent('mail:action', {
-            detail: { 
-              action: 'delete', 
-              threadId: threadId,
-              previousFolder: currentFolder,
-              currentFolder: 'bin'
+          await moveThread({
+            threadId,
+            currentFolder,
+            destination: 'trash',
+            onSuccess: async () => {
+              await Promise.all([mutate(), mutateStats()]);
+              closeThreadIfOpen();
             },
-          });
-          window.dispatchEvent(actionEvent);
-          
-          // Implement actual delete functionality by moving to bin
-          await moveThreadsTo({
-            threadIds: [`thread:${threadId}`],
-            currentFolder: currentFolder,
-            destination: 'bin' as ThreadDestination,
-          }).then(async () => {
-            await Promise.all([mutate(), mutateStats()]);
-            
-            toast.success(t('common.mail.moveToTrash'), {
-              description: 'Press ⌘⇧T to undo'
-            });
-            
-            closeThreadIfOpen();
+            t
           });
         } catch (error) {
           console.error('Error deleting thread', error);
-          toast.error(t('common.mail.errorMoving'));
         } finally {
           setIsProcessing(false);
         }
@@ -256,26 +212,16 @@ export const MailQuickActions = memo(
         
         setIsProcessing(true);
         try {
-          const { threadId, previousFolder, currentFolder: actionFolder } = lastAction;
-          
-          if (threadId && previousFolder) {
-            // Dispatch undo event
-            const event = new CustomEvent('mail:undo', {
-              detail: { 
-                threadIds: Array.isArray(threadId) ? threadId : [threadId], 
-                currentFolder: actionFolder,
-                destination: previousFolder as ThreadDestination
-              },
-            });
-            window.dispatchEvent(event);
-            
-            // Clear the last action
-            setLastAction(null);
-            
-            // Refresh the mail list after the undo operation
-            await Promise.all([mutate(), mutateStats()]);
-            toast.success(t('common.mail.undoSuccess'));
-          }
+          await handleUndo({
+            lastAction,
+            onSuccess: async () => {
+              // Clear the last action
+              setLastAction(null);
+              // Refresh the mail list
+              await Promise.all([mutate(), mutateStats()]);
+            },
+            t
+          });
         } catch (error) {
           console.error('Error undoing action', error);
           toast.error(t('common.mail.undoError'));
