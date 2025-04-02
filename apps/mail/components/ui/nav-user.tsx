@@ -78,7 +78,7 @@ export function NavUser() {
   };
 
   const handleLogout = async () => {
-    toast.promise(signOut(), {
+    toast.promise(signOut().then(() => router.push('/login')), {
       loading: 'Signing out...',
       success: () => 'Signed out successfully!',
       error: 'Error signing out',

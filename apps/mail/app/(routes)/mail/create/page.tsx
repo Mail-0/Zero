@@ -8,7 +8,7 @@ export default async function CreatePage() {
   const session = await auth.api.getSession({ headers: headersList });
   
   if (!session) {
-    redirect('/');
+    redirect('/login');
   }
 
   return (

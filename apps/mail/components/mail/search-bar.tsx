@@ -1,6 +1,7 @@
 import { matchFilterPrefix, filterSuggestionsFunction, filterSuggestions } from '@/lib/filter';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn, extractFilterValue, type FilterSuggestion } from '@/lib/utils';
+import { Search, CalendarIcon, X } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { enhanceSearchQuery } from '@/actions/ai-search';
@@ -240,6 +241,7 @@ export function SearchBar() {
         setSuggestionsState((prev) => ({ ...prev, show: false }));
         setDatePickerState((prev) => ({ ...prev, show: false }));
         form.setValue('q', '');
+        resetSearch();
         return;
       }
 
@@ -640,6 +642,16 @@ export function SearchBar() {
             value={formValues.q}
             disabled={isSearching}
           />
+          {formValues.q && (
+            <button
+              type="button"
+              onClick={resetSearch}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              disabled={isSearching}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
           {isFocused && !formValues.q && (
             <div
               className={cn(

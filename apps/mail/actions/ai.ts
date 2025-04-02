@@ -2,7 +2,9 @@
 'use server';
 
 import { generateEmailContent } from '@/lib/ai';
+import { headers } from 'next/headers';
 import { JSONContent } from 'novel';
+import { auth } from '@/lib/auth';
 
 interface UserContext {
   name?: string;
@@ -31,6 +33,12 @@ export async function generateAIEmailContent({
   userContext?: UserContext;
 }): Promise<AIEmailResponse> {
   try {
+    const headersList = await headers();
+    const session = await auth.api.getSession({ headers: headersList });
+
+    if (!session?.user) {
+      throw new Error('Unauthorized');
+    }
     const responses = await generateEmailContent(
       prompt,
       currentContent,
