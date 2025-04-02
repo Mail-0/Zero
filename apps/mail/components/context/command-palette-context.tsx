@@ -112,272 +112,285 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Helper function to handle mail actions - moved up to fix declaration order
-  const handleMailAction = React.useCallback(
-    (action: string) => {
-      // Using the thread ID already retrieved above, no need to parse URL again
-      const inThreadView = isViewingThread;
-
-      switch (action) {
-        // AI Actions
-        case 'ai-compose':
-          // If in compose view, click the AI Assistant button
-          if (isComposing) {
-            const aiAssistantButton = document.querySelector('button[title*="Ask AI Assistant" i]');
-            if (aiAssistantButton instanceof HTMLElement) {
-              aiAssistantButton.click();
-            } else {
-              // If AI button not found, navigate to compose
-              router.push('/mail/create');
-            }
-          } 
-          // If in thread view, click Generate Email button
-          else if (inThreadView) {
-            // First open reply composer if not already open
-            const replyButton = document.querySelector('[aria-label="Reply"]');
-            if (replyButton instanceof HTMLElement) {
-              replyButton.click();
-            }
-            
-            // Give time for reply composer to render
-            setTimeout(() => {
-              // Find Generate Email button (it has a Sparkles icon within a group button)
-              const allButtons = Array.from(document.querySelectorAll('button'));
-              const generateButton = allButtons.find(button => {
-                const hasSparklesIcon = button.querySelector('.lucide-sparkles') !== null;
-                const buttonText = button.textContent || '';
-                return hasSparklesIcon && buttonText.includes('Generate Email');
-              });
-              
-              if (generateButton instanceof HTMLElement) {
-                generateButton.click();
-              }
-            }, 500);
-          }
-          break;
+  // Define action handlers as a mapping from action to handler function
+  const actionHandlers = React.useMemo(() => {
+    // Helper function to find a button by various selectors
+    const findButton = (selectors: string[]): HTMLElement | null => {
+      for (const selector of selectors) {
+        const button = document.querySelector(selector);
+        if (button instanceof HTMLElement) return button;
+      }
+      return null;
+    };
+    
+    return {
+      'ai-compose': () => {
+        const inThreadView = isViewingThread;
         
-        // Regular mail actions
-        case 'search':
-          // Focus search input or open search dialog
-          document.querySelector('[aria-label="Search"]')?.focus();
-          break;
-        case 'archive':
-          if (inThreadView && threadId) {
-            // Store current state for undo
-            const currentAction = 'archive';
-            const previousFolder = 'inbox'; // Assume archiving from inbox
-            const currentFolder = 'archive';
-            
-            // Update last action for undo functionality
-            setLastAction({
-              action: currentAction,
-              threadId,
-              previousFolder,
-              currentFolder
-            });
-            
-            // Try to find the archive button in thread display
-            let archiveButton = document.querySelector('button[aria-label*="Archive" i]');
-
-            if (!archiveButton) {
-              // Try finding by icon class
-              archiveButton = document
-                .querySelector('.fa-archive, .feather-archive, svg[class*="archive" i]')
-                ?.closest('button');
-            }
-
-            if (archiveButton instanceof HTMLElement) {
-              archiveButton.click();
-            } else {
-              // Dispatch a custom event as fallback
-              const event = new CustomEvent('mail:archive', {
-                detail: { threadId, previousFolder, currentFolder },
-              });
-              window.dispatchEvent(event);
-              
-              // Also dispatch the general mail:action event for tracking
-              const actionEvent = new CustomEvent('mail:action', {
-                detail: { action: currentAction, threadId, previousFolder, currentFolder },
-              });
-              window.dispatchEvent(actionEvent);
-              
-              // Show toast with undo instructions
-              toast.success(`Email archived`, {
-                description: 'Press ⌘⇧T to undo'
-              });
-              console.log('Triggered archive via custom event');
-            }
-          }
-          break;
-        case 'delete':
-          if (inThreadView && threadId) {
-            // Store current state for undo
-            const currentAction = 'delete';
-            // Determine the current folder based on the URL path
-            const currentPath = window.location.pathname;
-            const previousFolder = currentPath.includes('/archive') ? 'archive' : 'inbox';
-            const currentFolder = 'bin'; // Destination folder
-            
-            // Update last action for undo functionality
-            setLastAction({
-              action: currentAction,
-              threadId,
-              previousFolder,
-              currentFolder
-            });
-            
-            // Try to find a delete/trash button
-            let deleteButton = document.querySelector(
-              'button[aria-label*="Delete" i], button[aria-label*="Trash" i]',
-            );
-
-            if (!deleteButton) {
-              // Try finding by icon
-              deleteButton = document
-                .querySelector('.fa-trash, .feather-trash, svg[class*="trash" i]')
-                ?.closest('button');
-            }
-
-            if (deleteButton instanceof HTMLElement) {
-              deleteButton.click();
-            } else {
-              // Dispatch a custom event as fallback
-              const event = new CustomEvent('mail:delete', {
-                detail: { threadId, previousFolder, currentFolder },
-              });
-              window.dispatchEvent(event);
-              
-              // Also dispatch the general mail:action event for tracking
-              const actionEvent = new CustomEvent('mail:action', {
-                detail: { action: currentAction, threadId, previousFolder, currentFolder },
-              });
-              window.dispatchEvent(actionEvent);
-              
-              // Show toast with undo instructions
-              toast.success(`Email moved to trash`, {
-                description: 'Press ⌘⇧T to undo'
-              });
-              console.log('Triggered delete via custom event');
-            }
-          }
-          break;
-        case 'print':
-          if (inThreadView) {
-            window.print();
-          }
-          break;
-        case 'expand':
-          if (inThreadView) {
-            // Try finding the expand button
-            let expandButton = document.querySelector(
-              'button[aria-label*="fullscreen" i], button[aria-label*="Expand" i]',
-            );
-
-            if (!expandButton) {
-              // Try finding by icon
-              expandButton = document
-                .querySelector('.fa-expand, .feather-expand, svg[class*="expand" i]')
-                ?.closest('button');
-            }
-
-            if (expandButton instanceof HTMLElement) {
-              expandButton.click();
-            } else {
-              // Dispatch a custom event as fallback
-              const event = new CustomEvent('mail:expand', {
-                detail: { threadId },
-              });
-              window.dispatchEvent(event);
-              console.log('Triggered expand via custom event');
-            }
-          }
-          break;
-        case 'undo':
-          if (lastAction) {
-            if (lastAction.action === 'archive' || lastAction.action === 'delete' || lastAction.action === 'spam') {
-              // For actions that moved messages between folders, reverse the action
-              const threadIds = Array.isArray(lastAction.threadId) ? lastAction.threadId : [lastAction.threadId];
-              if (threadIds && lastAction.previousFolder) {
-                // Dispatch a custom event to reverse the action
-                const event = new CustomEvent('mail:undo', {
-                  detail: { 
-                    threadIds, 
-                    currentFolder: lastAction.currentFolder,
-                    destination: lastAction.previousFolder as 'inbox' | 'archive' | 'spam'
-                  },
-                });
-                window.dispatchEvent(event);
-                toast.success(`Undoing last action: ${lastAction.action}`);
-                // Clear last action after undoing
-                setLastAction(null);
-              }
-            } else {
-              toast.info(`Cannot undo action: ${lastAction.action}`);
-            }
+        // If in compose view, click the AI Assistant button
+        if (isComposing) {
+          const aiAssistantButton = document.querySelector('button[title*="Ask AI Assistant" i]');
+          if (aiAssistantButton instanceof HTMLElement) {
+            aiAssistantButton.click();
           } else {
-            toast.info('Nothing to undo');
+            // If AI button not found, navigate to compose
+            router.push('/mail/create');
           }
-          break;
-        case 'reply':
-          if (inThreadView) {
-            // Look for the ThreadActionButton with the reply icon/label
-            // First try with aria-label
-            let replyButton = document.querySelector('button[aria-label*="Reply" i]');
-
-            // If not found, try other selectors
-            if (!replyButton) {
-              // Try finding by icon class
-              replyButton = document
-                .querySelector('.fa-reply, .feather-reply, svg[class*="reply" i]')
-                ?.closest('button');
-            }
-
-            if (!replyButton) {
-              // Try finding any button with Reply text content
-              const buttons = Array.from(document.querySelectorAll('button'));
-              replyButton = buttons.find(
-                (btn) =>
-                  btn.textContent?.toLowerCase().includes('reply') ||
-                  btn.innerHTML.toLowerCase().includes('reply'),
-              );
-            }
-
-            // If all else fails, look for the reply composer's reply button at the bottom of thread
-            if (!replyButton) {
-              replyButton = document.querySelector(
-                '.ReplyCompose button, button:has(span:contains("Reply to"))',
-              );
-            }
-
-            // Click the button if found
-            if (replyButton instanceof HTMLElement) {
-              replyButton.click();
-            } else {
-              // Direct state manipulation as fallback - this might not work but we can try
-              // We're looking for a component that might have setIsReplyOpen function
-              const event = new CustomEvent('mail:reply', {
-                detail: { threadId },
-              });
-              window.dispatchEvent(event);
-              console.log('Triggered reply via custom event');
-            }
+        } 
+        // If in thread view, click Generate Email button
+        else if (inThreadView) {
+          // First open reply composer if not already open
+          const replyButton = document.querySelector('[aria-label="Reply"]');
+          if (replyButton instanceof HTMLElement) {
+            replyButton.click();
           }
-          break;
-        case 'forward':
-          if (inThreadView) {
-            // Forward is typically in the dropdown menu, so using a custom event is more reliable
-            const event = new CustomEvent('mail:forward', {
+          
+          // Give time for reply composer to render
+          setTimeout(() => {
+            // Find Generate Email button (it has a Sparkles icon within a group button)
+            const allButtons = Array.from(document.querySelectorAll('button'));
+            const generateButton = allButtons.find(button => {
+              const hasSparklesIcon = button.querySelector('.lucide-sparkles') !== null;
+              const buttonText = button.textContent || '';
+              return hasSparklesIcon && buttonText.includes('Generate Email');
+            });
+            
+            if (generateButton instanceof HTMLElement) {
+              generateButton.click();
+            }
+          }, 500);
+        }
+      },
+      
+      'search': () => {
+        // Focus search input or open search dialog
+        document.querySelector('[aria-label="Search"]')?.focus();
+      },
+      
+      'archive': () => {
+        const inThreadView = isViewingThread;
+        if (inThreadView && threadId) {
+          // Store current state for undo
+          const currentAction = 'archive';
+          const previousFolder = 'inbox'; // Assume archiving from inbox
+          const currentFolder = 'archive';
+          
+          // Update last action for undo functionality
+          setLastAction({
+            action: currentAction,
+            threadId,
+            previousFolder,
+            currentFolder
+          });
+          
+          // Try to find the archive button in thread display
+          const archiveSelectors = [
+            'button[aria-label*="Archive" i]',
+            '.fa-archive',
+            '.feather-archive',
+            'svg[class*="archive" i]'
+          ];
+          
+          const archiveButton = findButton(archiveSelectors) || 
+            document.querySelector(archiveSelectors[3])?.closest('button') as HTMLElement;
+
+          if (archiveButton) {
+            archiveButton.click();
+          } else {
+            // Dispatch a custom event as fallback
+            const event = new CustomEvent('mail:archive', {
+              detail: { threadId, previousFolder, currentFolder },
+            });
+            window.dispatchEvent(event);
+            
+            // Also dispatch the general mail:action event for tracking
+            const actionEvent = new CustomEvent('mail:action', {
+              detail: { action: currentAction, threadId, previousFolder, currentFolder },
+            });
+            window.dispatchEvent(actionEvent);
+            
+            // Show toast with undo instructions
+            toast.success(`Email archived`, {
+              description: 'Press ⌘⇧T to undo'
+            });
+          }
+        }
+      },
+      
+      'delete': () => {
+        const inThreadView = isViewingThread;
+        if (inThreadView && threadId) {
+          // Store current state for undo
+          const currentAction = 'delete';
+          // Determine the current folder based on the URL path
+          const currentPath = window.location.pathname;
+          const previousFolder = currentPath.includes('/archive') ? 'archive' : 'inbox';
+          const currentFolder = 'bin'; // Destination folder
+          
+          // Update last action for undo functionality
+          setLastAction({
+            action: currentAction,
+            threadId,
+            previousFolder,
+            currentFolder
+          });
+          
+          // Try to find a delete/trash button
+          const deleteSelectors = [
+            'button[aria-label*="Delete" i]', 
+            'button[aria-label*="Trash" i]',
+            '.fa-trash', 
+            '.feather-trash', 
+            'svg[class*="trash" i]'
+          ];
+          
+          const deleteButton = findButton(deleteSelectors) || 
+            document.querySelector(deleteSelectors[4])?.closest('button') as HTMLElement;
+
+          if (deleteButton) {
+            deleteButton.click();
+          } else {
+            // Dispatch a custom event as fallback
+            const event = new CustomEvent('mail:delete', {
+              detail: { threadId, previousFolder, currentFolder },
+            });
+            window.dispatchEvent(event);
+            
+            // Also dispatch the general mail:action event for tracking
+            const actionEvent = new CustomEvent('mail:action', {
+              detail: { action: currentAction, threadId, previousFolder, currentFolder },
+            });
+            window.dispatchEvent(actionEvent);
+            
+            // Show toast with undo instructions
+            toast.success(`Email moved to trash`, {
+              description: 'Press ⌘⇧T to undo'
+            });
+          }
+        }
+      },
+      
+      'print': () => {
+        if (isViewingThread) {
+          window.print();
+        }
+      },
+      
+      'expand': () => {
+        if (isViewingThread) {
+          // Try finding the expand button
+          const expandSelectors = [
+            'button[aria-label*="fullscreen" i]', 
+            'button[aria-label*="Expand" i]',
+            '.fa-expand', 
+            '.feather-expand', 
+            'svg[class*="expand" i]'
+          ];
+          
+          const expandButton = findButton(expandSelectors) || 
+            document.querySelector(expandSelectors[4])?.closest('button') as HTMLElement;
+
+          if (expandButton) {
+            expandButton.click();
+          } else {
+            // Dispatch a custom event as fallback
+            const event = new CustomEvent('mail:expand', {
               detail: { threadId },
             });
             window.dispatchEvent(event);
-            console.log('Triggered forward via custom event');
           }
-          break;
-        default:
-          console.log(`Action not implemented: ${action}`);
+        }
+      },
+      
+      'undo': () => {
+        if (lastAction) {
+          if (lastAction.action === 'archive' || lastAction.action === 'delete' || lastAction.action === 'spam') {
+            // For actions that moved messages between folders, reverse the action
+            const threadIds = Array.isArray(lastAction.threadId) ? lastAction.threadId : [lastAction.threadId];
+            if (threadIds && lastAction.previousFolder) {
+              // Dispatch a custom event to reverse the action
+              const event = new CustomEvent('mail:undo', {
+                detail: { 
+                  threadIds, 
+                  currentFolder: lastAction.currentFolder,
+                  destination: lastAction.previousFolder as 'inbox' | 'archive' | 'spam'
+                },
+              });
+              window.dispatchEvent(event);
+              toast.success(`Undoing last action: ${lastAction.action}`);
+              // Clear last action after undoing
+              setLastAction(null);
+            }
+          } else {
+            toast.info(`Cannot undo action: ${lastAction.action}`);
+          }
+        } else {
+          toast.info('Nothing to undo');
+        }
+      },
+      
+      'reply': () => {
+        if (isViewingThread) {
+          // Look for the ThreadActionButton with the reply icon/label
+          const replySelectors = [
+            'button[aria-label*="Reply" i]',
+            '.fa-reply', 
+            '.feather-reply', 
+            'svg[class*="reply" i]',
+            '.ReplyCompose button', 
+            'button:has(span:contains("Reply to"))'
+          ];
+          
+          // Try finding any button with Reply text content
+          let replyButton = findButton(replySelectors) || 
+            document.querySelector(replySelectors[3])?.closest('button') as HTMLElement;
+            
+          if (!replyButton) {
+            const buttons = Array.from(document.querySelectorAll('button'));
+            const textMatchButton = buttons.find(
+              (btn) =>
+                btn.textContent?.toLowerCase().includes('reply') ||
+                btn.innerHTML.toLowerCase().includes('reply'),
+            );
+            if (textMatchButton) replyButton = textMatchButton as HTMLElement;
+          }
+
+          // Click the button if found
+          if (replyButton) {
+            replyButton.click();
+          } else {
+            // Use custom event as fallback
+            const event = new CustomEvent('mail:reply', {
+              detail: { threadId },
+            });
+            window.dispatchEvent(event);
+          }
+        }
+      },
+      
+      'forward': () => {
+        if (isViewingThread) {
+          // Forward is typically in the dropdown menu, so using a custom event is more reliable
+          const event = new CustomEvent('mail:forward', {
+            detail: { threadId },
+          });
+          window.dispatchEvent(event);
+        }
+      },
+    };
+  }, [pathname, router, isComposing, isViewingThread, threadId, lastAction]);
+  
+  // Helper function to handle mail actions using the action handlers map
+  const handleMailAction = React.useCallback(
+    (action: string) => {
+      const handler = actionHandlers[action as keyof typeof actionHandlers];
+      if (handler) {
+        handler();
+      } else {
+        console.log(`Action not implemented: ${action}`);
       }
     },
-    [pathname, router, isComposing, isViewingThread, threadId],
+    [actionHandlers]
   );
 
   // Add keyboard shortcut handlers

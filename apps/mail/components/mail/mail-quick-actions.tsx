@@ -2,7 +2,7 @@
 
 import { moveThreadsTo, ThreadDestination } from '@/lib/thread-actions';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { Archive, Mail, Reply, Trash, Inbox, Undo } from 'lucide-react';
+import { Archive, Mail, Inbox, Undo } from 'lucide-react';
 import { markAsRead, markAsUnread } from '@/actions/mail';
 import { useCallback, memo, useState, useEffect } from 'react';
 import { cn, FOLDERS, LABELS } from '@/lib/utils';
@@ -38,16 +38,21 @@ export const MailQuickActions = memo(
     const router = useRouter();
     const searchParams = useSearchParams();
     const [isProcessing, setIsProcessing] = useState(false);
-    const [lastAction, setLastAction] = useState<{
+    
+    interface LastAction {
       action: string;
       threadId?: string;
       previousFolder?: string;
       currentFolder?: string;
       timestamp: number;
-    } | null>(null);
+    }
+    
+    const [lastAction, setLastAction] = useState<LastAction | null>(null);
     
     // Listen for actions that can be undone
     useEffect(() => {
+      let timeoutId: ReturnType<typeof setTimeout>;
+      
       const handleMailAction = (event: CustomEvent) => {
         const { action, threadId, currentFolder, previousFolder } = event.detail;
         
@@ -61,8 +66,11 @@ export const MailQuickActions = memo(
             timestamp: Date.now()
           });
           
+          // Clear any existing timeout
+          if (timeoutId) clearTimeout(timeoutId);
+          
           // Auto-clear the last action after 10 seconds
-          setTimeout(() => {
+          timeoutId = setTimeout(() => {
             setLastAction(null);
           }, 10000);
         }
@@ -72,6 +80,7 @@ export const MailQuickActions = memo(
       
       return () => {
         window.removeEventListener('mail:action', handleMailAction as EventListener);
+        if (timeoutId) clearTimeout(timeoutId);
       };
     }, [message.threadId, message.id]);
 
@@ -208,17 +217,28 @@ export const MailQuickActions = memo(
           });
           window.dispatchEvent(actionEvent);
           
-          // TODO: Implement actual delete functionality
-          toast.info(t('common.mail.moveToTrash'), {
-            description: 'Press ⌘⇧T to undo'
+          // Implement actual delete functionality by moving to bin
+          await moveThreadsTo({
+            threadIds: [`thread:${threadId}`],
+            currentFolder: currentFolder,
+            destination: 'bin' as ThreadDestination,
+          }).then(async () => {
+            await Promise.all([mutate(), mutateStats()]);
+            
+            toast.success(t('common.mail.moveToTrash'), {
+              description: 'Press ⌘⇧T to undo'
+            });
+            
+            closeThreadIfOpen();
           });
         } catch (error) {
           console.error('Error deleting thread', error);
+          toast.error(t('common.mail.errorMoving'));
         } finally {
           setIsProcessing(false);
         }
       },
-      [t, isProcessing, isLoading, message, currentFolder],
+      [t, isProcessing, isLoading, message, currentFolder, mutate, mutateStats, closeThreadIfOpen],
     );
 
     const handleQuickReply = useCallback(
