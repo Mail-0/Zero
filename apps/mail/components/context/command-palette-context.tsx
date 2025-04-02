@@ -78,6 +78,23 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
   const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
   const threadId = searchParams.get('threadId');
   const isViewingThread = pathname?.includes('/mail/') && !pathname?.includes('/mail/create') && threadId !== null;
+  
+  // Check if the reply composer is open
+  const [isReplyComposerOpen, setIsReplyComposerOpen] = React.useState(false);
+  
+  // Add event listeners to detect when reply composer opens/closes
+  React.useEffect(() => {
+    const handleReplyOpen = () => setIsReplyComposerOpen(true);
+    const handleReplyClose = () => setIsReplyComposerOpen(false);
+    
+    window.addEventListener('replyComposer:open', handleReplyOpen);
+    window.addEventListener('replyComposer:close', handleReplyClose);
+    
+    return () => {
+      window.removeEventListener('replyComposer:open', handleReplyOpen);
+      window.removeEventListener('replyComposer:close', handleReplyClose);
+    };
+  }, []);
 
   // Helper function to handle mail actions - moved up to fix declaration order
   const handleMailAction = React.useCallback(
@@ -424,7 +441,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                 <span>Use AI to write this email</span>
               </CommandItem>
             )}
-            {isViewingThread && (
+            {isViewingThread && isReplyComposerOpen && (
               <CommandItem onSelect={() => runCommand(() => handleMailAction('ai-compose'))}>
                 <Sparkles size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
                 <span>Generate AI reply</span>

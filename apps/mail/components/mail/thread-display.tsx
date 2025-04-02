@@ -232,6 +232,15 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
       setIsMuted(emailData[0].unread ?? false);
     }
   }, [emailData]);
+  
+  // Dispatch events for the reply/forward composer state
+  useEffect(() => {
+    if (isReplyOpen || isForwardOpen) {
+      window.dispatchEvent(new Event('replyComposer:open'));
+    } else {
+      window.dispatchEvent(new Event('replyComposer:close'));
+    }
+  }, [isReplyOpen, isForwardOpen]);
 
   const handleFavourites = async () => {
     if (!emailData || !threadId) return;

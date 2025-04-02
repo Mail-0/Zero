@@ -161,6 +161,13 @@ export default function ReplyCompose({
     } else {
       composerDispatch({ type: 'SET_COMPOSER_OPEN', payload: value });
     }
+    
+    // Dispatch custom events for command palette to detect reply composer state
+    if (value) {
+      window.dispatchEvent(new Event('replyComposer:open'));
+    } else {
+      window.dispatchEvent(new Event('replyComposer:close'));
+    }
   };
 
   // Handle keyboard shortcuts for sending email
