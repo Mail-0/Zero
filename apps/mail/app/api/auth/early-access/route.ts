@@ -60,7 +60,9 @@ export async function POST(req: NextRequest) {
 
     console.log('Request body:', body);
 
-    const { email } = body;
+    const { email: rawEmail } = body as { email: string };
+
+    const email = rawEmail.trim().toLowerCase();
 
     if (!email) {
       console.log('Email missing from request');

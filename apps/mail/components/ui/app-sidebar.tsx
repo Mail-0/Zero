@@ -5,8 +5,6 @@ import { Sidebar, SidebarContent, SidebarHeader } from '@/components/ui/sidebar'
 import { navigationConfig } from '@/config/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSidebar } from '@/components/ui/sidebar';
-import FeaturebaseWidget from './featurebase-widget';
-import FeaturebaseButton from './featurebase-button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import React, { useMemo, useRef } from 'react';
 import { usePathname } from 'next/navigation';
@@ -60,9 +58,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <>
-      <FeaturebaseWidget organization="0email" theme="dark" />
-      <FeaturebaseButton />
-
       <Sidebar
         collapsible="icon"
         {...props}
