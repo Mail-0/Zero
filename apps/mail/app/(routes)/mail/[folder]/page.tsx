@@ -16,7 +16,7 @@ export default async function MailPage({ params }: MailPageProps) {
   const session = await auth.api.getSession({ headers: headersList });
   
   if (!session) {
-    redirect('/');
+    redirect('/login');
   }
 
   const { folder } = await params;
