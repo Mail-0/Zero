@@ -11,8 +11,8 @@
       "signingOut": "Izrakstīšanās...",
       "signedOutSuccess": "Veiksmīgi izrakstījies!",
       "signOutError": "Kļūda, izrakstoties no sistēmas",
-      "refresh": "Refresh",
-      "loading": "Loading..."
+      "refresh": "Atjaunot",
+      "loading": "Ielādē..."
     },
     "themes": {
       "dark": "Tumšs",
@@ -230,7 +230,7 @@
       "labels": "Iezīmes",
       "createNewLabel": "Izveidot jaunu iezīmi",
       "noLabelsAvailable": "Nav pieejamas iezīmes",
-      "loadMore": "Load more"
+      "loadMore": "Ielādēt vairāk"
     }
   },
   "navigation": {

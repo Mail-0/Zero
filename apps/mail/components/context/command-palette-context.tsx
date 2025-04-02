@@ -335,6 +335,16 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     const settingsCommands: { group: string; item: NavItem }[] = [];
     const otherCommands: { group: string; item: NavItem }[] = [];
 
+    // Add compose message as first mail command
+    mailCommands.push({
+      group: 'mail',
+      item: {
+        title: 'common.commandPalette.commands.composeMessage',
+        url: '/mail/create',
+        icon: Pencil
+      }
+    });
+
     for (const sectionKey in navigationConfig) {
       const section = navigationConfig[sectionKey];
       section?.sections.forEach((group) => {
@@ -556,6 +566,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           <CommandSeparator />
 
           {/* Navigation */}
+
           {allCommands.map((group, groupIndex) => (
             <React.Fragment key={groupIndex}>
               {group.items.length > 0 && (
@@ -573,7 +584,9 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                         <item.icon
                           size={16}
                           strokeWidth={2}
+
                           className="opacity-70"
+
                           aria-hidden="true"
                         />
                       )}

@@ -61,12 +61,12 @@ export default function SecurityPage() {
       >
         <Form {...form}>
           <form id="security-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="flex w-full items-center gap-5">
+            <div className="flex flex-col md:flex-row w-full items-center gap-5">
               <FormField
                 control={form.control}
                 name="twoFactorAuth"
                 render={({ field }) => (
-                  <FormItem className="bg-popover flex flex-row items-center justify-between rounded-lg border p-4">
+                  <FormItem className="bg-popover flex flex-row items-center justify-between rounded-lg border p-4 w-full md:w-auto">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">
                         {t('pages.settings.security.twoFactorAuth')}
@@ -85,7 +85,7 @@ export default function SecurityPage() {
                 control={form.control}
                 name="loginNotifications"
                 render={({ field }) => (
-                  <FormItem className="bg-popover flex flex-row items-center justify-between rounded-lg border p-4">
+                  <FormItem className="bg-popover flex flex-row items-center justify-between rounded-lg border p-4 w-full md:w-auto">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">
                         {t('pages.settings.security.loginNotifications')}

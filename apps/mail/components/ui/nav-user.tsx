@@ -227,8 +227,8 @@ export function NavUser() {
                   <p className="text-[13px] opacity-60">{t('common.navUser.appTheme')}</p>
                 </div>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push('/support')}>
-                <a href="https://discord.com/0email" target="_blank" className="w-full">
+              <DropdownMenuItem>
+                <a href="https://discord.gg/0email" target="_blank" className="w-full">
                   <div className="flex items-center gap-2">
                     <HelpCircle size={16} className="opacity-60" />
                     <p className="text-[13px] opacity-60">{t('common.navUser.customerSupport')}</p>

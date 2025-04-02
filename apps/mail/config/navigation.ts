@@ -90,8 +90,8 @@ export const navigationConfig: Record<string, NavConfig> = {
             isSettingsButton: true,
           },
           {
-            id:'contact',
-            title: "navigation.sidebar.contact",
+            id:'feedback',
+            title: "navigation.sidebar.feedback",
             url: "#",
             icon: MessageSquareIcon,
             isFeaturebaseButton: true,

@@ -19,7 +19,7 @@ export default function ThreadSubject({ subject }: ThreadSubjectProps) {
           <span
             ref={textRef}
             className={cn(
-              'line-clamp-1 block max-w-[30ch] cursor-pointer truncate font-semibold md:max-w-[50ch]',
+              'line-clamp-1 cursor-pointer font-semibold md:max-w-[50ch]',
               !subject && 'opacity-50',
             )}
           >
