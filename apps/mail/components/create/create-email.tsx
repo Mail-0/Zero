@@ -286,6 +286,37 @@ export function CreateEmail() {
     return () => document.removeEventListener('keydown', handleKeyPress);
   }, []);
 
+  const handleEmailEdit = (event: React.FocusEvent<HTMLInputElement>): void => {
+    if (editingEmailIndex === null) return;
+
+    const newEmail = event.target.value.trim();
+
+    // Clear email entry if edit input is empty
+    if (!newEmail) {
+      setToEmails((emails) => emails.filter((_, index) => index !== editingEmailIndex));
+      setEditingEmailIndex(null);
+      setEditingEmailValue('');
+      setHasUnsavedChanges(true);
+      return;
+    }
+
+    // Check email validity
+    if (!isValidEmail(newEmail)) {
+      event.preventDefault();
+      toast.error(`Invalid email format: ${newEmail}`);
+      event.target.focus();
+      return;
+    }
+
+    // Update email only if format is valid
+    setToEmails((emails) =>
+      emails.map((email, index) => (index === editingEmailIndex ? newEmail : email))
+    );
+    setHasUnsavedChanges(true);
+    setEditingEmailIndex(null);
+    setEditingEmailValue('');
+  };
+
   return (
     <div
       className="bg-offsetLight dark:bg-offsetDark relative flex h-full flex-col overflow-hidden shadow-inner md:rounded-2xl md:border md:shadow-sm"
@@ -325,18 +356,7 @@ export function CreateEmail() {
                           className="bg-accent max-w-[120px] focus:outline-none"
                           value={editingEmailValue}
                           onChange={(e) => setEditingEmailValue(e.target.value)}
-                          onBlur={() => {
-                            const newEmail = editingEmailValue.trim();
-                            if (isValidEmail(newEmail) && newEmail !== email) {
-                              setToEmails((emails) => {
-                                const newEmails = [...emails];
-                                newEmails[index] = newEmail;
-                                return newEmails;
-                              });
-                              setHasUnsavedChanges(true);
-                            }
-                            setEditingEmailIndex(null);
-                          }}
+                          onBlur={handleEmailEdit}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
