@@ -6,7 +6,6 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { enhanceSearchQuery } from '@/actions/ai-search';
 import { Calendar } from '@/components/ui/calendar';
-import { Search, CalendarIcon } from 'lucide-react';
 import { type DateRange } from 'react-day-picker';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
