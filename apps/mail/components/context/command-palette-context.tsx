@@ -23,7 +23,11 @@ import {
   Printer,
   Sun,
   Moon,
+  Sparkles,
+  BrainCircuit,
+  Wand2,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useOpenComposeModal } from '@/hooks/use-open-compose-modal';
 import { navigationConfig, type NavItem } from '@/config/navigation';
@@ -64,40 +68,62 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   // Only enable command palette in app routes
-  const isAppRoute = React.useMemo(() => {
-    return (
-      pathname?.startsWith('/mail') ||
-      pathname?.startsWith('/settings') ||
-      pathname?.startsWith('/create')
-    );
-  }, [pathname]);
+  // Simple check for app route, no need to memoize
+  const isAppRoute = pathname?.startsWith('/mail') || pathname?.startsWith('/settings') || pathname?.startsWith('/create');
+  
+  // Check if user is composing a new email
+  const isComposing = pathname?.includes('/mail/create') || pathname?.includes('/create');
 
-  React.useEffect(() => {
-    if (!isAppRoute) return;
+  // Check if viewing a thread - using a single searchParams initialization outside useMemo
+  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const threadId = searchParams.get('threadId');
+  const isViewingThread = pathname?.includes('/mail/') && !pathname?.includes('/mail/create') && threadId !== null;
 
-    const down = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        setOpen((prevOpen) => !prevOpen);
-      }
-    };
-
-    document.addEventListener('keydown', down);
-    return () => document.removeEventListener('keydown', down);
-  }, [isAppRoute]);
-
-  // Helper function to handle mail actions
+  // Helper function to handle mail actions - moved up to fix declaration order
   const handleMailAction = React.useCallback(
     (action: string) => {
-      // Check for a thread parameter in the URL to determine if we're viewing an email
-      const searchParams = new URLSearchParams(window.location.search);
-      const threadId = searchParams.get('threadId');
-
-      // A user is viewing a specific thread if in mail path and has threadId parameter
-      const inThreadView =
-        pathname.includes('/mail/') && !pathname.includes('/mail/create') && threadId !== null;
+      // Using the thread ID already retrieved above, no need to parse URL again
+      const inThreadView = isViewingThread;
 
       switch (action) {
+        // AI Actions
+        case 'ai-compose':
+          // If in compose view, click the AI Assistant button
+          if (isComposing) {
+            const aiAssistantButton = document.querySelector('button[title*="Ask AI Assistant" i]');
+            if (aiAssistantButton instanceof HTMLElement) {
+              aiAssistantButton.click();
+            } else {
+              // If AI button not found, navigate to compose
+              router.push('/mail/create');
+            }
+          } 
+          // If in thread view, click Generate Email button
+          else if (inThreadView) {
+            // First open reply composer if not already open
+            const replyButton = document.querySelector('[aria-label="Reply"]');
+            if (replyButton instanceof HTMLElement) {
+              replyButton.click();
+            }
+            
+            // Give time for reply composer to render
+            setTimeout(() => {
+              // Find Generate Email button (it has a Sparkles icon within a group button)
+              const allButtons = Array.from(document.querySelectorAll('button'));
+              const generateButton = allButtons.find(button => {
+                const hasSparklesIcon = button.querySelector('.lucide-sparkles') !== null;
+                const buttonText = button.textContent || '';
+                return hasSparklesIcon && buttonText.includes('Generate Email');
+              });
+              
+              if (generateButton instanceof HTMLElement) {
+                generateButton.click();
+              }
+            }, 500);
+          }
+          break;
+        
+        // Regular mail actions
         case 'search':
           // Focus search input or open search dialog
           document.querySelector('[aria-label="Search"]')?.focus();
@@ -246,8 +272,24 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           console.log(`Action not implemented: ${action}`);
       }
     },
-    [pathname],
+    [pathname, router, isComposing, isViewingThread, threadId],
   );
+
+  // Add keyboard shortcut handlers
+  React.useEffect(() => {
+    if (!isAppRoute) return;
+
+    const down = (e: KeyboardEvent) => {
+      // Open command palette
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setOpen((prevOpen) => !prevOpen);
+      }
+    };
+
+    document.addEventListener('keydown', down);
+    return () => document.removeEventListener('keydown', down);
+  }, [isAppRoute]);
 
   const runCommand = React.useCallback((command: () => unknown) => {
     setOpen(false);
@@ -256,23 +298,21 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
 
   const t = useTranslations();
 
-  // Use memoized shortcuts to ensure updates are reflected
-  const memoizedShortcuts = React.useMemo(() => keyboardShortcuts, []);
+  // Shortcuts are a static import, no need to memoize
+  const memoizedShortcuts = keyboardShortcuts;
 
-  // Define actions that should be excluded from navigation items to prevent duplication
-  const actionPaths = React.useMemo(
-    () => [
-      '/mail/inbox', // Inbox
-      '/mail/archive', // Archive
-      '/mail/create', // Compose
-      '/mail/draft', // Drafts
-      '/mail/sent', // Sent
-      '/mail/spam', // Spam
-      '/mail/bin', // Bin/Trash
-    ],
-    [],
-  );
+  // Define static action paths, no need to memoize
+  const actionPaths = [
+    '/mail/inbox', // Inbox
+    '/mail/archive', // Archive
+    '/mail/create', // Compose
+    '/mail/draft', // Drafts
+    '/mail/sent', // Sent
+    '/mail/spam', // Spam
+    '/mail/bin', // Bin/Trash
+  ];
 
+  // Use the original implementation to avoid breaking changes
   const allCommands = React.useMemo(() => {
     const mailCommands: { group: string; item: NavItem }[] = [];
     const settingsCommands: { group: string; item: NavItem }[] = [];
@@ -338,7 +378,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     });
 
     return filteredCommands;
-  }, [pathname, t, actionPaths]);
+  }, [pathname, t]);
 
   // Only render command palette in app routes
   if (!isAppRoute) {
@@ -375,6 +415,25 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         <CommandList>
           <CommandEmpty>{t('common.commandPalette.noResults')}</CommandEmpty>
 
+          {/* AI Actions - Context-aware */}
+          <CommandGroup heading="AI Assistant">
+            {/* Show context-aware AI action based on view */}
+            {isComposing && (
+              <CommandItem onSelect={() => runCommand(() => handleMailAction('ai-compose'))}>
+                <Sparkles size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+                <span>Use AI to write this email</span>
+              </CommandItem>
+            )}
+            {isViewingThread && (
+              <CommandItem onSelect={() => runCommand(() => handleMailAction('ai-compose'))}>
+                <Sparkles size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+                <span>Generate AI reply</span>
+              </CommandItem>
+            )}
+          </CommandGroup>
+
+          <CommandSeparator />
+
           {/* Quick Actions */}
           <CommandGroup heading="Actions">
             <CommandItem onSelect={() => runCommand(() => router.push('/mail/create'))}>
@@ -388,85 +447,73 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             </CommandItem>
 
             {/* Check if in thread view to show email-specific actions */}
-            {(() => {
-              // Check for a thread parameter in the URL to determine if we're viewing an email
-              const searchParams = new URLSearchParams(window.location.search);
-              const threadId = searchParams.get('threadId');
+            {isViewingThread && (
+              <>
+                <CommandItem onSelect={() => runCommand(() => handleMailAction('reply'))}>
+                  <Reply size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+                  <span>Reply</span>
+                  <CommandShortcut>
+                    {memoizedShortcuts
+                      .find((s: { action: string; keys: string[] }) => s.action === 'reply')
+                      ?.keys.join(' ')}
+                  </CommandShortcut>
+                </CommandItem>
 
-              // A user is viewing a specific thread if in mail path and has threadId parameter
-              const inThreadView =
-                pathname.includes('/mail/') &&
-                !pathname.includes('/mail/create') &&
-                threadId !== null;
+                <CommandItem onSelect={() => runCommand(() => handleMailAction('forward'))}>
+                  <Forward size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+                  <span>Forward</span>
+                  <CommandShortcut>
+                    {memoizedShortcuts
+                      .find((s: { action: string; keys: string[] }) => s.action === 'forward')
+                      ?.keys.join(' ')}
+                  </CommandShortcut>
+                </CommandItem>
 
-              return inThreadView ? (
-                <>
-                  <CommandItem onSelect={() => runCommand(() => handleMailAction('reply'))}>
-                    <Reply size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
-                    <span>Reply</span>
-                    <CommandShortcut>
-                      {memoizedShortcuts
-                        .find((s: { action: string; keys: string[] }) => s.action === 'reply')
-                        ?.keys.join(' ')}
-                    </CommandShortcut>
-                  </CommandItem>
+                <CommandItem onSelect={() => runCommand(() => handleMailAction('archive'))}>
+                  <Archive size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+                  <span>Archive</span>
+                  <CommandShortcut>
+                    {memoizedShortcuts
+                      .find(
+                        (s: { action: string; keys: string[] }) => s.action === 'archiveEmail',
+                      )
+                      ?.keys.join(' ')}
+                  </CommandShortcut>
+                </CommandItem>
 
-                  <CommandItem onSelect={() => runCommand(() => handleMailAction('forward'))}>
-                    <Forward size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
-                    <span>Forward</span>
-                    <CommandShortcut>
-                      {memoizedShortcuts
-                        .find((s: { action: string; keys: string[] }) => s.action === 'forward')
-                        ?.keys.join(' ')}
-                    </CommandShortcut>
-                  </CommandItem>
+                <CommandItem onSelect={() => runCommand(() => handleMailAction('delete'))}>
+                  <Trash size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+                  <span>Delete</span>
+                  <CommandShortcut>
+                    {memoizedShortcuts
+                      .find((s: { action: string; keys: string[] }) => s.action === 'delete')
+                      ?.keys.join(' ')}
+                  </CommandShortcut>
+                </CommandItem>
 
-                  <CommandItem onSelect={() => runCommand(() => handleMailAction('archive'))}>
-                    <Archive size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
-                    <span>Archive</span>
-                    <CommandShortcut>
-                      {memoizedShortcuts
-                        .find(
-                          (s: { action: string; keys: string[] }) => s.action === 'archiveEmail',
-                        )
-                        ?.keys.join(' ')}
-                    </CommandShortcut>
-                  </CommandItem>
+                <CommandItem onSelect={() => runCommand(() => handleMailAction('print'))}>
+                  <Printer size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+                  <span>Print</span>
+                  <CommandShortcut>
+                    {memoizedShortcuts
+                      .find((s: { action: string; keys: string[] }) => s.action === 'printEmail')
+                      ?.keys.join(' ')}
+                  </CommandShortcut>
+                </CommandItem>
 
-                  <CommandItem onSelect={() => runCommand(() => handleMailAction('delete'))}>
-                    <Trash size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
-                    <span>Delete</span>
-                    <CommandShortcut>
-                      {memoizedShortcuts
-                        .find((s: { action: string; keys: string[] }) => s.action === 'delete')
-                        ?.keys.join(' ')}
-                    </CommandShortcut>
-                  </CommandItem>
-
-                  <CommandItem onSelect={() => runCommand(() => handleMailAction('print'))}>
-                    <Printer size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
-                    <span>Print</span>
-                    <CommandShortcut>
-                      {memoizedShortcuts
-                        .find((s: { action: string; keys: string[] }) => s.action === 'printEmail')
-                        ?.keys.join(' ')}
-                    </CommandShortcut>
-                  </CommandItem>
-
-                  <CommandItem onSelect={() => runCommand(() => handleMailAction('expand'))}>
-                    <Expand size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
-                    <span>Expand view</span>
-                    <CommandShortcut>
-                      {memoizedShortcuts
-                        .find(
-                          (s: { action: string; keys: string[] }) => s.action === 'expandEmailView',
-                        )
-                        ?.keys.join(' ')}
-                    </CommandShortcut>
-                  </CommandItem>
-                </>
-              ) : null;
-            })()}
+                <CommandItem onSelect={() => runCommand(() => handleMailAction('expand'))}>
+                  <Expand size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+                  <span>Expand view</span>
+                  <CommandShortcut>
+                    {memoizedShortcuts
+                      .find(
+                        (s: { action: string; keys: string[] }) => s.action === 'expandEmailView',
+                      )
+                      ?.keys.join(' ')}
+                  </CommandShortcut>
+                </CommandItem>
+              </>
+            )}
 
             <CommandItem onSelect={() => runCommand(() => handleMailAction('search'))}>
               <Search size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
