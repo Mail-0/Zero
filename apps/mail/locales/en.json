@@ -233,6 +233,8 @@
       "moving": "Moving...",
       "moved": "Moved",
       "errorMoving": "Error moving",
+      "undoSuccess": "Action undone successfully",
+      "undoError": "Failed to undo action",
       "reply": "Reply",
       "replyAll": "Reply All",
       "forward": "Forward",

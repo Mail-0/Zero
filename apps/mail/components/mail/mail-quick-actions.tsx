@@ -2,9 +2,9 @@
 
 import { moveThreadsTo, ThreadDestination } from '@/lib/thread-actions';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { Archive, Mail, Reply, Trash, Inbox } from 'lucide-react';
+import { Archive, Mail, Reply, Trash, Inbox, Undo } from 'lucide-react';
 import { markAsRead, markAsUnread } from '@/actions/mail';
-import { useCallback, memo, useState } from 'react';
+import { useCallback, memo, useState, useEffect } from 'react';
 import { cn, FOLDERS, LABELS } from '@/lib/utils';
 import { useThreads } from '@/hooks/use-threads';
 import { Button } from '@/components/ui/button';
@@ -38,6 +38,42 @@ export const MailQuickActions = memo(
     const router = useRouter();
     const searchParams = useSearchParams();
     const [isProcessing, setIsProcessing] = useState(false);
+    const [lastAction, setLastAction] = useState<{
+      action: string;
+      threadId?: string;
+      previousFolder?: string;
+      currentFolder?: string;
+      timestamp: number;
+    } | null>(null);
+    
+    // Listen for actions that can be undone
+    useEffect(() => {
+      const handleMailAction = (event: CustomEvent) => {
+        const { action, threadId, currentFolder, previousFolder } = event.detail;
+        
+        // Check if this action is for the current message
+        if (threadId === message.threadId || threadId === message.id) {
+          setLastAction({ 
+            action, 
+            threadId, 
+            currentFolder, 
+            previousFolder,
+            timestamp: Date.now()
+          });
+          
+          // Auto-clear the last action after 10 seconds
+          setTimeout(() => {
+            setLastAction(null);
+          }, 10000);
+        }
+      };
+      
+      window.addEventListener('mail:action', handleMailAction as EventListener);
+      
+      return () => {
+        window.removeEventListener('mail:action', handleMailAction as EventListener);
+      };
+    }, [message.threadId, message.id]);
 
     const currentFolder = folder ?? '';
     const isInbox = currentFolder === FOLDERS.INBOX;
@@ -68,6 +104,18 @@ export const MailQuickActions = memo(
           const threadId = message.threadId ?? message.id;
           const destination = isArchiveFolder ? FOLDERS.INBOX : FOLDERS.ARCHIVE;
 
+          // Record action for undo capability
+          const actionType = isArchiveFolder ? 'unarchive' : 'archive';
+          const actionEvent = new CustomEvent('mail:action', {
+            detail: { 
+              action: actionType, 
+              threadId: threadId,
+              previousFolder: currentFolder,
+              currentFolder: destination
+            },
+          });
+          window.dispatchEvent(actionEvent);
+          
           await moveThreadsTo({
             threadIds: [`thread:${threadId}`],
             currentFolder: currentFolder,
@@ -75,8 +123,9 @@ export const MailQuickActions = memo(
           }).then(async () => {
             await Promise.all([mutate(), mutateStats()]);
 
-            const actionType = isArchiveFolder ? 'unarchive' : 'archive';
-            toast.success(t(`common.mail.${actionType}`));
+            toast.success(t(`common.mail.${actionType}`), {
+              description: 'Press ⌘⇧T to undo'
+            });
 
             closeThreadIfOpen();
           });
@@ -141,10 +190,35 @@ export const MailQuickActions = memo(
 
     const handleDelete = useCallback(
       async (e?: React.MouseEvent) => {
-        // TODO: Implement delete
-        toast.info(t('common.mail.moveToTrash'));
+        e?.stopPropagation();
+        if (isProcessing || isLoading) return;
+
+        setIsProcessing(true);
+        try {
+          const threadId = message.threadId ?? message.id;
+          
+          // Record action for undo capability
+          const actionEvent = new CustomEvent('mail:action', {
+            detail: { 
+              action: 'delete', 
+              threadId: threadId,
+              previousFolder: currentFolder,
+              currentFolder: 'bin'
+            },
+          });
+          window.dispatchEvent(actionEvent);
+          
+          // TODO: Implement actual delete functionality
+          toast.info(t('common.mail.moveToTrash'), {
+            description: 'Press ⌘⇧T to undo'
+          });
+        } catch (error) {
+          console.error('Error deleting thread', error);
+        } finally {
+          setIsProcessing(false);
+        }
       },
-      [t],
+      [t, isProcessing, isLoading, message, currentFolder],
     );
 
     const handleQuickReply = useCallback(
@@ -154,8 +228,52 @@ export const MailQuickActions = memo(
       },
       [t],
     );
+    
+    const handleUndo = useCallback(
+      async (e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        if (isProcessing || isLoading || !lastAction) return;
+        
+        setIsProcessing(true);
+        try {
+          const { threadId, previousFolder, currentFolder: actionFolder } = lastAction;
+          
+          if (threadId && previousFolder) {
+            // Dispatch undo event
+            const event = new CustomEvent('mail:undo', {
+              detail: { 
+                threadIds: Array.isArray(threadId) ? threadId : [threadId], 
+                currentFolder: actionFolder,
+                destination: previousFolder as ThreadDestination
+              },
+            });
+            window.dispatchEvent(event);
+            
+            // Clear the last action
+            setLastAction(null);
+            
+            // Refresh the mail list after the undo operation
+            await Promise.all([mutate(), mutateStats()]);
+            toast.success(t('common.mail.undoSuccess'));
+          }
+        } catch (error) {
+          console.error('Error undoing action', error);
+          toast.error(t('common.mail.undoError'));
+        } finally {
+          setIsProcessing(false);
+        }
+      },
+      [lastAction, t, isProcessing, isLoading, mutate, mutateStats],
+    );
 
     const quickActions = [
+      // Only show undo button if there's a recent action to undo
+      ...(lastAction ? [{
+        action: handleUndo,
+        icon: Undo,
+        label: `Undo ${lastAction.action}`,
+        disabled: false,
+      }] : []),
       {
         action: handleArchive,
         icon: isArchiveFolder || !isInbox ? Inbox : Archive,

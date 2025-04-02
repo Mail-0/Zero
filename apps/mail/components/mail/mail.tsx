@@ -225,6 +225,8 @@ export function MailLayout() {
   const { data: session, isPending } = useSession();
   const t = useTranslations();
   const prevFolderRef = useRef(folder);
+  const { isLoading, isValidating, mutate: mutateThreads } = useThreads();
+  const { mutate: mutateStats } = useStats();
 
   useEffect(() => {
     if (prevFolderRef.current !== folder && mail.bulkSelected.length > 0) {
@@ -238,8 +240,36 @@ export function MailLayout() {
       router.push('/login');
     }
   }, [session?.user, isPending]);
-
-  const { isLoading, isValidating } = useThreads();
+  
+  // Add event listener for undo operations
+  useEffect(() => {
+    const handleUndo = async (event: CustomEvent) => {
+      const { threadIds, currentFolder, destination } = event.detail;
+      
+      if (threadIds && destination) {
+        try {
+          await moveThreadsTo({
+            threadIds,
+            currentFolder: currentFolder || folder,
+            destination,
+          });
+          
+          // Refresh data after the undo operation
+          await Promise.all([mutateThreads(), mutateStats()]);
+          toast.success(t('common.mail.undoSuccess'));
+        } catch (error) {
+          console.error('Error undoing action', error);
+          toast.error(t('common.mail.undoError'));
+        }
+      }
+    };
+    
+    window.addEventListener('mail:undo', handleUndo as EventListener);
+    
+    return () => {
+      window.removeEventListener('mail:undo', handleUndo as EventListener);
+    };
+  }, [folder, mutateThreads, mutateStats, t]);
 
   const isDesktop = useMediaQuery('(min-width: 768px)');
 
@@ -538,11 +568,29 @@ function BulkSelectActions() {
               className="md:h-fit md:px-2"
               onClick={() => {
                 if (mail.bulkSelected.length === 0) return;
+                
+                // Record action for undo capability
+                const actionEvent = new CustomEvent('mail:action', {
+                  detail: { 
+                    action: action, 
+                    threadId: mail.bulkSelected,
+                    previousFolder: folder,
+                    currentFolder: action
+                  },
+                });
+                window.dispatchEvent(actionEvent);
+                
                 moveThreadsTo({
                   threadIds: mail.bulkSelected,
                   currentFolder: folder,
                   destination: action,
-                }).then(onMoveSuccess);
+                }).then(() => {
+                  // Show toast with undo instructions
+                  toast.success(`${mail.bulkSelected.length} emails moved to ${action}`, {
+                    description: 'Press ⌘⇧T to undo'
+                  });
+                  onMoveSuccess();
+                });
               }}
             >
               {actionButtons[action].icon}

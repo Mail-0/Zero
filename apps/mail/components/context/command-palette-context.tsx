@@ -82,17 +82,33 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
   // Check if the reply composer is open
   const [isReplyComposerOpen, setIsReplyComposerOpen] = React.useState(false);
   
+  // Track recent mail actions for undo functionality
+  const [lastAction, setLastAction] = React.useState<{
+    action: string;
+    threadId?: string | string[];
+    currentFolder?: string;
+    previousFolder?: string;
+  } | null>(null);
+  
   // Add event listeners to detect when reply composer opens/closes
   React.useEffect(() => {
     const handleReplyOpen = () => setIsReplyComposerOpen(true);
     const handleReplyClose = () => setIsReplyComposerOpen(false);
     
+    // Listen for custom events that track mail actions
+    const handleMailAction = (event: CustomEvent) => {
+      const { action, threadId, currentFolder, previousFolder } = event.detail;
+      setLastAction({ action, threadId, currentFolder, previousFolder });
+    };
+    
     window.addEventListener('replyComposer:open', handleReplyOpen);
     window.addEventListener('replyComposer:close', handleReplyClose);
+    window.addEventListener('mail:action', handleMailAction as EventListener);
     
     return () => {
       window.removeEventListener('replyComposer:open', handleReplyOpen);
       window.removeEventListener('replyComposer:close', handleReplyClose);
+      window.removeEventListener('mail:action', handleMailAction as EventListener);
     };
   }, []);
 
@@ -147,6 +163,19 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           break;
         case 'archive':
           if (inThreadView && threadId) {
+            // Store current state for undo
+            const currentAction = 'archive';
+            const previousFolder = 'inbox'; // Assume archiving from inbox
+            const currentFolder = 'archive';
+            
+            // Update last action for undo functionality
+            setLastAction({
+              action: currentAction,
+              threadId,
+              previousFolder,
+              currentFolder
+            });
+            
             // Try to find the archive button in thread display
             let archiveButton = document.querySelector('button[aria-label*="Archive" i]');
 
@@ -162,15 +191,41 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             } else {
               // Dispatch a custom event as fallback
               const event = new CustomEvent('mail:archive', {
-                detail: { threadId },
+                detail: { threadId, previousFolder, currentFolder },
               });
               window.dispatchEvent(event);
+              
+              // Also dispatch the general mail:action event for tracking
+              const actionEvent = new CustomEvent('mail:action', {
+                detail: { action: currentAction, threadId, previousFolder, currentFolder },
+              });
+              window.dispatchEvent(actionEvent);
+              
+              // Show toast with undo instructions
+              toast.success(`Email archived`, {
+                description: 'Press ⌘⇧T to undo'
+              });
               console.log('Triggered archive via custom event');
             }
           }
           break;
         case 'delete':
           if (inThreadView && threadId) {
+            // Store current state for undo
+            const currentAction = 'delete';
+            // Determine the current folder based on the URL path
+            const currentPath = window.location.pathname;
+            const previousFolder = currentPath.includes('/archive') ? 'archive' : 'inbox';
+            const currentFolder = 'bin'; // Destination folder
+            
+            // Update last action for undo functionality
+            setLastAction({
+              action: currentAction,
+              threadId,
+              previousFolder,
+              currentFolder
+            });
+            
             // Try to find a delete/trash button
             let deleteButton = document.querySelector(
               'button[aria-label*="Delete" i], button[aria-label*="Trash" i]',
@@ -188,9 +243,20 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             } else {
               // Dispatch a custom event as fallback
               const event = new CustomEvent('mail:delete', {
-                detail: { threadId },
+                detail: { threadId, previousFolder, currentFolder },
               });
               window.dispatchEvent(event);
+              
+              // Also dispatch the general mail:action event for tracking
+              const actionEvent = new CustomEvent('mail:action', {
+                detail: { action: currentAction, threadId, previousFolder, currentFolder },
+              });
+              window.dispatchEvent(actionEvent);
+              
+              // Show toast with undo instructions
+              toast.success(`Email moved to trash`, {
+                description: 'Press ⌘⇧T to undo'
+              });
               console.log('Triggered delete via custom event');
             }
           }
@@ -227,8 +293,30 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           }
           break;
         case 'undo':
-          // Call undo function when implemented
-          console.log('Undo action triggered');
+          if (lastAction) {
+            if (lastAction.action === 'archive' || lastAction.action === 'delete' || lastAction.action === 'spam') {
+              // For actions that moved messages between folders, reverse the action
+              const threadIds = Array.isArray(lastAction.threadId) ? lastAction.threadId : [lastAction.threadId];
+              if (threadIds && lastAction.previousFolder) {
+                // Dispatch a custom event to reverse the action
+                const event = new CustomEvent('mail:undo', {
+                  detail: { 
+                    threadIds, 
+                    currentFolder: lastAction.currentFolder,
+                    destination: lastAction.previousFolder as 'inbox' | 'archive' | 'spam'
+                  },
+                });
+                window.dispatchEvent(event);
+                toast.success(`Undoing last action: ${lastAction.action}`);
+                // Clear last action after undoing
+                setLastAction(null);
+              }
+            } else {
+              toast.info(`Cannot undo action: ${lastAction.action}`);
+            }
+          } else {
+            toast.info('Nothing to undo');
+          }
           break;
         case 'reply':
           if (inThreadView) {
@@ -302,11 +390,22 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         e.preventDefault();
         setOpen((prevOpen) => !prevOpen);
       }
+      
+      // Handle undo shortcut (Cmd+Shift+T)
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 't') {
+        e.preventDefault();
+        // Only trigger if there's an action that can be undone
+        if (lastAction) {
+          handleMailAction('undo');
+        } else {
+          toast.info('Nothing to undo');
+        }
+      }
     };
 
     document.addEventListener('keydown', down);
     return () => document.removeEventListener('keydown', down);
-  }, [isAppRoute]);
+  }, [isAppRoute, lastAction, handleMailAction]);
 
   const runCommand = React.useCallback((command: () => unknown) => {
     setOpen(false);
@@ -552,15 +651,18 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
               </CommandShortcut>
             </CommandItem>
 
-            <CommandItem onSelect={() => runCommand(() => handleMailAction('undo'))}>
-              <Undo size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
-              <span>Undo</span>
-              <CommandShortcut>
-                {memoizedShortcuts
-                  .find((s: { action: string; keys: string[] }) => s.action === 'undoLastAction')
-                  ?.keys.join(' ')}
-              </CommandShortcut>
-            </CommandItem>
+            {/* Only show undo when there's an action to undo */}
+            {lastAction && (
+              <CommandItem onSelect={() => runCommand(() => handleMailAction('undo'))}>
+                <Undo size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+                <span>Undo {lastAction.action}</span>
+                <CommandShortcut>
+                  {memoizedShortcuts
+                    .find((s: { action: string; keys: string[] }) => s.action === 'undoLastAction')
+                    ?.keys.join(' ')}
+                </CommandShortcut>
+              </CommandItem>
+            )}
           </CommandGroup>
 
           <CommandSeparator />
