@@ -174,7 +174,6 @@ function NavItem(item: NavItemProps & { href: string }) {
 
   const iconRef = useRef<IconRefType>(null);
   const { data: stats } = useStats();
-  const { openFeaturebase } = useFeaturebase();
   const t = useTranslations();
   const [, clearBulkSelection] = useAtom(clearBulkSelectionAtom);
 
