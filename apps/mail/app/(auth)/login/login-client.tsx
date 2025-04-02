@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, type ReactNode, useState } from 'react';
-import { Google } from '@/components/icons/icons';
 import { type EnvVarInfo } from '@/lib/auth-providers';
 import { signIn, useSession } from '@/lib/auth-client';
+import { Google } from '@/components/icons/icons';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -39,7 +39,7 @@ const getProviderIcon = (providerId: string, className?: string): ReactNode => {
   switch (providerId) {
     case 'google':
       return <Google className={defaultClass} />;
-   
+
     case 'zero':
       return (
         <Image

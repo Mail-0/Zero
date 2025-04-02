@@ -19,18 +19,18 @@ import { SettingsCard } from '@/components/settings/settings-card';
 import { availableLocales, locales, Locale } from '@/i18n/config';
 import { useTranslations, useLocale } from 'next-intl';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { saveUserSettings } from '@/actions/settings';
+import { getBrowserTimezone } from '@/lib/timezones';
+import { Textarea } from '@/components/ui/textarea';
+import { useSettings } from '@/hooks/use-settings';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Globe, Clock } from 'lucide-react';
 import { changeLocale } from '@/i18n/utils';
-import { useForm } from 'react-hook-form';
 import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
-import { useSettings } from '@/hooks/use-settings';
-import { getBrowserTimezone } from '@/lib/timezones';
-import { saveUserSettings } from '@/actions/settings';
-import { Textarea } from '@/components/ui/textarea';
 
 const formSchema = z.object({
   language: z.enum(locales as [string, ...string[]]),
@@ -53,7 +53,7 @@ export default function GeneralPage() {
       timezone: getBrowserTimezone(),
       dynamicContent: false,
       externalImages: true,
-      customPrompt: "",
+      customPrompt: '',
     },
   });
 

@@ -48,6 +48,7 @@ import { handleUnsubscribe } from '@/lib/email-utils.client';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useMediaQuery } from '../../hooks/use-media-query';
 import { useSearchValue } from '@/hooks/use-search-value';
+import { RefreshIcon } from '../icons/animated/refresh';
 import { SearchIcon } from '../icons/animated/search';
 import { useMail } from '@/components/mail/use-mail';
 import { SidebarToggle } from '../ui/sidebar-toggle';
@@ -68,7 +69,6 @@ import { SearchBar } from './search-bar';
 import items from './demo.json';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
-import { RefreshIcon } from '../icons/animated/refresh';
 
 export function DemoMailLayout() {
   const [mail, setMail] = useState({

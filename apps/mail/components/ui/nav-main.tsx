@@ -6,6 +6,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { clearBulkSelectionAtom } from '../mail/use-mail';
 import { useFeaturebase } from '@/hooks/use-featurebase';
 import { type MessageKey } from '@/config/navigation';
+import { type NavItem } from '@/config/navigation';
 import { Badge } from '@/components/ui/badge';
 import { useStats } from '@/hooks/use-stats';
 import { useTranslations } from 'next-intl';
@@ -15,7 +16,6 @@ import { cn } from '@/lib/utils';
 import { useAtom } from 'jotai';
 import * as React from 'react';
 import Link from 'next/link';
-import {type NavItem} from '@/config/navigation'
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
   ref?: React.Ref<SVGSVGElement>;
@@ -174,11 +174,11 @@ export function NavMain({ items }: NavMainProps) {
 }
 
 function NavItem(item: NavItemProps & { href: string }) {
-	const iconRef = useRef<IconRefType>(null);
-	const { data: stats } = useStats();
-	const { openFeaturebase } = useFeaturebase();
-	const t = useTranslations();
-	const [, clearBulkSelection] = useAtom(clearBulkSelectionAtom);
+  const iconRef = useRef<IconRefType>(null);
+  const { data: stats } = useStats();
+  const { openFeaturebase } = useFeaturebase();
+  const t = useTranslations();
+  const [, clearBulkSelection] = useAtom(clearBulkSelectionAtom);
 
   if (item.disabled) {
     return (
@@ -192,14 +192,14 @@ function NavItem(item: NavItemProps & { href: string }) {
     );
   }
 
-	// Handle Featurebase button click
-	const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-		clearBulkSelection();
+  // Handle Featurebase button click
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    clearBulkSelection();
 
-		if (item.isFeaturebaseButton) {
-			e.preventDefault();
-			openFeaturebase();
-		}
+    if (item.isFeaturebaseButton) {
+      e.preventDefault();
+      openFeaturebase();
+    }
 
     if (item.onClick) {
       item.onClick(e);

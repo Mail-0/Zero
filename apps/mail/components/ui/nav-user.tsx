@@ -143,13 +143,11 @@ export function NavUser() {
       >
         {session && activeAccount && (
           <>
-            <div className="p-3 flex flex-col items-center text-center">
-              <Avatar className="size-14 rounded-xl mb-2 border border-border/50">
+            <div className="flex flex-col items-center p-3 text-center">
+              <Avatar className="border-border/50 mb-2 size-14 rounded-xl border">
                 <AvatarImage
                   className="rounded-xl"
-                  src={
-                    (activeAccount?.picture ?? undefined) || (session?.user.image ?? undefined)
-                  }
+                  src={(activeAccount?.picture ?? undefined) || (session?.user.image ?? undefined)}
                   alt={activeAccount?.name || session?.user.name || 'User'}
                 />
                 <AvatarFallback className="rounded-xl">
@@ -164,7 +162,9 @@ export function NavUser() {
                 </AvatarFallback>
               </Avatar>
               <div className="w-full">
-                <div className="font-medium text-sm">{activeAccount?.name || session?.user.name || 'User'}</div>
+                <div className="text-sm font-medium">
+                  {activeAccount?.name || session?.user.name || 'User'}
+                </div>
                 <div className="text-muted-foreground text-xs">{activeAccount.email}</div>
               </div>
             </div>
@@ -178,43 +178,45 @@ export function NavUser() {
                 {t('common.navUser.accounts')}
               </p>
 
-              {connections?.filter(connection => connection.id !== session?.connectionId).map((connection) => (
-                <DropdownMenuItem
-                  key={connection.id}
-                  onClick={handleAccountSwitch(connection)}
-                  className="flex cursor-pointer items-center gap-3 py-1"
-                >
-                  <Avatar className="size-7 rounded-lg">
-                    <AvatarImage
-                      className="rounded-lg"
-                      src={connection.picture || undefined}
-                      alt={connection.name || connection.email}
-                    />
-                    <AvatarFallback className="rounded-lg text-[10px]">
-                      {(connection.name || connection.email)
-                        .split(' ')
-                        .map((n) => n[0])
-                        .join('')
-                        .toUpperCase()
-                        .slice(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="-space-y-0.5">
-                    <p className="text-[12px]">{connection.name || connection.email}</p>
-                    {connection.name && (
-                      <p className="text-muted-foreground text-[11px]">
-                        {connection.email.length > 25
-                          ? `${connection.email.slice(0, 25)}...`
-                          : connection.email}
-                      </p>
-                    )}
-                  </div>
-                </DropdownMenuItem>
-              ))}
+              {connections
+                ?.filter((connection) => connection.id !== session?.connectionId)
+                .map((connection) => (
+                  <DropdownMenuItem
+                    key={connection.id}
+                    onClick={handleAccountSwitch(connection)}
+                    className="flex cursor-pointer items-center gap-3 py-1"
+                  >
+                    <Avatar className="size-7 rounded-lg">
+                      <AvatarImage
+                        className="rounded-lg"
+                        src={connection.picture || undefined}
+                        alt={connection.name || connection.email}
+                      />
+                      <AvatarFallback className="rounded-lg text-[10px]">
+                        {(connection.name || connection.email)
+                          .split(' ')
+                          .map((n) => n[0])
+                          .join('')
+                          .toUpperCase()
+                          .slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="-space-y-0.5">
+                      <p className="text-[12px]">{connection.name || connection.email}</p>
+                      {connection.name && (
+                        <p className="text-muted-foreground text-[11px]">
+                          {connection.email.length > 25
+                            ? `${connection.email.slice(0, 25)}...`
+                            : connection.email}
+                        </p>
+                      )}
+                    </div>
+                  </DropdownMenuItem>
+                ))}
               <AddConnectionDialog />
-              
+
               <DropdownMenuSeparator className="my-1" />
-              
+
               <DropdownMenuItem onClick={handleThemeToggle} className="cursor-pointer">
                 <div className="flex w-full items-center gap-2">
                   {theme === 'dark' ? (
@@ -249,14 +251,18 @@ export function NavUser() {
             </>
           )}
         </div>
-        
+
         {session && (
           <>
             <DropdownMenuSeparator className="mt-1" />
-            <div className="pt-1 pb-2 px-2 flex items-center justify-center gap-1 text-[10px] text-muted-foreground/60">
-              <a href="/privacy" className="hover:underline">Privacy</a>
+            <div className="text-muted-foreground/60 flex items-center justify-center gap-1 px-2 pb-2 pt-1 text-[10px]">
+              <a href="/privacy" className="hover:underline">
+                Privacy
+              </a>
               <span>·</span>
-              <a href="/terms" className="hover:underline">Terms</a>
+              <a href="/terms" className="hover:underline">
+                Terms
+              </a>
             </div>
           </>
         )}

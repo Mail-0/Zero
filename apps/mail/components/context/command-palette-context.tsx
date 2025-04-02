@@ -87,58 +87,167 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
   }, [isAppRoute]);
 
   // Helper function to handle mail actions
-  const handleMailAction = React.useCallback((action: string) => {
-    // Check for appropriate context
-    const inMailView = pathname.includes('/mail/') && !pathname.includes('/mail/create');
-    
-    switch (action) {
-      case 'search':
-        // Focus search input or open search dialog
-        document.querySelector('[aria-label="Search"]')?.focus();
-        break;
-      case 'archive':
-        if (inMailView) {
-          // Call archive function when implemented
-          console.log('Archive action triggered');
-        }
-        break;
-      case 'delete':
-        if (inMailView) {
-          // Call delete function when implemented
-          console.log('Delete action triggered');
-        }
-        break;
-      case 'print':
-        if (inMailView) {
-          window.print();
-        }
-        break;
-      case 'expand':
-        if (inMailView) {
-          // Call expand view function when implemented
-          console.log('Expand view action triggered');
-        }
-        break;
-      case 'undo':
-        // Call undo function when implemented
-        console.log('Undo action triggered');
-        break;
-      case 'reply':
-        if (inMailView) {
-          // Call reply function when implemented
-          console.log('Reply action triggered');
-        }
-        break;
-      case 'forward':
-        if (inMailView) {
-          // Call forward function when implemented
-          console.log('Forward action triggered');
-        }
-        break;
-      default:
-        console.log(`Action not implemented: ${action}`);
-    }
-  }, [pathname]);
+  const handleMailAction = React.useCallback(
+    (action: string) => {
+      // Check for a thread parameter in the URL to determine if we're viewing an email
+      const searchParams = new URLSearchParams(window.location.search);
+      const threadId = searchParams.get('threadId');
+
+      // A user is viewing a specific thread if in mail path and has threadId parameter
+      const inThreadView =
+        pathname.includes('/mail/') && !pathname.includes('/mail/create') && threadId !== null;
+
+      switch (action) {
+        case 'search':
+          // Focus search input or open search dialog
+          document.querySelector('[aria-label="Search"]')?.focus();
+          break;
+        case 'archive':
+          if (inThreadView && threadId) {
+            // Try to find the archive button in thread display
+            let archiveButton = document.querySelector('button[aria-label*="Archive" i]');
+
+            if (!archiveButton) {
+              // Try finding by icon class
+              archiveButton = document
+                .querySelector('.fa-archive, .feather-archive, svg[class*="archive" i]')
+                ?.closest('button');
+            }
+
+            if (archiveButton instanceof HTMLElement) {
+              archiveButton.click();
+            } else {
+              // Dispatch a custom event as fallback
+              const event = new CustomEvent('mail:archive', {
+                detail: { threadId },
+              });
+              window.dispatchEvent(event);
+              console.log('Triggered archive via custom event');
+            }
+          }
+          break;
+        case 'delete':
+          if (inThreadView && threadId) {
+            // Try to find a delete/trash button
+            let deleteButton = document.querySelector(
+              'button[aria-label*="Delete" i], button[aria-label*="Trash" i]',
+            );
+
+            if (!deleteButton) {
+              // Try finding by icon
+              deleteButton = document
+                .querySelector('.fa-trash, .feather-trash, svg[class*="trash" i]')
+                ?.closest('button');
+            }
+
+            if (deleteButton instanceof HTMLElement) {
+              deleteButton.click();
+            } else {
+              // Dispatch a custom event as fallback
+              const event = new CustomEvent('mail:delete', {
+                detail: { threadId },
+              });
+              window.dispatchEvent(event);
+              console.log('Triggered delete via custom event');
+            }
+          }
+          break;
+        case 'print':
+          if (inThreadView) {
+            window.print();
+          }
+          break;
+        case 'expand':
+          if (inThreadView) {
+            // Try finding the expand button
+            let expandButton = document.querySelector(
+              'button[aria-label*="fullscreen" i], button[aria-label*="Expand" i]',
+            );
+
+            if (!expandButton) {
+              // Try finding by icon
+              expandButton = document
+                .querySelector('.fa-expand, .feather-expand, svg[class*="expand" i]')
+                ?.closest('button');
+            }
+
+            if (expandButton instanceof HTMLElement) {
+              expandButton.click();
+            } else {
+              // Dispatch a custom event as fallback
+              const event = new CustomEvent('mail:expand', {
+                detail: { threadId },
+              });
+              window.dispatchEvent(event);
+              console.log('Triggered expand via custom event');
+            }
+          }
+          break;
+        case 'undo':
+          // Call undo function when implemented
+          console.log('Undo action triggered');
+          break;
+        case 'reply':
+          if (inThreadView) {
+            // Look for the ThreadActionButton with the reply icon/label
+            // First try with aria-label
+            let replyButton = document.querySelector('button[aria-label*="Reply" i]');
+
+            // If not found, try other selectors
+            if (!replyButton) {
+              // Try finding by icon class
+              replyButton = document
+                .querySelector('.fa-reply, .feather-reply, svg[class*="reply" i]')
+                ?.closest('button');
+            }
+
+            if (!replyButton) {
+              // Try finding any button with Reply text content
+              const buttons = Array.from(document.querySelectorAll('button'));
+              replyButton = buttons.find(
+                (btn) =>
+                  btn.textContent?.toLowerCase().includes('reply') ||
+                  btn.innerHTML.toLowerCase().includes('reply'),
+              );
+            }
+
+            // If all else fails, look for the reply composer's reply button at the bottom of thread
+            if (!replyButton) {
+              replyButton = document.querySelector(
+                '.ReplyCompose button, button:has(span:contains("Reply to"))',
+              );
+            }
+
+            // Click the button if found
+            if (replyButton instanceof HTMLElement) {
+              replyButton.click();
+            } else {
+              // Direct state manipulation as fallback - this might not work but we can try
+              // We're looking for a component that might have setIsReplyOpen function
+              const event = new CustomEvent('mail:reply', {
+                detail: { threadId },
+              });
+              window.dispatchEvent(event);
+              console.log('Triggered reply via custom event');
+            }
+          }
+          break;
+        case 'forward':
+          if (inThreadView) {
+            // Forward is typically in the dropdown menu, so using a custom event is more reliable
+            const event = new CustomEvent('mail:forward', {
+              detail: { threadId },
+            });
+            window.dispatchEvent(event);
+            console.log('Triggered forward via custom event');
+          }
+          break;
+        default:
+          console.log(`Action not implemented: ${action}`);
+      }
+    },
+    [pathname],
+  );
 
   const runCommand = React.useCallback((command: () => unknown) => {
     setOpen(false);
@@ -209,13 +318,14 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // For navigation items, exclude any that are already in the actions menu
+      // For navigation items, show all mail folders except current one
       if (group.group === t('common.commandPalette.groups.mail')) {
         if (Array.isArray(group.items)) {
           return {
             ...group,
             items: group.items.filter((item: NavItem) => {
-              return !actionPaths.includes(item.url);
+              // Hide current folder from command palette
+              return item.url !== pathname;
             }),
           };
         }
@@ -277,25 +387,86 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
               </CommandShortcut>
             </CommandItem>
 
-            <CommandItem onSelect={() => runCommand(() => handleMailAction('reply'))}>
-              <Reply size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
-              <span>Reply</span>
-              <CommandShortcut>
-                {memoizedShortcuts
-                  .find((s: { action: string; keys: string[] }) => s.action === 'reply')
-                  ?.keys.join(' ')}
-              </CommandShortcut>
-            </CommandItem>
+            {/* Check if in thread view to show email-specific actions */}
+            {(() => {
+              // Check for a thread parameter in the URL to determine if we're viewing an email
+              const searchParams = new URLSearchParams(window.location.search);
+              const threadId = searchParams.get('threadId');
 
-            <CommandItem onSelect={() => runCommand(() => handleMailAction('forward'))}>
-              <Forward size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
-              <span>Forward</span>
-              <CommandShortcut>
-                {memoizedShortcuts
-                  .find((s: { action: string; keys: string[] }) => s.action === 'forward')
-                  ?.keys.join(' ')}
-              </CommandShortcut>
-            </CommandItem>
+              // A user is viewing a specific thread if in mail path and has threadId parameter
+              const inThreadView =
+                pathname.includes('/mail/') &&
+                !pathname.includes('/mail/create') &&
+                threadId !== null;
+
+              return inThreadView ? (
+                <>
+                  <CommandItem onSelect={() => runCommand(() => handleMailAction('reply'))}>
+                    <Reply size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+                    <span>Reply</span>
+                    <CommandShortcut>
+                      {memoizedShortcuts
+                        .find((s: { action: string; keys: string[] }) => s.action === 'reply')
+                        ?.keys.join(' ')}
+                    </CommandShortcut>
+                  </CommandItem>
+
+                  <CommandItem onSelect={() => runCommand(() => handleMailAction('forward'))}>
+                    <Forward size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+                    <span>Forward</span>
+                    <CommandShortcut>
+                      {memoizedShortcuts
+                        .find((s: { action: string; keys: string[] }) => s.action === 'forward')
+                        ?.keys.join(' ')}
+                    </CommandShortcut>
+                  </CommandItem>
+
+                  <CommandItem onSelect={() => runCommand(() => handleMailAction('archive'))}>
+                    <Archive size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+                    <span>Archive</span>
+                    <CommandShortcut>
+                      {memoizedShortcuts
+                        .find(
+                          (s: { action: string; keys: string[] }) => s.action === 'archiveEmail',
+                        )
+                        ?.keys.join(' ')}
+                    </CommandShortcut>
+                  </CommandItem>
+
+                  <CommandItem onSelect={() => runCommand(() => handleMailAction('delete'))}>
+                    <Trash size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+                    <span>Delete</span>
+                    <CommandShortcut>
+                      {memoizedShortcuts
+                        .find((s: { action: string; keys: string[] }) => s.action === 'delete')
+                        ?.keys.join(' ')}
+                    </CommandShortcut>
+                  </CommandItem>
+
+                  <CommandItem onSelect={() => runCommand(() => handleMailAction('print'))}>
+                    <Printer size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+                    <span>Print</span>
+                    <CommandShortcut>
+                      {memoizedShortcuts
+                        .find((s: { action: string; keys: string[] }) => s.action === 'printEmail')
+                        ?.keys.join(' ')}
+                    </CommandShortcut>
+                  </CommandItem>
+
+                  <CommandItem onSelect={() => runCommand(() => handleMailAction('expand'))}>
+                    <Expand size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
+                    <span>Expand view</span>
+                    <CommandShortcut>
+                      {memoizedShortcuts
+                        .find(
+                          (s: { action: string; keys: string[] }) => s.action === 'expandEmailView',
+                        )
+                        ?.keys.join(' ')}
+                    </CommandShortcut>
+                  </CommandItem>
+                </>
+              ) : null;
+            })()}
 
             <CommandItem onSelect={() => runCommand(() => handleMailAction('search'))}>
               <Search size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
@@ -303,46 +474,6 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
               <CommandShortcut>
                 {memoizedShortcuts
                   .find((s: { action: string; keys: string[] }) => s.action === 'search')
-                  ?.keys.join(' ')}
-              </CommandShortcut>
-            </CommandItem>
-
-            <CommandItem onSelect={() => runCommand(() => handleMailAction('archive'))}>
-              <Archive size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
-              <span>Archive</span>
-              <CommandShortcut>
-                {memoizedShortcuts
-                  .find((s: { action: string; keys: string[] }) => s.action === 'archiveEmail')
-                  ?.keys.join(' ')}
-              </CommandShortcut>
-            </CommandItem>
-
-            <CommandItem onSelect={() => runCommand(() => handleMailAction('delete'))}>
-              <Trash size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
-              <span>Delete</span>
-              <CommandShortcut>
-                {memoizedShortcuts
-                  .find((s: { action: string; keys: string[] }) => s.action === 'delete')
-                  ?.keys.join(' ')}
-              </CommandShortcut>
-            </CommandItem>
-
-            <CommandItem onSelect={() => runCommand(() => handleMailAction('print'))}>
-              <Printer size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
-              <span>Print</span>
-              <CommandShortcut>
-                {memoizedShortcuts
-                  .find((s: { action: string; keys: string[] }) => s.action === 'printEmail')
-                  ?.keys.join(' ')}
-              </CommandShortcut>
-            </CommandItem>
-
-            <CommandItem onSelect={() => runCommand(() => handleMailAction('expand'))}>
-              <Expand size={16} strokeWidth={2} className="opacity-70" aria-hidden="true" />
-              <span>Expand view</span>
-              <CommandShortcut>
-                {memoizedShortcuts
-                  .find((s: { action: string; keys: string[] }) => s.action === 'expandEmailView')
                   ?.keys.join(' ')}
               </CommandShortcut>
             </CommandItem>

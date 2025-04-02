@@ -1,10 +1,11 @@
 import { matchFilterPrefix, filterSuggestionsFunction, filterSuggestions } from '@/lib/filter';
-import { cn, extractFilterValue, type FilterSuggestion } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Search, CalendarIcon } from 'lucide-react';
+import { cn, extractFilterValue, type FilterSuggestion } from '@/lib/utils';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSearchValue } from '@/hooks/use-search-value';
+import { enhanceSearchQuery } from '@/actions/ai-search';
 import { Calendar } from '@/components/ui/calendar';
+import { Search, CalendarIcon } from 'lucide-react';
 import { type DateRange } from 'react-day-picker';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,6 @@ import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
 import React from 'react';
-import { enhanceSearchQuery } from '@/actions/ai-search';
 
 const SEARCH_SUGGESTIONS = [
   '"Emails from last week..."',
@@ -179,7 +179,7 @@ export function SearchBar() {
           setIsAISearching(true);
           const { enhancedQuery, error } = await enhanceSearchQuery(data.q.trim());
           setIsAISearching(false);
-          
+
           if (error) {
             console.error('AI enhancement error:', error);
             // Fallback to original query if AI enhancement fails
@@ -195,22 +195,21 @@ export function SearchBar() {
         if (data.subject) searchTerms.push(`subject:(${data.subject})`);
         if (data.dateRange.from)
           searchTerms.push(`after:${format(data.dateRange.from, 'yyyy/MM/dd')}`);
-        if (data.dateRange.to) 
+        if (data.dateRange.to)
           searchTerms.push(`before:${format(data.dateRange.to, 'yyyy/MM/dd')}`);
 
         const searchQuery = searchTerms.join(' ');
         const folder = data.folder ? data.folder.toUpperCase() : '';
 
         console.log('Final search query:', searchQuery);
-        
+
         setSearchValue({
           value: searchQuery,
           highlight: data.q,
           folder: folder,
           isLoading: true,
-          isAISearching: isAISearching
+          isAISearching: isAISearching,
         });
-
       } catch (error) {
         console.error('Search error:', error);
         // Fallback to regular search if AI fails
@@ -224,7 +223,7 @@ export function SearchBar() {
           highlight: data.q,
           folder: folder,
           isLoading: true,
-          isAISearching: false
+          isAISearching: false,
         });
       } finally {
         setIsSearching(false);
@@ -236,7 +235,7 @@ export function SearchBar() {
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const inputValue = e.target.value;
-      
+
       if (!inputValue.trim()) {
         setSuggestionsState((prev) => ({ ...prev, show: false }));
         setDatePickerState((prev) => ({ ...prev, show: false }));
@@ -621,7 +620,7 @@ export function SearchBar() {
       highlight: '',
       folder: '',
       isLoading: false,
-      isAISearching: false
+      isAISearching: false,
     });
   }, [form, setSearchValue]);
 
@@ -631,7 +630,7 @@ export function SearchBar() {
         <Search className="text-muted-foreground absolute left-2.5 h-4 w-4" aria-hidden="true" />
         <div className="relative w-full">
           <Input
-            placeholder={isFocused ? "" : "Search..."}
+            placeholder={isFocused ? '' : 'Search...'}
             ref={inputRef}
             className="bg-muted/50 text-muted-foreground ring-muted placeholder:text-muted-foreground/70 h-8 w-full rounded-md border-none pl-9 pr-14 shadow-none transition-all duration-300"
             onChange={handleInputChange}
@@ -642,12 +641,12 @@ export function SearchBar() {
             disabled={isSearching}
           />
           {isFocused && !formValues.q && (
-            <div 
+            <div
               className={cn(
-                "absolute left-9 right-0 bottom-[5.5px] -translate-y-1/2 text-muted-foreground/70 pointer-events-none text-sm",
-                isAnimating 
-                  ? "opacity-0 translate-y-2 transition-all duration-300 ease-out" 
-                  : "opacity-100 translate-y-0 transition-all duration-300 ease-in"
+                'text-muted-foreground/70 pointer-events-none absolute bottom-[5.5px] left-9 right-0 -translate-y-1/2 text-sm',
+                isAnimating
+                  ? 'translate-y-2 opacity-0 transition-all duration-300 ease-out'
+                  : 'translate-y-0 opacity-100 transition-all duration-300 ease-in',
               )}
             >
               {SEARCH_SUGGESTIONS[currentSuggestionIndex]}

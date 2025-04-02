@@ -124,7 +124,12 @@ type FormData = {
   to: string;
 };
 
-export default function ReplyCompose({ emailData, isOpen, setIsOpen, mode = 'reply' }: ReplyComposeProps) {
+export default function ReplyCompose({
+  emailData,
+  isOpen,
+  setIsOpen,
+  mode = 'reply',
+}: ReplyComposeProps) {
   const [attachments, setAttachments] = useState<File[]>([]);
   const { data: session } = useSession();
 
@@ -405,7 +410,7 @@ export default function ReplyCompose({ emailData, isOpen, setIsOpen, mode = 'rep
         setEditorHeight(newHeight);
       }
     },
-    [isResizing]
+    [isResizing],
   );
 
   // Add a function to handle starting the resize
@@ -424,7 +429,7 @@ export default function ReplyCompose({ emailData, isOpen, setIsOpen, mode = 'rep
         const resizeObserver = new ResizeObserver((entries) => {
           for (const entry of entries) {
             const contentHeight = entry.contentRect.height;
-            
+
             // If content exceeds current height but is less than max, grow the container
             if (contentHeight > editorHeight - 20 && editorHeight < 500) {
               const newHeight = Math.min(500, contentHeight + 20);
@@ -432,7 +437,7 @@ export default function ReplyCompose({ emailData, isOpen, setIsOpen, mode = 'rep
             }
           }
         });
-        
+
         resizeObserver.observe(editorElement);
         return () => resizeObserver.disconnect();
       }
@@ -577,13 +582,13 @@ ${email.decodedBody || 'No content'}
       </div>
       <div className="group relative left-[2px] flex w-full flex-wrap items-center rounded-md border border-none bg-transparent p-1 transition-all focus-within:border-none focus:outline-none">
         {toEmails.map((email, index) => (
-          <EmailTag 
-            key={index} 
-            email={email} 
+          <EmailTag
+            key={index}
+            email={email}
             onRemove={() => {
               setToEmails((emails) => emails.filter((_, i) => i !== index));
               form.setValue('to', toEmails.join(', '));
-            }} 
+            }}
           />
         ))}
         <input
@@ -602,9 +607,7 @@ ${email.decodedBody || 'No content'}
   // Extract email tag component
   const EmailTag = ({ email, onRemove }: { email: string; onRemove: () => void }) => (
     <div className="bg-accent flex items-center gap-1 rounded-md border px-2 text-sm font-medium">
-      <span className="max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap">
-        {email}
-      </span>
+      <span className="max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap">{email}</span>
       <button
         type="button"
         className="text-muted-foreground hover:text-foreground ml-1 rounded-full"
@@ -685,13 +688,13 @@ ${email.decodedBody || 'No content'}
         {mode === 'forward' && <RecipientInput />}
 
         {/* Editor container with fixed menu and growing content */}
-        <div className="flex flex-col flex-grow">
-          <div 
+        <div className="flex flex-grow flex-col">
+          <div
             className="w-full overflow-y-auto"
-            style={{ 
+            style={{
               height: `${composerState.contentHeight}px`,
               minHeight: '150px',
-              maxHeight: '600px'
+              maxHeight: '600px',
             }}
           >
             <Editor
