@@ -263,7 +263,7 @@ const Thread = memo(
                   {message.receivedOn && (
                     <p
                       className={cn(
-                        'text-nowrap text-xs font-normal text-zinc-400 opacity-70 transition-opacity group-hover:opacity-100',
+                        'text-nowrap text-xs font-normal opacity-70 transition-opacity group-hover:opacity-100',
                         isMailSelected && 'opacity-100',
                       )}
                     >
