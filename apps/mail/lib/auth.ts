@@ -91,9 +91,7 @@ const options = {
           .catch((err) =>
             console.log('Tried to add user to earlyAccess after error, failed', foundUser),
           );
-        throw new Error('Unauthorized', {
-          cause: 'No early access found, check logs',
-        });
+        redirect('/login?error=early_access_required');
       }
 
       let activeConnection = null;

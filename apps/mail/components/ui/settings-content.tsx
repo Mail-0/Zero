@@ -10,7 +10,7 @@ export function SettingsLayoutContent({ children }: { children: React.ReactNode 
   const isMobile = useIsMobile();
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full w-full">
       <AppSidebar className="hidden lg:flex" />
       <div className="flex-1 bg-white dark:bg-black md:py-3 md:pr-2">
         <ResizablePanelGroup
