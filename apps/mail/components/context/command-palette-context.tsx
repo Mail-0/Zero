@@ -33,7 +33,7 @@ import { DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useOpenComposeModal } from '@/hooks/use-open-compose-modal';
 import { navigationConfig, type NavItem } from '@/config/navigation';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { keyboardShortcuts } from '@/config/shortcuts';
 import { useTranslations } from 'next-intl';
 import { CircleHelp } from 'lucide-react';
@@ -75,8 +75,8 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
   // Check if user is composing a new email
   const isComposing = pathname?.includes('/mail/create') || pathname?.includes('/create');
 
-  // Check if viewing a thread - using a single searchParams initialization outside useMemo
-  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  // Check if viewing a thread - using Next.js useSearchParams hook
+  const searchParams = useSearchParams();
   const threadId = searchParams.get('threadId');
   const isViewingThread = pathname?.includes('/mail/') && !pathname?.includes('/mail/create') && threadId !== null;
   
