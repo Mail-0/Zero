@@ -205,7 +205,7 @@ export const MailQuickActions = memo(
       [t],
     );
     
-    const handleUndo = useCallback(
+    const handleUndoAction = useCallback(
       async (e?: React.MouseEvent) => {
         e?.stopPropagation();
         if (isProcessing || isLoading || !lastAction) return;
@@ -235,7 +235,7 @@ export const MailQuickActions = memo(
     const quickActions = [
       // Only show undo button if there's a recent action to undo
       ...(lastAction ? [{
-        action: handleUndo,
+        action: handleUndoAction,
         icon: Undo,
         label: `Undo ${lastAction.action}`,
         disabled: false,
