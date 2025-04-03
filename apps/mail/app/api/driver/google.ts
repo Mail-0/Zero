@@ -96,11 +96,11 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       refresh_token: config.auth.refresh_token,
       scope: getScope(),
     });
-    if (process.env.NODE_ENV === 'production') {
-      EnableBrain()
-        .then(() => console.log('✅ Driver: Enabled'))
-        .catch(() => console.log('✅ Driver: Enabled'));
-    }
+    // if (process.env.NODE_ENV === 'production') {
+    //   EnableBrain()
+    //     .then(() => console.log('✅ Driver: Enabled'))
+    //     .catch(() => console.log('✅ Driver: Enabled'));
+    // }
   }
   const parse = ({
     id,
