@@ -24,13 +24,15 @@ import { getBrowserTimezone } from '@/lib/timezones';
 import { Textarea } from '@/components/ui/textarea';
 import { useSettings } from '@/hooks/use-settings';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import { Globe, Clock } from 'lucide-react';
 import { changeLocale } from '@/i18n/utils';
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, ControllerRenderProps } from 'react-hook-form';
+import { useState, useEffect, useMemo, memo } from 'react';
 import { toast } from 'sonner';
 import * as z from 'zod';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const formSchema = z.object({
   language: z.enum(locales as [string, ...string[]]),
@@ -39,6 +41,80 @@ const formSchema = z.object({
   externalImages: z.boolean(),
   customPrompt: z.string(),
 });
+
+const TimezoneSelect = memo(({ 
+  field, 
+  t 
+}: { 
+  field: ControllerRenderProps<z.infer<typeof formSchema>, "timezone">, 
+  t: any 
+}) => {
+  const [open, setOpen] = useState(false);
+  const [timezoneSearch, setTimezoneSearch] = useState('');
+  
+  const timezones = useMemo(() => Intl.supportedValuesOf('timeZone'), []);
+  
+  const filteredTimezones = useMemo(() => {
+    if (!timezoneSearch) return timezones;
+    return timezones.filter(timezone => 
+      timezone.toLowerCase().includes(timezoneSearch.toLowerCase())
+    );
+  }, [timezones, timezoneSearch]);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <FormControl>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-46 flex items-center justify-start"
+          >
+            <Clock className="mr-2 h-4 w-4 flex-shrink-0" />
+            <span className="truncate">{field.value}</span>
+          </Button>
+        </FormControl>
+      </PopoverTrigger>
+      <PopoverContent className="w-[300px] p-0">
+        <div className="px-3 py-2">
+          <input
+            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            placeholder={t('pages.settings.general.selectTimezone')}
+            value={timezoneSearch}
+            onChange={(e) => setTimezoneSearch(e.target.value)}
+          />
+        </div>
+        <ScrollArea className="h-[300px]">
+          <div className="p-1">
+            {filteredTimezones.length === 0 && (
+              <div className="p-2 text-center text-sm text-muted-foreground">
+                {t('pages.settings.general.noResultsFound')}
+              </div>
+            )}
+            {filteredTimezones.map((timezone) => (
+              <div
+                key={timezone}
+                className={cn(
+                  "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none",
+                  field.value === timezone ? "bg-accent text-accent-foreground" : "hover:bg-accent hover:text-accent-foreground"
+                )}
+                onClick={() => {
+                  field.onChange(timezone);
+                  setOpen(false);
+                }}
+              >
+                {timezone}
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </PopoverContent>
+    </Popover>
+  );
+});
+
+TimezoneSelect.displayName = "TimezoneSelect";
 
 export default function GeneralPage() {
   const [isSaving, setIsSaving] = useState(false);
@@ -133,65 +209,12 @@ export default function GeneralPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t('pages.settings.general.timezone')}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="w-36">
-                          <Clock className="mr-2 h-4 w-4" />
-                          <SelectValue placeholder={t('pages.settings.general.selectTimezone')} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Intl.supportedValuesOf('timeZone').map((timezone) => (
-                          <SelectItem key={timezone} value={timezone}>
-                            {timezone}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <TimezoneSelect field={field} t={t} />
                   </FormItem>
                 )}
               />
             </div>
-            {/* <div className="flex flex-col md:flex-row w-full items-center gap-5">
-              <FormField
-                control={form.control}
-                name="dynamicContent"
-                render={({ field }) => (
-                  <FormItem className="bg-popover flex flex-row items-center justify-between rounded-lg border p-4 w-full md:w-auto">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">
-                        {t('pages.settings.general.dynamicContent')}
-                      </FormLabel>
-                      <FormDescription>
-                        {t('pages.settings.general.dynamicContentDescription')}
-                      </FormDescription>
-                    </div>
-                    <FormControl className="ml-4">
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="externalImages"
-                render={({ field }) => (
-                  <FormItem className="bg-popover flex flex-row items-center justify-between rounded-lg border p-4 w-full md:w-auto">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">
-                        {t('pages.settings.general.externalImages')}
-                      </FormLabel>
-                      <FormDescription>
-                        {t('pages.settings.general.externalImagesDescription')}
-                      </FormDescription>
-                    </div>
-                    <FormControl className="ml-4">
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div> */}
+            
             <FormField
               control={form.control}
               name="customPrompt"
