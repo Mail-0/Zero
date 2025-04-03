@@ -57,6 +57,7 @@ import { SearchBar } from './search-bar';
 import { cn } from '@/lib/utils';
 import items from './demo.json';
 import { useAtom } from 'jotai';
+import { useHotKey } from '@/hooks/use-hot-key';
 import { toast } from 'sonner';
 
 export function DemoMailLayout() {
