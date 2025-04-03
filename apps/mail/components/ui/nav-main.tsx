@@ -177,6 +177,32 @@ function NavItem(item: NavItemProps & { href: string }) {
   const t = useTranslations();
   const [, clearBulkSelection] = useAtom(clearBulkSelectionAtom);
 
+  // Apply animation handlers to all buttons including back buttons
+  const linkProps = {
+    href: item.href,
+    onMouseEnter: () => iconRef.current?.startAnimation?.(),
+    onMouseLeave: () => iconRef.current?.stopAnimation?.(),
+  };
+
+  function openFeaturebase() {
+    // Implementation needs to be added here
+    console.log('Opening Featurebase...');
+  }
+
+  // Handle Featurebase button click
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    clearBulkSelection();
+
+    if (item.isFeaturebaseButton) {
+      e.preventDefault();
+      openFeaturebase();
+    }
+
+    if (item.onClick) {
+      item.onClick(e);
+    }
+  };
+
   if (item.disabled) {
     return (
       <SidebarMenuButton
@@ -188,44 +214,6 @@ function NavItem(item: NavItemProps & { href: string }) {
       </SidebarMenuButton>
     );
   }
-
-
-function openFeaturebase() {
-  // Implementation needs to be added here
-  console.log('Opening Featurebase...');
-}
-
-// Handle Featurebase button click
-const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-  clearBulkSelection();
-
-  if (item.isFeaturebaseButton) {
-    e.preventDefault();
-    openFeaturebase();
-  }
-
-  if (item.onClick) {
-    item.onClick(e);
-  }
-};
-
-return (
-  <Collapsible defaultOpen={item.isActive}>
-    <CollapsibleTrigger asChild>
-      <Link {...linkProps} target={item.target} onClick={handleClick}>
-        {buttonContent}
-      </Link>
-    </CollapsibleTrigger>
-  </Collapsible>
-);
-
-
-  // Apply animation handlers to all buttons including back buttons
-  const linkProps = {
-    href: item.href,
-    onMouseEnter: () => iconRef.current?.startAnimation?.(),
-    onMouseLeave: () => iconRef.current?.stopAnimation?.(),
-  };
 
   const buttonContent = (
     <SidebarMenuButton
@@ -256,7 +244,7 @@ return (
   return (
     <Collapsible defaultOpen={item.isActive}>
       <CollapsibleTrigger asChild>
-        <Link {...linkProps} target={item.target}>{buttonContent}</Link>
+        <Link {...linkProps} target={item.target} onClick={handleClick}>{buttonContent}</Link>
       </CollapsibleTrigger>
     </Collapsible>
   );
