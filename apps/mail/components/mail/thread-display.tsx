@@ -282,56 +282,37 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
     };
 
     // Add custom event listeners for actions triggered by command palette
-    const handleReplyEvent = (event: CustomEvent) => {
-      const { threadId: eventThreadId } = event.detail || {};
-      if (eventThreadId === threadId) {
-        setIsReplyOpen(true);
-      }
-    };
-
-    const handleForwardEvent = (event: CustomEvent) => {
-      const { threadId: eventThreadId } = event.detail || {};
-      if (eventThreadId === threadId) {
-        setIsForwardOpen(true);
-      }
-    };
-
-    const handleArchiveEvent = (event: CustomEvent) => {
-      const { threadId: eventThreadId } = event.detail || {};
-      if (eventThreadId === threadId && isInInbox) {
-        moveThreadTo('archive');
-      }
-    };
-
-    const handleExpandEvent = (event: CustomEvent) => {
-      const { threadId: eventThreadId } = event.detail || {};
-      if (eventThreadId === threadId) {
-        setIsFullscreen(!isFullscreen);
-      }
-    };
-
-    const handleDeleteEvent = (event: CustomEvent) => {
-      const { threadId: eventThreadId } = event.detail || {};
-      if (eventThreadId === threadId && isInInbox) {
-        // Move to trash/bin - assuming this is how deletion works in this app
-        moveThreadTo('bin');
+    const handleMailEvent = (event: CustomEvent) => {
+      const { threadId: eventThreadId, type } = event.detail || {};
+      
+      // Only process events for this thread
+      if (eventThreadId !== threadId) return;
+      
+      switch (type) {
+        case 'reply':
+          setIsReplyOpen(true);
+          break;
+        case 'forward':
+          setIsForwardOpen(true);
+          break;
+        case 'archive':
+          if (isInInbox) moveThreadTo('archive');
+          break;
+        case 'expand':
+          setIsFullscreen(!isFullscreen);
+          break;
+        case 'delete':
+          if (isInInbox) moveThreadTo('bin');
+          break;
       }
     };
 
     window.addEventListener('keydown', handleEsc);
-    window.addEventListener('mail:reply' as any, handleReplyEvent as EventListener);
-    window.addEventListener('mail:forward' as any, handleForwardEvent as EventListener);
-    window.addEventListener('mail:archive' as any, handleArchiveEvent as EventListener);
-    window.addEventListener('mail:expand' as any, handleExpandEvent as EventListener);
-    window.addEventListener('mail:delete' as any, handleDeleteEvent as EventListener);
+    window.addEventListener('mail:action' as any, handleMailEvent as EventListener);
 
     return () => {
       window.removeEventListener('keydown', handleEsc);
-      window.removeEventListener('mail:reply' as any, handleReplyEvent as EventListener);
-      window.removeEventListener('mail:forward' as any, handleForwardEvent as EventListener);
-      window.removeEventListener('mail:archive' as any, handleArchiveEvent as EventListener);
-      window.removeEventListener('mail:expand' as any, handleExpandEvent as EventListener);
-      window.removeEventListener('mail:delete' as any, handleDeleteEvent as EventListener);
+      window.removeEventListener('mail:action' as any, handleMailEvent as EventListener);
     };
   }, [handleClose, threadId, isInInbox, moveThreadTo, isFullscreen]);
 

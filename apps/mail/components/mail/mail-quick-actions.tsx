@@ -12,6 +12,7 @@ import { useStats } from '@/hooks/use-stats';
 import type { InitialThread } from '@/types';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import { ReplyIcon } from '../icons/animated/reply';
 
 interface MailQuickActionsProps {
   message: InitialThread;
@@ -199,10 +200,25 @@ export const MailQuickActions = memo(
 
     const handleQuickReply = useCallback(
       async (e?: React.MouseEvent) => {
-        // TODO: Implement quick reply
-        toast.info(t('common.mail.reply'));
+        e?.stopPropagation();
+        
+        // Dispatch event to trigger the reply composer in thread display
+        const threadId = message.threadId ?? message.id;
+        const event = new CustomEvent('mail:action', {
+          detail: { 
+            threadId, 
+            type: 'reply'
+          }
+        });
+        
+        window.dispatchEvent(event);
+        
+        // Navigate to the thread view with the reply composer open
+        const currentParams = new URLSearchParams(searchParams.toString());
+        currentParams.set('threadId', threadId);
+        router.push(`/mail/${currentFolder}?${currentParams.toString()}`);
       },
-      [t],
+      [message, router, currentFolder, searchParams],
     );
     
     const handleUndoAction = useCallback(
@@ -241,6 +257,12 @@ export const MailQuickActions = memo(
         label: `Undo ${lastAction.action}`,
         disabled: false,
       }] : []),
+      {
+        action: handleQuickReply,
+        icon: ReplyIcon,
+        label: t('common.mail.reply'),
+        disabled: false,
+      },
       {
         action: handleArchive,
         icon: isArchiveFolder || !isInbox ? Inbox : Archive,

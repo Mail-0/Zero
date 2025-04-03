@@ -262,17 +262,20 @@ export function MailLayout({ children }: { children: React.ReactNode }) {
 
   const isDesktop = useMediaQuery('(min-width: 768px)');
 
-  // Check if we're on mobile on mount and when window resizes
-  useEffect(() => {
-    const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < 768); // 768px is the 'md' breakpoint
-    };
-
-    checkIsMobile();
-    window.addEventListener('resize', checkIsMobile);
-
-    return () => window.removeEventListener('resize', checkIsMobile);
-  }, []);
+  // We're already using useMediaQuery for isDesktop, let's leverage it for isMobile too
+  const isMobile = !isDesktop;
+  
+  // This is intentionally left as a comment to document the previous approach
+  // useEffect(() => {
+  //   const checkIsMobile = () => {
+  //     setIsMobile(window.innerWidth < 768); // 768px is the 'md' breakpoint
+  //   };
+  //
+  //   checkIsMobile();
+  //   window.addEventListener('resize', checkIsMobile);
+  //
+  //   return () => window.removeEventListener('resize', checkIsMobile);
+  // }, []);
 
   const searchParams = useSearchParams();
   const threadIdParam = searchParams.get('threadId');
