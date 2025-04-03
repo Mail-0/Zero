@@ -185,8 +185,8 @@ function NavItem(item: NavItemProps & { href: string }) {
   };
 
   function openFeaturebase() {
-    // Implementation needs to be added here
-    console.log('Opening Featurebase...');
+    // Open Featurebase in a new tab
+    window.open('https://feedback.0.email', '_blank', 'noopener,noreferrer');
   }
 
   // Handle Featurebase button click
