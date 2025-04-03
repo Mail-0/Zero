@@ -113,6 +113,36 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // Helper function to find UI elements with multiple strategies
+  const findUIElement = (selectors: string[], textContent?: string): HTMLElement | null => {
+    // First try direct selectors
+    const element = findButton(selectors);
+    if (element) return element;
+    
+    // Try finding by SVG and getting the closest button
+    const svgSelector = selectors.find(s => s.includes('svg'));
+    if (svgSelector) {
+      const svgElement = document.querySelector(svgSelector);
+      if (svgElement) {
+        const buttonElement = svgElement.closest('button');
+        if (buttonElement instanceof HTMLElement) return buttonElement;
+      }
+    }
+    
+    // Finally try text content matching if provided
+    if (textContent) {
+      const buttons = Array.from(document.querySelectorAll('button'));
+      const textMatchButton = buttons.find(
+        (btn) =>
+          btn.textContent?.toLowerCase().includes(textContent.toLowerCase()) ||
+          btn.innerHTML.toLowerCase().includes(textContent.toLowerCase())
+      );
+      if (textMatchButton) return textMatchButton as HTMLElement;
+    }
+    
+    return null;
+  };
+
   // Define action handlers as a mapping from action to handler function
   const actionHandlers = React.useMemo(() => {
     // Import findButton from shared utilities
@@ -123,9 +153,9 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         
         // If in compose view, click the AI Assistant button
         if (isComposing) {
-          const aiAssistantButton = document.querySelector('button[title*="Ask AI Assistant" i]');
-          if (aiAssistantButton instanceof HTMLElement) {
-            aiAssistantButton.click();
+          const element = findUIElement(['button[title*="Ask AI Assistant" i]'], 'AI Assistant');
+          if (element) {
+            element.click();
           } else {
             // If AI button not found, navigate to compose
             router.push('/mail/create');
@@ -134,13 +164,17 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         // If in thread view, click Generate Email button
         else if (inThreadView) {
           // First open reply composer if not already open
-          const replyButton = document.querySelector('[aria-label="Reply"]');
-          if (replyButton instanceof HTMLElement) {
+          const replyButton = findUIElement(['[aria-label="Reply"]'], 'reply');
+          if (replyButton) {
             replyButton.click();
           }
           
-          // Give time for reply composer to render
-          setTimeout(() => {
+          // Use a more robust approach with polling
+          let attempts = 0;
+          const maxAttempts = 10;
+          const checkInterval = 100;
+          
+          const findAndClickGenerateButton = () => {
             // Find Generate Email button (it has a Sparkles icon within a group button)
             const allButtons = Array.from(document.querySelectorAll('button'));
             const generateButton = allButtons.find(button => {
@@ -151,14 +185,25 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             
             if (generateButton instanceof HTMLElement) {
               generateButton.click();
+              return true;
             }
-          }, 500);
+            
+            if (++attempts < maxAttempts) {
+              setTimeout(findAndClickGenerateButton, checkInterval);
+            }
+            return false;
+          };
+          
+          setTimeout(findAndClickGenerateButton, checkInterval);
         }
       },
       
       'search': () => {
         // Focus search input or open search dialog
-        document.querySelector('[aria-label="Search"]')?.focus();
+        const searchElement = findUIElement(['[aria-label="Search"]'], 'search');
+        if (searchElement) {
+          searchElement.focus();
+        }
       },
       
       'archive': () => {
@@ -177,9 +222,8 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             'svg[class*="archive" i]'
           ];
           
-          const archiveButton = findButton(archiveSelectors) || 
-            document.querySelector(archiveSelectors[3])?.closest('button') as HTMLElement;
-
+          const archiveButton = findUIElement(archiveSelectors, 'archive');
+          
           if (archiveButton) {
             archiveButton.click();
           } else {
@@ -220,9 +264,8 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             'svg[class*="trash" i]'
           ];
           
-          const deleteButton = findButton(deleteSelectors) || 
-            document.querySelector(deleteSelectors[4])?.closest('button') as HTMLElement;
-
+          const deleteButton = findUIElement(deleteSelectors, 'trash');
+          
           if (deleteButton) {
             deleteButton.click();
           } else {
@@ -263,11 +306,10 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             'svg[class*="expand" i]'
           ];
           
-          const expandButton = findButton(expandSelectors) || 
-            document.querySelector(expandSelectors[4])?.closest('button') as HTMLElement;
-
-          if (expandButton) {
-            expandButton.click();
+          const element = findUIElement(expandSelectors, 'expand');
+          
+          if (element) {
+            element.click();
           } else {
             // Dispatch a custom event as fallback
             const event = new CustomEvent('mail:expand', {
@@ -307,19 +349,8 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             'button:has(span:contains("Reply to"))'
           ];
           
-          // Try finding any button with Reply text content
-          let replyButton = findButton(replySelectors) || 
-            document.querySelector(replySelectors[3])?.closest('button') as HTMLElement;
-            
-          if (!replyButton) {
-            const buttons = Array.from(document.querySelectorAll('button'));
-            const textMatchButton = buttons.find(
-              (btn) =>
-                btn.textContent?.toLowerCase().includes('reply') ||
-                btn.innerHTML.toLowerCase().includes('reply'),
-            );
-            if (textMatchButton) replyButton = textMatchButton as HTMLElement;
-          }
+          // Use the standardized element finder
+          const replyButton = findUIElement(replySelectors, 'reply');
 
           // Click the button if found
           if (replyButton) {
