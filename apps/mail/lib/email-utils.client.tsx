@@ -17,10 +17,11 @@ export const handleUnsubscribe = async ({ emailData }: { emailData: ParsedMessag
           domain: emailData.sender.email.split('@')?.[1] ?? 'unknown',
         });
         switch (listUnsubscribeAction.type) {
-          case 'get':
+          case 'get': {
             window.open(listUnsubscribeAction.url, '_blank');
             break;
-          case 'post':
+          }
+          case 'post': {
             const controller = new AbortController();
             const timeoutId = setTimeout(
               () => controller.abort(),
@@ -39,7 +40,8 @@ export const handleUnsubscribe = async ({ emailData }: { emailData: ParsedMessag
 
             clearTimeout(timeoutId);
             return true;
-          case 'email':
+          }
+          case 'email': {
             await sendEmail({
               to: listUnsubscribeAction.emailAddress,
               subject: listUnsubscribeAction.subject,
@@ -47,6 +49,7 @@ export const handleUnsubscribe = async ({ emailData }: { emailData: ParsedMessag
               attachments: [],
             });
             return true;
+          }
         }
       }
     }
