@@ -221,7 +221,7 @@ const Thread = memo(
             onMouseLeave={handleMouseLeave}
             key={message.threadId ?? message.id}
             className={cn(
-              'hover:bg-offsetLight hover:bg-primary/5 group relative flex cursor-pointer flex-col items-start overflow-clip rounded-lg border border-transparent px-4 py-3 text-left text-sm transition-all hover:opacity-100',
+              'hover:bg-offsetLight hover:bg-primary/5 group relative flex cursor-pointer items-center overflow-clip rounded-lg border border-transparent px-4 py-3 text-sm transition-all hover:opacity-100',
               isMailSelected || (!message.unread && 'opacity-50'),
               (isMailSelected || isMailBulkSelected || isKeyboardFocused) &&
                 'border-border bg-primary/5 opacity-100',
@@ -230,66 +230,57 @@ const Thread = memo(
           >
             <div
               className={cn(
-                'bg-primary absolute inset-y-0 left-0 w-1 -translate-x-2 transition-transform ease-out',
+                'bg-primary absolute inset-y-0 left-0 w-1 -translate-x-3 transition-transform ease-out',
                 isMailBulkSelected && 'translate-x-0',
               )}
             />
-            <div className="flex w-full items-center justify-between gap-4">
-              <Avatar className="h-8 w-8 rounded-full">
-                <AvatarImage src={getEmailLogo(message.sender.email)} className="rounded-full" />
-                <AvatarFallback className="rounded-full">{message.sender.name[0]}</AvatarFallback>
-              </Avatar>
-              <div className="flex w-full justify-between">
-                <div className="w-full">
-                  <div className="flex w-full flex-row items-center justify-between">
-                    <div className="flex flex-row items-center gap-1">
-                      <p
-                        className={cn(
-                          message.unread && !isMailSelected ? 'font-bold' : 'font-medium',
-                          'text-md flex items-baseline gap-1 group-hover:opacity-100',
-                        )}
-                      >
-                        <span>{highlightText(message.sender.name, searchValue.highlight)}</span>{' '}
-                        {message.unread && !isMailSelected ? (
-                          <span className="size-2 rounded bg-[#006FFE]" />
-                        ) : null}
-                      </p>
-                      <MailLabels labels={threadLabels} />
-                      {message.totalReplies > 1 ? (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="rounded-md border border-dotted px-[5px] py-[1px] text-xs opacity-70">
-                              {message.totalReplies}
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent className="px-1 py-0 text-xs">
-                            {t('common.mail.replies', { count: message.totalReplies })}
-                          </TooltipContent>
-                        </Tooltip>
-                      ) : null}
-                    </div>
-                    {message.receivedOn ? (
-                      <p
-                        className={cn(
-                          'text-nowrap text-xs font-normal opacity-70 transition-opacity group-hover:opacity-100',
-                          isMailSelected && 'opacity-100',
-                        )}
-                      >
-                        {formatDate(message.receivedOn.split('.')[0] || '')}
-                      </p>
-                    ) : null}
-                  </div>
-                  <p
-                    className={cn(
-                      'mt-1 line-clamp-1 text-xs opacity-70 transition-opacity',
-                      mail.selected ? 'line-clamp-1' : 'line-clamp-2',
-                      isMailSelected && 'opacity-100',
-                    )}
-                  >
-                    {highlightText(message.subject, searchValue.highlight)}
-                  </p>
+            <Avatar className="h-8 w-8 rounded-full">
+              <AvatarImage src={getEmailLogo(message.sender.email)} className="rounded-full" />
+              <AvatarFallback className="rounded-full">{message.sender.name[0]}</AvatarFallback>
+            </Avatar>
+            <div className="ml-3 w-full">
+              <div className="grid grid-cols-[minmax(auto,50%),1fr]">
+                <div className="relative flex items-center gap-1 overflow-auto whitespace-normal text-balance break-words">
+                  <p>{highlightText(message.sender.name, searchValue.highlight)}</p>
+                  {message.unread && !isMailSelected && (
+                    <span className="size-2 rounded bg-[#006FFE]" />
+                  )}
+                </div>
+                <div className="flex flex-wrap-reverse items-center justify-end gap-y-1 space-x-2 text-right">
+                  <MailLabels labels={threadLabels} />
+                  {message.totalReplies > 1 ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="rounded-md border border-dotted px-[5px] py-[1px] text-xs opacity-70">
+                          {message.totalReplies}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent className="px-1 py-0 text-xs">
+                        {t('common.mail.replies', { count: message.totalReplies })}
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : null}
+                  {message.receivedOn && (
+                    <p
+                      className={cn(
+                        'text-nowrap text-xs font-normal text-zinc-400 opacity-70 transition-opacity group-hover:opacity-100',
+                        isMailSelected && 'opacity-100',
+                      )}
+                    >
+                      {formatDate(message.receivedOn.split('.')[0] || '')}
+                    </p>
+                  )}
                 </div>
               </div>
+              <p
+                className={cn(
+                  'mt-1 line-clamp-1 overflow-hidden text-ellipsis text-pretty break-all text-xs opacity-70 transition-opacity',
+                  mail.selected ? 'line-clamp-1' : 'line-clamp-2',
+                  isMailSelected && 'opacity-100',
+                )}
+              >
+                {highlightText(message.subject, searchValue.highlight)}
+              </p>
             </div>
           </Link>
         )}
