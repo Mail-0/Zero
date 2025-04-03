@@ -190,19 +190,34 @@ function NavItem(item: NavItemProps & { href: string }) {
   }
 
 
-  // Handle Featurebase button click
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    clearBulkSelection();
+function openFeaturebase() {
+  // Implementation needs to be added here
+  console.log('Opening Featurebase...');
+}
 
-    if (item.isFeaturebaseButton) {
-      e.preventDefault();
-      openFeaturebase();
-    }
+// Handle Featurebase button click
+const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+  clearBulkSelection();
 
-    if (item.onClick) {
-      item.onClick(e);
-    }
-  };
+  if (item.isFeaturebaseButton) {
+    e.preventDefault();
+    openFeaturebase();
+  }
+
+  if (item.onClick) {
+    item.onClick(e);
+  }
+};
+
+return (
+  <Collapsible defaultOpen={item.isActive}>
+    <CollapsibleTrigger asChild>
+      <Link {...linkProps} target={item.target} onClick={handleClick}>
+        {buttonContent}
+      </Link>
+    </CollapsibleTrigger>
+  </Collapsible>
+);
 
 
   // Apply animation handlers to all buttons including back buttons
