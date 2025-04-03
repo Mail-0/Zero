@@ -652,9 +652,9 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             <React.Fragment key={groupIndex}>
               {group.items.length > 0 && (
                 <CommandGroup heading={group.group}>
-                  {group.items.map((item: any) => (
+                  {group.items.map((item: any, index: number) => (
                     <CommandItem
-                      key={item.url}
+                      key={`${item.url}-${index}`}
                       onSelect={() =>
                         runCommand(() => {
                           router.push(item.url);
