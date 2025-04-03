@@ -80,7 +80,7 @@ const Draft = ({ message, onClick }: ThreadProps) => {
   );
 };
 
-export function DraftsList({ isCompact }: MailListProps) {
+export function DraftsList() {
   const [mail, setMail] = useMail();
   const { data: session } = useSession();
   const [searchValue] = useSearchValue();
@@ -347,12 +347,12 @@ export function DraftsList({ isCompact }: MailListProps) {
         key={props.data.id}
         onClick={handleMailClick}
         selectMode={selectMode}
-        isCompact={isCompact}
+        isCompact={false}
         message={props.data}
         {...props}
       />
     ),
-    [handleMailClick, selectMode, isCompact],
+    [handleMailClick, selectMode],
   );
 
   return (

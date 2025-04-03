@@ -232,6 +232,7 @@ export const MailQuickActions = memo(
       [lastAction, t, isProcessing, isLoading, mutate, mutateStats],
     );
 
+
     const quickActions = [
       // Only show undo button if there's a recent action to undo
       ...(lastAction ? [{

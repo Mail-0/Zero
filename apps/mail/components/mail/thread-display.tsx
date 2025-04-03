@@ -1,10 +1,12 @@
+'use client';
 import { DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { DropdownMenu, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { ArchiveX, Forward, ReplyAll, Star, StarOff } from 'lucide-react';
-import { useSearchParams, useParams } from 'next/navigation';
+import { ArchiveX, Forward, ReplyAll, Star, StarOff, X } from 'lucide-react';
+import { useSearchParams, useParams, useRouter } from 'next/navigation';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { moveThreadsTo, ThreadDestination } from '@/lib/thread-actions';
 import { MoreVerticalIcon } from '../icons/animated/more-vertical';
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -13,6 +15,7 @@ import { ArchiveIcon } from '../icons/animated/archive';
 import { ExpandIcon } from '../icons/animated/expand';
 import { MailDisplaySkeleton } from './mail-skeleton';
 import { ReplyIcon } from '../icons/animated/reply';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { modifyLabels } from '@/actions/mail';
 import { useStats } from '@/hooks/use-stats';
@@ -23,6 +26,7 @@ import { useTranslations } from 'next-intl';
 import { NotesPanel } from './note-panel';
 import { cn, FOLDERS } from '@/lib/utils';
 import MailDisplay from './mail-display';
+import { ParsedMessage } from '@/types';
 import { Inbox } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -514,8 +518,8 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
             </DropdownMenu>
           </div>
         </div>
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <ScrollArea className="h-full flex-1" type="auto">
+        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+          <ScrollArea className="flex-1" type="auto">
             <div className="pb-4">
               {[...(emailData || [])].reverse().map((message, index) => (
                 <div
@@ -536,7 +540,7 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
               ))}
             </div>
           </ScrollArea>
-          <div className={`relative ${isFullscreen ? '' : 'top-1'} flex-shrink-0`}>
+          <div className="bg-background sticky bottom-0 w-full border-t">
             <ReplyCompose
               emailData={emailData}
               isOpen={isReplyOpen || isForwardOpen}
@@ -553,5 +557,251 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
         </div>
       </div>
     </div>
+  );
+}
+
+export function SRThreadDisplay({ messages }: { messages: ParsedMessage[] }) {
+  const [isMuted, setIsMuted] = useState(false);
+  const router = useRouter();
+  const isMobile = useIsMobile();
+  const [isReplyOpen, setIsReplyOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isForwardOpen, setIsForwardOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const t = useTranslations();
+  const { mutate: mutateStats } = useStats();
+  const { folder, threadId } = useParams<{ folder: string; threadId: string }>();
+  const moreVerticalIconRef = useRef<any>(null);
+
+  const isInInbox = folder === FOLDERS.INBOX || !folder;
+  const isInArchive = folder === FOLDERS.ARCHIVE;
+  const isInSpam = folder === FOLDERS.SPAM;
+
+  const moveThreadTo = useCallback(
+    async (destination: ThreadDestination) => {
+      await moveThreadsTo({
+        threadIds: [threadId],
+        currentFolder: folder,
+        destination,
+      })
+        .then(() => {
+          handleClose();
+          router.refresh();
+        })
+        .catch(console.warn);
+    },
+    [threadId, folder, mutateStats],
+  );
+
+  useEffect(() => {
+    if (messages?.[0]) {
+      setIsMuted(messages[0].unread ?? false);
+    }
+  }, [messages]);
+
+  const handleFavourites = async () => {
+    if (!threadId) return;
+    const done = () => router.refresh();
+    if (messages[0]?.tags?.includes('STARRED')) {
+      toast.promise(
+        modifyLabels({ threadId: [threadId], removeLabels: ['STARRED'] }).then(() => done()),
+        {
+          success: 'Removed from favourites.',
+          loading: 'Removing from favourites',
+          error: 'Failed to remove from favourites.',
+        },
+      );
+    } else {
+      toast.promise(
+        modifyLabels({ threadId: [threadId], addLabels: ['STARRED'] }).then(() => done()),
+        {
+          success: 'Added to favourites.',
+          loading: 'Adding to favourites.',
+          error: 'Failed to add to favourites.',
+        },
+      );
+    }
+  };
+
+  const handleForward = () => {
+    setIsForwardOpen(true);
+  };
+
+  const handleClose = () => router.push(`/mail/${folder}/`);
+
+  useEffect(() => {
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
+
+  // Close drawer when screen becomes larger than mobile
+  useEffect(() => {
+    if (!isMobile) {
+      setIsDrawerOpen(false);
+    } else {
+      setIsDrawerOpen(true);
+    }
+  }, [isMobile]);
+
+  // Extract the main content into a reusable component
+  const ThreadContent = () => (
+    <div
+      className={cn(
+        'flex flex-col',
+        isFullscreen ? 'h-screen' : isMobile ? 'h-full' : 'h-[calc(100vh-5rem)]',
+      )}
+    >
+      <div
+        className={cn(
+          'bg-offsetLight dark:bg-offsetDark relative flex flex-col overflow-hidden transition-all duration-300',
+          isMobile ? 'h-full' : 'h-full',
+          !isMobile && !isFullscreen && 'rounded-r-lg',
+          isFullscreen ? 'fixed inset-0 z-50' : '',
+        )}
+      >
+        <div className="flex flex-shrink-0 items-center border-b px-1 pb-1 md:px-3 md:pb-2 md:pt-[10px]">
+          <div className="ml-2 flex flex-1 items-center gap-2 md:ml-0">
+            <Link href={`/mail/${folder}`}>
+              <X className="h-4 w-4" />
+            </Link>
+            <ThreadSubject subject={messages[0]?.subject} />
+          </div>
+          <div className="flex items-center md:gap-2">
+            <NotesPanel threadId={threadId} />
+            <ThreadActionButton
+              icon={isFullscreen ? ExpandIcon : ExpandIcon}
+              label={
+                isFullscreen
+                  ? t('common.threadDisplay.exitFullscreen')
+                  : t('common.threadDisplay.enterFullscreen')
+              }
+              onClick={() => setIsFullscreen(!isFullscreen)}
+            />
+            <ThreadActionButton
+              icon={ArchiveIcon}
+              label={t('common.threadDisplay.archive')}
+              disabled={!isInInbox && !isInSpam}
+              className="relative top-0.5"
+              onClick={() => moveThreadTo('archive')}
+            />
+            <ThreadActionButton
+              icon={messages[0]?.tags?.includes('STARRED') ? StarOff : Star}
+              label={t('common.threadDisplay.favourites')}
+              onClick={handleFavourites}
+              className="relative top-0.5"
+            />
+            <ThreadActionButton
+              icon={ReplyIcon}
+              label={t('common.threadDisplay.reply')}
+              onClick={() => setIsReplyOpen(true)}
+            />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  disabled
+                  variant="ghost"
+                  className="md:h-fit md:px-2"
+                  onMouseEnter={() => moreVerticalIconRef.current?.startAnimation?.()}
+                  onMouseLeave={() => moreVerticalIconRef.current?.stopAnimation?.()}
+                >
+                  <MoreVerticalIcon ref={moreVerticalIconRef} className="h-4 w-4" />
+                  <span className="sr-only">{t('common.threadDisplay.moreOptions')}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {isInInbox && (
+                  <DropdownMenuItem onClick={() => moveThreadTo('spam')}>
+                    <ArchiveX className="mr-2 h-4 w-4" /> {t('common.threadDisplay.moveToSpam')}
+                  </DropdownMenuItem>
+                )}
+                {isInSpam && (
+                  <DropdownMenuItem onClick={() => moveThreadTo('inbox')}>
+                    <Inbox className="mr-2 h-4 w-4" /> {t('common.mail.moveToInbox')}
+                  </DropdownMenuItem>
+                )}
+                {isInArchive && (
+                  <DropdownMenuItem onClick={() => moveThreadTo('inbox')}>
+                    <Inbox className="mr-2 h-4 w-4" /> {t('common.mail.moveToInbox')}
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem>
+                  <ReplyAll className="mr-2 h-4 w-4" /> {t('common.threadDisplay.replyAll')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleForward}>
+                  <Forward className="mr-2 h-4 w-4" /> {t('common.threadDisplay.forward')}
+                </DropdownMenuItem>
+                <DropdownMenuItem>{t('common.threadDisplay.markAsUnread')}</DropdownMenuItem>
+                <DropdownMenuItem>{t('common.threadDisplay.addLabel')}</DropdownMenuItem>
+                <DropdownMenuItem>{t('common.threadDisplay.muteThread')}</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+          <ScrollArea className="flex-1" type="auto">
+            <div className="pb-4">
+              {[...(messages || [])].reverse().map((message, index) => (
+                <div
+                  key={message.id}
+                  className={cn(
+                    'transition-all duration-200',
+                    index > 0 && 'border-border border-t',
+                  )}
+                >
+                  <MailDisplay
+                    emailData={message}
+                    isFullscreen={isFullscreen}
+                    isMuted={isMuted}
+                    isLoading={false}
+                    index={index}
+                  />
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+          <div className="bg-background sticky bottom-0 w-full border-t">
+            <ReplyCompose
+              emailData={messages}
+              isOpen={isReplyOpen || isForwardOpen}
+              setIsOpen={(open) => {
+                if (isForwardOpen) {
+                  setIsForwardOpen(open);
+                } else {
+                  setIsReplyOpen(open);
+                }
+              }}
+              mode={isForwardOpen ? 'forward' : 'reply'}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Return different layouts based on screen size
+  return (
+    <>
+      {/* Desktop view */}
+      <div className="hidden h-full md:block">
+        <ThreadContent />
+      </div>
+
+      {/* Mobile/Tablet drawer view - only render on mobile */}
+      {isMobile && (
+        <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+          <DrawerTitle className="hidden"></DrawerTitle>
+          <DrawerContent className="h-[95vh] bg-white dark:bg-black">
+            <div className="flex-1 overflow-auto">
+              <ThreadContent />
+            </div>
+          </DrawerContent>
+        </Drawer>
+      )}
+    </>
   );
 }

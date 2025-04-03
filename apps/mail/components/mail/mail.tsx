@@ -48,7 +48,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { clearBulkSelectionAtom } from './use-mail';
 import { useThreads } from '@/hooks/use-threads';
 import { Button } from '@/components/ui/button';
-import { useHotKey } from '@/hooks/use-hot-key';
 import { useSession } from '@/lib/auth-client';
 import { useStats } from '@/hooks/use-stats';
 import { useRouter } from 'next/navigation';
@@ -210,7 +209,6 @@ export function MailLayout({ children }: { children: React.ReactNode }) {
   const { folder, threadId } = useParams<{ folder: string; threadId: string }>();
   const [mail, setMail] = useMail();
   const [, clearBulkSelection] = useAtom(clearBulkSelectionAtom);
-  const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
   const { data: session, isPending } = useSession();
   const t = useTranslations();
@@ -295,6 +293,7 @@ export function MailLayout({ children }: { children: React.ReactNode }) {
 
   const searchIconRef = useRef<any>(null);
 
+
   return (
     <TooltipProvider delayDuration={0}>
       <div className="rounded-inherit flex">
@@ -367,6 +366,8 @@ export function MailLayout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </div>
+
+
       </div>
     </TooltipProvider>
   );

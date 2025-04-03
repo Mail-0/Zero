@@ -4,6 +4,22 @@ export interface User {
   avatar: string;
 }
 
+export interface IGetThreads {
+  folder: string;
+  q?: string;
+  max?: number;
+  labelIds?: string;
+  pageToken: string | number | undefined;
+}
+
+export interface MailPageProps {
+  params: Promise<{
+    folder: string;
+    threadId: string;
+  }>;
+  searchParams: Promise<IGetThreads>;
+}
+
 export interface Account {
   name: string;
   logo: React.ComponentType<{ className?: string }>;
@@ -89,11 +105,21 @@ export interface Attachment {
   // TODO: Fix typing
   headers: any;
 }
-export interface MailListProps {
-  isCompact?: boolean;
+
+// Based on gmail
+export interface IGetThreadsResponse {
+  nextPageToken: string | undefined;
+  threads: InitialThread[];
+  resultSizeEstimate: number;
 }
 
-export type MailSelectMode = "mass" | "range" | "single" | "selectAllBelow";
+export interface MailListProps {
+  items: InitialThread[];
+  next?: string;
+  size?: number;
+}
+
+export type MailSelectMode = 'mass' | 'range' | 'single' | 'selectAllBelow';
 
 export type ThreadProps = {
   message: InitialThread;

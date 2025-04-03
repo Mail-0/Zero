@@ -65,7 +65,7 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
   useEffect(() => {
     const error = searchParams.get('error');
     if (error === 'early_access_required') {
-      toast.error('This account requires early access approval.');
+      toast.error('Early access is required to log in');
     }
 
     const missing = providers.find((p) => p.required && !p.enabled);

@@ -5,57 +5,43 @@ import {
   Bell,
   Briefcase,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Star,
   StickyNote,
   Tag,
   User,
   Users,
 } from 'lucide-react';
-import {
-  type ComponentProps,
-  memo,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
 import type { ConditionalThreadProps, InitialThread, MailListProps, MailSelectMode } from '@/types';
+import { type ComponentProps, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { EmptyState, type FolderType } from '@/components/mail/empty-state';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
 import { useMailNavigation } from '@/hooks/use-mail-navigation';
-import { preloadThread, useThreads } from '@/hooks/use-threads';
 import { useHotKey, useKeyState } from '@/hooks/use-hot-key';
 import { cn, formatDate, getEmailLogo } from '@/lib/utils';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { markAsRead, markAsUnread } from '@/actions/mail';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { highlightText } from '@/lib/email-utils.client';
-import { MailQuickActions } from './mail-quick-actions';
 import { useMail } from '@/components/mail/use-mail';
 import type { VirtuosoHandle } from 'react-virtuoso';
 import { useSession } from '@/lib/auth-client';
 import { Badge } from '@/components/ui/badge';
 import { useTranslations } from 'next-intl';
 import { Button } from '../ui/button';
-import items from './demo.json';
+import demo_items from './demo.json';
 import { toast } from 'sonner';
 import Link from 'next/link';
-const HOVER_DELAY = 1000; // ms before prefetching
 
 const Thread = memo(
   ({
     message,
-    selectMode,
     demo,
     onClick,
-    sessionData,
     isKeyboardFocused,
-    isInQuickActionMode,
-    selectedQuickActionIndex,
-    resetNavigation,
   }: ConditionalThreadProps & {
     folder?: string;
     isKeyboardFocused?: boolean;
@@ -67,16 +53,14 @@ const Thread = memo(
     const [searchValue] = useSearchValue();
     const t = useTranslations();
     const searchParams = useSearchParams();
-    const threadIdParam = searchParams.get('threadId');
-    const { folder } = useParams<{ folder: string }>();
-    const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-    const isHovering = useRef<boolean>(false);
-    const hasPrefetched = useRef<boolean>(false);
-    const [isHovered, setIsHovered] = useState(false);
+    const { threadId, folder } = useParams<{ threadId: string; folder: string }>();
+    const pageToken = searchParams.get('pageToken');
+    const searchQuery = searchParams.get('q');
+
     const isMailSelected = useMemo(() => {
-      const threadId = message.threadId ?? message.id;
-      return threadId === threadIdParam;
-    }, [message.id, message.threadId, threadIdParam]);
+      const _threadId = message.threadId ?? message.id;
+      return _threadId === threadId;
+    }, [message.id, message.threadId, threadId]);
 
     const isMailBulkSelected = mail.bulkSelected.includes(message.id);
 
@@ -84,62 +68,11 @@ const Thread = memo(
       return [...(message.tags || [])];
     }, [message.tags]);
 
-    const handleMouseEnter = () => {
-      if (demo) return;
-      isHovering.current = true;
-      setIsHovered(true);
-
-      // Prefetch only in single select mode
-      if (selectMode === 'single' && sessionData?.userId && !hasPrefetched.current) {
-        // Clear any existing timeout
-        if (hoverTimeoutRef.current) {
-          clearTimeout(hoverTimeoutRef.current);
-        }
-
-        // Set new timeout for prefetch
-        hoverTimeoutRef.current = setTimeout(() => {
-          if (isHovering.current) {
-            const messageId = message.threadId ?? message.id;
-            // Only prefetch if still hovering and hasn't been prefetched
-            console.log(
-              `🕒 Hover threshold reached for email ${messageId}, initiating prefetch...`,
-            );
-            void preloadThread(sessionData.userId, messageId, sessionData.connectionId ?? '');
-            hasPrefetched.current = true;
-          }
-        }, HOVER_DELAY);
-      }
-    };
-
-    const handleMouseLeave = () => {
-      isHovering.current = false;
-      setIsHovered(false);
-      if (hoverTimeoutRef.current) {
-        clearTimeout(hoverTimeoutRef.current);
-      }
-    };
-
-    // Reset prefetch flag when message changes
-    useEffect(() => {
-      hasPrefetched.current = false;
-    }, [message.id]);
-
-    // Cleanup timeout on unmount
-    useEffect(() => {
-      return () => {
-        if (hoverTimeoutRef.current) {
-          clearTimeout(hoverTimeoutRef.current);
-        }
-      };
-    }, []);
-
     return (
       <div className="p-1" onClick={onClick ? onClick(message) : undefined}>
         {demo ? (
           <div
             data-thread-id={message.threadId ?? message.id}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
             key={message.threadId ?? message.id}
             className={cn(
               'hover:bg-offsetLight hover:bg-primary/5 group relative flex cursor-pointer flex-col items-start overflow-clip rounded-lg border border-transparent px-4 py-3 text-left text-sm transition-all hover:opacity-100',
@@ -215,10 +148,10 @@ const Thread = memo(
           </div>
         ) : (
           <Link
-            href={`/mail/${folder}?threadId=${message.threadId ?? message.id}`}
+            shallow
+            prefetch={true}
+            href={`/mail/${folder}/${message.threadId ?? message.id}?pageToken=${pageToken ?? ''}${searchQuery ? `&q=${searchQuery}` : ''}`}
             data-thread-id={message.threadId ?? message.id}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
             key={message.threadId ?? message.id}
             className={cn(
               'hover:bg-offsetLight hover:bg-primary/5 group relative flex cursor-pointer flex-col items-start overflow-clip rounded-lg border border-transparent px-4 py-3 text-left text-sm transition-all hover:opacity-100',
@@ -301,10 +234,10 @@ const Thread = memo(
 Thread.displayName = 'Thread';
 
 export function MailListDemo({
-  items: filteredItems = items,
+  items: filteredItems = demo_items,
   onSelectMail,
 }: {
-  items?: typeof items;
+  items?: typeof demo_items;
   onSelectMail?: (message: any) => void;
 }) {
   return (
@@ -328,7 +261,7 @@ export function MailListDemo({
   );
 }
 
-export const MailList = memo(({ isCompact }: MailListProps) => {
+export const MailList = memo(({ items, next, size }: MailListProps) => {
   const { folder } = useParams<{ folder: string }>();
   const [mail, setMail] = useMail();
   const { data: session } = useSession();
@@ -336,6 +269,8 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const threadIdParam = searchParams.get('threadId');
+  const current = searchParams.get('pageToken');
+  const prev = searchParams.get('prev');
 
   const sessionData = useMemo(
     () => ({
@@ -346,24 +281,6 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
   );
 
   const [searchValue, setSearchValue] = useSearchValue();
-
-  const {
-    data: { threads: items, nextPageToken },
-    isValidating,
-    isLoading,
-    loadMore,
-    mutate,
-  } = useThreads();
-
-  // Add event listener for refresh
-  useEffect(() => {
-    const handleRefresh = () => {
-      void mutate();
-    };
-
-    window.addEventListener('refreshMailList', handleRefresh);
-    return () => window.removeEventListener('refreshMailList', handleRefresh);
-  }, [mutate]);
 
   const parentRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<VirtuosoHandle>(null);
@@ -389,12 +306,6 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
     containerRef: parentRef,
     onNavigate: handleNavigateToThread,
   });
-
-  const handleScroll = useCallback(() => {
-    if (isLoading || isValidating || !nextPageToken) return;
-    console.log('Loading more items...');
-    void loadMore();
-  }, [isLoading, isValidating, loadMore, nextPageToken]);
 
   const isKeyPressed = useKeyState();
 
@@ -554,20 +465,22 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
 
   // Add effect to handle search loading state
   useEffect(() => {
-    if (isFiltering && !isLoading) {
+    if (isFiltering) {
       // Reset the search value when loading is complete
       setSearchValue((prev) => ({
         ...prev,
         isLoading: false,
       }));
     }
-  }, [isLoading, isFiltering, setSearchValue]);
+  }, [isFiltering, setSearchValue]);
+
+  const handlePrev = () => router.back();
 
   if (isEmpty && session) {
     if (isFiltering) {
       return (
         <div className="flex min-h-[90vh] flex-col items-center justify-center md:min-h-[90vh]">
-          {isLoading || searchValue.isLoading ? (
+          {searchValue.isLoading ? (
             <div className="flex flex-col items-center gap-4">
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
               <p className="text-muted-foreground text-sm">
@@ -597,7 +510,6 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
               <Thread
                 onClick={handleMailClick}
                 selectMode={getSelectMode()}
-                isCompact={isCompact}
                 sessionData={sessionData}
                 message={data}
                 key={data.id}
@@ -608,35 +520,25 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
               />
             );
           })}
-          {items.length >= 9 && nextPageToken && (
-            <Button
-              variant={'ghost'}
-              className="w-full rounded-none"
-              onClick={handleScroll}
-              disabled={isLoading || isValidating}
-            >
-              {isLoading || isValidating ? (
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
-                  {t('common.actions.loading')}
-                </div>
-              ) : (
+          <div className="flex justify-center pb-3">
+            {size && size > items.length && (
+              <Button variant={'ghost'} onClick={handlePrev}>
                 <>
-                  {t('common.mail.loadMore')} <ChevronDown />
+                  <ChevronLeft /> Back
                 </>
-              )}
-            </Button>
-          )}
-        </ScrollArea>
-      </div>
-      <div className="w-full pt-4 text-center">
-        {isLoading || isValidating ? (
-          <div className="text-center">
-            <div className="mx-auto h-4 w-4 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
+              </Button>
+            )}
+            {size && size > items.length && (
+              <Link prefetch={true} href={`?pageToken=${next}&prev=${current ?? ''}`}>
+                <Button variant={'ghost'}>
+                  <>
+                    Next <ChevronRight />
+                  </>
+                </Button>
+              </Link>
+            )}
           </div>
-        ) : (
-          <div className="h-4" />
-        )}
+        </ScrollArea>
       </div>
     </>
   );

@@ -1,4 +1,4 @@
-import { type InitialThread, type ParsedMessage } from '@/types';
+import { type IGetThreadsResponse, type ParsedMessage } from '@/types';
 
 export interface MailManager {
   get(id: string): Promise<ParsedMessage[] | undefined>;
@@ -7,13 +7,13 @@ export interface MailManager {
   getDraft: (id: string) => Promise<any>;
   listDrafts: (q?: string, maxResults?: number, pageToken?: string) => Promise<any>;
   delete(id: string): Promise<any>;
-  list<T>(
+  list(
     folder: string,
     query?: string,
     maxResults?: number,
     labelIds?: string[],
     pageToken?: string | number,
-  ): Promise<(T & { threads: InitialThread[] }) | undefined>;
+  ): Promise<IGetThreadsResponse | undefined>;
   count(): Promise<any>;
   generateConnectionAuthUrl(userId: string): string;
   getTokens(

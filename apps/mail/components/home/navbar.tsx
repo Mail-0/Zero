@@ -64,7 +64,7 @@ export default function Navbar() {
               </div>
               <div className="mt-7 flex flex-col space-y-4 px-3">
                 <Link
-                  href="login"
+                  href="/login"
                   className="w-full py-2 text-center text-gray-800 transition-opacity hover:opacity-80 dark:bg-gradient-to-r dark:from-gray-300 dark:via-gray-100 dark:to-gray-200 dark:bg-clip-text dark:text-transparent"
                 >
                   {session ? 'Dashboard' : 'Sign in'}
@@ -90,7 +90,7 @@ export default function Navbar() {
       <>
         <div className="hidden items-center gap-4 lg:flex">
           <Link
-            href="login"
+            href="/login"
             className="text-nowrap text-sm text-gray-800 transition-opacity hover:opacity-80 dark:bg-gradient-to-r dark:from-gray-300 dark:via-gray-100 dark:to-gray-200 dark:bg-clip-text dark:text-transparent"
           >
             {session ? 'Dashboard' : 'Sign in'}

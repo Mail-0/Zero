@@ -1,8 +1,8 @@
 'use client';
 
+import type { IGetThreadsResponse, InitialThread, ParsedMessage } from '@/types';
 import { getMail, getMails, markAsRead } from '@/actions/mail';
 import { useParams, useSearchParams } from 'next/navigation';
-import type { InitialThread, ParsedMessage } from '@/types';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useSession } from '@/lib/auth-client';
 import { defaultPageSize } from '@/lib/utils';
@@ -32,10 +32,10 @@ const fetchEmails = async ([
   max,
   labelIds,
   pageToken,
-]: FetchEmailsTuple): Promise<RawResponse> => {
+]: FetchEmailsTuple): Promise<IGetThreadsResponse> => {
   try {
-    const data = (await getMails({ folder, q, max, labelIds, pageToken })) as RawResponse;
-    return data;
+    const data = await getMails({ folder, q, max, labelIds, pageToken });
+    return data!;
   } catch (error) {
     console.error('Error fetching emails:', error);
     throw error;
@@ -64,15 +64,8 @@ const fetchThread = (cb: any) => async (args: any[]) => {
   }
 };
 
-// Based on gmail
-interface RawResponse {
-  nextPageToken: string | undefined;
-  threads: InitialThread[];
-  resultSizeEstimate: number;
-}
-
 const getKey = (
-  previousPageData: RawResponse | null,
+  previousPageData: IGetThreadsResponse | null,
   [connectionId, folder, query, max, labelIds]: FetchEmailsTuple,
 ): FetchEmailsTuple | null => {
   if (previousPageData && !previousPageData.nextPageToken) return null; // reached the end);

@@ -27,6 +27,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   experimental: {
+    useCache: true,
     serverActions: {
       bodySizeLimit: '20mb',
     },

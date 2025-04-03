@@ -141,7 +141,7 @@ export function DraftsLayout() {
                 ))}
               </div>
             ) : (
-              <DraftsList isCompact={true} />
+              <DraftsList />
             )}
           </div>
         </div>

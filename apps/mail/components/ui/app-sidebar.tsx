@@ -20,7 +20,6 @@ import Link from 'next/link';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: stats } = useStats();
-  const isMobile = useIsMobile();
 
   const pathname = usePathname();
 

@@ -1,3 +1,4 @@
+'use client';
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { fixNonReadableColors, template } from '@/lib/email-utils';
 import { useTranslations } from 'next-intl';

@@ -1,26 +1,15 @@
 'use server';
 import { deleteActiveConnection, FatalErrors, getActiveDriver } from './utils';
+import { IGetThreads } from '@/types';
 
-export const getMails = async ({
-  folder,
-  q,
-  max,
-  labelIds,
-  pageToken,
-}: {
-  folder: string;
-  q?: string;
-  max?: number;
-  labelIds?: string[];
-  pageToken: string | number | undefined;
-}) => {
+export const getMails = async ({ folder, q, max, labelIds, pageToken }: IGetThreads) => {
   if (!folder) {
     throw new Error('Missing required fields');
   }
 
   try {
     const driver = await getActiveDriver();
-    return await driver.list(folder, q, max, labelIds, pageToken);
+    return await driver.list(folder, q, max, undefined, pageToken);
   } catch (error) {
     if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection();
     console.error('Error getting threads:', error);
