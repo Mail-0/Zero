@@ -151,10 +151,10 @@ const MailDisplay = ({ emailData, isMuted, index, demo }: Props) => {
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start justify-center gap-4">
               <Avatar className="h-8 w-8 rounded-full">
-                <AvatarImage
+                {/* <AvatarImage
                   src={getEmailLogo(emailData?.sender?.email)}
                   className="rounded-full"
-                />
+                /> */}
                 <AvatarFallback className="rounded-full">
                   {emailData?.sender?.name[0]}
                 </AvatarFallback>
