@@ -1,7 +1,6 @@
 'use client';
 
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Form } from '@/components/ui/form';
 import { SettingsCard } from '@/components/settings/settings-card';
 import { ModeToggle } from '@/components/theme/theme-switcher';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,16 +8,19 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import * as z from 'zod';
+import { useSettings } from '@/hooks/use-settings';
+import { saveUserSettings } from '@/actions/settings';
+import { toast } from 'sonner';
+import { appearanceSettingsSchema } from '@zero/db/user_settings';
 
 // TODO: More customization options
-const formSchema = z.object({
-  inboxType: z.enum(['default', 'important', 'unread']),
-});
+const formSchema = appearanceSettingsSchema;
 
 export default function AppearancePage() {
   const [isSaving, setIsSaving] = useState(false);
+  const { settings, mutate } = useSettings();
   const t = useTranslations();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -28,12 +30,28 @@ export default function AppearancePage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  useEffect(() => {
+    if (settings) {
+      form.reset(settings.appearance);
+    }
+  }, [form, settings]);
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSaving(true);
-    setTimeout(() => {
-      console.log(values);
+
+    try {
+      if (!settings) throw new Error('Settings not available');
+
+      await saveUserSettings({appearance: values});
+      await mutate({ ...settings, appearance: values }, { revalidate: false });
+      toast.success(t('common.settings.saved'));
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      toast.error(t('common.settings.failedToSave'));
+      await mutate();
+    } finally {
       setIsSaving(false);
-    }, 1000);
+    }
   }
 
   return (

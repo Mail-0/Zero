@@ -1,6 +1,6 @@
 "use server";
 
-import { type UserSettings, userSettingsSchema } from "@zero/db/user_settings_default";
+import { type UserSettings, userSettingsSchema, defaultUserSettings } from "@zero/db/user_settings";
 import { userSettings } from "@zero/db/schema";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
@@ -50,23 +50,33 @@ export async function getUserSettings() {
   }
 }
 
-export async function saveUserSettings(settings: UserSettings) {
+export async function saveUserSettings(partialSettings: Partial<UserSettings>) {
   try {
     const userId = await getAuthenticatedUserId();
-    settings = validateSettings(settings);
     const timestamp = new Date();
 
-    const [existingSettings] = await db
+    // Get current settings or use defaults
+    const [existingResult] = await db
       .select()
       .from(userSettings)
       .where(eq(userSettings.userId, userId))
       .limit(1);
 
-    if (existingSettings) {
+    // Start with default settings, then apply existing settings (if any), then apply new partial settings
+    const mergedSettings = {
+      ...defaultUserSettings,
+      ...(existingResult?.settings as Partial<UserSettings> || {}),
+      ...partialSettings,
+    };
+
+    // Validate the merged settings
+    const validatedSettings = validateSettings(mergedSettings);
+
+    if (existingResult) {
       await db
         .update(userSettings)
         .set({
-          settings: settings,
+          settings: validatedSettings,
           updatedAt: timestamp,
         })
         .where(eq(userSettings.userId, userId));
@@ -74,13 +84,13 @@ export async function saveUserSettings(settings: UserSettings) {
       await db.insert(userSettings).values({
         id: crypto.randomUUID(),
         userId,
-        settings,
+        settings: validatedSettings,
         createdAt: timestamp,
         updatedAt: timestamp,
       });
     }
 
-    return { success: true };
+    return validatedSettings;
   } catch (error) {
     console.error("Failed to save user settings:", error);
     throw new Error("Failed to save user settings");

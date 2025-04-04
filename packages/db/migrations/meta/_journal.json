@@ -134,6 +134,13 @@
       "when": 1742937065931,
       "tag": "0018_far_lady_mastermind",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1743545442094,
+      "tag": "0019_right_stryfe",
+      "breakpoints": true
     }
   ]
 }

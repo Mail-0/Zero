@@ -1,5 +1,5 @@
 import { pgTableCreator, text, timestamp, boolean, integer, jsonb } from "drizzle-orm/pg-core";
-import { defaultUserSettings } from "@zero/db/user_settings_default";
+import { defaultUserSettings } from "@zero/db/user_settings";
 
 export const createTable = pgTableCreator((name) => `mail0_${name}`);
 
@@ -11,8 +11,7 @@ export const user = createTable("user", {
   image: text("image"),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
-  defaultConnectionId: text("default_connection_id"),
-  customPrompt: text("custom_prompt"),
+  defaultConnectionId: text("default_connection_id")
 });
 
 export const session = createTable("session", {
