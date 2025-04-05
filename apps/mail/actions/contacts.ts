@@ -46,8 +46,9 @@ function extractEmailAddresses(
     const email = match[2]?.trim();
     
     if (email && !emailAddresses.has(email) && email.toLowerCase() !== userEmail?.toLowerCase()) {
-      // Basic validation to make sure it looks like an email
-      if (email.includes('@') && email.includes('.')) {
+      // Validate email using more comprehensive regex pattern
+      const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+      if (emailRegex.test(email)) {
         emailAddresses.add(email);
         if (name) {
           emailNames.set(email, name);
@@ -58,8 +59,8 @@ function extractEmailAddresses(
   
   // If we didn't find any bracketed emails, try to extract plain emails
   if (!foundBracketedEmail) {
-    // Regular expression for common email format
-    const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi;
+    // More comprehensive email regex for extraction
+    const emailRegex = /([a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*)/gi;
     let emailMatch;
     
     while ((emailMatch = emailRegex.exec(normalizedValue)) !== null) {
@@ -76,8 +77,8 @@ function extractEmailAddresses(
       .filter(addr => addr.includes('@') && !addr.includes('<') && 
              addr.toLowerCase() !== userEmail?.toLowerCase())
       .forEach(email => {
-        // Basic validation
-        if (email.includes('.')) {
+        // Use the same comprehensive regex pattern for validation
+        if (emailRegex.test(email)) {
           emailAddresses.add(email);
         }
       });
@@ -133,72 +134,70 @@ export const getGoogleContacts = cache(async (): Promise<GoogleContact[]> => {
     let contacts: GoogleContact[] = [];
 
     // Always try to fetch contacts, even if scope doesn't explicitly include it
-    {
+    try {
+      const auth = {
+        access_token: userConnection.accessToken,
+        refresh_token: userConnection.refreshToken
+      };
+
+      // Get user info to test the connection
+      const userInfo = await driver.getUserInfo(auth);
+      console.log("Successfully fetched user info with scope:", userConnection.scope);
+
+      // Get contacts directly from People API
       try {
-        const auth = {
-          access_token: userConnection.accessToken,
-          refresh_token: userConnection.refreshToken
-        };
-
-        // Get user info to test the connection
-        const userInfo = await driver.getUserInfo(auth);
-        console.log("Successfully fetched user info with scope:", userConnection.scope);
-
-        // Get contacts directly from People API
+        console.log("Attempting to fetch contacts via People API...");
+        const peopleApi = await driver.getPeopleApi(userConnection.accessToken, userConnection.refreshToken);
+        
         try {
-          console.log("Attempting to fetch contacts via People API...");
-          const peopleApi = await driver.getPeopleApi(userConnection.accessToken, userConnection.refreshToken);
-          
-          try {
-            // First try to get user profile to check if token is working
-            const userProfile = await peopleApi.people.get({
-              resourceName: 'people/me',
-              personFields: 'names,emailAddresses'
-            });
-            
-            console.log("People API access confirmed:", 
-              userProfile.data.emailAddresses?.[0]?.value || "No email found");
-          } catch (profileError) {
-            console.error("Failed to get user profile from People API:", profileError);
-            // Continue anyway, we might still be able to get connections
-          }
-          
-          // Now try to get contacts
-          const response = await peopleApi.people.connections.list({
+          // First try to get user profile to check if token is working
+          const userProfile = await peopleApi.people.get({
             resourceName: 'people/me',
-            personFields: 'names,emailAddresses,photos',
-            pageSize: 100
+            personFields: 'names,emailAddresses'
           });
           
-          const connections = response.data.connections || [];
-          console.log(`Retrieved ${connections.length} contacts from Google People API`);
-          
-          // Detailed logging to debug empty contacts issue
-          if (connections.length === 0) {
-            console.log("No connections returned from People API. Response totalItems:", 
-              response.data.totalItems, "totalPeople:", response.data.totalPeople);
-          }
-          
-          connections.forEach(person => {
-            const email = person.emailAddresses?.[0]?.value;
-            if (email && email.toLowerCase() !== userConnection.email?.toLowerCase()) {
-              contacts.push({
-                id: person.resourceName || `people-${contacts.length}`,
-                name: person.names?.[0]?.displayName,
-                email: email,
-                profilePhotoUrl: person.photos?.[0]?.url
-              });
-            }
-          });
-          
-          console.log(`Added ${contacts.length} contacts from People API`);
-        } catch (peopleError) {
-          console.error("Error fetching contacts from People API:", peopleError);
-          console.log("Will try fallback method instead");
+          console.log("People API access confirmed:", 
+            userProfile.data.emailAddresses?.[0]?.value || "No email found");
+        } catch (profileError) {
+          console.error("Failed to get user profile from People API:", profileError);
+          // Continue anyway, we might still be able to get connections
         }
-      } catch (error) {
-        console.log("Error fetching contacts:", error);
+        
+        // Now try to get contacts
+        const response = await peopleApi.people.connections.list({
+          resourceName: 'people/me',
+          personFields: 'names,emailAddresses,photos',
+          pageSize: 100
+        });
+        
+        const connections = response.data.connections || [];
+        console.log(`Retrieved ${connections.length} contacts from Google People API`);
+        
+        // Detailed logging to debug empty contacts issue
+        if (connections.length === 0) {
+          console.log("No connections returned from People API. Response totalItems:", 
+            response.data.totalItems, "totalPeople:", response.data.totalPeople);
+        }
+        
+        connections.forEach(person => {
+          const email = person.emailAddresses?.[0]?.value;
+          if (email && email.toLowerCase() !== userConnection.email?.toLowerCase()) {
+            contacts.push({
+              id: person.resourceName || `people-${contacts.length}`,
+              name: person.names?.[0]?.displayName,
+              email: email,
+              profilePhotoUrl: person.photos?.[0]?.url
+            });
+          }
+        });
+        
+        console.log(`Added ${contacts.length} contacts from People API`);
+      } catch (peopleError) {
+        console.error("Error fetching contacts from People API:", peopleError);
+        console.log("Will try fallback method instead");
       }
+    } catch (error) {
+      console.log("Error fetching contacts:", error);
     }
 
     // If no contacts found, use the Gmail API to extract recipients
@@ -209,15 +208,31 @@ export const getGoogleContacts = cache(async (): Promise<GoogleContact[]> => {
         // Create Gmail API client from the driver
         const gmail = await driver.getGmailApi(userConnection.accessToken, userConnection.refreshToken);
         
-        // Get a list of emails sent in the last 60 days
-        const sentEmailsResponse = await gmail.users.messages.list({
-          userId: 'me',
-          q: 'in:sent newer_than:60d',
-          maxResults: 50
-        });
+        // Get a list of emails sent in the last 60 days with pagination support
+        const allMessageIds: string[] = [];
+        let pageToken = undefined;
         
-        const messageIds = sentEmailsResponse.data.messages?.map(msg => msg.id) || [];
-        console.log(`Found ${messageIds.length} sent messages for contacts extraction`);
+        // Implement pagination to get more complete results
+        do {
+          const sentEmailsResponse = await gmail.users.messages.list({
+            userId: 'me',
+            q: 'in:sent newer_than:60d',
+            maxResults: 100,
+            pageToken: pageToken
+          });
+          
+          if (sentEmailsResponse.data.messages) {
+            sentEmailsResponse.data.messages.forEach(msg => {
+              if (msg.id) allMessageIds.push(msg.id);
+            });
+          }
+          
+          pageToken = sentEmailsResponse.data.nextPageToken;
+          // Limit to 200 total messages for performance reasons
+          if (allMessageIds.length >= 200) break;
+        } while (pageToken);
+        
+        console.log(`Found ${allMessageIds.length} sent messages for contacts extraction`);
         
         // Extract recipients from these emails
         const emailAddresses = new Set<string>();
@@ -228,23 +243,39 @@ export const getGoogleContacts = cache(async (): Promise<GoogleContact[]> => {
         // Process both sent and received messages for maximum contact extraction
         console.log("Expanding search to include both sent and inbox messages for better contact discovery");
         
-        // Get inbox messages too for a better contact list
-        const inboxResponse = await gmail.users.messages.list({
-          userId: 'me',
-          q: 'in:inbox',
-          maxResults: 30
-        });
+        // Get inbox messages too for a better contact list, with pagination
+        let inboxIds: string[] = [];
+        pageToken = undefined;
         
-        const inboxIds = inboxResponse.data.messages?.map(msg => msg.id) || [];
+        do {
+          const inboxResponse = await gmail.users.messages.list({
+            userId: 'me',
+            q: 'in:inbox',
+            maxResults: 50,
+            pageToken: pageToken
+          });
+          
+          if (inboxResponse.data.messages) {
+            inboxResponse.data.messages.forEach(msg => {
+              if (msg.id) inboxIds.push(msg.id);
+            });
+          }
+          
+          pageToken = inboxResponse.data.nextPageToken;
+          // Limit to 100 inbox messages for performance
+          if (inboxIds.length >= 100) break;
+        } while (pageToken);
+        
         console.log(`Found ${inboxIds.length} inbox messages for contacts extraction`);
         
         // Combine sent and inbox messages for processing
-        const allMessageIds = [...messageIds, ...inboxIds];
-        const uniqueMessageIds = Array.from(new Set(allMessageIds));
+        const combinedMessageIds = [...allMessageIds, ...inboxIds];
+        const uniqueMessageIds = Array.from(new Set(combinedMessageIds));
         console.log(`Processing ${uniqueMessageIds.length} unique messages for contacts`);
         
-        // Process up to 30 messages to extract recipients and senders
-        for (let i = 0; i < Math.min(30, uniqueMessageIds.length); i++) {
+        // Process messages to extract recipients and senders
+        // Increase limit to get more comprehensive contact list
+        for (let i = 0; i < Math.min(75, uniqueMessageIds.length); i++) {
           try {
             const messageId = uniqueMessageIds[i];
             if (!messageId) continue;

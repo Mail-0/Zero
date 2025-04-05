@@ -56,7 +56,7 @@ export function CreateEmail({
   const [isDragging, setIsDragging] = React.useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [reauthUrl, setReauthUrl] = React.useState('');
+  const [reauthUrl, setReauthUrl] = React.useState<string>('');
   const [messageContent, setMessageContent] = React.useState(initialBody);
   const [draftId, setDraftId] = useQueryState('draftId');
   
@@ -463,9 +463,14 @@ export function CreateEmail({
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         setSelectedSuggestionIndex(prev => prev > 0 ? prev - 1 : -1);
-      } else if (e.key === 'Enter' && selectedSuggestionIndex >= 0) {
+      } else if ((e.key === 'Enter' || e.key === 'Tab') && selectedSuggestionIndex >= 0) {
         e.preventDefault();
         handleAddEmail(emailSuggestions[selectedSuggestionIndex]);
+        setShowSuggestions(false);
+      } else if (e.key === 'Tab' && emailSuggestions.length > 0 && selectedSuggestionIndex === -1) {
+        // Auto-select first suggestion on Tab if nothing is selected
+        e.preventDefault();
+        handleAddEmail(emailSuggestions[0]);
         setShowSuggestions(false);
       } else if (e.key === 'Escape') {
         e.preventDefault();
@@ -593,16 +598,16 @@ export function CreateEmail({
                     </div>
                   ))}
                   <div className="relative flex-1">
-                    {contacts?.length === 0 && (
+                    {contacts?.length === 0 && needsContactsPermission && (
                       <div className="absolute -top-9 right-0 z-20 flex items-center gap-2 rounded bg-amber-100 dark:bg-amber-900 px-3 py-1.5 text-xs text-amber-900 dark:text-amber-100 shadow-sm">
                         <UserCheck className="h-3.5 w-3.5" />
-                        <span>{needsContactsPermission ? 'Reconnect to enable contacts' : 'No contacts found'}</span>
+                        <span>Connect to access contacts</span>
                         <a 
-                          href={'/api/v1/mail/auth/google/init?scope=contacts'}
+                          href={reauthUrl || '/api/v1/mail/auth/google/init?scope=contacts'}
                           className="bg-amber-200 dark:bg-amber-800 hover:bg-amber-300 dark:hover:bg-amber-700 rounded px-2 py-0.5 font-medium flex items-center gap-1"
                         >
                           <RefreshCw className="h-3 w-3" />
-                          {needsContactsPermission ? 'Connect' : 'Refresh'}
+                          Connect
                         </a>
                       </div>
                     )}
