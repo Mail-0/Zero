@@ -92,20 +92,18 @@ export function CreateEmail({
     }
   }, [draftId, defaultValue]);
 
-  // Check if we need to request contacts permission and get the reauth URL
+  // Fetch reauth URL early, during component initialization
   React.useEffect(() => {
-    if (needsContactsPermission && !reauthUrl) {
-      const fetchReauthUrl = async () => {
-        try {
-          const { url } = await getReauthUrl();
-          setReauthUrl(url);
-        } catch (error) {
-          console.error('Error getting reauth URL:', error);
-        }
-      };
-      fetchReauthUrl();
-    }
-  }, [needsContactsPermission, reauthUrl]);
+    const fetchReauthUrl = async () => {
+      try {
+        const { url } = await getReauthUrl();
+        setReauthUrl(url);
+      } catch (error) {
+        console.error('Error getting reauth URL:', error);
+      }
+    };
+    fetchReauthUrl();
+  }, []);
 
   React.useEffect(() => {
     const loadDraft = async () => {
@@ -303,8 +301,6 @@ export function CreateEmail({
   const getEmailSuggestions = React.useCallback((input: string): string[] => {
     if (!input) return [];
     
-    // Removed console.log for production
-    
     const inputLower = input.toLowerCase();
     const allSuggestions: ContactSuggestion[] = [];
     
@@ -342,9 +338,11 @@ export function CreateEmail({
     
     // Add suggestions from Google contacts
     if (contacts?.length) {
-      // Log contacts for debugging
-      console.log(`Found ${contacts.length} contacts for suggestions:`, 
-        contacts.slice(0, 5).map(c => ({ email: c.email, name: c.name })));
+      // Only log in development environment
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`Found ${contacts.length} contacts for suggestions:`, 
+          contacts.slice(0, 5).map(c => ({ email: c.email, name: c.name })));
+      }
         
       contacts.forEach(contact => {
         if (!toEmails.includes(contact.email) && 
@@ -362,7 +360,9 @@ export function CreateEmail({
       
       // If we still don't have suggestions but have contacts, show first 5 contacts
       if (allSuggestions.length === 0 && contacts.length > 0 && inputLower.length === 0) {
-        console.log("No matching suggestions found, showing first contacts");
+        if (process.env.NODE_ENV !== 'production') {
+          console.log("No matching suggestions found, showing first contacts");
+        }
         contacts.slice(0, 5).forEach(contact => {
           if (!toEmails.includes(contact.email)) {
             allSuggestions.push({
@@ -598,7 +598,7 @@ export function CreateEmail({
                     </div>
                   ))}
                   <div className="relative flex-1">
-                    {contacts?.length === 0 && needsContactsPermission && (
+                    {needsContactsPermission && (
                       <div className="absolute -top-9 right-0 z-20 flex items-center gap-2 rounded bg-amber-100 dark:bg-amber-900 px-3 py-1.5 text-xs text-amber-900 dark:text-amber-100 shadow-sm">
                         <UserCheck className="h-3.5 w-3.5" />
                         <span>Connect to access contacts</span>

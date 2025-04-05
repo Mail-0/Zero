@@ -72,7 +72,7 @@ function extractEmailAddresses(
     
     // Also handle plain email addresses without names
     normalizedValue
-      .split(',')
+      .split(/[,;]/)
       .map(addr => addr.trim())
       .filter(addr => addr.includes('@') && !addr.includes('<') && 
              addr.toLowerCase() !== userEmail?.toLowerCase())
@@ -273,37 +273,44 @@ export const getGoogleContacts = cache(async (): Promise<GoogleContact[]> => {
         const uniqueMessageIds = Array.from(new Set(combinedMessageIds));
         console.log(`Processing ${uniqueMessageIds.length} unique messages for contacts`);
         
-        // Process messages to extract recipients and senders
-        // Increase limit to get more comprehensive contact list
-        for (let i = 0; i < Math.min(75, uniqueMessageIds.length); i++) {
-          try {
-            const messageId = uniqueMessageIds[i];
-            if (!messageId) continue;
+        // Process messages to extract recipients and senders with controlled concurrency
+        const processedCount = Math.min(75, uniqueMessageIds.length);
+        const batchSize = 10; // Process 10 messages concurrently
+        
+        for (let i = 0; i < processedCount; i += batchSize) {          
+          // Create a batch of promises to process messages concurrently
+          const batch = uniqueMessageIds.slice(i, i + batchSize).map(async messageId => {
+            if (!messageId) return;
             
-            const message = await gmail.users.messages.get({
-              userId: 'me',
-              id: messageId,
-              format: 'metadata',
-              metadataHeaders: ['To', 'Cc', 'Bcc', 'From', 'Reply-To']
-            });
-            
-            // Extract recipient information
-            const headers = message.data.payload?.headers || [];
-            
-            // Process all relevant headers
-            for (const header of headers) {
-              if (['To', 'Cc', 'Bcc', 'From', 'Reply-To'].includes(header.name || '') && header.value) {
-                extractEmailAddresses(
-                  header.value, 
-                  emailAddresses, 
-                  emailNames, 
-                  userConnection.email?.toLowerCase()
-                );
+            try {
+              const message = await gmail.users.messages.get({
+                userId: 'me',
+                id: messageId,
+                format: 'metadata',
+                metadataHeaders: ['To', 'Cc', 'Bcc', 'From', 'Reply-To']
+              });
+              
+              // Extract recipient information
+              const headers = message.data.payload?.headers || [];
+              
+              // Process all relevant headers
+              for (const header of headers) {
+                if (['To', 'Cc', 'Bcc', 'From', 'Reply-To'].includes(header.name || '') && header.value) {
+                  extractEmailAddresses(
+                    header.value, 
+                    emailAddresses, 
+                    emailNames, 
+                    userConnection.email?.toLowerCase()
+                  );
+                }
               }
+            } catch (err) {
+              console.error('Error processing message:', err);
             }
-          } catch (err) {
-            console.error('Error processing message:', err);
-          }
+          });
+          
+          // Wait for the current batch to complete before processing the next batch
+          await Promise.all(batch);
         }
         
         // Add extracted email addresses to contacts
