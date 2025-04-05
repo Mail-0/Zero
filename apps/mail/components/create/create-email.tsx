@@ -23,17 +23,52 @@ import './prosemirror.css';
 
 const MAX_VISIBLE_ATTACHMENTS = 12;
 
-export function CreateEmail() {
-  const [toEmails, setToEmails] = React.useState<string[]>([]);
-  const [subjectInput, setSubjectInput] = React.useState('');
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const createEmptyDocContent = (): JSONContent => ({
+  type: 'doc',
+  content: [
+    {
+      type: 'paragraph',
+      content: [],
+    },
+  ],
+});
+
+export function CreateEmail({
+  initialTo = '',
+  initialSubject = '',
+  initialBody = '',
+}: {
+  initialTo?: string;
+  initialSubject?: string;
+  initialBody?: string;
+}) {
+  const [toInput, setToInput] = React.useState('');
+  const [toEmails, setToEmails] = React.useState<string[]>(initialTo ? [initialTo] : []);
+  const [subjectInput, setSubjectInput] = React.useState(initialSubject);
   const [attachments, setAttachments] = React.useState<File[]>([]);
   const [resetEditorKey, setResetEditorKey] = React.useState(0);
   const [isDragging, setIsDragging] = React.useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [messageContent, setMessageContent] = React.useState('');
+  const [messageContent, setMessageContent] = React.useState(initialBody);
   const [draftId, setDraftId] = useQueryState('draftId');
-  const [defaultValue, setDefaultValue] = React.useState<JSONContent | null>(null);
+  
+  const [defaultValue, setDefaultValue] = React.useState<JSONContent | null>(() => {
+    if (initialBody) {
+      try {
+        return generateJSON(initialBody, [Document, Paragraph, Text, Bold]);
+      } catch (error) {
+        console.error('Error parsing initial body:', error);
+        return createEmptyDocContent();
+      }
+    }
+    return null;
+  });
 
   const { data: session } = useSession();
   const { data: connections } = useConnections();
@@ -50,31 +85,14 @@ export function CreateEmail() {
 
   React.useEffect(() => {
     if (!draftId && !defaultValue) {
-      // Set initial empty content
-      setDefaultValue({
-        type: 'doc',
-        content: [
-          {
-            type: 'paragraph',
-            content: [],
-          },
-        ],
-      });
+      setDefaultValue(createEmptyDocContent());
     }
   }, [draftId, defaultValue]);
 
   React.useEffect(() => {
     const loadDraft = async () => {
       if (!draftId) {
-        setDefaultValue({
-          type: 'doc',
-          content: [
-            {
-              type: 'paragraph',
-              content: [],
-            },
-          ],
-        });
+        setDefaultValue(createEmptyDocContent());
         return;
       }
 
@@ -116,6 +134,26 @@ export function CreateEmail() {
   }, [draftId]);
 
   const t = useTranslations();
+
+  const handleAddEmail = (email: string) => {
+    const trimmedEmail = email.trim().replace(/,$/, '');
+
+    if (!trimmedEmail) return;
+
+    if (toEmails.includes(trimmedEmail)) {
+      setToInput('');
+      return;
+    }
+
+    if (!isValidEmail(trimmedEmail)) {
+      toast.error(`Invalid email format: ${trimmedEmail}`);
+      return;
+    }
+
+    setToEmails([...toEmails, trimmedEmail]);
+    setToInput('');
+    setHasUnsavedChanges(true);
+  };
 
   const saveDraft = React.useCallback(async () => {
     if (!hasUnsavedChanges) return;
@@ -193,16 +231,7 @@ export function CreateEmail() {
       setAttachments([]);
       setMessageContent('');
 
-      setDefaultValue({
-        type: 'doc',
-        content: [
-          {
-            type: 'paragraph',
-            content: [],
-          },
-        ],
-      });
-
+      setDefaultValue(createEmptyDocContent());
       setResetEditorKey((prev) => prev + 1);
 
       setHasUnsavedChanges(false);
@@ -251,6 +280,40 @@ export function CreateEmail() {
     document.addEventListener('keydown', handleKeyPress);
     return () => document.removeEventListener('keydown', handleKeyPress);
   }, []);
+
+  React.useEffect(() => {
+    if (initialTo) {
+      const emails = initialTo.split(',').map(email => email.trim());
+      const validEmails = emails.filter(email => isValidEmail(email));
+      if (validEmails.length > 0) {
+        setToEmails(validEmails);
+      } else {
+        setToInput(initialTo);
+      }
+    }
+    
+    if (initialSubject) {
+      setSubjectInput(initialSubject);
+    }
+    
+    if (initialBody && !defaultValue) {
+      setDefaultValue({
+        type: 'doc',
+        content: [
+          {
+            type: 'paragraph',
+            content: [
+              {
+                type: 'text',
+                text: initialBody
+              }
+            ]
+          }
+        ]
+      });
+      setMessageContent(initialBody);
+    }
+  }, [initialTo, initialSubject, initialBody, defaultValue]);
 
   return (
     <div

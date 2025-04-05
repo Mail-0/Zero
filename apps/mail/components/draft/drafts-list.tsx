@@ -324,7 +324,7 @@ export function DraftsList({ isCompact }: MailListProps) {
       return;
     }
 
-    router.push(`/create?draftId=${message.id}`);
+    router.push(`/mail/create?draftId=${message.id}`);
 
     return;
   };

@@ -68,7 +68,7 @@ export default function ConnectionsPage() {
               ))}
             </div>
           ) : connections?.length ? (
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="lg: grid gap-4 sm:grid-cols-1 md:grid-cols-2">
               {connections.map((connection) => (
                 <div
                   key={connection.id}

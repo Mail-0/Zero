@@ -15,22 +15,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { SettingsCard } from '@/components/settings/settings-card';
 import { availableLocales, locales, Locale } from '@/i18n/config';
+import { useForm, ControllerRenderProps } from 'react-hook-form';
+import { useState, useEffect, useMemo, memo } from 'react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTranslations, useLocale } from 'next-intl';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { saveUserSettings } from '@/actions/settings';
+import { getBrowserTimezone } from '@/lib/timezones';
+import { Textarea } from '@/components/ui/textarea';
+import { useSettings } from '@/hooks/use-settings';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Globe, Clock } from 'lucide-react';
 import { changeLocale } from '@/i18n/utils';
-import { useForm } from 'react-hook-form';
-import { useState, useEffect } from 'react';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import * as z from 'zod';
-import { useSettings } from '@/hooks/use-settings';
-import { getBrowserTimezone } from '@/lib/timezones';
-import { saveUserSettings } from '@/actions/settings';
-import { Textarea } from '@/components/ui/textarea';
 
 const formSchema = z.object({
   language: z.enum(locales as [string, ...string[]]),
@@ -39,6 +42,84 @@ const formSchema = z.object({
   externalImages: z.boolean(),
   customPrompt: z.string(),
 });
+
+const TimezoneSelect = memo(
+  ({
+    field,
+    t,
+  }: {
+    field: ControllerRenderProps<z.infer<typeof formSchema>, 'timezone'>;
+    t: any;
+  }) => {
+    const [open, setOpen] = useState(false);
+    const [timezoneSearch, setTimezoneSearch] = useState('');
+
+    const timezones = useMemo(() => Intl.supportedValuesOf('timeZone'), []);
+
+    const filteredTimezones = useMemo(() => {
+      if (!timezoneSearch) return timezones;
+      return timezones.filter((timezone) =>
+        timezone.toLowerCase().includes(timezoneSearch.toLowerCase()),
+      );
+    }, [timezones, timezoneSearch]);
+
+    return (
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <FormControl>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="w-46 flex items-center justify-start"
+            >
+              <Clock className="mr-2 h-4 w-4 flex-shrink-0" />
+              <span className="truncate">{field.value}</span>
+            </Button>
+          </FormControl>
+        </PopoverTrigger>
+        <PopoverContent className="w-[300px] p-0">
+          <div className="px-3 py-2">
+            <input
+              className="border-input bg-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-1 disabled:cursor-not-allowed disabled:opacity-50"
+              placeholder={t('pages.settings.general.selectTimezone')}
+              value={timezoneSearch}
+              onChange={(e) => setTimezoneSearch(e.target.value)}
+            />
+          </div>
+          <ScrollArea className="h-[300px]">
+            <div className="p-1">
+              {filteredTimezones.length === 0 && (
+                <div className="text-muted-foreground p-2 text-center text-sm">
+                  {t('pages.settings.general.noResultsFound')}
+                </div>
+              )}
+              {filteredTimezones.map((timezone) => (
+                <div
+                  key={timezone}
+                  className={cn(
+                    'relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none',
+                    field.value === timezone
+                      ? 'bg-accent text-accent-foreground'
+                      : 'hover:bg-accent hover:text-accent-foreground',
+                  )}
+                  onClick={() => {
+                    field.onChange(timezone);
+                    setOpen(false);
+                  }}
+                >
+                  {timezone}
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </PopoverContent>
+      </Popover>
+    );
+  },
+);
+
+TimezoneSelect.displayName = 'TimezoneSelect';
 
 export default function GeneralPage() {
   const [isSaving, setIsSaving] = useState(false);
@@ -53,7 +134,7 @@ export default function GeneralPage() {
       timezone: getBrowserTimezone(),
       dynamicContent: false,
       externalImages: true,
-      customPrompt: "",
+      customPrompt: '',
     },
   });
 
@@ -133,21 +214,7 @@ export default function GeneralPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t('pages.settings.general.timezone')}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="w-36">
-                          <Clock className="mr-2 h-4 w-4" />
-                          <SelectValue placeholder={t('pages.settings.general.selectTimezone')} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Intl.supportedValuesOf('timeZone').map((timezone) => (
-                          <SelectItem key={timezone} value={timezone}>
-                            {timezone}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <TimezoneSelect field={field} t={t} />
                   </FormItem>
                 )}
               />

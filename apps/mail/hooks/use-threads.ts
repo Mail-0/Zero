@@ -9,6 +9,7 @@ import { defaultPageSize } from '@/lib/utils';
 import useSWRInfinite from 'swr/infinite';
 import useSWR, { preload } from 'swr';
 import { useMemo } from 'react';
+import axios from 'axios';
 
 export const preloadThread = async (userId: string, threadId: string, connectionId: string) => {
   console.log(`🔄 Prefetching email ${threadId}...`);
@@ -34,8 +35,14 @@ const fetchEmails = async ([
   pageToken,
 ]: FetchEmailsTuple): Promise<RawResponse> => {
   try {
-    const data = (await getMails({ folder, q, max, labelIds, pageToken })) as RawResponse;
-    return data;
+    const searchParams = new URLSearchParams({
+      folder,
+      q,
+      max: max?.toString() ?? defaultPageSize.toString(),
+      pageToken: pageToken ?? '',
+    } as Record<string, string>);
+    const response = await axios.get<RawResponse>(`/api/driver?${searchParams.toString()}`);
+    return response.data;
   } catch (error) {
     console.error('Error fetching emails:', error);
     throw error;
@@ -49,8 +56,9 @@ const fetchThread = (cb: any) => async (args: any[]) => {
       if (response) {
         if (cb) {
           const unreadMessages = response.filter((e) => e.unread).map((e) => e.id);
+          console.log('here', unreadMessages.length);
           if (unreadMessages.length) {
-            markAsRead({ ids: unreadMessages }).then(() => {
+            void markAsRead({ ids: unreadMessages }).then(() => {
               if (cb && typeof cb === 'function') cb();
             });
           }
@@ -133,14 +141,16 @@ export const useThreads = () => {
   };
 };
 
+// Deprecated, we move this to be prefetched on the server
 export const useThread = (threadId?: string) => {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
+  const { mutate: mutateThreads } = useThreads();
   const id = threadId ? threadId : searchParams.get('threadId');
 
   const { data, isLoading, error, mutate } = useSWR<ParsedMessage[]>(
     session?.user.id && id ? [session.user.id, id, session.connectionId] : null,
-    fetchThread(undefined) as any,
+    fetchThread(mutateThreads) as any,
   );
 
   const hasUnread = useMemo(() => data?.some((e) => e.unread), [data]);

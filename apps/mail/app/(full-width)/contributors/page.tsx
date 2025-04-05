@@ -660,7 +660,7 @@ export default function OpenPage() {
                   transform: 'translateY(10px)',
                 }}
               >
-                <Avatar className="h-16 w-16 rounded-full ring-2 ring-neutral-200 transition-transform group-hover:scale-105 group-hover:ring-neutral-300 dark:ring-neutral-800 dark:group-hover:ring-neutral-700">
+                <Avatar className="h-16 w-16 ring-2 ring-neutral-200 transition-transform group-hover:scale-105 group-hover:ring-neutral-300 dark:ring-neutral-800 dark:group-hover:ring-neutral-700">
                   <AvatarImage
                     src={`https://github.com/${member.login}.png`}
                     alt={member.login}
@@ -784,7 +784,7 @@ export default function OpenPage() {
                         transform: 'translateY(10px)',
                       }}
                     >
-                      <Avatar className="h-16 w-16 rounded-full ring-2 ring-neutral-200 transition-transform group-hover:scale-105 group-hover:ring-neutral-300 dark:ring-neutral-800 dark:group-hover:ring-neutral-700">
+                      <Avatar className="h-16 w-16 ring-2 ring-neutral-200 transition-transform group-hover:scale-105 group-hover:ring-neutral-300 dark:ring-neutral-800 dark:group-hover:ring-neutral-700">
                         <AvatarImage
                           src={contributor.avatar_url}
                           alt={contributor.login}
@@ -836,7 +836,7 @@ export default function OpenPage() {
                           return (
                             <g transform={`translate(${x},${y})`}>
                               <foreignObject x="-12" y="8" width="24" height="24">
-                                <Avatar className="h-6 w-6 rounded-full ring-1 ring-neutral-200 dark:ring-neutral-800">
+                                <Avatar className="h-6 w-6  ring-1 ring-neutral-200 dark:ring-neutral-800">
                                   <AvatarImage src={contributor?.avatar_url} />
                                   <AvatarFallback className="text-[8px]">
                                     {payload.value.slice(0, 2).toUpperCase()}

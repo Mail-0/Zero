@@ -5,8 +5,6 @@ import { Sidebar, SidebarContent, SidebarHeader } from '@/components/ui/sidebar'
 import { navigationConfig } from '@/config/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSidebar } from '@/components/ui/sidebar';
-import FeaturebaseWidget from './featurebase-widget';
-import FeaturebaseButton from './featurebase-button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import React, { useMemo, useRef } from 'react';
 import { usePathname } from 'next/navigation';
@@ -60,9 +58,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <>
-      <FeaturebaseWidget organization="0email" theme="dark" />
-      <FeaturebaseButton />
-
       <Sidebar
         collapsible="icon"
         {...props}
@@ -131,18 +126,20 @@ function ComposeButton() {
   const t = useTranslations();
   return (
     <Button
-      onClick={() => router.push('/mail/create')}
+      asChild
       className="bg-secondary bg-subtleWhite text-primary hover:bg-subtleWhite dark:bg-subtleBlack dark:hover:bg-subtleBlack relative isolate mt-1 h-8 w-[calc(100%)] overflow-hidden whitespace-nowrap shadow-inner"
       onMouseEnter={() => () => iconRef.current?.startAnimation?.()}
       onMouseLeave={() => () => iconRef.current?.stopAnimation?.()}
     >
-      {state === 'collapsed' && !isMobile ? (
-        <SquarePenIcon ref={iconRef} className="size-4" />
-      ) : (
-        <>
-          <span className="text-center text-sm">{t('common.actions.create')}</span>
-        </>
-      )}
+      <Link prefetch shallow href="/mail/create">
+        {state === 'collapsed' && !isMobile ? (
+          <SquarePenIcon ref={iconRef} className="size-4" />
+        ) : (
+          <>
+            <span className="text-center text-sm">{t('common.actions.create')}</span>
+          </>
+        )}
+      </Link>
     </Button>
   );
 }

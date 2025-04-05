@@ -1,7 +1,18 @@
+import {
+  Archive,
+  ArchiveX,
+  Expand,
+  Forward,
+  MoreVertical,
+  Reply,
+  ReplyAll,
+  Star,
+  StarOff,
+  X,
+} from 'lucide-react';
 import { DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { DropdownMenu, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { ArchiveX, Forward, ReplyAll, Star, StarOff } from 'lucide-react';
 import { useSearchParams, useParams } from 'next/navigation';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -23,6 +34,7 @@ import { useTranslations } from 'next-intl';
 import { NotesPanel } from './note-panel';
 import { cn, FOLDERS } from '@/lib/utils';
 import MailDisplay from './mail-display';
+import { ParsedMessage } from '@/types';
 import { Inbox } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -31,9 +43,11 @@ interface ThreadDisplayProps {
   mail?: any;
   onClose?: () => void;
   isMobile?: boolean;
+  messages?: ParsedMessage[];
+  id?: string;
 }
 
-export function ThreadDemo({ mail: emailData, isMobile }: ThreadDisplayProps) {
+export function ThreadDemo({ messages, isMobile }: ThreadDisplayProps) {
   const isFullscreen = false;
 
   return (
@@ -53,21 +67,17 @@ export function ThreadDemo({ mail: emailData, isMobile }: ThreadDisplayProps) {
       >
         <div className="flex flex-shrink-0 items-center border-b p-2">
           <div className="flex flex-1 items-center gap-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" className="md:h-fit md:px-2" disabled={!emailData}>
-                  <XIcon className="h-4 w-4" />
-                  <span className="sr-only">Close</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Close</TooltipContent>
-            </Tooltip>
+            <Button variant="ghost" className="md:h-fit md:px-2" disabled={!messages}>
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </Button>
+
             <ThreadSubject subject={'Join the Email Revolution with Zero!'} />
           </div>
           <div className="flex items-center gap-2">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" className="md:h-fit md:px-2" disabled={!emailData}>
+                <Button variant="ghost" className="md:h-fit md:px-2" disabled={!messages}>
                   {isFullscreen ? (
                     <ExpandIcon className="h-4 w-4" />
                   ) : (
@@ -84,7 +94,7 @@ export function ThreadDemo({ mail: emailData, isMobile }: ThreadDisplayProps) {
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" className="md:h-fit md:px-2" disabled={!emailData}>
+                <Button variant="ghost" className="md:h-fit md:px-2" disabled={!messages}>
                   <ArchiveIcon className="relative top-0.5 h-4 w-4" />
                   <span className="sr-only">Archive</span>
                 </Button>
@@ -93,7 +103,7 @@ export function ThreadDemo({ mail: emailData, isMobile }: ThreadDisplayProps) {
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" className="md:h-fit md:px-2" disabled={!emailData}>
+                <Button variant="ghost" className="md:h-fit md:px-2" disabled={!messages}>
                   <ReplyIcon className="h-4 w-4" />
                   <span className="sr-only">Reply</span>
                 </Button>
@@ -102,7 +112,7 @@ export function ThreadDemo({ mail: emailData, isMobile }: ThreadDisplayProps) {
             </Tooltip>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="md:h-fit md:px-2" disabled={!emailData}>
+                <Button variant="ghost" className="md:h-fit md:px-2" disabled={!messages}>
                   <MoreVerticalIcon className="h-4 w-4" />
                   <span className="sr-only">More</span>
                 </Button>
@@ -112,14 +122,8 @@ export function ThreadDemo({ mail: emailData, isMobile }: ThreadDisplayProps) {
                   <ArchiveX className="mr-2 h-4 w-4" /> Move to spam
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <ReplyAll className="mr-2 h-4 w-4" /> Reply all
-                </DropdownMenuItem>
-                <DropdownMenuItem>
                   <Forward className="mr-2 h-4 w-4" /> Forward
                 </DropdownMenuItem>
-                <DropdownMenuItem>Mark as unread</DropdownMenuItem>
-                <DropdownMenuItem>Add label</DropdownMenuItem>
-                <DropdownMenuItem>Mute thread</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -127,7 +131,7 @@ export function ThreadDemo({ mail: emailData, isMobile }: ThreadDisplayProps) {
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <ScrollArea className="flex-1" type="scroll">
             <div className="pb-4">
-              {[...(emailData || [])].reverse().map((message, index) => (
+              {[...(messages || [])].reverse().map((message, index) => (
                 <div
                   key={message.id}
                   className={cn(
@@ -148,7 +152,9 @@ export function ThreadDemo({ mail: emailData, isMobile }: ThreadDisplayProps) {
             </div>
           </ScrollArea>
           <div className="relative flex-shrink-0 md:top-2">
-            <ReplyCompose emailData={emailData} isOpen={false} setIsOpen={() => {}} />
+            {messages ? (
+              <ReplyCompose emailData={messages} isOpen={false} setIsOpen={() => {}} />
+            ) : null}
           </div>
         </div>
       </div>
@@ -189,8 +195,8 @@ function ThreadActionButton({
   );
 }
 
-export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
-  const { data: emailData, isLoading, mutate: mutateThread } = useThread();
+export function ThreadDisplay({ mail, onClose, isMobile, id }: ThreadDisplayProps) {
+  const { data: emailData, isLoading } = useThread(id ?? null);
   const { mutate: mutateThreads } = useThreads();
   const searchParams = useSearchParams();
   const [isMuted, setIsMuted] = useState(false);
@@ -220,11 +226,11 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
         currentFolder: folder,
         destination,
       }).then(async () => {
-        await Promise.all([mutateThread(), mutateStats()]);
+        await Promise.all([mutateStats(), mutateThreads()]);
         handleClose();
       });
     },
-    [threadId, folder, mutateThread, mutateStats, handleClose],
+    [threadId, folder, mutateStats, handleClose],
   );
 
   useEffect(() => {
@@ -235,7 +241,7 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
 
   const handleFavourites = async () => {
     if (!emailData || !threadId) return;
-    const done = Promise.all([mutateThread(), mutateThreads()]);
+    const done = Promise.all([mutateThreads()]);
     if (emailData[0]?.tags?.includes('STARRED')) {
       toast.promise(
         modifyLabels({ threadId: [threadId], removeLabels: ['STARRED'] }).then(() => done),
@@ -271,7 +277,7 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
     return () => window.removeEventListener('keydown', handleEsc);
   }, [handleClose]);
 
-  if (isLoading || !emailData)
+  if (!emailData || isLoading)
     return (
       <div
         className={cn(
@@ -382,15 +388,17 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
       >
         <div className="flex flex-shrink-0 items-center border-b px-1 pb-1 md:px-3 md:pb-2 md:pt-[10px]">
           <div className="flex flex-1 items-center gap-2">
-            <Link href={`/mail/${folder}`}>
-              <XIcon className="size-6" />
+            <Link prefetch href={`/mail/${folder}`}>
+              <Button variant="ghost" className="md:h-fit md:px-2">
+                <X className="h-4 w-4 hover:text-red-500" />
+              </Button>
             </Link>
             <ThreadSubject subject={emailData[0]?.subject} />
           </div>
           <div className="flex items-center md:gap-2">
-            <NotesPanel threadId={mail} />
+            {/* <NotesPanel threadId={mail} /> */}
             <ThreadActionButton
-              icon={isFullscreen ? ExpandIcon : ExpandIcon}
+              icon={Expand}
               label={
                 isFullscreen
                   ? t('common.threadDisplay.exitFullscreen')
@@ -400,14 +408,13 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
               onClick={() => setIsFullscreen(!isFullscreen)}
             />
             <ThreadActionButton
-              icon={ArchiveIcon}
+              icon={Archive}
               label={t('common.threadDisplay.archive')}
               disabled={!emailData || (!isInInbox && !isInSpam)}
-              className="relative top-0.5"
               onClick={() => moveThreadTo('archive')}
             />
             <ThreadActionButton
-              icon={ReplyIcon}
+              icon={Reply}
               label={t('common.threadDisplay.reply')}
               disabled={!emailData}
               onClick={() => setIsReplyOpen(true)}
@@ -421,7 +428,7 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
                   onMouseEnter={() => moreVerticalIconRef.current?.startAnimation?.()}
                   onMouseLeave={() => moreVerticalIconRef.current?.stopAnimation?.()}
                 >
-                  <MoreVerticalIcon ref={moreVerticalIconRef} className="h-4 w-4" />
+                  <MoreVertical ref={moreVerticalIconRef} className="h-4 w-4" />
                   <span className="sr-only">{t('common.threadDisplay.moreOptions')}</span>
                 </Button>
               </DropdownMenuTrigger>
@@ -469,7 +476,7 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
                     emailData={message}
                     isFullscreen={isFullscreen}
                     isMuted={isMuted}
-                    isLoading={isLoading}
+                    isLoading={false}
                     index={index}
                   />
                 </div>

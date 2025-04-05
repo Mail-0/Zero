@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, type ReactNode, useState } from 'react';
-import { Google } from '@/components/icons/icons';
+import { useEffect, type ReactNode, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { type EnvVarInfo } from '@/lib/auth-providers';
 import { signIn, useSession } from '@/lib/auth-client';
+import { Google } from '@/components/icons/icons';
 import { Button } from '@/components/ui/button';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -39,7 +39,7 @@ const getProviderIcon = (providerId: string, className?: string): ReactNode => {
   switch (providerId) {
     case 'google':
       return <Google className={defaultClass} />;
-   
+
     case 'zero':
       return (
         <Image
@@ -55,18 +55,23 @@ const getProviderIcon = (providerId: string, className?: string): ReactNode => {
   }
 };
 
-export function LoginClient({ providers, isProd }: LoginClientProps) {
+function LoginClientContent({ providers, isProd }: LoginClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, isPending } = useSession();
   const [expandedProviders, setExpandedProviders] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    const missingProviders = providers.filter((p) => p.required && !p.enabled);
-
-    if (missingProviders.length > 0 && missingProviders[0]?.id) {
-      setExpandedProviders({ [missingProviders[0].id]: true });
+    const error = searchParams.get('error');
+    if (error === 'early_access_required') {
+      toast.error('Early access is required to log in');
     }
-  }, [providers]);
+
+    const missing = providers.find((p) => p.required && !p.enabled);
+    if (missing?.id) {
+      setExpandedProviders({ [missing.id]: true });
+    }
+  }, [searchParams, providers, router]);
 
   const missingRequiredProviders = providers
     .filter((p) => p.required && !p.enabled)
@@ -349,5 +354,19 @@ export function LoginClient({ providers, isProd }: LoginClientProps) {
         </div>
       </footer>
     </div>
+  );
+}
+
+export function LoginClient(props: LoginClientProps) {
+  const fallback = (
+    <div className="flex min-h-screen w-full items-center justify-center">
+      <p>Loading...</p>
+    </div>
+  );
+
+  return (
+    <Suspense fallback={fallback}>
+      <LoginClientContent {...props} />
+    </Suspense>
   );
 }

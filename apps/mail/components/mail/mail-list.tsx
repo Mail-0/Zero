@@ -156,9 +156,14 @@ const Thread = memo(
               )}
             />
             <div className="flex w-full items-center justify-between gap-4">
-              <Avatar className="h-8 w-8 rounded-full">
-                <AvatarImage src={getEmailLogo(message.sender.email)} className="rounded-full" />
-                <AvatarFallback className="rounded-full">{message.sender.name[0]}</AvatarFallback>
+              <Avatar className="h-8 w-8">
+                <AvatarImage
+                  className="bg-muted-foreground/50 dark:bg-muted/50 p-2"
+                  src={getEmailLogo(message.sender.email)}
+                />
+                <AvatarFallback className="bg-muted-foreground/50 dark:bg-muted/50">
+                  {message?.sender?.name[0]?.toUpperCase()}
+                </AvatarFallback>
               </Avatar>
               <div className="flex w-full justify-between">
                 <div className="w-full">
@@ -170,7 +175,9 @@ const Thread = memo(
                           'text-md flex items-baseline gap-1 group-hover:opacity-100',
                         )}
                       >
-                        <span>{highlightText(message.sender.name, searchValue.highlight)}</span>{' '}
+                        <span className={cn(threadIdParam ? 'max-w-[3ch] truncate' : '')}>
+                          {highlightText(message.sender.name, searchValue.highlight)}
+                        </span>{' '}
                         {message.unread && !isMailSelected ? (
                           <span className="size-2 rounded bg-[#006FFE]" />
                         ) : null}
@@ -203,8 +210,11 @@ const Thread = memo(
                   <p
                     className={cn(
                       'mt-1 line-clamp-1 text-xs opacity-70 transition-opacity',
-                      mail.selected ? 'line-clamp-1' : 'line-clamp-2',
-                      isMailSelected && 'opacity-100',
+                      mail.selected
+                        ? 'max-w-[3ch] overflow-hidden text-ellipsis whitespace-nowrap'
+                        : 'line-clamp-2',
+                      isMailSelected &&
+                        'max-w-[3ch] overflow-hidden text-ellipsis whitespace-nowrap opacity-100',
                     )}
                   >
                     {highlightText(message.subject, searchValue.highlight)}
@@ -214,8 +224,7 @@ const Thread = memo(
             </div>
           </div>
         ) : (
-          <Link
-            href={`/mail/${folder}?threadId=${message.threadId ?? message.id}`}
+          <div
             data-thread-id={message.threadId ?? message.id}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
@@ -235,9 +244,11 @@ const Thread = memo(
               )}
             />
             <div className="flex w-full items-center justify-between gap-4">
-              <Avatar className="h-8 w-8 rounded-full">
-                <AvatarImage src={getEmailLogo(message.sender.email)} className="rounded-full" />
-                <AvatarFallback className="rounded-full">{message.sender.name[0]}</AvatarFallback>
+              <Avatar className="h-8 w-8">
+                <AvatarImage className="bg-muted-foreground/50 dark:bg-muted/50 p-2" src={getEmailLogo(message.sender.email)} />
+                <AvatarFallback className="bg-muted-foreground/50 dark:bg-muted/50">
+                  {message?.sender?.name[0]?.toUpperCase()}
+                </AvatarFallback>
               </Avatar>
               <div className="flex w-full justify-between">
                 <div className="w-full">
@@ -249,7 +260,9 @@ const Thread = memo(
                           'text-md flex items-baseline gap-1 group-hover:opacity-100',
                         )}
                       >
-                        <span>{highlightText(message.sender.name, searchValue.highlight)}</span>{' '}
+                        <span className={cn(threadIdParam ? 'max-w-[5ch] truncate' : '')}>
+                          {highlightText(message.sender.name, searchValue.highlight)}
+                        </span>{' '}
                         {message.unread && !isMailSelected ? (
                           <span className="size-2 rounded bg-[#006FFE]" />
                         ) : null}
@@ -279,19 +292,13 @@ const Thread = memo(
                       </p>
                     ) : null}
                   </div>
-                  <p
-                    className={cn(
-                      'mt-1 line-clamp-1 text-xs opacity-70 transition-opacity',
-                      mail.selected ? 'line-clamp-1' : 'line-clamp-2',
-                      isMailSelected && 'opacity-100',
-                    )}
-                  >
+                  <p className={cn('mt-1 line-clamp-1 text-xs opacity-70 transition-opacity')}>
                     {highlightText(message.subject, searchValue.highlight)}
                   </p>
                 </div>
               </div>
             </div>
-          </Link>
+          </div>
         )}
       </div>
     );
@@ -545,6 +552,8 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
         }
         return;
       }
+
+      router.push(`/mail/inbox?threadId=${message.threadId ?? message.id}`);
     },
     [getSelectMode, folder, searchParams, items, handleMouseEnter],
   );

@@ -149,15 +149,16 @@ const MailDisplay = ({ emailData, isMuted, index, demo }: Props) => {
         <div className="flex flex-col gap-4 p-4 pb-2 transition-all duration-200">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start justify-center gap-4">
-              <Avatar className="h-8 w-8 rounded-full">
+              <Avatar className="h-8 w-8">
                 <AvatarImage
+                  className="bg-muted-foreground/50 dark:bg-muted/50 p-2"
                   src={getEmailLogo(emailData?.sender?.email)}
-                  className="rounded-full"
                 />
-                <AvatarFallback className="rounded-full">
-                  {emailData?.sender?.name[0]}
+                <AvatarFallback className="bg-muted-foreground/50 dark:bg-muted/50">
+                  {emailData?.sender?.name[0]?.toUpperCase()}
                 </AvatarFallback>
               </Avatar>
+
               <div className="relative bottom-1 flex-1">
                 <div className="flex items-center justify-start gap-2">
                   <span className="font-semibold">{emailData?.sender?.name}</span>

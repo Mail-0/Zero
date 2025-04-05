@@ -310,6 +310,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       return { ...res.data, threads } as any;
     },
     get: async (id: string): Promise<ParsedMessage[]> => {
+      console.log(id);
       const res = await gmail.users.threads.get({ userId: 'me', id, format: 'full' });
       if (!res.data.messages) return [];
 

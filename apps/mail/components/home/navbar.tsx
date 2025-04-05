@@ -42,7 +42,7 @@ export default function Navbar() {
           </SheetTrigger>
           <SheetContent
             side="top"
-            className="w-full !translate-y-0 border-none bg-white px-4 py-4 !duration-0 data-[state=closed]:!translate-y-0 data-[state=open]:!translate-y-0 dark:bg-black"
+            className="w-full !translate-y-0 border-none bg-white px-0 py-4 !duration-0 data-[state=closed]:!translate-y-0 data-[state=open]:!translate-y-0 dark:bg-black"
           >
             <SheetHeader className="">
               <VisuallyHidden>
@@ -54,7 +54,7 @@ export default function Navbar() {
                 <Image
                   src="/white-icon.svg"
                   alt="zerodotemail"
-                  className="h-9 w-9 invert dark:invert-0"
+                  className="size-6 invert dark:invert-0"
                   width={180}
                   height={180}
                 />

@@ -4,7 +4,6 @@ import { SidebarGroup, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '.
 import { Collapsible, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { clearBulkSelectionAtom } from '../mail/use-mail';
-import { useFeaturebase } from '@/hooks/use-featurebase';
 import { type MessageKey } from '@/config/navigation';
 import { Badge } from '@/components/ui/badge';
 import { useStats } from '@/hooks/use-stats';
@@ -76,10 +75,7 @@ export function NavMain({ items }: NavMainProps) {
       const currentFrom = searchParams.get('from');
       const category = searchParams.get('category');
 
-      // Handle Featurebase button
-      if (item.isFeaturebaseButton) {
-        return '#';
-      }
+      
 
       // Handle settings navigation
       if (item.isSettingsButton) {
@@ -162,6 +158,7 @@ export function NavMain({ items }: NavMainProps) {
                     {...item}
                     isActive={isUrlActive(item.url)}
                     href={getHref(item)}
+                    target={item.target}
                   />
                 ))}
               </div>
@@ -176,7 +173,6 @@ export function NavMain({ items }: NavMainProps) {
 function NavItem(item: NavItemProps & { href: string }) {
 	const iconRef = useRef<IconRefType>(null);
 	const { data: stats } = useStats();
-	const { openFeaturebase } = useFeaturebase();
 	const t = useTranslations();
 	const [, clearBulkSelection] = useAtom(clearBulkSelectionAtom);
 
@@ -192,24 +188,10 @@ function NavItem(item: NavItemProps & { href: string }) {
     );
   }
 
-	// Handle Featurebase button click
-	const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-		clearBulkSelection();
-
-		if (item.isFeaturebaseButton) {
-			e.preventDefault();
-			openFeaturebase();
-		}
-
-    if (item.onClick) {
-      item.onClick(e);
-    }
-  };
 
   // Apply animation handlers to all buttons including back buttons
   const linkProps = {
     href: item.href,
-    onClick: handleClick,
     onMouseEnter: () => iconRef.current?.startAnimation?.(),
     onMouseLeave: () => iconRef.current?.stopAnimation?.(),
   };
@@ -243,7 +225,7 @@ function NavItem(item: NavItemProps & { href: string }) {
   return (
     <Collapsible defaultOpen={item.isActive}>
       <CollapsibleTrigger asChild>
-        <Link {...linkProps}>{buttonContent}</Link>
+        <Link {...linkProps} target={item.target}>{buttonContent}</Link>
       </CollapsibleTrigger>
     </Collapsible>
   );

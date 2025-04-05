@@ -2,12 +2,12 @@
   {
     "id": "imp-001",
     "threadId": "imp-001",
-    "tags": ["important", "personal", "promotions", "updates"],
+    "tags": ["important"],
     "title": "🚨 Welcome to Zero: The Future of Email is Here 🚨",
     "body": "We're building the future of email at Zero, and we'd love for you to be part of it!",
     "receivedOn": "2024-02-14",
     "sender": {
-      "name": "Zero Team",
+      "name": "Zero",
       "email": "hello@0.email"
     },
     "unread": true,
@@ -23,7 +23,7 @@
     "body": "Okay, not quite, but we do have a job for you. Are you in?",
     "receivedOn": "2024-03-05",
     "sender": {
-      "name": "Tech Recruiter",
+      "name": "Company",
       "email": "hr@desperateforhelp.com"
     },
     "unread": false,
@@ -39,7 +39,7 @@
     "body": "Hey, you look like someone who needs a paycheck. Want a job?",
     "receivedOn": "2024-03-01",
     "sender": {
-      "name": "HR Recruiter",
+      "name": "HR",
       "email": "hireme@company.com"
     },
     "unread": false,
@@ -103,7 +103,7 @@
     "body": "Someone (hopefully you) updated your account settings. If this wasn't you, panic immediately.",
     "receivedOn": "2024-03-10",
     "sender": {
-      "name": "Security Team",
+      "name": "Security",
       "email": "noreply@securityalerts.com"
     },
     "unread": true,
@@ -135,7 +135,7 @@
     "body": "We've analyzed your spending habits. The good news: you're alive. The bad news: everything else.",
     "receivedOn": "2024-03-12",
     "sender": {
-      "name": "Your Bank",
+      "name": "Bank",
       "email": "statements@bankofmoney.com"
     },
     "unread": true,
@@ -167,7 +167,7 @@
     "body": "Everything is on track for launch! Unless it isn't, in which case, we'll let you know... eventually.",
     "receivedOn": "2024-03-18",
     "sender": {
-      "name": "Project Manager",
+      "name": "Manager",
       "email": "pm@bigproject.com"
     },
     "unread": true,
@@ -183,7 +183,7 @@
     "body": "Order now and get a second pizza free! (Your diet plan can start tomorrow.)",
     "receivedOn": "2024-03-22",
     "sender": {
-      "name": "Pizza Palace",
+      "name": "Restaurant",
       "email": "deals@pizzapalace.com"
     },
     "unread": false,
