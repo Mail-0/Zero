@@ -1,6 +1,6 @@
-import { ImageResponse } from "next/og";
+import { ImageResponse } from 'next/og';
 
-export const runtime = "edge";
+export const runtime = 'edge';
 
 export async function GET() {
   async function loadGoogleFont(font: string, weight: string) {
@@ -15,17 +15,17 @@ export async function GET() {
       }
     }
 
-    throw new Error("failed to load font data");
+    throw new Error('failed to load font data');
   }
 
   const mailBuffer = await fetch(
-    new URL("../../../../public/white-icon.svg", import.meta.url),
+    new URL('../../../../public/white-icon.svg', import.meta.url),
   ).then((res) => res.arrayBuffer());
-  const mailBase64 = Buffer.from(mailBuffer).toString("base64");
+  const mailBase64 = Buffer.from(mailBuffer).toString('base64');
   const mail = `data:image/svg+xml;base64,${mailBase64}`;
 
-  const fontWeight400 = await loadGoogleFont("Geist", "400");
-  const fontWeight600 = await loadGoogleFont("Geist", "600");
+  const fontWeight400 = await loadGoogleFont('Geist', '400');
+  const fontWeight600 = await loadGoogleFont('Geist', '600');
 
   return new ImageResponse(
     (
@@ -39,7 +39,7 @@ export async function GET() {
           </div>
           <div
             tw="flex flex-col items-center justify-center text-8xl"
-            style={{ fontFamily: "bold" }}
+            style={{ fontFamily: 'bold' }}
           >
             <div tw="flex">
               <span tw="text-[#fff]">The future of email</span>
@@ -47,7 +47,7 @@ export async function GET() {
             <span tw="text-[#A1A1A1]">is here</span>
           </div>
 
-          <div tw="text-[36px] text-center text-neutral-400 mt-10" style={{ fontFamily: "light" }}>
+          <div tw="text-[36px] text-center text-neutral-400 mt-10" style={{ fontFamily: 'light' }}>
             Experience email the way you want with 0 - the first open source email app that puts
             your privacy and safety first.
           </div>
@@ -60,30 +60,30 @@ export async function GET() {
 
         <div
           style={{
-            background: "linear-gradient(135deg, #fff  100%, #ffff  100%)",
-            width: "20rem",
-            height: "20rem",
-            filter: "blur(180px)",
-            borderRadius: "50%",
-            display: "flex",
-            position: "absolute",
-            bottom: "-100px",
-            left: "-40px",
-            opacity: "0.18",
+            background: 'linear-gradient(135deg, #fff  100%, #ffff  100%)',
+            width: '20rem',
+            height: '20rem',
+            filter: 'blur(180px)',
+            borderRadius: '50%',
+            display: 'flex',
+            position: 'absolute',
+            bottom: '-100px',
+            left: '-40px',
+            opacity: '0.18',
           }}
         ></div>
         <div
           style={{
-            background: "linear-gradient(135deg, #fff  100%, #fff  100%)",
-            width: "20rem",
-            height: "20rem",
-            filter: "blur(180px)",
-            borderRadius: "50%",
-            display: "flex",
-            position: "absolute",
-            top: "33%",
-            right: "-40px",
-            opacity: "0.26",
+            background: 'linear-gradient(135deg, #fff  100%, #fff  100%)',
+            width: '20rem',
+            height: '20rem',
+            filter: 'blur(180px)',
+            borderRadius: '50%',
+            display: 'flex',
+            position: 'absolute',
+            top: '33%',
+            right: '-40px',
+            opacity: '0.26',
           }}
         ></div>
       </div>
@@ -94,15 +94,15 @@ export async function GET() {
       // debug: true,
       fonts: [
         {
-          name: "light",
+          name: 'light',
           data: fontWeight400,
-          style: "normal",
+          style: 'normal',
           weight: 400,
         },
         {
-          name: "bold",
+          name: 'bold',
           data: fontWeight600,
-          style: "normal",
+          style: 'normal',
           weight: 600,
         },
       ],

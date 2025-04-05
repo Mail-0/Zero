@@ -1,9 +1,9 @@
 'use client';
 
-import type { Transition } from 'motion/react';
-import { motion, useAnimation } from 'motion/react';
-import type { HTMLAttributes } from 'react';
 import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
+import { motion, useAnimation } from 'motion/react';
+import type { Transition } from 'motion/react';
+import type { HTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 
 export interface ExpandIconHandle {
@@ -43,7 +43,7 @@ const ExpandIcon = forwardRef<ExpandIconHandle, ExpandIconProps>(
           onMouseEnter?.(e);
         }
       },
-      [controls, onMouseEnter]
+      [controls, onMouseEnter],
     );
 
     const handleMouseLeave = useCallback(
@@ -54,14 +54,14 @@ const ExpandIcon = forwardRef<ExpandIconHandle, ExpandIconProps>(
           onMouseLeave?.(e);
         }
       },
-      [controls, onMouseLeave]
+      [controls, onMouseLeave],
     );
 
     return (
       <div
         className={cn(
-          `cursor-pointer select-none p-2 hover:bg-accent rounded-md transition-colors duration-200 flex items-center justify-center`,
-          className
+          `hover:bg-accent flex cursor-pointer select-none items-center justify-center rounded-md p-2 transition-colors duration-200`,
+          className,
         )}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -117,7 +117,7 @@ const ExpandIcon = forwardRef<ExpandIconHandle, ExpandIconProps>(
         </svg>
       </div>
     );
-  }
+  },
 );
 
 ExpandIcon.displayName = 'ExpandIcon';

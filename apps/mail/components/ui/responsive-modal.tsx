@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import * as React from "react";
+import * as React from 'react';
 
 import {
   Dialog,
@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   Drawer,
   DrawerClose,
@@ -21,9 +21,9 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer";
-import { useMediaQuery } from "@/hooks/use-media-query";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/drawer';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import { cn } from '@/lib/utils';
 
 interface BaseProps {
   children: React.ReactNode;
@@ -46,13 +46,13 @@ const CredenzaContext = React.createContext<{ isDesktop: boolean }>({
 const useCredenzaContext = () => {
   const context = React.useContext(CredenzaContext);
   if (!context) {
-    throw new Error("Credenza components cannot be rendered outside the Credenza Context");
+    throw new Error('Credenza components cannot be rendered outside the Credenza Context');
   }
   return context;
 };
 
 const Credenza = ({ children, ...props }: RootCredenzaProps) => {
-  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const isDesktop = useMediaQuery('(min-width: 768px)');
   const Credenza = isDesktop ? Dialog : Drawer;
 
   return (
@@ -132,7 +132,7 @@ const CredenzaTitle = ({ className, children, ...props }: CredenzaProps) => {
 
 const CredenzaBody = ({ className, children, ...props }: CredenzaProps) => {
   return (
-    <div className={cn("px-4 md:px-0", className)} {...props}>
+    <div className={cn('px-4 md:px-0', className)} {...props}>
       {children}
     </div>
   );

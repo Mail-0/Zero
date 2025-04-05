@@ -1,0 +1,320 @@
+{
+  "common": {
+    "actions": {
+      "logout": "ログアウト",
+      "back": "戻る",
+      "create": "メールを作成",
+      "saveChanges": "変更を保存する",
+      "saving": "保存しています…",
+      "resetToDefaults": "デフォルトに戻す",
+      "close": "閉じる",
+      "signingOut": "ログアウトしています...",
+      "signedOutSuccess": "正常にログアウトしました！",
+      "signOutError": "サインアウトエラー"
+    },
+    "themes": {
+      "dark": "ダーク",
+      "light": "ライト",
+      "system": "システム"
+    },
+    "commandPalette": {
+      "title": "コマンド パレット",
+      "description": "Mail-0のクイックナビゲーションとアクション",
+      "placeholder": "コマンドを入力するか検索...",
+      "noResults": "何も見つかりませんでした",
+      "groups": {
+        "mail": "メール",
+        "settings": "設定",
+        "actions": "アクション",
+        "help": "ヘルプ",
+        "navigation": "ナビゲーション"
+      },
+      "commands": {
+        "goToInbox": "受信箱に移動します",
+        "goToDrafts": "下書きを開く",
+        "goToSent": "送信済みを開く",
+        "goToSpam": "迷惑メールを開く",
+        "goToArchive": "アーカイブを開く",
+        "goToBin": "ゴミ箱に移動",
+        "goToSettings": "設定を開く",
+        "newEmail": "新規メール",
+        "composeMessage": "メッセージを作成",
+        "searchEmails": "メールを検索",
+        "toggleTheme": "テーマを切り替え",
+        "backToMail": "メールに戻る",
+        "goToDocs": "ドキュメントに移動",
+        "helpWithShortcuts": "ショートカットのヘルプ"
+      }
+    },
+    "searchBar": {
+      "pickDateRange": "日付または範囲を選択",
+      "search": "検索",
+      "clearSearch": "検索をクリア",
+      "advancedSearch": "詳細検索",
+      "quickFilters": "クイックフィルター",
+      "searchIn": "次を検索",
+      "recipient": "宛先",
+      "sender": "差出人",
+      "subject": "件名",
+      "dateRange": "期間",
+      "category": "カテゴリー",
+      "folder": "フォルダー",
+      "allMail": "すべてのメール",
+      "unread": "未読",
+      "hasAttachment": "添付ファイルあり",
+      "starred": "スター付き",
+      "applyFilters": "フィルタを適用",
+      "reset": "リセット"
+    },
+    "navUser": {
+      "customerSupport": "カスタマーサポート",
+      "documentation": "ドキュメント",
+      "appTheme": "テーマ",
+      "accounts": "アカウント",
+      "signIn": "サインイン"
+    },
+    "mailCategories": {
+      "primary": "プライマリ",
+      "important": "重要",
+      "personal": "個人用",
+      "updates": "更新",
+      "promotions": "プロモーション",
+      "social": "ソーシャル",
+      "favourites": "お気に入り"
+    },
+    "replyCompose": {
+      "replyTo": "次に返信",
+      "thisEmail": "このメール",
+      "dropFiles": "添付するファイルをドロップ",
+      "attachments": "添付ファイル",
+      "attachmentCount": "{count, plural, =0 {attachments} other {attachments}}",
+      "fileCount": "{count, plural, =0 {files} other {files}}",
+      "saveDraft": "下書きを保存",
+      "send": "送信"
+    },
+    "mailDisplay": {
+      "details": "詳細",
+      "from": "差出人",
+      "to": "宛先",
+      "cc": "Cc",
+      "date": "日付",
+      "mailedBy": "メール送信者",
+      "signedBy": "署名済み",
+      "security": "セキュリティ",
+      "standardEncryption": "標準暗号化（TLS）",
+      "loadingMailContent": "メールの内容を読み込み中...",
+      "unsubscribe": "購読を解除",
+      "unsubscribed": "購読を解除しました",
+      "unsubscribeDescription": "このメーリングリストから登録を解除してもよろしいですか？",
+      "unsubscribeOpenSiteDescription": "このメーリングリストからのメッセージの取得を停止するには、解除するために彼らのウェブサイトに行きます。",
+      "cancel": "キャンセル",
+      "goToWebsite": "ウェブサイトへ移動",
+      "failedToUnsubscribe": "メーリングリストの登録解除に失敗しました"
+    },
+    "threadDisplay": {
+      "exitFullscreen": "フルスクリーン表示を終了",
+      "enterFullscreen": "フルスクリーン",
+      "archive": "アーカイブ",
+      "reply": "返信する",
+      "moreOptions": "詳細設定を表示",
+      "moveToSpam": "迷惑メールに移動",
+      "replyAll": "全員に返信",
+      "forward": "転送",
+      "markAsUnread": "未読にする",
+      "addLabel": "ラベルを追加",
+      "muteThread": "スレッドをミュート"
+    },
+    "notes": {
+      "title": "メモ",
+      "empty": "このメールのメモはありません",
+      "emptyDescription": "重要な情報やフォローアップを追跡するためにメモを追加します。",
+      "addNote": "メモを追加",
+      "addYourNote": "ここにメモを追加します…",
+      "editNote": "メモを編集",
+      "deleteNote": "メモを削除",
+      "deleteConfirm": "このメモを本当に削除しますか？",
+      "deleteConfirmDescription": "この操作は元に戻せません。",
+      "cancel": "キャンセル",
+      "delete": "削除",
+      "save": "メモを保存",
+      "toSave": "保存する",
+      "label": "ラベル：",
+      "search": "メモを検索…",
+      "noteCount": "{count, plural, =0 {Add notes} one {# note} other {# notes}}",
+      "notePinned": "メモをピン留めしました",
+      "noteUnpinned": "メモのピン留めを解除しました",
+      "colorChanged": "メモの色が更新されました",
+      "noteUpdated": "メモが更新されました",
+      "noteDeleted": "メモを削除しました",
+      "noteCopied": "クリップボードにコピー",
+      "noteAdded": "メモ追加",
+      "notesReordered": "メモを並べ替えました",
+      "noMatchingNotes": "\"{query}\" に一致するメモはありません",
+      "clearSearch": "検索をクリア",
+      "pinnedNotes": "ピン留めされたメモ",
+      "otherNotes": "その他のメモ",
+      "created": "作成時刻",
+      "updated": "更新日時",
+      "errors": {
+        "failedToLoadNotes": "メモの読み込みに失敗しました",
+        "failedToLoadThreadNotes": "スレッドメモの読み込みに失敗しました",
+        "failedToAddNote": "メモの追加に失敗しました",
+        "failedToUpdateNote": "メモの更新に失敗しました",
+        "failedToDeleteNote": "メモの削除に失敗しました",
+        "failedToUpdateNoteColor": "メモの色の更新に失敗しました",
+        "noValidNotesToReorder": "並べ替えるための有効なメモがありません",
+        "failedToReorderNotes": "メモの並べ替えに失敗しました"
+      },
+      "colors": {
+        "default": "デフォルト",
+        "red": "赤",
+        "orange": "オレンジ",
+        "yellow": "黄色",
+        "green": "緑",
+        "blue": "Blue",
+        "purple": "Purple",
+        "pink": "Pink"
+      },
+      "actions": {
+        "pin": "Pin note",
+        "unpin": "Unpin note",
+        "edit": "Edit note",
+        "delete": "Delete note",
+        "copy": "Copy note",
+        "changeColor": "Change color"
+      }
+    },
+    "mail": {
+      "replies": "{count, plural, =0 {replies} one {# reply} other {# replies}}",
+      "deselectAll": "Deselected all emails",
+      "selectedEmails": "Selected {count} emails",
+      "noEmailsToSelect": "No emails to select",
+      "markedAsRead": "Marked as read",
+      "markedAsUnread": "Marked as unread",
+      "failedToMarkAsRead": "Failed to mark as read",
+      "failedToMarkAsUnread": "Failed to mark as unread",
+      "selected": "{count} selected",
+      "clearSelection": "Clear Selection",
+      "mute": "Mute",
+      "moveToSpam": "Move to Spam",
+      "moveToInbox": "Move to Inbox",
+      "unarchive": "Unarchive",
+      "archive": "Archive",
+      "moveToTrash": "Move to Trash",
+      "markAsUnread": "Mark as Unread",
+      "addStar": "Add Star",
+      "muteThread": "Mute Thread",
+      "moving": "Moving...",
+      "moved": "Moved",
+      "errorMoving": "Error moving"
+    }
+  },
+  "navigation": {
+    "sidebar": {
+      "inbox": "受信箱",
+      "drafts": "下書き",
+      "sent": "送信済み",
+      "spam": "迷惑メール",
+      "archive": "アーカイブ",
+      "bin": "ごみ箱",
+      "feedback": "Feedback",
+      "contact": "Contact",
+      "settings": "設定"
+    },
+    "settings": {
+      "general": "一般",
+      "connections": "接続",
+      "security": "セキュリティ",
+      "appearance": "外観",
+      "shortcuts": "ショートカット"
+    }
+  },
+  "pages": {
+    "error": {
+      "notFound": {
+        "title": "ページが見つかりません",
+        "description": "おっと！お探しのページは存在しないか、移動されています。",
+        "goBack": "戻る"
+      },
+      "settingsNotFound": "404 - 設定ページが見つかりません"
+    },
+    "settings": {
+      "general": {
+        "title": "一般",
+        "description": "言語と電子メールの表示設定を管理します。",
+        "language": "言語",
+        "timezone": "タイムゾーン",
+        "dynamicContent": "動的コンテンツ",
+        "dynamicContentDescription": "電子メールの動的なコンテンツの表示を許可します。",
+        "externalImages": "外部画像を表示する",
+        "externalImagesDescription": "電子メールによる外部ソースからの画像の表示を許可します。",
+        "languageChangedTo": "{language}に切り替えました"
+      },
+      "connections": {
+        "title": "メールの接続",
+        "description": "メールアカウントをZeroに接続します。",
+        "disconnectTitle": "メールアカウントを切断する",
+        "disconnectDescription": "このメールアドレスを切断してもよろしいですか？",
+        "cancel": "キャンセル",
+        "remove": "削除",
+        "disconnectSuccess": "アカウントが正常に切断されました",
+        "disconnectError": "アカウントの切断に失敗しました",
+        "addEmail": "接続を追加",
+        "connectEmail": "メールアドレスの接続",
+        "connectEmailDescription": "接続するメールプロバイダを選択してください",
+        "moreComingSoon": "近日追加予定"
+      },
+      "security": {
+        "title": "セキュリティ",
+        "description": "セキュリティ設定とアカウント保護を管理します。",
+        "twoFactorAuth": "2要素認証",
+        "twoFactorAuthDescription": "アカウントにセキュリティレイヤーを追加します",
+        "loginNotifications": "ログイン通知",
+        "loginNotificationsDescription": "新しいログイン試行について通知を受け取ります",
+        "deleteAccount": "アカウントを削除"
+      },
+      "appearance": {
+        "title": "外観",
+        "description": "色、フォント、表示オプションをカスタマイズします。",
+        "theme": "テーマ",
+        "inboxType": "受信トレイの種類"
+      },
+      "shortcuts": {
+        "title": "キーボードショートカット",
+        "description": "クイックアクションのためのキーボードショートカットを表示およびカスタマイズします。",
+        "actions": {
+          "newEmail": "新規メール",
+          "sendEmail": "メールを送信",
+          "reply": "返信",
+          "replyAll": "全員に返信",
+          "forward": "転送",
+          "drafts": "下書き",
+          "inbox": "受信箱",
+          "sentMail": "送信済みメール",
+          "delete": "削除",
+          "search": "検索",
+          "markAsUnread": "未読にする",
+          "muteThread": "スレッドをミュート",
+          "printEmail": "メールを印刷",
+          "archiveEmail": "メールをアーカイブ",
+          "markAsSpam": "迷惑メールとしてマーク",
+          "moveToFolder": "フォルダーに移動",
+          "undoLastAction": "最後の操作を元に戻す",
+          "viewEmailDetails": "メール詳細を表示",
+          "goToDrafts": "下書きを開く",
+          "expandEmailView": "メールビューを展開",
+          "helpWithShortcuts": "ショートカットのヘルプ"
+        }
+      }
+    },
+    "createEmail": {
+      "body": "本文",
+      "example": "zero@0.email",
+      "attachments": "添付ファイル",
+      "dropFilesToAttach": "添付するファイルをドロップ",
+      "writeYourMessageHere": "ここにメッセージを書いてください",
+      "emailSentSuccessfully": "メールを送信しました",
+      "failedToSendEmail": "メールを送信できませんでした。もう一度やり直してください。"
+    }
+  }
+}

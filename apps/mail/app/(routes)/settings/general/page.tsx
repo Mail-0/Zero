@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   Form,
@@ -7,42 +7,44 @@ import {
   FormField,
   FormItem,
   FormLabel,
-} from "@/components/ui/form";
+} from '@/components/ui/form';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { SettingsCard } from "@/components/settings/settings-card";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Globe, Clock, LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { signOut } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { useState } from "react";
-import { toast } from "sonner";
-import * as z from "zod";
+} from '@/components/ui/select';
+import { SettingsCard } from '@/components/settings/settings-card';
+import { availableLocales, locales, Locale } from '@/i18n/config';
+import { useTranslations, useLocale } from 'next-intl';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Globe, Clock } from 'lucide-react';
+import { changeLocale } from '@/i18n/utils';
+import { useForm } from 'react-hook-form';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import * as z from 'zod';
 
 const formSchema = z.object({
-  language: z.string(),
+  language: z.enum(locales as [string, ...string[]]),
   timezone: z.string(),
   dynamicContent: z.boolean(),
   externalImages: z.boolean(),
 });
 
 export default function GeneralPage() {
-  const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
+  const locale = useLocale();
+  const t = useTranslations();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      language: "en",
-      timezone: "UTC",
+      language: locale as Locale,
+      timezone: 'UTC',
       dynamicContent: false,
       externalImages: true,
     },
@@ -53,6 +55,15 @@ export default function GeneralPage() {
 
     // TODO: Save settings in user's account
 
+    changeLocale(values.language as Locale);
+
+    if (values.language !== locale) {
+      const localeName = new Intl.DisplayNames([values.language], { type: 'language' }).of(
+        values.language,
+      );
+      toast.success(t('pages.settings.general.languageChangedTo', { language: localeName }));
+    }
+
     // Simulate API call
     setTimeout(() => {
       console.log(values);
@@ -60,38 +71,15 @@ export default function GeneralPage() {
     }, 1000);
   }
 
-  const handleSignOut = async () => {
-    toast.promise(
-      signOut({
-        fetchOptions: {
-          onSuccess: () => {
-            router.push("/");
-          },
-        },
-      }),
-      {
-        loading: "Signing out...",
-        success: () => "Signed out successfully!",
-        error: "Error signing out",
-      },
-    );
-  };
-
   return (
     <div className="grid gap-6">
       <SettingsCard
-        title="General Settings"
-        description="Manage settings for your language and email display preferences."
+        title={t('pages.settings.general.title')}
+        description={t('pages.settings.general.description')}
         footer={
-          <div className="flex gap-4">
-            <Button variant="destructive" onClick={handleSignOut}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Log out
-            </Button>
-            <Button type="submit" form="general-form" disabled={isSaving}>
-              {isSaving ? "Saving..." : "Save changes"}
-            </Button>
-          </div>
+          <Button type="submit" form="general-form" disabled={isSaving}>
+            {isSaving ? t('common.actions.saving') : t('common.actions.saveChanges')}
+          </Button>
         }
       >
         <Form {...form}>
@@ -102,7 +90,7 @@ export default function GeneralPage() {
                 name="language"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Language</FormLabel>
+                    <FormLabel>{t('pages.settings.general.language')}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-36">
@@ -111,7 +99,11 @@ export default function GeneralPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="en">English</SelectItem>
+                        {availableLocales.map((locale) => (
+                          <SelectItem key={locale.code} value={locale.code}>
+                            {locale.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </FormItem>
@@ -123,7 +115,7 @@ export default function GeneralPage() {
                 render={({ field }) => (
                   // TODO: Add all timezones
                   <FormItem>
-                    <FormLabel>Timezone</FormLabel>
+                    <FormLabel>{t('pages.settings.general.timezone')}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-36">
@@ -151,10 +143,14 @@ export default function GeneralPage() {
                 control={form.control}
                 name="dynamicContent"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border bg-popover p-4">
+                  <FormItem className="bg-popover flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-base">Dynamic Content</FormLabel>
-                      <FormDescription>Allow emails to display dynamic content.</FormDescription>
+                      <FormLabel className="text-base">
+                        {t('pages.settings.general.dynamicContent')}
+                      </FormLabel>
+                      <FormDescription>
+                        {t('pages.settings.general.dynamicContentDescription')}
+                      </FormDescription>
                     </div>
                     <FormControl className="ml-4">
                       <Switch checked={field.value} onCheckedChange={field.onChange} />
@@ -166,11 +162,13 @@ export default function GeneralPage() {
                 control={form.control}
                 name="externalImages"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 bg-popover">
+                  <FormItem className="bg-popover flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-base">Display External Images</FormLabel>
+                      <FormLabel className="text-base">
+                        {t('pages.settings.general.externalImages')}
+                      </FormLabel>
                       <FormDescription>
-                        Allow emails to display images from external sources.
+                        {t('pages.settings.general.externalImagesDescription')}
                       </FormDescription>
                     </div>
                     <FormControl className="ml-4">

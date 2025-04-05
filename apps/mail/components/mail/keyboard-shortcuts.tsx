@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useAISidebar } from "@/components/ui/ai-sidebar";
-import { navigationConfig } from "@/config/navigation";
-import { useHotKey } from "@/hooks/use-hot-key";
-import { useRouter } from "next/navigation";
+import { useAISidebar } from '@/components/ui/ai-sidebar';
+import { navigationConfig } from '@/config/navigation';
+import { useHotKey } from '@/hooks/use-hot-key';
+import { useRouter } from 'next/navigation';
 
 export const KeyboardShortcuts = () => {
   const router = useRouter();

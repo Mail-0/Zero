@@ -6,23 +6,33 @@ import LZString from "lz-string";
 import axios from "axios";
 
 export const FOLDERS = {
-  SPAM: 'spam',
-  INBOX: 'inbox',
-  ARCHIVE: 'archive',
-  TRASH: 'trash',
-  DRAFT: 'draft',
-  SENT: 'sent',
+  SPAM: "spam",
+  INBOX: "inbox",
+  ARCHIVE: "archive",
+  TRASH: "trash",
+  DRAFT: "draft",
+  SENT: "sent",
 } as const;
 
 export const LABELS = {
-  SPAM: 'SPAM',
-  INBOX: 'INBOX',
-  UNREAD: 'UNREAD',
-  IMPORTANT: 'IMPORTANT',
-  SENT: 'SENT',
+  SPAM: "SPAM",
+  INBOX: "INBOX",
+  UNREAD: "UNREAD",
+  IMPORTANT: "IMPORTANT",
+  SENT: "SENT",
 } as const;
 
-export const FOLDER_NAMES = ["inbox", "spam", "trash", "unread", "starred", "important", "sent", "draft"];
+export const FOLDER_NAMES = [
+  "inbox",
+  "spam",
+  "trash",
+  "unread",
+  "starred",
+  "important",
+  "sent",
+  "draft",
+];
+
 export const FOLDER_TAGS: Record<string, string[]> = {
   [FOLDERS.SPAM]: [LABELS.SPAM],
   [FOLDERS.INBOX]: [LABELS.INBOX],
@@ -32,7 +42,7 @@ export const FOLDER_TAGS: Record<string, string[]> = {
 
 export const getFolderTags = (folder: string): string[] => {
   return FOLDER_TAGS[folder] || [];
-}; 
+};
 
 export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
 
@@ -54,11 +64,41 @@ export const getCookie = (key: string): string | null => {
 
 export const formatDate = (date: string) => {
   try {
-    if (isToday(date)) return format(date, "h:mm a");
-    if (isThisMonth(date) || differenceInCalendarMonths(new Date(), date) === 1)
-      return format(date, "MMM dd");
+    // Handle empty or invalid input
+    if (!date) {
+      return "";
+    }
 
-    return format(date, "MM/dd/yy");
+    // Parse the date string to a Date object
+    const dateObj = new Date(date);
+    const now = new Date();
+    
+    // Check if the date is valid
+    if (isNaN(dateObj.getTime())) {
+      console.error("Invalid date", date);
+      return "";
+    }
+    
+    // If it's today, always show the time
+    if (isToday(dateObj)) {
+      return format(dateObj, "h:mm a");
+    }
+    
+    // Calculate hours difference between now and the email date
+    const hoursDifference = (now.getTime() - dateObj.getTime()) / (1000 * 60 * 60);
+    
+    // If it's not today but within the last 12 hours, show the time
+    if (hoursDifference <= 12) {
+      return format(dateObj, "h:mm a");
+    }
+    
+    // If it's this month or last month, show the month and day
+    if (isThisMonth(dateObj) || differenceInCalendarMonths(now, dateObj) === 1) {
+      return format(dateObj, "MMM dd");
+    }
+    
+    // Otherwise show the date in MM/DD/YY format
+    return format(dateObj, "MM/dd/yy");
   } catch (error) {
     console.error("Error formatting date", error);
     return "";
@@ -87,18 +127,34 @@ export type FilterSuggestion = {
   prefix: string;
 };
 
-
 export const extractFilterValue = (filter: string): string => {
-  if (!filter || !filter.includes(':')) return '';
-  
-  const colonIndex = filter.indexOf(':');
+  if (!filter || !filter.includes(":")) return "";
+
+  const colonIndex = filter.indexOf(":");
   const value = filter.substring(colonIndex + 1);
-  
-  return value || '';
+
+  return value || "";
 };
 
-export const defaultPageSize = 20
+export const defaultPageSize = 20;
 
 export function createSectionId(title: string) {
-  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-} 
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+}
+
+export const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+};
+
+export const getFileIcon = (mimeType: string): string => {
+  if (mimeType === "application/pdf") return "📄";
+  if (mimeType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") return "📊";
+  if (mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    return "📝";
+  if (mimeType.includes("image")) return ""; // Empty for images as they're handled separately
+  return "📎"; // Default icon
+};

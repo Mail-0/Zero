@@ -1,4 +1,4 @@
-import type { Editor } from "@tiptap/react";
+import type { Editor } from '@tiptap/react';
 
 export interface User {
   name: string;
@@ -31,16 +31,23 @@ export interface SidebarData {
   navMain: NavSection[];
 }
 
+export interface Sender {
+  name: string;
+  email: string;
+}
+
 export interface ParsedMessage {
   id: string;
   connectionId?: string;
   title: string;
   subject: string;
   tags: string[];
-  sender: {
-    name: string;
-    email: string;
-  };
+  sender: Sender;
+  to: Sender[];
+  cc: Sender[];
+  tls: boolean;
+  listUnsubscribe?: string;
+  listUnsubscribePost?: string;
   receivedOn: string;
   unread: boolean;
   body: string;
@@ -51,6 +58,7 @@ export interface ParsedMessage {
   inReplyTo?: string;
   messageId?: string;
   threadId?: string;
+  attachments?: Attachment[];
 }
 
 export interface IConnection {
@@ -65,10 +73,7 @@ export interface InitialThread {
   threadId?: string;
   title: string;
   tags: string[];
-  sender: {
-    name: string;
-    email: string;
-  };
+  sender: Sender;
   receivedOn: string;
   unread: boolean;
   subject: string;
@@ -96,3 +101,31 @@ export interface AIInlineContextType {
   selectedText: string;
   setSelectedText: (text: string) => void;
 }
+export interface Attachment {
+  attachmentId: string;
+  filename: string;
+  mimeType: string;
+  size: number;
+  body: string;
+  // TODO: Fix typing
+  headers: any;
+}
+export interface MailListProps {
+  isCompact?: boolean;
+}
+
+export type MailSelectMode = 'mass' | 'range' | 'single' | 'selectAllBelow';
+
+export type ThreadProps = {
+  message: InitialThread;
+  selectMode: MailSelectMode;
+  // TODO: enforce types instead of sprinkling "any"
+  onClick?: (message: InitialThread) => () => any;
+  isCompact?: boolean;
+};
+
+export type ConditionalThreadProps = ThreadProps &
+  (
+    | { demo?: true; sessionData?: { userId: string; connectionId: string | null } }
+    | { demo?: false; sessionData: { userId: string; connectionId: string | null } }
+  );

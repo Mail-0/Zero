@@ -1,0 +1,320 @@
+{
+  "common": {
+    "actions": {
+      "logout": "Cerrar sesión",
+      "back": "Volver",
+      "create": "Crear un email",
+      "saveChanges": "Guardar los cambios",
+      "saving": "Guardando...",
+      "resetToDefaults": "Reiniciar a valores por defecto",
+      "close": "Cerrar",
+      "signingOut": "Cerrando sesión...",
+      "signedOutSuccess": "Sesión cerrada correctamente",
+      "signOutError": "Error al cerrar sesión"
+    },
+    "themes": {
+      "dark": "Oscuro",
+      "light": "Claro",
+      "system": "Sistema"
+    },
+    "commandPalette": {
+      "title": "Paleta de Comandos",
+      "description": "Navegación rápida y acciones para Mail-0",
+      "placeholder": "Escriba un comando o búsqueda...",
+      "noResults": "No se han encontrado resultados",
+      "groups": {
+        "mail": "Correo",
+        "settings": "Configuración",
+        "actions": "Acciones",
+        "help": "Ayuda",
+        "navigation": "Navegación"
+      },
+      "commands": {
+        "goToInbox": "Ir a la bandeja de entrada",
+        "goToDrafts": "Ir a la carpeta de borradores",
+        "goToSent": "Ir a la carpeta de Enviados",
+        "goToSpam": "Ir a spam",
+        "goToArchive": "Ir a archivo",
+        "goToBin": "Ir a la papelera",
+        "goToSettings": "Ir a la configuración",
+        "newEmail": "Nuevo email",
+        "composeMessage": "Redactar mensaje",
+        "searchEmails": "Buscar correos",
+        "toggleTheme": "Cambiar tema",
+        "backToMail": "Volver al correo",
+        "goToDocs": "Ir a documentos",
+        "helpWithShortcuts": "Ayuda con accesos directos"
+      }
+    },
+    "searchBar": {
+      "pickDateRange": "Elige una fecha o rango",
+      "search": "Buscar",
+      "clearSearch": "Limpiar búsqueda",
+      "advancedSearch": "Búsqueda avanzada",
+      "quickFilters": "Filtros rápidos",
+      "searchIn": "Buscar en",
+      "recipient": "Destinatario",
+      "sender": "Remitente",
+      "subject": "Asunto",
+      "dateRange": "Rango de fechas",
+      "category": "Categoría",
+      "folder": "Carpeta",
+      "allMail": "Todo el correo",
+      "unread": "Sin leer",
+      "hasAttachment": "Tiene archivos adjuntos",
+      "starred": "Favoritos",
+      "applyFilters": "Aplicar filtros",
+      "reset": "Restablecer"
+    },
+    "navUser": {
+      "customerSupport": "Atención al cliente",
+      "documentation": "Documentación",
+      "appTheme": "Tema de aplicación",
+      "accounts": "Cuentas",
+      "signIn": "Registrarse"
+    },
+    "mailCategories": {
+      "primary": "Principal",
+      "important": "Importante",
+      "personal": "Personal",
+      "updates": "Actualizaciones",
+      "promotions": "Promociones",
+      "social": "Social",
+      "favourites": "Favoritos"
+    },
+    "replyCompose": {
+      "replyTo": "Responder a",
+      "thisEmail": "este correo electrónico",
+      "dropFiles": "Suelte los archivos para adjuntarlos",
+      "attachments": "Adjuntos",
+      "attachmentCount": "{count, plural, =0 {sin adjuntos} one {adjunto} other {adjuntos}}",
+      "fileCount": "{count, plural, =0 {archivos} one {archivo} other {archivos}}",
+      "saveDraft": "Guardar borrador",
+      "send": "Enviar"
+    },
+    "mailDisplay": {
+      "details": "Detalles",
+      "from": "De",
+      "to": "Hasta",
+      "cc": "Cc",
+      "date": "Fecha",
+      "mailedBy": "Errores-Por",
+      "signedBy": "Firmado por",
+      "security": "Seguridad",
+      "standardEncryption": "Encriptación estándar (TLS)",
+      "loadingMailContent": "Cargando el contenido del correo...",
+      "unsubscribe": "Cancelar suscripción",
+      "unsubscribed": "Suscripción cancelada",
+      "unsubscribeDescription": "¿Seguro que desea cancelar la suscripción a esta lista de correo?",
+      "unsubscribeOpenSiteDescription": "Para dejar de recibir mensajes de esta lista de correo, vaya a su sitio web para darse de baja.",
+      "cancel": "Cancelar",
+      "goToWebsite": "Ir al sitio web",
+      "failedToUnsubscribe": "Error al cancelar la suscripción de la lista de correo"
+    },
+    "threadDisplay": {
+      "exitFullscreen": "Salir de pantalla completa",
+      "enterFullscreen": "Mostrar en pantalla completa",
+      "archive": "Archivar",
+      "reply": "Responder",
+      "moreOptions": "Más opciones",
+      "moveToSpam": "Mover a spam",
+      "replyAll": "Responder a todos",
+      "forward": "Reenviar",
+      "markAsUnread": "Marcar como no leído",
+      "addLabel": "Añadir etiqueta",
+      "muteThread": "Silenciar hilo"
+    },
+    "notes": {
+      "title": "Notas",
+      "empty": "No hay notas para este correo",
+      "emptyDescription": "Agrega notas para llevar un registro de información importante o acciones a realizar.",
+      "addNote": "Añadir una nota",
+      "addYourNote": "Añade tu nota aquí...",
+      "editNote": "Editar nota",
+      "deleteNote": "Borrar nota",
+      "deleteConfirm": "¿Seguro que quieres borrar esta nota?",
+      "deleteConfirmDescription": "Esta acción no se puede deshacer.",
+      "cancel": "Cancelar",
+      "delete": "Borrar",
+      "save": "Guardar nota",
+      "toSave": "para guardar",
+      "label": "Etiqueta:",
+      "search": "Buscar notas...",
+      "noteCount": "{count, plural, =0 {Añade notas} one {# nota} other {# notas}}",
+      "notePinned": "Nota anclada",
+      "noteUnpinned": "Nota desanclada",
+      "colorChanged": "Color de nota actualizado",
+      "noteUpdated": "Nota actualizada",
+      "noteDeleted": "Nota eliminada",
+      "noteCopied": "Copiado al portapapeles",
+      "noteAdded": "Nota añadida",
+      "notesReordered": "Notas reordenadas",
+      "noMatchingNotes": "No hay notas que coincidan con \"{query}\"",
+      "clearSearch": "Limpiar búsqueda",
+      "pinnedNotes": "Notas ancladas",
+      "otherNotes": "Otras notas",
+      "created": "Creada",
+      "updated": "Actualizada",
+      "errors": {
+        "failedToLoadNotes": "Error al cargar las notas",
+        "failedToLoadThreadNotes": "Error al cargar las notas del hilo",
+        "failedToAddNote": "Error al agregar nota",
+        "failedToUpdateNote": "Error al actualizar nota",
+        "failedToDeleteNote": "Error al eliminar la nota",
+        "failedToUpdateNoteColor": "Error al actualizar el color de la nota",
+        "noValidNotesToReorder": "No hay notas válidas para reordenar",
+        "failedToReorderNotes": "Error al reordenar las notas"
+      },
+      "colors": {
+        "default": "Predeterminado",
+        "red": "Rojo",
+        "orange": "Naranja",
+        "yellow": "Amarillo",
+        "green": "Verde",
+        "blue": "Azul",
+        "purple": "Morado",
+        "pink": "Rosa"
+      },
+      "actions": {
+        "pin": "Anclar nota",
+        "unpin": "Desanclar nota",
+        "edit": "Editar nota",
+        "delete": "Borrar nota",
+        "copy": "Copiar nota",
+        "changeColor": "Cambiar Color"
+      }
+    },
+    "mail": {
+      "replies": "{count, plural, =0 {respuestas} one {# respuesta} other {# respuestas}}",
+      "deselectAll": "Deseleccionar todos los correos",
+      "selectedEmails": "{count} Correos seleccionados",
+      "noEmailsToSelect": "No hay correos para seleccionar",
+      "markedAsRead": "Marcado como leído",
+      "markedAsUnread": "Marcado como no leído",
+      "failedToMarkAsRead": "Error al marcar como leído",
+      "failedToMarkAsUnread": "Error al marcar como no leído",
+      "selected": "{count} seleccionados",
+      "clearSelection": "Limpiar selección",
+      "mute": "Silenciar",
+      "moveToSpam": "Mover a spam",
+      "moveToInbox": "Mover a bandeja de entrada",
+      "unarchive": "Desarchivar",
+      "archive": "Archivar",
+      "moveToTrash": "Mover a la papelera",
+      "markAsUnread": "Marcar como no leído",
+      "addStar": "Destacar",
+      "muteThread": "Silencia hilo",
+      "moving": "Moviendo...",
+      "moved": "Movido",
+      "errorMoving": "Error al mover"
+    }
+  },
+  "navigation": {
+    "sidebar": {
+      "inbox": "Bandeja de entrada",
+      "drafts": "Borradores",
+      "sent": "Enviado",
+      "spam": "Spam",
+      "archive": "Archivar",
+      "bin": "Papelera de reciclaje",
+      "feedback": "Feedback",
+      "contact": "Contact",
+      "settings": "Configuración"
+    },
+    "settings": {
+      "general": "General",
+      "connections": "Conexiones",
+      "security": "Seguridad",
+      "appearance": "Apariencia",
+      "shortcuts": "Accesos directos"
+    }
+  },
+  "pages": {
+    "error": {
+      "notFound": {
+        "title": "Página no encontrada",
+        "description": "¡Uy! La página que estás buscando no existe o ha sido movida.",
+        "goBack": "Regresar"
+      },
+      "settingsNotFound": "404 - Página de configuración no encontrada"
+    },
+    "settings": {
+      "general": {
+        "title": "General",
+        "description": "Administre la configuración de sus preferencias de idioma y correo electrónico.",
+        "language": "Idioma",
+        "timezone": "Zona horaria",
+        "dynamicContent": "Contenido dinámico",
+        "dynamicContentDescription": "Permitir que los correos electrónicos muestren contenido dinámico.",
+        "externalImages": "Mostrar imágenes externas",
+        "externalImagesDescription": "Permitir que los correos electrónicos muestren imágenes de fuentes externas.",
+        "languageChangedTo": "Idioma cambiado a {language}"
+      },
+      "connections": {
+        "title": "Conexiones de correo",
+        "description": "Conecte sus cuentas de correo electrónico a Zero.",
+        "disconnectTitle": "Desconectar cuenta de correo",
+        "disconnectDescription": "¿Estás seguro de que quieres desconectar este correo electrónico?",
+        "cancel": "Cancelar",
+        "remove": "Eliminar",
+        "disconnectSuccess": "Cuenta desconectada correctamente",
+        "disconnectError": "Error al desconectar la cuenta",
+        "addEmail": "Añadir conexión",
+        "connectEmail": "Conectar correo electrónico",
+        "connectEmailDescription": "Seleccione un proveedor de correo electrónico para conectar",
+        "moreComingSoon": "Próximamente más"
+      },
+      "security": {
+        "title": "Seguridad",
+        "description": "Administre sus preferencias de seguridad y protección de cuenta.",
+        "twoFactorAuth": "Autenticación de dos factores",
+        "twoFactorAuthDescription": "Añade una capa extra de seguridad a su cuenta",
+        "loginNotifications": "Notificaciones de inicio de sesión",
+        "loginNotificationsDescription": "Recibir notificaciones de nuevos intentos de inicio de sesión",
+        "deleteAccount": "Eliminar cuenta"
+      },
+      "appearance": {
+        "title": "Apariencia",
+        "description": "Personalizar colores, fuentes y opciones de visualización.",
+        "theme": "Temas",
+        "inboxType": "Tipo de bandeja de entrada"
+      },
+      "shortcuts": {
+        "title": "Atajos de teclado",
+        "description": "Ver y personalizar los atajos de teclado para acciones rápidas.",
+        "actions": {
+          "newEmail": "Nuevo email",
+          "sendEmail": "Enviar correo electrónico",
+          "reply": "Responder",
+          "replyAll": "Responder a todos",
+          "forward": "Reenviar",
+          "drafts": "Borradores",
+          "inbox": "Bandeja de entrada",
+          "sentMail": "Enviados",
+          "delete": "Borrar",
+          "search": "Buscar",
+          "markAsUnread": "Marcar como no leído",
+          "muteThread": "Silencia hilo",
+          "printEmail": "Imprimir correo electrónico",
+          "archiveEmail": "Archivar correo",
+          "markAsSpam": "Marcar como Spam",
+          "moveToFolder": "Mover a directorio",
+          "undoLastAction": "Deshacer última acción",
+          "viewEmailDetails": "Ver detalles de email",
+          "goToDrafts": "Ir a la carpeta de borradores",
+          "expandEmailView": "Expandir vista de email",
+          "helpWithShortcuts": "Ayuda con accesos directos"
+        }
+      }
+    },
+    "createEmail": {
+      "body": "Cuerpo",
+      "example": "zero@0.email",
+      "attachments": "Archivos adjuntos",
+      "dropFilesToAttach": "Suelte los archivos para adjuntarlos",
+      "writeYourMessageHere": "Escribe tu mensaje aquí...",
+      "emailSentSuccessfully": "E-mail enviado con éxito",
+      "failedToSendEmail": "Error al enviar el correo electrónico. Por favor, inténtalo de nuevo."
+    }
+  }
+}

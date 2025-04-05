@@ -28,6 +28,9 @@
     },
     "start": {
       "cache": false
+    },
+    "lint": {
+      "outputs": []
     }
   }
 }

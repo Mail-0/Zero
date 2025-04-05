@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   Dialog,
@@ -8,66 +8,71 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogClose,
-} from "@/components/ui/dialog";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { SettingsCard } from "@/components/settings/settings-card";
-import { emailProviders } from "@/constants/emailProviders";
-import { useConnections } from "@/hooks/use-connections";
-import { deleteConnection } from "@/actions/connections";
-import { AddConnectionDialog } from "@/components/connection/add";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { useSession } from "@/lib/auth-client";
-import { Trash } from "lucide-react";
-import { useState } from "react";
-import Image from "next/image";
-import { toast } from "sonner";
+} from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { SettingsCard } from '@/components/settings/settings-card';
+import { AddConnectionDialog } from '@/components/connection/add';
+import { useConnections } from '@/hooks/use-connections';
+import { deleteConnection } from '@/actions/connections';
+import { Skeleton } from '@/components/ui/skeleton';
+import { emailProviders } from '@/lib/constants';
+import { Button } from '@/components/ui/button';
+import { useSession } from '@/lib/auth-client';
+import { useTranslations } from 'next-intl';
+import { Trash, Plus } from 'lucide-react';
+import { useState } from 'react';
+import Image from 'next/image';
+import { toast } from 'sonner';
 
 export default function ConnectionsPage() {
   const { refetch } = useSession();
   const { data: connections, mutate, isLoading } = useConnections();
   const [openTooltip, setOpenTooltip] = useState<string | null>(null);
+  const t = useTranslations();
 
   const disconnectAccount = async (connectionId: string) => {
     try {
       await deleteConnection(connectionId);
-      toast.success("Account disconnected successfully");
+      toast.success(t('pages.settings.connections.disconnectSuccess'));
       mutate();
       refetch();
     } catch (error) {
-      console.error("Error disconnecting account:", error);
-      toast.error("Failed to disconnect account");
+      console.error('Error disconnecting account:', error);
+      toast.error(t('pages.settings.connections.disconnectError'));
     }
   };
 
   return (
     <div className="grid gap-6">
-      <SettingsCard title="Email Connections" description="Connect your email accounts to Zero.">
+      <SettingsCard
+        title={t('pages.settings.connections.title')}
+        description={t('pages.settings.connections.description')}
+      >
         <div className="space-y-6">
           {isLoading ? (
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid gap-4 md:grid-cols-3">
               {[...Array(3)].map((_, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between rounded-lg border p-4 bg-popover"
+                  className="bg-popover flex items-center justify-between rounded-lg border p-4"
                 >
                   <div className="flex min-w-0 items-center gap-4">
                     <Skeleton className="h-12 w-12 rounded-lg" />
-                    <div className="flex-col gap-1 flex">
+                    <div className="flex flex-col gap-1">
                       <Skeleton className="h-4 w-full lg:w-32" />
                       <Skeleton className="h-3 w-full lg:w-48" />
                     </div>
                   </div>
-                  <Skeleton className="h-8 w-8 rounded-full ml-4" />
+                  <Skeleton className="ml-4 h-8 w-8 rounded-full" />
                 </div>
               ))}
             </div>
           ) : connections?.length ? (
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid gap-4 md:grid-cols-3">
               {connections.map((connection) => (
                 <div
                   key={connection.id}
-                  className="flex items-center justify-between rounded-lg border p-4 bg-popover"
+                  className="bg-popover flex items-center justify-between rounded-lg border p-4"
                 >
                   <div className="flex min-w-0 items-center gap-4">
                     {connection.picture ? (
@@ -81,7 +86,7 @@ export default function ConnectionsPage() {
                     ) : (
                       <div className="bg-primary/10 flex h-12 w-12 shrink-0 items-center justify-center rounded-lg">
                         <svg viewBox="0 0 24 24" className="text-primary h-6 w-6">
-                            <path fill="currentColor" d={emailProviders[0]!.icon} />
+                          <path fill="currentColor" d={emailProviders[0]!.icon} />
                         </svg>
                       </div>
                     )}
@@ -123,24 +128,28 @@ export default function ConnectionsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="text-muted-foreground hover:text-primary shrink-0 ml-4"
+                        className="text-muted-foreground hover:text-primary ml-4 shrink-0"
                       >
                         <Trash className="h-4 w-4" />
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Disconnect Email Account</DialogTitle>
+                        <DialogTitle>{t('pages.settings.connections.disconnectTitle')}</DialogTitle>
                         <DialogDescription>
-                          Are you sure you want to disconnect this email?
+                          {t('pages.settings.connections.disconnectDescription')}
                         </DialogDescription>
                       </DialogHeader>
                       <div className="flex justify-end gap-4">
                         <DialogClose asChild>
-                          <Button variant="outline">Cancel</Button>
+                          <Button variant="outline">
+                            {t('pages.settings.connections.cancel')}
+                          </Button>
                         </DialogClose>
                         <DialogClose asChild>
-                          <Button onClick={() => disconnectAccount(connection.id)}>Remove</Button>
+                          <Button onClick={() => disconnectAccount(connection.id)}>
+                            {t('pages.settings.connections.remove')}
+                          </Button>
                         </DialogClose>
                       </div>
                     </DialogContent>
@@ -150,9 +159,19 @@ export default function ConnectionsPage() {
             </div>
           ) : null}
 
-          <AddConnectionDialog className="w-fit hover:bg-transparent">
-
-          </AddConnectionDialog>
+          <div className="flex items-center justify-start">
+            <AddConnectionDialog>
+              <Button
+                variant="outline"
+                className="group relative w-9 overflow-hidden transition-all duration-200 hover:w-full sm:hover:w-[32.5%]"
+              >
+                <Plus className="absolute left-2 h-4 w-4" />
+                <span className="whitespace-nowrap pl-7 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                  {t('pages.settings.connections.addEmail')}
+                </span>
+              </Button>
+            </AddConnectionDialog>
+          </div>
         </div>
       </SettingsCard>
     </div>

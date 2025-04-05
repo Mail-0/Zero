@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { Ratelimit } from "@upstash/ratelimit";
 import { earlyAccess } from "@zero/db/schema";
 import { redis } from "@/lib/redis";
@@ -16,10 +16,26 @@ const ratelimit = new Ratelimit({
   prefix: "ratelimit:early-access",
 });
 
+function isEmail(email: string): boolean {
+  if (!email) {
+    return false;
+  }
+
+  const emailRegex = new RegExp(
+    /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+  );
+
+  return emailRegex.test(email);
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const ip = req.headers.get("x-forwarded-for") || "unknown";
-    console.log("Request from IP:", ip);
+    const ip = req.headers.get("CF-Connecting-IP");
+    if (!ip) {
+      console.log("No IP detected");
+      return NextResponse.json({ error: "No IP detected" }, { status: 400 });
+    }
+    console.log("Request from IP:", ip, req.headers.get("x-forwarded-for"), req.headers.get('CF-Connecting-IP'));
     const { success, limit, reset, remaining } = await ratelimit.limit(ip);
 
     const headers = {
@@ -44,6 +60,11 @@ export async function POST(req: NextRequest) {
     if (!email) {
       console.log("Email missing from request");
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    }
+
+    if (!isEmail(email)) {
+      console.log("Invalid email format");
+      return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
     }
 
     const nowDate = new Date();

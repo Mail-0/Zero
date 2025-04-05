@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { createDriver } from "@/app/api/driver";
 import { connection } from "@zero/db/schema";
 import { db } from "@zero/db";
@@ -59,7 +59,7 @@ export async function GET(
       updatedAt: new Date(),
     });
 
-    return NextResponse.redirect(new URL("/settings/connections?success=true", request.url));
+    return NextResponse.redirect(new URL("/mail", request.url));
   } catch (error) {
     return new NextResponse(JSON.stringify({ error }));
   }

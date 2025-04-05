@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   Book,
@@ -9,8 +9,8 @@ import {
   MoonIcon,
   Settings2Icon,
   UserPlus,
-} from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+} from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 import {
   DropdownMenu,
@@ -18,22 +18,23 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
-import { SettingsGearIcon } from "../icons/animated/settings-gear";
-import { useConnections } from "@/hooks/use-connections";
-import { usePathname, useRouter } from "next/navigation";
-import { signOut, useSession } from "@/lib/auth-client";
-import { AddConnectionDialog } from "../connection/add";
-import { putConnection } from "@/actions/connections";
-import { useEffect, useMemo, useState } from "react";
-import { SunIcon } from "../icons/animated/sun";
-import { useTheme } from "next-themes";
-import { IConnection } from "@/types";
-import { Button } from "./button";
-import { toast } from "sonner";
-import Link from "next/link";
-import axios from "axios";
+} from '@/components/ui/dropdown-menu';
+import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
+import { SettingsGearIcon } from '../icons/animated/settings-gear';
+import { useConnections } from '@/hooks/use-connections';
+import { usePathname, useRouter } from 'next/navigation';
+import { signOut, useSession } from '@/lib/auth-client';
+import { AddConnectionDialog } from '../connection/add';
+import { putConnection } from '@/actions/connections';
+import { useEffect, useMemo, useState } from 'react';
+import { SunIcon } from '../icons/animated/sun';
+import { useTranslations } from 'next-intl';
+import { type IConnection } from '@/types';
+import { useTheme } from 'next-themes';
+import { Button } from './button';
+import { toast } from 'sonner';
+import Link from 'next/link';
+import axios from 'axios';
 
 export function NavUser() {
   const { data: session, refetch } = useSession();
@@ -42,6 +43,7 @@ export function NavUser() {
   const pathname = usePathname();
   const [isRendered, setIsRendered] = useState(false);
   const { theme, resolvedTheme, setTheme } = useTheme();
+  const t = useTranslations();
 
   const activeAccount = useMemo(() => {
     if (!session) return null;
@@ -52,16 +54,16 @@ export function NavUser() {
   useEffect(() => setIsRendered(true), []);
 
   async function handleThemeToggle() {
-    const newTheme = theme === "dark" ? "light" : "dark";
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
 
     function update() {
       setTheme(newTheme);
     }
 
     if (document.startViewTransition && newTheme !== resolvedTheme) {
-      document.documentElement.style.viewTransitionName = "theme-transition";
+      document.documentElement.style.viewTransitionName = 'theme-transition';
       await document.startViewTransition(update).finished;
-      document.documentElement.style.viewTransitionName = "";
+      document.documentElement.style.viewTransitionName = '';
     } else {
       update();
     }
@@ -77,9 +79,9 @@ export function NavUser() {
 
   const handleLogout = async () => {
     toast.promise(signOut(), {
-      loading: "Signing out...",
-      success: () => "Signed out successfully!",
-      error: "Error signing out",
+      loading: 'Signing out...',
+      success: () => 'Signed out successfully!',
+      error: 'Error signing out',
     });
   };
 
@@ -104,15 +106,15 @@ export function NavUser() {
                       src={
                         (activeAccount?.picture ?? undefined) || (session?.user.image ?? undefined)
                       }
-                      alt={activeAccount?.name || session?.user.name || "User"}
+                      alt={activeAccount?.name || session?.user.name || 'User'}
                     />
                     <AvatarFallback className="relative overflow-hidden rounded-lg">
                       <div className="absolute inset-0" />
                       <span className="relative z-10">
-                        {(activeAccount?.name || session?.user.name || "User")
-                          .split(" ")
+                        {(activeAccount?.name || session?.user.name || 'User')
+                          .split(' ')
                           .map((n) => n[0])
-                          .join("")
+                          .join('')
                           .toUpperCase()
                           .slice(0, 2)}
                       </span>
@@ -120,7 +122,7 @@ export function NavUser() {
                   </Avatar>
                   <div className="flex min-w-0 flex-col gap-0.5 leading-none">
                     <span className="truncate font-medium tracking-tight">
-                      {activeAccount?.name || session?.user.name || "User"}
+                      {activeAccount?.name || session?.user.name || 'User'}
                     </span>
                     <span className="text-muted-foreground/70 truncate text-[11px]">
                       {activeAccount?.email || session?.user.email}
@@ -136,45 +138,47 @@ export function NavUser() {
       <DropdownMenuContent
         className="ml-3 w-[--radix-dropdown-menu-trigger-width] min-w-56 font-medium"
         align="end"
-        side={"bottom"}
+        side={'bottom'}
         sideOffset={8}
       >
-        <DropdownMenuItem onClick={() => router.push("/support")}>
+        <DropdownMenuItem onClick={() => router.push('/support')}>
           <div className="flex cursor-pointer items-center gap-2 text-[13px]">
             <HelpCircle size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
-            <p className="text-[13px] opacity-60">Customer Support</p>
+            <p className="text-[13px] opacity-60">{t('common.navUser.customerSupport')}</p>
           </div>
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => window.open("https://github.com/Mail-0/Mail-0", "_blank")}
-        >
-          <div className="flex cursor-pointer items-center gap-2 text-[13px]">
-            <Book size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
-            <p className="text-[13px] opacity-60">Documentation</p>
-          </div>
+        <DropdownMenuItem asChild>
+          <a href="https://github.com/Mail-0/Zero" target="_blank">
+            <div className="flex cursor-pointer items-center gap-2 text-[13px]">
+              <Book size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
+              <p className="text-[13px] opacity-60">{t('common.navUser.documentation')}</p>
+            </div>
+          </a>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleThemeToggle}>
           <div className="flex cursor-pointer items-center gap-2 text-[13px]">
-            {theme === "dark" ? (
+            {theme === 'dark' ? (
               <MoonIcon className="opacity-60" />
             ) : (
               <SunIcon className="opacity-60" />
             )}
-            <p className="text-[13px] opacity-60">App Theme</p>
+            <p className="text-[13px] opacity-60">{t('common.navUser.appTheme')}</p>
           </div>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <div className="space-y-1">
           {session ? (
             <>
-              <p className="text-muted-foreground px-1 py-0.5 text-[11px]">Accounts</p>
+              <p className="text-muted-foreground px-1 py-0.5 text-[11px]">
+                {t('common.navUser.accounts')}
+              </p>
 
               {connections?.map((connection) => (
                 <DropdownMenuItem
                   key={connection.id}
                   onClick={handleAccountSwitch(connection)}
                   className={`flex cursor-pointer items-center gap-3 py-0.5 ${
-                    connection.id === session?.connectionId ? "bg-accent" : ""
+                    connection.id === session?.connectionId ? 'bg-accent' : ''
                   }`}
                 >
                   <Avatar className="size-7 rounded-lg">
@@ -185,9 +189,9 @@ export function NavUser() {
                     />
                     <AvatarFallback className="rounded-lg text-[10px]">
                       {(connection.name || connection.email)
-                        .split(" ")
+                        .split(' ')
                         .map((n) => n[0])
-                        .join("")
+                        .join('')
                         .toUpperCase()
                         .slice(0, 2)}
                     </AvatarFallback>
@@ -206,16 +210,19 @@ export function NavUser() {
               ))}
               <AddConnectionDialog />
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer text-muted-foreground" onClick={handleLogout}>
+              <DropdownMenuItem
+                className="text-muted-foreground cursor-pointer"
+                onClick={handleLogout}
+              >
                 <LogOut size={16} strokeWidth={2} className="mr-1" aria-hidden="true" />
-                <p className="text-[13px]">Log out</p>
+                <p className="text-[13px]">{t('common.actions.logout')}</p>
               </DropdownMenuItem>
             </>
           ) : (
             <>
-              <DropdownMenuItem className="cursor-pointer" onClick={() => router.push("/login")}>
+              <DropdownMenuItem className="cursor-pointer" onClick={() => router.push('/login')}>
                 <LogIn size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
-                <p className="text-[13px] opacity-60">Sign in</p>
+                <p className="text-[13px] opacity-60">{t('common.navUser.signIn')}</p>
               </DropdownMenuItem>
             </>
           )}

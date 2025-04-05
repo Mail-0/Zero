@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { forwardRef, useCallback, useImperativeHandle, useRef } from "react";
-import { motion, useAnimation } from "motion/react";
-import type { HTMLAttributes } from "react";
+import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
+import { motion, useAnimation } from 'motion/react';
+import type { HTMLAttributes } from 'react';
 
 export interface BookTextIconHandle {
   startAnimation: () => void;
@@ -18,15 +18,15 @@ const BookTextIcon = forwardRef<BookTextIconHandle, HTMLAttributes<HTMLDivElemen
       isControlledRef.current = true;
 
       return {
-        startAnimation: () => controls.start("animate"),
-        stopAnimation: () => controls.start("normal"),
+        startAnimation: () => controls.start('animate'),
+        stopAnimation: () => controls.start('normal'),
       };
     });
 
     const handleMouseEnter = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
         if (!isControlledRef.current) {
-          controls.start("animate");
+          controls.start('animate');
         } else {
           onMouseEnter?.(e);
         }
@@ -37,7 +37,7 @@ const BookTextIcon = forwardRef<BookTextIconHandle, HTMLAttributes<HTMLDivElemen
     const handleMouseLeave = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
         if (!isControlledRef.current) {
-          controls.start("normal");
+          controls.start('normal');
         } else {
           onMouseLeave?.(e);
         }
@@ -47,7 +47,7 @@ const BookTextIcon = forwardRef<BookTextIconHandle, HTMLAttributes<HTMLDivElemen
 
     return (
       <div
-        className="flex cursor-pointer select-none items-center justify-center rounded-md p-2 transition-colors duration-200 hover:bg-accent"
+        className="hover:bg-accent flex cursor-pointer select-none items-center justify-center rounded-md p-2 transition-colors duration-200"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         {...props}
@@ -61,7 +61,7 @@ const BookTextIcon = forwardRef<BookTextIconHandle, HTMLAttributes<HTMLDivElemen
               y: [0, -2, 0],
               transition: {
                 duration: 0.6,
-                ease: "easeInOut",
+                ease: 'easeInOut',
                 times: [0, 0.2, 0.5, 0.8, 1],
               },
             },
@@ -90,6 +90,6 @@ const BookTextIcon = forwardRef<BookTextIconHandle, HTMLAttributes<HTMLDivElemen
   },
 );
 
-BookTextIcon.displayName = "BookTextIcon";
+BookTextIcon.displayName = 'BookTextIcon';
 
 export { BookTextIcon };

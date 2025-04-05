@@ -1,88 +1,59 @@
-import {
-  BoldIcon,
-  CodeIcon,
-  ItalicIcon,
-  SparkleIcon,
-  StrikethroughIcon,
-  UnderlineIcon,
-} from "lucide-react";
-import { useAIInline } from "@/components/ui/ai-inline";
-import type { SelectorItem } from "./node-selector";
-import { EditorBubbleItem, useEditor } from "novel";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { MessageSquare, FileText, Edit } from 'lucide-react';
+import type { SelectorItem } from './node-selector';
+import { EditorBubbleItem, useEditor } from 'novel';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import Image from 'next/image';
+import { useAIInline } from '@/components/ui/ai-inline';
 
 export const TextButtons = () => {
   const { editor } = useEditor();
-  const { toggleOpen, setPosition, setEditor } = useAIInline();
-
   if (!editor) return null;
-  const items: SelectorItem[] = [
-    {
-      name: "bold",
-      isActive: (editor) => (editor ? editor.isActive("bold") : false),
-      command: (editor) => editor?.chain().focus().toggleBold().run(),
-      icon: BoldIcon,
-    },
-    {
-      name: "italic",
-      isActive: (editor) => (editor ? editor.isActive("italic") : false),
-      command: (editor) => editor?.chain().focus().toggleItalic().run(),
-      icon: ItalicIcon,
-    },
-    {
-      name: "underline",
-      isActive: (editor) => (editor ? editor.isActive("underline") : false),
-      command: (editor) => editor?.chain().focus().toggleUnderline().run(),
-      icon: UnderlineIcon,
-    },
-    {
-      name: "strike",
-      isActive: (editor) => (editor ? editor.isActive("strike") : false),
-      command: (editor) => editor?.chain().focus().toggleStrike().run(),
-      icon: StrikethroughIcon,
-    },
-    {
-      name: "code",
-      isActive: (editor) => (editor ? editor.isActive("code") : false),
-      command: (editor) => editor?.chain().focus().toggleCode().run(),
-      icon: CodeIcon,
-    },
-    {
-      name: "AI",
-      isActive: () => false,
-      command: (editor) => {
-        // Get cursor position
-        const { view } = editor;
-        if (!view) return;
 
-        const { from } = view.state.selection;
-        const coords = view.coordsAtPos(from);
+  // Define AI action handlers
+  const handleChatWithAI = () => {
+    // Get selected text
+    const selection = editor.state.selection;
+    const selectedText = selection.empty
+      ? ''
+      : editor.state.doc.textBetween(selection.from, selection.to);
 
-        setEditor(editor);
+    console.log('Chat with AI about:', selectedText);
+    // Implement chat with AI functionality
+  };
 
-        // Set position and open the AI inline component
-        setPosition({ x: coords.left, y: coords.top - 150 });
-        toggleOpen();
-      },
-      icon: SparkleIcon,
+  const items = [
+    {
+      name: 'chat-with-zero',
+      label: 'Chat with Zero',
+      action: handleChatWithAI,
+      useImage: true,
+      imageSrc: '/ai.svg',
     },
   ];
+
   return (
     <div className="flex">
       {items.map((item) => (
         <EditorBubbleItem
           key={item.name}
-          onSelect={(editor) => {
-            item.command(editor);
+          onSelect={() => {
+            item.action();
           }}
         >
-          <Button size="sm" className="rounded-none" variant="ghost">
-            <item.icon
-              className={cn("h-4 w-4", {
-                "text-blue-500": item.isActive(editor),
-              })}
-            />
+          <Button size="sm" className="flex items-center gap-1.5 rounded-none px-3" variant="ghost">
+            {item.useImage ? (
+              <Image
+                src={item.imageSrc}
+                alt={item.label}
+                width={16}
+                height={16}
+                className="h-4 w-4"
+              />
+            ) : (
+              <item.icon className="h-4 w-4" />
+            )}
+            <span className="text-xs">{item.label}</span>
           </Button>
         </EditorBubbleItem>
       ))}

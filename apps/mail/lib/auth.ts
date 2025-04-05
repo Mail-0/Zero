@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { connection, user as _user, account } from "@zero/db/schema";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { betterAuth, BetterAuthOptions } from "better-auth";
+import { betterAuth, type BetterAuthOptions } from "better-auth";
 import { customSession } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { Resend } from "resend";
 import { db } from "@zero/db";
+import { getSocialProviders } from "./auth-providers";
 
 // If there is no resend key, it might be a local dev environment
 // In that case, we don't want to send emails and just log them
@@ -26,27 +27,7 @@ const options = {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day (every 1 day the session expiration is updated)
   },
-  socialProviders: {
-    microsoft: {
-      tenantId: '0.email',
-      clientId: process.env.ZERO_CLIENT_ID!,
-      clientSecret: process.env.ZERO_CLIENT_SECRET!,
-      scope: ["openid", "offline_access", "email", "User.Read"],
-      // requireSelectAccount: 'consent',
-    },
-    google: {
-      // Remove this before going to prod, it's to force to get `refresh_token` from google, some users don't have it yet.
-      prompt: "consent",
-      accessType: "offline",
-      scope: ["https://www.googleapis.com/auth/gmail.modify"],
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    },
-    github: {
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-    },
-  },
+  socialProviders: getSocialProviders(),
   emailAndPassword: {
     enabled: false,
     requireEmailVerification: true,
@@ -91,12 +72,43 @@ const options = {
         .from(_user)
         .where(eq(_user.id, user.id))
         .limit(1);
+
+      let activeConnection = null;
+      
+      if (foundUser?.activeConnectionId) {
+        // Get the active connection details
+        const [connectionDetails] = await db
+          .select()
+          .from(connection)
+          .where(eq(connection.id, foundUser.activeConnectionId))
+          .limit(1);
+          
+        if (connectionDetails) {
+          activeConnection = {
+            id: connectionDetails.id,
+            name: connectionDetails.name,
+            email: connectionDetails.email,
+            picture: connectionDetails.picture,
+          };
+        }
+      }
+
       if (!foundUser?.activeConnectionId) {
         const [defaultConnection] = await db
           .select()
           .from(connection)
           .where(eq(connection.userId, user.id))
           .limit(1);
+
+        if (defaultConnection) {
+          activeConnection = {
+            id: defaultConnection.id,
+            name: defaultConnection.name,
+            email: defaultConnection.email,
+            picture: defaultConnection.picture,
+          };
+        }
+
         if (!defaultConnection) {
           // find the user account the user has
           const [userAccount] = await db
@@ -128,15 +140,11 @@ const options = {
             }
           }
         }
-        return {
-          connectionId: defaultConnection ? defaultConnection.id : null,
-          user,
-          session,
-        };
       }
 
       return {
-        connectionId: foundUser?.activeConnectionId,
+        connectionId: activeConnection?.id || null,
+        activeConnection,
         user,
         session,
       };

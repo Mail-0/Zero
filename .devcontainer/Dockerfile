@@ -44,7 +44,7 @@ RUN . $NVM_DIR/nvm.sh && \
     nvm install --lts && \
     nvm use --lts && \
     nvm alias default 'lts/*' && \
-    npm install -g yarn pnpm
+    npm install -g bun
 
 # Register Nvm in bashrc and zshrc
 RUN echo 'export NVM_DIR="$HOME/.nvm"' >> ~/.bashrc

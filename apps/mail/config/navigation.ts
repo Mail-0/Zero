@@ -6,11 +6,16 @@ import { ShieldCheckIcon } from "@/components/icons/animated/shield";
 import { KeyboardIcon } from "@/components/icons/animated/keyboard";
 import { SparklesIcon } from "@/components/icons/animated/sparkles";
 import { ArchiveIcon } from "@/components/icons/animated/archive";
+import { DeleteIcon } from "@/components/icons/animated/trash";
 import { UsersIcon } from "@/components/icons/animated/users";
 import { InboxIcon } from "@/components/icons/animated/inbox";
-import { DeleteIcon } from "@/components/icons/animated/trash";
 import { XIcon } from "@/components/icons/animated/x";
+import { MessageCircleIcon } from "@/components/icons/animated/message";
+import { NestedKeyOf } from "next-intl";
+import { MessageKeys } from "next-intl";
+import { MessageSquareIcon } from "@/components/icons/animated/message-square";
 export interface NavItem {
+  id?:string,
   title: string;
   url: string;
   icon: React.ComponentType<any>;
@@ -18,7 +23,9 @@ export interface NavItem {
   isBackButton?: boolean;
   isSettingsButton?: boolean;
   disabled?: boolean;
+  isFeaturebaseButton?: boolean;
 }
+export type MessageKey = MessageKeys<IntlMessages, NestedKeyOf<IntlMessages>>;
 
 interface NavSection {
   title: string;
@@ -30,6 +37,7 @@ interface NavConfig {
   sections: NavSection[];
 }
 
+// ! items title has to be a message key (check messages/en.json)
 export const navigationConfig: Record<string, NavConfig> = {
   mail: {
     path: "/mail",
@@ -38,42 +46,55 @@ export const navigationConfig: Record<string, NavConfig> = {
         title: "",
         items: [
           {
-            title: "Inbox",
+            id: 'inbox',
+            title: "navigation.sidebar.inbox",
             url: "/mail/inbox",
             icon: InboxIcon,
           },
           {
-            title: "Drafts",
+            id: 'drafts',
+            title: "navigation.sidebar.drafts",
             url: "/mail/draft",
             icon: BookTextIcon,
           },
           {
-            title: "Sent",
+            id: 'sent',
+            title: "navigation.sidebar.sent",
             url: "/mail/sent",
             icon: CheckCheckIcon,
           },
           {
-            title: "Spam",
+            id:'spam',
+            title: "navigation.sidebar.spam",
             url: "/mail/spam",
             icon: XIcon,
           },
           {
-            title: "Archive",
+            id:'archive',
+            title: "navigation.sidebar.archive",
             url: "/mail/archive",
             icon: ArchiveIcon,
-            disabled: true,
           },
           {
-            title: "Bin",
+            id:'bin',
+            title: "navigation.sidebar.bin",
             url: "/mail/bin",
             icon: DeleteIcon,
             disabled: true,
           },
           {
-            title: "Settings",
+            id:'settings',
+            title: "navigation.sidebar.settings",
             url: "/settings/general",
             icon: SettingsGearIcon,
             isSettingsButton: true,
+          },
+          {
+            id:'contact',
+            title: "navigation.sidebar.contact",
+            url: "#",
+            icon: MessageSquareIcon,
+            isFeaturebaseButton: true,
           },
         ],
       },
@@ -125,34 +146,34 @@ export const navigationConfig: Record<string, NavConfig> = {
         title: "Settings",
         items: [
           {
-            title: "Back",
+            title: "common.actions.back",
             url: "/mail",
             icon: ArrowLeftIcon,
             isBackButton: true,
           },
 
           {
-            title: "General",
+            title: "navigation.settings.general",
             url: "/settings/general",
             icon: SettingsGearIcon,
           },
           {
-            title: "Connections",
+            title: "navigation.settings.connections",
             url: "/settings/connections",
             icon: UsersIcon,
           },
           {
-            title: "Security",
+            title: "navigation.settings.security",
             url: "/settings/security",
             icon: ShieldCheckIcon,
           },
           {
-            title: "Appearance",
+            title: "navigation.settings.appearance",
             url: "/settings/appearance",
             icon: SparklesIcon,
           },
           {
-            title: "Shortcuts",
+            title: "navigation.settings.shortcuts",
             url: "/settings/shortcuts",
             icon: KeyboardIcon,
           },

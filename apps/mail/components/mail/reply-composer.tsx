@@ -1,15 +1,16 @@
-import { ArrowUp, Paperclip, Reply, X, Plus } from "lucide-react";
-import { cleanEmailAddress, truncateFileName } from "@/lib/utils";
-import Editor from "@/components/create/editor";
-import { Button } from "@/components/ui/button";
-import { sendEmail } from "@/actions/send";
-import { Dispatch, SetStateAction, useRef, useState, useEffect } from "react";
-import { ParsedMessage } from "@/types";
-import { cn } from "@/lib/utils";
-import { toast } from "sonner";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
-import { UploadedFileIcon } from "@/components/create/uploaded-file-icon";
+import { type Dispatch, type SetStateAction, useRef, useState, useEffect } from 'react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { UploadedFileIcon } from '@/components/create/uploaded-file-icon';
+import { ArrowUp, Paperclip, Reply, X, Plus } from 'lucide-react';
+import { cleanEmailAddress, truncateFileName } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
+import Editor from '@/components/create/editor';
+import { Button } from '@/components/ui/button';
+import type { ParsedMessage } from '@/types';
+import { useTranslations } from 'next-intl';
+import { sendEmail } from '@/actions/send';
+import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface ReplyComposeProps {
   emailData: ParsedMessage[];
@@ -17,18 +18,15 @@ interface ReplyComposeProps {
   setIsOpen?: Dispatch<SetStateAction<boolean>>;
 }
 
-export default function ReplyCompose({ 
-  emailData, 
-  isOpen, 
-  setIsOpen 
-}: ReplyComposeProps) {
+export default function ReplyCompose({ emailData, isOpen, setIsOpen }: ReplyComposeProps) {
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [messageContent, setMessageContent] = useState("");
-  const [isTextAreaFocused, setIsTextAreaFocused] = useState(false);
+  const [messageContent, setMessageContent] = useState('');
   const [isComposerOpen, setIsComposerOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isEditorFocused, setIsEditorFocused] = useState(false);
+  const t = useTranslations();
 
   // Use external state if provided, otherwise use internal state
   const composerIsOpen = isOpen !== undefined ? isOpen : isComposerOpen;
@@ -46,7 +44,7 @@ export default function ReplyCompose({
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       e.preventDefault();
       if (isFormValid) {
-        handleSendEmail(e as unknown as React.MouseEvent<HTMLButtonElement>);
+        void handleSendEmail(e as unknown as React.MouseEvent<HTMLButtonElement>);
       }
     }
   };
@@ -88,7 +86,7 @@ export default function ReplyCompose({
       e.preventDefault();
       e.stopPropagation();
       setIsDragging(false);
-      
+
       if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
         setAttachments([...attachments, ...Array.from(e.dataTransfer.files)]);
         // Open the composer if it's not already open
@@ -113,7 +111,7 @@ export default function ReplyCompose({
         </div>
         <div style="padding-left: 1em; margin-top: 1em; border-left: 2px solid #ccc; color: #666;">
           <div style="margin-bottom: 1em;">
-            On ${originalDate}, ${originalSender?.name ? `${originalSender.name} ` : ""}${originalSender?.email ? `&lt;${cleanedToEmail}&gt;` : ""} wrote:
+            On ${originalDate}, ${originalSender?.name ? `${originalSender.name} ` : ''}${originalSender?.email ? `&lt;${cleanedToEmail}&gt;` : ''} wrote:
           </div>
           <div style="white-space: pre-wrap;">
             ${quotedMessage}
@@ -126,14 +124,14 @@ export default function ReplyCompose({
   const handleSendEmail = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     try {
-      const originalSubject = emailData[0]?.subject || "";
-      const subject = originalSubject.startsWith("Re:")
+      const originalSubject = emailData[0]?.subject || '';
+      const subject = originalSubject.startsWith('Re:')
         ? originalSubject
         : `Re: ${originalSubject}`;
 
       const originalSender = emailData[0]?.sender;
       const cleanedToEmail = cleanEmailAddress(emailData[emailData.length - 1]?.sender?.email);
-      const originalDate = new Date(emailData[0]?.receivedOn || "").toLocaleString();
+      const originalDate = new Date(emailData[0]?.receivedOn || '').toLocaleString();
       const quotedMessage = emailData[0]?.decodedBody;
       const messageId = emailData[0]?.messageId;
       const threadId = emailData[0]?.threadId;
@@ -150,10 +148,10 @@ export default function ReplyCompose({
 
       const inReplyTo = messageId;
 
-      const existingRefs = emailData[0]?.references?.split(" ") || [];
+      const existingRefs = emailData[0]?.references?.split(' ') || [];
       const references = [...existingRefs, emailData[0]?.inReplyTo, cleanEmailAddress(messageId)]
         .filter(Boolean)
-        .join(" ");
+        .join(' ');
 
       await sendEmail({
         to: cleanedToEmail,
@@ -161,18 +159,18 @@ export default function ReplyCompose({
         message: replyBody,
         attachments,
         headers: {
-          "In-Reply-To": inReplyTo ?? "",
+          'In-Reply-To': inReplyTo ?? '',
           References: references,
-          "Thread-Id": threadId ?? "",
+          'Thread-Id': threadId ?? '',
         },
       });
 
-      setMessageContent("");
+      setMessageContent('');
       setComposerIsOpen(false);
-      toast.success("Email sent successfully!");
+      toast.success(t('pages.createEmail.emailSentSuccessfully'));
     } catch (error) {
-      console.error("Error sending email:", error);
-      toast.error("Failed to send email. Please try again.");
+      console.error('Error sending email:', error);
+      toast.error(t('pages.createEmail.failedToSendEmail'));
     }
   };
 
@@ -194,21 +192,24 @@ export default function ReplyCompose({
           editorElement.focus();
         }
       }, 100);
-      
+
       return () => clearTimeout(timer);
     }
   }, [composerIsOpen]);
 
   // Check if the message is empty
-  const isMessageEmpty = !messageContent || messageContent === JSON.stringify({
-    type: "doc",
-    content: [
-      {
-        type: "paragraph",
-        content: [],
-      },
-    ],
-  });
+  const isMessageEmpty =
+    !messageContent ||
+    messageContent ===
+      JSON.stringify({
+        type: 'doc',
+        content: [
+          {
+            type: 'paragraph',
+            content: [],
+          },
+        ],
+      });
 
   // Check if form is valid for submission
   const isFormValid = !isMessageEmpty || attachments.length > 0;
@@ -222,7 +223,10 @@ export default function ReplyCompose({
           variant="outline"
         >
           <Reply className="h-4 w-4" />
-          <span>Reply to {emailData[emailData.length - 1]?.sender?.name || "this email"}</span>
+          <span>
+            {t('common.replyCompose.replyTo')}{' '}
+            {emailData[emailData.length - 1]?.sender?.name || t('common.replyCompose.thisEmail')}
+          </span>
         </Button>
       </div>
     );
@@ -232,8 +236,8 @@ export default function ReplyCompose({
     <div className="bg-offsetLight dark:bg-offsetDark w-full p-2">
       <form
         className={cn(
-          "border-border flex h-[300px] flex-col space-y-2.5 rounded-[10px] border px-2 py-4 relative",
-          isTextAreaFocused ? "ring-2 ring-[#3D3D3D]" : "",
+          'border-border ring-offset-background flex h-[300px] flex-col space-y-2.5 rounded-[10px] border px-2 py-2 transition-shadow duration-300 ease-in-out',
+          isEditorFocused ? 'ring-2 ring-[#3D3D3D] ring-offset-1' : '',
         )}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -245,14 +249,14 @@ export default function ReplyCompose({
         onKeyDown={handleKeyDown}
       >
         {isDragging && (
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center border-2 border-dashed border-primary/30 rounded-2xl m-4">
-            <div className="flex flex-col items-center gap-2 text-muted-foreground">
-              <Paperclip className="h-12 w-12 text-muted-foreground" />
-              <p className="text-lg font-medium">Drop files to attach</p>
+          <div className="bg-background/80 border-primary/30 absolute inset-0 z-50 m-4 flex items-center justify-center rounded-2xl border-2 border-dashed backdrop-blur-sm">
+            <div className="text-muted-foreground flex flex-col items-center gap-2">
+              <Paperclip className="text-muted-foreground h-12 w-12" />
+              <p className="text-lg font-medium">{t('common.replyCompose.dropFiles')}</p>
             </div>
           </div>
         )}
-        
+
         <div className="text-muted-foreground flex items-center justify-between text-sm">
           <div className="flex items-center gap-2">
             <Reply className="h-4 w-4" />
@@ -275,8 +279,8 @@ export default function ReplyCompose({
         </div>
 
         <div className="w-full flex-grow overflow-hidden p-1">
-          <div 
-            className=" h-full w-full"
+          <div
+            className="h-full w-full overflow-y-auto"
             onDragOver={(e) => e.stopPropagation()}
             onDragLeave={(e) => e.stopPropagation()}
             onDrop={(e) => e.stopPropagation()}
@@ -285,16 +289,24 @@ export default function ReplyCompose({
               onChange={(content) => {
                 setMessageContent(content);
               }}
+              className="sm:max-w-[600px] md:max-w-[2050px]"
               initialValue={{
-                type: "doc",
+                type: 'doc',
                 content: [
                   {
-                    type: "paragraph",
+                    type: 'paragraph',
                     content: [],
                   },
                 ],
               }}
               placeholder="Type your reply here..."
+              onFocus={() => {
+                setIsEditorFocused(true);
+              }}
+              onBlur={() => {
+                console.log('Editor blurred');
+                setIsEditorFocused(false);
+              }}
             />
           </div>
         </div>
@@ -306,31 +318,35 @@ export default function ReplyCompose({
               className="group relative w-9 overflow-hidden transition-all duration-200 hover:w-32"
               onClick={(e) => {
                 e.preventDefault();
-                document.getElementById("attachment-input")?.click();
+                document.getElementById('attachment-input')?.click();
               }}
             >
               <Plus className="absolute left-[9px] h-6 w-6" />
               <span className="whitespace-nowrap pl-7 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                Attachments
+                {t('common.replyCompose.attachments')}
               </span>
             </Button>
-            
+
             {attachments.length > 0 && (
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="flex items-center gap-2">
                     <Paperclip className="h-4 w-4" />
                     <span>
-                      {attachments.length} attachment{attachments.length !== 1 ? "s" : ""}
+                      {attachments.length}{' '}
+                      {t('common.replyCompose.attachmentCount', { count: attachments.length })}
                     </span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-80 touch-auto" align="start">
                   <div className="space-y-2">
                     <div className="px-1">
-                      <h4 className="font-medium leading-none">Attachments</h4>
+                      <h4 className="font-medium leading-none">
+                        {t('common.replyCompose.attachments')}
+                      </h4>
                       <p className="text-muted-foreground text-sm">
-                        {attachments.length} file{attachments.length !== 1 ? "s" : ""} attached
+                        {attachments.length}{' '}
+                        {t('common.replyCompose.fileCount', { count: attachments.length })}
                       </p>
                     </div>
                     <Separator />
@@ -373,20 +389,20 @@ export default function ReplyCompose({
           </div>
           <div className="mr-2 flex items-center gap-2">
             <Button variant="ghost" size="sm" className="h-8">
-              Save draft
+              {t('common.replyCompose.saveDraft')}
             </Button>
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               className="group relative h-8 w-9 overflow-hidden transition-all duration-200 hover:w-24"
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.preventDefault();
-                handleSendEmail(e);
+                await handleSendEmail(e);
               }}
               disabled={!isFormValid}
               type="button"
             >
               <span className="whitespace-nowrap pr-7 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                Send
+                {t('common.replyCompose.send')}
               </span>
               <ArrowUp className="absolute right-2.5 h-4 w-4" />
             </Button>

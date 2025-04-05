@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { forwardRef, useCallback, useImperativeHandle, useRef } from "react";
-import { motion, useAnimation } from "motion/react";
-import type { Variants } from "motion/react";
-import type { HTMLAttributes } from "react";
+import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
+import { motion, useAnimation } from 'motion/react';
+import type { Variants } from 'motion/react';
+import type { HTMLAttributes } from 'react';
 
 export interface CheckCheckIconHandle {
   startAnimation: () => void;
@@ -41,15 +41,15 @@ const CheckCheckIcon = forwardRef<CheckCheckIconHandle, HTMLAttributes<HTMLDivEl
       isControlledRef.current = true;
 
       return {
-        startAnimation: () => controls.start("animate"),
-        stopAnimation: () => controls.start("normal"),
+        startAnimation: () => controls.start('animate'),
+        stopAnimation: () => controls.start('normal'),
       };
     });
 
     const handleMouseEnter = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
         if (!isControlledRef.current) {
-          controls.start("animate");
+          controls.start('animate');
         } else {
           onMouseEnter?.(e);
         }
@@ -60,7 +60,7 @@ const CheckCheckIcon = forwardRef<CheckCheckIconHandle, HTMLAttributes<HTMLDivEl
     const handleMouseLeave = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
         if (!isControlledRef.current) {
-          controls.start("normal");
+          controls.start('normal');
         } else {
           onMouseLeave?.(e);
         }
@@ -70,7 +70,7 @@ const CheckCheckIcon = forwardRef<CheckCheckIconHandle, HTMLAttributes<HTMLDivEl
 
     return (
       <div
-        className="flex cursor-pointer select-none items-center justify-center rounded-md p-2 transition-colors duration-200 hover:bg-accent"
+        className="hover:bg-accent flex cursor-pointer select-none items-center justify-center rounded-md p-2 transition-colors duration-200"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         {...props}
@@ -106,6 +106,6 @@ const CheckCheckIcon = forwardRef<CheckCheckIconHandle, HTMLAttributes<HTMLDivEl
   },
 );
 
-CheckCheckIcon.displayName = "CheckCheckIcon";
+CheckCheckIcon.displayName = 'CheckCheckIcon';
 
 export { CheckCheckIcon };
