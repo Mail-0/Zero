@@ -14,7 +14,11 @@ export async function GET(
   }
 
   const { providerId } = await params;
+  
+  // Check if there's a specific scope requested
+  const requestedScope = request.nextUrl.searchParams.get('scope');
+  
   const driver = await createDriver(providerId, {});
-  const authUrl = driver.generateConnectionAuthUrl(userId);
+  const authUrl = driver.generateConnectionAuthUrl(userId, requestedScope);
   return NextResponse.redirect(authUrl);
 }
