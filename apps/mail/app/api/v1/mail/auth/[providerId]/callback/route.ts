@@ -23,8 +23,7 @@ export async function GET(
 
   try {
     // Log the scope parameter from Google's callback
-    const scope = searchParams.get("scope");
-    console.log("Auth callback received with scope:", scope);
+    console.log("Auth callback received with scope:", searchParams.get("scope"));
 
     // Exchange the authorization code for tokens
     const { tokens } = await driver.getTokens(code);
