@@ -340,7 +340,8 @@ export const getGoogleContacts = cache(async (): Promise<GoogleContact[]> => {
   }
 });
 
-export async function getAllContacts(): Promise<GoogleContact[]> {
+// Cache contacts with a short TTL to improve performance
+export const getAllContacts = cache(async (): Promise<GoogleContact[]> => {
   try {
     // Fetch Google contacts
     const googleContacts = await getGoogleContacts();
@@ -353,4 +354,4 @@ export async function getAllContacts(): Promise<GoogleContact[]> {
     console.error("Error fetching all contacts (this might be normal if you're not logged in):", error);
     return [];
   }
-}
+});
