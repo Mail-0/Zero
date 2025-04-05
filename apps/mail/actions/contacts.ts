@@ -182,12 +182,15 @@ export const getGoogleContacts = cache(async (): Promise<GoogleContact[]> => {
         connections.forEach(person => {
           const email = person.emailAddresses?.[0]?.value;
           if (email && email.toLowerCase() !== userConnection.email?.toLowerCase()) {
-            contacts.push({
-              id: person.resourceName || `people-${contacts.length}`,
-              name: person.names?.[0]?.displayName,
-              email: email,
-              profilePhotoUrl: person.photos?.[0]?.url
-            });
+            // Check if contact with this email already exists before adding
+            if (!contacts.some(c => c.email.toLowerCase() === email.toLowerCase())) {
+              contacts.push({
+                id: person.resourceName || `people-${contacts.length}`,
+                name: person.names?.[0]?.displayName,
+                email: email,
+                profilePhotoUrl: person.photos?.[0]?.url
+              });
+            }
           }
         });
         

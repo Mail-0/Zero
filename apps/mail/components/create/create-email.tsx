@@ -417,14 +417,23 @@ export function CreateEmail({
   
   // Get contact details by email from either connections or Google contacts
   const getContactByEmail = React.useCallback((email: string): { name?: string, picture?: string } | undefined => {
-    // First check connections
+    // Get info from both sources to merge the most complete data
     const conn = connections?.find(conn => conn.email === email);
+    const contact = contacts?.find(contact => contact.email === email);
+    
+    // Merge data from both sources if available
+    if (conn && contact) {
+      return { 
+        name: conn.name || contact.name, 
+        picture: conn.picture || contact.profilePhotoUrl 
+      };
+    }
+    
+    // Otherwise return from individual sources
     if (conn) {
       return { name: conn.name, picture: conn.picture };
     }
     
-    // Then check Google contacts
-    const contact = contacts?.find(contact => contact.email === email);
     if (contact) {
       return { name: contact.name, picture: contact.profilePhotoUrl };
     }
