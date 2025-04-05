@@ -8,82 +8,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@zero/db";
 import { cache } from "react";
 
-export interface GoogleContact {
-  id: string;
-  name?: string;
-  email: string;
-  profilePhotoUrl?: string;
-}
-
-/**
- * Helper function to extract email addresses from header values
- * @param headerValue The raw header value containing email addresses
- * @param emailAddresses Set to store unique email addresses
- * @param emailNames Map to store name associations with emails
- * @param userEmail Optional user email to exclude from results
- */
-function extractEmailAddresses(
-  headerValue: string,
-  emailAddresses: Set<string>,
-  emailNames: Map<string, string>,
-  userEmail?: string
-) {
-  if (!headerValue) return;
-  
-  // Normalize newlines and extra spaces
-  const normalizedValue = headerValue.replace(/\r?\n/g, ' ').replace(/\s+/g, ' ');
-  
-  // Parse email addresses in format "Name <email@example.com>"
-  const addressRegex = /(.*?)<([^>]+)>/g;
-  let match;
-  
-  // Track if we found any bracketed emails
-  let foundBracketedEmail = false;
-  
-  while ((match = addressRegex.exec(normalizedValue)) !== null) {
-    foundBracketedEmail = true;
-    const name = match[1]?.trim() || '';
-    const email = match[2]?.trim();
-    
-    if (email && !emailAddresses.has(email) && email.toLowerCase() !== userEmail?.toLowerCase()) {
-      // Validate email using more comprehensive regex pattern
-      const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-      if (emailRegex.test(email)) {
-        emailAddresses.add(email);
-        if (name) {
-          emailNames.set(email, name);
-        }
-      }
-    }
-  }
-  
-  // If we didn't find any bracketed emails, try to extract plain emails
-  if (!foundBracketedEmail) {
-    // More comprehensive email regex for extraction
-    const emailRegex = /([a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*)/gi;
-    let emailMatch;
-    
-    while ((emailMatch = emailRegex.exec(normalizedValue)) !== null) {
-      const email = emailMatch[0].trim();
-      if (email && !emailAddresses.has(email) && email.toLowerCase() !== userEmail?.toLowerCase()) {
-        emailAddresses.add(email);
-      }
-    }
-    
-    // Also handle plain email addresses without names
-    normalizedValue
-      .split(/[,;]/)
-      .map(addr => addr.trim())
-      .filter(addr => addr.includes('@') && !addr.includes('<') && 
-             addr.toLowerCase() !== userEmail?.toLowerCase())
-      .forEach(email => {
-        // Use the same comprehensive regex pattern for validation
-        if (emailRegex.test(email)) {
-          emailAddresses.add(email);
-        }
-      });
-  }
-}
+import { GoogleContact } from "@/app/api/driver/types";
 
 export const getGoogleContacts = cache(async (): Promise<GoogleContact[]> => {
   try {
@@ -208,126 +133,17 @@ export const getGoogleContacts = cache(async (): Promise<GoogleContact[]> => {
       try {
         console.log("Fallback: Using Gmail API to find contacts from message history...");
         
-        // Create Gmail API client from the driver
-        const gmail = await driver.getGmailApi(userConnection.accessToken, userConnection.refreshToken);
+        // Use the driver's built-in method to get Gmail contacts
+        const gmailContacts = await driver.getContactsFromGmail!(
+          userConnection.accessToken, 
+          userConnection.refreshToken, 
+          userConnection.email || ''
+        );
         
-        // Get a list of emails sent in the last 60 days with pagination support
-        const allMessageIds: string[] = [];
-        let pageToken = undefined;
+        // Add the extracted contacts to our contacts list
+        contacts.push(...gmailContacts);
         
-        // Implement pagination to get more complete results
-        do {
-          const sentEmailsResponse = await gmail.users.messages.list({
-            userId: 'me',
-            q: 'in:sent newer_than:60d',
-            maxResults: 100,
-            pageToken: pageToken
-          });
-          
-          if (sentEmailsResponse.data.messages) {
-            sentEmailsResponse.data.messages.forEach(msg => {
-              if (msg.id) allMessageIds.push(msg.id);
-            });
-          }
-          
-          pageToken = sentEmailsResponse.data.nextPageToken;
-          // Limit to 200 total messages for performance reasons
-          if (allMessageIds.length >= 200) break;
-        } while (pageToken);
-        
-        console.log(`Found ${allMessageIds.length} sent messages for contacts extraction`);
-        
-        // Extract recipients from these emails
-        const emailAddresses = new Set<string>();
-        const emailNames = new Map<string, string>();
-        
-        // Get contacts from more sources for better fallback
-
-        // Process both sent and received messages for maximum contact extraction
-        console.log("Expanding search to include both sent and inbox messages for better contact discovery");
-        
-        // Get inbox messages too for a better contact list, with pagination
-        let inboxIds: string[] = [];
-        pageToken = undefined;
-        
-        do {
-          const inboxResponse = await gmail.users.messages.list({
-            userId: 'me',
-            q: 'in:inbox',
-            maxResults: 50,
-            pageToken: pageToken
-          });
-          
-          if (inboxResponse.data.messages) {
-            inboxResponse.data.messages.forEach(msg => {
-              if (msg.id) inboxIds.push(msg.id);
-            });
-          }
-          
-          pageToken = inboxResponse.data.nextPageToken;
-          // Limit to 100 inbox messages for performance
-          if (inboxIds.length >= 100) break;
-        } while (pageToken);
-        
-        console.log(`Found ${inboxIds.length} inbox messages for contacts extraction`);
-        
-        // Combine sent and inbox messages for processing
-        const combinedMessageIds = [...allMessageIds, ...inboxIds];
-        const uniqueMessageIds = Array.from(new Set(combinedMessageIds));
-        console.log(`Processing ${uniqueMessageIds.length} unique messages for contacts`);
-        
-        // Process messages to extract recipients and senders with controlled concurrency
-        const processedCount = Math.min(75, uniqueMessageIds.length);
-        const batchSize = 10; // Process 10 messages concurrently
-        
-        for (let i = 0; i < processedCount; i += batchSize) {          
-          // Create a batch of promises to process messages concurrently
-          const batch = uniqueMessageIds.slice(i, i + batchSize).map(async messageId => {
-            if (!messageId) return;
-            
-            try {
-              const message = await gmail.users.messages.get({
-                userId: 'me',
-                id: messageId,
-                format: 'metadata',
-                metadataHeaders: ['To', 'Cc', 'Bcc', 'From', 'Reply-To']
-              });
-              
-              // Extract recipient information
-              const headers = message.data.payload?.headers || [];
-              
-              // Process all relevant headers
-              for (const header of headers) {
-                if (['To', 'Cc', 'Bcc', 'From', 'Reply-To'].includes(header.name || '') && header.value) {
-                  extractEmailAddresses(
-                    header.value, 
-                    emailAddresses, 
-                    emailNames, 
-                    userConnection.email?.toLowerCase()
-                  );
-                }
-              }
-            } catch (err) {
-              console.error('Error processing message:', err);
-            }
-          });
-          
-          // Wait for the current batch to complete before processing the next batch
-          await Promise.all(batch);
-        }
-        
-        // Add extracted email addresses to contacts
-        let id = 0;
-        emailAddresses.forEach(email => {
-          contacts.push({
-            id: `gmail-history-${id++}`,
-            name: emailNames.get(email) || undefined,
-            email,
-            profilePhotoUrl: undefined
-          });
-        });
-        
-        console.log(`Added ${emailAddresses.size} email addresses from message history`);
+        console.log(`Added ${gmailContacts.length} email addresses from message history`);
       } catch (err) {
         console.error('Error getting contacts from Gmail:', err);
       }
