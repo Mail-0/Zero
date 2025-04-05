@@ -364,7 +364,7 @@ export function DraftsList({ isCompact }: MailListProps) {
           })}
         </ScrollArea>
       </div>
-      <Button onClick={handleScroll}>Load more</Button>
+      <Button onClick={handleScroll}>{t('common.mail.loadMore')}</Button>
       <div className="w-full pt-2 text-center">
         {isLoading || isValidating ? (
           <div className="text-center">

@@ -10,7 +10,9 @@
       "close": "Cerrar",
       "signingOut": "Cerrando sesión...",
       "signedOutSuccess": "Sesión cerrada correctamente",
-      "signOutError": "Error al cerrar sesión"
+      "signOutError": "Error al cerrar sesión",
+      "refresh": "Actualizar",
+      "loading": "Loading..."
     },
     "themes": {
       "dark": "Oscuro",
@@ -65,12 +67,12 @@
       "starred": "Favoritos",
       "applyFilters": "Aplicar filtros",
       "reset": "Restablecer",
-      "searching": "Searching...",
-      "aiSuggestions": "AI Suggestions",
-      "aiSearching": "AI is searching...",
-      "aiSearchError": "AI search failed. Please try again.",
-      "aiNoResults": "No AI suggestions found",
-      "aiEnhancedQuery": "Enhanced search query"
+      "searching": "Buscando...",
+      "aiSuggestions": "Sugerencias de IA",
+      "aiSearching": "La IA está buscando...",
+      "aiSearchError": "La búsqueda de IA falló. Por favor, inténtalo de nuevo.",
+      "aiNoResults": "No hay sugerencias de IA",
+      "aiEnhancedQuery": "Búsqueda mejorada"
     },
     "navUser": {
       "customerSupport": "Atención al cliente",
@@ -96,12 +98,12 @@
       "fileCount": "{count, plural, =0 {archivos} one {archivo} other {archivos}}",
       "saveDraft": "Guardar borrador",
       "send": "Enviar",
-      "forward": "Forward"
+      "forward": "Reenviar"
     },
     "mailDisplay": {
       "details": "Detalles",
       "from": "De",
-      "to": "Hasta",
+      "to": "Para",
       "cc": "Cc",
       "date": "Fecha",
       "mailedBy": "Errores-Por",
@@ -227,7 +229,8 @@
       "forward": "Reenviar",
       "labels": "Etiquetas",
       "createNewLabel": "Crear nueva etiqueta",
-      "noLabelsAvailable": "No hay etiquetas disponibles"
+      "noLabelsAvailable": "No hay etiquetas disponibles",
+      "loadMore": "Load more"
     }
   },
   "navigation": {
@@ -271,10 +274,10 @@
         "dynamicContentDescription": "Permitir que los correos electrónicos muestren contenido dinámico.",
         "externalImages": "Mostrar imágenes externas",
         "externalImagesDescription": "Permitir que los correos electrónicos muestren imágenes de fuentes externas.",
-        "languageChangedTo": "Language changed to {locale}",
-        "customPrompt": "Custom AI Prompt",
-        "customPromptPlaceholder": "Enter your custom prompt for the AI...",
-        "customPromptDescription": "Customize how the AI writes your email replies. This will be added to the base prompt."
+        "languageChangedTo": "Idioma cambiado a {locale}",
+        "customPrompt": "Prompt de IA personalizado",
+        "customPromptPlaceholder": "Introduzca su prompt personalizado para la IA...",
+        "customPromptDescription": "Personaliza cómo la IA escribe tus respuestas de correo electrónico. Esto se añadirá al prompt base."
       },
       "connections": {
         "title": "Conexiones de correo",

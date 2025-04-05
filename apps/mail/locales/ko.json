@@ -10,7 +10,9 @@
       "close": "닫기",
       "signingOut": "로그아웃 중...",
       "signedOutSuccess": "로그아웃에 성공했습니다!",
-      "signOutError": "로그아웃 오류 발생"
+      "signOutError": "로그아웃 오류 발생",
+      "refresh": "Refresh",
+      "loading": "Loading..."
     },
     "themes": {
       "dark": "다크 모드",
@@ -227,7 +229,8 @@
       "forward": "전달",
       "labels": "라벨",
       "createNewLabel": "새 라벨 생성",
-      "noLabelsAvailable": "사용 가능한 라벨 없음"
+      "noLabelsAvailable": "사용 가능한 라벨 없음",
+      "loadMore": "Load more"
     }
   },
   "navigation": {

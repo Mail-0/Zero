@@ -13,6 +13,7 @@ import {
   ArrowRightIcon,
   Loader2,
   Archive,
+  RotateCw,
 } from 'lucide-react';
 import {
   Dialog,
@@ -47,6 +48,7 @@ import { handleUnsubscribe } from '@/lib/email-utils.client';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useMediaQuery } from '../../hooks/use-media-query';
 import { useSearchValue } from '@/hooks/use-search-value';
+import { RefreshIcon } from '../icons/animated/refresh';
 import { SearchIcon } from '../icons/animated/search';
 import { useMail } from '@/components/mail/use-mail';
 import { SidebarToggle } from '../ui/sidebar-toggle';
@@ -73,6 +75,7 @@ export function DemoMailLayout() {
     selected: 'demo',
     bulkSelected: [],
   });
+  const [selectedMail, setSelectedMail] = useState<any>(null);
   const isMobile = false;
   const isValidating = false;
   const isLoading = false;
@@ -81,6 +84,11 @@ export function DemoMailLayout() {
   const threadIdParam = searchParams?.get('threadId');
   const [activeCategory, setActiveCategory] = useState('Primary');
   const [filteredItems, setFilteredItems] = useState(items);
+
+  const handleSelectMail = useCallback((message: any) => {
+    setSelectedMail(message);
+    setMail((prev) => ({ ...prev, selected: message.id }));
+  }, []);
 
   useEffect(() => {
     if (activeCategory === 'Primary') {
@@ -98,6 +106,12 @@ export function DemoMailLayout() {
       setFilteredItems(filtered);
     }
   }, [activeCategory]);
+
+  useEffect(() => {
+    if (filteredItems.length > 0 && !selectedMail) {
+      handleSelectMail(filteredItems[0]);
+    }
+  }, [filteredItems, selectedMail, handleSelectMail]);
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -160,7 +174,7 @@ export function DemoMailLayout() {
                     ))}
                   </div>
                 ) : (
-                  <MailListDemo items={filteredItems} />
+                  <MailListDemo items={filteredItems} onSelectMail={handleSelectMail} />
                 )}
               </div>
             </div>
@@ -175,7 +189,7 @@ export function DemoMailLayout() {
                 minSize={25}
               >
                 <div className="relative hidden h-[calc(100vh-(12px+14px))] max-h-[800px] flex-1 md:block">
-                  <ThreadDemo mail={[filteredItems[0]]} />
+                  <ThreadDemo mail={selectedMail ? [selectedMail] : [filteredItems[0]]} />
                 </div>
               </ResizablePanel>
             </>
@@ -286,7 +300,26 @@ export function MailLayout() {
                   'sticky top-0 z-10 flex items-center justify-between gap-1.5 border-b p-2 transition-colors',
                 )}
               >
-                <SidebarToggle className="h-fit px-2" />
+                <div className="flex items-center gap-2">
+                  <SidebarToggle className="h-fit px-2" />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => {
+                          // Trigger a refresh of the mail list
+                          const event = new CustomEvent('refreshMailList');
+                          window.dispatchEvent(event);
+                        }}
+                      >
+                        <RotateCw className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{t('common.actions.refresh')}</TooltipContent>
+                  </Tooltip>
+                </div>
 
                 {mail.bulkSelected.length > 0 ? (
                   <>

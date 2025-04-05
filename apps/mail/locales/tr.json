@@ -10,7 +10,9 @@
       "close": "Kapat",
       "signingOut": "Çıkış yapılıyor...",
       "signedOutSuccess": "Çıkış yapıldı!",
-      "signOutError": "Çıkış yapılırken hata oluştu"
+      "signOutError": "Çıkış yapılırken hata oluştu",
+      "refresh": "Refresh",
+      "loading": "Loading..."
     },
     "themes": {
       "dark": "Koyu",
@@ -227,7 +229,8 @@
       "forward": "Forward",
       "labels": "Labels",
       "createNewLabel": "Create New Label",
-      "noLabelsAvailable": "No labels available"
+      "noLabelsAvailable": "No labels available",
+      "loadMore": "Load more"
     }
   },
   "navigation": {

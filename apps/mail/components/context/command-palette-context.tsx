@@ -71,6 +71,16 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     const settingsCommands: { group: string; item: NavItem }[] = [];
     const otherCommands: { group: string; item: NavItem }[] = [];
 
+    // Add compose message as first mail command
+    mailCommands.push({
+      group: 'mail',
+      item: {
+        title: 'common.commandPalette.commands.composeMessage',
+        url: '/mail/create',
+        icon: Pencil
+      }
+    });
+
     for (const sectionKey in navigationConfig) {
       const section = navigationConfig[sectionKey];
       section?.sections.forEach((group) => {
@@ -139,17 +149,6 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         <CommandInput autoFocus placeholder={t('common.commandPalette.placeholder')} />
         <CommandList>
           <CommandEmpty>{t('common.commandPalette.noResults')}</CommandEmpty>
-          <CommandGroup className="pb-0">
-            <CommandItem onSelect={() => (window.location.href = '/mail/create')}>
-              <Pencil size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
-              <span>{t('common.commandPalette.commands.composeMessage')}</span>
-              <CommandShortcut>
-                {keyboardShortcuts
-                  .find((s: { action: string; keys: string[] }) => s.action === 'newEmail')
-                  ?.keys.join(' ')}
-              </CommandShortcut>
-            </CommandItem>
-          </CommandGroup>
           {allCommands.map((group, groupIndex) => (
             <React.Fragment key={groupIndex}>
               {group.items.length > 0 && (
@@ -167,6 +166,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                         <item.icon
                           size={16}
                           strokeWidth={2}
+                          
                           className="opacity-60"
                           aria-hidden="true"
                         />

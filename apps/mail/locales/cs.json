@@ -10,7 +10,9 @@
       "close": "Zavřít",
       "signingOut": "Odhlašování...",
       "signedOutSuccess": "Odhlášení proběhlo úspěšně!",
-      "signOutError": "Chyba při odhlášení"
+      "signOutError": "Chyba při odhlášení",
+      "refresh": "Refresh",
+      "loading": "Loading..."
     },
     "themes": {
       "dark": "Tmavé",
@@ -227,7 +229,8 @@
       "forward": "Přeposlat",
       "labels": "Štítky",
       "createNewLabel": "Vytvořit nový štítek",
-      "noLabelsAvailable": "Nejsou dostupné žádné štítky"
+      "noLabelsAvailable": "Nejsou dostupné žádné štítky",
+      "loadMore": "Load more"
     }
   },
   "navigation": {

@@ -10,7 +10,9 @@
       "close": "Tanca",
       "signingOut": "S'està tancant la sessió...",
       "signedOutSuccess": "S'ha tancat la sessió amb èxit!",
-      "signOutError": "Error tancant la sessió"
+      "signOutError": "Error tancant la sessió",
+      "refresh": "Refresh",
+      "loading": "Loading..."
     },
     "themes": {
       "dark": "Fosc",
@@ -227,7 +229,8 @@
       "forward": "Forward",
       "labels": "Labels",
       "createNewLabel": "Create New Label",
-      "noLabelsAvailable": "No labels available"
+      "noLabelsAvailable": "No labels available",
+      "loadMore": "Load more"
     }
   },
   "navigation": {

@@ -10,7 +10,9 @@
       "close": "閉じる",
       "signingOut": "ログアウトしています...",
       "signedOutSuccess": "正常にログアウトしました！",
-      "signOutError": "サインアウトエラー"
+      "signOutError": "サインアウトエラー",
+      "refresh": "Refresh",
+      "loading": "Loading..."
     },
     "themes": {
       "dark": "ダーク",
@@ -227,7 +229,8 @@
       "forward": "転送",
       "labels": "ラベル",
       "createNewLabel": "新しいラベルを作成",
-      "noLabelsAvailable": "利用可能なラベルがありません"
+      "noLabelsAvailable": "利用可能なラベルがありません",
+      "loadMore": "Load more"
     }
   },
   "navigation": {

@@ -457,7 +457,7 @@ export default function Editor({
     return {
       ...editorRef.current,
       clearContent: clearEditorContent,
-    } as TiptapEditor;
+    } as TiptapEditor & { clearContent: () => void };
   }, [clearEditorContent]);
 
   // Handle command+enter or ctrl+enter

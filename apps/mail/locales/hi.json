@@ -10,7 +10,9 @@
       "close": "बंद करे",
       "signingOut": "साइनआउट कर रहे हैं...",
       "signedOutSuccess": "सफलतापूर्वक साइन आउट हो गया!",
-      "signOutError": "साइन आउट करने में एरर"
+      "signOutError": "साइन आउट करने में एरर",
+      "refresh": "Refresh",
+      "loading": "Loading..."
     },
     "themes": {
       "dark": "काला",
@@ -227,7 +229,8 @@
       "forward": "Forward",
       "labels": "Labels",
       "createNewLabel": "Create New Label",
-      "noLabelsAvailable": "No labels available"
+      "noLabelsAvailable": "No labels available",
+      "loadMore": "Load more"
     }
   },
   "navigation": {

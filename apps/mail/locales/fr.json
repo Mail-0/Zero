@@ -10,7 +10,9 @@
       "close": "Fermer",
       "signingOut": "Déconnexion...",
       "signedOutSuccess": "Déconnecté avec succès !",
-      "signOutError": "Erreur de déconnexion"
+      "signOutError": "Erreur de déconnexion",
+      "refresh": "Actualiser",
+      "loading": "Loading..."
     },
     "themes": {
       "dark": "Sombre",
@@ -227,7 +229,8 @@
       "forward": "Transférer",
       "labels": "Labels",
       "createNewLabel": "Create New Label",
-      "noLabelsAvailable": "Aucune étiquette disponible"
+      "noLabelsAvailable": "Aucune étiquette disponible",
+      "loadMore": "Charger plus d'éléments"
     }
   },
   "navigation": {
@@ -273,8 +276,8 @@
         "externalImagesDescription": "Autoriser les courriels à afficher des images provenant de sources externes.",
         "languageChangedTo": "Language changed to {locale}",
         "customPrompt": "Custom AI Prompt",
-        "customPromptPlaceholder": "Enter your custom prompt for the AI...",
-        "customPromptDescription": "Customize how the AI writes your email replies. This will be added to the base prompt."
+        "customPromptPlaceholder": "",
+        "customPromptDescription": "Personnalisez la façon dont l'IA écrit vos réponses. Cela sera ajouté à la requête par défaut."
       },
       "connections": {
         "title": "Connexions de courriels",

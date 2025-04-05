@@ -152,12 +152,12 @@ export default function GeneralPage() {
                 )}
               />
             </div>
-            <div className="flex w-full items-center gap-5">
+            {/* <div className="flex flex-col md:flex-row w-full items-center gap-5">
               <FormField
                 control={form.control}
                 name="dynamicContent"
                 render={({ field }) => (
-                  <FormItem className="bg-popover flex flex-row items-center justify-between rounded-lg border p-4">
+                  <FormItem className="bg-popover flex flex-row items-center justify-between rounded-lg border p-4 w-full md:w-auto">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">
                         {t('pages.settings.general.dynamicContent')}
@@ -176,7 +176,7 @@ export default function GeneralPage() {
                 control={form.control}
                 name="externalImages"
                 render={({ field }) => (
-                  <FormItem className="bg-popover flex flex-row items-center justify-between rounded-lg border p-4">
+                  <FormItem className="bg-popover flex flex-row items-center justify-between rounded-lg border p-4 w-full md:w-auto">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">
                         {t('pages.settings.general.externalImages')}
@@ -191,7 +191,7 @@ export default function GeneralPage() {
                   </FormItem>
                 )}
               />
-            </div>
+            </div> */}
             <FormField
               control={form.control}
               name="customPrompt"

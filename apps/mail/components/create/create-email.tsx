@@ -32,11 +32,10 @@ export function CreateEmail() {
   const [resetEditorKey, setResetEditorKey] = React.useState(0);
   const [isDragging, setIsDragging] = React.useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false);
-  const [isSaving, setIsSaving] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
   const [messageContent, setMessageContent] = React.useState('');
   const [draftId, setDraftId] = useQueryState('draftId');
   const [defaultValue, setDefaultValue] = React.useState<JSONContent | null>(null);
-  const [editorReady, setEditorReady] = React.useState(false);
 
   const { data: session } = useSession();
   const { data: connections } = useConnections();
@@ -47,9 +46,9 @@ export function CreateEmail() {
   }, [session, connections]);
 
   const userName =
-    activeAccount?.name || session?.activeConnection?.name || session?.user.name || '';
+    activeAccount?.name || session?.activeConnection?.name || session?.user?.name || '';
   const userEmail =
-    activeAccount?.email || session?.activeConnection?.email || session?.user.email || '';
+    activeAccount?.email || session?.activeConnection?.email || session?.user?.email || '';
 
   React.useEffect(() => {
     if (!draftId && !defaultValue) {
@@ -63,7 +62,6 @@ export function CreateEmail() {
           },
         ],
       });
-      setEditorReady(true);
     }
   }, [draftId, defaultValue]);
 
@@ -146,19 +144,12 @@ export function CreateEmail() {
     setHasUnsavedChanges(true);
   };
 
-  const handleAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setAttachments([...attachments, ...Array.from(e.target.files)]);
-      setHasUnsavedChanges(true);
-    }
-  };
-
   const saveDraft = React.useCallback(async () => {
     if (!hasUnsavedChanges) return;
     if (!toEmails.length && !subjectInput && !messageContent) return;
 
     try {
-      setIsSaving(true);
+      setIsLoading(true);
       const draftData = {
         to: toEmails.join(', '),
         subject: subjectInput,
@@ -178,7 +169,7 @@ export function CreateEmail() {
       console.error('Error saving draft:', error);
       toast.error('Failed to save draft');
     } finally {
-      setIsSaving(false);
+      setIsLoading(false);
     }
   }, [toEmails, subjectInput, messageContent, attachments, draftId, hasUnsavedChanges]);
 
@@ -213,6 +204,7 @@ export function CreateEmail() {
     }
 
     try {
+      setIsLoading(true);
       await sendEmail({
         to: toEmails.join(','),
         subject: subjectInput,
@@ -220,6 +212,7 @@ export function CreateEmail() {
         attachments: attachments,
       });
 
+      setIsLoading(false);
       toast.success(t('pages.createEmail.emailSentSuccessfully'));
 
       setToInput('');
@@ -243,6 +236,7 @@ export function CreateEmail() {
       setHasUnsavedChanges(false);
     } catch (error) {
       console.error('Error sending email:', error);
+      setIsLoading(false);
       toast.error(t('pages.createEmail.failedToSendEmail'));
     }
   };
@@ -381,6 +375,7 @@ export function CreateEmail() {
                       )}
                       <button
                         type="button"
+                        disabled={isLoading}
                         className="text-muted-foreground hover:text-foreground ml-1 rounded-full"
                         onClick={() => {
                           setToEmails((emails) => emails.filter((_, i) => i !== index));
@@ -392,6 +387,7 @@ export function CreateEmail() {
                     </div>
                   ))}
                   <input
+                    disabled={isLoading}
                     type="email"
                     className="text-md relative left-[3px] min-w-[120px] flex-1 bg-transparent placeholder:text-[#616161] placeholder:opacity-50 focus:outline-none"
                     placeholder={toEmails.length ? '' : t('pages.createEmail.example')}
@@ -420,6 +416,7 @@ export function CreateEmail() {
                   {t('common.searchBar.subject')}
                 </div>
                 <input
+                  disabled={isLoading}
                   type="text"
                   className="text-md relative left-[7.5px] w-full bg-transparent placeholder:text-[#616161] placeholder:opacity-50 focus:outline-none"
                   placeholder={t('common.searchBar.subject')}
@@ -527,7 +524,9 @@ export function CreateEmail() {
               variant="default"
               className="h-9 w-9 overflow-hidden rounded-full"
               onClick={handleSendEmail}
-              disabled={!toEmails.length || !messageContent.trim() || !subjectInput.trim()}
+              disabled={
+                isLoading || !toEmails.length || !messageContent.trim() || !subjectInput.trim()
+              }
             >
               <ArrowUpIcon className="h-4 w-4" />
             </Button>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, type ReactNode, useState } from 'react';
-import { GitHub, Google } from '@/components/icons/icons';
+import { Google } from '@/components/icons/icons';
 import { type EnvVarInfo } from '@/lib/auth-providers';
 import { signIn, useSession } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
@@ -39,8 +39,7 @@ const getProviderIcon = (providerId: string, className?: string): ReactNode => {
   switch (providerId) {
     case 'google':
       return <Google className={defaultClass} />;
-    case 'github':
-      return <GitHub className={defaultClass} />;
+   
     case 'zero':
       return (
         <Image

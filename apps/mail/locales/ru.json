@@ -10,7 +10,9 @@
       "close": "Закрыть",
       "signingOut": "Выход...",
       "signedOutSuccess": "Выход успешен",
-      "signOutError": "Ошибка при выходе"
+      "signOutError": "Ошибка при выходе",
+      "refresh": "Refresh",
+      "loading": "Loading..."
     },
     "themes": {
       "dark": "Тёмный",
@@ -227,7 +229,8 @@
       "forward": "Forward",
       "labels": "Labels",
       "createNewLabel": "Create New Label",
-      "noLabelsAvailable": "No labels available"
+      "noLabelsAvailable": "No labels available",
+      "loadMore": "Load more"
     }
   },
   "navigation": {

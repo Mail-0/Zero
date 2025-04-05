@@ -10,7 +10,9 @@
       "close": "Aizvērt",
       "signingOut": "Izrakstīšanās...",
       "signedOutSuccess": "Veiksmīgi izrakstījies!",
-      "signOutError": "Kļūda, izrakstoties no sistēmas"
+      "signOutError": "Kļūda, izrakstoties no sistēmas",
+      "refresh": "Atjaunot",
+      "loading": "Ielādē..."
     },
     "themes": {
       "dark": "Tumšs",
@@ -65,12 +67,12 @@
       "starred": "Ar zvaigznīti",
       "applyFilters": "Lietot filtrus",
       "reset": "Atstatīt",
-      "searching": "Searching...",
-      "aiSuggestions": "AI Suggestions",
-      "aiSearching": "AI is searching...",
-      "aiSearchError": "AI search failed. Please try again.",
-      "aiNoResults": "No AI suggestions found",
-      "aiEnhancedQuery": "Enhanced search query"
+      "searching": "Meklē...",
+      "aiSuggestions": "AI ieteikumi",
+      "aiSearching": "AI meklē...",
+      "aiSearchError": "AI meklēšana neizdevās. Lūdzu, mēģiniet vēlreiz.",
+      "aiNoResults": "Nav atrasti AI ieteikumi",
+      "aiEnhancedQuery": "Uzlabota meklēšanas frāze"
     },
     "navUser": {
       "customerSupport": "Klientu atbalsts",
@@ -96,7 +98,7 @@
       "fileCount": "{count, plural, zero {}=0 {faili} one {fails} other {faili}}",
       "saveDraft": "Saglabāt melnrakstu",
       "send": "Sūtīt",
-      "forward": "Forward"
+      "forward": "Pārsūtīt"
     },
     "mailDisplay": {
       "details": "Detaļas",
@@ -123,14 +125,14 @@
       "archive": "Arhīvs",
       "reply": "Atbildēt",
       "moreOptions": "Vairāk iespējas",
-      "moveToSpam": "Move to Spam",
+      "moveToSpam": "Pārvietot uz Mēstulēm",
       "replyAll": "Atbildēt Visiem",
       "forward": "Pārsūtīt",
-      "markAsUnread": "Mark as Unread",
-      "markAsRead": "Mark as Read",
+      "markAsUnread": "Atzīmēt kā nelasītu",
+      "markAsRead": "Atzīmēt kā lasītu",
       "addLabel": "Pievienot iezīmi",
       "muteThread": "Apklusināt pavedienu",
-      "favourites": "Favourites"
+      "favourites": "Izlase"
     },
     "notes": {
       "title": "Piezīmes",
@@ -193,10 +195,10 @@
       }
     },
     "settings": {
-      "notFound": "Settings not found",
-      "saved": "Settings saved",
-      "failedToSave": "Failed to save settings",
-      "languageChanged": "Language changed to {locale}"
+      "notFound": "Iestatījumu lapa nav atrasta",
+      "saved": "Iestatījumi saglabāti",
+      "failedToSave": "Neizdevās saglabāt iestatījumus",
+      "languageChanged": "Valoda nomainīta uz {locale}"
     },
     "mail": {
       "replies": "{count, plural, zero {}=0 {atbildes} one {# atbilde} other {# atbildes}}",
@@ -216,18 +218,19 @@
       "archive": "Arhivēt",
       "moveToTrash": "Pārvietot uz Miskasti",
       "markAsUnread": "Atzīmēt kā nelasītu",
-      "markAsRead": "Mark as Read",
+      "markAsRead": "Atzīmēt kā lasītu",
       "addStar": "Pievienot Zvaigzni",
       "muteThread": "Apklusināt pavedienu",
       "moving": "Pārvieto...",
       "moved": "Pārvietots",
       "errorMoving": "Kļūda, pārvietojot",
-      "reply": "Reply",
-      "replyAll": "Reply All",
-      "forward": "Forward",
-      "labels": "Labels",
-      "createNewLabel": "Create New Label",
-      "noLabelsAvailable": "No labels available"
+      "reply": "Atbildēt",
+      "replyAll": "Atbildēt Visiem",
+      "forward": "Pārsūtīt",
+      "labels": "Iezīmes",
+      "createNewLabel": "Izveidot jaunu iezīmi",
+      "noLabelsAvailable": "Nav pieejamas iezīmes",
+      "loadMore": "Ielādēt vairāk"
     }
   },
   "navigation": {
@@ -264,17 +267,17 @@
         "title": "Vispārīgi",
         "description": "Pārvaldīt valodas un e-pasta attēlojuma iestatījumus.",
         "language": "Valoda",
-        "selectLanguage": "Select a language",
+        "selectLanguage": "Izvēlēties valodu",
         "timezone": "Laika zona",
-        "selectTimezone": "Select a timezone",
+        "selectTimezone": "Izvēlieties laika joslu",
         "dynamicContent": "Dinamisks Saturs",
         "dynamicContentDescription": "Atļaut e-pastiem rādīt dinamisku saturu.",
         "externalImages": "Rādīt ārējos attēlus",
         "externalImagesDescription": "Atļaut e-pastiem rādīt attēlus no ārējiem avotiem.",
-        "languageChangedTo": "Language changed to {locale}",
-        "customPrompt": "Custom AI Prompt",
-        "customPromptPlaceholder": "Enter your custom prompt for the AI...",
-        "customPromptDescription": "Customize how the AI writes your email replies. This will be added to the base prompt."
+        "languageChangedTo": "Valoda nomainīta uz {locale}",
+        "customPrompt": "Pielāgota AI instrukcija",
+        "customPromptPlaceholder": "Ievadi savu pielāgoto norādījumu AI...",
+        "customPromptDescription": "Pielāgot, kā AI raksta jūsu e-pasta atbildes. Jūsu norādījumi tiks pievienoti AI noklusējuma instrukcijām."
       },
       "connections": {
         "title": "E-pasta savienojumi",

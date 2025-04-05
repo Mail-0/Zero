@@ -235,21 +235,26 @@ export function ThreadDisplay({ mail, onClose, isMobile }: ThreadDisplayProps) {
 
   const handleFavourites = async () => {
     if (!emailData || !threadId) return;
+    const done = Promise.all([mutateThread(), mutateThreads()]);
     if (emailData[0]?.tags?.includes('STARRED')) {
-      toast.promise(modifyLabels({ threadId: [threadId], removeLabels: ['STARRED'] }), {
-        success: 'Removed from favourites.',
-        loading: 'Removing from favourites',
-        error: 'Failed to remove from favourites.',
-      });
+      toast.promise(
+        modifyLabels({ threadId: [threadId], removeLabels: ['STARRED'] }).then(() => done),
+        {
+          success: 'Removed from favourites.',
+          loading: 'Removing from favourites',
+          error: 'Failed to remove from favourites.',
+        },
+      );
     } else {
-      toast.promise(modifyLabels({ threadId: [threadId], addLabels: ['STARRED'] }), {
-        success: 'Added to favourites.',
-        loading: 'Adding to favourites.',
-        error: 'Failed to add to favourites.',
-      });
+      toast.promise(
+        modifyLabels({ threadId: [threadId], addLabels: ['STARRED'] }).then(() => done),
+        {
+          success: 'Added to favourites.',
+          loading: 'Adding to favourites.',
+          error: 'Failed to add to favourites.',
+        },
+      );
     }
-
-    await Promise.all([mutateThread(), mutateThreads()]);
   };
 
   const handleForward = () => {
