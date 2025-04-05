@@ -30,6 +30,9 @@ export function useContacts() {
       // If we got an empty response but no error, we might be missing permissions
       console.log("No contacts found - might need permissions");
       setNeedsContactsPermission(true);
+      
+      // Try refreshing contacts data immediately
+      mutate();
     } else {
       setNeedsContactsPermission(false);
     }
@@ -41,7 +44,7 @@ export function useContacts() {
       hasError: !!error,
       needsPermission: !isLoading && !error && (!data || data.length === 0)
     });
-  }, [data, error, isLoading]);
+  }, [data, error, isLoading, mutate]);
 
   return {
     contacts: data || [],

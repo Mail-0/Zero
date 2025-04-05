@@ -28,31 +28,60 @@ function extractEmailAddresses(
   emailNames: Map<string, string>,
   userEmail?: string
 ) {
+  if (!headerValue) return;
+  
+  // Normalize newlines and extra spaces
+  const normalizedValue = headerValue.replace(/\r?\n/g, ' ').replace(/\s+/g, ' ');
+  
   // Parse email addresses in format "Name <email@example.com>"
-  const addressRegex = /(.*?)<(.+?)>/g;
+  const addressRegex = /(.*?)<([^>]+)>/g;
   let match;
   
-  while ((match = addressRegex.exec(headerValue)) !== null) {
+  // Track if we found any bracketed emails
+  let foundBracketedEmail = false;
+  
+  while ((match = addressRegex.exec(normalizedValue)) !== null) {
+    foundBracketedEmail = true;
     const name = match[1]?.trim() || '';
     const email = match[2]?.trim();
     
-    if (email && !emailAddresses.has(email) && email.toLowerCase() !== userEmail) {
-      emailAddresses.add(email);
-      if (name) {
-        emailNames.set(email, name);
+    if (email && !emailAddresses.has(email) && email.toLowerCase() !== userEmail?.toLowerCase()) {
+      // Basic validation to make sure it looks like an email
+      if (email.includes('@') && email.includes('.')) {
+        emailAddresses.add(email);
+        if (name) {
+          emailNames.set(email, name);
+        }
       }
     }
   }
   
-  // Also handle plain email addresses without names
-  headerValue
-    .split(',')
-    .map(addr => addr.trim())
-    .filter(addr => addr.includes('@') && !addr.includes('<') && 
-           addr.toLowerCase() !== userEmail)
-    .forEach(email => {
-      emailAddresses.add(email);
-    });
+  // If we didn't find any bracketed emails, try to extract plain emails
+  if (!foundBracketedEmail) {
+    // Regular expression for common email format
+    const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi;
+    let emailMatch;
+    
+    while ((emailMatch = emailRegex.exec(normalizedValue)) !== null) {
+      const email = emailMatch[0].trim();
+      if (email && !emailAddresses.has(email) && email.toLowerCase() !== userEmail?.toLowerCase()) {
+        emailAddresses.add(email);
+      }
+    }
+    
+    // Also handle plain email addresses without names
+    normalizedValue
+      .split(',')
+      .map(addr => addr.trim())
+      .filter(addr => addr.includes('@') && !addr.includes('<') && 
+             addr.toLowerCase() !== userEmail?.toLowerCase())
+      .forEach(email => {
+        // Basic validation
+        if (email.includes('.')) {
+          emailAddresses.add(email);
+        }
+      });
+  }
 }
 
 export const getGoogleContacts = cache(async (): Promise<GoogleContact[]> => {
@@ -92,13 +121,19 @@ export const getGoogleContacts = cache(async (): Promise<GoogleContact[]> => {
     });
 
     // Check if we have proper permissions and log
-    const hasContactsScope = userConnection.scope?.includes("https://www.googleapis.com/auth/contacts.readonly");
+    // We'll always attempt to get contacts regardless of scope, as Google may still allow access
+    // based on previously granted permissions
+    // Check for both contacts scopes - the old readonly scope and the newer contacts scope
+    const hasContactsScope = userConnection.scope?.includes("https://www.googleapis.com/auth/contacts.readonly") || 
+                            userConnection.scope?.includes("https://www.googleapis.com/auth/contacts");
     console.log("Connection scope includes contacts:", hasContactsScope);
+    // Even if scope doesn't explicitly include contacts, we'll try anyway
 
     // First try to get contacts directly from the People API
     let contacts: GoogleContact[] = [];
 
-    if (hasContactsScope) {
+    // Always try to fetch contacts, even if scope doesn't explicitly include it
+    {
       try {
         const auth = {
           access_token: userConnection.accessToken,
@@ -109,14 +144,61 @@ export const getGoogleContacts = cache(async (): Promise<GoogleContact[]> => {
         const userInfo = await driver.getUserInfo(auth);
         console.log("Successfully fetched user info with scope:", userConnection.scope);
 
-        // TODO: Implement a proper getContacts method on the driver
-        // For now, we just return an empty array as we'll use the fallback
+        // Get contacts directly from People API
+        try {
+          console.log("Attempting to fetch contacts via People API...");
+          const peopleApi = await driver.getPeopleApi(userConnection.accessToken, userConnection.refreshToken);
+          
+          try {
+            // First try to get user profile to check if token is working
+            const userProfile = await peopleApi.people.get({
+              resourceName: 'people/me',
+              personFields: 'names,emailAddresses'
+            });
+            
+            console.log("People API access confirmed:", 
+              userProfile.data.emailAddresses?.[0]?.value || "No email found");
+          } catch (profileError) {
+            console.error("Failed to get user profile from People API:", profileError);
+            // Continue anyway, we might still be able to get connections
+          }
+          
+          // Now try to get contacts
+          const response = await peopleApi.people.connections.list({
+            resourceName: 'people/me',
+            personFields: 'names,emailAddresses,photos',
+            pageSize: 100
+          });
+          
+          const connections = response.data.connections || [];
+          console.log(`Retrieved ${connections.length} contacts from Google People API`);
+          
+          // Detailed logging to debug empty contacts issue
+          if (connections.length === 0) {
+            console.log("No connections returned from People API. Response totalItems:", 
+              response.data.totalItems, "totalPeople:", response.data.totalPeople);
+          }
+          
+          connections.forEach(person => {
+            const email = person.emailAddresses?.[0]?.value;
+            if (email && email.toLowerCase() !== userConnection.email?.toLowerCase()) {
+              contacts.push({
+                id: person.resourceName || `people-${contacts.length}`,
+                name: person.names?.[0]?.displayName,
+                email: email,
+                profilePhotoUrl: person.photos?.[0]?.url
+              });
+            }
+          });
+          
+          console.log(`Added ${contacts.length} contacts from People API`);
+        } catch (peopleError) {
+          console.error("Error fetching contacts from People API:", peopleError);
+          console.log("Will try fallback method instead");
+        }
       } catch (error) {
         console.log("Error fetching contacts:", error);
       }
-    } else {
-      console.log("Missing contacts scope needed for direct API access.");
-      console.log("User will need to click the 'Connect' button to grant contacts permission.");
     }
 
     // If no contacts found, use the Gmail API to extract recipients
@@ -141,25 +223,45 @@ export const getGoogleContacts = cache(async (): Promise<GoogleContact[]> => {
         const emailAddresses = new Set<string>();
         const emailNames = new Map<string, string>();
         
-        // Process up to 15 messages to extract recipients
-        for (let i = 0; i < Math.min(15, messageIds.length); i++) {
+        // Get contacts from more sources for better fallback
+
+        // Process both sent and received messages for maximum contact extraction
+        console.log("Expanding search to include both sent and inbox messages for better contact discovery");
+        
+        // Get inbox messages too for a better contact list
+        const inboxResponse = await gmail.users.messages.list({
+          userId: 'me',
+          q: 'in:inbox',
+          maxResults: 30
+        });
+        
+        const inboxIds = inboxResponse.data.messages?.map(msg => msg.id) || [];
+        console.log(`Found ${inboxIds.length} inbox messages for contacts extraction`);
+        
+        // Combine sent and inbox messages for processing
+        const allMessageIds = [...messageIds, ...inboxIds];
+        const uniqueMessageIds = Array.from(new Set(allMessageIds));
+        console.log(`Processing ${uniqueMessageIds.length} unique messages for contacts`);
+        
+        // Process up to 30 messages to extract recipients and senders
+        for (let i = 0; i < Math.min(30, uniqueMessageIds.length); i++) {
           try {
-            const messageId = messageIds[i];
+            const messageId = uniqueMessageIds[i];
             if (!messageId) continue;
             
             const message = await gmail.users.messages.get({
               userId: 'me',
               id: messageId,
               format: 'metadata',
-              metadataHeaders: ['To', 'Cc', 'Bcc']
+              metadataHeaders: ['To', 'Cc', 'Bcc', 'From', 'Reply-To']
             });
             
             // Extract recipient information
             const headers = message.data.payload?.headers || [];
             
-            // Process To, Cc, and Bcc headers
+            // Process all relevant headers
             for (const header of headers) {
-              if (['To', 'Cc', 'Bcc'].includes(header.name || '') && header.value) {
+              if (['To', 'Cc', 'Bcc', 'From', 'Reply-To'].includes(header.name || '') && header.value) {
                 extractEmailAddresses(
                   header.value, 
                   emailAddresses, 

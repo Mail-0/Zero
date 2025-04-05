@@ -89,6 +89,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
     [
       'https://www.googleapis.com/auth/gmail.modify',
       'https://www.googleapis.com/auth/contacts.readonly',
+      'https://www.googleapis.com/auth/contacts',
       'https://www.googleapis.com/auth/userinfo.profile',
       'https://www.googleapis.com/auth/userinfo.email',
     ].join(' ');
@@ -201,6 +202,26 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       // Return the Gmail API client
       return google.gmail({ version: 'v1', auth: authClient });
     },
+    
+    // Helper method to get a People API client for contacts
+    getPeopleApi: async (accessToken: string, refreshToken: string) => {
+      // Create a new auth instance with the tokens
+      const authClient = new google.auth.OAuth2(
+        process.env.GOOGLE_CLIENT_ID as string,
+        process.env.GOOGLE_CLIENT_SECRET as string,
+        process.env.GOOGLE_REDIRECT_URI as string
+      );
+      
+      // Set the credentials
+      authClient.setCredentials({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        scope: getScope(),
+      });
+      
+      // Return the People API client
+      return google.people({ version: 'v1', auth: authClient });
+    },
     getAttachment: async (messageId: string, attachmentId: string) => {
       try {
         const response = await gmail.users.messages.attachments.get({
@@ -254,17 +275,14 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       }
     },
     generateConnectionAuthUrl: (userId: string, additionalScope?: string | null) => {
-      // Set up scopes based on the requested additional scope
+      // Set up scopes including contacts by default
       let scopes = [
         'https://www.googleapis.com/auth/gmail.modify',
         'https://www.googleapis.com/auth/userinfo.profile',
         'https://www.googleapis.com/auth/userinfo.email',
+        'https://www.googleapis.com/auth/contacts.readonly',
+        'https://www.googleapis.com/auth/contacts', // Add both contacts scopes for better compatibility
       ];
-      
-      // Add contacts scope if specifically requested
-      if (additionalScope === 'contacts') {
-        scopes.push('https://www.googleapis.com/auth/contacts.readonly');
-      }
       
       return auth.generateAuthUrl({
         access_type: 'offline',

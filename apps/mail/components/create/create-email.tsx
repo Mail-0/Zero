@@ -308,12 +308,16 @@ export function CreateEmail({
     const inputLower = input.toLowerCase();
     const allSuggestions: ContactSuggestion[] = [];
     
+    // When input is very short (1-2 chars), show more suggestions
+    const isShortInput = inputLower.length <= 2;
+    
     // Add suggestions from mail connections
     if (connections?.length) {
       connections.forEach(conn => {
         if (!toEmails.includes(conn.email) && 
-            (conn.email.toLowerCase().includes(inputLower) || 
-             conn.name?.toLowerCase().includes(inputLower))) {
+            (isShortInput || 
+             conn.email.toLowerCase().includes(inputLower) || 
+             conn.name?.toLowerCase()?.includes(inputLower))) {
           allSuggestions.push({
             email: conn.email,
             name: conn.name,
@@ -326,7 +330,7 @@ export function CreateEmail({
     
     // Always add user's own email as a suggestion
     if (userEmail && !toEmails.includes(userEmail)) {
-      if (userEmail.toLowerCase().includes(inputLower) || inputLower.length < 2) {
+      if (isShortInput || userEmail.toLowerCase().includes(inputLower)) {
         allSuggestions.push({
           email: userEmail,
           name: userName || 'Me (Your Email)',
@@ -338,10 +342,15 @@ export function CreateEmail({
     
     // Add suggestions from Google contacts
     if (contacts?.length) {
+      // Log contacts for debugging
+      console.log(`Found ${contacts.length} contacts for suggestions:`, 
+        contacts.slice(0, 5).map(c => ({ email: c.email, name: c.name })));
+        
       contacts.forEach(contact => {
         if (!toEmails.includes(contact.email) && 
-            (contact.email.toLowerCase().includes(inputLower) || 
-             contact.name?.toLowerCase().includes(inputLower))) {
+            (isShortInput || 
+             contact.email.toLowerCase().includes(inputLower) || 
+             contact.name?.toLowerCase()?.includes(inputLower))) {
           allSuggestions.push({
             email: contact.email,
             name: contact.name,
@@ -350,6 +359,21 @@ export function CreateEmail({
           });
         }
       });
+      
+      // If we still don't have suggestions but have contacts, show first 5 contacts
+      if (allSuggestions.length === 0 && contacts.length > 0 && inputLower.length === 0) {
+        console.log("No matching suggestions found, showing first contacts");
+        contacts.slice(0, 5).forEach(contact => {
+          if (!toEmails.includes(contact.email)) {
+            allSuggestions.push({
+              email: contact.email,
+              name: contact.name,
+              source: 'google',
+              picture: contact.profilePhotoUrl
+            });
+          }
+        });
+      }
     }
     
     // Removed console.log for production
@@ -372,9 +396,23 @@ export function CreateEmail({
       return a.email.localeCompare(b.email);
     });
     
-    // De-duplicate by email and return just the emails
-    const dedupedEmails = Array.from(new Set(allSuggestions.map(s => s.email)));
-    return dedupedEmails.slice(0, 5); // Limit to 5 suggestions
+    // Remove duplicates while preserving the contact details
+    const uniqueEmails = new Map<string, ContactSuggestion>();
+    
+    // Add each contact to the map, prioritizing those with profile pictures
+    allSuggestions.forEach(suggestion => {
+      const existing = uniqueEmails.get(suggestion.email);
+      
+      // Add if we don't have this email yet, or if this one has a picture but the existing one doesn't
+      if (!existing || (!existing.picture && suggestion.picture)) {
+        uniqueEmails.set(suggestion.email, suggestion);
+      }
+    });
+    
+    // Convert back to an array and return just the emails
+    return Array.from(uniqueEmails.values())
+      .map(suggestion => suggestion.email)
+      .slice(0, 5); // Limit to 5 suggestions
   }, [connections, contacts, toEmails, userEmail, userName]);
   
   // Get contact details by email from either connections or Google contacts
@@ -396,14 +434,11 @@ export function CreateEmail({
 
   // Helper function to update suggestions
   const updateSuggestions = React.useCallback((inputValue: string) => {
-    if (inputValue) {
-      const suggestions = getEmailSuggestions(inputValue);
-      setEmailSuggestions(suggestions);
-      setShowSuggestions(suggestions.length > 0);
-      setSelectedSuggestionIndex(-1);
-    } else {
-      setShowSuggestions(false);
-    }
+    // Get suggestions even for empty input to show default suggestions
+    const suggestions = getEmailSuggestions(inputValue);
+    setEmailSuggestions(suggestions);
+    setShowSuggestions(suggestions.length > 0);
+    setSelectedSuggestionIndex(-1);
   }, [getEmailSuggestions]);
   
   // Update suggestions when input changes
@@ -558,32 +593,17 @@ export function CreateEmail({
                     </div>
                   ))}
                   <div className="relative flex-1">
-                    {needsContactsPermission && (
+                    {contacts?.length === 0 && (
                       <div className="absolute -top-9 right-0 z-20 flex items-center gap-2 rounded bg-amber-100 dark:bg-amber-900 px-3 py-1.5 text-xs text-amber-900 dark:text-amber-100 shadow-sm">
                         <UserCheck className="h-3.5 w-3.5" />
-                        <span>Enable contacts for better suggestions</span>
+                        <span>{needsContactsPermission ? 'Reconnect to enable contacts' : 'No contacts found'}</span>
                         <a 
                           href={'/api/v1/mail/auth/google/init?scope=contacts'}
                           className="bg-amber-200 dark:bg-amber-800 hover:bg-amber-300 dark:hover:bg-amber-700 rounded px-2 py-0.5 font-medium flex items-center gap-1"
                         >
                           <RefreshCw className="h-3 w-3" />
-                          Connect
+                          {needsContactsPermission ? 'Connect' : 'Refresh'}
                         </a>
-                      </div>
-                    )}
-                    {!needsContactsPermission && contacts?.length === 0 && (
-                      <div className="absolute -top-9 right-0 z-20 flex items-center gap-2 rounded bg-amber-100 dark:bg-amber-900 px-3 py-1.5 text-xs text-amber-900 dark:text-amber-100 shadow-sm">
-                        <span>No contacts found</span>
-                        <button 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            refreshContacts();
-                          }}
-                          className="bg-amber-200 dark:bg-amber-800 hover:bg-amber-300 dark:hover:bg-amber-700 rounded px-2 py-0.5 font-medium flex items-center gap-1"
-                        >
-                          <RefreshCw className="h-3 w-3" />
-                          Refresh
-                        </button>
                       </div>
                     )}
                     <input
