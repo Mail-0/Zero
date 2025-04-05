@@ -19,6 +19,12 @@ export const filterSuggestions: FilterSuggestion[] = [
   // "is:" filters
   {
     prefix: "is",
+    filter: "is:all",
+    description: "Show all emails",
+    icon: React.createElement(Mail, { className: "h-5 w-5" }),
+  },
+  {
+    prefix: "is",
     filter: "is:important",
     description: "Show important emails",
     icon: React.createElement(AlertTriangle, { className: "h-5 w-5" }),

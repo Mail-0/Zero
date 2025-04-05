@@ -83,6 +83,7 @@
     },
     "mailCategories": {
       "primary": "Primary",
+      "allMail": "All Mail",
       "important": "Important",
       "personal": "Personal",
       "updates": "Updates",
