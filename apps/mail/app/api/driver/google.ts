@@ -85,13 +85,19 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
     process.env.GOOGLE_REDIRECT_URI as string,
   );
 
+  // OAuth2 scope constants
+  const GMAIL_SCOPE = 'https://www.googleapis.com/auth/gmail.modify';
+  const CONTACTS_READONLY_SCOPE = 'https://www.googleapis.com/auth/contacts.readonly';
+  const USERINFO_PROFILE_SCOPE = 'https://www.googleapis.com/auth/userinfo.profile';
+  const USERINFO_EMAIL_SCOPE = 'https://www.googleapis.com/auth/userinfo.email';
+  
+  // Get default scopes - using readonly for contacts by default for stricter permissions
   const getScope = () =>
     [
-      'https://www.googleapis.com/auth/gmail.modify',
-      'https://www.googleapis.com/auth/contacts.readonly',
-      'https://www.googleapis.com/auth/contacts',
-      'https://www.googleapis.com/auth/userinfo.profile',
-      'https://www.googleapis.com/auth/userinfo.email',
+      GMAIL_SCOPE,
+      CONTACTS_READONLY_SCOPE, // Using only readonly for minimum necessary permissions
+      USERINFO_PROFILE_SCOPE,
+      USERINFO_EMAIL_SCOPE,
     ].join(' ');
   if (config.auth) {
     auth.setCredentials({
@@ -183,45 +189,79 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
   };
   const gmail = google.gmail({ version: 'v1', auth });
   const manager = {
-    // Helper method to get a Gmail API client
-    getGmailApi: async (accessToken: string, refreshToken: string) => {
-      // Create a new auth instance with the tokens
-      const authClient = new google.auth.OAuth2(
-        process.env.GOOGLE_CLIENT_ID as string,
-        process.env.GOOGLE_CLIENT_SECRET as string,
-        process.env.GOOGLE_REDIRECT_URI as string
-      );
+    // Helper method to get a Gmail API client using a memoized auth client
+    getGmailApi: (() => {
+      let cachedAuth: any = null;
+      let cachedRefreshToken: string | null = null;
       
-      // Set the credentials
-      authClient.setCredentials({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-        scope: getScope(),
-      });
-      
-      // Return the Gmail API client
-      return google.gmail({ version: 'v1', auth: authClient });
-    },
+      return async (accessToken: string, refreshToken: string): Promise<gmail_v1.Gmail> => {
+        // Reuse auth client if it exists and refresh token matches
+        if (cachedAuth && cachedRefreshToken === refreshToken) {
+          // Just update the access token
+          cachedAuth.setCredentials({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+            scope: getScope(),
+          });
+        } else {
+          // Create a new auth instance with the tokens
+          cachedAuth = new google.auth.OAuth2(
+            process.env.GOOGLE_CLIENT_ID as string,
+            process.env.GOOGLE_CLIENT_SECRET as string,
+            process.env.GOOGLE_REDIRECT_URI as string
+          );
+          
+          // Set the credentials
+          cachedAuth.setCredentials({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+            scope: getScope(),
+          });
+          
+          cachedRefreshToken = refreshToken;
+        }
+        
+        // Return the Gmail API client
+        return google.gmail({ version: 'v1', auth: cachedAuth });
+      };
+    })(),
     
-    // Helper method to get a People API client for contacts
-    getPeopleApi: async (accessToken: string, refreshToken: string) => {
-      // Create a new auth instance with the tokens
-      const authClient = new google.auth.OAuth2(
-        process.env.GOOGLE_CLIENT_ID as string,
-        process.env.GOOGLE_CLIENT_SECRET as string,
-        process.env.GOOGLE_REDIRECT_URI as string
-      );
+    // Helper method to get a People API client for contacts using a memoized auth client
+    getPeopleApi: (() => {
+      let cachedAuth: any = null;
+      let cachedRefreshToken: string | null = null;
       
-      // Set the credentials
-      authClient.setCredentials({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-        scope: getScope(),
-      });
-      
-      // Return the People API client
-      return google.people({ version: 'v1', auth: authClient });
-    },
+      return async (accessToken: string, refreshToken: string) => {
+        // Reuse auth client if it exists and refresh token matches
+        if (cachedAuth && cachedRefreshToken === refreshToken) {
+          // Just update the access token
+          cachedAuth.setCredentials({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+            scope: getScope(),
+          });
+        } else {
+          // Create a new auth instance with the tokens
+          cachedAuth = new google.auth.OAuth2(
+            process.env.GOOGLE_CLIENT_ID as string,
+            process.env.GOOGLE_CLIENT_SECRET as string,
+            process.env.GOOGLE_REDIRECT_URI as string
+          );
+          
+          // Set the credentials
+          cachedAuth.setCredentials({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+            scope: getScope(),
+          });
+          
+          cachedRefreshToken = refreshToken;
+        }
+        
+        // Return the People API client
+        return google.people({ version: 'v1', auth: cachedAuth });
+      };
+    })(),
     
     // Extract email contacts from Gmail message history
     getContactsFromGmail: async (accessToken: string, refreshToken: string, userEmail: string) => {
@@ -468,13 +508,12 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       }
     },
     generateConnectionAuthUrl: (userId: string, additionalScope?: string | null) => {
-      // Set up scopes including contacts by default
-      let scopes = [
-        'https://www.googleapis.com/auth/gmail.modify',
-        'https://www.googleapis.com/auth/userinfo.profile',
-        'https://www.googleapis.com/auth/userinfo.email',
-        'https://www.googleapis.com/auth/contacts.readonly',
-        'https://www.googleapis.com/auth/contacts', // Add both contacts scopes for better compatibility
+      // Use core scopes only - use the readonly scope for contacts to minimize permissions
+      const scopes = [
+        GMAIL_SCOPE,
+        USERINFO_PROFILE_SCOPE,
+        USERINFO_EMAIL_SCOPE,
+        CONTACTS_READONLY_SCOPE, // Only request readonly for minimum necessary permissions
       ];
       
       return auth.generateAuthUrl({
