@@ -88,6 +88,8 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
   const getScope = () =>
     [
       'https://www.googleapis.com/auth/gmail.modify',
+      'https://www.googleapis.com/auth/contacts',
+      'https://www.googleapis.com/auth/contacts.readonly',
       'https://www.googleapis.com/auth/userinfo.profile',
       'https://www.googleapis.com/auth/userinfo.email',
     ].join(' ');
@@ -240,6 +242,12 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
         include_granted_scopes: true,
         prompt: 'consent',
         state: userId,
+      });
+    },
+    getUserContacts: async () => {
+      return google.people({ version: 'v1', auth }).people.connections.list({
+        resourceName: 'people/me',
+        personFields: 'names,photos,emailAddresses',
       });
     },
     count: async () => {
