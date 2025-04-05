@@ -115,3 +115,19 @@ export const userSettings = createTable("user_settings", {
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
 });
+
+export const calendarEvent = createTable("calendar_event", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  start: timestamp("start").notNull(),
+  end: timestamp("end").notNull(),
+  allDay: boolean("all_day").notNull().default(false),
+  color: text("color").notNull().default("sky"),
+  location: text("location"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
