@@ -52,6 +52,7 @@ import { Markdown } from 'tiptap-markdown';
 import { useReducer, useRef } from 'react';
 import { useState } from 'react';
 import React from 'react';
+import SignatureDisplay from './signature-display';
 
 export const defaultEditorContent = {
   type: 'doc',
@@ -81,6 +82,9 @@ interface EditorProps {
     email?: string;
   };
   onTab?: () => boolean;
+  includeSignature?: boolean;
+  onSignatureToggle?: (include: boolean) => void;
+  signature?: string;
 }
 
 interface EditorState {
@@ -112,11 +116,19 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
 }
 
 // Update the MenuBar component with icons
+interface MenuBarProps {
+  onAttachmentsChange?: (attachments: File[]) => void;
+  includeSignature?: boolean;
+  onSignatureToggle?: (include: boolean) => void;
+  hasSignature?: boolean;
+}
+
 const MenuBar = ({
   onAttachmentsChange,
-}: {
-  onAttachmentsChange?: (attachments: File[]) => void;
-}) => {
+  includeSignature,
+  onSignatureToggle,
+  hasSignature = false,
+}: MenuBarProps) => {
   const { editor } = useCurrentEditor();
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
@@ -274,6 +286,28 @@ const MenuBar = ({
             >
               <ListOrdered className="h-4 w-4" />
             </button>
+            
+            {hasSignature && onSignatureToggle && (
+              <button
+                onClick={() => onSignatureToggle(!includeSignature)}
+                className={`hover:bg-muted rounded p-1.5 ${includeSignature ? 'bg-muted' : 'bg-background'}`}
+                title={includeSignature ? "Disable Signature" : "Enable Signature"}
+              >
+                <svg 
+                  className="h-4 w-4" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2"
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                >
+                  <path d="M22 13V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h9" />
+                  <path d="M15 19l2 2 4-4" />
+                  <path d="M2 10h20" />
+                </svg>
+              </button>
+            )}
 
             {attachments.length > 0 ? (
               <Popover>
@@ -389,6 +423,9 @@ export default function Editor({
   onAttachmentsChange,
   senderInfo,
   myInfo,
+  includeSignature,
+  onSignatureToggle,
+  signature,
 }: EditorProps) {
   const [state, dispatch] = useReducer(editorReducer, {
     openNode: false,
@@ -582,8 +619,35 @@ export default function Editor({
             contentRef.current = editor.getHTML();
             onChange(editor.getHTML());
           }}
-          slotBefore={<MenuBar onAttachmentsChange={onAttachmentsChange} />}
-          slotAfter={<ImageResizer />}
+          slotBefore={
+            <MenuBar 
+              onAttachmentsChange={onAttachmentsChange}
+              includeSignature={includeSignature}
+              onSignatureToggle={onSignatureToggle}
+              hasSignature={!!signature}
+            />
+          }
+          slotAfter={
+            <>
+              <ImageResizer />
+              {signature && includeSignature && (
+                <div className="border-t mt-4 pt-2 text-muted-foreground">
+                  <div 
+                    className="text-xs italic pb-1"
+                    style={{ userSelect: 'none' }}
+                  >
+                    Signature:
+                  </div>
+                  <div className="signature-preview px-2 text-sm opacity-80">
+                    <SignatureDisplay
+                      html={signature}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+              )}
+            </>
+          }
         >
           {/* Make sure the command palette doesn't cause a refresh */}
           <EditorCommand

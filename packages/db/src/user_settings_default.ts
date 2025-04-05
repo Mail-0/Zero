@@ -6,6 +6,11 @@ export const defaultUserSettings = {
     dynamicContent: false,
     externalImages: true,
     customPrompt: "",
+    signature: {
+        enabled: false,
+        content: "",
+        includeByDefault: true,
+    },
 };
 
 export const userSettingsSchema = z.object({
@@ -14,6 +19,11 @@ export const userSettingsSchema = z.object({
     dynamicContent: z.boolean(),
     externalImages: z.boolean(),
     customPrompt: z.string(),
+    signature: z.object({
+        enabled: z.boolean(),
+        content: z.string(),
+        includeByDefault: z.boolean(),
+    }),
 });
 
 export type UserSettings = typeof defaultUserSettings;

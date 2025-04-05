@@ -19,6 +19,8 @@ import { toast } from 'sonner';
 import * as React from 'react';
 import Editor from './editor';
 import './prosemirror.css';
+import { useSettings } from '@/hooks/use-settings';
+import { Switch } from '@/components/ui/switch';
 
 const MAX_VISIBLE_ATTACHMENTS = 12;
 
@@ -56,6 +58,8 @@ export function CreateEmail({
   const [isLoading, setIsLoading] = React.useState(false);
   const [messageContent, setMessageContent] = React.useState(initialBody);
   const [draftId, setDraftId] = useQueryState('draftId');
+  const [includeSignature, setIncludeSignature] = React.useState(true);
+  const { settings } = useSettings();
   
   const [defaultValue, setDefaultValue] = React.useState<JSONContent | null>(() => {
     if (initialBody) {
@@ -220,6 +224,7 @@ export function CreateEmail({
         subject: subjectInput,
         message: messageContent,
         attachments: attachments,
+        includeSignature: includeSignature && settings?.signature?.enabled,
       });
 
       setIsLoading(false);
@@ -280,6 +285,13 @@ export function CreateEmail({
     document.addEventListener('keydown', handleKeyPress);
     return () => document.removeEventListener('keydown', handleKeyPress);
   }, []);
+
+  // Initialize signature toggle from settings
+  React.useEffect(() => {
+    if (settings?.signature) {
+      setIncludeSignature(settings.signature.includeByDefault);
+    }
+  }, [settings]);
 
   React.useEffect(() => {
     if (initialTo) {
@@ -424,6 +436,9 @@ export function CreateEmail({
                       placeholder={t('pages.createEmail.writeYourMessageHere')}
                       onAttachmentsChange={setAttachments}
                       onCommandEnter={handleSendEmail}
+                      includeSignature={includeSignature}
+                      onSignatureToggle={setIncludeSignature}
+                      signature={settings?.signature?.enabled && settings?.signature?.content ? settings.signature.content : undefined}
                     />
                   )}
                 </div>
@@ -433,7 +448,7 @@ export function CreateEmail({
         </div>
 
         <div className="bg-offsetLight dark:bg-offsetDark sticky bottom-0 left-0 right-0 flex items-center justify-between p-4 pb-3">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             <div className="mr-1 pb-2 pt-2">
               <AIAssistant
                 currentContent={messageContent}

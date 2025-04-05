@@ -249,6 +249,7 @@
       "connections": "Connections",
       "security": "Security",
       "appearance": "Appearance",
+      "signatures": "Signatures",
       "shortcuts": "Shortcuts"
     }
   },
@@ -306,6 +307,19 @@
         "description": "Customize colors, fonts and view options.",
         "theme": "Theme",
         "inboxType": "Inbox Type"
+      },
+      "signatures": {
+        "title": "Email Signatures",
+        "description": "Create and manage your email signature that appears at the bottom of your messages.",
+        "enableSignature": "Enable signature",
+        "enableSignatureDescription": "Add your signature to the end of all outgoing messages.",
+        "includeByDefault": "Include by default",
+        "includeByDefaultDescription": "Automatically add your signature when composing new emails.",
+        "signatureContent": "Signature Content",
+        "signatureContentPlaceholder": "Create your signature with formatting, links, and images.",
+        "signaturePreview": "Signature Preview",
+        "signatureSaved": "Signature saved successfully",
+        "signaturePreviewDescription": "This is how your signature will appear in emails."
       },
       "shortcuts": {
         "title": "Keyboard Shortcuts",
