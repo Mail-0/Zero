@@ -71,6 +71,12 @@ export default function Footer() {
             >
               Contributors
             </Link>
+            <Link
+              href="https://feedback.0.email"
+              className="text-gray-600 transition-colors duration-200 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+            >
+              Feedback
+            </Link>
           </div>
 
           <div className="flex items-center justify-center gap-3 md:justify-end">
