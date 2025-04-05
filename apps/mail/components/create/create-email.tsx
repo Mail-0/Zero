@@ -2,8 +2,9 @@
 import { generateHTML, generateJSON } from '@tiptap/core';
 import { useConnections } from '@/hooks/use-connections';
 import { createDraft, getDraft } from '@/actions/drafts';
-import { ArrowUpIcon, Paperclip, X } from 'lucide-react';
+import { ArrowUpIcon, Paperclip } from 'lucide-react';
 import { SidebarToggle } from '../ui/sidebar-toggle';
+import { AddRecipient } from './add-recipient';
 import Paragraph from '@tiptap/extension-paragraph';
 import Document from '@tiptap/extension-document';
 import { Button } from '@/components/ui/button';
@@ -23,10 +24,7 @@ import './prosemirror.css';
 const MAX_VISIBLE_ATTACHMENTS = 12;
 
 export function CreateEmail() {
-  const [toInput, setToInput] = React.useState('');
   const [toEmails, setToEmails] = React.useState<string[]>([]);
-  const [editingEmailIndex, setEditingEmailIndex] = React.useState<number | null>(null);
-  const [editingEmailValue, setEditingEmailValue] = React.useState('');
   const [subjectInput, setSubjectInput] = React.useState('');
   const [attachments, setAttachments] = React.useState<File[]>([]);
   const [resetEditorKey, setResetEditorKey] = React.useState(0);
@@ -119,31 +117,6 @@ export function CreateEmail() {
 
   const t = useTranslations();
 
-  const isValidEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const handleAddEmail = (email: string) => {
-    const trimmedEmail = email.trim().replace(/,$/, '');
-
-    if (!trimmedEmail) return;
-
-    if (toEmails.includes(trimmedEmail)) {
-      setToInput('');
-      return;
-    }
-
-    if (!isValidEmail(trimmedEmail)) {
-      toast.error(`Invalid email format: ${trimmedEmail}`);
-      return;
-    }
-
-    setToEmails([...toEmails, trimmedEmail]);
-    setToInput('');
-    setHasUnsavedChanges(true);
-  };
-
   const saveDraft = React.useCallback(async () => {
     if (!hasUnsavedChanges) return;
     if (!toEmails.length && !subjectInput && !messageContent) return;
@@ -215,7 +188,6 @@ export function CreateEmail() {
       setIsLoading(false);
       toast.success(t('pages.createEmail.emailSentSuccessfully'));
 
-      setToInput('');
       setToEmails([]);
       setSubjectInput('');
       setAttachments([]);
@@ -280,37 +252,6 @@ export function CreateEmail() {
     return () => document.removeEventListener('keydown', handleKeyPress);
   }, []);
 
-  const handleEmailEdit = (event: React.FocusEvent<HTMLInputElement>): void => {
-    if (editingEmailIndex === null) return;
-
-    const newEmail = event.target.value.trim();
-
-    // Clear email entry if edit input is empty
-    if (!newEmail) {
-      setToEmails((emails) => emails.filter((_, index) => index !== editingEmailIndex));
-      setEditingEmailIndex(null);
-      setEditingEmailValue('');
-      setHasUnsavedChanges(true);
-      return;
-    }
-
-    // Check email validity
-    if (!isValidEmail(newEmail)) {
-      event.preventDefault();
-      toast.error(`Invalid email format: ${newEmail}`);
-      event.target.focus();
-      return;
-    }
-
-    // Update email only if format is valid
-    setToEmails((emails) =>
-      emails.map((email, index) => (index === editingEmailIndex ? newEmail : email))
-    );
-    setHasUnsavedChanges(true);
-    setEditingEmailIndex(null);
-    setEditingEmailValue('');
-  };
-
   return (
     <div
       className="bg-offsetLight dark:bg-offsetDark relative flex h-full flex-col overflow-hidden shadow-inner md:rounded-2xl md:border md:shadow-sm"
@@ -338,77 +279,12 @@ export function CreateEmail() {
                 <div className="text-muted-foreground w-20 flex-shrink-0 pr-3 text-right text-[1rem] font-[600] opacity-50 md:w-24">
                   {t('common.mailDisplay.to')}
                 </div>
-                <div className="group relative left-[2px] flex w-full flex-wrap items-center rounded-md border border-none bg-transparent p-1 transition-all focus-within:border-none focus:outline-none">
-                  {toEmails.map((email, index) => (
-                    <div
-                      key={index}
-                      className="bg-accent flex items-center gap-1 rounded-md border px-2 text-sm font-medium mr-1"
-                    >
-                      {editingEmailIndex === index ? (
-                        <input
-                          type="email"
-                          className="bg-accent max-w-[120px] focus:outline-none"
-                          value={editingEmailValue}
-                          onChange={(e) => setEditingEmailValue(e.target.value)}
-                          onBlur={handleEmailEdit}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              e.currentTarget.blur();
-                            }
-                            if (e.key === 'Escape') {
-                              setEditingEmailIndex(null);
-                            }
-                          }}
-                          autoFocus
-                        />
-                      ) : (
-                        <span
-                          className="max-w-[150px] cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap"
-                          onClick={() => {
-                            setEditingEmailIndex(index);
-                            setEditingEmailValue(email);
-                          }}
-                        >
-                          {email}
-                        </span>
-                      )}
-                      <button
-                        type="button"
-                        disabled={isLoading}
-                        className="text-muted-foreground hover:text-foreground ml-1 rounded-full"
-                        onClick={() => {
-                          setToEmails((emails) => emails.filter((_, i) => i !== index));
-                          setHasUnsavedChanges(true);
-                        }}
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
-                  <input
-                    disabled={isLoading}
-                    type="email"
-                    className="text-md relative left-[3px] min-w-[120px] flex-1 bg-transparent placeholder:text-[#616161] placeholder:opacity-50 focus:outline-none"
-                    placeholder={toEmails.length ? '' : t('pages.createEmail.example')}
-                    value={toInput}
-                    onChange={(e) => setToInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if ((e.key === ',' || e.key === 'Enter' || e.key === ' ') && toInput.trim()) {
-                        e.preventDefault();
-                        handleAddEmail(toInput);
-                      } else if (e.key === 'Backspace' && !toInput && toEmails.length > 0) {
-                        setToEmails((emails) => emails.slice(0, -1));
-                        setHasUnsavedChanges(true);
-                      }
-                    }}
-                    onBlur={() => {
-                      if (toInput.trim()) {
-                        handleAddEmail(toInput);
-                      }
-                    }}
-                  />
-                </div>
+                <AddRecipient
+                  emails={toEmails}
+                  onEmailsChange={setToEmails}
+                  placeholder={t('pages.createEmail.example')}
+                  onHasChanges={() => setHasUnsavedChanges(true)}
+                />
               </div>
 
               <div className="flex items-center">
