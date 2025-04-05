@@ -1,8 +1,19 @@
 import { type InitialThread, type ParsedMessage } from '@/types';
 
+export interface GoogleContact {
+  id: string;
+  name?: string;
+  email: string;
+  profilePhotoUrl?: string;
+}
+
 export interface MailManager {
   // Helper to get Gmail API client
   getGmailApi?(accessToken: string, refreshToken: string): Promise<any>;
+  // Helper to get People API client
+  getPeopleApi?(accessToken: string, refreshToken: string): Promise<any>;
+  // Get contacts from Gmail history (fallback method)
+  getContactsFromGmail?(accessToken: string, refreshToken: string, userEmail: string): Promise<GoogleContact[]>;
   get(id: string): Promise<ParsedMessage[] | undefined>;
   create(data: any): Promise<any>;
   createDraft(data: any): Promise<any>;
