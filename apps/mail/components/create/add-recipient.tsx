@@ -2,6 +2,7 @@
 
 import { X } from 'lucide-react';
 import * as React from 'react';
+import { toast } from 'sonner';
 
 interface EmailRecipientProps {
   emails: string[];
@@ -25,12 +26,13 @@ export function AddRecipient({ emails, onEmailsChange, placeholder, onHasChanges
 
     if (!trimmedEmail) return;
 
-    if (emails.includes(trimmedEmail)) {
-      setToInput('');
+    if (!isValidEmail(trimmedEmail)) {
+      toast.error(`Invalid email format: ${trimmedEmail}`);
       return;
     }
 
-    if (!isValidEmail(trimmedEmail)) {
+    if (emails.includes(trimmedEmail)) {
+      toast.error(`Email already exists: ${trimmedEmail}`);
       return;
     }
 
@@ -39,12 +41,57 @@ export function AddRecipient({ emails, onEmailsChange, placeholder, onHasChanges
     onHasChanges?.();
   };
 
+  const handleEmailEdit = (event: React.FocusEvent<HTMLInputElement>): void => {
+    if (editingEmailIndex === null) return;
+
+    const newEmail = event.target.value.trim();
+    const currentEmail = emails[editingEmailIndex];
+
+    // Clear email entry if edit input is empty
+    if (!newEmail) {
+      onEmailsChange(emails.filter((_, index) => index !== editingEmailIndex));
+      setEditingEmailIndex(null);
+      setEditingEmailValue('');
+      onHasChanges?.();
+      return;
+    }
+
+    // Skip validation if email hasn't changed
+    if (newEmail === currentEmail) {
+      setEditingEmailIndex(null);
+      setEditingEmailValue('');
+      return;
+    }
+
+    // Check email validity
+    if (!isValidEmail(newEmail)) {
+      event.preventDefault();
+      toast.error(`Invalid email format: ${newEmail}`);
+      event.target.focus();
+      return;
+    }
+
+    // Check for duplicates if email has changed
+    if (emails.includes(newEmail)) {
+      event.preventDefault();
+      toast.error(`Email already exists: ${newEmail}`);
+      event.target.focus();
+      return;
+    }
+
+    // Update email only if format is valid and not duplicate
+    onEmailsChange(emails.map((email, index) => (index === editingEmailIndex ? newEmail : email)));
+    onHasChanges?.();
+    setEditingEmailIndex(null);
+    setEditingEmailValue('');
+  };
+
   return (
     <div className="group relative left-[2px] flex w-full flex-wrap items-center rounded-md border border-none bg-transparent p-1 transition-all focus-within:border-none focus:outline-none">
       {emails.map((email, index) => (
         <div
           key={index}
-          className="bg-accent flex items-center gap-1 rounded-md border px-2 text-sm font-medium mr-1.5"
+          className="bg-accent flex items-center gap-1 rounded-md border px-2 text-sm font-medium mr-1 mb-1"
         >
           {editingEmailIndex === index ? (
             <input
@@ -52,16 +99,7 @@ export function AddRecipient({ emails, onEmailsChange, placeholder, onHasChanges
               className="bg-accent max-w-[120px] focus:outline-none"
               value={editingEmailValue}
               onChange={(e) => setEditingEmailValue(e.target.value)}
-              onBlur={() => {
-                const newEmail = editingEmailValue.trim();
-                if (isValidEmail(newEmail) && newEmail !== email) {
-                  const newEmails = [...emails];
-                  newEmails[index] = newEmail;
-                  onEmailsChange(newEmails);
-                  onHasChanges?.();
-                }
-                setEditingEmailIndex(null);
-              }}
+              onBlur={handleEmailEdit}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();

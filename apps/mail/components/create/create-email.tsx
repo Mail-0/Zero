@@ -23,11 +23,6 @@ import './prosemirror.css';
 
 const MAX_VISIBLE_ATTACHMENTS = 12;
 
-const isValidEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
-
 const createEmptyDocContent = (): JSONContent => ({
   type: 'doc',
   content: [
@@ -134,26 +129,6 @@ export function CreateEmail({
   }, [draftId]);
 
   const t = useTranslations();
-
-  const handleAddEmail = (email: string) => {
-    const trimmedEmail = email.trim().replace(/,$/, '');
-
-    if (!trimmedEmail) return;
-
-    if (toEmails.includes(trimmedEmail)) {
-      setToInput('');
-      return;
-    }
-
-    if (!isValidEmail(trimmedEmail)) {
-      toast.error(`Invalid email format: ${trimmedEmail}`);
-      return;
-    }
-
-    setToEmails([...toEmails, trimmedEmail]);
-    setToInput('');
-    setHasUnsavedChanges(true);
-  };
 
   const saveDraft = React.useCallback(async () => {
     if (!hasUnsavedChanges) return;
@@ -284,12 +259,7 @@ export function CreateEmail({
   React.useEffect(() => {
     if (initialTo) {
       const emails = initialTo.split(',').map(email => email.trim());
-      const validEmails = emails.filter(email => isValidEmail(email));
-      if (validEmails.length > 0) {
-        setToEmails(validEmails);
-      } else {
-        setToInput(initialTo);
-      }
+      setToEmails(emails);
     }
     
     if (initialSubject) {
