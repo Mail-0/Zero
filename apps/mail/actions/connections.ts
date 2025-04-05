@@ -110,3 +110,22 @@ export async function putConnection(connectionId: string) {
     throw new Error("Failed to update connection");
   }
 }
+
+export async function getReauthUrl() {
+  try {
+    const headersList = await headers();
+    const session = await auth.api.getSession({ headers: headersList });
+
+    if (!session?.user?.id) {
+      throw new Error("Unauthorized, not logged in");
+    }
+
+    // Create a URL that will start the reauth flow for Google with contacts permission
+    const reauthUrl = `/api/v1/mail/auth/google/init?scope=contacts`;
+
+    return { url: reauthUrl };
+  } catch (error) {
+    console.error("Failed to generate reauth URL:", error);
+    throw new Error("Failed to generate reauth URL");
+  }
+}

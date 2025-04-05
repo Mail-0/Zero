@@ -88,6 +88,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
   const getScope = () =>
     [
       'https://www.googleapis.com/auth/gmail.modify',
+      'https://www.googleapis.com/auth/contacts.readonly',
       'https://www.googleapis.com/auth/userinfo.profile',
       'https://www.googleapis.com/auth/userinfo.email',
     ].join(' ');
@@ -233,10 +234,22 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
         throw error;
       }
     },
-    generateConnectionAuthUrl: (userId: string) => {
+    generateConnectionAuthUrl: (userId: string, additionalScope?: string | null) => {
+      // Set up scopes based on the requested additional scope
+      let scopes = [
+        'https://www.googleapis.com/auth/gmail.modify',
+        'https://www.googleapis.com/auth/userinfo.profile',
+        'https://www.googleapis.com/auth/userinfo.email',
+      ];
+      
+      // Add contacts scope if specifically requested
+      if (additionalScope === 'contacts') {
+        scopes.push('https://www.googleapis.com/auth/contacts.readonly');
+      }
+      
       return auth.generateAuthUrl({
         access_type: 'offline',
-        scope: getScope(),
+        scope: scopes.join(' '),
         include_granted_scopes: true,
         prompt: 'consent',
         state: userId,

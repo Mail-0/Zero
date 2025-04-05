@@ -22,6 +22,10 @@ export async function GET(
   const driver = await createDriver(providerId, {});
 
   try {
+    // Log the scope parameter from Google's callback
+    const scope = searchParams.get("scope");
+    console.log("Auth callback received with scope:", scope);
+
     // Exchange the authorization code for tokens
     const { tokens } = await driver.getTokens(code);
 
@@ -43,6 +47,10 @@ export async function GET(
       });
     }
 
+    // Get the actual scope from the callback URL
+    const scope = searchParams.get("scope") || driver.getScope();
+    console.log("Using scope for DB storage:", scope);
+    
     // Store the connection in the database
     await db.insert(connection).values({
       providerId,
@@ -53,7 +61,7 @@ export async function GET(
       picture: userInfo.data.photos?.[0]?.url || "",
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token,
-      scope: driver.getScope(),
+      scope: scope, // Use the scope from the callback
       expiresAt: new Date(Date.now() + (tokens.expiry_date || 3600000)),
       createdAt: new Date(),
       updatedAt: new Date(),

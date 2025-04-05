@@ -15,7 +15,7 @@ export interface MailManager {
     pageToken?: string | number,
   ): Promise<(T & { threads: InitialThread[] }) | undefined>;
   count(): Promise<any>;
-  generateConnectionAuthUrl(userId: string): string;
+  generateConnectionAuthUrl(userId: string, additionalScope?: string | null): string;
   getTokens(
     code: string,
   ): Promise<{ tokens: { access_token?: any; refresh_token?: any; expiry_date?: number } }>;
