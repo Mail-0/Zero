@@ -99,6 +99,42 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       USERINFO_PROFILE_SCOPE,
       USERINFO_EMAIL_SCOPE,
     ].join(' ');
+    
+  // Helper function to create or reuse an auth client
+  const getOrCreateAuthClient = (() => {
+    let cachedAuth: any = null;
+    let cachedRefreshToken: string | null = null;
+    
+    return (accessToken: string, refreshToken: string) => {
+      // Reuse auth client if it exists and refresh token matches
+      if (cachedAuth && cachedRefreshToken === refreshToken) {
+        // Just update the access token
+        cachedAuth.setCredentials({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          scope: getScope(),
+        });
+      } else {
+        // Create a new auth instance with the tokens
+        cachedAuth = new google.auth.OAuth2(
+          process.env.GOOGLE_CLIENT_ID as string,
+          process.env.GOOGLE_CLIENT_SECRET as string,
+          process.env.GOOGLE_REDIRECT_URI as string
+        );
+        
+        // Set the credentials
+        cachedAuth.setCredentials({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          scope: getScope(),
+        });
+        
+        cachedRefreshToken = refreshToken;
+      }
+      
+      return cachedAuth;
+    };
+  })();
   if (config.auth) {
     auth.setCredentials({
       refresh_token: config.auth.refresh_token,
@@ -189,89 +225,27 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
   };
   const gmail = google.gmail({ version: 'v1', auth });
   const manager = {
-    // Helper method to get a Gmail API client using a memoized auth client
-    getGmailApi: (() => {
-      let cachedAuth: any = null;
-      let cachedRefreshToken: string | null = null;
-      
-      return async (accessToken: string, refreshToken: string): Promise<gmail_v1.Gmail> => {
-        // Reuse auth client if it exists and refresh token matches
-        if (cachedAuth && cachedRefreshToken === refreshToken) {
-          // Just update the access token
-          cachedAuth.setCredentials({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-            scope: getScope(),
-          });
-        } else {
-          // Create a new auth instance with the tokens
-          cachedAuth = new google.auth.OAuth2(
-            process.env.GOOGLE_CLIENT_ID as string,
-            process.env.GOOGLE_CLIENT_SECRET as string,
-            process.env.GOOGLE_REDIRECT_URI as string
-          );
-          
-          // Set the credentials
-          cachedAuth.setCredentials({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-            scope: getScope(),
-          });
-          
-          cachedRefreshToken = refreshToken;
-        }
-        
-        // Return the Gmail API client
-        return google.gmail({ version: 'v1', auth: cachedAuth });
-      };
-    })(),
+    // Provider-specific email API client (Gmail for Google provider)
+    getEmailAPIClient: async (accessToken: string, refreshToken: string): Promise<gmail_v1.Gmail> => {
+      const auth = getOrCreateAuthClient(accessToken, refreshToken);
+      return google.gmail({ version: 'v1', auth });
+    },
     
-    // Helper method to get a People API client for contacts using a memoized auth client
-    getPeopleApi: (() => {
-      let cachedAuth: any = null;
-      let cachedRefreshToken: string | null = null;
-      
-      return async (accessToken: string, refreshToken: string) => {
-        // Reuse auth client if it exists and refresh token matches
-        if (cachedAuth && cachedRefreshToken === refreshToken) {
-          // Just update the access token
-          cachedAuth.setCredentials({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-            scope: getScope(),
-          });
-        } else {
-          // Create a new auth instance with the tokens
-          cachedAuth = new google.auth.OAuth2(
-            process.env.GOOGLE_CLIENT_ID as string,
-            process.env.GOOGLE_CLIENT_SECRET as string,
-            process.env.GOOGLE_REDIRECT_URI as string
-          );
-          
-          // Set the credentials
-          cachedAuth.setCredentials({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-            scope: getScope(),
-          });
-          
-          cachedRefreshToken = refreshToken;
-        }
-        
-        // Return the People API client
-        return google.people({ version: 'v1', auth: cachedAuth });
-      };
-    })(),
+    // Provider-specific contacts API client (People API for Google provider)
+    getContactsAPIClient: async (accessToken: string, refreshToken: string): Promise<people_v1.People> => {
+      const auth = getOrCreateAuthClient(accessToken, refreshToken);
+      return google.people({ version: 'v1', auth });
+    },
     
-    // Extract email contacts from Gmail message history
-    getContactsFromGmail: async (accessToken: string, refreshToken: string, userEmail: string) => {
+    // Extract contacts from message history (provider-agnostic interface with Google implementation)
+    getContacts: async (accessToken: string, refreshToken: string, userEmail: string) => {
       const contacts: {id: string; name?: string; email: string; profilePhotoUrl?: string}[] = [];
       
       try {
-        console.log("Using Gmail API to find contacts from message history...");
+        console.log("Finding contacts from email message history...");
         
         // Create Gmail API client
-        const gmail = await manager.getGmailApi(accessToken, refreshToken);
+        const gmail = await manager.getEmailAPIClient(accessToken, refreshToken);
         
         // Get a list of emails sent in the last 60 days with pagination support
         const allMessageIds: string[] = [];

@@ -7,6 +7,7 @@ import { connection } from "@zero/db/schema";
 import { eq } from "drizzle-orm";
 import { db } from "@zero/db";
 import { cache } from "react";
+import { logger } from "@/lib/logger";
 
 import { GoogleContact } from "@/app/api/driver/types";
 
@@ -16,7 +17,7 @@ export const getGoogleContacts = cache(async (): Promise<{ contacts: GoogleConta
     const session = await authService.api.getSession({ headers: headersList });
 
     if (!session?.user?.id || !session.activeConnection?.id) {
-      console.log("No active session or connection");
+      logger.info("No active session or connection");
       return { contacts: [], status: 'no_session', message: 'No active session or connection' };
     }
 
@@ -34,7 +35,7 @@ export const getGoogleContacts = cache(async (): Promise<{ contacts: GoogleConta
       .limit(1);
 
     if (!userConnection?.refreshToken) {
-      console.log("No refresh token found for connection");
+      logger.info("No refresh token found for connection");
       return { contacts: [], status: 'error', message: 'No refresh token found for connection' };
     }
 
@@ -50,12 +51,12 @@ export const getGoogleContacts = cache(async (): Promise<{ contacts: GoogleConta
     // Check for both contacts scopes - the old readonly scope and the newer contacts scope
     const hasContactsScope = userConnection.scope?.includes("https://www.googleapis.com/auth/contacts.readonly") || 
                             userConnection.scope?.includes("https://www.googleapis.com/auth/contacts");
-    console.log("Connection scope includes contacts:", hasContactsScope);
+    logger.debug("Connection scope includes contacts:", hasContactsScope);
     
     // Only attempt to get contacts if we have the proper scope
     // or fall back to Gmail contacts if not
     if (!hasContactsScope) {
-      console.log("Contacts scope not included, will use Gmail fallback method");
+      logger.info("Contacts scope not included, will use Gmail fallback method");
     }
 
     // First try to get contacts directly from the People API
@@ -70,12 +71,12 @@ export const getGoogleContacts = cache(async (): Promise<{ contacts: GoogleConta
 
       // Get user info to test the connection
       const userInfo = await driver.getUserInfo(auth);
-      console.log("Successfully fetched user info with scope:", userConnection.scope);
+      logger.debug("Successfully fetched user info with scope:", userConnection.scope);
 
-      // Get contacts directly from People API
+      // Get contacts directly from provider's contacts API
       try {
-        console.log("Attempting to fetch contacts via People API...");
-        const peopleApi = await driver.getPeopleApi(userConnection.accessToken, userConnection.refreshToken);
+        logger.info("Attempting to fetch contacts via provider's contacts API...");
+        const peopleApi = await driver.getContactsAPIClient(userConnection.accessToken, userConnection.refreshToken);
         
         try {
           // First try to get user profile to check if token is working
@@ -84,10 +85,25 @@ export const getGoogleContacts = cache(async (): Promise<{ contacts: GoogleConta
             personFields: 'names,emailAddresses'
           });
           
-          console.log("People API access confirmed:", 
+          logger.info("People API access confirmed:", 
             userProfile.data.emailAddresses?.[0]?.value || "No email found");
         } catch (profileError) {
-          console.error("Failed to get user profile from People API:", profileError);
+          logger.error("Failed to get user profile from People API:", profileError);
+          // Try one more time with exponential backoff for transient errors
+          if (profileError.code === 429 || (profileError.code && profileError.code >= 500)) {
+            logger.info("Attempting retry after timeout...");
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            try {
+              const retryProfile = await peopleApi.people.get({
+                resourceName: 'people/me',
+                personFields: 'names,emailAddresses'
+              });
+              logger.info("People API access confirmed on retry:", 
+                retryProfile.data.emailAddresses?.[0]?.value || "No email found");
+            } catch (retryError) {
+              logger.error("Retry also failed:", retryError);
+            }
+          }
           // Continue anyway, we might still be able to get connections
         }
         
@@ -105,17 +121,17 @@ export const getGoogleContacts = cache(async (): Promise<{ contacts: GoogleConta
           
           const pageConnections = response.data.connections || [];
           connections.push(...pageConnections);
-          console.log(`Retrieved ${pageConnections.length} contacts from page, total: ${connections.length}`);
+          logger.debug(`Retrieved ${pageConnections.length} contacts from page, total: ${connections.length}`);
           
           // Update pageToken for next iteration
           pageToken = response.data.nextPageToken;
         } while (pageToken);
         
-        console.log(`Retrieved a total of ${connections.length} contacts from Google People API`);
+        logger.info(`Retrieved a total of ${connections.length} contacts from Google People API`);
         
         // Detailed logging to debug empty contacts issue
         if (connections.length === 0) {
-          console.log("No connections returned from People API. This could be due to permission issues or no contacts available.");
+          logger.warn("No connections returned from People API. This could be due to permission issues or no contacts available.");
         }
         
         connections.forEach(person => {
@@ -133,23 +149,23 @@ export const getGoogleContacts = cache(async (): Promise<{ contacts: GoogleConta
           }
         });
         
-        console.log(`Added ${contacts.length} contacts from People API`);
+        logger.info(`Added ${contacts.length} contacts from People API`);
       } catch (peopleError) {
-        console.error("Error fetching contacts from People API:", peopleError);
-        console.log("Will try fallback method instead");
+        logger.error("Error fetching contacts from People API:", peopleError);
+        logger.info("Will try fallback method instead");
       }
     } catch (error) {
-      console.log("Error fetching contacts:", error);
+      logger.error("Error fetching contacts:", error);
     }
 
     // If no contacts found from People API, or if we don't have contacts scope,
     // use the Gmail API to extract recipients
     if (contacts.length === 0 || !hasContactsScope) {
       try {
-        console.log("Fallback: Using Gmail API to find contacts from message history...");
+        logger.info("Fallback: Using Gmail API to find contacts from message history...");
         
-        // Use the driver's built-in method to get Gmail contacts
-        const gmailContacts = await driver.getContactsFromGmail!(
+        // Use the driver's built-in method to get contacts from email history
+        const emailContacts = await driver.getContacts!(
           userConnection.accessToken, 
           userConnection.refreshToken, 
           userConnection.email || ''
@@ -158,61 +174,104 @@ export const getGoogleContacts = cache(async (): Promise<{ contacts: GoogleConta
         // Create a set of existing emails to avoid duplicates
         const existingEmails = new Set(contacts.map(contact => contact.email.toLowerCase()));
         
-        // Add only non-duplicate contacts from Gmail
-        for (const contact of gmailContacts) {
+        // Add only non-duplicate contacts from email history
+        for (const contact of emailContacts) {
           if (!existingEmails.has(contact.email.toLowerCase())) {
             contacts.push(contact);
             existingEmails.add(contact.email.toLowerCase());
           }
         }
         
-        console.log(`Added ${gmailContacts.length} email addresses from message history, ${contacts.length} total unique contacts`);
+        logger.info(`Added ${emailContacts.length} email addresses from message history, ${contacts.length} total unique contacts`);
       } catch (err) {
-        console.error('Error getting contacts from Gmail:', err);
+        logger.error('Error getting contacts from email history:', err);
       }
     }
 
     return { contacts, status: 'success' };
   } catch (error) {
-    console.error("Error fetching Google contacts:", error);
+    logger.error("Error fetching Google contacts:", error);
     return { contacts: [], status: 'error', message: error instanceof Error ? error.message : String(error) };
   }
 });
 
-// Cache contacts with a 5-minute TTL to prevent stale data
-// This is implemented using React's cache function but with a manual expiration approach
-let contactsCache: { data: GoogleContact[], timestamp: number } | null = null;
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+// Cache contacts with TTLs to prevent stale data while maintaining performance
+// Use a Map with user IDs as keys to prevent cross-user cache sharing
+const contactsCache = new Map<string, { data: GoogleContact[], timestamp: number }>();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes for fresh cache
+const EXTENDED_TTL_MS = 30 * 60 * 1000; // 30 minutes for stale-but-usable cache
 
 export const getAllContacts = cache(async (): Promise<GoogleContact[]> => {
   try {
+    // Get user info to use as cache key
+    const headersList = await headers();
+    const session = await authService.api.getSession({ headers: headersList });
+    const userId = session?.user?.id || 'anonymous';
+    
     // Check if we have a valid cache
     const now = Date.now();
-    if (contactsCache && (now - contactsCache.timestamp) < CACHE_TTL_MS) {
-      console.log(`Using cached contacts, age: ${Math.round((now - contactsCache.timestamp)/1000)}s`);
-      return contactsCache.data;
+    const userCache = contactsCache.get(userId);
+    
+    // If cache is fresh, use it immediately
+    if (userCache && (now - userCache.timestamp) < CACHE_TTL_MS) {
+      logger.debug(`Using cached contacts for user ${userId}, age: ${Math.round((now - userCache.timestamp)/1000)}s`);
+      return userCache.data;
     }
     
-    // Cache expired or doesn't exist, fetch fresh data
+    // If cache is expired, but not too old, trigger a refresh
+    // but return the cached data immediately to improve perceived performance
+    if (userCache && (now - userCache.timestamp) < EXTENDED_TTL_MS) {
+      logger.info(`Cache expired but not stale for user ${userId}, refreshing in background`);
+      
+      // Refresh cache in background
+      Promise.resolve().then(async () => {
+        try {
+          const result = await getGoogleContacts();
+          contactsCache.set(userId, {
+            data: result.contacts,
+            timestamp: Date.now()
+          });
+          logger.info(`Background cache refresh complete for user ${userId}, fetched ${result.contacts.length} contacts`);
+        } catch (error) {
+          logger.error("Background cache refresh failed:", error);
+        }
+      });
+      
+      return userCache.data;
+    }
+    
+    // Cache is completely stale or doesn't exist, fetch fresh data
     const result = await getGoogleContacts();
     
     // Add debugging logs
-    console.log(`Fetched ${result.contacts.length} Google contacts for email suggestions (status: ${result.status})`);
+    logger.info(`Fetched ${result.contacts.length} Google contacts for user ${userId} (status: ${result.status})`);
     
     // Update cache
-    contactsCache = {
+    contactsCache.set(userId, {
       data: result.contacts,
       timestamp: now
-    };
+    });
     
     return result.contacts;
   } catch (error) {
-    console.error("Error fetching all contacts:", error);
-    // Return cached data if available, even if expired
-    if (contactsCache?.data) {
-      console.log("Returning stale cached contacts due to error");
-      return contactsCache.data;
+    logger.error("Error fetching all contacts:", error);
+    
+    // Try to get user ID for cache lookup
+    try {
+      const headersList = await headers();
+      const session = await authService.api.getSession({ headers: headersList });
+      const userId = session?.user?.id || 'anonymous';
+      const userCache = contactsCache.get(userId);
+      
+      // Return cached data if available, even if expired
+      if (userCache?.data) {
+        logger.info(`Returning stale cached contacts for user ${userId} due to error`);
+        return userCache.data;
+      }
+    } catch (e) {
+      logger.error("Failed to retrieve user session for cache fallback:", e);
     }
+    
     return [];
   }
 });
