@@ -111,6 +111,12 @@ export async function putConnection(connectionId: string) {
   }
 }
 
+/**
+ * Generates a reauthorization URL for Google with contacts permission
+ * Used when the app needs additional access to user's contacts for autofill suggestions
+ * @returns {Promise<{url: string}>} Object containing the reauthorization URL
+ * @throws {Error} If the user is not logged in or if URL generation fails
+ */
 export async function getReauthUrl() {
   try {
     const headersList = await headers();

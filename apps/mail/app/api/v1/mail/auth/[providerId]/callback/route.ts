@@ -22,8 +22,7 @@ export async function GET(
   const driver = await createDriver(providerId, {});
 
   try {
-    // Log the scope parameter from Google's callback
-    console.log("Auth callback received with scope:", searchParams.get("scope"));
+    // We'll log the scope parameter later when we use it
 
     // Exchange the authorization code for tokens
     const { tokens } = await driver.getTokens(code);
@@ -47,8 +46,29 @@ export async function GET(
     }
 
     // Get the actual scope from the callback URL
-    const scope = searchParams.get("scope") || driver.getScope();
-    console.log("Using scope for DB storage:", scope);
+    const receivedScope = searchParams.get("scope");
+    const driverScope = driver.getScope();
+    console.log("Auth callback - URL scope:", receivedScope);
+    console.log("Auth callback - Driver scope:", driverScope);
+    
+    // Combine scopes to ensure we have both
+    const combinedScopes = new Set<string>();
+    
+    // Add driver scopes
+    driverScope.split(' ').forEach(s => combinedScopes.add(s));
+    
+    // Add URL scopes
+    if (receivedScope) {
+      receivedScope.split(' ').forEach(s => combinedScopes.add(s));
+    }
+    
+    // Ensure contacts scope is included
+    combinedScopes.add("https://www.googleapis.com/auth/contacts.readonly");
+    
+    // Create final scope string
+    const scope = Array.from(combinedScopes).join(' ');
+    
+    console.log("Combined scope for DB storage:", scope);
     
     // Store the connection in the database
     await db.insert(connection).values({

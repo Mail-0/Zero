@@ -182,6 +182,25 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
   };
   const gmail = google.gmail({ version: 'v1', auth });
   const manager = {
+    // Helper method to get a Gmail API client
+    getGmailApi: async (accessToken: string, refreshToken: string) => {
+      // Create a new auth instance with the tokens
+      const authClient = new google.auth.OAuth2(
+        process.env.GOOGLE_CLIENT_ID as string,
+        process.env.GOOGLE_CLIENT_SECRET as string,
+        process.env.GOOGLE_REDIRECT_URI as string
+      );
+      
+      // Set the credentials
+      authClient.setCredentials({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        scope: getScope(),
+      });
+      
+      // Return the Gmail API client
+      return google.gmail({ version: 'v1', auth: authClient });
+    },
     getAttachment: async (messageId: string, attachmentId: string) => {
       try {
         const response = await gmail.users.messages.attachments.get({

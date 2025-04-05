@@ -1,6 +1,8 @@
 import { type InitialThread, type ParsedMessage } from '@/types';
 
 export interface MailManager {
+  // Helper to get Gmail API client
+  getGmailApi?(accessToken: string, refreshToken: string): Promise<any>;
   get(id: string): Promise<ParsedMessage[] | undefined>;
   create(data: any): Promise<any>;
   createDraft(data: any): Promise<any>;

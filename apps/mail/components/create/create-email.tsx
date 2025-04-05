@@ -303,10 +303,7 @@ export function CreateEmail({
   const getEmailSuggestions = React.useCallback((input: string): string[] => {
     if (!input) return [];
     
-    console.log("Getting email suggestions for input:", input, {
-      connectionsCount: connections?.length || 0,
-      contactsCount: contacts?.length || 0
-    });
+    // Removed console.log for production
     
     const inputLower = input.toLowerCase();
     const allSuggestions: ContactSuggestion[] = [];
@@ -316,7 +313,7 @@ export function CreateEmail({
       connections.forEach(conn => {
         if (!toEmails.includes(conn.email) && 
             (conn.email.toLowerCase().includes(inputLower) || 
-             (conn.name && conn.name.toLowerCase().includes(inputLower)))) {
+             conn.name?.toLowerCase().includes(inputLower))) {
           allSuggestions.push({
             email: conn.email,
             name: conn.name,
@@ -344,7 +341,7 @@ export function CreateEmail({
       contacts.forEach(contact => {
         if (!toEmails.includes(contact.email) && 
             (contact.email.toLowerCase().includes(inputLower) || 
-             (contact.name && contact.name.toLowerCase().includes(inputLower)))) {
+             contact.name?.toLowerCase().includes(inputLower))) {
           allSuggestions.push({
             email: contact.email,
             name: contact.name,
@@ -355,7 +352,7 @@ export function CreateEmail({
       });
     }
     
-    console.log(`Found ${allSuggestions.length} matching suggestions`);
+    // Removed console.log for production
     
     // Sort by relevance - exact matches first, then alphabetically
     allSuggestions.sort((a, b) => {
@@ -397,17 +394,22 @@ export function CreateEmail({
     return undefined;
   }, [connections, contacts]);
 
-  // Update suggestions when input changes
-  React.useEffect(() => {
-    if (toInput) {
-      const suggestions = getEmailSuggestions(toInput);
+  // Helper function to update suggestions
+  const updateSuggestions = React.useCallback((inputValue: string) => {
+    if (inputValue) {
+      const suggestions = getEmailSuggestions(inputValue);
       setEmailSuggestions(suggestions);
       setShowSuggestions(suggestions.length > 0);
       setSelectedSuggestionIndex(-1);
     } else {
       setShowSuggestions(false);
     }
-  }, [toInput, getEmailSuggestions]);
+  }, [getEmailSuggestions]);
+  
+  // Update suggestions when input changes
+  React.useEffect(() => {
+    updateSuggestions(toInput);
+  }, [toInput, updateSuggestions]);
 
   // Handle selecting a suggestion via click
   const handleSuggestionClick = (email: string) => {
@@ -593,23 +595,11 @@ export function CreateEmail({
                       value={toInput}
                       onChange={(e) => {
                         setToInput(e.target.value);
-                        const newInput = e.target.value;
-                        if (newInput) {
-                          const suggestions = getEmailSuggestions(newInput);
-                          setEmailSuggestions(suggestions);
-                          setShowSuggestions(suggestions.length > 0);
-                        } else {
-                          setShowSuggestions(false);
-                        }
+                        updateSuggestions(e.target.value);
                       }}
                       onKeyDown={handleToInputKeyDown}
                       onFocus={() => {
-                        if (toInput) {
-                          const suggestions = getEmailSuggestions(toInput);
-                          setEmailSuggestions(suggestions);
-                          setShowSuggestions(suggestions.length > 0);
-                          console.log("Focus event - showing suggestions:", suggestions);
-                        }
+                        updateSuggestions(toInput);
                       }}
                       onBlur={(e) => {
                         // Delay hiding suggestions to allow clicks on the suggestions
