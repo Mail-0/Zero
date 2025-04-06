@@ -339,7 +339,7 @@ const MenuBar = ({
                     <ListOrdered className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{t('pages.createEmail.editor.menuBar.bulletList')}</TooltipContent>
+                <TooltipContent>{t('pages.createEmail.editor.menuBar.orderedList')}</TooltipContent>
               </Tooltip>
 
               {attachments.length > 0 ? (
