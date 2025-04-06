@@ -30,7 +30,9 @@
       "failedToRemoveFromFavorites": "Failed to remove from favorites",
       "failedToModifyFavorites": "Failed to modify favorites",
       "markingAsRead": "Marking as read...",
-      "markingAsUnread": "Marking as unread..."
+      "markingAsUnread": "Marking as unread...",
+      "cancel": "Cancel",
+      "save": "Save"
     },
     "themes": {
       "dark": "Dark",
@@ -251,6 +253,9 @@
       "createNewLabel": "Create New Label",
       "noLabelsAvailable": "No labels available",
       "loadMore": "Load more"
+    },
+    "units": {
+      "mb": "{amount} MB"
     }
   },
   "navigation": {
@@ -358,11 +363,30 @@
     "createEmail": {
       "body": "Body",
       "example": "zero@0.email",
-      "attachments": "Attachments",
+      "attachments": "Attachments ({count})",
+      "addMore": "Add more",
       "dropFilesToAttach": "Drop files to attach",
       "writeYourMessageHere": "Write your message here...",
       "emailSentSuccessfully": "Email sent successfully",
-      "failedToSendEmail": "Failed to send email. Please try again."
+      "failedToSendEmail": "Failed to send email. Please try again.",
+      "addLink": "Add Link",
+      "addUrlToCreateALink": "Add URL to create a link. The link will open in a new tab.",
+      "editor": {
+        "menuBar": {
+          "heading1": "Heading 1",
+          "heading2": "Heading 2",
+          "heading3": "Heading 3",
+          "bold": "Bold",
+          "italic": "Italic",
+          "strikethrough": "Strikethrough",
+          "underline": "Underline",
+          "link": "Link",
+          "bulletList": "Bullet List",
+          "orderedList": "Ordered List",
+          "viewAttachments": "View Attachments",
+          "attachFiles": "Attach Files"
+        }
+      }
     }
   }
 }
