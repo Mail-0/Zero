@@ -10,6 +10,126 @@ import { cache } from "react";
 import { logger } from "@/lib/logger";
 
 import { GoogleContact } from "@/app/api/driver/types";
+import { type MailManager } from "@/app/api/driver/types";
+
+/**
+ * Fetches contacts from Google People API with pagination support
+ * Handles authentication, retries, and error cases
+ */
+async function fetchFromPeopleAPI(
+  driver: MailManager,
+  accessToken: string,
+  refreshToken: string,
+  userEmail?: string
+): Promise<GoogleContact[]> {
+  logger.info("Attempting to fetch contacts via provider's contacts API...");
+  const peopleApi = await driver.getContactsAPIClient!(accessToken, refreshToken);
+  const contacts: GoogleContact[] = [];
+  
+  // First verify API access by getting user profile
+  await verifyPeopleApiAccess(peopleApi);
+  
+  // Now try to get contacts with pagination support
+  let pageToken = undefined;
+  const connections: any[] = [];
+  
+  do {
+    const response = await peopleApi.people.connections.list({
+      resourceName: 'people/me',
+      personFields: 'names,emailAddresses,photos',
+      pageSize: 100,
+      pageToken
+    });
+    
+    const pageConnections = response.data.connections || [];
+    connections.push(...pageConnections);
+    logger.debug(`Retrieved ${pageConnections.length} contacts from page, total: ${connections.length}`);
+    
+    // Update pageToken for next iteration
+    pageToken = response.data.nextPageToken;
+  } while (pageToken);
+  
+  logger.info(`Retrieved a total of ${connections.length} contacts from Google People API`);
+  
+  // Detailed logging to debug empty contacts issue
+  if (connections.length === 0) {
+    logger.warn("No connections returned from People API. This could be due to permission issues or no contacts available.");
+  }
+  
+  connections.forEach(person => {
+    const email = person.emailAddresses?.[0]?.value;
+    if (email && email.toLowerCase() !== userEmail?.toLowerCase()) {
+      // Check if contact with this email already exists before adding
+      if (!contacts.some(c => c.email.toLowerCase() === email.toLowerCase())) {
+        contacts.push({
+          id: person.resourceName || `people-${contacts.length}`,
+          name: person.names?.[0]?.displayName,
+          email: email,
+          profilePhotoUrl: person.photos?.[0]?.url
+        });
+      }
+    }
+  });
+  
+  return contacts;
+}
+
+/**
+ * Verifies People API access by getting user profile
+ * Implements exponential backoff for transient errors
+ */
+async function verifyPeopleApiAccess(peopleApi: any): Promise<void> {
+  try {
+    // First try to get user profile to check if token is working
+    const userProfile = await peopleApi.people.get({
+      resourceName: 'people/me',
+      personFields: 'names,emailAddresses'
+    });
+    
+    logger.info("People API access confirmed:", 
+      userProfile.data.emailAddresses?.[0]?.value || "No email found");
+  } catch (profileError) {
+    logger.error("Failed to get user profile from People API:", profileError);
+    
+    // Try one more time with exponential backoff for transient errors
+    if (profileError.code === 429 || (profileError.code && profileError.code >= 500)) {
+      logger.info("Attempting retry after timeout...");
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      try {
+        const retryProfile = await peopleApi.people.get({
+          resourceName: 'people/me',
+          personFields: 'names,emailAddresses'
+        });
+        logger.info("People API access confirmed on retry:", 
+          retryProfile.data.emailAddresses?.[0]?.value || "No email found");
+      } catch (retryError) {
+        logger.error("Retry also failed:", retryError);
+      }
+    }
+    // Continue anyway, we might still be able to get connections
+  }
+}
+
+/**
+ * Fetches contacts from Gmail message history
+ * Used as a fallback when People API fails or lacks permissions
+ */
+async function fetchFromGmailHistory(
+  driver: MailManager,
+  accessToken: string,
+  refreshToken: string,
+  userEmail: string
+): Promise<GoogleContact[]> {
+  logger.info("Fallback: Using Gmail API to find contacts from message history...");
+  
+  // Use the driver's built-in method to get contacts from email history
+  return await driver.getContacts!(
+    accessToken, 
+    refreshToken, 
+    userEmail
+  );
+}
 
 /**
  * Cache contacts with TTLs to prevent stale data while maintaining performance
@@ -163,81 +283,14 @@ async function fetchGoogleContacts(): Promise<GoogleContact[]> {
       const userInfo = await driver.getUserInfo(auth);
       logger.debug("Successfully fetched user info with scope:", userConnection.scope);
 
-      // Get contacts directly from provider's contacts API
+      // Attempt to fetch contacts from People API
       try {
-        logger.info("Attempting to fetch contacts via provider's contacts API...");
-        const peopleApi = await driver.getContactsAPIClient(userConnection.accessToken, userConnection.refreshToken);
-        
-        try {
-          // First try to get user profile to check if token is working
-          const userProfile = await peopleApi.people.get({
-            resourceName: 'people/me',
-            personFields: 'names,emailAddresses'
-          });
-          
-          logger.info("People API access confirmed:", 
-            userProfile.data.emailAddresses?.[0]?.value || "No email found");
-        } catch (profileError) {
-          logger.error("Failed to get user profile from People API:", profileError);
-          // Try one more time with exponential backoff for transient errors
-          if (profileError.code === 429 || (profileError.code && profileError.code >= 500)) {
-            logger.info("Attempting retry after timeout...");
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            try {
-              const retryProfile = await peopleApi.people.get({
-                resourceName: 'people/me',
-                personFields: 'names,emailAddresses'
-              });
-              logger.info("People API access confirmed on retry:", 
-                retryProfile.data.emailAddresses?.[0]?.value || "No email found");
-            } catch (retryError) {
-              logger.error("Retry also failed:", retryError);
-            }
-          }
-          // Continue anyway, we might still be able to get connections
-        }
-        
-        // Now try to get contacts with pagination support
-        let pageToken = undefined;
-        const connections: any[] = [];
-        
-        do {
-          const response = await peopleApi.people.connections.list({
-            resourceName: 'people/me',
-            personFields: 'names,emailAddresses,photos',
-            pageSize: 100,
-            pageToken
-          });
-          
-          const pageConnections = response.data.connections || [];
-          connections.push(...pageConnections);
-          logger.debug(`Retrieved ${pageConnections.length} contacts from page, total: ${connections.length}`);
-          
-          // Update pageToken for next iteration
-          pageToken = response.data.nextPageToken;
-        } while (pageToken);
-        
-        logger.info(`Retrieved a total of ${connections.length} contacts from Google People API`);
-        
-        // Detailed logging to debug empty contacts issue
-        if (connections.length === 0) {
-          logger.warn("No connections returned from People API. This could be due to permission issues or no contacts available.");
-        }
-        
-        connections.forEach(person => {
-          const email = person.emailAddresses?.[0]?.value;
-          if (email && email.toLowerCase() !== userConnection.email?.toLowerCase()) {
-            // Check if contact with this email already exists before adding
-            if (!contacts.some(c => c.email.toLowerCase() === email.toLowerCase())) {
-              contacts.push({
-                id: person.resourceName || `people-${contacts.length}`,
-                name: person.names?.[0]?.displayName,
-                email: email,
-                profilePhotoUrl: person.photos?.[0]?.url
-              });
-            }
-          }
-        });
+        contacts = await fetchFromPeopleAPI(
+          driver, 
+          userConnection.accessToken, 
+          userConnection.refreshToken,
+          userConnection.email
+        );
         
         logger.info(`Added ${contacts.length} contacts from People API`);
       } catch (peopleError) {
@@ -252,12 +305,10 @@ async function fetchGoogleContacts(): Promise<GoogleContact[]> {
     // use the Gmail API to extract recipients
     if (contacts.length === 0 || !hasContactsScope) {
       try {
-        logger.info("Fallback: Using Gmail API to find contacts from message history...");
-        
-        // Use the driver's built-in method to get contacts from email history
-        const emailContacts = await driver.getContacts!(
-          userConnection.accessToken, 
-          userConnection.refreshToken, 
+        const emailContacts = await fetchFromGmailHistory(
+          driver,
+          userConnection.accessToken,
+          userConnection.refreshToken,
           userConnection.email || ''
         );
         
@@ -265,14 +316,16 @@ async function fetchGoogleContacts(): Promise<GoogleContact[]> {
         const existingEmails = new Set(contacts.map(contact => contact.email.toLowerCase()));
         
         // Add only non-duplicate contacts from email history
+        let addedCount = 0;
         for (const contact of emailContacts) {
           if (!existingEmails.has(contact.email.toLowerCase())) {
             contacts.push(contact);
             existingEmails.add(contact.email.toLowerCase());
+            addedCount++;
           }
         }
         
-        logger.info(`Added ${emailContacts.length} email addresses from message history, ${contacts.length} total unique contacts`);
+        logger.info(`Added ${addedCount} unique email addresses from message history, ${contacts.length} total unique contacts`);
       } catch (err) {
         logger.error('Error getting contacts from email history:', err);
       }

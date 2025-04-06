@@ -509,6 +509,11 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
         CONTACTS_READONLY_SCOPE, // Only request readonly for minimum necessary permissions
       ];
       
+      // Add additional scopes if provided
+      if (additionalScope) {
+        scopes.push(additionalScope);
+      }
+      
       return auth.generateAuthUrl({
         access_type: 'offline',
         scope: scopes.join(' '),
