@@ -5,6 +5,7 @@ import {
   Forward,
   ForwardIcon,
   Mail,
+  MailOpen,
   MoreVertical,
   Reply,
   ReplyAll,
@@ -342,7 +343,7 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
               </>
             )}
             <ThreadActionButton
-              icon={Mail}
+              icon={MailOpen}
               label={t('common.mail.markAsUnread')}
               disabled={!emailData}
               onClick={handleMarkAsUnread}
