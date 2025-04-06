@@ -251,25 +251,44 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
         const allMessageIds: string[] = [];
         let pageToken = undefined;
         
-        // Implement pagination to get more complete results
-        do {
+        // Use more efficient API requests with fallback to local messages
+        try {
+          // Get more messages in fewer API calls with larger maxResults
           const sentEmailsResponse = await gmail.users.messages.list({
             userId: 'me',
-            q: 'in:sent newer_than:60d',
-            maxResults: 100,
-            pageToken: pageToken
+            q: 'in:sent newer_than:30d', // More recent timeframe
+            maxResults: 250 // Larger batch to reduce API calls
           });
           
           if (sentEmailsResponse.data.messages) {
             sentEmailsResponse.data.messages.forEach(msg => {
-              if (msg.id) allMessageIds.push(msg.id);
+              // Only add messages up to the limit of 200
+              if (msg.id && allMessageIds.length < 200) allMessageIds.push(msg.id);
             });
           }
           
-          pageToken = sentEmailsResponse.data.nextPageToken;
-          // Limit to 200 total messages for performance reasons
-          if (allMessageIds.length >= 200) break;
-        } while (pageToken);
+          // Only fetch more if we have fewer than 200 messages and there's a next page
+          if (allMessageIds.length < 200 && sentEmailsResponse.data.nextPageToken) {
+            pageToken = sentEmailsResponse.data.nextPageToken;
+            // Just one more request if needed
+            const moreEmailsResponse = await gmail.users.messages.list({
+              userId: 'me',
+              q: 'in:sent newer_than:30d',
+              maxResults: 200 - allMessageIds.length, // Only get what we need
+              pageToken: pageToken
+            });
+            
+            if (moreEmailsResponse.data.messages) {
+              moreEmailsResponse.data.messages.forEach(msg => {
+                // Only add messages up to the limit of 200
+                if (msg.id && allMessageIds.length < 200) allMessageIds.push(msg.id);
+              });
+            }
+          }
+        } catch (error) {
+          console.log("Error fetching sent messages, will use local messages as fallback");
+          // Continue with whatever messages we have so far, or empty list
+        }
         
         console.log(`Found ${allMessageIds.length} sent messages for contacts extraction`);
         
