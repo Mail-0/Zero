@@ -589,15 +589,15 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
     return 'single';
   }, [isKeyPressed]);
 
-  const isUnSelectedWhenBulk = useCallback(
+  const isNotSelectedWhenBulk = useCallback(
     (id: string) => {
-      let handled = false;
+      let isTrue = false;
       setMail((prev) => {
         const isBulkMode = prev.bulkSelected.length > 0;
         const alreadySelected = prev.bulkSelected.includes(id);
 
         if (isBulkMode && !alreadySelected) {
-          handled = true;
+          isTrue = true;
           return {
             ...prev,
             bulkSelected: [...prev.bulkSelected, id],
@@ -606,14 +606,14 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
 
         return prev;
       });
-      return handled;
+      return isTrue;
     },
     [setMail],
   );
 
   const handleMailMouseDown = useCallback(
     (message: InitialThread) => () => {
-      if (isUnSelectedWhenBulk(message.id)) return;
+      if (isNotSelectedWhenBulk(message.id)) return;
 
       handleMouseEnter(message.id);
 
