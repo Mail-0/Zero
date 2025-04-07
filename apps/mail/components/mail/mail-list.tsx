@@ -591,10 +591,10 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
 
   const handleMailMouseDown = useCallback(
     (message: InitialThread) => () => {
-      const isUnselectedDuringBulk =
+      const isNotselectedDuringBulk =
         mail.bulkSelected.length && !mail.bulkSelected.includes(message.id);
 
-      if (isUnselectedDuringBulk) {
+      if (isNotselectedDuringBulk) {
         setMail((prev) => ({
           ...prev,
           bulkSelected: [...prev.bulkSelected, message.id],
