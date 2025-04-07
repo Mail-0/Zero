@@ -276,9 +276,9 @@ export default function GeneralPage() {
                         {t('pages.settings.general.trustedSendersDescription')}
                       </FormDescription>
                     </div>
-                    <div className="flex flex-col gap-2">
+                    <ScrollArea className="flex flex-col max-h-32 pr-3">
                       {field.value.map((senderEmail) => (
-                        <div className="flex items-center justify-between" key={senderEmail}>
+                        <div className="flex items-center justify-between mt-1.5 first:mt-0" key={senderEmail}>
                           <span>{senderEmail}</span>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -296,7 +296,7 @@ export default function GeneralPage() {
                           </Tooltip>
                         </div>
                       ))}
-                    </div>
+                    </ScrollArea>
                   </FormItem>
                 ) : <></>}
               />
