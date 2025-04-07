@@ -589,18 +589,31 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
     return 'single';
   }, [isKeyPressed]);
 
+  const isUnSelectedWhenBulk = useCallback(
+    (id: string) => {
+      let handled = false;
+      setMail((prev) => {
+        const isBulkMode = prev.bulkSelected.length > 0;
+        const alreadySelected = prev.bulkSelected.includes(id);
+
+        if (isBulkMode && !alreadySelected) {
+          handled = true;
+          return {
+            ...prev,
+            bulkSelected: [...prev.bulkSelected, id],
+          };
+        }
+
+        return prev;
+      });
+      return handled;
+    },
+    [setMail],
+  );
+
   const handleMailMouseDown = useCallback(
     (message: InitialThread) => () => {
-      const isUnselectedDuringBulk =
-        mail.bulkSelected.length && !mail.bulkSelected.includes(message.id);
-
-      if (isUnselectedDuringBulk) {
-        setMail((prev) => ({
-          ...prev,
-          bulkSelected: [...prev.bulkSelected, message.id],
-        }));
-        return;
-      }
+      if (isUnSelectedWhenBulk(message.id)) return;
 
       handleMouseEnter(message.id);
 
