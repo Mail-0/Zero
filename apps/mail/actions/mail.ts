@@ -111,3 +111,44 @@ export const modifyLabels = async ({
     throw error;
   }
 };
+
+export const toggleStar = async ({ ids }: { ids: string[] }) => {
+  try {
+    const driver = await getActiveDriver();
+    const { threadIds } = driver.normalizeIds(ids);
+    
+    if (!threadIds.length) {
+      return { success: false, error: 'No thread IDs provided' };
+    }
+
+    const threadResults = await Promise.allSettled(
+      threadIds.map(id => driver.get(id))
+    );
+
+    let allStarred = true;
+    let anyValid = false;
+
+    for (const result of threadResults) {
+      if (result.status === 'fulfilled' && result.value?.[0]) {
+        anyValid = true;
+        if (!result.value[0].tags?.includes('STARRED')) {
+          allStarred = false;
+          break;
+        }
+      }
+    }
+
+    const shouldStar = !anyValid || !allStarred;
+
+    await driver.modifyLabels(threadIds, {
+      addLabels: shouldStar ? ['STARRED'] : [],
+      removeLabels: shouldStar ? [] : ['STARRED'],
+    });
+
+    return { success: true };
+  } catch (error) {
+    if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection();
+    console.error('Error toggling star:', error);
+    throw error;
+  }
+};

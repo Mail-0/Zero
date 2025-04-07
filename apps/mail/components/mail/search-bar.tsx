@@ -198,7 +198,10 @@ export function SearchBar() {
         if (data.dateRange.to) 
           searchTerms.push(`before:${format(data.dateRange.to, 'yyyy/MM/dd')}`);
 
-        const searchQuery = searchTerms.join(' ');
+        let searchQuery = searchTerms.join(' ');
+
+        searchQuery = extractMetaText(searchQuery) || ''
+
         const folder = data.folder ? data.folder.toUpperCase() : '';
 
         console.log('Final search query:', searchQuery);
@@ -634,7 +637,7 @@ export function SearchBar() {
           <Input
             placeholder={isFocused ? "" : "Search..."}
             ref={inputRef}
-            className="bg-muted/50 text-muted-foreground ring-muted placeholder:text-muted-foreground/70 h-8 w-full rounded-md border-none pl-9 pr-14 shadow-none transition-all duration-300"
+            className="bg-muted-foreground/20 dark:bg-muted/50 text-muted-foreground ring-muted placeholder:text-muted-foreground/70 h-8 w-full rounded-md border-none pl-9 pr-14 shadow-none transition-all duration-300"
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             onFocus={() => setIsFocused(true)}
@@ -878,4 +881,52 @@ export function SearchBar() {
       </form>
     </div>
   );
+}
+
+function extractMetaText(text: string) {
+  // Check if the text contains a query enclosed in quotes
+  const quotedQueryMatch = text.match(/["']([^"']+)["']/);
+  if (quotedQueryMatch && quotedQueryMatch[1]) {
+    // Return just the content inside the quotes
+    return quotedQueryMatch[1].trim();
+  }
+  
+  // Check for common patterns where the query is preceded by explanatory text
+  const patternMatches = [
+    // Match "Here is the converted query:" pattern
+    text.match(/here is the (converted|enhanced) query:?\s*["']?([^"']+)["']?/i),
+    // Match "The search query is:" pattern
+    text.match(/the (search query|query) (is|would be):?\s*["']?([^"']+)["']?/i),
+    // Match "I've converted your query to:" pattern
+    text.match(/i('ve| have) converted your query to:?\s*["']?([^"']+)["']?/i),
+    // Match "Converting to:" pattern
+    text.match(/converting to:?\s*["']?([^"']+)["']?/i)
+  ].filter(Boolean);
+  
+  if (patternMatches.length > 0 && patternMatches[0]) {
+    // Return the captured query part (last capture group)
+    const match = patternMatches[0];
+
+    if (!match[match.length - 1]) return
+
+    return match[match.length - 1]!.trim();
+  }
+  
+  // If no patterns match, remove common explanatory text and return
+  let cleanedText = text
+    // Remove "I focused on..." explanations
+    .replace(/I focused on.*$/im, '')
+    // Remove "Here's a precise..." explanations
+    .replace(/Here's a precise.*$/im, '')
+    // Remove any explanations after the query
+    .replace(/\n\nThis (query|search).*$/im, '')
+    // Remove any explanations before the query
+    .replace(/^.*?(from:|to:|subject:|is:|has:|after:|before:)/i, '$1')
+    // Clean up any remaining quotes
+    .replace(/["']/g, '')
+    // Remove extra whitespace
+    .replace(/\s+/g, ' ')
+    .trim();
+    
+  return cleanedText;
 }

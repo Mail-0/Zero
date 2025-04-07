@@ -12,7 +12,25 @@
       "signedOutSuccess": "Çıkış yapıldı!",
       "signOutError": "Çıkış yapılırken hata oluştu",
       "refresh": "Refresh",
-      "loading": "Loading..."
+      "loading": "Loading...",
+      "featureNotImplemented": "This feature is not implemented yet",
+      "moving": "Moving...",
+      "movedToInbox": "Moved to inbox",
+      "movingToInbox": "Moving to inbox...",
+      "movedToSpam": "Moved to spam",
+      "movingToSpam": "Moving to spam...",
+      "archiving": "Archiving...",
+      "archived": "Archived",
+      "failedToMove": "Failed to move message",
+      "addingToFavorites": "Adding to favorites...",
+      "removingFromFavorites": "Removing from favorites...",
+      "addedToFavorites": "Added to favorites",
+      "removedFromFavorites": "Removed from favorites",
+      "failedToAddToFavorites": "Failed to add to favorites",
+      "failedToRemoveFromFavorites": "Failed to remove from favorites",
+      "failedToModifyFavorites": "Failed to modify favorites",
+      "markingAsRead": "Marking as read...",
+      "markingAsUnread": "Marking as unread..."
     },
     "themes": {
       "dark": "Koyu",
@@ -83,6 +101,7 @@
     },
     "mailCategories": {
       "primary": "Birincil",
+      "allMail": "All Mail",
       "important": "Önemli",
       "personal": "Kişisel",
       "updates": "Güncellemeler",
@@ -219,7 +238,8 @@
       "moveToTrash": "Çöp Kutusuna Taşı",
       "markAsUnread": "Okunmamış Olarak İşaretle",
       "markAsRead": "Mark as Read",
-      "addStar": "Yıldız Ekle",
+      "addFavorite": "Favorite",
+      "removeFavorite": "Unfavorite",
       "muteThread": "Konuyu Sessize Al",
       "moving": "Taşınıyor...",
       "moved": "Taşındı",
@@ -242,7 +262,6 @@
       "archive": "Arşiv",
       "bin": "Çöp",
       "feedback": "Geribildirim",
-      "contact": "İletişim",
       "settings": "Ayarlar"
     },
     "settings": {

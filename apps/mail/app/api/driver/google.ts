@@ -215,12 +215,14 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
     };
   };
   const normalizeSearch = (folder: string, q: string) => {
+    // Handle special folders
     if (folder === 'trash') {
       return { folder: undefined, q: `in:trash ${q}` };
     }
     if (folder === 'archive') {
       return { folder: undefined, q: `in:archive ${q}` };
     }
+    // Return the query as-is to preserve Gmail's native search syntax
     return { folder, q };
   };
   const gmail = google.gmail({ version: 'v1', auth });
@@ -415,7 +417,11 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
             const labelIds = [
               ...new Set(msg.data.messages?.flatMap((message) => message.labelIds || [])),
             ];
-            const message = msg.data.messages?.[msg.data.messages.length - 1];
+            const latestMessage = msg.data.messages?.reverse()?.find((msg) => {
+              const parsedMessage = parse({ ...msg, labelIds });
+              return parsedMessage.sender.email !== config.auth?.email
+            })
+            const message = latestMessage ? latestMessage : msg.data.messages?.[0]
             const parsed = parse({ ...message, labelIds });
             return {
               ...parsed,
@@ -432,7 +438,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       return { ...res.data, threads } as any;
     },
     get: async (id: string): Promise<ParsedMessage[]> => {
-      console.log(id);
+      console.log('Fetching thread:', id);
       const res = await gmail.users.threads.get({ userId: 'me', id, format: 'full' });
       if (!res.data.messages) return [];
 
@@ -451,18 +457,61 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
           }
 
           console.log('🔄 Driver: Processing email body...');
-          const decodedBody = fromBinary(bodyData);
+          const decodedBody = bodyData ? fromBinary(bodyData) : '';
+
+          // Process inline images if present
+          let processedBody = decodedBody;
+          if (message.payload?.parts) {
+            const inlineImages = message.payload.parts
+              .filter(part => {
+                const contentDisposition = part.headers?.find(h => h.name?.toLowerCase() === 'content-disposition')?.value || '';
+                const isInline = contentDisposition.toLowerCase().includes('inline');
+                const hasContentId = part.headers?.some(h => h.name?.toLowerCase() === 'content-id');
+                return isInline && hasContentId;
+              });
+
+            for (const part of inlineImages) {
+              const contentId = part.headers?.find(h => h.name?.toLowerCase() === 'content-id')?.value;
+              if (contentId && part.body?.attachmentId) {
+                try {
+                  const imageData = await manager.getAttachment(message.id!, part.body.attachmentId);
+                  if (imageData) {
+                    // Remove < and > from Content-ID if present
+                    const cleanContentId = contentId.replace(/[<>]/g, '');
+
+                    const escapedContentId = cleanContentId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    // Replace cid: URL with data URL
+                    processedBody = processedBody.replace(
+                      new RegExp(`cid:${escapedContentId}`, 'g'),
+                      `data:${part.mimeType};base64,${imageData}`
+                    );
+                  }
+                } catch (error) {
+                  console.error('Failed to process inline image:', error);
+                }
+              }
+            }
+          }
 
           console.log('✅ Driver: Email processing complete', {
             hasBody: !!bodyData,
-            decodedBodyLength: decodedBody.length,
+            decodedBodyLength: processedBody.length,
           });
 
           const parsedData = parse(message);
 
           const attachments = await Promise.all(
             message.payload?.parts
-              ?.filter((part) => part.filename && part.filename.length > 0)
+              ?.filter((part) => {
+                if (!part.filename || part.filename.length === 0) return false;
+                
+                const contentDisposition = part.headers?.find(h => h.name?.toLowerCase() === 'content-disposition')?.value || '';
+                const isInline = contentDisposition.toLowerCase().includes('inline');
+                
+                const hasContentId = part.headers?.some(h => h.name?.toLowerCase() === 'content-id');
+                
+                return !isInline || (isInline && !hasContentId);
+              })
               ?.map(async (part) => {
                 console.log('Processing attachment:', part.filename);
                 const attachmentId = part.body?.attachmentId;
@@ -507,9 +556,8 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
             ...parsedData,
             body: '',
             processedHtml: '',
-            // blobUrl: `data:text/html;charset=utf-8,${encodeURIComponent(decodedBody)}`,
             blobUrl: '',
-            decodedBody,
+            decodedBody: processedBody,
             attachments,
           };
 
@@ -539,15 +587,33 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       );
       return { threadIds };
     },
-    async modifyLabels(id: string[], options: { addLabels: string[]; removeLabels: string[] }) {
-      await gmail.users.messages.batchModify({
-        userId: 'me',
-        requestBody: {
-          ids: id,
-          addLabelIds: options.addLabels,
-          removeLabelIds: options.removeLabels,
-        },
-      });
+    async modifyLabels(threadIds: string[], options: { addLabels: string[]; removeLabels: string[] }) {
+      const threadResults = await Promise.allSettled(
+        threadIds.map(threadId =>
+          gmail.users.threads.get({
+            userId: 'me',
+            id: threadId,
+            format: 'minimal'
+          })
+        )
+      );
+
+      const messageIds = threadResults
+        .filter((result): result is PromiseFulfilledResult<any> => result.status === 'fulfilled')
+        .flatMap(result => result.value.data.messages || [])
+        .map(msg => msg.id)
+        .filter((id): id is string => !!id);
+
+      if (messageIds.length > 0) {
+        await gmail.users.messages.batchModify({
+          userId: 'me',
+          requestBody: {
+            ids: messageIds,
+            addLabelIds: options.addLabels,
+            removeLabelIds: options.removeLabels,
+          },
+        });
+      }
     },
     getDraft: async (draftId: string) => {
       try {

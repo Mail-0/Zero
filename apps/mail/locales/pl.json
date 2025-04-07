@@ -12,7 +12,25 @@
       "signedOutSuccess": "Signed out successfully!",
       "signOutError": "Error signing out",
       "refresh": "Refresh",
-      "loading": "Loading..."
+      "loading": "Loading...",
+      "featureNotImplemented": "This feature is not implemented yet",
+      "moving": "Moving...",
+      "movedToInbox": "Moved to inbox",
+      "movingToInbox": "Moving to inbox...",
+      "movedToSpam": "Moved to spam",
+      "movingToSpam": "Moving to spam...",
+      "archiving": "Archiving...",
+      "archived": "Archived",
+      "failedToMove": "Failed to move message",
+      "addingToFavorites": "Adding to favorites...",
+      "removingFromFavorites": "Removing from favorites...",
+      "addedToFavorites": "Added to favorites",
+      "removedFromFavorites": "Removed from favorites",
+      "failedToAddToFavorites": "Failed to add to favorites",
+      "failedToRemoveFromFavorites": "Failed to remove from favorites",
+      "failedToModifyFavorites": "Failed to modify favorites",
+      "markingAsRead": "Marking as read...",
+      "markingAsUnread": "Marking as unread..."
     },
     "themes": {
       "dark": "Dark",
@@ -83,6 +101,7 @@
     },
     "mailCategories": {
       "primary": "Primary",
+      "allMail": "All Mail",
       "important": "Important",
       "personal": "Personal",
       "updates": "Updates",
@@ -219,7 +238,8 @@
       "moveToTrash": "Move to Trash",
       "markAsUnread": "Mark as Unread",
       "markAsRead": "Mark as Read",
-      "addStar": "Add Star",
+      "addFavorite": "Favorite",
+      "removeFavorite": "Unfavorite",
       "muteThread": "Mute Thread",
       "moving": "Moving...",
       "moved": "Moved",
@@ -242,7 +262,6 @@
       "archive": "Archive",
       "bin": "Bin",
       "feedback": "Feedback",
-      "contact": "Contact",
       "settings": "Settings"
     },
     "settings": {

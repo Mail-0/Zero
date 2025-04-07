@@ -2,7 +2,7 @@ import { Sparkles, X, Check, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateAIEmailContent } from '@/actions/ai';
 import { useState, useEffect, useRef } from 'react';
-import { generateConversationId } from '@/lib/ai';
+import { generateConversationId } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/lib/auth-client';

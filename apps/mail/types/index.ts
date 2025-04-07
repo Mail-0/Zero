@@ -99,7 +99,7 @@ export type ThreadProps = {
   message: InitialThread;
   selectMode: MailSelectMode;
   // TODO: enforce types instead of sprinkling "any"
-  onClick?: (message: InitialThread) => () => any;
+  onMouseDown?: (message: InitialThread) => () => any;
   isCompact?: boolean;
 };
 

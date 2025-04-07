@@ -12,7 +12,25 @@
       "signedOutSuccess": "Déconnecté avec succès !",
       "signOutError": "Erreur de déconnexion",
       "refresh": "Actualiser",
-      "loading": "Loading..."
+      "loading": "Chargement...",
+      "featureNotImplemented": "This feature is not implemented yet",
+      "moving": "Moving...",
+      "movedToInbox": "Moved to inbox",
+      "movingToInbox": "Moving to inbox...",
+      "movedToSpam": "Moved to spam",
+      "movingToSpam": "Moving to spam...",
+      "archiving": "Archiving...",
+      "archived": "Archived",
+      "failedToMove": "Failed to move message",
+      "addingToFavorites": "Adding to favorites...",
+      "removingFromFavorites": "Removing from favorites...",
+      "addedToFavorites": "Added to favorites",
+      "removedFromFavorites": "Removed from favorites",
+      "failedToAddToFavorites": "Failed to add to favorites",
+      "failedToRemoveFromFavorites": "Failed to remove from favorites",
+      "failedToModifyFavorites": "Failed to modify favorites",
+      "markingAsRead": "Marking as read...",
+      "markingAsUnread": "Marking as unread..."
     },
     "themes": {
       "dark": "Sombre",
@@ -67,12 +85,12 @@
       "starred": "Étoilé",
       "applyFilters": "Appliquer les filtres",
       "reset": "Réinitialiser",
-      "searching": "Searching...",
-      "aiSuggestions": "AI Suggestions",
-      "aiSearching": "AI is searching...",
-      "aiSearchError": "AI search failed. Please try again.",
-      "aiNoResults": "No AI suggestions found",
-      "aiEnhancedQuery": "Enhanced search query"
+      "searching": "Recherche en cours...",
+      "aiSuggestions": "Suggestions de l'IA",
+      "aiSearching": "L'IA est en cours de recherche...",
+      "aiSearchError": "La recherche de l'IA a échouée. Veuillez réessayer.",
+      "aiNoResults": "Aucune suggestion de l'IA trouvée",
+      "aiEnhancedQuery": "Requête de recherche avancée"
     },
     "navUser": {
       "customerSupport": "Support aux clients",
@@ -83,6 +101,7 @@
     },
     "mailCategories": {
       "primary": "Principale",
+      "allMail": "All Mail",
       "important": "Important",
       "personal": "Personnel",
       "updates": "Mises à jour",
@@ -91,14 +110,14 @@
     },
     "replyCompose": {
       "replyTo": "Répondre à",
-      "thisEmail": "cet email",
+      "thisEmail": "ce courriel",
       "dropFiles": "Déposer les fichiers à joindre",
       "attachments": "Pièces jointes",
       "attachmentCount": "{count, plural, =0 {pièces jointes} one {pièce jointe} other {pièces jointes}}",
       "fileCount": "{count, plural, =0 {fichiers} one {fichier} other {fichiers}}",
       "saveDraft": "Enregistrer le brouillon",
       "send": "Envoyer",
-      "forward": "Forward"
+      "forward": "Transférer"
     },
     "mailDisplay": {
       "details": "Détails",
@@ -106,11 +125,11 @@
       "to": "À",
       "cc": "Cc",
       "date": "Date",
-      "mailedBy": "Expédié par",
+      "mailedBy": "Envoyé par",
       "signedBy": "Signé par",
       "security": "Sécurité",
-      "standardEncryption": "Chiffrement standard (TLS)",
-      "loadingMailContent": "Chargement du contenu de l'email...",
+      "standardEncryption": "Encryptage standard (TLS)",
+      "loadingMailContent": "Chargement du contenu du courriel...",
       "unsubscribe": "Se désabonner",
       "unsubscribed": "Désabonné",
       "unsubscribeDescription": "Êtes-vous sûr de vouloir vous désabonner de cette liste de diffusion ?",
@@ -125,14 +144,14 @@
       "archive": "Archiver",
       "reply": "Répondre",
       "moreOptions": "Plus d'options",
-      "moveToSpam": "Move to Spam",
+      "moveToSpam": "Déplacer dans les indésirables",
       "replyAll": "Répondre à tous",
       "forward": "Transférer",
       "markAsUnread": "Marquer comme non lu",
-      "markAsRead": "Mark as Read",
-      "addLabel": "Ajouter un label",
+      "markAsRead": "Marquer comme lu",
+      "addLabel": "Ajouter une étiquette",
       "muteThread": "Mettre en sourdine",
-      "favourites": "Favourites"
+      "favourites": "Favoris"
     },
     "notes": {
       "title": "Notes",
@@ -195,10 +214,10 @@
       }
     },
     "settings": {
-      "notFound": "Settings not found",
+      "notFound": "Paramètres introuvables",
       "saved": "Paramètres enregistrés",
-      "failedToSave": "Failed to save settings",
-      "languageChanged": "Language changed to {locale}"
+      "failedToSave": "Échec de la sauvegarde des paramètres",
+      "languageChanged": "Langue changée en {locale}"
     },
     "mail": {
       "replies": "{count, plural, =0 {réponses} one {# réponse} other {# réponses}}",
@@ -218,17 +237,18 @@
       "archive": "Archiver",
       "moveToTrash": "Déplacer dans la Corbeille",
       "markAsUnread": "Marquer comme non lu",
-      "markAsRead": "Mark as Read",
-      "addStar": "Add Star",
+      "markAsRead": "Marquer comme lu",
+      "addFavorite": "Favorite",
+      "removeFavorite": "Unfavorite",
       "muteThread": "Mettre en sourdine",
       "moving": "Déplacement...",
       "moved": "Déplacé",
       "errorMoving": "Erreur lors du déplacement",
-      "reply": "Reply",
+      "reply": "Répondre",
       "replyAll": "Répondre à tous",
       "forward": "Transférer",
-      "labels": "Labels",
-      "createNewLabel": "Create New Label",
+      "labels": "Étiquettes",
+      "createNewLabel": "Créer une nouvelle étiquette",
       "noLabelsAvailable": "Aucune étiquette disponible",
       "loadMore": "Charger plus d'éléments"
     }
@@ -242,7 +262,6 @@
       "archive": "Archives",
       "bin": "Corbeille",
       "feedback": "Vos commentaires",
-      "contact": "Contact",
       "settings": "Paramètres"
     },
     "settings": {
@@ -265,18 +284,18 @@
     "settings": {
       "general": {
         "title": "Paramètres généraux",
-        "description": "Gérez les paramètres de votre langue et vos préférences d'affichage des courriels.",
+        "description": "Gérez les paramètres de langue et vos préférences d'affichage des courriels.",
         "language": "Langue",
-        "selectLanguage": "Select a language",
+        "selectLanguage": "Sélectionnez la langue",
         "timezone": "Fuseau horaire",
-        "selectTimezone": "Select a timezone",
+        "selectTimezone": "Sélectionner un fuseau horaire",
         "dynamicContent": "Contenu dynamique",
         "dynamicContentDescription": "Autoriser les courriels à afficher du contenu dynamique.",
         "externalImages": "Afficher les images externes",
         "externalImagesDescription": "Autoriser les courriels à afficher des images provenant de sources externes.",
-        "languageChangedTo": "Language changed to {locale}",
-        "customPrompt": "Custom AI Prompt",
-        "customPromptPlaceholder": "",
+        "languageChangedTo": "Langue changée en {locale}",
+        "customPrompt": "Requêtes IA personnalisées",
+        "customPromptPlaceholder": "Entrez votre requête personnalisée pour l'IA...",
         "customPromptDescription": "Personnalisez la façon dont l'IA écrit vos réponses. Cela sera ajouté à la requête par défaut."
       },
       "connections": {
@@ -312,8 +331,8 @@
         "title": "Raccourcis clavier",
         "description": "Consultez et personnalisez les raccourcis clavier pour des actions rapides.",
         "actions": {
-          "newEmail": "Nouvel email",
-          "sendEmail": "Envoyer l'email",
+          "newEmail": "Nouveau courriel",
+          "sendEmail": "Envoyer le courriel",
           "reply": "Répondre",
           "replyAll": "Répondre à tous",
           "forward": "Transférer",

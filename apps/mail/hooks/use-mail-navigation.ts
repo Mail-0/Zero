@@ -16,6 +16,7 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
   const [quickActionIndex, setQuickActionIndex] = useState(0);
   const hoveredMailRef = useRef<string | null>(null);
   const keyboardActiveRef = useRef(false);
+  const lastMoveTime = useRef(0);
   
   useEffect(() => {
     if (!keyboardActiveRef.current) {
@@ -185,6 +186,64 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
       keyboardActiveRef.current = false;
     }
   }, []);
+
+  useEffect(() => {
+    let isProcessingKey = false;
+    const MOVE_DELAY = 100; // Decreased from 150ms to 100ms for faster movement
+    
+    const handleKeyDown = async (event: KeyboardEvent) => {
+      if (isQuickActionMode) return;
+      
+      // For non-repeat events (initial press), let the useHotKey handlers manage it
+      if (!event.repeat) return;
+      
+      if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+        event.preventDefault(); // Prevent default browser behavior
+        
+        // If we're already processing a previous key event, don't stack them
+        if (isProcessingKey) return;
+        
+        // Check if enough time has passed since the last movement
+        const now = Date.now();
+        if (now - lastMoveTime.current < MOVE_DELAY) return;
+        
+        isProcessingKey = true;
+        lastMoveTime.current = now;
+        
+        await new Promise<void>(resolve => {
+          requestAnimationFrame(() => {
+            if (event.key === 'ArrowUp') {
+              setFocusedIndex(prev => {
+                const newIndex = prev === null ? items.length - 1 : Math.max(0, prev - 1);
+                const threadElement = getThreadElement(newIndex);
+                if (threadElement && containerRef.current) {
+                  threadElement.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+                }
+                return newIndex;
+              });
+            } else if (event.key === 'ArrowDown') {
+              setFocusedIndex(prev => {
+                const newIndex = prev === null ? 0 : Math.min(items.length - 1, prev + 1);
+                const threadElement = getThreadElement(newIndex);
+                if (threadElement && containerRef.current) {
+                  threadElement.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+                }
+                return newIndex;
+              });
+            }
+            isProcessingKey = false;
+            resolve();
+          });
+        });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleArrowUp, handleArrowDown, isQuickActionMode, items.length, getThreadElement, containerRef]);
 
   return {
     focusedIndex,

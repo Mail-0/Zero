@@ -39,6 +39,7 @@ export async function generateAIEmailContent({
     if (!session?.user) {
       throw new Error('Unauthorized');
     }
+    
     const responses = await generateEmailContent(
       prompt,
       currentContent,
@@ -57,6 +58,7 @@ export async function generateAIEmailContent({
     }
 
     const emailResponses = responses.filter((r) => r.type === 'email');
+    
     const cleanedContent = emailResponses
       .map((r) => r.content)
       .join('\n\n')

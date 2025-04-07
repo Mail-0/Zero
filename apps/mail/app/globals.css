@@ -201,10 +201,9 @@
   }
 }
 
-.compose-gradient {
-  background: linear-gradient(90deg, rgba(255, 213, 208, 1), rgba(219, 255, 228, 1), rgba(226, 214, 255, 1), rgba(255, 213, 208, 1));
-  background-size: 400% 400%;
-  animation: gradient-flow 3s ease infinite;
+.compose-loading {
+  background: #016FFE;
+  animation: none;
 }
 
 .compose-gradient-animated {

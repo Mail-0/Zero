@@ -52,6 +52,7 @@ export const getActiveDriver = async () => {
         auth: {
             access_token: _connection.accessToken,
             refresh_token: _connection.refreshToken,
+            email: _connection.email
         },
     });
 

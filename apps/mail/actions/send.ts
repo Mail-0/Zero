@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { db } from "@zero/db";
+import { getUserSettings } from "./settings";
 
 export async function sendEmail({
   to,
@@ -13,12 +14,14 @@ export async function sendEmail({
   message,
   attachments,
   headers: additionalHeaders = {},
+  includeSignature = true,
 }: {
   to: string;
   subject: string;
   message: string;
   attachments: File[];
   headers?: Record<string, string>;
+  includeSignature?: boolean;
 }) {
   if (!to || !subject || !message) {
     throw new Error("Missing required fields");
@@ -37,6 +40,38 @@ export async function sendEmail({
 
   if (!_connection?.accessToken || !_connection.refreshToken) {
     throw new Error("Unauthorized, reconnect");
+  }
+
+  // Get user settings to check for signature
+  let finalMessage = message.trim();
+  
+  // Create the email HTML structure with optional signature
+  const htmlTemplate = (content: string, signature?: string) => `
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body style="margin: 0; padding: 0;">
+${content}
+${signature ? `
+<div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px; clear: both;">
+${signature}
+</div>` : ''}
+</body>
+</html>`;
+
+  if (includeSignature) {
+    const userSettings = await getUserSettings();
+    if (userSettings?.signature?.enabled && userSettings.signature.content) {
+      const signatureContent = userSettings.signature.content.trim();
+      finalMessage = htmlTemplate(finalMessage, signatureContent);
+    } else {
+      finalMessage = htmlTemplate(finalMessage);
+    }
+  } else {
+    finalMessage = htmlTemplate(finalMessage);
   }
 
   const driver = await createDriver(_connection.providerId, {
@@ -70,6 +105,9 @@ export async function sendEmail({
       .map((ref) => (ref.startsWith("<") ? ref : `<${ref}>`))
       .join(", ")}`,
     `Subject: ${subject}`,
+    `X-Mailer: 0.email`,
+    `X-Priority: 3`,
+    `X-MSMail-Priority: Normal`,
 
     // Add threading headers if present
     ...(additionalHeaders["In-Reply-To"]
@@ -92,17 +130,15 @@ export async function sendEmail({
       : []),
 
     // Security headers
-    "X-Mailer: zerodotemail",
     `X-Originating-IP: [PRIVATE]`,
-    `X-Priority: 3`,
-    `X-MSMail-Priority: Normal`,
     `Importance: Normal`,
     "",
     `--${boundary}`,
     "Content-Type: text/html; charset=UTF-8",
-    "Content-Transfer-Encoding: quoted-printable",
+    "Content-Transfer-Encoding: 8bit",
+    "Content-Disposition: inline",
     "",
-    message.trim(),
+    finalMessage.trim(),
   ];
 
   // Process attachments if any

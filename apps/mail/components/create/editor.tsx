@@ -33,6 +33,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AnyExtension, Editor as TiptapEditor, useCurrentEditor } from '@tiptap/react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TextButtons } from '@/components/create/selectors/text-buttons';
@@ -48,10 +49,12 @@ import { AutoComplete } from './editor-autocomplete';
 import { cn, truncateFileName } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useTranslations } from 'next-intl';
 import { Markdown } from 'tiptap-markdown';
 import { useReducer, useRef } from 'react';
 import { useState } from 'react';
 import React from 'react';
+import SignatureDisplay from './signature-display';
 
 export const defaultEditorContent = {
   type: 'doc',
@@ -81,6 +84,10 @@ interface EditorProps {
     email?: string;
   };
   onTab?: () => boolean;
+  includeSignature?: boolean;
+  onSignatureToggle?: (include: boolean) => void;
+  signature?: string;
+  hasSignature?: boolean;
 }
 
 interface EditorState {
@@ -112,12 +119,21 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
 }
 
 // Update the MenuBar component with icons
+interface MenuBarProps {
+  onAttachmentsChange?: (attachments: File[]) => void;
+  includeSignature?: boolean;
+  onSignatureToggle?: (include: boolean) => void;
+  hasSignature?: boolean;
+}
+
 const MenuBar = ({
   onAttachmentsChange,
-}: {
-  onAttachmentsChange?: (attachments: File[]) => void;
-}) => {
+  includeSignature,
+  onSignatureToggle,
+  hasSignature = false,
+}: MenuBarProps) => {
   const { editor } = useCurrentEditor();
+  const t = useTranslations();
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -189,166 +205,311 @@ const MenuBar = ({
 
   return (
     <>
-      <div className="control-group mb-2 overflow-x-auto">
-        <div className="button-group ml-2 mt-1 flex flex-wrap gap-1 border-b pb-2">
-          <div className="mr-2 flex items-center gap-1">
-            <button
-              onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-              className={`hover:bg-muted rounded p-1.5 ${editor.isActive('heading', { level: 1 }) ? 'bg-muted' : 'bg-background'}`}
-              title="Heading 1"
-            >
-              <Heading1 className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-              className={`hover:bg-muted rounded p-1.5 ${editor.isActive('heading', { level: 2 }) ? 'bg-muted' : 'bg-background'}`}
-              title="Heading 2"
-            >
-              <Heading2 className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-              className={`hover:bg-muted rounded p-1.5 ${editor.isActive('heading', { level: 3 }) ? 'bg-muted' : 'bg-background'}`}
-              title="Heading 3"
-            >
-              <Heading3 className="h-4 w-4" />
-            </button>
-          </div>
-
-          <Separator orientation="vertical" className="relative right-1 top-0.5 h-6" />
-          <div className="mr-2 flex items-center gap-1">
-            <button
-              onClick={() => editor.chain().focus().toggleBold().run()}
-              disabled={!editor.can().chain().focus().toggleBold().run()}
-              className={`hover:bg-muted rounded p-1.5 ${editor.isActive('bold') ? 'bg-muted' : 'bg-background'}`}
-              title="Bold"
-            >
-              <Bold className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => editor.chain().focus().toggleItalic().run()}
-              disabled={!editor.can().chain().focus().toggleItalic().run()}
-              className={`hover:bg-muted rounded p-1.5 ${editor.isActive('italic') ? 'bg-muted' : 'bg-background'}`}
-              title="Italic"
-            >
-              <Italic className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => editor.chain().focus().toggleStrike().run()}
-              disabled={!editor.can().chain().focus().toggleStrike().run()}
-              className={`hover:bg-muted rounded p-1.5 ${editor.isActive('strike') ? 'bg-muted' : 'bg-background'}`}
-              title="Strikethrough"
-            >
-              <Strikethrough className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => editor.chain().focus().toggleUnderline().run()}
-              className={`hover:bg-muted rounded p-1.5 ${editor.isActive('underline') ? 'bg-muted' : 'bg-background'}`}
-              title="Underline"
-            >
-              <Underline className="h-4 w-4" />
-            </button>
-            <button
-              onClick={handleLinkDialogOpen}
-              className={`hover:bg-muted rounded p-1.5 ${editor.isActive('link') ? 'bg-muted' : 'bg-background'}`}
-              title="Link"
-            >
-              <LinkIcon className="h-4 w-4" />
-            </button>
-          </div>
-
-          <Separator orientation="vertical" className="relative right-1 top-0.5 h-6" />
-
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => editor.chain().focus().toggleBulletList().run()}
-              className={`hover:bg-muted rounded p-1.5 ${editor.isActive('bulletList') ? 'bg-muted' : 'bg-background'}`}
-              title="Bullet List"
-            >
-              <List className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => editor.chain().focus().toggleOrderedList().run()}
-              className={`hover:bg-muted rounded p-1.5 ${editor.isActive('orderedList') ? 'bg-muted' : 'bg-background'}`}
-              title="Ordered List"
-            >
-              <ListOrdered className="h-4 w-4" />
-            </button>
-
-            {attachments.length > 0 ? (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button
-                    className="hover:bg-muted bg-background relative rounded p-1.5"
-                    title="View Attachments"
+      <TooltipProvider delayDuration={0}>
+        <div className="control-group mb-2 overflow-x-auto">
+          <div className="button-group ml-2 mt-1 flex flex-wrap gap-1 border-b pb-2">
+            <div className="mr-2 flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('heading', { level: 1 }) ? 'bg-muted' : 'bg-background'}`}
+                    tabIndex={-1}
                   >
-                    <Paperclip className="h-4 w-4" />
-                    <span className="absolute -right-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-[#016FFE] text-[10px] text-white">
-                      {attachments.length}
-                    </span>
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80 touch-auto" align="end">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between px-1">
-                      <h4 className="font-medium leading-none">
-                        Attachments ({attachments.length})
-                      </h4>
-                      <button
-                        onClick={handleAttachmentClick}
-                        className="hover:bg-muted bg-background text-muted-foreground rounded px-2 py-1 text-xs"
-                      >
-                        Add more
-                      </button>
-                    </div>
-                    <Separator />
-                    <div className="h-[300px] touch-auto overflow-y-auto overscroll-contain px-1 py-1">
-                      <div className="grid grid-cols-2 gap-2">
-                        {attachments.map((file, index) => (
-                          <div
-                            key={index}
-                            className="group relative overflow-hidden rounded-md border"
-                          >
-                            <UploadedFileIcon
-                              removeAttachment={removeAttachment}
-                              index={index}
-                              file={file}
-                            />
-                            <div className="bg-muted/10 p-2">
-                              <p className="text-xs font-medium">
-                                {truncateFileName(file.name, 20)}
-                              </p>
-                              <p className="text-muted-foreground text-xs">
-                                {(file.size / (1024 * 1024)).toFixed(2)} MB
-                              </p>
+                    <Heading1 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('pages.createEmail.editor.menuBar.heading1')}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('heading', { level: 2 }) ? 'bg-muted' : 'bg-background'}`}
+                    tabIndex={-1}
+                  >
+                    <Heading2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('pages.createEmail.editor.menuBar.heading2')}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('heading', { level: 3 }) ? 'bg-muted' : 'bg-background'}`}
+                    tabIndex={-1}
+                  >
+                    <Heading3 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('pages.createEmail.editor.menuBar.heading3')}</TooltipContent>
+              </Tooltip>
+            </div>
+
+            <Separator orientation="vertical" className="relative right-1 top-0.5 h-6" />
+            <div className="mr-2 flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    tabIndex={-1}
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => editor.chain().focus().toggleBold().run()}
+                    disabled={!editor.can().chain().focus().toggleBold().run()}
+                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('bold') ? 'bg-muted' : 'bg-background'}`}
+                    title="Bold"
+                  >
+                    <Bold className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('pages.createEmail.editor.menuBar.bold')}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    tabIndex={-1}
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => editor.chain().focus().toggleItalic().run()}
+                    disabled={!editor.can().chain().focus().toggleItalic().run()}
+                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('italic') ? 'bg-muted' : 'bg-background'}`}
+                  >
+                    <Italic className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('pages.createEmail.editor.menuBar.italic')}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    tabIndex={-1}
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => editor.chain().focus().toggleStrike().run()}
+                    disabled={!editor.can().chain().focus().toggleStrike().run()}
+                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('strike') ? 'bg-muted' : 'bg-background'}`}
+                  >
+                    <Strikethrough className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {t('pages.createEmail.editor.menuBar.strikethrough')}
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    tabIndex={-1}
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => editor.chain().focus().toggleUnderline().run()}
+                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('underline') ? 'bg-muted' : 'bg-background'}`}
+                  >
+                    <Underline className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('pages.createEmail.editor.menuBar.underline')}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    tabIndex={-1}
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleLinkDialogOpen}
+                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('link') ? 'bg-muted' : 'bg-background'}`}
+                  >
+                    <LinkIcon className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('pages.createEmail.editor.menuBar.link')}</TooltipContent>
+              </Tooltip>
+            </div>
+
+            <Separator orientation="vertical" className="relative right-1 top-0.5 h-6" />
+
+            <div className="flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    tabIndex={-1}
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => editor.chain().focus().toggleBulletList().run()}
+                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('bulletList') ? 'bg-muted' : 'bg-background'}`}
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('pages.createEmail.editor.menuBar.bulletList')}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    tabIndex={-1}
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('orderedList') ? 'bg-muted' : 'bg-background'}`}
+                  >
+                    <ListOrdered className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('pages.createEmail.editor.menuBar.orderedList')}</TooltipContent>
+              </Tooltip>
+
+              {attachments.length > 0 ? (
+                <Popover>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <PopoverTrigger asChild>
+                        <Button
+                          tabIndex={-1}
+                          variant="ghost"
+                          size="icon"
+                          className="bg-background relative h-auto w-auto rounded p-1.5"
+                        >
+                          <Paperclip className="h-4 w-4" />
+                          <span className="absolute -right-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-[#016FFE] text-[10px] text-white">
+                            {attachments.length}
+                          </span>
+                        </Button>
+                      </PopoverTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {t('pages.createEmail.editor.menuBar.viewAttachments')}
+                    </TooltipContent>
+                  </Tooltip>
+                  <PopoverContent className="w-80 touch-auto" align="end">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between px-1">
+                        <h4 className="font-medium leading-none">
+                          {t('pages.createEmail.attachments', { count: attachments.length })}
+                        </h4>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleAttachmentClick}
+                          className="hover:text-muted-foreground text-muted-foreground h-auto rounded px-2 py-1 text-xs font-normal"
+                        >
+                          {t('pages.createEmail.addMore')}
+                        </Button>
+                      </div>
+                      <Separator />
+                      <div className="h-[300px] touch-auto overflow-y-auto overscroll-contain px-1 py-1">
+                        <div className="grid grid-cols-2 gap-2">
+                          {attachments.map((file, index) => (
+                            <div
+                              key={index}
+                              className="group relative overflow-hidden rounded-md border"
+                            >
+                              <UploadedFileIcon
+                                removeAttachment={removeAttachment}
+                                index={index}
+                                file={file}
+                              />
+                              <div className="bg-muted/10 p-2">
+                                <p className="text-xs font-medium">
+                                  {truncateFileName(file.name, 20)}
+                                </p>
+                                <p className="text-muted-foreground text-xs">
+                                  {t('common.units.mb', {
+                                    amount: (file.size / (1024 * 1024)).toFixed(2),
+                                  })}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            ) : (
-              <button
-                onClick={handleAttachmentClick}
-                className="hover:bg-muted bg-background rounded p-1.5"
-                title="Attach Files"
-              >
-                <Paperclip className="h-4 w-4" />
-              </button>
-            )}
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      tabIndex={-1}
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleAttachmentClick}
+                      className="bg-background h-auto w-auto rounded p-1.5"
+                    >
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {t('pages.createEmail.editor.menuBar.attachFiles')}
+                  </TooltipContent>
+                </Tooltip>
+              )}
+
+              {hasSignature && onSignatureToggle && (
+                <>
+                  <Separator orientation="vertical" className="relative top-0.5 h-6 mx-1.5" />
+                  <button
+                    onClick={() => onSignatureToggle(!includeSignature)}
+                    className={`hover:bg-muted flex items-center space-x-1 rounded border ${includeSignature ? 'border-primary bg-primary/10 text-primary' : 'border-muted-foreground/30 text-muted-foreground'} px-2 py-1 text-xs transition-colors`}
+                    title={includeSignature ? t('pages.createEmail.signature.disable') : t('pages.createEmail.signature.enable')}
+                  >
+                    {includeSignature ? (
+                      <>
+                        <svg
+                          className="mr-1 h-3 w-3"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M22 13V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h9" />
+                          <path d="M18 14v4" />
+                          <path d="M15 16l3 3 3-3" />
+                          <path d="M2 10h20" />
+                          <path d="M9 16l2 2 4-4" />
+                        </svg>
+                        <span>{t('pages.createEmail.signature.include')}</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="mr-1 h-3 w-3"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M22 13V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h9" />
+                          <path d="M18 14v4" />
+                          <path d="M15 16l3 3 3-3" />
+                          <path d="M2 10h20" />
+                        </svg>
+                        <span>{t('pages.createEmail.signature.add')}</span>
+                      </>
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      </TooltipProvider>
 
       <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Add Link</DialogTitle>
-            <DialogDescription>
-              Add a URL to create a link. The link will open in a new tab.
-            </DialogDescription>
+            <DialogTitle>{t('pages.createEmail.addLink')}</DialogTitle>
+            <DialogDescription>{t('pages.createEmail.addUrlToCreateALink')}</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-2">
             <div className="flex flex-col gap-2">
@@ -365,10 +526,10 @@ const MenuBar = ({
           </div>
           <DialogFooter className="flex justify-between sm:justify-between">
             <Button variant="outline" onClick={handleRemoveLink} type="button">
-              Cancel
+              {t('common.actions.cancel')}
             </Button>
             <Button onClick={handleSaveLink} type="button">
-              Save
+              {t('common.actions.save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -389,6 +550,10 @@ export default function Editor({
   onAttachmentsChange,
   senderInfo,
   myInfo,
+  includeSignature,
+  onSignatureToggle,
+  signature,
+  hasSignature,
 }: EditorProps) {
   const [state, dispatch] = useReducer(editorReducer, {
     openNode: false,
@@ -401,6 +566,7 @@ export default function Editor({
   const contentRef = useRef<string>('');
   // Add a ref to the editor instance
   const editorRef = useRef<TiptapEditor>(null);
+  const t = useTranslations();
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -582,8 +748,53 @@ export default function Editor({
             contentRef.current = editor.getHTML();
             onChange(editor.getHTML());
           }}
-          slotBefore={<MenuBar onAttachmentsChange={onAttachmentsChange} />}
-          slotAfter={<ImageResizer />}
+          slotBefore={
+            <MenuBar
+              onAttachmentsChange={onAttachmentsChange}
+              includeSignature={includeSignature}
+              onSignatureToggle={onSignatureToggle}
+              hasSignature={!!signature}
+            />
+          }
+          slotAfter={
+            <>
+              <ImageResizer />
+              {signature && includeSignature && (
+                <div className="border-t mt-4 pt-2 text-muted-foreground">
+                  <div className="flex items-center justify-between">
+                    <div
+                      className="text-xs italic pb-1"
+                      style={{ userSelect: 'none' }}
+                    >
+                      {t('pages.createEmail.signature.title') || 'Signature'}
+                    </div>
+                    <button
+                      onClick={() => onSignatureToggle?.(false)}
+                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 pb-1"
+                      title={t('pages.createEmail.signature.disable') || 'Disable signature'}
+                    >
+                      <svg
+                        className="h-3 w-3"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                      <span>{t('pages.createEmail.signature.remove')}</span>
+                    </button>
+                  </div>
+                  <div className="signature-preview rounded-md border border-dashed border-muted-foreground/20 px-3 py-2 text-sm">
+                    <SignatureDisplay html={signature} className="w-full" />
+                  </div>
+                </div>
+              )}
+            </>
+          }
         >
           {/* Make sure the command palette doesn't cause a refresh */}
           <EditorCommand

@@ -356,3 +356,7 @@ export const getEmailLogo = (email: string) => {
   if (!process.env.NEXT_PUBLIC_IMAGE_API_URL) return '';
   return process.env.NEXT_PUBLIC_IMAGE_API_URL + email;
 };
+
+export const generateConversationId = (): string => {
+  return `conv_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+};

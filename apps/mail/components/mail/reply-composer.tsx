@@ -41,6 +41,10 @@ import { useForm } from 'react-hook-form';
 import type { JSONContent } from 'novel';
 import { toast } from 'sonner';
 import type { z } from 'zod';
+import { useSettings } from '@/hooks/use-settings';
+import { Switch } from '@/components/ui/switch';
+import { useMail } from '@/components/mail/use-mail';
+
 
 // Define state interfaces
 interface ComposerState {
@@ -114,8 +118,6 @@ const aiReducer = (state: AIState, action: AIAction): AIState => {
 
 interface ReplyComposeProps {
   emailData: ParsedMessage[];
-  isOpen?: boolean;
-  setIsOpen?: Dispatch<SetStateAction<boolean>>;
   mode?: 'reply' | 'forward';
 }
 
@@ -124,9 +126,20 @@ type FormData = {
   to: string;
 };
 
-export default function ReplyCompose({ emailData, isOpen, setIsOpen, mode = 'reply' }: ReplyComposeProps) {
+export default function ReplyCompose({ emailData, mode = 'reply' }: ReplyComposeProps) {
   const [attachments, setAttachments] = useState<File[]>([]);
   const { data: session } = useSession();
+  const [mail, setMail] = useMail();
+
+  // Use global state instead of local state
+  const composerIsOpen = mode === 'reply' ? mail.replyComposerOpen : mail.forwardComposerOpen;
+  const setComposerIsOpen = (value: boolean) => {
+    setMail((prev: typeof mail) => ({
+      ...prev,
+      replyComposerOpen: mode === 'reply' ? value : prev.replyComposerOpen,
+      forwardComposerOpen: mode === 'forward' ? value : prev.forwardComposerOpen,
+    }));
+  };
 
   // Use reducers instead of multiple useState
   const [composerState, composerDispatch] = useReducer(composerReducer, {
@@ -147,16 +160,6 @@ export default function ReplyCompose({ emailData, isOpen, setIsOpen, mode = 'rep
 
   const composerRef = useRef<HTMLFormElement>(null);
   const t = useTranslations();
-
-  // Use external state if provided, otherwise use internal state
-  const composerIsOpen = isOpen !== undefined ? isOpen : composerState.isComposerOpen;
-  const setComposerIsOpen = (value: boolean) => {
-    if (setIsOpen) {
-      setIsOpen(value);
-    } else {
-      composerDispatch({ type: 'SET_COMPOSER_OPEN', payload: value });
-    }
-  };
 
   // Handle keyboard shortcuts for sending email
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -243,6 +246,8 @@ export default function ReplyCompose({ emailData, isOpen, setIsOpen, mode = 'rep
 
   const [toInput, setToInput] = useState('');
   const [toEmails, setToEmails] = useState<string[]>([]);
+  const [includeSignature, setIncludeSignature] = useState(true);
+  const { settings } = useSettings();
 
   const isValidEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -353,6 +358,7 @@ export default function ReplyCompose({ emailData, isOpen, setIsOpen, mode = 'rep
           References: references,
           'Thread-Id': threadId ?? '',
         },
+        includeSignature: includeSignature && settings?.signature?.enabled,
       });
 
       form.reset();
@@ -374,6 +380,13 @@ export default function ReplyCompose({ emailData, isOpen, setIsOpen, mode = 'rep
   };
 
   // Add a useEffect to focus the editor when the composer opens
+  // Initialize signature toggle from settings
+  useEffect(() => {
+    if (settings?.signature) {
+      setIncludeSignature(settings.signature.includeByDefault);
+    }
+  }, [settings]);
+
   useEffect(() => {
     if (composerIsOpen) {
       // Give the editor time to render before focusing
@@ -498,7 +511,7 @@ ${email.decodedBody || 'No content'}
       let errorMessage = 'Failed to generate AI response. Please try again or compose manually.';
 
       if (error.message) {
-        if (error.message.includes('OpenAI API')) {
+        if (error.message.includes('Groq API')) {
           errorMessage = 'AI service is currently unavailable. Please try again later.';
         } else if (error.message.includes('key is not configured')) {
           errorMessage = 'AI service is not properly configured. Please contact support.';
@@ -632,11 +645,30 @@ ${email.decodedBody || 'No content'}
     }
   };
 
+  // Add this effect near other useEffects
+  useEffect(() => {
+    if (!composerIsOpen) {
+      // Reset form state
+      form.reset();
+      // Reset attachments
+      setAttachments([]);
+      // Reset AI state
+      aiDispatch({ type: 'RESET' });
+      // Reset to emails if in forward mode
+      if (mode === 'forward') {
+        setToEmails([]);
+        setToInput('');
+      }
+      // Reset editor key to force a fresh instance
+      composerDispatch({ type: 'INCREMENT_EDITOR_KEY' });
+    }
+  }, [composerIsOpen, form, mode]);
+
   // Simplified composer visibility check
   if (!composerIsOpen) {
     if (mode === 'reply') {
       return (
-        <div className="bg-offsetLight dark:bg-offsetDark w-full p-2">
+        <div className="bg-offsetLight dark:bg-offsetDark w-full px-2">
           <Button
             onClick={toggleComposer}
             className="flex h-12 w-full items-center justify-center gap-2 rounded-md"
@@ -655,11 +687,11 @@ ${email.decodedBody || 'No content'}
   }
 
   return (
-    <div className="bg-offsetLight dark:bg-offsetDark w-full p-2">
+    <div className="bg-offsetLight dark:bg-offsetDark w-full px-2">
       <form
         ref={composerRef}
         className={cn(
-          'border-border ring-offset-background flex flex-col space-y-2.5 rounded-[10px] border px-2 py-2 transition-all duration-300 ease-in-out',
+          'border-border ring-offset-background relative z-20 flex flex-col space-y-2.5 rounded-[10px] border px-2 py-2 transition-all duration-300 ease-in-out',
           composerState.isEditorFocused ? 'ring-2 ring-[#3D3D3D] ring-offset-1' : '',
         )}
         style={{
@@ -734,6 +766,9 @@ ${email.decodedBody || 'No content'}
                 name: emailData[0]?.sender?.name,
                 email: emailData[0]?.sender?.email,
               }}
+              includeSignature={includeSignature}
+              onSignatureToggle={setIncludeSignature}
+              signature={settings?.signature?.enabled && settings?.signature?.content ? settings.signature.content : undefined}
             />
             <div
               className="h-2 w-full cursor-ns-resize hover:bg-gray-200 dark:hover:bg-gray-700"
@@ -881,14 +916,17 @@ ${email.decodedBody || 'No content'}
 }
 
 // Extract smaller components
-const DragOverlay = () => (
-  <div className="bg-background/80 border-primary/30 absolute inset-0 z-50 m-4 flex items-center justify-center rounded-2xl border-2 border-dashed backdrop-blur-sm">
-    <div className="text-muted-foreground flex flex-col items-center gap-2">
-      <Paperclip className="text-muted-foreground h-12 w-12" />
-      <p className="text-lg font-medium">{t('common.replyCompose.dropFiles')}</p>
+const DragOverlay = () => {
+  const t = useTranslations();
+  return (
+    <div className="bg-background/80 border-primary/30 absolute inset-0 z-50 m-4 flex items-center justify-center rounded-2xl border-2 border-dashed backdrop-blur-sm">
+      <div className="text-muted-foreground flex flex-col items-center gap-2">
+        <Paperclip className="text-muted-foreground h-12 w-12" />
+        <p className="text-lg font-medium">{t('common.replyCompose.dropFiles')}</p>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const CloseButton = ({ onClick }: { onClick: (e: React.MouseEvent) => void }) => (
   <Button

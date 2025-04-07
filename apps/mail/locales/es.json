@@ -12,7 +12,25 @@
       "signedOutSuccess": "Sesión cerrada correctamente",
       "signOutError": "Error al cerrar sesión",
       "refresh": "Actualizar",
-      "loading": "Loading..."
+      "loading": "Loading...",
+      "featureNotImplemented": "This feature is not implemented yet",
+      "moving": "Moving...",
+      "movedToInbox": "Moved to inbox",
+      "movingToInbox": "Moving to inbox...",
+      "movedToSpam": "Moved to spam",
+      "movingToSpam": "Moving to spam...",
+      "archiving": "Archiving...",
+      "archived": "Archived",
+      "failedToMove": "Failed to move message",
+      "addingToFavorites": "Adding to favorites...",
+      "removingFromFavorites": "Removing from favorites...",
+      "addedToFavorites": "Added to favorites",
+      "removedFromFavorites": "Removed from favorites",
+      "failedToAddToFavorites": "Failed to add to favorites",
+      "failedToRemoveFromFavorites": "Failed to remove from favorites",
+      "failedToModifyFavorites": "Failed to modify favorites",
+      "markingAsRead": "Marking as read...",
+      "markingAsUnread": "Marking as unread..."
     },
     "themes": {
       "dark": "Oscuro",
@@ -83,6 +101,7 @@
     },
     "mailCategories": {
       "primary": "Principal",
+      "allMail": "All Mail",
       "important": "Importante",
       "personal": "Personal",
       "updates": "Actualizaciones",
@@ -219,7 +238,8 @@
       "moveToTrash": "Mover a la papelera",
       "markAsUnread": "Marcar como no leído",
       "markAsRead": "Marcar como leído",
-      "addStar": "Destacar",
+      "addFavorite": "Favorite",
+      "removeFavorite": "Unfavorite",
       "muteThread": "Silencia hilo",
       "moving": "Moviendo...",
       "moved": "Movido",
@@ -242,7 +262,6 @@
       "archive": "Archivar",
       "bin": "Papelera de reciclaje",
       "feedback": "Sugerencias",
-      "contact": "Contacto",
       "settings": "Configuración"
     },
     "settings": {

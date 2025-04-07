@@ -9,10 +9,28 @@
       "resetToDefaults": "Сбросить к значениям по умолчанию",
       "close": "Закрыть",
       "signingOut": "Выход...",
-      "signedOutSuccess": "Выход успешен",
+      "signedOutSuccess": "Выход выполнен успешно",
       "signOutError": "Ошибка при выходе",
-      "refresh": "Refresh",
-      "loading": "Loading..."
+      "refresh": "Обновить",
+      "loading": "Загрузка...",
+      "featureNotImplemented": "Этот функционал ещё не реализован",
+      "moving": "Перемещение...",
+      "movedToInbox": "Перемещено во входящие",
+      "movingToInbox": "Перемещение во входящие...",
+      "movedToSpam": "Перемещено в спам",
+      "movingToSpam": "Перемещено во входящие",
+      "archiving": "Архивация...",
+      "archived": "В архиве",
+      "failedToMove": "Не удалось переместить сообщение",
+      "addingToFavorites": "Добавление в избранное...",
+      "removingFromFavorites": "Удаление из избранного...",
+      "addedToFavorites": "Добавлено в избранное",
+      "removedFromFavorites": "Удалено из избранного",
+      "failedToAddToFavorites": "Не удалось добавить в избранное",
+      "failedToRemoveFromFavorites": "Не удалось удалить из избранного",
+      "failedToModifyFavorites": "Не удалось изменить избранные",
+      "markingAsRead": "Отмечается как прочитанное...",
+      "markingAsUnread": "Отмечается как непрочитанное..."
     },
     "themes": {
       "dark": "Тёмный",
@@ -21,7 +39,7 @@
     },
     "commandPalette": {
       "title": "Команда",
-      "description": "Быстрый переход и действия для Mail-0",
+      "description": "Выход выполнен успешно",
       "placeholder": "Введите команду или поиск...",
       "noResults": "Нет результатов",
       "groups": {
@@ -64,15 +82,15 @@
       "allMail": "Все Письма",
       "unread": "Непрочитанные",
       "hasAttachment": "Есть вложения",
-      "starred": "Звездочечка",
+      "starred": "Отмеченные",
       "applyFilters": "Применить фильтры",
       "reset": "Сбросить",
-      "searching": "Searching...",
-      "aiSuggestions": "AI Suggestions",
-      "aiSearching": "AI is searching...",
-      "aiSearchError": "AI search failed. Please try again.",
-      "aiNoResults": "No AI suggestions found",
-      "aiEnhancedQuery": "Enhanced search query"
+      "searching": "Поиск...",
+      "aiSuggestions": "Предложения ИИ",
+      "aiSearching": "ИИ ищет...",
+      "aiSearchError": "Поиск ИИ не удался. Пожалуйста, попробуйте снова.",
+      "aiNoResults": "ИИ предложения не найдены",
+      "aiEnhancedQuery": "Расширенный поиск"
     },
     "navUser": {
       "customerSupport": "Поддержка",
@@ -83,8 +101,9 @@
     },
     "mailCategories": {
       "primary": "Основные",
+      "allMail": "Вся почта",
       "important": "Важные",
-      "personal": "Персональные",
+      "personal": "Личные",
       "updates": "Обновления",
       "promotions": "Промо",
       "social": "Социальные"
@@ -94,22 +113,22 @@
       "thisEmail": "это письмо",
       "dropFiles": "Поместите файлы, чтобы прикрепить",
       "attachments": "Приложения",
-      "attachmentCount": "{count, plural, =0 {attachments} one {attachment} other {attachments}}",
-      "fileCount": "{count, plural, =0 {files} one {file} other {files}}",
+      "attachmentCount": "{count, plural, =0 {вложений} one {вложение} few {вложения} many {вложений} other {вложений}}",
+      "fileCount": "{count, plural, =0 {файлов} one {файл} few {файла} many {файлов} other {файла}}",
       "saveDraft": "Сохранить черновик",
       "send": "Отправить",
-      "forward": "Forward"
+      "forward": "Переслать"
     },
     "mailDisplay": {
       "details": "Подробнее",
       "from": "От",
-      "to": "К",
+      "to": "Кому",
       "cc": "Cc",
       "date": "Дата",
-      "mailedBy": "Прописано",
+      "mailedBy": "Отправитель",
       "signedBy": "Подписано",
       "security": "Безопасность",
-      "standardEncryption": "Стандартная шифровка (TLS)",
+      "standardEncryption": "Стандартное шифрование (TLS)",
       "loadingMailContent": "Загрузка...",
       "unsubscribe": "Отменить подписку",
       "unsubscribed": "Подписка отменена",
@@ -120,19 +139,19 @@
       "failedToUnsubscribe": "Не удалось отписаться от списка рассылки"
     },
     "threadDisplay": {
-      "exitFullscreen": "Выход в полноэкранный режим",
-      "enterFullscreen": "Вход в полноэкранный режим",
+      "exitFullscreen": "Выйти из полноэкранного режима",
+      "enterFullscreen": "Полноэкранный режим",
       "archive": "Архив",
       "reply": "Ответить",
       "moreOptions": "Больше опций",
-      "moveToSpam": "Move to Spam",
+      "moveToSpam": "Переместить в Спам",
       "replyAll": "Ответить всем",
       "forward": "Переслать",
-      "markAsUnread": "Mark as Unread",
-      "markAsRead": "Mark as Read",
-      "addLabel": "Добавить метку",
-      "muteThread": "Выключить поток",
-      "favourites": "Favourites"
+      "markAsUnread": "Отметить как непрочитанное",
+      "markAsRead": "Отметить как прочитанное",
+      "addLabel": "Добавить ярлык",
+      "muteThread": "Заглушить ветку",
+      "favourites": "Избранное"
     },
     "notes": {
       "title": "Заметки",
@@ -150,7 +169,7 @@
       "toSave": "чтобы сохранить",
       "label": "Метка:",
       "search": "Найти заметки...",
-      "noteCount": "{count, plural, =0 {Добавьте заметки} one {# Заметка} few {# заметки} many {# заметки} other {# заметки}}",
+      "noteCount": "{count, plural, =0 {Добавьте заметки} one {# заметка} few {# заметки} many {# заметок} other {# заметки}}",
       "notePinned": "Заметка закреплена",
       "noteUnpinned": "Заметка откреплена",
       "colorChanged": "Цвет заметки обновлён",
@@ -163,16 +182,16 @@
       "clearSearch": "Очистить поиск",
       "pinnedNotes": "Закреплённые заметки",
       "otherNotes": "Другие заметки",
-      "created": "Создана",
-      "updated": "Обновлена",
+      "created": "Создано",
+      "updated": "Обновлено",
       "errors": {
         "failedToLoadNotes": "Не удалось загрузить заметки",
-        "failedToLoadThreadNotes": "Не удалось загрузить заметки в теме",
+        "failedToLoadThreadNotes": "Не удалось загрузить заметки в ветке",
         "failedToAddNote": "Не удалось добавить заметку",
         "failedToUpdateNote": "Невозможно обновить заметку",
         "failedToDeleteNote": "Не удалось удалить заметку",
         "failedToUpdateNoteColor": "Не удалось обновить цвет заметки",
-        "noValidNotesToReorder": "Нет действительных заметок для изменения порядка",
+        "noValidNotesToReorder": "Нет заметок для изменения порядка",
         "failedToReorderNotes": "Не удалось изменить порядок заметок"
       },
       "colors": {
@@ -195,15 +214,15 @@
       }
     },
     "settings": {
-      "notFound": "Settings not found",
-      "saved": "Settings saved",
-      "failedToSave": "Failed to save settings",
-      "languageChanged": "Language changed to {locale}"
+      "notFound": "Настройки не найдены",
+      "saved": "Настройки сохранены",
+      "failedToSave": "Не удалось сохранить настройки",
+      "languageChanged": "Язык изменен на {locale}"
     },
     "mail": {
       "replies": "{count, plural, =0 {ответы} one {# ответ} few {# ответа} many {# ответов} other {# ответы}}",
       "deselectAll": "Отменить выбор всех писем",
-      "selectedEmails": "Выбранные {count} письма",
+      "selectedEmails": "{count, plural, one {Выбрано # письмо} few {Выбрано # письма} many {Выбрано # писем} other {Выбрано # письма}}",
       "noEmailsToSelect": "Нет писем для выбора",
       "markedAsRead": "Отметить как прочитанное",
       "markedAsUnread": "Отметить как непрочитанное",
@@ -218,19 +237,20 @@
       "archive": "Архивировать",
       "moveToTrash": "Переместить в Корзину",
       "markAsUnread": "Отметить как непрочитанное",
-      "markAsRead": "Mark as Read",
-      "addStar": "В избранное",
-      "muteThread": "Заглушить цепочку",
+      "markAsRead": "Отметить как прочитанное",
+      "addFavorite": "Избранное",
+      "removeFavorite": "Удалить из избранного",
+      "muteThread": "Заглушить ветку",
       "moving": "Перемещение...",
       "moved": "Перемещено",
       "errorMoving": "Ошибка при перемещении",
-      "reply": "Reply",
-      "replyAll": "Reply All",
-      "forward": "Forward",
-      "labels": "Labels",
-      "createNewLabel": "Create New Label",
-      "noLabelsAvailable": "No labels available",
-      "loadMore": "Load more"
+      "reply": "Ответить",
+      "replyAll": "Ответить всем",
+      "forward": "Переслать",
+      "labels": "Ярлыки",
+      "createNewLabel": "Создать новый ярлык",
+      "noLabelsAvailable": "Нет доступных ярлыков",
+      "loadMore": "Загрузить ещё"
     }
   },
   "navigation": {
@@ -242,7 +262,6 @@
       "archive": "Архив",
       "bin": "Корзина",
       "feedback": "Отзывы",
-      "contact": "Контакты",
       "settings": "Настройки"
     },
     "settings": {
@@ -267,17 +286,17 @@
         "title": "Общие",
         "description": "Управление настройками языка и отображения электронной почты.",
         "language": "Язык",
-        "selectLanguage": "Select a language",
+        "selectLanguage": "Выберите язык",
         "timezone": "Часовой пояс",
-        "selectTimezone": "Select a timezone",
+        "selectTimezone": "Выбрать часовой пояс",
         "dynamicContent": "Динамический контент",
         "dynamicContentDescription": "Позволяет электронной почте отображать динамический контент.",
-        "externalImages": "Отображать внешние изображения",
+        "externalImages": "Отображать изображения из внешних источников",
         "externalImagesDescription": "Позволяет электронной почте отображать изображения из внешних источников.",
-        "languageChangedTo": "Language changed to {locale}",
-        "customPrompt": "Custom AI Prompt",
-        "customPromptPlaceholder": "Enter your custom prompt for the AI...",
-        "customPromptDescription": "Customize how the AI writes your email replies. This will be added to the base prompt."
+        "languageChangedTo": "Язык изменен на {locale}",
+        "customPrompt": "Пользовательский ИИ Запрос",
+        "customPromptPlaceholder": "Введите ваш запрос для ИИ...",
+        "customPromptDescription": "Настройте, как ИИ будет писать ваши ответы на письма. Этот текст будет добавлен к основному запросу."
       },
       "connections": {
         "title": "Подключения",
@@ -291,7 +310,7 @@
         "addEmail": "Добавить подключение",
         "connectEmail": "Подключить электронную почту",
         "connectEmailDescription": "Выберите поставщика электронной почты для подключения",
-        "moreComingSoon": "Больше функций прийдёт скоро"
+        "moreComingSoon": "Новые функции появятся скоро"
       },
       "security": {
         "title": "Безопасность",
@@ -299,7 +318,7 @@
         "twoFactorAuth": "Двухфакторная аутентификация",
         "twoFactorAuthDescription": "Добавьте дополнительный слой безопасности к вашему аккаунту",
         "loginNotifications": "Уведомления о входе",
-        "loginNotificationsDescription": "Получайте уведомления о новых попытках входа",
+        "loginNotificationsDescription": "Получать уведомления о новых попытках входа",
         "deleteAccount": "Удалить аккаунт"
       },
       "appearance": {

@@ -1,34 +1,37 @@
 'use server';
 
-import { getUserSettings } from '@/actions/settings';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
+import { generateCompletions, truncateThreadContent } from '@/lib/groq';
+import { extractTextFromHTML } from './extractText';
 
-// Function to truncate email thread content to fit within token limits
-function truncateThreadContent(threadContent: string, maxTokens: number = 12000): string {
-  // Split the thread into individual emails
-  const emails = threadContent.split('\n---\n');
-
-  // Start with the most recent email (last in the array)
-  let truncatedContent = emails[emails.length - 1];
-
-  // Add previous emails until we reach the token limit
-  for (let i = emails.length - 2; i >= 0; i--) {
-    const newContent = `${emails[i]}\n---\n${truncatedContent}`;
-
-    // Rough estimation of tokens (1 token ≈ 4 characters)
-    const estimatedTokens = newContent.length / 4;
-
-    if (estimatedTokens > maxTokens) {
-      break;
-    }
-
-    truncatedContent = newContent;
+// Hard cap the context to prevent token limit errors
+async function extractEmailSummary(threadContent: string, maxTokens: number = 2000): Promise<string> {
+  // First, strip HTML from the thread content
+  threadContent = await extractTextFromHTML(threadContent);
+  
+  // Hard character limit (roughly 3 chars per token to be safe)
+  const MAX_CHARS = 4000;
+  
+  // If content is already small enough, return as is
+  if (threadContent.length <= MAX_CHARS) {
+    return threadContent;
   }
-
-  return truncatedContent ?? '';
+  
+  // Split into emails and get the latest one
+  const emails = threadContent.split('\n---\n');
+  const latestEmail = emails[emails.length - 1] || '';
+  
+  // If the latest email is within limits, return just that
+  if (latestEmail.length <= MAX_CHARS) {
+    return "Most recent email:\n" + latestEmail;
+  }
+  
+  // Otherwise, take the last MAX_CHARS characters of the latest email
+  return "Most recent email (truncated):\n" + latestEmail.slice(-MAX_CHARS);
 }
 
+// Generates an AI response for an email reply based on the thread content
 export async function generateAIResponse(
   threadContent: string,
   originalSender: string,
@@ -40,75 +43,78 @@ export async function generateAIResponse(
     throw new Error('Unauthorized');
   }
 
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('OpenAI API key is not configured');
+  if (!process.env.GROQ_API_KEY) {
+    throw new Error('Groq API key is not configured');
   }
 
-  // Get user settings to check for custom prompt
-  const userSettings = await getUserSettings();
-  const customPrompt = userSettings?.customPrompt || '';
+  // Use a more aggressive content reduction approach
+  const processedContent = await extractEmailSummary(threadContent, 2000); // Reduced to 2000 tokens maximum
 
-  // Truncate the thread content to fit within token limits
-  const truncatedThreadContent = truncateThreadContent(threadContent);
-
-  // Create the prompt for OpenAI
-  const prompt = `
-
- You should write as if your name is ${session.user.name}, who is the user writing an email reply.
-
-  Here's the context of the email thread:
-  ${truncatedThreadContent}
-
-  Generate a professional, helpful, and concise email reply to ${originalSender}.
-
-  Requirements:
+  // Create the system message
+  const systemPrompt = `You are an email assistant helping ${session.user.name} write professional and concise email replies.
+  
+  CRITICAL INSTRUCTIONS:
+  - Return ONLY the email content itself
+  - DO NOT include ANY explanatory text or meta-text like "Here's a draft" or "Here's a reply"
+  - DO NOT include ANY text before or after the email content
+  - Start directly with the greeting (e.g. "Hi John,")
+  - End with just the name
+  - Generate a real, ready-to-send email reply, not a template
+  - Do not include placeholders like [Recipient], [discount percentage], etc.
+  - Do not include formatting instructions or explanations
+  - Do not include "Subject:" lines
+  - Write as if this email is ready to be sent immediately
+  - Use real, specific content instead of placeholders
+  - Address the recipient directly without using [brackets]
   - Be concise but thorough (2-3 paragraphs maximum)
-  - Base your reply on the context provided. sometimes there will be an email that needs to be replied in an orderly manner while other times you will want a casual reply.
-  - Address the key points from the original email
-  - Close with an appropriate sign-off
-  - Don't use placeholder text or mention that you're an AI
-  - Write as if you are (${session.user.name})
-  - Don't include the subject line in the reply
+  - Write in the first person as if you are ${session.user.name}
   - Double space paragraphs (2 newlines)
-  - Add two spaces bellow the sign-off
+  - Add two spaces below the sign-off
+  - End with the name: ${session.user.name}`;
+  
+  // Create the user message - keep it shorter
+  const prompt = `
+  Here's the context of the email thread (some parts may be summarized or truncated due to length):
+  ${processedContent}
 
-Here is some additional information about the user:
-${customPrompt}
+  Write a professional, helpful, and concise email reply to ${originalSender}.
+  Keep your response under 200 words.
+  
+  CRITICAL: Return ONLY the email content itself. DO NOT include ANY explanatory text or meta-text.
+  Start directly with the greeting and end with just the name.
 
-  `;
+  Important instructions:
+  - Return ONLY the email content itself
+  - DO NOT include ANY explanatory text or meta-text
+  - Start directly with the greeting (e.g. "Hi John,")
+  - End with just the name
+  - Generate a real, ready-to-send email reply, not a template
+  - Do not include placeholders like [Recipient], [discount percentage], etc.
+  - Do not include formatting instructions or explanations
+  - Do not include "Subject:" lines
+  - Write as if this email is ready to be sent immediately
+  - Use real, specific content instead of placeholders
+  - Address the recipient directly without using [brackets]
+  - Be concise but thorough (2-3 paragraphs maximum)
+  - Write in the first person as if you are ${session.user.name}
+  - Double space paragraphs (2 newlines)
+  - Add two spaces below the sign-off
+  - End with the name: ${session.user.name}`;
 
   try {
-    // Direct OpenAI API call using fetch
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content:
-              process.env.AI_SYSTEM_PROMPT,
-          },
-          { role: 'user', content: prompt },
-        ],
-        temperature: 0.7,
-        max_tokens: 500,
-      }),
+    // Use direct fetch to the Groq API
+    const { completion } = await generateCompletions({
+      model: 'llama3-8b-8192',
+      systemPrompt: process.env.AI_SYSTEM_PROMPT || systemPrompt,
+      prompt,
+      temperature: 0.7,
+      max_tokens: 500,
+      userName: session.user.name
     });
 
-    if (!openaiResponse.ok) {
-      const errorData = await openaiResponse.json();
-      throw new Error(`OpenAI API Error: ${errorData.error?.message || 'Unknown error'}`);
-    }
-
-    const data = await openaiResponse.json();
-    return data.choices[0]?.message?.content || '';
+    return completion;
   } catch (error: any) {
-    console.error('OpenAI API Error:', error);
-    throw new Error(`OpenAI API Error: ${error.message || 'Unknown error'}`);
+    console.error('Error generating AI response:', error);
+    throw error;
   }
 }

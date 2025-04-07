@@ -11,8 +11,26 @@
       "signingOut": "ログアウトしています...",
       "signedOutSuccess": "正常にログアウトしました！",
       "signOutError": "サインアウトエラー",
-      "refresh": "Refresh",
-      "loading": "Loading..."
+      "refresh": "更新",
+      "loading": "読み込み中...",
+      "featureNotImplemented": "This feature is not implemented yet",
+      "moving": "Moving...",
+      "movedToInbox": "Moved to inbox",
+      "movingToInbox": "Moving to inbox...",
+      "movedToSpam": "Moved to spam",
+      "movingToSpam": "Moving to spam...",
+      "archiving": "Archiving...",
+      "archived": "Archived",
+      "failedToMove": "Failed to move message",
+      "addingToFavorites": "Adding to favorites...",
+      "removingFromFavorites": "Removing from favorites...",
+      "addedToFavorites": "Added to favorites",
+      "removedFromFavorites": "Removed from favorites",
+      "failedToAddToFavorites": "Failed to add to favorites",
+      "failedToRemoveFromFavorites": "Failed to remove from favorites",
+      "failedToModifyFavorites": "Failed to modify favorites",
+      "markingAsRead": "Marking as read...",
+      "markingAsUnread": "Marking as unread..."
     },
     "themes": {
       "dark": "ダーク",
@@ -67,12 +85,12 @@
       "starred": "スター付き",
       "applyFilters": "フィルタを適用",
       "reset": "リセット",
-      "searching": "Searching...",
-      "aiSuggestions": "AI Suggestions",
-      "aiSearching": "AI is searching...",
-      "aiSearchError": "AI search failed. Please try again.",
-      "aiNoResults": "No AI suggestions found",
-      "aiEnhancedQuery": "Enhanced search query"
+      "searching": "検索中...",
+      "aiSuggestions": "AIの提案",
+      "aiSearching": "AIが検索中...",
+      "aiSearchError": "AI検索に失敗しました。もう一度お試しください。",
+      "aiNoResults": "AIの提案が見つかりませんでした",
+      "aiEnhancedQuery": "拡張検索クエリ"
     },
     "navUser": {
       "customerSupport": "カスタマーサポート",
@@ -83,6 +101,7 @@
     },
     "mailCategories": {
       "primary": "プライマリ",
+      "allMail": "All Mail",
       "important": "重要",
       "personal": "個人用",
       "updates": "更新",
@@ -98,7 +117,7 @@
       "fileCount": "{count, plural, =0 {files} other {files}}",
       "saveDraft": "下書きを保存",
       "send": "送信",
-      "forward": "Forward"
+      "forward": "転送"
     },
     "mailDisplay": {
       "details": "詳細",
@@ -219,7 +238,8 @@
       "moveToTrash": "ゴミ箱へ移動",
       "markAsUnread": "未読にする",
       "markAsRead": "既読にする",
-      "addStar": "スターを追加",
+      "addFavorite": "Favorite",
+      "removeFavorite": "Unfavorite",
       "muteThread": "スレッドをミュート",
       "moving": "移動中...",
       "moved": "移動しました",
@@ -230,7 +250,7 @@
       "labels": "ラベル",
       "createNewLabel": "新しいラベルを作成",
       "noLabelsAvailable": "利用可能なラベルがありません",
-      "loadMore": "Load more"
+      "loadMore": "さらに読み込む"
     }
   },
   "navigation": {
@@ -242,7 +262,6 @@
       "archive": "アーカイブ",
       "bin": "ごみ箱",
       "feedback": "フィードバック",
-      "contact": "コンタクト",
       "settings": "設定"
     },
     "settings": {
@@ -274,10 +293,10 @@
         "dynamicContentDescription": "電子メールの動的なコンテンツの表示を許可します。",
         "externalImages": "外部画像を表示する",
         "externalImagesDescription": "電子メールによる外部ソースからの画像の表示を許可します。",
-        "languageChangedTo": "Language changed to {locale}",
-        "customPrompt": "Custom AI Prompt",
-        "customPromptPlaceholder": "Enter your custom prompt for the AI...",
-        "customPromptDescription": "Customize how the AI writes your email replies. This will be added to the base prompt."
+        "languageChangedTo": "言語を {locale}に変更しました",
+        "customPrompt": "カスタムAIプロンプト",
+        "customPromptPlaceholder": "AIのカスタムプロンプトを入力...",
+        "customPromptDescription": "AIがメールの返信を書く方法をカスタマイズします。これはベースプロンプトに追加されます。"
       },
       "connections": {
         "title": "メールの接続",

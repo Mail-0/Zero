@@ -87,11 +87,12 @@ type Props = {
   isMuted: boolean;
   isLoading: boolean;
   index: number;
+  totalEmails?: number;
   demo?: boolean;
 };
 
-const MailDisplay = ({ emailData, isMuted, index, demo }: Props) => {
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(true);
+const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) => {
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [unsubscribed, setUnsubscribed] = useState(false);
   const [isUnsubscribing, setIsUnsubscribing] = useState(false);
   const [selectedAttachment, setSelectedAttachment] = useState<null | {
@@ -113,10 +114,20 @@ const MailDisplay = ({ emailData, isMuted, index, demo }: Props) => {
     : useSummary(emailData.id);
 
   useEffect(() => {
-    if (index === 0) {
-      setIsCollapsed(false);
+    if (!demo) {
+      if (totalEmails && index === totalEmails - 1) {
+        setIsCollapsed(false);
+        if (totalEmails > 5) {
+          setTimeout(() => {
+            const element = document.getElementById(`mail-${emailData.id}`);
+            element?.scrollIntoView({ behavior: 'smooth' });
+          }, 100);
+        }
+      } else {
+        setIsCollapsed(true);
+      }
     }
-  }, [index]);
+  }, [index, emailData.id, totalEmails, demo]);
 
   const listUnsubscribeAction = useMemo(
     () =>
@@ -144,9 +155,12 @@ const MailDisplay = ({ emailData, isMuted, index, demo }: Props) => {
   };
 
   return (
-    <div className={cn('relative flex-1 overflow-hidden')}>
+    <div className={cn('relative flex-1 overflow-hidden')} id={`mail-${emailData.id}`}>
       <div className="relative h-full overflow-y-auto">
-        <div className="flex flex-col gap-4 p-4 pb-2 transition-all duration-200">
+        <div 
+          className="flex flex-col gap-4 p-4 pb-2 transition-all duration-200 cursor-pointer" 
+          onClick={() => setIsCollapsed(!isCollapsed)}
+        >
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start justify-center gap-4">
               <Avatar className="h-8 w-8">
@@ -218,7 +232,10 @@ const MailDisplay = ({ emailData, isMuted, index, demo }: Props) => {
                         variant="ghost"
                         size="sm"
                         className="h-auto p-0 text-xs underline hover:bg-transparent"
-                        onClick={() => setOpenDetailsPopover(true)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenDetailsPopover(true);
+                        }}
                       >
                         {t('common.mailDisplay.details')}
                       </Button>
@@ -297,16 +314,6 @@ const MailDisplay = ({ emailData, isMuted, index, demo }: Props) => {
                       </div>
                     </PopoverContent>
                   </Popover>
-                  <p onClick={() => setIsCollapsed(!isCollapsed)} className="cursor-pointer">
-                    <span
-                      className={cn(
-                        'relative top-0.5 inline-block transition-transform duration-300',
-                        !isCollapsed && 'rotate-180',
-                      )}
-                    >
-                      <ChevronDown className="h-4 w-4" />
-                    </span>
-                  </p>
                 </div>
               </div>
             </div>

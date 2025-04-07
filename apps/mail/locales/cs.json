@@ -12,7 +12,25 @@
       "signedOutSuccess": "Odhlášení proběhlo úspěšně!",
       "signOutError": "Chyba při odhlášení",
       "refresh": "Refresh",
-      "loading": "Loading..."
+      "loading": "Loading...",
+      "featureNotImplemented": "This feature is not implemented yet",
+      "moving": "Moving...",
+      "movedToInbox": "Moved to inbox",
+      "movingToInbox": "Moving to inbox...",
+      "movedToSpam": "Moved to spam",
+      "movingToSpam": "Moving to spam...",
+      "archiving": "Archiving...",
+      "archived": "Archived",
+      "failedToMove": "Failed to move message",
+      "addingToFavorites": "Adding to favorites...",
+      "removingFromFavorites": "Removing from favorites...",
+      "addedToFavorites": "Added to favorites",
+      "removedFromFavorites": "Removed from favorites",
+      "failedToAddToFavorites": "Failed to add to favorites",
+      "failedToRemoveFromFavorites": "Failed to remove from favorites",
+      "failedToModifyFavorites": "Failed to modify favorites",
+      "markingAsRead": "Marking as read...",
+      "markingAsUnread": "Marking as unread..."
     },
     "themes": {
       "dark": "Tmavé",
@@ -83,6 +101,7 @@
     },
     "mailCategories": {
       "primary": "Hlavní",
+      "allMail": "All Mail",
       "important": "Důležité",
       "personal": "Osobní",
       "updates": "Aktualizace",
@@ -219,7 +238,8 @@
       "moveToTrash": "Přesunout do Odstraněné pošty",
       "markAsUnread": "Označit jako nepřečtené",
       "markAsRead": "Označit jako přečtené",
-      "addStar": "Přidat hvězdu",
+      "addFavorite": "Favorite",
+      "removeFavorite": "Unfavorite",
       "muteThread": "Ztlumit vlákno",
       "moving": "Přesouvání...",
       "moved": "Přesunuto",
@@ -242,7 +262,6 @@
       "archive": "Archiv",
       "bin": "Odstraněná pošta",
       "feedback": "Zpětná vazba",
-      "contact": "Kontakt",
       "settings": "Nastavení"
     },
     "settings": {

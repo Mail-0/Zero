@@ -7,6 +7,7 @@ import { siteConfig } from '@/lib/site-config';
 import { Toast } from '@/components/ui/toast';
 import { Providers } from '@/lib/providers';
 import { headers } from 'next/headers';
+import type { Viewport } from 'next';
 import { cn } from '@/lib/utils';
 import './globals.css';
 
@@ -21,6 +22,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = siteConfig;
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+  ],
+};
 
 export default async function RootLayout({
   children,

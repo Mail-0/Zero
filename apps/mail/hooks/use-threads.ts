@@ -1,6 +1,4 @@
 'use client';
-
-import { getMail, getMails, markAsRead } from '@/actions/mail';
 import { useParams, useSearchParams } from 'next/navigation';
 import type { InitialThread, ParsedMessage } from '@/types';
 import { useSearchValue } from '@/hooks/use-search-value';
@@ -13,7 +11,7 @@ import axios from 'axios';
 
 export const preloadThread = async (userId: string, threadId: string, connectionId: string) => {
   console.log(`🔄 Prefetching email ${threadId}...`);
-  await preload([userId, threadId, connectionId], fetchThread(undefined));
+  await preload([userId, threadId, connectionId], fetchThread);
 };
 
 type FetchEmailsTuple = [
@@ -49,23 +47,11 @@ const fetchEmails = async ([
   }
 };
 
-const fetchThread = (cb: any) => async (args: any[]) => {
+const fetchThread = async (args: any[]) => {
   const [_, id] = args;
   try {
-    return await getMail({ id }).then((response) => {
-      if (response) {
-        if (cb) {
-          const unreadMessages = response.filter((e) => e.unread).map((e) => e.id);
-          console.log('here', unreadMessages.length);
-          if (unreadMessages.length) {
-            void markAsRead({ ids: unreadMessages }).then(() => {
-              if (cb && typeof cb === 'function') cb();
-            });
-          }
-        }
-        return response;
-      }
-    });
+    const response = await axios.get<ParsedMessage[]>(`/api/driver/${id}`);
+    return response.data;
   } catch (error) {
     console.error('Error fetching email:', error);
     throw error;
@@ -87,6 +73,7 @@ const getKey = (
   return [connectionId, folder, query, max, labelIds, previousPageData?.nextPageToken];
 };
 
+// Deprecated, we move this to be prefetched on the server
 export const useThreads = () => {
   const { folder } = useParams<{ folder: string }>();
   const [searchValue] = useSearchValue();
@@ -141,16 +128,14 @@ export const useThreads = () => {
   };
 };
 
-// Deprecated, we move this to be prefetched on the server
-export const useThread = (threadId?: string) => {
+export const useThread = (threadId: string | null) => {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
-  const { mutate: mutateThreads } = useThreads();
   const id = threadId ? threadId : searchParams.get('threadId');
 
   const { data, isLoading, error, mutate } = useSWR<ParsedMessage[]>(
     session?.user.id && id ? [session.user.id, id, session.connectionId] : null,
-    fetchThread(mutateThreads) as any,
+    fetchThread,
   );
 
   const hasUnread = useMemo(() => data?.some((e) => e.unread), [data]);

@@ -12,7 +12,25 @@
       "signedOutSuccess": "Veiksmīgi izrakstījies!",
       "signOutError": "Kļūda, izrakstoties no sistēmas",
       "refresh": "Atjaunot",
-      "loading": "Ielādē..."
+      "loading": "Ielādē...",
+      "featureNotImplemented": "This feature is not implemented yet",
+      "moving": "Moving...",
+      "movedToInbox": "Moved to inbox",
+      "movingToInbox": "Moving to inbox...",
+      "movedToSpam": "Moved to spam",
+      "movingToSpam": "Moving to spam...",
+      "archiving": "Archiving...",
+      "archived": "Archived",
+      "failedToMove": "Failed to move message",
+      "addingToFavorites": "Adding to favorites...",
+      "removingFromFavorites": "Removing from favorites...",
+      "addedToFavorites": "Added to favorites",
+      "removedFromFavorites": "Removed from favorites",
+      "failedToAddToFavorites": "Failed to add to favorites",
+      "failedToRemoveFromFavorites": "Failed to remove from favorites",
+      "failedToModifyFavorites": "Failed to modify favorites",
+      "markingAsRead": "Marking as read...",
+      "markingAsUnread": "Marking as unread..."
     },
     "themes": {
       "dark": "Tumšs",
@@ -83,6 +101,7 @@
     },
     "mailCategories": {
       "primary": "Galvenā",
+      "allMail": "Visi E-pasti",
       "important": "Svarīgi",
       "personal": "Personīgi",
       "updates": "Atjauninājumi",
@@ -219,7 +238,8 @@
       "moveToTrash": "Pārvietot uz Miskasti",
       "markAsUnread": "Atzīmēt kā nelasītu",
       "markAsRead": "Atzīmēt kā lasītu",
-      "addStar": "Pievienot Zvaigzni",
+      "addFavorite": "Favorite",
+      "removeFavorite": "Unfavorite",
       "muteThread": "Apklusināt pavedienu",
       "moving": "Pārvieto...",
       "moved": "Pārvietots",
@@ -242,7 +262,6 @@
       "archive": "Arhīvs",
       "bin": "Miskaste",
       "feedback": "Atsauksmes",
-      "contact": "Kontakti",
       "settings": "Iestatījumi"
     },
     "settings": {
