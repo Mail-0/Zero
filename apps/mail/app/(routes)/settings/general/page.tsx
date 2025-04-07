@@ -276,7 +276,7 @@ export default function GeneralPage() {
                     </div>
                     <div className="flex flex-col gap-2">
                       {field.value.map((senderEmail) => (
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between" key={senderEmail}>
                           <span>{senderEmail}</span>
                           <Tooltip>
                             <TooltipTrigger asChild>
