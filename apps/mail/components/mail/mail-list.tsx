@@ -461,8 +461,8 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
   const [hoveredMailId, setHoveredMailId] = useState<string | null>(null);
 
   const selectHoveredAndBelow = useCallback(() => {
-    // If there are already all items selected and no mail hovered, deselect them all
-    if (mail.bulkSelected.length === items.length && hoveredMailId === null) {
+    // If there are items selected and no mail hovered, deselect them all
+    if (mail.bulkSelected.length > 0 && !hoveredMailId) {
       setMail((prev) => ({
         ...prev,
         bulkSelected: [],
@@ -478,7 +478,6 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
         ...prev,
         bulkSelected: hoveredMailId ? allIdsFromHoveredAndBelow : allIds,
       }));
-
     } else {
       toast.info(t('common.mail.noEmailsToSelect'));
     }
