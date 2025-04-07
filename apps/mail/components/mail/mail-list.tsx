@@ -11,16 +11,25 @@ import {
   User,
   Users,
 } from 'lucide-react';
+import {
+  type ComponentProps,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import type { ConditionalThreadProps, InitialThread, MailListProps, MailSelectMode } from '@/types';
-import { type ComponentProps, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { EmptyState, type FolderType } from '@/components/mail/empty-state';
+import { ThreadContextMenu } from '@/components/context/thread-context';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { cn, FOLDERS, formatDate, getEmailLogo } from '@/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
 import { useMailNavigation } from '@/hooks/use-mail-navigation';
 import { preloadThread, useThreads } from '@/hooks/use-threads';
 import { useHotKey, useKeyState } from '@/hooks/use-hot-key';
-import { cn, FOLDERS, formatDate, getEmailLogo } from '@/lib/utils';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { markAsRead, markAsUnread } from '@/actions/mail';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -34,7 +43,6 @@ import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import items from './demo.json';
 import { toast } from 'sonner';
-import { ThreadContextMenu } from '@/components/context/thread-context';
 const HOVER_DELAY = 1000; // ms before prefetching
 
 const ThreadWrapper = ({
@@ -79,12 +87,14 @@ const Thread = memo(
     isInQuickActionMode,
     selectedQuickActionIndex,
     resetNavigation,
+    setHoveredMailId,
   }: ConditionalThreadProps & {
     folder?: string;
     isKeyboardFocused?: boolean;
     isInQuickActionMode?: boolean;
     selectedQuickActionIndex?: number;
     resetNavigation?: () => void;
+    setHoveredMailId?: (index: string | null) => void;
   }) => {
     const [mail] = useMail();
     const [searchValue] = useSearchValue();
@@ -114,7 +124,7 @@ const Thread = memo(
     const handleMouseEnter = () => {
       if (demo) return;
       isHovering.current = true;
-
+      setHoveredMailId?.(message?.id || null);
       // Prefetch only in single select mode
       if (selectMode === 'single' && sessionData?.userId && !hasPrefetched.current) {
         // Clear any existing timeout
@@ -139,6 +149,8 @@ const Thread = memo(
 
     const handleMouseLeave = () => {
       isHovering.current = false;
+      setHoveredMailId?.(null);
+
       if (hoverTimeoutRef.current) {
         clearTimeout(hoverTimeoutRef.current);
       }
@@ -167,7 +179,7 @@ const Thread = memo(
             onMouseLeave={handleMouseLeave}
             key={message.threadId ?? message.id}
             className={cn(
-              'hover:bg-offsetLight hover:bg-primary/5 group relative flex cursor-pointer flex-col items-start overflow-clip rounded-lg border border-transparent  px-4 py-3 text-left text-sm transition-all hover:opacity-100',
+              'hover:bg-offsetLight hover:bg-primary/5 group relative flex cursor-pointer flex-col items-start overflow-clip rounded-lg border border-transparent px-4 py-3 text-left text-sm transition-all hover:opacity-100',
               isMailSelected || (!message.unread && 'opacity-50'),
               (isMailSelected || isMailBulkSelected || isKeyboardFocused) &&
                 'border-border bg-primary/5 opacity-100',
@@ -446,9 +458,11 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
 
   const isKeyPressed = useKeyState();
 
-  const selectAll = useCallback(() => {
-    // If there are already items selected, deselect them all
-    if (mail.bulkSelected.length > 0) {
+  const [hoveredMailId, setHoveredMailId] = useState<string | null>(null);
+
+  const selectHoveredAndBelow = useCallback(() => {
+    // If there are already all items selected and no mail hovered, deselect them all
+    if (mail.bulkSelected.length === items.length && hoveredMailId === null) {
       setMail((prev) => ({
         ...prev,
         bulkSelected: [],
@@ -458,14 +472,17 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
     // Otherwise select all items
     else if (items.length > 0) {
       const allIds = items.map((item) => item.id);
+      const allIdsFromHoveredAndBelow = allIds.slice(allIds.indexOf(hoveredMailId ?? ''));
+
       setMail((prev) => ({
         ...prev,
-        bulkSelected: allIds,
+        bulkSelected: hoveredMailId ? allIdsFromHoveredAndBelow : allIds,
       }));
+
     } else {
       toast.info(t('common.mail.noEmailsToSelect'));
     }
-  }, [items, setMail, mail.bulkSelected, t]);
+  }, [items, setMail, mail.bulkSelected, t, hoveredMailId]);
 
   useHotKey('Meta+Shift+u', () => {
     markAsUnread({ ids: mail.bulkSelected }).then((result) => {
@@ -517,22 +534,22 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
 
   useHotKey('Meta+a', (event) => {
     event?.preventDefault();
-    selectAll();
+    selectHoveredAndBelow();
   });
 
   useHotKey('Control+a', (event) => {
     event?.preventDefault();
-    selectAll();
+    selectHoveredAndBelow();
   });
 
   useHotKey('Meta+n', (event) => {
     event?.preventDefault();
-    selectAll();
+    selectHoveredAndBelow();
   });
 
   useHotKey('Control+n', (event) => {
     event?.preventDefault();
-    selectAll();
+    selectHoveredAndBelow();
   });
 
   const getSelectMode = useCallback((): MailSelectMode => {
@@ -555,11 +572,11 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
       const messageThreadId = message.threadId ?? message.id;
 
       // Update local state immediately for optimistic UI
-      setMail((prev) => ({ 
-        ...prev, 
+      setMail((prev) => ({
+        ...prev,
         selected: messageThreadId,
         replyComposerOpen: false,
-        forwardComposerOpen: false
+        forwardComposerOpen: false,
       }));
 
       // Update URL param without navigation
@@ -630,6 +647,7 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
                 isInQuickActionMode={isQuickActionMode && focusedIndex === index}
                 selectedQuickActionIndex={quickActionIndex}
                 resetNavigation={resetNavigation}
+                setHoveredMailId={setHoveredMailId}
               />
             );
           })}
