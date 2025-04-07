@@ -63,12 +63,12 @@ export function MailIframe({ html }: { html: string }) {
       {!imagesEnabled && !settings?.externalImages && (
         <div className="flex items-center justify-start bg-amber-500 p-2 text-sm text-amber-900">
           <p>{t('common.actions.hiddenImagesWarning')}</p>
-          <p
+          <button
             onClick={() => setImagesEnabled(!imagesEnabled)}
             className="ml-2 cursor-pointer underline"
           >
             {imagesEnabled ? t('common.actions.disableImages') : t('common.actions.showImages')}
-          </p>
+          </button>
         </div>
       )}
       {/* {!loaded && (
