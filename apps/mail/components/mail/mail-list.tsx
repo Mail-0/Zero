@@ -589,31 +589,18 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
     return 'single';
   }, [isKeyPressed]);
 
-  const isNotSelectedWhenBulk = useCallback(
-    (id: string) => {
-      let isTrue = false;
-      setMail((prev) => {
-        const isBulkMode = prev.bulkSelected.length > 0;
-        const alreadySelected = prev.bulkSelected.includes(id);
-
-        if (isBulkMode && !alreadySelected) {
-          isTrue = true;
-          return {
-            ...prev,
-            bulkSelected: [...prev.bulkSelected, id],
-          };
-        }
-
-        return prev;
-      });
-      return isTrue;
-    },
-    [setMail],
-  );
-
   const handleMailMouseDown = useCallback(
     (message: InitialThread) => () => {
-      if (isNotSelectedWhenBulk(message.id)) return;
+      const isUnselectedDuringBulk =
+        mail.bulkSelected.length && !mail.bulkSelected.includes(message.id);
+
+      if (isUnselectedDuringBulk) {
+        setMail((prev) => ({
+          ...prev,
+          bulkSelected: [...prev.bulkSelected, message.id],
+        }));
+        return;
+      }
 
       handleMouseEnter(message.id);
 
@@ -636,7 +623,7 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
         toast.error(t('common.mail.failedToMarkAsRead'));
       });
     },
-    [handleMouseEnter, setThreadId, t, setMail],
+    [handleMouseEnter, setThreadId, t, setMail, mail],
   );
 
   const isEmpty = items.length === 0;
