@@ -27,13 +27,14 @@ import { saveUserSettings } from '@/actions/settings';
 import { getBrowserTimezone } from '@/lib/timezones';
 import { Textarea } from '@/components/ui/textarea';
 import { useSettings } from '@/hooks/use-settings';
+import { Globe, Clock, XIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Globe, Clock } from 'lucide-react';
 import { changeLocale } from '@/i18n/utils';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import * as z from 'zod';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const formSchema = z.object({
   language: z.enum(locales as [string, ...string[]]),
@@ -41,6 +42,7 @@ const formSchema = z.object({
   dynamicContent: z.boolean(),
   externalImages: z.boolean(),
   customPrompt: z.string(),
+  trustedSenders: z.string().array(),
 });
 
 const TimezoneSelect = memo(
@@ -135,6 +137,7 @@ export default function GeneralPage() {
       dynamicContent: false,
       externalImages: true,
       customPrompt: '',
+      trustedSenders: [],
     },
   });
 
@@ -219,7 +222,7 @@ export default function GeneralPage() {
                 )}
               />
             </div>
-            <div className="flex w-full flex-col items-center gap-5 md:flex-row">
+            <div className="flex w-full w-max flex-col items-start gap-5">
               {/* <FormField
                 control={form.control}
                 name="dynamicContent"
@@ -257,6 +260,43 @@ export default function GeneralPage() {
                     </FormControl>
                   </FormItem>
                 )}
+              />
+              <FormField
+                control={form.control}
+                name="trustedSenders"
+                render={({ field }) => field.value.length > 0 ? (
+                  <FormItem className="bg-popover flex w-full flex-col rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">
+                        {t('pages.settings.general.trustedSenders')}
+                      </FormLabel>
+                      <FormDescription>
+                        {t('pages.settings.general.trustedSendersDescription')}
+                      </FormDescription>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      {field.value.map((senderEmail) => (
+                        <div className="flex items-center justify-between">
+                          <span>{senderEmail}</span>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                          <button
+                            onClick={() =>
+                              field.onChange(field.value.filter((e) => e !== senderEmail))
+                            }
+                          >
+                            <XIcon className="h-4 w-4 transition hover:opacity-80" />
+                          </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {t('common.actions.remove')}
+                          </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      ))}
+                    </div>
+                  </FormItem>
+                ) : <></>}
               />
             </div>
             <FormField

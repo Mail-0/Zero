@@ -34,8 +34,10 @@
       "hiddenImagesWarning": "Images are hidden by default for security reasons.",
       "showImages": "Show Images",
       "disableImages": "Hide Images",
+      "trustSender": "Trust Sender",
       "cancel": "Cancel",
-      "save": "Save"
+      "save": "Save",
+      "remove": "Remove"
     },
     "themes": {
       "dark": "Dark",
@@ -303,6 +305,8 @@
         "dynamicContentDescription": "Allow emails to display dynamic content.",
         "externalImages": "Display External Images",
         "externalImagesDescription": "Allow emails to display images from external sources.",
+        "trustedSenders": "Trusted Senders",
+        "trustedSendersDescription": "Always display images for these senders.",
         "languageChangedTo": "Language changed to {locale}",
         "customPrompt": "Custom AI Prompt",
         "customPromptPlaceholder": "Enter your custom prompt for the AI...",

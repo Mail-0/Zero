@@ -368,7 +368,7 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
 
             <div className="h-fit w-full p-0">
               {emailData?.decodedBody ? (
-                <MailIframe html={emailData?.decodedBody} />
+                <MailIframe html={emailData?.decodedBody} senderEmail={emailData.sender.email} />
               ) : (
                 <div
                   className="flex h-[500px] w-full items-center justify-center"

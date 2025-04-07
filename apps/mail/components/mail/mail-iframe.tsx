@@ -1,16 +1,45 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { defaultUserSettings } from '@zero/db/user_settings_default';
 import { fixNonReadableColors, template } from '@/lib/email-utils';
+import { saveUserSettings } from '@/actions/settings';
+import { getBrowserTimezone } from '@/lib/timezones';
 import { useSettings } from '@/hooks/use-settings';
 import { useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
-export function MailIframe({ html }: { html: string }) {
-  const { settings } = useSettings();
-  const [imagesEnabled, setImagesEnabled] = useState(settings?.externalImages || false);
+export function MailIframe({ html, senderEmail }: { html: string; senderEmail: string }) {
+  const { settings, mutate } = useSettings();
+  const isTrustedSender = settings?.trustedSenders?.includes(senderEmail);
+  const [imagesEnabled, setImagesEnabled] = useState(
+    isTrustedSender || settings?.externalImages || false,
+  );
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [height, setHeight] = useState(300);
   const { resolvedTheme } = useTheme();
+
+  const onTrustSender = useCallback(async (senderEmail: string) => {
+    setImagesEnabled(true);
+
+    const existingSettings = settings ?? {
+      ...defaultUserSettings,
+      timezone: getBrowserTimezone(),
+    };
+
+    const { success } = await saveUserSettings({
+      ...existingSettings,
+      trustedSenders: settings?.trustedSenders
+        ? settings.trustedSenders.concat(senderEmail)
+        : [senderEmail],
+    });
+
+    if (!success) {
+      toast.error('Failed to trust sender');
+    } else {
+      mutate();
+    }
+  }, []);
 
   const iframeDoc = useMemo(() => template(html, imagesEnabled), [html, imagesEnabled]);
 
@@ -68,6 +97,12 @@ export function MailIframe({ html }: { html: string }) {
             className="ml-2 cursor-pointer underline"
           >
             {imagesEnabled ? t('common.actions.disableImages') : t('common.actions.showImages')}
+          </button>
+          <button
+            onClick={() => void onTrustSender(senderEmail)}
+            className="ml-2 cursor-pointer underline"
+          >
+            {t('common.actions.trustSender')}
           </button>
         </div>
       )}
