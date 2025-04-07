@@ -141,6 +141,8 @@ export default function GeneralPage() {
     },
   });
 
+  const externalImages = form.watch("externalImages")
+
   useEffect(() => {
     if (settings) {
       form.reset(settings);
@@ -264,7 +266,7 @@ export default function GeneralPage() {
               <FormField
                 control={form.control}
                 name="trustedSenders"
-                render={({ field }) => field.value.length > 0 ? (
+                render={({ field}) => field.value.length > 0 && !externalImages ? (
                   <FormItem className="bg-popover flex w-full flex-col rounded-lg border p-4">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">
