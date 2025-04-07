@@ -10,6 +10,7 @@ import {
   Tag,
   User,
   Users,
+  X,
 } from 'lucide-react';
 import {
   type ComponentProps,
@@ -96,7 +97,7 @@ const Thread = memo(
     resetNavigation?: () => void;
     setHoveredMailId?: (index: string | null) => void;
   }) => {
-    const [mail] = useMail();
+    const [mail, setEmail] = useMail();
     const [searchValue] = useSearchValue();
     const t = useTranslations();
     const searchParams = useSearchParams();
@@ -321,6 +322,33 @@ const Thread = memo(
                         </Tooltip>
                       ) : null}
                     </div>
+                    {isMailBulkSelected && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-muted-foreground absolute right-0 top-0 ml-1.5 h-7 w-fit px-2"
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              setEmail({
+                                ...mail,
+                                bulkSelected: mail.bulkSelected.filter((id) => id !== message.id),
+                              });
+                            }}
+                          >
+                            <X />
+                          </Button>
+                        </TooltipTrigger>
+
+                        <TooltipContent>{t('common.mail.clearSelection')}</TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className={cn('mt-1 line-clamp-1 text-xs opacity-70 transition-opacity')}>
+                      {highlightText(message.subject, searchValue.highlight)}
+                    </p>
                     {message.receivedOn ? (
                       <p
                         className={cn(
@@ -332,9 +360,6 @@ const Thread = memo(
                       </p>
                     ) : null}
                   </div>
-                  <p className={cn('mt-1 line-clamp-1 text-xs opacity-70 transition-opacity')}>
-                    {highlightText(message.subject, searchValue.highlight)}
-                  </p>
                 </div>
               </div>
             </div>
@@ -566,6 +591,17 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
 
   const handleMailMouseDown = useCallback(
     (message: InitialThread) => () => {
+      const isUnselectedDuringBulk =
+        mail.bulkSelected.length && !mail.bulkSelected.includes(message.id);
+
+      if (isUnselectedDuringBulk) {
+        setMail((prev) => ({
+          ...prev,
+          bulkSelected: [...prev.bulkSelected, message.id],
+        }));
+        return;
+      }
+
       handleMouseEnter(message.id);
 
       const messageThreadId = message.threadId ?? message.id;
