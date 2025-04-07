@@ -40,7 +40,11 @@ import { sendEmail } from '@/actions/send';
 import { useForm } from 'react-hook-form';
 import type { JSONContent } from 'novel';
 import { toast } from 'sonner';
+import type { z } from 'zod';
+import { useSettings } from '@/hooks/use-settings';
+import { Switch } from '@/components/ui/switch';
 import { useMail } from '@/components/mail/use-mail';
+
 
 // Define state interfaces
 interface ComposerState {
@@ -242,6 +246,8 @@ export default function ReplyCompose({ emailData, mode = 'reply' }: ReplyCompose
 
   const [toInput, setToInput] = useState('');
   const [toEmails, setToEmails] = useState<string[]>([]);
+  const [includeSignature, setIncludeSignature] = useState(true);
+  const { settings } = useSettings();
 
   const isValidEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -352,6 +358,7 @@ export default function ReplyCompose({ emailData, mode = 'reply' }: ReplyCompose
           References: references,
           'Thread-Id': threadId ?? '',
         },
+        includeSignature: includeSignature && settings?.signature?.enabled,
       });
 
       form.reset();
@@ -373,6 +380,13 @@ export default function ReplyCompose({ emailData, mode = 'reply' }: ReplyCompose
   };
 
   // Add a useEffect to focus the editor when the composer opens
+  // Initialize signature toggle from settings
+  useEffect(() => {
+    if (settings?.signature) {
+      setIncludeSignature(settings.signature.includeByDefault);
+    }
+  }, [settings]);
+
   useEffect(() => {
     if (composerIsOpen) {
       // Give the editor time to render before focusing
@@ -752,6 +766,9 @@ ${email.decodedBody || 'No content'}
                 name: emailData[0]?.sender?.name,
                 email: emailData[0]?.sender?.email,
               }}
+              includeSignature={includeSignature}
+              onSignatureToggle={setIncludeSignature}
+              signature={settings?.signature?.enabled && settings?.signature?.content ? settings.signature.content : undefined}
             />
             <div
               className="h-2 w-full cursor-ns-resize hover:bg-gray-200 dark:hover:bg-gray-700"

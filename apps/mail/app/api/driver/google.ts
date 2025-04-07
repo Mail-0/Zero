@@ -295,7 +295,11 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
             const labelIds = [
               ...new Set(msg.data.messages?.flatMap((message) => message.labelIds || [])),
             ];
-            const message = msg.data.messages?.[msg.data.messages.length - 1];
+            const latestMessage = msg.data.messages?.reverse()?.find((msg) => {
+              const parsedMessage = parse({ ...msg, labelIds });
+              return parsedMessage.sender.email !== config.auth?.email
+            })
+            const message = latestMessage ? latestMessage : msg.data.messages?.[0]
             const parsed = parse({ ...message, labelIds });
             return {
               ...parsed,

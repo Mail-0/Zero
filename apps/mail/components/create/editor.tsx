@@ -54,6 +54,7 @@ import { Markdown } from 'tiptap-markdown';
 import { useReducer, useRef } from 'react';
 import { useState } from 'react';
 import React from 'react';
+import SignatureDisplay from './signature-display';
 
 export const defaultEditorContent = {
   type: 'doc',
@@ -83,6 +84,10 @@ interface EditorProps {
     email?: string;
   };
   onTab?: () => boolean;
+  includeSignature?: boolean;
+  onSignatureToggle?: (include: boolean) => void;
+  signature?: string;
+  hasSignature?: boolean;
 }
 
 interface EditorState {
@@ -114,11 +119,19 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
 }
 
 // Update the MenuBar component with icons
+interface MenuBarProps {
+  onAttachmentsChange?: (attachments: File[]) => void;
+  includeSignature?: boolean;
+  onSignatureToggle?: (include: boolean) => void;
+  hasSignature?: boolean;
+}
+
 const MenuBar = ({
   onAttachmentsChange,
-}: {
-  onAttachmentsChange?: (attachments: File[]) => void;
-}) => {
+  includeSignature,
+  onSignatureToggle,
+  hasSignature = false,
+}: MenuBarProps) => {
   const { editor } = useCurrentEditor();
   const t = useTranslations();
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
@@ -437,6 +450,56 @@ const MenuBar = ({
                   </TooltipContent>
                 </Tooltip>
               )}
+
+              {hasSignature && onSignatureToggle && (
+                <>
+                  <Separator orientation="vertical" className="relative top-0.5 h-6 mx-1.5" />
+                  <button
+                    onClick={() => onSignatureToggle(!includeSignature)}
+                    className={`hover:bg-muted flex items-center space-x-1 rounded border ${includeSignature ? 'border-primary bg-primary/10 text-primary' : 'border-muted-foreground/30 text-muted-foreground'} px-2 py-1 text-xs transition-colors`}
+                    title={includeSignature ? t('pages.createEmail.signature.disable') : t('pages.createEmail.signature.enable')}
+                  >
+                    {includeSignature ? (
+                      <>
+                        <svg
+                          className="mr-1 h-3 w-3"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M22 13V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h9" />
+                          <path d="M18 14v4" />
+                          <path d="M15 16l3 3 3-3" />
+                          <path d="M2 10h20" />
+                          <path d="M9 16l2 2 4-4" />
+                        </svg>
+                        <span>{t('pages.createEmail.signature.include')}</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="mr-1 h-3 w-3"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M22 13V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h9" />
+                          <path d="M18 14v4" />
+                          <path d="M15 16l3 3 3-3" />
+                          <path d="M2 10h20" />
+                        </svg>
+                        <span>{t('pages.createEmail.signature.add')}</span>
+                      </>
+                    )}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -487,6 +550,10 @@ export default function Editor({
   onAttachmentsChange,
   senderInfo,
   myInfo,
+  includeSignature,
+  onSignatureToggle,
+  signature,
+  hasSignature,
 }: EditorProps) {
   const [state, dispatch] = useReducer(editorReducer, {
     openNode: false,
@@ -499,6 +566,7 @@ export default function Editor({
   const contentRef = useRef<string>('');
   // Add a ref to the editor instance
   const editorRef = useRef<TiptapEditor>(null);
+  const t = useTranslations();
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -680,8 +748,53 @@ export default function Editor({
             contentRef.current = editor.getHTML();
             onChange(editor.getHTML());
           }}
-          slotBefore={<MenuBar onAttachmentsChange={onAttachmentsChange} />}
-          slotAfter={<ImageResizer />}
+          slotBefore={
+            <MenuBar
+              onAttachmentsChange={onAttachmentsChange}
+              includeSignature={includeSignature}
+              onSignatureToggle={onSignatureToggle}
+              hasSignature={!!signature}
+            />
+          }
+          slotAfter={
+            <>
+              <ImageResizer />
+              {signature && includeSignature && (
+                <div className="border-t mt-4 pt-2 text-muted-foreground">
+                  <div className="flex items-center justify-between">
+                    <div
+                      className="text-xs italic pb-1"
+                      style={{ userSelect: 'none' }}
+                    >
+                      {t('pages.createEmail.signature.title') || 'Signature'}
+                    </div>
+                    <button
+                      onClick={() => onSignatureToggle?.(false)}
+                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 pb-1"
+                      title={t('pages.createEmail.signature.disable') || 'Disable signature'}
+                    >
+                      <svg
+                        className="h-3 w-3"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                      <span>{t('pages.createEmail.signature.remove')}</span>
+                    </button>
+                  </div>
+                  <div className="signature-preview rounded-md border border-dashed border-muted-foreground/20 px-3 py-2 text-sm">
+                    <SignatureDisplay html={signature} className="w-full" />
+                  </div>
+                </div>
+              )}
+            </>
+          }
         >
           {/* Make sure the command palette doesn't cause a refresh */}
           <EditorCommand

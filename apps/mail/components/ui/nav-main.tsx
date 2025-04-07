@@ -1,6 +1,12 @@
 'use client';
 
-import { SidebarGroup, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from './sidebar';
+import {
+  SidebarGroup,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  useSidebar,
+} from './sidebar';
 import { Collapsible, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { clearBulkSelectionAtom } from '../mail/use-mail';
@@ -74,8 +80,6 @@ export function NavMain({ items }: NavMainProps) {
       // Get the current 'from' parameter
       const currentFrom = searchParams.get('from');
       const category = searchParams.get('category');
-
-      
 
       // Handle settings navigation
       if (item.isSettingsButton) {
@@ -188,13 +192,14 @@ function NavItem(item: NavItemProps & { href: string }) {
     );
   }
 
-
   // Apply animation handlers to all buttons including back buttons
   const linkProps = {
     href: item.href,
     onMouseEnter: () => iconRef.current?.startAnimation?.(),
     onMouseLeave: () => iconRef.current?.stopAnimation?.(),
   };
+
+  const { setOpenMobile } = useSidebar();
 
   const buttonContent = (
     <SidebarMenuButton
@@ -203,6 +208,7 @@ function NavItem(item: NavItemProps & { href: string }) {
         'hover:bg-subtleWhite dark:hover:bg-subtleBlack flex items-center',
         item.isActive && 'bg-subtleWhite text-accent-foreground dark:bg-subtleBlack',
       )}
+      onClick={() => setOpenMobile(false)}
     >
       {item.icon && <item.icon ref={iconRef} className="mr-2" />}
       <p className="mt-0.5 text-[13px]">{t(item.title as MessageKey)}</p>
