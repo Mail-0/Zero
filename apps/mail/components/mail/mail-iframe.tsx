@@ -39,7 +39,7 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
     } else {
       mutate();
     }
-  }, []);
+  }, [settings, mutate]);
 
   const iframeDoc = useMemo(() => template(html, imagesEnabled), [html, imagesEnabled]);
 
