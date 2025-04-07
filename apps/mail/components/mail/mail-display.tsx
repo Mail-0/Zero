@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogClose,
 } from '../ui/dialog';
-import { BellOff, Check, ChevronDown, LoaderCircleIcon, Lock } from 'lucide-react';
+import { BellOff, Check, LoaderCircleIcon, Lock, Reply } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
@@ -21,11 +21,13 @@ import { TextShimmer } from '../ui/text-shimmer';
 import { cn, getEmailLogo } from '@/lib/utils';
 import { type ParsedMessage } from '@/types';
 import { Separator } from '../ui/separator';
+import ThreadActionButton from '@/components/mail/thread-action-button';
 import { useTranslations } from 'next-intl';
 import { MailIframe } from './mail-iframe';
 import { Button } from '../ui/button';
 import { format } from 'date-fns';
 import Image from 'next/image';
+import { useMail } from './use-mail';
 
 const StreamingText = ({ text }: { text: string }) => {
   const [displayText, setDisplayText] = useState('');
@@ -93,6 +95,7 @@ type Props = {
 
 const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) => {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+  const [mail, setMail] = useMail();
   const [unsubscribed, setUnsubscribed] = useState(false);
   const [isUnsubscribing, setIsUnsubscribing] = useState(false);
   const [selectedAttachment, setSelectedAttachment] = useState<null | {
@@ -162,7 +165,7 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
           <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start justify-center gap-4">
+            <div className="flex items-start justify-center gap-4 ">
               <Avatar className="h-8 w-8">
                 <AvatarImage
                   className="bg-muted-foreground/50 dark:bg-muted/50 p-2"
@@ -317,6 +320,29 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
                 </div>
               </div>
             </div>
+
+            <ThreadActionButton
+              icon={Reply}
+              label={t('common.mailDisplay.replyTo', { user: emailData?.sender?.email })}
+              onClick={() => {
+                if (mail.forwardComposerOpen) {
+                  setMail((prev) => ({ 
+                    ...prev, 
+                    selected: emailData?.id || null,
+                    forwardComposerOpen: false,
+                    replyComposerOpen: true 
+                  }));
+                } else {
+                  setMail((prev) => ({ 
+                    ...prev, 
+                    selected: emailData?.id || null,
+                    replyComposerOpen: true
+                  }));
+                }
+              }}
+            />
+            
+
             {data ? (
               <div className="relative top-1">
                 <Popover>
