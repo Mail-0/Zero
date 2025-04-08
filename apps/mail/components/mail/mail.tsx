@@ -217,6 +217,8 @@ export function MailLayout() {
   const { data: session, isPending } = useSession();
   const t = useTranslations();
   const prevFolderRef = useRef(folder);
+  const hasHandledErrorRef = useRef(false);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (prevFolderRef.current !== folder && mail.bulkSelected.length > 0) {
@@ -230,6 +232,21 @@ export function MailLayout() {
       router.push('/login');
     }
   }, [session?.user, isPending]);
+
+  // temp
+  useEffect(() => {
+    const error = searchParams.get('error');
+    
+    if (error === 'connection_exists' && !hasHandledErrorRef.current) {
+      toast.error(t('common.mail.connectionExists'));
+      hasHandledErrorRef.current = true;
+      
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('error');
+      router.replace(`/mail/${folder}` + (newUrl.searchParams.toString() ? `?${newUrl.searchParams.toString()}` : ''), 
+        { scroll: false });
+    }
+  }, [searchParams, t, router, folder]);
 
   const { isLoading, isValidating } = useThreads();
 

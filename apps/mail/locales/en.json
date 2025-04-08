@@ -257,7 +257,8 @@
       "labels": "Labels",
       "createNewLabel": "Create New Label",
       "noLabelsAvailable": "No labels available",
-      "loadMore": "Load more"
+      "loadMore": "Load more",
+      "connectionExists": "Connection already exists"
     },
     "units": {
       "mb": "{amount} MB"

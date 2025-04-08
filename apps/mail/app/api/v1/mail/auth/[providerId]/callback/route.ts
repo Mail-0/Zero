@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createDriver } from "@/app/api/driver";
 import { connection } from "@zero/db/schema";
+import { and, eq } from "drizzle-orm";
 import { db } from "@zero/db";
 
 export async function GET(
@@ -34,6 +35,7 @@ export async function GET(
     const userInfo = await driver.getUserInfo({
       access_token: tokens.access_token,
       refresh_token: tokens.refresh_token,
+      email: '', // just avoid type error, populated by driver alrdy
     });
 
     if (!userInfo.data?.emailAddresses?.[0]?.value) {
@@ -43,12 +45,30 @@ export async function GET(
       });
     }
 
+    const userEmail = userInfo.data.emailAddresses[0].value;
+    
+    const existingConnections = await db
+      .select()
+      .from(connection)
+      .where(
+        and(
+          eq(connection.userId, state),
+          eq(connection.email, userEmail)
+        )
+      );
+    
+    if (existingConnections.length > 0) {
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL}/mail?error=connection_exists` // can be handled better but... yerp.
+      );
+    }
+
     // Store the connection in the database
     await db.insert(connection).values({
       providerId,
       id: crypto.randomUUID(),
       userId: state,
-      email: userInfo.data.emailAddresses[0].value,
+      email: userEmail,
       name: userInfo.data.names?.[0]?.displayName || "Unknown",
       picture: userInfo.data.photos?.[0]?.url || "",
       accessToken: tokens.access_token,
