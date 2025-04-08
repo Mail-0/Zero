@@ -187,7 +187,7 @@ function NavItem(item: NavItemProps & { href: string }) {
         className="flex cursor-not-allowed items-center opacity-50"
       >
         {item.icon && <item.icon ref={iconRef} className="relative mr-2.5 h-3 w-3.5" />}
-        <p className="mt-0.5 text-[13px]">{t(item.title as MessageKey)}</p>
+        <p className="mt-0.5 text-[13px] truncate">{t(item.title as MessageKey)}</p>
       </SidebarMenuButton>
     );
   }
@@ -210,14 +210,12 @@ function NavItem(item: NavItemProps & { href: string }) {
       )}
       onClick={() => setOpenMobile(false)}
     >
-      {item.icon && <item.icon ref={iconRef} className="mr-2" />}
-      <p className="mt-0.5 text-[13px]">{t(item.title as MessageKey)}</p>
+      {item.icon && <item.icon ref={iconRef} className="mr-2 shrink-0" />}
+      <p className="mt-0.5 text-[13px] truncate min-w-0 flex-1">{t(item.title as MessageKey)}</p>
       {stats && stats.find((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase()) && (
-        <Badge className="ml-auto rounded-md" variant="outline">
+        <Badge className="ml-auto rounded-md shrink-0" variant="outline">
           {stats
-
             .find((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase())
-
             ?.count?.toLocaleString() || '0'}
         </Badge>
       )}
