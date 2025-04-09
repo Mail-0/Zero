@@ -110,3 +110,28 @@ export async function putConnection(connectionId: string) {
     throw new Error("Failed to update connection");
   }
 }
+
+/**
+ * Generates a reauthorization URL for Google with contacts permission
+ * Used when the app needs additional access to user's contacts for autofill suggestions
+ * @returns {Promise<{url: string}>} Object containing the reauthorization URL
+ * @throws {Error} If the user is not logged in or if URL generation fails
+ */
+export async function getReauthUrl() {
+  try {
+    const headersList = await headers();
+    const session = await auth.api.getSession({ headers: headersList });
+
+    if (!session?.user?.id) {
+      throw new Error("Unauthorized, not logged in");
+    }
+
+    // Create a URL that will start the reauth flow for Google with contacts permission
+    const reauthUrl = `/api/v1/mail/auth/google/init?scope=contacts`;
+
+    return { url: reauthUrl };
+  } catch (error) {
+    console.error("Failed to generate reauth URL:", error);
+    throw new Error("Failed to generate reauth URL");
+  }
+}

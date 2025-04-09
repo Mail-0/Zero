@@ -1,6 +1,20 @@
 import { type InitialThread, type ParsedMessage } from '@/types';
+import { gmail_v1, people_v1 } from 'googleapis';
+
+export interface GoogleContact {
+  id: string;
+  name?: string;
+  email: string;
+  profilePhotoUrl?: string;
+}
 
 export interface MailManager {
+  // Get provider-specific API clients (optional, provider-specific)
+  getEmailAPIClient?(accessToken: string, refreshToken: string): Promise<any>;
+  getContactsAPIClient?(accessToken: string, refreshToken: string): Promise<any>;
+  
+  // Get contacts from message history (provider-agnostic method)
+  getContacts?(accessToken: string, refreshToken: string, userEmail: string): Promise<GoogleContact[]>;
   get(id: string): Promise<ParsedMessage[] | undefined>;
   create(data: any): Promise<any>;
   createDraft(data: any): Promise<any>;
@@ -15,7 +29,7 @@ export interface MailManager {
     pageToken?: string | number,
   ): Promise<(T & { threads: InitialThread[] }) | undefined>;
   count(): Promise<any>;
-  generateConnectionAuthUrl(userId: string): string;
+  generateConnectionAuthUrl(userId: string, additionalScope?: string | null): string;
   getTokens(
     code: string,
   ): Promise<{ tokens: { access_token?: any; refresh_token?: any; expiry_date?: number } }>;

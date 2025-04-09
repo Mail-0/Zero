@@ -1,6 +1,6 @@
 import { parseAddressList, parseFrom, wasSentWithTLS } from '@/lib/email-utils';
 import { type IConfig, type MailManager } from './types';
-import { type gmail_v1, google } from 'googleapis';
+import { type gmail_v1, type people_v1, google } from 'googleapis';
 import { EnableBrain } from '@/actions/brain';
 import { type ParsedMessage } from '@/types';
 import * as he from 'he';
@@ -85,12 +85,56 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
     process.env.GOOGLE_REDIRECT_URI as string,
   );
 
+  // OAuth2 scope constants
+  const GMAIL_SCOPE = 'https://www.googleapis.com/auth/gmail.modify';
+  const CONTACTS_READONLY_SCOPE = 'https://www.googleapis.com/auth/contacts.readonly';
+  const USERINFO_PROFILE_SCOPE = 'https://www.googleapis.com/auth/userinfo.profile';
+  const USERINFO_EMAIL_SCOPE = 'https://www.googleapis.com/auth/userinfo.email';
+  
+  // Get default scopes - using readonly for contacts by default for stricter permissions
   const getScope = () =>
     [
-      'https://www.googleapis.com/auth/gmail.modify',
-      'https://www.googleapis.com/auth/userinfo.profile',
-      'https://www.googleapis.com/auth/userinfo.email',
+      GMAIL_SCOPE,
+      CONTACTS_READONLY_SCOPE, // Using only readonly for minimum necessary permissions
+      USERINFO_PROFILE_SCOPE,
+      USERINFO_EMAIL_SCOPE,
     ].join(' ');
+    
+  // Helper function to create or reuse an auth client
+  const getOrCreateAuthClient = (() => {
+    let cachedAuth: any = null;
+    let cachedRefreshToken: string | null = null;
+    
+    return (accessToken: string, refreshToken: string) => {
+      // Reuse auth client if it exists and refresh token matches
+      if (cachedAuth && cachedRefreshToken === refreshToken) {
+        // Just update the access token
+        cachedAuth.setCredentials({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          scope: getScope(),
+        });
+      } else {
+        // Create a new auth instance with the tokens
+        cachedAuth = new google.auth.OAuth2(
+          process.env.GOOGLE_CLIENT_ID as string,
+          process.env.GOOGLE_CLIENT_SECRET as string,
+          process.env.GOOGLE_REDIRECT_URI as string
+        );
+        
+        // Set the credentials
+        cachedAuth.setCredentials({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          scope: getScope(),
+        });
+        
+        cachedRefreshToken = refreshToken;
+      }
+      
+      return cachedAuth;
+    };
+  })();
   if (config.auth) {
     auth.setCredentials({
       refresh_token: config.auth.refresh_token,
@@ -183,6 +227,71 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
   };
   const gmail = google.gmail({ version: 'v1', auth });
   const manager = {
+    // Provider-specific email API client (Gmail for Google provider)
+    getEmailAPIClient: async (accessToken: string, refreshToken: string): Promise<gmail_v1.Gmail> => {
+      const auth = getOrCreateAuthClient(accessToken, refreshToken);
+      return google.gmail({ version: 'v1', auth });
+    },
+    
+    // Provider-specific contacts API client (People API for Google provider)
+    getContactsAPIClient: async (accessToken: string, refreshToken: string): Promise<people_v1.People> => {
+      const auth = getOrCreateAuthClient(accessToken, refreshToken);
+      return google.people({ version: 'v1', auth });
+    },
+    
+    // Extract contacts from message history (provider-agnostic interface with Google implementation)
+    getContacts: async (accessToken: string, refreshToken: string, userEmail: string) => {
+      const contacts: {id: string; name?: string; email: string; profilePhotoUrl?: string}[] = [];
+      
+      try {
+        console.log("Finding contacts from email message history...");
+        
+        // Create Gmail API client
+        const gmail = await manager.getEmailAPIClient(accessToken, refreshToken);
+        
+        // Get sent message IDs from the last 30 days
+        const allMessageIds = await fetchSentMessageIds(gmail);
+         
+        console.log(`Found ${allMessageIds.length} sent messages for contacts extraction`);
+        
+        // Extract recipients from these emails
+        const emailAddresses = new Set<string>();
+        const emailNames = new Map<string, string>();
+        
+        // Get inbox message IDs (up to 100)
+        const inboxIds = await fetchInboxMessageIds(gmail);
+        
+        console.log(`Found ${inboxIds.length} inbox messages for contacts extraction`);
+        
+        // Combine sent and inbox messages for processing
+        const combinedMessageIds = [...allMessageIds, ...inboxIds];
+        const uniqueMessageIds = Array.from(new Set(combinedMessageIds));
+        console.log(`Processing ${uniqueMessageIds.length} unique messages for contacts`);
+        
+        // Extract email addresses helper function 
+        const extractEmailAddresses = createEmailExtractor(emailAddresses, emailNames);
+        
+        // Process messages in batches and extract contacts
+        await processMessagesInBatches(gmail, uniqueMessageIds, extractEmailAddresses, userEmail);
+        
+        // Add extracted email addresses to contacts
+        let id = 0;
+        emailAddresses.forEach(email => {
+          contacts.push({
+            id: `gmail-history-${id++}`,
+            name: emailNames.get(email) || undefined,
+            email,
+            profilePhotoUrl: undefined
+          });
+        });
+        
+        console.log(`Added ${emailAddresses.size} email addresses from message history`);
+      } catch (err) {
+        console.error('Error getting contacts from Gmail:', err);
+      }
+      
+      return contacts;
+    },
     getAttachment: async (messageId: string, attachmentId: string) => {
       try {
         const response = await gmail.users.messages.attachments.get({
@@ -235,10 +344,23 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
         throw error;
       }
     },
-    generateConnectionAuthUrl: (userId: string) => {
+    generateConnectionAuthUrl: (userId: string, additionalScope?: string | null) => {
+      // Use core scopes only - use the readonly scope for contacts to minimize permissions
+      const scopes = [
+        GMAIL_SCOPE,
+        USERINFO_PROFILE_SCOPE,
+        USERINFO_EMAIL_SCOPE,
+        CONTACTS_READONLY_SCOPE, // Only request readonly for minimum necessary permissions
+      ];
+      
+      // Add additional scopes if provided
+      if (additionalScope) {
+        scopes.push(additionalScope);
+      }
+      
       return auth.generateAuthUrl({
         access_type: 'offline',
-        scope: getScope(),
+        scope: scopes.join(' '),
         include_granted_scopes: true,
         prompt: 'consent',
         state: userId,
@@ -589,3 +711,175 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
 
   return manager;
 };
+
+// Helper function to fetch sent message IDs
+async function fetchSentMessageIds(gmail: gmail_v1.Gmail): Promise<string[]> {
+  const allMessageIds: string[] = [];
+  let pageToken = undefined;
+  
+  try {
+    // Get more messages in fewer API calls with larger maxResults
+    const sentEmailsResponse = await gmail.users.messages.list({
+      userId: 'me',
+      q: 'in:sent newer_than:30d',
+      maxResults: 250
+    });
+    
+    if (sentEmailsResponse.data.messages) {
+      sentEmailsResponse.data.messages.forEach(msg => {
+        if (msg.id && allMessageIds.length < 200) allMessageIds.push(msg.id);
+      });
+    }
+    
+    // Only fetch more if we have fewer than 200 messages and there's a next page
+    if (allMessageIds.length < 200 && sentEmailsResponse.data.nextPageToken) {
+      pageToken = sentEmailsResponse.data.nextPageToken;
+      const moreEmailsResponse = await gmail.users.messages.list({
+        userId: 'me',
+        q: 'in:sent newer_than:30d',
+        maxResults: 200 - allMessageIds.length,
+        pageToken: pageToken
+      });
+      
+      if (moreEmailsResponse.data.messages) {
+        moreEmailsResponse.data.messages.forEach(msg => {
+          if (msg.id && allMessageIds.length < 200) allMessageIds.push(msg.id);
+        });
+      }
+    }
+  } catch (error) {
+    console.log("Error fetching sent messages, will use local messages as fallback");
+  }
+  
+  return allMessageIds;
+}
+
+// Helper function to fetch inbox message IDs
+async function fetchInboxMessageIds(gmail: gmail_v1.Gmail): Promise<string[]> {
+  const inboxIds: string[] = [];
+  let pageToken = undefined;
+  
+  do {
+    const inboxResponse = await gmail.users.messages.list({
+      userId: 'me',
+      q: 'in:inbox',
+      maxResults: 50,
+      pageToken: pageToken
+    });
+    
+    if (inboxResponse.data.messages) {
+      inboxResponse.data.messages.forEach(msg => {
+        if (msg.id) inboxIds.push(msg.id);
+      });
+    }
+    
+    pageToken = inboxResponse.data.nextPageToken;
+    // Limit to 100 inbox messages for performance
+    if (inboxIds.length >= 100) break;
+  } while (pageToken);
+  
+  return inboxIds;
+}
+
+// Helper function to create an email extractor
+function createEmailExtractor(emailAddresses: Set<string>, emailNames: Map<string, string>) {
+  return (headerValue: string, userEmail?: string) => {
+    if (!headerValue) return;
+    
+    // Normalize newlines and extra spaces
+    const normalizedValue = headerValue.replace(/\r?\n/g, ' ').replace(/\s+/g, ' ');
+    
+    // Parse email addresses in format "Name <email@example.com>"
+    const addressRegex = /(.*?)<([^>]+)>/g;
+    let match;
+    
+    // Track if we found any bracketed emails
+    let foundBracketedEmail = false;
+    
+    while ((match = addressRegex.exec(normalizedValue)) !== null) {
+      foundBracketedEmail = true;
+      const name = match[1]?.trim() || '';
+      const email = match[2]?.trim();
+      
+      if (email && !emailAddresses.has(email) && email.toLowerCase() !== userEmail?.toLowerCase()) {
+        // Validate email using comprehensive regex pattern
+        const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+        if (emailRegex.test(email)) {
+          emailAddresses.add(email);
+          if (name) {
+            emailNames.set(email, name);
+          }
+        }
+      }
+    }
+    
+    // If we didn't find any bracketed emails, try to extract plain emails
+    if (!foundBracketedEmail) {
+      // More comprehensive email regex for extraction
+      const emailRegex = /([a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*)/gi;
+      let emailMatch;
+      
+      while ((emailMatch = emailRegex.exec(normalizedValue)) !== null) {
+        const email = emailMatch[0].trim();
+        if (email && !emailAddresses.has(email) && email.toLowerCase() !== userEmail?.toLowerCase()) {
+          emailAddresses.add(email);
+        }
+      }
+      
+      // Also handle plain email addresses without names
+      normalizedValue
+        .split(/[,;]/)
+        .map(addr => addr.trim())
+        .filter(addr => addr.includes('@') && !addr.includes('<') && 
+               addr.toLowerCase() !== userEmail?.toLowerCase())
+        .forEach(email => {
+          // Use the same comprehensive regex pattern for validation
+          if (emailRegex.test(email)) {
+            emailAddresses.add(email);
+          }
+        });
+    }
+  };
+}
+
+// Helper function to process messages in batches
+async function processMessagesInBatches(
+  gmail: gmail_v1.Gmail, 
+  uniqueMessageIds: string[], 
+  extractEmailAddresses: (headerValue: string, userEmail?: string) => void,
+  userEmail: string
+) {
+  const processedCount = Math.min(75, uniqueMessageIds.length);
+  const batchSize = 10; // Process 10 messages concurrently
+  
+  for (let i = 0; i < processedCount; i += batchSize) {          
+    // Create a batch of promises to process messages concurrently
+    const batch = uniqueMessageIds.slice(i, i + batchSize).map(async messageId => {
+      if (!messageId) return;
+      
+      try {
+        const message = await gmail.users.messages.get({
+          userId: 'me',
+          id: messageId,
+          format: 'metadata',
+          metadataHeaders: ['To', 'Cc', 'Bcc', 'From', 'Reply-To']
+        });
+        
+        // Extract recipient information
+        const headers = message.data.payload?.headers || [];
+        
+        // Process all relevant headers
+        for (const header of headers) {
+          if (['To', 'Cc', 'Bcc', 'From', 'Reply-To'].includes(header.name || '') && header.value) {
+            extractEmailAddresses(header.value, userEmail?.toLowerCase());
+          }
+        }
+      } catch (err) {
+        console.error('Error processing message:', err);
+      }
+    });
+    
+    // Wait for the current batch to complete before processing the next batch
+    await Promise.all(batch);
+  }
+}
