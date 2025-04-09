@@ -1,8 +1,7 @@
 {
-  "lockfileVersion": 1,
+  "lockfileVersion": 0,
   "workspaces": {
     "": {
-      "name": "zero",
       "dependencies": {
         "@types/dompurify": "^3.2.0",
         "dompurify": "^3.2.5",
@@ -12,7 +11,7 @@
       },
       "devDependencies": {
         "@types/node": "22.13.8",
-        "@zero/tsconfig": "workspace:*",
+        "@zero/tsconfig": "packages/tsconfig",
         "husky": "9.1.7",
         "prettier": "3.5.3",
         "prettier-plugin-sort-imports": "1.8.6",
@@ -67,8 +66,8 @@
         "@upstash/redis": "1.34.4",
         "@vercel/analytics": "1.5.0",
         "@vercel/functions": "2.0.0",
-        "@zero/db": "workspace:*",
-        "@zero/eslint-config": "workspace:*",
+        "@zero/db": "packages/db",
+        "@zero/eslint-config": "packages/eslint-config",
         "axios": "1.8.1",
         "better-auth": "1.2.1",
         "canvas-confetti": "1.9.3",
@@ -150,7 +149,7 @@
       },
       "devDependencies": {
         "@types/node": "22.13.8",
-        "@zero/tsconfig": "workspace:*",
+        "@zero/tsconfig": "packages/tsconfig",
         "dotenv": "16.4.7",
         "drizzle-kit": "0.30.5",
         "typescript": "5.8.2",
@@ -176,7 +175,7 @@
       "name": "@zero/tailwind-config",
       "version": "0.0.0",
       "devDependencies": {
-        "@zero/tsconfig": "workspace:*",
+        "@zero/tsconfig": "packages/tsconfig",
         "tailwindcss": "3.4.17",
       },
     },
@@ -378,7 +377,7 @@
 
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.25", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ=="],
 
-    "@langchain/core": ["@langchain/core@0.3.43", "", { "dependencies": { "@cfworker/json-schema": "^4.0.2", "ansi-styles": "^5.0.0", "camelcase": "6", "decamelize": "1.2.0", "js-tiktoken": "^1.0.12", "langsmith": ">=0.2.8 <0.4.0", "mustache": "^4.2.0", "p-queue": "^6.6.2", "p-retry": "4", "uuid": "^10.0.0", "zod": "^3.22.4", "zod-to-json-schema": "^3.22.3" } }, "sha512-DwiSUwmZqcuOn7j8SFdeOH1nvaUqG7q8qn3LhobdQYEg5PmjLgd2yLr2KzuT/YWMBfjkOR+Di5K6HEdFmouTxg=="],
+    "@langchain/core": ["@langchain/core@0.3.44", "", { "dependencies": { "@cfworker/json-schema": "^4.0.2", "ansi-styles": "^5.0.0", "camelcase": "6", "decamelize": "1.2.0", "js-tiktoken": "^1.0.12", "langsmith": ">=0.2.8 <0.4.0", "mustache": "^4.2.0", "p-queue": "^6.6.2", "p-retry": "4", "uuid": "^10.0.0", "zod": "^3.22.4", "zod-to-json-schema": "^3.22.3" } }, "sha512-3BsSFf7STvPPZyl2kMANgtVnCUvDdyP4k+koP+nY2Tczd5V+RFkuazIn/JOj/xxy/neZjr4PxFU4BFyF1aKXOA=="],
 
     "@langchain/groq": ["@langchain/groq@0.2.1", "", { "dependencies": { "@langchain/openai": "~0.3.0", "groq-sdk": "^0.5.0", "zod": "^3.22.4", "zod-to-json-schema": "^3.22.5" }, "peerDependencies": { "@langchain/core": ">=0.2.21 <0.4.0" } }, "sha512-fGhWaDM5VAzBpYFFVttN88ib0/mm2U8zhXATVYO03GFa+aybElLLBS8RimZbqDMBkqjWb5wG1QxIYJwm56ic9w=="],
 
@@ -390,7 +389,7 @@
 
     "@next/env": ["@next/env@15.2.3", "", {}, "sha512-a26KnbW9DFEUsSxAxKBORR/uD9THoYoKbkpFywMN/AFvboTt94b8+g/07T8J6ACsdLag8/PDU60ov4rPxRAixw=="],
 
-    "@next/eslint-plugin-next": ["@next/eslint-plugin-next@14.2.27", "", { "dependencies": { "glob": "10.3.10" } }, "sha512-nwXJPtxaL/1Dd80dwmhTZpc/kghn8WJrnKfZr/v+o2tkwlINKiYcflYwm/YIBLiJiwGPZMoFJRDxlsJexv21vw=="],
+    "@next/eslint-plugin-next": ["@next/eslint-plugin-next@14.2.28", "", { "dependencies": { "glob": "10.3.10" } }, "sha512-GQUPA1bTZy5qZdPV5MOHB18465azzhg8xm5o2SqxMF+h1rWNjB43y6xmIPHG5OV2OiU3WxuINpusXom49DdaIQ=="],
 
     "@next/swc-darwin-arm64": ["@next/swc-darwin-arm64@15.2.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-uaBhA8aLbXLqwjnsHSkxs353WrRgQgiFjduDpc7YXEU0B54IKx3vU+cxQlYwPCyC8uYEEX7THhtQQsfHnvv8dw=="],
 
@@ -764,15 +763,15 @@
 
     "@xobotyi/scrollbar-width": ["@xobotyi/scrollbar-width@1.9.5", "", {}, "sha512-N8tkAACJx2ww8vFMneJmaAgmjAG1tnVBZJRLRcx061tmsLRZHSEZSLuGWnwPtunsSLvSqXQ2wfp7Mgqg1I+2dQ=="],
 
-    "@zero/db": ["@zero/db@workspace:packages/db"],
+    "@zero/db": ["@zero/db@workspace:packages/db", { "dependencies": { "drizzle-orm": "0.39.3", "postgres": "3.4.5" }, "devDependencies": { "@types/node": "22.13.8", "@zero/tsconfig": "packages/tsconfig", "dotenv": "16.4.7", "drizzle-kit": "0.30.5", "typescript": "5.8.2" } }],
 
-    "@zero/eslint-config": ["@zero/eslint-config@workspace:packages/eslint-config"],
+    "@zero/eslint-config": ["@zero/eslint-config@workspace:packages/eslint-config", { "devDependencies": { "@types/eslint": "^9.6.1", "@typescript-eslint/eslint-plugin": "^8.26.1", "@typescript-eslint/parser": "^8.26.1", "eslint": "^9.22.0", "eslint-config-next": "^14.1.0", "eslint-config-prettier": "^9.1.0", "eslint-import-resolver-typescript": "^3.6.1", "eslint-plugin-import": "^2.29.1", "eslint-plugin-react": "^7.33.2", "eslint-plugin-react-hooks": "^5.2.0" } }],
 
-    "@zero/mail": ["@zero/mail@workspace:apps/mail"],
+    "@zero/mail": ["@zero/mail@workspace:apps/mail", { "dependencies": { "@better-fetch/fetch": "^1.1.18", "@coinbase/cookie-manager": "1.1.8", "@dnd-kit/core": "6.3.1", "@dnd-kit/modifiers": "9.0.0", "@dnd-kit/sortable": "10.0.0", "@dnd-kit/utilities": "3.2.2", "@hookform/resolvers": "4.1.2", "@langchain/groq": "^0.2.1", "@radix-ui/react-accordion": "1.2.3", "@radix-ui/react-avatar": "1.1.3", "@radix-ui/react-collapsible": "1.1.3", "@radix-ui/react-context-menu": "2.2.6", "@radix-ui/react-dialog": "1.1.6", "@radix-ui/react-dropdown-menu": "2.1.6", "@radix-ui/react-label": "2.1.2", "@radix-ui/react-popover": "1.1.6", "@radix-ui/react-progress": "1.1.2", "@radix-ui/react-radio-group": "1.2.3", "@radix-ui/react-scroll-area": "1.2.3", "@radix-ui/react-select": "2.1.6", "@radix-ui/react-separator": "1.1.2", "@radix-ui/react-slot": "1.1.2", "@radix-ui/react-switch": "1.1.3", "@radix-ui/react-tabs": "1.1.3", "@radix-ui/react-toggle": "1.1.2", "@radix-ui/react-toggle-group": "1.1.2", "@radix-ui/react-tooltip": "1.1.8", "@radix-ui/react-visually-hidden": "1.1.2", "@tiptap/core": "2.11.5", "@tiptap/extension-bold": "2.11.5", "@tiptap/extension-document": "2.11.5", "@tiptap/extension-link": "2.11.5", "@tiptap/extension-paragraph": "2.11.5", "@tiptap/extension-text": "2.11.5", "@tiptap/html": "2.11.5", "@tiptap/pm": "2.11.5", "@tiptap/react": "2.11.5", "@tiptap/starter-kit": "2.11.5", "@upstash/ratelimit": "2.0.5", "@upstash/redis": "1.34.4", "@vercel/analytics": "1.5.0", "@vercel/functions": "2.0.0", "@zero/db": "packages/db", "@zero/eslint-config": "packages/eslint-config", "axios": "1.8.1", "better-auth": "1.2.1", "canvas-confetti": "1.9.3", "cheerio": "1.0.0", "class-variance-authority": "0.7.1", "clsx": "2.1.1", "cmdk": "1.0.0", "color": "5.0.0", "date-fns": "4.1.0", "deepmerge": "4.3.1", "dexie": "4.0.11", "drizzle-orm": "0.39.3", "email-addresses": "5.0.0", "googleapis": "144.0.0", "he": "1.2.0", "husky": "9.1.7", "input-otp": "1.4.2", "jotai": "2.12.1", "lucide-react": "0.474.0", "lz-string": "1.5.0", "mimetext": "^3.0.27", "motion": "12.4.7", "next": "15.2.3", "next-intl": "3.26.5", "next-themes": "0.4.4", "novel": "1.0.2", "nuqs": "2.4.0", "postgres": "3.4.5", "react": "19.0.0", "react-day-picker": "8.10.1", "react-dom": "19.0.0", "react-hook-form": "7.54.2", "react-resizable-panels": "2.1.7", "react-use": "^17.6.0", "react-virtuoso": "4.12.5", "react-wrap-balancer": "^1.1.1", "recharts": "^2.15.1", "resend": "4.1.2", "sonner": "1.7.4", "swr": "2.3.2", "tailwind-merge": "3.0.2", "tailwindcss-animate": "1.0.7", "tiptap-extension-auto-joiner": "0.1.3", "tiptap-extension-global-drag-handle": "0.1.18", "tiptap-markdown": "0.8.10", "vaul": "1.1.2", "zod": "3.24.2" }, "devDependencies": { "@eslint/eslintrc": "3.3.0", "@tailwindcss/typography": "0.5.16", "@types/canvas-confetti": "1.9.0", "@types/he": "1.2.3", "@types/node": "22.13.8", "@types/react": "19.0.10", "@types/react-dom": "19.0.4", "@types/sanitize-html": "2.13.0", "@typescript-eslint/eslint-plugin": "8.26.1", "@typescript-eslint/parser": "8.26.1", "drizzle-kit": "0.30.5", "eslint": "9.22.0", "eslint-config-next": "15.2.0", "eslint-plugin-react": "7.33.2", "eslint-plugin-react-hooks": "5.2.0", "postcss": "8.5.3", "prettier": "3.5.3", "prettier-plugin-sort-imports": "1.8.6", "prettier-plugin-tailwindcss": "0.6.11", "tailwindcss": "3.4.17", "typescript": "5.7.3" } }],
 
-    "@zero/tailwind-config": ["@zero/tailwind-config@workspace:packages/tailwind-config"],
+    "@zero/tailwind-config": ["@zero/tailwind-config@workspace:packages/tailwind-config", { "devDependencies": { "@zero/tsconfig": "packages/tsconfig", "tailwindcss": "3.4.17" } }],
 
-    "@zero/tsconfig": ["@zero/tsconfig@workspace:packages/tsconfig"],
+    "@zero/tsconfig": ["@zero/tsconfig@workspace:packages/tsconfig", {}],
 
     "abbrev": ["abbrev@2.0.0", "", {}, "sha512-6/mh1E2u2YgEsCHdY0Yx5oW+61gZU+1vXaoiHHrpKeuRNNgFvS+/jrwHiQhB5apAf5oB7UB7E19ol2R2LKH8hQ=="],
 
@@ -846,7 +845,7 @@
 
     "better-call": ["better-call@1.0.7", "", { "dependencies": { "@better-fetch/fetch": "^1.1.4", "rou3": "^0.5.1", "set-cookie-parser": "^2.7.1", "uncrypto": "^0.1.3" } }, "sha512-p5kEthErx3HsW9dCCvvEx+uuEdncn0ZrlqrOG3TkR1aVYgynpwYbTVU90nY8/UwfMhROzqZWs8vryainSQxrNg=="],
 
-    "bignumber.js": ["bignumber.js@9.2.0", "", {}, "sha512-JocpCSOixzy5XFJi2ub6IMmV/G9i8Lrm2lZvwBv9xPdglmZM0ufDVBbjbrfU/zuLvBfD7Bv2eYxz9i+OHTgkew=="],
+    "bignumber.js": ["bignumber.js@9.2.1", "", {}, "sha512-+NzaKgOUvInq9TIUZ1+DRspzf/HApkCwD4btfuasFTdrfnOxqx853TgDpMolp+uv4RpRp7bPcEU2zKr9+fRmyw=="],
 
     "binary-extensions": ["binary-extensions@2.3.0", "", {}, "sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw=="],
 
@@ -1084,7 +1083,7 @@
 
     "eslint": ["eslint@9.24.0", "", { "dependencies": { "@eslint-community/eslint-utils": "^4.2.0", "@eslint-community/regexpp": "^4.12.1", "@eslint/config-array": "^0.20.0", "@eslint/config-helpers": "^0.2.0", "@eslint/core": "^0.12.0", "@eslint/eslintrc": "^3.3.1", "@eslint/js": "9.24.0", "@eslint/plugin-kit": "^0.2.7", "@humanfs/node": "^0.16.6", "@humanwhocodes/module-importer": "^1.0.1", "@humanwhocodes/retry": "^0.4.2", "@types/estree": "^1.0.6", "@types/json-schema": "^7.0.15", "ajv": "^6.12.4", "chalk": "^4.0.0", "cross-spawn": "^7.0.6", "debug": "^4.3.2", "escape-string-regexp": "^4.0.0", "eslint-scope": "^8.3.0", "eslint-visitor-keys": "^4.2.0", "espree": "^10.3.0", "esquery": "^1.5.0", "esutils": "^2.0.2", "fast-deep-equal": "^3.1.3", "file-entry-cache": "^8.0.0", "find-up": "^5.0.0", "glob-parent": "^6.0.2", "ignore": "^5.2.0", "imurmurhash": "^0.1.4", "is-glob": "^4.0.0", "json-stable-stringify-without-jsonify": "^1.0.1", "lodash.merge": "^4.6.2", "minimatch": "^3.1.2", "natural-compare": "^1.4.0", "optionator": "^0.9.3" }, "peerDependencies": { "jiti": "*" }, "optionalPeers": ["jiti"], "bin": { "eslint": "bin/eslint.js" } }, "sha512-eh/jxIEJyZrvbWRe4XuVclLPDYSYYYgLy5zXGGxD6j8zjSAxFEzI2fL/8xNq6O2yKqVt+eF2YhV+hxjV6UKXwQ=="],
 
-    "eslint-config-next": ["eslint-config-next@14.2.27", "", { "dependencies": { "@next/eslint-plugin-next": "14.2.27", "@rushstack/eslint-patch": "^1.3.3", "@typescript-eslint/eslint-plugin": "^5.4.2 || ^6.0.0 || ^7.0.0 || ^8.0.0", "@typescript-eslint/parser": "^5.4.2 || ^6.0.0 || ^7.0.0 || ^8.0.0", "eslint-import-resolver-node": "^0.3.6", "eslint-import-resolver-typescript": "^3.5.2", "eslint-plugin-import": "^2.28.1", "eslint-plugin-jsx-a11y": "^6.7.1", "eslint-plugin-react": "^7.33.2", "eslint-plugin-react-hooks": "^4.5.0 || 5.0.0-canary-7118f5dd7-20230705" }, "peerDependencies": { "eslint": "^7.23.0 || ^8.0.0", "typescript": ">=3.3.1" }, "optionalPeers": ["typescript"] }, "sha512-2+vThGj0T0s+XOu5u8CEVufAD6g+V/aahu7ElEMCDqZTIfvfERt94ajSEzcZkCWUu5xpgVO+nAKXRSzJIz0H6Q=="],
+    "eslint-config-next": ["eslint-config-next@14.2.28", "", { "dependencies": { "@next/eslint-plugin-next": "14.2.28", "@rushstack/eslint-patch": "^1.3.3", "@typescript-eslint/eslint-plugin": "^5.4.2 || ^6.0.0 || ^7.0.0 || ^8.0.0", "@typescript-eslint/parser": "^5.4.2 || ^6.0.0 || ^7.0.0 || ^8.0.0", "eslint-import-resolver-node": "^0.3.6", "eslint-import-resolver-typescript": "^3.5.2", "eslint-plugin-import": "^2.28.1", "eslint-plugin-jsx-a11y": "^6.7.1", "eslint-plugin-react": "^7.33.2", "eslint-plugin-react-hooks": "^4.5.0 || 5.0.0-canary-7118f5dd7-20230705" }, "peerDependencies": { "eslint": "^7.23.0 || ^8.0.0", "typescript": ">=3.3.1" }, "optionalPeers": ["typescript"] }, "sha512-UxJMRQ4uaEdLp3mVQoIbRIlEF0S2rTlyZhI/2yEMVdAWmgFfPY4iJZ68jCbhLvXMnKeHMkmqTGjEhFH5Vm9h+A=="],
 
     "eslint-config-prettier": ["eslint-config-prettier@9.1.0", "", { "peerDependencies": { "eslint": ">=7.0.0" }, "bin": { "eslint-config-prettier": "bin/cli.js" } }, "sha512-NSWl5BFQWEPi1j4TjVNItzYV7dZXZ+wP6I6ZhrBGpChQhZRUaElihE9uRRkcbRnNb76UMKDF3r+WTmNcGPKsqw=="],
 
@@ -1586,7 +1585,7 @@
 
     "object.values": ["object.values@1.2.1", "", { "dependencies": { "call-bind": "^1.0.8", "call-bound": "^1.0.3", "define-properties": "^1.2.1", "es-object-atoms": "^1.0.0" } }, "sha512-gXah6aZrcUxjWg2zR2MwouP2eHlCBzdV4pygudehaKXSGW4v2AsRQUK+lwwXhii6KFZcunEnmSUoYp5CXibxtA=="],
 
-    "openai": ["openai@4.92.1", "", { "dependencies": { "@types/node": "^18.11.18", "@types/node-fetch": "^2.6.4", "abort-controller": "^3.0.0", "agentkeepalive": "^4.2.1", "form-data-encoder": "1.7.2", "formdata-node": "^4.3.2", "node-fetch": "^2.6.7" }, "peerDependencies": { "ws": "^8.18.0", "zod": "^3.23.8" }, "optionalPeers": ["ws", "zod"], "bin": { "openai": "bin/cli" } }, "sha512-rFjyiQF/eHXIuzyoT2qkCY/xmI+zyq9xlMZmOEFkSsyGhc8tpNaf7rW25m5uTddnk6B5gRfRX640onMhAQyTww=="],
+    "openai": ["openai@4.93.0", "", { "dependencies": { "@types/node": "^18.11.18", "@types/node-fetch": "^2.6.4", "abort-controller": "^3.0.0", "agentkeepalive": "^4.2.1", "form-data-encoder": "1.7.2", "formdata-node": "^4.3.2", "node-fetch": "^2.6.7" }, "peerDependencies": { "ws": "^8.18.0", "zod": "^3.23.8" }, "optionalPeers": ["ws", "zod"], "bin": { "openai": "bin/cli" } }, "sha512-2kONcISbThKLfm7T9paVzg+QCE1FOZtNMMUfXyXckUAoXRRS/mTP89JSDHPMp8uM5s0bz28RISbvQjArD6mgUQ=="],
 
     "optionator": ["optionator@0.9.4", "", { "dependencies": { "deep-is": "^0.1.3", "fast-levenshtein": "^2.0.6", "levn": "^0.4.1", "prelude-ls": "^1.2.1", "type-check": "^0.4.0", "word-wrap": "^1.2.5" } }, "sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g=="],
 
@@ -1658,7 +1657,7 @@
 
     "postgres": ["postgres@3.4.5", "", {}, "sha512-cDWgoah1Gez9rN3H4165peY9qfpEo+SA61oQv65O3cRUE1pOEoJWwddwcqKE8XZYjbblOJlYDlLV4h67HrEVDg=="],
 
-    "posthog-js": ["posthog-js@1.234.10", "", { "dependencies": { "core-js": "^3.38.1", "fflate": "^0.4.8", "preact": "^10.19.3", "web-vitals": "^4.2.4" }, "peerDependencies": { "@rrweb/types": "2.0.0-alpha.17", "rrweb-snapshot": "2.0.0-alpha.17" }, "optionalPeers": ["@rrweb/types", "rrweb-snapshot"] }, "sha512-PCwfDtvzuQU1PfMVxZ/G6K9vQmBZvoIlYjE+3e5trycCd70rKJbPKAQX5cg0bI5+z5HZTcUQdq1A/NvDsMFQeA=="],
+    "posthog-js": ["posthog-js@1.235.0", "", { "dependencies": { "core-js": "^3.38.1", "fflate": "^0.4.8", "preact": "^10.19.3", "web-vitals": "^4.2.4" }, "peerDependencies": { "@rrweb/types": "2.0.0-alpha.17", "rrweb-snapshot": "2.0.0-alpha.17" }, "optionalPeers": ["@rrweb/types", "rrweb-snapshot"] }, "sha512-H/s2lgqXhp4lBmYUxue1RlObnt1rfYAg0kLXIU5fUrP6gFLe1OIqs46ip3zGHonCkh+6ZB0oRLnFApWsA1+1YQ=="],
 
     "preact": ["preact@10.26.5", "", {}, "sha512-fmpDkgfGU6JYux9teDWLhj9mKN55tyepwYbxHgQuIxbWQzgFg5vk7Mrrtfx7xRxq798ynkY4DDDxZr235Kk+4w=="],
 
