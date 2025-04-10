@@ -29,8 +29,18 @@
       "failedToAddToFavorites": "Failed to add to favorites",
       "failedToRemoveFromFavorites": "Failed to remove from favorites",
       "failedToModifyFavorites": "Failed to modify favorites",
+      "movingToBin": "Moving to bin...",
+      "movedToBin": "Moved to bin",
+      "failedToMoveToBin": "Failed to move to bin",
       "markingAsRead": "Marking as read...",
-      "markingAsUnread": "Marking as unread..."
+      "markingAsUnread": "Marking as unread...",
+      "hiddenImagesWarning": "Images are hidden by default for security reasons.",
+      "showImages": "Show Images",
+      "disableImages": "Hide Images",
+      "trustSender": "Trust Sender",
+      "cancel": "Cancel",
+      "save": "Save",
+      "remove": "Remove"
     },
     "themes": {
       "dark": "Escuro",
@@ -93,7 +103,7 @@
       "aiEnhancedQuery": "Enhanced search query"
     },
     "navUser": {
-      "customerSupport": "Suporte ao Cliente",
+      "customerSupport": "Community",
       "documentation": "Documentação",
       "appTheme": "Tema da aplicação",
       "accounts": "Contas",
@@ -151,7 +161,9 @@
       "markAsRead": "Mark as Read",
       "addLabel": "Adicionar marcador",
       "muteThread": "Silenciar esta conversa",
-      "favourites": "Favourites"
+      "favourites": "Favourites",
+      "disableImages": "Hide Images",
+      "enableImages": "Show Images"
     },
     "notes": {
       "title": "Notas",
@@ -235,7 +247,8 @@
       "moveToInbox": "Mover para a caixa de entrada",
       "unarchive": "Desarquivar",
       "archive": "Arquivo",
-      "moveToTrash": "Mover para o Lixo",
+      "moveToBin": "Move to Bin",
+      "restoreFromBin": "Restore from Bin",
       "markAsUnread": "Marcar como não lido",
       "markAsRead": "Mark as Read",
       "addFavorite": "Favorite",
@@ -251,6 +264,9 @@
       "createNewLabel": "Create New Label",
       "noLabelsAvailable": "No labels available",
       "loadMore": "Load more"
+    },
+    "units": {
+      "mb": "{amount} MB"
     }
   },
   "navigation": {
@@ -269,6 +285,7 @@
       "connections": "Conexões",
       "security": "Segurança",
       "appearance": "Aparência",
+      "signatures": "Signatures",
       "shortcuts": "Atalhos"
     }
   },
@@ -293,6 +310,8 @@
         "dynamicContentDescription": "Permitir que e-mails exibam conteúdo dinâmico.",
         "externalImages": "Exibir imagens externas",
         "externalImagesDescription": "Permitir que e-mails exibam imagens de fontes externas.",
+        "trustedSenders": "Trusted Senders",
+        "trustedSendersDescription": "Always display images for these senders.",
         "languageChangedTo": "Language changed to {locale}",
         "customPrompt": "Custom AI Prompt",
         "customPromptPlaceholder": "Enter your custom prompt for the AI...",
@@ -319,13 +338,35 @@
         "twoFactorAuthDescription": "Adicionar uma camada extra de segurança à sua conta",
         "loginNotifications": "Notificações de Login",
         "loginNotificationsDescription": "Seja notificado sobre novas tentativas de login",
-        "deleteAccount": "Deletar conta"
+        "deleteAccount": "Deletar conta",
+        "loadImagesDefault": "Load Images by Default",
+        "loadImagesDefaultDescription": "Images are not loaded by default for security reasons."
       },
       "appearance": {
         "title": "Aparência",
         "description": "Personalize as cores, fontes e opções de exibição.",
         "theme": "Tema",
         "inboxType": "Tipo de Caixa de E-mail"
+      },
+      "signatures": {
+        "title": "Email Signatures",
+        "description": "Create and manage your email signature that appears at the bottom of your messages.",
+        "enableSignature": "Enable signature",
+        "enableSignatureDescription": "Add your signature to the end of all outgoing messages.",
+        "includeByDefault": "Include by default",
+        "includeByDefaultDescription": "Automatically add your signature when composing new emails.",
+        "signatureContent": "Signature Content",
+        "signatureContentPlaceholder": "Create your signature with formatting, links, and images.",
+        "signaturePreview": "Signature Preview",
+        "signatureSaved": "Signature saved successfully",
+        "signaturePreviewDescription": "This is how your signature will appear in emails.",
+        "editorType": "Editor Type",
+        "editorTypeDescription": "Choose between plain text/HTML input or a rich text editor for your signature.",
+        "plainText": "Plain Text / HTML",
+        "richText": "Rich Text Editor",
+        "richTextDescription": "Use the rich text editor to format your signature.",
+        "richTextPlaceholder": "Format your signature with the rich text editor...",
+        "signatureContentHelp": "You can use HTML to add formatting, links, and images to your signature."
       },
       "shortcuts": {
         "title": "Atalhos do Teclado",
@@ -358,11 +399,38 @@
     "createEmail": {
       "body": "Corpo",
       "example": "zero@0.email",
-      "attachments": "Anexos",
+      "attachments": "Attachments ({count})",
+      "addMore": "Add more",
       "dropFilesToAttach": "Arraste e solte arquivos para anexar",
       "writeYourMessageHere": "Escreva sua mensagem aqui...",
       "emailSentSuccessfully": "E-mail enviado com sucesso",
-      "failedToSendEmail": "Não foi possível enviar o e-mail. Por favor, tente novamente."
+      "failedToSendEmail": "Não foi possível enviar o e-mail. Por favor, tente novamente.",
+      "signature": {
+        "title": "Signature",
+        "include": "Include signature",
+        "remove": "Remove signature",
+        "enable": "Enable signature",
+        "disable": "Disable signature",
+        "add": "Add signature"
+      },
+      "addLink": "Add Link",
+      "addUrlToCreateALink": "Add URL to create a link. The link will open in a new tab.",
+      "editor": {
+        "menuBar": {
+          "heading1": "Heading 1",
+          "heading2": "Heading 2",
+          "heading3": "Heading 3",
+          "bold": "Bold",
+          "italic": "Italic",
+          "strikethrough": "Strikethrough",
+          "underline": "Underline",
+          "link": "Link",
+          "bulletList": "Bullet List",
+          "orderedList": "Ordered List",
+          "viewAttachments": "View Attachments",
+          "attachFiles": "Attach Files"
+        }
+      }
     }
   }
 }

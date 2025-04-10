@@ -16,6 +16,7 @@ import {
   RotateCw,
   Mail,
   MailOpen,
+  Trash,
 } from 'lucide-react';
 import {
   Dialog,
@@ -83,7 +84,7 @@ export function DemoMailLayout() {
   }, []);
 
   useEffect(() => {
-    if (activeCategory === 'Primary') {
+    if (activeCategory === 'Primary' || activeCategory === 'All Mail') {
       setFilteredItems(items);
     } else {
       const categoryMap = {
@@ -171,7 +172,7 @@ export function DemoMailLayout() {
               </div>
             </div>
           </ResizablePanel>
-          
+
           {isDesktop && mail.selected && (
             <>
               <ResizableHandle className="opacity-0" />
@@ -390,7 +391,7 @@ export function MailLayout() {
             </div>
           </ResizablePanel>
 
-          <ResizableHandle className='opacity-0'/>
+          <ResizableHandle className="opacity-0" />
 
           {isDesktop ? (
             <>
@@ -400,7 +401,7 @@ export function MailLayout() {
                   threadId ? 'md:flex' : 'hidden',
                 )}
                 defaultSize={75}
-                minSize={25}
+                minSize={35}
               >
                 <div className="relative hidden h-[calc(100vh-(12px+14px))] flex-1 md:block">
                   <ThreadDisplay onClose={handleClose} id={threadId ?? undefined} />
@@ -516,6 +517,10 @@ function BulkSelectActions() {
       icon: <Inbox />,
       tooltip: t('common.mail.moveToInbox'),
     },
+    bin: {
+      icon: <Trash />,
+      tooltip: t('common.mail.moveToBin'),
+    },
   };
 
   return (
@@ -595,17 +600,17 @@ function BulkSelectActions() {
   );
 }
 
-const Categories = () => {
+export const Categories = () => {
   const t = useTranslations();
 
   return [
     {
-      id: 'Primary',
-      name: t('common.mailCategories.primary'),
-      searchValue: 'in:inbox category:primary',
-      icon: <Inbox className="h-4 w-4" />,
+      id: 'Important',
+      name: t('common.mailCategories.important'),
+      searchValue: 'is:important',
+      icon: <AlertTriangle className="h-4 w-4" />,
       colors:
-        'border-0 bg-gray-200 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400 dark:hover:bg-gray-800/70',
+        'border-0 text-amber-800 bg-amber-100 dark:bg-amber-900/20 dark:text-amber-500 dark:hover:bg-amber-900/30',
     },
     {
       id: 'All Mail',
@@ -616,12 +621,12 @@ const Categories = () => {
         'border-0 bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30',
     },
     {
-      id: 'Important',
-      name: t('common.mailCategories.important'),
-      searchValue: 'is:important',
-      icon: <AlertTriangle className="h-4 w-4" />,
+      id: 'Primary',
+      name: t('common.mailCategories.primary'),
+      searchValue: 'in:inbox category:primary',
+      icon: <Inbox className="h-4 w-4" />,
       colors:
-        'border-0 text-amber-800 bg-amber-100 dark:bg-amber-900/20 dark:text-amber-500 dark:hover:bg-amber-900/30',
+        'border-0 bg-gray-200 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400 dark:hover:bg-gray-800/70',
     },
     {
       id: 'Personal',
@@ -655,32 +660,43 @@ function CategorySelect() {
   const categories = Categories();
   const router = useRouter();
   const [category, setCategory] = useQueryState('category', {
-    defaultValue: 'Primary',
+    defaultValue: 'Important',
   });
 
   return (
     <Select
       onValueChange={(value: string) => {
-        // Find the category and trigger its selection
-        const category = categories.find((cat) => cat.id === value);
+        const selectedCategory = categories.find((cat) => cat.id === value);
 
-        if (category) {
-          // Update search value based on category
-          const searchValueState = {
-            value: category.searchValue || '',
+        if (selectedCategory) {
+          setSearchValue({
+            value: selectedCategory.searchValue || '',
             highlight: '',
             folder: '',
-          };
-          setSearchValue(searchValueState);
+          });
 
-          // Update category in URL - nuqs will preserve other params automatically
-          setCategory(value);
+          if (value === 'Important') {
+            setCategory(null);
+          } else {
+            setCategory(value);
+          }
         }
       }}
-      value={category}
+      value={category || 'Important'}
     >
-      <SelectTrigger className="bg-popover h-9 w-36">
-        <SelectValue placeholder="Select category" />
+      <SelectTrigger className="bg-popover h-9 w-fit">
+        {category ? (
+          <div className="flex items-center gap-2">
+            <span className="block md:hidden">
+              {categories.find((cat) => cat.id === category)?.icon}
+            </span>
+            <span className="hidden w-full md:block">
+              <SelectValue placeholder="Select category" />
+            </span>
+          </div>
+        ) : (
+          <SelectValue placeholder="Select category" />
+        )}
       </SelectTrigger>
       <SelectContent>
         {categories.map((category) => (

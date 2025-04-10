@@ -13,24 +13,34 @@
       "signOutError": "Fehler beim Abmelden",
       "refresh": "Aktualisieren",
       "loading": "Wird geladen...",
-      "featureNotImplemented": "This feature is not implemented yet",
-      "moving": "Moving...",
-      "movedToInbox": "Moved to inbox",
-      "movingToInbox": "Moving to inbox...",
-      "movedToSpam": "Moved to spam",
-      "movingToSpam": "Moving to spam...",
-      "archiving": "Archiving...",
-      "archived": "Archived",
-      "failedToMove": "Failed to move message",
-      "addingToFavorites": "Adding to favorites...",
-      "removingFromFavorites": "Removing from favorites...",
-      "addedToFavorites": "Added to favorites",
-      "removedFromFavorites": "Removed from favorites",
-      "failedToAddToFavorites": "Failed to add to favorites",
-      "failedToRemoveFromFavorites": "Failed to remove from favorites",
-      "failedToModifyFavorites": "Failed to modify favorites",
-      "markingAsRead": "Marking as read...",
-      "markingAsUnread": "Marking as unread..."
+      "featureNotImplemented": "Diese Funktion ist noch nicht implementiert",
+      "moving": "Wird verschoben...",
+      "movedToInbox": "Wurde in den Posteingang verschoben",
+      "movingToInbox": "Wird in Posteingang verschoben...",
+      "movedToSpam": "In Spam verschoben",
+      "movingToSpam": "Wird in Spam verschoben...",
+      "archiving": "Wird archiviert...",
+      "archived": "Archiviert",
+      "failedToMove": "Fehler beim Verschieben der Nachricht",
+      "addingToFavorites": "Wird zu Favoriten hinzugefügt...",
+      "removingFromFavorites": "Wird aus Favoriten entfernt...",
+      "addedToFavorites": "Zu den Favoriten hinzugefügt",
+      "removedFromFavorites": "Aus Favoriten entfernt",
+      "failedToAddToFavorites": "Fehler beim Hinzufügen zu den Favoriten",
+      "failedToRemoveFromFavorites": "Fehler beim Entfernen der Favoriten",
+      "failedToModifyFavorites": "Fehler beim Ändern der Favoriten",
+      "movingToBin": "Moving to bin...",
+      "movedToBin": "Moved to bin",
+      "failedToMoveToBin": "Failed to move to bin",
+      "markingAsRead": "Wird als gelesen markiert...",
+      "markingAsUnread": "Wird als ungelesen markiert...",
+      "hiddenImagesWarning": "Images are hidden by default for security reasons.",
+      "showImages": "Show Images",
+      "disableImages": "Hide Images",
+      "trustSender": "Trust Sender",
+      "cancel": "Cancel",
+      "save": "Save",
+      "remove": "Remove"
     },
     "themes": {
       "dark": "Dunkel",
@@ -93,7 +103,7 @@
       "aiEnhancedQuery": "Erweiterte Suchanfrage"
     },
     "navUser": {
-      "customerSupport": "Kundensupport",
+      "customerSupport": "Community",
       "documentation": "Dokumentation",
       "appTheme": "App Theme",
       "accounts": "Benutzerkonten",
@@ -101,7 +111,7 @@
     },
     "mailCategories": {
       "primary": "Primär",
-      "allMail": "All Mail",
+      "allMail": "Alle E-Mails",
       "important": "Wichtig",
       "personal": "Persönlich",
       "updates": "Updates",
@@ -151,7 +161,9 @@
       "markAsRead": "Als gelesen markieren",
       "addLabel": "Label hinzufügen",
       "muteThread": "Thread stummschalten",
-      "favourites": "Favoriten"
+      "favourites": "Favoriten",
+      "disableImages": "Hide Images",
+      "enableImages": "Show Images"
     },
     "notes": {
       "title": "Notizen",
@@ -235,11 +247,12 @@
       "moveToInbox": "In Posteingang verschieben",
       "unarchive": "Entarchivieren",
       "archive": "Archivieren",
-      "moveToTrash": "In den Papierkorb verschieben",
+      "moveToBin": "Move to Bin",
+      "restoreFromBin": "Restore from Bin",
       "markAsUnread": "Als ungelesen markieren",
       "markAsRead": "Als gelesen markieren",
-      "addFavorite": "Favorite",
-      "removeFavorite": "Unfavorite",
+      "addFavorite": "Favorit",
+      "removeFavorite": "Aus Favoriten entfernen",
       "muteThread": "Thread stummschalten",
       "moving": "Wird verschoben...",
       "moved": "Verschoben",
@@ -251,6 +264,9 @@
       "createNewLabel": "Create New Label",
       "noLabelsAvailable": "No labels available",
       "loadMore": "Mehr anzeigen"
+    },
+    "units": {
+      "mb": "{amount} MB"
     }
   },
   "navigation": {
@@ -269,6 +285,7 @@
       "connections": "Verbindungen",
       "security": "Sicherheit",
       "appearance": "Gestaltung",
+      "signatures": "Signatures",
       "shortcuts": "Shortcuts"
     }
   },
@@ -293,6 +310,8 @@
         "dynamicContentDescription": "Dynamischen Inhalt erlauben",
         "externalImages": "Externe Bilder anzeigen",
         "externalImagesDescription": "Das Anzeigen externer Bilder erlauben.",
+        "trustedSenders": "Trusted Senders",
+        "trustedSendersDescription": "Always display images for these senders.",
         "languageChangedTo": "Sprache zu {locale} geändert",
         "customPrompt": "Benutzerdefinierte KI-Aufforderung",
         "customPromptPlaceholder": "Geben Sie Ihre benutzerdefinierte Eingabeaufforderung für die KI ein...",
@@ -319,13 +338,35 @@
         "twoFactorAuthDescription": "Füge eine zusätzliche Sicherheitsebene zu deinem Konto hinzu",
         "loginNotifications": "Anmeldebenachrichtigungen",
         "loginNotificationsDescription": "Über neue Anmeldeversuche benachrichtigt werden",
-        "deleteAccount": "Benutzerkonto löschen"
+        "deleteAccount": "Benutzerkonto löschen",
+        "loadImagesDefault": "Load Images by Default",
+        "loadImagesDefaultDescription": "Images are not loaded by default for security reasons."
       },
       "appearance": {
         "title": "Gestaltung",
         "description": "Farben, Schriften und Ansicht anpassen",
         "theme": "Theme",
         "inboxType": ""
+      },
+      "signatures": {
+        "title": "Email Signatures",
+        "description": "Create and manage your email signature that appears at the bottom of your messages.",
+        "enableSignature": "Enable signature",
+        "enableSignatureDescription": "Add your signature to the end of all outgoing messages.",
+        "includeByDefault": "Include by default",
+        "includeByDefaultDescription": "Automatically add your signature when composing new emails.",
+        "signatureContent": "Signature Content",
+        "signatureContentPlaceholder": "Create your signature with formatting, links, and images.",
+        "signaturePreview": "Signature Preview",
+        "signatureSaved": "Signature saved successfully",
+        "signaturePreviewDescription": "This is how your signature will appear in emails.",
+        "editorType": "Editor Type",
+        "editorTypeDescription": "Choose between plain text/HTML input or a rich text editor for your signature.",
+        "plainText": "Plain Text / HTML",
+        "richText": "Rich Text Editor",
+        "richTextDescription": "Use the rich text editor to format your signature.",
+        "richTextPlaceholder": "Format your signature with the rich text editor...",
+        "signatureContentHelp": "You can use HTML to add formatting, links, and images to your signature."
       },
       "shortcuts": {
         "title": "Tastaturkürzel",
@@ -358,11 +399,38 @@
     "createEmail": {
       "body": "Inhalt",
       "example": "zero@0.email",
-      "attachments": "Anhänge",
+      "attachments": "Attachments ({count})",
+      "addMore": "Add more",
       "dropFilesToAttach": "Dateien hier ablegen, um sie anzuhängen",
       "writeYourMessageHere": "Schreiben Sie hier Ihre Nachricht...",
       "emailSentSuccessfully": "E-Mail wurde erfolgreich Versendet",
-      "failedToSendEmail": "Senden der E-Mail fehlgeschlagen. Bitte versuchen Sie es erneut."
+      "failedToSendEmail": "Senden der E-Mail fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "signature": {
+        "title": "Signature",
+        "include": "Include signature",
+        "remove": "Remove signature",
+        "enable": "Enable signature",
+        "disable": "Disable signature",
+        "add": "Add signature"
+      },
+      "addLink": "Add Link",
+      "addUrlToCreateALink": "Add URL to create a link. The link will open in a new tab.",
+      "editor": {
+        "menuBar": {
+          "heading1": "Heading 1",
+          "heading2": "Heading 2",
+          "heading3": "Heading 3",
+          "bold": "Bold",
+          "italic": "Italic",
+          "strikethrough": "Strikethrough",
+          "underline": "Underline",
+          "link": "Link",
+          "bulletList": "Bullet List",
+          "orderedList": "Ordered List",
+          "viewAttachments": "View Attachments",
+          "attachFiles": "Attach Files"
+        }
+      }
     }
   }
 }

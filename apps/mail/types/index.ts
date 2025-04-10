@@ -42,7 +42,7 @@ export interface ParsedMessage {
   tags: string[];
   sender: Sender;
   to: Sender[];
-  cc: Sender[];
+  cc: Sender[] | null;
   tls: boolean;
   listUnsubscribe?: string;
   listUnsubscribePost?: string;
@@ -99,8 +99,14 @@ export type ThreadProps = {
   message: InitialThread;
   selectMode: MailSelectMode;
   // TODO: enforce types instead of sprinkling "any"
-  onMouseDown?: (message: InitialThread) => () => any;
+  onClick?: (message: InitialThread) => () => void;
   isCompact?: boolean;
+  folder?: string;
+  isKeyboardFocused?: boolean;
+  isInQuickActionMode?: boolean;
+  selectedQuickActionIndex?: number;
+  resetNavigation?: () => void;
+  setHoveredMailId?: (index: string | null) => void;
 };
 
 export type ConditionalThreadProps = ThreadProps &
@@ -108,3 +114,16 @@ export type ConditionalThreadProps = ThreadProps &
     | { demo?: true; sessionData?: { userId: string; connectionId: string | null } }
     | { demo?: false; sessionData: { userId: string; connectionId: string | null } }
   );
+
+
+
+export interface IOutgoingMessage {
+  to: Sender[];
+  cc?: Sender[];
+  bcc?: Sender[];
+  subject: string
+  message: string
+  attachments: any[]
+  headers: Record<string, string>
+  threadId?: string
+}

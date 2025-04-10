@@ -5,12 +5,13 @@ import { twMerge } from 'tailwind-merge';
 import { JSONContent } from 'novel';
 import LZString from 'lz-string';
 import axios from 'axios';
+import { Sender } from '@/types';
 
 export const FOLDERS = {
   SPAM: 'spam',
   INBOX: 'inbox',
   ARCHIVE: 'archive',
-  TRASH: 'trash',
+  BIN: 'bin',
   DRAFT: 'draft',
   SENT: 'sent',
 } as const;
@@ -21,12 +22,13 @@ export const LABELS = {
   UNREAD: 'UNREAD',
   IMPORTANT: 'IMPORTANT',
   SENT: 'SENT',
+  TRASH: 'TRASH',
 } as const;
 
 export const FOLDER_NAMES = [
   'inbox',
   'spam',
-  'trash',
+  'bin',
   'unread',
   'starred',
   'important',
@@ -39,6 +41,7 @@ export const FOLDER_TAGS: Record<string, string[]> = {
   [FOLDERS.INBOX]: [LABELS.INBOX],
   [FOLDERS.ARCHIVE]: [],
   [FOLDERS.SENT]: [LABELS.SENT],
+  [FOLDERS.BIN]: [LABELS.TRASH],
 };
 
 export const getFolderTags = (folder: string): string[] => {
@@ -359,4 +362,43 @@ export const getEmailLogo = (email: string) => {
 
 export const generateConversationId = (): string => {
   return `conv_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+};
+
+export const contentToHTML = (content: string) => `
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body style="margin: 0; padding: 0;">
+${content}
+</body></html>`;
+
+
+export const constructReplyBody = (
+  formattedMessage: string,
+  originalDate: string,
+  originalSender: Sender | undefined,
+  otherRecipients: Sender[],
+  quotedMessage?: string,
+) => {
+  const senderName = originalSender?.name || originalSender?.email || 'Unknown Sender';
+  const recipientEmails = otherRecipients.map(r => r.email).join(', ');
+
+  return `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+      <div style="margin-bottom: 20px; line-height: 1.5;">
+        ${formattedMessage}
+      </div>
+      <div style="padding-left: 16px; margin-top: 20px; border-left: 3px solid #e2e8f0; color: #64748b;">
+        <div style="margin-bottom: 12px; font-size: 14px;">
+          On ${originalDate}, ${senderName} ${recipientEmails ? `&lt;${recipientEmails}&gt;` : ''} wrote:
+        </div>
+        <div style="white-space: pre-wrap; line-height: 1.5;">
+          ${quotedMessage || ''}
+        </div>
+      </div>
+    </div>
+  `;
 };

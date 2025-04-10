@@ -11,6 +11,8 @@ import {
   User,
   Users,
   X,
+  Inbox,
+  Mail,
 } from 'lucide-react';
 import {
   type ComponentProps,
@@ -42,6 +44,7 @@ import { Badge } from '@/components/ui/badge';
 import { useTranslations } from 'next-intl';
 import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
+import { Categories } from './mail';
 import items from './demo.json';
 import { toast } from 'sonner';
 const HOVER_DELAY = 1000; // ms before prefetching
@@ -53,6 +56,7 @@ const ThreadWrapper = ({
   isFolderInbox,
   isFolderSpam,
   isFolderSent,
+  isFolderBin,
   refreshCallback,
 }: {
   children: React.ReactNode;
@@ -61,6 +65,7 @@ const ThreadWrapper = ({
   isFolderInbox: boolean;
   isFolderSpam: boolean;
   isFolderSent: boolean;
+  isFolderBin: boolean;
   refreshCallback: () => void;
 }) => {
   return (
@@ -70,6 +75,7 @@ const ThreadWrapper = ({
       isInbox={isFolderInbox}
       isSpam={isFolderSpam}
       isSent={isFolderSent}
+      isBin={isFolderBin}
       refreshCallback={refreshCallback}
     >
       {children}
@@ -82,21 +88,11 @@ const Thread = memo(
     message,
     selectMode,
     demo,
-    onMouseDown,
+    onClick,
     sessionData,
     isKeyboardFocused,
-    isInQuickActionMode,
-    selectedQuickActionIndex,
-    resetNavigation,
     setHoveredMailId,
-  }: ConditionalThreadProps & {
-    folder?: string;
-    isKeyboardFocused?: boolean;
-    isInQuickActionMode?: boolean;
-    selectedQuickActionIndex?: number;
-    resetNavigation?: () => void;
-    setHoveredMailId?: (index: string | null) => void;
-  }) => {
+  }: ConditionalThreadProps) => {
     const [mail, setEmail] = useMail();
     const [searchValue] = useSearchValue();
     const t = useTranslations();
@@ -121,6 +117,7 @@ const Thread = memo(
     const isFolderInbox = folder === FOLDERS.INBOX || !folder;
     const isFolderSpam = folder === FOLDERS.SPAM;
     const isFolderSent = folder === FOLDERS.SENT;
+    const isFolderBin = folder === FOLDERS.BIN;
 
     const handleMouseEnter = () => {
       if (demo) return;
@@ -172,7 +169,7 @@ const Thread = memo(
     }, []);
 
     const content = (
-      <div className="p-1 px-3" onMouseDown={onMouseDown ? onMouseDown(message) : undefined}>
+      <div className="p-1 px-3" onClick={onClick ? onClick(message) : undefined}>
         {demo ? (
           <div
             data-thread-id={message.threadId ?? message.id}
@@ -301,7 +298,9 @@ const Thread = memo(
                           'text-md flex items-baseline gap-1 group-hover:opacity-100',
                         )}
                       >
-                        <span className={cn(threadIdParam ? 'max-w-[5ch] truncate' : '')}>
+                        <span
+                          className={cn('truncate', threadIdParam ? 'max-w-[5ch] truncate' : '')}
+                        >
                           {highlightText(message.sender.name, searchValue.highlight)}
                         </span>{' '}
                         {message.unread && !isMailSelected ? (
@@ -375,6 +374,7 @@ const Thread = memo(
         isFolderInbox={isFolderInbox}
         isFolderSpam={isFolderSpam}
         isFolderSent={isFolderSent}
+        isFolderBin={isFolderBin}
         refreshCallback={() => mutate()}
       >
         {content}
@@ -403,7 +403,7 @@ export function MailListDemo({
                 key={item.id}
                 message={item}
                 selectMode={'single'}
-                onMouseDown={(message) => () => onSelectMail && onSelectMail(message)}
+                onClick={(message) => () => onSelectMail && onSelectMail(message)}
               />
             ) : null;
           })}
@@ -421,6 +421,10 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [threadId, setThreadId] = useQueryState('threadId');
+  const [category, setCategory] = useQueryState('category');
+  const [searchValue, setSearchValue] = useSearchValue();
+
+  const allCategories = Categories();
 
   const sessionData = useMemo(
     () => ({
@@ -430,7 +434,20 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
     [session],
   );
 
-  const [searchValue, setSearchValue] = useSearchValue();
+  // Set initial category search value
+  useEffect(() => {
+    const currentCategory = category
+      ? allCategories.find((cat) => cat.id === category)
+      : allCategories.find((cat) => cat.id === 'Important');
+
+    if (currentCategory && searchValue.value === '') {
+      setSearchValue({
+        value: currentCategory.searchValue || '',
+        highlight: '',
+        folder: '',
+      });
+    }
+  }, []); // Run only once on mount
 
   const {
     data: { threads: items, nextPageToken },
@@ -589,7 +606,7 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
     return 'single';
   }, [isKeyPressed]);
 
-  const handleMailMouseDown = useCallback(
+  const handleMailClick = useCallback(
     (message: InitialThread) => () => {
       const isNotselectedDuringBulk =
         mail.bulkSelected.length && !mail.bulkSelected.includes(message.id);
@@ -616,12 +633,6 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
 
       // Update URL param without navigation
       void setThreadId(messageThreadId);
-
-      // Mark as read in background
-      markAsRead({ ids: [messageThreadId] }).catch((error) => {
-        console.error('Failed to mark email as read:', error);
-        toast.error(t('common.mail.failedToMarkAsRead'));
-      });
     },
     [handleMouseEnter, setThreadId, t, setMail, mail],
   );
@@ -672,7 +683,7 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
           {items.map((data, index) => {
             return (
               <Thread
-                onMouseDown={handleMailMouseDown}
+                onClick={handleMailClick}
                 selectMode={getSelectMode()}
                 isCompact={isCompact}
                 sessionData={sessionData}

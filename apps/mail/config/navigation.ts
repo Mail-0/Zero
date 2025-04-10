@@ -79,7 +79,7 @@ export const navigationConfig: Record<string, NavConfig> = {
             title: 'navigation.sidebar.bin',
             url: '/mail/bin',
             icon: DeleteIcon,
-            disabled: true,
+            disabled: false,
           },
           {
             id: 'settings',

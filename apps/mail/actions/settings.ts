@@ -1,7 +1,7 @@
 "use server";
 
 import { type UserSettings, userSettingsSchema } from "@zero/db/user_settings_default";
-import { userSettings } from "@zero/db/schema";
+import { earlyAccess, user, userSettings } from "@zero/db/schema";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
@@ -84,5 +84,61 @@ export async function saveUserSettings(settings: UserSettings) {
   } catch (error) {
     console.error("Failed to save user settings:", error);
     throw new Error("Failed to save user settings");
+  }
+}
+
+export async function handleGoldenTicket(email: string) {
+  try {
+    const userId = await getAuthenticatedUserId();
+    const [foundUser] = await db
+      .select({
+        hasUsedTicket: earlyAccess.hasUsedTicket,
+        email: user.email,
+        isEarlyAccess: earlyAccess.isEarlyAccess
+      })
+      .from(user)
+      .leftJoin(earlyAccess, eq(user.email, earlyAccess.email))
+      .where(eq(user.id, userId))
+      .limit(1);
+
+    if (!foundUser) {
+      return { success: false, error: 'User not found' };
+    }
+
+    if (foundUser.hasUsedTicket) {
+      return { success: false, error: 'Golden ticket already claimed' };
+    }
+
+    if (!foundUser.isEarlyAccess) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    await db.transaction(async (tx) => {
+      try {
+        await tx.insert(earlyAccess).values({
+          id: crypto.randomUUID(),
+          email,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          isEarlyAccess: true,
+          hasUsedTicket: '',
+        });
+      } catch (error: any) {
+        if (error.code !== '23505') {
+          throw error;
+        }
+      }
+      await tx.update(earlyAccess)
+        .set({
+          hasUsedTicket: email,
+          updatedAt: new Date()
+        })
+        .where(eq(earlyAccess.email, foundUser.email));
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to handle golden ticket:', error);
+    throw new Error('Failed to handle golden ticket');
   }
 }

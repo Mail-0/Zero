@@ -3,45 +3,33 @@ import {
   ArchiveX,
   Expand,
   Forward,
-  ForwardIcon,
-  Mail,
   MailOpen,
-  MoreVertical,
   Reply,
-  ReplyAll,
-  Star,
-  StarOff,
   X,
+  Trash,
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { DropdownMenu, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useSearchParams, useParams } from 'next/navigation';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { moveThreadsTo, ThreadDestination } from '@/lib/thread-actions';
-import { MoreVerticalIcon } from '../icons/animated/more-vertical';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useThread, useThreads } from '@/hooks/use-threads';
-import { ArchiveIcon } from '../icons/animated/archive';
-import { ExpandIcon } from '../icons/animated/expand';
 import { MailDisplaySkeleton } from './mail-skeleton';
-import { ReplyIcon } from '../icons/animated/reply';
 import { Button } from '@/components/ui/button';
-import { markAsUnread } from '@/actions/mail';
+import { markAsRead, markAsUnread } from '@/actions/mail';
 import { modifyLabels } from '@/actions/mail';
 import { useStats } from '@/hooks/use-stats';
 import ThreadSubject from './thread-subject';
 import ReplyCompose from './reply-composer';
 import { useTranslations } from 'next-intl';
 import { useMail } from '../mail/use-mail';
-import { NotesPanel } from './note-panel';
 import { cn, FOLDERS } from '@/lib/utils';
 import MailDisplay from './mail-display';
 import { ParsedMessage } from '@/types';
 import { Inbox } from 'lucide-react';
 import { toast } from 'sonner';
-import Link from 'next/link';
+
 
 interface ThreadDisplayProps {
   threadParam?: any;
@@ -94,12 +82,9 @@ export function ThreadDemo({ messages, isMobile }: ThreadDisplayProps) {
             </div>
           </ScrollArea>
           <div className="relative flex-shrink-0 md:top-1">
-            {messages ? (
-              <ReplyCompose 
-                emailData={messages} 
+            <ReplyCompose 
                 mode={mail.forwardComposerOpen ? 'forward' : 'reply'} 
-              />
-            ) : null}
+            />
           </div>
         </div>
       </div>
@@ -148,7 +133,7 @@ function ThreadActionButton({
 }
 
 export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisplayProps) {
-  const { data: emailData, isLoading } = useThread(id ?? null);
+  const { data: emailData, isLoading, mutate: mutateThread } = useThread(id ?? null);
   const { mutate: mutateThreads } = useThreads();
   const searchParams = useSearchParams();
   const [isMuted, setIsMuted] = useState(false);
@@ -160,12 +145,29 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
   const threadIdParam = searchParams.get('threadId');
   const threadId = threadParam ?? threadIdParam ?? '';
 
-  const moreVerticalIconRef = useRef<any>(null);
+  /**
+   * Mark email as read if it's unread, if there are no unread emails, mark the current thread as read
+   */
+  useEffect(() => {
+    if (!emailData || !id) return;
+    const unreadEmails = emailData.filter(e => e.unread);
+    if (unreadEmails.length === 0) {
+      markAsRead({ ids: [id] }).catch((error) => {
+        console.error('Failed to mark email as read:', error);
+        toast.error(t('common.mail.failedToMarkAsRead'));
+      }).then(() => Promise.all([mutateThread(), mutateThreads()]))
+    } else {
+      const ids = [id, ...unreadEmails.map(e => e.id)]
+      markAsRead({ ids }).catch((error) => {
+        console.error('Failed to mark email as read:', error);
+        toast.error(t('common.mail.failedToMarkAsRead'));
+      }).then(() => Promise.all([mutateThread(), mutateThreads()]))
+    }
+  }, [emailData, id])
 
-  const isInInbox = folder === FOLDERS.INBOX || !folder;
   const isInArchive = folder === FOLDERS.ARCHIVE;
   const isInSpam = folder === FOLDERS.SPAM;
-
+  const isInBin = folder === FOLDERS.BIN;
   const handleClose = useCallback(() => {
     // Reset reply composer state when closing thread display
     setMail((prev) => ({
@@ -195,7 +197,9 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
             ? t('common.actions.movedToInbox')
             : destination === 'spam'
               ? t('common.actions.movedToSpam')
-              : t('common.actions.archived'),
+              : destination === 'bin'
+                ? t('common.actions.movedToBin')
+                : t('common.actions.archived'),
         error: t('common.actions.failedToMove'),
       });
     },
@@ -319,7 +323,7 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
               disabled={!emailData}
               onClick={() => setIsFullscreen(!isFullscreen)}
             />
-            {isInSpam || isInArchive ? (
+            {isInSpam || isInArchive || isInBin ? (
               <ThreadActionButton
                 icon={Inbox}
                 label={t('common.mail.moveToInbox')}
@@ -339,6 +343,12 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
                   label={t('common.threadDisplay.moveToSpam')}
                   disabled={!emailData}
                   onClick={() => moveThreadTo('spam')}
+                />
+                <ThreadActionButton
+                  icon={Trash}
+                  label={t('common.mail.moveToBin')}
+                  disabled={!emailData}
+                  onClick={() => moveThreadTo('bin')}
                 />
               </>
             )}
@@ -418,11 +428,10 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
             </div>
           </ScrollArea>
           <div className={cn(
-            'relative z-10 bg-offsetLight dark:bg-offsetDark',
+            'relative z-10 mt-3 ',
             isFullscreen ? 'mb-2' : ''
           )}>
             <ReplyCompose
-              emailData={emailData}
               mode={mail.forwardComposerOpen ? 'forward' : 'reply'}
             />
           </div>

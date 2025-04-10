@@ -20,7 +20,6 @@ import Link from 'next/link';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: stats } = useStats();
-  const isMobile = useIsMobile();
 
   const pathname = usePathname();
 
@@ -122,7 +121,6 @@ function ComposeButton() {
   const iconRef = useRef<SquarePenIconHandle>(null);
   const { state } = useSidebar();
   const isMobile = useIsMobile();
-  const router = useRouter();
   const t = useTranslations();
   return (
     <Button
