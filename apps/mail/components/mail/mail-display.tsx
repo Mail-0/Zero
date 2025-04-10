@@ -177,7 +177,7 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
                 <div className="flex items-center justify-start gap-2">
                   <span className="font-semibold">{emailData?.sender?.name}</span>
                   <span className="text-muted-foreground flex grow-0 items-center gap-2 text-sm">
-                    <span>{emailData?.sender?.email}</span>
+                      <span className="overflow-hidden text-ellipsis whitespace-nowrap min-w-0">{emailData?.sender?.email}</span>
 
                     {listUnsubscribeAction && (
                       <Dialog>

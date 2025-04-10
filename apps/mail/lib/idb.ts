@@ -21,7 +21,7 @@ class SWRDatabase extends Dexie {
 const db = new SWRDatabase();
 const ONE_DAY = 1000 * 60 * 60 * 24;
 
-export function dexieStorageProvider(_: Readonly<Cache>): Cache {
+export function dexieStorageProvider(): Cache & { clear: () => void } {
   const memoryCache = new Map<string, State<any>>();
 
   db.cache
@@ -39,6 +39,11 @@ export function dexieStorageProvider(_: Readonly<Cache>): Cache {
 
     get(key: string) {
       return memoryCache.get(key);
+    },
+
+    clear: () => {
+      memoryCache.clear();
+      db.cache.clear().catch(console.error);
     },
 
     set(key: string, value: State) {

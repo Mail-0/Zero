@@ -1,6 +1,7 @@
 'use client';
 
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
+import { EditorProvider } from '@/components/providers/editor-provider';
 import { AISidebarProvider } from '@/components/ui/ai-sidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
@@ -12,7 +13,9 @@ export function Providers({ children, ...props }: React.ComponentProps<typeof Ne
       <JotaiProvider>
         <NuqsAdapter>
           <NextThemesProvider {...props}>
-            <SidebarProvider>{children}</SidebarProvider>
+            <EditorProvider>
+              <SidebarProvider>{children}</SidebarProvider>
+            </EditorProvider>
           </NextThemesProvider>
         </NuqsAdapter>
       </JotaiProvider>

@@ -7,11 +7,7 @@ export const defaultUserSettings = {
     externalImages: true,
     customPrompt: "",
     trustedSenders: [],
-    signature: {
-        enabled: false,
-        content: "",
-        includeByDefault: true,
-    },
+    isOnboarded: false
 } satisfies UserSettings;
 
 export const userSettingsSchema = z.object({
@@ -20,12 +16,8 @@ export const userSettingsSchema = z.object({
     dynamicContent: z.boolean(),
     externalImages: z.boolean(),
     customPrompt: z.string(),
-    trustedSenders: z.string().array(),
-    signature: z.object({
-        enabled: z.boolean(),
-        content: z.string(),
-        includeByDefault: z.boolean(),
-    }),
+    isOnboarded: z.boolean().optional(),
+    trustedSenders: z.string().array().optional(),
 });
 
 export type UserSettings = z.infer<typeof userSettingsSchema>

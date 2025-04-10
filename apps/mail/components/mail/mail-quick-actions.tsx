@@ -142,7 +142,7 @@ export const MailQuickActions = memo(
     const handleDelete = useCallback(
       async (e?: React.MouseEvent) => {
         // TODO: Implement delete
-        toast.info(t('common.mail.moveToTrash'));
+        toast.info(t('common.mail.moveToBin'));
       },
       [t],
     );

@@ -2,7 +2,7 @@
 import { generateHTML, generateJSON } from '@tiptap/core';
 import { useConnections } from '@/hooks/use-connections';
 import { createDraft, getDraft } from '@/actions/drafts';
-import { ArrowUpIcon, Paperclip, X } from 'lucide-react';
+import { ArrowUpIcon, Paperclip, X, CheckIcon, XIcon } from 'lucide-react';
 import { SidebarToggle } from '../ui/sidebar-toggle';
 import Paragraph from '@tiptap/extension-paragraph';
 import Document from '@tiptap/extension-document';
@@ -19,7 +19,7 @@ import { toast } from 'sonner';
 import * as React from 'react';
 import Editor from './editor';
 import './prosemirror.css';
-import { useSettings } from '@/hooks/use-settings';
+import type { Editor as EditorType } from '@tiptap/core';
 
 const MAX_VISIBLE_ATTACHMENTS = 12;
 
@@ -57,8 +57,7 @@ export function CreateEmail({
   const [isLoading, setIsLoading] = React.useState(false);
   const [messageContent, setMessageContent] = React.useState(initialBody);
   const [draftId, setDraftId] = useQueryState('draftId');
-  const [includeSignature, setIncludeSignature] = React.useState(true);
-  const { settings } = useSettings();
+  const [editor, setEditor] = React.useState<EditorType | null>(null);
   
   const [defaultValue, setDefaultValue] = React.useState<JSONContent | null>(() => {
     if (initialBody) {
@@ -84,6 +83,13 @@ export function CreateEmail({
     activeAccount?.name || session?.activeConnection?.name || session?.user?.name || '';
   const userEmail =
     activeAccount?.email || session?.activeConnection?.email || session?.user?.email || '';
+
+  const [aiSuggestion, setAiSuggestion] = React.useState<{
+    content: string;
+    subject?: string;
+  } | null>(null);
+
+  const t = useTranslations();
 
   React.useEffect(() => {
     if (!draftId && !defaultValue) {
@@ -134,8 +140,6 @@ export function CreateEmail({
 
     loadDraft();
   }, [draftId]);
-
-  const t = useTranslations();
 
   const handleAddEmail = (email: string) => {
     const trimmedEmail = email.trim().replace(/,$/, '');
@@ -271,7 +275,36 @@ export function CreateEmail({
 
   // Add ref for to input
   const toInputRef = React.useRef<HTMLInputElement>(null);
+  // Add refs for subject and editor
+  const subjectInputRef = React.useRef<HTMLInputElement>(null);
+  const editorRef = React.useRef<any>(null);
 
+  // Add a mount ref to ensure we only auto-focus once
+  const isFirstMount = React.useRef(true);
+
+  // Auto-focus logic
+  React.useEffect(() => {
+    if (!isFirstMount.current) return;
+    isFirstMount.current = false;
+
+    requestAnimationFrame(() => {
+      if (toEmails.length === 0 && !toInput) {
+        toInputRef.current?.focus();
+        console.log('Focusing to input');
+      } else if (!subjectInput.trim()) {
+        subjectInputRef.current?.focus();
+        console.log('Focusing subject input');
+      } else {
+        const editorElement = document.querySelector('.ProseMirror');
+        if (editorElement instanceof HTMLElement) {
+          editorElement.focus();
+          console.log('Focusing editor');
+        }
+      }
+    });
+  }, []); // Empty dependency array since we only want this on mount
+
+  // Keyboard shortcut handler
   React.useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       // Only trigger if "/" is pressed and no input/textarea is focused
@@ -326,12 +359,90 @@ export function CreateEmail({
     }
   }, [initialTo, initialSubject, initialBody, defaultValue]);
 
+  const handleAcceptAISuggestion = () => {
+    if (!aiSuggestion) return;
+
+    try {
+      // Update editor content
+      if (editor) {
+        const paragraphs = aiSuggestion.content.split('\n\n');
+        const jsonContent = {
+          type: 'doc',
+          content: paragraphs.map(p => ({
+            type: 'paragraph',
+            content: [{ type: 'text', text: p }]
+          }))
+        };
+        editor.commands.setContent(jsonContent);
+      }
+
+      // Update subject if empty and suggestion has subject
+      if (aiSuggestion.subject && !subjectInput) {
+        setSubjectInput(aiSuggestion.subject);
+      }
+
+      // Clear suggestion
+      setAiSuggestion(null);
+      toast.success('Email content updated');
+      setHasUnsavedChanges(true);
+    } catch (error) {
+      console.error('Error applying suggestion:', error);
+      toast.error('Failed to apply suggestion');
+    }
+  };
+
+  const handleRejectAISuggestion = () => {
+    setAiSuggestion(null);
+  };
+
   return (
     <div
       className="bg-offsetLight dark:bg-offsetDark relative flex h-full flex-col overflow-hidden shadow-inner md:rounded-2xl md:border md:shadow-sm"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
+      data-create-email
+      ref={(el) => {
+        if (el) {
+          (el as any).__onContentGenerated = (jsonContent: any, newSubject?: string) => {
+            try {
+              // Update the editor content with the AI-generated content
+              if (editor) {
+                editor.commands.setContent(jsonContent);
+              }
+
+              // Extract and set the text content for validation purposes
+              if (jsonContent.content && jsonContent.content.length > 0) {
+                const extractTextContent = (node: any): string => {
+                  if (!node) return '';
+                  if (node.text) return node.text;
+                  if (node.content && Array.isArray(node.content)) {
+                    return node.content.map(extractTextContent).join(' ');
+                  }
+                  return '';
+                };
+
+                const textContent = jsonContent.content
+                  .map(extractTextContent)
+                  .join('\n')
+                  .trim();
+                setMessageContent(textContent);
+              }
+
+              // Update the subject if provided
+              if (newSubject && (!subjectInput || subjectInput.trim() === '')) {
+                setSubjectInput(newSubject);
+              }
+
+              // Mark as having unsaved changes
+              setHasUnsavedChanges(true);
+            } catch (error) {
+              console.error('Error applying AI content:', error);
+              toast.error('Error applying AI content to your email. Please try again.');
+            }
+          };
+        }
+      }}
     >
       {isDragging && (
         <div className="bg-background/80 border-primary/30 absolute inset-0 z-50 m-4 flex items-center justify-center rounded-2xl border-2 border-dashed backdrop-blur-sm">
@@ -348,6 +459,40 @@ export function CreateEmail({
       <div className="relative flex h-full flex-col">
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto w-full max-w-7xl space-y-12 px-4 pt-4 md:px-2">
+            {aiSuggestion && (
+              <div className="mb-4 rounded-lg border bg-muted/5 p-4">
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="text-sm font-medium">AI Suggestion</div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAcceptAISuggestion}
+                      className="h-8 rounded-md border border-green-500/20 bg-green-500/10 px-4 text-[13px] font-medium text-green-600 hover:bg-green-500/20 hover:text-green-700"
+                    >
+                      <CheckIcon className="mr-1 h-4 w-4" />
+                      Accept
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRejectAISuggestion}
+                      className="h-8 rounded-md border border-red-500/20 bg-red-500/10 px-4 text-[13px] font-medium text-red-600 hover:bg-red-500/20 hover:text-red-700"
+                    >
+                      <XIcon className="mr-1 h-4 w-4" />
+                      Reject
+                    </Button>
+                  </div>
+                </div>
+                {aiSuggestion.subject && (
+                  <div className="mb-2 text-sm">
+                    <span className="font-medium">Subject:</span> {aiSuggestion.subject}
+                  </div>
+                )}
+                <div className="whitespace-pre-wrap text-sm font-mono">{aiSuggestion.content}</div>
+              </div>
+            )}
+
             <div className="space-y-3 md:px-1">
               <div className="flex items-center">
                 <div className="text-muted-foreground w-20 flex-shrink-0 pr-3 text-right text-[1rem] font-[600] opacity-50 md:w-24">
@@ -376,18 +521,30 @@ export function CreateEmail({
                     </div>
                   ))}
                   <input
+                    ref={toInputRef}
                     disabled={isLoading}
                     type="email"
                     className="text-md relative left-[3px] min-w-[120px] flex-1 bg-transparent placeholder:text-[#616161] placeholder:opacity-50 focus:outline-none"
                     placeholder={toEmails.length ? '' : t('pages.createEmail.example')}
                     value={toInput}
                     onChange={(e) => setToInput(e.target.value)}
+                    onPaste={(e) => {
+                      e.preventDefault();
+                      const pastedText = e.clipboardData.getData('text');
+                      const emails = pastedText.split(/[,\n]/).map(email => email.trim());
+                      emails.forEach(email => {
+                        if (email && !toEmails.includes(email) && isValidEmail(email)) {
+                          setToEmails(prev => [...prev, email]);
+                          setHasUnsavedChanges(true);
+                        }
+                      });
+                    }}
                     onKeyDown={(e) => {
                       if ((e.key === ',' || e.key === 'Enter' || e.key === ' ') && toInput.trim()) {
                         e.preventDefault();
                         handleAddEmail(toInput);
                       } else if (e.key === 'Backspace' && !toInput && toEmails.length > 0) {
-                        setToEmails((emails) => emails.slice(0, -1));
+                        setToEmails((emails) => emails.filter((_, i) => i !== emails.length - 1));
                         setHasUnsavedChanges(true);
                       }
                     }}
@@ -405,6 +562,7 @@ export function CreateEmail({
                   {t('common.searchBar.subject')}
                 </div>
                 <input
+                  ref={subjectInputRef}
                   disabled={isLoading}
                   type="text"
                   className="text-md relative left-[7.5px] w-full bg-transparent placeholder:text-[#616161] placeholder:opacity-50 focus:outline-none"
@@ -422,32 +580,27 @@ export function CreateEmail({
                   {t('pages.createEmail.body')}
                 </div>
                 <div className="w-full">
-                  {defaultValue && (
-                    <Editor
-                      initialValue={defaultValue}
-                      onChange={(newContent) => {
-                        setMessageContent(newContent);
-                        if (newContent.trim() !== '') {
-                          setHasUnsavedChanges(true);
-                        }
-                      }}
-                      key={resetEditorKey}
-                      placeholder={t('pages.createEmail.writeYourMessageHere')}
-                      onAttachmentsChange={setAttachments}
-                      onCommandEnter={handleSendEmail}
-                      includeSignature={includeSignature}
-                      onSignatureToggle={setIncludeSignature}
-                      signature={settings?.signature?.content || ''}
-                      hasSignature={Boolean(settings?.signature?.enabled)}
-                    />
-                  )}
+                  <Editor
+                    initialValue={defaultValue || undefined}
+                    onChange={(newContent) => {
+                      setMessageContent(newContent);
+                      if (newContent.trim() !== '') {
+                        setHasUnsavedChanges(true);
+                      }
+                    }}
+                    key={resetEditorKey}
+                    placeholder={t('pages.createEmail.writeYourMessageHere')}
+                    onAttachmentsChange={setAttachments}
+                    onCommandEnter={handleSendEmail}
+                    onEditorReady={setEditor}
+                  />
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-offsetLight dark:bg-offsetDark sticky bottom-0 left-0 right-0 flex items-center justify-between p-4 pb-3">
+        <div className="bg-offsetLight dark:bg-offsetDark sticky bottom-0 left-0 right-0 flex items-center justify-between p-4 pb-3 md:mb-0 mb-16">
           <div className="flex items-center gap-4">
             <div className="mr-1 pb-2 pt-2">
               <AIAssistant
@@ -455,60 +608,7 @@ export function CreateEmail({
                 subject={subjectInput}
                 recipients={toEmails}
                 userContext={{ name: userName, email: userEmail }}
-                onContentGenerated={(jsonContent, newSubject) => {
-                  console.log('CreateEmail: Received AI-generated content', {
-                    jsonContentType: jsonContent.type,
-                    hasContent: Boolean(jsonContent.content),
-                    contentLength: jsonContent.content?.length || 0,
-                    newSubject: newSubject,
-                  });
-
-                  try {
-                    // Update the editor content with the AI-generated content
-                    setDefaultValue(jsonContent);
-
-                    // Extract and set the text content for validation purposes
-                    // This ensures the submit button is enabled immediately
-                    if (jsonContent.content && jsonContent.content.length > 0) {
-                      // Extract text content from JSON structure recursively
-                      const extractTextContent = (node: any): string => {
-                        if (!node) return '';
-
-                        if (node.text) return node.text;
-
-                        if (node.content && Array.isArray(node.content)) {
-                          return node.content.map(extractTextContent).join(' ');
-                        }
-
-                        return '';
-                      };
-
-                      // Process all content nodes
-                      const textContent = jsonContent.content
-                        .map(extractTextContent)
-                        .join('\n')
-                        .trim();
-                      setMessageContent(textContent);
-                    }
-
-                    // Update the subject if provided
-                    if (newSubject && (!subjectInput || subjectInput.trim() === '')) {
-                      console.log('CreateEmail: Setting new subject from AI', newSubject);
-                      setSubjectInput(newSubject);
-                    }
-
-                    // Mark as having unsaved changes
-                    setHasUnsavedChanges(true);
-
-                    // Reset the editor to ensure it picks up the new content
-                    setResetEditorKey((prev) => prev + 1);
-
-                    console.log('CreateEmail: Successfully applied AI content');
-                  } catch (error) {
-                    console.error('CreateEmail: Error applying AI content', error);
-                    toast.error('Error applying AI content to your email. Please try again.');
-                  }
-                }}
+                onSuggestion={setAiSuggestion}
               />
             </div>
             

@@ -29,6 +29,9 @@
       "failedToAddToFavorites": "Failed to add to favorites",
       "failedToRemoveFromFavorites": "Failed to remove from favorites",
       "failedToModifyFavorites": "Failed to modify favorites",
+      "movingToBin": "Moving to bin...",
+      "movedToBin": "Moved to bin",
+      "failedToMoveToBin": "Failed to move to bin",
       "markingAsRead": "Marking as read...",
       "markingAsUnread": "Marking as unread...",
       "hiddenImagesWarning": "Images are hidden by default for security reasons.",
@@ -100,7 +103,7 @@
       "aiEnhancedQuery": "Enhanced search query"
     },
     "navUser": {
-      "customerSupport": "Customer Support",
+      "customerSupport": "Community",
       "documentation": "Documentation",
       "appTheme": "App Theme",
       "accounts": "Accounts",
@@ -244,7 +247,8 @@
       "moveToInbox": "Move to Inbox",
       "unarchive": "Unarchive",
       "archive": "Archive",
-      "moveToTrash": "Move to Trash",
+      "moveToBin": "Move to Bin",
+      "restoreFromBin": "Restore from Bin",
       "markAsUnread": "Mark as Unread",
       "markAsRead": "Mark as Read",
       "addFavorite": "Favorite",

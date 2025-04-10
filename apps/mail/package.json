@@ -78,6 +78,7 @@
     "jotai": "2.12.1",
     "lucide-react": "0.474.0",
     "lz-string": "1.5.0",
+    "mimetext": "^3.0.27",
     "motion": "12.4.7",
     "next": "15.2.3",
     "next-intl": "3.26.5",

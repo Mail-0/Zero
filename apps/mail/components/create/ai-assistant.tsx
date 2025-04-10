@@ -12,14 +12,14 @@ import { toast } from 'sonner';
 
 // Types
 interface AIAssistantProps {
-  currentContent?: string;
-  recipients?: string[];
-  subject?: string;
-  userContext?: {
+  currentContent: string;
+  subject: string;
+  recipients: string[];
+  userContext: {
     name?: string;
     email?: string;
   };
-  onContentGenerated?: (content: JSONContent, subject?: string) => void;
+  onSuggestion?: (suggestion: { content: string; subject?: string; } | null) => void;
 }
 
 type MessageType = 'email' | 'question' | 'system';
@@ -207,13 +207,13 @@ const ActionButtons = ({
 );
 
 // Main component
-export const AIAssistant = ({
-  currentContent = '',
-  recipients = [],
-  subject = '',
+export function AIAssistant({
+  currentContent,
+  subject,
+  recipients,
   userContext,
-  onContentGenerated,
-}: AIAssistantProps) => {
+  onSuggestion
+}: AIAssistantProps) {
   // State
   const [isExpanded, setIsExpanded] = useState(false);
   const [prompt, setPrompt] = useState('');
@@ -340,16 +340,21 @@ export const AIAssistant = ({
 
   // Handle accept
   const handleAccept = () => {
-    if (generatedContent && onContentGenerated) {
+    if (generatedContent && onSuggestion) {
       // Extract the actual content from the JSON structure
       const actualContent = generatedContent.content;
 
       // First update subject if available
       if (suggestedSubject) {
         // Pass both the JSON content for the editor and the plaintext content for validation
-        onContentGenerated(generatedContent.jsonContent, suggestedSubject);
+        onSuggestion({
+          content: actualContent,
+          subject: suggestedSubject
+        });
       } else {
-        onContentGenerated(generatedContent.jsonContent);
+        onSuggestion({
+          content: actualContent
+        });
       }
 
       // Add confirmation message
@@ -475,4 +480,4 @@ export const AIAssistant = ({
       </div>
     </div>
   );
-};
+}

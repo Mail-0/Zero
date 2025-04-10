@@ -72,6 +72,7 @@ const options = {
         .select({
           activeConnectionId: _user.defaultConnectionId,
           hasEarlyAccess: earlyAccess.isEarlyAccess,
+          hasUsedTicket: earlyAccess.hasUsedTicket
         })
         .from(_user)
         .leftJoin(earlyAccess, eq(_user.email, earlyAccess.email))
@@ -169,6 +170,7 @@ const options = {
         activeConnection,
         user,
         session,
+        hasUsedTicket: foundUser?.hasUsedTicket ?? false
       };
     }),
   ],

@@ -72,7 +72,6 @@ ul[data-type='taskList'] li > label input[type='checkbox'] {
   -webkit-appearance: none;
   appearance: none;
   background-color: hsl(var(--background));
-  margin: 0;
   cursor: pointer;
   width: 1.2em;
   height: 1.2em;
@@ -216,8 +215,9 @@ mark[style] > strong {
 /* Adjust spacing between list items */
 .ProseMirror ul li,
 .ProseMirror ol li {
-  margin-bottom: 0.75rem;  /* Reduced from 1rem to 0.75rem */
-  line-height: 1.4;        /* Reduced from 1.6 to 1.4 */
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
 }
 
 

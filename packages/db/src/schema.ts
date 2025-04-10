@@ -62,6 +62,7 @@ export const earlyAccess = createTable("early_access", {
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
   isEarlyAccess: boolean("is_early_access").notNull().default(false),
+  hasUsedTicket: text("has_used_ticket").default('')
 });
 
 export const connection = createTable("connection", {
