@@ -34,8 +34,10 @@
       "hiddenImagesWarning": "Images are hidden by default for security reasons.",
       "showImages": "Show Images",
       "disableImages": "Hide Images",
+      "trustSender": "Trust Sender",
       "cancel": "Cancel",
-      "save": "Save"
+      "save": "Save",
+      "remove": "Remove"
     },
     "themes": {
       "dark": "Dark",
@@ -279,6 +281,7 @@
       "connections": "Connections",
       "security": "Security",
       "appearance": "Appearance",
+      "signatures": "Signatures",
       "shortcuts": "Shortcuts"
     }
   },
@@ -303,6 +306,8 @@
         "dynamicContentDescription": "Allow emails to display dynamic content.",
         "externalImages": "Display External Images",
         "externalImagesDescription": "Allow emails to display images from external sources.",
+        "trustedSenders": "Trusted Senders",
+        "trustedSendersDescription": "Always display images for these senders.",
         "languageChangedTo": "Language changed to {locale}",
         "customPrompt": "Custom AI Prompt",
         "customPromptPlaceholder": "Enter your custom prompt for the AI...",
@@ -338,6 +343,26 @@
         "description": "Customize colors, fonts and view options.",
         "theme": "Theme",
         "inboxType": "Inbox Type"
+      },
+      "signatures": {
+        "title": "Email Signatures",
+        "description": "Create and manage your email signature that appears at the bottom of your messages.",
+        "enableSignature": "Enable signature",
+        "enableSignatureDescription": "Add your signature to the end of all outgoing messages.",
+        "includeByDefault": "Include by default",
+        "includeByDefaultDescription": "Automatically add your signature when composing new emails.",
+        "signatureContent": "Signature Content",
+        "signatureContentPlaceholder": "Create your signature with formatting, links, and images.",
+        "signaturePreview": "Signature Preview",
+        "signatureSaved": "Signature saved successfully",
+        "signaturePreviewDescription": "This is how your signature will appear in emails.",
+        "editorType": "Editor Type",
+        "editorTypeDescription": "Choose between plain text/HTML input or a rich text editor for your signature.",
+        "plainText": "Plain Text / HTML",
+        "richText": "Rich Text Editor",
+        "richTextDescription": "Use the rich text editor to format your signature.",
+        "richTextPlaceholder": "Format your signature with the rich text editor...",
+        "signatureContentHelp": "You can use HTML to add formatting, links, and images to your signature."
       },
       "shortcuts": {
         "title": "Keyboard Shortcuts",
@@ -376,6 +401,14 @@
       "writeYourMessageHere": "Write your message here...",
       "emailSentSuccessfully": "Email sent successfully",
       "failedToSendEmail": "Failed to send email. Please try again.",
+      "signature": {
+        "title": "Signature",
+        "include": "Include signature",
+        "remove": "Remove signature",
+        "enable": "Enable signature",
+        "disable": "Disable signature",
+        "add": "Add signature"
+      },
       "addLink": "Add Link",
       "addUrlToCreateALink": "Add URL to create a link. The link will open in a new tab.",
       "editor": {

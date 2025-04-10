@@ -1,6 +1,12 @@
 'use client';
 
-import { SidebarGroup, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from './sidebar';
+import {
+  SidebarGroup,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  useSidebar,
+} from './sidebar';
 import { Collapsible, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { clearBulkSelectionAtom } from '../mail/use-mail';
@@ -74,8 +80,6 @@ export function NavMain({ items }: NavMainProps) {
       // Get the current 'from' parameter
       const currentFrom = searchParams.get('from');
       const category = searchParams.get('category');
-
-      
 
       // Handle settings navigation
       if (item.isSettingsButton) {
@@ -183,11 +187,10 @@ function NavItem(item: NavItemProps & { href: string }) {
         className="flex cursor-not-allowed items-center opacity-50"
       >
         {item.icon && <item.icon ref={iconRef} className="relative mr-2.5 h-3 w-3.5" />}
-        <p className="mt-0.5 text-[13px]">{t(item.title as MessageKey)}</p>
+        <p className="mt-0.5 text-[13px] truncate">{t(item.title as MessageKey)}</p>
       </SidebarMenuButton>
     );
   }
-
 
   // Apply animation handlers to all buttons including back buttons
   const linkProps = {
@@ -196,6 +199,8 @@ function NavItem(item: NavItemProps & { href: string }) {
     onMouseLeave: () => iconRef.current?.stopAnimation?.(),
   };
 
+  const { setOpenMobile } = useSidebar();
+
   const buttonContent = (
     <SidebarMenuButton
       tooltip={t(item.title as MessageKey)}
@@ -203,15 +208,14 @@ function NavItem(item: NavItemProps & { href: string }) {
         'hover:bg-subtleWhite dark:hover:bg-subtleBlack flex items-center',
         item.isActive && 'bg-subtleWhite text-accent-foreground dark:bg-subtleBlack',
       )}
+      onClick={() => setOpenMobile(false)}
     >
-      {item.icon && <item.icon ref={iconRef} className="mr-2" />}
-      <p className="mt-0.5 text-[13px]">{t(item.title as MessageKey)}</p>
+      {item.icon && <item.icon ref={iconRef} className="mr-2 shrink-0" />}
+      <p className="mt-0.5 text-[13px] truncate min-w-0 flex-1">{t(item.title as MessageKey)}</p>
       {stats && stats.find((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase()) && (
-        <Badge className="ml-auto rounded-md" variant="outline">
+        <Badge className="ml-auto rounded-md shrink-0" variant="outline">
           {stats
-
             .find((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase())
-
             ?.count?.toLocaleString() || '0'}
         </Badge>
       )}

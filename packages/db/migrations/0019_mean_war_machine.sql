@@ -1,0 +1,3 @@
+ALTER TABLE "mail0_user_settings" ALTER COLUMN "settings" SET DEFAULT '{"language":"en","timezone":"UTC","dynamicContent":false,"externalImages":true,"customPrompt":"","signature":{"enabled":false,"content":"","includeByDefault":true}}'::jsonb;--> statement-breakpoint
+ALTER TABLE "mail0_user" ADD COLUMN "custom_prompt" text;--> statement-breakpoint
+ALTER TABLE "mail0_connection" ADD CONSTRAINT "mail0_connection_user_id_email_unique" UNIQUE("user_id","email");
