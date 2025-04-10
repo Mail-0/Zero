@@ -12,7 +12,32 @@
       "signedOutSuccess": "Déconnecté avec succès !",
       "signOutError": "Erreur de déconnexion",
       "refresh": "Actualiser",
-      "loading": "Chargement..."
+      "loading": "Chargement...",
+      "featureNotImplemented": "Cette fonctionnalité n'est pas encore implémentée",
+      "moving": "Déplacement...",
+      "movedToInbox": "Déplacé vers la boîte de réception",
+      "movingToInbox": "Déplacement vers la boîte de réception...",
+      "movedToSpam": "Déplacé vers les indésirables",
+      "movingToSpam": "Déplacement vers les indésirables...",
+      "archiving": "Archivage...",
+      "archived": "Archivé",
+      "failedToMove": "Échec du déplacement du message",
+      "addingToFavorites": "Ajout aux favoris...",
+      "removingFromFavorites": "Suppression des favoris...",
+      "addedToFavorites": "Ajouté aux favoris",
+      "removedFromFavorites": "Retiré des favoris",
+      "failedToAddToFavorites": "Échec de l'ajout aux favoris",
+      "failedToRemoveFromFavorites": "Échec de la suppression des favoris",
+      "failedToModifyFavorites": "Échec de la modification des favoris",
+      "markingAsRead": "Marquage comme lu...",
+      "markingAsUnread": "Marquage comme non lu...",
+      "hiddenImagesWarning": "Les images sont masquées par défaut pour des raisons de sécurité.",
+      "showImages": "Afficher les images",
+      "disableImages": "Masquer les images",
+      "trustSender": "Faire confiance à l'expéditeur",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "remove": "Supprimer"
     },
     "themes": {
       "dark": "Sombre",
@@ -133,7 +158,9 @@
       "markAsRead": "Marquer comme lu",
       "addLabel": "Ajouter une étiquette",
       "muteThread": "Mettre en sourdine",
-      "favourites": "Favoris"
+      "favourites": "Favoris",
+      "disableImages": "Masquer les images",
+      "enableImages": "Afficher les images"
     },
     "notes": {
       "title": "Notes",
@@ -233,6 +260,9 @@
       "createNewLabel": "Créer une nouvelle étiquette",
       "noLabelsAvailable": "Aucune étiquette disponible",
       "loadMore": "Charger plus d'éléments"
+    },
+    "units": {
+      "mb": "{amount} Mo"
     }
   },
   "navigation": {
@@ -251,6 +281,7 @@
       "connections": "Connexions",
       "security": "Sécurité",
       "appearance": "Apparence",
+      "signatures": "Signatures",
       "shortcuts": "Raccourcis"
     }
   },
@@ -275,6 +306,8 @@
         "dynamicContentDescription": "Autoriser les courriels à afficher du contenu dynamique.",
         "externalImages": "Afficher les images externes",
         "externalImagesDescription": "Autoriser les courriels à afficher des images provenant de sources externes.",
+        "trustedSenders": "Expéditeurs de confiance",
+        "trustedSendersDescription": "Toujours afficher les images pour ces expéditeurs.",
         "languageChangedTo": "Langue changée en {locale}",
         "customPrompt": "Requêtes IA personnalisées",
         "customPromptPlaceholder": "Entrez votre requête personnalisée pour l'IA...",
@@ -301,13 +334,35 @@
         "twoFactorAuthDescription": "Ajoutez une couche de sécurité supplémentaire à votre compte",
         "loginNotifications": "Notifications de connexion",
         "loginNotificationsDescription": "Soyez notifié des nouvelles tentatives de connexion",
-        "deleteAccount": "Supprimer le compte"
+        "deleteAccount": "Supprimer le compte",
+        "loadImagesDefault": "Charger les images par défaut",
+        "loadImagesDefaultDescription": "Les images ne sont pas chargées par défaut pour des raisons de sécurité."
       },
       "appearance": {
         "title": "Apparence",
         "description": "Personnalisez les couleurs, les polices et les options d'affichage.",
         "theme": "Thème",
         "inboxType": "Type de boîte de réception"
+      },
+      "signatures": {
+        "title": "Signatures d'e-mail",
+        "description": "Créez et gérez votre signature d'e-mail qui apparaît au bas de vos messages.",
+        "enableSignature": "Activer la signature",
+        "enableSignatureDescription": "Ajoutez votre signature à la fin de tous les messages sortants.",
+        "includeByDefault": "Inclure par défaut",
+        "includeByDefaultDescription": "Ajouter automatiquement votre signature lors de la rédaction de nouveaux e-mails.",
+        "signatureContent": "Contenu de la signature",
+        "signatureContentPlaceholder": "Créez votre signature avec mise en forme, liens et images.",
+        "signaturePreview": "Aperçu de la signature",
+        "signatureSaved": "Signature enregistrée avec succès",
+        "signaturePreviewDescription": "Voici comment votre signature apparaîtra dans les e-mails.",
+        "editorType": "Type d'éditeur",
+        "editorTypeDescription": "Choisissez entre texte brut/HTML ou un éditeur de texte enrichi pour votre signature.",
+        "plainText": "Texte brut / HTML",
+        "richText": "Éditeur de texte enrichi",
+        "richTextDescription": "Utilisez l'éditeur de texte enrichi pour formater votre signature.",
+        "richTextPlaceholder": "Formatez votre signature avec l'éditeur de texte enrichi...",
+        "signatureContentHelp": "Vous pouvez utiliser HTML pour ajouter de la mise en forme, des liens et des images à votre signature."
       },
       "shortcuts": {
         "title": "Raccourcis clavier",
@@ -341,10 +396,37 @@
       "body": "Corps",
       "example": "zero@0.email",
       "attachments": "Pièces jointes",
+      "addMore": "Ajouter plus",
       "dropFilesToAttach": "Déposez des fichiers pour les joindre",
       "writeYourMessageHere": "Écrivez votre message ici...",
       "emailSentSuccessfully": "Email envoyé avec succès",
-      "failedToSendEmail": "Échec d'envoi de l'email. Veuillez réessayer."
+      "failedToSendEmail": "Échec d'envoi de l'email. Veuillez réessayer.",
+      "signature": {
+        "title": "Signature",
+        "include": "Inclure la signature",
+        "remove": "Supprimer la signature",
+        "enable": "Activer la signature",
+        "disable": "Désactiver la signature",
+        "add": "Ajouter une signature"
+      },
+      "addLink": "Ajouter un lien",
+      "addUrlToCreateALink": "Ajoutez une URL pour créer un lien. Le lien s'ouvrira dans un nouvel onglet.",
+      "editor": {
+        "menuBar": {
+          "heading1": "Titre 1",
+          "heading2": "Titre 2",
+          "heading3": "Titre 3",
+          "bold": "Gras",
+          "italic": "Italique",
+          "strikethrough": "Barré",
+          "underline": "Souligné",
+          "link": "Lien",
+          "bulletList": "Liste à puces",
+          "orderedList": "Liste numérotée",
+          "viewAttachments": "Voir les pièces jointes",
+          "attachFiles": "Joindre des fichiers"
+        }
+      }
     }
   }
 }

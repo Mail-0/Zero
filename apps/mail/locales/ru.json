@@ -30,7 +30,14 @@
       "failedToRemoveFromFavorites": "Не удалось удалить из избранного",
       "failedToModifyFavorites": "Не удалось изменить избранные",
       "markingAsRead": "Отмечается как прочитанное...",
-      "markingAsUnread": "Отмечается как непрочитанное..."
+      "markingAsUnread": "Отмечается как непрочитанное...",
+      "hiddenImagesWarning": "Изображения скрыты по умолчанию в целях безопасности.",
+      "showImages": "Показать изображения",
+      "disableImages": "Скрыть изображения",
+      "trustSender": "Доверять отправителю",
+      "cancel": "Отменить",
+      "save": "Сохранить",
+      "remove": "Удалить"
     },
     "themes": {
       "dark": "Тёмный",
@@ -151,7 +158,9 @@
       "markAsRead": "Отметить как прочитанное",
       "addLabel": "Добавить ярлык",
       "muteThread": "Заглушить ветку",
-      "favourites": "Избранное"
+      "favourites": "Избранное",
+      "disableImages": "Скрыть изображения",
+      "enableImages": "Показать изображения"
     },
     "notes": {
       "title": "Заметки",
@@ -251,6 +260,9 @@
       "createNewLabel": "Создать новый ярлык",
       "noLabelsAvailable": "Нет доступных ярлыков",
       "loadMore": "Загрузить ещё"
+    },
+    "units": {
+      "mb": "{amount} МБ"
     }
   },
   "navigation": {
@@ -269,6 +281,7 @@
       "connections": "Подключения",
       "security": "Безопасность",
       "appearance": "Внешний вид",
+      "signatures": "Подписи",
       "shortcuts": "Команды"
     }
   },
@@ -293,6 +306,8 @@
         "dynamicContentDescription": "Позволяет электронной почте отображать динамический контент.",
         "externalImages": "Отображать изображения из внешних источников",
         "externalImagesDescription": "Позволяет электронной почте отображать изображения из внешних источников.",
+        "trustedSenders": "Доверенные отправители",
+        "trustedSendersDescription": "Всегда отображать изображения от этих отправителей.",
         "languageChangedTo": "Язык изменен на {locale}",
         "customPrompt": "Пользовательский ИИ Запрос",
         "customPromptPlaceholder": "Введите ваш запрос для ИИ...",
@@ -319,13 +334,35 @@
         "twoFactorAuthDescription": "Добавьте дополнительный слой безопасности к вашему аккаунту",
         "loginNotifications": "Уведомления о входе",
         "loginNotificationsDescription": "Получать уведомления о новых попытках входа",
-        "deleteAccount": "Удалить аккаунт"
+        "deleteAccount": "Удалить аккаунт",
+        "loadImagesDefault": "Загружать изображения по умолчанию",
+        "loadImagesDefaultDescription": "Изображения не загружаются по умолчанию в целях безопасности."
       },
       "appearance": {
         "title": "Внешний вид",
         "description": "Кастомизация цветов, шрифтов и опций просмотра.",
         "theme": "Тема",
         "inboxType": "Тип почты"
+      },
+      "signatures": {
+        "title": "Подписи электронной почты",
+        "description": "Создавайте и управляйте подписью электронной почты, которая отображается внизу ваших сообщений.",
+        "enableSignature": "Включить подпись",
+        "enableSignatureDescription": "Добавлять подпись в конец всех исходящих сообщений.",
+        "includeByDefault": "Включать по умолчанию",
+        "includeByDefaultDescription": "Автоматически добавлять подпись при создании новых писем.",
+        "signatureContent": "Содержание подписи",
+        "signatureContentPlaceholder": "Создайте свою подпись с форматированием, ссылками и изображениями.",
+        "signaturePreview": "Предварительный просмотр подписи",
+        "signatureSaved": "Подпись успешно сохранена",
+        "signaturePreviewDescription": "Так будет выглядеть ваша подпись в письмах.",
+        "editorType": "Тип редактора",
+        "editorTypeDescription": "Выберите между вводом обычного текста/HTML или редактором форматированного текста для вашей подписи.",
+        "plainText": "Обычный текст / HTML",
+        "richText": "Редактор форматированного текста",
+        "richTextDescription": "Используйте редактор форматированного текста для оформления вашей подписи.",
+        "richTextPlaceholder": "Отформатируйте вашу подпись с помощью редактора форматированного текста...",
+        "signatureContentHelp": "Вы можете использовать HTML для добавления форматирования, ссылок и изображений в вашу подпись."
       },
       "shortcuts": {
         "title": "Горячие клавиши",
@@ -359,10 +396,37 @@
       "body": "Текст письма",
       "example": "zero@0.email",
       "attachments": "Приложения",
+      "addMore": "Добавить ещё",
       "dropFilesToAttach": "Поместите файлы, чтобы прикрепить",
       "writeYourMessageHere": "Напишите свое сообщение здесь...",
       "emailSentSuccessfully": "Письмо отправлено успешно",
-      "failedToSendEmail": "Не удалось отправить письмо. Попробуйте снова."
+      "failedToSendEmail": "Не удалось отправить письмо. Попробуйте снова.",
+      "signature": {
+        "title": "Подпись",
+        "include": "Включить подпись",
+        "remove": "Удалить подпись",
+        "enable": "Включить подпись",
+        "disable": "Отключить подпись",
+        "add": "Добавить подпись"
+      },
+      "addLink": "Добавить ссылку",
+      "addUrlToCreateALink": "Добавьте URL, чтобы создать ссылку. Ссылка откроется в новой вкладке.",
+      "editor": {
+        "menuBar": {
+          "heading1": "Заголовок 1",
+          "heading2": "Заголовок 2",
+          "heading3": "Заголовок 3",
+          "bold": "Жирный",
+          "italic": "Курсив",
+          "strikethrough": "Зачёркнутый",
+          "underline": "Подчёркнутый",
+          "link": "Ссылка",
+          "bulletList": "Маркированный список",
+          "orderedList": "Нумерованный список",
+          "viewAttachments": "Просмотр вложений",
+          "attachFiles": "Прикрепить файлы"
+        }
+      }
     }
   }
 }

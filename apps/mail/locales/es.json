@@ -12,7 +12,32 @@
       "signedOutSuccess": "Sesión cerrada correctamente",
       "signOutError": "Error al cerrar sesión",
       "refresh": "Actualizar",
-      "loading": "Loading..."
+      "loading": "Loading...",
+      "featureNotImplemented": "Esta función aún no está implementada",
+      "moving": "Moviendo...",
+      "movedToInbox": "Movido a la bandeja de entrada",
+      "movingToInbox": "Moviendo a la bandeja de entrada...",
+      "movedToSpam": "Movido a spam",
+      "movingToSpam": "Moviendo a spam...",
+      "archiving": "Archivando...",
+      "archived": "Archivado",
+      "failedToMove": "Error al mover el mensaje",
+      "addingToFavorites": "Añadiendo a favoritos...",
+      "removingFromFavorites": "Eliminando de favoritos...",
+      "addedToFavorites": "Añadido a favoritos",
+      "removedFromFavorites": "Eliminado de favoritos",
+      "failedToAddToFavorites": "Error al añadir a favoritos",
+      "failedToRemoveFromFavorites": "Error al eliminar de favoritos",
+      "failedToModifyFavorites": "Error al modificar favoritos",
+      "markingAsRead": "Marcando como leído...",
+      "markingAsUnread": "Marcando como no leído...",
+      "hiddenImagesWarning": "Las imágenes están ocultas por defecto por razones de seguridad.",
+      "showImages": "Mostrar imágenes",
+      "disableImages": "Ocultar imágenes",
+      "trustSender": "Confiar en remitente",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "remove": "Eliminar"
     },
     "themes": {
       "dark": "Oscuro",
@@ -133,7 +158,9 @@
       "markAsRead": "Marcar como leído",
       "addLabel": "Añadir etiqueta",
       "muteThread": "Silenciar hilo",
-      "favourites": "Favoritos"
+      "favourites": "Favoritos",
+      "disableImages": "Ocultar imágenes",
+      "enableImages": "Mostrar imágenes"
     },
     "notes": {
       "title": "Notas",
@@ -233,6 +260,9 @@
       "createNewLabel": "Crear nueva etiqueta",
       "noLabelsAvailable": "No hay etiquetas disponibles",
       "loadMore": "Load more"
+    },
+    "units": {
+      "mb": "{amount} MB"
     }
   },
   "navigation": {
@@ -251,6 +281,7 @@
       "connections": "Conexiones",
       "security": "Seguridad",
       "appearance": "Apariencia",
+      "signatures": "Firmas",
       "shortcuts": "Accesos directos"
     }
   },
@@ -275,6 +306,8 @@
         "dynamicContentDescription": "Permitir que los correos electrónicos muestren contenido dinámico.",
         "externalImages": "Mostrar imágenes externas",
         "externalImagesDescription": "Permitir que los correos electrónicos muestren imágenes de fuentes externas.",
+        "trustedSenders": "Remitentes de confianza",
+        "trustedSendersDescription": "Mostrar siempre imágenes de estos remitentes.",
         "languageChangedTo": "Idioma cambiado a {locale}",
         "customPrompt": "Prompt de IA personalizado",
         "customPromptPlaceholder": "Introduzca su prompt personalizado para la IA...",
@@ -301,13 +334,35 @@
         "twoFactorAuthDescription": "Añade una capa extra de seguridad a su cuenta",
         "loginNotifications": "Notificaciones de inicio de sesión",
         "loginNotificationsDescription": "Recibir notificaciones de nuevos intentos de inicio de sesión",
-        "deleteAccount": "Eliminar cuenta"
+        "deleteAccount": "Eliminar cuenta",
+        "loadImagesDefault": "Cargar imágenes por defecto",
+        "loadImagesDefaultDescription": "Las imágenes no se cargan por defecto por razones de seguridad."
       },
       "appearance": {
         "title": "Apariencia",
         "description": "Personalizar colores, fuentes y opciones de visualización.",
         "theme": "Temas",
         "inboxType": "Tipo de bandeja de entrada"
+      },
+      "signatures": {
+        "title": "Firmas de correo electrónico",
+        "description": "Crea y gestiona tu firma de correo electrónico que aparece al final de tus mensajes.",
+        "enableSignature": "Activar firma",
+        "enableSignatureDescription": "Añade tu firma al final de todos los mensajes salientes.",
+        "includeByDefault": "Incluir por defecto",
+        "includeByDefaultDescription": "Añadir automáticamente tu firma al redactar nuevos correos.",
+        "signatureContent": "Contenido de la firma",
+        "signatureContentPlaceholder": "Crea tu firma con formato, enlaces e imágenes.",
+        "signaturePreview": "Vista previa de la firma",
+        "signatureSaved": "Firma guardada correctamente",
+        "signaturePreviewDescription": "Así es como aparecerá tu firma en los correos.",
+        "editorType": "Tipo de editor",
+        "editorTypeDescription": "Elige entre texto plano/HTML o un editor de texto enriquecido para tu firma.",
+        "plainText": "Texto plano / HTML",
+        "richText": "Editor de texto enriquecido",
+        "richTextDescription": "Usa el editor de texto enriquecido para formatear tu firma.",
+        "richTextPlaceholder": "Formatea tu firma con el editor de texto enriquecido...",
+        "signatureContentHelp": "Puedes usar HTML para añadir formato, enlaces e imágenes a tu firma."
       },
       "shortcuts": {
         "title": "Atajos de teclado",
@@ -341,10 +396,37 @@
       "body": "Cuerpo",
       "example": "zero@0.email",
       "attachments": "Archivos adjuntos",
+      "addMore": "Añadir más",
       "dropFilesToAttach": "Suelte los archivos para adjuntarlos",
       "writeYourMessageHere": "Escribe tu mensaje aquí...",
       "emailSentSuccessfully": "E-mail enviado con éxito",
-      "failedToSendEmail": "Error al enviar el correo electrónico. Por favor, inténtalo de nuevo."
+      "failedToSendEmail": "Error al enviar el correo electrónico. Por favor, inténtalo de nuevo.",
+      "signature": {
+        "title": "Firma",
+        "include": "Incluir firma",
+        "remove": "Eliminar firma",
+        "enable": "Activar firma",
+        "disable": "Desactivar firma",
+        "add": "Añadir firma"
+      },
+      "addLink": "Añadir enlace",
+      "addUrlToCreateALink": "Añade URL para crear un enlace. El enlace se abrirá en una nueva pestaña.",
+      "editor": {
+        "menuBar": {
+          "heading1": "Encabezado 1",
+          "heading2": "Encabezado 2",
+          "heading3": "Encabezado 3",
+          "bold": "Negrita",
+          "italic": "Cursiva",
+          "strikethrough": "Tachado",
+          "underline": "Subrayado",
+          "link": "Enlace",
+          "bulletList": "Lista con viñetas",
+          "orderedList": "Lista numerada",
+          "viewAttachments": "Ver adjuntos",
+          "attachFiles": "Adjuntar archivos"
+        }
+      }
     }
   }
 }

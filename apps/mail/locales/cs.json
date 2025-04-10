@@ -10,7 +10,34 @@
       "close": "Zavřít",
       "signingOut": "Odhlašování...",
       "signedOutSuccess": "Odhlášení proběhlo úspěšně!",
-      "signOutError": "Chyba při odhlášení"
+      "signOutError": "Chyba při odhlášení",
+      "refresh": "Obnovit",
+      "loading": "Načítání...",
+      "featureNotImplemented": "Tato funkce ještě není implementována",
+      "moving": "Přesouvání...",
+      "movedToInbox": "Přesunuto do doručené pošty",
+      "movingToInbox": "Přesouvání do doručené pošty...",
+      "movedToSpam": "Přesunuto do spamu",
+      "movingToSpam": "Přesouvání do spamu...",
+      "archiving": "Archivace...",
+      "archived": "Archivováno",
+      "failedToMove": "Nepodařilo se přesunout zprávu",
+      "addingToFavorites": "Přidávání do oblíbených...",
+      "removingFromFavorites": "Odebírání z oblíbených...",
+      "addedToFavorites": "Přidáno do oblíbených",
+      "removedFromFavorites": "Odebráno z oblíbených",
+      "failedToAddToFavorites": "Nepodařilo se přidat do oblíbených",
+      "failedToRemoveFromFavorites": "Nepodařilo se odebrat z oblíbených",
+      "failedToModifyFavorites": "Nepodařilo se upravit oblíbené",
+      "markingAsRead": "Označování jako přečtené...",
+      "markingAsUnread": "Označování jako nepřečtené...",
+      "hiddenImagesWarning": "Obrázky jsou z bezpečnostních důvodů ve výchozím nastavení skryty.",
+      "showImages": "Zobrazit obrázky",
+      "disableImages": "Skrýt obrázky",
+      "trustSender": "Důvěřovat odesílateli",
+      "cancel": "Zrušit",
+      "save": "Uložit",
+      "remove": "Odstranit"
     },
     "themes": {
       "dark": "Tmavé",
@@ -64,7 +91,13 @@
       "hasAttachment": "Má přílohu",
       "starred": "Oblíbené",
       "applyFilters": "Použít filtry",
-      "reset": "Obnovit"
+      "reset": "Obnovit",
+      "searching": "Vyhledávání...",
+      "aiSuggestions": "AI návrhy",
+      "aiSearching": "AI vyhledává...",
+      "aiSearchError": "AI vyhledávání selhalo. Zkuste to prosím znovu.",
+      "aiNoResults": "Žádné AI návrhy nenalezeny",
+      "aiEnhancedQuery": "Vylepšený vyhledávací dotaz"
     },
     "navUser": {
       "customerSupport": "Zákaznická podpora",
@@ -75,6 +108,7 @@
     },
     "mailCategories": {
       "primary": "Hlavní",
+      "allMail": "Všechna pošta",
       "important": "Důležité",
       "personal": "Osobní",
       "updates": "Aktualizace",
@@ -89,7 +123,8 @@
       "attachmentCount": "{count, plural, =0 {příloh} one {příloha} few {přílohy} many {příloh} other {příloh}}",
       "fileCount": "{count, plural, =0 {souborů} one {soubor} few {soubory} many {souborů} other {souborů}}",
       "saveDraft": "Uložit koncept",
-      "send": "Odeslat"
+      "send": "Odeslat",
+      "forward": "Přeposlat"
     },
     "mailDisplay": {
       "details": "Podrobnosti",
@@ -123,7 +158,9 @@
       "markAsRead": "Označit jako přečtené",
       "addLabel": "Přidat značku",
       "muteThread": "Ztlumit vlákno",
-      "favourites": "Oblíbené"
+      "favourites": "Oblíbené",
+      "disableImages": "Skrýt obrázky",
+      "enableImages": "Zobrazit obrázky"
     },
     "notes": {
       "title": "Poznámky",
@@ -210,6 +247,8 @@
       "moveToTrash": "Přesunout do Odstraněné pošty",
       "markAsUnread": "Označit jako nepřečtené",
       "markAsRead": "Označit jako přečtené",
+      "addFavorite": "Přidat do oblíbených",
+      "removeFavorite": "Odebrat z oblíbených",
       "muteThread": "Ztlumit vlákno",
       "moving": "Přesouvání...",
       "moved": "Přesunuto",
@@ -219,7 +258,11 @@
       "forward": "Přeposlat",
       "labels": "Štítky",
       "createNewLabel": "Vytvořit nový štítek",
-      "noLabelsAvailable": "Nejsou dostupné žádné štítky"
+      "noLabelsAvailable": "Nejsou dostupné žádné štítky",
+      "loadMore": "Načíst více"
+    },
+    "units": {
+      "mb": "{amount} MB"
     }
   },
   "navigation": {
@@ -238,6 +281,7 @@
       "connections": "Propojení",
       "security": "Zabezpečení",
       "appearance": "Vzhled",
+      "signatures": "Podpisy",
       "shortcuts": "Zástupci"
     }
   },
@@ -261,7 +305,13 @@
         "dynamicContent": "Dynamický obsah",
         "dynamicContentDescription": "Povolit emailům zobrazení dynamického obsahu.",
         "externalImages": "Zobrazit externí obrázky",
-        "externalImagesDescription": "Povolit zobrazení emailů z externích zdrojů."
+        "externalImagesDescription": "Povolit zobrazení emailů z externích zdrojů.",
+        "trustedSenders": "Důvěryhodní odesílatelé",
+        "trustedSendersDescription": "Vždy zobrazovat obrázky od těchto odesílatelů.",
+        "languageChangedTo": "Jazyk změněn na {locale}",
+        "customPrompt": "Vlastní AI pokyn",
+        "customPromptPlaceholder": "Zadejte vlastní pokyn pro AI...",
+        "customPromptDescription": "Přizpůsobte, jak AI píše vaše e-mailové odpovědi. Toto bude přidáno k základnímu pokynu."
       },
       "connections": {
         "title": "Propojení emailu",
@@ -284,13 +334,35 @@
         "twoFactorAuthDescription": "Přidejte ke svému účtu další vrstu zabezpečení",
         "loginNotifications": "Upozornění o přihlášení",
         "loginNotificationsDescription": "Získejte upozornění při novém pokusu o přihlášení",
-        "deleteAccount": "Smazat účet"
+        "deleteAccount": "Smazat účet",
+        "loadImagesDefault": "Načítat obrázky ve výchozím nastavení",
+        "loadImagesDefaultDescription": "Z bezpečnostních důvodů nejsou obrázky ve výchozím nastavení načítány."
       },
       "appearance": {
         "title": "Vzhled",
         "description": "Přizpůsobte si barvy, písmo a možnosti zobrazení.",
         "theme": "Motiv",
         "inboxType": "Typ doporučené pošty"
+      },
+      "signatures": {
+        "title": "E-mailové podpisy",
+        "description": "Vytvářejte a spravujte svůj e-mailový podpis, který se zobrazuje na konci vašich zpráv.",
+        "enableSignature": "Povolit podpis",
+        "enableSignatureDescription": "Přidat váš podpis na konec všech odchozích zpráv.",
+        "includeByDefault": "Zahrnout ve výchozím nastavení",
+        "includeByDefaultDescription": "Automaticky přidat váš podpis při vytváření nových e-mailů.",
+        "signatureContent": "Obsah podpisu",
+        "signatureContentPlaceholder": "Vytvořte svůj podpis s formátováním, odkazy a obrázky.",
+        "signaturePreview": "Náhled podpisu",
+        "signatureSaved": "Podpis byl úspěšně uložen",
+        "signaturePreviewDescription": "Takto bude váš podpis vypadat v e-mailech.",
+        "editorType": "Typ editoru",
+        "editorTypeDescription": "Vyberte mezi prostým textem/HTML nebo editorem formátovaného textu pro váš podpis.",
+        "plainText": "Prostý text / HTML",
+        "richText": "Editor formátovaného textu",
+        "richTextDescription": "Použijte editor formátovaného textu pro formátování vašeho podpisu.",
+        "richTextPlaceholder": "Formátujte svůj podpis pomocí editoru formátovaného textu...",
+        "signatureContentHelp": "Můžete použít HTML pro přidání formátování, odkazů a obrázků do vašeho podpisu."
       },
       "shortcuts": {
         "title": "Klávesové zkratky",
@@ -324,10 +396,37 @@
       "body": "Tělo",
       "example": "nula@0.email",
       "attachments": "Přílohy",
+      "addMore": "Přidat další",
       "dropFilesToAttach": "Přetáhněte sem soubory",
       "writeYourMessageHere": "Sem napište svojí zprávu...",
       "emailSentSuccessfully": "Email úspěšně odeslán",
-      "failedToSendEmail": "Odeslání emailu se nazdrařilo. Zkuste to prosím znovu."
+      "failedToSendEmail": "Odeslání emailu se nazdrařilo. Zkuste to prosím znovu.",
+      "signature": {
+        "title": "Podpis",
+        "include": "Zahrnout podpis",
+        "remove": "Odstranit podpis",
+        "enable": "Povolit podpis",
+        "disable": "Zakázat podpis",
+        "add": "Přidat podpis"
+      },
+      "addLink": "Přidat odkaz",
+      "addUrlToCreateALink": "Přidejte URL pro vytvoření odkazu. Odkaz se otevře v nové záložce.",
+      "editor": {
+        "menuBar": {
+          "heading1": "Nadpis 1",
+          "heading2": "Nadpis 2",
+          "heading3": "Nadpis 3",
+          "bold": "Tučné",
+          "italic": "Kurzíva",
+          "strikethrough": "Přeškrtnuté",
+          "underline": "Podtržené",
+          "link": "Odkaz",
+          "bulletList": "Odrážkový seznam",
+          "orderedList": "Číslovaný seznam",
+          "viewAttachments": "Zobrazit přílohy",
+          "attachFiles": "Připojit soubory"
+        }
+      }
     }
   }
 }

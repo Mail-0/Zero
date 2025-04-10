@@ -10,7 +10,34 @@
       "close": "닫기",
       "signingOut": "로그아웃 중...",
       "signedOutSuccess": "로그아웃에 성공했습니다!",
-      "signOutError": "로그아웃 오류 발생"
+      "signOutError": "로그아웃 오류 발생",
+      "refresh": "새로고침",
+      "loading": "로딩 중...",
+      "featureNotImplemented": "이 기능은 아직 구현되지 않았습니다",
+      "moving": "이동 중...",
+      "movedToInbox": "받은 편지함으로 이동됨",
+      "movingToInbox": "받은 편지함으로 이동 중...",
+      "movedToSpam": "스팸으로 이동됨",
+      "movingToSpam": "스팸으로 이동 중...",
+      "archiving": "보관 중...",
+      "archived": "보관됨",
+      "failedToMove": "메시지 이동 실패",
+      "addingToFavorites": "즐겨찾기에 추가 중...",
+      "removingFromFavorites": "즐겨찾기에서 제거 중...",
+      "addedToFavorites": "즐겨찾기에 추가됨",
+      "removedFromFavorites": "즐겨찾기에서 제거됨",
+      "failedToAddToFavorites": "즐겨찾기 추가 실패",
+      "failedToRemoveFromFavorites": "즐겨찾기 제거 실패",
+      "failedToModifyFavorites": "즐겨찾기 수정 실패",
+      "markingAsRead": "읽음으로 표시 중...",
+      "markingAsUnread": "읽지 않음으로 표시 중...",
+      "hiddenImagesWarning": "보안상의 이유로 이미지는 기본적으로 숨겨져 있습니다.",
+      "showImages": "이미지 표시",
+      "disableImages": "이미지 숨기기",
+      "trustSender": "발신자 신뢰",
+      "cancel": "취소",
+      "save": "저장",
+      "remove": "삭제"
     },
     "themes": {
       "dark": "다크 모드",
@@ -64,7 +91,13 @@
       "hasAttachment": "첨부 파일 있음",
       "starred": "별표 처리됨",
       "applyFilters": "필터 적용",
-      "reset": "초기화"
+      "reset": "초기화",
+      "searching": "검색 중...",
+      "aiSuggestions": "AI 추천",
+      "aiSearching": "AI가 검색 중...",
+      "aiSearchError": "AI 검색에 실패했습니다. 다시 시도해 주세요.",
+      "aiNoResults": "AI 추천 결과가 없습니다",
+      "aiEnhancedQuery": "향상된 검색 쿼리"
     },
     "navUser": {
       "customerSupport": "고객 지원",
@@ -75,6 +108,7 @@
     },
     "mailCategories": {
       "primary": "기본",
+      "allMail": "모든 메일",
       "important": "중요",
       "personal": "개인",
       "updates": "업데이트",
@@ -89,7 +123,8 @@
       "attachmentCount": "{count, plural, =0 {첨부 파일} other {첨부 파일}}",
       "fileCount": "{count, plural, =0 {파일} other {파일}}",
       "saveDraft": "임시 저장",
-      "send": "전송"
+      "send": "전송",
+      "forward": "전달"
     },
     "mailDisplay": {
       "details": "세부 사항",
@@ -123,7 +158,9 @@
       "markAsRead": "읽음으로 표시",
       "addLabel": "라벨 추가",
       "muteThread": "스레드 음소거",
-      "favourites": "즐겨찾기"
+      "favourites": "즐겨찾기",
+      "disableImages": "이미지 숨기기",
+      "enableImages": "이미지 표시"
     },
     "notes": {
       "title": "노트",
@@ -141,6 +178,7 @@
       "toSave": "저장하기",
       "label": "라벨:",
       "search": "노트 검색...",
+      "noteCount": "{count, plural, =0 {메모 추가} one {메모 #개} other {메모 #개}}",
       "notePinned": "노트를 고정했습니다",
       "noteUnpinned": "노트를 고정 해제했습니다",
       "colorChanged": "노트 색상을 변경했습니다",
@@ -159,13 +197,21 @@
         "failedToLoadNotes": "노트 불러오기 실패",
         "failedToLoadThreadNotes": "스레드 노트 불러오기 실패",
         "failedToAddNote": "노트 추가 실패",
+        "failedToUpdateNote": "메모 업데이트 실패",
         "failedToDeleteNote": "노트 삭제 실패",
         "failedToUpdateNoteColor": "노트 색상 변경 실패",
         "noValidNotesToReorder": "정렬할 유효한 노트가 없습니다",
         "failedToReorderNotes": "노트 재정렬 실패"
       },
       "colors": {
-        "default": "기본"
+        "default": "기본",
+        "red": "빨간색",
+        "orange": "주황색",
+        "yellow": "노란색",
+        "green": "초록색",
+        "blue": "파란색",
+        "purple": "보라색",
+        "pink": "분홍색"
       },
       "actions": {
         "pin": "노트 고정",
@@ -177,11 +223,14 @@
       }
     },
     "settings": {
+      "notFound": "설정을 찾을 수 없습니다",
       "saved": "설정 저장됨",
       "failedToSave": "설정 저장 실패",
       "languageChanged": "언어가 {locale}(으)로 변경되었습니다"
     },
     "mail": {
+      "replies": "{count, plural, =0 {답장} one {답장 #개} other {답장 #개}}",
+      "deselectAll": "모든 이메일 선택 해제됨",
       "selectedEmails": "{count}개의 이메일 선택됨",
       "noEmailsToSelect": "선택할 이메일이 없습니다",
       "markedAsRead": "읽음으로 표시되었습니다",
@@ -198,6 +247,8 @@
       "moveToTrash": "휴지통으로 이동",
       "markAsUnread": "읽지 않음으로 표시",
       "markAsRead": "읽음으로 표시",
+      "addFavorite": "즐겨찾기",
+      "removeFavorite": "즐겨찾기 해제",
       "muteThread": "스레드 음소거",
       "moving": "이동 중...",
       "moved": "이동됨",
@@ -207,7 +258,11 @@
       "forward": "전달",
       "labels": "라벨",
       "createNewLabel": "새 라벨 생성",
-      "noLabelsAvailable": "사용 가능한 라벨 없음"
+      "noLabelsAvailable": "사용 가능한 라벨 없음",
+      "loadMore": "더 불러오기"
+    },
+    "units": {
+      "mb": "{amount} MB"
     }
   },
   "navigation": {
@@ -226,6 +281,7 @@
       "connections": "연결",
       "security": "보안",
       "appearance": "외관",
+      "signatures": "서명",
       "shortcuts": "단축키"
     }
   },
@@ -249,7 +305,13 @@
         "dynamicContent": "동적 콘텐츠",
         "dynamicContentDescription": "이메일에 동적 콘텐츠를 표시하도록 허용합니다.",
         "externalImages": "외부 이미지 표시",
-        "externalImagesDescription": "이메일에 외부 소스의 이미지를 표시하도록 허용합니다."
+        "externalImagesDescription": "이메일에 외부 소스의 이미지를 표시하도록 허용합니다.",
+        "trustedSenders": "신뢰할 수 있는 발신자",
+        "trustedSendersDescription": "이 발신자들의 이미지를 항상 표시합니다.",
+        "languageChangedTo": "언어가 {locale}(으)로 변경되었습니다",
+        "customPrompt": "맞춤 AI 프롬프트",
+        "customPromptPlaceholder": "AI를 위한 맞춤 프롬프트를 입력하세요...",
+        "customPromptDescription": "AI가 이메일 답장을 작성하는 방식을 맞춤설정하세요. 이것은 기본 프롬프트에 추가됩니다."
       },
       "connections": {
         "title": "이메일 연결",
@@ -272,13 +334,35 @@
         "twoFactorAuthDescription": "계정에 보안 단계 추가",
         "loginNotifications": "로그인 알림",
         "loginNotificationsDescription": "새 로그인 시도 알림 받기",
-        "deleteAccount": "계정 삭제"
+        "deleteAccount": "계정 삭제",
+        "loadImagesDefault": "기본적으로 이미지 로드",
+        "loadImagesDefaultDescription": "보안상의 이유로 이미지는 기본적으로 로드되지 않습니다."
       },
       "appearance": {
         "title": "외관",
         "description": "색상, 서체 및 보기 옵션을 사용자 지정합니다.",
         "theme": "테마",
         "inboxType": "받은 편지함 종류"
+      },
+      "signatures": {
+        "title": "이메일 서명",
+        "description": "메시지 하단에 표시되는 이메일 서명을 생성하고 관리하세요.",
+        "enableSignature": "서명 활성화",
+        "enableSignatureDescription": "모든 발신 메시지 끝에 서명을 추가합니다.",
+        "includeByDefault": "기본적으로 포함",
+        "includeByDefaultDescription": "새 이메일 작성 시 자동으로 서명을 추가합니다.",
+        "signatureContent": "서명 내용",
+        "signatureContentPlaceholder": "서식, 링크 및 이미지가 포함된 서명을 만드세요.",
+        "signaturePreview": "서명 미리보기",
+        "signatureSaved": "서명이 성공적으로 저장되었습니다",
+        "signaturePreviewDescription": "이메일에 표시될 서명 모습입니다.",
+        "editorType": "에디터 유형",
+        "editorTypeDescription": "서명을 위해 일반 텍스트/HTML 입력 또는 서식 있는 텍스트 에디터 중에서 선택하세요.",
+        "plainText": "일반 텍스트 / HTML",
+        "richText": "서식 있는 텍스트 편집기",
+        "richTextDescription": "서식 있는 텍스트 편집기를 사용하여 서명을 포맷하세요.",
+        "richTextPlaceholder": "서식 있는 텍스트 편집기로 서명을 포맷하세요...",
+        "signatureContentHelp": "HTML을 사용하여 서명에 서식, 링크 및 이미지를 추가할 수 있습니다."
       },
       "shortcuts": {
         "title": "키보드 단축키",
@@ -312,10 +396,37 @@
       "body": "본문",
       "example": "zero@0.email",
       "attachments": "첨부 파일",
+      "addMore": "더 추가하기",
       "dropFilesToAttach": "첨부할 파일 끌어놓기",
       "writeYourMessageHere": "이곳에 메시지를 작성하세요...",
       "emailSentSuccessfully": "이메일이 성공적으로 전송되었습니다",
-      "failedToSendEmail": "이메일 전송에 실패했습니다. 다시 시도해 주세요."
+      "failedToSendEmail": "이메일 전송에 실패했습니다. 다시 시도해 주세요.",
+      "signature": {
+        "title": "서명",
+        "include": "서명 포함하기",
+        "remove": "서명 제거하기",
+        "enable": "서명 활성화하기",
+        "disable": "서명 비활성화하기",
+        "add": "서명 추가하기"
+      },
+      "addLink": "링크 추가하기",
+      "addUrlToCreateALink": "링크를 생성하려면 URL을 추가하세요. 링크는 새 탭에서 열립니다.",
+      "editor": {
+        "menuBar": {
+          "heading1": "제목 1",
+          "heading2": "제목 2",
+          "heading3": "제목 3",
+          "bold": "굵게",
+          "italic": "기울임꼴",
+          "strikethrough": "취소선",
+          "underline": "밑줄",
+          "link": "링크",
+          "bulletList": "글머리 기호 목록",
+          "orderedList": "번호 매기기 목록",
+          "viewAttachments": "첨부 파일 보기",
+          "attachFiles": "파일 첨부"
+        }
+      }
     }
   }
 }

@@ -10,7 +10,34 @@
       "close": "Kapat",
       "signingOut": "Çıkış yapılıyor...",
       "signedOutSuccess": "Çıkış yapıldı!",
-      "signOutError": "Çıkış yapılırken hata oluştu"
+      "signOutError": "Çıkış yapılırken hata oluştu",
+      "refresh": "Yenile",
+      "loading": "Yükleniyor...",
+      "featureNotImplemented": "Bu özellik henüz uygulanmadı",
+      "moving": "Taşınıyor...",
+      "movedToInbox": "Gelen kutusuna taşındı",
+      "movingToInbox": "Gelen kutusuna taşınıyor...",
+      "movedToSpam": "İstenmeyen kutusuna taşındı",
+      "movingToSpam": "İstenmeyen kutusuna taşınıyor...",
+      "archiving": "Arşivleniyor...",
+      "archived": "Arşivlendi",
+      "failedToMove": "Mesaj taşınamadı",
+      "addingToFavorites": "Favorilere ekleniyor...",
+      "removingFromFavorites": "Favorilerden kaldırılıyor...",
+      "addedToFavorites": "Favorilere eklendi",
+      "removedFromFavorites": "Favorilerden kaldırıldı",
+      "failedToAddToFavorites": "Favorilere eklenemedi",
+      "failedToRemoveFromFavorites": "Favorilerden kaldırılamadı",
+      "failedToModifyFavorites": "Favoriler değiştirilemedi",
+      "markingAsRead": "Okundu olarak işaretleniyor...",
+      "markingAsUnread": "Okunmadı olarak işaretleniyor...",
+      "hiddenImagesWarning": "Güvenlik nedeniyle görseller varsayılan olarak gizlenir.",
+      "showImages": "Görselleri Göster",
+      "disableImages": "Görselleri Gizle",
+      "trustSender": "Gönderene Güven",
+      "cancel": "İptal",
+      "save": "Kaydet",
+      "remove": "Kaldır"
     },
     "themes": {
       "dark": "Koyu",
@@ -64,7 +91,13 @@
       "hasAttachment": "Dosya Eki Var",
       "starred": "Yıldızlı",
       "applyFilters": "Filtreleri Uygula",
-      "reset": "Sıfırla"
+      "reset": "Sıfırla",
+      "searching": "Aranıyor...",
+      "aiSuggestions": "Yapay Zeka Önerileri",
+      "aiSearching": "Yapay Zeka arama yapıyor...",
+      "aiSearchError": "Yapay Zeka araması başarısız oldu. Lütfen tekrar deneyin.",
+      "aiNoResults": "Yapay Zeka önerisi bulunamadı",
+      "aiEnhancedQuery": "Geliştirilmiş arama sorgusu"
     },
     "navUser": {
       "customerSupport": "Müşteri Desteği",
@@ -75,6 +108,7 @@
     },
     "mailCategories": {
       "primary": "Birincil",
+      "allMail": "Tüm E-postalar",
       "important": "Önemli",
       "personal": "Kişisel",
       "updates": "Güncellemeler",
@@ -89,7 +123,8 @@
       "attachmentCount": "{count, plural, =0 {ekler} one {ek} other {ekler}}",
       "fileCount": "{count, plural, =0 {dosyalar} one {dosya} other {dosyalar}}",
       "saveDraft": "Taslağı kaydet",
-      "send": "Gönder"
+      "send": "Gönder",
+      "forward": "İlet"
     },
     "mailDisplay": {
       "details": "Detaylar",
@@ -116,10 +151,16 @@
       "archive": "Arşivle",
       "reply": "Yanıtla",
       "moreOptions": "Daha fazla seçenek",
+      "moveToSpam": "İstenmeyen Kutusuna Taşı",
       "replyAll": "Tümünü yanıtla",
       "forward": "İlet",
+      "markAsUnread": "Okunmamış Olarak İşaretle",
+      "markAsRead": "Okundu Olarak İşaretle",
       "addLabel": "Etiket ekle",
-      "muteThread": "Konuyu sessize al"
+      "muteThread": "Konuyu sessize al",
+      "favourites": "Favoriler",
+      "disableImages": "Görselleri Gizle",
+      "enableImages": "Görselleri Göster"
     },
     "notes": {
       "title": "Notlar",
@@ -181,6 +222,12 @@
         "changeColor": "Rengi değiştir"
       }
     },
+    "settings": {
+      "notFound": "Ayarlar bulunamadı",
+      "saved": "Ayarlar kaydedildi",
+      "failedToSave": "Ayarlar kaydedilemedi",
+      "languageChanged": "Dil {locale} olarak değiştirildi"
+    },
     "mail": {
       "replies": "{count, plural, =0 {cevaplar} one {# cevap} other {# cevaplar}}",
       "deselectAll": "Seçilen tüm postaları bırak",
@@ -199,10 +246,23 @@
       "archive": "Arşivle",
       "moveToTrash": "Çöp Kutusuna Taşı",
       "markAsUnread": "Okunmamış Olarak İşaretle",
+      "markAsRead": "Okundu Olarak İşaretle",
+      "addFavorite": "Favorilere Ekle",
+      "removeFavorite": "Favorilerden Çıkar",
       "muteThread": "Konuyu Sessize Al",
       "moving": "Taşınıyor...",
       "moved": "Taşındı",
-      "errorMoving": "Taşıma Hatası"
+      "errorMoving": "Taşıma Hatası",
+      "reply": "Yanıtla",
+      "replyAll": "Tümünü Yanıtla",
+      "forward": "İlet",
+      "labels": "Etiketler",
+      "createNewLabel": "Yeni Etiket Oluştur",
+      "noLabelsAvailable": "Etiket bulunmuyor",
+      "loadMore": "Daha fazla yükle"
+    },
+    "units": {
+      "mb": "{amount} MB"
     }
   },
   "navigation": {
@@ -221,6 +281,7 @@
       "connections": "Bağlantılar",
       "security": "Güvenlik",
       "appearance": "Görünüm",
+      "signatures": "İmzalar",
       "shortcuts": "Kısayollar"
     }
   },
@@ -238,11 +299,19 @@
         "title": "Genel Ayarlar",
         "description": "Dil ve E-posta görünümü ayarlarını yönetin.",
         "language": "Dil",
+        "selectLanguage": "Bir dil seçin",
         "timezone": "Saat Dilimi",
+        "selectTimezone": "Bir saat dilimi seçin",
         "dynamicContent": "Dinamik İçerik",
         "dynamicContentDescription": "E-postaların dinamik içerik göstermesine izin verin.",
         "externalImages": "Harici Görselleri Göster",
-        "externalImagesDescription": "E-postaların harici kaynaklardan görselleri göstermesine izin verin."
+        "externalImagesDescription": "E-postaların harici kaynaklardan görselleri göstermesine izin verin.",
+        "trustedSenders": "Güvenilir Göndericiler",
+        "trustedSendersDescription": "Bu göndericilerin görsellerini her zaman göster.",
+        "languageChangedTo": "Dil {locale} olarak değiştirildi",
+        "customPrompt": "Özel Yapay Zeka Yönergesi",
+        "customPromptPlaceholder": "Yapay zeka için özel yönergenizi girin...",
+        "customPromptDescription": "Yapay zekanın e-posta yanıtlarınızı nasıl yazacağını özelleştirin. Bu, temel yönergeye eklenecektir."
       },
       "connections": {
         "title": "E-posta Bağlantıları",
@@ -265,13 +334,35 @@
         "twoFactorAuthDescription": "Hesabınıza ekstra bir güvenlik katmanı ekleyin",
         "loginNotifications": "Giriş Bildirimleri",
         "loginNotificationsDescription": "Yeni giriş denemeleri hakkında bildirim alın",
-        "deleteAccount": "Hesabı Sil"
+        "deleteAccount": "Hesabı Sil",
+        "loadImagesDefault": "Varsayılan Olarak Görselleri Yükle",
+        "loadImagesDefaultDescription": "Güvenlik nedeniyle görseller varsayılan olarak yüklenmez."
       },
       "appearance": {
         "title": "Görünüm",
         "description": "Renkleri, yazı tiplerini ve görünüm seçeneklerini özelleştirin.",
         "theme": "Tema",
         "inboxType": "Gelen Kutusu Tipi"
+      },
+      "signatures": {
+        "title": "E-posta İmzaları",
+        "description": "Mesajlarınızın altında görünen e-posta imzanızı oluşturun ve yönetin.",
+        "enableSignature": "İmzayı etkinleştir",
+        "enableSignatureDescription": "Tüm giden mesajlarınızın sonuna imzanızı ekleyin.",
+        "includeByDefault": "Varsayılan olarak ekle",
+        "includeByDefaultDescription": "Yeni e-postalar oluştururken imzanızı otomatik olarak ekleyin.",
+        "signatureContent": "İmza İçeriği",
+        "signatureContentPlaceholder": "Biçimlendirme, bağlantılar ve görsellerle imzanızı oluşturun.",
+        "signaturePreview": "İmza Önizleme",
+        "signatureSaved": "İmza başarıyla kaydedildi",
+        "signaturePreviewDescription": "İmzanız e-postalarda bu şekilde görünecek.",
+        "editorType": "Düzenleyici Türü",
+        "editorTypeDescription": "İmzanız için düz metin/HTML girişi veya zengin metin düzenleyici arasında seçim yapın.",
+        "plainText": "Düz Metin / HTML",
+        "richText": "Zengin Metin Düzenleyici",
+        "richTextDescription": "İmzanızı biçimlendirmek için zengin metin düzenleyiciyi kullanın.",
+        "richTextPlaceholder": "Zengin metin düzenleyici ile imzanızı biçimlendirin...",
+        "signatureContentHelp": "İmzanıza biçimlendirme, bağlantılar ve görseller eklemek için HTML kullanabilirsiniz."
       },
       "shortcuts": {
         "title": "Klavye Kısayolları",
@@ -305,10 +396,37 @@
       "body": "İçerik",
       "example": "zero@0.email",
       "attachments": "Ekler",
+      "addMore": "Daha fazla ekle",
       "dropFilesToAttach": "Eklemek için dosyaları bırakın",
       "writeYourMessageHere": "Mesajınızı buraya yazın...",
       "emailSentSuccessfully": "E-posta başarıyla gönderildi",
-      "failedToSendEmail": "E-posta gönderilemedi. Lütfen tekrar deneyin."
+      "failedToSendEmail": "E-posta gönderilemedi. Lütfen tekrar deneyin.",
+      "signature": {
+        "title": "İmza",
+        "include": "İmza ekle",
+        "remove": "İmzayı kaldır",
+        "enable": "İmzayı etkinleştir",
+        "disable": "İmzayı devre dışı bırak",
+        "add": "İmza ekle"
+      },
+      "addLink": "Bağlantı Ekle",
+      "addUrlToCreateALink": "Bağlantı oluşturmak için URL ekleyin. Bağlantı yeni sekmede açılacaktır.",
+      "editor": {
+        "menuBar": {
+          "heading1": "Başlık 1",
+          "heading2": "Başlık 2",
+          "heading3": "Başlık 3",
+          "bold": "Kalın",
+          "italic": "İtalik",
+          "strikethrough": "Üstü çizili",
+          "underline": "Altı çizili",
+          "link": "Bağlantı",
+          "bulletList": "Madde işaretli liste",
+          "orderedList": "Sıralı liste",
+          "viewAttachments": "Ekleri görüntüle",
+          "attachFiles": "Dosya ekle"
+        }
+      }
     }
   }
 }

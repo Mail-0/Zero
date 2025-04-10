@@ -12,7 +12,32 @@
       "signedOutSuccess": "正常にログアウトしました！",
       "signOutError": "サインアウトエラー",
       "refresh": "更新",
-      "loading": "読み込み中..."
+      "loading": "読み込み中...",
+      "featureNotImplemented": "この機能はまだ実装されていません",
+      "moving": "移動中...",
+      "movedToInbox": "受信箱に移動しました",
+      "movingToInbox": "受信箱に移動中...",
+      "movedToSpam": "迷惑メールに移動しました",
+      "movingToSpam": "迷惑メールに移動中...",
+      "archiving": "アーカイブ中...",
+      "archived": "アーカイブしました",
+      "failedToMove": "メッセージの移動に失敗しました",
+      "addingToFavorites": "お気に入りに追加中...",
+      "removingFromFavorites": "お気に入りから削除中...",
+      "addedToFavorites": "お気に入りに追加しました",
+      "removedFromFavorites": "お気に入りから削除しました",
+      "failedToAddToFavorites": "お気に入りへの追加に失敗しました",
+      "failedToRemoveFromFavorites": "お気に入りからの削除に失敗しました",
+      "failedToModifyFavorites": "お気に入りの変更に失敗しました",
+      "markingAsRead": "既読にしています...",
+      "markingAsUnread": "未読にしています...",
+      "hiddenImagesWarning": "セキュリティ上の理由から、画像はデフォルトで非表示になっています。",
+      "showImages": "画像を表示",
+      "disableImages": "画像を非表示",
+      "trustSender": "送信者を信頼",
+      "cancel": "キャンセル",
+      "save": "保存",
+      "remove": "削除"
     },
     "themes": {
       "dark": "ダーク",
@@ -133,7 +158,9 @@
       "markAsRead": "既読にする",
       "addLabel": "ラベルを追加",
       "muteThread": "スレッドをミュート",
-      "favourites": "お気に入り"
+      "favourites": "お気に入り",
+      "disableImages": "画像を非表示",
+      "enableImages": "画像を表示"
     },
     "notes": {
       "title": "メモ",
@@ -233,6 +260,9 @@
       "createNewLabel": "新しいラベルを作成",
       "noLabelsAvailable": "利用可能なラベルがありません",
       "loadMore": "さらに読み込む"
+    },
+    "units": {
+      "mb": "{amount} MB"
     }
   },
   "navigation": {
@@ -251,6 +281,7 @@
       "connections": "接続",
       "security": "セキュリティ",
       "appearance": "外観",
+      "signatures": "署名",
       "shortcuts": "ショートカット"
     }
   },
@@ -275,6 +306,8 @@
         "dynamicContentDescription": "電子メールの動的なコンテンツの表示を許可します。",
         "externalImages": "外部画像を表示する",
         "externalImagesDescription": "電子メールによる外部ソースからの画像の表示を許可します。",
+        "trustedSenders": "信頼できる送信者",
+        "trustedSendersDescription": "これらの送信者からの画像を常に表示します。",
         "languageChangedTo": "言語を {locale}に変更しました",
         "customPrompt": "カスタムAIプロンプト",
         "customPromptPlaceholder": "AIのカスタムプロンプトを入力...",
@@ -301,13 +334,35 @@
         "twoFactorAuthDescription": "アカウントにセキュリティレイヤーを追加します",
         "loginNotifications": "ログイン通知",
         "loginNotificationsDescription": "新しいログイン試行について通知を受け取ります",
-        "deleteAccount": "アカウントを削除"
+        "deleteAccount": "アカウントを削除",
+        "loadImagesDefault": "デフォルトで画像を読み込む",
+        "loadImagesDefaultDescription": "セキュリティ上の理由から、画像はデフォルトでは読み込まれません。"
       },
       "appearance": {
         "title": "外観",
         "description": "色、フォント、表示オプションをカスタマイズします。",
         "theme": "テーマ",
         "inboxType": "受信トレイの種類"
+      },
+      "signatures": {
+        "title": "メール署名",
+        "description": "メッセージの末尾に表示されるメール署名を作成・管理します。",
+        "enableSignature": "署名を有効にする",
+        "enableSignatureDescription": "すべての送信メッセージの末尾に署名を追加します。",
+        "includeByDefault": "デフォルトで含める",
+        "includeByDefaultDescription": "新しいメールを作成する際に自動的に署名を追加します。",
+        "signatureContent": "署名の内容",
+        "signatureContentPlaceholder": "書式設定、リンク、画像を含む署名を作成してください。",
+        "signaturePreview": "署名のプレビュー",
+        "signatureSaved": "署名が正常に保存されました",
+        "signaturePreviewDescription": "メールでの署名の表示例です。",
+        "editorType": "エディタの種類",
+        "editorTypeDescription": "署名用にプレーンテキスト/HTML入力またはリッチテキストエディタを選択してください。",
+        "plainText": "プレーンテキスト / HTML",
+        "richText": "リッチテキストエディタ",
+        "richTextDescription": "リッチテキストエディタを使用して署名を書式設定します。",
+        "richTextPlaceholder": "リッチテキストエディタで署名を書式設定してください...",
+        "signatureContentHelp": "HTMLを使用して、署名に書式設定、リンク、画像を追加できます。"
       },
       "shortcuts": {
         "title": "キーボードショートカット",
@@ -341,10 +396,37 @@
       "body": "本文",
       "example": "zero@0.email",
       "attachments": "添付ファイル",
+      "addMore": "さらに追加",
       "dropFilesToAttach": "添付するファイルをドロップ",
       "writeYourMessageHere": "ここにメッセージを書いてください",
       "emailSentSuccessfully": "メールを送信しました",
-      "failedToSendEmail": "メールを送信できませんでした。もう一度やり直してください。"
+      "failedToSendEmail": "メールを送信できませんでした。もう一度やり直してください。",
+      "signature": {
+        "title": "署名",
+        "include": "署名を含める",
+        "remove": "署名を削除",
+        "enable": "署名を有効にする",
+        "disable": "署名を無効にする",
+        "add": "署名を追加"
+      },
+      "addLink": "リンクを追加",
+      "addUrlToCreateALink": "リンクを作成するにはURLを追加してください。リンクは新しいタブで開きます。",
+      "editor": {
+        "menuBar": {
+          "heading1": "見出し1",
+          "heading2": "見出し2",
+          "heading3": "見出し3",
+          "bold": "太字",
+          "italic": "斜体",
+          "strikethrough": "取り消し線",
+          "underline": "下線",
+          "link": "リンク",
+          "bulletList": "箇条書きリスト",
+          "orderedList": "番号付きリスト",
+          "viewAttachments": "添付ファイルを表示",
+          "attachFiles": "ファイルを添付"
+        }
+      }
     }
   }
 }
