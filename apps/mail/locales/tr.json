@@ -10,27 +10,7 @@
       "close": "Kapat",
       "signingOut": "Çıkış yapılıyor...",
       "signedOutSuccess": "Çıkış yapıldı!",
-      "signOutError": "Çıkış yapılırken hata oluştu",
-      "refresh": "Refresh",
-      "loading": "Loading...",
-      "featureNotImplemented": "This feature is not implemented yet",
-      "moving": "Moving...",
-      "movedToInbox": "Moved to inbox",
-      "movingToInbox": "Moving to inbox...",
-      "movedToSpam": "Moved to spam",
-      "movingToSpam": "Moving to spam...",
-      "archiving": "Archiving...",
-      "archived": "Archived",
-      "failedToMove": "Failed to move message",
-      "addingToFavorites": "Adding to favorites...",
-      "removingFromFavorites": "Removing from favorites...",
-      "addedToFavorites": "Added to favorites",
-      "removedFromFavorites": "Removed from favorites",
-      "failedToAddToFavorites": "Failed to add to favorites",
-      "failedToRemoveFromFavorites": "Failed to remove from favorites",
-      "failedToModifyFavorites": "Failed to modify favorites",
-      "markingAsRead": "Marking as read...",
-      "markingAsUnread": "Marking as unread..."
+      "signOutError": "Çıkış yapılırken hata oluştu"
     },
     "themes": {
       "dark": "Koyu",
@@ -84,13 +64,7 @@
       "hasAttachment": "Dosya Eki Var",
       "starred": "Yıldızlı",
       "applyFilters": "Filtreleri Uygula",
-      "reset": "Sıfırla",
-      "searching": "Searching...",
-      "aiSuggestions": "AI Suggestions",
-      "aiSearching": "AI is searching...",
-      "aiSearchError": "AI search failed. Please try again.",
-      "aiNoResults": "No AI suggestions found",
-      "aiEnhancedQuery": "Enhanced search query"
+      "reset": "Sıfırla"
     },
     "navUser": {
       "customerSupport": "Müşteri Desteği",
@@ -101,7 +75,6 @@
     },
     "mailCategories": {
       "primary": "Birincil",
-      "allMail": "All Mail",
       "important": "Önemli",
       "personal": "Kişisel",
       "updates": "Güncellemeler",
@@ -116,8 +89,7 @@
       "attachmentCount": "{count, plural, =0 {ekler} one {ek} other {ekler}}",
       "fileCount": "{count, plural, =0 {dosyalar} one {dosya} other {dosyalar}}",
       "saveDraft": "Taslağı kaydet",
-      "send": "Gönder",
-      "forward": "Forward"
+      "send": "Gönder"
     },
     "mailDisplay": {
       "details": "Detaylar",
@@ -144,14 +116,10 @@
       "archive": "Arşivle",
       "reply": "Yanıtla",
       "moreOptions": "Daha fazla seçenek",
-      "moveToSpam": "Move to Spam",
       "replyAll": "Tümünü yanıtla",
       "forward": "İlet",
-      "markAsUnread": "Mark as Unread",
-      "markAsRead": "Mark as Read",
       "addLabel": "Etiket ekle",
-      "muteThread": "Konuyu sessize al",
-      "favourites": "Favourites"
+      "muteThread": "Konuyu sessize al"
     },
     "notes": {
       "title": "Notlar",
@@ -213,12 +181,6 @@
         "changeColor": "Rengi değiştir"
       }
     },
-    "settings": {
-      "notFound": "Settings not found",
-      "saved": "Settings saved",
-      "failedToSave": "Failed to save settings",
-      "languageChanged": "Language changed to {locale}"
-    },
     "mail": {
       "replies": "{count, plural, =0 {cevaplar} one {# cevap} other {# cevaplar}}",
       "deselectAll": "Seçilen tüm postaları bırak",
@@ -237,20 +199,10 @@
       "archive": "Arşivle",
       "moveToTrash": "Çöp Kutusuna Taşı",
       "markAsUnread": "Okunmamış Olarak İşaretle",
-      "markAsRead": "Mark as Read",
-      "addFavorite": "Favorite",
-      "removeFavorite": "Unfavorite",
       "muteThread": "Konuyu Sessize Al",
       "moving": "Taşınıyor...",
       "moved": "Taşındı",
-      "errorMoving": "Taşıma Hatası",
-      "reply": "Reply",
-      "replyAll": "Reply All",
-      "forward": "Forward",
-      "labels": "Labels",
-      "createNewLabel": "Create New Label",
-      "noLabelsAvailable": "No labels available",
-      "loadMore": "Load more"
+      "errorMoving": "Taşıma Hatası"
     }
   },
   "navigation": {
@@ -286,17 +238,11 @@
         "title": "Genel Ayarlar",
         "description": "Dil ve E-posta görünümü ayarlarını yönetin.",
         "language": "Dil",
-        "selectLanguage": "Select a language",
         "timezone": "Saat Dilimi",
-        "selectTimezone": "Select a timezone",
         "dynamicContent": "Dinamik İçerik",
         "dynamicContentDescription": "E-postaların dinamik içerik göstermesine izin verin.",
         "externalImages": "Harici Görselleri Göster",
-        "externalImagesDescription": "E-postaların harici kaynaklardan görselleri göstermesine izin verin.",
-        "languageChangedTo": "Language changed to {locale}",
-        "customPrompt": "Custom AI Prompt",
-        "customPromptPlaceholder": "Enter your custom prompt for the AI...",
-        "customPromptDescription": "Customize how the AI writes your email replies. This will be added to the base prompt."
+        "externalImagesDescription": "E-postaların harici kaynaklardan görselleri göstermesine izin verin."
       },
       "connections": {
         "title": "E-posta Bağlantıları",

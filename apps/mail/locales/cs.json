@@ -10,27 +10,7 @@
       "close": "Zavřít",
       "signingOut": "Odhlašování...",
       "signedOutSuccess": "Odhlášení proběhlo úspěšně!",
-      "signOutError": "Chyba při odhlášení",
-      "refresh": "Refresh",
-      "loading": "Loading...",
-      "featureNotImplemented": "This feature is not implemented yet",
-      "moving": "Moving...",
-      "movedToInbox": "Moved to inbox",
-      "movingToInbox": "Moving to inbox...",
-      "movedToSpam": "Moved to spam",
-      "movingToSpam": "Moving to spam...",
-      "archiving": "Archiving...",
-      "archived": "Archived",
-      "failedToMove": "Failed to move message",
-      "addingToFavorites": "Adding to favorites...",
-      "removingFromFavorites": "Removing from favorites...",
-      "addedToFavorites": "Added to favorites",
-      "removedFromFavorites": "Removed from favorites",
-      "failedToAddToFavorites": "Failed to add to favorites",
-      "failedToRemoveFromFavorites": "Failed to remove from favorites",
-      "failedToModifyFavorites": "Failed to modify favorites",
-      "markingAsRead": "Marking as read...",
-      "markingAsUnread": "Marking as unread..."
+      "signOutError": "Chyba při odhlášení"
     },
     "themes": {
       "dark": "Tmavé",
@@ -84,13 +64,7 @@
       "hasAttachment": "Má přílohu",
       "starred": "Oblíbené",
       "applyFilters": "Použít filtry",
-      "reset": "Obnovit",
-      "searching": "Searching...",
-      "aiSuggestions": "AI Suggestions",
-      "aiSearching": "AI is searching...",
-      "aiSearchError": "AI search failed. Please try again.",
-      "aiNoResults": "No AI suggestions found",
-      "aiEnhancedQuery": "Enhanced search query"
+      "reset": "Obnovit"
     },
     "navUser": {
       "customerSupport": "Zákaznická podpora",
@@ -101,7 +75,6 @@
     },
     "mailCategories": {
       "primary": "Hlavní",
-      "allMail": "All Mail",
       "important": "Důležité",
       "personal": "Osobní",
       "updates": "Aktualizace",
@@ -116,8 +89,7 @@
       "attachmentCount": "{count, plural, =0 {příloh} one {příloha} few {přílohy} many {příloh} other {příloh}}",
       "fileCount": "{count, plural, =0 {souborů} one {soubor} few {soubory} many {souborů} other {souborů}}",
       "saveDraft": "Uložit koncept",
-      "send": "Odeslat",
-      "forward": "Forward"
+      "send": "Odeslat"
     },
     "mailDisplay": {
       "details": "Podrobnosti",
@@ -238,8 +210,6 @@
       "moveToTrash": "Přesunout do Odstraněné pošty",
       "markAsUnread": "Označit jako nepřečtené",
       "markAsRead": "Označit jako přečtené",
-      "addFavorite": "Favorite",
-      "removeFavorite": "Unfavorite",
       "muteThread": "Ztlumit vlákno",
       "moving": "Přesouvání...",
       "moved": "Přesunuto",
@@ -249,8 +219,7 @@
       "forward": "Přeposlat",
       "labels": "Štítky",
       "createNewLabel": "Vytvořit nový štítek",
-      "noLabelsAvailable": "Nejsou dostupné žádné štítky",
-      "loadMore": "Load more"
+      "noLabelsAvailable": "Nejsou dostupné žádné štítky"
     }
   },
   "navigation": {
@@ -292,11 +261,7 @@
         "dynamicContent": "Dynamický obsah",
         "dynamicContentDescription": "Povolit emailům zobrazení dynamického obsahu.",
         "externalImages": "Zobrazit externí obrázky",
-        "externalImagesDescription": "Povolit zobrazení emailů z externích zdrojů.",
-        "languageChangedTo": "Language changed to {locale}",
-        "customPrompt": "Custom AI Prompt",
-        "customPromptPlaceholder": "Enter your custom prompt for the AI...",
-        "customPromptDescription": "Customize how the AI writes your email replies. This will be added to the base prompt."
+        "externalImagesDescription": "Povolit zobrazení emailů z externích zdrojů."
       },
       "connections": {
         "title": "Propojení emailu",

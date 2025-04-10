@@ -12,25 +12,7 @@
       "signedOutSuccess": "Erfolgreich abgemeldet!",
       "signOutError": "Fehler beim Abmelden",
       "refresh": "Aktualisieren",
-      "loading": "Wird geladen...",
-      "featureNotImplemented": "This feature is not implemented yet",
-      "moving": "Moving...",
-      "movedToInbox": "Moved to inbox",
-      "movingToInbox": "Moving to inbox...",
-      "movedToSpam": "Moved to spam",
-      "movingToSpam": "Moving to spam...",
-      "archiving": "Archiving...",
-      "archived": "Archived",
-      "failedToMove": "Failed to move message",
-      "addingToFavorites": "Adding to favorites...",
-      "removingFromFavorites": "Removing from favorites...",
-      "addedToFavorites": "Added to favorites",
-      "removedFromFavorites": "Removed from favorites",
-      "failedToAddToFavorites": "Failed to add to favorites",
-      "failedToRemoveFromFavorites": "Failed to remove from favorites",
-      "failedToModifyFavorites": "Failed to modify favorites",
-      "markingAsRead": "Marking as read...",
-      "markingAsUnread": "Marking as unread..."
+      "loading": "Wird geladen..."
     },
     "themes": {
       "dark": "Dunkel",
@@ -38,7 +20,6 @@
       "system": "System"
     },
     "commandPalette": {
-      "title": "Command Palette",
       "description": "Schnellzugriff für Mail-0",
       "placeholder": "Befehl eingeben oder suchen...",
       "noResults": "Keine Ergebnisse gefunden",

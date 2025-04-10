@@ -10,27 +10,7 @@
       "close": "닫기",
       "signingOut": "로그아웃 중...",
       "signedOutSuccess": "로그아웃에 성공했습니다!",
-      "signOutError": "로그아웃 오류 발생",
-      "refresh": "Refresh",
-      "loading": "Loading...",
-      "featureNotImplemented": "This feature is not implemented yet",
-      "moving": "Moving...",
-      "movedToInbox": "Moved to inbox",
-      "movingToInbox": "Moving to inbox...",
-      "movedToSpam": "Moved to spam",
-      "movingToSpam": "Moving to spam...",
-      "archiving": "Archiving...",
-      "archived": "Archived",
-      "failedToMove": "Failed to move message",
-      "addingToFavorites": "Adding to favorites...",
-      "removingFromFavorites": "Removing from favorites...",
-      "addedToFavorites": "Added to favorites",
-      "removedFromFavorites": "Removed from favorites",
-      "failedToAddToFavorites": "Failed to add to favorites",
-      "failedToRemoveFromFavorites": "Failed to remove from favorites",
-      "failedToModifyFavorites": "Failed to modify favorites",
-      "markingAsRead": "Marking as read...",
-      "markingAsUnread": "Marking as unread..."
+      "signOutError": "로그아웃 오류 발생"
     },
     "themes": {
       "dark": "다크 모드",
@@ -84,13 +64,7 @@
       "hasAttachment": "첨부 파일 있음",
       "starred": "별표 처리됨",
       "applyFilters": "필터 적용",
-      "reset": "초기화",
-      "searching": "Searching...",
-      "aiSuggestions": "AI Suggestions",
-      "aiSearching": "AI is searching...",
-      "aiSearchError": "AI search failed. Please try again.",
-      "aiNoResults": "No AI suggestions found",
-      "aiEnhancedQuery": "Enhanced search query"
+      "reset": "초기화"
     },
     "navUser": {
       "customerSupport": "고객 지원",
@@ -101,7 +75,6 @@
     },
     "mailCategories": {
       "primary": "기본",
-      "allMail": "All Mail",
       "important": "중요",
       "personal": "개인",
       "updates": "업데이트",
@@ -116,8 +89,7 @@
       "attachmentCount": "{count, plural, =0 {첨부 파일} other {첨부 파일}}",
       "fileCount": "{count, plural, =0 {파일} other {파일}}",
       "saveDraft": "임시 저장",
-      "send": "전송",
-      "forward": "Forward"
+      "send": "전송"
     },
     "mailDisplay": {
       "details": "세부 사항",
@@ -169,7 +141,6 @@
       "toSave": "저장하기",
       "label": "라벨:",
       "search": "노트 검색...",
-      "noteCount": "{count, plural, =0 {Add notes} one {# note} other {# notes}}",
       "notePinned": "노트를 고정했습니다",
       "noteUnpinned": "노트를 고정 해제했습니다",
       "colorChanged": "노트 색상을 변경했습니다",
@@ -188,21 +159,13 @@
         "failedToLoadNotes": "노트 불러오기 실패",
         "failedToLoadThreadNotes": "스레드 노트 불러오기 실패",
         "failedToAddNote": "노트 추가 실패",
-        "failedToUpdateNote": "Failed to update note",
         "failedToDeleteNote": "노트 삭제 실패",
         "failedToUpdateNoteColor": "노트 색상 변경 실패",
         "noValidNotesToReorder": "정렬할 유효한 노트가 없습니다",
         "failedToReorderNotes": "노트 재정렬 실패"
       },
       "colors": {
-        "default": "기본",
-        "red": "Red",
-        "orange": "Orange",
-        "yellow": "Yellow",
-        "green": "Green",
-        "blue": "Blue",
-        "purple": "Purple",
-        "pink": "Pink"
+        "default": "기본"
       },
       "actions": {
         "pin": "노트 고정",
@@ -214,14 +177,11 @@
       }
     },
     "settings": {
-      "notFound": "Settings not found",
       "saved": "설정 저장됨",
       "failedToSave": "설정 저장 실패",
       "languageChanged": "언어가 {locale}(으)로 변경되었습니다"
     },
     "mail": {
-      "replies": "{count, plural, =0 {replies} one {# reply} other {# replies}}",
-      "deselectAll": "Deselected all emails",
       "selectedEmails": "{count}개의 이메일 선택됨",
       "noEmailsToSelect": "선택할 이메일이 없습니다",
       "markedAsRead": "읽음으로 표시되었습니다",
@@ -238,8 +198,6 @@
       "moveToTrash": "휴지통으로 이동",
       "markAsUnread": "읽지 않음으로 표시",
       "markAsRead": "읽음으로 표시",
-      "addFavorite": "Favorite",
-      "removeFavorite": "Unfavorite",
       "muteThread": "스레드 음소거",
       "moving": "이동 중...",
       "moved": "이동됨",
@@ -249,8 +207,7 @@
       "forward": "전달",
       "labels": "라벨",
       "createNewLabel": "새 라벨 생성",
-      "noLabelsAvailable": "사용 가능한 라벨 없음",
-      "loadMore": "Load more"
+      "noLabelsAvailable": "사용 가능한 라벨 없음"
     }
   },
   "navigation": {
@@ -292,11 +249,7 @@
         "dynamicContent": "동적 콘텐츠",
         "dynamicContentDescription": "이메일에 동적 콘텐츠를 표시하도록 허용합니다.",
         "externalImages": "외부 이미지 표시",
-        "externalImagesDescription": "이메일에 외부 소스의 이미지를 표시하도록 허용합니다.",
-        "languageChangedTo": "Language changed to {locale}",
-        "customPrompt": "Custom AI Prompt",
-        "customPromptPlaceholder": "Enter your custom prompt for the AI...",
-        "customPromptDescription": "Customize how the AI writes your email replies. This will be added to the base prompt."
+        "externalImagesDescription": "이메일에 외부 소스의 이미지를 표시하도록 허용합니다."
       },
       "connections": {
         "title": "이메일 연결",
