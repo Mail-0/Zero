@@ -1,10 +1,21 @@
 name: autofix.ci
+
 on:
   pull_request:
   push:
-permissions: {}
+  workflow_dispatch:
+    inputs:
+      skip_localization:
+        description: "Skip Lingo.dev step"
+        type: "boolean"
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
-  prettier:
+  autofix:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code 🛎
@@ -14,6 +25,17 @@ jobs:
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
-      - uses: actions/setup-node@v4
-      - run: |
-          bun install
+
+      - name: Setup Node 📦
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install dependencies 📦
+        run: bun install
+
+      - name: Run Lingo.dev Localization 🌐
+        if: ${{ !inputs.skip_localization }}
+        uses: lingodotdev/lingo.dev@main
+        with:
+          api-key: ${{ secrets.LINGODOTDEV_API_KEY }}
