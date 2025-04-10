@@ -2,17 +2,6 @@ name: autofix.ci
 
 on:
   pull_request:
-  push:
-  workflow_dispatch:
-    inputs:
-      skip_localization:
-        description: "Skip Lingo.dev step"
-        type: "boolean"
-        default: false
-
-permissions:
-  contents: write
-  pull-requests: write
 
 jobs:
   autofix:
@@ -33,9 +22,3 @@ jobs:
 
       - name: Install dependencies 📦
         run: bun install
-
-      - name: Run Lingo.dev Localization 🌐
-        if: ${{ !inputs.skip_localization }}
-        uses: lingodotdev/lingo.dev@main
-        with:
-          api-key: ${{ secrets.LINGODOTDEV_API_KEY }}
