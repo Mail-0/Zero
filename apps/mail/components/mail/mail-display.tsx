@@ -269,7 +269,7 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
                             {emailData?.to?.map((t) => t.email).join(', ')}
                           </span>
                         </div>
-                        {emailData?.cc?.length > 0 && (
+                        {emailData?.cc && emailData.cc.length > 0 && (
                           <div className="flex">
                             <span className="w-24 text-end text-gray-500">
                               {t('common.mailDisplay.cc')}:

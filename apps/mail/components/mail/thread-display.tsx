@@ -5,18 +5,17 @@ import {
   Forward,
   MailOpen,
   Reply,
+  ReplyAll,
   X,
   Trash,
 } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useSearchParams, useParams } from 'next/navigation';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { moveThreadsTo, ThreadDestination } from '@/lib/thread-actions';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useThread, useThreads } from '@/hooks/use-threads';
 import { MailDisplaySkeleton } from './mail-skeleton';
-import { Button } from '@/components/ui/button';
 import { markAsRead, markAsUnread } from '@/actions/mail';
 import { modifyLabels } from '@/actions/mail';
 import { useStats } from '@/hooks/use-stats';
@@ -28,6 +27,7 @@ import { cn, FOLDERS } from '@/lib/utils';
 import MailDisplay from './mail-display';
 import { ParsedMessage } from '@/types';
 import { Inbox } from 'lucide-react';
+import ThreadActionButton from './thread-action-button';
 import { toast } from 'sonner';
 
 
@@ -89,46 +89,6 @@ export function ThreadDemo({ messages, isMobile }: ThreadDisplayProps) {
         </div>
       </div>
     </div>
-  );
-}
-
-function ThreadActionButton({
-  icon: Icon,
-  label,
-  onClick,
-  disabled = false,
-  className,
-}: {
-  icon: React.ComponentType<React.ComponentPropsWithRef<any>> & {
-    startAnimation?: () => void;
-    stopAnimation?: () => void;
-  };
-  label: string;
-  onClick?: () => void;
-  disabled?: boolean;
-  className?: string;
-}) {
-  const iconRef = useRef<any>(null);
-
-  return (
-    <TooltipProvider delayDuration={0}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            disabled={disabled}
-            onClick={onClick}
-            variant="ghost"
-            className={cn('md:h-fit md:px-2', className)}
-            onMouseEnter={() => iconRef.current?.startAnimation?.()}
-            onMouseLeave={() => iconRef.current?.stopAnimation?.()}
-          >
-            <Icon ref={iconRef} className="h-4 w-4" />
-            <span className="sr-only">{label}</span>
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>{label}</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
   );
 }
 
@@ -313,7 +273,7 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
           <div className="flex items-center md:gap-2">
             {/* disable notes for now, it's still a bit buggy and not ready for prod. */}
             {/* <NotesPanel threadId={threadId} /> */}
-            <ThreadActionButton
+            {!isMobile &&  <ThreadActionButton
               icon={Expand}
               label={
                 isFullscreen
@@ -322,7 +282,7 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
               }
               disabled={!emailData}
               onClick={() => setIsFullscreen(!isFullscreen)}
-            />
+            />}
             {isInSpam || isInArchive || isInBin ? (
               <ThreadActionButton
                 icon={Inbox}
@@ -359,8 +319,8 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
               onClick={handleMarkAsUnread}
             />
             <ThreadActionButton
-              icon={Reply}
-              label={t('common.threadDisplay.reply')}
+              icon={emailData.length > 1 ? ReplyAll : Reply}
+              label={emailData.length > 1 ? t('common.threadDisplay.replyAll') : t('common.threadDisplay.reply')}
               disabled={!emailData}
               className={cn(mail.replyComposerOpen && "bg-primary/10")}
               onClick={() => {
@@ -369,13 +329,15 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
                   setMail((prev) => ({ 
                     ...prev, 
                     forwardComposerOpen: false,
-                    replyComposerOpen: true 
+                    replyComposerOpen: true,
+                    selected: null
                   }));
                 } else {
                   // Toggle reply
                   setMail((prev) => ({ 
                     ...prev, 
-                    replyComposerOpen: !prev.replyComposerOpen 
+                    replyComposerOpen: true,
+                    selected: null 
                   }));
                 }
               }}
@@ -391,13 +353,14 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
                   setMail((prev) => ({ 
                     ...prev, 
                     replyComposerOpen: false,
-                    forwardComposerOpen: true 
+                    forwardComposerOpen: true
                   }));
                 } else {
                   // Toggle forward
                   setMail((prev) => ({ 
                     ...prev, 
-                    forwardComposerOpen: !prev.forwardComposerOpen 
+                    forwardComposerOpen: true,
+                    selected: null 
                   }));
                 }
               }}

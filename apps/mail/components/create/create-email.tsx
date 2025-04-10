@@ -20,13 +20,10 @@ import * as React from 'react';
 import Editor from './editor';
 import './prosemirror.css';
 import { useSettings } from '@/hooks/use-settings';
+import { EmailListInput } from '@/components/shared/email-list-input';
+import { isValidEmail } from '@/lib/utils';
 
 const MAX_VISIBLE_ATTACHMENTS = 12;
-
-const isValidEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
 
 const createEmptyDocContent = (): JSONContent => ({
   type: 'doc',
@@ -47,8 +44,7 @@ export function CreateEmail({
   initialSubject?: string;
   initialBody?: string;
 }) {
-  const [toInput, setToInput] = React.useState('');
-  const [toEmails, setToEmails] = React.useState<string[]>(initialTo ? [initialTo] : []);
+  const [recipientsList, setRecipientsList] = React.useState<string[]>(initialTo ? [initialTo] : []);
   const [subjectInput, setSubjectInput] = React.useState(initialSubject);
   const [attachments, setAttachments] = React.useState<File[]>([]);
   const [resetEditorKey, setResetEditorKey] = React.useState(0);
@@ -59,7 +55,7 @@ export function CreateEmail({
   const [draftId, setDraftId] = useQueryState('draftId');
   const [includeSignature, setIncludeSignature] = React.useState(true);
   const { settings } = useSettings();
-  
+
   const [defaultValue, setDefaultValue] = React.useState<JSONContent | null>(() => {
     if (initialBody) {
       try {
@@ -109,7 +105,7 @@ export function CreateEmail({
         setDraftId(draft.id);
 
         if (draft.to?.length) {
-          setToEmails(draft.to);
+          setRecipientsList(draft.to);
         }
         if (draft.subject) {
           setSubjectInput(draft.subject);
@@ -137,34 +133,15 @@ export function CreateEmail({
 
   const t = useTranslations();
 
-  const handleAddEmail = (email: string) => {
-    const trimmedEmail = email.trim().replace(/,$/, '');
-
-    if (!trimmedEmail) return;
-
-    if (toEmails.includes(trimmedEmail)) {
-      setToInput('');
-      return;
-    }
-
-    if (!isValidEmail(trimmedEmail)) {
-      toast.error(`Invalid email format: ${trimmedEmail}`);
-      return;
-    }
-
-    setToEmails([...toEmails, trimmedEmail]);
-    setToInput('');
-    setHasUnsavedChanges(true);
-  };
 
   const saveDraft = React.useCallback(async () => {
     if (!hasUnsavedChanges) return;
-    if (!toEmails.length && !subjectInput && !messageContent) return;
+    if (!recipientsList.length && !subjectInput && !messageContent) return;
 
     try {
       setIsLoading(true);
       const draftData = {
-        to: toEmails.join(', '),
+        to: recipientsList.join(', '),
         subject: subjectInput,
         message: messageContent || '',
         attachments: attachments,
@@ -184,7 +161,7 @@ export function CreateEmail({
     } finally {
       setIsLoading(false);
     }
-  }, [toEmails, subjectInput, messageContent, attachments, draftId, hasUnsavedChanges]);
+  }, [recipientsList, subjectInput, messageContent, attachments, draftId, hasUnsavedChanges]);
 
   React.useEffect(() => {
     if (!hasUnsavedChanges) return;
@@ -201,7 +178,7 @@ export function CreateEmail({
   }, [messageContent]);
 
   const handleSendEmail = async () => {
-    if (!toEmails.length) {
+    if (!recipientsList.length) {
       toast.error('Please enter at least one recipient email address');
       return;
     }
@@ -219,7 +196,7 @@ export function CreateEmail({
     try {
       setIsLoading(true);
       await sendEmail({
-        to: toEmails.map((email) => ({ email, name: email })),
+        to: recipientsList.map((email) => ({ email, name: email })),
         subject: subjectInput,
         message: messageContent,
         attachments: attachments,
@@ -228,8 +205,7 @@ export function CreateEmail({
       setIsLoading(false);
       toast.success(t('pages.createEmail.emailSentSuccessfully'));
 
-      setToInput('');
-      setToEmails([]);
+      setRecipientsList([]);
       setSubjectInput('');
       setAttachments([]);
       setMessageContent('');
@@ -283,7 +259,7 @@ export function CreateEmail({
     isFirstMount.current = false;
 
     requestAnimationFrame(() => {
-      if (toEmails.length === 0 && !toInput) {
+      if (!recipientsList) {
         toInputRef.current?.focus();
         console.log('Focusing to input');
       } else if (!subjectInput.trim()) {
@@ -299,35 +275,20 @@ export function CreateEmail({
     });
   }, []); // Empty dependency array since we only want this on mount
 
-  // Keyboard shortcut handler
-  React.useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      // Only trigger if "/" is pressed and no input/textarea is focused
-      if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
-        e.preventDefault();
-        toInputRef.current?.focus();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyPress);
-    return () => document.removeEventListener('keydown', handleKeyPress);
-  }, []);
 
   React.useEffect(() => {
     if (initialTo) {
       const emails = initialTo.split(',').map(email => email.trim());
       const validEmails = emails.filter(email => isValidEmail(email));
       if (validEmails.length > 0) {
-        setToEmails(validEmails);
-      } else {
-        setToInput(initialTo);
+        setRecipientsList(validEmails);
       }
     }
-    
+
     if (initialSubject) {
       setSubjectInput(initialSubject);
     }
-    
+
     if (initialBody && !defaultValue) {
       setDefaultValue({
         type: 'doc',
@@ -374,61 +335,13 @@ export function CreateEmail({
                 <div className="text-muted-foreground w-20 flex-shrink-0 pr-3 text-right text-[1rem] font-[600] opacity-50 md:w-24">
                   {t('common.mailDisplay.to')}
                 </div>
-                <div className="group relative left-[2px] flex w-full flex-wrap items-center rounded-md border border-none bg-transparent p-1 transition-all focus-within:border-none focus:outline-none">
-                  {toEmails.map((email, index) => (
-                    <div
-                      key={index}
-                      className="bg-accent flex items-center gap-1 rounded-md border px-2 text-sm font-medium"
-                    >
-                      <span className="max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap">
-                        {email}
-                      </span>
-                      <button
-                        type="button"
-                        disabled={isLoading}
-                        className="text-muted-foreground hover:text-foreground ml-1 rounded-full"
-                        onClick={() => {
-                          setToEmails((emails) => emails.filter((_, i) => i !== index));
-                          setHasUnsavedChanges(true);
-                        }}
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
-                  <input
-                    ref={toInputRef}
+                <div className="flex w-full flex-wrap gap-2 items-center p-1">
+                  <EmailListInput
+                    emails={recipientsList}
+                    onEmailsChange={setRecipientsList}
                     disabled={isLoading}
-                    type="email"
-                    className="text-md relative left-[3px] min-w-[120px] flex-1 bg-transparent placeholder:text-[#616161] placeholder:opacity-50 focus:outline-none"
-                    placeholder={toEmails.length ? '' : t('pages.createEmail.example')}
-                    value={toInput}
-                    onChange={(e) => setToInput(e.target.value)}
-                    onPaste={(e) => {
-                      e.preventDefault();
-                      const pastedText = e.clipboardData.getData('text');
-                      const emails = pastedText.split(/[,\n]/).map(email => email.trim());
-                      emails.forEach(email => {
-                        if (email && !toEmails.includes(email) && isValidEmail(email)) {
-                          setToEmails(prev => [...prev, email]);
-                          setHasUnsavedChanges(true);
-                        }
-                      });
-                    }}
-                    onKeyDown={(e) => {
-                      if ((e.key === ',' || e.key === 'Enter' || e.key === ' ') && toInput.trim()) {
-                        e.preventDefault();
-                        handleAddEmail(toInput);
-                      } else if (e.key === 'Backspace' && !toInput && toEmails.length > 0) {
-                        setToEmails((emails) => emails.filter((_, i) => i !== emails.length - 1));
-                        setHasUnsavedChanges(true);
-                      }
-                    }}
-                    onBlur={() => {
-                      if (toInput.trim()) {
-                        handleAddEmail(toInput);
-                      }
-                    }}
+                    placeholder={t('pages.createEmail.example')}
+                    onChangeComplete={() => setHasUnsavedChanges(true)}
                   />
                 </div>
               </div>
@@ -483,7 +396,7 @@ export function CreateEmail({
               <AIAssistant
                 currentContent={messageContent}
                 subject={subjectInput}
-                recipients={toEmails}
+                recipients={recipientsList}
                 userContext={{ name: userName, email: userEmail }}
                 onContentGenerated={(jsonContent, newSubject) => {
                   console.log('CreateEmail: Received AI-generated content', {
@@ -541,7 +454,7 @@ export function CreateEmail({
                 }}
               />
             </div>
-            
+
           </div>
           <div className="flex justify-end gap-3">
             <Button
@@ -549,7 +462,7 @@ export function CreateEmail({
               className="h-9 w-9 overflow-hidden rounded-full"
               onClick={handleSendEmail}
               disabled={
-                isLoading || !toEmails.length || !messageContent.trim() || !subjectInput.trim()
+                isLoading || !recipientsList.length || !messageContent.trim() || !subjectInput.trim()
               }
             >
               <ArrowUpIcon className="h-4 w-4" />

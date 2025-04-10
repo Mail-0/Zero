@@ -42,9 +42,11 @@ import { useForm } from 'react-hook-form';
 import type { JSONContent } from 'novel';
 import { toast } from 'sonner';
 import type { z } from 'zod';
+import { EmailListInput } from '@/components/shared/email-list-input';
 import { useSettings } from '@/hooks/use-settings';
 import { useMail } from '@/components/mail/use-mail';
 import { useThread } from '@/hooks/use-threads';
+import { isValidEmail } from '@/lib/utils';
 import { useQueryState } from 'nuqs';
 import { Sender } from '@/types';
 
@@ -135,15 +137,15 @@ type FormData = {
 
 export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
   const [threadId] = useQueryState('threadId');
-  const { data: emailData } = useThread(threadId);
   const [attachments, setAttachments] = useState<File[]>([]);
   const { data: session } = useSession();
   const [mail, setMail] = useMail();
-  const [toInput, setToInput] = useState('');
-  const [toEmails, setToEmails] = useState<string[]>([]);
-  const [includeSignature, setIncludeSignature] = useState(true);
+  const [recipientsList, setRecipientsList] = useState<string[]>([]);
   const { settings } = useSettings();
   const [draftId, setDraftId] = useQueryState('draftId');
+  const individualReply = !!mail.selected;
+  let { data: emailData } = useThread(threadId);
+  emailData = mail.selected ? emailData?.filter(m => m.id === mail.selected) : emailData;
 
   // Use global state instead of local state
   const composerIsOpen = mode === 'reply' ? mail.replyComposerOpen : mail.forwardComposerOpen;
@@ -235,37 +237,46 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
     }
   };
 
-  const isValidEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const handleAddEmail = (email: string) => {
-    const trimmedEmail = email.trim().replace(/,$/, '');
-
-    if (!trimmedEmail) return;
-
-    if (toEmails.includes(trimmedEmail)) {
-      setToInput('');
-      return;
-    }
-
-    if (!isValidEmail(trimmedEmail)) {
-      toast.error(`Invalid email format: ${trimmedEmail}`);
-      return;
-    }
-
-    setToEmails([...toEmails, trimmedEmail]);
-    setToInput('');
-    form.setValue('to', toEmails.join(', '));
-  };
-
   const form = useForm<FormData>({
     defaultValues: {
       messageContent: '',
       to: '',
     },
   });
+
+  useEffect(() => {
+    if (mode === 'forward') {
+      setRecipientsList([]);
+      return;
+    }
+
+    const latestEmail = emailData?.[emailData.length - 1];
+    const userEmail = session?.activeConnection?.email?.toLowerCase();
+
+    // Collect all recipients from 'to' and 'cc'
+    const allRecipients = Array.from(
+      new Set(
+        (emailData || []).flatMap((email) => [
+          email.sender.email,
+          ...(email.to?.map((recipient) => recipient.email) || []),
+          ...(email.cc?.map((ccRecipient) => ccRecipient.email) || []),
+        ])
+      )
+    );
+
+    const initialRecipients = [
+      ...(latestEmail?.sender?.email ? [cleanEmailAddress(latestEmail.sender.email)] : []),
+      ...(!individualReply
+        ? allRecipients.map(cleanEmailAddress)
+        : []),
+    ]
+      .filter(Boolean)
+      .filter((email, index, self) =>
+        self.indexOf(email) === index && (individualReply || email.toLowerCase() !== userEmail)
+      );
+
+    setRecipientsList(initialRecipients);
+  }, [mode, emailData, session?.activeConnection?.email, individualReply]);
 
   // Add a loading state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -296,7 +307,7 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
 
       const recipients: Sender[] =
         mode === 'forward'
-          ? toEmails.map((email) => ({ email, name: 'User' }))
+          ? recipientsList.map((email) => ({ email, name: 'User' }))
           : [
             {
               email: cleanEmailAddress(originalEmail.sender.email),
@@ -528,72 +539,16 @@ ${email.decodedBody || 'No content'}
     }
 
     return (
-      <div className="flex items-center gap-2">
-        <Reply className="h-4 w-4" />
-        <p className="truncate"> ({emailData[emailData.length - 1]?.sender?.email})</p>
+      <div className="flex items-center gap-2 min-w-0 flex-1">
+        <Reply className="h-4 w-4 flex-shrink-0" />
+        <EmailListInput
+          emails={recipientsList}
+          onEmailsChange={setRecipientsList}
+          placeholder={t('pages.createEmail.example')}
+        />
       </div>
     );
   };
-
-  // Extract recipient input component for reusability
-  const RecipientInput = () => (
-    <div className="ml-1 flex items-center">
-      <div className="text-muted-foreground flex-shrink-0 text-right text-[1rem] font-[600] opacity-50">
-        {t('common.mailDisplay.to')}
-      </div>
-      <div className="group relative left-[2px] flex w-full flex-wrap items-center rounded-md border border-none bg-transparent p-1 transition-all focus-within:border-none focus:outline-none">
-        {toEmails.map((email, index) => (
-          <EmailTag
-            key={index}
-            email={email}
-            onRemove={() => {
-              setToEmails((emails) => emails.filter((_, i) => i !== index));
-              form.setValue('to', toEmails.join(', '));
-            }}
-          />
-        ))}
-        <input
-          type="email"
-          className="text-md relative left-[3px] min-w-[120px] flex-1 bg-transparent placeholder:text-[#616161] placeholder:opacity-50 focus:outline-none"
-          placeholder={toEmails.length ? '' : t('pages.createEmail.example')}
-          value={toInput}
-          onChange={(e) => setToInput(e.target.value)}
-          onPaste={(e) => {
-            e.preventDefault();
-            const pastedText = e.clipboardData.getData('text');
-            const emails = pastedText.split(/[,\n]/).map(email => email.trim());
-            emails.forEach(email => {
-              if (email && !toEmails.includes(email) && isValidEmail(email)) {
-                setToEmails(prev => [...prev, email]);
-              }
-            });
-          }}
-          onKeyDown={(e) => {
-            if ((e.key === ',' || e.key === 'Enter' || e.key === ' ') && toInput.trim()) {
-              e.preventDefault();
-              handleAddEmail(toInput);
-            } else if (e.key === 'Backspace' && !toInput && toEmails.length > 0) {
-              setToEmails((emails) => emails.filter((_, i) => i !== emails.length - 1));
-            }
-          }}
-        />
-      </div>
-    </div>
-  );
-
-  // Extract email tag component
-  const EmailTag = ({ email, onRemove }: { email: string; onRemove: () => void }) => (
-    <div className="bg-accent flex items-center gap-1 rounded-md border px-2 text-sm font-medium">
-      <span className="max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap">{email}</span>
-      <button
-        type="button"
-        className="text-muted-foreground hover:text-foreground ml-1 rounded-full"
-        onClick={onRemove}
-      >
-        <X className="h-3 w-3" />
-      </button>
-    </div>
-  );
 
   // Add this effect near other useEffects
   useEffect(() => {
@@ -606,8 +561,7 @@ ${email.decodedBody || 'No content'}
       aiDispatch({ type: 'RESET' });
       // Reset to emails if in forward mode
       if (mode === 'forward') {
-        setToEmails([]);
-        setToInput('');
+        setRecipientsList([]);
       }
       // Reset editor key to force a fresh instance
       composerDispatch({ type: 'INCREMENT_EDITOR_KEY' });
@@ -623,7 +577,7 @@ ${email.decodedBody || 'No content'}
       composerDispatch({ type: 'SET_LOADING', payload: true });
       const originalEmail = emailData[0];
       const draftData = {
-        to: mode === 'forward' ? toEmails.join(', ') : originalEmail.sender.email,
+        to: mode === 'forward' ? recipientsList.join(', ') : originalEmail.sender.email,
         subject: originalEmail.subject?.startsWith(mode === 'forward' ? 'Fwd: ' : 'Re: ')
           ? originalEmail.subject
           : `${mode === 'forward' ? 'Fwd: ' : 'Re: '}${originalEmail.subject || ''}`,
@@ -645,7 +599,7 @@ ${email.decodedBody || 'No content'}
     } finally {
       composerDispatch({ type: 'SET_LOADING', payload: false });
     }
-  }, [mode, toEmails, emailData, form, attachments, draftId, setDraftId]);
+  }, [mode, recipientsList, emailData, form, attachments, draftId, setDraftId]);
 
   // Update onChange handler in Editor component
   const handleEditorChange = (content: string) => {
@@ -701,7 +655,14 @@ ${email.decodedBody || 'No content'}
         </div>
 
         {/* Recipient input for forward mode */}
-        {mode === 'forward' && <RecipientInput />}
+        {mode === 'forward' && (
+          <div className="flex items-center gap-2">
+            <div className="text-muted-foreground flex-shrink-0 text-right text-[1rem] font-[600] opacity-50">
+              {t('common.mailDisplay.to')}
+            </div>
+            <EmailListInput emails={recipientsList} onEmailsChange={setRecipientsList} placeholder={t('pages.createEmail.example')} />
+          </div>
+        )}
 
         {/* Editor container with fixed menu and growing content */}
         <div className="flex flex-grow flex-col">
@@ -861,10 +822,10 @@ ${email.decodedBody || 'No content'}
             />
           </div>
           <div className="mr-2 flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-8" 
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8"
               disabled={composerState.isLoading || !form.getValues('messageContent')}
               onClick={(e) => {
                 e.preventDefault();
@@ -881,7 +842,7 @@ ${email.decodedBody || 'No content'}
                 e.preventDefault();
                 await handleSendEmail(e);
               }}
-              disabled={composerState.isLoading}
+              disabled={composerState.isLoading || !recipientsList}
               type="button"
             >
               <ArrowUp className="h-4 w-4" />
