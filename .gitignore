@@ -46,3 +46,4 @@ next-env.d.ts
 .idea
 .vscode
 .turbo
+i18n.cache
