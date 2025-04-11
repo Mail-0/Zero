@@ -122,7 +122,7 @@ const Thread = memo(
     const handleMouseEnter = () => {
       if (demo) return;
       isHovering.current = true;
-      setHoveredMailId?.(message?.id || null);
+      setHoveredMailId?.(message?.threadId || message?.id || null);
       // Prefetch only in single select mode
       if (selectMode === 'single' && sessionData?.userId && !hasPrefetched.current) {
         // Clear any existing timeout
@@ -513,7 +513,6 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
     }
     // Otherwise select all items
     else if (items.length > 0) {
-
       const allIds = items.map((item) => item.threadId ?? item.id);
       const allIdsFromHoveredAndBelow = allIds.slice(allIds.indexOf(hoveredMailId ?? ''));
 
@@ -610,7 +609,7 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
   const handleMailClick = useCallback(
     (message: InitialThread) => () => {
       const isNotselectedDuringBulk =
-        mail.bulkSelected.length && !mail.bulkSelected.includes(message.id);
+        mail.bulkSelected.length && !mail.bulkSelected.includes(message.threadId ?? message.id);
 
       if (isNotselectedDuringBulk) {
         setMail((prev) => ({
