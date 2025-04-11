@@ -94,8 +94,8 @@ export async function POST(req: NextRequest) {
       await resend.emails.send({
         from: '0.email <onboarding@0.email>',
         to: email,
-        subject: 'Welcome to Zero (beta)',
-        html: ``,
+        subject: 'You <> Zero',
+        text: `Congrats on joining the waitlist! We're excited to have you on board. Please expect an email from us soon with more information, we are inviting more batches of early access users every day. If you have any questions, please don't hesitate to reach out to us on Discord https://discord.gg/0email.`,
         scheduledAt: new Date(Date.now() + (1000 * 60 * 60 * 24)).toISOString(),
       });
 

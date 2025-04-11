@@ -113,28 +113,34 @@ export async function handleGoldenTicket(email: string) {
       return { success: false, error: 'Unauthorized' };
     }
 
-    await db.transaction(async (tx) => {
-      try {
-        await tx.insert(earlyAccess).values({
-          id: crypto.randomUUID(),
-          email,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          isEarlyAccess: true,
-          hasUsedTicket: '',
-        });
-      } catch (error: any) {
-        if (error.code !== '23505') {
+    await db
+      .insert(earlyAccess)
+      .values({
+        id: crypto.randomUUID(),
+        email,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        isEarlyAccess: true,
+        hasUsedTicket: '',
+      }).catch(async (error) => {
+        console.log('Error registering early access', error);
+        if (error.code === '23505') {
+          console.log('Email already registered for early access, granted access');
+          await db.update(earlyAccess).set({
+            hasUsedTicket: '',
+            updatedAt: new Date(),
+            isEarlyAccess: true
+          })
+        } else {
+          console.error('Error registering early access', error);
           throw error;
         }
-      }
-      await tx.update(earlyAccess)
-        .set({
-          hasUsedTicket: email,
-          updatedAt: new Date()
-        })
-        .where(eq(earlyAccess.email, foundUser.email));
-    });
+      })
+
+    await db.update(earlyAccess).set({
+      hasUsedTicket: email,
+      updatedAt: new Date()
+    }).where(eq(earlyAccess.email, foundUser?.email))
 
     return { success: true };
   } catch (error) {
