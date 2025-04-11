@@ -5,14 +5,16 @@ import {
   Forward,
   MailOpen,
   Reply,
+  ReplyAll,
   X,
+  Trash,
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useSearchParams, useParams } from 'next/navigation';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { moveThreadsTo, ThreadDestination } from '@/lib/thread-actions';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useThread, useThreads } from '@/hooks/use-threads';
 import { MailDisplaySkeleton } from './mail-skeleton';
 import { Button } from '@/components/ui/button';
@@ -144,6 +146,19 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
   const threadIdParam = searchParams.get('threadId');
   const threadId = threadParam ?? threadIdParam ?? '';
 
+  // Check if thread contains any images (excluding sender avatars)
+  const hasImages = useMemo(() => {
+    if (!emailData) return false;
+    return emailData.some(message => {
+      const hasAttachments = message.attachments?.some(attachment => 
+        attachment.mimeType?.startsWith('image/')
+      );
+      const hasInlineImages = message.processedHtml?.includes('<img') && 
+        !message.processedHtml.includes('data:image/svg+xml;base64'); // Exclude avatar SVGs
+      return hasAttachments || hasInlineImages;
+    });
+  }, [emailData]);
+
   /**
    * Mark email as read if it's unread, if there are no unread emails, mark the current thread as read
    */
@@ -166,7 +181,7 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
 
   const isInArchive = folder === FOLDERS.ARCHIVE;
   const isInSpam = folder === FOLDERS.SPAM;
-
+  const isInBin = folder === FOLDERS.BIN;
   const handleClose = useCallback(() => {
     // Reset reply composer state when closing thread display
     setMail((prev) => ({
@@ -196,7 +211,9 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
             ? t('common.actions.movedToInbox')
             : destination === 'spam'
               ? t('common.actions.movedToSpam')
-              : t('common.actions.archived'),
+              : destination === 'bin'
+                ? t('common.actions.movedToBin')
+                : t('common.actions.archived'),
         error: t('common.actions.failedToMove'),
       });
     },
@@ -320,7 +337,7 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
               disabled={!emailData}
               onClick={() => setIsFullscreen(!isFullscreen)}
             />
-            {isInSpam || isInArchive ? (
+            {isInSpam || isInArchive || isInBin ? (
               <ThreadActionButton
                 icon={Inbox}
                 label={t('common.mail.moveToInbox')}
@@ -341,6 +358,12 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
                   disabled={!emailData}
                   onClick={() => moveThreadTo('spam')}
                 />
+                <ThreadActionButton
+                  icon={Trash}
+                  label={t('common.mail.moveToBin')}
+                  disabled={!emailData}
+                  onClick={() => moveThreadTo('bin')}
+                />
               </>
             )}
             <ThreadActionButton
@@ -355,20 +378,26 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
               disabled={!emailData}
               className={cn(mail.replyComposerOpen && "bg-primary/10")}
               onClick={() => {
-                if (mail.forwardComposerOpen) {
-                  // If forward is open, close it and open reply
-                  setMail((prev) => ({ 
-                    ...prev, 
-                    forwardComposerOpen: false,
-                    replyComposerOpen: true 
-                  }));
-                } else {
-                  // Toggle reply
-                  setMail((prev) => ({ 
-                    ...prev, 
-                    replyComposerOpen: !prev.replyComposerOpen 
-                  }));
-                }
+                setMail((prev) => ({ 
+                  ...prev, 
+                  replyComposerOpen: true,
+                  replyAllComposerOpen: false,
+                  forwardComposerOpen: false 
+                }));
+              }}
+            />
+            <ThreadActionButton
+              icon={ReplyAll}
+              label={t('common.threadDisplay.replyAll')}
+              disabled={!emailData}
+              className={cn(mail.replyAllComposerOpen && "bg-primary/10")}
+              onClick={() => {
+                setMail((prev) => ({ 
+                  ...prev, 
+                  replyComposerOpen: false,
+                  replyAllComposerOpen: true,
+                  forwardComposerOpen: false 
+                }));
               }}
             />
             <ThreadActionButton
@@ -377,20 +406,12 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
               disabled={!emailData}
               className={cn(mail.forwardComposerOpen && "bg-primary/10")}
               onClick={() => {
-                if (mail.replyComposerOpen) {
-                  // If reply is open, close it and open forward
-                  setMail((prev) => ({ 
-                    ...prev, 
-                    replyComposerOpen: false,
-                    forwardComposerOpen: true 
-                  }));
-                } else {
-                  // Toggle forward
-                  setMail((prev) => ({ 
-                    ...prev, 
-                    forwardComposerOpen: !prev.forwardComposerOpen 
-                  }));
-                }
+                setMail((prev) => ({ 
+                  ...prev, 
+                  replyComposerOpen: false,
+                  replyAllComposerOpen: false,
+                  forwardComposerOpen: true 
+                }));
               }}
             />
           </div>
@@ -398,6 +419,22 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
         <div className="flex min-h-0 flex-1 flex-col">
           <ScrollArea className="h-full flex-1" type="auto">
             <div className="pb-4">
+              {hasImages && !mail.showImages && (
+                <div className="bg-warning/10 border-warning/20 border rounded-lg p-4 m-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-warning">
+                      {t('common.mail.imagesHidden')}
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setMail(prev => ({ ...prev, showImages: true }))}
+                    >
+                      {t('common.mail.showImages')}
+                    </Button>
+                  </div>
+                </div>
+              )}
               {(emailData || []).map((message, index) => (
                 <div
                   key={message.id}
@@ -423,7 +460,7 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
             isFullscreen ? 'mb-2' : ''
           )}>
             <ReplyCompose
-              mode={mail.forwardComposerOpen ? 'forward' : 'reply'}
+              mode={mail.forwardComposerOpen ? 'forward' : mail.replyAllComposerOpen ? 'replyAll' : 'reply'}
             />
           </div>
         </div>

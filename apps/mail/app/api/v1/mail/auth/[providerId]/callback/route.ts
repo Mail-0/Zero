@@ -34,6 +34,7 @@ export async function GET(
     const userInfo = await driver.getUserInfo({
       access_token: tokens.access_token,
       refresh_token: tokens.refresh_token,
+      email: ''
     });
 
     if (!userInfo.data?.emailAddresses?.[0]?.value) {

@@ -11,7 +11,7 @@ export const FOLDERS = {
   SPAM: 'spam',
   INBOX: 'inbox',
   ARCHIVE: 'archive',
-  TRASH: 'trash',
+  BIN: 'bin',
   DRAFT: 'draft',
   SENT: 'sent',
 } as const;
@@ -22,12 +22,13 @@ export const LABELS = {
   UNREAD: 'UNREAD',
   IMPORTANT: 'IMPORTANT',
   SENT: 'SENT',
+  TRASH: 'TRASH',
 } as const;
 
 export const FOLDER_NAMES = [
   'inbox',
   'spam',
-  'trash',
+  'bin',
   'unread',
   'starred',
   'important',
@@ -40,6 +41,7 @@ export const FOLDER_TAGS: Record<string, string[]> = {
   [FOLDERS.INBOX]: [LABELS.INBOX],
   [FOLDERS.ARCHIVE]: [],
   [FOLDERS.SENT]: [LABELS.SENT],
+  [FOLDERS.BIN]: [LABELS.TRASH],
 };
 
 export const getFolderTags = (folder: string): string[] => {

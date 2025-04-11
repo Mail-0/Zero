@@ -217,12 +217,12 @@ export function DraftsList({ isCompact }: MailListProps) {
   //   else toast.error("Failed to mark as junk");
   // });
 
-  useHotKey('Meta+a', async (event) => {
-    // @ts-expect-error
-    event.preventDefault();
-    resetSelectMode();
-    selectAll();
-  });
+  // useHotKey('Meta+a', async (event) => {
+  //   // @ts-expect-error
+  //   event.preventDefault();
+  //   resetSelectMode();
+  //   selectAll();
+  // });
 
   useHotKey('Control+a', async (event) => {
     // @ts-expect-error
@@ -231,19 +231,19 @@ export function DraftsList({ isCompact }: MailListProps) {
     selectAll();
   });
 
-  useHotKey('Meta+n', async (event) => {
-    // @ts-expect-error
-    event.preventDefault();
-    resetSelectMode();
-    selectAll();
-  });
+  // useHotKey('Meta+n', async (event) => {
+  //   // @ts-expect-error
+  //   event.preventDefault();
+  //   resetSelectMode();
+  //   selectAll();
+  // });
 
-  useHotKey('Control+n', async (event) => {
-    // @ts-expect-error
-    event.preventDefault();
-    resetSelectMode();
-    selectAll();
-  });
+  // useHotKey('Control+n', async (event) => {
+  //   // @ts-expect-error
+  //   event.preventDefault();
+  //   resetSelectMode();
+  //   selectAll();
+  // });
 
   useEffect(() => {
     const handleKeyUp = (e: KeyboardEvent) => {

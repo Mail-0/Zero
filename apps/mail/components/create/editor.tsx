@@ -497,9 +497,6 @@ export default function Editor({
   onAttachmentsChange,
   senderInfo,
   myInfo,
-  includeSignature,
-  onSignatureToggle,
-  signature,
 }: EditorProps) {
   const [state, dispatch] = useReducer(editorReducer, {
     openNode: false,
@@ -708,11 +705,7 @@ export default function Editor({
               onAttachmentsChange={onAttachmentsChange}
             />
           }
-          slotAfter={
-            <>
-              <ImageResizer />
-            </>
-          }
+          slotAfter={null}
         >
           {/* Make sure the command palette doesn't cause a refresh */}
           <EditorCommand

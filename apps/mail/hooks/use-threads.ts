@@ -79,13 +79,16 @@ export const useThreads = () => {
   const [searchValue] = useSearchValue();
   const { data: session } = useSession();
 
+  // Skip filtering for drafts, spam, sent, archive, and bin pages
+  const shouldFilter = !['draft', 'spam', 'sent', 'archive', 'bin'].includes(folder || '');
+
   const { data, error, size, setSize, isLoading, isValidating, mutate } = useSWRInfinite(
     (_, previousPageData) => {
       if (!session?.user.id || !session.connectionId) return null;
       return getKey(previousPageData, [
         session.connectionId,
         folder,
-        searchValue.value,
+        shouldFilter ? searchValue.value : '', // Only apply search filter if not in special folders
         defaultPageSize,
       ]);
     },

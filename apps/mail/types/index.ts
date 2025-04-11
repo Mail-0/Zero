@@ -54,6 +54,7 @@ export interface ParsedMessage {
   decodedBody?: string;
   references?: string;
   inReplyTo?: string;
+  replyTo?: string;
   messageId?: string;
   threadId?: string;
   attachments?: Attachment[];

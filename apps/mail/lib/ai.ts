@@ -118,7 +118,6 @@ export async function generateEmailContent(
       systemPrompt,
       prompt: userMessages + '\n\nUser: ' + prompt,
       temperature: 0.7,
-      max_tokens: isQuestion ? 150 : 1000,
       embeddings, // Pass the embeddings to the API call
       userName: session?.user.name || 'User',
     });

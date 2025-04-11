@@ -16,6 +16,7 @@ import {
   RotateCw,
   Mail,
   MailOpen,
+  Trash,
 } from 'lucide-react';
 import {
   Dialog,
@@ -83,7 +84,7 @@ export function DemoMailLayout() {
   }, []);
 
   useEffect(() => {
-    if (activeCategory === 'Primary') {
+    if (activeCategory === 'Primary' || activeCategory === 'All Mail') {
       setFilteredItems(items);
     } else {
       const categoryMap = {
@@ -516,6 +517,10 @@ function BulkSelectActions() {
       icon: <Inbox />,
       tooltip: t('common.mail.moveToInbox'),
     },
+    bin: {
+      icon: <Trash />,
+      tooltip: t('common.mail.moveToBin'),
+    },
   };
 
   return (
@@ -600,6 +605,14 @@ export const Categories = () => {
 
   return [
     {
+      id: 'Primary',
+      name: t('common.mailCategories.primary'),
+      searchValue: 'in:inbox category:primary',
+      icon: <Inbox className="h-4 w-4" />,
+      colors:
+        'border-0 bg-gray-200 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400 dark:hover:bg-gray-800/70',
+    },
+    {
       id: 'Important',
       name: t('common.mailCategories.important'),
       searchValue: 'is:important',
@@ -614,14 +627,6 @@ export const Categories = () => {
       icon: <Mail className="h-4 w-4" />,
       colors:
         'border-0 bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30',
-    },
-    {
-      id: 'Primary',
-      name: t('common.mailCategories.primary'),
-      searchValue: 'in:inbox category:primary',
-      icon: <Inbox className="h-4 w-4" />,
-      colors:
-        'border-0 bg-gray-200 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400 dark:hover:bg-gray-800/70',
     },
     {
       id: 'Personal',
@@ -654,9 +659,15 @@ function CategorySelect() {
   const [, setSearchValue] = useSearchValue();
   const categories = Categories();
   const router = useRouter();
+  const { folder } = useParams<{ folder: string }>();
   const [category, setCategory] = useQueryState('category', {
-    defaultValue: 'Important',
+    defaultValue: 'Primary',
   });
+
+  // Skip category selection for drafts, spam, sent, archive, and bin pages
+  const shouldShowCategorySelect = !['draft', 'spam', 'sent', 'archive', 'bin'].includes(folder || '');
+
+  if (!shouldShowCategorySelect) return null;
 
   return (
     <Select
@@ -670,11 +681,7 @@ function CategorySelect() {
             folder: '',
           });
 
-          if (value === 'Important') {
-            setCategory(null);
-          } else {
-            setCategory(value);
-          }
+          setCategory(value);
         }
       }}
       value={category || 'Important'}

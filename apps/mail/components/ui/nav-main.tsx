@@ -21,6 +21,8 @@ import { useAtom } from 'jotai';
 import * as React from 'react';
 import Link from 'next/link';
 import {type NavItem} from '@/config/navigation'
+import { GoldenTicketModal } from '../golden';
+import { useSession } from '@/lib/auth-client';
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
   ref?: React.Ref<SVGSVGElement>;
@@ -52,6 +54,7 @@ type IconRefType = SVGSVGElement & {
 export function NavMain({ items }: NavMainProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { data: session, isPending } = useSession();
 
   /**
    * Validates URLs to prevent open redirect vulnerabilities.
@@ -169,6 +172,7 @@ export function NavMain({ items }: NavMainProps) {
             </SidebarMenuItem>
           </Collapsible>
         ))}
+        {!session || isPending ? null : !session?.hasUsedTicket ? <GoldenTicketModal /> : null}
       </SidebarMenu>
     </SidebarGroup>
   );

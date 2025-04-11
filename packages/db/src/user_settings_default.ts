@@ -7,6 +7,7 @@ export const defaultUserSettings = {
     externalImages: true,
     customPrompt: "",
     trustedSenders: [],
+    isOnboarded: false
 } satisfies UserSettings;
 
 export const userSettingsSchema = z.object({
@@ -15,6 +16,7 @@ export const userSettingsSchema = z.object({
     dynamicContent: z.boolean(),
     externalImages: z.boolean(),
     customPrompt: z.string(),
+    isOnboarded: z.boolean().optional(),
     trustedSenders: z.string().array().optional(),
 });
 

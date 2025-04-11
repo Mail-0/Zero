@@ -79,6 +79,9 @@ const parseDraft = (draft: gmail_v1.Schema$Draft): ParsedDraft | null => {
   };
 };
 
+// Helper function for delays
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export const driver = async (config: IConfig): Promise<MailManager> => {
   const auth = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID as string,
@@ -130,6 +133,8 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
     const listUnsubscribePost =
       payload?.headers?.find((h) => h.name?.toLowerCase() === 'list-unsubscribe-post')?.value ||
       undefined;
+    const replyTo =
+      payload?.headers?.find((h) => h.name?.toLowerCase() === 'reply-to')?.value || undefined;
     const toHeaders =
       payload?.headers
         ?.filter((h) => h.name?.toLowerCase() === 'to')
@@ -165,6 +170,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       tags: labelIds || [],
       listUnsubscribe,
       listUnsubscribePost,
+      replyTo,
       references,
       inReplyTo,
       sender: parseFrom(sender),
@@ -180,23 +186,107 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
     const msg = createMimeMessage();
 
     const fromEmail = config.auth?.email || 'nobody@example.com';
-    msg.setSender(fromEmail);
+    console.log('Debug - From email:', fromEmail);
+    console.log('Debug - Original to recipients:', JSON.stringify(to, null, 2));
+    
+    msg.setSender({ name: '', addr: fromEmail });
 
-    to.forEach(recipient => {
-      msg.setRecipient(({
-        addr: recipient.email,
-        name: recipient.name
+    // Track unique recipients to avoid duplicates
+    const uniqueRecipients = new Set<string>();
+
+    if (!Array.isArray(to)) {
+      console.error('Debug - To field is not an array:', to);
+      throw new Error('Recipient address required');
+    }
+
+    if (to.length === 0) {
+      console.error('Debug - To array is empty');
+      throw new Error('Recipient address required');
+    }
+
+    // Handle all To recipients
+    const toRecipients = to
+      .filter(recipient => {
+        if (!recipient || !recipient.email) {
+          console.log('Debug - Skipping invalid recipient:', recipient);
+          return false;
+        }
+
+        const email = recipient.email.toLowerCase();
+        console.log('Debug - Processing recipient:', {
+          originalEmail: recipient.email,
+          normalizedEmail: email,
+          fromEmail,
+          isDuplicate: uniqueRecipients.has(email),
+          isSelf: email === fromEmail
+        });
+        
+        // Only check for duplicates, allow sending to yourself
+        if (!uniqueRecipients.has(email)) {
+          uniqueRecipients.add(email);
+          return true;
+        }
+        return false;
+      })
+      .map(recipient => ({
+        name: recipient.name || '',
+        addr: recipient.email
       }));
-    });
 
-    if (cc) msg.setCc(cc.map(recipient => ({
-      addr: recipient.email,
-      name: recipient.name
-    })));
-    if (bcc) msg.setBcc(bcc.map(recipient => ({
-      addr: recipient.email,
-      name: recipient.name
-    })));
+    console.log('Debug - Filtered to recipients:', JSON.stringify(toRecipients, null, 2));
+
+    if (toRecipients.length > 0) {
+      msg.setRecipients(toRecipients);
+    } else {
+      console.error('Debug - No valid recipients after filtering:', {
+        originalTo: to,
+        filteredTo: toRecipients,
+        fromEmail
+      });
+      throw new Error('No valid recipients found in To field');
+    }
+
+    // Handle CC recipients
+    if (Array.isArray(cc) && cc.length > 0) {
+      const ccRecipients = cc
+        .filter(recipient => {
+          const email = recipient.email.toLowerCase();
+          if (!uniqueRecipients.has(email) && email !== fromEmail) {
+            uniqueRecipients.add(email);
+            return true;
+          }
+          return false;
+        })
+        .map(recipient => ({
+          name: recipient.name || '',
+          addr: recipient.email
+        }));
+
+      if (ccRecipients.length > 0) {
+        msg.setCc(ccRecipients);
+      }
+    }
+
+    // Handle BCC recipients
+    if (Array.isArray(bcc) && bcc.length > 0) {
+      const bccRecipients = bcc
+        .filter(recipient => {
+          const email = recipient.email.toLowerCase();
+          if (!uniqueRecipients.has(email) && email !== fromEmail) {
+            uniqueRecipients.add(email);
+            return true;
+          }
+          return false;
+        })
+        .map(recipient => ({
+          name: recipient.name || '',
+          addr: recipient.email
+        }));
+      
+      if (bccRecipients.length > 0) {
+        msg.setBcc(bccRecipients);
+      }
+    }
 
     msg.setSubject(subject);
 
@@ -205,12 +295,22 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       data: message.trim()
     });
 
+    // Set headers for reply/reply-all/forward
     if (headers) {
-      Object.keys(headers).forEach(key => {
-        if (headers[key]) msg.setHeader(key, headers[key]);
+      Object.entries(headers).forEach(([key, value]) => {
+        if (value) {
+          // Ensure References header includes all previous message IDs
+          if (key.toLowerCase() === 'references' && value) {
+            const refs = value.split(' ').filter(Boolean);
+            msg.setHeader(key, refs.join(' '));
+          } else {
+            msg.setHeader(key, value);
+          }
+        }
       });
     }
 
+    // Handle attachments
     if (attachments?.length > 0) {
       for (const file of attachments) {
         const arrayBuffer = await file.arrayBuffer();
@@ -234,7 +334,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
   }
   const normalizeSearch = (folder: string, q: string) => {
     // Handle special folders
-    if (folder === 'trash') {
+    if (folder === 'bin') {
       return { folder: undefined, q: `in:trash ${q}` };
     }
     if (folder === 'archive') {
@@ -244,6 +344,52 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
     return { folder, q };
   };
   const gmail = google.gmail({ version: 'v1', auth });
+
+  const modifyThreadLabels = async (
+    threadIds: string[], 
+    requestBody: gmail_v1.Schema$ModifyThreadRequest
+  ) => {
+    if (threadIds.length === 0) { 
+      return; 
+    }
+
+    const chunkSize = 15; 
+    const delayBetweenChunks = 100;
+    const allResults = [];
+
+    for (let i = 0; i < threadIds.length; i += chunkSize) {
+      const chunk = threadIds.slice(i, i + chunkSize);
+      
+      const promises = chunk.map(async (threadId) => {
+        try {
+          const response = await gmail.users.threads.modify({
+            userId: 'me',
+            id: threadId,
+            requestBody: requestBody,
+          });
+          return { threadId, status: 'fulfilled' as const, value: response.data };
+        } catch (error: any) { 
+          const errorMessage = error?.errors?.[0]?.message || error.message || error;
+          console.error(`Failed bulk modify operation for thread ${threadId}:`, errorMessage);
+          return { threadId, status: 'rejected' as const, reason: { error: errorMessage } };
+        }
+      });
+
+      const chunkResults = await Promise.all(promises);
+      allResults.push(...chunkResults);
+
+      if (i + chunkSize < threadIds.length) {
+        await delay(delayBetweenChunks);
+      }
+    }
+
+    const failures = allResults.filter(result => result.status === 'rejected');
+    if (failures.length > 0) {
+      const failureReasons = failures.map(f => ({ threadId: f.threadId, reason: f.reason }));
+      console.error(`Failed bulk modify operation for ${failures.length}/${threadIds.length} threads:`, failureReasons);
+    }
+  };
+
   const manager: MailManager = {
     getAttachment: async (messageId: string, attachmentId: string) => {
       try {
@@ -263,23 +409,11 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
         throw error;
       }
     },
-    markAsRead: async (id: string[]) => {
-      await gmail.users.messages.batchModify({
-        userId: 'me',
-        requestBody: {
-          ids: id,
-          removeLabelIds: ['UNREAD'],
-        },
-      });
+    markAsRead: async (threadIds: string[]) => {
+      await modifyThreadLabels(threadIds, { removeLabelIds: ['UNREAD'] });
     },
-    markAsUnread: async (id: string[]) => {
-      await gmail.users.messages.batchModify({
-        userId: 'me',
-        requestBody: {
-          ids: id,
-          addLabelIds: ['UNREAD'],
-        },
-      });
+    markAsUnread: async (threadIds: string[]) => {
+      await modifyThreadLabels(threadIds, { addLabelIds: ['UNREAD'] });
     },
     getScope,
     getUserInfo: (tokens: IConfig['auth']) => {
@@ -504,6 +638,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
             hasBody: !!fullEmailData.body,
             hasBlobUrl: !!fullEmailData.blobUrl,
             blobUrlLength: fullEmailData.blobUrl.length,
+            labels: fullEmailData.tags,
           });
 
           return fullEmailData;
@@ -532,33 +667,11 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       );
       return { threadIds };
     },
-    async modifyLabels(threadIds: string[], options: { addLabels: string[]; removeLabels: string[] }) {
-      const threadResults = await Promise.allSettled(
-        threadIds.map(threadId =>
-          gmail.users.threads.get({
-            userId: 'me',
-            id: threadId,
-            format: 'minimal'
-          })
-        )
-      );
-
-      const messageIds = threadResults
-        .filter((result): result is PromiseFulfilledResult<any> => result.status === 'fulfilled')
-        .flatMap(result => result.value.data.messages || [])
-        .map(msg => msg.id)
-        .filter((id): id is string => !!id);
-
-      if (messageIds.length > 0) {
-        await gmail.users.messages.batchModify({
-          userId: 'me',
-          requestBody: {
-            ids: messageIds,
-            addLabelIds: options.addLabels,
-            removeLabelIds: options.removeLabels,
-          },
-        });
-      }
+    modifyLabels: async (threadIds: string[], options: { addLabels: string[]; removeLabels: string[] }) => {
+      await modifyThreadLabels(threadIds, {
+        addLabelIds: options.addLabels,
+        removeLabelIds: options.removeLabels,
+      });
     },
     getDraft: async (draftId: string) => {
       try {
@@ -630,8 +743,8 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
 
         // Sort drafts by date, newest first
         const sortedDrafts = [...drafts].sort((a, b) => {
-          const dateA = new Date(a.receivedOn || new Date()).getTime();
-          const dateB = new Date(b.receivedOn || new Date()).getTime();
+          const dateA = new Date(a?.receivedOn || new Date()).getTime();
+          const dateB = new Date(b?.receivedOn || new Date()).getTime();
           return dateB - dateA;
         });
 

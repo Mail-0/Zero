@@ -2,34 +2,7 @@
 
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
-import { generateCompletions, truncateThreadContent } from '@/lib/groq';
-import { extractTextFromHTML } from './extractText';
-
-// Hard cap the context to prevent token limit errors
-async function extractEmailSummary(threadContent: string, maxTokens: number = 2000): Promise<string> {
-  // First, strip HTML from the thread content
-  threadContent = await extractTextFromHTML(threadContent);
-  
-  // Hard character limit (roughly 3 chars per token to be safe)
-  const MAX_CHARS = 4000;
-  
-  // If content is already small enough, return as is
-  if (threadContent.length <= MAX_CHARS) {
-    return threadContent;
-  }
-  
-  // Split into emails and get the latest one
-  const emails = threadContent.split('\n---\n');
-  const latestEmail = emails[emails.length - 1] || '';
-  
-  // If the latest email is within limits, return just that
-  if (latestEmail.length <= MAX_CHARS) {
-    return "Most recent email:\n" + latestEmail;
-  }
-  
-  // Otherwise, take the last MAX_CHARS characters of the latest email
-  return "Most recent email (truncated):\n" + latestEmail.slice(-MAX_CHARS);
-}
+import { generateCompletions } from '@/lib/groq';
 
 // Generates an AI response for an email reply based on the thread content
 export async function generateAIResponse(
@@ -48,7 +21,7 @@ export async function generateAIResponse(
   }
 
   // Use a more aggressive content reduction approach
-  const processedContent = await extractEmailSummary(threadContent, 2000); // Reduced to 2000 tokens maximum
+  const processedContent = threadContent
 
   // Create the system message
   const systemPrompt = `You are an email assistant helping ${session.user.name} write professional and concise email replies.
@@ -102,13 +75,13 @@ export async function generateAIResponse(
   - End with the name: ${session.user.name}`;
 
   try {
+    console.log('Generating AI response with prompt:', prompt);
     // Use direct fetch to the Groq API
     const { completion } = await generateCompletions({
-      model: 'llama3-8b-8192',
+      model: 'gpt-4o-mini',
       systemPrompt: process.env.AI_SYSTEM_PROMPT || systemPrompt,
       prompt,
-      temperature: 0.7,
-      max_tokens: 500,
+      temperature: 0.6,
       userName: session.user.name
     });
 

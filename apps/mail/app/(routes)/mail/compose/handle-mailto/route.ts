@@ -136,27 +136,27 @@ export async function GET(request: NextRequest) {
   // Get the mailto parameter from the URL
   const searchParams = request.nextUrl.searchParams;
   const mailto = searchParams.get('mailto');
-  
+
   if (!mailto) {
     return NextResponse.redirect(new URL('/mail/compose', request.url));
   }
-  
+
   // Parse the mailto URL
   const mailtoData = await parseMailtoUrl(mailto);
-  
+
   // If parsing failed, redirect to empty compose
   if (!mailtoData) {
     return NextResponse.redirect(new URL('/mail/compose', request.url));
   }
-  
+
   // Create a draft from the mailto data
   const draftId = await createDraftFromMailto(mailtoData);
-  
+
   // If draft creation failed, redirect to empty compose
   if (!draftId) {
     return NextResponse.redirect(new URL('/mail/compose', request.url));
   }
-  
+
   // Redirect to compose with the draft ID
   return NextResponse.redirect(new URL(`/mail/compose?draftId=${draftId}`, request.url));
 } 

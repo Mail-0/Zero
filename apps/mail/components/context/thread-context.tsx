@@ -56,6 +56,7 @@ interface EmailContextMenuProps {
 	isInbox?: boolean;
 	isSpam?: boolean;
 	isSent?: boolean;
+	isBin?: boolean;
 	refreshCallback?: () => void;
 }
 
@@ -66,6 +67,7 @@ export function ThreadContextMenu({
   isInbox = true,
   isSpam = false,
   isSent = false,
+  isBin = false,
   refreshCallback,
 }: EmailContextMenuProps) {
   const { folder } = useParams<{ folder: string }>();
@@ -113,6 +115,7 @@ export function ThreadContextMenu({
 			let destination: ThreadDestination = null;
 			if (to === LABELS.INBOX) destination = FOLDERS.INBOX;
 			else if (to === LABELS.SPAM) destination = FOLDERS.SPAM;
+			else if (to === LABELS.TRASH) destination = FOLDERS.BIN;
 			else if (from && !to) destination = FOLDERS.ARCHIVE;
 
 			const promise = moveThreadsTo({
@@ -136,6 +139,9 @@ export function ThreadContextMenu({
 			} else if (destination === FOLDERS.ARCHIVE) {
 				loadingMessage = t('common.actions.archiving');
 				successMessage = t('common.actions.archived');
+			} else if (destination === FOLDERS.BIN) {
+				loadingMessage = t('common.actions.movingToBin');
+				successMessage = t('common.actions.movedToBin');
 			}
 
 			toast.promise(promise, {
@@ -217,6 +223,25 @@ export function ThreadContextMenu({
           action: handleMove(LABELS.SPAM, LABELS.INBOX),
           disabled: false,
         },
+        {
+          id: 'move-to-bin',
+          label: t('common.mail.moveToBin'),
+          icon: <Trash className="mr-2.5 h-4 w-4" />,
+          action: handleMove(LABELS.SPAM, LABELS.TRASH),
+          disabled: false,
+        },
+      ];
+    }
+
+    if (isBin) {
+      return [
+        {
+          id: 'restore-from-bin',
+          label: t('common.mail.restoreFromBin'),
+          icon: <Inbox className="mr-2.5 h-4 w-4" />,
+          action: handleMove(LABELS.TRASH, LABELS.INBOX),
+          disabled: false,
+        },
       ];
     }
 
@@ -227,6 +252,13 @@ export function ThreadContextMenu({
           label: t('common.mail.unarchive'),
           icon: <Inbox className="mr-2.5 h-4 w-4" />,
           action: handleMove('', LABELS.INBOX),
+          disabled: false,
+        },
+        {
+          id: 'move-to-bin',
+          label: t('common.mail.moveToBin'),
+          icon: <Trash className="mr-2.5 h-4 w-4" />,
+          action: handleMove('', LABELS.TRASH),
           disabled: false,
         },
       ];
@@ -240,6 +272,13 @@ export function ThreadContextMenu({
           icon: <Archive className="mr-2.5 h-4 w-4" />,
           shortcut: 'E',
           action: handleMove(LABELS.SENT, ''),
+          disabled: false,
+        },
+        {
+          id: 'move-to-bin',
+          label: t('common.mail.moveToBin'),
+          icon: <Trash className="mr-2.5 h-4 w-4" />,
+          action: handleMove(LABELS.SENT, LABELS.TRASH),
           disabled: false,
         },
       ];
@@ -261,18 +300,15 @@ export function ThreadContextMenu({
         action: handleMove(LABELS.INBOX, LABELS.SPAM),
         disabled: !isInbox,
       },
+      {
+        id: 'move-to-bin',
+        label: t('common.mail.moveToBin'),
+        icon: <Trash className="mr-2.5 h-4 w-4" />,
+        action: handleMove(LABELS.INBOX, LABELS.TRASH),
+        disabled: false,
+      },
     ];
   };
-
-  const moveActions: EmailAction[] = [
-    {
-      id: 'move-to-trash',
-      label: t('common.mail.moveToTrash'),
-      icon: <Trash className="mr-2.5 h-4 w-4" />,
-      action: noopAction,
-      disabled: true, // TODO: Move to trash functionality to be implemented
-    },
-  ];
 
   const otherActions: EmailAction[] = [
     {
@@ -324,7 +360,6 @@ export function ThreadContextMenu({
         <ContextMenuSeparator />
 
         {getActions().map(renderAction as any)}
-        {moveActions.filter((action) => action.id !== 'move-to-spam').map(renderAction)}
 
         <ContextMenuSeparator />
 
