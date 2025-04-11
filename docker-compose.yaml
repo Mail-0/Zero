@@ -29,10 +29,27 @@ services:
     image: hiett/serverless-redis-http:latest
     environment:
       SRH_MODE: env
-      SRH_TOKEN: upstash-local-token
+      SRH_TOKEN: ${REDIS_TOKEN}
       SRH_CONNECTION_STRING: "redis://valkey:6379"
     ports:
       - 8079:80
+      
+  app:
+    container_name: zerodotemail-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    depends_on:
+      - db
+      - valkey
+      - upstash-proxy
+    environment:
+      NODE_ENV: production
+      NODE_OPTIONS: --no-experimental-fetch
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
 
 volumes:
   valkey-data:
