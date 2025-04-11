@@ -1,71 +1,114 @@
-'use client'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+'use client';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Form, FormField, FormItem, FormLabel } from './ui/form';
-import { Input } from './ui/input';
+import { handleGoldenTicket } from '@/actions/settings';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useSession } from '@/lib/auth-client';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { TicketIcon } from 'lucide-react';
 import { Button } from './ui/button';
-import { handleGoldenTicket } from '@/actions/settings';
+import { Input } from './ui/input';
 import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
-import { useSession } from '@/lib/auth-client';
+import { z } from 'zod';
+import { useSidebar } from '@/components/ui/sidebar';
+import { useIsMobile } from '@/hooks/use-mobile';
+import Image from 'next/image';
 
 const schema = z.object({
-    email: z.string().email(),
+  email: z.string().email(),
 });
 
 export const GoldenTicketModal = () => {
-    const { refetch } = useSession();
-    const router = useRouter();
-    const form = useForm({
-        resolver: zodResolver(schema),
-    })
-    const onSubmit = async (data: z.infer<typeof schema>) => {
-        const { success, error } = await handleGoldenTicket(data.email);
-        if (success) {
-            toast.success('Golden ticket used, your friend will be notified');
-            refetch()
-            router.refresh()
-        } else {
-            toast.error(error);
-        }
+  const { refetch } = useSession();
+  const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false);
+  const { state } = useSidebar();
+  const isMobile = useIsMobile();
+  const form = useForm({
+    resolver: zodResolver(schema),
+  });
+
+  useEffect(() => {
+    const hasDeclined = localStorage.getItem('goldenTicketDeclined');
+    if (!hasDeclined) {
+      setIsOpen(true);
     }
-    const email = form.watch('email');
-    return <Dialog defaultOpen>
-        <DialogTrigger asChild>
-            <Button className='w-full bg-yellow-500/10 border-yellow-500 border text-yellow-500 hover:bg-black'>
-                <span className='mr-2'>Use Golden Ticket</span>
-                <TicketIcon className='h-4 w-4' />
-            </Button>
-        </DialogTrigger>
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>You're in! 🎉</DialogTitle>
-                <DialogDescription>Congrats on joining Zero (beta)! 🎉 As an early adopter, you're automatically qualified to receive <span className='font-bold underline'>1x Golden Ticket 🎫</span>. You can use this 🎫 to give any of your friends access to the app immediately, skipping the waitling!</DialogDescription>
-                <DialogDescription>Who are you inviting? 🤔</DialogDescription>
-            </DialogHeader>
-            <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-2'>
-                <Form {...form}>
-                    <FormField
-                        control={form.control}
-                        name='email'
-                        render={({ field }) =>
-                            <FormItem>
-                                <FormLabel htmlFor="email" className="text-sm font-medium">
-                                    Email
-                                </FormLabel>
-                                <Input {...field} />
-                            </FormItem>
-                        }
-                    />
-                    <Button disabled={!email} type='submit' className='w-full'>
-                        <span className='mr-2'>Use (1x Golden Ticket)</span>
-                        <TicketIcon className='h-4 w-4' />
-                    </Button>
-                </Form>
-            </form>
-        </DialogContent>
+  }, []);
+
+  const onSubmit = async (data: z.infer<typeof schema>) => {
+    const { success, error } = await handleGoldenTicket(data.email);
+    if (success) {
+      toast.success('Golden ticket used, your friend will be notified');
+      refetch();
+      router.refresh();
+      setIsOpen(false);
+    } else {
+      toast.error(error);
+    }
+  };
+
+  const handleMaybeLater = () => {
+    localStorage.setItem('goldenTicketDeclined', 'true');
+    setIsOpen(false);
+  };
+
+  const email = form.watch('email');
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button className="">
+          {state === 'collapsed' && !isMobile ? (
+            <TicketIcon className="size-4" />
+          ) : (
+            <span className="mr-2">Invite a friend</span>
+          )}
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className='flex flex-col gap-4'>
+            <Image src='/white-icon.svg' alt='Zero' width={32} height={32} />
+            <span>Welcome to Zero! 🎉 ✨</span>
+          </DialogTitle>
+          <DialogDescription className='pt-3 flex flex-col gap-3'>
+            <span>Zero is still in early beta 🚀 and will continue to grow and improve from this point on. If
+            you know a friend who wants to test and try out Zero, send them an invite! 💌</span>
+
+            <span>You can only invite one person, so make it count! 🎯 ⭐️</span>
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+          <Form {...form}>
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  
+                  <Input placeholder='nizzy@gmail.com' {...field} className='placeholder:opacity-20' />
+                </FormItem>
+              )}
+            />
+            <div className="pt-3 flex gap-2 justify-end">
+              <Button onClick={handleMaybeLater} type="button" variant="outline" className="">
+                Maybe Later
+              </Button>
+              <Button disabled={!email} type="submit" className="">
+                <span className="mr-2">Send invite</span>
+              </Button>
+            </div>
+          </Form>
+        </form>
+      </DialogContent>
     </Dialog>
-}
+  );
+};

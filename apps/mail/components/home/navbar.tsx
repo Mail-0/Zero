@@ -23,6 +23,44 @@ export default function Navbar() {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
+  const mobileNavContent = () => {
+    return (
+      <>
+        <Link
+          href={session ? '/mail' : '/login'}
+          className="w-full py-2 text-center text-gray-800 transition-opacity hover:opacity-80 dark:bg-gradient-to-r dark:from-gray-300 dark:via-gray-100 dark:to-gray-200 dark:bg-clip-text dark:text-transparent"
+        >
+          {session ? 'Dashboard' : 'Sign in'}
+        </Link>
+        <Button
+          className="w-full bg-gray-900 text-white hover:bg-black dark:bg-white dark:text-black dark:hover:bg-white/90"
+          asChild
+        >
+          <Link href="https://cal.com/team/0/chat">Contact</Link>
+        </Button>
+      </>
+    )
+  };
+
+  const desktopNavContent = () => {
+    return (
+      <>
+        <Link
+          href={session ? "/mail" : "/login"}
+          className="text-nowrap text-sm text-gray-800 transition-opacity hover:opacity-80 dark:bg-gradient-to-r dark:from-gray-300 dark:via-gray-100 dark:to-gray-200 dark:bg-clip-text dark:text-transparent"
+        >
+          {session ? 'Dashboard' : 'Sign in'}
+        </Link>
+        <Button
+          className="h-[32px] w-[110px] rounded-md bg-gray-900 text-white hover:bg-black dark:bg-white dark:text-black dark:hover:bg-white/90"
+          asChild
+        >
+          <Link href={session ? '/mail' : '/login'}>Get Started</Link>
+        </Button>
+      </>
+    )
+  }
+
   return (
     <div className="mx-auto flex w-full items-center justify-between p-4 px-3 lg:px-4">
       <Link href="/">
@@ -63,18 +101,7 @@ export default function Navbar() {
                 </SheetTrigger>
               </div>
               <div className="mt-7 flex flex-col space-y-4 px-3">
-                <Link
-                  href="/login"
-                  className="w-full py-2 text-center text-gray-800 transition-opacity hover:opacity-80 dark:bg-gradient-to-r dark:from-gray-300 dark:via-gray-100 dark:to-gray-200 dark:bg-clip-text dark:text-transparent"
-                >
-                  {session ? 'Dashboard' : 'Sign in'}
-                </Link>
-                <Button
-                  className="w-full bg-gray-900 text-white hover:bg-black dark:bg-white dark:text-black dark:hover:bg-white/90"
-                  asChild
-                >
-                  <Link href="https://cal.com/team/0/chat">Contact</Link>
-                </Button>
+                {mobileNavContent()}
               </div>
             </div>
           </SheetContent>
@@ -83,18 +110,7 @@ export default function Navbar() {
 
       <>
         <div className="hidden items-center gap-4 lg:flex">
-          <Link
-            href="login"
-            className="text-nowrap text-sm text-gray-800 transition-opacity hover:opacity-80 dark:bg-gradient-to-r dark:from-gray-300 dark:via-gray-100 dark:to-gray-200 dark:bg-clip-text dark:text-transparent"
-          >
-            {session ? 'Dashboard' : 'Sign in'}
-          </Link>
-          <Button
-            className="h-[32px] w-[110px] rounded-md bg-gray-900 text-white hover:bg-black dark:bg-white dark:text-black dark:hover:bg-white/90"
-            asChild
-          >
-            <Link href="/login">Get Started</Link>
-          </Button>
+          {desktopNavContent()}
         </div>
       </>
     </div>

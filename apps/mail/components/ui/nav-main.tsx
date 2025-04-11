@@ -54,7 +54,7 @@ type IconRefType = SVGSVGElement & {
 export function NavMain({ items }: NavMainProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { data: session } = useSession();
+  const { data: session, isPending } = useSession();
 
   /**
    * Validates URLs to prevent open redirect vulnerabilities.
@@ -172,7 +172,7 @@ export function NavMain({ items }: NavMainProps) {
             </SidebarMenuItem>
           </Collapsible>
         ))}
-        {!session?.hasUsedTicket ? <GoldenTicketModal /> : null}
+        {!session || isPending ? null : !session?.hasUsedTicket ? <GoldenTicketModal /> : null}
       </SidebarMenu>
     </SidebarGroup>
   );

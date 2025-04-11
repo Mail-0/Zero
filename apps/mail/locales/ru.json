@@ -3,7 +3,7 @@
     "actions": {
       "logout": "Выйти",
       "back": "Назад",
-      "create": "Написать письмо",
+      "create": "Создать Письмо",
       "saveChanges": "Сохранить изменения",
       "saving": "Сохранение...",
       "resetToDefaults": "Сбросить к значениям по умолчанию",
@@ -18,7 +18,7 @@
       "movedToInbox": "Перемещено во входящие",
       "movingToInbox": "Перемещение во входящие...",
       "movedToSpam": "Перемещено в спам",
-      "movingToSpam": "Перемещение в спам...",
+      "movingToSpam": "Перемещено во входящие",
       "archiving": "Архивация...",
       "archived": "В архиве",
       "failedToMove": "Не удалось переместить сообщение",
@@ -29,18 +29,18 @@
       "failedToAddToFavorites": "Не удалось добавить в избранное",
       "failedToRemoveFromFavorites": "Не удалось удалить из избранного",
       "failedToModifyFavorites": "Не удалось изменить избранные",
-      "movingToBin": "Moving to bin...",
-      "movedToBin": "Moved to bin",
-      "failedToMoveToBin": "Failed to move to bin",
+      "movingToBin": "Перемещение в корзину...",
+      "movedToBin": "Перемещено в корзину",
+      "failedToMoveToBin": "Не удалось переместить в корзину",
       "markingAsRead": "Отмечается как прочитанное...",
       "markingAsUnread": "Отмечается как непрочитанное...",
-      "hiddenImagesWarning": "Images are hidden by default for security reasons.",
-      "showImages": "Show Images",
-      "disableImages": "Hide Images",
-      "trustSender": "Trust Sender",
-      "cancel": "Cancel",
-      "save": "Save",
-      "remove": "Remove"
+      "hiddenImagesWarning": "Изображения скрыты по умолчанию в целях безопасности.",
+      "showImages": "Показать изображения",
+      "disableImages": "Скрыть изображения",
+      "trustSender": "Доверять отправителю",
+      "cancel": "Отменить",
+      "save": "Сохранить",
+      "remove": "Удалить"
     },
     "themes": {
       "dark": "Тёмный",
@@ -103,7 +103,7 @@
       "aiEnhancedQuery": "Расширенный поиск"
     },
     "navUser": {
-      "customerSupport": "Community",
+      "customerSupport": "Сообщество",
       "documentation": "Документация",
       "appTheme": "Тема",
       "accounts": "Аккаунты",
@@ -162,8 +162,8 @@
       "addLabel": "Добавить ярлык",
       "muteThread": "Заглушить ветку",
       "favourites": "Избранное",
-      "disableImages": "Hide Images",
-      "enableImages": "Show Images"
+      "disableImages": "Скрыть изображения",
+      "enableImages": "Показать изображения"
     },
     "notes": {
       "title": "Заметки",
@@ -243,12 +243,12 @@
       "selected": "Выбрано {count}",
       "clearSelection": "Очистить выбор",
       "mute": "Заглушить",
-      "moveToSpam": "Переместить в Спам",
+      "moveToSpam": "Переместить в спам",
       "moveToInbox": "Переместить во Входящие",
       "unarchive": "Разархивировать",
       "archive": "Архивировать",
-      "moveToBin": "Move to Bin",
-      "restoreFromBin": "Restore from Bin",
+      "moveToBin": "Переместить в корзину",
+      "restoreFromBin": "Восстановить из корзины",
       "markAsUnread": "Отметить как непрочитанное",
       "markAsRead": "Отметить как прочитанное",
       "addFavorite": "Избранное",
@@ -266,7 +266,7 @@
       "loadMore": "Загрузить ещё"
     },
     "units": {
-      "mb": "{amount} MB"
+      "mb": "{amount} МБ"
     }
   },
   "navigation": {
@@ -285,7 +285,7 @@
       "connections": "Подключения",
       "security": "Безопасность",
       "appearance": "Внешний вид",
-      "signatures": "Signatures",
+      "signatures": "Подписи",
       "shortcuts": "Команды"
     }
   },
@@ -300,7 +300,7 @@
     },
     "settings": {
       "general": {
-        "title": "Основные",
+        "title": "Общие",
         "description": "Управление настройками языка и отображения электронной почты.",
         "language": "Язык",
         "selectLanguage": "Выберите язык",
@@ -310,8 +310,8 @@
         "dynamicContentDescription": "Позволяет электронной почте отображать динамический контент.",
         "externalImages": "Отображать изображения из внешних источников",
         "externalImagesDescription": "Позволяет электронной почте отображать изображения из внешних источников.",
-        "trustedSenders": "Trusted Senders",
-        "trustedSendersDescription": "Always display images for these senders.",
+        "trustedSenders": "Доверенные отправители",
+        "trustedSendersDescription": "Всегда отображать изображения от этих отправителей.",
         "languageChangedTo": "Язык изменен на {locale}",
         "customPrompt": "Пользовательский ИИ Запрос",
         "customPromptPlaceholder": "Введите ваш запрос для ИИ...",
@@ -339,8 +339,8 @@
         "loginNotifications": "Уведомления о входе",
         "loginNotificationsDescription": "Получать уведомления о новых попытках входа",
         "deleteAccount": "Удалить аккаунт",
-        "loadImagesDefault": "Load Images by Default",
-        "loadImagesDefaultDescription": "Images are not loaded by default for security reasons."
+        "loadImagesDefault": "Загружать изображения по умолчанию",
+        "loadImagesDefaultDescription": "Изображения не загружаются по умолчанию в целях безопасности."
       },
       "appearance": {
         "title": "Внешний вид",
@@ -349,24 +349,24 @@
         "inboxType": "Тип почты"
       },
       "signatures": {
-        "title": "Email Signatures",
-        "description": "Create and manage your email signature that appears at the bottom of your messages.",
-        "enableSignature": "Enable signature",
-        "enableSignatureDescription": "Add your signature to the end of all outgoing messages.",
-        "includeByDefault": "Include by default",
-        "includeByDefaultDescription": "Automatically add your signature when composing new emails.",
-        "signatureContent": "Signature Content",
-        "signatureContentPlaceholder": "Create your signature with formatting, links, and images.",
-        "signaturePreview": "Signature Preview",
-        "signatureSaved": "Signature saved successfully",
-        "signaturePreviewDescription": "This is how your signature will appear in emails.",
-        "editorType": "Editor Type",
-        "editorTypeDescription": "Choose between plain text/HTML input or a rich text editor for your signature.",
-        "plainText": "Plain Text / HTML",
-        "richText": "Rich Text Editor",
-        "richTextDescription": "Use the rich text editor to format your signature.",
-        "richTextPlaceholder": "Format your signature with the rich text editor...",
-        "signatureContentHelp": "You can use HTML to add formatting, links, and images to your signature."
+        "title": "Подписи электронной почты",
+        "description": "Создавайте и управляйте подписью электронной почты, которая отображается внизу ваших сообщений.",
+        "enableSignature": "Включить подпись",
+        "enableSignatureDescription": "Добавлять подпись в конец всех исходящих сообщений.",
+        "includeByDefault": "Включать по умолчанию",
+        "includeByDefaultDescription": "Автоматически добавлять подпись при создании новых писем.",
+        "signatureContent": "Содержание подписи",
+        "signatureContentPlaceholder": "Создайте свою подпись с форматированием, ссылками и изображениями.",
+        "signaturePreview": "Предварительный просмотр подписи",
+        "signatureSaved": "Подпись успешно сохранена",
+        "signaturePreviewDescription": "Так будет выглядеть ваша подпись в письмах.",
+        "editorType": "Тип редактора",
+        "editorTypeDescription": "Выберите между вводом обычного текста/HTML или редактором форматированного текста для вашей подписи.",
+        "plainText": "Обычный текст / HTML",
+        "richText": "Редактор форматированного текста",
+        "richTextDescription": "Используйте редактор форматированного текста для оформления вашей подписи.",
+        "richTextPlaceholder": "Отформатируйте вашу подпись с помощью редактора форматированного текста...",
+        "signatureContentHelp": "Вы можете использовать HTML для добавления форматирования, ссылок и изображений в вашу подпись."
       },
       "shortcuts": {
         "title": "Горячие клавиши",
@@ -399,36 +399,36 @@
     "createEmail": {
       "body": "Текст письма",
       "example": "zero@0.email",
-      "attachments": "Attachments ({count})",
-      "addMore": "Add more",
+      "attachments": "Приложения",
+      "addMore": "Добавить ещё",
       "dropFilesToAttach": "Поместите файлы, чтобы прикрепить",
       "writeYourMessageHere": "Напишите свое сообщение здесь...",
       "emailSentSuccessfully": "Письмо отправлено успешно",
       "failedToSendEmail": "Не удалось отправить письмо. Попробуйте снова.",
       "signature": {
-        "title": "Signature",
-        "include": "Include signature",
-        "remove": "Remove signature",
-        "enable": "Enable signature",
-        "disable": "Disable signature",
-        "add": "Add signature"
+        "title": "Подпись",
+        "include": "Включить подпись",
+        "remove": "Удалить подпись",
+        "enable": "Включить подпись",
+        "disable": "Отключить подпись",
+        "add": "Добавить подпись"
       },
-      "addLink": "Add Link",
-      "addUrlToCreateALink": "Add URL to create a link. The link will open in a new tab.",
+      "addLink": "Добавить ссылку",
+      "addUrlToCreateALink": "Добавьте URL, чтобы создать ссылку. Ссылка откроется в новой вкладке.",
       "editor": {
         "menuBar": {
-          "heading1": "Heading 1",
-          "heading2": "Heading 2",
-          "heading3": "Heading 3",
-          "bold": "Bold",
-          "italic": "Italic",
-          "strikethrough": "Strikethrough",
-          "underline": "Underline",
-          "link": "Link",
-          "bulletList": "Bullet List",
-          "orderedList": "Ordered List",
-          "viewAttachments": "View Attachments",
-          "attachFiles": "Attach Files"
+          "heading1": "Заголовок 1",
+          "heading2": "Заголовок 2",
+          "heading3": "Заголовок 3",
+          "bold": "Жирный",
+          "italic": "Курсив",
+          "strikethrough": "Зачёркнутый",
+          "underline": "Подчёркнутый",
+          "link": "Ссылка",
+          "bulletList": "Маркированный список",
+          "orderedList": "Нумерованный список",
+          "viewAttachments": "Просмотр вложений",
+          "attachFiles": "Прикрепить файлы"
         }
       }
     }

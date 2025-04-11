@@ -79,6 +79,9 @@ const parseDraft = (draft: gmail_v1.Schema$Draft): ParsedDraft | null => {
   };
 };
 
+// Helper function for delays
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export const driver = async (config: IConfig): Promise<MailManager> => {
   const auth = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID as string,
@@ -244,6 +247,52 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
     return { folder, q };
   };
   const gmail = google.gmail({ version: 'v1', auth });
+
+  const modifyThreadLabels = async (
+    threadIds: string[], 
+    requestBody: gmail_v1.Schema$ModifyThreadRequest
+  ) => {
+    if (threadIds.length === 0) { 
+      return; 
+    }
+
+    const chunkSize = 15; 
+    const delayBetweenChunks = 100;
+    const allResults = [];
+
+    for (let i = 0; i < threadIds.length; i += chunkSize) {
+      const chunk = threadIds.slice(i, i + chunkSize);
+      
+      const promises = chunk.map(async (threadId) => {
+        try {
+          const response = await gmail.users.threads.modify({
+            userId: 'me',
+            id: threadId,
+            requestBody: requestBody,
+          });
+          return { threadId, status: 'fulfilled' as const, value: response.data };
+        } catch (error: any) { 
+          const errorMessage = error?.errors?.[0]?.message || error.message || error;
+          console.error(`Failed bulk modify operation for thread ${threadId}:`, errorMessage);
+          return { threadId, status: 'rejected' as const, reason: { error: errorMessage } };
+        }
+      });
+
+      const chunkResults = await Promise.all(promises);
+      allResults.push(...chunkResults);
+
+      if (i + chunkSize < threadIds.length) {
+        await delay(delayBetweenChunks);
+      }
+    }
+
+    const failures = allResults.filter(result => result.status === 'rejected');
+    if (failures.length > 0) {
+      const failureReasons = failures.map(f => ({ threadId: f.threadId, reason: f.reason }));
+      console.error(`Failed bulk modify operation for ${failures.length}/${threadIds.length} threads:`, failureReasons);
+    }
+  };
+
   const manager: MailManager = {
     getAttachment: async (messageId: string, attachmentId: string) => {
       try {
@@ -263,23 +312,11 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
         throw error;
       }
     },
-    markAsRead: async (id: string[]) => {
-      await gmail.users.messages.batchModify({
-        userId: 'me',
-        requestBody: {
-          ids: id,
-          removeLabelIds: ['UNREAD'],
-        },
-      });
+    markAsRead: async (threadIds: string[]) => {
+      await modifyThreadLabels(threadIds, { removeLabelIds: ['UNREAD'] });
     },
-    markAsUnread: async (id: string[]) => {
-      await gmail.users.messages.batchModify({
-        userId: 'me',
-        requestBody: {
-          ids: id,
-          addLabelIds: ['UNREAD'],
-        },
-      });
+    markAsUnread: async (threadIds: string[]) => {
+      await modifyThreadLabels(threadIds, { addLabelIds: ['UNREAD'] });
     },
     getScope,
     getUserInfo: (tokens: IConfig['auth']) => {
@@ -504,6 +541,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
             hasBody: !!fullEmailData.body,
             hasBlobUrl: !!fullEmailData.blobUrl,
             blobUrlLength: fullEmailData.blobUrl.length,
+            labels: fullEmailData.tags,
           });
 
           return fullEmailData;
@@ -532,33 +570,11 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       );
       return { threadIds };
     },
-    async modifyLabels(threadIds: string[], options: { addLabels: string[]; removeLabels: string[] }) {
-      const threadResults = await Promise.allSettled(
-        threadIds.map(threadId =>
-          gmail.users.threads.get({
-            userId: 'me',
-            id: threadId,
-            format: 'minimal'
-          })
-        )
-      );
-
-      const messageIds = threadResults
-        .filter((result): result is PromiseFulfilledResult<any> => result.status === 'fulfilled')
-        .flatMap(result => result.value.data.messages || [])
-        .map(msg => msg.id)
-        .filter((id): id is string => !!id);
-
-      if (messageIds.length > 0) {
-        await gmail.users.messages.batchModify({
-          userId: 'me',
-          requestBody: {
-            ids: messageIds,
-            addLabelIds: options.addLabels,
-            removeLabelIds: options.removeLabels,
-          },
-        });
-      }
+    modifyLabels: async (threadIds: string[], options: { addLabels: string[]; removeLabels: string[] }) => {
+      await modifyThreadLabels(threadIds, {
+        addLabelIds: options.addLabels,
+        removeLabelIds: options.removeLabels,
+      });
     },
     getDraft: async (draftId: string) => {
       try {

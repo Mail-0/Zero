@@ -49,6 +49,7 @@ import { useQueryState } from 'nuqs';
 import { Sender } from '@/types';
 
 import { createDraft } from '@/actions/drafts';
+import { extractTextFromHTML } from '@/actions/extractText';
 
 // Define state interfaces
 interface ComposerState {
@@ -432,17 +433,16 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
       const originalSender = latestEmail?.sender?.name || 'the recipient';
 
       // Create a summary of the thread content for context
-      const threadContent = emailData
-        .map((email) => {
-          return `
-From: ${email.sender?.name || 'Unknown'} <${email.sender?.email || 'unknown@email.com'}>
-Subject: ${email.subject || 'No Subject'}
-Date: ${new Date(email.receivedOn || '').toLocaleString()}
-
-${email.decodedBody || 'No content'}
-          `;
-        })
-        .join('\n---\n');
+      const threadContent = (await Promise.all(emailData.map(async (email) => {
+        const body = await extractTextFromHTML(email.decodedBody || 'No content');
+        return `
+            <email>
+              <from>${email.sender?.name || 'Unknown'} &lt;${email.sender?.email || 'unknown@email.com'}&gt;</from>
+              <subject>${email.subject || 'No Subject'}</subject>
+              <date>${new Date(email.receivedOn || '').toLocaleString()}</date>
+              <body>${body}</body>
+            </email>`;
+      }))).join('\n\n');
 
       const suggestion = await generateAIResponse(threadContent, originalSender);
       aiDispatch({ type: 'SET_SUGGESTION', payload: suggestion });

@@ -497,9 +497,6 @@ export default function Editor({
   onAttachmentsChange,
   senderInfo,
   myInfo,
-  includeSignature,
-  onSignatureToggle,
-  signature,
 }: EditorProps) {
   const [state, dispatch] = useReducer(editorReducer, {
     openNode: false,

@@ -180,7 +180,7 @@ type CompletionsParams = {
   prompt?: string,
   systemPrompt?: string,
   temperature: number,
-  max_tokens: number,
+  max_tokens?: number,
   embeddings?: Record<string, number[]>,
   userName?: string
 };
@@ -190,7 +190,7 @@ interface GroqRequestBody {
   model: string;
   messages: Array<{role: string; content: string}>;
   temperature: number;
-  max_tokens: number;
+  max_tokens?: number;
   // Add any other standard properties here
   [key: string]: any; // Allow additional properties
 }
@@ -203,7 +203,6 @@ export async function generateCompletions({
   prompt, 
   systemPrompt, 
   temperature, 
-  max_tokens,
   embeddings,
   userName
 }: CompletionsParams) {
@@ -251,34 +250,6 @@ export async function generateCompletions({
   - Double space paragraphs (2 newlines)
   - Add two spaces below the sign-off
   - End with the name: ${userName}`;
-
-    // Update the prompt to match ai-reply.ts format
-    if (prompt) {
-      prompt = `
-  Here's the context of the email thread (some parts may be summarized or truncated due to length):
-  ${prompt}
-
-  Generate a professional, helpful, and concise email reply.
-  Keep your response under 200 words.
-
-  You are an email assistant helping ${userName} write professional and concise email replies.
-  
-  Important instructions:
-  - Generate a real, ready-to-send email reply, not a template
-  - Do not include placeholders like [Recipient], [discount percentage], etc.
-  - Do not include formatting instructions or explanations
-  - Do not include "Subject:" lines
-  - Do not include "Here's a draft..." or similar meta-text
-  - Write as if this email is ready to be sent immediately
-  - Use real, specific content instead of placeholders
-  - Address the recipient directly without using [brackets]
-  - Be concise but thorough (2-3 paragraphs maximum)
-  - Write in the first person as if you are ${userName}
-  - Double space paragraphs (2 newlines)
-  - Add two spaces below the sign-off
-  - End with the name: ${userName}
-  `;
-    }
   }
   
   // Ensure we have valid messages
@@ -309,7 +280,6 @@ export async function generateCompletions({
     model: groqModel,
     messages,
     temperature,
-    max_tokens,
   };
 
   try {
