@@ -130,7 +130,7 @@ export async function handleGoldenTicket(email: string) {
             hasUsedTicket: '',
             updatedAt: new Date(),
             isEarlyAccess: true
-          })
+          }).where(eq(earlyAccess.email, email))
         } else {
           console.error('Error registering early access', error);
           throw error;
@@ -140,7 +140,7 @@ export async function handleGoldenTicket(email: string) {
     await db.update(earlyAccess).set({
       hasUsedTicket: email,
       updatedAt: new Date()
-    }).where(eq(earlyAccess.email, foundUser?.email))
+    }).where(eq(earlyAccess.email, foundUser.email))
 
     return { success: true };
   } catch (error) {

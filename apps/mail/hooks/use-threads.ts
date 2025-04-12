@@ -85,7 +85,7 @@ export const useThreads = () => {
       return getKey(previousPageData, [
         session.connectionId,
         folder,
-        searchValue.value,
+        searchValue.value, // Always apply search filter
         defaultPageSize,
       ]);
     },
@@ -107,13 +107,6 @@ export const useThreads = () => {
     await setSize(size + 1);
   };
 
-  // Create a new mutate function that resets the pagination state
-  const refresh = async () => {
-    await mutate(undefined, { revalidate: true });
-    // Reset the size to 1 to clear pagination
-    await setSize(1);
-  };
-
   return {
     data: {
       threads,
@@ -124,7 +117,7 @@ export const useThreads = () => {
     error,
     loadMore,
     isReachingEnd,
-    mutate: refresh,
+    mutate,
   };
 };
 

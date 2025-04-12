@@ -113,6 +113,10 @@ const options = {
             email: connectionDetails.email,
             picture: connectionDetails.picture,
           };
+        } else {
+          await db.update(_user).set({
+            defaultConnectionId: null,
+          }).where(eq(_user.id, user.id));
         }
       }
 

@@ -44,10 +44,10 @@ const getKey = (
   if (previousPageData && !previousPageData.nextPageToken) return null;
 
   if (pageIndex === 0) {
-    return [userId, query, max, undefined, connectionId];
+    return [userId, undefined, max, undefined, connectionId];
   }
 
-  return [userId, query, max, previousPageData?.nextPageToken, connectionId];
+  return [userId, undefined, max, previousPageData?.nextPageToken, connectionId];
 };
 
 export const useDrafts = (query?: string, max?: number) => {
@@ -68,9 +68,10 @@ export const useDrafts = (query?: string, max?: number) => {
           : null,
       fetchDrafts,
       {
-        refreshInterval: 10000, // Refresh every 10 seconds
-        revalidateOnFocus: true, // Revalidate when window regains focus
-        revalidateOnReconnect: true, // Revalidate when internet reconnects
+        revalidateOnMount: true,
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+        refreshInterval: 30000, // Refresh every 30 seconds
       }
     );
 
@@ -94,11 +95,6 @@ export const useDrafts = (query?: string, max?: number) => {
   const isEmpty = data?.[0]?.drafts.length === 0;
   const isReachingEnd = isEmpty || (data && !data[data.length - 1]?.nextPageToken);
   const loadMore = () => setSize(size + 1);
-
-  // Force revalidate when component mounts
-  useEffect(() => {
-    mutate();
-  }, [mutate]);
 
   return {
     data: {

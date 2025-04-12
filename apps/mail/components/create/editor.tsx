@@ -705,11 +705,7 @@ export default function Editor({
               onAttachmentsChange={onAttachmentsChange}
             />
           }
-          slotAfter={
-            <>
-              <ImageResizer />
-            </>
-          }
+          slotAfter={null}
         >
           {/* Make sure the command palette doesn't cause a refresh */}
           <EditorCommand

@@ -263,7 +263,9 @@
       "labels": "Labels",
       "createNewLabel": "Create New Label",
       "noLabelsAvailable": "No labels available",
-      "loadMore": "Load more"
+      "loadMore": "Load more",
+      "imagesHidden": "Images are hidden for security reasons",
+      "showImages": "Show Images"
     },
     "units": {
       "mb": "{amount} MB"

@@ -6,14 +6,18 @@ type Config = {
   selected: Mail["id"] | null;
   bulkSelected: Mail["id"][];
   replyComposerOpen: boolean;
+  replyAllComposerOpen: boolean;
   forwardComposerOpen: boolean;
+  showImages: boolean;
 };
 
 const configAtom = atom<Config>({
   selected: null,
   bulkSelected: [],
   replyComposerOpen: false,
+  replyAllComposerOpen: false,
   forwardComposerOpen: false,
+  showImages: false,
 });
 
 export function useMail() {

@@ -1,39 +1,19 @@
-import { getConnections, deleteConnection, putConnection } from "@/actions/connections";
+import { deleteConnection, putConnection } from "@/actions/connections";
 import { type IConnection } from "@/types";
 import useSWR from "swr";
 
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
 export const useConnections = () => {
   const { data, error, isLoading, mutate } = useSWR<IConnection[]>(
-    "/api/v1/mail/connections",
-    getConnections,
+    "/api/driver/connections",
+    fetcher
   );
-
-  const handleDeleteConnection = async (connectionId: string) => {
-    try {
-      await deleteConnection(connectionId);
-      mutate();
-    } catch (error) {
-      console.error("Failed to delete connection:", error);
-      throw error;
-    }
-  };
-
-  const handleSetDefaultConnection = async (connectionId: string) => {
-    try {
-      await putConnection(connectionId);
-      mutate();
-    } catch (error) {
-      console.error("Failed to set default connection:", error);
-      throw error;
-    }
-  };
 
   return {
     data,
     error,
     isLoading,
     mutate,
-    deleteConnection: handleDeleteConnection,
-    setDefaultConnection: handleSetDefaultConnection,
   };
 };

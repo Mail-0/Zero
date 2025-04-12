@@ -133,6 +133,8 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
     const listUnsubscribePost =
       payload?.headers?.find((h) => h.name?.toLowerCase() === 'list-unsubscribe-post')?.value ||
       undefined;
+    const replyTo =
+      payload?.headers?.find((h) => h.name?.toLowerCase() === 'reply-to')?.value || undefined;
     const toHeaders =
       payload?.headers
         ?.filter((h) => h.name?.toLowerCase() === 'to')
@@ -168,6 +170,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       tags: labelIds || [],
       listUnsubscribe,
       listUnsubscribePost,
+      replyTo,
       references,
       inReplyTo,
       sender: parseFrom(sender),
@@ -183,23 +186,107 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
     const msg = createMimeMessage();
 
     const fromEmail = config.auth?.email || 'nobody@example.com';
-    msg.setSender(fromEmail);
+    console.log('Debug - From email:', fromEmail);
+    console.log('Debug - Original to recipients:', JSON.stringify(to, null, 2));
+    
+    msg.setSender({ name: '', addr: fromEmail });
 
-    to.forEach(recipient => {
-      msg.setRecipient(({
-        addr: recipient.email,
-        name: recipient.name
+    // Track unique recipients to avoid duplicates
+    const uniqueRecipients = new Set<string>();
+
+    if (!Array.isArray(to)) {
+      console.error('Debug - To field is not an array:', to);
+      throw new Error('Recipient address required');
+    }
+
+    if (to.length === 0) {
+      console.error('Debug - To array is empty');
+      throw new Error('Recipient address required');
+    }
+
+    // Handle all To recipients
+    const toRecipients = to
+      .filter(recipient => {
+        if (!recipient || !recipient.email) {
+          console.log('Debug - Skipping invalid recipient:', recipient);
+          return false;
+        }
+
+        const email = recipient.email.toLowerCase();
+        console.log('Debug - Processing recipient:', {
+          originalEmail: recipient.email,
+          normalizedEmail: email,
+          fromEmail,
+          isDuplicate: uniqueRecipients.has(email),
+          isSelf: email === fromEmail
+        });
+        
+        // Only check for duplicates, allow sending to yourself
+        if (!uniqueRecipients.has(email)) {
+          uniqueRecipients.add(email);
+          return true;
+        }
+        return false;
+      })
+      .map(recipient => ({
+        name: recipient.name || '',
+        addr: recipient.email
       }));
-    });
 
-    if (cc) msg.setCc(cc.map(recipient => ({
-      addr: recipient.email,
-      name: recipient.name
-    })));
-    if (bcc) msg.setBcc(bcc.map(recipient => ({
-      addr: recipient.email,
-      name: recipient.name
-    })));
+    console.log('Debug - Filtered to recipients:', JSON.stringify(toRecipients, null, 2));
+
+    if (toRecipients.length > 0) {
+      msg.setRecipients(toRecipients);
+    } else {
+      console.error('Debug - No valid recipients after filtering:', {
+        originalTo: to,
+        filteredTo: toRecipients,
+        fromEmail
+      });
+      throw new Error('No valid recipients found in To field');
+    }
+
+    // Handle CC recipients
+    if (Array.isArray(cc) && cc.length > 0) {
+      const ccRecipients = cc
+        .filter(recipient => {
+          const email = recipient.email.toLowerCase();
+          if (!uniqueRecipients.has(email) && email !== fromEmail) {
+            uniqueRecipients.add(email);
+            return true;
+          }
+          return false;
+        })
+        .map(recipient => ({
+          name: recipient.name || '',
+          addr: recipient.email
+        }));
+
+      if (ccRecipients.length > 0) {
+        msg.setCc(ccRecipients);
+      }
+    }
+
+    // Handle BCC recipients
+    if (Array.isArray(bcc) && bcc.length > 0) {
+      const bccRecipients = bcc
+        .filter(recipient => {
+          const email = recipient.email.toLowerCase();
+          if (!uniqueRecipients.has(email) && email !== fromEmail) {
+            uniqueRecipients.add(email);
+            return true;
+          }
+          return false;
+        })
+        .map(recipient => ({
+          name: recipient.name || '',
+          addr: recipient.email
+        }));
+      
+      if (bccRecipients.length > 0) {
+        msg.setBcc(bccRecipients);
+      }
+    }
 
     msg.setSubject(subject);
 
@@ -208,12 +295,22 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       data: message.trim()
     });
 
+    // Set headers for reply/reply-all/forward
     if (headers) {
-      Object.keys(headers).forEach(key => {
-        if (headers[key]) msg.setHeader(key, headers[key]);
+      Object.entries(headers).forEach(([key, value]) => {
+        if (value) {
+          // Ensure References header includes all previous message IDs
+          if (key.toLowerCase() === 'references' && value) {
+            const refs = value.split(' ').filter(Boolean);
+            msg.setHeader(key, refs.join(' '));
+          } else {
+            msg.setHeader(key, value);
+          }
+        }
       });
     }
 
+    // Handle attachments
     if (attachments?.length > 0) {
       for (const file of attachments) {
         const arrayBuffer = await file.arrayBuffer();

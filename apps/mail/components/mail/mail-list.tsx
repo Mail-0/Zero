@@ -47,7 +47,8 @@ import { useQueryState } from 'nuqs';
 import { Categories } from './mail';
 import items from './demo.json';
 import { toast } from 'sonner';
-const HOVER_DELAY = 1000; // ms before prefetching
+
+const HOVER_DELAY = 1000;
 
 const ThreadWrapper = ({
   children,
@@ -299,7 +300,7 @@ const Thread = memo(
                         )}
                       >
                         <span
-                          className={cn('truncate', threadIdParam ? 'max-w-[5ch] truncate' : '')}
+                          className={cn('truncate', threadIdParam ? 'max-w-[20ch] truncate' : '')}
                         >
                           {highlightText(message.sender.name, searchValue.highlight)}
                         </span>{' '}
@@ -307,7 +308,6 @@ const Thread = memo(
                           <span className="size-2 rounded bg-[#006FFE]" />
                         ) : null}
                       </p>
-                      <MailLabels labels={threadLabels} />
                       {message.totalReplies > 1 ? (
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -358,6 +358,13 @@ const Thread = memo(
                         {formatDate(message.receivedOn.split('.')[0] || '')}
                       </p>
                     ) : null}
+                  </div>
+
+                  <div className="flex justify-between">
+                    <p className={cn('mt-1 line-clamp-1 text-xs opacity-70 transition-opacity')}>
+                      {highlightText(message.subject, searchValue.highlight)}
+                    </p>
+                    <MailLabels labels={threadLabels} />
                   </div>
                 </div>
               </div>
@@ -423,8 +430,18 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
   const [threadId, setThreadId] = useQueryState('threadId');
   const [category, setCategory] = useQueryState('category');
   const [searchValue, setSearchValue] = useSearchValue();
+  const {
+    data: { threads: items, nextPageToken },
+    isValidating,
+    isLoading,
+    loadMore,
+    mutate,
+  } = useThreads();
 
   const allCategories = Categories();
+
+  // Skip category filtering for drafts, spam, sent, archive, and bin pages
+  const shouldFilter = !['draft', 'spam', 'sent', 'archive', 'bin'].includes(folder || '');
 
   const sessionData = useMemo(
     () => ({
@@ -434,11 +451,13 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
     [session],
   );
 
-  // Set initial category search value
+  // Set initial category search value only if not in special folders
   useEffect(() => {
+    if (!shouldFilter) return;
+
     const currentCategory = category
       ? allCategories.find((cat) => cat.id === category)
-      : allCategories.find((cat) => cat.id === 'Important');
+      : allCategories.find((cat) => cat.id === 'Primary');
 
     if (currentCategory && searchValue.value === '') {
       setSearchValue({
@@ -447,15 +466,7 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
         folder: '',
       });
     }
-  }, []); // Run only once on mount
-
-  const {
-    data: { threads: items, nextPageToken },
-    isValidating,
-    isLoading,
-    loadMore,
-    mutate,
-  } = useThreads();
+  }, [allCategories]); // Run only once on mount
 
   // Add event listener for refresh
   useEffect(() => {
@@ -578,6 +589,11 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
     selectHoveredAndBelow();
   });
 
+  // useHotKey('Meta+a', (event) => {
+  //   event?.preventDefault();
+  //   selectAll();
+  // });
+
   useHotKey('Control+a', (event) => {
     event?.preventDefault();
     selectHoveredAndBelow();
@@ -592,6 +608,16 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
     event?.preventDefault();
     selectHoveredAndBelow();
   });
+  
+  // useHotKey('Meta+n', (event) => {
+  //   event?.preventDefault();
+  //   selectAll();
+  // });
+
+  // useHotKey('Control+n', (event) => {
+  //   event?.preventDefault();
+  //   selectAll();
+  // });
 
   const getSelectMode = useCallback((): MailSelectMode => {
     if (isKeyPressed('Control') || isKeyPressed('Meta')) {
@@ -755,7 +781,7 @@ const MailLabels = memo(
                     {getLabelIcon(label)}
                   </Badge>
                 </TooltipTrigger>
-                <TooltipContent className="px-1 py-0 text-xs">
+                <TooltipContent className="px-1 py-0 text-xs hidden">
                   {t('common.notes.title')}
                 </TooltipContent>
               </Tooltip>
@@ -801,7 +827,7 @@ const MailLabels = memo(
                   {getLabelIcon(label)}
                 </Badge>
               </TooltipTrigger>
-              <TooltipContent className="px-1 py-0 text-xs" variant={style}>
+              <TooltipContent className="px-1 py-0 text-xs hidden" variant={style}>
                 {labelContent}
               </TooltipContent>
             </Tooltip>
