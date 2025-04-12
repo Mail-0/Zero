@@ -584,12 +584,7 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
 
   // useHotKey('Meta+a', (event) => {
   //   event?.preventDefault();
-  //   selectAll();
-  // });
-
-  // useHotKey('Meta+a', (event) => {
-  //   event?.preventDefault();
-  //   selectAll();
+  //   selectHoveredAndBelow();
   // });
 
   useHotKey('Control+a', (event) => {
@@ -599,12 +594,12 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
 
   // useHotKey('Meta+n', (event) => {
   //   event?.preventDefault();
-  //   selectAll();
+  //   selectHoveredAndBelow();
   // });
 
   // useHotKey('Control+n', (event) => {
   //   event?.preventDefault();
-  //   selectAll();
+  //   selectHoveredAndBelow();
   // });
 
   const getSelectMode = useCallback((): MailSelectMode => {
