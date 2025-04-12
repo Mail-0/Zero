@@ -10,9 +10,7 @@ import {
   Tag,
   User,
   Users,
-  X,
-  Inbox,
-  Mail,
+  X
 } from 'lucide-react';
 import {
   type ComponentProps,
@@ -584,10 +582,10 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
     });
   });
 
-  useHotKey('Meta+a', (event) => {
-    event?.preventDefault();
-    selectHoveredAndBelow();
-  });
+  // useHotKey('Meta+a', (event) => {
+  //   event?.preventDefault();
+  //   selectAll();
+  // });
 
   // useHotKey('Meta+a', (event) => {
   //   event?.preventDefault();
@@ -599,16 +597,6 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
     selectHoveredAndBelow();
   });
 
-  useHotKey('Meta+n', (event) => {
-    event?.preventDefault();
-    selectHoveredAndBelow();
-  });
-
-  useHotKey('Control+n', (event) => {
-    event?.preventDefault();
-    selectHoveredAndBelow();
-  });
-  
   // useHotKey('Meta+n', (event) => {
   //   event?.preventDefault();
   //   selectAll();
