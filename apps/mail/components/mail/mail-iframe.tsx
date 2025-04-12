@@ -13,6 +13,7 @@ import DOMPurify from 'dompurify';
 export function MailIframe({ html, senderEmail }: { html: string; senderEmail: string }) {
   const { settings, mutate } = useSettings();
   const isTrustedSender = settings?.trustedSenders?.includes(senderEmail);
+  const [cspViolation, setCspViolation] = useState(false)
   const [imagesEnabled, setImagesEnabled] = useState(
     isTrustedSender || settings?.externalImages || false,
   );
@@ -88,9 +89,24 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
     }
   }, [resolvedTheme]);
 
+  useEffect(() => {
+    const ctrl = new AbortController();
+    window.addEventListener(
+      'message',
+      (event) => {
+        if (event.data.type === 'csp-violation') {
+          setCspViolation(true)
+        }
+      },
+      { signal: ctrl.signal },
+    );
+
+    return () => ctrl.abort();
+  }, []);
+
   return (
     <>
-      {!imagesEnabled && !settings?.externalImages && (
+      {cspViolation && !imagesEnabled && !settings?.externalImages && (
         <div className="flex items-center justify-start bg-amber-500 p-2 text-sm text-amber-900">
           <p>{t('common.actions.hiddenImagesWarning')}</p>
           <button
@@ -129,7 +145,8 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
         ref={iframeRef}
         className={cn('w-full flex-1 overflow-hidden transition-opacity duration-200')}
         title="Email Content"
-        sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+        // allow-scripts is safe, because the CSP will prevent scripts from running that don't have our unique nonce.
+        sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-scripts"
         style={{
           width: '100%',
           overflow: 'hidden',

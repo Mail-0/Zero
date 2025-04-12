@@ -14,13 +14,30 @@ export const template = (html: string, imagesEnabled: boolean = false) => {
     template.head.appendChild(child);
   });
 
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  const nonce = btoa(String.fromCharCode(...array));
   // Add CSP meta tag based on imagesEnabled state
   const cspMeta = template.createElement('meta');
   cspMeta.httpEquiv = 'Content-Security-Policy';
   cspMeta.content = imagesEnabled
-    ? "default-src 'self'; img-src * data: blob: 'unsafe-inline'; style-src 'unsafe-inline' *; font-src *"
-    : "default-src 'self'; img-src data:; style-src 'unsafe-inline' *; font-src *";
+    ? `default-src 'none'; img-src * data: blob: 'unsafe-inline'; style-src 'unsafe-inline' *; font-src *; script-src 'nonce-${nonce}';`
+    : `default-src 'none'; img-src data:; style-src 'unsafe-inline' *; font-src *; script-src 'nonce-${nonce}';`;
   template.head.appendChild(cspMeta);
+
+  // Add a script to listen for security policy violations
+  const script = template.createElement('script');
+  script.setAttribute("nonce", nonce)
+  script.textContent = `
+    document.addEventListener('securitypolicyviolation', (e) => {
+      // Send the violation details to the parent window
+      window.parent.postMessage({
+        type: 'csp-violation',
+      }, '*');
+    });
+  `;
+  template.head.appendChild(script);
+
   template.body.innerHTML = doc.body.innerHTML;
   template.body.style.backgroundColor = getComputedStyle(document.body).getPropertyValue(
     'background-color',
