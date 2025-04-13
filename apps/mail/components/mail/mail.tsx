@@ -84,11 +84,11 @@ export function DemoMailLayout() {
   }, []);
 
   useEffect(() => {
-    if (activeCategory === 'Primary' || activeCategory === 'All Mail') {
+    if (activeCategory === 'All Mail') {
       setFilteredItems(items);
     } else {
       const categoryMap = {
-        Important: 'important',
+        Primary: 'important',
         Personal: 'personal',
         Updates: 'updates',
         Promotions: 'promotions',
