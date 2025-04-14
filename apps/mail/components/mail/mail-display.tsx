@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogClose,
 } from '../ui/dialog';
-import { BellOff, Check, ChevronDown, LoaderCircleIcon, Lock } from 'lucide-react';
+import { BellOff, Check, ChevronDown, LoaderCircleIcon, Lock, Copy } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
@@ -26,6 +26,7 @@ import { MailIframe } from './mail-iframe';
 import { Button } from '../ui/button';
 import { format } from 'date-fns';
 import Image from 'next/image';
+import DOMPurify from 'dompurify';
 
 const StreamingText = ({ text }: { text: string }) => {
   const [displayText, setDisplayText] = useState('');
@@ -102,6 +103,7 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
     url: string;
   }>(null);
   const [openDetailsPopover, setOpenDetailsPopover] = useState<boolean>(false);
+  const [isCopied, setIsCopied] = useState(false);
   const t = useTranslations();
 
   const { data } = demo
@@ -152,6 +154,81 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
       setIsUnsubscribing(false);
       setUnsubscribed(false);
     }
+  };
+
+  const copyEmailContent = () => {
+    if (!emailData?.decodedBody) return;
+    
+    // Create a temporary div to parse HTML
+    const tempDiv = document.createElement('div');
+    
+    // Clean the HTML first using DOMPurify
+    const cleanHtml = DOMPurify.sanitize(emailData.decodedBody, {
+      FORBID_TAGS: ['style', 'script', 'link'],
+      FORBID_ATTR: ['style', 'class']
+    });
+    tempDiv.innerHTML = cleanHtml;
+
+    // Remove any style or meta tags that might have survived
+    tempDiv.querySelectorAll('style, meta, link, script').forEach(el => el.remove());
+    
+    // Function to get clean text from a node
+    const getCleanText = (node: Node): string => {
+      // Skip hidden elements
+      if (node instanceof HTMLElement) {
+        const style = window.getComputedStyle(node);
+        if (style.display === 'none' || style.visibility === 'hidden') {
+          return '';
+        }
+      }
+      
+      // Handle text nodes
+      if (node.nodeType === Node.TEXT_NODE) {
+        return node.textContent?.trim() || '';
+      }
+      
+      // Handle element nodes
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const element = node as HTMLElement;
+        
+        // Add newlines for block elements
+        const isBlock = window.getComputedStyle(element).display === 'block';
+        const text = Array.from(node.childNodes)
+          .map(child => getCleanText(child))
+          .filter(Boolean)
+          .join(' ');
+          
+        return isBlock ? `\n${text}\n` : text;
+      }
+      
+      return '';
+    };
+
+    // Get the clean text content
+    let textContent = getCleanText(tempDiv)
+      .replace(/[\u200B-\u200D\uFEFF]/g, '') // Remove zero-width spaces
+      .replace(/\s+/g, ' ')                   // Normalize whitespace
+      .replace(/\n\s*\n/g, '\n')             // Remove multiple newlines
+      .trim();
+
+    // If there's a subject, add it at the top
+    if (emailData.subject) {
+      textContent = `Subject: ${emailData.subject}\n\n${textContent}`;
+    }
+
+    // Add sender info
+    if (emailData.sender?.name || emailData.sender?.email) {
+      const from = emailData.sender.name 
+        ? `${emailData.sender.name} <${emailData.sender.email}>`
+        : emailData.sender.email;
+      textContent = `From: ${from}\n${textContent}`;
+    }
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(textContent).then(() => {
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    });
   };
 
   return (
@@ -266,7 +343,7 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
                             {emailData?.to?.map((t) => t.email).join(', ')}
                           </span>
                         </div>
-                        {emailData?.cc?.length > 0 && (
+                        {emailData?.cc?.length && emailData?.cc?.length > 0 && (
                           <div className="flex">
                             <span className="w-24 text-end text-gray-500">
                               {t('common.mailDisplay.cc')}:
@@ -317,8 +394,23 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
                 </div>
               </div>
             </div>
-            {data ? (
-              <div className="relative top-1">
+            <div className="relative top-1 flex gap-2">
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  copyEmailContent();
+                }}
+                size="icon"
+                variant="ghost"
+                className="rounded-md"
+              >
+                {isCopied ? (
+                  <Check className="h-4 w-4 text-green-500" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+              {data ? (
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button size={'icon'} variant="ghost" className="rounded-md">
@@ -335,8 +427,8 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
                     <StreamingText text={data.content} />
                   </PopoverContent>
                 </Popover>
-              </div>
-            ) : null}
+              ) : null}
+            </div>
           </div>
         </div>
 
