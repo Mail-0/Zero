@@ -24,7 +24,7 @@ function convertToGmailSearch(query: string): string {
         const parts = d.split('/');
         if (parts.length === 3) {
           const [month, day, year] = parts;
-          const fullYear = parseInt(year) < 50 ? `20${year}` : `19${year}`; // Assume 20xx for years < 50
+          const fullYear = parseInt(year || '0') < 50 ? `20${year}` : `19${year}`; // Assume 20xx for years < 50
           return `${fullYear}/${month}/${day}`;
         }
         return d; // Return original if split fails
@@ -68,8 +68,8 @@ function convertToGmailSearch(query: string): string {
   const lastYearMonthRegex = new RegExp(`(${months.join('|')})\\s+(?:of\\s+)?last\\s+year`, 'i');
   const lastYearMatch = lowerQuery.match(lastYearMonthRegex);
   
-  if (lastYearMatch?.length >= 2) {
-    const monthName = lastYearMatch[1];
+  if (lastYearMatch && lastYearMatch.length >= 2) {
+    const monthName = lastYearMatch?.[1];
     if (monthName) {
       const monthIndex = months.indexOf(monthName.toLowerCase());
       
@@ -79,8 +79,8 @@ function convertToGmailSearch(query: string): string {
         const endDate = new Date(year, monthIndex + 1, 1);
         
         if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-          const startStr = startDate.toISOString().split('T')[0].replace(/-/g, '/');
-          const endStr = endDate.toISOString().split('T')[0].replace(/-/g, '/');
+          const startStr = startDate?.toISOString()?.split('T')?.[0]?.replace(/-/g, '/') ?? '';
+          const endStr = endDate?.toISOString()?.split('T')?.[0]?.replace(/-/g, '/') ?? '';
           const matchedText = lastYearMatch[0];
           if (matchedText) {
             searchTerms = searchTerms.replace(matchedText, '').trim();
@@ -111,8 +111,8 @@ function convertToGmailSearch(query: string): string {
         
         // Ensure dates are valid before proceeding
         if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-          const startStr = startDate.toISOString().split('T')[0].replace(/-/g, '/');
-          const endStr = endDate.toISOString().split('T')[0].replace(/-/g, '/');
+          const startStr = startDate?.toISOString()?.split('T')?.[0]?.replace(/-/g, '/') ?? '';
+          const endStr = endDate?.toISOString()?.split('T')?.[0]?.replace(/-/g, '/') ?? '';
           const matchedText = monthMatch[0];
           if (matchedText) {
             searchTerms = searchTerms.replace(matchedText, '').trim();
