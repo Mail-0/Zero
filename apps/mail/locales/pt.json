@@ -263,7 +263,9 @@
       "labels": "Etiquetas",
       "createNewLabel": "Criar nova etiqueta",
       "noLabelsAvailable": "Nenhuma etiqueta disponível",
-      "loadMore": "Carregar mais"
+      "loadMore": "Carregar mais",
+      "imagesHidden": "As imagens estão ocultas por motivos de segurança",
+      "showImages": "Mostrar imagens"
     },
     "units": {
       "mb": "{amount} MB"
@@ -315,7 +317,8 @@
         "languageChangedTo": "Idioma alterado para {locale}",
         "customPrompt": "Prompt personalizado de IA",
         "customPromptPlaceholder": "Digite seu prompt personalizado para a IA...",
-        "customPromptDescription": "Personalize como a IA escreve suas respostas de email. Isto será adicionado ao prompt base."
+        "customPromptDescription": "Personalize como a IA escreve suas respostas de email. Isto será adicionado ao prompt base.",
+        "noResultsFound": "Nenhum resultado encontrado"
       },
       "connections": {
         "title": "Conexões de E-mail",

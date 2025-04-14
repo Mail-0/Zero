@@ -263,7 +263,9 @@
       "labels": "라벨",
       "createNewLabel": "새 라벨 생성",
       "noLabelsAvailable": "사용 가능한 라벨 없음",
-      "loadMore": "더 불러오기"
+      "loadMore": "더 불러오기",
+      "imagesHidden": "보안상의 이유로 이미지가 숨겨져 있습니다",
+      "showImages": "이미지 표시"
     },
     "units": {
       "mb": "{amount} MB"
@@ -315,7 +317,8 @@
         "languageChangedTo": "언어가 {locale}(으)로 변경되었습니다",
         "customPrompt": "맞춤 AI 프롬프트",
         "customPromptPlaceholder": "AI를 위한 맞춤 프롬프트를 입력하세요...",
-        "customPromptDescription": "AI가 이메일 답장을 작성하는 방식을 맞춤설정하세요. 이것은 기본 프롬프트에 추가됩니다."
+        "customPromptDescription": "AI가 이메일 답장을 작성하는 방식을 맞춤설정하세요. 이것은 기본 프롬프트에 추가됩니다.",
+        "noResultsFound": "검색 결과 없음"
       },
       "connections": {
         "title": "이메일 연결",

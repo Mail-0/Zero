@@ -263,7 +263,9 @@
       "labels": "Labels",
       "createNewLabel": "Create New Label",
       "noLabelsAvailable": "No labels available",
-      "loadMore": "Mehr anzeigen"
+      "loadMore": "Mehr anzeigen",
+      "imagesHidden": "Bilder sind aus Sicherheitsgründen ausgeblendet",
+      "showImages": "Bilder anzeigen"
     },
     "units": {
       "mb": "{amount} MB"
@@ -315,7 +317,8 @@
         "languageChangedTo": "Sprache zu {locale} geändert",
         "customPrompt": "Benutzerdefinierte KI-Aufforderung",
         "customPromptPlaceholder": "Geben Sie Ihre benutzerdefinierte Eingabeaufforderung für die KI ein...",
-        "customPromptDescription": "Passen Sie an, wie die KI Ihre E-Mail beantwortet. Dies wird zur Base-Prompt hinzugefügt."
+        "customPromptDescription": "Passen Sie an, wie die KI Ihre E-Mail beantwortet. Dies wird zur Base-Prompt hinzugefügt.",
+        "noResultsFound": "Keine Ergebnisse gefunden"
       },
       "connections": {
         "title": "E-Mail Verbindungen",

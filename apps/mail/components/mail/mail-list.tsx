@@ -164,7 +164,7 @@ const Thread = memo(
             key={message.threadId ?? message.id}
             className={cn(
               'hover:bg-offsetLight hover:bg-primary/5 group relative flex cursor-pointer flex-col items-start overflow-clip rounded-lg border border-transparent px-4 py-3 text-left text-sm transition-all hover:opacity-100',
-              isMailSelected || (!message.unread && 'opacity-50'),
+              isMailSelected || (!message.unread && 'opacity-80'),
               (isMailSelected || isMailBulkSelected || isKeyboardFocused) &&
                 'border-border bg-primary/5 opacity-100',
               isKeyboardFocused && 'ring-primary/50 ring-2',
@@ -252,7 +252,7 @@ const Thread = memo(
             key={message.threadId ?? message.id}
             className={cn(
               'hover:bg-offsetLight hover:bg-primary/5 group relative flex cursor-pointer flex-col items-start overflow-clip rounded-lg border border-transparent px-4 py-3 text-left text-sm transition-all hover:opacity-100',
-              (isMailSelected || !message.unread && !['sent', 'archive', 'bin'].includes(folder)) && 'opacity-50',
+              (isMailSelected || !message.unread && !['sent', 'archive', 'bin'].includes(folder)) && 'dark:opacity-50 opacity-80',
               (isMailSelected || isMailBulkSelected || isKeyboardFocused) &&
                 'border-border bg-primary/5 opacity-100',
               isKeyboardFocused && 'ring-primary/50 ring-2',
