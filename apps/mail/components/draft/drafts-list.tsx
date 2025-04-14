@@ -33,7 +33,6 @@ const Draft = ({ message, onClick }: ThreadProps) => {
         key={message.id}
         className={cn(
           'hover:bg-offsetLight hover:bg-primary/5 group relative flex cursor-pointer flex-col items-start overflow-clip rounded-lg border border-transparent px-4 py-3 text-left text-sm transition-all hover:opacity-100',
-          !message.unread && 'opacity-50',
           (isMailSelected || isMailBulkSelected) && 'border-border bg-primary/5 opacity-100',
         )}
       >
