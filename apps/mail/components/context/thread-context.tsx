@@ -188,14 +188,16 @@ export function ThreadContextMenu({
 
   const handleDelete = async () => {
 		try {
-        const promise = deleteThread({ id: threadId }).then(() => mutate());
+        const promise = deleteThread({ id: threadId }).then(() => {
+          setMail(prev => ({ ...prev, bulkSelected: [] }));
+          return mutate();
+        });
         toast.promise(promise, {
           loading: t('common.actions.deletingMail'),
           success: t('common.actions.deletedMail'),
           error: t('common.actions.failedToDeleteMail'),
         });
-
-    }catch (error) {
+    } catch (error) {
         console.error(`Error deleting ${threadId? 'email' : 'thread'}:`, error);
       }
     };
