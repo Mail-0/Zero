@@ -114,6 +114,15 @@ export async function handleGoldenTicket(email: string) {
       return { success: false, error: 'Unauthorized' };
     }
 
+    const sendNotification = () => {
+      return resend.emails.send({
+        from: '0.email <onboarding@0.email>',
+        to: email,
+        subject: 'You <> Zero',
+        text: `Congrats on joining Zero (beta)! Your friend gave you direct access to the beta while skipping the waitlist! You are able to log in now with your email. If you have any questions or need help, please don't hesitate to reach out to us on Discord https://discord.gg/0email.`,
+      });
+    }
+
     await db
       .insert(earlyAccess)
       .values({
@@ -140,6 +149,7 @@ export async function handleGoldenTicket(email: string) {
           }).where(eq(earlyAccess.email, foundUser.email)).catch((err) => {
             console.error('Error updating early access', err);
           })
+          await sendNotification()
           throw error;
         }
       })
@@ -153,12 +163,7 @@ export async function handleGoldenTicket(email: string) {
       ? new Resend(process.env.RESEND_API_KEY)
       : { emails: { send: async (...args: any[]) => console.log(args) } };
 
-    await resend.emails.send({
-      from: '0.email <onboarding@0.email>',
-      to: email,
-      subject: 'You <> Zero',
-      text: `Congrats on joining Zero (beta)! Your friend gave you direct access to the beta while skipping the waitlist! You are able to log in now with your email. If you have any questions or need help, please don't hesitate to reach out to us on Discord https://discord.gg/0email.`,
-    });
+    await sendNotification()
 
     return { success: true };
   } catch (error) {

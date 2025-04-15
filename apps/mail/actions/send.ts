@@ -14,14 +14,14 @@ export async function sendEmail({
   headers: additionalHeaders = {},
   threadId
 }: {
-    to: Sender[];
+  to: Sender[];
   subject: string;
   message: string;
   attachments: File[];
-    headers?: Record<string, string>;
-    cc?: Sender[];
-    bcc?: Sender[];
-    threadId?: string
+  headers?: Record<string, string>;
+  cc?: Sender[];
+  bcc?: Sender[];
+  threadId?: string
 }) {
   if (!to || !subject || !message) {
     throw new Error("Missing required fields");

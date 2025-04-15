@@ -160,6 +160,8 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
     });
   }, [emailData]);
 
+  const hasMultipleParticipants = (emailData?.[0]?.to?.length ?? 0) + (emailData?.[0]?.cc?.length ?? 0) + 1 > 2;
+
   /**
    * Mark email as read if it's unread, if there are no unread emails, mark the current thread as read
    */
@@ -171,14 +173,14 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
       markAsRead({ ids: [id] }).catch((error) => {
         console.error('Failed to mark email as read:', error);
         toast.error(t('common.mail.failedToMarkAsRead'));
-      }).then(() => Promise.all([mutateThread(), mutateThreads()]))
+      }).then(() => Promise.all([mutateThread(), mutateThreads(), mutateStats()]))
     } else {
       console.log('Marking email as read:', id, ...unreadEmails.map(e => e.id));
       const ids = [id, ...unreadEmails.map(e => e.id)]
       markAsRead({ ids }).catch((error) => {
         console.error('Failed to mark email as read:', error);
         toast.error(t('common.mail.failedToMarkAsRead'));
-      }).then(() => Promise.all([mutateThread(), mutateThreads()]))
+      }).then(() => Promise.all([mutateThread(), mutateThreads(), mutateStats()]))
     }
   }, [emailData, id])
 
@@ -388,20 +390,22 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
                 }));
               }}
             />
-            <ThreadActionButton
-              icon={ReplyAll}
-              label={t('common.threadDisplay.replyAll')}
-              disabled={!emailData}
-              className={cn(mail.replyAllComposerOpen && "bg-primary/10")}
-              onClick={() => {
-                setMail((prev) => ({ 
-                  ...prev, 
-                  replyComposerOpen: false,
-                  replyAllComposerOpen: true,
-                  forwardComposerOpen: false 
-                }));
-              }}
-            />
+            {hasMultipleParticipants && (
+              <ThreadActionButton
+                icon={ReplyAll}
+                label={t('common.threadDisplay.replyAll')}
+                disabled={!emailData}
+                className={cn(mail.replyAllComposerOpen && "bg-primary/10")}
+                onClick={() => {
+                  setMail((prev) => ({ 
+                    ...prev, 
+                    replyComposerOpen: false,
+                    replyAllComposerOpen: true,
+                    forwardComposerOpen: false 
+                  }));
+                }}
+              />
+            )}
             <ThreadActionButton
               icon={Forward}
               label={t('common.threadDisplay.forward')}

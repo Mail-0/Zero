@@ -263,7 +263,9 @@
       "labels": "Etiketler",
       "createNewLabel": "Yeni Etiket Oluştur",
       "noLabelsAvailable": "Etiket bulunmuyor",
-      "loadMore": "Daha fazla yükle"
+      "loadMore": "Daha fazla yükle",
+      "imagesHidden": "Görseller güvenlik nedeniyle gizlenmiştir",
+      "showImages": "Görselleri Göster"
     },
     "units": {
       "mb": "{amount} MB"
@@ -315,7 +317,8 @@
         "languageChangedTo": "Dil {locale} olarak değiştirildi",
         "customPrompt": "Özel Yapay Zeka Yönergesi",
         "customPromptPlaceholder": "Yapay zeka için özel yönergenizi girin...",
-        "customPromptDescription": "Yapay zekanın e-posta yanıtlarınızı nasıl yazacağını özelleştirin. Bu, temel yönergeye eklenecektir."
+        "customPromptDescription": "Yapay zekanın e-posta yanıtlarınızı nasıl yazacağını özelleştirin. Bu, temel yönergeye eklenecektir.",
+        "noResultsFound": "Sonuç bulunamadı"
       },
       "connections": {
         "title": "E-posta Bağlantıları",

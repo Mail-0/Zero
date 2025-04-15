@@ -263,7 +263,9 @@
       "labels": "Etykiety",
       "createNewLabel": "Utwórz nową etykietę",
       "noLabelsAvailable": "Brak dostępnych etykiet",
-      "loadMore": "Wczytaj więcej"
+      "loadMore": "Wczytaj więcej",
+      "imagesHidden": "Obrazy są ukryte ze względów bezpieczeństwa",
+      "showImages": "Pokaż obrazy"
     },
     "units": {
       "mb": "{amount} MB"
@@ -315,7 +317,8 @@
         "languageChangedTo": "Język zmieniony na {locale}",
         "customPrompt": "Niestandardowe polecenie dla AI",
         "customPromptPlaceholder": "Wprowadź własne polecenie dla AI...",
-        "customPromptDescription": "Dostosuj sposób, w jaki AI pisze odpowiedzi na Twoje e-maile. Zostanie to dodane do podstawowego polecenia."
+        "customPromptDescription": "Dostosuj sposób, w jaki AI pisze odpowiedzi na Twoje e-maile. Zostanie to dodane do podstawowego polecenia.",
+        "noResultsFound": "Nie znaleziono wyników"
       },
       "connections": {
         "title": "Połączenia e-mail",

@@ -263,7 +263,9 @@
       "labels": "Etiquetes",
       "createNewLabel": "Crear nova etiqueta",
       "noLabelsAvailable": "No hi ha etiquetes disponibles",
-      "loadMore": "Carregar més"
+      "loadMore": "Carregar més",
+      "imagesHidden": "Les imatges estan ocultes per raons de seguretat",
+      "showImages": "Mostrar imatges"
     },
     "units": {
       "mb": "{amount} MB"
@@ -315,7 +317,8 @@
         "languageChangedTo": "Idioma canviat a {locale}",
         "customPrompt": "Instrucció personalitzada per a la IA",
         "customPromptPlaceholder": "Introdueix la teva instrucció personalitzada per a la IA...",
-        "customPromptDescription": "Personalitza com la IA escriu les teves respostes de correu. Això s'afegirà a la instrucció base."
+        "customPromptDescription": "Personalitza com la IA escriu les teves respostes de correu. Això s'afegirà a la instrucció base.",
+        "noResultsFound": "No s'han trobat resultats"
       },
       "connections": {
         "title": "Connexions Correu",

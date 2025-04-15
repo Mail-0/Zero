@@ -1,5 +1,4 @@
 .ProseMirror {
-  @apply p-3;
   font-size: 1rem;
   font-family: 'Inter', sans-serif;
   font-weight: 400;
@@ -8,12 +7,14 @@
 
 /* Add placeholder styles */
 .ProseMirror p.is-editor-empty:first-child::before {
-  color: #363636;
+  color: #616161;
+  opacity: 0.5;
   content: "Start your email here";
   float: left;
   height: 0;
   pointer-events: none;
 }
+
 
 /* Custom image styles */
 

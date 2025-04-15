@@ -38,5 +38,8 @@ jobs:
       - name: Run Lingo.dev Localization 🌐
         if: ${{ !inputs.skip_localization }}
         uses: lingodotdev/lingo.dev@main
+        env:
+          GH_TOKEN: ${{ github.token }}
         with:
           api-key: ${{ secrets.LINGODOTDEV_API_KEY }}
+          pull-request: true

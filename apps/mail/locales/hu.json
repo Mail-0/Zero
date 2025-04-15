@@ -263,7 +263,9 @@
       "labels": "Címkék",
       "createNewLabel": "Új címke létrehozása",
       "noLabelsAvailable": "Nincsenek elérhető címkék",
-      "loadMore": "Továbbiak betöltése"
+      "loadMore": "Továbbiak betöltése",
+      "imagesHidden": "A képek biztonsági okokból rejtve vannak",
+      "showImages": "Képek megjelenítése"
     },
     "units": {
       "mb": "{amount} MB"
@@ -315,7 +317,8 @@
         "languageChangedTo": "Nyelv megváltoztatva erre: {locale}",
         "customPrompt": "Egyéni AI utasítás",
         "customPromptPlaceholder": "Írd be az egyéni utasításodat az AI számára...",
-        "customPromptDescription": "Szabd testre, hogyan írja az AI az e-mail válaszaidat. Ez hozzáadódik az alap utasításhoz."
+        "customPromptDescription": "Szabd testre, hogyan írja az AI az e-mail válaszaidat. Ez hozzáadódik az alap utasításhoz.",
+        "noResultsFound": "Nincs találat"
       },
       "connections": {
         "title": "E-mail kapcsolatok",

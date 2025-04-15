@@ -263,7 +263,9 @@
       "labels": "Iezīmes",
       "createNewLabel": "Izveidot jaunu iezīmi",
       "noLabelsAvailable": "Nav pieejamas iezīmes",
-      "loadMore": "Ielādēt vairāk"
+      "loadMore": "Ielādēt vairāk",
+      "imagesHidden": "Attēli ir paslēpti drošības apsvērumu dēļ",
+      "showImages": "Rādīt attēlus"
     },
     "units": {
       "mb": "{amount} MB"
@@ -315,7 +317,8 @@
         "languageChangedTo": "Valoda nomainīta uz {locale}",
         "customPrompt": "Pielāgota AI instrukcija",
         "customPromptPlaceholder": "Ievadi savu pielāgoto norādījumu AI...",
-        "customPromptDescription": "Pielāgot, kā AI raksta jūsu e-pasta atbildes. Jūsu norādījumi tiks pievienoti AI noklusējuma instrukcijām."
+        "customPromptDescription": "Pielāgot, kā AI raksta jūsu e-pasta atbildes. Jūsu norādījumi tiks pievienoti AI noklusējuma instrukcijām.",
+        "noResultsFound": "Netika atrasts neviens rezultāts"
       },
       "connections": {
         "title": "E-pasta savienojumi",

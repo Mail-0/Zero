@@ -250,6 +250,8 @@ export function CreateEmail({
   const toInputRef = React.useRef<HTMLInputElement>(null);
   const ccInputRef = React.useRef<HTMLInputElement>(null);
   const bccInputRef = React.useRef<HTMLInputElement>(null);
+  const subjectInputRef = React.useRef<HTMLInputElement>(null);
+
 
   // Remove auto-focus logic
   React.useEffect(() => {
@@ -402,51 +404,49 @@ export function CreateEmail({
   ]);
 
   const handleSendEmail = async () => {
-    if (!toEmails.length) {
+    // Validate to
+    if (toEmails.length === 0) {
       toast.error('Please enter at least one recipient email address');
       return;
     }
 
-    if (!messageContent.trim() || messageContent === JSON.stringify(defaultValue)) {
-      toast.error('Please enter a message');
+    // Validate subject
+    if (!subjectInput.trim()) {
+      toast.error('Please enter a subject');
       return;
     }
 
-    if (!subjectInput.trim()) {
-      toast.error('Please enter a subject');
+    // Validate message (empty check)
+    if (!messageContent.trim() || messageContent === '<p></p>') {
+      toast.error('Please enter a message');
       return;
     }
 
     try {
       setIsLoading(true);
 
-      // Create email data object
       const emailData = {
         to: toEmails.map((email) => ({ email, name: email.split('@')[0] || email })),
-        // Only include CC and BCC if the fields are visible and have values
-        cc:
-          mail.showCc && ccEmails.length > 0
-            ? ccEmails.map((email) => ({ email, name: email.split('@')[0] || email }))
-            : undefined,
-        bcc:
-          mail.showBcc && bccEmails.length > 0
-            ? bccEmails.map((email) => ({ email, name: email.split('@')[0] || email }))
-            : undefined,
+        cc: mail.showCc && ccEmails.length > 0
+          ? ccEmails.map((email) => ({ email, name: email.split('@')[0] || email }))
+          : undefined,
+        bcc: mail.showBcc && bccEmails.length > 0
+          ? bccEmails.map((email) => ({ email, name: email.split('@')[0] || email }))
+          : undefined,
         subject: subjectInput,
         message: messageContent,
-        attachments: attachments,
+        connectionId: session?.activeConnection?.id,
+        attachments,
       };
 
-      // Send the email with all required data
       await sendEmail(emailData);
 
-      toast.success(t('pages.createEmail.emailSentSuccessfully'));
+      toast.success('Email sent successfully');
 
-      // Reset all form fields
       resetEmailForm();
     } catch (error) {
       console.error('Error sending email:', error);
-      toast.error(t('pages.createEmail.failedToSendEmail'));
+      toast.error('Failed to send email');
     } finally {
       setIsLoading(false);
     }
@@ -605,6 +605,7 @@ export function CreateEmail({
                   ))}
                   <input
                     ref={toInputRef}
+                    autoFocus
                     disabled={isLoading}
                     type="text"
                     className="text-md relative left-[3px] min-w-[120px] flex-1 bg-transparent placeholder:text-[#616161] placeholder:opacity-50 focus:outline-none"
@@ -760,7 +761,7 @@ export function CreateEmail({
                   {t('common.searchBar.subject')}
                 </div>
                 <input
-                  ref={toInputRef}
+                  ref={subjectInputRef}
                   disabled={isLoading}
                   type="text"
                   className="text-md relative left-[7.5px] w-full bg-transparent placeholder:text-[#616161] placeholder:opacity-50 focus:outline-none"
@@ -863,53 +864,55 @@ export function CreateEmail({
                 }}
               />
             </div>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2">
-                  <Paperclip className="h-4 w-4" />
-                  <span>
-                    {attachments.length || 'no'}{' '}
-                    {t('common.replyCompose.attachmentCount', { count: attachments.length })}
-                  </span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80 touch-auto" align="start">
-                <div className="space-y-2">
-                  <div className="px-1">
-                    <h4 className="font-medium leading-none">
-                      {t('common.replyCompose.attachments')}
-                    </h4>
-                    <p className="text-muted-foreground text-sm">
+            {attachments.length > 0 && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <Paperclip className="h-4 w-4" />
+                    <span>
                       {attachments.length}{' '}
                       {t('common.replyCompose.fileCount', { count: attachments.length })}
-                    </p>
-                  </div>
-                  <Separator />
-                  <div className="h-[300px] touch-auto overflow-y-auto overscroll-contain px-1 py-1">
-                    <div className="grid grid-cols-2 gap-2">
-                      {attachments.map((file, index) => (
-                        <div
-                          key={index}
-                          className="group relative overflow-hidden rounded-md border"
-                        >
-                          <UploadedFileIcon
-                            removeAttachment={removeAttachment}
-                            index={index}
-                            file={file}
-                          />
-                          <div className="bg-muted/10 p-2">
-                            <p className="text-xs font-medium">{truncateFileName(file.name, 20)}</p>
-                            <p className="text-muted-foreground text-xs">
-                              {(file.size / (1024 * 1024)).toFixed(2)} MB
-                            </p>
+                    </span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 touch-auto" align="start">
+                  <div className="space-y-2">
+                    <div className="px-1">
+                      <h4 className="font-medium leading-none">
+                        {t('common.replyCompose.attachments')}
+                      </h4>
+                      <p className="text-muted-foreground text-sm">
+                        {attachments.length}{' '}
+                        {t('common.replyCompose.fileCount', { count: attachments.length })}
+                      </p>
+                    </div>
+                    <Separator />
+                    <div className="h-[300px] touch-auto overflow-y-auto overscroll-contain px-1 py-1">
+                      <div className="grid grid-cols-2 gap-2">
+                        {attachments.map((file, index) => (
+                          <div
+                            key={index}
+                            className="group relative overflow-hidden rounded-md border"
+                          >
+                            <UploadedFileIcon
+                              removeAttachment={removeAttachment}
+                              index={index}
+                              file={file}
+                            />
+                            <div className="bg-muted/10 p-2">
+                              <p className="text-xs font-medium">{truncateFileName(file.name, 20)}</p>
+                              <p className="text-muted-foreground text-xs">
+                                {(file.size / (1024 * 1024)).toFixed(2)} MB
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </PopoverContent>
-            </Popover>
+                </PopoverContent>
+              </Popover>
+            )}
             <div className="group relative -left-5">
               <Input
                 type="file"
@@ -931,14 +934,12 @@ export function CreateEmail({
           </div>
           <div className="flex justify-end gap-3">
             <Button
-              variant="default"
-              className="h-9 w-9 overflow-hidden rounded-full"
+              disabled={isLoading || toEmails.length === 0 || !messageContent || !subjectInput}
               onClick={handleSendEmail}
-              disabled={
-                isLoading || !toEmails.length || !messageContent.trim() || !subjectInput.trim()
-              }
+              className="flex items-center gap-1 whitespace-nowrap ml-auto"
             >
-              <ArrowUpIcon className="h-4 w-4" />
+              {t('common.replyCompose.send')}
+              <ArrowUpIcon className="ml-1 size-4 rotate-45" />
             </Button>
           </div>
         </div>

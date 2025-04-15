@@ -263,7 +263,9 @@
       "labels": "Štítky",
       "createNewLabel": "Vytvořit nový štítek",
       "noLabelsAvailable": "Nejsou dostupné žádné štítky",
-      "loadMore": "Načíst více"
+      "loadMore": "Načíst více",
+      "imagesHidden": "Obrázky jsou z bezpečnostních důvodů skryty",
+      "showImages": "Zobrazit obrázky"
     },
     "units": {
       "mb": "{amount} MB"
@@ -315,7 +317,8 @@
         "languageChangedTo": "Jazyk změněn na {locale}",
         "customPrompt": "Vlastní AI pokyn",
         "customPromptPlaceholder": "Zadejte vlastní pokyn pro AI...",
-        "customPromptDescription": "Přizpůsobte, jak AI píše vaše e-mailové odpovědi. Toto bude přidáno k základnímu pokynu."
+        "customPromptDescription": "Přizpůsobte, jak AI píše vaše e-mailové odpovědi. Toto bude přidáno k základnímu pokynu.",
+        "noResultsFound": "Nebyly nalezeny žádné výsledky"
       },
       "connections": {
         "title": "Propojení emailu",

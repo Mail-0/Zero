@@ -516,6 +516,13 @@ export default function Editor({
                     return true;
                   }
                 }
+
+                // Prevent Command+Enter from adding a new line
+                if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+                  event.preventDefault();
+                  return true;
+                }
+
                 return handleCommandNavigation(event);
               },
               focus: () => {
@@ -532,7 +539,7 @@ export default function Editor({
                 onAttachmentsChange?.([file]);
               }),
             attributes: {
-              class: 'prose dark:prose-invert prose-headings:font-title font-default focus:outline-none max-w-full min-h-[200px] px-4 py-2',
+              class: 'prose dark:prose-invert prose-headings:font-title font-default focus:outline-none max-w-full min-h-[200px] py-2',
               'data-placeholder': placeholder,
             },
           }}

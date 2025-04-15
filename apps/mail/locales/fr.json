@@ -263,7 +263,9 @@
       "labels": "Étiquettes",
       "createNewLabel": "Créer une nouvelle étiquette",
       "noLabelsAvailable": "Aucune étiquette disponible",
-      "loadMore": "Charger plus d'éléments"
+      "loadMore": "Charger plus d'éléments",
+      "imagesHidden": "Les images sont masquées pour des raisons de sécurité",
+      "showImages": "Afficher les images"
     },
     "units": {
       "mb": "{amount} Mo"
@@ -315,7 +317,8 @@
         "languageChangedTo": "Langue changée en {locale}",
         "customPrompt": "Requêtes IA personnalisées",
         "customPromptPlaceholder": "Entrez votre requête personnalisée pour l'IA...",
-        "customPromptDescription": "Personnalisez la façon dont l'IA écrit vos réponses. Cela sera ajouté à la requête par défaut."
+        "customPromptDescription": "Personnalisez la façon dont l'IA écrit vos réponses. Cela sera ajouté à la requête par défaut.",
+        "noResultsFound": "Aucun résultat trouvé"
       },
       "connections": {
         "title": "Connexions de courriels",

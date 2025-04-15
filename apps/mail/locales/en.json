@@ -134,6 +134,7 @@
       "from": "From",
       "to": "To",
       "cc": "Cc",
+      "bcc":"Bcc",
       "date": "Date",
       "mailedBy": "Mailed-By",
       "signedBy": "Signed-By",

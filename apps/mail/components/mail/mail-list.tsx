@@ -154,17 +154,15 @@ const Thread = memo(
       };
     }, []);
 
-    const content = (
-      <div className="p-1 px-3" onClick={onClick ? onClick(message) : undefined}>
-        {demo ? (
-          <div
+    const demoContent = <div className="p-1 px-3" onClick={onClick ? onClick(message) : undefined}>
+      <div
             data-thread-id={message.threadId ?? message.id}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             key={message.threadId ?? message.id}
             className={cn(
               'hover:bg-offsetLight hover:bg-primary/5 group relative flex cursor-pointer flex-col items-start overflow-clip rounded-lg border border-transparent px-4 py-3 text-left text-sm transition-all hover:opacity-100',
-              isMailSelected || (!message.unread && 'opacity-50'),
+              isMailSelected || (!message.unread && 'opacity-80'),
               (isMailSelected || isMailBulkSelected || isKeyboardFocused) &&
                 'border-border bg-primary/5 opacity-100',
               isKeyboardFocused && 'ring-primary/50 ring-2',
@@ -231,11 +229,6 @@ const Thread = memo(
                   <p
                     className={cn(
                       'mt-1 line-clamp-1 text-xs opacity-70 transition-opacity',
-                      mail.selected
-                        ? 'max-w-[3ch] overflow-hidden text-ellipsis whitespace-nowrap'
-                        : 'line-clamp-2',
-                      isMailSelected &&
-                        'max-w-[3ch] overflow-hidden text-ellipsis whitespace-nowrap opacity-100',
                     )}
                   >
                     {highlightText(message.subject, searchValue.highlight)}
@@ -243,8 +236,11 @@ const Thread = memo(
                 </div>
               </div>
             </div>
-          </div>
-        ) : (
+      </div>
+    </div>
+
+    const content = (
+      <div className="p-1 px-3" onClick={onClick ? onClick(message) : undefined}>
           <div
             data-thread-id={message.threadId ?? message.id}
             onMouseEnter={handleMouseEnter}
@@ -252,7 +248,7 @@ const Thread = memo(
             key={message.threadId ?? message.id}
             className={cn(
               'hover:bg-offsetLight hover:bg-primary/5 group relative flex cursor-pointer flex-col items-start overflow-clip rounded-lg border border-transparent px-4 py-3 text-left text-sm transition-all hover:opacity-100',
-              isMailSelected || (!message.unread && 'opacity-50'),
+              (isMailSelected || !message.unread && !['sent', 'archive', 'bin'].includes(folder)) && 'dark:opacity-50 opacity-80 dark:hover:opacity-80',
               (isMailSelected || isMailBulkSelected || isKeyboardFocused) &&
                 'border-border bg-primary/5 opacity-100',
               isKeyboardFocused && 'ring-primary/50 ring-2',
@@ -326,12 +322,11 @@ const Thread = memo(
                 </div>
               </div>
             </div>
-          </div>
-        )}
+        </div>
       </div>
     );
 
-    return (
+    return demo ? demoContent : (
       <ThreadWrapper
         emailId={message.id}
         threadId={message.threadId ?? message.id}
