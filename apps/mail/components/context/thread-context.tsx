@@ -186,7 +186,7 @@ export function ThreadContextMenu({
 		});
 	};
 
-  const handleDelete = () => async () => {
+  const handleDelete = async () => {
 		try {
         const promise = deleteThread({ id: threadId }).then(() => mutate());
         toast.promise(promise, {
