@@ -1203,26 +1203,22 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
               </Popover>
             )}
             {/* The Plus button is always visible, wrapped in a label for better click handling */}
-            <div className="">
-              <label htmlFor="reply-attachment-input" className="cursor-pointer">
-                <Input
-                  type="file"
-                  id="reply-attachment-input" // Use a unique ID
-                  className="absolute h-full w-full cursor-pointer opacity-0"
-                  onChange={handleAttachmentEvent}
-                  multiple
-                  accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
-                />
-                <Button
-                  variant="ghost" // Match create-email style (might need adjustment)
-                  size="icon"     // Match create-email style
-                  type="button"
-                  className="rounded-full transition-transform cursor-pointer hover:bg-muted h-8 w-8 -ml-1" // Match create-email style
-                  tabIndex={-1}
-                >
-                  <Plus className="h-4 w-4 cursor-pointer"/>
-                </Button>
-              </label>
+            <div className="-pb-1.5 relative">
+              <Input
+                type="file"
+                id="reply-attachment-input"
+                className="absolute h-full w-full cursor-pointer opacity-0"
+                onChange={handleAttachmentEvent}
+                multiple
+                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+              />
+              <Button
+                variant="ghost"
+                className="rounded-full transition-transform cursor-pointer hover:bg-muted h-8 w-8 -ml-1"
+                tabIndex={-1}
+              >
+                <Plus className="h-4 w-4 cursor-pointer"/>
+              </Button>
             </div>
           </div>
           <div className="mr-2 flex items-center gap-2">
