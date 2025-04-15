@@ -27,7 +27,6 @@
         "@dnd-kit/modifiers": "9.0.0",
         "@dnd-kit/sortable": "10.0.0",
         "@dnd-kit/utilities": "3.2.2",
-        "@faker-js/faker": "^9.7.0",
         "@flags-sdk/statsig": "^0.2.2",
         "@hookform/resolvers": "4.1.2",
         "@langchain/openai": "^0.5.5",
@@ -318,8 +317,6 @@
     "@eslint/object-schema": ["@eslint/object-schema@2.1.6", "", {}, "sha512-RBMg5FRL0I0gs51M/guSAj5/e14VQ4tpZnQNWwuDT66P14I43ItmPfIZRhO9fUVIPOAQXU47atlywZ/czoqFPA=="],
 
     "@eslint/plugin-kit": ["@eslint/plugin-kit@0.2.8", "", { "dependencies": { "@eslint/core": "^0.13.0", "levn": "^0.4.1" } }, "sha512-ZAoA40rNMPwSm+AeHpCq8STiNAwzWLJuP8Xv4CHIc9wv/PSuExjMrmjfYNj682vW0OOiZ1HKxzvjQr9XZIisQA=="],
-
-    "@faker-js/faker": ["@faker-js/faker@9.7.0", "", {}, "sha512-aozo5vqjCmDoXLNUJarFZx2IN/GgGaogY4TMJ6so/WLZOWpSV7fvj2dmrV6sEAnUm1O7aCrhTibjpzeDFgNqbg=="],
 
     "@flags-sdk/statsig": ["@flags-sdk/statsig@0.2.2", "", { "dependencies": { "@vercel/edge-config": "^1.2.0", "@vercel/functions": "^1.5.2", "statsig-node-lite": "^0.4.2", "statsig-node-vercel": "^0.7.0" } }, "sha512-E3QNuKvVerW7B0z8Jb/tIyiejniKP193D5HB7oWquXWGCcNDEQ7YNuODX+MpPwVf8nLkqvVSTHFyH5eEacUYFQ=="],
 

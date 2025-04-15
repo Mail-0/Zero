@@ -2,52 +2,38 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createDraft } from '@/actions/drafts';
 import { auth } from '@/lib/auth';
 
-// Function to parse mailto URLs
+// Function to validate an email address
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+// Function to validate and parse a mailto URL
 async function parseMailtoUrl(mailtoUrl: string) {
-  if (!mailtoUrl.startsWith('mailto:')) {
-    return null;
-  }
-  
   try {
-    // Remove mailto: prefix to get the raw email and query part
-    const mailtoContent = mailtoUrl.substring(7); // "mailto:".length === 7
-    
-    // Split at the first ? to separate email from query params
-    const [emailPart, queryPart] = mailtoContent.split('?', 2);
-    
-    // Decode the email address - might be double-encoded
-    const toEmail = decodeURIComponent(emailPart || '');
-    
-    // Default values
+    let toEmail = '';
     let subject = '';
     let body = '';
+    let cc = '';
+    let bcc = '';
     
-    // Parse query parameters if they exist
-    if (queryPart) {
+    // Extract the email address from the mailto URL
+    const emailMatch = mailtoUrl.match(/^mailto:([^?]+)/);
+    if (emailMatch && emailMatch[1]) {
+      toEmail = decodeURIComponent(emailMatch[1]);
+    }
+    
+    // Extract query parameters
+    const queryParamsMatch = mailtoUrl.match(/\?(.+)$/);
+    if (queryParamsMatch && queryParamsMatch[1]) {
       try {
-        // Try to decode the query part - it might be double-encoded 
-        // (once by the browser and once by our encodeURIComponent)
-        let decodedQueryPart = queryPart;
+        const queryString = queryParamsMatch[1];
+        const queryParams = new URLSearchParams(queryString);
         
-        // Try decoding up to twice to handle double-encoding
-        try {
-          decodedQueryPart = decodeURIComponent(decodedQueryPart);
-          // Try one more time in case of double encoding
-          try {
-            decodedQueryPart = decodeURIComponent(decodedQueryPart);
-          } catch (e) {
-            // If second decoding fails, use the result of the first decoding
-          }
-        } catch (e) {
-          // If first decoding fails, try parsing directly
-          decodedQueryPart = queryPart;
-        }
-        
-        const queryParams = new URLSearchParams(decodedQueryPart);
-        
-        // Get and decode parameters 
         const rawSubject = queryParams.get('subject') || '';
         const rawBody = queryParams.get('body') || '';
+        const rawCC = queryParams.get('cc') || '';
+        const rawBCC = queryParams.get('bcc') || '';
         
         // Try to decode them in case they're still encoded
         try {
@@ -61,15 +47,27 @@ async function parseMailtoUrl(mailtoUrl: string) {
         } catch (e) {
           body = rawBody;
         }
+        
+        try {
+          cc = decodeURIComponent(rawCC);
+        } catch (e) {
+          cc = rawCC;
+        }
+        
+        try {
+          bcc = decodeURIComponent(rawBCC);
+        } catch (e) {
+          bcc = rawBCC;
+        }
       } catch (e) {
         console.error('Error parsing query parameters:', e);
       }
     }
     
     // Return the parsed data if email is valid
-    if (toEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(toEmail)) {
-      console.log('Parsed mailto data:', { to: toEmail, subject, body });
-      return { to: toEmail, subject, body };
+    if (toEmail && isValidEmail(toEmail)) {
+      console.log('Parsed mailto data:', { to: toEmail, subject, body, cc, bcc });
+      return { to: toEmail, subject, body, cc, bcc };
     }
   } catch (error) {
     console.error('Failed to parse mailto URL:', error);
@@ -79,7 +77,7 @@ async function parseMailtoUrl(mailtoUrl: string) {
 }
 
 // Function to create a draft and get its ID
-async function createDraftFromMailto(mailtoData: { to: string; subject: string; body: string }) {
+async function createDraftFromMailto(mailtoData: { to: string; subject: string; body: string; cc: string; bcc: string }) {
   try {
     // The driver's parseDraft function looks for text/plain MIME type
     // We need to ensure line breaks are preserved in the plain text
@@ -102,16 +100,15 @@ async function createDraftFromMailto(mailtoData: { to: string; subject: string; 
       to: mailtoData.to,
       subject: mailtoData.subject,
       message: htmlContent,
-      attachments: []
+      attachments: [],
+      cc: mailtoData.cc,
+      bcc: mailtoData.bcc
     };
     
-    console.log('Creating draft with body sample:', {
-      to: draftData.to,
-      subject: draftData.subject,
-      messageSample: htmlContent.substring(0, 100) + (htmlContent.length > 100 ? '...' : '')
-    });
-    
+  
     const result = await createDraft(draftData);
+    
+    console.log('Draft creation result:', result);
     
     if (result?.success && result.id) {
       console.log('Draft created successfully with ID:', result.id);
