@@ -164,6 +164,7 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
   const { data: session } = useSession();
   const [mail, setMail] = useMail();
   const { settings } = useSettings();
+  const [replyTo, setReplyTo] = useQueryState('replyTo');
   const [draftId, setDraftId] = useQueryState('draftId');
   const [isEditingRecipients, setIsEditingRecipients] = useState(false);
   const [showCc, setShowCc] = useState(false);
@@ -249,8 +250,8 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
     }
     if (!emailData) return;
     try {
-      const originalEmail = emailData[emailData.length - 1];
       const userEmail = session?.activeConnection?.email?.toLowerCase();
+      const originalEmail = emailData[emailData.length - 1];
 
       if (!userEmail) {
         throw new Error('Active connection email not found');
@@ -606,7 +607,10 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
   const initializeRecipients = useCallback(() => {
     if (!emailData || !emailData.length) return { to: [], cc: [] };
 
-    const latestEmail = emailData[emailData.length - 1];
+    const latestEmail = replyTo
+      ? emailData.find((email) => email.id === replyTo)
+      : emailData[emailData.length - 1];
+
     if (!latestEmail) return { to: [], cc: [] };
 
     const userEmail = session?.activeConnection?.email?.toLowerCase();
@@ -621,40 +625,31 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
       // Add reply-to or sender email to To
       const replyEmail = latestEmail.replyTo || latestEmail.sender?.email;
       if (replyEmail) {
-        to.push(replyEmail);
+        to.push(replyEmail.toLowerCase());
       }
     } else if (mode === 'replyAll') {
       // Add original sender to To if not current user
       if (latestEmail.sender?.email && latestEmail.sender.email.toLowerCase() !== userEmail) {
-        to.push(latestEmail.sender.email);
+        to.push(latestEmail.sender.email.toLowerCase());
       }
 
-      // Add all original recipients to CC except current user and primary recipient
-      if (latestEmail.to) {
-        latestEmail.to.forEach((recipient) => {
-          if (
-            recipient.email &&
-            recipient.email.toLowerCase() !== userEmail &&
-            recipient.email.toLowerCase() !== to[0]?.toLowerCase()
-          ) {
-            cc.push(recipient.email);
-          }
-        });
-      }
+      // Gather all recipients from 'to' and 'cc'
+      const allRecipients = [
+        ...(latestEmail.to || []),
+        ...(latestEmail.cc || [])
+      ];
 
-      // Add CC recipients if they exist
-      if (latestEmail.cc) {
-        latestEmail.cc.forEach((recipient) => {
-          if (
-            recipient.email &&
-            recipient.email.toLowerCase() !== userEmail &&
-            recipient.email.toLowerCase() !== to[0]?.toLowerCase() &&
-            !cc.includes(recipient.email)
-          ) {
-            cc.push(recipient.email);
-          }
-        });
-      }
+      allRecipients.forEach(recipient => {
+        const email = recipient.email?.toLowerCase();
+        if (
+          email &&
+          email !== userEmail && // Exclude current user
+          !to.includes(email) && // Exclude already in 'to'
+          !cc.includes(email) // Exclude duplicates
+        ) {
+          cc.push(email);
+        }
+      });
 
       // If there are CC recipients, show the CC field
       if (cc.length > 0) {
@@ -663,7 +658,7 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
     }
 
     return { to, cc };
-  }, [emailData, mode, session?.activeConnection?.email]);
+  }, [emailData, mode, session?.activeConnection?.email, replyTo]);
 
   // Initialize recipients when composer opens
   useEffect(() => {
@@ -1233,7 +1228,7 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
                 className="rounded-full transition-transform cursor-pointer hover:bg-muted h-8 w-8 -ml-1"
                 tabIndex={-1}
               >
-                <Plus className="h-4 w-4 cursor-pointer"/>
+                <Plus className="h-4 w-4 cursor-pointer" />
               </Button>
             </div>
           </div>

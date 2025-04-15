@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogClose,
 } from '../ui/dialog';
-import { BellOff, Check, ChevronDown, LoaderCircleIcon, Lock } from 'lucide-react';
+import { BellOff, Check, ChevronDown, LoaderCircleIcon, Lock, Reply, ReplyAll } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
@@ -25,7 +25,10 @@ import { useTranslations } from 'next-intl';
 import { MailIframe } from './mail-iframe';
 import { Button } from '../ui/button';
 import { format } from 'date-fns';
+import { ThreadActionButton } from './thread-action-button';
+import { useMail } from '@/components/mail/use-mail';
 import Image from 'next/image';
+import { useQueryState } from 'nuqs';
 
 const StreamingText = ({ text }: { text: string }) => {
   const [displayText, setDisplayText] = useState('');
@@ -95,6 +98,7 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [unsubscribed, setUnsubscribed] = useState(false);
   const [isUnsubscribing, setIsUnsubscribing] = useState(false);
+  const [replyTo, setReplyTo] = useQueryState('replyTo');
   const [selectedAttachment, setSelectedAttachment] = useState<null | {
     id: string;
     name: string;
@@ -103,6 +107,7 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
   }>(null);
   const [openDetailsPopover, setOpenDetailsPopover] = useState<boolean>(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const [mail, setMail] = useMail();
   const t = useTranslations();
 
   const { data } = demo
@@ -333,6 +338,54 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
                 </div>
               </div>
             </div>
+            <div className="flex items-center gap-2">
+            <ThreadActionButton
+              icon={Reply}
+              label={t('common.mailDisplay.replyTo', { user: emailData?.sender?.email })}
+              onClick={(e: React.MouseEvent) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setMail((prev) => ({ 
+                  ...prev, 
+                  forwardComposerOpen: false,
+                  replyComposerOpen: true,
+                  replyAllComposerOpen: false
+                }));
+                setReplyTo(emailData.id);
+              }}
+            />
+            <ThreadActionButton
+              icon={ReplyAll}
+              label={t('common.mailDisplay.replyAll')}
+              onClick={(e: React.MouseEvent) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setMail((prev) => ({
+                  ...prev,
+                  forwardComposerOpen: false,
+                  replyComposerOpen: false,
+                  replyAllComposerOpen: true
+                }));
+                setReplyTo(emailData.id);
+              }}
+            />
+            {/* <ThreadActionButton
+              icon={Forward}
+              label={t('common.mailDisplay.forward', { user: emailData?.sender?.email })}
+              onClick={(e: React.MouseEvent) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setMail((prev) => ({
+                  ...prev,
+                  forwardComposerOpen: true,
+                  replyComposerOpen: false,
+                  replyAllComposerOpen: false
+                }));
+                setReplyTo(emailData.id);
+              }}
+            /> */}
+            </div>
+
             {data ? (
               <div className='relative -top-1'>
                 <Popover>

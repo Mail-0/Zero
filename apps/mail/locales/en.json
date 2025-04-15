@@ -135,6 +135,8 @@
       "details": "Details",
       "from": "From",
       "to": "To",
+      "replyTo": "Reply to {user}",
+      "replyAll": "Reply all",
       "cc": "Cc",
       "bcc":"Bcc",
       "date": "Date",
