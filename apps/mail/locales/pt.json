@@ -40,7 +40,8 @@
       "trustSender": "Confiar no remetente",
       "cancel": "Cancelar",
       "save": "Salvar",
-      "remove": "Remover"
+      "remove": "Remover",
+      "settings": "Configurações"
     },
     "themes": {
       "dark": "Escuro",
@@ -116,7 +117,8 @@
       "personal": "Pessoal",
       "updates": "Atualizações",
       "promotions": "Promoções",
-      "social": "Social"
+      "social": "Social",
+      "unread": "Não lidos"
     },
     "replyCompose": {
       "replyTo": "Responder para",
@@ -134,6 +136,7 @@
       "from": "De",
       "to": "Para",
       "cc": "Cc",
+      "bcc": "Cco",
       "date": "Data",
       "mailedBy": "Enviado por",
       "signedBy": "Assinado por",
@@ -400,6 +403,7 @@
       }
     },
     "createEmail": {
+      "invalidEmail": "Endereço de email inválido",
       "body": "Corpo",
       "example": "zero@0.email",
       "attachments": "Anexos",

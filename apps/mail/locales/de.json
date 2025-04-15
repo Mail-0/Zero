@@ -40,7 +40,8 @@
       "trustSender": "Absender vertrauen",
       "cancel": "Abbrechen",
       "save": "Speichern",
-      "remove": "Entfernen"
+      "remove": "Entfernen",
+      "settings": "Einstellungen"
     },
     "themes": {
       "dark": "Dunkel",
@@ -116,7 +117,8 @@
       "personal": "Persönlich",
       "updates": "Updates",
       "promotions": "Werbung",
-      "social": "Sozial"
+      "social": "Sozial",
+      "unread": "Ungelesen"
     },
     "replyCompose": {
       "replyTo": "Antwort an",
@@ -134,6 +136,7 @@
       "from": "Von",
       "to": "An",
       "cc": "Cc",
+      "bcc": "Bcc",
       "date": "Datum",
       "mailedBy": "Mailed-By",
       "signedBy": "Signed-By",
@@ -400,6 +403,7 @@
       }
     },
     "createEmail": {
+      "invalidEmail": "Ungültige E-Mail-Adresse",
       "body": "Inhalt",
       "example": "zero@0.email",
       "attachments": "Anhänge",

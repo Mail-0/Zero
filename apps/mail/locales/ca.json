@@ -40,7 +40,8 @@
       "trustSender": "Confiar en el remitent",
       "cancel": "Cancel·lar",
       "save": "Desar",
-      "remove": "Eliminar"
+      "remove": "Eliminar",
+      "settings": "Configuració"
     },
     "themes": {
       "dark": "Fosc",
@@ -116,7 +117,8 @@
       "personal": "Personal",
       "updates": "Actualitzacions",
       "promotions": "Promocions",
-      "social": "Social"
+      "social": "Social",
+      "unread": "No llegits"
     },
     "replyCompose": {
       "replyTo": "Respon a",
@@ -134,6 +136,7 @@
       "from": "De",
       "to": "A",
       "cc": "Cc",
+      "bcc": "Cco",
       "date": "Data",
       "mailedBy": "Enviat per",
       "signedBy": "Signat per",
@@ -400,6 +403,7 @@
       }
     },
     "createEmail": {
+      "invalidEmail": "Adreça de correu electrònic no vàlida",
       "body": "Cos",
       "example": "zero@0.email",
       "attachments": "Adjunts",

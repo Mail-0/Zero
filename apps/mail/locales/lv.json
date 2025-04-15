@@ -40,7 +40,8 @@
       "trustSender": "Uzticēties sūtītājam",
       "cancel": "Atcelt",
       "save": "Saglabāt",
-      "remove": "Noņemt"
+      "remove": "Noņemt",
+      "settings": "Iestatījumi"
     },
     "themes": {
       "dark": "Tumšs",
@@ -116,7 +117,8 @@
       "personal": "Personīgi",
       "updates": "Atjauninājumi",
       "promotions": "Reklāmas",
-      "social": "Sociālie tīkli"
+      "social": "Sociālie tīkli",
+      "unread": "Nelasītie"
     },
     "replyCompose": {
       "replyTo": "Atbildēt",
@@ -134,6 +136,7 @@
       "from": "No",
       "to": "Kam",
       "cc": "Cc",
+      "bcc": "Bcc",
       "date": "Datums",
       "mailedBy": "Nosūtījis",
       "signedBy": "Parakstījis",
@@ -400,6 +403,7 @@
       }
     },
     "createEmail": {
+      "invalidEmail": "Nederīga e-pasta adrese",
       "body": "Saturs",
       "example": "zero@0.email",
       "attachments": "Pielikumi",
