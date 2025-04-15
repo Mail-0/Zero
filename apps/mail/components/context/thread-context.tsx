@@ -260,7 +260,7 @@ export function ThreadContextMenu({
           id: 'delete-from-bin',
           label: t('common.mail.deleteFromBin'),
           icon: <Trash className="mr-2.5 h-4 w-4" />,
-          action: handleDelete(),
+          action: handleDelete,
           disabled: false,
         }
       ];
