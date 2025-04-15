@@ -19,13 +19,13 @@ async function parseMailtoUrl(mailtoUrl: string) {
     
     // Extract the email address from the mailto URL
     const emailMatch = mailtoUrl.match(/^mailto:([^?]+)/);
-    if (emailMatch && emailMatch[1]) {
+    if (emailMatch?.[1]) {
       toEmail = decodeURIComponent(emailMatch[1]);
     }
     
     // Extract query parameters
     const queryParamsMatch = mailtoUrl.match(/\?(.+)$/);
-    if (queryParamsMatch && queryParamsMatch[1]) {
+    if (queryParamsMatch?.[1]) {
       try {
         const queryString = queryParamsMatch[1];
         const queryParams = new URLSearchParams(queryString);
