@@ -190,9 +190,9 @@ export function ThreadContextMenu({
 		try {
         const promise = deleteThread({ id: threadId }).then(() => mutate());
         toast.promise(promise, {
-          loading: "Deleting mail...",
-          success: "Mail deleted successfully",
-          error: "Failed to delete mail",
+          loading: t('common.actions.deletingMail'),
+          success: t('common.actions.deletedMail'),
+          error: t('common.actions.failedToDeleteMail'),
         });
 
     }catch (error) {
@@ -258,7 +258,7 @@ export function ThreadContextMenu({
         },
         {
           id: 'delete-from-bin',
-          label: 'Delete from Bin',
+          label: t('common.mail.deleteFromBin'),
           icon: <Trash className="mr-2.5 h-4 w-4" />,
           action: handleDelete(),
           disabled: false,
