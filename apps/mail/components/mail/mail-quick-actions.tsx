@@ -1,17 +1,18 @@
 'use client';
 
 import { moveThreadsTo, ThreadDestination } from '@/lib/thread-actions';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { Archive, Mail, Reply, Trash, Inbox } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { Archive, Mail, Inbox } from 'lucide-react';
 import { markAsRead, markAsUnread } from '@/actions/mail';
 import { useCallback, memo, useState } from 'react';
-import { cn, FOLDERS, LABELS } from '@/lib/utils';
+import { cn, FOLDERS } from '@/lib/utils';
 import { useThreads } from '@/hooks/use-threads';
 import { Button } from '@/components/ui/button';
 import { useStats } from '@/hooks/use-stats';
 import type { InitialThread } from '@/types';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import { useQueryState } from 'nuqs';
 
 interface MailQuickActionsProps {
   message: InitialThread;
@@ -36,27 +37,24 @@ export const MailQuickActions = memo(
     const { mutate: mutateStats } = useStats();
     const t = useTranslations();
     const router = useRouter();
-    const searchParams = useSearchParams();
     const [isProcessing, setIsProcessing] = useState(false);
+    const [threadId, setThreadId] = useQueryState('threadId');
 
     const currentFolder = folder ?? '';
     const isInbox = currentFolder === FOLDERS.INBOX;
     const isArchiveFolder = currentFolder === FOLDERS.ARCHIVE;
 
     const closeThreadIfOpen = useCallback(() => {
-      const threadIdParam = searchParams.get('threadId');
       const messageId = message.threadId ?? message.id;
 
-      if (threadIdParam === messageId) {
-        const currentParams = new URLSearchParams(searchParams.toString());
-        currentParams.delete('threadId');
-        router.push(`/mail/${currentFolder}?${currentParams.toString()}`);
+      if (threadId === messageId) {
+        setThreadId(null)
       }
 
       if (resetNavigation) {
         resetNavigation();
       }
-    }, [searchParams, message, router, currentFolder, resetNavigation]);
+    }, [threadId, message, router, currentFolder, resetNavigation]);
 
     const handleArchive = useCallback(
       async (e?: React.MouseEvent) => {

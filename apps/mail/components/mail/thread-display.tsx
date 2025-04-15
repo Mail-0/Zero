@@ -10,7 +10,7 @@ import {
   Trash,
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useSearchParams, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { moveThreadsTo, ThreadDestination } from '@/lib/thread-actions';
@@ -31,6 +31,7 @@ import { ParsedMessage } from '@/types';
 import { Inbox } from 'lucide-react';
 import { toast } from 'sonner';
 import { NotesPanel } from './note-panel';
+import { useQueryState } from 'nuqs';
 
 
 interface ThreadDisplayProps {
@@ -134,18 +135,16 @@ function ThreadActionButton({
   );
 }
 
-export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisplayProps) {
+export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
   const { data: emailData, isLoading, mutate: mutateThread } = useThread(id ?? null);
   const { mutate: mutateThreads } = useThreads();
-  const searchParams = useSearchParams();
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [mail, setMail] = useMail();
   const t = useTranslations();
   const { mutate: mutateStats } = useStats();
   const { folder } = useParams<{ folder: string }>();
-  const threadIdParam = searchParams.get('threadId');
-  const threadId = threadParam ?? threadIdParam ?? '';
+  const [threadId, setThreadId] = useQueryState('threadId');
 
   // Check if thread contains any images (excluding sender avatars)
   const hasImages = useMemo(() => {
@@ -188,17 +187,12 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
   const isInSpam = folder === FOLDERS.SPAM;
   const isInBin = folder === FOLDERS.BIN;
   const handleClose = useCallback(() => {
-    // Reset reply composer state when closing thread display
-    setMail((prev) => ({
-      ...prev,
-      replyComposerOpen: false,
-      forwardComposerOpen: false
-    }));
-    onClose?.();
-  }, [onClose, setMail]);
+    setThreadId(null)
+  }, []);
 
   const moveThreadTo = useCallback(
     async (destination: ThreadDestination) => {
+      if (!threadId) return;
       const promise = async () => {
         await moveThreadsTo({
           threadIds: [threadId],
@@ -330,7 +324,7 @@ export function ThreadDisplay({ threadParam, onClose, isMobile, id }: ThreadDisp
             <ThreadSubject subject={emailData[0]?.subject} />
           </div>
           <div className="flex items-center md:gap-2">
-            <NotesPanel threadId={threadId} />
+            {threadId ? <NotesPanel threadId={threadId} /> : null}
             <ThreadActionButton
               icon={Expand}
               label={

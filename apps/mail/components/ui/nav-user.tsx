@@ -70,7 +70,6 @@ export function NavUser() {
   if (!isRendered) return null;
 
   const handleAccountSwitch = (connection: IConnection) => async () => {
-    router.push('/mail/inbox'); // this is temp, its not good. bad. we change later.
     await putConnection(connection.id);
     refetch();
     mutate();

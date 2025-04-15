@@ -42,7 +42,7 @@ import { useState, useCallback, useMemo, useEffect, useRef, memo } from 'react';
 import { ThreadDisplay, ThreadDemo } from '@/components/mail/thread-display';
 import { MailList, MailListDemo } from '@/components/mail/mail-list';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useMediaQuery } from '../../hooks/use-media-query';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useMail } from '@/components/mail/use-mail';
@@ -74,7 +74,7 @@ export function DemoMailLayout() {
   const isValidating = false;
   const isLoading = false;
   const isDesktop = true;
-  const threadIdParam = useQueryState('threadId');
+  const [threadIdParam] = useQueryState('threadId');
   const [activeCategory, setActiveCategory] = useState('Primary');
   const [filteredItems, setFilteredItems] = useState(items);
 
@@ -250,10 +250,9 @@ export function MailLayout() {
 
   const [threadId, setThreadId] = useQueryState('threadId');
 
-  const handleClose = useCallback(() => {
+  const handleClose = () => {
     setThreadId(null);
-    router.push(`/mail/${folder}`);
-  }, [router, folder, setThreadId]);
+  }
 
   // Search bar is always visible now, no need for keyboard shortcuts to toggle it
   useHotKey('Esc', (event) => {

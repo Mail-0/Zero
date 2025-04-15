@@ -8,6 +8,8 @@ import useSWR from 'swr';
 
 export type { Note };
 
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
 export const useThreadNotes = (threadId: string) => {
   const t = useTranslations();
   const { data: session } = useSession();
@@ -17,10 +19,10 @@ export const useThreadNotes = (threadId: string) => {
     isLoading,
     mutate,
   } = useSWR<Note[]>(
-    session?.connectionId ? `notes-${threadId}-${session.connectionId}` : null,
+    session?.connectionId && threadId ? ['notes', session.connectionId, threadId] : null,
     async () => {
       try {
-        const result = await fetchThreadNotes(threadId);
+        const result = await fetcher('/api/driver/notes?threadId=' + threadId);
         return result.data || [];
       } catch (err: any) {
         console.error('Error fetching notes:', err);
