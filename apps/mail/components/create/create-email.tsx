@@ -1,14 +1,21 @@
+//create-email NEW
 'use client';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { UploadedFileIcon } from '@/components/create/uploaded-file-icon';
 import { generateHTML, generateJSON } from '@tiptap/core';
 import { useConnections } from '@/hooks/use-connections';
 import { createDraft, getDraft } from '@/actions/drafts';
 import { ArrowUpIcon, Paperclip, X } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { useMail } from '@/components/mail/use-mail';
 import { SidebarToggle } from '../ui/sidebar-toggle';
 import Paragraph from '@tiptap/extension-paragraph';
 import { useSettings } from '@/hooks/use-settings';
 import Document from '@tiptap/extension-document';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/lib/auth-client';
+import { truncateFileName } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 import { AIAssistant } from './ai-assistant';
 import { useTranslations } from 'next-intl';
 import { sendEmail } from '@/actions/send';
@@ -16,16 +23,11 @@ import Text from '@tiptap/extension-text';
 import Bold from '@tiptap/extension-bold';
 import { type JSONContent } from 'novel';
 import { useQueryState } from 'nuqs';
+import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import * as React from 'react';
 import Editor from './editor';
 import './prosemirror.css';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { UploadedFileIcon } from '@/components/create/uploaded-file-icon';
-import { Separator } from '@/components/ui/separator';
-import { Input } from '@/components/ui/input';
-import { Plus } from 'lucide-react';
-import { truncateFileName } from '@/lib/utils';
 
 const MAX_VISIBLE_ATTACHMENTS = 12;
 
@@ -53,19 +55,26 @@ export function CreateEmail({
   initialTo = '',
   initialSubject = '',
   initialBody = '',
+  initialCc = '',
+  initialBcc = '',
 }: {
   initialTo?: string;
   initialSubject?: string;
   initialBody?: string;
+  initialCc?: string;
+  initialBcc?: string;
 }) {
   const [toInput, setToInput] = React.useState('');
   const [toEmails, setToEmails] = React.useState<string[]>(initialTo ? [initialTo] : []);
   const [ccInput, setCcInput] = React.useState('');
-  const [ccEmails, setCcEmails] = React.useState<string[]>([]);
+  const [ccEmails, setCcEmails] = React.useState<string[]>(
+    initialCc ? initialCc.split(',').filter(Boolean) : [],
+  );
   const [bccInput, setBccInput] = React.useState('');
-  const [bccEmails, setBccEmails] = React.useState<string[]>([]);
-  const [showCc, setShowCc] = React.useState(false);
-  const [showBcc, setShowBcc] = React.useState(false);
+  const [bccEmails, setBccEmails] = React.useState<string[]>(
+    initialBcc ? initialBcc.split(',').filter(Boolean) : [],
+  );
+  const [mail, setMail] = useMail();
   const [subjectInput, setSubjectInput] = React.useState(initialSubject);
   const [attachments, setAttachments] = React.useState<File[]>([]);
   const [resetEditorKey, setResetEditorKey] = React.useState(0);
@@ -108,6 +117,35 @@ export function CreateEmail({
     }
   }, [draftId, defaultValue]);
 
+  // Track whether we've already set the CC/BCC flags
+  const ccBccFlagsSetRef = React.useRef(false);
+
+  // Set showCc and showBcc flags if initialCc or initialBcc have values
+  React.useEffect(() => {
+    // Avoid setting flags multiple times
+    if (ccBccFlagsSetRef.current) {
+      return;
+    }
+
+    let shouldUpdateMailState = false;
+    let mailStateUpdates = {};
+
+    if (initialCc && initialCc.trim() !== '') {
+      shouldUpdateMailState = true;
+      mailStateUpdates = { ...mailStateUpdates, showCc: true };
+    }
+
+    if (initialBcc && initialBcc.trim() !== '') {
+      shouldUpdateMailState = true;
+      mailStateUpdates = { ...mailStateUpdates, showBcc: true };
+    }
+
+    if (shouldUpdateMailState) {
+      setMail((prev) => ({ ...prev, ...mailStateUpdates }));
+      ccBccFlagsSetRef.current = true;
+    }
+  }, [initialCc, initialBcc, setMail]);
+
   React.useEffect(() => {
     const loadDraft = async () => {
       if (!draftId) {
@@ -125,13 +163,38 @@ export function CreateEmail({
 
         setDraftId(draft.id);
 
-        if (draft.to?.length) {
-          setToEmails(draft.to);
+        // Process to, cc, and bcc email addresses
+        const toList = processDraftEmails(draft.to);
+        const ccList = processDraftEmails(draft.cc);
+        const bccList = processDraftEmails(draft.bcc);
+
+        // Set emails and update mail state in a batch
+        if (toList.length > 0) {
+          setToEmails(toList);
         }
+
         if (draft.subject) {
           setSubjectInput(draft.subject);
         }
 
+        // Single mail state update for both CC and BCC
+        const mailStateUpdates = {
+          showCc: ccList.length > 0,
+          showBcc: bccList.length > 0,
+        };
+
+        setMail((prev) => ({ ...prev, ...mailStateUpdates }));
+
+        // Only set cc/bcc emails if there are any
+        if (ccList.length > 0) {
+          setCcEmails(ccList);
+        }
+
+        if (bccList.length > 0) {
+          setBccEmails(bccList);
+        }
+
+        // Parse content if available
         if (draft.content) {
           try {
             const json = generateJSON(draft.content, [Document, Paragraph, Text, Bold]);
@@ -149,8 +212,37 @@ export function CreateEmail({
       }
     };
 
+    // Helper function to process email lists consistently
+    function processDraftEmails(emails: any): string[] {
+      if (!emails) return [];
+
+      if (Array.isArray(emails)) {
+        return emails;
+      }
+
+      if (typeof emails === 'string' && emails.trim()) {
+        return emails
+          .split(',')
+          .map((email: string) => email.trim())
+          .filter(Boolean);
+      }
+
+      return [];
+    }
+
     loadDraft();
-  }, [draftId]);
+  }, [
+    draftId,
+    setMail,
+    setToEmails,
+    setCcEmails,
+    setBccEmails,
+    setSubjectInput,
+    setDefaultValue,
+    setMessageContent,
+    setHasUnsavedChanges,
+    setDraftId,
+  ]);
 
   const t = useTranslations();
 
@@ -215,8 +307,12 @@ export function CreateEmail({
 
     try {
       setIsLoading(true);
+
+      // Create a single draft data object
       const draftData = {
         to: toEmails.join(', '),
+        cc: mail.showCc ? ccEmails.join(', ') : '',
+        bcc: mail.showBcc ? bccEmails.join(', ') : '',
         subject: subjectInput,
         message: messageContent || '',
         attachments: attachments,
@@ -236,7 +332,21 @@ export function CreateEmail({
     } finally {
       setIsLoading(false);
     }
-  }, [toEmails, subjectInput, messageContent, attachments, draftId, hasUnsavedChanges]);
+  }, [
+    toEmails,
+    ccEmails,
+    bccEmails,
+    mail.showCc,
+    mail.showBcc,
+    subjectInput,
+    messageContent,
+    attachments,
+    draftId,
+    hasUnsavedChanges,
+    setDraftId,
+    setIsLoading,
+    setHasUnsavedChanges,
+  ]);
 
   React.useEffect(() => {
     if (!hasUnsavedChanges) return;
@@ -251,6 +361,45 @@ export function CreateEmail({
   React.useEffect(() => {
     setHasUnsavedChanges(true);
   }, [messageContent]);
+
+  const resetEmailForm = React.useCallback(() => {
+    // Reset all form fields
+    setToInput('');
+    setToEmails([]);
+    setCcInput('');
+    setCcEmails([]);
+    setBccInput('');
+    setBccEmails([]);
+    setSubjectInput('');
+    setAttachments([]);
+    setMessageContent('');
+    setDefaultValue(createEmptyDocContent());
+    setResetEditorKey((prev) => prev + 1);
+    setHasUnsavedChanges(false);
+
+    // Reset CC and BCC visibility
+    setMail((prev) => ({
+      ...prev,
+      showCc: false,
+      showBcc: false,
+      replyComposerOpen: false,
+      forwardComposerOpen: false,
+    }));
+  }, [
+    setMail,
+    setToInput,
+    setToEmails,
+    setCcInput,
+    setCcEmails,
+    setBccInput,
+    setBccEmails,
+    setSubjectInput,
+    setAttachments,
+    setMessageContent,
+    setDefaultValue,
+    setResetEditorKey,
+    setHasUnsavedChanges,
+  ]);
 
   const handleSendEmail = async () => {
     if (!toEmails.length) {
@@ -270,38 +419,36 @@ export function CreateEmail({
 
     try {
       setIsLoading(true);
-      await sendEmail({
+
+      // Create email data object
+      const emailData = {
         to: toEmails.map((email) => ({ email, name: email.split('@')[0] || email })),
-        cc: showCc ? ccEmails.map((email) => ({ email, name: email.split('@')[0] || email })) : undefined,
-        bcc: showBcc ? bccEmails.map((email) => ({ email, name: email.split('@')[0] || email })) : undefined,
+        // Only include CC and BCC if the fields are visible and have values
+        cc:
+          mail.showCc && ccEmails.length > 0
+            ? ccEmails.map((email) => ({ email, name: email.split('@')[0] || email }))
+            : undefined,
+        bcc:
+          mail.showBcc && bccEmails.length > 0
+            ? bccEmails.map((email) => ({ email, name: email.split('@')[0] || email }))
+            : undefined,
         subject: subjectInput,
         message: messageContent,
         attachments: attachments,
-      });
+      };
 
-      setIsLoading(false);
+      // Send the email with all required data
+      await sendEmail(emailData);
+
       toast.success(t('pages.createEmail.emailSentSuccessfully'));
 
-      setToInput('');
-      setToEmails([]);
-      setCcInput('');
-      setCcEmails([]);
-      setBccInput('');
-      setBccEmails([]);
-      setShowCc(false);
-      setShowBcc(false);
-      setSubjectInput('');
-      setAttachments([]);
-      setMessageContent('');
-
-      setDefaultValue(createEmptyDocContent());
-      setResetEditorKey((prev) => prev + 1);
-
-      setHasUnsavedChanges(false);
+      // Reset all form fields
+      resetEmailForm();
     } catch (error) {
       console.error('Error sending email:', error);
-      setIsLoading(false);
       toast.error(t('pages.createEmail.failedToSendEmail'));
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -350,6 +497,7 @@ export function CreateEmail({
     setHasUnsavedChanges(true);
   };
 
+  // Update useEffect to correctly set CC and BCC visibility based on initial props
   React.useEffect(() => {
     if (initialTo) {
       const emails = initialTo.split(',').map((email) => email.trim());
@@ -382,7 +530,29 @@ export function CreateEmail({
       });
       setMessageContent(initialBody);
     }
-  }, [initialTo, initialSubject, initialBody, defaultValue]);
+
+    // Update CC and BCC visibility based on whether we have recipients
+    // This ensures fields are shown immediately when there are recipients
+    if (ccEmails.length > 0) {
+      setMail((prev) => ({ ...prev, showCc: true }));
+    }
+
+    if (bccEmails.length > 0) {
+      setMail((prev) => ({ ...prev, showBcc: true }));
+    }
+  }, [
+    initialTo,
+    initialSubject,
+    initialBody,
+    defaultValue,
+    setMail,
+    ccEmails,
+    bccEmails,
+    setToEmails,
+    setToInput,
+    setMessageContent,
+    setDefaultValue,
+  ]);
 
   return (
     <div
@@ -456,9 +626,14 @@ export function CreateEmail({
                       size="sm"
                       className="text-xs"
                       onClick={() => {
-                        setShowCc(!showCc);
-                        if (!showCc) {
-                          setTimeout(() => ccInputRef.current?.focus(), 0);
+                        const shouldShow = !mail.showCc;
+                        setMail((prev) => ({ ...prev, showCc: shouldShow }));
+
+                        // Focus the CC input if we're showing it, using RAF for proper DOM update
+                        if (shouldShow) {
+                          requestAnimationFrame(() => {
+                            ccInputRef.current?.focus();
+                          });
                         }
                       }}
                     >
@@ -471,9 +646,14 @@ export function CreateEmail({
                       size="sm"
                       className="text-xs"
                       onClick={() => {
-                        setShowBcc(!showBcc);
-                        if (!showBcc) {
-                          setTimeout(() => bccInputRef.current?.focus(), 0);
+                        const shouldShow = !mail.showBcc;
+                        setMail((prev) => ({ ...prev, showBcc: shouldShow }));
+
+                        // Focus the BCC input if we're showing it, using RAF for proper DOM update
+                        if (shouldShow) {
+                          requestAnimationFrame(() => {
+                            bccInputRef.current?.focus();
+                          });
                         }
                       }}
                     >
@@ -483,7 +663,7 @@ export function CreateEmail({
                 </div>
               </div>
 
-              {showCc && (
+              {mail.showCc && (
                 <div className="flex items-center">
                   <div className="text-muted-foreground w-20 flex-shrink-0 pr-3 text-right text-[1rem] font-[600] opacity-50 md:w-24">
                     Cc
@@ -529,7 +709,7 @@ export function CreateEmail({
                 </div>
               )}
 
-              {showBcc && (
+              {mail.showBcc && (
                 <div className="flex items-center">
                   <div className="text-muted-foreground w-20 flex-shrink-0 pr-3 text-right text-[1rem] font-[600] opacity-50 md:w-24">
                     Bcc
@@ -718,9 +898,7 @@ export function CreateEmail({
                             file={file}
                           />
                           <div className="bg-muted/10 p-2">
-                            <p className="text-xs font-medium">
-                              {truncateFileName(file.name, 20)}
-                            </p>
+                            <p className="text-xs font-medium">{truncateFileName(file.name, 20)}</p>
                             <p className="text-muted-foreground text-xs">
                               {(file.size / (1024 * 1024)).toFixed(2)} MB
                             </p>
@@ -732,16 +910,21 @@ export function CreateEmail({
                 </div>
               </PopoverContent>
             </Popover>
-            <div className='-left-5 relative group'>
+            <div className="group relative -left-5">
               <Input
                 type="file"
                 id="attachment-input"
-                className='w-10 opacity-0'
+                className="w-10 opacity-0"
                 onChange={handleAttachment}
                 multiple
                 accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
               />
-              <Button variant={'outline'} size={'icon'} type='button' className='transition-transform group-hover:scale-90 scale-75 absolute top-0 left-0 rounded-full pointer-events-none'>
+              <Button
+                variant={'outline'}
+                size={'icon'}
+                type="button"
+                className="pointer-events-none absolute left-0 top-0 scale-75 rounded-full transition-transform group-hover:scale-90"
+              >
                 <Plus />
               </Button>
             </div>

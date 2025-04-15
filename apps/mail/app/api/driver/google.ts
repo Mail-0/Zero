@@ -39,6 +39,8 @@ const findHtmlBody = (parts: any[]): string => {
 interface ParsedDraft {
   id: string;
   to?: string[];
+  cc?: string[];
+  bcc?: string[];
   subject?: string;
   content?: string;
   rawMessage?: gmail_v1.Schema$Message;
@@ -48,12 +50,19 @@ const parseDraft = (draft: gmail_v1.Schema$Draft): ParsedDraft | null => {
   if (!draft.message) return null;
 
   const headers = draft.message.payload?.headers || [];
-  const to =
+
+  // Helper function to extract email addresses from header
+  const getEmails = (headerName: string) => 
     headers
-      .find((h) => h.name === 'To')
+      .find((h) => h.name === headerName)
       ?.value?.split(',')
       .map((e) => e.trim())
       .filter(Boolean) || [];
+
+  // Extract recipients from headers
+  const to = getEmails('To');
+  const cc = getEmails('Cc');
+  const bcc = getEmails('Bcc');
   const subject = headers.find((h) => h.name === 'Subject')?.value;
 
   let content = '';
@@ -73,6 +82,8 @@ const parseDraft = (draft: gmail_v1.Schema$Draft): ParsedDraft | null => {
   return {
     id: draft.id || '',
     to,
+    cc,
+    bcc,
     subject: subject ? he.decode(subject).trim() : '',
     content,
     rawMessage: draft.message,
@@ -771,14 +782,44 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       }
     },
     createDraft: async (data: any) => {
-      const mimeMessage = [
-        `From: me`,
-        `To: ${data.to}`,
+      // Helper function to sanitize email addresses
+      const sanitizeEmails = (emailStr: string): string => {
+        if (!emailStr || !emailStr.trim()) return '';
+        
+        return emailStr
+          .split(',')
+          .map(email => email.trim())
+          .filter(email => {
+            // Basic email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+          })
+          .join(', ');
+      };
+      
+      // Build email headers
+      const headers = [`From: me`];
+      
+      // Sanitize and add recipient headers
+      const sanitizedTo = sanitizeEmails(data.to);
+      if (sanitizedTo) headers.push(`To: ${sanitizedTo}`);
+      
+      // Add optional headers if they exist (after sanitizing)
+      const sanitizedCc = sanitizeEmails(data.cc);
+      if (sanitizedCc) headers.push(`Cc: ${sanitizedCc}`);
+      
+      const sanitizedBcc = sanitizeEmails(data.bcc);
+      if (sanitizedBcc) headers.push(`Bcc: ${sanitizedBcc}`);
+      
+      // Add required headers and content
+      headers.push(
         `Subject: ${data.subject}`,
         'Content-Type: text/html; charset=utf-8',
         '',
-        data.message,
-      ].join('\n');
+        data.message
+      );
+      
+      const mimeMessage = headers.join('\n');
 
       const encodedMessage = Buffer.from(mimeMessage)
         .toString('base64')
@@ -794,20 +835,24 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
 
       let res;
 
-      if (data.id) {
-        res = await gmail.users.drafts.update({
-          userId: 'me',
-          id: data.id,
-          requestBody,
-        });
-      } else {
-        res = await gmail.users.drafts.create({
-          userId: 'me',
-          requestBody,
-        });
+      try {
+        if (data.id) {
+          res = await gmail.users.drafts.update({
+            userId: 'me',
+            id: data.id,
+            requestBody,
+          });
+        } else {
+          res = await gmail.users.drafts.create({
+            userId: 'me',
+            requestBody,
+          });
+        }
+        return res.data;
+      } catch (error) {
+        console.error('Error creating/updating draft:', error);
+        throw error;
       }
-
-      return res.data;
     },
   };
 
