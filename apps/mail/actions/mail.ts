@@ -164,3 +164,16 @@ export const toggleStar = async ({ ids }: { ids: string[] }) => {
     throw error;
   }
 };
+
+export const deleteThread = async ({ id }: { id: string }) => {
+  console.log("Deleting thread:", id);
+  try {
+    const driver = await getActiveDriver();
+    await driver.delete(id);
+    return { success: true };
+  } catch (error) {
+    if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection();
+    console.error('Error deleting thread:', error);
+    throw error;
+  }
+}

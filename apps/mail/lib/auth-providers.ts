@@ -48,7 +48,7 @@ export const authProviders: ProviderConfig[] = [
       // TODO: Remove this before going to prod, it's to force to get `refresh_token` from google, some users don't have it yet.
       prompt: process.env.NODE_ENV === "production" ? undefined : "consent",
       accessType: "offline",
-      scope: ["https://www.googleapis.com/auth/gmail.modify"],
+      scope: ["https://www.googleapis.com/auth/gmail.modify", 'https://mail.google.com'],
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     },
