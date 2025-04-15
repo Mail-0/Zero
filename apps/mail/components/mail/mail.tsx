@@ -276,7 +276,7 @@ export function MailLayout() {
         // This ensures we don't keep the email content in the URL
         navigator.registerProtocolHandler(
           'mailto',
-          `${window.location.origin}/mail/compose/handle-mailto?mailto=%s`,
+          `${window.location.origin}/mail/create/handle-mailto?mailto=%s`,
         );
       } catch (error) {
         console.error('Failed to register protocol handler:', error);

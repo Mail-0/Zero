@@ -135,7 +135,7 @@ export async function GET(request: NextRequest) {
   const mailto = searchParams.get('mailto');
 
   if (!mailto) {
-    return NextResponse.redirect(new URL('/mail/compose', request.url));
+    return NextResponse.redirect(new URL('/mail/create', request.url));
   }
 
   // Parse the mailto URL
@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
 
   // If parsing failed, redirect to empty compose
   if (!mailtoData) {
-    return NextResponse.redirect(new URL('/mail/compose', request.url));
+    return NextResponse.redirect(new URL('/mail/create', request.url));
   }
 
   // Create a draft from the mailto data
@@ -151,9 +151,9 @@ export async function GET(request: NextRequest) {
 
   // If draft creation failed, redirect to empty compose
   if (!draftId) {
-    return NextResponse.redirect(new URL('/mail/compose', request.url));
+    return NextResponse.redirect(new URL('/mail/create', request.url));
   }
 
   // Redirect to compose with the draft ID
-  return NextResponse.redirect(new URL(`/mail/compose?draftId=${draftId}`, request.url));
+  return NextResponse.redirect(new URL(`/mail/create?draftId=${draftId}`, request.url));
 } 
