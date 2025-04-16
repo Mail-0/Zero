@@ -5,8 +5,16 @@ import Navbar from '@/components/home/navbar';
 import Footer from '@/components/home/footer';
 import Hero from '@/components/home/hero';
 import { Suspense } from 'react';
+import { createFeatureGate } from '@/lib/flags';
 
-export default function Home() {
+export default async function Home() {
+  const isPrimaryLanding = await createFeatureGate("landing_title")();
+  const title = isPrimaryLanding ? <p className="text-center text-4xl font-semibold leading-tight tracking-[-0.03em] text-gray-900 sm:text-6xl md:px-0 dark:text-white">
+    open source <span className='font-normal italic'>Gmail</span> alternative
+  </p> : <p className="text-center text-4xl font-semibold leading-tight tracking-[-0.03em] text-gray-900 sm:text-6xl md:px-0 dark:text-white">
+    <span className='font-normal italic'>Gmail</span>, but better.
+  </p>;
+
   return (
     <div className="relative h-screen min-h-screen w-full overflow-auto bg-white dark:bg-black">
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -16,7 +24,7 @@ export default function Home() {
         <Suspense fallback={<Skeleton />}>
           <Navbar />
         </Suspense>
-        <Hero />
+        <Hero title={title} />
         <div className="container mx-auto mt-3 hidden md:block">
           <Suspense fallback={<Skeleton />}>
             <DemoMailLayout />

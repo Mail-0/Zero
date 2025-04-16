@@ -29,13 +29,19 @@ export const getMails = async ({
   }
 };
 
-export const getMail = async ({ id }: { id: string }) => {
+export const getMail = async ({ id }: { id: string }): Promise<ParsedMessage[]> => {
   if (!id) {
     throw new Error('Missing required fields');
   }
   try {
     const driver = await getActiveDriver();
-    return await driver.get(id);
+    const mailData = await driver.get(id);
+
+    if (!mailData) {
+      throw new Error('Mail data not found');
+    }
+
+    return mailData;
   } catch (error) {
     if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection();
     console.error('Error getting mail:', error);

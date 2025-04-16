@@ -164,6 +164,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
 
     return {
       id: id || 'ERROR',
+      bcc: [],
       threadId: threadId || '',
       title: snippet ? he.decode(snippet).trim() : 'ERROR',
       tls: wasSentWithTLS(receivedHeaders) || !!hasTLSReport,
@@ -340,13 +341,13 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
   const normalizeSearch = (folder: string, q: string) => {
     // Handle special folders
     if (folder === 'bin') {
-      return { folder: undefined, q: `in:trash ${q}` };
+      return { folder: undefined, q: `in:trash` };
     }
     if (folder === 'archive') {
-      return { folder: undefined, q: `in:archive ${q}` };
+      return { folder: undefined, q: `in:archive` };
     }
     if (folder !== 'inbox') {
-      return { folder, q: `` };
+      return { folder, q: `in:${folder}` };
     }
     // Return the query as-is to preserve Gmail's native search syntax
     return { folder, q };
@@ -479,10 +480,11 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       const { folder: normalizedFolder, q: normalizedQ } = normalizeSearch(folder, q ?? '');
       const labelIds = [..._labelIds];
       if (normalizedFolder) labelIds.push(normalizedFolder.toUpperCase());
+
       const res = await gmail.users.threads.list({
         userId: 'me',
         q: normalizedQ ? normalizedQ : undefined,
-        labelIds,
+        labelIds: folder === 'inbox' ? labelIds : [],
         maxResults,
         pageToken: pageToken ? pageToken : undefined,
       });

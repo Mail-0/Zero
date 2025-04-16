@@ -182,7 +182,6 @@ function NavItem(item: NavItemProps & { href: string }) {
 	const iconRef = useRef<IconRefType>(null);
 	const { data: stats } = useStats();
 	const t = useTranslations();
-	const [, clearBulkSelection] = useAtom(clearBulkSelectionAtom);
 
   if (item.disabled) {
     return (
@@ -233,7 +232,7 @@ function NavItem(item: NavItemProps & { href: string }) {
   return (
     <Collapsible defaultOpen={item.isActive}>
       <CollapsibleTrigger asChild>
-        <Link {...linkProps} target={item.target}>{buttonContent}</Link>
+        <Link {...linkProps} prefetch target={item.target}>{buttonContent}</Link>
       </CollapsibleTrigger>
     </Collapsible>
   );

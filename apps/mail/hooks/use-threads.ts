@@ -8,6 +8,7 @@ import useSWRInfinite from 'swr/infinite';
 import useSWR, { preload } from 'swr';
 import { useMemo } from 'react';
 import axios from 'axios';
+import { useQueryState } from 'nuqs';
 
 export const preloadThread = async (userId: string, threadId: string, connectionId: string) => {
   console.log(`🔄 Prefetching email ${threadId}...`);
@@ -99,7 +100,7 @@ export const useThreads = () => {
   );
 
   // Flatten threads from all pages and sort by receivedOn date (newest first)
-  const threads = useMemo(() => (data ? data.flatMap((e) => e.threads) : []), [data]);
+  const threads = useMemo(() => (data ? data.flatMap((e) => e.threads) : []), [data, session]);
   const isEmpty = useMemo(() => threads.length === 0, [threads]);
   const isReachingEnd = isEmpty || (data && !data[data.length - 1]?.nextPageToken);
   const loadMore = async () => {
@@ -123,8 +124,8 @@ export const useThreads = () => {
 
 export const useThread = (threadId: string | null) => {
   const { data: session } = useSession();
-  const searchParams = useSearchParams();
-  const id = threadId ? threadId : searchParams.get('threadId');
+  const [_threadId] = useQueryState('threadId');
+  const id = threadId ? threadId : _threadId
 
   const { data, isLoading, error, mutate } = useSWR<ParsedMessage[]>(
     session?.user.id && id ? [session.user.id, id, session.connectionId] : null,

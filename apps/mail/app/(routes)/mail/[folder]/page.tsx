@@ -14,7 +14,7 @@ interface MailPageProps {
 
 const ALLOWED_FOLDERS = ['inbox', 'draft', 'sent', 'spam', 'bin', 'archive'];
 
-export default async function MailPage({ params, searchParams }: MailPageProps) {
+export default async function MailPage({ params }: MailPageProps) {
   const headersList = await headers();
   const session = await auth.api.getSession({ headers: headersList });
 

@@ -16,7 +16,7 @@ import { type ComponentProps, memo, useCallback, useEffect, useMemo, useRef } fr
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { EmptyState, type FolderType } from '@/components/mail/empty-state';
 import { ThreadContextMenu } from '@/components/context/thread-context';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { cn, FOLDERS, formatDate, getEmailLogo } from '@/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
 import { useMailNavigation } from '@/hooks/use-mail-navigation';
@@ -84,17 +84,17 @@ const Thread = memo(
     const [mail] = useMail();
     const [searchValue] = useSearchValue();
     const t = useTranslations();
-    const searchParams = useSearchParams();
     const { folder } = useParams<{ folder: string }>();
     const { mutate } = useThreads();
-    const threadIdParam = searchParams.get('threadId');
+    const [threadId, setThreadId] = useQueryState('threadId');
     const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     const isHovering = useRef<boolean>(false);
     const hasPrefetched = useRef<boolean>(false);
     const isMailSelected = useMemo(() => {
-      const threadId = message.threadId ?? message.id;
-      return threadId === threadIdParam || threadId === mail.selected;
-    }, [message.id, message.threadId, threadIdParam, mail.selected]);
+      if (!threadId) return false;
+      const _threadId = message.threadId ?? message.id;
+      return _threadId === threadId || threadId === mail.selected;
+    }, [threadId, message.id, message.threadId, mail.selected]);
 
     const isMailBulkSelected = mail.bulkSelected.includes(message.threadId ?? message.id);
 
@@ -154,17 +154,15 @@ const Thread = memo(
       };
     }, []);
 
-    const content = (
-      <div className="p-1 px-3" onClick={onClick ? onClick(message) : undefined}>
-        {demo ? (
-          <div
+    const demoContent = <div className="p-1 px-3" onClick={onClick ? onClick(message) : undefined}>
+      <div
             data-thread-id={message.threadId ?? message.id}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             key={message.threadId ?? message.id}
             className={cn(
               'hover:bg-offsetLight hover:bg-primary/5 group relative flex cursor-pointer flex-col items-start overflow-clip rounded-lg border border-transparent px-4 py-3 text-left text-sm transition-all hover:opacity-100',
-              isMailSelected || (!message.unread && 'opacity-50'),
+              isMailSelected || (!message.unread && 'opacity-80'),
               (isMailSelected || isMailBulkSelected || isKeyboardFocused) &&
                 'border-border bg-primary/5 opacity-100',
               isKeyboardFocused && 'ring-primary/50 ring-2',
@@ -196,7 +194,7 @@ const Thread = memo(
                           'text-md flex items-baseline gap-1 group-hover:opacity-100',
                         )}
                       >
-                        <span className={cn(threadIdParam ? 'max-w-[3ch] truncate' : '')}>
+                    <span className={cn(threadId ? 'max-w-[3ch] truncate' : '')}>
                           {highlightText(message.sender.name, searchValue.highlight)}
                         </span>{' '}
                         {message.unread && !isMailSelected ? (
@@ -231,11 +229,6 @@ const Thread = memo(
                   <p
                     className={cn(
                       'mt-1 line-clamp-1 text-xs opacity-70 transition-opacity',
-                      mail.selected
-                        ? 'max-w-[3ch] overflow-hidden text-ellipsis whitespace-nowrap'
-                        : 'line-clamp-2',
-                      isMailSelected &&
-                        'max-w-[3ch] overflow-hidden text-ellipsis whitespace-nowrap opacity-100',
                     )}
                   >
                     {highlightText(message.subject, searchValue.highlight)}
@@ -243,8 +236,11 @@ const Thread = memo(
                 </div>
               </div>
             </div>
-          </div>
-        ) : (
+      </div>
+    </div>
+
+    const content = (
+      <div className="p-1 px-3" onClick={onClick ? onClick(message) : undefined}>
           <div
             data-thread-id={message.threadId ?? message.id}
             onMouseEnter={handleMouseEnter}
@@ -252,7 +248,7 @@ const Thread = memo(
             key={message.threadId ?? message.id}
             className={cn(
               'hover:bg-offsetLight hover:bg-primary/5 group relative flex cursor-pointer flex-col items-start overflow-clip rounded-lg border border-transparent px-4 py-3 text-left text-sm transition-all hover:opacity-100',
-              isMailSelected || (!message.unread && 'opacity-50'),
+              (isMailSelected || !message.unread && !['sent', 'archive', 'bin'].includes(folder)) && 'dark:opacity-50 opacity-80 dark:hover:opacity-80',
               (isMailSelected || isMailBulkSelected || isKeyboardFocused) &&
                 'border-border bg-primary/5 opacity-100',
               isKeyboardFocused && 'ring-primary/50 ring-2',
@@ -285,7 +281,7 @@ const Thread = memo(
                         )}
                       >
                         <span
-                          className={cn('truncate', threadIdParam ? 'max-w-[20ch] truncate' : '')}
+                        className={cn('truncate', threadId ? 'max-w-[20ch] truncate' : '')}
                         >
                           {highlightText(message.sender.name, searchValue.highlight)}
                         </span>{' '}
@@ -326,12 +322,11 @@ const Thread = memo(
                 </div>
               </div>
             </div>
-          </div>
-        )}
+        </div>
       </div>
     );
 
-    return (
+    return demo ? demoContent : (
       <ThreadWrapper
         emailId={message.id}
         threadId={message.threadId ?? message.id}
@@ -382,7 +377,6 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
   const [mail, setMail] = useMail();
   const { data: session } = useSession();
   const t = useTranslations();
-  const searchParams = useSearchParams();
   const router = useRouter();
   const [threadId, setThreadId] = useQueryState('threadId');
   const [category, setCategory] = useQueryState('category');
@@ -423,7 +417,7 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
         folder: '',
       });
     }
-  }, [allCategories]); // Run only once on mount
+  }, [allCategories, category, shouldFilter, searchValue.value, setSearchValue]);
 
   // Add event listener for refresh
   useEffect(() => {
@@ -440,11 +434,9 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
 
   const handleNavigateToThread = useCallback(
     (threadId: string) => {
-      const currentParams = new URLSearchParams(searchParams.toString());
-      currentParams.set('threadId', threadId);
-      router.push(`/mail/${folder}?${currentParams.toString()}`);
+      setThreadId(threadId);
     },
-    [folder, router, searchParams],
+    [folder, router],
   );
 
   const {

@@ -1,61 +1,107 @@
 # Translation Guide for 0.email
 
-[![Crowdin](https://badges.crowdin.net/0email/localized.svg)](https://crowdin.com/project/0email)
+[![Localization](https://img.shields.io/badge/Localization-Lingo.dev-5fcc03)](https://lingo.dev)
 
-We use [Crowdin](https://crowdin.com/project/0email) to manage translations for 0.email. This document explains how you can contribute to translating the application into your language.
+We use [Lingo.dev](https://github.com/lingodotdev/lingo.dev) to manage translations for 0.email. This document explains how our translation workflow operates.
 
-## Getting Started
+## Overview
 
-1. Visit our [Crowdin project page](https://crowdin.com/project/0email)
-2. Create an account
-3. Choose your language from the list
-4. Click on "Join" to apply to the translation team
-5. In your application description, **include your Discord tag and the language(s) you want to help with** for communication and to be added to the translators community
-
-If the language you'd like to help with isn't listed, you can open an issue and mention [@needleXO](https://github.com/needleXO)
+Lingo.dev is an open-source CLI + AI Localization Engine that helps translate our product into multiple languages with great developer experience. It integrates directly with our development workflow through a CLI tool and GitHub Actions.
 
 ## Translation Process
 
-We will go through the process as soon as possible. Once you have been accepted, you should get a Direct Message from `@zerodotemail` on Discord
+Our translation process is fully automated:
 
-1. After your application is approved, you'll be able to see the files that need translation
-2. Select a file to start translating
-3. Translate the strings by filling in the target language field for each source string
-4. Save your translations
+1. Developers add or update content in the English source files (`en.json`)
+2. GitHub Actions automatically runs the Lingo.dev CLI on commits
+3. Lingo.dev's managed translation AI automatically generates translations for all target languages, taking into account translation memory and our product's context, configured in our Lingo.dev dashboard
+4. Updated translations are committed back to the repository
+
+## Our Configuration
+
+Here's an example of our i18n.json configuration:
+
+```json
+{
+  "$schema": "https://lingo.dev/schema/i18n.json",
+  "version": 1.5,
+  "locale": {
+    "source": "en",
+    "targets": ["ar", "de", "es", "fr", "hi"]
+  },
+  "buckets": {
+    "json": {
+      "include": ["apps/mail/locales/[locale].json"]
+    }
+  }
+}
+```
+
+## Adding a New Language
+
+To add support for a new language:
+
+1. Add the language code to the `targets` array in `i18n.json` in the project root
+2. Also add the language to the i18n config in `apps/mail/i18n/config.ts`
+3. The GitHub Action will automatically generate missing translations when you commit these changes
+
+## Automatic Translation of New Content
+
+When new phrases are added or updated in `en.json`, they will be automatically localized in all other languages through our GitHub Action workflow. The Lingo.dev CLI detects changes and only translates what's new or modified.
+
+## Updating Translations
+
+If you want to manually update a translation:
+
+1. Go to the non-English translation file (e.g., `es.json` for Spanish, `de.json` for German)
+2. Find the key you want to update and change its value
+3. Commit the change to the repository
+4. Lingo.dev will remember this override and reuse it for future translations
+
+Example:
+
+```json
+// Before manual update in de.json
+"welcomeMessage": "Willkommen bei 0.email"
+
+// After manual update in de.json
+"welcomeMessage": "Herzlich willkommen bei 0.email"
+```
+
+Your manual override will be preserved during future translation runs, and Lingo.dev will learn from these changes to improve future translations.
+
+## GitHub Actions Integration
+
+We use the Lingo.dev GitHub Action to automate translations in our CI/CD pipeline. The action is configured to:
+
+1. Run automatically on push to feature branches
+2. Generate translations for any new or modified content
+3. Commit the updated translation files back to the repository, via a PR
+
+This setup means developers only need to focus on maintaining the English source content. The translation process happens automatically in the background.
 
 ## Translation Guidelines
 
-### Maintaining Format Tags
+### Handling Variables and Formatting
 
-Our application uses React, which requires maintaining special tags and placeholders in translations:
+When updating translations manually, ensure:
 
-- **Do not modify variables** like `{count}`, `{language}`, or similar placeholders
-- **Preserve formatting tags** such as `<strong>`, `<em>`, etc.
-- **Keep plural forms** such as `{count, plural, =0 {files} one {file} other {files}}`
+- **Variables remain intact**: Placeholders like `{count}`, `{email}` must not be modified
+- **Formatting tags are preserved**: Tags like `<strong>`, `<em>` should remain in the translated text
+- **Plural forms are maintained**: Structures like `{count, plural, =0 {files} one {file} other {files}}` must keep their format
 
 ### Example Translation
 
-Here's an example from our English locale file:
+English source:
 
 ```json
 "attachmentCount": "{count, plural, =0 {attachments} one {attachment} other {attachments}}",
 ```
 
-In this example:
-- `{count}` is a variable that should not be translated
-- `plural` is a formatter that handles pluralization
-- The words inside `{}` should be translated, but the structure must remain intact
-
-### Testing Your Translations
-
-You can see your translations in context by:
-
-1. Making sure your translations are saved in Crowdin
-2. Waiting for the project maintainers to approve and merge the translations
-3. Testing the application in your language (follow the [Quick Start Guide](../README.md#quick-start-guide) to set up the app locally)
+The AI will translate only the words inside the curly braces while maintaining the structure.
 
 ## Need Help?
 
-If you have any questions about translation or encounter any issues, please [open an issue](https://github.com/Mail-0/Zero/issues) or join our [Discord server](https://discord.gg/NaK85MSzND)
+If you have questions about translation or encounter issues, please [open an issue](https://github.com/Mail-0/Zero/issues) or join our [Discord server](https://discord.gg/NaK85MSzND).
 
-Thank you for helping make 0.email accessible to users in your language! 
+Thank you for helping make 0.email accessible to users in your language!

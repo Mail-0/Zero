@@ -1,14 +1,19 @@
 'use client';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { UploadedFileIcon } from '@/components/create/uploaded-file-icon';
 import { generateHTML, generateJSON } from '@tiptap/core';
 import { useConnections } from '@/hooks/use-connections';
 import { createDraft, getDraft } from '@/actions/drafts';
 import { ArrowUpIcon, Paperclip, X } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 import { SidebarToggle } from '../ui/sidebar-toggle';
 import Paragraph from '@tiptap/extension-paragraph';
 import { useSettings } from '@/hooks/use-settings';
 import Document from '@tiptap/extension-document';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/lib/auth-client';
+import { truncateFileName } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 import { AIAssistant } from './ai-assistant';
 import { useTranslations } from 'next-intl';
 import { sendEmail } from '@/actions/send';
@@ -16,16 +21,11 @@ import Text from '@tiptap/extension-text';
 import Bold from '@tiptap/extension-bold';
 import { type JSONContent } from 'novel';
 import { useQueryState } from 'nuqs';
+import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import * as React from 'react';
 import Editor from './editor';
 import './prosemirror.css';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { UploadedFileIcon } from '@/components/create/uploaded-file-icon';
-import { Separator } from '@/components/ui/separator';
-import { Input } from '@/components/ui/input';
-import { Plus } from 'lucide-react';
-import { truncateFileName } from '@/lib/utils';
 
 const MAX_VISIBLE_ATTACHMENTS = 12;
 
@@ -158,6 +158,8 @@ export function CreateEmail({
   const toInputRef = React.useRef<HTMLInputElement>(null);
   const ccInputRef = React.useRef<HTMLInputElement>(null);
   const bccInputRef = React.useRef<HTMLInputElement>(null);
+  const subjectInputRef = React.useRef<HTMLInputElement>(null);
+
 
   // Remove auto-focus logic
   React.useEffect(() => {
@@ -206,6 +208,8 @@ export function CreateEmail({
       setEmailState([...emailState, trimmedEmail]);
       setInputState('');
       setHasUnsavedChanges(true);
+    } else {
+      toast.error(t('pages.createEmail.invalidEmail'));
     }
   };
 
@@ -272,8 +276,12 @@ export function CreateEmail({
       setIsLoading(true);
       await sendEmail({
         to: toEmails.map((email) => ({ email, name: email.split('@')[0] || email })),
-        cc: showCc ? ccEmails.map((email) => ({ email, name: email.split('@')[0] || email })) : undefined,
-        bcc: showBcc ? bccEmails.map((email) => ({ email, name: email.split('@')[0] || email })) : undefined,
+        cc: showCc
+          ? ccEmails.map((email) => ({ email, name: email.split('@')[0] || email }))
+          : undefined,
+        bcc: showBcc
+          ? bccEmails.map((email) => ({ email, name: email.split('@')[0] || email }))
+          : undefined,
         subject: subjectInput,
         message: messageContent,
         attachments: attachments,
@@ -405,7 +413,7 @@ export function CreateEmail({
 
       <div className="relative flex h-full flex-col">
         <div className="flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-[500px] space-y-12 px-4 pt-4 sm:max-w-[720px] md:px-2">
+          <div className="mx-auto w-full max-w-[500px] space-y-12 px-4 pt-4 sm:max-w-[720px] md:px-2 bg-sidebar rounded-lg">
             <div className="space-y-3 md:px-1">
               <div className="flex items-center">
                 <div className="text-muted-foreground w-20 flex-shrink-0 pr-3 text-right text-[1rem] font-[600] opacity-50 md:w-24">
@@ -435,14 +443,16 @@ export function CreateEmail({
                   ))}
                   <input
                     ref={toInputRef}
+                    autoFocus
                     disabled={isLoading}
                     type="text"
                     className="text-md relative left-[3px] min-w-[120px] flex-1 bg-transparent placeholder:text-[#616161] placeholder:opacity-50 focus:outline-none"
                     placeholder={toEmails.length ? '' : t('pages.createEmail.example')}
                     value={toInput}
                     onChange={(e) => handleEmailInputChange('to', e.target.value)}
+                    onBlur={() => handleAddEmail('to', toInput)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
+                      if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
                         handleAddEmail('to', toInput);
                       }
@@ -519,7 +529,7 @@ export function CreateEmail({
                       value={ccInput}
                       onChange={(e) => handleEmailInputChange('cc', e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
+                        if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault();
                           handleAddEmail('cc', ccInput);
                         }
@@ -565,7 +575,7 @@ export function CreateEmail({
                       value={bccInput}
                       onChange={(e) => handleEmailInputChange('bcc', e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
+                        if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault();
                           handleAddEmail('bcc', bccInput);
                         }
@@ -580,7 +590,7 @@ export function CreateEmail({
                   {t('common.searchBar.subject')}
                 </div>
                 <input
-                  ref={toInputRef}
+                  ref={subjectInputRef}
                   disabled={isLoading}
                   type="text"
                   className="text-md relative left-[7.5px] w-full bg-transparent placeholder:text-[#616161] placeholder:opacity-50 focus:outline-none"
@@ -613,6 +623,152 @@ export function CreateEmail({
                       onCommandEnter={handleSendEmail}
                     />
                   )}
+                  <div className='flex justify-between'>
+                    <div className="flex items-center gap-4">
+                      <div className="pb-2 pt-2">
+                        <AIAssistant
+                          currentContent={messageContent}
+                          subject={subjectInput}
+                          recipients={toEmails}
+                          userContext={{ name: userName, email: userEmail }}
+                          onContentGenerated={(jsonContent, newSubject) => {
+                            console.log('CreateEmail: Received AI-generated content', {
+                              jsonContentType: jsonContent.type,
+                              hasContent: Boolean(jsonContent.content),
+                              contentLength: jsonContent.content?.length || 0,
+                              newSubject: newSubject,
+                            });
+
+                            try {
+                              // Update the editor content with the AI-generated content
+                              setDefaultValue(jsonContent);
+
+                              // Extract and set the text content for validation purposes
+                              // This ensures the submit button is enabled immediately
+                              if (jsonContent.content && jsonContent.content.length > 0) {
+                                // Extract text content from JSON structure recursively
+                                const extractTextContent = (node: any): string => {
+                                  if (!node) return '';
+
+                                  if (node.text) return node.text;
+
+                                  if (node.content && Array.isArray(node.content)) {
+                                    return node.content.map(extractTextContent).join(' ');
+                                  }
+
+                                  return '';
+                                };
+
+                                // Process all content nodes
+                                const textContent = jsonContent.content
+                                  .map(extractTextContent)
+                                  .join('\n')
+                                  .trim();
+                                setMessageContent(textContent);
+                              }
+
+                              // Update the subject if provided
+                              if (newSubject && (!subjectInput || subjectInput.trim() === '')) {
+                                console.log('CreateEmail: Setting new subject from AI', newSubject);
+                                setSubjectInput(newSubject);
+                              }
+
+                              // Mark as having unsaved changes
+                              setHasUnsavedChanges(true);
+
+                              // Reset the editor to ensure it picks up the new content
+                              setResetEditorKey((prev) => prev + 1);
+
+                              console.log('CreateEmail: Successfully applied AI content');
+                            } catch (error) {
+                              console.error('CreateEmail: Error applying AI content', error);
+                              toast.error('Error applying AI content to your email. Please try again.');
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-3">
+                      {attachments.length > 0 && (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" className="flex items-center gap-2">
+                              <Paperclip className="h-4 w-4" />
+                              <span>
+                                {attachments.length}{' '}
+                                {t('common.replyCompose.attachmentCount', { count: attachments.length })}
+                              </span>
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-80 touch-auto" align="end">
+                            <div className="space-y-2">
+                              <div className="px-1">
+                                <h4 className="font-medium leading-none">
+                                  {t('common.replyCompose.attachments')}
+                                </h4>
+                                <p className="text-muted-foreground text-sm">
+                                  {attachments.length}{' '}
+                                  {t('common.replyCompose.fileCount', { count: attachments.length })}
+                                </p>
+                              </div>
+                              <Separator />
+                              <div className="h-[300px] touch-auto overflow-y-auto overscroll-contain px-1 py-1">
+                                <div className="grid grid-cols-2 gap-2">
+                                  {attachments.map((file, index) => (
+                                    <div
+                                      key={index}
+                                      className="group relative overflow-hidden rounded-md border"
+                                    >
+                                      <UploadedFileIcon
+                                        removeAttachment={removeAttachment}
+                                        index={index}
+                                        file={file}
+                                      />
+                                      <div className="bg-muted/10 p-2">
+                                        <p className="text-xs font-medium">
+                                          {truncateFileName(file.name, 20)}
+                                        </p>
+                                        <p className="text-muted-foreground text-xs">
+                                          {(file.size / (1024 * 1024)).toFixed(2)} MB
+                                        </p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      )}
+                      <div className="relative">
+                        <Input
+                          type="file"
+                          id="attachment-input"
+                          className="absolute h-full w-full cursor-pointer opacity-0"
+                          onChange={handleAttachment}
+                          multiple
+                          accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+                        />
+                        <Button
+                          variant="outline"
+                          className="rounded-full transition-transform cursor-pointer hover:bg-muted h-9 w-9 -ml-1"
+                          tabIndex={-1}
+                        >
+                          <Plus className='h-4 w-4 cursor-pointer' />
+                        </Button>
+                      </div>
+                      <Button
+                        variant="default"
+                        className="h-9 w-9 overflow-hidden rounded-full"
+                        onClick={handleSendEmail}
+                        disabled={
+                          isLoading || !toEmails.length || !messageContent.trim() || !subjectInput.trim()
+                        }
+                      >
+                        <ArrowUpIcon className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -620,144 +776,7 @@ export function CreateEmail({
         </div>
 
         <div className="bg-offsetLight dark:bg-offsetDark sticky bottom-0 left-0 right-0 mb-16 flex items-center justify-between p-4 pb-3 md:mb-0">
-          <div className="flex items-center gap-4">
-            <div className="mr-1 pb-2 pt-2">
-              <AIAssistant
-                currentContent={messageContent}
-                subject={subjectInput}
-                recipients={toEmails}
-                userContext={{ name: userName, email: userEmail }}
-                onContentGenerated={(jsonContent, newSubject) => {
-                  console.log('CreateEmail: Received AI-generated content', {
-                    jsonContentType: jsonContent.type,
-                    hasContent: Boolean(jsonContent.content),
-                    contentLength: jsonContent.content?.length || 0,
-                    newSubject: newSubject,
-                  });
 
-                  try {
-                    // Update the editor content with the AI-generated content
-                    setDefaultValue(jsonContent);
-
-                    // Extract and set the text content for validation purposes
-                    // This ensures the submit button is enabled immediately
-                    if (jsonContent.content && jsonContent.content.length > 0) {
-                      // Extract text content from JSON structure recursively
-                      const extractTextContent = (node: any): string => {
-                        if (!node) return '';
-
-                        if (node.text) return node.text;
-
-                        if (node.content && Array.isArray(node.content)) {
-                          return node.content.map(extractTextContent).join(' ');
-                        }
-
-                        return '';
-                      };
-
-                      // Process all content nodes
-                      const textContent = jsonContent.content
-                        .map(extractTextContent)
-                        .join('\n')
-                        .trim();
-                      setMessageContent(textContent);
-                    }
-
-                    // Update the subject if provided
-                    if (newSubject && (!subjectInput || subjectInput.trim() === '')) {
-                      console.log('CreateEmail: Setting new subject from AI', newSubject);
-                      setSubjectInput(newSubject);
-                    }
-
-                    // Mark as having unsaved changes
-                    setHasUnsavedChanges(true);
-
-                    // Reset the editor to ensure it picks up the new content
-                    setResetEditorKey((prev) => prev + 1);
-
-                    console.log('CreateEmail: Successfully applied AI content');
-                  } catch (error) {
-                    console.error('CreateEmail: Error applying AI content', error);
-                    toast.error('Error applying AI content to your email. Please try again.');
-                  }
-                }}
-              />
-            </div>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2">
-                  <Paperclip className="h-4 w-4" />
-                  <span>
-                    {attachments.length || 'no'}{' '}
-                    {t('common.replyCompose.attachmentCount', { count: attachments.length })}
-                  </span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80 touch-auto" align="start">
-                <div className="space-y-2">
-                  <div className="px-1">
-                    <h4 className="font-medium leading-none">
-                      {t('common.replyCompose.attachments')}
-                    </h4>
-                    <p className="text-muted-foreground text-sm">
-                      {attachments.length}{' '}
-                      {t('common.replyCompose.fileCount', { count: attachments.length })}
-                    </p>
-                  </div>
-                  <Separator />
-                  <div className="h-[300px] touch-auto overflow-y-auto overscroll-contain px-1 py-1">
-                    <div className="grid grid-cols-2 gap-2">
-                      {attachments.map((file, index) => (
-                        <div
-                          key={index}
-                          className="group relative overflow-hidden rounded-md border"
-                        >
-                          <UploadedFileIcon
-                            removeAttachment={removeAttachment}
-                            index={index}
-                            file={file}
-                          />
-                          <div className="bg-muted/10 p-2">
-                            <p className="text-xs font-medium">
-                              {truncateFileName(file.name, 20)}
-                            </p>
-                            <p className="text-muted-foreground text-xs">
-                              {(file.size / (1024 * 1024)).toFixed(2)} MB
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-            <div className='-left-5 relative group'>
-              <Input
-                type="file"
-                id="attachment-input"
-                className='w-10 opacity-0'
-                onChange={handleAttachment}
-                multiple
-                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
-              />
-              <Button variant={'outline'} size={'icon'} type='button' className='transition-transform group-hover:scale-90 scale-75 absolute top-0 left-0 rounded-full pointer-events-none'>
-                <Plus />
-              </Button>
-            </div>
-          </div>
-          <div className="flex justify-end gap-3">
-            <Button
-              variant="default"
-              className="h-9 w-9 overflow-hidden rounded-full"
-              onClick={handleSendEmail}
-              disabled={
-                isLoading || !toEmails.length || !messageContent.trim() || !subjectInput.trim()
-              }
-            >
-              <ArrowUpIcon className="h-4 w-4" />
-            </Button>
-          </div>
         </div>
       </div>
     </div>

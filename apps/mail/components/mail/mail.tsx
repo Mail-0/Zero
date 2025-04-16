@@ -42,7 +42,7 @@ import { useState, useCallback, useMemo, useEffect, useRef, memo } from 'react';
 import { ThreadDisplay, ThreadDemo } from '@/components/mail/thread-display';
 import { MailList, MailListDemo } from '@/components/mail/mail-list';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useMediaQuery } from '../../hooks/use-media-query';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useMail } from '@/components/mail/use-mail';
@@ -74,7 +74,7 @@ export function DemoMailLayout() {
   const isValidating = false;
   const isLoading = false;
   const isDesktop = true;
-  const threadIdParam = useQueryState('threadId');
+  const [threadIdParam] = useQueryState('threadId');
   const [activeCategory, setActiveCategory] = useState('Primary');
   const [filteredItems, setFilteredItems] = useState(items);
 
@@ -84,11 +84,11 @@ export function DemoMailLayout() {
   }, []);
 
   useEffect(() => {
-    if (activeCategory === 'Primary' || activeCategory === 'All Mail') {
+    if (activeCategory === 'All Mail') {
       setFilteredItems(items);
     } else {
       const categoryMap = {
-        Important: 'important',
+        Primary: 'important',
         Personal: 'personal',
         Updates: 'updates',
         Promotions: 'promotions',
@@ -250,10 +250,9 @@ export function MailLayout() {
 
   const [threadId, setThreadId] = useQueryState('threadId');
 
-  const handleClose = useCallback(() => {
+  const handleClose = () => {
     setThreadId(null);
-    router.push(`/mail/${folder}`);
-  }, [router, folder, setThreadId]);
+  }
 
   // Search bar is always visible now, no need for keyboard shortcuts to toggle it
   useHotKey('Esc', (event) => {
@@ -644,6 +643,14 @@ export const Categories = () => {
       colors:
         'border-0 text-red-800 bg-red-100 dark:bg-red-900/20 dark:text-red-500 dark:hover:bg-red-900/30',
     },
+    {
+      id: 'Unread',
+      name: t('common.mailCategories.unread'),
+      searchValue: 'is:unread',
+      icon: <MailOpen className="h-4 w-4" />,
+      colors:
+        'border-0 text-red-800 bg-red-100 dark:bg-red-900/20 dark:text-red-500 dark:hover:bg-red-900/30',
+    },
   ];
 };
 
@@ -723,15 +730,6 @@ function MailCategoryTabs({
   // Initialize with just the initialCategory or "Primary"
   const [activeCategory, setActiveCategory] = useState(initialCategory || 'Primary');
 
-  // Move localStorage logic to a useEffect
-  useEffect(() => {
-    // Check localStorage only after initial render
-    const savedCategory = localStorage.getItem('mailActiveCategory');
-    if (savedCategory) {
-      setActiveCategory(savedCategory);
-    }
-  }, [initialCategory]);
-
   const containerRef = useRef<HTMLDivElement>(null);
   const activeTabElementRef = useRef<HTMLButtonElement>(null);
 
@@ -756,6 +754,17 @@ function MailCategoryTabs({
       });
     }
   }, [activeCategory, setSearchValue, isLoading]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      setSearchValue({
+        value: '',
+        highlight: '',
+        folder: '',
+      });
+    };
+  }, [setSearchValue]);
 
   // Function to update clip path
   const updateClipPath = useCallback(() => {
@@ -811,7 +820,6 @@ function MailCategoryTabs({
                   data-tab={category.id}
                   onClick={() => {
                     setActiveCategory(category.id);
-                    localStorage.setItem('mailActiveCategory', category.id);
                   }}
                   className={cn(
                     'flex h-7 items-center gap-1.5 rounded-full px-2 text-xs font-medium transition-all duration-200',

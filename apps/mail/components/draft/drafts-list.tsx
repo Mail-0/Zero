@@ -17,6 +17,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'use-intl';
 import { Button } from '../ui/button';
 import { toast } from 'sonner';
+import { ChevronDown } from 'lucide-react';
 
 const Draft = ({ message, onClick }: ThreadProps) => {
   const [mail] = useMail();
@@ -32,7 +33,6 @@ const Draft = ({ message, onClick }: ThreadProps) => {
         key={message.id}
         className={cn(
           'hover:bg-offsetLight hover:bg-primary/5 group relative flex cursor-pointer flex-col items-start overflow-clip rounded-lg border border-transparent px-4 py-3 text-left text-sm transition-all hover:opacity-100',
-          !message.unread && 'opacity-50',
           (isMailSelected || isMailBulkSelected) && 'border-border bg-primary/5 opacity-100',
         )}
       >
@@ -379,10 +379,28 @@ export function DraftsList({ isCompact }: MailListProps) {
           {items.map((item, index) => {
             return rowRenderer({ index, data: item });
           })}
+          {items.length >= 9 && nextPageToken && (
+            <Button
+              variant={'ghost'}
+              className="w-full rounded-none"
+              onMouseDown={handleScroll}
+              disabled={isLoading || isValidating}
+            >
+              {isLoading || isValidating ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
+                  {t('common.actions.loading')}
+                </div>
+              ) : (
+                <>
+                  {t('common.mail.loadMore')} <ChevronDown />
+                </>
+              )}
+            </Button>
+          )}
         </ScrollArea>
       </div>
-      <Button onClick={handleScroll}>{t('common.mail.loadMore')}</Button>
-      <div className="w-full pt-2 text-center">
+      <div className="w-full pt-4 text-center">
         {isLoading || isValidating ? (
           <div className="text-center">
             <div className="mx-auto h-4 w-4 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />

@@ -40,7 +40,8 @@
       "trustSender": "送信者を信頼",
       "cancel": "キャンセル",
       "save": "保存",
-      "remove": "削除"
+      "remove": "削除",
+      "settings": "設定"
     },
     "themes": {
       "dark": "ダーク",
@@ -116,7 +117,8 @@
       "personal": "個人用",
       "updates": "更新",
       "promotions": "プロモーション",
-      "social": "ソーシャル"
+      "social": "ソーシャル",
+      "unread": "未読"
     },
     "replyCompose": {
       "replyTo": "次に返信",
@@ -134,6 +136,7 @@
       "from": "差出人",
       "to": "宛先",
       "cc": "Cc",
+      "bcc": "Bcc",
       "date": "日付",
       "mailedBy": "メール送信者",
       "signedBy": "署名済み",
@@ -263,7 +266,9 @@
       "labels": "ラベル",
       "createNewLabel": "新しいラベルを作成",
       "noLabelsAvailable": "利用可能なラベルがありません",
-      "loadMore": "さらに読み込む"
+      "loadMore": "さらに読み込む",
+      "imagesHidden": "セキュリティ上の理由により画像は非表示になっています",
+      "showImages": "画像を表示"
     },
     "units": {
       "mb": "{amount} MB"
@@ -315,7 +320,8 @@
         "languageChangedTo": "言語を {locale}に変更しました",
         "customPrompt": "カスタムAIプロンプト",
         "customPromptPlaceholder": "AIのカスタムプロンプトを入力...",
-        "customPromptDescription": "AIがメールの返信を書く方法をカスタマイズします。これはベースプロンプトに追加されます。"
+        "customPromptDescription": "AIがメールの返信を書く方法をカスタマイズします。これはベースプロンプトに追加されます。",
+        "noResultsFound": "結果が見つかりませんでした"
       },
       "connections": {
         "title": "メールの接続",
@@ -397,6 +403,7 @@
       }
     },
     "createEmail": {
+      "invalidEmail": "無効なメールアドレスです",
       "body": "本文",
       "example": "zero@0.email",
       "attachments": "添付ファイル",

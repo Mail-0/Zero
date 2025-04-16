@@ -4,7 +4,7 @@ import { Form, FormControl, FormField, FormItem } from '../ui/form';
 import { AnimatedNumber } from '../ui/animated-number';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Card, CardContent } from '../ui/card';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 import Balancer from 'react-wrap-balancer';
 import { useForm } from 'react-hook-form';
 import { GitHub } from '../icons/icons';
@@ -22,7 +22,7 @@ const betaSignupSchema = z.object({
   email: z.string().email().min(9),
 });
 
-export default function Hero() {
+export default function Hero({ title }: { title: ReactNode }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [signupCount, setSignupCount] = useState<number>(0);
@@ -87,9 +87,7 @@ export default function Hero() {
 
   return (
     <div className="animate-fade-in mx-auto w-full pt-20 md:px-0 md:pt-20">
-      <p className="text-center text-4xl font-semibold leading-tight tracking-[-0.03em] text-gray-900 sm:text-6xl md:px-0 dark:text-white">
-        The future of email is here
-      </p>
+      {title}
       <div className="mx-auto w-full max-w-4xl">
         <Balancer className="dark:text-shinyGray mx-auto mt-3 text-center text-[15px] leading-tight text-gray-600 sm:text-[22px]">
           Experience email the way you want with <span className="font-mono">0</span> – the first

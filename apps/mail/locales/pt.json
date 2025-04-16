@@ -40,7 +40,8 @@
       "trustSender": "Confiar no remetente",
       "cancel": "Cancelar",
       "save": "Salvar",
-      "remove": "Remover"
+      "remove": "Remover",
+      "settings": "Configurações"
     },
     "themes": {
       "dark": "Escuro",
@@ -116,7 +117,8 @@
       "personal": "Pessoal",
       "updates": "Atualizações",
       "promotions": "Promoções",
-      "social": "Social"
+      "social": "Social",
+      "unread": "Não lidos"
     },
     "replyCompose": {
       "replyTo": "Responder para",
@@ -134,6 +136,7 @@
       "from": "De",
       "to": "Para",
       "cc": "Cc",
+      "bcc": "Cco",
       "date": "Data",
       "mailedBy": "Enviado por",
       "signedBy": "Assinado por",
@@ -263,7 +266,9 @@
       "labels": "Etiquetas",
       "createNewLabel": "Criar nova etiqueta",
       "noLabelsAvailable": "Nenhuma etiqueta disponível",
-      "loadMore": "Carregar mais"
+      "loadMore": "Carregar mais",
+      "imagesHidden": "As imagens estão ocultas por motivos de segurança",
+      "showImages": "Mostrar imagens"
     },
     "units": {
       "mb": "{amount} MB"
@@ -315,7 +320,8 @@
         "languageChangedTo": "Idioma alterado para {locale}",
         "customPrompt": "Prompt personalizado de IA",
         "customPromptPlaceholder": "Digite seu prompt personalizado para a IA...",
-        "customPromptDescription": "Personalize como a IA escreve suas respostas de email. Isto será adicionado ao prompt base."
+        "customPromptDescription": "Personalize como a IA escreve suas respostas de email. Isto será adicionado ao prompt base.",
+        "noResultsFound": "Nenhum resultado encontrado"
       },
       "connections": {
         "title": "Conexões de E-mail",
@@ -397,6 +403,7 @@
       }
     },
     "createEmail": {
+      "invalidEmail": "Endereço de email inválido",
       "body": "Corpo",
       "example": "zero@0.email",
       "attachments": "Anexos",

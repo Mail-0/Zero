@@ -40,7 +40,8 @@
       "trustSender": "Gönderene Güven",
       "cancel": "İptal",
       "save": "Kaydet",
-      "remove": "Kaldır"
+      "remove": "Kaldır",
+      "settings": "Ayarlar"
     },
     "themes": {
       "dark": "Koyu",
@@ -116,7 +117,8 @@
       "personal": "Kişisel",
       "updates": "Güncellemeler",
       "promotions": "Tanıtımlar",
-      "social": "Sosyal Medya"
+      "social": "Sosyal Medya",
+      "unread": "Okunmamış"
     },
     "replyCompose": {
       "replyTo": "Yanıtla",
@@ -134,6 +136,7 @@
       "from": "Kimden",
       "to": "Kime",
       "cc": "Gönderilecek Kişiler",
+      "bcc": "Gizli Alıcı",
       "date": "Tarih",
       "mailedBy": "Gönderen",
       "signedBy": "İmzalayan",
@@ -263,7 +266,9 @@
       "labels": "Etiketler",
       "createNewLabel": "Yeni Etiket Oluştur",
       "noLabelsAvailable": "Etiket bulunmuyor",
-      "loadMore": "Daha fazla yükle"
+      "loadMore": "Daha fazla yükle",
+      "imagesHidden": "Görseller güvenlik nedeniyle gizlenmiştir",
+      "showImages": "Görselleri Göster"
     },
     "units": {
       "mb": "{amount} MB"
@@ -315,7 +320,8 @@
         "languageChangedTo": "Dil {locale} olarak değiştirildi",
         "customPrompt": "Özel Yapay Zeka Yönergesi",
         "customPromptPlaceholder": "Yapay zeka için özel yönergenizi girin...",
-        "customPromptDescription": "Yapay zekanın e-posta yanıtlarınızı nasıl yazacağını özelleştirin. Bu, temel yönergeye eklenecektir."
+        "customPromptDescription": "Yapay zekanın e-posta yanıtlarınızı nasıl yazacağını özelleştirin. Bu, temel yönergeye eklenecektir.",
+        "noResultsFound": "Sonuç bulunamadı"
       },
       "connections": {
         "title": "E-posta Bağlantıları",
@@ -397,6 +403,7 @@
       }
     },
     "createEmail": {
+      "invalidEmail": "Geçersiz e-posta adresi",
       "body": "İçerik",
       "example": "zero@0.email",
       "attachments": "Ekler",

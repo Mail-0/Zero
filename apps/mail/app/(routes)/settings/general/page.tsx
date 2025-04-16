@@ -43,11 +43,6 @@ const formSchema = z.object({
   externalImages: z.boolean(),
   customPrompt: z.string(),
   trustedSenders: z.string().array(),
-  signature: z.object({
-    enabled: z.boolean(),
-    content: z.string(),
-    includeByDefault: z.boolean(),
-  }),
 });
 
 const TimezoneSelect = memo(
@@ -137,17 +132,12 @@ export default function GeneralPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      language: locale as string,
+      language: locale,
       timezone: getBrowserTimezone(),
       dynamicContent: false,
       externalImages: true,
       customPrompt: '',
       trustedSenders: [],
-      signature: {
-        enabled: false,
-        content: '',
-        includeByDefault: true,
-      },
     },
   });
 
@@ -161,7 +151,6 @@ export default function GeneralPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSaving(true);
-
     try {
       await saveUserSettings(values);
       await mutate(values, { revalidate: false });
@@ -320,7 +309,7 @@ export default function GeneralPage() {
                   <FormControl>
                     <Textarea
                       placeholder={t('pages.settings.general.customPromptPlaceholder')}
-                      className="min-h-[350px]"
+                      className="min-h-[150px]"
                       {...field}
                     />
                   </FormControl>

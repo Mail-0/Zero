@@ -40,7 +40,8 @@
       "trustSender": "प्रेषक पर भरोसा करें",
       "cancel": "रद्द करें",
       "save": "सेव करें",
-      "remove": "हटाएँ"
+      "remove": "हटाएँ",
+      "settings": "सेटिंग्स"
     },
     "themes": {
       "dark": "काला",
@@ -116,7 +117,8 @@
       "personal": "पर्सनल",
       "updates": "अपडेट",
       "promotions": "प्रोमोशन",
-      "social": "सोशल"
+      "social": "सोशल",
+      "unread": "अपठित"
     },
     "replyCompose": {
       "replyTo": "जवाब दें",
@@ -134,6 +136,7 @@
       "from": "से",
       "to": "को",
       "cc": "सीसी",
+      "bcc": "बीसीसी",
       "date": "तारीख",
       "mailedBy": "द्वारा मेल किया गया",
       "signedBy": "द्वारा हस्ताक्षर किया गया",
@@ -263,7 +266,9 @@
       "labels": "लेबल",
       "createNewLabel": "नया लेबल बनाएं",
       "noLabelsAvailable": "कोई लेबल उपलब्ध नहीं",
-      "loadMore": "और लोड करें"
+      "loadMore": "और लोड करें",
+      "imagesHidden": "सुरक्षा कारणों से छवियां छिपाई गई हैं",
+      "showImages": "छवियां दिखाएं"
     },
     "units": {
       "mb": "{amount} MB"
@@ -315,7 +320,8 @@
         "languageChangedTo": "भाषा {locale} में बदल दी गई",
         "customPrompt": "कस्टम AI प्रॉम्प्ट",
         "customPromptPlaceholder": "AI के लिए अपना कस्टम प्रॉम्प्ट दर्ज करें...",
-        "customPromptDescription": "AI आपके ईमेल जवाब कैसे लिखता है, इसे अनुकूलित करें। यह आधार प्रॉम्प्ट में जोड़ा जाएगा।"
+        "customPromptDescription": "AI आपके ईमेल जवाब कैसे लिखता है, इसे अनुकूलित करें। यह आधार प्रॉम्प्ट में जोड़ा जाएगा।",
+        "noResultsFound": "कोई परिणाम नहीं मिला"
       },
       "connections": {
         "title": "ईमेल कनेक्शन्स",
@@ -397,6 +403,7 @@
       }
     },
     "createEmail": {
+      "invalidEmail": "अमान्य ईमेल पता",
       "body": "बॉडी",
       "example": "zero@0.email",
       "attachments": "अटैचमेंटस",
