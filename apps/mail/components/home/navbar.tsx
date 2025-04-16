@@ -73,7 +73,7 @@ export default function Navbar() {
         />
       </Link>
       {/* Mobile Navigation */}
-      {/* <div className="lg:hidden">
+      <div className="lg:hidden">
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild className="cursor-pointer">
             <Menu className="dark:hover:bg-accent h-9 w-9 rounded-md p-2 text-gray-800 hover:bg-gray-100 dark:text-white" />
@@ -106,13 +106,11 @@ export default function Navbar() {
             </div>
           </SheetContent>
         </Sheet>
-      </div> */}
+      </div>
 
-      {/* <>
-        <div className="hidden items-center gap-4 lg:flex">
-          {desktopNavContent()}
-        </div>
-      </> */}
+      <div className="hidden items-center gap-4 lg:flex">
+        {desktopNavContent()}
+      </div>
     </div>
   );
 }
