@@ -40,8 +40,7 @@
       "trustSender": "Trust Sender",
       "cancel": "Cancel",
       "save": "Save",
-      "remove": "Remove",
-      "settings": "Settings"
+      "remove": "Remove"
     },
     "themes": {
       "dark": "Dark",
@@ -117,8 +116,7 @@
       "personal": "Personal",
       "updates": "Updates",
       "promotions": "Promotions",
-      "social": "Social",
-      "unread": "Unread"
+      "social": "Social"
     },
     "replyCompose": {
       "replyTo": "Reply to",
@@ -403,7 +401,6 @@
       }
     },
     "createEmail": {
-      "invalidEmail": "Invalid email address",
       "body": "Body",
       "example": "zero@0.email",
       "attachments": "Attachments ({count})",

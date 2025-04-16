@@ -40,8 +40,7 @@
       "trustSender": "الوثوق بالمرسل",
       "cancel": "إلغاء",
       "save": "حفظ",
-      "remove": "إزالة",
-      "settings": "الإعدادات"
+      "remove": "إزالة"
     },
     "themes": {
       "dark": "داكن",
@@ -117,8 +116,7 @@
       "personal": "شخصي",
       "updates": "تحديثات",
       "promotions": "عروض",
-      "social": "اجتماعي",
-      "unread": "غير مقروءة"
+      "social": "اجتماعي"
     },
     "replyCompose": {
       "replyTo": "الرد على",
@@ -136,7 +134,6 @@
       "from": "من",
       "to": "إلى",
       "cc": "نسخة",
-      "bcc": "نسخة مخفية",
       "date": "التاريخ",
       "mailedBy": "مرسل بواسطة",
       "signedBy": "موقع بواسطة",
@@ -403,7 +400,6 @@
       }
     },
     "createEmail": {
-      "invalidEmail": "عنوان البريد الإلكتروني غير صالح",
       "body": "المحتوى",
       "example": "zero@0.email",
       "attachments": "المرفقات ({count})",

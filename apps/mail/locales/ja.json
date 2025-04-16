@@ -40,8 +40,7 @@
       "trustSender": "送信者を信頼",
       "cancel": "キャンセル",
       "save": "保存",
-      "remove": "削除",
-      "settings": "設定"
+      "remove": "削除"
     },
     "themes": {
       "dark": "ダーク",
@@ -117,8 +116,7 @@
       "personal": "個人用",
       "updates": "更新",
       "promotions": "プロモーション",
-      "social": "ソーシャル",
-      "unread": "未読"
+      "social": "ソーシャル"
     },
     "replyCompose": {
       "replyTo": "次に返信",
@@ -136,7 +134,6 @@
       "from": "差出人",
       "to": "宛先",
       "cc": "Cc",
-      "bcc": "Bcc",
       "date": "日付",
       "mailedBy": "メール送信者",
       "signedBy": "署名済み",
@@ -403,7 +400,6 @@
       }
     },
     "createEmail": {
-      "invalidEmail": "無効なメールアドレスです",
       "body": "本文",
       "example": "zero@0.email",
       "attachments": "添付ファイル",

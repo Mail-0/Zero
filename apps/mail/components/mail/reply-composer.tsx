@@ -788,15 +788,6 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
       },
     });
 
-    const handleAddEmail = (type: 'to' | 'cc' | 'bcc', value: string) => {
-      const trimmedEmail = value.trim().replace(/,$/, '');
-      const currentEmails = getValues(type);
-      if (trimmedEmail && !currentEmails.includes(trimmedEmail) && isValidEmail(trimmedEmail)) {
-        setValue(type, [...currentEmails, trimmedEmail]);
-        setValue(`${type}Input` as 'toInput' | 'ccInput' | 'bccInput', '');
-      }
-    };
-
     return (
       <div className="flex items-center gap-2">
         <div className="text-muted-foreground flex-shrink-0 text-right text-[1rem] opacity-50">
@@ -817,7 +808,6 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
             className="text-md relative left-[3px] min-w-[120px] flex-1 bg-transparent placeholder:text-[#616161] placeholder:opacity-50 focus:outline-none"
             placeholder={value.length ? '' : placeholder}
             {...rest}
-            onBlur={(e) => handleAddEmail('to', e.currentTarget.value)}
             onKeyDown={(e) => {
               const currentValue = e.currentTarget.value;
               if ((e.key === ',' || e.key === 'Enter' || e.key === ' ') && currentValue) {

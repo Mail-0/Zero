@@ -40,8 +40,7 @@
       "trustSender": "Доверять отправителю",
       "cancel": "Отменить",
       "save": "Сохранить",
-      "remove": "Удалить",
-      "settings": "Настройки"
+      "remove": "Удалить"
     },
     "themes": {
       "dark": "Тёмный",
@@ -117,8 +116,7 @@
       "personal": "Личные",
       "updates": "Обновления",
       "promotions": "Промо",
-      "social": "Социальные",
-      "unread": "Непрочитанные"
+      "social": "Социальные"
     },
     "replyCompose": {
       "replyTo": "Ответить",
@@ -136,7 +134,6 @@
       "from": "От",
       "to": "Кому",
       "cc": "Cc",
-      "bcc": "Скрытая копия",
       "date": "Дата",
       "mailedBy": "Отправитель",
       "signedBy": "Подписано",
@@ -403,7 +400,6 @@
       }
     },
     "createEmail": {
-      "invalidEmail": "Неверный адрес электронной почты",
       "body": "Текст письма",
       "example": "zero@0.email",
       "attachments": "Приложения",

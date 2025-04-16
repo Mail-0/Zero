@@ -9,6 +9,8 @@ type Config = {
   replyAllComposerOpen: boolean;
   forwardComposerOpen: boolean;
   showImages: boolean;
+  showCc: boolean;
+  showBcc: boolean;
 };
 
 const configAtom = atom<Config>({
@@ -18,6 +20,8 @@ const configAtom = atom<Config>({
   replyAllComposerOpen: false,
   forwardComposerOpen: false,
   showImages: false,
+  showCc: false,
+  showBcc: false,
 });
 
 export function useMail() {

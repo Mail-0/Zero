@@ -274,7 +274,7 @@ export function MailLayout() {
         // This ensures we don't keep the email content in the URL
         navigator.registerProtocolHandler(
           'mailto',
-          `${window.location.origin}/mail/compose/handle-mailto?mailto=%s`,
+          `${window.location.origin}/mail/create/handle-mailto?mailto=%s`,
         );
       } catch (error) {
         console.error('Failed to register protocol handler:', error);
@@ -640,14 +640,6 @@ export const Categories = () => {
       name: t('common.mailCategories.promotions'),
       searchValue: 'is:promotions',
       icon: <Tag className="h-4 w-4 rotate-90" />,
-      colors:
-        'border-0 text-red-800 bg-red-100 dark:bg-red-900/20 dark:text-red-500 dark:hover:bg-red-900/30',
-    },
-    {
-      id: 'Unread',
-      name: t('common.mailCategories.unread'),
-      searchValue: 'is:unread',
-      icon: <MailOpen className="h-4 w-4" />,
       colors:
         'border-0 text-red-800 bg-red-100 dark:bg-red-900/20 dark:text-red-500 dark:hover:bg-red-900/30',
     },

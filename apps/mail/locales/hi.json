@@ -40,8 +40,7 @@
       "trustSender": "प्रेषक पर भरोसा करें",
       "cancel": "रद्द करें",
       "save": "सेव करें",
-      "remove": "हटाएँ",
-      "settings": "सेटिंग्स"
+      "remove": "हटाएँ"
     },
     "themes": {
       "dark": "काला",
@@ -117,8 +116,7 @@
       "personal": "पर्सनल",
       "updates": "अपडेट",
       "promotions": "प्रोमोशन",
-      "social": "सोशल",
-      "unread": "अपठित"
+      "social": "सोशल"
     },
     "replyCompose": {
       "replyTo": "जवाब दें",
@@ -136,7 +134,6 @@
       "from": "से",
       "to": "को",
       "cc": "सीसी",
-      "bcc": "बीसीसी",
       "date": "तारीख",
       "mailedBy": "द्वारा मेल किया गया",
       "signedBy": "द्वारा हस्ताक्षर किया गया",
@@ -403,7 +400,6 @@
       }
     },
     "createEmail": {
-      "invalidEmail": "अमान्य ईमेल पता",
       "body": "बॉडी",
       "example": "zero@0.email",
       "attachments": "अटैचमेंटस",
