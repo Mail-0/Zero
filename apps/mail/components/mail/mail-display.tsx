@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
 import { getListUnsubscribeAction } from '@/lib/email-utils';
 import AttachmentsAccordion from './attachments-accordion';
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState, useRef } from 'react';
 import AttachmentDialog from './attachment-dialog';
 import { useSummary } from '@/hooks/use-summary';
 import { TextShimmer } from '../ui/text-shimmer';
@@ -50,10 +50,10 @@ const StreamingText = ({ text }: { text: string }) => {
           setIsComplete(true);
           clearInterval(interval);
         }
-      }, 40);
+      }, 20);
 
       return () => clearInterval(interval);
-    }, 2000);
+    }, 1000);
 
     return () => {
       clearTimeout(thinkingTimeout);
@@ -102,15 +102,16 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
     url: string;
   }>(null);
   const [openDetailsPopover, setOpenDetailsPopover] = useState<boolean>(false);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
   const t = useTranslations();
 
   const { data } = demo
     ? {
-        data: {
-          content:
-            'This email talks about how Zero Email is the future of email. It is a new way to send and receive emails that is more secure and private.',
-        },
-      }
+      data: {
+        content:
+          'This email talks about how Zero Email is the future of email. It is a new way to send and receive emails that is more secure and private.',
+      },
+    }
     : useSummary(emailData.id);
 
   useEffect(() => {
@@ -133,9 +134,9 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
     () =>
       emailData.listUnsubscribe
         ? getListUnsubscribeAction({
-            listUnsubscribe: emailData.listUnsubscribe,
-            listUnsubscribePost: emailData.listUnsubscribePost,
-          })
+          listUnsubscribe: emailData.listUnsubscribe,
+          listUnsubscribePost: emailData.listUnsubscribePost,
+        })
         : undefined,
     [emailData.listUnsubscribe, emailData.listUnsubscribePost],
   );
@@ -157,8 +158,8 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
   return (
     <div className={cn('relative flex-1 overflow-hidden')} id={`mail-${emailData.id}`}>
       <div className="relative h-full overflow-y-auto">
-        <div 
-          className="flex flex-col gap-4 p-4 pb-2 transition-all duration-200 cursor-pointer" 
+        <div
+          className="flex flex-col gap-4 p-4 pb-2 transition-all duration-200 cursor-pointer"
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
           <div className="flex items-start justify-between gap-4">
@@ -177,7 +178,7 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
                 <div className="flex items-center justify-start gap-2">
                   <span className="font-semibold">{emailData?.sender?.name}</span>
                   <span className="text-muted-foreground flex grow-0 items-center gap-2 text-sm">
-                      <span className="overflow-hidden text-ellipsis whitespace-nowrap min-w-0">{emailData?.sender?.email}</span>
+                    <span className="overflow-hidden text-ellipsis whitespace-nowrap min-w-0">{emailData?.sender?.email}</span>
 
                     {listUnsubscribeAction && (
                       <Dialog>
@@ -234,15 +235,20 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
                         className="h-auto p-0 text-xs underline hover:bg-transparent"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setOpenDetailsPopover(true);
+                          setOpenDetailsPopover(!openDetailsPopover);
                         }}
+                        ref={triggerRef}
                       >
                         {t('common.mailDisplay.details')}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
                       className="w-[420px] rounded-lg border p-3 shadow-lg"
-                      onBlur={() => setOpenDetailsPopover(false)}
+                      onBlur={(e) => {
+                        if (!triggerRef.current?.contains(e.relatedTarget)) {
+                          setOpenDetailsPopover(false);
+                        }
+                      }}
                     >
                       <div className="space-y-1 text-sm">
                         <div className="flex">
@@ -273,6 +279,16 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
                             </span>
                             <span className="text-muted-foreground ml-3">
                               {emailData?.cc?.map((t) => t.email).join(', ')}
+                            </span>
+                          </div>
+                        )}
+                        {emailData?.bcc && emailData.bcc.length > 0 && (
+                          <div className="flex">
+                            <span className="w-24 text-end text-gray-500">
+                              {t('common.mailDisplay.bcc')}:
+                            </span>
+                            <span className="text-muted-foreground ml-3">
+                              {emailData?.bcc?.map((t) => t.email).join(', ')}
                             </span>
                           </div>
                         )}
@@ -321,7 +337,12 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
               <div className='relative -top-1'>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button size={'icon'} variant="ghost" className="rounded-md">
+                    <Button
+                      size={'icon'}
+                      variant="ghost"
+                      className="rounded-md"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <Image
                         src="/ai.svg"
                         alt="logo"

@@ -65,7 +65,7 @@ export const GoldenTicketModal = () => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="">
+        <Button className="bg-subtleWhite dark:bg-subtleBlack hover:bg-subtleWhite dark:hover:bg-subtleBlack text-black dark:text-white">
           {state === 'collapsed' && !isMobile ? (
             <TicketIcon className="size-4" />
           ) : (

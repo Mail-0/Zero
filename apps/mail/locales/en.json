@@ -40,7 +40,8 @@
       "trustSender": "Trust Sender",
       "cancel": "Cancel",
       "save": "Save",
-      "remove": "Remove"
+      "remove": "Remove",
+      "settings": "Settings"
     },
     "themes": {
       "dark": "Dark",
@@ -116,7 +117,8 @@
       "personal": "Personal",
       "updates": "Updates",
       "promotions": "Promotions",
-      "social": "Social"
+      "social": "Social",
+      "unread": "Unread"
     },
     "replyCompose": {
       "replyTo": "Reply to",
@@ -134,6 +136,7 @@
       "from": "From",
       "to": "To",
       "cc": "Cc",
+      "bcc":"Bcc",
       "date": "Date",
       "mailedBy": "Mailed-By",
       "signedBy": "Signed-By",
@@ -400,6 +403,7 @@
       }
     },
     "createEmail": {
+      "invalidEmail": "Invalid email address",
       "body": "Body",
       "example": "zero@0.email",
       "attachments": "Attachments ({count})",

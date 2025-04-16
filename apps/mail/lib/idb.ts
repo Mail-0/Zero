@@ -1,5 +1,6 @@
 import type { Cache, State } from "swr";
 import Dexie from "dexie";
+import { InitialThread } from "@/types";
 
 interface CacheEntry {
   key: string;
@@ -21,7 +22,7 @@ class SWRDatabase extends Dexie {
 const db = new SWRDatabase();
 const ONE_DAY = 1000 * 60 * 60 * 24;
 
-export function dexieStorageProvider(): Cache & { clear: () => void } {
+export function dexieStorageProvider(): Cache & { clear: () => void; list: (prefix: string) => Promise<{ key: string, state: { data?: [{ threads: InitialThread[] }] } }[]> } {
   const memoryCache = new Map<string, State<any>>();
 
   db.cache
@@ -35,6 +36,10 @@ export function dexieStorageProvider(): Cache & { clear: () => void } {
   return {
     keys() {
       return memoryCache.keys();
+    },
+
+    list(prefix: string) {
+      return db.cache.where("key").startsWith(prefix).toArray();
     },
 
     get(key: string) {

@@ -6,6 +6,7 @@ import {
   LogIn,
   LogOut,
   MoonIcon,
+  Settings,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -29,6 +30,8 @@ import { type IConnection } from '@/types';
 import { useTheme } from 'next-themes';
 import { toast } from 'sonner';
 import { dexieStorageProvider } from '@/lib/idb';
+import { usePathname, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
 export function NavUser() {
   const { data: session, refetch } = useSession();
@@ -37,6 +40,22 @@ export function NavUser() {
   const [isRendered, setIsRendered] = useState(false);
   const { theme, resolvedTheme, setTheme } = useTheme();
   const t = useTranslations();
+
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const getSettingsHref = useCallback(() => {
+    // Get the current category parameter if it exists
+    const category = searchParams.get('category');
+
+    // Construct the current path with category if present
+    const currentPath = category
+      ? `${pathname}?category=${encodeURIComponent(category)}`
+      : pathname;
+
+    // Return settings URL with the current path as 'from' parameter
+    return `/settings/general?from=${encodeURIComponent(currentPath)}`;
+  }, [pathname, searchParams]);
 
   const handleClearCache = useCallback(async () => {
     dexieStorageProvider().clear();
@@ -70,7 +89,6 @@ export function NavUser() {
   if (!isRendered) return null;
 
   const handleAccountSwitch = (connection: IConnection) => async () => {
-    router.push('/mail/inbox'); // this is temp, its not good. bad. we change later.
     await putConnection(connection.id);
     refetch();
     mutate();
@@ -226,6 +244,14 @@ export function NavUser() {
                   <p className="text-[13px] opacity-60">{t('common.navUser.appTheme')}</p>
                 </div>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href={getSettingsHref()} className="cursor-pointer">
+                  <div className="flex items-center gap-2">
+                    <Settings size={16} className="opacity-60" />
+                    <p className="text-[13px] opacity-60">{t('common.actions.settings')}</p>
+                  </div>
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem>
                 <a href="https://discord.gg/0email" target="_blank" className="w-full">
                   <div className="flex items-center gap-2">
@@ -240,6 +266,7 @@ export function NavUser() {
                   <p className="text-[13px] opacity-60">{t('common.actions.logout')}</p>
                 </div>
               </DropdownMenuItem>
+
             </>
           ) : (
             <>

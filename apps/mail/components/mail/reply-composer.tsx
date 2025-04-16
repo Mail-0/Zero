@@ -234,14 +234,14 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
   const ccEmails = watch('cc');
   const bccEmails = watch('bcc');
 
-  const handleAddEmail = (type: 'to' | 'cc' | 'bcc', value: string) => {
-    const trimmedEmail = value.trim().replace(/,$/, '');
-    const currentEmails = getValues(type);
-    if (trimmedEmail && !currentEmails.includes(trimmedEmail) && isValidEmail(trimmedEmail)) {
-      setValue(type, [...currentEmails, trimmedEmail]);
-      setValue(`${type}Input`, '');
-    }
-  };
+  // const handleAddEmail = (type: 'to' | 'cc' | 'bcc', value: string) => {
+  //   const trimmedEmail = value.trim().replace(/,$/, '');
+  //   const currentEmails = getValues(type);
+  //   if (trimmedEmail && !currentEmails.includes(trimmedEmail) && isValidEmail(trimmedEmail)) {
+  //     setValue(type, [...currentEmails, trimmedEmail]);
+  //     setValue(`${type}Input`, '');
+  //   }
+  // };
 
   const handleSendEmail = async (e?: React.MouseEvent<HTMLButtonElement>) => {
     if (e) {
@@ -275,16 +275,16 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
 
       const ccRecipients: Sender[] | undefined = showCc
         ? ccEmails.map((email) => ({
-            email,
-            name: email.split('@')[0] || 'User',
-          }))
+          email,
+          name: email.split('@')[0] || 'User',
+        }))
         : undefined;
 
       const bccRecipients: Sender[] | undefined = showBcc
         ? bccEmails.map((email) => ({
-            email,
-            name: email.split('@')[0] || 'User',
-          }))
+          email,
+          name: email.split('@')[0] || 'User',
+        }))
         : undefined;
 
       const messageId = originalEmail.messageId;
@@ -497,15 +497,15 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
   const isMessageEmpty =
     !getValues('messageContent') ||
     getValues('messageContent') ===
-      JSON.stringify({
-        type: 'doc',
-        content: [
-          {
-            type: 'paragraph',
-            content: [],
-          },
-        ],
-      });
+    JSON.stringify({
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [],
+        },
+      ],
+    });
 
   // Check if form is valid for submission
   const isFormValid = !isMessageEmpty || attachments.length > 0;
@@ -701,7 +701,7 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
               </span>
             </div>
           </div>
-          
+
           <RecipientInput
             type="to"
             value={toEmails}
@@ -711,7 +711,7 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
             }}
             placeholder={t('pages.createEmail.example')}
           />
-          
+
           {showCc && (
             <RecipientInput
               type="cc"
@@ -724,7 +724,7 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
               inputRef={ccInputRef}
             />
           )}
-          
+
           {showBcc && (
             <RecipientInput
               type="bcc"
@@ -788,6 +788,15 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
       },
     });
 
+    const handleAddEmail = (type: 'to' | 'cc' | 'bcc', value: string) => {
+      const trimmedEmail = value.trim().replace(/,$/, '');
+      const currentEmails = getValues(type);
+      if (trimmedEmail && !currentEmails.includes(trimmedEmail) && isValidEmail(trimmedEmail)) {
+        setValue(type, [...currentEmails, trimmedEmail]);
+        setValue(`${type}Input` as 'toInput' | 'ccInput' | 'bccInput', '');
+      }
+    };
+
     return (
       <div className="flex items-center gap-2">
         <div className="text-muted-foreground flex-shrink-0 text-right text-[1rem] opacity-50">
@@ -808,6 +817,7 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
             className="text-md relative left-[3px] min-w-[120px] flex-1 bg-transparent placeholder:text-[#616161] placeholder:opacity-50 focus:outline-none"
             placeholder={value.length ? '' : placeholder}
             {...rest}
+            onBlur={(e) => handleAddEmail('to', e.currentTarget.value)}
             onKeyDown={(e) => {
               const currentValue = e.currentTarget.value;
               if ((e.key === ',' || e.key === 'Enter' || e.key === ' ') && currentValue) {
@@ -1026,7 +1036,10 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setShowCc(true);
+                setShowCc(!showCc);
+                if (showCc) {
+                  setValue('cc', []);
+                }
                 setIsEditingRecipients(true);
                 setTimeout(() => {
                   ccInputRef.current?.focus();
@@ -1034,7 +1047,7 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
               }}
               className="text-xs"
             >
-              Add Cc
+              {showCc ? 'Remove Cc' : 'Add Cc'}
             </Button>
             <Button
               type="button"
@@ -1043,7 +1056,10 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setShowBcc(true);
+                setShowBcc(!showBcc);
+                if (showBcc) {
+                  setValue('bcc', []);
+                }
                 setIsEditingRecipients(true);
                 setTimeout(() => {
                   bccInputRef.current?.focus();
@@ -1051,7 +1067,7 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
               }}
               className="text-xs"
             >
-              Add Bcc
+              {showBcc ? 'Remove Bcc' : 'Add Bcc'}
             </Button>
             <CloseButton onClick={toggleComposer} />
           </div>

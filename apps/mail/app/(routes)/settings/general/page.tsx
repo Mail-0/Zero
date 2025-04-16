@@ -176,7 +176,6 @@ export default function GeneralPage() {
 
   return (
     <div className="grid gap-6">
-      {JSON.stringify(form.formState.errors)}
       <SettingsCard
         title={t('pages.settings.general.title')}
         description={t('pages.settings.general.description')}

@@ -9,7 +9,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import React, { useMemo, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { useStats } from '@/hooks/use-stats';
-import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { FOLDERS } from '@/lib/utils';
 import { NavMain } from './nav-main';
@@ -125,7 +124,7 @@ function ComposeButton() {
   return (
     <Button
       asChild
-      className="bg-secondary bg-subtleWhite text-primary hover:bg-subtleWhite dark:bg-subtleBlack dark:hover:bg-subtleBlack relative isolate mt-1 h-8 w-[calc(100%)] overflow-hidden whitespace-nowrap shadow-inner"
+      className="bg-secondary bg-black text-primary hover:bg-black/80 dark:bg-white dark:hover:bg-white/80 relative isolate mt-1 h-8 w-[calc(100%)] overflow-hidden whitespace-nowrap shadow-inner text-white dark:text-black"
       onMouseEnter={() => () => iconRef.current?.startAnimation?.()}
       onMouseLeave={() => () => iconRef.current?.stopAnimation?.()}
     >

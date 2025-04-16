@@ -81,13 +81,13 @@ export const navigationConfig: Record<string, NavConfig> = {
             icon: DeleteIcon,
             disabled: false,
           },
-          {
-            id: 'settings',
-            title: 'navigation.sidebar.settings',
-            url: '/settings/general',
-            icon: SettingsGearIcon,
-            isSettingsButton: true,
-          },
+          // {
+          //   id: 'settings',
+          //   title: 'navigation.sidebar.settings',
+          //   url: '/settings/general',
+          //   icon: SettingsGearIcon,
+          //   isSettingsButton: true,
+          // },
           {
             id: 'feedback',
             title: 'navigation.sidebar.feedback',

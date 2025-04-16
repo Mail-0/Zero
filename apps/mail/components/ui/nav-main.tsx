@@ -85,13 +85,13 @@ export function NavMain({ items }: NavMainProps) {
       const category = searchParams.get('category');
 
       // Handle settings navigation
-      if (item.isSettingsButton) {
+      // if (item.isSettingsButton) {
         // Include current path with category query parameter if present
-        const currentPath = category
-          ? `${pathname}?category=${encodeURIComponent(category)}`
-          : pathname;
-        return `${item.url}?from=${encodeURIComponent(currentPath)}`;
-      }
+      //   const currentPath = category
+      //     ? `${pathname}?category=${encodeURIComponent(category)}`
+      //     : pathname;
+      //   return `${item.url}?from=${encodeURIComponent(currentPath)}`;
+      // }
 
       // Handle back button with redirect protection
       if (item.isBackButton) {
@@ -232,7 +232,7 @@ function NavItem(item: NavItemProps & { href: string }) {
   return (
     <Collapsible defaultOpen={item.isActive}>
       <CollapsibleTrigger asChild>
-        <Link {...linkProps} target={item.target}>{buttonContent}</Link>
+        <Link {...linkProps} prefetch target={item.target}>{buttonContent}</Link>
       </CollapsibleTrigger>
     </Collapsible>
   );
