@@ -17,7 +17,6 @@ import Link from 'next/link';
 import axios from 'axios';
 import { z } from 'zod';
 import { useSession } from '@/lib/auth-client';
-import { GithubIcon } from 'lucide-react';
 
 const betaSignupSchema = z.object({
   email: z.string().email().min(9),
