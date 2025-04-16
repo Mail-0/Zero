@@ -103,6 +103,7 @@ export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [replyTo, setReplyTo] = useQueryState('replyTo');
+  const [forward, setForward] = useQueryState('forward');
   const [mail, setMail] = useMail();
   const t = useTranslations();
   const { mutate: mutateStats } = useStats();
@@ -337,29 +338,19 @@ export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
               icon={hasMultipleParticipants ? ReplyAll : Reply}
               label={hasMultipleParticipants ? t('common.threadDisplay.replyAll') : t('common.threadDisplay.reply')}
               disabled={!emailData}
-              className={cn(mail.replyAllComposerOpen || mail.replyComposerOpen && "bg-primary/10")}
               onClick={() => {
-                setMail((prev) => ({ 
-                  ...prev, 
-                  replyComposerOpen: hasMultipleParticipants ? false : true,
-                  replyAllComposerOpen: hasMultipleParticipants ? true : false,
-                  forwardComposerOpen: false 
-                }));
-                setReplyTo(null);
+                setReplyTo("all");
+                setForward(null);
               }}
             />
             <ThreadActionButton
               icon={Forward}
               label={t('common.threadDisplay.forward')}
               disabled={!emailData}
-              className={cn(mail.forwardComposerOpen && "bg-primary/10")}
+              className={cn(Boolean(forward) && "bg-primary/10")}
               onClick={() => {
-                setMail((prev) => ({ 
-                  ...prev, 
-                  replyComposerOpen: false,
-                  replyAllComposerOpen: false,
-                  forwardComposerOpen: true 
-                }));
+                setForward(emailData?.[emailData.length - 1]?.id ?? null);
+                setReplyTo(null);
               }}
             />
           </div>
@@ -408,7 +399,7 @@ export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
             isFullscreen ? 'mb-2' : ''
           )}>
             <ReplyCompose
-              mode={mail.forwardComposerOpen ? 'forward' : mail.replyAllComposerOpen ? 'replyAll' : 'reply'}
+              mode={forward ? 'forward' : replyTo === 'all' ? 'replyAll' : 'reply'}
             />
           </div>
         </div>

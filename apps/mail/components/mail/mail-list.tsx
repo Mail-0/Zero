@@ -380,6 +380,8 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
   const router = useRouter();
   const [threadId, setThreadId] = useQueryState('threadId');
   const [category, setCategory] = useQueryState('category');
+  const [replyTo, setReplyTo] = useQueryState('replyTo');
+  const [forward, setForward] = useQueryState('forward');
   const [searchValue, setSearchValue] = useSearchValue();
   const {
     data: { threads: items, nextPageToken },
@@ -569,11 +571,8 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
       const messageThreadId = message.threadId ?? message.id;
 
       // Update local state immediately for optimistic UI
-      setMail((prev) => ({
-        ...prev,
-        replyComposerOpen: false,
-        forwardComposerOpen: false,
-      }));
+      setReplyTo(null);
+      setForward(null);
 
       // Update URL param without navigation
       void setThreadId(messageThreadId);

@@ -99,6 +99,7 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
   const [unsubscribed, setUnsubscribed] = useState(false);
   const [isUnsubscribing, setIsUnsubscribing] = useState(false);
   const [replyTo, setReplyTo] = useQueryState('replyTo');
+  const [forward, setForward] = useQueryState('forward');
   const [selectedAttachment, setSelectedAttachment] = useState<null | {
     id: string;
     name: string;
@@ -345,13 +346,8 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
               onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setMail((prev) => ({ 
-                  ...prev, 
-                  forwardComposerOpen: false,
-                  replyComposerOpen: true,
-                  replyAllComposerOpen: false
-                }));
                 setReplyTo(emailData.id);
+                setForward(null);
               }}
             />
 
