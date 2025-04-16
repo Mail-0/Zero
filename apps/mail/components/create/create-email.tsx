@@ -17,6 +17,7 @@ import { truncateFileName } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { AIAssistant } from './ai-assistant';
 import { useTranslations } from 'next-intl';
+import ContactInput from './contact-input';
 import { sendEmail } from '@/actions/send';
 import Text from '@tiptap/extension-text';
 import Bold from '@tiptap/extension-bold';
@@ -62,19 +63,8 @@ export function CreateEmail({
   const [toEmails, setToEmails] = React.useState<string[]>(initialTo ? [initialTo] : []);
   const [toInput, setToInput] = React.useState('');
   const [selectedContactIndex, setSelectedContactIndex] = React.useState(0);
-  const contacts = useContacts();
-  const [ccInput, setCcInput] = React.useState('');
 
-  const filteredContacts = React.useMemo(() => {
-    if (!toInput) return [];
-    const searchTerm = toInput.toLowerCase();
-    return contacts.filter(
-      (contact) =>
-        (contact.email?.toLowerCase().includes(searchTerm) ||
-          contact.name?.toLowerCase().includes(searchTerm)) &&
-        !toEmails.includes(contact.email),
-    );
-  }, [contacts, toInput, toEmails]);
+  const [ccInput, setCcInput] = React.useState('');
 
   const [ccEmails, setCcEmails] = React.useState<string[]>([]);
   const [bccInput, setBccInput] = React.useState('');
@@ -433,85 +423,30 @@ export function CreateEmail({
                 <div className="text-muted-foreground w-20 flex-shrink-0 pr-3 text-right text-[1rem] font-[600] opacity-50 md:w-24">
                   {t('common.mailDisplay.to')}
                 </div>
-                <div className="group relative left-[2px] flex w-full flex-wrap items-center rounded-md border border-none bg-transparent p-1 transition-all focus-within:border-none focus:outline-none">
-                  {toEmails.map((email, index) => (
-                    <div
-                      key={index}
-                      className="bg-accent flex items-center gap-1 rounded-md border px-2 text-sm font-medium"
-                    >
-                      <span className="max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap">
-                        {email}
-                      </span>
-                      <button
-                        type="button"
-                        disabled={isLoading}
-                        className="text-muted-foreground hover:text-foreground ml-1 rounded-full"
-                        onClick={() => {
-                          setToEmails((emails) => emails.filter((_, i) => i !== index));
-                          setHasUnsavedChanges(true);
-                        }}
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
+                <div className="flex flex-1 items-start">
                   <div className="relative flex-1">
-                    <input
-                      ref={toInputRef}
-                      disabled={isLoading}
-                      type="text"
-                      className="text-md relative left-[3px] w-full min-w-[120px] bg-transparent placeholder:text-[#616161] placeholder:opacity-50 focus:outline-none"
-                      placeholder={toEmails.length ? '' : t('pages.createEmail.example')}
-                      value={toInput}
-                      onChange={(e) => handleEmailInputChange('to', e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          if (filteredContacts.length > 0) {
-                            const selectedEmail = filteredContacts[selectedContactIndex]?.email;
-                            if (selectedEmail) handleAddEmail('to', selectedEmail);
-                            setSelectedContactIndex(0);
-                          } else {
-                            handleAddEmail('to', toInput);
-                          }
-                        } else if (e.key === 'ArrowDown' && filteredContacts.length > 0) {
-                          e.preventDefault();
-                          setSelectedContactIndex((prev) =>
-                            Math.min(prev + 1, filteredContacts.length - 1),
-                          );
-                        } else if (e.key === 'ArrowUp' && filteredContacts.length > 0) {
-                          e.preventDefault();
-                          setSelectedContactIndex((prev) => Math.max(prev - 1, 0));
-                        }
-                      }}
+                    <ContactInput
+                      type="to"
+                      emails={toEmails}
+                      setEmails={setToEmails}
+                      input={toInput}
+                      setInput={setToInput}
+                      selectedContactIndex={selectedContactIndex}
+                      setSelectedContactIndex={setSelectedContactIndex}
+                      isLoading={isLoading}
+                      handleEmailInputChange={handleEmailInputChange}
+                      handleAddEmail={handleAddEmail}
+                      inputRef={toInputRef}
+                      setHasUnsavedChanges={setHasUnsavedChanges}
                     />
-                    {toInput && filteredContacts.length > 0 && (
-                      <div className="bg-background absolute left-0 top-full z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border shadow-lg">
-                        {filteredContacts.map((contact, index) => (
-                          <button
-                            key={contact.email}
-                            className={`w-full px-3 py-2 text-left text-sm ${selectedContactIndex === index ? 'bg-accent' : 'hover:bg-accent/50'}`}
-                            onClick={() => {
-                              handleAddEmail('to', contact.email);
-                              setSelectedContactIndex(0);
-                            }}
-                          >
-                            <div className="font-medium">{contact.name || contact.email}</div>
-                            {contact.name && (
-                              <div className="text-muted-foreground text-xs">{contact.email}</div>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    )}
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 self-center">
                     <Button
                       tabIndex={-1}
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="text-xs"
+                      className="text-muted-foreground hover:text-foreground h-6 px-2 text-xs"
                       onClick={() => {
                         setShowCc(!showCc);
                         if (!showCc) {
@@ -526,7 +461,7 @@ export function CreateEmail({
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="text-xs"
+                      className="text-muted-foreground hover:text-foreground h-6 px-2 text-xs"
                       onClick={() => {
                         setShowBcc(!showBcc);
                         if (!showBcc) {
@@ -545,44 +480,21 @@ export function CreateEmail({
                   <div className="text-muted-foreground w-20 flex-shrink-0 pr-3 text-right text-[1rem] font-[600] opacity-50 md:w-24">
                     Cc
                   </div>
-                  <div className="group relative left-[2px] flex w-full flex-wrap items-center rounded-md border border-none bg-transparent p-1 transition-all focus-within:border-none focus:outline-none">
-                    {ccEmails.map((email, index) => (
-                      <div
-                        key={index}
-                        className="bg-accent flex items-center gap-1 rounded-md border px-2 text-sm font-medium"
-                      >
-                        <span className="max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap">
-                          {email}
-                        </span>
-                        <button
-                          type="button"
-                          disabled={isLoading}
-                          className="text-muted-foreground hover:text-foreground ml-1 rounded-full"
-                          onClick={() => {
-                            setCcEmails((emails) => emails.filter((_, i) => i !== index));
-                            setHasUnsavedChanges(true);
-                          }}
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
-                    <input
-                      ref={ccInputRef}
-                      disabled={isLoading}
-                      type="text"
-                      className="text-md relative left-[3px] min-w-[120px] flex-1 bg-transparent placeholder:text-[#616161] placeholder:opacity-50 focus:outline-none"
-                      placeholder={ccEmails.length ? '' : 'Add Cc recipients'}
-                      value={ccInput}
-                      onChange={(e) => handleEmailInputChange('cc', e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          handleAddEmail('cc', ccInput);
-                        }
-                      }}
-                    />
-                  </div>
+                  <ContactInput
+                    type="cc"
+                    emails={ccEmails}
+                    setEmails={setCcEmails}
+                    input={ccInput}
+                    setInput={setCcInput}
+                    selectedContactIndex={selectedContactIndex}
+                    setSelectedContactIndex={setSelectedContactIndex}
+                    isLoading={isLoading}
+                    handleEmailInputChange={handleEmailInputChange}
+                    handleAddEmail={handleAddEmail}
+                    inputRef={ccInputRef}
+                    placeholder="Add Cc recipients"
+                    setHasUnsavedChanges={setHasUnsavedChanges}
+                  />
                 </div>
               )}
 
@@ -591,44 +503,21 @@ export function CreateEmail({
                   <div className="text-muted-foreground w-20 flex-shrink-0 pr-3 text-right text-[1rem] font-[600] opacity-50 md:w-24">
                     Bcc
                   </div>
-                  <div className="group relative left-[2px] flex w-full flex-wrap items-center rounded-md border border-none bg-transparent p-1 transition-all focus-within:border-none focus:outline-none">
-                    {bccEmails.map((email, index) => (
-                      <div
-                        key={index}
-                        className="bg-accent flex items-center gap-1 rounded-md border px-2 text-sm font-medium"
-                      >
-                        <span className="max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap">
-                          {email}
-                        </span>
-                        <button
-                          type="button"
-                          disabled={isLoading}
-                          className="text-muted-foreground hover:text-foreground ml-1 rounded-full"
-                          onClick={() => {
-                            setBccEmails((emails) => emails.filter((_, i) => i !== index));
-                            setHasUnsavedChanges(true);
-                          }}
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
-                    <input
-                      ref={bccInputRef}
-                      disabled={isLoading}
-                      type="text"
-                      className="text-md relative left-[3px] min-w-[120px] flex-1 bg-transparent placeholder:text-[#616161] placeholder:opacity-50 focus:outline-none"
-                      placeholder={bccEmails.length ? '' : 'Add Bcc recipients'}
-                      value={bccInput}
-                      onChange={(e) => handleEmailInputChange('bcc', e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          handleAddEmail('bcc', bccInput);
-                        }
-                      }}
-                    />
-                  </div>
+                  <ContactInput
+                    type="bcc"
+                    emails={bccEmails}
+                    setEmails={setBccEmails}
+                    input={bccInput}
+                    setInput={setBccInput}
+                    selectedContactIndex={selectedContactIndex}
+                    setSelectedContactIndex={setSelectedContactIndex}
+                    isLoading={isLoading}
+                    handleEmailInputChange={handleEmailInputChange}
+                    handleAddEmail={handleAddEmail}
+                    inputRef={bccInputRef}
+                    placeholder="Add Bcc recipients"
+                    setHasUnsavedChanges={setHasUnsavedChanges}
+                  />
                 </div>
               )}
 
