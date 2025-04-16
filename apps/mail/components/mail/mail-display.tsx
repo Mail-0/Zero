@@ -338,10 +338,10 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
             <ThreadActionButton
               icon={Reply}
               label={t('common.mailDisplay.replyTo', { user: emailData?.sender?.email })}
+              className={data ? 'invisible' : ''}
               onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -354,22 +354,6 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
                 setReplyTo(emailData.id);
               }}
             />
-            <ThreadActionButton
-              icon={ReplyAll}
-              label={t('common.mailDisplay.replyAll')}
-              onClick={(e: React.MouseEvent) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setMail((prev) => ({
-                  ...prev,
-                  forwardComposerOpen: false,
-                  replyComposerOpen: false,
-                  replyAllComposerOpen: true
-                }));
-                setReplyTo(emailData.id);
-              }}
-            />
-            </div>
 
             {data ? (
               <div className='relative -top-1'>
