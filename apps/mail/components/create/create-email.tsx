@@ -623,70 +623,69 @@ export function CreateEmail({
                       onCommandEnter={handleSendEmail}
                     />
                   )}
-                  <div className='flex justify-between'>
+                  <Separator />
+                  <div className='flex justify-between py-2'>
                     <div className="flex items-center gap-4">
-                      <div className="pb-2 pt-2">
-                        <AIAssistant
-                          currentContent={messageContent}
-                          subject={subjectInput}
-                          recipients={toEmails}
-                          userContext={{ name: userName, email: userEmail }}
-                          onContentGenerated={(jsonContent, newSubject) => {
-                            console.log('CreateEmail: Received AI-generated content', {
-                              jsonContentType: jsonContent.type,
-                              hasContent: Boolean(jsonContent.content),
-                              contentLength: jsonContent.content?.length || 0,
-                              newSubject: newSubject,
-                            });
+                      <AIAssistant
+                        currentContent={messageContent}
+                        subject={subjectInput}
+                        recipients={toEmails}
+                        userContext={{ name: userName, email: userEmail }}
+                        onContentGenerated={(jsonContent, newSubject) => {
+                          console.log('CreateEmail: Received AI-generated content', {
+                            jsonContentType: jsonContent.type,
+                            hasContent: Boolean(jsonContent.content),
+                            contentLength: jsonContent.content?.length || 0,
+                            newSubject: newSubject,
+                          });
 
-                            try {
-                              // Update the editor content with the AI-generated content
-                              setDefaultValue(jsonContent);
+                          try {
+                            // Update the editor content with the AI-generated content
+                            setDefaultValue(jsonContent);
 
-                              // Extract and set the text content for validation purposes
-                              // This ensures the submit button is enabled immediately
-                              if (jsonContent.content && jsonContent.content.length > 0) {
-                                // Extract text content from JSON structure recursively
-                                const extractTextContent = (node: any): string => {
-                                  if (!node) return '';
+                            // Extract and set the text content for validation purposes
+                            // This ensures the submit button is enabled immediately
+                            if (jsonContent.content && jsonContent.content.length > 0) {
+                              // Extract text content from JSON structure recursively
+                              const extractTextContent = (node: any): string => {
+                                if (!node) return '';
 
-                                  if (node.text) return node.text;
+                                if (node.text) return node.text;
 
-                                  if (node.content && Array.isArray(node.content)) {
-                                    return node.content.map(extractTextContent).join(' ');
-                                  }
+                                if (node.content && Array.isArray(node.content)) {
+                                  return node.content.map(extractTextContent).join(' ');
+                                }
 
-                                  return '';
-                                };
+                                return '';
+                              };
 
-                                // Process all content nodes
-                                const textContent = jsonContent.content
-                                  .map(extractTextContent)
-                                  .join('\n')
-                                  .trim();
-                                setMessageContent(textContent);
-                              }
-
-                              // Update the subject if provided
-                              if (newSubject && (!subjectInput || subjectInput.trim() === '')) {
-                                console.log('CreateEmail: Setting new subject from AI', newSubject);
-                                setSubjectInput(newSubject);
-                              }
-
-                              // Mark as having unsaved changes
-                              setHasUnsavedChanges(true);
-
-                              // Reset the editor to ensure it picks up the new content
-                              setResetEditorKey((prev) => prev + 1);
-
-                              console.log('CreateEmail: Successfully applied AI content');
-                            } catch (error) {
-                              console.error('CreateEmail: Error applying AI content', error);
-                              toast.error('Error applying AI content to your email. Please try again.');
+                              // Process all content nodes
+                              const textContent = jsonContent.content
+                                .map(extractTextContent)
+                                .join('\n')
+                                .trim();
+                              setMessageContent(textContent);
                             }
-                          }}
-                        />
-                      </div>
+
+                            // Update the subject if provided
+                            if (newSubject && (!subjectInput || subjectInput.trim() === '')) {
+                              console.log('CreateEmail: Setting new subject from AI', newSubject);
+                              setSubjectInput(newSubject);
+                            }
+
+                            // Mark as having unsaved changes
+                            setHasUnsavedChanges(true);
+
+                            // Reset the editor to ensure it picks up the new content
+                            setResetEditorKey((prev) => prev + 1);
+
+                            console.log('CreateEmail: Successfully applied AI content');
+                          } catch (error) {
+                            console.error('CreateEmail: Error applying AI content', error);
+                            toast.error('Error applying AI content to your email. Please try again.');
+                          }
+                        }}
+                      />
                     </div>
                     <div className="flex justify-end gap-3">
                       {attachments.length > 0 && (
