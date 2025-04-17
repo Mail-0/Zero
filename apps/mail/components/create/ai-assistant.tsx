@@ -219,7 +219,7 @@ export const AIAssistant = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [generatedBody, setGeneratedBody] = useState<{
+  const [generatedContent, setGeneratedContent] = useState<{
     content: string;
     jsonContent: JSONContent;
   } | null>(null);
@@ -243,6 +243,7 @@ export const AIAssistant = ({
   const activeConnection = session?.activeConnection;
   const userName = userContext?.name || activeConnection?.name || session?.user.name || '';
   const userEmail = userContext?.email || activeConnection?.email || session?.user.email || '';
+  const [suggestedSubject, setSuggestedSubject] = useState<string>('');
 
   // Focus input when expanded
   useEffect(() => {
@@ -259,12 +260,11 @@ export const AIAssistant = ({
   // Reset states
   const resetStates = (includeExpanded = true) => {
     setPrompt('');
-    setGeneratedBody(null);
-    setGeneratedSubject(undefined);
+    setGeneratedContent(null);
     setShowActions(false);
     setIsAskingQuestion(false);
-    setErrorOccurred(false);
     if (includeExpanded) setIsExpanded(false);
+    setSuggestedSubject('');
   };
 
   // Handle chat with AI button
@@ -281,109 +281,7 @@ export const AIAssistant = ({
   };
 
   // Handle submit - Updated for two-step generation
-  const handleSubmit = async (e?: React.MouseEvent): Promise<void> => { // Explicitly type return as Promise<void>
-    e?.stopPropagation();
-    if (!prompt.trim() || isLoading) return;
-
-    // --- Start of Merged Section ---
-    try { // Keep try block from staging
-      setIsLoading(true); // Keep from either branch
-      setErrorOccurred(false); // Keep from your branch
-
-      // Track AI assistant usage
-      posthog.capture('Create Email AI Assistant Submit');
-
-      // Add user message
-      addMessage('user', prompt, 'question');
-
-      // Reset states (Keep comprehensive resets from your branch)
-      setIsAskingQuestion(false);
-      setShowActions(false);
-      setGeneratedBody(null);
-      setGeneratedSubject(undefined);
-
-      // Continue with your branch's logic for body/subject generation
-      // --- Step 1: Generate Body ---
-      console.log('AI Assistant: Requesting email body...');
-      const bodyResult = await generateAIEmailBody({ // Use const here
-        prompt,
-        currentContent: generatedBody?.content || currentContent,
-        subject, 
-        to: recipients,
-        conversationId,
-        userContext: { name: userName, email: userEmail },
-      });
-      console.log('AI Assistant: Received Body Result:', JSON.stringify(bodyResult));
-
-      if (bodyResult.type === 'system') {
-        addMessage('system', bodyResult.content, 'system');
-        toast.error(bodyResult.content || "Failed to generate email body.");
-        setErrorOccurred(true);
-        setPrompt(''); 
-        // Ensure finally block runs, but don't proceed
-        throw new Error("Body generation failed with system message."); 
-      } else if (bodyResult.type === 'question') {
-        setIsAskingQuestion(true);
-        addMessage('assistant', bodyResult.content, 'question');
-        setPrompt('');
-        // Let the finally block handle loading state, but don't proceed
-        return; 
-      }
-
-      // Store the generated body
-      setGeneratedBody({
-        content: bodyResult.content, 
-        jsonContent: bodyResult.jsonContent,
-      });
-
-      let finalSubject: string | undefined = undefined; // Define subject variable here
-
-      // --- Step 2: Generate Subject (only if body generation succeeded) ---
-      if (bodyResult.content && bodyResult.content.trim() !== '') {
-          console.log('AI Assistant: Requesting email subject...');
-          const subjectResult = await generateAISubject({ body: bodyResult.content }); // Use const
-          console.log('AI Assistant: Received Subject Result:', subjectResult);
-          
-          if (subjectResult && subjectResult.trim() !== '') {
-              finalSubject = subjectResult; // Assign to outer variable
-              setGeneratedSubject(finalSubject);
-              addMessage('assistant', `Subject: ${finalSubject}\n\n${bodyResult.content}`, 'email');
-          } else {
-              console.warn('AI Assistant: Subject generation failed or returned empty.');
-              addMessage('assistant', bodyResult.content, 'email'); 
-              toast.warning("Generated email body, but failed to generate subject.");
-              // Keep finalSubject as undefined
-          }
-      } else {
-           console.warn('AI Assistant: Body generation returned empty content.');
-           addMessage('system', "AI generated an empty email body.", 'system');
-           setErrorOccurred(true);
-           // Throw error to prevent showing actions and trigger finally block correctly
-           throw new Error("Body generation resulted in empty content.");
-      }
-      
-      setShowActions(true); 
-      setPrompt('');
-
-    } catch (error) {
-      // Only log if it's not one of the specific errors we threw
-      if (!(error instanceof Error && (error.message.includes("Body generation failed") || error.message.includes("Body generation resulted")))) {
-          console.error('AI Assistant Error (handleSubmit):', error);
-          const errorMessage = error instanceof Error ? error.message : 'Failed to generate email content. Please try again.';
-          toast.error(errorMessage);
-          addMessage('system', errorMessage, 'system');
-      }
-      // Ensure error state is set if any catch happens
-      setErrorOccurred(true);
-    } finally {
-      setIsLoading(false);
-      // Only keep expanded if no error OR if it was just a question
-      if (!errorOccurred || isAskingQuestion) {
-          setIsExpanded(true); 
-      } else {
-          setIsExpanded(false); // Collapse on definitive errors
-      }
-    }
+  const handleSubmit = async (e?: React.MouseEvent) => {
   };
 
   // Handle accept
@@ -461,8 +359,8 @@ export const AIAssistant = ({
       >
         {/* Floating card for generated content */}
         <AnimatePresence>
-          {showActions && generatedBody && (
-            <ContentPreview content={generatedBody.content} animations={animations} />
+          {showActions && generatedContent && (
+            <ContentPreview content={generatedContent.content} animations={animations} />
           )}
         </AnimatePresence>
 
@@ -516,7 +414,7 @@ export const AIAssistant = ({
                 onRefresh={handleRefresh}
                 onSubmit={handleSubmit}
                 onAccept={handleAccept}
-                hasContent={!!generatedBody && !errorOccurred}
+                hasContent={!!generatedContent}
                 hasPrompt={!!prompt.trim()}
                 animations={animations}
               />
