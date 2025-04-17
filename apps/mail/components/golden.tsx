@@ -99,11 +99,11 @@ export const GoldenTicketModal = () => {
               )}
             />
             <div className="pt-3 flex gap-2 justify-end">
-              <Button onClick={handleMaybeLater} type="button" variant="outline" className="">
+              <Button onClick={handleMaybeLater} type="button" variant="outline">
                 Maybe Later
               </Button>
-              <Button disabled={!email} type="submit" className="">
-                <span className="mr-2">Send invite</span>
+              <Button disabled={!email} type="submit">
+                Send invite
               </Button>
             </div>
           </Form>
