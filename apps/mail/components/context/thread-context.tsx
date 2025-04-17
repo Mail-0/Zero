@@ -35,7 +35,7 @@ import { useMail } from '../mail/use-mail';
 import { useTranslations } from 'use-intl';
 import { type ReactNode } from 'react';
 import { toast } from 'sonner';
-import { modifyLabels } from '@/actions/mail';
+import { deleteThread, modifyLabels } from '@/actions/mail';
 import { markAsRead, markAsUnread, toggleStar } from '@/actions/mail';
 import { useMemo } from 'react';
 
@@ -186,6 +186,22 @@ export function ThreadContextMenu({
 		});
 	};
 
+  const handleDelete = async () => {
+		try {
+        const promise = deleteThread({ id: threadId }).then(() => {
+          setMail(prev => ({ ...prev, bulkSelected: [] }));
+          return mutate();
+        });
+        toast.promise(promise, {
+          loading: t('common.actions.deletingMail'),
+          success: t('common.actions.deletedMail'),
+          error: t('common.actions.failedToDeleteMail'),
+        });
+    } catch (error) {
+        console.error(`Error deleting ${threadId? 'email' : 'thread'}:`, error);
+      }
+    };
+
 	const primaryActions: EmailAction[] = [
 		{
 			id: 'reply',
@@ -242,6 +258,13 @@ export function ThreadContextMenu({
           action: handleMove(LABELS.TRASH, LABELS.INBOX),
           disabled: false,
         },
+        {
+          id: 'delete-from-bin',
+          label: t('common.mail.deleteFromBin'),
+          icon: <Trash className="mr-2.5 h-4 w-4" />,
+          action: handleDelete(),
+          disabled: false,
+        }
       ];
     }
 
