@@ -1,6 +1,6 @@
 import { Sparkles, X, Check, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { generateAIEmailContent } from '@/actions/ai';
+import { generateAIEmailBody, generateAISubject } from '@/actions/ai';
 import { useState, useEffect, useRef } from 'react';
 import { generateConversationId } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -226,6 +226,7 @@ export const AIAssistant = ({
   const [showActions, setShowActions] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isAskingQuestion, setIsAskingQuestion] = useState(false);
+  const [errorOccurred, setErrorOccurred] = useState(false);
 
   // Generate conversation ID immediately without useEffect
   const conversationId = generateConversationId();
@@ -261,6 +262,7 @@ export const AIAssistant = ({
     setGeneratedSubject(undefined);
     setShowActions(false);
     setIsAskingQuestion(false);
+    setErrorOccurred(false);
     if (includeExpanded) setIsExpanded(false);
   };
 
@@ -277,57 +279,103 @@ export const AIAssistant = ({
     }
   };
 
-  // Handle submit
-  const handleSubmit = async (e?: React.MouseEvent) => {
+  // Handle submit - Updated for two-step generation
+  const handleSubmit = async (e?: React.MouseEvent): Promise<void> => { // Explicitly type return as Promise<void>
     e?.stopPropagation();
-    if (!prompt.trim()) return;
+    if (!prompt.trim() || isLoading) return;
+
+    setIsLoading(true);
+    setErrorOccurred(false); 
+    addMessage('user', prompt, 'question');
+    setIsAskingQuestion(false);
+    setShowActions(false);
+    setGeneratedBody(null);
+    setGeneratedSubject(undefined);
+    // Rename bodyResult variable to avoid confusion if needed, but it's scoped
+    // let bodyResult: Awaited<ReturnType<typeof generateAIEmailBody>> | null = null; 
+    // let subjectResult: string | null = null; // Declared later
 
     try {
-      setIsLoading(true);
-      addMessage('user', prompt, 'question');
-      setIsAskingQuestion(false);
-      setShowActions(false);
-      setGeneratedBody(null);
-      setGeneratedSubject(undefined);
-
-      const result = await generateAIEmailContent({
+      // --- Step 1: Generate Body ---
+      console.log('AI Assistant: Requesting email body...');
+      const bodyResult = await generateAIEmailBody({ // Use const here
         prompt,
         currentContent: generatedBody?.content || currentContent,
-        subject,
+        subject, 
         to: recipients,
         conversationId,
         userContext: { name: userName, email: userEmail },
       });
+      console.log('AI Assistant: Received Body Result:', JSON.stringify(bodyResult));
 
-      console.log('AI Assistant Received Result:', JSON.stringify(result));
-
-      // Handle response based on type
-      if (result.type === 'question') {
+      if (bodyResult.type === 'system') {
+        addMessage('system', bodyResult.content, 'system');
+        toast.error(bodyResult.content || "Failed to generate email body.");
+        setErrorOccurred(true);
+        setPrompt(''); 
+        // Ensure finally block runs, but don't proceed
+        throw new Error("Body generation failed with system message."); 
+      } else if (bodyResult.type === 'question') {
         setIsAskingQuestion(true);
-        addMessage('assistant', result.content, 'question');
-      } else if (result.type === 'email') {
-        setGeneratedBody({
-          content: result.content,
-          jsonContent: result.jsonContent,
-        });
-        setGeneratedSubject(result.subject);
-        addMessage('assistant', `Subject: ${result.subject || ''}\n\n${result.content}`, 'email');
-        setShowActions(true);
-      } else {
-        const genericFailureMessage = "Unable to fulfill your request.";
-        addMessage('system', genericFailureMessage, 'system');
-        toast.error(genericFailureMessage);
+        addMessage('assistant', bodyResult.content, 'question');
+        setPrompt('');
+        // Let the finally block handle loading state, but don't proceed
+        return; 
       }
 
+      // Store the generated body
+      setGeneratedBody({
+        content: bodyResult.content, 
+        jsonContent: bodyResult.jsonContent,
+      });
+
+      let finalSubject: string | undefined = undefined; // Define subject variable here
+
+      // --- Step 2: Generate Subject (only if body generation succeeded) ---
+      if (bodyResult.content && bodyResult.content.trim() !== '') {
+          console.log('AI Assistant: Requesting email subject...');
+          const subjectResult = await generateAISubject({ body: bodyResult.content }); // Use const
+          console.log('AI Assistant: Received Subject Result:', subjectResult);
+          
+          if (subjectResult && subjectResult.trim() !== '') {
+              finalSubject = subjectResult; // Assign to outer variable
+              setGeneratedSubject(finalSubject);
+              addMessage('assistant', `Subject: ${finalSubject}\n\n${bodyResult.content}`, 'email');
+          } else {
+              console.warn('AI Assistant: Subject generation failed or returned empty.');
+              addMessage('assistant', bodyResult.content, 'email'); 
+              toast.warning("Generated email body, but failed to generate subject.");
+              // Keep finalSubject as undefined
+          }
+      } else {
+           console.warn('AI Assistant: Body generation returned empty content.');
+           addMessage('system', "AI generated an empty email body.", 'system');
+           setErrorOccurred(true);
+           // Throw error to prevent showing actions and trigger finally block correctly
+           throw new Error("Body generation resulted in empty content.");
+      }
+      
+      setShowActions(true); 
       setPrompt('');
+
     } catch (error) {
-      console.error('AI Assistant Error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to generate email content. Please try again.';
-      toast.error(errorMessage);
-      addMessage('system', errorMessage, 'system');
+      // Only log if it's not one of the specific errors we threw
+      if (!(error instanceof Error && (error.message.includes("Body generation failed") || error.message.includes("Body generation resulted")))) {
+          console.error('AI Assistant Error (handleSubmit):', error);
+          const errorMessage = error instanceof Error ? error.message : 'Failed to generate email content. Please try again.';
+          toast.error(errorMessage);
+          addMessage('system', errorMessage, 'system');
+      }
+      // Ensure error state is set if any catch happens
+      setErrorOccurred(true);
     } finally {
       setIsLoading(false);
-      setIsExpanded(true);
+      // Only keep expanded if no error OR if it was just a question
+      if (!errorOccurred || isAskingQuestion) {
+          setIsExpanded(true); 
+      } else {
+          setIsExpanded(false); // Collapse on definitive errors
+      }
     }
   };
 
@@ -447,7 +495,7 @@ export const AIAssistant = ({
                 onRefresh={handleRefresh}
                 onSubmit={handleSubmit}
                 onAccept={handleAccept}
-                hasContent={!!generatedBody}
+                hasContent={!!generatedBody && !errorOccurred}
                 hasPrompt={!!prompt.trim()}
                 animations={animations}
               />

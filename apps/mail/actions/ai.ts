@@ -1,7 +1,7 @@
 // The brain.ts file in /actions should replace this file once ready.
 'use server';
 
-import { generateEmailContent } from '@/lib/ai';
+import { generateEmailBody, generateSubjectForEmail } from '@/lib/ai';
 import { headers } from 'next/headers';
 import { JSONContent } from 'novel';
 import { auth } from '@/lib/auth';
@@ -11,14 +11,13 @@ interface UserContext {
   email?: string;
 }
 
-interface AIEmailResponse {
-  subject?: string;
+interface AIBodyResponse {
   content: string;
   jsonContent: JSONContent;
   type: 'email' | 'question' | 'system';
 }
 
-export async function generateAIEmailContent({
+export async function generateAIEmailBody({
   prompt,
   currentContent,
   subject,
@@ -32,7 +31,7 @@ export async function generateAIEmailContent({
   to?: string[];
   conversationId?: string;
   userContext?: UserContext;
-}): Promise<AIEmailResponse> {
+}): Promise<AIBodyResponse> {
   try {
     const headersList = await headers();
     const session = await auth.api.getSession({ headers: headersList });
@@ -41,7 +40,7 @@ export async function generateAIEmailContent({
       throw new Error('Unauthorized');
     }
     
-    const responses = await generateEmailContent(
+    const responses = await generateEmailBody(
       prompt,
       currentContent,
       to,
@@ -52,43 +51,79 @@ export async function generateAIEmailContent({
 
     const response = responses[0];
     if (!response) {
-        console.error('AI Action Error: Received no response array item from generateEmailContent');
-        throw new Error("Received no response from generateEmailContent");
+        console.error('AI Action Error (Body): Received no response array item from generateEmailBody');
+        throw new Error("Received no response from generateEmailBody");
     }
 
     const responseBody = response.body;
-    const responseSubject = response.subject;
+    
+    console.log("--- Action Layer (Body): Received from generateEmailBody ---");
+    console.log("Raw response object:", JSON.stringify(response, null, 2));
+    console.log("Extracted Body:", response.body);
+    console.log("--- End Action Layer (Body) Log ---");
 
-    const paragraphs = responseBody.split('\n');
-    const jsonContent = createJsonContent(paragraphs);
+    const jsonContent = createJsonContentFromBody(responseBody);
 
     return {
-      subject: responseSubject,
       content: responseBody,
       jsonContent,
       type: response.type,
     };
   } catch (error) {
-    console.error('Error in generateAIEmailContent action:', error);
-    const errorMsg = 'Sorry, I encountered an error while generating content. Please try again.';
+    console.error('Error in generateAIEmailBody action:', error);
+    const errorMsg = 'Sorry, I encountered an error while generating the email body. Please try again.';
     return {
       content: errorMsg,
-      jsonContent: createJsonContent([errorMsg]),
+      jsonContent: createJsonContentFromBody(errorMsg),
       type: 'system',
     };
   }
 }
 
-function createJsonContent(paragraphs: string[]): JSONContent {
-  if (paragraphs.length === 0) {
-    paragraphs = ['Failed to generate content. Please try again with a different prompt.'];
-  }
+export async function generateAISubject({
+    body,
+}: {
+    body: string;
+}): Promise<string> {
+    try {
+        const headersList = await headers();
+        const session = await auth.api.getSession({ headers: headersList });
 
-  return {
-    type: 'doc',
-    content: paragraphs.map((paragraph) => ({
-      type: 'paragraph',
-      content: paragraph.length ? [{ type: 'text', text: paragraph }] : [],
-    })),
-  };
+        if (!session?.user) {
+            throw new Error('Unauthorized');
+        }
+
+        if (!body || body.trim() === '') {
+            console.warn('AI Action Warning (Subject): Cannot generate subject for empty body.');
+            return '';
+        }
+
+        const subject = await generateSubjectForEmail(body);
+
+        console.log("--- Action Layer (Subject): Received from generateSubjectForEmail ---");
+        console.log("Generated Subject:", subject);
+        console.log("--- End Action Layer (Subject) Log ---");
+
+        return subject;
+
+    } catch (error) {
+        console.error('Error in generateAISubject action:', error);
+        return '';
+    }
+}
+
+function createJsonContentFromBody(bodyText: string): JSONContent {
+    if (!bodyText || bodyText.trim() === '') {
+        bodyText = 'Failed to generate content. Please try again with a different prompt.';
+    }
+
+    return {
+        type: 'doc',
+        content: [
+            {
+                type: 'paragraph',
+                content: [{ type: 'text', text: bodyText.trim() }], 
+            }
+        ],
+    };
 }
