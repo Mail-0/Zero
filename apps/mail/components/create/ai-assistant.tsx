@@ -218,14 +218,14 @@ export const AIAssistant = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [generatedContent, setGeneratedContent] = useState<{
+  const [generatedBody, setGeneratedBody] = useState<{
     content: string;
     jsonContent: JSONContent;
   } | null>(null);
+  const [generatedSubject, setGeneratedSubject] = useState<string | undefined>(undefined);
   const [showActions, setShowActions] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isAskingQuestion, setIsAskingQuestion] = useState(false);
-  const [suggestedSubject, setSuggestedSubject] = useState<string>('');
 
   // Generate conversation ID immediately without useEffect
   const conversationId = generateConversationId();
@@ -257,11 +257,11 @@ export const AIAssistant = ({
   // Reset states
   const resetStates = (includeExpanded = true) => {
     setPrompt('');
-    setGeneratedContent(null);
+    setGeneratedBody(null);
+    setGeneratedSubject(undefined);
     setShowActions(false);
     setIsAskingQuestion(false);
     if (includeExpanded) setIsExpanded(false);
-    setSuggestedSubject('');
   };
 
   // Handle chat with AI button
@@ -287,10 +287,13 @@ export const AIAssistant = ({
       addMessage('user', prompt, 'question');
       setIsAskingQuestion(false);
       setShowActions(false);
+      setGeneratedBody(null);
+      setGeneratedSubject(undefined);
 
       const result = await generateAIEmailContent({
         prompt,
-        currentContent: generatedContent?.content || currentContent,
+        currentContent: generatedBody?.content || currentContent,
+        subject,
         to: recipients,
         conversationId,
         userContext: { name: userName, email: userEmail },
@@ -303,33 +306,23 @@ export const AIAssistant = ({
         setIsAskingQuestion(true);
         addMessage('assistant', result.content, 'question');
       } else if (result.type === 'email') {
-        setGeneratedContent({
+        setGeneratedBody({
           content: result.content,
           jsonContent: result.jsonContent,
         });
-
-        if (!subject || subject.trim() === '') {
-          const extractedSubject = extractSubjectFromContent(result.content);
-          if (extractedSubject) setSuggestedSubject(extractedSubject);
-        }
-
-        addMessage('assistant', result.content, 'email');
+        setGeneratedSubject(result.subject);
+        addMessage('assistant', `Subject: ${result.subject || ''}\n\n${result.content}`, 'email');
         setShowActions(true);
       } else {
-        // Handle system messages (errors, code block refusals, clarification reclassifications)
-        addMessage('system', result.content, 'system');
-        // Show a destructive toast for these system messages (refusals/errors)
-        toast.error(result.content);
+        const genericFailureMessage = "Unable to fulfill your request.";
+        addMessage('system', genericFailureMessage, 'system');
+        toast.error(genericFailureMessage);
       }
 
       setPrompt('');
     } catch (error) {
       console.error('AI Assistant Error:', error);
-
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Failed to generate email content. Please try again.';
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate email content. Please try again.';
       toast.error(errorMessage);
       addMessage('system', errorMessage, 'system');
     } finally {
@@ -340,19 +333,8 @@ export const AIAssistant = ({
 
   // Handle accept
   const handleAccept = () => {
-    if (generatedContent && onContentGenerated) {
-      // Extract the actual content from the JSON structure
-      const actualContent = generatedContent.content;
-
-      // First update subject if available
-      if (suggestedSubject) {
-        // Pass both the JSON content for the editor and the plaintext content for validation
-        onContentGenerated(generatedContent.jsonContent, suggestedSubject);
-      } else {
-        onContentGenerated(generatedContent.jsonContent);
-      }
-
-      // Add confirmation message
+    if (generatedBody && onContentGenerated) {
+      onContentGenerated(generatedBody.jsonContent, generatedSubject);
       addMessage('system', 'Email content applied successfully.', 'system');
       resetStates();
       toast.success('AI content applied to your email');
@@ -410,8 +392,8 @@ export const AIAssistant = ({
       >
         {/* Floating card for generated content */}
         <AnimatePresence>
-          {showActions && generatedContent && (
-            <ContentPreview content={generatedContent.content} animations={animations} />
+          {showActions && generatedBody && (
+            <ContentPreview content={generatedBody.content} animations={animations} />
           )}
         </AnimatePresence>
 
@@ -465,7 +447,7 @@ export const AIAssistant = ({
                 onRefresh={handleRefresh}
                 onSubmit={handleSubmit}
                 onAccept={handleAccept}
-                hasContent={!!generatedContent}
+                hasContent={!!generatedBody}
                 hasPrompt={!!prompt.trim()}
                 animations={animations}
               />

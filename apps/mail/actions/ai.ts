@@ -12,6 +12,7 @@ interface UserContext {
 }
 
 interface AIEmailResponse {
+  subject?: string;
   content: string;
   jsonContent: JSONContent;
   type: 'email' | 'question' | 'system';
@@ -20,15 +21,15 @@ interface AIEmailResponse {
 export async function generateAIEmailContent({
   prompt,
   currentContent,
+  subject,
   to,
-  isEdit = false,
   conversationId,
   userContext,
 }: {
   prompt: string;
   currentContent?: string;
+  subject?: string;
   to?: string[];
-  isEdit?: boolean;
   conversationId?: string;
   userContext?: UserContext;
 }): Promise<AIEmailResponse> {
@@ -44,70 +45,35 @@ export async function generateAIEmailContent({
       prompt,
       currentContent,
       to,
+      subject,
       conversationId,
       userContext,
     );
 
-    // Check if the response is our specific 'invalid request' system message
-    if (responses.length === 1 && responses[0] && responses[0].type === 'system') {
-      // Pass the system message directly back to the frontend
-      return {
-        content: responses[0].content,
-        jsonContent: createJsonContent([responses[0].content]),
-        type: 'system',
-      };
+    const response = responses[0];
+    if (!response) {
+        console.error('AI Action Error: Received no response array item from generateEmailContent');
+        throw new Error("Received no response from generateEmailContent");
     }
 
-    const questionResponse = responses.find((r) => r.type === 'question');
-    if (questionResponse) {
-      return {
-        content: questionResponse.content,
-        jsonContent: createJsonContent([questionResponse.content]),
-        type: 'question',
-      };
-    }
+    const responseBody = response.body;
+    const responseSubject = response.subject;
 
-    const emailResponses = responses.filter((r) => r.type === 'email');
-    
-    const cleanedContent = emailResponses
-      .map((r) => r.content)
-      .join('\n\n')
-      .trim();
-
-    const paragraphs = cleanedContent.split('\n');
-
+    const paragraphs = responseBody.split('\n');
     const jsonContent = createJsonContent(paragraphs);
 
-    // If the AI response looks like a question back to the user, treat it as a system message
-    const isClarification = 
-      cleanedContent.trim().endsWith('?') ||
-      [/^what/i, /^how/i, /^why/i, /^when/i, /^where/i, /^who/i, /^can you/i, /^could you/i, /^would you/i].some(pattern => pattern.test(cleanedContent.trim())) ||
-      cleanedContent.toLowerCase().includes('please provide more context') ||
-      cleanedContent.toLowerCase().includes('need more information');
-
-    if (isClarification) {
-        console.log('AI Assistant: Detected clarification request from AI. Treating as system message.');
-        return {
-            content: cleanedContent,
-            jsonContent,
-            type: 'system', // Reclassify as system
-        };
-    }
-
     return {
-      content: cleanedContent,
+      subject: responseSubject,
+      content: responseBody,
       jsonContent,
-      type: 'email',
+      type: response.type,
     };
   } catch (error) {
-    console.error('Error generating AI email content:', error);
-
+    console.error('Error in generateAIEmailContent action:', error);
+    const errorMsg = 'Sorry, I encountered an error while generating content. Please try again.';
     return {
-      content:
-        'Sorry, I encountered an error while generating content. Please try again with a different prompt.',
-      jsonContent: createJsonContent([
-        'Sorry, I encountered an error while generating content. Please try again with a different prompt.',
-      ]),
+      content: errorMsg,
+      jsonContent: createJsonContent([errorMsg]),
       type: 'system',
     };
   }
