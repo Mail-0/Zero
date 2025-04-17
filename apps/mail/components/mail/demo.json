@@ -307,16 +307,16 @@
     "id": "imp-005",
     "threadId": "imp-005",
     "tags": ["important", "updates"],
-    "title": "URGENT.",
-    "body": "uh hey dude... do you have any toilet paper? 😅",
+    "title": "💼 Meeting That Could Have Been an Email (But Isn't)",
+    "body": "Please join us for a two-hour discussion on something that could be resolved in a three-sentence email.",
     "receivedOn": "2024-04-12",
     "sender": {
-      "name": "grim",
-      "email": "grim@0.email"
+      "name": "Calendar Overlord",
+      "email": "meetings@workplace.com"
     },
     "unread": true,
-    "subject": "Urgent toilet paper request",
-    "totalReplies": 0,
-    "decodedBody": "<p>uh hey dude... do you have any toilet paper? 😅</p>"
+    "subject": "Mandatory Team Sync",
+    "totalReplies": 2,
+    "decodedBody": "<p>Please join us for a two-hour discussion on something that could be resolved in a three-sentence email.</p>"
   }
 ]
