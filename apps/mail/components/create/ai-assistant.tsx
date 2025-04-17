@@ -293,7 +293,7 @@ export const AIAssistant = ({
       // Track AI assistant usage
       posthog.capture('Create Email AI Assistant Submit');
 
-       // Add user message
+      // Add user message
       addMessage('user', prompt, 'question');
 
       // Reset states (Keep comprehensive resets from your branch)
