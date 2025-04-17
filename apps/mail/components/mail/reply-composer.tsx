@@ -81,13 +81,6 @@ interface AIState {
   showOptions: boolean;
 }
 
-interface MailState {
-  replyComposerOpen: boolean;
-  replyAllComposerOpen: boolean;
-  forwardComposerOpen: boolean;
-  // ... other existing state
-}
-
 // Define action types
 type ComposerAction =
   | { type: 'SET_UPLOADING'; payload: boolean }
@@ -165,6 +158,8 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
   const { data: session } = useSession();
   const [mail, setMail] = useMail();
   const { settings } = useSettings();
+  const [replyTo, setReplyTo] = useQueryState('replyTo');
+  const [forward, setForward] = useQueryState('forward');
   const [draftId, setDraftId] = useQueryState('draftId');
   const [isEditingRecipients, setIsEditingRecipients] = useState(false);
   const [showCc, setShowCc] = useState(false);
@@ -172,20 +167,13 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
   const ccInputRef = useRef<HTMLInputElement | null>(null);
   const bccInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Use global state instead of local state
-  const composerIsOpen =
-    mode === 'reply'
-      ? mail.replyComposerOpen
-      : mode === 'replyAll'
-        ? mail.replyAllComposerOpen
-        : mail.forwardComposerOpen;
+  // Use query parameters to determine if composer is open
+  const composerIsOpen = Boolean(replyTo || forward);
   const setComposerIsOpen = (value: boolean) => {
-    setMail((prev: typeof mail) => ({
-      ...prev,
-      replyComposerOpen: mode === 'reply' ? value : prev.replyComposerOpen,
-      replyAllComposerOpen: mode === 'replyAll' ? value : prev.replyAllComposerOpen,
-      forwardComposerOpen: mode === 'forward' ? value : prev.forwardComposerOpen,
-    }));
+    if (!value) {
+      setReplyTo(null);
+      setForward(null);
+    }
   };
 
   // Use reducers instead of multiple useState
@@ -250,8 +238,8 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
     }
     if (!emailData) return;
     try {
-      const originalEmail = emailData[emailData.length - 1];
       const userEmail = session?.activeConnection?.email?.toLowerCase();
+      const originalEmail = emailData[emailData.length - 1];
 
       if (!userEmail) {
         throw new Error('Active connection email not found');
@@ -436,12 +424,9 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
-    setMail((prev) => ({
-      ...prev,
-      replyComposerOpen: false,
-      replyAllComposerOpen: false,
-      forwardComposerOpen: false,
-    }));
+    setComposerIsOpen(false);
+    setReplyTo(null);
+    setForward(null);
     setIsEditingRecipients(false);
     setShowCc(false);
     setShowBcc(false);
@@ -527,7 +512,12 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
     aiDispatch({ type: 'SET_LOADING', payload: true });
     try {
       // Extract relevant information from the email thread for context
-      const latestEmail = emailData[emailData.length - 1];
+      const latestEmail = replyTo === 'all'
+        ? emailData[emailData.length - 1]
+        : replyTo
+          ? emailData.find((email) => email.id === replyTo)
+          : emailData[emailData.length - 1];
+
       if (!latestEmail) return;
       const originalSender = latestEmail?.sender?.name || 'the recipient';
 
@@ -618,7 +608,12 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
   const initializeRecipients = useCallback(() => {
     if (!emailData || !emailData.length) return { to: [], cc: [] };
 
-    const latestEmail = emailData[emailData.length - 1];
+    const latestEmail = replyTo === 'all'
+      ? emailData[emailData.length - 1]
+      : replyTo
+        ? emailData.find((email) => email.id === replyTo)
+        : emailData[emailData.length - 1];
+
     if (!latestEmail) return { to: [], cc: [] };
 
     const userEmail = session?.activeConnection?.email?.toLowerCase();
@@ -633,40 +628,31 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
       // Add reply-to or sender email to To
       const replyEmail = latestEmail.replyTo || latestEmail.sender?.email;
       if (replyEmail) {
-        to.push(replyEmail);
+        to.push(replyEmail.toLowerCase());
       }
     } else if (mode === 'replyAll') {
       // Add original sender to To if not current user
       if (latestEmail.sender?.email && latestEmail.sender.email.toLowerCase() !== userEmail) {
-        to.push(latestEmail.sender.email);
+        to.push(latestEmail.sender.email.toLowerCase());
       }
 
-      // Add all original recipients to CC except current user and primary recipient
-      if (latestEmail.to) {
-        latestEmail.to.forEach((recipient) => {
-          if (
-            recipient.email &&
-            recipient.email.toLowerCase() !== userEmail &&
-            recipient.email.toLowerCase() !== to[0]?.toLowerCase()
-          ) {
-            cc.push(recipient.email);
-          }
-        });
-      }
+      // Gather all recipients from 'to' and 'cc'
+      const allRecipients = [
+        ...(latestEmail.to || []),
+        ...(latestEmail.cc || [])
+      ];
 
-      // Add CC recipients if they exist
-      if (latestEmail.cc) {
-        latestEmail.cc.forEach((recipient) => {
-          if (
-            recipient.email &&
-            recipient.email.toLowerCase() !== userEmail &&
-            recipient.email.toLowerCase() !== to[0]?.toLowerCase() &&
-            !cc.includes(recipient.email)
-          ) {
-            cc.push(recipient.email);
-          }
-        });
-      }
+      allRecipients.forEach(recipient => {
+        const email = recipient.email?.toLowerCase();
+        if (
+          email &&
+          email !== userEmail && // Exclude current user
+          !to.includes(email) && // Exclude already in 'to'
+          !cc.includes(email) // Exclude duplicates
+        ) {
+          cc.push(email);
+        }
+      });
 
       // If there are CC recipients, show the CC field
       if (cc.length > 0) {
@@ -675,7 +661,7 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
     }
 
     return { to, cc };
-  }, [emailData, mode, session?.activeConnection?.email]);
+  }, [emailData, mode, session?.activeConnection?.email, replyTo]);
 
   // Initialize recipients when composer opens
   useEffect(() => {
@@ -690,8 +676,7 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
   const renderHeaderContent = () => {
     if (!emailData) return null;
 
-    const latestEmail = emailData[emailData.length - 1];
-    if (!latestEmail) return null;
+    if (!Boolean(replyTo || forward)) return null;
 
     const icon =
       mode === 'forward' ? (
@@ -965,12 +950,7 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
       <div className="bg-offsetLight dark:bg-offsetDark flex w-full gap-2 px-2">
         <Button
           onClick={() => {
-            setMail((prev) => ({
-              ...prev,
-              replyComposerOpen: true,
-              forwardComposerOpen: false,
-              mode: 'reply',
-            }));
+            setComposerIsOpen(true);
           }}
           className="flex h-12 flex-1 items-center justify-center gap-2 rounded-md"
           variant="outline"
@@ -981,13 +961,7 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
         {showReplyAll && (
           <Button
             onClick={() => {
-              setMail((prev) => ({
-                ...prev,
-                replyComposerOpen: false,
-                forwardComposerOpen: false,
-                replyAllComposerOpen: true,
-                mode: 'replyAll',
-              }));
+              setComposerIsOpen(true);
             }}
             className="flex h-12 flex-1 items-center justify-center gap-2 rounded-md"
             variant="outline"
@@ -998,12 +972,9 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
         )}
         <Button
           onClick={() => {
-            setMail((prev) => ({
-              ...prev,
-              replyComposerOpen: false,
-              forwardComposerOpen: true,
-              mode: 'forward',
-            }));
+            setComposerIsOpen(true);
+            setForward(emailData?.[emailData.length - 1]?.id ?? null);
+            setReplyTo(null);
           }}
           className="flex h-12 flex-1 items-center justify-center gap-2 rounded-md"
           variant="outline"
@@ -1245,7 +1216,7 @@ export default function ReplyCompose({ mode = 'reply' }: ReplyComposeProps) {
                 className="rounded-full transition-transform cursor-pointer hover:bg-muted h-8 w-8 -ml-1"
                 tabIndex={-1}
               >
-                <Plus className="h-4 w-4 cursor-pointer"/>
+                <Plus className="h-4 w-4 cursor-pointer" />
               </Button>
             </div>
           </div>

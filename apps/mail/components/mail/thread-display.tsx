@@ -16,9 +16,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { moveThreadsTo, ThreadDestination } from '@/lib/thread-actions';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useThread, useThreads } from '@/hooks/use-threads';
+import { ThreadActionButton } from './thread-action-button';
+import { markAsRead, markAsUnread } from '@/actions/mail';
 import { MailDisplaySkeleton } from './mail-skeleton';
 import { Button } from '@/components/ui/button';
-import { markAsRead, markAsUnread } from '@/actions/mail';
 import { modifyLabels } from '@/actions/mail';
 import { useStats } from '@/hooks/use-stats';
 import ThreadSubject from './thread-subject';
@@ -95,51 +96,14 @@ export function ThreadDemo({ messages, isMobile }: ThreadDisplayProps) {
   );
 }
 
-function ThreadActionButton({
-  icon: Icon,
-  label,
-  onClick,
-  disabled = false,
-  className,
-}: {
-  icon: React.ComponentType<React.ComponentPropsWithRef<any>> & {
-    startAnimation?: () => void;
-    stopAnimation?: () => void;
-  };
-  label: string;
-  onClick?: () => void;
-  disabled?: boolean;
-  className?: string;
-}) {
-  const iconRef = useRef<any>(null);
-
-  return (
-    <TooltipProvider delayDuration={0}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            disabled={disabled}
-            onClick={onClick}
-            variant="ghost"
-            className={cn('md:h-fit md:px-2', className)}
-            onMouseEnter={() => iconRef.current?.startAnimation?.()}
-            onMouseLeave={() => iconRef.current?.stopAnimation?.()}
-          >
-            <Icon ref={iconRef} className="h-4 w-4" />
-            <span className="sr-only">{label}</span>
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>{label}</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
-}
 
 export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
   const { data: emailData, isLoading, mutate: mutateThread } = useThread(id ?? null);
   const { mutate: mutateThreads } = useThreads();
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [replyTo, setReplyTo] = useQueryState('replyTo');
+  const [forward, setForward] = useQueryState('forward');
   const [mail, setMail] = useMail();
   const t = useTranslations();
   const { mutate: mutateStats } = useStats();
@@ -371,47 +335,22 @@ export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
               onClick={handleMarkAsUnread}
             />
             <ThreadActionButton
-              icon={Reply}
-              label={t('common.threadDisplay.reply')}
+              icon={hasMultipleParticipants ? ReplyAll : Reply}
+              label={hasMultipleParticipants ? t('common.threadDisplay.replyAll') : t('common.threadDisplay.reply')}
               disabled={!emailData}
-              className={cn(mail.replyComposerOpen && "bg-primary/10")}
               onClick={() => {
-                setMail((prev) => ({ 
-                  ...prev, 
-                  replyComposerOpen: true,
-                  replyAllComposerOpen: false,
-                  forwardComposerOpen: false 
-                }));
+                setReplyTo("all");
+                setForward(null);
               }}
             />
-            {hasMultipleParticipants && (
-              <ThreadActionButton
-                icon={ReplyAll}
-                label={t('common.threadDisplay.replyAll')}
-                disabled={!emailData}
-                className={cn(mail.replyAllComposerOpen && "bg-primary/10")}
-                onClick={() => {
-                  setMail((prev) => ({ 
-                    ...prev, 
-                    replyComposerOpen: false,
-                    replyAllComposerOpen: true,
-                    forwardComposerOpen: false 
-                  }));
-                }}
-              />
-            )}
             <ThreadActionButton
               icon={Forward}
               label={t('common.threadDisplay.forward')}
               disabled={!emailData}
-              className={cn(mail.forwardComposerOpen && "bg-primary/10")}
+              className={cn(Boolean(forward) && "bg-primary/10")}
               onClick={() => {
-                setMail((prev) => ({ 
-                  ...prev, 
-                  replyComposerOpen: false,
-                  replyAllComposerOpen: false,
-                  forwardComposerOpen: true 
-                }));
+                setForward(emailData?.[emailData.length - 1]?.id ?? null);
+                setReplyTo(null);
               }}
             />
           </div>
@@ -460,7 +399,7 @@ export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
             isFullscreen ? 'mb-2' : ''
           )}>
             <ReplyCompose
-              mode={mail.forwardComposerOpen ? 'forward' : mail.replyAllComposerOpen ? 'replyAll' : 'reply'}
+              mode={forward ? 'forward' : replyTo === 'all' ? 'replyAll' : 'reply'}
             />
           </div>
         </div>

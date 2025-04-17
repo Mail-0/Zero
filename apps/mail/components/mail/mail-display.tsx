@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogClose,
 } from '../ui/dialog';
-import { BellOff, Check, ChevronDown, LoaderCircleIcon, Lock } from 'lucide-react';
+import { BellOff, Check, ChevronDown, LoaderCircleIcon, Lock, Reply, ReplyAll } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
@@ -25,7 +25,10 @@ import { useTranslations } from 'next-intl';
 import { MailIframe } from './mail-iframe';
 import { Button } from '../ui/button';
 import { format } from 'date-fns';
+import { ThreadActionButton } from './thread-action-button';
+import { useMail } from '@/components/mail/use-mail';
 import Image from 'next/image';
+import { useQueryState } from 'nuqs';
 
 const StreamingText = ({ text }: { text: string }) => {
   const [displayText, setDisplayText] = useState('');
@@ -95,6 +98,8 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [unsubscribed, setUnsubscribed] = useState(false);
   const [isUnsubscribing, setIsUnsubscribing] = useState(false);
+  const [replyTo, setReplyTo] = useQueryState('replyTo');
+  const [forward, setForward] = useQueryState('forward');
   const [selectedAttachment, setSelectedAttachment] = useState<null | {
     id: string;
     name: string;
@@ -103,6 +108,7 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
   }>(null);
   const [openDetailsPopover, setOpenDetailsPopover] = useState<boolean>(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const [mail, setMail] = useMail();
   const t = useTranslations();
 
   const { data } = demo
@@ -178,7 +184,7 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
                 <div className="flex items-center justify-start gap-2">
                   <span className="font-semibold">{emailData?.sender?.name}</span>
                   <span className="text-muted-foreground flex grow-0 items-center gap-2 text-sm">
-                    <span className="overflow-hidden text-ellipsis whitespace-nowrap min-w-0">{emailData?.sender?.email}</span>
+                  <span className="overflow-hidden hidden md:inline text-ellipsis whitespace-nowrap min-w-0">{emailData?.sender?.email}</span>
 
                     {listUnsubscribeAction && (
                       <Dialog>
@@ -333,6 +339,18 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
                 </div>
               </div>
             </div>
+            <ThreadActionButton
+              icon={Reply}
+              label={t('common.mailDisplay.replyTo', { user: emailData?.sender?.email })}
+              className={data ? 'invisible' : ''}
+              onClick={(e: React.MouseEvent) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setReplyTo(emailData.id);
+                setForward(null);
+              }}
+            />
+
             {data ? (
               <div className='relative -top-1'>
                 <Popover>
