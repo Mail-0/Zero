@@ -48,6 +48,16 @@ export async function generateAIEmailContent({
       userContext,
     );
 
+    // Check if the response is our specific 'invalid request' system message
+    if (responses.length === 1 && responses[0] && responses[0].type === 'system') {
+      // Pass the system message directly back to the frontend
+      return {
+        content: responses[0].content,
+        jsonContent: createJsonContent([responses[0].content]),
+        type: 'system',
+      };
+    }
+
     const questionResponse = responses.find((r) => r.type === 'question');
     if (questionResponse) {
       return {
@@ -67,6 +77,22 @@ export async function generateAIEmailContent({
     const paragraphs = cleanedContent.split('\n');
 
     const jsonContent = createJsonContent(paragraphs);
+
+    // If the AI response looks like a question back to the user, treat it as a system message
+    const isClarification = 
+      cleanedContent.trim().endsWith('?') ||
+      [/^what/i, /^how/i, /^why/i, /^when/i, /^where/i, /^who/i, /^can you/i, /^could you/i, /^would you/i].some(pattern => pattern.test(cleanedContent.trim())) ||
+      cleanedContent.toLowerCase().includes('please provide more context') ||
+      cleanedContent.toLowerCase().includes('need more information');
+
+    if (isClarification) {
+        console.log('AI Assistant: Detected clarification request from AI. Treating as system message.');
+        return {
+            content: cleanedContent,
+            jsonContent,
+            type: 'system', // Reclassify as system
+        };
+    }
 
     return {
       content: cleanedContent,

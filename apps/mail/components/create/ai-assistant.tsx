@@ -284,15 +284,10 @@ export const AIAssistant = ({
 
     try {
       setIsLoading(true);
-
-      // Add user message
       addMessage('user', prompt, 'question');
-
-      // Reset states
       setIsAskingQuestion(false);
       setShowActions(false);
 
-      // Call the server action
       const result = await generateAIEmailContent({
         prompt,
         currentContent: generatedContent?.content || currentContent,
@@ -300,6 +295,8 @@ export const AIAssistant = ({
         conversationId,
         userContext: { name: userName, email: userEmail },
       });
+
+      console.log('AI Assistant Received Result:', JSON.stringify(result));
 
       // Handle response based on type
       if (result.type === 'question') {
@@ -319,7 +316,10 @@ export const AIAssistant = ({
         addMessage('assistant', result.content, 'email');
         setShowActions(true);
       } else {
+        // Handle system messages (errors, code block refusals, clarification reclassifications)
         addMessage('system', result.content, 'system');
+        // Show a destructive toast for these system messages (refusals/errors)
+        toast.error(result.content);
       }
 
       setPrompt('');

@@ -3,6 +3,7 @@ import { createEmbeddings, generateCompletions } from './groq';
 import { generateConversationId } from './utils';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
+import { EmailAssistantSystemPrompt } from './prompts';
 
 interface AIResponse {
   id: string;
@@ -31,151 +32,113 @@ export async function generateEmailContent(
 ): Promise<AIResponse[]> {
   const headersList = await headers();
   const session = await auth.api.getSession({ headers: headersList });
+  const userName = session?.user.name || 'User';
+  const convId = conversationId || generateConversationId();
+
+  console.log(`AI Assistant: Processing prompt for convId ${convId}: "${prompt}"`);
 
   try {
     if (!process.env.GROQ_API_KEY) {
       throw new Error('Groq API key is not configured');
     }
 
-    // Get or initialize conversation
-    const convId = conversationId || generateConversationId();
+    // Initialize conversation history if it doesn't exist
     if (!conversationHistories[convId]) {
-      conversationHistories[convId] = [
-        { role: 'system', content: process.env.AI_SYSTEM_PROMPT || 'You are an email assistant.' },
-      ];
-
-      // Add user context if available
-      if (userContext?.name) {
-        conversationHistories[convId].push({
-          role: 'system',
-          content: `User name: ${userContext.name}. Always sign emails with ${userContext.name}.`,
-        });
-      }
+      conversationHistories[convId] = [];
     }
 
-    // Add user message to history
-    conversationHistories[convId].push({ role: 'user', content: prompt });
+    const baseSystemPrompt = EmailAssistantSystemPrompt(userName);
 
-    // Check if this is a question about the email
-    const isQuestion = checkIfQuestion(prompt);
-
-    // Build system prompt from conversation history and context
-    let systemPrompt = '';
-    const systemMessages = conversationHistories[convId].filter((msg) => msg.role === 'system');
-    if (systemMessages.length > 0) {
-      systemPrompt = systemMessages.map((msg) => msg.content).join('\n\n');
-    }
-
-    // Add context about current email if it exists
+    // Dynamic context
+    let dynamicContext = '\n\n<dynamic_context>\n';
     if (currentContent) {
-      systemPrompt += `\n\nThe user's current email draft is:\n\n${currentContent}`;
+      dynamicContext += `  <current_draft>${currentContent}</current_draft>\n`;
     }
-
-    // Add context about recipients
     if (recipients && recipients.length > 0) {
-      systemPrompt += `\n\nThe email is addressed to: ${recipients.join(', ')}`;
+      dynamicContext += `  <recipients>${recipients.join(', ')}</recipients>\n`;
     }
+    dynamicContext += '</dynamic_context>\n';
+    const fullSystemPrompt = baseSystemPrompt + (dynamicContext.length > 30 ? dynamicContext : '');
 
-    // Build user prompt from conversation history
-    const userMessages = conversationHistories[convId]
+    // Build conversation history string for the prompt
+    const conversationHistory = conversationHistories[convId]
       .filter((msg) => msg.role === 'user' || msg.role === 'assistant')
-      .map((msg) => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
-      .join('\n\n');
+      .map((msg) => `<message role="${msg.role}">${msg.content}</message>`)
+      .join('\n');
+      
+    const fullPrompt = conversationHistory + `\n<message role="user">${prompt}</message>`;
 
-    // Create embeddings for relevant context
+    // Embeddings
     const embeddingTexts: Record<string, string> = {};
-
-    if (currentContent) {
-      embeddingTexts.currentEmail = currentContent;
-    }
-
-    if (prompt) {
-      embeddingTexts.userPrompt = prompt;
-    }
-
-    // Add previous messages for context
-    const previousMessages = conversationHistories[convId]
-      .filter((msg) => msg.role === 'user' || msg.role === 'assistant')
-      .slice(-4); // Get last 4 messages
-
+    if (currentContent) { embeddingTexts.currentEmail = currentContent; }
+    if (prompt) { embeddingTexts.userPrompt = prompt; }
+    const previousMessages = conversationHistories[convId].slice(-4);
     if (previousMessages.length > 0) {
-      embeddingTexts.conversationHistory = previousMessages
-        .map((msg) => `${msg.role}: ${msg.content}`)
-        .join('\n\n');
+      embeddingTexts.conversationHistory = previousMessages.map((msg) => `${msg.role}: ${msg.content}`).join('\n\n');
     }
-
-    // Generate embeddings
     let embeddings = {};
-    try {
-      embeddings = await createEmbeddings(embeddingTexts);
-    } catch (embeddingError) {
-      console.error(embeddingError);
-    }
+    try { embeddings = await createEmbeddings(embeddingTexts); } catch (e) { console.error('Embedding error:', e); }
 
-    // Make API call using the ai function
+    // --- AI Call ---
+    console.log(`AI Assistant: Calling generateCompletions for convId ${convId}...`);
     const { completion } = await generateCompletions({
-      model: 'gpt-4o-mini', // Using Groq's model
-      systemPrompt,
-      prompt: userMessages + '\n\nUser: ' + prompt,
+      model: 'gpt-4o-mini',
+      systemPrompt: fullSystemPrompt,
+      prompt: fullPrompt,
       temperature: 0.7,
-      embeddings, // Pass the embeddings to the API call
-      userName: session?.user.name || 'User',
+      embeddings,
+      userName: userName,
     });
+    console.log(`AI Assistant: Received completion for convId ${convId}:`, completion);
 
-    const generatedContent = completion;
-
-    // Add assistant response to conversation history
+    // --- Post-AI Safety Net ---
+    const refusalContent = "Sorry, I can only assist with email-related tasks.";
+    if (completion.includes('```') || completion.trim().startsWith('<html>')) {
+      console.warn(`AI Assistant Post-Check: Detected forbidden content (code block or HTML) in AI response for convId ${convId}. Overriding.`);
+      conversationHistories[convId].push({ role: 'user', content: prompt });
+      conversationHistories[convId].push({ role: 'assistant', content: refusalContent });
+      return [
+        { id: 'override-' + Date.now(), content: refusalContent, type: 'system' },
+      ];
+    }
+    
+    // --- Process Valid Completion ---
+    const generatedContent = completion.trim();
+    conversationHistories[convId].push({ role: 'user', content: prompt });
     conversationHistories[convId].push({ role: 'assistant', content: generatedContent });
 
-    // Format and return the response
-    if (isQuestion) {
-      return [
-        {
-          id: 'question-' + Date.now(),
-          content: generatedContent,
-          type: 'question',
-          position: 'replace',
-        },
-      ];
-    } else {
-      return [
-        {
-          id: 'email-' + Date.now(),
-          content: generatedContent,
-          type: 'email',
-          position: 'replace',
-        },
-      ];
-    }
+    const isClarificationNeeded = checkIfQuestion(generatedContent);
+
+    if (isClarificationNeeded) {
+       console.log(`AI Assistant: AI response is a clarification question for convId ${convId}.`);
+       return [
+         { id: 'question-' + Date.now(), content: generatedContent, type: 'question', position: 'replace' },
+       ];
+     } else {
+       console.log(`AI Assistant: AI response is email content for convId ${convId}.`);
+       return [
+         { id: 'email-' + Date.now(), content: generatedContent, type: 'email', position: 'replace' },
+       ];
+     }
+
   } catch (error) {
-    console.error('Error generating email content:', error);
-    throw error;
+    console.error(`Error during AI email generation process for convId ${convId}:`, error);
+    return [
+      {
+        id: 'error-' + Date.now(),
+        content: "Sorry, I encountered an error processing your request.",
+        type: 'system',
+      },
+    ];
   }
 }
 
 function checkIfQuestion(prompt: string): boolean {
   const trimmedPrompt = prompt.trim().toLowerCase();
-
-  // Check if the prompt ends with a question mark
   if (trimmedPrompt.endsWith('?')) return true;
-
-  // Check if the prompt starts with question words
   const questionStarters = [
-    'what',
-    'how',
-    'why',
-    'when',
-    'where',
-    'who',
-    'can you',
-    'could you',
-    'would you',
-    'will you',
-    'is it',
-    'are there',
-    'should i',
-    'do you',
+    'what', 'how', 'why', 'when', 'where', 'who', 'can you', 'could you',
+    'would you', 'will you', 'is it', 'are there', 'should i', 'do you',
   ];
-
   return questionStarters.some((starter) => trimmedPrompt.startsWith(starter));
 }
