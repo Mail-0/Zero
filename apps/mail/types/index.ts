@@ -108,6 +108,7 @@ export type ThreadProps = {
   isInQuickActionMode?: boolean;
   selectedQuickActionIndex?: number;
   resetNavigation?: () => void;
+  setHoveredMailId?: (index: string | null) => void;
 };
 
 export type ConditionalThreadProps = ThreadProps &

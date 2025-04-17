@@ -10,9 +10,18 @@ import {
   Tag,
   User,
   Users,
+  X
 } from 'lucide-react';
+import {
+  type ComponentProps,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import type { ConditionalThreadProps, InitialThread, MailListProps, MailSelectMode } from '@/types';
-import { type ComponentProps, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { EmptyState, type FolderType } from '@/components/mail/empty-state';
 import { ThreadContextMenu } from '@/components/context/thread-context';
@@ -36,6 +45,7 @@ import { useQueryState } from 'nuqs';
 import { Categories } from './mail';
 import items from './demo.json';
 import { toast } from 'sonner';
+
 const HOVER_DELAY = 1000;
 
 const ThreadWrapper = ({
@@ -80,8 +90,9 @@ const Thread = memo(
     onClick,
     sessionData,
     isKeyboardFocused,
+    setHoveredMailId,
   }: ConditionalThreadProps) => {
-    const [mail] = useMail();
+    const [mail, setEmail] = useMail();
     const [searchValue] = useSearchValue();
     const t = useTranslations();
     const { folder } = useParams<{ folder: string }>();
@@ -110,7 +121,7 @@ const Thread = memo(
     const handleMouseEnter = () => {
       if (demo) return;
       isHovering.current = true;
-
+      setHoveredMailId?.(message?.threadId || message?.id || null);
       // Prefetch only in single select mode
       if (selectMode === 'single' && sessionData?.userId && !hasPrefetched.current) {
         // Clear any existing timeout
@@ -135,6 +146,8 @@ const Thread = memo(
 
     const handleMouseLeave = () => {
       isHovering.current = false;
+      setHoveredMailId?.(null);
+
       if (hoverTimeoutRef.current) {
         clearTimeout(hoverTimeoutRef.current);
       }
@@ -302,6 +315,33 @@ const Thread = memo(
                         </Tooltip>
                       ) : null}
                     </div>
+                    {isMailBulkSelected && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-muted-foreground absolute right-0 top-0 ml-1.5 h-7 w-fit px-2"
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              setEmail({
+                                ...mail,
+                                bulkSelected: mail.bulkSelected.filter((id) => id !== message.id),
+                              });
+                            }}
+                          >
+                            <X />
+                          </Button>
+                        </TooltipTrigger>
+
+                        <TooltipContent>{t('common.mail.clearSelection')}</TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className={cn('mt-1 line-clamp-1 text-xs opacity-70 transition-opacity')}>
+                      {highlightText(message.subject, searchValue.highlight)}
+                    </p>
                     {message.receivedOn ? (
                       <p
                         className={cn(
@@ -313,6 +353,7 @@ const Thread = memo(
                       </p>
                     ) : null}
                   </div>
+
                   <div className="flex justify-between">
                     <p className={cn('mt-1 line-clamp-1 text-xs opacity-70 transition-opacity')}>
                       {highlightText(message.subject, searchValue.highlight)}
@@ -460,9 +501,11 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
 
   const isKeyPressed = useKeyState();
 
-  const selectAll = useCallback(() => {
-    // If there are already items selected, deselect them all
-    if (mail.bulkSelected.length > 0) {
+  const [hoveredMailId, setHoveredMailId] = useState<string | null>(null);
+
+  const selectHoveredAndBelow = useCallback(() => {
+    // If there are items selected and no mail hovered, deselect them all
+    if (mail.bulkSelected.length > 0 && !hoveredMailId) {
       setMail((prev) => ({
         ...prev,
         bulkSelected: [],
@@ -472,14 +515,16 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
     // Otherwise select all items
     else if (items.length > 0) {
       const allIds = items.map((item) => item.threadId ?? item.id);
+      const allIdsFromHoveredAndBelow = allIds.slice(allIds.indexOf(hoveredMailId ?? ''));
+
       setMail((prev) => ({
         ...prev,
-        bulkSelected: allIds,
+        bulkSelected: hoveredMailId ? allIdsFromHoveredAndBelow : allIds,
       }));
     } else {
       toast.info(t('common.mail.noEmailsToSelect'));
     }
-  }, [items, setMail, mail.bulkSelected, t]);
+  }, [items, setMail, mail.bulkSelected, t, hoveredMailId]);
 
   useHotKey('Meta+Shift+u', () => {
     markAsUnread({ ids: mail.bulkSelected }).then((result) => {
@@ -531,22 +576,22 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
 
   // useHotKey('Meta+a', (event) => {
   //   event?.preventDefault();
-  //   selectAll();
+  //   selectHoveredAndBelow();
   // });
 
   useHotKey('Control+a', (event) => {
     event?.preventDefault();
-    selectAll();
+    selectHoveredAndBelow();
   });
 
   // useHotKey('Meta+n', (event) => {
   //   event?.preventDefault();
-  //   selectAll();
+  //   selectHoveredAndBelow();
   // });
 
   // useHotKey('Control+n', (event) => {
   //   event?.preventDefault();
-  //   selectAll();
+  //   selectHoveredAndBelow();
   // });
 
   const getSelectMode = useCallback((): MailSelectMode => {
@@ -564,6 +609,17 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
 
   const handleMailClick = useCallback(
     (message: InitialThread) => () => {
+      const isNotselectedDuringBulk =
+        mail.bulkSelected.length && !mail.bulkSelected.includes(message.threadId ?? message.id);
+
+      if (isNotselectedDuringBulk) {
+        setMail((prev) => ({
+          ...prev,
+          bulkSelected: [...prev.bulkSelected, message.id],
+        }));
+        return;
+      }
+
       handleMouseEnter(message.id);
 
       const messageThreadId = message.threadId ?? message.id;
@@ -571,6 +627,7 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
       // Update local state immediately for optimistic UI
       setMail((prev) => ({
         ...prev,
+        selected: messageThreadId,
         replyComposerOpen: false,
         forwardComposerOpen: false,
       }));
@@ -578,7 +635,7 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
       // Update URL param without navigation
       void setThreadId(messageThreadId);
     },
-    [handleMouseEnter, setThreadId, t, setMail],
+    [handleMouseEnter, setThreadId, t, setMail, mail],
   );
 
   const isEmpty = items.length === 0;
@@ -637,6 +694,7 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
                 isInQuickActionMode={isQuickActionMode && focusedIndex === index}
                 selectedQuickActionIndex={quickActionIndex}
                 resetNavigation={resetNavigation}
+                setHoveredMailId={setHoveredMailId}
               />
             );
           })}
