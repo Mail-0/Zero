@@ -290,10 +290,10 @@ export const AIAssistant = ({
       setIsLoading(true); // Keep from either branch
       setErrorOccurred(false); // Keep from your branch
 
-      // Track AI assistant usage (Keep from staging)
+      // Track AI assistant usage
       posthog.capture('Create Email AI Assistant Submit');
 
-      // Add user message (Keep from either branch)
+       // Add user message
       addMessage('user', prompt, 'question');
 
       // Reset states (Keep comprehensive resets from your branch)
@@ -301,7 +301,6 @@ export const AIAssistant = ({
       setShowActions(false);
       setGeneratedBody(null);
       setGeneratedSubject(undefined);
-    // --- End of Merged Section ---
 
       // Continue with your branch's logic for body/subject generation
       // --- Step 1: Generate Body ---
