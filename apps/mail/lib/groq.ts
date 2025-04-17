@@ -232,26 +232,6 @@ export async function generateCompletions({
     }
   }
   
-  // Enhance the system prompt for email generation to improve formatting
-  if (enhancedSystemPrompt.toLowerCase().includes('email')) {
-    enhancedSystemPrompt = process.env.AI_SYSTEM_PROMPT || `You are an email assistant helping ${userName} write professional and concise email replies.
-  
-  Important instructions:
-  - Generate a real, ready-to-send email reply, not a template
-  - Do not include placeholders like [Recipient], [discount percentage], etc.
-  - Do not include formatting instructions or explanations
-  - Do not include "Subject:" lines
-  - Do not include "Here's a draft..." or similar meta-text
-  - Write as if this email is ready to be sent immediately
-  - Use real, specific content instead of placeholders
-  - Address the recipient directly without using [brackets]
-  - Be concise but thorough (2-3 paragraphs maximum)
-  - Write in the first person as if you are ${userName}
-  - Double space paragraphs (2 newlines)
-  - Add two spaces below the sign-off
-  - End with the name: ${userName}`;
-  }
-  
   // Ensure we have valid messages
   const messages = [];
   
@@ -283,6 +263,11 @@ export async function generateCompletions({
   };
 
   try {
+    // Log the exact request body being sent
+    console.log("--- START GROQ API Request Body ---");
+    console.log(JSON.stringify(requestBody, null, 2));
+    console.log("--- END GROQ API Request Body ---");
+
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
