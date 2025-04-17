@@ -9,7 +9,7 @@ import { useSearchValue } from '@/hooks/use-search-value';
 import { markAsRead, markAsUnread } from '@/actions/mail';
 import { highlightText } from '@/lib/email-utils.client';
 import { useMail } from '@/components/mail/use-mail';
-import { useHotKey } from '@/hooks/use-hot-key';
+import { useHotkeys } from 'react-hotkeys-hook';
 import { useDrafts } from '@/hooks/use-drafts';
 import { useSession } from '@/lib/auth-client';
 import { ScrollArea } from '../ui/scroll-area';
@@ -92,7 +92,7 @@ export function DraftsList({ isCompact }: MailListProps) {
     isValidating,
     isLoading,
     loadMore,
-    error
+    error,
   } = useDrafts(searchValue.value, defaultPageSize);
 
   const parentRef = useRef<HTMLDivElement>(null);
@@ -135,27 +135,27 @@ export function DraftsList({ isCompact }: MailListProps) {
     setSelectAllBelowMode(false);
   };
 
-  useHotKey('Control', () => {
+  useHotkeys('Control', () => {
     resetSelectMode();
     setMassSelectMode(true);
   });
 
-  useHotKey('Meta', () => {
+  useHotkeys('Meta', () => {
     resetSelectMode();
     setMassSelectMode(true);
   });
 
-  useHotKey('Shift', () => {
+  useHotkeys('Shift', () => {
     resetSelectMode();
     setRangeSelectMode(true);
   });
 
-  useHotKey('Alt+Shift', () => {
+  useHotkeys('Alt+Shift', () => {
     resetSelectMode();
     setSelectAllBelowMode(true);
   });
 
-  useHotKey('Meta+Shift+u', async () => {
+  useHotkeys('Meta+Shift+u', async () => {
     resetSelectMode();
     const res = await markAsUnread({ ids: mail.bulkSelected });
     if (res.success) {
@@ -167,7 +167,7 @@ export function DraftsList({ isCompact }: MailListProps) {
     } else toast.error(t('common.mail.failedToMarkAsUnread'));
   });
 
-  useHotKey('Control+Shift+u', async () => {
+  useHotkeys('Control+Shift+u', async () => {
     resetSelectMode();
     const res = await markAsUnread({ ids: mail.bulkSelected });
     if (res.success) {
@@ -179,7 +179,7 @@ export function DraftsList({ isCompact }: MailListProps) {
     } else toast.error(t('common.mail.failedToMarkAsUnread'));
   });
 
-  useHotKey('Meta+Shift+i', async () => {
+  useHotkeys('Meta+Shift+i', async () => {
     resetSelectMode();
     const res = await markAsRead({ ids: mail.bulkSelected });
     if (res.success) {
@@ -191,7 +191,7 @@ export function DraftsList({ isCompact }: MailListProps) {
     } else toast.error(t('common.mail.failedToMarkAsRead'));
   });
 
-  useHotKey('Control+Shift+i', async () => {
+  useHotkeys('Control+Shift+i', async () => {
     resetSelectMode();
     const res = await markAsRead({ ids: mail.bulkSelected });
     if (res.success) {
@@ -217,33 +217,29 @@ export function DraftsList({ isCompact }: MailListProps) {
   //   else toast.error("Failed to mark as junk");
   // });
 
-  // useHotKey('Meta+a', async (event) => {
-  //   // @ts-expect-error
-  //   event.preventDefault();
-  //   resetSelectMode();
-  //   selectAll();
-  // });
-
-  useHotKey('Control+a', async (event) => {
-    // @ts-expect-error
+  useHotkeys('Meta+a', async (event) => {
     event.preventDefault();
     resetSelectMode();
     selectAll();
   });
 
-  // useHotKey('Meta+n', async (event) => {
-  //   // @ts-expect-error
-  //   event.preventDefault();
-  //   resetSelectMode();
-  //   selectAll();
-  // });
+  useHotkeys('Control+a', async (event) => {
+    event.preventDefault();
+    resetSelectMode();
+    selectAll();
+  });
 
-  // useHotKey('Control+n', async (event) => {
-  //   // @ts-expect-error
-  //   event.preventDefault();
-  //   resetSelectMode();
-  //   selectAll();
-  // });
+  useHotkeys('Meta+n', async (event) => {
+    event.preventDefault();
+    resetSelectMode();
+    selectAll();
+  });
+
+  useHotkeys('Control+n', async (event) => {
+    event.preventDefault();
+    resetSelectMode();
+    selectAll();
+  });
 
   useEffect(() => {
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -345,7 +341,7 @@ export function DraftsList({ isCompact }: MailListProps) {
       items,
       nextPageToken,
       isValidating,
-      isLoading
+      isLoading,
     });
   }, [items, nextPageToken, isValidating, isLoading]);
 

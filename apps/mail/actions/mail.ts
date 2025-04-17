@@ -1,5 +1,6 @@
 'use server';
 import { deleteActiveConnection, FatalErrors, getActiveDriver } from './utils';
+import { IGetThreadResponse } from '@/app/api/driver/types';
 import { ParsedMessage } from '@/types';
 
 export const getMails = async ({
@@ -29,7 +30,7 @@ export const getMails = async ({
   }
 };
 
-export const getMail = async ({ id }: { id: string }): Promise<ParsedMessage[]> => {
+export const getMail = async ({ id }: { id: string }): Promise<IGetThreadResponse> => {
   if (!id) {
     throw new Error('Missing required fields');
   }
@@ -128,17 +129,17 @@ export const toggleStar = async ({ ids }: { ids: string[] }) => {
       return { success: false, error: 'No thread IDs provided' };
     }
 
-    const threadResults = await Promise.allSettled(
-      threadIds.map(id => driver.get(id))
-    );
+    const threadResults = await Promise.allSettled(threadIds.map((id) => driver.get(id)));
 
     let anyStarred = false;
     let processedThreads = 0;
 
     for (const result of threadResults) {
-      if (result.status === 'fulfilled' && result.value && result.value.length > 0) {
+      if (result.status === 'fulfilled' && result.value && result.value.messages.length > 0) {
         processedThreads++;
-        const isThreadStarred = result.value.some((message: ParsedMessage) => message.tags?.includes('STARRED'));
+        const isThreadStarred = result.value.messages.some((message: ParsedMessage) =>
+          message.tags?.includes('STARRED'),
+        );
         if (isThreadStarred) {
           anyStarred = true;
           break;

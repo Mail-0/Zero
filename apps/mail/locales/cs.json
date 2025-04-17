@@ -40,7 +40,8 @@
       "trustSender": "Důvěřovat odesílateli",
       "cancel": "Zrušit",
       "save": "Uložit",
-      "remove": "Odstranit"
+      "remove": "Odstranit",
+      "settings": "Nastavení"
     },
     "themes": {
       "dark": "Tmavé",
@@ -116,7 +117,8 @@
       "personal": "Osobní",
       "updates": "Aktualizace",
       "promotions": "Promoakce",
-      "social": "Sociální sítě"
+      "social": "Sociální sítě",
+      "unread": "Nepřečtené"
     },
     "replyCompose": {
       "replyTo": "Odpovědět",
@@ -134,6 +136,7 @@
       "from": "Od",
       "to": "Pro",
       "cc": "Kopie",
+      "bcc": "Skrytá kopie",
       "date": "Datum",
       "mailedBy": "Přijato",
       "signedBy": "Podepsáno",
@@ -400,6 +403,7 @@
       }
     },
     "createEmail": {
+      "invalidEmail": "Neplatná e-mailová adresa",
       "body": "Tělo",
       "example": "nula@0.email",
       "attachments": "Přílohy",

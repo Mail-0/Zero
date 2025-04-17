@@ -1,6 +1,7 @@
 'use client';
 import { useSession } from '@/lib/auth-client';
 import { mailCount } from '@/actions/mail';
+import axios from 'axios';
 import useSWR from 'swr';
 
 export const useStats = () => {
@@ -13,7 +14,7 @@ export const useStats = () => {
     error,
   } = useSWR<{ label: string; count: number }[]>(
     session?.connectionId ? `/mail-count/${session?.connectionId}` : null,
-    mailCount,
+    () => axios.get('/api/driver/count').then((res) => res.data),
   );
 
   return {

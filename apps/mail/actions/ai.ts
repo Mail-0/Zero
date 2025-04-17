@@ -1,6 +1,7 @@
 // The brain.ts file in /actions should replace this file once ready.
 'use server';
 
+import { throwUnauthorizedGracefully } from '@/app/api/utils';
 import { generateEmailBody, generateSubjectForEmail } from '@/lib/ai';
 import { headers } from 'next/headers';
 import { JSONContent } from 'novel';
@@ -37,7 +38,7 @@ export async function generateAIEmailBody({
     const session = await auth.api.getSession({ headers: headersList });
 
     if (!session?.user) {
-      throw new Error('Unauthorized');
+      return throwUnauthorizedGracefully();
     }
     
     const responses = await generateEmailBody(

@@ -18,14 +18,13 @@
       "pt",
       "ru",
       "tr",
-      "hu"
+      "hu",
+      "fa"
     ]
   },
   "buckets": {
     "json": {
-      "include": [
-        "apps/mail/locales/[locale].json"
-      ]
+      "include": ["apps/mail/locales/[locale].json"]
     }
   }
 }

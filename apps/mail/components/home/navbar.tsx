@@ -26,12 +26,13 @@ export default function Navbar() {
   const mobileNavContent = () => {
     return (
       <>
-        <Link
-          href={session ? '/mail' : '/login'}
-          className="w-full py-2 text-center text-gray-800 transition-opacity hover:opacity-80 dark:bg-gradient-to-r dark:from-gray-300 dark:via-gray-100 dark:to-gray-200 dark:bg-clip-text dark:text-transparent"
-        >
-          {session ? 'Dashboard' : 'Sign in'}
-        </Link>
+        <Button asChild>
+          <Link
+            href={session ? '/mail' : '/login'}
+          >
+            {session ? 'Open Zero' : 'Get Started'}
+          </Link>
+        </Button>
         <Button
           className="w-full bg-gray-900 text-white hover:bg-black dark:bg-white dark:text-black dark:hover:bg-white/90"
           asChild
@@ -45,18 +46,21 @@ export default function Navbar() {
   const desktopNavContent = () => {
     return (
       <>
-        <Link
-          href={session ? "/mail" : "/login"}
-          className="text-nowrap text-sm text-gray-800 transition-opacity hover:opacity-80 dark:bg-gradient-to-r dark:from-gray-300 dark:via-gray-100 dark:to-gray-200 dark:bg-clip-text dark:text-transparent"
-        >
-          {session ? 'Dashboard' : 'Sign in'}
-        </Link>
-        <Button
+        <Button asChild>
+          <Link
+            href={session ? "/mail" : "/login"}
+          >
+            {session ? 'Open Zero' : 'Get Started'}
+          </Link>
+        </Button>
+
+        {/* It is better to enable this button when we implement our own mail server, no need for it honestly */}
+        {/* <Button
           className="h-[32px] w-[110px] rounded-md bg-gray-900 text-white hover:bg-black dark:bg-white dark:text-black dark:hover:bg-white/90"
           asChild
         >
           <Link href={session ? '/mail' : '/login'}>Get Started</Link>
-        </Button>
+        </Button> */}
       </>
     )
   }

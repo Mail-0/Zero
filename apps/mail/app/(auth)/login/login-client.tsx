@@ -67,6 +67,10 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
       toast.error('Early access is required to log in');
     }
 
+    if (error === 'unauthorized') {
+      toast.error('Zero could not load your data from the 3rd party provider. Please try again.');
+    }
+
     const missing = providers.find((p) => p.required && !p.enabled);
     if (missing?.id) {
       setExpandedProviders({ [missing.id]: true });

@@ -1,14 +1,15 @@
 'use client';
 import { useParams, useSearchParams } from 'next/navigation';
+import { IGetThreadResponse } from '@/app/api/driver/types';
 import type { InitialThread, ParsedMessage } from '@/types';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useSession } from '@/lib/auth-client';
 import { defaultPageSize } from '@/lib/utils';
 import useSWRInfinite from 'swr/infinite';
 import useSWR, { preload } from 'swr';
+import { useQueryState } from 'nuqs';
 import { useMemo } from 'react';
 import axios from 'axios';
-import { useQueryState } from 'nuqs';
 
 export const preloadThread = async (userId: string, threadId: string, connectionId: string) => {
   console.log(`🔄 Prefetching email ${threadId}...`);
@@ -51,7 +52,7 @@ const fetchEmails = async ([
 const fetchThread = async (args: any[]) => {
   const [_, id] = args;
   try {
-    const response = await axios.get<ParsedMessage[]>(`/api/driver/${id}`);
+    const response = await axios.get<IGetThreadResponse>(`/api/driver/${id}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching email:', error);
@@ -79,6 +80,11 @@ export const useThreads = () => {
   const { folder } = useParams<{ folder: string }>();
   const [searchValue] = useSearchValue();
   const { data: session } = useSession();
+  const searchParams = new URLSearchParams({
+    q: searchValue.value,
+    folder,
+    max: defaultPageSize.toString(),
+  });
 
   const { data, error, size, setSize, isLoading, isValidating, mutate } = useSWRInfinite(
     (_, previousPageData) => {
@@ -90,7 +96,7 @@ export const useThreads = () => {
         defaultPageSize,
       ]);
     },
-    fetchEmails,
+    () => axios.get<RawResponse>(`/api/driver?${searchParams.toString()}`).then((res) => res.data),
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
@@ -125,14 +131,14 @@ export const useThreads = () => {
 export const useThread = (threadId: string | null) => {
   const { data: session } = useSession();
   const [_threadId] = useQueryState('threadId');
-  const id = threadId ? threadId : _threadId
+  const id = threadId ? threadId : _threadId;
 
-  const { data, isLoading, error, mutate } = useSWR<ParsedMessage[]>(
+  const { data, isLoading, error, mutate } = useSWR<IGetThreadResponse>(
     session?.user.id && id ? [session.user.id, id, session.connectionId] : null,
-    fetchThread,
+    () => axios.get<IGetThreadResponse>(`/api/driver/${id}`).then((res) => res.data),
   );
 
-  const hasUnread = useMemo(() => data?.some((e) => e.unread), [data]);
+  const hasUnread = useMemo(() => data?.messages.some((e) => e.unread), [data]);
 
   return { data, isLoading, error, hasUnread, mutate };
 };

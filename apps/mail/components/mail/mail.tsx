@@ -52,7 +52,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { clearBulkSelectionAtom } from './use-mail';
 import { useThreads } from '@/hooks/use-threads';
 import { Button } from '@/components/ui/button';
-import { useHotKey } from '@/hooks/use-hot-key';
+import { useHotkeysContext } from 'react-hotkeys-hook';
 import { useSession } from '@/lib/auth-client';
 import { useStats } from '@/hooks/use-stats';
 import { useRouter } from 'next/navigation';
@@ -218,6 +218,7 @@ export function MailLayout() {
   const { data: session, isPending } = useSession();
   const t = useTranslations();
   const prevFolderRef = useRef(folder);
+  const { enableScope, disableScope } = useHotkeysContext();
 
   useEffect(() => {
     if (prevFolderRef.current !== folder && mail.bulkSelected.length > 0) {
@@ -250,15 +251,27 @@ export function MailLayout() {
 
   const [threadId, setThreadId] = useQueryState('threadId');
 
-  const handleClose = () => {
-    setThreadId(null);
-  }
+  useEffect(() => {
+    if (threadId) {
+      console.log('Enabling thread-display scope, disabling mail-list');
+      enableScope('thread-display');
+      disableScope('mail-list');
+    } else {
+      console.log('Enabling mail-list scope, disabling thread-display');
+      enableScope('mail-list');
+      disableScope('thread-display');
+    }
 
-  // Search bar is always visible now, no need for keyboard shortcuts to toggle it
-  useHotKey('Esc', (event) => {
-    event?.preventDefault();
-    // Handle other Esc key functionality if needed
-  });
+    return () => {
+      console.log('Cleaning up mail/thread scopes');
+      disableScope('thread-display');
+      disableScope('mail-list');
+    };
+  }, [threadId, enableScope, disableScope]);
+
+  const handleClose = useCallback(() => {
+    setThreadId(null);
+  }, [setThreadId]);
 
   // Add mailto protocol handler registration
   useEffect(() => {
@@ -364,28 +377,7 @@ export function MailLayout() {
                 )}
               />
               <div className="h-[calc(100dvh-56px)] overflow-hidden pt-0 md:h-[calc(100dvh-(8px+8px+14px+44px))]">
-                {isLoading ? (
-                  <div className="flex flex-col">
-                    {[...Array(8)].map((_, i) => (
-                      <div key={i} className="flex flex-col px-4 py-3">
-                        <div className="flex w-full items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Skeleton className="h-4 w-24" />
-                          </div>
-                          <Skeleton className="h-3 w-12" />
-                        </div>
-                        <Skeleton className="mt-2 h-3 w-32" />
-                        <Skeleton className="mt-2 h-3 w-full" />
-                        <div className="mt-2 flex gap-2">
-                          <Skeleton className="h-4 w-16 rounded-md" />
-                          <Skeleton className="h-4 w-16 rounded-md" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <MailList isCompact={true} />
-                )}
+                <MailList isCompact={true} />
               </div>
             </div>
           </ResizablePanel>
@@ -451,7 +443,7 @@ function BulkSelectActions() {
           await new Promise((resolve) => setTimeout(resolve, 499));
           const emailData = await getMail({ id: bulkSelected });
           if (emailData) {
-            const [firstEmail] = emailData;
+            const firstEmail = emailData.latest;
             if (firstEmail)
               return handleUnsubscribe({ emailData: firstEmail }).catch((e) => {
                 toast.error(e.message ?? 'Unknown error while unsubscribing');
@@ -479,6 +471,7 @@ function BulkSelectActions() {
     try {
       const response = await markAsRead({ ids: mail.bulkSelected });
       if (response.success) {
+        // TODO: fix this, it needs useThread mutation 
         await mutateThreads();
         await mutateStats();
         setMail((prev) => ({

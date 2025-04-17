@@ -1,8 +1,9 @@
-"use server";
+'use server';
 
-import { createDriver } from "@/app/api/driver";
-import { Sender } from "@/types";
-import { getActiveConnection } from "./utils";
+import { throwUnauthorizedGracefully } from '@/app/api/utils';
+import { createDriver } from '@/app/api/driver';
+import { getActiveConnection } from './utils';
+import { Sender } from '@/types';
 
 export async function sendEmail({
   to,
@@ -12,7 +13,7 @@ export async function sendEmail({
   bcc,
   cc,
   headers: additionalHeaders = {},
-  threadId
+  threadId,
 }: {
   to: Sender[];
   subject: string;
@@ -21,25 +22,23 @@ export async function sendEmail({
   headers?: Record<string, string>;
   cc?: Sender[];
   bcc?: Sender[];
-  threadId?: string
+  threadId?: string;
 }) {
   if (!to || !subject || !message) {
-    throw new Error("Missing required fields");
+    throw new Error('Missing required fields');
   }
 
-  console.log(additionalHeaders)
-
-  const connection = await getActiveConnection()
+  const connection = await getActiveConnection();
 
   if (!connection?.accessToken || !connection.refreshToken) {
-    throw new Error("Unauthorized, reconnect");
+    return throwUnauthorizedGracefully();
   }
 
   const driver = await createDriver(connection.providerId, {
     auth: {
       access_token: connection.accessToken,
       refresh_token: connection.refreshToken,
-      email: connection.email
+      email: connection.email,
     },
   });
 
@@ -51,7 +50,7 @@ export async function sendEmail({
     headers: additionalHeaders,
     cc,
     bcc,
-    threadId
+    threadId,
   });
 
   return { success: true };

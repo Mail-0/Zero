@@ -59,7 +59,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <Sidebar
         collapsible="icon"
         {...props}
-        className="bg-offsetWhite dark:bg-offsetDark flex flex-col items-center"
+        className="bg-offsetWhite dark:bg-offsetDark flex flex-col items-center select-none"
       >
         <div className="flex w-full flex-col">
           <SidebarHeader className="flex flex-col gap-2 p-2">

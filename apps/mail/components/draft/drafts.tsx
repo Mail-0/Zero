@@ -11,7 +11,6 @@ import { ArchiveX, BellOff, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { cn, defaultPageSize } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useHotKey } from '@/hooks/use-hot-key';
 import { SearchBar } from '../mail/search-bar';
 import { useDrafts } from '@/hooks/use-drafts';
 import { useSession } from '@/lib/auth-client';
@@ -33,6 +32,8 @@ export function DraftsLayout() {
   }, [session?.user, isPending]);
 
   const { isLoading, isValidating } = useDrafts(searchValue.value, defaultPageSize);
+
+  const searchIconRef = useRef<any>(null);
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -74,7 +75,7 @@ export function DraftsLayout() {
               </>
             ) : (
               <div className="flex flex-1 justify-center">
-                <SearchBar />
+                {/* <SearchBar /> */}
               </div>
             )}
           </div>

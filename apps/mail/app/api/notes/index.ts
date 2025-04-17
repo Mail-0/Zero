@@ -1,7 +1,8 @@
-import { auth } from '@/lib/auth';
-import { notesManager } from './db';
-import type { Note } from './types';
+import { throwUnauthorizedGracefully } from '../utils';
 import { headers } from 'next/headers';
+import type { Note } from './types';
+import { notesManager } from './db';
+import { auth } from '@/lib/auth';
 export type { Note } from './types';
 
 async function getCurrentUserId(): Promise<string> {
@@ -10,7 +11,7 @@ async function getCurrentUserId(): Promise<string> {
     const session = await auth.api.getSession({ headers: headersList });
 
     if (!session?.user?.id) {
-      throw new Error('Unauthorized');
+      return throwUnauthorizedGracefully();
     }
     return session.user.id;
   } catch (error) {
@@ -34,7 +35,7 @@ export const notes = {
     threadId: string,
     content: string,
     color: string = 'default',
-    isPinned: boolean = false
+    isPinned: boolean = false,
   ): Promise<Note> {
     try {
       const userId = await getCurrentUserId();
@@ -47,7 +48,7 @@ export const notes = {
 
   async updateNote(
     noteId: string,
-    data: Partial<Omit<Note, 'id' | 'userId' | 'threadId' | 'createdAt' | 'updatedAt'>>
+    data: Partial<Omit<Note, 'id' | 'userId' | 'threadId' | 'createdAt' | 'updatedAt'>>,
   ): Promise<Note> {
     try {
       const userId = await getCurrentUserId();
@@ -69,7 +70,7 @@ export const notes = {
   },
 
   async reorderNotes(
-    notesArray: { id: string; order: number; isPinned?: boolean | null }[]
+    notesArray: { id: string; order: number; isPinned?: boolean | null }[],
   ): Promise<boolean> {
     try {
       const userId = await getCurrentUserId();
@@ -78,7 +79,7 @@ export const notes = {
       console.error('Error reordering notes:', error);
       throw error;
     }
-  }
+  },
 };
 
 export * from './types';

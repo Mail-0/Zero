@@ -149,7 +149,7 @@ export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
   // Check if thread contains any images (excluding sender avatars)
   const hasImages = useMemo(() => {
     if (!emailData) return false;
-    return emailData.some(message => {
+    return emailData.messages.some(message => {
       const hasAttachments = message.attachments?.some(attachment => 
         attachment.mimeType?.startsWith('image/')
       );
@@ -159,27 +159,27 @@ export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
     });
   }, [emailData]);
 
-  const hasMultipleParticipants = (emailData?.[0]?.to?.length ?? 0) + (emailData?.[0]?.cc?.length ?? 0) + 1 > 2;
+  const hasMultipleParticipants = (emailData?.latest?.to?.length ?? 0) + (emailData?.latest?.cc?.length ?? 0) + 1 > 2;
 
   /**
    * Mark email as read if it's unread, if there are no unread emails, mark the current thread as read
    */
   useEffect(() => {
     if (!emailData || !id) return;
-    const unreadEmails = emailData.filter(e => e.unread);
+    const unreadEmails = emailData.messages.filter(e => e.unread);
     if (unreadEmails.length === 0) {
       console.log('Marking email as read:', id);
       markAsRead({ ids: [id] }).catch((error) => {
         console.error('Failed to mark email as read:', error);
         toast.error(t('common.mail.failedToMarkAsRead'));
-      }).then(() => Promise.all([mutateThread(), mutateThreads(), mutateStats()]))
+      }).then(() => Promise.all([mutateThread(), mutateStats()]))
     } else {
       console.log('Marking email as read:', id, ...unreadEmails.map(e => e.id));
       const ids = [id, ...unreadEmails.map(e => e.id)]
       markAsRead({ ids }).catch((error) => {
         console.error('Failed to mark email as read:', error);
         toast.error(t('common.mail.failedToMarkAsRead'));
-      }).then(() => Promise.all([mutateThread(), mutateThreads(), mutateStats()]))
+      }).then(() => Promise.all([mutateThread(), mutateStats()]))
     }
   }, [emailData, id])
 
@@ -227,7 +227,7 @@ export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
       if (!result.success) throw new Error('Failed to mark as unread');
 
       setMail((prev) => ({ ...prev, bulkSelected: [] }));
-      await Promise.all([mutateStats(), mutateThreads()]);
+      await Promise.all([mutateStats(), mutateThread()]);
       handleClose();
     };
 
@@ -236,12 +236,12 @@ export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
       success: t('common.mail.markedAsUnread'),
       error: t('common.mail.failedToMarkAsUnread'),
     });
-  }, [emailData, threadId, mutateStats, mutateThreads, t, handleClose, setMail]);
+  }, [emailData, threadId, t]);
 
   const handleFavourites = async () => {
     if (!emailData || !threadId) return;
     const done = Promise.all([mutateThreads()]);
-    if (emailData[0]?.tags?.includes('STARRED')) {
+    if (emailData.latest?.tags?.includes('STARRED')) {
       toast.promise(
         modifyLabels({ threadId: [threadId], removeLabels: ['STARRED'] }).then(() => done),
         {
@@ -321,7 +321,7 @@ export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
               label={t('common.actions.close')}
               onClick={handleClose}
             />
-            <ThreadSubject subject={emailData[0]?.subject} />
+            <ThreadSubject subject={emailData.latest?.subject} />
           </div>
           <div className="flex items-center md:gap-2">
             {threadId ? <NotesPanel threadId={threadId} /> : null}
@@ -435,7 +435,7 @@ export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
                   </div>
                 </div>
               )}
-              {(emailData || []).map((message, index) => (
+              {(emailData.messages || []).map((message, index) => (
                 <div
                   key={message.id}
                   className={cn(
@@ -449,7 +449,7 @@ export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
                     isMuted={isMuted}
                     isLoading={false}
                     index={index}
-                    totalEmails={emailData.length}
+                    totalEmails={emailData?.totalReplies}
                   />
                 </div>
               ))}

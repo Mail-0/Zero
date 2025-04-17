@@ -70,16 +70,6 @@ export interface IConnection {
 
 export interface InitialThread {
   id: string;
-  threadId?: string;
-  title: string;
-  tags: string[];
-  sender: Sender;
-  receivedOn: string;
-  unread: boolean;
-  subject: string;
-  totalReplies: number;
-  references?: string;
-  inReplyTo?: string;
 }
 
 export interface Attachment {
@@ -95,19 +85,20 @@ export interface MailListProps {
   isCompact?: boolean;
 }
 
-export type MailSelectMode = "mass" | "range" | "single" | "selectAllBelow";
+export type MailSelectMode = 'mass' | 'range' | 'single' | 'selectAllBelow';
 
 export type ThreadProps = {
-  message: InitialThread;
+  message: { id: string };
   selectMode: MailSelectMode;
   // TODO: enforce types instead of sprinkling "any"
-  onClick?: (message: InitialThread) => () => void;
+  onClick?: (message: ParsedMessage) => () => void;
   isCompact?: boolean;
   folder?: string;
   isKeyboardFocused?: boolean;
   isInQuickActionMode?: boolean;
   selectedQuickActionIndex?: number;
   resetNavigation?: () => void;
+  demoMessage?: ParsedMessage;
 };
 
 export type ConditionalThreadProps = ThreadProps &
@@ -116,15 +107,13 @@ export type ConditionalThreadProps = ThreadProps &
     | { demo?: false; sessionData: { userId: string; connectionId: string | null } }
   );
 
-
-
 export interface IOutgoingMessage {
   to: Sender[];
   cc?: Sender[];
   bcc?: Sender[];
-  subject: string
-  message: string
-  attachments: any[]
-  headers: Record<string, string>
-  threadId?: string
+  subject: string;
+  message: string;
+  attachments: any[];
+  headers: Record<string, string>;
+  threadId?: string;
 }

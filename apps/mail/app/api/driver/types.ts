@@ -1,7 +1,14 @@
 import { type IOutgoingMessage, type InitialThread, type ParsedMessage } from '@/types';
 
+export interface IGetThreadResponse {
+  messages: ParsedMessage[];
+  latest: ParsedMessage | undefined;
+  hasUnread: boolean;
+  totalReplies: number;
+}
+
 export interface MailManager {
-  get(id: string): Promise<ParsedMessage[] | undefined>;
+  get(id: string): Promise<IGetThreadResponse>;
   create(data: IOutgoingMessage): Promise<any>;
   createDraft(data: any): Promise<any>;
   getDraft: (id: string) => Promise<any>;
@@ -35,6 +42,6 @@ export interface IConfig {
   auth?: {
     access_token: string;
     refresh_token: string;
-    email: string
+    email: string;
   };
 }

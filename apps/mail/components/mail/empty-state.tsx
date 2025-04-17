@@ -24,7 +24,7 @@ import { cn } from '@/lib/utils';
 import { useMemo } from 'react';
 
 // Types for default inbox filters
-export type FolderType = 'inbox' | 'draft' | 'sent' | 'spam' | 'trash' | 'archive' | 'search';
+export type FolderType = 'inbox' | 'draft' | 'sent' | 'spam' | 'bin' | 'archive' | 'search';
 
 interface EmptyStateConfig {
   icon: LucideIcon;
@@ -65,7 +65,7 @@ const FOLDER_CONFIGS: FolderConfig = {
     title: 'No spam messages',
     description: 'Messages marked as spam will appear here',
   },
-  trash: {
+  bin: {
     icon: Trash2,
     title: 'Trash is empty',
     description: 'Deleted messages will appear here',

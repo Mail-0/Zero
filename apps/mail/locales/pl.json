@@ -40,7 +40,8 @@
       "trustSender": "Zaufaj nadawcy",
       "cancel": "Anuluj",
       "save": "Zapisz",
-      "remove": "Usuń"
+      "remove": "Usuń",
+      "settings": "Ustawienia"
     },
     "themes": {
       "dark": "Ciemny",
@@ -116,7 +117,8 @@
       "personal": "Osobiste",
       "updates": "Aktualizacje",
       "promotions": "Promocje",
-      "social": "Społecznościowe"
+      "social": "Społecznościowe",
+      "unread": "Nieprzeczytane"
     },
     "replyCompose": {
       "replyTo": "Odpowiedz do",
@@ -134,6 +136,7 @@
       "from": "Od",
       "to": "Do",
       "cc": "Dw",
+      "bcc": "UDW",
       "date": "Data",
       "mailedBy": "Wysłane przez",
       "signedBy": "Podpisane przez",
@@ -400,6 +403,7 @@
       }
     },
     "createEmail": {
+      "invalidEmail": "Nieprawidłowy adres e-mail",
       "body": "Treść",
       "example": "zero@0.email",
       "attachments": "Załączniki ({count})",

@@ -388,8 +388,22 @@ export const AIAssistant = ({
 
   // Handle accept
   const handleAccept = () => {
-    if (generatedBody && onContentGenerated) {
-      onContentGenerated(generatedBody.jsonContent, generatedSubject);
+    if (generatedContent && onContentGenerated) {
+      // Extract the actual content from the JSON structure
+      const actualContent = generatedContent.content;
+
+      // First update subject if available
+      if (suggestedSubject) {
+        // Pass both the JSON content for the editor and the plaintext content for validation
+        onContentGenerated(generatedContent.jsonContent, suggestedSubject);
+      } else {
+        onContentGenerated(generatedContent.jsonContent);
+      }
+
+      // Track AI assistant usage
+      posthog.capture('Create Email AI Assistant Submit');
+
+      // Add confirmation message
       addMessage('system', 'Email content applied successfully.', 'system');
       resetStates();
       toast.success('AI content applied to your email');

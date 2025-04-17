@@ -1,7 +1,7 @@
 'use server';
 
-import { notes } from '@/app/api/notes';
 import type { Note } from '@/app/api/notes/types';
+import { notes } from '@/app/api/notes';
 
 export type ActionResult<T> = {
   success: boolean;
@@ -17,7 +17,7 @@ export async function fetchThreadNotes(threadId: string): Promise<ActionResult<N
     console.error('Error fetching thread notes:', error);
     return {
       success: false,
-      error: error.message || 'Failed to fetch thread notes'
+      error: error.message || 'Failed to fetch thread notes',
     };
   }
 }
@@ -26,7 +26,7 @@ export async function createNote({
   threadId,
   content,
   color = 'default',
-  isPinned = false
+  isPinned = false,
 }: {
   threadId: string;
   content: string;
@@ -40,14 +40,14 @@ export async function createNote({
     console.error('Error creating note:', error);
     return {
       success: false,
-      error: error.message || 'Failed to create note'
+      error: error.message || 'Failed to create note',
     };
   }
 }
 
 export async function updateNote(
   noteId: string,
-  data: Partial<Omit<Note, 'id' | 'userId' | 'threadId' | 'createdAt' | 'updatedAt'>>
+  data: Partial<Omit<Note, 'id' | 'userId' | 'threadId' | 'createdAt' | 'updatedAt'>>,
 ): Promise<ActionResult<Note>> {
   try {
     const result = await notes.updateNote(noteId, data);
@@ -56,7 +56,7 @@ export async function updateNote(
     console.error('Error updating note:', error);
     return {
       success: false,
-      error: error.message || 'Failed to update note'
+      error: error.message || 'Failed to update note',
     };
   }
 }
@@ -69,13 +69,13 @@ export async function deleteNote(noteId: string): Promise<ActionResult<boolean>>
     console.error('Error deleting note:', error);
     return {
       success: false,
-      error: error.message || 'Failed to delete note'
+      error: error.message || 'Failed to delete note',
     };
   }
 }
 
 export async function reorderNotes(
-  notesArray: { id: string; order: number; isPinned?: boolean | null }[]
+  notesArray: { id: string; order: number; isPinned?: boolean | null }[],
 ): Promise<ActionResult<boolean>> {
   try {
     if (!notesArray || notesArray.length === 0) {
@@ -83,8 +83,10 @@ export async function reorderNotes(
       return { success: true, data: true };
     }
 
-    console.log(`Reordering ${notesArray.length} notes:`,
-      notesArray.map(({id, order, isPinned}) => ({id, order, isPinned})));
+    console.log(
+      `Reordering ${notesArray.length} notes:`,
+      notesArray.map(({ id, order, isPinned }) => ({ id, order, isPinned })),
+    );
 
     const result = await notes.reorderNotes(notesArray);
     return { success: true, data: result };
@@ -92,7 +94,7 @@ export async function reorderNotes(
     console.error('Error reordering notes:', error);
     return {
       success: false,
-      error: error.message || 'Failed to reorder notes'
+      error: error.message || 'Failed to reorder notes',
     };
   }
 }

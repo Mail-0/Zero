@@ -398,7 +398,11 @@
           "viewEmailDetails": "View Email Details",
           "goToDrafts": "Go to Drafts",
           "expandEmailView": "Expand Email View",
-          "helpWithShortcuts": "Help with shortcuts"
+          "helpWithShortcuts": "Help with shortcuts",
+          "recordHotkey": "Record Hotkey",
+          "pressKeys": "Press keys",
+          "releaseKeys": "Release keys",
+          "selectAll": "Select All"
         }
       }
     },

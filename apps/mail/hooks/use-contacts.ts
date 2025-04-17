@@ -1,4 +1,3 @@
-import { dexieStorageProvider } from '@/lib/idb';
 import { useSession } from '@/lib/auth-client';
 import useSWRImmutable from 'swr/immutable';
 import { useEffect, useState } from 'react';
@@ -10,23 +9,22 @@ export const useContacts = () => {
 
   useEffect(() => {
     if (!session?.connectionId) return;
-    const provider = dexieStorageProvider();
-    provider.list(`$inf$@"${session?.connectionId}"`).then((cachedThreadsResponses) => {
-      const seen = new Set<string>();
-      const contacts: Sender[] = cachedThreadsResponses.reduce((acc: Sender[], { state }) => {
-        if (state.data) {
-          for (const thread of state.data[0].threads) {
-            const email = thread.sender.email;
-            if (!seen.has(email)) {
-              seen.add(email);
-              acc.push(thread.sender);
-            }
-          }
-        }
-        return acc;
-      }, []);
-      mutate(contacts);
-    });
+    // provider.list(`$inf$@"${session?.connectionId}"`).then((cachedThreadsResponses) => {
+    //   const seen = new Set<string>();
+    //   const contacts: Sender[] = cachedThreadsResponses.reduce((acc: Sender[], { state }) => {
+    //     if (state.data) {
+    //       for (const thread of state.data[0].threads) {
+    //         const email = thread.sender.email;
+    //         if (!seen.has(email)) {
+    //           seen.add(email);
+    //           acc.push(thread.sender);
+    //         }
+    //       }
+    //     }
+    //     return acc;
+    //   }, []);
+    //   mutate(contacts);
+    // });
   }, [session?.connectionId]);
 
   if (!data) {

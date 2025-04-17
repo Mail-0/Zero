@@ -1,44 +1,12 @@
-"use server";
+'use server';
 
-import { connection, user } from "@zero/db/schema";
-import { headers } from "next/headers";
-import { and, eq } from "drizzle-orm";
-import { type IConnection } from "@/types";
-import { auth } from "@/lib/auth";
-import { db } from "@zero/db";
-
-export async function getConnections() {
-  try {
-    const headersList = await headers();
-    const session = await auth.api.getSession({ headers: headersList });
-
-    if (!session) {
-      throw new Error("Unauthorized, reconnect");
-    }
-
-    const userId = session?.user?.id;
-
-    if (!userId) {
-      throw new Error("Unauthorized, reconnect");
-    }
-
-    const connections = (await db
-      .select({
-        id: connection.id,
-        email: connection.email,
-        name: connection.name,
-        picture: connection.picture,
-        createdAt: connection.createdAt,
-      })
-      .from(connection)
-      .where(eq(connection.userId, userId))) as IConnection[];
-
-    return connections;
-  } catch (error) {
-    console.error("Failed to fetch connections:", error);
-    throw new Error("Failed to fetch connections");
-  }
-}
+import { getAuthenticatedUserId, throwUnauthorizedGracefully } from '@/app/api/utils';
+import { connection, user } from '@zero/db/schema';
+import { type IConnection } from '@/types';
+import { headers } from 'next/headers';
+import { and, eq } from 'drizzle-orm';
+import { auth } from '@/lib/auth';
+import { db } from '@zero/db';
 
 export async function deleteConnection(connectionId: string) {
   try {
@@ -46,13 +14,13 @@ export async function deleteConnection(connectionId: string) {
     const session = await auth.api.getSession({ headers: headersList });
 
     if (!session) {
-      throw new Error("Unauthorized, reconnect");
+      return throwUnauthorizedGracefully();
     }
 
     const userId = session?.user?.id;
 
     if (!userId) {
-      throw new Error("Unauthorized, reconnect");
+      return throwUnauthorizedGracefully();
     }
 
     await db
@@ -67,8 +35,8 @@ export async function deleteConnection(connectionId: string) {
 
     return { success: true };
   } catch (error) {
-    console.error("Failed to delete connection:", error);
-    throw new Error("Failed to delete connection");
+    console.error('Failed to delete connection:', error);
+    throw new Error('Failed to delete connection');
   }
 }
 
@@ -78,13 +46,13 @@ export async function putConnection(connectionId: string) {
     const session = await auth.api.getSession({ headers: headersList });
 
     if (!session) {
-      throw new Error("Unauthorized, reconnect");
+      return throwUnauthorizedGracefully();
     }
 
     const userId = session?.user?.id;
 
     if (!userId) {
-      throw new Error("Unauthorized, reconnect");
+      return throwUnauthorizedGracefully();
     }
 
     const [foundConnection] = await db
@@ -94,7 +62,7 @@ export async function putConnection(connectionId: string) {
       .limit(1);
 
     if (!foundConnection) {
-      throw new Error("Connection not found");
+      throw new Error('Connection not found');
     }
 
     await db
@@ -106,7 +74,7 @@ export async function putConnection(connectionId: string) {
 
     return { success: true };
   } catch (error) {
-    console.error("Failed to update connection:", error);
-    throw new Error("Failed to update connection");
+    console.error('Failed to update connection:', error);
+    throw new Error('Failed to update connection');
   }
 }

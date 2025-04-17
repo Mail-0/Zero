@@ -5,9 +5,9 @@
 import { getDrafts, getDraft } from '@/actions/drafts';
 import { InitialThread, ParsedMessage } from '@/types';
 import { useSession } from '@/lib/auth-client';
+import { useMemo, useEffect } from 'react';
 import useSWRInfinite from 'swr/infinite';
 import useSWR, { preload } from 'swr';
-import { useMemo, useEffect } from 'react';
 
 export const preloadDraft = (userId: string, draftId: string, connectionId: string) => {
   console.log(`🔄 Prefetching draft ${draftId}...`);
@@ -72,7 +72,7 @@ export const useDrafts = (query?: string, max?: number) => {
         revalidateOnFocus: false,
         revalidateOnReconnect: false,
         refreshInterval: 30000, // Refresh every 30 seconds
-      }
+      },
     );
 
   const drafts = data
@@ -81,10 +81,10 @@ export const useDrafts = (query?: string, max?: number) => {
           return {
             ...draft,
             id: draft.id,
-            threadId: draft.threadId,
-            title: draft.title,
-            subject: draft.subject,
-            receivedOn: draft.receivedOn || new Date().toISOString(),
+            // threadId: draft.threadId,
+            // title: draft.title,
+            // subject: draft.subject,
+            // receivedOn: draft.receivedOn || new Date().toISOString(),
             unread: false,
             totalReplies: 0,
           } as InitialThread;

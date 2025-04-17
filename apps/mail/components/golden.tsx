@@ -45,14 +45,35 @@ export const GoldenTicketModal = () => {
   }, []);
 
   const onSubmit = async (data: z.infer<typeof schema>) => {
-    const { success, error } = await handleGoldenTicket(data.email);
-    if (success) {
-      toast.success('Golden ticket used, your friend will be notified');
-      refetch();
-      router.refresh();
-      setIsOpen(false);
-    } else {
-      toast.error(error);
+    const toastId = toast.loading('Sending invite...');
+    try {
+      const response = await fetch('/api/golden-ticket', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: data.email }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success('Invitation sent, your friend will be notified!!', {
+          id: toastId,
+        });
+        refetch();
+        router.refresh();
+        setIsOpen(false);
+      } else {
+        toast.error(result.error || 'Failed to send invite', {
+          id: toastId,
+        });
+      }
+    } catch (error) {
+      console.error('Error sending golden ticket:', error);
+      toast.error('Failed to send golden ticket', {
+        id: toastId,
+      });
     }
   };
 
