@@ -3,13 +3,15 @@ import { createEmbeddings, generateCompletions } from './groq';
 import { generateConversationId } from './utils';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
-import { EmailAssistantSystemPrompt } from './prompts';
+import { 
+    EmailAssistantSystemPrompt, 
+    SubjectGenerationSystemPrompt // Import the new prompt
+} from './prompts';
 
-// Define a new AIResponse structure that includes subject
+// Modified AIResponse - Subject is now handled separately
 interface AIResponse {
   id: string;
-  subject?: string; // Add subject field
-  body: string;    // Rename content to body
+  body: string; // Only body is returned now
   type: 'email' | 'question' | 'system';
   position?: 'start' | 'end' | 'replace';
 }
@@ -20,73 +22,47 @@ interface UserContext {
   email?: string;
 }
 
-// Function to parse the AI response. Tries strict format, falls back to body-only.
-function parseAICompletion(completion: string): { subject: string | undefined; body: string } {
-  const trimmedCompletion = completion.trim();
-  
-  // Regex to capture content within <SUBJECT>...</SUBJECT> and <BODY>...</BODY>
-  const xmlRegex = /^<SUBJECT>\s*([\s\S]*?)\s*<\/SUBJECT>\s*<BODY>\s*([\s\S]*?)\s*<\/BODY>$/i;
-  
-  const match = trimmedCompletion.match(xmlRegex);
-
-  if (match && match[1] !== undefined && match[2] !== undefined) {
-    const extractedSubject = match[1].trim();
-    const extractedBody = match[2].trim();
-    // Check if extracted body STARTS with preamble/refusal
-    if (!extractedBody.match(/^\s*(I cannot|I am unable to|As an AI|My purpose is|Okay,|Sure,|Here\'s|I\'m happy to help|I suggest|I recommend)/i)) {
-        console.log("AI Assistant Parser: Matched <SUBJECT>/<BODY> format without preamble.");
-        return {
-            subject: extractedSubject ? extractedSubject : undefined,
-            body: extractedBody,
-        };
-    } else {
-        console.warn("AI Assistant Parser: Found XML format, but body started with preamble/refusal. Falling back.");
-        // Fall through to fallback below
-    }
-  }
-
-  // Fallback: Assume entire completion is the body if strict format failed or was rejected.
-  console.warn("AI Assistant Parser: Strict <SUBJECT>/<BODY> format not matched correctly or rejected. Treating entire completion as body.");
-  return { subject: undefined, body: trimmedCompletion }; 
-}
+// REMOVED: parseAICompletion function is no longer needed for body generation
+// function parseAICompletion(...) { ... }
 
 const conversationHistories: Record<
   string,
   { role: 'user' | 'assistant' | 'system'; content: string }[]
 > = {};
 
-export async function generateEmailContent(
+// --- Generate Email Body --- 
+export async function generateEmailBody(
   prompt: string,
   currentContent?: string,
   recipients?: string[],
-  subject?: string,
+  subject?: string, // Still accept subject for context, but don't generate it
   conversationId?: string,
   userContext?: UserContext,
-): Promise<AIResponse[]> {
+): Promise<AIResponse[]> { // Returns body-focused response
   const headersList = await headers();
   const session = await auth.api.getSession({ headers: headersList });
   const userName = session?.user.name || 'User';
   const convId = conversationId || generateConversationId();
 
-  console.log(`AI Assistant: Processing prompt for convId ${convId}: "${prompt}"`);
+  console.log(`AI Assistant (Body): Processing prompt for convId ${convId}: "${prompt}"`);
 
-  const genericFailureMessage = "Unable to fulfill your request."; // Define generic failure message
+  const genericFailureMessage = "Unable to fulfill your request.";
 
   try {
     if (!process.env.GROQ_API_KEY) {
       throw new Error('Groq API key is not configured');
     }
 
-    // Initialize conversation history if it doesn't exist
     if (!conversationHistories[convId]) {
       conversationHistories[convId] = [];
     }
 
+    // Use the BODY-ONLY system prompt
     const baseSystemPrompt = EmailAssistantSystemPrompt(userName);
 
-    // Dynamic context - ADD SUBJECT
+    // Dynamic context (can still include subject if available)
     let dynamicContext = '\n\n<dynamic_context>\n';
-    if (subject) { // Add current subject context
+    if (subject) {
       dynamicContext += `  <current_subject>${subject}</current_subject>\n`;
     }
     if (currentContent) {
@@ -98,7 +74,6 @@ export async function generateEmailContent(
     dynamicContext += '</dynamic_context>\n';
     const fullSystemPrompt = baseSystemPrompt + (dynamicContext.length > 30 ? dynamicContext : '');
 
-    // Build conversation history string for the prompt
     const conversationHistory = conversationHistories[convId]
       .filter((msg) => msg.role === 'user' || msg.role === 'assistant')
       .map((msg) => `<message role="${msg.role}">${msg.content}</message>`)
@@ -106,7 +81,6 @@ export async function generateEmailContent(
       
     const fullPrompt = conversationHistory + `\n<message role="user">${prompt}</message>`;
 
-    // Embeddings
     const embeddingTexts: Record<string, string> = {};
     if (currentContent) { embeddingTexts.currentEmail = currentContent; }
     if (prompt) { embeddingTexts.userPrompt = prompt; }
@@ -117,43 +91,28 @@ export async function generateEmailContent(
     let embeddings = {};
     try { embeddings = await createEmbeddings(embeddingTexts); } catch (e) { console.error('Embedding error:', e); }
 
-    // --- AI Call ---
-    console.log(`AI Assistant: Calling generateCompletions for convId ${convId}...`);
-    const { completion } = await generateCompletions({
-      model: 'gpt-4o-mini',
+    console.log(`AI Assistant (Body): Calling generateCompletions for convId ${convId}...`);
+    const { completion: generatedBody } = await generateCompletions({
+      model: 'gpt-4',
       systemPrompt: fullSystemPrompt,
       prompt: fullPrompt,
       temperature: 0.7,
       embeddings,
       userName: userName,
     });
-    console.log(`AI Assistant: Received completion for convId ${convId}:`, completion);
+    console.log(`AI Assistant (Body): Received completion for convId ${convId}:`, generatedBody);
 
-    // --- Post-AI Safety Net (Forbidden Content Format) ---
-    if (completion.includes('```') || completion.trim().startsWith('<html>')) {
-      console.warn(`AI Assistant Post-Check: Detected forbidden content format... Overriding.`);
-      conversationHistories[convId].push({ role: 'user', content: prompt });
-      conversationHistories[convId].push({ role: 'assistant', content: genericFailureMessage }); // Log generic failure
+    // No parsing needed for body based on the new prompt
+
+    // Basic safety checks remain
+    if (generatedBody.includes('```') || generatedBody.trim().startsWith('<html>')) {
+      console.warn(`AI Assistant Post-Check (Body): Detected forbidden content format... Overriding.`);
+      // Log failure appropriately if needed
       return [
         { id: 'override-' + Date.now(), body: genericFailureMessage, type: 'system' },
       ];
     }
     
-    // --- Process & Validate Completion ---
-    const parsedResult = parseAICompletion(completion);
-
-    if (!parsedResult) {
-        // Parsing failed (strict format error)
-        console.warn(`AI Assistant Post-Check: Strict format parsing failed for completion. Overriding.`);
-        conversationHistories[convId].push({ role: 'user', content: prompt });
-        conversationHistories[convId].push({ role: 'assistant', content: genericFailureMessage }); // Log generic failure
-        return [
-            { id: 'format-' + Date.now(), body: genericFailureMessage, type: 'system' },
-        ];
-    }
-
-    // Parsing succeeded, check body content for refusals/interjections we don't want
-    const { subject: generatedSubject, body: generatedBody } = parsedResult;
     const lowerBody = generatedBody.toLowerCase();
     const isRefusal = 
         lowerBody.includes("i cannot") || 
@@ -161,56 +120,100 @@ export async function generateEmailContent(
         lowerBody.includes("i am unable to") ||
         lowerBody.includes("as an ai") ||
         lowerBody.includes("my purpose is to assist") ||
-        lowerBody.includes("violates my safety guidelines"); 
-        // Add more refusal patterns if needed
+        lowerBody.includes("violates my safety guidelines") ||
+        lowerBody.includes("sorry, i can only assist with email body"); // Check for refusal message
 
     if (isRefusal) {
-        console.warn(`AI Assistant Post-Check: Detected refusal/interjection in parsed body. Overriding.`);
-        conversationHistories[convId].push({ role: 'user', content: prompt });
-        conversationHistories[convId].push({ role: 'assistant', content: genericFailureMessage }); // Log generic failure
+        console.warn(`AI Assistant Post-Check (Body): Detected refusal/interjection. Overriding.`);
+        // Log failure appropriately if needed
         return [
             { id: 'refusal-' + Date.now(), body: genericFailureMessage, type: 'system' },
         ];
     }
 
-    // Add user prompt and VALIDATED/PARSED body to history
+    // Add user prompt and generated body to history
     conversationHistories[convId].push({ role: 'user', content: prompt });
     conversationHistories[convId].push({ role: 'assistant', content: generatedBody });
 
-    // Check if the VALIDATED body is a clarification question
     const isClarificationNeeded = checkIfQuestion(generatedBody);
 
     if (isClarificationNeeded) {
-       console.log(`AI Assistant: AI response is a clarification question...`);
+       console.log(`AI Assistant (Body): AI response is a clarification question...`);
        return [
          { id: 'question-' + Date.now(), body: generatedBody, type: 'question', position: 'replace' },
        ];
      } else {
-       // It's a valid email generation!
-       console.log(`AI Assistant: AI response is email content...`);
+       console.log(`AI Assistant (Body): AI response is email body content...`);
+       // Return only the body and type
        return [
-         { id: 'email-' + Date.now(), subject: generatedSubject, body: generatedBody, type: 'email', position: 'replace' },
+         { id: 'email-' + Date.now(), body: generatedBody, type: 'email', position: 'replace' },
        ];
      }
 
   } catch (error) {
-    console.error(`Error during AI email generation process...`, error);
+    console.error(`Error during AI email body generation process...`, error);
     return [
       {
         id: 'error-' + Date.now(),
-        body: genericFailureMessage, // Use generic failure on catch
+        body: genericFailureMessage,
         type: 'system',
       },
     ];
   }
 }
 
-function checkIfQuestion(body: string): boolean { // Parameter renamed for clarity
-  const trimmedBody = body.trim().toLowerCase();
-  if (trimmedBody.endsWith('?')) return true;
+// --- Generate Subject for Email Body ---
+export async function generateSubjectForEmail(body: string): Promise<string> {
+    console.log("AI Assistant (Subject): Generating subject for body:", body.substring(0, 100) + "...");
+
+    if (!body || body.trim() === '') {
+        console.warn("AI Assistant (Subject): Cannot generate subject for empty body.");
+        return ''; // Return empty string if body is empty
+    }
+
+    try {
+        const systemPrompt = SubjectGenerationSystemPrompt;
+        // Construct a simple prompt containing the body
+        const subjectPrompt = `<email_body>
+${body}
+</email_body>
+
+Please generate a concise subject line for the email body above.`;
+
+        console.log(`AI Assistant (Subject): Calling generateCompletions...`);
+        const { completion: generatedSubject } = await generateCompletions({
+            model: 'gpt-4',
+            systemPrompt: systemPrompt,
+            prompt: subjectPrompt,
+            temperature: 0.5, // Lower temperature might be better for concise subjects
+            // No embeddings or history needed for subject generation usually
+        });
+        console.log(`AI Assistant (Subject): Received subject completion:`, generatedSubject);
+
+        // Simple cleaning: trim whitespace
+        const cleanSubject = generatedSubject.trim();
+        
+        // Basic check for refusal message from the subject prompt
+        if (cleanSubject.toLowerCase().includes('unable to generate subject')) {
+            console.warn("AI Assistant (Subject): Detected refusal message.");
+            return ''; // Return empty if AI refused
+        }
+        
+        return cleanSubject;
+
+    } catch (error) {
+        console.error(`Error during AI subject generation process...`, error);
+        return ''; // Return empty string on error
+    }
+}
+
+// Helper function (remains unchanged)
+function checkIfQuestion(text: string): boolean { 
+  const trimmedText = text.trim().toLowerCase();
+  if (trimmedText.endsWith('?')) return true;
   const questionStarters = [
     'what', 'how', 'why', 'when', 'where', 'who', 'can you', 'could you',
     'would you', 'will you', 'is it', 'are there', 'should i', 'do you',
   ];
-  return questionStarters.some((starter) => trimmedBody.startsWith(starter));
+  return questionStarters.some((starter) => trimmedText.startsWith(starter));
 }
