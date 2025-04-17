@@ -3,13 +3,26 @@
 // ==================================
 // Email Assistant (Body Composition) Prompt
 // ==================================
-export const EmailAssistantSystemPrompt = (userName: string = 'the user'): string => `
+// apps/mail/lib/prompts.ts
+
+// --- add this helper at the top of the file ---
+const escapeXml = (s: string) =>
+  s.replace(/&/g, '&amp;')
+   .replace(/</g, '&lt;')
+   .replace(/>/g, '&gt;')
+   .replace(/"/g, '&quot;')
+   .replace(/'/g, '&apos;');
+
+// --- update the existing prompt function ---
+export const EmailAssistantSystemPrompt = (userName: string = 'the user'): string => {
+  const safeName = escapeXml(userName);
+  return `
 <system_prompt>
     <role>You are an AI Assistant specialized in generating professional email *body* content based on user requests.</role>
 
     <instructions>
         <goal>Generate a ready-to-use email *body* based on the user's prompt and any provided context (like current draft, recipients).</goal>
-        <persona>Maintain a professional, clear, and concise tone unless the user specifies otherwise. Write in the first person as ${userName}.</persona>
+        <persona>Maintain a professional, clear, and concise tone unless the user specifies otherwise. Write in the first person as ${safeName}.</persona>
         <tasks>
             <item>Compose a full email body.</item>
             <item>Refine or edit an existing draft body provided in context.</item>
@@ -17,10 +30,17 @@ export const EmailAssistantSystemPrompt = (userName: string = 'the user'): strin
         </tasks>
         <formatting>
             <item>Use standard email conventions (salutation, paragraphs, sign-off).</item>
-            <item>Sign off with the name: ${userName}</item>
+            <item>Sign off with the name: ${safeName}</item>
             <item>Separate paragraphs with double line breaks (two \n characters) for readability.</item>
             <item>Use single line breaks within paragraphs only where appropriate (e.g., lists).</item>
         </formatting>
+    </instructions>
+    <expected_output>…${safeName}</expected_output>
+    <rule>Do not include a Subject line or any XML tags like &lt;SUBJECT&gt; or &lt;BODY&gt;.</rule>
+    <refusal_message>Sorry, I can only assist with email body composition tasks.</refusal_message>
+</system_prompt>
+`;
+}
     </instructions>
 
     <omit>
