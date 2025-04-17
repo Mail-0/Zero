@@ -9,6 +9,7 @@ import { useSession } from '@/lib/auth-client';
 import { Input } from '@/components/ui/input';
 import { type JSONContent } from 'novel';
 import { toast } from 'sonner';
+import { posthog } from '@/lib/posthog';
 
 // Types
 interface AIAssistantProps {
@@ -284,18 +285,25 @@ export const AIAssistant = ({
     e?.stopPropagation();
     if (!prompt.trim() || isLoading) return;
 
-    setIsLoading(true);
-    setErrorOccurred(false); 
-    addMessage('user', prompt, 'question');
-    setIsAskingQuestion(false);
-    setShowActions(false);
-    setGeneratedBody(null);
-    setGeneratedSubject(undefined);
-    // Rename bodyResult variable to avoid confusion if needed, but it's scoped
-    // let bodyResult: Awaited<ReturnType<typeof generateAIEmailBody>> | null = null; 
-    // let subjectResult: string | null = null; // Declared later
+    // --- Start of Merged Section ---
+    try { // Keep try block from staging
+      setIsLoading(true); // Keep from either branch
+      setErrorOccurred(false); // Keep from your branch
 
-    try {
+      // Track AI assistant usage (Keep from staging)
+      posthog.capture('Create Email AI Assistant Submit');
+
+      // Add user message (Keep from either branch)
+      addMessage('user', prompt, 'question');
+
+      // Reset states (Keep comprehensive resets from your branch)
+      setIsAskingQuestion(false);
+      setShowActions(false);
+      setGeneratedBody(null);
+      setGeneratedSubject(undefined);
+    // --- End of Merged Section ---
+
+      // Continue with your branch's logic for body/subject generation
       // --- Step 1: Generate Body ---
       console.log('AI Assistant: Requesting email body...');
       const bodyResult = await generateAIEmailBody({ // Use const here
