@@ -9,7 +9,7 @@ import { useSession } from '@/lib/auth-client';
 import { Input } from '@/components/ui/input';
 import { type JSONContent } from 'novel';
 import { toast } from 'sonner';
-import { posthog } from '@/lib/posthog';
+import posthog from 'posthog-js';
 
 // Types
 interface AIAssistantProps {
