@@ -1,8 +1,7 @@
 // The brain.ts file in /actions should replace this file once ready.
 'use server';
 
-import { throwUnauthorizedGracefully } from '@/app/api/utils';
-import { generateEmailContent } from '@/lib/ai';
+import { generateEmailBody, generateSubjectForEmail } from '@/lib/ai';
 import { headers } from 'next/headers';
 import { JSONContent } from 'novel';
 import { auth } from '@/lib/auth';
@@ -12,92 +11,132 @@ interface UserContext {
   email?: string;
 }
 
-interface AIEmailResponse {
+interface AIBodyResponse {
   content: string;
   jsonContent: JSONContent;
   type: 'email' | 'question' | 'system';
 }
 
-export async function generateAIEmailContent({
+export async function generateAIEmailBody({
   prompt,
   currentContent,
+  subject,
   to,
-  isEdit = false,
   conversationId,
   userContext,
 }: {
   prompt: string;
   currentContent?: string;
+  subject?: string;
   to?: string[];
-  isEdit?: boolean;
   conversationId?: string;
   userContext?: UserContext;
-}): Promise<AIEmailResponse> {
+}): Promise<AIBodyResponse> {
   try {
     const headersList = await headers();
     const session = await auth.api.getSession({ headers: headersList });
 
     if (!session?.user) {
-      return throwUnauthorizedGracefully();
+      console.error('AI Action Error (Body): Unauthorized');
+      const errorMsg = 'Unauthorized access. Please log in.';
+       return {
+          content: errorMsg,
+          jsonContent: createJsonContentFromBody(errorMsg),
+          type: 'system',
+       };
     }
-
-    const responses = await generateEmailContent(
+    
+    const responses = await generateEmailBody(
       prompt,
       currentContent,
       to,
+      subject,
       conversationId,
       userContext,
     );
 
-    const questionResponse = responses.find((r) => r.type === 'question');
-    if (questionResponse) {
-      return {
-        content: questionResponse.content,
-        jsonContent: createJsonContent([questionResponse.content]),
-        type: 'question',
-      };
+    const response = responses[0];
+    if (!response) {
+        console.error('AI Action Error (Body): Received no response array item from generateEmailBody');
+        const errorMsg = 'AI failed to generate a response.';
+        return {
+           content: errorMsg,
+           jsonContent: createJsonContentFromBody(errorMsg),
+           type: 'system',
+        };
     }
 
-    const emailResponses = responses.filter((r) => r.type === 'email');
+    console.log("--- Action Layer (Body): Received from generateEmailBody ---");
+    console.log("Raw response object:", JSON.stringify(response, null, 2));
+    console.log("Extracted Body:", response.body);
+    console.log("--- End Action Layer (Body) Log ---");
 
-    const cleanedContent = emailResponses
-      .map((r) => r.content)
-      .join('\n\n')
-      .trim();
-
-    const paragraphs = cleanedContent.split('\n');
-
-    const jsonContent = createJsonContent(paragraphs);
+    const responseBody = response.body;
+    
+    const jsonContent = createJsonContentFromBody(responseBody);
 
     return {
-      content: cleanedContent,
+      content: responseBody,
       jsonContent,
-      type: 'email',
+      type: response.type,
     };
+    
   } catch (error) {
-    console.error('Error generating AI email content:', error);
-
+    console.error('Error in generateAIEmailBody action:', error);
+    const errorMsg = 'Sorry, I encountered an unexpected error while generating the email body.';
     return {
-      content:
-        'Sorry, I encountered an error while generating content. Please try again with a different prompt.',
-      jsonContent: createJsonContent([
-        'Sorry, I encountered an error while generating content. Please try again with a different prompt.',
-      ]),
+      content: errorMsg,
+      jsonContent: createJsonContentFromBody(errorMsg),
       type: 'system',
     };
   }
 }
 
-function createJsonContent(paragraphs: string[]): JSONContent {
-  if (paragraphs.length === 0) {
-    paragraphs = ['Failed to generate content. Please try again with a different prompt.'];
-  }
+export async function generateAISubject({
+    body,
+}: {
+    body: string;
+}): Promise<string> {
+    try {
+        const headersList = await headers();
+        const session = await auth.api.getSession({ headers: headersList });
 
-  return {
-    type: 'doc',
-    content: paragraphs.map((paragraph) => ({
-      type: 'paragraph',
-      content: paragraph.length ? [{ type: 'text', text: paragraph }] : [],
-    })),
-  };
+        if (!session?.user) {
+            console.error('AI Action Error (Subject): Unauthorized');
+            return '';
+        }
+
+        if (!body || body.trim() === '') {
+            console.warn('AI Action Warning (Subject): Cannot generate subject for empty body.');
+            return '';
+        }
+
+        const subject = await generateSubjectForEmail(body);
+
+        console.log("--- Action Layer (Subject): Received from generateSubjectForEmail ---");
+        console.log("Generated Subject:", subject);
+        console.log("--- End Action Layer (Subject) Log ---");
+
+        return subject;
+
+    } catch (error) {
+        console.error('Error in generateAISubject action:', error);
+        return '';
+    }
+}
+
+function createJsonContentFromBody(bodyText: string): JSONContent {
+    if (!bodyText || bodyText.trim() === '') {
+        bodyText = 'AI failed to generate content. Please try again.';
+    }
+
+    return {
+        type: 'doc',
+        content: [
+            {
+                type: 'paragraph',
+                content: [{ type: 'text', text: bodyText.trim() }], 
+            }
+        ],
+    };
 }
