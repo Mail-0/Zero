@@ -317,7 +317,7 @@ export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
           isFullscreen ? 'fixed inset-0 z-50' : '',
         )}
       >
-        <div className="flex flex-shrink-0 items-center border-b px-1 pb-1 md:px-2">
+        <div className="flex flex-shrink-0 items-center border-b px-1 pb-1 md:px-3 md:pb-2 md:pt-[8px]">
           <div className="flex flex-1 items-center gap-2">
             <ThreadActionButton icon={X} label={t('common.actions.close')} onClick={handleClose} />
             <ThreadSubject subject={emailData.latest?.subject} />
