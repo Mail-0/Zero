@@ -92,26 +92,6 @@ export function SearchBar() {
   // const [popoverOpen, setPopoverOpen] = useState(false);
   const [searchValue, setSearchValue] = useSearchValue();
   const [isSearching, setIsSearching] = useState(false);
-  const [value, setValue] = useState<SearchForm>({
-    folder: '',
-    subject: '',
-    from: '',
-    to: '',
-    cc: '',
-    bcc: '',
-    q: searchValue.value ?? '',
-    dateRange: {
-      from: undefined,
-      to: undefined,
-    },
-    category: '',
-    has: '',
-    fileName: '',
-    deliveredTo: '',
-    unicorn: '',
-  });
-
-  const t = useTranslations();
 
   const [suggestionsState, setSuggestionsState] = useState({
     show: false,
@@ -131,7 +111,24 @@ export function SearchBar() {
   const isMobile = useIsMobile();
 
   const form = useForm<SearchForm>({
-    defaultValues: value,
+    defaultValues: {
+      folder: '',
+      subject: '',
+      from: '',
+      to: '',
+      cc: '',
+      bcc: '',
+      q: searchValue.value,
+      dateRange: {
+        from: undefined,
+        to: undefined,
+      },
+      category: '',
+      has: '',
+      fileName: '',
+      deliveredTo: '',
+      unicorn: '',
+    },
   });
 
   const formValues = useMemo(
@@ -665,15 +662,25 @@ export function SearchBar() {
     );
   }, [datePickerState, isMobile, handleDateSelect]);
 
-  useEffect(() => {
-    const subscription = form.watch((data) => {
-      setValue(data as SearchForm);
-    });
-    return () => subscription.unsubscribe();
-  }, [form.watch]);
-
   const resetSearch = useCallback(() => {
-    form.reset();
+    form.reset({
+      folder: '',
+      subject: '',
+      from: '',
+      to: '',
+      cc: '',
+      bcc: '',
+      q: '',
+      dateRange: {
+        from: undefined,
+        to: undefined,
+      },
+      category: '',
+      has: '',
+      fileName: '',
+      deliveredTo: '',
+      unicorn: '',
+    });
     setSearchValue({
       value: '',
       highlight: '',

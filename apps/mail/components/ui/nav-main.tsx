@@ -19,6 +19,7 @@ import { useStats } from '@/hooks/use-stats';
 import { useTranslations } from 'next-intl';
 import { useRef, useCallback } from 'react';
 import { BASE_URL } from '@/lib/constants';
+import { useQueryState } from 'nuqs';
 import { cn } from '@/lib/utils';
 import { useAtom } from 'jotai';
 import * as React from 'react';
@@ -55,6 +56,7 @@ export function NavMain({ items }: NavMainProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { data: session, isPending } = useSession();
+  const [category] = useQueryState('category');
 
   /**
    * Validates URLs to prevent open redirect vulnerabilities.
@@ -82,7 +84,6 @@ export function NavMain({ items }: NavMainProps) {
     (item: NavItemProps) => {
       // Get the current 'from' parameter
       const currentFrom = searchParams.get('from');
-      const category = searchParams.get('category');
 
       // Handle settings navigation
       // if (item.isSettingsButton) {
@@ -117,13 +118,13 @@ export function NavMain({ items }: NavMainProps) {
       }
 
       // Handle category links
-      if (category && item.url.includes('category=')) {
-        return item.url;
+      if (category) {
+        return `${item.url}?category=${encodeURIComponent(category)}`;
       }
 
       return item.url;
     },
-    [pathname, searchParams, isValidInternalUrl],
+    [pathname, category, searchParams, isValidInternalUrl],
   );
 
   const isUrlActive = useCallback(
