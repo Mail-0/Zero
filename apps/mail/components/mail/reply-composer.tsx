@@ -619,12 +619,15 @@ export default function ReplyCompose() {
 
   // Helper function to initialize recipients based on mode
   const initializeRecipients = useCallback(() => {
-    if (!emailData || !emailData.messages.length) return { to: [], cc: [] };
+    if (!emailData || !emailData.messages || emailData.messages.length === 0) return { to: [], cc: [] };
 
-    const latestEmail = emailData.latest;
-    if (!latestEmail) return { to: [], cc: [] };
+    const latestMessage = emailData.messages[0];
+    if (!latestMessage) return { to: [], cc: [] };
 
-    const userEmail = session?.activeConnection?.email?.toLowerCase();
+    // Get the active connection's email
+    const activeConnectionEmail = session?.activeConnection?.email?.toLowerCase();
+    const userEmail = activeConnectionEmail;
+
     const to: string[] = [];
     const cc: string[] = [];
 
@@ -633,37 +636,52 @@ export default function ReplyCompose() {
     }
 
     if (mode === 'reply') {
-      // Add reply-to or sender email to To
-      const replyEmail = latestEmail.replyTo || latestEmail.sender?.email;
-      if (replyEmail) {
+      // For individual replies, check if the sender is from our active connection
+      const senderEmail = latestMessage.sender?.email?.toLowerCase();
+      const replyEmail = latestMessage.replyTo || senderEmail;
+
+      // If we're replying from the same email as the sender, use the original recipients
+      if (senderEmail === userEmail && latestMessage.to && latestMessage.to.length > 0) {
+        // Get the first recipient that isn't us
+        const firstRecipient = latestMessage.to.find(
+          recipient => recipient.email?.toLowerCase() !== userEmail
+        );
+        if (firstRecipient?.email) {
+          to.push(firstRecipient.email);
+        }
+      } else if (replyEmail) {
+        // Otherwise reply to the sender
         to.push(replyEmail);
       }
     } else if (mode === 'replyAll') {
+      const senderEmail = latestMessage.sender?.email?.toLowerCase();
+
       // Add original sender to To if not current user
-      if (latestEmail.sender?.email && latestEmail.sender.email.toLowerCase() !== userEmail) {
-        to.push(latestEmail.sender.email);
+      if (senderEmail && senderEmail !== userEmail) {
+        to.push(latestMessage.sender.email);
       }
 
-      // Add all original recipients to CC except current user and primary recipient
-      if (latestEmail.to) {
-        latestEmail.to.forEach((recipient) => {
+      // Add original To recipients (except current user and sender)
+      if (latestMessage.to) {
+        latestMessage.to.forEach((recipient) => {
           if (
             recipient.email &&
             recipient.email.toLowerCase() !== userEmail &&
-            recipient.email.toLowerCase() !== to[0]?.toLowerCase()
+            recipient.email.toLowerCase() !== senderEmail &&
+            !to.includes(recipient.email)
           ) {
-            cc.push(recipient.email);
+            to.push(recipient.email);
           }
         });
       }
 
-      // Add CC recipients if they exist
-      if (latestEmail.cc) {
-        latestEmail.cc.forEach((recipient) => {
+      // Add CC recipients (except current user and those already in To)
+      if (latestMessage.cc) {
+        latestMessage.cc.forEach((recipient) => {
           if (
             recipient.email &&
             recipient.email.toLowerCase() !== userEmail &&
-            recipient.email.toLowerCase() !== to[0]?.toLowerCase() &&
+            !to.includes(recipient.email) &&
             !cc.includes(recipient.email)
           ) {
             cc.push(recipient.email);
