@@ -1,7 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { Ratelimit } from '@upstash/ratelimit';
 import { earlyAccess } from '@zero/db/schema';
-import { redis } from '@/lib/redis';
 import { db } from '@zero/db';
 import { Resend } from 'resend';
 
@@ -9,13 +7,6 @@ type PostgresError = {
   code: string;
   message: string;
 };
-
-const ratelimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(2, '10m'),
-  analytics: true,
-  prefix: 'ratelimit:early-access',
-});
 
 function isEmail(email: string): boolean {
   if (!email) {
@@ -31,34 +22,7 @@ function isEmail(email: string): boolean {
 
 export async function POST(req: NextRequest) {
   try {
-    const ip = req.headers.get('CF-Connecting-IP');
-    if (!ip) {
-      console.log('No IP detected');
-      return NextResponse.json({ error: 'No IP detected' }, { status: 400 });
-    }
-    console.log(
-      'Request from IP:',
-      ip,
-      req.headers.get('x-forwarded-for'),
-      req.headers.get('CF-Connecting-IP'),
-    );
-    const { success, limit, reset, remaining } = await ratelimit.limit(ip);
-
-    const headers = {
-      'X-RateLimit-Limit': limit.toString(),
-      'X-RateLimit-Remaining': remaining.toString(),
-      'X-RateLimit-Reset': reset.toString(),
-    };
     const body = await req.json();
-
-    if (!success) {
-      console.log(`Rate limit exceeded for IP ${ip}. Remaining: ${remaining}`, body.email);
-      return NextResponse.json(
-        { error: 'Too many requests. Please try again later.' },
-        { status: 429, headers },
-      );
-    }
-
     console.log('Request body:', body);
 
     const { email: rawEmail } = body as { email: string };
@@ -103,14 +67,7 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json(
         { message: 'Successfully joined early access' },
-        {
-          status: 201,
-          headers: {
-            'X-RateLimit-Limit': limit.toString(),
-            'X-RateLimit-Remaining': remaining.toString(),
-            'X-RateLimit-Reset': reset.toString(),
-          },
-        },
+        { status: 201 }
       );
     } catch (err) {
       const pgError = err as PostgresError;
@@ -124,14 +81,7 @@ export async function POST(req: NextRequest) {
         // Return 200 for existing emails
         return NextResponse.json(
           { message: 'Email already registered for early access' },
-          {
-            status: 200,
-            headers: {
-              'X-RateLimit-Limit': limit.toString(),
-              'X-RateLimit-Remaining': remaining.toString(),
-              'X-RateLimit-Reset': reset.toString(),
-            },
-          },
+          { status: 200 }
         );
       }
 

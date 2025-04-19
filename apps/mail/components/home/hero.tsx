@@ -107,7 +107,7 @@ export default function Hero({ title }: { title: ReactNode }) {
                 We'll let you know when we're ready to revolutionize your email experience.
               </p>
             </div>
-          ) : process.env.NODE_ENV === 'development' ? (
+          ) : process.env.NODE_ENV !== 'development' ? (
             <div className="flex items-center justify-center gap-4">
               <Button
                 variant="outline"
