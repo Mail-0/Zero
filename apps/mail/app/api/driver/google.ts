@@ -829,14 +829,53 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       }
     },
     createDraft: async (data: any) => {
-      const mimeMessage = [
+      const boundary = `boundary_${Date.now()}`;
+
+      const messageParts = [
         `From: me`,
         `To: ${data.to}`,
+        data.cc ? `Cc: ${data.cc}` : '',
+        data.bcc ? `Bcc: ${data.bcc}` : '',
         `Subject: ${data.subject}`,
+        `MIME-Version: 1.0`,
+        `Content-Type: multipart/mixed; boundary=${boundary}`,
+        '',
+        `--${boundary}`,
         'Content-Type: text/html; charset=utf-8',
         '',
-        data.message,
-      ].join('\n');
+        data.message || '',
+      ];
+
+      if (data.attachments?.length > 0) {
+        for (const attachment of data.attachments) {
+          const base64Data = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const base64 = (reader.result as string).split(',')[1];
+              if (base64) {
+                resolve(base64);
+              } else {
+                reject(new Error('Failed to read file as base64'));
+              }
+            };
+            reader.onerror = () => reject(new Error('Failed to read file'));
+            reader.readAsDataURL(attachment);
+          });
+
+          messageParts.push(
+            `--${boundary}`,
+            `Content-Type: ${attachment.type}`,
+            `Content-Transfer-Encoding: base64`,
+            `Content-Disposition: attachment; filename="${attachment.name}"`,
+            '',
+            base64Data,
+          );
+        }
+      }
+
+      messageParts.push(`--${boundary}--`);
+
+      const mimeMessage = messageParts.filter(Boolean).join('\n');
 
       const encodedMessage = Buffer.from(mimeMessage)
         .toString('base64')

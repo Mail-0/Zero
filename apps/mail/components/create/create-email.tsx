@@ -173,12 +173,24 @@ export function CreateEmail({
 
         if (draft.content) {
           try {
-            const json = generateJSON(draft.content, [Document, Paragraph, Text, Bold]);
-            setDefaultValue(json);
             setMessageContent(draft.content);
+            setResetEditorKey((prev) => prev + 1);
+            setTimeout(() => {
+              try {
+                const json = generateJSON(draft.content, [Document, Paragraph, Text, Bold]);
+                setDefaultValue(json);
+              } catch (error) {
+                console.error('Error parsing draft content:', error);
+                setDefaultValue(createEmptyDocContent());
+              }
+            }, 0);
           } catch (error) {
-            console.error('Error parsing draft content:', error);
+            console.error('Error setting draft content:', error);
+            setDefaultValue(createEmptyDocContent());
           }
+        } else {
+          setDefaultValue(createEmptyDocContent());
+          setMessageContent('');
         }
 
         setHasUnsavedChanges(false);
@@ -255,12 +267,14 @@ export function CreateEmail({
 
   const saveDraft = React.useCallback(async () => {
     if (!hasUnsavedChanges) return;
-    if (!toEmails.length && !subjectInput && !messageContent) return;
+    if (!toEmails.length || !subjectInput || !messageContent) return;
 
     try {
       setIsLoading(true);
       const draftData = {
         to: toEmails.join(', '),
+        cc: ccEmails.join(', '),
+        bcc: bccEmails.join(', '),
         subject: subjectInput,
         message: messageContent || '',
         attachments: attachments,

@@ -19,7 +19,13 @@ import { ChevronDown } from 'lucide-react';
 import { Button } from '../ui/button';
 import { toast } from 'sonner';
 
-const Draft = ({ message, onClick }: ThreadProps) => {
+import { ParsedMessage } from '@/types';
+
+interface DraftProps extends Omit<ThreadProps, 'message'> {
+  message: ParsedMessage;
+}
+
+const Draft = ({ message, onClick }: DraftProps) => {
   const [mail] = useMail();
   const [searchValue] = useSearchValue();
 
@@ -51,7 +57,20 @@ const Draft = ({ message, onClick }: ThreadProps) => {
               )}
             >
               <span className={cn(mail.selected && 'max-w-[120px] truncate')}>
-                {highlightText(message.sender.name, searchValue.highlight)}
+                {!message.to?.length ||
+                message.to.some(
+                  (to: { name: string; email: string }) =>
+                    to.name.includes('no-sender') || to.email.includes('no-sender'),
+                )
+                  ? 'No recipient'
+                  : highlightText(
+                      message.to
+                        .map((to: { name: string; email: string }) =>
+                          to.name === 'No Sender Name' ? to.email : `${to.name} <${to.email}>`,
+                        )
+                        .join(', '),
+                      searchValue.highlight,
+                    )}
               </span>
             </p>
           </div>
