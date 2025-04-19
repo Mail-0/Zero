@@ -6,11 +6,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ArrowUpIcon, MinusCircle, Paperclip, PlusCircle, X } from 'lucide-react';
 import { UploadedFileIcon } from '@/components/create/uploaded-file-icon';
 import { generateHTML, generateJSON } from '@tiptap/core';
 import { useConnections } from '@/hooks/use-connections';
 import { createDraft, getDraft } from '@/actions/drafts';
-import { ArrowUpIcon, Paperclip, X } from 'lucide-react';
 import { useHotkeysContext } from 'react-hotkeys-hook';
 import { Separator } from '@/components/ui/separator';
 import { SidebarToggle } from '../ui/sidebar-toggle';
@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { AIAssistant } from './ai-assistant';
 import { useTranslations } from 'next-intl';
 import { sendEmail } from '@/actions/send';
+import { EmailInput } from './email-input';
 import Text from '@tiptap/extension-text';
 import Bold from '@tiptap/extension-bold';
 import { type JSONContent } from 'novel';
@@ -80,10 +81,6 @@ export function CreateEmail({
 }) {
   const [toEmails, setToEmails] = React.useState<string[]>(initialTo ? [initialTo] : []);
   const [toInput, setToInput] = React.useState('');
-  const [selectedContactIndex, setSelectedContactIndex] = React.useState(0);
-  const [selectedCcContactIndex, setSelectedCcContactIndex] = React.useState(0);
-  const [selectedBccContactIndex, setSelectedBccContactIndex] = React.useState(0);
-  const contacts = useContacts();
   const [ccInput, setCcInput] = React.useState('');
   const [ccEmails, setCcEmails] = React.useState<string[]>([]);
   const [bccInput, setBccInput] = React.useState('');
@@ -129,20 +126,20 @@ export function CreateEmail({
   const userEmail =
     activeAccount?.email || session?.activeConnection?.email || session?.user?.email || '';
 
-  const filteredContacts = React.useMemo(
-    () => filterContacts(contacts, toInput, toEmails),
-    [contacts, toInput, toEmails],
-  );
+  //   const filteredContacts = React.useMemo(
+  //     () => filterContacts(contacts, toInput, toEmails),
+  //     [contacts, toInput, toEmails],
+  //   );
 
-  const filteredCcContacts = React.useMemo(
-    () => filterContacts(contacts, ccInput, [...toEmails, ...ccEmails]),
-    [contacts, ccInput, toEmails, ccEmails],
-  );
+  //   const filteredCcContacts = React.useMemo(
+  //     () => filterContacts(contacts, ccInput, [...toEmails, ...ccEmails]),
+  //     [contacts, ccInput, toEmails, ccEmails],
+  //   );
 
-  const filteredBccContacts = React.useMemo(
-    () => filterContacts(contacts, bccInput, [...toEmails, ...ccEmails, ...bccEmails]),
-    [contacts, bccInput, toEmails, ccEmails, bccEmails],
-  );
+  //   const filteredBccContacts = React.useMemo(
+  //     () => filterContacts(contacts, bccInput, [...toEmails, ...ccEmails, ...bccEmails]),
+  //     [contacts, bccInput, toEmails, ccEmails, bccEmails],
+  //   );
 
   React.useEffect(() => {
     if (!draftId && !defaultValue) {
@@ -471,41 +468,6 @@ export function CreateEmail({
     };
   }, [enableScope, disableScope]);
 
-  const toDropdownRef = React.useRef<HTMLDivElement>(null);
-  const ccDropdownRef = React.useRef<HTMLDivElement>(null);
-  const bccDropdownRef = React.useRef<HTMLDivElement>(null);
-
-  // Add this effect to handle scrolling
-  React.useEffect(() => {
-    const dropdownRef = toDropdownRef.current;
-    if (dropdownRef && selectedContactIndex >= 0) {
-      const selectedItem = dropdownRef.children[selectedContactIndex] as HTMLElement;
-      if (selectedItem) {
-        selectedItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      }
-    }
-  }, [selectedContactIndex]);
-
-  React.useEffect(() => {
-    const dropdownRef = ccDropdownRef.current;
-    if (dropdownRef && selectedCcContactIndex >= 0) {
-      const selectedItem = dropdownRef.children[selectedCcContactIndex] as HTMLElement;
-      if (selectedItem) {
-        selectedItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      }
-    }
-  }, [selectedCcContactIndex]);
-
-  React.useEffect(() => {
-    const dropdownRef = bccDropdownRef.current;
-    if (dropdownRef && selectedBccContactIndex >= 0) {
-      const selectedItem = dropdownRef.children[selectedBccContactIndex] as HTMLElement;
-      if (selectedItem) {
-        selectedItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      }
-    }
-  }, [selectedBccContactIndex]);
-
   return (
     <div
       className="bg-offsetLight dark:bg-offsetDark relative flex h-full flex-col overflow-hidden shadow-inner md:rounded-2xl md:border md:shadow-sm"
@@ -533,298 +495,94 @@ export function CreateEmail({
                 </div>
               </div>
             )}
+            <div className="flex items-center justify-end gap-2 pr-4">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                tabIndex={-1}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowCc(!showCc);
+                  if (!showCc) {
+                    setCcEmails([]);
+                  }
+                  setTimeout(() => {
+                    ccInputRef.current?.focus();
+                  }, 0);
+                }}
+                className="text-xs"
+              >
+                <span>Cc</span>
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                tabIndex={-1}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowBcc(!showBcc);
+                  if (!showBcc) {
+                    setBccEmails([]);
+                  }
+                  setTimeout(() => {
+                    bccInputRef.current?.focus();
+                  }, 0);
+                }}
+                className="text-xs"
+              >
+                <span>Bcc</span>
+              </Button>
+            </div>
             <div className="min-h-0 flex-1 space-y-12 overflow-y-auto overflow-x-hidden">
               <div className="space-y-3 md:px-1">
-                <div className="flex items-center">
-                  <div className="text-muted-foreground w-20 flex-shrink-0 pr-3 text-right text-[1rem] font-[600] opacity-50 md:w-24">
-                    {t('common.mailDisplay.to')}
-                  </div>
-                  <div className="group relative left-[2px] flex w-full flex-wrap items-center rounded-md border border-none bg-transparent p-1 transition-all focus-within:border-none focus:outline-none">
-                    {toEmails.map((email, index) => (
-                      <div
-                        key={index}
-                        className="bg-accent flex items-center gap-1 rounded-md border px-2 text-sm font-medium"
-                      >
-                        <span className="max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap">
-                          {email}
-                        </span>
-                        <button
-                          type="button"
-                          disabled={isLoading}
-                          className="text-muted-foreground hover:text-foreground ml-1 rounded-full"
-                          onClick={() => {
-                            setToEmails((emails) => emails.filter((_, i) => i !== index));
-                            setHasUnsavedChanges(true);
-                          }}
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
-                    <div className="relative flex-1">
-                      <input
-                        ref={toInputRef}
-                        disabled={isLoading}
-                        type="text"
-                        className="text-md relative left-[3px] w-full min-w-[120px] bg-transparent placeholder:text-[#616161] placeholder:opacity-50 focus:outline-none"
-                        placeholder={toEmails.length ? '' : t('pages.createEmail.example')}
-                        value={toInput}
-                        onChange={(e) => handleEmailInputChange('to', e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            if (filteredContacts.length > 0) {
-                              const selectedEmail = filteredContacts[selectedContactIndex]?.email;
-                              if (selectedEmail) handleAddEmail('to', selectedEmail);
-                              setSelectedContactIndex(0);
-                            } else {
-                              handleAddEmail('to', toInput);
-                            }
-                          } else if (e.key === 'ArrowDown' && filteredContacts.length > 0) {
-                            e.preventDefault();
-                            setSelectedContactIndex((prev) =>
-                              Math.min(prev + 1, filteredContacts.length - 1),
-                            );
-                          } else if (e.key === 'ArrowUp' && filteredContacts.length > 0) {
-                            e.preventDefault();
-                            setSelectedContactIndex((prev) => Math.max(prev - 1, 0));
-                          }
-                        }}
-                      />
-                      {toInput && filteredContacts.length > 0 && (
-                        <div
-                          ref={toDropdownRef}
-                          className="bg-background absolute left-0 top-full z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border shadow-lg"
-                        >
-                          {filteredContacts.map((contact, index) => (
-                            <button
-                              key={contact.email}
-                              className={`w-full px-3 py-2 text-left text-sm ${selectedContactIndex === index ? 'bg-accent' : 'hover:bg-accent/50'}`}
-                              onClick={() => {
-                                handleAddEmail('to', contact.email);
-                                setSelectedContactIndex(0);
-                              }}
-                            >
-                              <div className="font-medium">{contact.name || contact.email}</div>
-                              {contact.name && (
-                                <div className="text-muted-foreground text-xs">{contact.email}</div>
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        tabIndex={-1}
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="text-xs"
-                        onClick={() => {
-                          setShowCc(!showCc);
-                          if (!showCc) {
-                            setTimeout(() => ccInputRef.current?.focus(), 0);
-                          }
-                        }}
-                      >
-                        Cc
-                      </Button>
-                      <Button
-                        tabIndex={-1}
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="text-xs"
-                        onClick={() => {
-                          setShowBcc(!showBcc);
-                          if (!showBcc) {
-                            setTimeout(() => bccInputRef.current?.focus(), 0);
-                          }
-                        }}
-                      >
-                        Bcc
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+                <EmailInput
+                  type="to"
+                  emails={toEmails}
+                  setEmails={setToEmails}
+                  inputValue={toInput}
+                  setInputValue={setToInput}
+                  filteredContacts={[]}
+                  isLoading={isLoading}
+                  onAddEmail={handleAddEmail}
+                  hasUnsavedChanges={hasUnsavedChanges}
+                  setHasUnsavedChanges={setHasUnsavedChanges}
+                  className='w-24 text-right'
+                />
 
                 {showCc && (
-                  <div className="flex items-center">
-                    <div className="text-muted-foreground w-20 flex-shrink-0 pr-3 text-right text-[1rem] font-[600] opacity-50 md:w-24">
-                      Cc
-                    </div>
-                    <div className="group relative left-[2px] flex w-full flex-wrap items-center rounded-md border border-none bg-transparent p-1 transition-all focus-within:border-none focus:outline-none">
-                      {ccEmails.map((email, index) => (
-                        <div
-                          key={index}
-                          className="bg-accent flex items-center gap-1 rounded-md border px-2 text-sm font-medium"
-                        >
-                          <span className="max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap">
-                            {email}
-                          </span>
-                          <button
-                            type="button"
-                            disabled={isLoading}
-                            className="text-muted-foreground hover:text-foreground ml-1 rounded-full"
-                            onClick={() => {
-                              setCcEmails((emails) => emails.filter((_, i) => i !== index));
-                              setHasUnsavedChanges(true);
-                            }}
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ))}
-                      <div className="relative flex-1">
-                        <input
-                          ref={ccInputRef}
-                          disabled={isLoading}
-                          type="text"
-                          className="text-md relative left-[3px] w-full min-w-[120px] bg-transparent placeholder:text-[#616161] placeholder:opacity-50 focus:outline-none"
-                          placeholder={ccEmails.length ? '' : t('pages.createEmail.example')}
-                          value={ccInput}
-                          onChange={(e) => handleEmailInputChange('cc', e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              if (filteredCcContacts.length > 0) {
-                                const selectedEmail =
-                                  filteredCcContacts[selectedCcContactIndex]?.email;
-                                if (selectedEmail) {
-                                  handleAddEmail('cc', selectedEmail);
-                                  setSelectedCcContactIndex(0);
-                                }
-                              } else {
-                                handleAddEmail('cc', ccInput);
-                              }
-                            } else if (e.key === 'ArrowDown' && filteredCcContacts.length > 0) {
-                              e.preventDefault();
-                              setSelectedCcContactIndex((prev) =>
-                                Math.min(prev + 1, filteredCcContacts.length - 1),
-                              );
-                            } else if (e.key === 'ArrowUp' && filteredCcContacts.length > 0) {
-                              e.preventDefault();
-                              setSelectedCcContactIndex((prev) => Math.max(prev - 1, 0));
-                            }
-                          }}
-                        />
-                        {ccInput && filteredCcContacts.length > 0 && (
-                          <div
-                            ref={ccDropdownRef}
-                            className="bg-background absolute left-0 top-full z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border shadow-lg"
-                          >
-                            {filteredCcContacts.map((contact, index) => (
-                              <button
-                                key={contact.email}
-                                className={`w-full px-3 py-2 text-left text-sm ${selectedCcContactIndex === index ? 'bg-accent' : 'hover:bg-accent/50'}`}
-                                onClick={() => {
-                                  handleAddEmail('cc', contact.email);
-                                  setSelectedCcContactIndex(0);
-                                }}
-                              >
-                                <div className="font-medium">{contact.name || contact.email}</div>
-                                {contact.name && (
-                                  <div className="text-muted-foreground text-xs">
-                                    {contact.email}
-                                  </div>
-                                )}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                  <EmailInput
+                    type="cc"
+                    emails={ccEmails}
+                    setEmails={setCcEmails}
+                    inputValue={ccInput}
+                    setInputValue={setCcInput}
+                    filteredContacts={[]}
+                    isLoading={isLoading}
+                    onAddEmail={handleAddEmail}
+                    hasUnsavedChanges={hasUnsavedChanges}
+                    setHasUnsavedChanges={setHasUnsavedChanges}
+                    className='w-24 text-right'
+                  />
                 )}
 
                 {showBcc && (
-                  <div className="flex items-center">
-                    <div className="text-muted-foreground w-20 flex-shrink-0 pr-3 text-right text-[1rem] font-[600] opacity-50 md:w-24">
-                      Bcc
-                    </div>
-                    <div className="group relative left-[2px] flex w-full flex-wrap items-center rounded-md border border-none bg-transparent p-1 transition-all focus-within:border-none focus:outline-none">
-                      {bccEmails.map((email, index) => (
-                        <div
-                          key={index}
-                          className="bg-accent flex items-center gap-1 rounded-md border px-2 text-sm font-medium"
-                        >
-                          <span className="max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap">
-                            {email}
-                          </span>
-                          <button
-                            type="button"
-                            disabled={isLoading}
-                            className="text-muted-foreground hover:text-foreground ml-1 rounded-full"
-                            onClick={() => {
-                              setBccEmails((emails) => emails.filter((_, i) => i !== index));
-                              setHasUnsavedChanges(true);
-                            }}
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ))}
-                      <div className="relative flex-1">
-                        <input
-                          ref={bccInputRef}
-                          disabled={isLoading}
-                          type="text"
-                          className="text-md relative left-[3px] w-full min-w-[120px] bg-transparent placeholder:text-[#616161] placeholder:opacity-50 focus:outline-none"
-                          placeholder={bccEmails.length ? '' : t('pages.createEmail.example')}
-                          value={bccInput}
-                          onChange={(e) => handleEmailInputChange('bcc', e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              if (filteredBccContacts.length > 0) {
-                                const selectedEmail =
-                                  filteredBccContacts[selectedBccContactIndex]?.email;
-                                if (selectedEmail) {
-                                  handleAddEmail('bcc', selectedEmail);
-                                  setSelectedBccContactIndex(0);
-                                }
-                              } else {
-                                handleAddEmail('bcc', bccInput);
-                              }
-                            } else if (e.key === 'ArrowDown' && filteredBccContacts.length > 0) {
-                              e.preventDefault();
-                              setSelectedBccContactIndex((prev) =>
-                                Math.min(prev + 1, filteredBccContacts.length - 1),
-                              );
-                            } else if (e.key === 'ArrowUp' && filteredBccContacts.length > 0) {
-                              e.preventDefault();
-                              setSelectedBccContactIndex((prev) => Math.max(prev - 1, 0));
-                            }
-                          }}
-                        />
-                        {bccInput && filteredBccContacts.length > 0 && (
-                          <div
-                            ref={bccDropdownRef}
-                            className="bg-background absolute left-0 top-full z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border shadow-lg"
-                          >
-                            {filteredBccContacts.map((contact, index) => (
-                              <button
-                                key={contact.email}
-                                className={`w-full px-3 py-2 text-left text-sm ${selectedBccContactIndex === index ? 'bg-accent' : 'hover:bg-accent/50'}`}
-                                onClick={() => {
-                                  handleAddEmail('bcc', contact.email);
-                                  setSelectedBccContactIndex(0);
-                                }}
-                              >
-                                <div className="font-medium">{contact.name || contact.email}</div>
-                                {contact.name && (
-                                  <div className="text-muted-foreground text-xs">
-                                    {contact.email}
-                                  </div>
-                                )}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                  <EmailInput
+                    type="bcc"
+                    emails={bccEmails}
+                    setEmails={setBccEmails}
+                    inputValue={bccInput}
+                    setInputValue={setBccInput}
+                    filteredContacts={[]}
+                    isLoading={isLoading}
+                    onAddEmail={handleAddEmail}
+                    hasUnsavedChanges={hasUnsavedChanges}
+                    setHasUnsavedChanges={setHasUnsavedChanges}
+                    className='w-24 text-right'
+                  />
                 )}
 
                 <div className="flex items-center">

@@ -78,9 +78,22 @@ export function MailListHotkeys() {
     });
   }, [mail.bulkSelected, mutate, mutateStats, t]);
 
+  const archiveEmail = useCallback(async () => {
+    const emailId = hoveredEmailId.current;
+    if (!emailId) return;
+
+    // Immediately remove the email from the list
+    const updatedItems = items.filter((item) => item.id !== emailId);
+    mutate({ threads: updatedItems, nextPageToken: null }, false);
+
+    // Show success message
+    toast.success(t('common.mail.archived'));
+  }, [items, mutate, t]);
+
   const handlers = {
     markAsUnread,
     selectAll,
+    archiveEmail,
   };
 
   const mailListShortcuts = keyboardShortcuts.filter((shortcut) => shortcut.scope === scope);

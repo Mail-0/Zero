@@ -1,14 +1,6 @@
 'use client';
 
 import {
-  cleanEmailAddress,
-  truncateFileName,
-  cn,
-  convertJSONToHTML,
-  createAIJsonContent,
-  constructReplyBody,
-} from '@/lib/utils';
-import {
   ArrowUp,
   Paperclip,
   Reply,
@@ -19,10 +11,22 @@ import {
   X as XIcon,
   Forward,
   ReplyAll,
+  MinusCircle,
+  PlusCircle,
+  Minus,
 } from 'lucide-react';
+import {
+  cleanEmailAddress,
+  truncateFileName,
+  cn,
+  convertJSONToHTML,
+  createAIJsonContent,
+  constructReplyBody,
+} from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useRef, useState, useEffect, useCallback, useReducer } from 'react';
 import { UploadedFileIcon } from '@/components/create/uploaded-file-icon';
+import { EmailInput } from '@/components/create/email-input';
 import { extractTextFromHTML } from '@/actions/extractText';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { generateAIResponse } from '@/actions/ai-reply';
@@ -30,6 +34,7 @@ import { useHotkeysContext } from 'react-hotkeys-hook';
 import { Separator } from '@/components/ui/separator';
 import { useMail } from '@/components/mail/use-mail';
 import { useSettings } from '@/hooks/use-settings';
+import { useContacts } from '@/hooks/use-contacts';
 import Editor from '@/components/create/editor';
 import { Button } from '@/components/ui/button';
 import { useThread } from '@/hooks/use-threads';
@@ -44,6 +49,7 @@ import posthog from 'posthog-js';
 import { Sender } from '@/types';
 import { toast } from 'sonner';
 import type { z } from 'zod';
+import React from 'react';
 
 // Utility function to check if an email is a noreply address
 const isNoReplyAddress = (email: string): boolean => {
@@ -207,20 +213,49 @@ export default function ReplyCompose() {
   const toEmails = watch('to');
   const ccEmails = watch('cc');
   const bccEmails = watch('bcc');
+  const toInput = watch('toInput');
+  const ccInput = watch('ccInput');
+  const bccInput = watch('bccInput');
 
-  // const handleAddEmail = (type: 'to' | 'cc' | 'bcc', value: string) => {
-  //   const trimmedEmail = value.trim().replace(/,$/, '');
-  //   const currentEmails = getValues(type);
-  //   if (trimmedEmail && !currentEmails.includes(trimmedEmail) && isValidEmail(trimmedEmail)) {
-  //     setValue(type, [...currentEmails, trimmedEmail]);
-  //     setValue(`${type}Input`, '');
-  //   }
-  // };
+  const filterContacts = (contacts: Sender[], searchTerm: string, excludeEmails: string[]) => {
+    if (!searchTerm) return [];
+    const term = searchTerm.toLowerCase();
+    return contacts.filter(
+      (contact) =>
+        (contact.email?.toLowerCase().includes(term) ||
+          contact.name?.toLowerCase().includes(term)) &&
+        !excludeEmails.includes(contact.email),
+    );
+  };
 
-  const handleSendEmail = async (e?: React.MouseEvent<HTMLButtonElement>) => {
-    if (e) {
-      e.preventDefault();
+  const handleAddEmail = (type: 'to' | 'cc' | 'bcc', email: string) => {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) return;
+
+    const currentEmails = getValues(type);
+    if (isValidEmail(trimmedEmail) && !currentEmails.includes(trimmedEmail)) {
+      setValue(type, [...currentEmails, trimmedEmail]);
+      setValue(`${type}Input`, '');
+      composerDispatch({ type: 'SET_UNSAVED_CHANGES', payload: true });
     }
+  };
+
+  //   const filteredContacts = React.useMemo(
+  //     () => filterContacts(contactsList, toInput, toEmails),
+  //     [contactsList, toInput, toEmails],
+  //   );
+
+  //   const filteredCcContacts = React.useMemo(
+  //     () => filterContacts(contactsList, ccInput, [...toEmails, ...ccEmails]),
+  //     [contactsList, ccInput, toEmails, ccEmails],
+  //   );
+
+  //   const filteredBccContacts = React.useMemo(
+  //     () => filterContacts(contactsList, bccInput, [...toEmails, ...ccEmails, ...bccEmails]),
+  //     [contactsList, bccInput, toEmails, ccEmails, bccEmails],
+  //   );
+
+  const handleSendEmail = async (values: FormData) => {
     if (!emailData) return;
     try {
       const originalEmail = emailData.latest;
@@ -263,7 +298,7 @@ export default function ReplyCompose() {
 
       const messageId = originalEmail.messageId;
       const threadId = originalEmail.threadId;
-      const formattedMessage = getValues('messageContent');
+      const formattedMessage = values.messageContent;
       const originalDate = new Date(originalEmail.receivedOn || '').toLocaleString();
       const quotedMessage = originalEmail.decodedBody;
 
@@ -316,7 +351,11 @@ export default function ReplyCompose() {
   };
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
-    await handleSendEmail();
+    if (composerState.isLoading) return;
+    composerDispatch({ type: 'SET_LOADING', payload: true });
+    await handleSendEmail(data).finally(() => {
+      composerDispatch({ type: 'SET_LOADING', payload: false });
+    });
   };
 
   const handleAttachment = (files: File[]) => {
@@ -445,23 +484,23 @@ export default function ReplyCompose() {
     [isResizing],
   );
 
-  // Add a function to handle starting the resize
-  const handleResizeStart = (e: React.MouseEvent) => {
-    setIsResizing(true);
-    resizeStartY.current = e.clientY;
-    startHeight.current = editorHeight;
-  };
+  //   // Add a function to handle starting the resize
+  //   const handleResizeStart = (e: React.MouseEvent) => {
+  //     setIsResizing(true);
+  //     resizeStartY.current = e.clientY;
+  //     startHeight.current = editorHeight;
+  //   };
 
-  // Handle keyboard shortcuts for sending email
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Check for Cmd/Ctrl + Enter
-    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-      e.preventDefault();
-      if (isFormValid) {
-        handleSubmit(onSubmit)();
-      }
-    }
-  };
+  //   // Handle keyboard shortcuts for sending email
+  //   const handleKeyDown = (e: React.KeyboardEvent) => {
+  //     // Check for Cmd/Ctrl + Enter
+  //     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+  //       e.preventDefault();
+  //       if (isFormValid) {
+  //         handleSubmit(onSubmit)();
+  //       }
+  //     }
+  //   };
 
   // Update onChange handler in Editor component
   const handleEditorChange = (content: string) => {
@@ -481,9 +520,6 @@ export default function ReplyCompose() {
           },
         ],
       });
-
-  // Check if form is valid for submission
-  const isFormValid = !isMessageEmpty || attachments.length > 0;
 
   const handleAIButtonClick = async () => {
     if (!emailData) return;
@@ -583,12 +619,15 @@ export default function ReplyCompose() {
 
   // Helper function to initialize recipients based on mode
   const initializeRecipients = useCallback(() => {
-    if (!emailData || !emailData.messages.length) return { to: [], cc: [] };
+    if (!emailData || !emailData.messages || emailData.messages.length === 0) return { to: [], cc: [] };
 
-    const latestEmail = emailData.latest;
-    if (!latestEmail) return { to: [], cc: [] };
+    const latestMessage = emailData.messages[0];
+    if (!latestMessage) return { to: [], cc: [] };
 
-    const userEmail = session?.activeConnection?.email?.toLowerCase();
+    // Get the active connection's email
+    const activeConnectionEmail = session?.activeConnection?.email?.toLowerCase();
+    const userEmail = activeConnectionEmail;
+
     const to: string[] = [];
     const cc: string[] = [];
 
@@ -597,37 +636,52 @@ export default function ReplyCompose() {
     }
 
     if (mode === 'reply') {
-      // Add reply-to or sender email to To
-      const replyEmail = latestEmail.replyTo || latestEmail.sender?.email;
-      if (replyEmail) {
+      // For individual replies, check if the sender is from our active connection
+      const senderEmail = latestMessage.sender?.email?.toLowerCase();
+      const replyEmail = latestMessage.replyTo || senderEmail;
+
+      // If we're replying from the same email as the sender, use the original recipients
+      if (senderEmail === userEmail && latestMessage.to && latestMessage.to.length > 0) {
+        // Get the first recipient that isn't us
+        const firstRecipient = latestMessage.to.find(
+          recipient => recipient.email?.toLowerCase() !== userEmail
+        );
+        if (firstRecipient?.email) {
+          to.push(firstRecipient.email);
+        }
+      } else if (replyEmail) {
+        // Otherwise reply to the sender
         to.push(replyEmail);
       }
     } else if (mode === 'replyAll') {
+      const senderEmail = latestMessage.sender?.email?.toLowerCase();
+
       // Add original sender to To if not current user
-      if (latestEmail.sender?.email && latestEmail.sender.email.toLowerCase() !== userEmail) {
-        to.push(latestEmail.sender.email);
+      if (senderEmail && senderEmail !== userEmail) {
+        to.push(latestMessage.sender.email);
       }
 
-      // Add all original recipients to CC except current user and primary recipient
-      if (latestEmail.to) {
-        latestEmail.to.forEach((recipient) => {
+      // Add original To recipients (except current user and sender)
+      if (latestMessage.to) {
+        latestMessage.to.forEach((recipient) => {
           if (
             recipient.email &&
             recipient.email.toLowerCase() !== userEmail &&
-            recipient.email.toLowerCase() !== to[0]?.toLowerCase()
+            recipient.email.toLowerCase() !== senderEmail &&
+            !to.includes(recipient.email)
           ) {
-            cc.push(recipient.email);
+            to.push(recipient.email);
           }
         });
       }
 
-      // Add CC recipients if they exist
-      if (latestEmail.cc) {
-        latestEmail.cc.forEach((recipient) => {
+      // Add CC recipients (except current user and those already in To)
+      if (latestMessage.cc) {
+        latestMessage.cc.forEach((recipient) => {
           if (
             recipient.email &&
             recipient.email.toLowerCase() !== userEmail &&
-            recipient.email.toLowerCase() !== to[0]?.toLowerCase() &&
+            !to.includes(recipient.email) &&
             !cc.includes(recipient.email)
           ) {
             cc.push(recipient.email);
@@ -671,7 +725,7 @@ export default function ReplyCompose() {
 
     if (isEditingRecipients || mode === 'forward') {
       return (
-        <div className="flex-1 space-y-2">
+        <div className="flex-1 space-y-2 ml-1.5">
           <div className="mb-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
               {icon}
@@ -681,39 +735,52 @@ export default function ReplyCompose() {
             </div>
           </div>
 
-          <RecipientInput
+          <EmailInput
             type="to"
-            value={toEmails}
-            onRemove={(index) => {
-              const newEmails = toEmails.filter((_, i) => i !== index);
-              setValue('to', newEmails);
-            }}
-            placeholder={t('pages.createEmail.example')}
+            emails={toEmails}
+            setEmails={(emails) => setValue('to', emails)}
+            inputValue={toInput}
+            setInputValue={(value) => setValue('toInput', value)}
+            filteredContacts={[]}
+            isLoading={composerState.isLoading}
+            onAddEmail={handleAddEmail}
+            hasUnsavedChanges={composerState.hasUnsavedChanges}
+            setHasUnsavedChanges={(value) =>
+              composerDispatch({ type: 'SET_UNSAVED_CHANGES', payload: value })
+            }
           />
 
           {showCc && (
-            <RecipientInput
+            <EmailInput
               type="cc"
-              value={ccEmails}
-              onRemove={(index) => {
-                const newEmails = ccEmails.filter((_, i) => i !== index);
-                setValue('cc', newEmails);
-              }}
-              placeholder="Add Cc recipients"
-              inputRef={ccInputRef}
+              emails={ccEmails}
+              setEmails={(emails) => setValue('cc', emails)}
+              inputValue={ccInput}
+              setInputValue={(value) => setValue('ccInput', value)}
+              filteredContacts={[]}
+              isLoading={composerState.isLoading}
+              onAddEmail={handleAddEmail}
+              hasUnsavedChanges={composerState.hasUnsavedChanges}
+              setHasUnsavedChanges={(value) =>
+                composerDispatch({ type: 'SET_UNSAVED_CHANGES', payload: value })
+              }
             />
           )}
 
           {showBcc && (
-            <RecipientInput
+            <EmailInput
               type="bcc"
-              value={bccEmails}
-              onRemove={(index) => {
-                const newEmails = bccEmails.filter((_, i) => i !== index);
-                setValue('bcc', newEmails);
-              }}
-              placeholder="Add Bcc recipients"
-              inputRef={bccInputRef}
+              emails={bccEmails}
+              setEmails={(emails) => setValue('bcc', emails)}
+              inputValue={bccInput}
+              setInputValue={(value) => setValue('bccInput', value)}
+              filteredContacts={[]}
+              isLoading={composerState.isLoading}
+              onAddEmail={handleAddEmail}
+              hasUnsavedChanges={composerState.hasUnsavedChanges}
+              setHasUnsavedChanges={(value) =>
+                composerDispatch({ type: 'SET_UNSAVED_CHANGES', payload: value })
+              }
             />
           )}
         </div>
@@ -743,107 +810,6 @@ export default function ReplyCompose() {
       </div>
     );
   };
-
-  // Extract recipient input component for reusability
-  const RecipientInput = ({
-    type,
-    value,
-    onRemove,
-    placeholder,
-    inputRef,
-  }: {
-    type: 'to' | 'cc' | 'bcc';
-    value: string[];
-    onRemove: (index: number) => void;
-    placeholder: string;
-    inputRef?: React.RefObject<HTMLInputElement | null>;
-  }) => {
-    const { ref, ...rest } = register(`${type}Input` as 'toInput' | 'ccInput' | 'bccInput', {
-      validate: (value: string) => {
-        if (value && !isValidEmail(value)) {
-          return 'Invalid email format';
-        }
-        return true;
-      },
-    });
-
-    const handleAddEmail = (type: 'to' | 'cc' | 'bcc', value: string) => {
-      const trimmedEmail = value.trim().replace(/,$/, '');
-      const currentEmails = getValues(type);
-      if (trimmedEmail && !currentEmails.includes(trimmedEmail) && isValidEmail(trimmedEmail)) {
-        setValue(type, [...currentEmails, trimmedEmail]);
-        setValue(`${type}Input` as 'toInput' | 'ccInput' | 'bccInput', '');
-      }
-    };
-
-    return (
-      <div className="flex items-center gap-2">
-        <div className="text-muted-foreground flex-shrink-0 text-right text-[1rem] opacity-50">
-          {type}:
-        </div>
-        <div className="group relative left-[2px] flex w-full flex-wrap items-center gap-1 rounded-md border border-none bg-transparent p-1 transition-all focus-within:border-none focus:outline-none">
-          {value.map((email, index) => (
-            <EmailTag key={index} email={email} onRemove={() => onRemove(index)} />
-          ))}
-          <input
-            ref={(e) => {
-              ref(e);
-              if (inputRef) {
-                (inputRef as React.MutableRefObject<HTMLInputElement | null>).current = e;
-              }
-            }}
-            type="email"
-            className="text-md relative left-[3px] min-w-[120px] flex-1 bg-transparent placeholder:text-[#616161] placeholder:opacity-50 focus:outline-none"
-            placeholder={value.length ? '' : placeholder}
-            {...rest}
-            onBlur={(e) => handleAddEmail('to', e.currentTarget.value)}
-            onKeyDown={(e) => {
-              const currentValue = e.currentTarget.value;
-              if ((e.key === ',' || e.key === 'Enter' || e.key === ' ') && currentValue) {
-                e.preventDefault();
-                if (isValidEmail(currentValue)) {
-                  const newEmails = [...value];
-                  newEmails.push(currentValue);
-                  setValue(type as 'to' | 'cc' | 'bcc', newEmails);
-                  setValue(`${type}Input` as 'toInput' | 'ccInput' | 'bccInput', '');
-                }
-              } else if (e.key === 'Backspace' && !currentValue && value.length > 0) {
-                e.preventDefault();
-                const newEmails = value.filter((_, i) => i !== value.length - 1);
-                setValue(type as 'to' | 'cc' | 'bcc', newEmails);
-              }
-            }}
-            onPaste={(e) => {
-              e.preventDefault();
-              const pastedText = e.clipboardData.getData('text');
-              const emails = pastedText.split(/[,\n]/).map((email) => email.trim());
-              const validEmails = emails.filter(
-                (email) => email && !value.includes(email) && isValidEmail(email),
-              );
-              if (validEmails.length > 0) {
-                setValue(type as 'to' | 'cc' | 'bcc', [...value, ...validEmails]);
-                setValue(`${type}Input` as 'toInput' | 'ccInput' | 'bccInput', '');
-              }
-            }}
-          />
-        </div>
-      </div>
-    );
-  };
-
-  // Extract email tag component
-  const EmailTag = ({ email, onRemove }: { email: string; onRemove: () => void }) => (
-    <div className="bg-accent flex items-center gap-1 rounded-md border px-2 text-sm font-medium">
-      <span className="max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap">{email}</span>
-      <button
-        type="button"
-        className="text-muted-foreground hover:text-foreground ml-1 rounded-full"
-        onClick={onRemove}
-      >
-        <X className="h-3 w-3" />
-      </button>
-    </div>
-  );
 
   // Add this effect near other useEffects
   useEffect(() => {
@@ -998,7 +964,7 @@ export default function ReplyCompose() {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onSubmit={handleSubmit(onSubmit)}
-        onKeyDown={handleKeyDown}
+        // onKeyDown={handleKeyDown}
       >
         {/* Drag overlay */}
         {composerState.isDragging && <DragOverlay />}
@@ -1006,11 +972,12 @@ export default function ReplyCompose() {
         {/* Header */}
         <div className="text-muted-foreground flex flex-shrink-0 items-start justify-between text-sm">
           {renderHeaderContent()}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center">
             <Button
               type="button"
               variant="ghost"
               size="sm"
+              tabIndex={-1}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -1025,12 +992,13 @@ export default function ReplyCompose() {
               }}
               className="text-xs"
             >
-              {showCc ? 'Remove Cc' : 'Add Cc'}
+              <span>Cc</span>
             </Button>
             <Button
               type="button"
               variant="ghost"
               size="sm"
+              tabIndex={-1}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -1045,7 +1013,7 @@ export default function ReplyCompose() {
               }}
               className="text-xs"
             >
-              {showBcc ? 'Remove Bcc' : 'Add Bcc'}
+              <span>Bcc</span>
             </Button>
             <CloseButton onClick={toggleComposer} />
           </div>
@@ -1235,7 +1203,7 @@ export default function ReplyCompose() {
                 'relative h-8 w-8 rounded-full',
                 composerState.isLoading && 'cursor-not-allowed',
               )}
-              onClick={handleSendEmail}
+              onClick={handleSubmit(onSubmit)}
               disabled={composerState.isLoading}
               type="button"
             >

@@ -2,6 +2,7 @@ import { parseAddressList, parseFrom, wasSentWithTLS } from '@/lib/email-utils';
 import { IOutgoingMessage, Sender, type ParsedMessage } from '@/types';
 import { type IConfig, type MailManager } from './types';
 import { type gmail_v1, google } from 'googleapis';
+import { filterSuggestions } from '@/lib/filter';
 import { EnableBrain } from '@/actions/brain';
 import { createMimeMessage } from 'mimetext';
 import * as he from 'he';
@@ -392,14 +393,18 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
   };
   const normalizeSearch = (folder: string, q: string) => {
     // Handle special folders
-    if (folder === 'bin') {
-      return { folder: undefined, q: `in:trash` };
-    }
-    if (folder === 'archive') {
-      return { folder: undefined, q: `in:archive` };
-    }
     if (folder !== 'inbox') {
-      return { folder, q: `in:${folder}` };
+      filterSuggestions.forEach((suggestion) => {
+        q = q.replaceAll(suggestion.filter, ``);
+      });
+      console.log('🔄 Filter suggestions', q);
+      if (folder === 'bin') {
+        return { folder: undefined, q: `in:trash ${q}` };
+      }
+      if (folder === 'archive') {
+        return { folder: undefined, q: `in:archive ${q}` };
+      }
+      return { folder, q: `in:${folder} ${q}` };
     }
     // Return the query as-is to preserve Gmail's native search syntax
     return { folder, q };

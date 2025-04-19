@@ -67,8 +67,12 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
       const message = items[index];
       const threadId = message.threadId ?? message.id;
 
-      onNavigate(threadId);
-
+      // Only navigate if there's already a thread open
+      const currentThreadId = window.location.search.includes('threadId=');
+      if (currentThreadId) {
+        onNavigate(threadId);
+      }
+      
       setMail((prev) => ({
         ...prev,
         bulkSelected: [],
@@ -94,17 +98,22 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
           const hoveredIndex = getHoveredIndex();
           if (hoveredIndex !== -1) {
             scrollIntoView(hoveredIndex);
+            navigateToThread(hoveredIndex);
             return hoveredIndex;
           }
-          return items.length - 1;
+          const newIndex = items.length - 1;
+          scrollIntoView(newIndex);
+          navigateToThread(newIndex);
+          return newIndex;
         }
 
         const newIndex = Math.max(0, prevIndex - 1);
         scrollIntoView(newIndex);
+        navigateToThread(newIndex);
         return newIndex;
       });
     },
-    [isQuickActionMode, items.length, scrollIntoView, getHoveredIndex],
+    [isQuickActionMode, items.length, scrollIntoView, getHoveredIndex, navigateToThread],
   );
 
   const handleArrowDown = useCallback(
@@ -119,17 +128,22 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
           const hoveredIndex = getHoveredIndex();
           if (hoveredIndex !== -1) {
             scrollIntoView(hoveredIndex);
+            navigateToThread(hoveredIndex);
             return hoveredIndex;
           }
-          return 0;
+          const newIndex = 0;
+          scrollIntoView(newIndex);
+          navigateToThread(newIndex);
+          return newIndex;
         }
 
         const newIndex = Math.min(items.length - 1, prevIndex + 1);
         scrollIntoView(newIndex);
+        navigateToThread(newIndex);
         return newIndex;
       });
     },
-    [isQuickActionMode, items.length, scrollIntoView, getHoveredIndex],
+    [isQuickActionMode, items.length, scrollIntoView, getHoveredIndex, navigateToThread],
   );
 
   const handleEnter = useCallback(
@@ -147,9 +161,11 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
         return;
       }
 
-      navigateToThread(focusedIndex);
+      const message = items[focusedIndex];
+      const threadId = message.threadId ?? message.id;
+      onNavigate(threadId);
     },
-    [focusedIndex, isQuickActionMode, getThreadElement, navigateToThread, quickActionIndex],
+    [focusedIndex, isQuickActionMode, getThreadElement, items, onNavigate, quickActionIndex],
   );
 
   const handleTab = useCallback(
@@ -293,3 +309,9 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
     resetNavigation,
   };
 }
+
+export default function useMailListHotkeys() {
+  const [removingEmails, setRemovingEmails] = useState<Set<string>>(new Set());
+
+  return [removingEmails, setRemovingEmails] as const;
+} 

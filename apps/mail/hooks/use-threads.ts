@@ -92,13 +92,19 @@ export const useThreads = () => {
       ]);
     },
     async (key) => {
-      const [connectionId, folder, query, max, labelIds, pageToken] = key;
+      const [, folder, query, max, , pageToken] = key;
       const searchParams = new URLSearchParams({
         q: query,
         folder,
         max: max?.toString() ?? defaultPageSize.toString(),
         pageToken: pageToken ?? '',
       } as Record<string, string>);
+      console.log('Fetching emails with params:', {
+        q: query,
+        folder,
+        max: max?.toString() ?? defaultPageSize.toString(),
+        pageToken: pageToken ?? '',
+      });
       const res = await axios.get<RawResponse>(`/api/driver?${searchParams.toString()}`);
       return res.data;
     },

@@ -311,7 +311,7 @@ export function MailLayout() {
             <div className="bg-offsetLight dark:bg-offsetDark flex-1 flex-col overflow-y-auto shadow-inner md:flex md:rounded-2xl md:border md:shadow-sm">
               <div
                 className={cn(
-                  'sticky top-0 z-10 flex items-center justify-between gap-1.5 border-b p-2 transition-colors',
+                  'sticky top-0 z-10 flex items-center justify-between gap-1.5 border-b p-2 transition-colors md:min-h-14',
                 )}
               >
                 <div className="flex items-center gap-2">
