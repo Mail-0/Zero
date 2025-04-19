@@ -470,7 +470,7 @@ export function CreateEmail({
 
   return (
     <div
-      className="bg-offsetLight dark:bg-offsetDark relative flex h-full flex-col overflow-hidden shadow-inner md:rounded-2xl md:border md:shadow-sm"
+      className="bg-offsetLight dark:bg-offsetDark relative flex h-[100.3%] flex-col overflow-hidden shadow-inner md:rounded-2xl md:border md:shadow-sm"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}

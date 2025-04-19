@@ -53,6 +53,10 @@ import { Markdown } from 'tiptap-markdown';
 import { useReducer, useRef } from 'react';
 import { useState } from 'react';
 import React from 'react';
+import { useEditor as useEditorContext } from '@/components/providers/editor-provider';
+import { EditorView } from 'prosemirror-view';
+import { Slice } from 'prosemirror-model';
+import { Editor as CoreEditor } from '@tiptap/core';
 import { TextSelection } from 'prosemirror-state';
 
 export const defaultEditorContent = {
@@ -83,6 +87,7 @@ interface EditorProps {
     email?: string;
   };
   onTab?: () => boolean;
+  onEditorReady?: (editor: TiptapEditor) => void;
   includeSignature?: boolean;
   onSignatureToggle?: (include: boolean) => void;
   signature?: string;
@@ -348,9 +353,8 @@ export default function Editor({
     openAI: false,
   });
 
-  // Add a ref to store the editor content to prevent losing it on refresh
+  // Remove context usage
   const contentRef = useRef<string>('');
-  // Add a ref to the editor instance
   const editorRef = useRef<TiptapEditor>(null);
   const t = useTranslations();
 
@@ -424,6 +428,40 @@ export default function Editor({
       }
     }, 200);
   }, [onCommandEnter, clearEditorContent]);
+
+  const editor = useEditor({
+    extensions: defaultExtensions,
+    content: initialValue || defaultEditorContent,
+    onUpdate: ({ editor }: { editor: TiptapEditor }) => {
+      const html = editor.getHTML();
+      onChange(html);
+      if (onEditorReady) onEditorReady(editor);
+    },
+    editorProps: {
+      handleDrop: (view: EditorView, event: DragEvent, slice: Slice, moved: boolean) => {
+        if (!moved && event.dataTransfer?.files?.length) {
+          const files = event.dataTransfer.files;
+          if (files.length > 0) {
+            onAttachmentsChange?.(Array.from(files));
+            return true;
+          }
+          return false;
+        }
+        return false;
+      },
+      handlePaste: (view: EditorView, event: ClipboardEvent) => {
+        if (event.clipboardData?.files?.length) {
+          const files = event.clipboardData.files;
+          if (files.length > 0) {
+            onAttachmentsChange?.(Array.from(files));
+            return true;
+          }
+          return false;
+        }
+        return false;
+      },
+    },
+  });
 
   return (
     <div
@@ -545,6 +583,8 @@ export default function Editor({
           }}
           onCreate={({ editor }) => {
             editorRef.current = editor;
+          }}
+          onDestroy={() => {
           }}
           onUpdate={({ editor }) => {
             // Store the content in the ref to prevent losing it
