@@ -37,6 +37,7 @@ import { toast } from 'sonner';
 import * as React from 'react';
 import Editor from './editor';
 import './prosemirror.css';
+import { useStats } from '@/hooks/use-stats';
 
 const MAX_VISIBLE_ATTACHMENTS = 12;
 
@@ -115,6 +116,7 @@ export function CreateEmail({
 
   const { data: session } = useSession();
   const { data: connections } = useConnections();
+  const { mutate: mutateStats } = useStats();
 
   const activeAccount = React.useMemo(() => {
     if (!session) return null;
@@ -296,7 +298,11 @@ export function CreateEmail({
     setHasUnsavedChanges(true);
   }, [messageContent]);
 
-  const handleSendEmail = async () => {
+  const handleSendEmail = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+
     if (!toEmails.length) {
       toast.error('Please enter at least one recipient email address');
       return;
@@ -337,6 +343,8 @@ export function CreateEmail({
       } else {
         console.log(posthog.capture('Create Email Sent'));
       }
+
+      mutateStats();
 
       setIsLoading(false);
       toast.success(t('pages.createEmail.emailSentSuccessfully'));

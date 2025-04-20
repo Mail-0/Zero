@@ -509,25 +509,38 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       });
     },
     count: async () => {
-      const userLabels = await gmail.users.labels.list({
-        userId: 'me',
-      });
+      try {
+        const userLabels = await gmail.users.labels.list({ userId: 'me' });
+        const labels = userLabels.data.labels ?? [];
 
-      if (!userLabels.data.labels) {
-        return { count: 0 };
+        const response: { label: string; count: number }[] = [];
+
+        const aliasLabels: Record<string, string> = {
+          DRAFT: 'DRAFTS',
+          TRASH: 'BIN',
+        };
+
+        for (const label of labels) {
+          const labelId = label.id ?? undefined;
+          const res = await gmail.users.labels.get({ userId: 'me', id: labelId });
+
+          const labelName = res.data.name ?? res.data.id ?? '';
+          const isTotalCount = ['SENT', 'DRAFT', 'TRASH', 'SPAM'].includes(labelName);
+          const count = isTotalCount ? (res.data.threadsTotal ?? 0) : (res.data.threadsUnread ?? 0);
+
+          response.push({ label: labelName, count });
+
+          const alias = aliasLabels[labelName];
+          if (alias) {
+            response.push({ label: alias, count: res.data.threadsTotal ?? 0 });
+          }
+        }
+
+        return response;
+      } catch (error) {
+        console.error('Error fetching label counts:', error);
+        return [];
       }
-      return Promise.all(
-        userLabels.data.labels.map(async (label) => {
-          const res = await gmail.users.labels.get({
-            userId: 'me',
-            id: label.id ?? undefined,
-          });
-          return {
-            label: res.data.name ?? res.data.id ?? '',
-            count: res.data.threadsUnread,
-          };
-        }),
-      );
     },
     list: async (
       folder: string,

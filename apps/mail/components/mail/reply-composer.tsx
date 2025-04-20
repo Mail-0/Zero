@@ -50,6 +50,7 @@ import { Sender } from '@/types';
 import { toast } from 'sonner';
 import type { z } from 'zod';
 import React from 'react';
+import { useStats } from '@/hooks/use-stats';
 
 // Utility function to check if an email is a noreply address
 const isNoReplyAddress = (email: string): boolean => {
@@ -255,6 +256,8 @@ export default function ReplyCompose() {
   //     [contactsList, bccInput, toEmails, ccEmails, bccEmails],
   //   );
 
+  const { mutate: mutateStats } = useStats();
+
   const handleSendEmail = async (values: FormData) => {
     if (!emailData) return;
     try {
@@ -329,7 +332,10 @@ export default function ReplyCompose() {
           'Thread-Id': threadId ?? '',
         },
         threadId,
-      }).then(() => mutate());
+      }).then(() => {
+        mutate();
+        mutateStats();
+      });
 
       if (ccRecipients && bccRecipients) {
         posthog.capture('Reply Email Sent with CC and BCC');
