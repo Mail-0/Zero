@@ -78,8 +78,9 @@ export interface Attachment {
   mimeType: string;
   size: number;
   body: string;
-  // TODO: Fix typing
-  headers: any;
+  url?: string; 
+  headers:any;
+  preview?: string; 
 }
 export interface MailListProps {
   isCompact?: boolean;
