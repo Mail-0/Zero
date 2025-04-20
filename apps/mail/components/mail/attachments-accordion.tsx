@@ -10,10 +10,25 @@ type Props = {
     name: string;
     type: string;
     url: string;
-  }) => void;
+  } | null) => void;
 };
 
 const AttachmentsAccordion = ({ attachments, setSelectedAttachment }: Props) => {
+  const handleAttachmentClick = (attachment: Attachment) => {
+    setSelectedAttachment({
+      id: attachment.attachmentId,
+      name: attachment.filename,
+      type: getAttachmentType(attachment.mimeType),
+      url: attachment.url || `data:${attachment.mimeType};base64,${attachment.body}`,
+    });
+  };
+
+  const getAttachmentType = (mimeType: string): string => {
+    if (mimeType.startsWith('image/')) return 'image';
+    if (mimeType === 'application/pdf') return 'pdf';
+    return 'other';
+  };
+
   return (
     <div className="px-4">
       <Accordion type="single" collapsible className="w-full">
@@ -26,59 +41,42 @@ const AttachmentsAccordion = ({ attachments, setSelectedAttachment }: Props) => 
           </AccordionTrigger>
           <AccordionContent>
             <div className="flex gap-3 overflow-x-auto pb-2">
-              {attachments.map((attachment) => {
-                return (
-                  <div
-                    key={attachment.attachmentId}
-                    className="w-48 flex-shrink-0 overflow-hidden rounded-md border transition-shadow hover:shadow-md"
+              {attachments.map((attachment) => (
+                <div
+                  key={attachment.attachmentId}
+                  className="w-48 flex-shrink-0 overflow-hidden rounded-md border transition-shadow hover:shadow-md"
+                >
+                  <button
+                    className="w-full text-left"
+                    onClick={() => handleAttachmentClick(attachment)}
                   >
-                    <button
-                      className="w-full text-left"
-                      onClick={() =>
-                        setSelectedAttachment({
-                          id: attachment.attachmentId,
-                          name: attachment.filename,
-                          type: attachment.mimeType,
-                          url: `data:${attachment.mimeType};base64,${attachment.body}`,
-                        })
-                      }
-                    >
-                      <div className="bg-muted flex h-24 items-center justify-center">
-                        {attachment.mimeType.includes('image') ? (
-                          (() => {
-                            if (!attachment.body) return null;
-
-                            const dataUrl = `data:${attachment.mimeType};base64,${attachment.body}`;
-
-                            return (
-                              <img
-                                src={dataUrl}
-                                alt={attachment.filename}
-                                className="max-h-full max-w-full object-cover"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                  console.error('Failed to load image:', attachment.filename);
-                                }}
-                              />
-                            );
-                          })()
-                        ) : (
-                          <div className="text-muted-foreground text-2xl">
-                            {getFileIcon(attachment.mimeType)}
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-2">
-                        <p className="truncate text-sm font-medium">{attachment.filename}</p>
-                        <p className="text-muted-foreground text-xs">
-                          {formatFileSize(attachment.size)}
-                        </p>
-                      </div>
-                    </button>
-                  </div>
-                );
-              })}
+                    <div className="bg-muted flex h-24 items-center justify-center">
+                      {attachment.mimeType.startsWith('image/') ? (
+                        <img
+                          src={attachment.url || `data:${attachment.mimeType};base64,${attachment.body}`}
+                          alt={attachment.filename}
+                          className="max-h-full max-w-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            console.error('Failed to load image:', attachment.filename);
+                          }}
+                        />
+                      ) : (
+                        <div className="text-muted-foreground text-2xl">
+                          {getFileIcon(attachment.mimeType)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-2">
+                      <p className="truncate text-sm font-medium">{attachment.filename}</p>
+                      <p className="text-muted-foreground text-xs">
+                        {formatFileSize(attachment.size)}
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              ))}
             </div>
           </AccordionContent>
         </AccordionItem>

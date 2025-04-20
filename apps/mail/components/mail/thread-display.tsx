@@ -14,6 +14,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useParams } from 'next/navigation';
+import AttachmentDialog from './attachment-dialog';
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { moveThreadsTo, ThreadDestination } from '@/lib/thread-actions';
@@ -47,6 +48,12 @@ interface ThreadDisplayProps {
 export function ThreadDemo({ messages, isMobile }: ThreadDisplayProps) {
   const isFullscreen = false;
   const [mail, setMail] = useMail();
+  const [selectedAttachment, setSelectedAttachment] = useState<null | {
+    id: string;
+    name: string;
+    type: string;
+    url: string;
+  }>(null);
 
   return (
     <div
@@ -81,6 +88,7 @@ export function ThreadDemo({ messages, isMobile }: ThreadDisplayProps) {
                     isMuted={false}
                     isLoading={false}
                     index={index}
+                    setSelectedAttachment={setSelectedAttachment}
                   />
                 </div>
               ))}
@@ -147,6 +155,12 @@ export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
   const { folder } = useParams<{ folder: string }>();
   const [threadId, setThreadId] = useQueryState('threadId');
   const [mode, setMode] = useQueryState('mode');
+  const [selectedAttachment, setSelectedAttachment] = useState<null | {
+    id: string;
+    name: string;
+    type: string;
+    url: string;
+  }>(null);
 
   // Check if thread contains any images (excluding sender avatars)
   const hasImages = useMemo(() => {
@@ -435,6 +449,7 @@ export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
                     isLoading={false}
                     index={index}
                     totalEmails={emailData?.totalReplies}
+                    setSelectedAttachment={setSelectedAttachment}
                   />
                 </div>
               ))}
@@ -445,6 +460,10 @@ export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
           </div>
         </div>
       </div>
+      <AttachmentDialog
+        selectedAttachment={selectedAttachment}
+        setSelectedAttachment={setSelectedAttachment}
+      />
     </div>
   );
 }

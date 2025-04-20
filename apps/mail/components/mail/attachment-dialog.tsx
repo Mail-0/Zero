@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Download, ExternalLink } from 'lucide-react';
 import { Button } from '../ui/button';
+import { PDFViewer } from '@/components/mail/pdf-viewer';
 
 type Props = {
   selectedAttachment: null | {
@@ -57,6 +58,13 @@ const AttachmentDialog = ({ selectedAttachment, setSelectedAttachment }: Props) 
               alt={selectedAttachment.name}
               className="max-h-[500px] max-w-full object-contain"
             />
+          ) : selectedAttachment?.type === 'pdf' ? (
+            <div className="w-full h-[500px]">
+              <PDFViewer
+                url={selectedAttachment.url}
+                onClose={() => setSelectedAttachment(null)}
+              />
+            </div>
           ) : (
             <div className="text-center">
               <div className="mb-4 text-6xl">

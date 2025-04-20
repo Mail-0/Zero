@@ -15,7 +15,6 @@ import { handleUnsubscribe } from '@/lib/email-utils.client';
 import { getListUnsubscribeAction } from '@/lib/email-utils';
 import AttachmentsAccordion from './attachments-accordion';
 import { memo, useEffect, useMemo, useState, useRef } from 'react';
-import AttachmentDialog from './attachment-dialog';
 import { useSummary } from '@/hooks/use-summary';
 import { TextShimmer } from '../ui/text-shimmer';
 import { cn, getEmailLogo } from '@/lib/utils';
@@ -89,18 +88,18 @@ type Props = {
   index: number;
   totalEmails?: number;
   demo?: boolean;
-};
-
-const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) => {
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
-  const [unsubscribed, setUnsubscribed] = useState(false);
-  const [isUnsubscribing, setIsUnsubscribing] = useState(false);
-  const [selectedAttachment, setSelectedAttachment] = useState<null | {
+  setSelectedAttachment: (attachment: null | {
     id: string;
     name: string;
     type: string;
     url: string;
-  }>(null);
+  }) => void;
+};
+
+const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo, setSelectedAttachment }: Props) => {
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+  const [unsubscribed, setUnsubscribed] = useState(false);
+  const [isUnsubscribing, setIsUnsubscribing] = useState(false);
   const [openDetailsPopover, setOpenDetailsPopover] = useState<boolean>(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const t = useTranslations();
@@ -404,11 +403,6 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
           </div>
         </div>
       </div>
-
-      <AttachmentDialog
-        selectedAttachment={selectedAttachment}
-        setSelectedAttachment={setSelectedAttachment}
-      />
     </div>
   );
 };
