@@ -1,4 +1,3 @@
-// apps/mail/app/api/og/compose/route.tsx
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
@@ -19,7 +18,7 @@ export async function GET(request: Request) {
     const resource = css.match(/src: url\((.+)\) format\('(opentype|truetype)'\)/);
 
     // Check if resource and the captured group exist
-    if (resource && resource[1]) { 
+    if (resource?.[1]) {
       const response = await fetch(resource[1]);
       if (response.status === 200) {
         return await response.arrayBuffer();

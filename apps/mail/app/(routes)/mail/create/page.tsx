@@ -35,20 +35,25 @@ export async function generateMetadata({ searchParams }: CreatePageProps) {
   
   const toParam = params.to || 'someone';
   
+  // Create common metadata properties
+  const title = `Email ${toParam} on Zero`;
+  const description = 'Zero - The future of email is here';
+  const imageUrl = `/api/og/create?to=${encodeURIComponent(toParam)}${params.subject ? `&subject=${encodeURIComponent(params.subject)}` : ''}`;
+  
   // Create metadata object
   return {
-    title: `Email ${toParam} on Zero`,
-    description: 'Zero - The future of email is here',
+    title,
+    description,
     openGraph: {
-      title: `Email ${toParam} on Zero`,
-      description: 'Zero - The future of email is here',
-      images: [`/api/og/create?to=${encodeURIComponent(toParam)}${params.subject ? `&subject=${encodeURIComponent(params.subject)}` : ''}`],
+      title,
+      description,
+      images: [imageUrl],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `Email ${toParam} on Zero`,
-      description: 'Zero - The future of email is here',
-      images: [`/api/og/create?to=${encodeURIComponent(toParam)}${params.subject ? `&subject=${encodeURIComponent(params.subject)}` : ''}`],
+      title,
+      description,
+      images: [imageUrl],
     }
   };
 }
