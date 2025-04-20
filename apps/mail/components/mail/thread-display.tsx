@@ -8,6 +8,8 @@ import {
   ReplyAll,
   X,
   Trash,
+  MoreVertical,
+  StickyNote,
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -32,6 +34,7 @@ import { ParsedMessage } from '@/types';
 import { Inbox } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { toast } from 'sonner';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface ThreadDisplayProps {
   threadParam?: any;
@@ -137,6 +140,7 @@ export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
   const { mutate: mutateThreads } = useThreads();
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isNotesOpen, setIsNotesOpen] = useState(false);
   const [mail, setMail] = useMail();
   const t = useTranslations();
   const { mutate: mutateStats } = useStats();
@@ -314,58 +318,12 @@ export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
           isFullscreen ? 'fixed inset-0 z-50' : '',
         )}
       >
-        <div className="flex flex-shrink-0 items-center border-b px-1 pb-2 md:min-h-14 md:px-3 md:py-2">
+        <div className="flex flex-shrink-0 items-center border-b px-1 pb-1 md:px-3 md:pb-1.5 md:pt-[10px]">
           <div className="flex flex-1 items-center gap-2">
             <ThreadActionButton icon={X} label={t('common.actions.close')} onClick={handleClose} />
             <ThreadSubject subject={emailData.latest?.subject} />
           </div>
           <div className="flex items-center md:gap-2">
-            {threadId ? <NotesPanel threadId={threadId} /> : null}
-            <ThreadActionButton
-              icon={Expand}
-              label={
-                isFullscreen
-                  ? t('common.threadDisplay.exitFullscreen')
-                  : t('common.threadDisplay.enterFullscreen')
-              }
-              disabled={!emailData}
-              onClick={() => setIsFullscreen(!isFullscreen)}
-            />
-            {isInSpam || isInArchive || isInBin ? (
-              <ThreadActionButton
-                icon={Inbox}
-                label={t('common.mail.moveToInbox')}
-                disabled={!emailData}
-                onClick={() => moveThreadTo('inbox')}
-              />
-            ) : (
-              <>
-                <ThreadActionButton
-                  icon={Archive}
-                  label={t('common.threadDisplay.archive')}
-                  disabled={!emailData}
-                  onClick={() => moveThreadTo('archive')}
-                />
-                <ThreadActionButton
-                  icon={ArchiveX}
-                  label={t('common.threadDisplay.moveToSpam')}
-                  disabled={!emailData}
-                  onClick={() => moveThreadTo('spam')}
-                />
-                <ThreadActionButton
-                  icon={Trash}
-                  label={t('common.mail.moveToBin')}
-                  disabled={!emailData}
-                  onClick={() => moveThreadTo('bin')}
-                />
-              </>
-            )}
-            <ThreadActionButton
-              icon={MailOpen}
-              label={t('common.mail.markAsUnread')}
-              disabled={!emailData}
-              onClick={handleMarkAsUnread}
-            />
             <ThreadActionButton
               icon={Reply}
               label={t('common.threadDisplay.reply')}
@@ -395,6 +353,54 @@ export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
                 setMode('forward');
               }}
             />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <MoreVertical className="h-4 w-4" />
+                  <span className="sr-only">More actions</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {/* {threadId && (
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                    <StickyNote className="mr-2 h-4 w-4" />
+                    <span>{t('common.notes.title')}</span>
+                    <div className="absolute right-0 top-0" onClick={(e) => e.stopPropagation()}>
+                      <NotesPanel threadId={threadId} />
+                    </div>
+                  </DropdownMenuItem>
+                )} */}
+                <DropdownMenuItem onClick={() => setIsFullscreen(!isFullscreen)}>
+                  <Expand className="mr-2 h-4 w-4" />
+                  <span>
+                    {isFullscreen
+                      ? t('common.threadDisplay.exitFullscreen')
+                      : t('common.threadDisplay.enterFullscreen')}
+                  </span>
+                </DropdownMenuItem>
+                {isInSpam || isInArchive || isInBin ? (
+                  <DropdownMenuItem onClick={() => moveThreadTo('inbox')}>
+                    <Inbox className="mr-2 h-4 w-4" />
+                    <span>{t('common.mail.moveToInbox')}</span>
+                  </DropdownMenuItem>
+                ) : (
+                  <>
+                    <DropdownMenuItem onClick={() => moveThreadTo('archive')}>
+                      <Archive className="mr-2 h-4 w-4" />
+                      <span>{t('common.threadDisplay.archive')}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => moveThreadTo('spam')}>
+                      <ArchiveX className="mr-2 h-4 w-4" />
+                      <span>{t('common.threadDisplay.moveToSpam')}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => moveThreadTo('bin')}>
+                      <Trash className="mr-2 h-4 w-4" />
+                      <span>{t('common.mail.moveToBin')}</span>
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
         <div className="flex min-h-0 flex-1 flex-col">
