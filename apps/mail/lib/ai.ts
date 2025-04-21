@@ -22,10 +22,13 @@ interface UserContext {
   email?: string;
 }
 
-// Conversation history storage
+// Keyed by user to prevent cross‑tenant bleed‑through and allow GC per‑user
 const conversationHistories: Record<
-  string,
-  { role: 'user' | 'assistant' | 'system'; content: string }[]
+  string,                                     // userId
+  Record<
+    string,                                   // conversationId
+    { role: 'user' | 'assistant' | 'system'; content: string }[]
+  >
 > = {};
 
 // --- Generate Email Body --- 
@@ -41,6 +44,7 @@ export async function generateEmailBody(
   const session = await auth.api.getSession({ headers: headersList });
   const userName = session?.user.name || 'User';
   const convId = conversationId || generateConversationId();
+  const userId = session?.user?.id || 'anonymous';
 
   console.log(`AI Assistant (Body): Processing prompt for convId ${convId}: "${prompt}"`);
 
@@ -51,8 +55,12 @@ export async function generateEmailBody(
       throw new Error('Groq API key is not configured');
     }
 
-    if (!conversationHistories[convId]) {
-      conversationHistories[convId] = [];
+    // Initialize nested structure if needed
+    if (!conversationHistories[userId]) {
+      conversationHistories[userId] = {};
+    }
+    if (!conversationHistories[userId][convId]) {
+      conversationHistories[userId][convId] = [];
     }
 
     // Use the BODY-ONLY system prompt
@@ -73,7 +81,7 @@ export async function generateEmailBody(
     const fullSystemPrompt = baseSystemPrompt + (dynamicContext.length > 30 ? dynamicContext : '');
 
     // Build conversation history string
-    const conversationHistory = conversationHistories[convId]
+    const conversationHistory = conversationHistories[userId][convId]
       .filter((msg) => msg.role === 'user' || msg.role === 'assistant')
       .map((msg) => `<message role="${msg.role}">${msg.content}</message>`)
       .join('\n');
@@ -85,7 +93,7 @@ export async function generateEmailBody(
     const embeddingTexts: Record<string, string> = {};
     if (currentContent) { embeddingTexts.currentEmail = currentContent; }
     if (prompt) { embeddingTexts.userPrompt = prompt; }
-    const previousMessages = conversationHistories[convId].slice(-4);
+    const previousMessages = conversationHistories[userId][convId].slice(-4);
     if (previousMessages.length > 0) {
       embeddingTexts.conversationHistory = previousMessages.map((msg) => `${msg.role}: ${msg.content}`).join('\n\n');
     }
@@ -150,8 +158,8 @@ export async function generateEmailBody(
     }
 
     // Add user prompt and cleaned/validated body to history
-    conversationHistories[convId].push({ role: 'user', content: prompt });
-    conversationHistories[convId].push({ role: 'assistant', content: generatedBody }); // Log the potentially cleaned body
+    conversationHistories[userId][convId].push({ role: 'user', content: prompt });
+    conversationHistories[userId][convId].push({ role: 'assistant', content: generatedBody }); // Log the potentially cleaned body
 
     const isClarificationNeeded = checkIfQuestion(generatedBody);
 
