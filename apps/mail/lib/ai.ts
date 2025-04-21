@@ -123,9 +123,10 @@ export async function generateEmailBody(
     }
     // --- End Post-processing ---
 
-    // Basic safety checks 
-    if (generatedBody.includes('```') || generatedBody.trim().startsWith('<html>')) {
-      console.warn(`AI Assistant Post-Check (Body): Detected forbidden content format... Overriding.`);
+    // Comprehensive safety checks for HTML tags and code blocks
+    const unsafePattern = /(```|~~~|<[^>]+>|&lt;[^&]+&gt;|<script|<style|\bjavascript:|data:)/i;
+    if (unsafePattern.test(generatedBody)) {
+      console.warn(`AI Assistant Post-Check (Body): Detected forbidden content format (HTML/code)... Overriding.`);
       return [
         { id: 'override-' + Date.now(), body: genericFailureMessage, type: 'system' },
       ];
