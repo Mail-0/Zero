@@ -7,11 +7,7 @@
     "dev:turbo": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint . --cache --cache-location ./node_modules/.cache/eslint",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "lint": "eslint . --cache --cache-location ./node_modules/.cache/eslint"
   },
   "dependencies": {
     "@better-fetch/fetch": "^1.1.18",
@@ -60,7 +56,7 @@
     "@zero/db": "workspace:*",
     "@zero/eslint-config": "workspace:*",
     "axios": "1.8.1",
-    "better-auth": "1.2.1",
+    "better-auth": "1.2.7",
     "canvas-confetti": "1.9.3",
     "cheerio": "1.0.0",
     "class-variance-authority": "0.7.1",
