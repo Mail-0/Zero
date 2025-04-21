@@ -71,7 +71,17 @@ export async function generateAIEmailBody({
     console.log("Extracted Body:", response.body);
     console.log("--- End Action Layer (Body) Log ---");
 
-    const responseBody = response.body;
+    const responseBody = response.body ?? '';
+    
+    if (!responseBody) {
+        console.error('AI Action Error (Body): Missing body field on response');
+        const errorMsg = 'AI returned an unexpected format.';
+        return {
+            content: errorMsg,
+            jsonContent: createJsonContentFromBody(errorMsg),
+            type: 'system',
+        };
+    }
     
     const jsonContent = createJsonContentFromBody(responseBody);
 
