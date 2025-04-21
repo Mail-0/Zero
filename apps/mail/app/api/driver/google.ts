@@ -833,15 +833,44 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       }
     },
     createDraft: async (data: any) => {
-      const mimeMessage = [
-        `From: me`,
-        `To: ${data.to}`,
-        `Subject: ${data.subject}`,
-        'Content-Type: text/html; charset=utf-8',
-        '',
-        data.message,
-      ].join('\n');
+      const msg = createMimeMessage();
+      msg.setSender('me');
+      msg.setTo(data.to);
+      
+      if (data.cc) msg.setCc(data.cc);
+      if (data.bcc) msg.setBcc(data.bcc);
+      
+      msg.setSubject(data.subject);
+      msg.addMessage({
+        contentType: 'text/html',
+        data: data.message || ''
+      });
 
+      if (data.attachments?.length > 0) {
+        for (const attachment of data.attachments) {
+          const base64Data = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const base64 = (reader.result as string).split(',')[1];
+              if (base64) {
+                resolve(base64);
+              } else {
+                reject(new Error('Failed to read file as base64'));
+              }
+            };
+            reader.onerror = () => reject(new Error('Failed to read file'));
+            reader.readAsDataURL(attachment);
+          });
+
+          msg.addAttachment({
+            filename: attachment.name,
+            contentType: attachment.type,
+            data: base64Data
+          });
+        }
+      }
+
+      const mimeMessage = msg.asRaw();
       const encodedMessage = Buffer.from(mimeMessage)
         .toString('base64')
         .replace(/\+/g, '-')
