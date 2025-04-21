@@ -460,9 +460,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
             )}
             onClick={() => setIsOpen(!isOpen)}
           >
-            <StickyNote
-              className={cn('h-4 w-4', notes.length > 0 && 'fill-amber-200 dark:fill-amber-900')}
-            />
+           
             {notes.length > 0 && (
               <span className="bg-primary text-primary-foreground absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px]">
                 {notes.length}

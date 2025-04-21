@@ -18,7 +18,7 @@ export const useStats = () => {
   );
 
   return {
-    data,
+    data: data ?? [],
     isValidating,
     isLoading,
     mutate,

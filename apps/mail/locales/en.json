@@ -268,7 +268,10 @@
       "noLabelsAvailable": "No labels available",
       "loadMore": "Load more",
       "imagesHidden": "Images are hidden for security reasons",
-      "showImages": "Show Images"
+      "showImages": "Show Images",
+      "noEmails": "No emails available",
+      "noSearchResults": "No search results found",
+      "clearSearch": "Clear search"
     },
     "units": {
       "mb": "{amount} MB"

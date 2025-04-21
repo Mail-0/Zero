@@ -1,18 +1,18 @@
 'use client';
 
 import { moveThreadsTo, ThreadDestination } from '@/lib/thread-actions';
+import { useThread, useThreads } from '@/hooks/use-threads';
+import { markAsRead, markAsUnread } from '@/actions/mail';
 import { useParams, useRouter } from 'next/navigation';
 import { Archive, Mail, Inbox } from 'lucide-react';
-import { markAsRead, markAsUnread } from '@/actions/mail';
 import { useCallback, memo, useState } from 'react';
-import { cn, FOLDERS } from '@/lib/utils';
-import { useThreads } from '@/hooks/use-threads';
 import { Button } from '@/components/ui/button';
 import { useStats } from '@/hooks/use-stats';
 import type { InitialThread } from '@/types';
 import { useTranslations } from 'next-intl';
-import { toast } from 'sonner';
+import { cn, FOLDERS } from '@/lib/utils';
 import { useQueryState } from 'nuqs';
+import { toast } from 'sonner';
 
 interface MailQuickActionsProps {
   message: InitialThread;
@@ -25,13 +25,15 @@ interface MailQuickActionsProps {
 
 export const MailQuickActions = memo(
   ({
-    message,
+    message: { id },
     className,
     isHovered = false,
     isInQuickActionMode = false,
     selectedQuickActionIndex = 0,
     resetNavigation,
   }: MailQuickActionsProps) => {
+    const { data: threadData, mutate: mutateThread } = useThread(id);
+    const latestMessage = threadData?.latest;
     const { folder } = useParams<{ folder: string }>();
     const { mutate, isLoading } = useThreads();
     const { mutate: mutateStats } = useStats();
@@ -45,25 +47,26 @@ export const MailQuickActions = memo(
     const isArchiveFolder = currentFolder === FOLDERS.ARCHIVE;
 
     const closeThreadIfOpen = useCallback(() => {
-      const messageId = message.threadId ?? message.id;
+      if (!latestMessage) return;
+      const messageId = latestMessage.threadId ?? latestMessage.id;
 
       if (threadId === messageId) {
-        setThreadId(null)
+        setThreadId(null);
       }
 
       if (resetNavigation) {
         resetNavigation();
       }
-    }, [threadId, message, router, currentFolder, resetNavigation]);
+    }, [threadId, latestMessage, router, currentFolder, resetNavigation]);
 
     const handleArchive = useCallback(
       async (e?: React.MouseEvent) => {
         e?.stopPropagation();
-        if (isProcessing || isLoading) return;
+        if (isProcessing || isLoading || !latestMessage) return;
 
         setIsProcessing(true);
         try {
-          const threadId = message.threadId ?? message.id;
+          const threadId = latestMessage.threadId ?? latestMessage.id;
           const destination = isArchiveFolder ? FOLDERS.INBOX : FOLDERS.ARCHIVE;
 
           await moveThreadsTo({
@@ -86,7 +89,7 @@ export const MailQuickActions = memo(
         }
       },
       [
-        message,
+        latestMessage,
         currentFolder,
         isArchiveFolder,
         mutate,
@@ -101,16 +104,16 @@ export const MailQuickActions = memo(
     const handleToggleRead = useCallback(
       async (e?: React.MouseEvent) => {
         e?.stopPropagation();
-        if (isProcessing || isLoading) return;
+        if (isProcessing || isLoading || !latestMessage) return;
 
         setIsProcessing(true);
         try {
-          const threadId = message.threadId ?? message.id;
+          const threadId = latestMessage.threadId ?? latestMessage.id;
 
-          if (message.unread) {
+          if (latestMessage.unread) {
             await markAsRead({ ids: [threadId] }).then((response) => {
               if (response.success) {
-                mutate();
+                mutateThread();
                 toast.success(t('common.mail.markedAsRead'));
               } else {
                 toast.error(t('common.mail.failedToMarkAsRead'));
@@ -120,7 +123,7 @@ export const MailQuickActions = memo(
           } else {
             await markAsUnread({ ids: [threadId] }).then((response) => {
               if (response.success) {
-                mutate();
+                mutateThread();
                 toast.success(t('common.mail.markedAsUnread'));
               } else {
                 toast.error(t('common.mail.failedToMarkAsUnread'));
@@ -134,7 +137,7 @@ export const MailQuickActions = memo(
           setIsProcessing(false);
         }
       },
-      [message, mutate, t, isProcessing, isLoading, closeThreadIfOpen],
+      [latestMessage, mutate, t, isProcessing, isLoading, closeThreadIfOpen],
     );
 
     const handleDelete = useCallback(
@@ -163,7 +166,7 @@ export const MailQuickActions = memo(
       {
         action: handleToggleRead,
         icon: Mail,
-        label: message.unread ? 'Mark as read' : 'Mark as unread',
+        label: threadData?.hasUnread ? 'Mark as read' : 'Mark as unread',
         disabled: false,
       },
     ];

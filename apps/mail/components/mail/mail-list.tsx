@@ -1,6 +1,15 @@
 'use client';
 
 import {
+  cn,
+  FOLDERS,
+  formatDate,
+  getEmailLogo,
+  getMainSearchTerm,
+  parseNaturalLanguageSearch,
+  parseNaturalLanguageDate,
+} from '@/lib/utils';
+import {
   AlertTriangle,
   Bell,
   Briefcase,
@@ -23,7 +32,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { EmptyState, type FolderType } from '@/components/mail/empty-state';
 import { preloadThread, useThread, useThreads } from '@/hooks/use-threads';
 import { ThreadContextMenu } from '@/components/context/thread-context';
-import { cn, FOLDERS, formatDate, getEmailLogo } from '@/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
 import { useMailNavigation } from '@/hooks/use-mail-navigation';
 import { useSearchValue } from '@/hooks/use-search-value';
@@ -90,7 +98,7 @@ const Thread = memo(
     demoMessage,
   }: ConditionalThreadProps) => {
     const [mail] = useMail();
-    const [searchValue] = useSearchValue();
+    const [searchValue, setSearchValue] = useSearchValue();
     const t = useTranslations();
     const { folder } = useParams<{ folder: string }>();
     const { mutate } = useThreads();
@@ -101,6 +109,29 @@ const Thread = memo(
     const { data: getThreadData, isLoading } = useThread(demo ? null : message.id);
 
     const latestMessage = demo ? demoMessage : getThreadData?.latest;
+    const emailContent = demo ? demoMessage?.body : getThreadData?.latest?.body;
+
+    const mainSearchTerm = useMemo(() => {
+      if (!searchValue.highlight) return '';
+      return getMainSearchTerm(searchValue.highlight);
+    }, [searchValue.highlight]);
+
+    const semanticSearchQuery = useMemo(() => {
+      if (!searchValue.value) return '';
+      return parseNaturalLanguageSearch(searchValue.value);
+    }, [searchValue.value]);
+
+    // Use semanticSearchQuery when filtering/searching emails
+    useEffect(() => {
+      if (semanticSearchQuery && semanticSearchQuery !== searchValue.value) {
+        // Update the search value with our semantic query
+        setSearchValue({
+          ...searchValue,
+          value: semanticSearchQuery,
+          isAISearching: true,
+        });
+      }
+    }, [semanticSearchQuery]);
 
     const isMailSelected = useMemo(() => {
       if (!threadId || !latestMessage) return false;
@@ -220,18 +251,22 @@ const Thread = memo(
                         ) : null}
                       </p>
                       <MailLabels labels={threadLabels} />
-                      {Math.random() > 0.5 ? (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="rounded-md border border-dotted px-[5px] py-[1px] text-xs opacity-70">
-                              {Math.random() * 10}
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent className="px-1 py-0 text-xs">
-                            {t('common.mail.replies', { count: Math.random() * 10 })}
-                          </TooltipContent>
-                        </Tooltip>
-                      ) : null}
+                      {Math.random() > 0.5 &&
+                        (() => {
+                          const count = Math.floor(Math.random() * 10) + 1;
+                          return (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="rounded-md border border-dotted px-[5px] py-[1px] text-xs opacity-70">
+                                  {count}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent className="px-1 py-0 text-xs">
+                                {t('common.mail.replies', { count })}
+                              </TooltipContent>
+                            </Tooltip>
+                          );
+                        })()}
                     </div>
                     {latestMessage.receivedOn ? (
                       <p
@@ -247,6 +282,18 @@ const Thread = memo(
                   <p className={cn('mt-1 line-clamp-1 text-xs opacity-70 transition-opacity')}>
                     {highlightText(latestMessage.subject, searchValue.highlight)}
                   </p>
+                  {emailContent && (
+                    <div className="text-muted-foreground mt-2 line-clamp-2 text-xs">
+                      {highlightText(emailContent, searchValue.highlight)}
+                    </div>
+                  )}
+                  {mainSearchTerm && (
+                    <div className="text-muted-foreground mt-1 flex items-center gap-1 text-xs">
+                      <span className="bg-primary/10 text-primary rounded px-1.5 py-0.5">
+                        {mainSearchTerm}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -258,7 +305,10 @@ const Thread = memo(
 
     const content =
       latestMessage && getThreadData ? (
-        <div className="p-1 px-3" onClick={onClick ? onClick(latestMessage) : undefined}>
+        <div
+          className="select-none p-1 px-3"
+          onClick={onClick ? onClick(latestMessage) : undefined}
+        >
           <div
             data-thread-id={latestMessage.threadId ?? latestMessage.id}
             onMouseEnter={handleMouseEnter}
@@ -337,6 +387,18 @@ const Thread = memo(
                     </p>
                     <MailLabels labels={threadLabels} />
                   </div>
+                  {emailContent && (
+                    <div className="text-muted-foreground mt-2 line-clamp-2 text-xs">
+                      {highlightText(emailContent, searchValue.highlight)}
+                    </div>
+                  )}
+                  {mainSearchTerm && (
+                    <div className="text-muted-foreground mt-1 flex items-center gap-1 text-xs">
+                      <span className="bg-primary/10 text-primary rounded px-1.5 py-0.5">
+                        {mainSearchTerm}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -393,7 +455,6 @@ export function MailListDemo({
 
 export const MailList = memo(({ isCompact }: MailListProps) => {
   const { folder } = useParams<{ folder: string }>();
-  const [mail, setMail] = useMail();
   const { data: session } = useSession();
   const t = useTranslations();
   const router = useRouter();
@@ -402,7 +463,7 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
   const [searchValue, setSearchValue] = useSearchValue();
   const { enableScope, disableScope } = useHotkeysContext();
   const {
-    data: { threads: items, nextPageToken },
+    data: { threads: items = [], nextPageToken },
     isValidating,
     isLoading,
     loadMore,
@@ -481,28 +542,6 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
 
   const isKeyPressed = useKeyState();
 
-  const selectAll = useCallback(() => {
-    // If there are already items selected, deselect them all
-    if (mail.bulkSelected.length > 0) {
-      setMail((prev) => ({
-        ...prev,
-        bulkSelected: [],
-      }));
-      // toast.success(t('common.mail.deselectAll'));
-    }
-    // Otherwise select all items
-    else if (items.length > 0) {
-      // TODO: debug
-      const allIds = items.map((item) => item.id);
-      setMail((prev) => ({
-        ...prev,
-        bulkSelected: allIds,
-      }));
-    } else {
-      toast.info(t('common.mail.noEmailsToSelect'));
-    }
-  }, [items, setMail, mail.bulkSelected, t]);
-
   const getSelectMode = useCallback((): MailSelectMode => {
     if (isKeyPressed('Control') || isKeyPressed('Meta')) {
       return 'mass';
@@ -522,17 +561,10 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
 
       const messageThreadId = message.threadId ?? message.id;
 
-      // Update local state immediately for optimistic UI
-      setMail((prev) => ({
-        ...prev,
-        replyComposerOpen: false,
-        forwardComposerOpen: false,
-      }));
-
       // Update URL param without navigation
       void setThreadId(messageThreadId);
     },
-    [handleMouseEnter, setThreadId, t, setMail],
+    [],
   );
 
   const isFiltering = searchValue.value.trim().length > 0;
@@ -541,10 +573,10 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
   useEffect(() => {
     if (isFiltering && !isLoading) {
       // Reset the search value when loading is complete
-      setSearchValue((prev) => ({
-        ...prev,
+      setSearchValue({
+        ...searchValue,
         isLoading: false,
-      }));
+      });
     }
   }, [isLoading, isFiltering, setSearchValue]);
 
@@ -563,40 +595,74 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
         }}
       >
         <ScrollArea className="hide-scrollbar h-full overflow-auto">
-          {items.map((data, index) => {
-            return (
-              <Thread
-                onClick={handleMailClick}
-                selectMode={getSelectMode()}
-                isCompact={isCompact}
-                sessionData={sessionData}
-                message={data}
-                key={`${data.id}-${index}`}
-                isKeyboardFocused={focusedIndex === index && keyboardActive}
-                isInQuickActionMode={isQuickActionMode && focusedIndex === index}
-                selectedQuickActionIndex={quickActionIndex}
-                resetNavigation={resetNavigation}
-              />
-            );
-          })}
-          {items.length >= 9 && nextPageToken && !isValidating && (
-            <Button
-              variant={'ghost'}
-              className="w-full rounded-none"
-              onMouseDown={handleScroll}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
-                  {t('common.actions.loading')}
-                </div>
-              ) : (
-                <>
-                  {t('common.mail.loadMore')} <ChevronDown />
-                </>
+          {isLoading ? (
+            <div className="flex h-32 items-center justify-center">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
+            </div>
+          ) : !items || items.length === 0 ? (
+            <div className="flex h-32 flex-col items-center justify-center gap-2 text-center">
+              <p className="text-muted-foreground text-sm">
+                {searchValue.value ? t('common.mail.noSearchResults') : t('common.mail.noEmails')}
+              </p>
+              {searchValue.value && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSearchValue({
+                      value: '',
+                      highlight: '',
+                      folder: '',
+                      isLoading: false,
+                    });
+                  }}
+                >
+                  {t('common.mail.clearSearch')}
+                </Button>
               )}
-            </Button>
+            </div>
+          ) : (
+            <>
+              {items
+                .filter((data) => data.id)
+                .map((data, index) => {
+                  if (!data || !data.id) return null;
+
+                  return (
+                    <Thread
+                      onClick={handleMailClick}
+                      selectMode={getSelectMode()}
+                      isCompact={isCompact}
+                      sessionData={sessionData}
+                      message={data}
+                      key={`${data.id}-${index}`}
+                      isKeyboardFocused={focusedIndex === index && keyboardActive}
+                      isInQuickActionMode={isQuickActionMode && focusedIndex === index}
+                      selectedQuickActionIndex={quickActionIndex}
+                      resetNavigation={resetNavigation}
+                    />
+                  );
+                })}
+              {items.length >= 9 && nextPageToken && !isValidating && (
+                <Button
+                  variant={'ghost'}
+                  className="w-full rounded-none"
+                  onMouseDown={handleScroll}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
+                      {t('common.actions.loading')}
+                    </div>
+                  ) : (
+                    <>
+                      {t('common.mail.loadMore')} <ChevronDown />
+                    </>
+                  )}
+                </Button>
+              )}
+            </>
           )}
         </ScrollArea>
       </div>

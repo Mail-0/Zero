@@ -52,7 +52,7 @@ export default async function RootLayout({
         />
       </head>
       <body className={cn(geistSans.variable, geistMono.variable, 'antialiased')}>
-        <Providers attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+        <Providers attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <NextIntlClientProvider messages={messages}>
             <CookieProvider>
               {children}

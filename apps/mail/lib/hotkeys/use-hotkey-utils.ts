@@ -135,10 +135,11 @@ export function useShortcuts(
   handlers: { [key: string]: () => void },
   options: Partial<HotkeyOptions> = {},
 ) {
-  shortcuts.forEach((shortcut) => {
-    const handler = handlers[shortcut.action];
-    if (handler) {
-      useShortcut(shortcut, handler, options);
-    }
-  });
+  // DISABLED
+  //   shortcuts.forEach((shortcut) => {
+  //     const handler = handlers[shortcut.action];
+  //     if (handler) {
+  //       useShortcut(shortcut, handler, options);
+  //     }
+  //   });
 }

@@ -80,11 +80,6 @@ export const useThreads = () => {
   const { folder } = useParams<{ folder: string }>();
   const [searchValue] = useSearchValue();
   const { data: session } = useSession();
-  const searchParams = new URLSearchParams({
-    q: searchValue.value,
-    folder,
-    max: defaultPageSize.toString(),
-  });
 
   const { data, error, size, setSize, isLoading, isValidating, mutate } = useSWRInfinite(
     (_, previousPageData) => {
@@ -96,7 +91,23 @@ export const useThreads = () => {
         defaultPageSize,
       ]);
     },
-    () => axios.get<RawResponse>(`/api/driver?${searchParams.toString()}`).then((res) => res.data),
+    async (key) => {
+      const [, folder, query, max, , pageToken] = key;
+      const searchParams = new URLSearchParams({
+        q: query,
+        folder,
+        max: max?.toString() ?? defaultPageSize.toString(),
+        pageToken: pageToken ?? '',
+      } as Record<string, string>);
+      console.log('Fetching emails with params:', {
+        q: query,
+        folder,
+        max: max?.toString() ?? defaultPageSize.toString(),
+        pageToken: pageToken ?? '',
+      });
+      const res = await axios.get<RawResponse>(`/api/driver?${searchParams.toString()}`);
+      return res.data;
+    },
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
@@ -106,7 +117,10 @@ export const useThreads = () => {
   );
 
   // Flatten threads from all pages and sort by receivedOn date (newest first)
-  const threads = useMemo(() => (data ? data.flatMap((e) => e.threads) : []), [data, session]);
+  const threads = useMemo(
+    () => (data ? data.flatMap((e) => e.threads).filter(Boolean) : []),
+    [data, session],
+  );
   const isEmpty = useMemo(() => threads.length === 0, [threads]);
   const isReachingEnd = isEmpty || (data && !data[data.length - 1]?.nextPageToken);
   const loadMore = async () => {

@@ -1,6 +1,8 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { signOut } from '@/lib/auth-client';
+import { dexieStorageProvider } from '@/lib/idb';
 import React, { useEffect } from 'react';
 
 export default function Error({ error, reset }: { error: Error; reset: () => void }) {
@@ -19,8 +21,16 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
 
         {/* Buttons */}
         <div className="mt-2">
-          <Button variant="outline" onClick={() => reset()} className="text-muted-foreground gap-2">
-            Try Again
+        <Button
+            variant="outline"
+            onClick={async () => {
+              await dexieStorageProvider().clear();
+              await signOut();
+              window.location.href = '/login';
+            }}
+            className="text-muted-foreground gap-2"
+          >
+            Try again
           </Button>
         </div>
       </div>

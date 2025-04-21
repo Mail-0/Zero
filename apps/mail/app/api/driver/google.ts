@@ -2,6 +2,8 @@ import { parseAddressList, parseFrom, wasSentWithTLS } from '@/lib/email-utils';
 import { IOutgoingMessage, Sender, type ParsedMessage } from '@/types';
 import { type IConfig, type MailManager } from './types';
 import { type gmail_v1, google } from 'googleapis';
+import { filterSuggestions } from '@/lib/filter';
+import { cleanSearchValue } from '@/lib/utils';
 import { EnableBrain } from '@/actions/brain';
 import { createMimeMessage } from 'mimetext';
 import * as he from 'he';
@@ -140,11 +142,6 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       refresh_token: config.auth.refresh_token,
       scope: getScope(),
     });
-    if (process.env.NODE_ENV === 'production') {
-      EnableBrain()
-        .then(() => console.log('✅ Driver: Enabled'))
-        .catch(() => console.log('✅ Driver: Enabled'));
-    }
   }
   const parse = ({
     id,
@@ -278,10 +275,20 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
         }
         return false;
       })
-      .map((recipient) => ({
-        name: recipient.name || '',
-        addr: recipient.email,
-      }));
+      .map((recipient) => {
+        // Parse the email address from the recipient string
+        const emailMatch = recipient.email.match(/<([^>]+)>/);
+        const email = emailMatch ? emailMatch[1] : recipient.email;
+        // Ensure we have a valid email address
+        if (!email) {
+          console.error('Debug - Invalid email address:', recipient.email);
+          throw new Error('Invalid email address');
+        }
+        return {
+          name: recipient.name || '',
+          addr: email,
+        };
+      });
 
     console.log('Debug - Filtered to recipients:', JSON.stringify(toRecipients, null, 2));
 
@@ -392,14 +399,16 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
   };
   const normalizeSearch = (folder: string, q: string) => {
     // Handle special folders
-    if (folder === 'bin') {
-      return { folder: undefined, q: `in:trash` };
-    }
-    if (folder === 'archive') {
-      return { folder: undefined, q: `in:archive` };
-    }
     if (folder !== 'inbox') {
-      return { folder, q: `in:${folder}` };
+      q = cleanSearchValue(q);
+      console.log('🔄 Filter suggestions', q);
+      if (folder === 'bin') {
+        return { folder: undefined, q: `in:trash ${q}` };
+      }
+      if (folder === 'archive') {
+        return { folder: undefined, q: `in:archive ${q}` };
+      }
+      return { folder, q: `in:${folder} ${q}` };
     }
     // Return the query as-is to preserve Gmail's native search syntax
     return { folder, q };
@@ -535,18 +544,15 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       const { folder: normalizedFolder, q: normalizedQ } = normalizeSearch(folder, q ?? '');
       const labelIds = [..._labelIds];
       if (normalizedFolder) labelIds.push(normalizedFolder.toUpperCase());
-
-      return withExponentialBackoff(async () => {
-        const res = await gmail.users.threads.list({
-          userId: 'me',
-          q: normalizedQ ? normalizedQ : undefined,
-          labelIds: folder === 'inbox' ? labelIds : [],
-          maxResults,
-          pageToken: pageToken ? pageToken : undefined,
-          quotaUser: config.auth?.email,
-        });
-        return { ...res.data, threads: res.data.threads } as any;
+      const res = await gmail.users.threads.list({
+        userId: 'me',
+        q: normalizedQ ? normalizedQ : undefined,
+        labelIds: folder === 'inbox' ? labelIds : [],
+        maxResults,
+        pageToken: pageToken ? pageToken : undefined,
+        quotaUser: config.auth?.email,
       });
+      return { ...res.data, threads: res.data.threads } as any;
     },
     get: async (id: string) => {
       return withExponentialBackoff(async () => {

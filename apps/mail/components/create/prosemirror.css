@@ -2,19 +2,17 @@
   font-size: 1rem;
   font-family: 'Inter', sans-serif;
   font-weight: 400;
- 
 }
 
 /* Add placeholder styles */
 .ProseMirror p.is-editor-empty:first-child::before {
   color: #616161;
   opacity: 0.5;
-  content: "Start your email here";
+  content: 'Start your email here';
   float: left;
   height: 0;
   pointer-events: none;
 }
-
 
 /* Custom image styles */
 
@@ -126,11 +124,8 @@ ul[data-type='taskList'] li[data-checked='true'] > div > p {
   box-shadow: none;
 }
 
-
-
 /* Custom Youtube Video CSS */
 iframe {
-  border: 8px solid #ffd00027;
   border-radius: 4px;
   min-width: 200px;
   min-height: 200px;
@@ -172,21 +167,21 @@ mark[style] > strong {
 
 /* Add specific heading styles */
 .ProseMirror h1 {
-  font-size: 1.5rem;  /* text-2xl equivalent */
+  font-size: 1.5rem; /* text-2xl equivalent */
   font-weight: bold;
   margin-top: 1rem;
   margin-bottom: 0.5rem;
 }
 
 .ProseMirror h2 {
-  font-size: 1.25rem;  /* text-xl equivalent */
+  font-size: 1.25rem; /* text-xl equivalent */
   font-weight: bold;
   margin-top: 0.75rem;
   margin-bottom: 0.5rem;
 }
 
 .ProseMirror h3 {
-  font-size: 1.125rem;  /* text-lg equivalent */
+  font-size: 1.125rem; /* text-lg equivalent */
   font-weight: bold;
   margin-top: 0.75rem;
   margin-bottom: 0.5rem;
@@ -194,7 +189,7 @@ mark[style] > strong {
 
 /* Add these new rules to fix list placeholder issues */
 .ProseMirror li .is-editor-empty::before {
-  content: none !important;  /* Disable placeholder in list items */
+  content: none !important; /* Disable placeholder in list items */
 }
 
 /* Ensure list items don't show placeholders */
@@ -220,8 +215,6 @@ mark[style] > strong {
   margin-bottom: 0.5rem;
   line-height: 1.4;
 }
-
-
 
 /* Keep the list indentation the same */
 .ProseMirror ul {

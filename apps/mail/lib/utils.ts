@@ -1,11 +1,12 @@
 import { format, isToday, isThisMonth, differenceInCalendarMonths } from 'date-fns';
 import { MAX_URL_LENGTH } from './constants';
+import { filterSuggestions } from './filter';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { JSONContent } from 'novel';
 import LZString from 'lz-string';
-import axios from 'axios';
 import { Sender } from '@/types';
+import axios from 'axios';
 
 export const FOLDERS = {
   SPAM: 'spam',
@@ -375,7 +376,6 @@ export const contentToHTML = (content: string) => `
 ${content}
 </body></html>`;
 
-
 export const constructReplyBody = (
   formattedMessage: string,
   originalDate: string,
@@ -384,7 +384,7 @@ export const constructReplyBody = (
   quotedMessage?: string,
 ) => {
   const senderName = originalSender?.name || originalSender?.email || 'Unknown Sender';
-  const recipientEmails = otherRecipients.map(r => r.email).join(', ');
+  const recipientEmails = otherRecipients.map((r) => r.email).join(', ');
 
   return `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
@@ -401,4 +401,194 @@ export const constructReplyBody = (
       </div>
     </div>
   `;
+};
+
+export const getMainSearchTerm = (searchQuery: string): string => {
+  // Don't highlight terms if this is a date-based search
+  const datePatterns = [
+    /emails?\s+from\s+(\w+)\s+(\d{4})/i, // "emails from [month] [year]"
+    /emails?\s+from\s+(\w+)/i, // "emails from [month]"
+    /emails?\s+from\s+(\d{4})/i, // "emails from [year]"
+    /emails?\s+from\s+last\s+(\w+)/i, // "emails from last [time period]"
+    /emails?\s+from\s+(\d+)\s+(\w+)\s+ago/i, // "emails from [X] [time period] ago"
+  ];
+
+  // If it's a date-based search, don't highlight anything
+  for (const pattern of datePatterns) {
+    if (searchQuery.match(pattern)) {
+      return '';
+    }
+  }
+
+  // Handle other natural language queries
+  const naturalLanguageMatches = {
+    'emails from': /emails?\s+from\s+(\w+)/i,
+    'mail from': /mail\s+from\s+(\w+)/i,
+    from: /\bfrom\s+(\w+)/i,
+    to: /\bto\s+(\w+)/i,
+    about: /\babout\s+(\w+)/i,
+    regarding: /\bregarding\s+(\w+)/i,
+  };
+
+  // Try to match natural language patterns
+  for (const [, pattern] of Object.entries(naturalLanguageMatches)) {
+    const match = searchQuery.match(pattern);
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+
+  // If no natural language match, remove search operators and date-related terms
+  const cleanedQuery = searchQuery
+    .replace(/\b(from|to|subject|has|in|after|before):\s*/gi, '')
+    .replace(/\b(is|has):\s*/gi, '')
+    .replace(
+      /\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/gi,
+      '',
+    )
+    .replace(/\b\d{4}\b/g, '') // Remove 4-digit years
+    .replace(/["']/g, '')
+    .trim();
+
+  // Split by spaces and get the first meaningful term
+  const terms = cleanedQuery.split(/\s+/);
+  return terms[0] || '';
+};
+
+export function parseNaturalLanguageSearch(query: string): string {
+  // Common search patterns
+  const patterns = [
+    // From pattern
+    {
+      regex: /^from\s+([^:\s]+)/i,
+      transform: (match: string[]) => `from:${match[1]}`,
+    },
+    // To pattern
+    {
+      regex: /^to\s+([^:\s]+)/i,
+      transform: (match: string[]) => `to:${match[1]}`,
+    },
+    // Subject pattern
+    {
+      regex: /^subject\s+([^:\s]+)/i,
+      transform: (match: string[]) => `subject:${match[1]}`,
+    },
+    // Has attachment pattern
+    {
+      regex: /^has\s+(attachment|file)/i,
+      transform: () => 'has:attachment',
+    },
+    // Is pattern (unread, read, starred)
+    {
+      regex: /^is\s+(unread|read|starred)/i,
+      transform: (match: string[]) => `is:${match[1]}`,
+    },
+  ];
+
+  // Check if query matches any pattern
+  for (const pattern of patterns) {
+    const match = query.match(pattern.regex);
+    if (match) {
+      return pattern.transform(match);
+    }
+  }
+
+  return query;
+}
+
+export function parseNaturalLanguageDate(query: string): { from?: Date; to?: Date } | null {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+
+  // Common date patterns
+  const patterns = [
+    // "emails from [month] [year]"
+    {
+      regex: /(?:emails?|mail)\s+from\s+(\w+)\s+(\d{4})/i,
+      transform: (match: string[]) => {
+        const monthNames = [
+          'january',
+          'february',
+          'march',
+          'april',
+          'may',
+          'june',
+          'july',
+          'august',
+          'september',
+          'october',
+          'november',
+          'december',
+        ];
+        const monthIndex = monthNames.findIndex((m) =>
+          m.toLowerCase().startsWith(match[1]?.toLowerCase() ?? ''),
+        );
+        if (monthIndex === -1) return null;
+
+        const year = parseInt(match[2] ?? currentYear.toString());
+        const from = new Date(year, monthIndex, 1);
+        const to = new Date(year, monthIndex + 1, 0); // Last day of the month
+        return { from, to };
+      },
+    },
+    // "emails from [month]" (assumes current year)
+    {
+      regex: /(?:emails?|mail)\s+from\s+(\w+)/i,
+      transform: (match: string[]) => {
+        const monthNames = [
+          'january',
+          'february',
+          'march',
+          'april',
+          'may',
+          'june',
+          'july',
+          'august',
+          'september',
+          'october',
+          'november',
+          'december',
+        ];
+        const monthIndex = monthNames.findIndex((m) =>
+          m.toLowerCase().startsWith(match[1]?.toLowerCase() ?? ''),
+        );
+        if (monthIndex === -1) return null;
+
+        const from = new Date(currentYear, monthIndex, 1);
+        const to = new Date(currentYear, monthIndex + 1, 0); // Last day of the month
+        return { from, to };
+      },
+    },
+  ];
+
+  // Check if query matches any pattern
+  for (const pattern of patterns) {
+    const match = query.match(pattern.regex);
+    if (match) {
+      const result = pattern.transform(match);
+      if (result) {
+        return result;
+      }
+    }
+  }
+
+  return null;
+}
+
+export const cleanSearchValue = (q: string): string => {
+  if (!q) return '';
+
+  const filterRegex = new RegExp(
+    filterSuggestions
+      .map((s) => s.filter)
+      .filter(Boolean) // Remove any empty strings
+      .join('|'),
+    'gi', // Case insensitive
+  );
+
+  return q
+    .replace(filterRegex, '')
+    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+    .trim();
 };

@@ -1,4 +1,6 @@
+import { checkRateLimit, getAuthenticatedUserId, getRatelimitModule } from '../../utils';
 import type { Shortcut } from '@/config/shortcuts';
+import { Ratelimit } from '@upstash/ratelimit';
 import { userHotkeys } from '@zero/db/schema';
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
@@ -7,33 +9,48 @@ import { eq } from 'drizzle-orm';
 import { db } from '@zero/db';
 
 export async function GET() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
+  const userId = await getAuthenticatedUserId();
+
+  const ratelimit = getRatelimitModule({
+    prefix: 'ratelimit:hotkeys',
+    limiter: Ratelimit.slidingWindow(60, '1m'),
   });
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { success, headers } = await checkRateLimit(ratelimit, userId);
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      { status: 429, headers },
+    );
   }
 
-  const result = await db.select().from(userHotkeys).where(eq(userHotkeys.userId, session.user.id));
+  const result = await db.select().from(userHotkeys).where(eq(userHotkeys.userId, userId));
 
   return NextResponse.json(result[0]?.shortcuts || []);
 }
 
 export async function POST(request: Request) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const userId = await getAuthenticatedUserId();
 
+  const ratelimit = getRatelimitModule({
+    prefix: 'ratelimit:hotkeys-post',
+    limiter: Ratelimit.slidingWindow(60, '1m'),
+  });
+
+  const { success, headers } = await checkRateLimit(ratelimit, userId);
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      { status: 429, headers },
+    );
+  }
   const shortcuts = (await request.json()) as Shortcut[];
   const now = new Date();
 
   await db
     .insert(userHotkeys)
     .values({
-      userId: session.user.id,
+      userId: userId,
       shortcuts,
       createdAt: now,
       updatedAt: now,
@@ -50,17 +67,24 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const userId = await getAuthenticatedUserId();
 
+  const ratelimit = getRatelimitModule({
+    prefix: 'ratelimit:hotkeys-put',
+    limiter: Ratelimit.slidingWindow(60, '1m'),
+  });
+
+  const { success, headers } = await checkRateLimit(ratelimit, userId);
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      { status: 429, headers },
+    );
+  }
   const shortcut = (await request.json()) as Shortcut;
   const now = new Date();
 
-  const result = await db.select().from(userHotkeys).where(eq(userHotkeys.userId, session.user.id));
+  const result = await db.select().from(userHotkeys).where(eq(userHotkeys.userId, userId));
 
   const existingShortcuts = (result[0]?.shortcuts || []) as Shortcut[];
   const updatedShortcuts = existingShortcuts.map((s: Shortcut) =>
@@ -74,7 +98,7 @@ export async function PUT(request: Request) {
   await db
     .insert(userHotkeys)
     .values({
-      userId: session.user.id,
+      userId,
       shortcuts: updatedShortcuts,
       createdAt: now,
       updatedAt: now,

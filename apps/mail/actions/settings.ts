@@ -22,7 +22,12 @@ function validateSettings(settings: unknown): UserSettings {
 export async function saveUserSettings(settings: UserSettings) {
   try {
     const userId = await getAuthenticatedUserId();
+    console.log(settings, 'before');
+
     settings = validateSettings(settings);
+
+    console.log(settings, 'after');
+
     const timestamp = new Date();
 
     const [existingSettings] = await db

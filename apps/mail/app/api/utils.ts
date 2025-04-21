@@ -1,4 +1,5 @@
 import { Ratelimit, Algorithm, RatelimitConfig } from '@upstash/ratelimit';
+import { deleteActiveConnection } from '@/actions/utils';
 import { redirect } from 'next/navigation';
 import { NextRequest } from 'next/server';
 import { headers } from 'next/headers';
@@ -24,7 +25,6 @@ export const throwUnauthorizedGracefully = async () => {
   try {
     const headersList = await headers();
     await auth.api.signOut({ headers: headersList });
-    redirect('/login?error=unauthorized');
   } catch (error) {
     console.warn('Error signing out & redirecting to login:', error);
     throw error;
@@ -42,7 +42,9 @@ export async function getAuthenticatedUserId(): Promise<string> {
   return session.user.id;
 }
 
+// Forcefully logout the user, this will delete the active connection
 export async function logoutUser() {
+  await deleteActiveConnection();
   const headersList = await headers();
   await auth.api.signOut({ headers: headersList });
 }

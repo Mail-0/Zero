@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { earlyAccess, user } from '@zero/db/schema';
 import { getAuthenticatedUserId } from '@/app/api/utils';
+import { earlyAccess, user } from '@zero/db/schema';
 import { eq } from 'drizzle-orm';
 import { Resend } from 'resend';
 import { db } from '@zero/db';
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Golden ticket already claimed' }, { status: 400 });
     }
 
-    if (!foundUser.isEarlyAccess) {
+    if (!foundUser.isEarlyAccess && process.env.EARLY_ACCESS_ENABLED) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
@@ -217,9 +217,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Failed to handle golden ticket:', error);
-    return NextResponse.json(
-      { error: 'Failed to handle golden ticket' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Failed to handle golden ticket' }, { status: 500 });
   }
-} 
+}

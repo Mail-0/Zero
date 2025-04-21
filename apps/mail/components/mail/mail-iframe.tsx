@@ -6,14 +6,14 @@ import { getBrowserTimezone } from '@/lib/timezones';
 import { useSettings } from '@/hooks/use-settings';
 import { useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
+import DOMPurify from 'dompurify';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import DOMPurify from 'dompurify';
 
 export function MailIframe({ html, senderEmail }: { html: string; senderEmail: string }) {
   const { settings, mutate } = useSettings();
   const isTrustedSender = settings?.trustedSenders?.includes(senderEmail);
-  const [cspViolation, setCspViolation] = useState(false)
+  const [cspViolation, setCspViolation] = useState(false);
   const [imagesEnabled, setImagesEnabled] = useState(
     isTrustedSender || settings?.externalImages || false,
   );
@@ -21,27 +21,32 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
   const [height, setHeight] = useState(300);
   const { resolvedTheme } = useTheme();
 
-  const onTrustSender = useCallback(async (senderEmail: string) => {
-    setImagesEnabled(true);
+  const onTrustSender = useCallback(
+    async (senderEmail: string) => {
+      setImagesEnabled(true);
 
-    const existingSettings = settings ?? {
-      ...defaultUserSettings,
-      timezone: getBrowserTimezone(),
-    };
+      console.log(settings);
 
-    const { success } = await saveUserSettings({
-      ...existingSettings,
-      trustedSenders: settings?.trustedSenders
-        ? settings.trustedSenders.concat(senderEmail)
-        : [senderEmail],
-    });
+      const existingSettings = settings ?? {
+        ...defaultUserSettings,
+        timezone: getBrowserTimezone(),
+      };
 
-    if (!success) {
-      toast.error('Failed to trust sender');
-    } else {
-      mutate();
-    }
-  }, [settings, mutate]);
+      const { success } = await saveUserSettings({
+        ...existingSettings,
+        trustedSenders: settings?.trustedSenders
+          ? settings.trustedSenders.concat(senderEmail)
+          : [senderEmail],
+      });
+
+      if (!success) {
+        toast.error('Failed to trust sender');
+      } else {
+        mutate();
+      }
+    },
+    [settings, mutate],
+  );
 
   const iframeDoc = useMemo(() => template(html, imagesEnabled), [html, imagesEnabled]);
 
@@ -95,7 +100,7 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
       'message',
       (event) => {
         if (event.data.type === 'csp-violation') {
-          setCspViolation(true)
+          setCspViolation(true);
         }
       },
       { signal: ctrl.signal },
@@ -254,7 +259,7 @@ export function DynamicIframe({
         const parentStyle = window.getComputedStyle(iframe.parentElement || document.body);
         const parentColor = parentStyle.color;
         const parentBg = parentStyle.backgroundColor;
-        
+
         const styleElement = iframeDoc.createElement('style');
         styleElement.textContent = `
           body {
@@ -265,21 +270,21 @@ export function DynamicIframe({
         iframeDoc.head.appendChild(styleElement);
       }
     };
-    
+
     updateStyles();
 
     // Size adjustment
     const resizeIframe = () => {
       if (!iframe.contentWindow || !iframeDoc.body) return;
-      
+
       const newHeight = iframeDoc.body.scrollHeight;
       const newWidth = iframeDoc.body.scrollWidth;
-      
+
       if (newHeight !== height) {
         setHeight(newHeight);
         iframe.style.height = `${newHeight}px`;
       }
-      
+
       if (newWidth !== width && newWidth > iframe.clientWidth) {
         setWidth(newWidth);
       }
@@ -289,12 +294,12 @@ export function DynamicIframe({
     const resizeObserver = new ResizeObserver(() => {
       resizeIframe();
     });
-    
+
     resizeObserver.observe(iframeDoc.body);
-    
+
     // Additional event listeners for images loading
     const images = iframeDoc.querySelectorAll('img');
-    images.forEach(img => {
+    images.forEach((img) => {
       img.addEventListener('load', resizeIframe);
       img.addEventListener('error', (e) => {
         console.error('Image failed to load:', e);
@@ -304,7 +309,7 @@ export function DynamicIframe({
 
     // Handle link clicks to open in new tab
     const links = iframeDoc.querySelectorAll('a');
-    links.forEach(link => {
+    links.forEach((link) => {
       link.setAttribute('target', '_blank');
       link.setAttribute('rel', 'noopener noreferrer');
     });
@@ -316,7 +321,7 @@ export function DynamicIframe({
     // Cleanup
     return () => {
       resizeObserver.disconnect();
-      images.forEach(img => {
+      images.forEach((img) => {
         img.removeEventListener('load', resizeIframe);
         img.removeEventListener('error', resizeIframe);
       });

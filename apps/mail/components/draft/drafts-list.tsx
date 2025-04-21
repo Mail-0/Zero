@@ -14,10 +14,10 @@ import { useDrafts } from '@/hooks/use-drafts';
 import { useSession } from '@/lib/auth-client';
 import { ScrollArea } from '../ui/scroll-area';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'use-intl';
+import { useTranslations } from 'next-intl';
+import { ChevronDown } from 'lucide-react';
 import { Button } from '../ui/button';
 import { toast } from 'sonner';
-import { ChevronDown } from 'lucide-react';
 
 const Draft = ({ message, onClick }: ThreadProps) => {
   const [mail] = useMail();

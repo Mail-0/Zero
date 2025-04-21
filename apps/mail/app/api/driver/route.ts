@@ -45,6 +45,6 @@ export const GET = async (req: NextRequest) => {
   } catch (error) {
     console.warn('Error getting threads:', error);
     await logoutUser();
-    // return NextResponse.redirect('/login?error=unauthorized');
+    return NextResponse.json({ messages: [], nextPageToken: null });
   }
 };

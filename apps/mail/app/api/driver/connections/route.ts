@@ -1,4 +1,10 @@
-import { processIP, getRatelimitModule, checkRateLimit, getAuthenticatedUserId } from '../../utils';
+import {
+  processIP,
+  getRatelimitModule,
+  checkRateLimit,
+  getAuthenticatedUserId,
+  logoutUser,
+} from '../../utils';
 import { NextRequest, NextResponse } from 'next/server';
 import { Ratelimit } from '@upstash/ratelimit';
 import { connection } from '@zero/db/schema';
@@ -7,33 +13,39 @@ import { eq } from 'drizzle-orm';
 import { db } from '@zero/db';
 
 export const GET = async (req: NextRequest) => {
-  const userId = await getAuthenticatedUserId();
-  const finalIp = processIP(req);
-  const ratelimit = getRatelimitModule({
-    prefix: `ratelimit:get-connections-${userId}`,
-    limiter: Ratelimit.slidingWindow(60, '1m'),
-  });
-  const { success, headers } = await checkRateLimit(ratelimit, finalIp);
-  if (!success) {
-    return NextResponse.json(
-      { error: 'Too many requests. Please try again later.' },
-      { status: 429, headers },
-    );
+  try {
+    const userId = await getAuthenticatedUserId();
+    const finalIp = processIP(req);
+    const ratelimit = getRatelimitModule({
+      prefix: `ratelimit:get-connections-${userId}`,
+      limiter: Ratelimit.slidingWindow(60, '1m'),
+    });
+    const { success, headers } = await checkRateLimit(ratelimit, finalIp);
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429, headers },
+      );
+    }
+
+    const connections = (await db
+      .select({
+        id: connection.id,
+        email: connection.email,
+        name: connection.name,
+        picture: connection.picture,
+        createdAt: connection.createdAt,
+      })
+      .from(connection)
+      .where(eq(connection.userId, userId))) as IConnection[];
+
+    return NextResponse.json(connections, {
+      status: 200,
+      headers,
+    });
+  } catch (error) {
+    console.warn('Error getting connections:', error);
+    await logoutUser();
+    return NextResponse.json([]);
   }
-
-  const connections = (await db
-    .select({
-      id: connection.id,
-      email: connection.email,
-      name: connection.name,
-      picture: connection.picture,
-      createdAt: connection.createdAt,
-    })
-    .from(connection)
-    .where(eq(connection.userId, userId))) as IConnection[];
-
-  return NextResponse.json(connections, {
-    status: 200,
-    headers,
-  });
 };
