@@ -210,6 +210,7 @@ export const AIAssistant = ({
 
   // Refs
   const inputRef = useRef<HTMLInputElement>(null);
+  const errorFlagRef = useRef(false);
 
   // Hooks
   const isMobile = useIsMobile();
@@ -264,6 +265,7 @@ export const AIAssistant = ({
     try {
       setIsLoading(true);
       setErrorOccurred(false);
+      errorFlagRef.current = false;
 
       posthog.capture('Create Email AI Assistant Submit');
       addMessage('user', prompt, 'question');
@@ -339,13 +341,12 @@ export const AIAssistant = ({
         addMessage('system', errorMessage, 'system');
       }
       setErrorOccurred(true);
+      errorFlagRef.current = true;
     } finally {
       setIsLoading(false);
-      if (!errorOccurred || isAskingQuestion) {
-        setIsExpanded(true);
-      } else {
-        setIsExpanded(false); // Collapse on errors
-      }
+      // Use a local flag to track errors deterministically
+      const hadError = isAskingQuestion ? false : !!errorFlagRef.current;
+      setIsExpanded(!hadError);
     }
   };
 
