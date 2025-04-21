@@ -258,9 +258,10 @@ export const AIAssistant = ({
   };
 
   // Handle submit
-  const handleSubmit = async (e?: React.MouseEvent): Promise<void> => {
+  const handleSubmit = async (e?: React.MouseEvent, overridePrompt?: string): Promise<void> => {
     e?.stopPropagation();
-    if (!prompt.trim() || isLoading) return;
+    const promptToUse = overridePrompt || prompt;
+    if (!promptToUse.trim() || isLoading) return;
 
     try {
       setIsLoading(true);
@@ -268,7 +269,7 @@ export const AIAssistant = ({
       errorFlagRef.current = false;
 
       posthog.capture('Create Email AI Assistant Submit');
-      addMessage('user', prompt, 'question');
+      addMessage('user', promptToUse, 'question');
 
       setIsAskingQuestion(false);
       setShowActions(false);
@@ -278,7 +279,7 @@ export const AIAssistant = ({
       // --- Step 1: Generate Body ---
       console.log('AI Assistant: Requesting email body...');
       const bodyResult = await generateAIEmailBody({
-        prompt,
+        prompt: promptToUse,
         currentContent: generatedBody?.content || currentContent,
         subject,
         to: recipients,
@@ -376,9 +377,9 @@ export const AIAssistant = ({
     // Re-trigger handleSubmit using the last user message
     const lastUserMessage = [...messages].reverse().find((item) => item.role === 'user');
     if (lastUserMessage && !isLoading) {
-      setPrompt(lastUserMessage.content);
-      // Use await here to ensure it runs fully before potential further actions
-      await handleSubmit();
+      const refreshedPrompt = lastUserMessage.content;
+      setPrompt(refreshedPrompt);
+      await handleSubmit(undefined, refreshedPrompt);
     } else if (prompt.trim() && !isLoading) {
       // If there's text in the input but no history, submit that
       await handleSubmit();
