@@ -14,6 +14,7 @@ import {
   MinusCircle,
   PlusCircle,
   Minus,
+  ChevronDown,
 } from 'lucide-react';
 import {
   cleanEmailAddress,
@@ -23,10 +24,17 @@ import {
   createAIJsonContent,
   constructReplyBody,
 } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useRef, useState, useEffect, useCallback, useReducer } from 'react';
 import { UploadedFileIcon } from '@/components/create/uploaded-file-icon';
 import { EmailInput } from '@/components/create/email-input';
+import { useEmailAliases } from '@/hooks/use-email-aliases';
 import { extractTextFromHTML } from '@/actions/extractText';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { generateAIResponse } from '@/actions/ai-reply';
@@ -50,6 +58,18 @@ import { Sender } from '@/types';
 import { toast } from 'sonner';
 import type { z } from 'zod';
 import React from 'react';
+
+const DragOverlay = () => {
+  const t = useTranslations();
+  return (
+    <div className="bg-background/80 border-primary/30 absolute inset-0 z-50 m-4 flex items-center justify-center rounded-2xl border-2 border-dashed backdrop-blur-sm">
+      <div className="text-muted-foreground flex flex-col items-center gap-2">
+        <Paperclip className="text-muted-foreground h-12 w-12" />
+        <p className="text-lg font-medium">{t('common.replyCompose.dropFiles')}</p>
+      </div>
+    </div>
+  );
+};
 
 // Utility function to check if an email is a noreply address
 const isNoReplyAddress = (email: string): boolean => {
@@ -161,6 +181,8 @@ export default function ReplyCompose() {
   const [isEditingRecipients, setIsEditingRecipients] = useState(false);
   const [showCc, setShowCc] = useState(false);
   const [showBcc, setShowBcc] = useState(false);
+  const [selectedFromEmail, setSelectedFromEmail] = useState<string | null>(null);
+  const { aliases, isLoading: isLoadingAliases } = useEmailAliases();
   const ccInputRef = useRef<HTMLInputElement | null>(null);
   const bccInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -323,6 +345,7 @@ export default function ReplyCompose() {
         subject,
         message: replyBody,
         attachments,
+        fromEmail: selectedFromEmail || aliases?.[0]?.email || userEmail,
         headers: {
           'In-Reply-To': inReplyTo ?? '',
           References: references,
@@ -619,7 +642,8 @@ export default function ReplyCompose() {
 
   // Helper function to initialize recipients based on mode
   const initializeRecipients = useCallback(() => {
-    if (!emailData || !emailData.messages || emailData.messages.length === 0) return { to: [], cc: [] };
+    if (!emailData || !emailData.messages || emailData.messages.length === 0)
+      return { to: [], cc: [] };
 
     const latestMessage = emailData.messages[0];
     if (!latestMessage) return { to: [], cc: [] };
@@ -644,7 +668,7 @@ export default function ReplyCompose() {
       if (senderEmail === userEmail && latestMessage.to && latestMessage.to.length > 0) {
         // Get the first recipient that isn't us
         const firstRecipient = latestMessage.to.find(
-          recipient => recipient.email?.toLowerCase() !== userEmail
+          (recipient) => recipient.email?.toLowerCase() !== userEmail,
         );
         if (firstRecipient?.email) {
           to.push(firstRecipient.email);
@@ -725,7 +749,7 @@ export default function ReplyCompose() {
 
     if (isEditingRecipients || mode === 'forward') {
       return (
-        <div className="flex-1 space-y-2 ml-1.5">
+        <div className="ml-1.5 flex-1 space-y-2">
           <div className="mb-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
               {icon}
@@ -749,6 +773,43 @@ export default function ReplyCompose() {
               composerDispatch({ type: 'SET_UNSAVED_CHANGES', payload: value })
             }
           />
+
+          <div className="flex items-center">
+            <div className="text-muted-foreground mr-1 w-[35px] text-right text-xs">From:</div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="h-auto justify-between p-0 text-left text-sm font-normal"
+                >
+                  <span>
+                    {selectedFromEmail || aliases?.[0]?.email || session?.activeConnection?.email}
+                  </span>
+                  <ChevronDown className="ml-1 h-3 w-3 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {isLoadingAliases ? (
+                  <div className="px-2 py-1 text-center text-sm">Loading...</div>
+                ) : aliases && aliases.length > 0 ? (
+                  aliases.map((alias) => (
+                    <DropdownMenuItem
+                      key={alias.email}
+                      onClick={() => setSelectedFromEmail(alias.email)}
+                      className="cursor-pointer"
+                    >
+                      {alias.name ? `${alias.name} <${alias.email}>` : alias.email}
+                      {alias.primary && ' (Primary)'}
+                    </DropdownMenuItem>
+                  ))
+                ) : (
+                  <div className="px-2 py-1 text-center text-sm">
+                    {session?.activeConnection?.email}
+                  </div>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
 
           {showCc && (
             <EmailInput
@@ -792,21 +853,60 @@ export default function ReplyCompose() {
     const recipientDisplay = allRecipients.join(', ');
 
     return (
-      <div
-        className="hover:bg-accent/50 flex flex-1 cursor-pointer items-center gap-2 rounded px-2 py-1"
-        onClick={() => setIsEditingRecipients(true)}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            setIsEditingRecipients(true);
-          }
-        }}
-      >
-        {icon}
-        <p className="truncate" title={recipientDisplay}>
-          {recipientDisplay || t('common.mailDisplay.to')}
-        </p>
+      <div className="flex w-full flex-col gap-1">
+        <div
+          className="hover:bg-accent/50 flex cursor-pointer items-center gap-2 rounded px-2 py-1"
+          onClick={() => setIsEditingRecipients(true)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              setIsEditingRecipients(true);
+            }
+          }}
+        >
+          {icon}
+          <span className="text-muted-foreground mr-1 text-xs">To:</span>
+          <p className="truncate text-sm" title={recipientDisplay}>
+            {recipientDisplay || t('common.mailDisplay.to')}
+          </p>
+        </div>
+        <div className="flex items-center">
+          <span className="text-muted-foreground mr-1 w-[35px] text-right text-xs">From:</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="h-auto justify-between p-0 text-left text-sm font-normal"
+              >
+                <span>
+                  {selectedFromEmail || aliases?.[0]?.email || session?.activeConnection?.email}
+                </span>
+                <ChevronDown className="ml-1 h-3 w-3 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              {isLoadingAliases ? (
+                <div className="px-2 py-1 text-center text-sm">Loading...</div>
+              ) : aliases && aliases.length > 0 ? (
+                aliases.map((alias) => (
+                  <DropdownMenuItem
+                    key={alias.email}
+                    onClick={() => setSelectedFromEmail(alias.email)}
+                    className="cursor-pointer"
+                  >
+                    {alias.name ? `${alias.name} <${alias.email}>` : alias.email}
+                    {alias.primary && ' (Primary)'}
+                  </DropdownMenuItem>
+                ))
+              ) : (
+                <div className="px-2 py-1 text-center text-sm">
+                  {session?.activeConnection?.email}
+                </div>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     );
   };
@@ -970,9 +1070,9 @@ export default function ReplyCompose() {
         {composerState.isDragging && <DragOverlay />}
 
         {/* Header */}
-        <div className="text-muted-foreground flex flex-shrink-0 items-start justify-between text-sm">
-          {renderHeaderContent()}
-          <div className="flex items-center">
+        <div className="text-muted-foreground mb-2 flex flex-shrink-0 items-start justify-between text-sm">
+          <div className="flex-1">{renderHeaderContent()}</div>
+          <div className="flex shrink-0 items-center">
             <Button
               type="button"
               variant="ghost"
@@ -1215,16 +1315,3 @@ export default function ReplyCompose() {
     </div>
   );
 }
-
-// Extract smaller components
-const DragOverlay = () => {
-  const t = useTranslations();
-  return (
-    <div className="bg-background/80 border-primary/30 absolute inset-0 z-50 m-4 flex items-center justify-center rounded-2xl border-2 border-dashed backdrop-blur-sm">
-      <div className="text-muted-foreground flex flex-col items-center gap-2">
-        <Paperclip className="text-muted-foreground h-12 w-12" />
-        <p className="text-lg font-medium">{t('common.replyCompose.dropFiles')}</p>
-      </div>
-    </div>
-  );
-};
