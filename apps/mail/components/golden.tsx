@@ -97,7 +97,8 @@ export const GoldenTicketModal = () => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle className='flex flex-col gap-4'>
-            <Image src='/white-icon.svg' alt='Zero' width={32} height={32} />
+            <Image src='/white-icon.svg' alt='Zero' width={32} height={32} className='hidden dark:block'/>
+            <Image src='/black-icon.svg' alt='Zero' width={32} height={32} className='block dark:hidden'/>
             <span>Welcome to Zero! 🎉 ✨</span>
           </DialogTitle>
           <DialogDescription className='pt-3 flex flex-col gap-3'>

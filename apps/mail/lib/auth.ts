@@ -1,12 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { connection, user as _user, account, userSettings, earlyAccess } from '@zero/db/schema';
 import { createAuthMiddleware, customSession } from 'better-auth/plugins';
+import { Account, betterAuth, type BetterAuthOptions } from 'better-auth';
 import { getBrowserTimezone, isValidTimezone } from '@/lib/timezones';
 import { defaultUserSettings } from '@zero/db/user_settings_default';
-import { betterAuth, type BetterAuthOptions } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { getSocialProviders } from './auth-providers';
+import { createDriver } from '@/app/api/driver';
 import { redirect } from 'next/navigation';
+import { APIError } from 'better-auth/api';
 import { eq } from 'drizzle-orm';
 import { Resend } from 'resend';
 import { db } from '@zero/db';
@@ -17,10 +19,59 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : { emails: { send: async (...args: any[]) => console.log(args) } };
 
+const connectionHandlerHook = async (account: Account) => {
+  if (!account.accessToken || !account.refreshToken) {
+    console.error('Missing Access/Refresh Tokens', { account });
+    throw new APIError('EXPECTATION_FAILED', { message: 'Missing Access/Refresh Tokens' });
+  }
+
+  const driver = await createDriver(account.providerId, {});
+  const userInfo = await driver
+    .getUserInfo({
+      access_token: account.accessToken,
+      refresh_token: account.refreshToken,
+      email: '',
+    })
+    .catch(() => {
+      throw new APIError('UNAUTHORIZED', { message: 'Failed to get user info' });
+    });
+
+  if (!userInfo.data?.emailAddresses?.[0]?.value) {
+    console.error('Missing email in user info:', { userInfo });
+    throw new APIError('BAD_REQUEST', { message: 'Missing "email" in user info' });
+  }
+
+  const updatingInfo = {
+    name: userInfo.data.names?.[0]?.displayName || 'Unknown',
+    picture: userInfo.data.photos?.[0]?.url || '',
+    accessToken: account.accessToken,
+    refreshToken: account.refreshToken,
+    scope: driver.getScope(),
+    expiresAt: new Date(Date.now() + (account.accessTokenExpiresAt?.getTime() || 3600000)),
+  };
+
+  await db
+    .insert(connection)
+    .values({
+      providerId: account.providerId,
+      id: crypto.randomUUID(),
+      email: userInfo.data.emailAddresses[0].value,
+      userId: account.userId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...updatingInfo,
+    })
+    .onConflictDoUpdate({
+      target: [connection.email, connection.userId],
+      set: {
+        ...updatingInfo,
+        updatedAt: new Date(),
+      },
+    });
+};
+
 const options = {
-  database: drizzleAdapter(db, {
-    provider: 'pg',
-  }),
+  database: drizzleAdapter(db, { provider: 'pg' }),
   advanced: {
     ipAddress: {
       disableIpTracking: true,
@@ -31,6 +82,23 @@ const options = {
     updateAge: 60 * 60 * 24, // 1 day (every 1 day the session expiration is updated)
   },
   socialProviders: getSocialProviders(),
+  account: {
+    accountLinking: {
+      enabled: true,
+      allowDifferentEmails: true,
+      trustedProviders: ['google'],
+    },
+  },
+  databaseHooks: {
+    account: {
+      create: {
+        after: connectionHandlerHook,
+      },
+      update: {
+        after: connectionHandlerHook,
+      },
+    },
+  },
   emailAndPassword: {
     enabled: false,
     requireEmailVerification: true,

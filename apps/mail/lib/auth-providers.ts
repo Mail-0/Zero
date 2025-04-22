@@ -32,21 +32,15 @@ export const authProviders: ProviderConfig[] = [
     name: "Google",
     requiredEnvVars: [
       "GOOGLE_CLIENT_ID",
-      "GOOGLE_CLIENT_SECRET",
-      "GOOGLE_REDIRECT_URI"
+      "GOOGLE_CLIENT_SECRET"
     ],
     envVarInfo: [
       { name: "GOOGLE_CLIENT_ID", source: "Google Cloud Console" },
-      { name: "GOOGLE_CLIENT_SECRET", source: "Google Cloud Console" },
-      {
-        name: "GOOGLE_REDIRECT_URI",
-        source: "Google Cloud Console",
-        defaultValue: "http://localhost:3000/api/v1/mail/auth/google/callback"
-      }
+      { name: "GOOGLE_CLIENT_SECRET", source: "Google Cloud Console" }
     ],
     config: {
       // TODO: Remove this before going to prod, it's to force to get `refresh_token` from google, some users don't have it yet.
-      prompt: "consent",
+      prompt: process.env.NODE_ENV === "production" ? undefined : "consent",
       accessType: "offline",
       scope: ["https://www.googleapis.com/auth/gmail.modify"],
       clientId: process.env.GOOGLE_CLIENT_ID!,

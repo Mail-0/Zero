@@ -116,4 +116,5 @@ export interface IOutgoingMessage {
   attachments: any[];
   headers: Record<string, string>;
   threadId?: string;
+  fromEmail?: string;
 }

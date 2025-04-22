@@ -3,6 +3,7 @@ import { IOutgoingMessage, Sender, type ParsedMessage } from '@/types';
 import { type IConfig, type MailManager } from './types';
 import { type gmail_v1, google } from 'googleapis';
 import { filterSuggestions } from '@/lib/filter';
+import { cleanSearchValue } from '@/lib/utils';
 import { EnableBrain } from '@/actions/brain';
 import { createMimeMessage } from 'mimetext';
 import * as he from 'he';
@@ -130,7 +131,12 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
     process.env.GOOGLE_REDIRECT_URI as string,
   );
 
-  const getScope = () => ['https://www.googleapis.com/auth/gmail.modify'].join(' ');
+  const getScope = () =>
+    [
+      'https://www.googleapis.com/auth/gmail.modify',
+      'https://www.googleapis.com/auth/userinfo.profile',
+      'https://www.googleapis.com/auth/userinfo.email',
+    ].join(' ');
   if (config.auth) {
     auth.setCredentials({
       refresh_token: config.auth.refresh_token,
@@ -223,14 +229,17 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
     headers,
     cc,
     bcc,
+    fromEmail,
   }: IOutgoingMessage) => {
     const msg = createMimeMessage();
 
-    const fromEmail = config.auth?.email || 'nobody@example.com';
-    console.log('Debug - From email:', fromEmail);
+    const defaultFromEmail = config.auth?.email || 'nobody@example.com';
+    // Use the specified fromEmail if available, otherwise use the default
+    const senderEmail = fromEmail || defaultFromEmail;
+    console.log('Debug - From email:', senderEmail);
     console.log('Debug - Original to recipients:', JSON.stringify(to, null, 2));
 
-    msg.setSender({ name: '', addr: fromEmail });
+    msg.setSender({ name: '', addr: senderEmail });
 
     // Track unique recipients to avoid duplicates
     const uniqueRecipients = new Set<string>();
@@ -259,7 +268,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
           normalizedEmail: email,
           fromEmail,
           isDuplicate: uniqueRecipients.has(email),
-          isSelf: email === fromEmail,
+          isSelf: email === senderEmail,
         });
 
         // Only check for duplicates, allow sending to yourself
@@ -302,7 +311,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       const ccRecipients = cc
         .filter((recipient) => {
           const email = recipient.email.toLowerCase();
-          if (!uniqueRecipients.has(email) && email !== fromEmail) {
+          if (!uniqueRecipients.has(email) && email !== senderEmail) {
             uniqueRecipients.add(email);
             return true;
           }
@@ -323,7 +332,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       const bccRecipients = bcc
         .filter((recipient) => {
           const email = recipient.email.toLowerCase();
-          if (!uniqueRecipients.has(email) && email !== fromEmail) {
+          if (!uniqueRecipients.has(email) && email !== senderEmail) {
             uniqueRecipients.add(email);
             return true;
           }
@@ -394,9 +403,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
   const normalizeSearch = (folder: string, q: string) => {
     // Handle special folders
     if (folder !== 'inbox') {
-      filterSuggestions.forEach((suggestion) => {
-        q = q.replaceAll(suggestion.filter, ``);
-      });
+      q = cleanSearchValue(q);
       console.log('🔄 Filter suggestions', q);
       if (folder === 'bin') {
         return { folder: undefined, q: `in:trash ${q}` };
@@ -476,6 +483,44 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       } catch (error) {
         console.error('Error fetching attachment:', error);
         throw error;
+      }
+    },
+    getEmailAliases: async () => {
+      try {
+        // First, get the user's primary email
+        const profile = await gmail.users.getProfile({
+          userId: 'me',
+        });
+
+        const primaryEmail = profile.data.emailAddress || '';
+        const aliases: { email: string; name?: string; primary?: boolean }[] = [
+          { email: primaryEmail, primary: true },
+        ];
+
+        // Fetch the Gmail settings for aliases
+        const settings = await gmail.users.settings.sendAs.list({
+          userId: 'me',
+        });
+
+        if (settings.data.sendAs) {
+          settings.data.sendAs.forEach((alias) => {
+            // Skip the primary email which we already added
+            if (alias.isPrimary && alias.sendAsEmail === primaryEmail) {
+              return;
+            }
+
+            aliases.push({
+              email: alias.sendAsEmail || '',
+              name: alias.displayName || undefined,
+              primary: alias.isPrimary || false,
+            });
+          });
+        }
+
+        return aliases;
+      } catch (error) {
+        console.error('Error fetching email aliases:', error);
+        return [];
       }
     },
     markAsRead: async (threadIds: string[]) => {
@@ -829,15 +874,44 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       }
     },
     createDraft: async (data: any) => {
-      const mimeMessage = [
-        `From: me`,
-        `To: ${data.to}`,
-        `Subject: ${data.subject}`,
-        'Content-Type: text/html; charset=utf-8',
-        '',
-        data.message,
-      ].join('\n');
+      const msg = createMimeMessage();
+      msg.setSender('me');
+      msg.setTo(data.to);
+      
+      if (data.cc) msg.setCc(data.cc);
+      if (data.bcc) msg.setBcc(data.bcc);
+      
+      msg.setSubject(data.subject);
+      msg.addMessage({
+        contentType: 'text/html',
+        data: data.message || ''
+      });
 
+      if (data.attachments?.length > 0) {
+        for (const attachment of data.attachments) {
+          const base64Data = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const base64 = (reader.result as string).split(',')[1];
+              if (base64) {
+                resolve(base64);
+              } else {
+                reject(new Error('Failed to read file as base64'));
+              }
+            };
+            reader.onerror = () => reject(new Error('Failed to read file'));
+            reader.readAsDataURL(attachment);
+          });
+
+          msg.addAttachment({
+            filename: attachment.name,
+            contentType: attachment.type,
+            data: base64Data
+          });
+        }
+      }
+
+      const mimeMessage = msg.asRaw();
       const encodedMessage = Buffer.from(mimeMessage)
         .toString('base64')
         .replace(/\+/g, '-')

@@ -2,9 +2,10 @@
 
 import type { InitialThread, ThreadProps, MailListProps, MailSelectMode } from '@/types';
 import { EmptyState, type FolderType } from '@/components/mail/empty-state';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso';
 import { cn, defaultPageSize, formatDate } from '@/lib/utils';
+import { extractTextFromHTML } from '@/actions/extractText';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { markAsRead, markAsUnread } from '@/actions/mail';
 import { highlightText } from '@/lib/email-utils.client';
@@ -19,9 +20,16 @@ import { ChevronDown } from 'lucide-react';
 import { Button } from '../ui/button';
 import { toast } from 'sonner';
 
-const Draft = ({ message, onClick }: ThreadProps) => {
+import { ParsedMessage } from '@/types';
+
+interface DraftProps extends Omit<ThreadProps, 'message'> {
+  message: ParsedMessage;
+}
+
+const Draft = ({ message, onClick }: DraftProps) => {
   const [mail] = useMail();
   const [searchValue] = useSearchValue();
+  const [bodyText, setBodyText] = React.useState('');
 
   const isMailSelected = message.id === mail.selected;
   const isMailBulkSelected = mail.bulkSelected.includes(message.id);
@@ -51,7 +59,20 @@ const Draft = ({ message, onClick }: ThreadProps) => {
               )}
             >
               <span className={cn(mail.selected && 'max-w-[120px] truncate')}>
-                {highlightText(message.sender.name, searchValue.highlight)}
+                {!message.to?.length ||
+                message.to.some(
+                  (to: { name: string; email: string }) =>
+                    to.name.includes('no-sender') || to.email.includes('no-sender'),
+                )
+                  ? 'No recipient'
+                  : highlightText(
+                      message.to
+                        .map((to: { name: string; email: string }) =>
+                          to.name === 'No Sender Name' ? to.email : `${to.name} <${to.email}>`,
+                        )
+                        .join(', '),
+                      searchValue.highlight,
+                    )}
               </span>
             </p>
           </div>
@@ -74,6 +95,15 @@ const Draft = ({ message, onClick }: ThreadProps) => {
           )}
         >
           {highlightText(message.subject, searchValue.highlight)}
+        </p>
+        <p
+          className={cn(
+            'mt-1 line-clamp-1 text-xs opacity-70 transition-opacity',
+            mail.selected ? 'line-clamp-1' : 'line-clamp-2',
+            isMailSelected && 'opacity-100',
+          )}
+        >
+          {highlightText(message.title || 'No content', searchValue.highlight)}
         </p>
       </div>
     </div>

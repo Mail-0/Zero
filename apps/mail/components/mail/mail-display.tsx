@@ -259,9 +259,11 @@ const MailDisplay = ({ emailData, isMuted, index, totalEmails, demo }: Props) =>
                             <span className="text-muted-foreground pr-1 font-bold">
                               {emailData?.sender?.name}
                             </span>
-                            <span className="text-muted-foreground">
-                              {emailData?.sender?.email}
-                            </span>
+                            {emailData?.sender?.name !== emailData?.sender?.email && (
+                              <span className="text-muted-foreground">
+                                {emailData?.sender?.email}
+                              </span>
+                            )}
                           </div>
                         </div>
                         <div className="flex">
