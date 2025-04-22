@@ -37,6 +37,7 @@ export interface MailManager {
   ): Promise<void>;
   getAttachment(messageId: string, attachmentId: string): Promise<string | undefined>;
   getUserLabels(): Promise<any>;
+  getLabel: (labelId: string) => Promise<any>;
   createLabel(label: {
     name: string;
     color?: { backgroundColor: string; textColor: string };

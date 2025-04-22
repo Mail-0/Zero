@@ -1,5 +1,5 @@
-import useSWR from 'swr';
 import { toast } from 'sonner';
+import useSWR from 'swr';
 
 export interface Label {
   id?: string;
@@ -20,12 +20,7 @@ const fetcher = async (url: string) => {
 };
 
 export function useLabels() {
-  const {
-    data: labels,
-    error,
-    isLoading,
-    mutate,
-  } = useSWR<Label[]>('/api/v1/labels', fetcher);
+  const { data: labels, error, isLoading, mutate } = useSWR<Label[]>('/api/v1/labels', fetcher);
 
   const createLabel = async (label: Omit<Label, 'id' | 'type'>) => {
     try {
@@ -62,10 +57,7 @@ export function useLabels() {
       }
 
       const updatedLabel = await response.json();
-      await mutate(
-        labels?.map((l) => (l.id === id ? { ...l, ...updatedLabel } : l)) || [],
-        false
-      );
+      await mutate(labels?.map((l) => (l.id === id ? { ...l, ...updatedLabel } : l)) || [], false);
       toast.success('Label updated successfully');
       return updatedLabel;
     } catch (error) {
@@ -94,6 +86,11 @@ export function useLabels() {
     }
   };
 
+  const getThreadLabels = async (ids: string[]) => {
+    const { data } = await useThreadLabels(ids);
+    return data || [];
+  };
+
   return {
     labels: labels || [],
     isLoading,
@@ -101,6 +98,37 @@ export function useLabels() {
     createLabel,
     updateLabel,
     deleteLabel,
+    getThreadLabels,
     refresh: () => mutate(),
   };
+}
+
+export function useThreadLabels(ids: string[]) {
+  const key = ids.length > 0 ? `/api/v1/thread-labels?ids=${ids.join(',')}` : null;
+
+  return useSWR<Label[]>(
+    key,
+    async (url) => {
+      try {
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch thread labels');
+        }
+
+        return response.json();
+      } catch (error) {
+        toast.error('Failed to fetch thread labels');
+        throw error;
+      }
+    },
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 5000,
+    },
+  );
 }

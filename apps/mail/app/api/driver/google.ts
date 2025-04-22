@@ -948,6 +948,13 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       });
       return res.data.labels;
     },
+    getLabel: async (labelId: string) => {
+      const res = await gmail.users.labels.get({
+        userId: 'me',
+        id: labelId,
+      });
+      return res.data;
+    },
     createLabel: async (label) => {
       const res = await gmail.users.labels.create({
         userId: 'me',
