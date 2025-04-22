@@ -1,22 +1,26 @@
-import { checkRateLimit, getAuthenticatedUserId, getRatelimitModule } from '../../utils';
+import { processIP, getRatelimitModule, checkRateLimit, getAuthenticatedUserId } from '../../utils';
+import { NextRequest, NextResponse } from 'next/server';
 import { getActiveDriver } from '@/actions/utils';
 import { Ratelimit } from '@upstash/ratelimit';
-import { NextResponse } from 'next/server';
 
 interface Label {
   name: string;
-  color?: string;
+  color?: {
+    backgroundColor: string;
+    textColor: string;
+  };
+  type?: 'user' | 'system';
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const userId = await getAuthenticatedUserId();
-
+  const finalIp = processIP(req);
   const ratelimit = getRatelimitModule({
-    prefix: 'ratelimit:labels',
+    prefix: `ratelimit:get-labels-${userId}`,
     limiter: Ratelimit.slidingWindow(60, '1m'),
   });
 
-  const { success, headers } = await checkRateLimit(ratelimit, userId);
+  const { success, headers } = await checkRateLimit(ratelimit, finalIp);
   if (!success) {
     return NextResponse.json(
       { error: 'Too many requests. Please try again later.' },
@@ -26,23 +30,29 @@ export async function GET() {
 
   try {
     const driver = await getActiveDriver();
-    const labels = await driver?.getUserLabels();
-    return NextResponse.json(labels.filter((label: any) => label.type === 'user'));
+    if (!driver) {
+      return NextResponse.json({ error: 'Email driver not configured' }, { status: 500 });
+    }
+    const labels = await driver.getUserLabels();
+    if (!labels) {
+      return NextResponse.json([], { status: 200 });
+    }
+    return NextResponse.json(labels.filter((label: Label) => label.type === 'user'));
   } catch (error) {
     console.error('Error fetching labels:', error);
     return NextResponse.json({ error: 'Failed to fetch labels' }, { status: 500 });
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
   const userId = await getAuthenticatedUserId();
-
+  const finalIp = processIP(req);
   const ratelimit = getRatelimitModule({
-    prefix: 'ratelimit:labels-post',
+    prefix: `ratelimit:labels-post-${userId}`,
     limiter: Ratelimit.slidingWindow(60, '1m'),
   });
 
-  const { success, headers } = await checkRateLimit(ratelimit, userId);
+  const { success, headers } = await checkRateLimit(ratelimit, finalIp);
   if (!success) {
     return NextResponse.json(
       { error: 'Too many requests. Please try again later.' },
@@ -51,7 +61,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const reqLabel = await request.json();
+    const reqLabel = await req.json();
     const label = {
       ...reqLabel,
       type: 'user',
@@ -65,15 +75,15 @@ export async function POST(request: Request) {
   }
 }
 
-export async function PATCH(request: Request) {
+export async function PATCH(req: NextRequest) {
   const userId = await getAuthenticatedUserId();
-
+  const finalIp = processIP(req);
   const ratelimit = getRatelimitModule({
-    prefix: 'ratelimit:labels-patch',
+    prefix: `ratelimit:labels-patch-${userId}`,
     limiter: Ratelimit.slidingWindow(60, '1m'),
   });
 
-  const { success, headers } = await checkRateLimit(ratelimit, userId);
+  const { success, headers } = await checkRateLimit(ratelimit, finalIp);
   if (!success) {
     return NextResponse.json(
       { error: 'Too many requests. Please try again later.' },
@@ -82,7 +92,7 @@ export async function PATCH(request: Request) {
   }
 
   try {
-    const { id, ...label } = (await request.json()) as Label & { id: string } & { type: string };
+    const { id, ...label } = (await req.json()) as Label & { id: string } & { type: string };
     const driver = await getActiveDriver();
     const result = await driver?.updateLabel(id, label);
     return NextResponse.json(result);
@@ -92,15 +102,15 @@ export async function PATCH(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE(req: NextRequest) {
   const userId = await getAuthenticatedUserId();
-
+  const finalIp = processIP(req);
   const ratelimit = getRatelimitModule({
-    prefix: 'ratelimit:labels-delete',
+    prefix: `ratelimit:labels-delete-${userId}`,
     limiter: Ratelimit.slidingWindow(60, '1m'),
   });
 
-  const { success, headers } = await checkRateLimit(ratelimit, userId);
+  const { success, headers } = await checkRateLimit(ratelimit, finalIp);
   if (!success) {
     return NextResponse.json(
       { error: 'Too many requests. Please try again later.' },
@@ -109,7 +119,7 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    const { id } = (await request.json()) as { id: string };
+    const { id } = (await req.json()) as { id: string };
     const driver = await getActiveDriver();
     await driver?.deleteLabel(id);
     return NextResponse.json({ success: true });
