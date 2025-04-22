@@ -36,7 +36,8 @@ export async function getAuthenticatedUserId(): Promise<string> {
   const session = await auth.api.getSession({ headers: headersList });
 
   if (!session?.user?.id) {
-    return throwUnauthorizedGracefully();
+    await throwUnauthorizedGracefully();
+    throw new Error('Unauthorized user');
   }
 
   return session.user.id;
