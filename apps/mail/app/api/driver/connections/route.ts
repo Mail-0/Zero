@@ -3,7 +3,7 @@ import {
   getRatelimitModule,
   checkRateLimit,
   getAuthenticatedUserId,
-  logoutUser,
+  throwUnauthorizedGracefully,
 } from '../../utils';
 import { NextRequest, NextResponse } from 'next/server';
 import { Ratelimit } from '@upstash/ratelimit';
@@ -44,8 +44,8 @@ export const GET = async (req: NextRequest) => {
       headers,
     });
   } catch (error) {
-    console.warn('Error getting connections:', error);
-    await logoutUser();
-    return NextResponse.json([]);
+    console.log('Error getting connections:', error);
+    await throwUnauthorizedGracefully(req);
+    return NextResponse.redirect(`https://${req.nextUrl.hostname}`);
   }
 };

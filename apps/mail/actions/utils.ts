@@ -12,20 +12,20 @@ export const FatalErrors = ['invalid_grant'];
 export const deleteActiveConnection = async () => {
   const headersList = await headers();
   const session = await auth.api.getSession({ headers: headersList });
-  if (!session || !session.connectionId) {
-    return throwUnauthorizedGracefully();
-  }
-
-  try {
-    await db
-      .delete(connection)
-      .where(and(eq(connection.userId, session.user.id), eq(connection.id, session.connectionId)));
-    console.log('Server: Successfully deleted connection, please reload');
-    return revalidatePath('/mail');
-  } catch (error) {
-    console.error('Server: Error deleting connection:', error);
-    throw error;
-  }
+  if (session?.connectionId)
+    try {
+      await db
+        .delete(connection)
+        .where(
+          and(eq(connection.userId, session.user.id), eq(connection.id, session.connectionId)),
+        );
+      console.log('Server: Successfully deleted connection, please reload');
+      await auth.api.signOut({ headers: headersList });
+      // return revalidatePath('/mail');
+    } catch (error) {
+      console.error('Server: Error deleting connection:', error);
+      throw error;
+    }
 };
 
 export const getActiveDriver = async () => {
@@ -33,7 +33,7 @@ export const getActiveDriver = async () => {
   const session = await auth.api.getSession({ headers: headersList });
 
   if (!session || !session.connectionId) {
-    return throwUnauthorizedGracefully();
+    return throwUnauthorizedGracefully() as never;
   }
 
   const [_connection] = await db
@@ -42,11 +42,11 @@ export const getActiveDriver = async () => {
     .where(and(eq(connection.userId, session.user.id), eq(connection.id, session.connectionId)));
 
   if (!_connection) {
-    return throwUnauthorizedGracefully();
+    return throwUnauthorizedGracefully() as never;
   }
 
   if (!_connection.accessToken || !_connection.refreshToken) {
-    return throwUnauthorizedGracefully();
+    return throwUnauthorizedGracefully() as never;
   }
 
   const driver = await createDriver(_connection.providerId, {
@@ -64,8 +64,8 @@ export const getActiveConnection = async () => {
   const headersList = await headers();
 
   const session = await auth.api.getSession({ headers: headersList });
-  if (!session?.user) return throwUnauthorizedGracefully();
-  if (!session.connectionId) return throwUnauthorizedGracefully();
+  if (!session?.user) return throwUnauthorizedGracefully() as never;
+  if (!session.connectionId) return throwUnauthorizedGracefully() as never;
 
   const [_connection] = await db
     .select()

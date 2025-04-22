@@ -1,37 +1,8 @@
 'use server';
-import { deleteActiveConnection, FatalErrors, getActiveDriver } from './utils';
 import { throwUnauthorizedGracefully } from '@/app/api/utils';
 import { IGetThreadResponse } from '@/app/api/driver/types';
+import { FatalErrors, getActiveDriver } from './utils';
 import { ParsedMessage } from '@/types';
-
-export const getMails = async ({
-  folder,
-  q,
-  max,
-  labelIds,
-  pageToken,
-}: {
-  folder: string;
-  q?: string;
-  max?: number;
-  labelIds?: string[];
-  pageToken: string | number | undefined;
-}) => {
-  if (!folder) {
-    throw new Error('Missing required fields');
-  }
-
-  try {
-    const driver = await getActiveDriver();
-    return await driver.list(folder, q, max, labelIds, pageToken);
-  } catch (error) {
-    if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection();
-    console.error('Error getting threads:', error);
-    // throw error;
-    await throwUnauthorizedGracefully();
-    return { messages: [], nextPageToken: null };
-  }
-};
 
 export const getMail = async ({ id }: { id: string }): Promise<IGetThreadResponse> => {
   if (!id) {
@@ -47,7 +18,7 @@ export const getMail = async ({ id }: { id: string }): Promise<IGetThreadRespons
 
     return mailData;
   } catch (error) {
-    if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection();
+    if (FatalErrors.includes((error as Error).message)) await throwUnauthorizedGracefully();
     console.error('Error getting mail:', error);
     throw error;
   }
@@ -59,7 +30,7 @@ export const markAsRead = async ({ ids }: { ids: string[] }) => {
     await driver.markAsRead(ids);
     return { success: true };
   } catch (error) {
-    if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection();
+    if (FatalErrors.includes((error as Error).message)) await throwUnauthorizedGracefully();
     console.error('Error marking message as read:', error);
     throw error;
   }
@@ -71,19 +42,8 @@ export const markAsUnread = async ({ ids }: { ids: string[] }) => {
     await driver.markAsUnread(ids);
     return { success: true };
   } catch (error) {
-    if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection();
+    if (FatalErrors.includes((error as Error).message)) await throwUnauthorizedGracefully();
     console.error('Error marking message as unread:', error);
-    throw error;
-  }
-};
-
-export const mailCount = async () => {
-  try {
-    const driver = await getActiveDriver();
-    return await driver.count();
-  } catch (error) {
-    if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection();
-    console.error('Error getting mail count:', error);
     throw error;
   }
 };
@@ -117,7 +77,7 @@ export const modifyLabels = async ({
     console.log('Server: No label changes specified');
     return { success: false, error: 'No label changes specified' };
   } catch (error) {
-    if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection();
+    if (FatalErrors.includes((error as Error).message)) await throwUnauthorizedGracefully();
     console.error('Error updating thread labels:', error);
     throw error;
   }
@@ -159,7 +119,7 @@ export const toggleStar = async ({ ids }: { ids: string[] }) => {
 
     return { success: true };
   } catch (error) {
-    if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection();
+    if (FatalErrors.includes((error as Error).message)) await throwUnauthorizedGracefully();
     console.error('Error toggling star:', error);
     throw error;
   }

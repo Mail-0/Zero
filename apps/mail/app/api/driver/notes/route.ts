@@ -3,7 +3,7 @@ import {
   getRatelimitModule,
   checkRateLimit,
   getAuthenticatedUserId,
-  logoutUser,
+  throwUnauthorizedGracefully,
 } from '../../utils';
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchThreadNotes } from '@/actions/notes';
@@ -39,7 +39,7 @@ export const GET = async (req: NextRequest) => {
     });
   } catch (error) {
     console.warn('Error getting thread notes:', error);
-    await logoutUser();
-    return NextResponse.json([]);
+  } finally {
+    throwUnauthorizedGracefully(req);
   }
 };

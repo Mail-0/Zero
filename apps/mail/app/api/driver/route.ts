@@ -2,8 +2,8 @@ import {
   checkRateLimit,
   getAuthenticatedUserId,
   getRatelimitModule,
-  logoutUser,
   processIP,
+  throwUnauthorizedGracefully,
 } from '../utils';
 import { type NextRequest, NextResponse } from 'next/server';
 import { getActiveDriver } from '@/actions/utils';
@@ -43,8 +43,8 @@ export const GET = async (req: NextRequest) => {
       headers,
     });
   } catch (error) {
-    console.warn('Error getting threads:', error);
-    await logoutUser();
-    return NextResponse.json({ messages: [], nextPageToken: null });
+    console.log('Error getting threads:', error);
+    await throwUnauthorizedGracefully(req);
+    return NextResponse.redirect(`https://${req.nextUrl.hostname}`);
   }
 };
