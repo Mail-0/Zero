@@ -3,6 +3,7 @@ import { IOutgoingMessage, Sender, type ParsedMessage } from '@/types';
 import { type IConfig, type MailManager } from './types';
 import { type gmail_v1, google } from 'googleapis';
 import { filterSuggestions } from '@/lib/filter';
+import { GMAIL_COLORS } from '@/lib/constants';
 import { cleanSearchValue } from '@/lib/utils';
 import { EnableBrain } from '@/actions/brain';
 import { createMimeMessage } from 'mimetext';
@@ -899,6 +900,61 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       }
 
       return res.data;
+    },
+    getUserLabels: async () => {
+      const res = await gmail.users.labels.list({
+        userId: 'me',
+      });
+      return res.data.labels;
+    },
+    createLabel: async (label) => {
+      const colorData = label.color ? GMAIL_COLORS.find((c) => c.name === label.color) : null;
+      if (label.color && !colorData) {
+        throw new Error(`Label color ${label.color} is not on the allowed color palette`);
+      }
+
+      const res = await gmail.users.labels.create({
+        userId: 'me',
+        requestBody: {
+          name: label.name,
+          labelListVisibility: 'labelShow',
+          messageListVisibility: 'show',
+          color: colorData
+            ? {
+                backgroundColor: colorData.backgroundColor,
+                textColor: colorData.textColor,
+              }
+            : undefined,
+        },
+      });
+      return res.data;
+    },
+    updateLabel: async (id, label) => {
+      const colorData = label.color ? GMAIL_COLORS.find((c) => c.name === label.color) : null;
+      if (label.color && !colorData) {
+        throw new Error(`Label color ${label.color} is not on the allowed color palette`);
+      }
+
+      const res = await gmail.users.labels.update({
+        userId: 'me',
+        id: id,
+        requestBody: {
+          name: label.name,
+          color: colorData
+            ? {
+                backgroundColor: colorData.backgroundColor,
+                textColor: colorData.textColor,
+              }
+            : undefined,
+        },
+      });
+      return res.data;
+    },
+    deleteLabel: async (id) => {
+      await gmail.users.labels.delete({
+        userId: 'me',
+        id: id,
+      });
     },
   };
 

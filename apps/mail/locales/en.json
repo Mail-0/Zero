@@ -294,7 +294,8 @@
       "security": "Security",
       "appearance": "Appearance",
       "signatures": "Signatures",
-      "shortcuts": "Shortcuts"
+      "shortcuts": "Shortcuts",
+      "labels": "Labels"
     }
   },
   "pages": {
@@ -407,6 +408,10 @@
           "releaseKeys": "Release keys",
           "selectAll": "Select All"
         }
+      },
+      "labels": {
+        "title": "Labels",
+        "description": "Manage your labels for better organization of your emails."
       }
     },
     "createEmail": {

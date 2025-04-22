@@ -104,3 +104,28 @@ export const emailProviders = [
     providerId: "google",
   },
 ] as const;
+
+interface GmailColor {
+  name: string;
+  textColor: string;
+  backgroundColor: string;
+}
+
+export const GMAIL_COLORS: GmailColor[] = [
+  { name: 'default', textColor: '#000000', backgroundColor: '#E2E2E2' },
+  { name: 'red', textColor: '#D50000', backgroundColor: '#F28B82' },
+  { name: 'orange', textColor: '#EF6C00', backgroundColor: '#FBBC04' },
+  { name: 'yellow', textColor: '#F9A825', backgroundColor: '#FFF475' },
+  { name: 'green', textColor: '#188038', backgroundColor: '#CCFF90' },
+  { name: 'blue', textColor: '#1967D2', backgroundColor: '#AECBFA' },
+  { name: 'purple', textColor: '#9334E6', backgroundColor: '#D7AEFB' },
+  { name: 'pink', textColor: '#D93025', backgroundColor: '#FDCFE8' },
+  { name: 'brown', textColor: '#3C1E1E', backgroundColor: '#E6C9A8' },
+  { name: 'gray', textColor: '#3C4043', backgroundColor: '#E8EAED' },
+  { name: 'teal', textColor: '#0B4B3F', backgroundColor: '#A7FFEB' },
+  { name: 'indigo', textColor: '#174EA6', backgroundColor: '#C5CAE9' },
+  { name: 'lime', textColor: '#33691E', backgroundColor: '#F0F4C3' },
+  { name: 'cyan', textColor: '#007B83', backgroundColor: '#B2EBF2' },
+  { name: 'violet', textColor: '#5B2C6F', backgroundColor: '#E1BEE7' },
+  { name: 'coral', textColor: '#BF360C', backgroundColor: '#FFAB91' },
+];
