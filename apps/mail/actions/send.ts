@@ -14,6 +14,7 @@ export async function sendEmail({
   cc,
   headers: additionalHeaders = {},
   threadId,
+  fromEmail,
 }: {
   to: Sender[];
   subject: string;
@@ -23,6 +24,7 @@ export async function sendEmail({
   cc?: Sender[];
   bcc?: Sender[];
   threadId?: string;
+  fromEmail?: string;
 }) {
   if (!to || !subject || !message) {
     throw new Error('Missing required fields');
@@ -51,6 +53,7 @@ export async function sendEmail({
     cc,
     bcc,
     threadId,
+    fromEmail,
   });
 
   return { success: true };
