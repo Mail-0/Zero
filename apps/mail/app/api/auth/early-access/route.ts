@@ -1,9 +1,10 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { Ratelimit } from '@upstash/ratelimit';
 import { earlyAccess } from '@zero/db/schema';
+import { processIP } from '../../utils';
 import { redis } from '@/lib/redis';
-import { db } from '@zero/db';
 import { Resend } from 'resend';
+import { db } from '@zero/db';
 
 type PostgresError = {
   code: string;
@@ -31,17 +32,7 @@ function isEmail(email: string): boolean {
 
 export async function POST(req: NextRequest) {
   try {
-    const ip = req.headers.get('CF-Connecting-IP');
-    if (!ip) {
-      console.log('No IP detected');
-      return NextResponse.json({ error: 'No IP detected' }, { status: 400 });
-    }
-    console.log(
-      'Request from IP:',
-      ip,
-      req.headers.get('x-forwarded-for'),
-      req.headers.get('CF-Connecting-IP'),
-    );
+    const ip = processIP(req);
     const { success, limit, reset, remaining } = await ratelimit.limit(ip);
 
     const headers = {
@@ -96,7 +87,7 @@ export async function POST(req: NextRequest) {
         to: email,
         subject: 'You <> Zero',
         text: `Congrats on joining the waitlist! We're excited to have you on board. Please expect an email from us soon with more information, we are inviting more batches of early access users every day. If you have any questions, please don't hesitate to reach out to us on Discord https://discord.gg/0email.`,
-        scheduledAt: new Date(Date.now() + (1000 * 60 * 60 * 24)).toISOString(),
+        scheduledAt: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
       });
 
       console.log('Insert successful:', result);
