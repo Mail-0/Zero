@@ -12,7 +12,7 @@ export const GetSummary = async (threadId: string) => {
   const session = await auth.api.getSession({ headers: headersList });
 
   if (!session || !session.connectionId) {
-    return throwUnauthorizedGracefully();
+    return throwUnauthorizedGracefully() as never;
   }
 
   const [_connection] = await db
@@ -21,7 +21,7 @@ export const GetSummary = async (threadId: string) => {
     .where(and(eq(connection.userId, session.user.id), eq(connection.id, session.connectionId)));
 
   if (!_connection) {
-    return throwUnauthorizedGracefully();
+    return throwUnauthorizedGracefully() as never;
   }
 
   try {

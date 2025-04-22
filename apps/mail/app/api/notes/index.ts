@@ -11,7 +11,7 @@ async function getCurrentUserId(): Promise<string> {
     const session = await auth.api.getSession({ headers: headersList });
 
     if (!session?.user?.id) {
-      return throwUnauthorizedGracefully();
+      return throwUnauthorizedGracefully() as never;
     }
     return session.user.id;
   } catch (error) {

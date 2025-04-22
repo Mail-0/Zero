@@ -172,7 +172,7 @@ export const navigationConfig: Record<string, NavConfig> = {
             title: 'navigation.settings.shortcuts',
             url: '/settings/shortcuts',
             icon: KeyboardIcon,
-            // disabled: true,
+            disabled: true,
           },
           // {
           //   title: "Notifications",

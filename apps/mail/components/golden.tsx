@@ -8,8 +8,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Form, FormField, FormItem, FormLabel } from './ui/form';
-import { handleGoldenTicket } from '@/actions/settings';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useSidebar } from '@/components/ui/sidebar';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useSession } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -17,11 +18,9 @@ import { useForm } from 'react-hook-form';
 import { TicketIcon } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import Image from 'next/image';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import { useSidebar } from '@/components/ui/sidebar';
-import { useIsMobile } from '@/hooks/use-mobile';
-import Image from 'next/image';
 
 const schema = z.object({
   email: z.string().email(),
@@ -96,14 +95,28 @@ export const GoldenTicketModal = () => {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className='flex flex-col gap-4'>
-            <Image src='/white-icon.svg' alt='Zero' width={32} height={32} className='hidden dark:block'/>
-            <Image src='/black-icon.svg' alt='Zero' width={32} height={32} className='block dark:hidden'/>
+          <DialogTitle className="flex flex-col gap-4">
+            <Image
+              src="/white-icon.svg"
+              alt="Zero"
+              width={32}
+              height={32}
+              className="hidden dark:block"
+            />
+            <Image
+              src="/black-icon.svg"
+              alt="Zero"
+              width={32}
+              height={32}
+              className="block dark:hidden"
+            />
             <span>Welcome to Zero! 🎉 ✨</span>
           </DialogTitle>
-          <DialogDescription className='pt-3 flex flex-col gap-3'>
-            <span>Zero is still in early beta 🚀 and will continue to grow and improve from this point on. If
-            you know a friend who wants to test and try out Zero, send them an invite! 💌</span>
+          <DialogDescription className="flex flex-col gap-3 pt-3">
+            <span>
+              Zero is still in early beta 🚀 and will continue to grow and improve from this point
+              on. If you know a friend who wants to test and try out Zero, send them an invite! 💌
+            </span>
 
             <span>You can only invite one person, so make it count! 🎯 ⭐️</span>
           </DialogDescription>
@@ -115,12 +128,15 @@ export const GoldenTicketModal = () => {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  
-                  <Input placeholder='nizzy@gmail.com' {...field} className='placeholder:opacity-20' />
+                  <Input
+                    placeholder="nizzy@gmail.com"
+                    {...field}
+                    className="placeholder:opacity-20"
+                  />
                 </FormItem>
               )}
             />
-            <div className="pt-3 flex gap-2 justify-end">
+            <div className="flex justify-end gap-2 pt-3">
               <Button onClick={handleMaybeLater} type="button" variant="outline" className="">
                 Maybe Later
               </Button>

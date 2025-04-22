@@ -28,8 +28,7 @@ export const getMails = async ({
     if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection();
     console.error('Error getting threads:', error);
     // throw error;
-    await throwUnauthorizedGracefully();
-    return { messages: [], nextPageToken: null };
+    return throwUnauthorizedGracefully();
   }
 };
 

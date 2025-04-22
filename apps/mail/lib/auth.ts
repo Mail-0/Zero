@@ -165,7 +165,7 @@ const options = {
             console.log('Tried to add user to earlyAccess after error, failed', foundUser, err),
           );
         try {
-          redirect('/login?error=early_access_required');
+          throw redirect('/login?error=early_access_required');
         } catch (error) {
           console.warn('Error redirecting to login page:', error);
         }

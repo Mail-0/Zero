@@ -16,9 +16,7 @@ export const getDrafts = async ({
     return await driver.listDrafts(q, max, pageToken);
   } catch (error) {
     console.error('Error getting threads:', error);
-    await throwUnauthorizedGracefully();
-    // throw error;
-    return { messages: [], nextPageToken: null };
+    return throwUnauthorizedGracefully();
   }
 };
 
