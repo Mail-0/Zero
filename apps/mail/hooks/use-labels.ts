@@ -1,4 +1,5 @@
 import { toast } from 'sonner';
+import axios from 'axios';
 import useSWR from 'swr';
 
 export interface Label {
@@ -12,11 +13,8 @@ export interface Label {
 }
 
 const fetcher = async (url: string) => {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error('Failed to fetch labels');
-  }
-  return response.json();
+  const response = await axios.get(url);
+  return response.data;
 };
 
 export function useLabels() {

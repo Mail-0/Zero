@@ -1,10 +1,26 @@
+import { processIP, getRatelimitModule, checkRateLimit, getAuthenticatedUserId } from '../../utils';
+import { NextRequest, NextResponse } from 'next/server';
 import { getActiveDriver } from '@/actions/utils';
+import { Ratelimit } from '@upstash/ratelimit';
 import { Label } from '@/hooks/use-labels';
-import { NextResponse } from 'next/server';
 
-export async function GET(request: Request) {
+export async function GET(req: NextRequest) {
+  const userId = await getAuthenticatedUserId();
+  const finalIp = processIP(req);
+  const ratelimit = getRatelimitModule({
+    prefix: `ratelimit:get-thread-labels-${userId}`,
+    limiter: Ratelimit.slidingWindow(60, '1m'),
+  });
+
+  const { success, headers } = await checkRateLimit(ratelimit, finalIp);
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      { status: 429, headers },
+    );
+  }
   try {
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = new URL(req.url);
     const ids = searchParams.get('ids');
 
     if (!ids) {
