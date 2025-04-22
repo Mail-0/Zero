@@ -11,7 +11,7 @@ export const EnableBrain = async () => {
   const connection = await getActiveConnection();
 
   if (!connection?.accessToken || !connection.refreshToken) {
-    return throwUnauthorizedGracefully();
+    throw throwUnauthorizedGracefully();
   }
 
   return await axios.put(process.env.BRAIN_URL + `/subscribe/${connection.providerId}`, {

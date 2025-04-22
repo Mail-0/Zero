@@ -14,13 +14,13 @@ export async function deleteConnection(connectionId: string) {
     const session = await auth.api.getSession({ headers: headersList });
 
     if (!session) {
-      return throwUnauthorizedGracefully();
+      throw throwUnauthorizedGracefully();
     }
 
     const userId = session?.user?.id;
 
     if (!userId) {
-      return throwUnauthorizedGracefully();
+      throw throwUnauthorizedGracefully();
     }
 
     await db
@@ -46,13 +46,13 @@ export async function putConnection(connectionId: string) {
     const session = await auth.api.getSession({ headers: headersList });
 
     if (!session) {
-      return throwUnauthorizedGracefully();
+      throw throwUnauthorizedGracefully();
     }
 
     const userId = session?.user?.id;
 
     if (!userId) {
-      return throwUnauthorizedGracefully();
+      throw throwUnauthorizedGracefully();
     }
 
     const [foundConnection] = await db

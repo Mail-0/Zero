@@ -33,7 +33,7 @@ export async function sendEmail({
   const connection = await getActiveConnection();
 
   if (!connection?.accessToken || !connection.refreshToken) {
-    return throwUnauthorizedGracefully();
+    throw throwUnauthorizedGracefully();
   }
 
   const driver = await createDriver(connection.providerId, {

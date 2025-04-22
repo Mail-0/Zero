@@ -14,7 +14,7 @@ export async function generateAIResponse(
   const session = await auth.api.getSession({ headers: headersList });
 
   if (!session?.user) {
-    return throwUnauthorizedGracefully();
+    throw throwUnauthorizedGracefully();
   }
 
   if (!process.env.GROQ_API_KEY) {

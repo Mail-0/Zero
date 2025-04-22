@@ -22,14 +22,8 @@ export const getRatelimitModule = (config: {
 
 export const throwUnauthorizedGracefully = async () => {
   console.warn('Unauthorized, redirecting to login');
-  try {
-    const headersList = await headers();
-    await auth.api.signOut({ headers: headersList });
-    throw new Error('Unauthorized');
-  } catch (error) {
-    console.warn('Error signing out & redirecting to login:', error);
-    throw error;
-  }
+  const headersList = await headers();
+  await auth.api.signOut({ headers: headersList });
 };
 
 export async function getAuthenticatedUserId(): Promise<string> {
@@ -37,17 +31,10 @@ export async function getAuthenticatedUserId(): Promise<string> {
   const session = await auth.api.getSession({ headers: headersList });
 
   if (!session?.user?.id) {
-    return throwUnauthorizedGracefully();
+    throw throwUnauthorizedGracefully();
   }
 
   return session.user.id;
-}
-
-// Forcefully logout the user, this will delete the active connection
-export async function logoutUser() {
-  await deleteActiveConnection();
-  const headersList = await headers();
-  await auth.api.signOut({ headers: headersList });
 }
 
 export const checkRateLimit = async (ratelimit: Ratelimit, finalIp: string) => {
