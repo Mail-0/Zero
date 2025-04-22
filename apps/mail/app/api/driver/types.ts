@@ -46,6 +46,7 @@ export interface MailManager {
     label: { name: string; color?: { backgroundColor: string; textColor: string } },
   ): Promise<any>;
   deleteLabel(id: string): Promise<void>;
+  getEmailAliases(): Promise<{ email: string; name?: string; primary?: boolean }[]>;
 }
 
 export interface IConfig {

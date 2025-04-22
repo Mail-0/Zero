@@ -230,14 +230,17 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
     headers,
     cc,
     bcc,
+    fromEmail,
   }: IOutgoingMessage) => {
     const msg = createMimeMessage();
 
-    const fromEmail = config.auth?.email || 'nobody@example.com';
-    console.log('Debug - From email:', fromEmail);
+    const defaultFromEmail = config.auth?.email || 'nobody@example.com';
+    // Use the specified fromEmail if available, otherwise use the default
+    const senderEmail = fromEmail || defaultFromEmail;
+    console.log('Debug - From email:', senderEmail);
     console.log('Debug - Original to recipients:', JSON.stringify(to, null, 2));
 
-    msg.setSender({ name: '', addr: fromEmail });
+    msg.setSender({ name: '', addr: senderEmail });
 
     // Track unique recipients to avoid duplicates
     const uniqueRecipients = new Set<string>();
@@ -266,7 +269,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
           normalizedEmail: email,
           fromEmail,
           isDuplicate: uniqueRecipients.has(email),
-          isSelf: email === fromEmail,
+          isSelf: email === senderEmail,
         });
 
         // Only check for duplicates, allow sending to yourself
@@ -309,7 +312,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       const ccRecipients = cc
         .filter((recipient) => {
           const email = recipient.email.toLowerCase();
-          if (!uniqueRecipients.has(email) && email !== fromEmail) {
+          if (!uniqueRecipients.has(email) && email !== senderEmail) {
             uniqueRecipients.add(email);
             return true;
           }
@@ -330,7 +333,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       const bccRecipients = bcc
         .filter((recipient) => {
           const email = recipient.email.toLowerCase();
-          if (!uniqueRecipients.has(email) && email !== fromEmail) {
+          if (!uniqueRecipients.has(email) && email !== senderEmail) {
             uniqueRecipients.add(email);
             return true;
           }
@@ -481,6 +484,44 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       } catch (error) {
         console.error('Error fetching attachment:', error);
         throw error;
+      }
+    },
+    getEmailAliases: async () => {
+      try {
+        // First, get the user's primary email
+        const profile = await gmail.users.getProfile({
+          userId: 'me',
+        });
+
+        const primaryEmail = profile.data.emailAddress || '';
+        const aliases: { email: string; name?: string; primary?: boolean }[] = [
+          { email: primaryEmail, primary: true },
+        ];
+
+        // Fetch the Gmail settings for aliases
+        const settings = await gmail.users.settings.sendAs.list({
+          userId: 'me',
+        });
+
+        if (settings.data.sendAs) {
+          settings.data.sendAs.forEach((alias) => {
+            // Skip the primary email which we already added
+            if (alias.isPrimary && alias.sendAsEmail === primaryEmail) {
+              return;
+            }
+
+            aliases.push({
+              email: alias.sendAsEmail || '',
+              name: alias.displayName || undefined,
+              primary: alias.isPrimary || false,
+            });
+          });
+        }
+
+        return aliases;
+      } catch (error) {
+        console.error('Error fetching email aliases:', error);
+        return [];
       }
     },
     markAsRead: async (threadIds: string[]) => {
