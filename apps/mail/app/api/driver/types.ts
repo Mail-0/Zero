@@ -37,8 +37,14 @@ export interface MailManager {
   ): Promise<void>;
   getAttachment(messageId: string, attachmentId: string): Promise<string | undefined>;
   getUserLabels(): Promise<any>;
-  createLabel(label: { name: string; color?: string }): Promise<any>;
-  updateLabel(id: string, label: { name: string; color?: string }): Promise<any>;
+  createLabel(label: {
+    name: string;
+    color?: { backgroundColor: string; textColor: string };
+  }): Promise<any>;
+  updateLabel(
+    id: string,
+    label: { name: string; color?: { backgroundColor: string; textColor: string } },
+  ): Promise<any>;
   deleteLabel(id: string): Promise<void>;
 }
 

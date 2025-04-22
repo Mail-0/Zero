@@ -908,21 +908,16 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       return res.data.labels;
     },
     createLabel: async (label) => {
-      const colorData = label.color ? GMAIL_COLORS.find((c) => c.name === label.color) : null;
-      if (label.color && !colorData) {
-        throw new Error(`Label color ${label.color} is not on the allowed color palette`);
-      }
-
       const res = await gmail.users.labels.create({
         userId: 'me',
         requestBody: {
           name: label.name,
           labelListVisibility: 'labelShow',
           messageListVisibility: 'show',
-          color: colorData
+          color: label.color
             ? {
-                backgroundColor: colorData.backgroundColor,
-                textColor: colorData.textColor,
+                backgroundColor: label.color.backgroundColor,
+                textColor: label.color.textColor,
               }
             : undefined,
         },
@@ -930,20 +925,15 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       return res.data;
     },
     updateLabel: async (id, label) => {
-      const colorData = label.color ? GMAIL_COLORS.find((c) => c.name === label.color) : null;
-      if (label.color && !colorData) {
-        throw new Error(`Label color ${label.color} is not on the allowed color palette`);
-      }
-
       const res = await gmail.users.labels.update({
         userId: 'me',
         id: id,
         requestBody: {
           name: label.name,
-          color: colorData
+          color: label.color
             ? {
-                backgroundColor: colorData.backgroundColor,
-                textColor: colorData.textColor,
+                backgroundColor: label.color.backgroundColor,
+                textColor: label.color.textColor,
               }
             : undefined,
         },
