@@ -86,26 +86,25 @@ export function ThreadContextMenu({
   const router = useRouter();
   const [, setMode] = useQueryState('mode');
   const [, setThreadId] = useQueryState('threadId');
-  const { mutate: mutateThread } = useThread(threadId);
+  const { mutate: mutateThread, data: threadData } = useThread(threadId);
   const selectedThreads = useMemo(() => {
     if (mail.bulkSelected.length) {
       return threads.filter((thread) => mail.bulkSelected.includes(thread.id));
     }
-    return threads.filter((thread) => thread.id === threadId || thread.threadId === threadId);
+    return threads.filter((thread) => thread.id === threadId);
   }, [mail.bulkSelected, threadId, threads]);
 
   const isUnread = useMemo(() => {
-    if (mail.bulkSelected.length) {
-      return selectedThreads.some((thread) => thread.unread);
-    }
-    return selectedThreads[0]?.unread ?? false;
-  }, [selectedThreads, mail.bulkSelected]);
+    return threadData?.hasUnread ?? false;
+  }, [threadData]);
 
   const isStarred = useMemo(() => {
-    if (mail.bulkSelected.length) {
-      return selectedThreads.every((thread) => thread.tags?.includes('STARRED'));
-    }
-    return selectedThreads[0]?.tags?.includes('STARRED') ?? false;
+    // TODO
+    return false;
+    // if (mail.bulkSelected.length) {
+    //   return selectedThreads.every((thread) => thread.tags?.includes('STARRED'));
+    // }
+    // return selectedThreads[0]?.tags?.includes('STARRED') ?? false;
   }, [selectedThreads, mail.bulkSelected]);
 
   const noopAction = () => async () => {
@@ -354,7 +353,7 @@ export function ThreadContextMenu({
         <Star className="mr-2.5 h-4 w-4" />
       ),
       action: handleFavorites,
-      disabled: false,
+      disabled: true,
     },
     {
       id: 'mute',

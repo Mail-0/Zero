@@ -278,9 +278,9 @@
     "sidebar": {
       "inbox": "Bandeja de entrada",
       "drafts": "Borradores",
-      "sent": "Enviado",
+      "sent": "Enviados",
       "spam": "Spam",
-      "archive": "Archivar",
+      "archive": "Archivados",
       "bin": "Papelera de reciclaje",
       "feedback": "Sugerencias",
       "settings": "Configuración"

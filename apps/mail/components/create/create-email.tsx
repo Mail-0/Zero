@@ -5,9 +5,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { ArrowUpIcon, MinusCircle, Paperclip, PlusCircle, X, ChevronDown } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ArrowUpIcon, MinusCircle, Paperclip, PlusCircle, X } from 'lucide-react';
 import { UploadedFileIcon } from '@/components/create/uploaded-file-icon';
+import { useEmailAliases } from '@/hooks/use-email-aliases';
 import { generateHTML, generateJSON } from '@tiptap/core';
 import { useConnections } from '@/hooks/use-connections';
 import { createDraft, getDraft } from '@/actions/drafts';
@@ -87,6 +88,7 @@ export function CreateEmail({
   const [bccEmails, setBccEmails] = React.useState<string[]>([]);
   const [showCc, setShowCc] = React.useState(false);
   const [showBcc, setShowBcc] = React.useState(false);
+  const [selectedFromEmail, setSelectedFromEmail] = React.useState<string | null>(null);
   const [subjectInput, setSubjectInput] = React.useState(initialSubject);
   const [attachments, setAttachments] = React.useState<File[]>([]);
   const [resetEditorKey, setResetEditorKey] = React.useState(0);
@@ -115,6 +117,7 @@ export function CreateEmail({
 
   const { data: session } = useSession();
   const { data: connections } = useConnections();
+  const { aliases, isLoading: isLoadingAliases } = useEmailAliases();
 
   const activeAccount = React.useMemo(() => {
     if (!session) return null;
@@ -173,12 +176,24 @@ export function CreateEmail({
 
         if (draft.content) {
           try {
-            const json = generateJSON(draft.content, [Document, Paragraph, Text, Bold]);
-            setDefaultValue(json);
             setMessageContent(draft.content);
+            setResetEditorKey((prev) => prev + 1);
+            setTimeout(() => {
+              try {
+                const json = generateJSON(draft.content, [Document, Paragraph, Text, Bold]);
+                setDefaultValue(json);
+              } catch (error) {
+                console.error('Error parsing draft content:', error);
+                setDefaultValue(createEmptyDocContent());
+              }
+            }, 0);
           } catch (error) {
-            console.error('Error parsing draft content:', error);
+            console.error('Error setting draft content:', error);
+            setDefaultValue(createEmptyDocContent());
           }
+        } else {
+          setDefaultValue(createEmptyDocContent());
+          setMessageContent('');
         }
 
         setHasUnsavedChanges(false);
@@ -255,12 +270,14 @@ export function CreateEmail({
 
   const saveDraft = React.useCallback(async () => {
     if (!hasUnsavedChanges) return;
-    if (!toEmails.length && !subjectInput && !messageContent) return;
+    if (!toEmails.length || !subjectInput || !messageContent) return;
 
     try {
       setIsLoading(true);
       const draftData = {
         to: toEmails.join(', '),
+        cc: ccEmails.join(', '),
+        bcc: bccEmails.join(', '),
         subject: subjectInput,
         message: messageContent || '',
         attachments: attachments,
@@ -314,6 +331,10 @@ export function CreateEmail({
 
     try {
       setIsLoading(true);
+
+      // Use the selected from email or the first alias (or default user email)
+      const fromEmail = selectedFromEmail || (aliases?.[0]?.email ?? userEmail);
+
       await sendEmail({
         to: toEmails.map((email) => ({ email, name: email.split('@')[0] || email })),
         cc: showCc
@@ -325,6 +346,7 @@ export function CreateEmail({
         subject: subjectInput,
         message: messageContent,
         attachments: attachments,
+        fromEmail: fromEmail,
       });
 
       // Track different email sending scenarios
@@ -550,7 +572,7 @@ export function CreateEmail({
                   onAddEmail={handleAddEmail}
                   hasUnsavedChanges={hasUnsavedChanges}
                   setHasUnsavedChanges={setHasUnsavedChanges}
-                  className='w-24 text-right'
+                  className="w-24 text-right"
                 />
 
                 {showCc && (
@@ -565,7 +587,7 @@ export function CreateEmail({
                     onAddEmail={handleAddEmail}
                     hasUnsavedChanges={hasUnsavedChanges}
                     setHasUnsavedChanges={setHasUnsavedChanges}
-                    className='w-24 text-right'
+                    className="w-24 text-right"
                   />
                 )}
 
@@ -581,9 +603,48 @@ export function CreateEmail({
                     onAddEmail={handleAddEmail}
                     hasUnsavedChanges={hasUnsavedChanges}
                     setHasUnsavedChanges={setHasUnsavedChanges}
-                    className='w-24 text-right'
+                    className="w-24 text-right"
                   />
                 )}
+
+                <div className="flex items-center">
+                  <div className="text-muted-foreground w-20 flex-shrink-0 pr-3 text-right text-[1rem] font-[600] opacity-50 md:w-24">
+                    {t('common.searchBar.from')}
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-between text-left font-normal"
+                        disabled={isLoadingAliases || isLoading}
+                      >
+                        <span>{selectedFromEmail || aliases?.[0]?.email || userEmail}</span>
+                        <ChevronDown className="h-4 w-4 opacity-50" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      className="w-[var(--radix-dropdown-trigger-width)]"
+                      align="start"
+                    >
+                      {isLoadingAliases ? (
+                        <div className="px-2 py-1 text-center text-sm">Loading...</div>
+                      ) : aliases && aliases.length > 0 ? (
+                        aliases.map((alias) => (
+                          <DropdownMenuItem
+                            key={alias.email}
+                            onClick={() => setSelectedFromEmail(alias.email)}
+                            className="cursor-pointer"
+                          >
+                            {alias.name ? `${alias.name} <${alias.email}>` : alias.email}
+                            {alias.primary && ' (Primary)'}
+                          </DropdownMenuItem>
+                        ))
+                      ) : (
+                        <div className="px-2 py-1 text-center text-sm">{userEmail}</div>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
 
                 <div className="flex items-center">
                   <div className="text-muted-foreground w-20 flex-shrink-0 pr-3 text-right text-[1rem] font-[600] opacity-50 md:w-24">

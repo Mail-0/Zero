@@ -4,27 +4,27 @@
   "private": true,
   "packageManager": "bun@1.2.5",
   "scripts": {
-    "dev": "turbo run dev",
-    "build": "turbo run build",
-    "start": "turbo run start",
-    "lint": "turbo run lint",
+    "prepare": "husky",
+    "dev": "dotenv -- turbo run dev",
+    "build": "dotenv -- turbo run build",
+    "start": "dotenv -- turbo run start",
+    "lint": "dotenv -- turbo run lint",
     "format": "prettier --write apps/**/*.{ts,tsx} --log-level silent",
     "check": "bun run check:format && bun run lint",
     "check:format": "prettier . --check",
-    "prepare": "husky",
     "lint-staged": "prettier --write --ignore-unknown",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:clean": "docker-compose down -v",
-    "db:dependencies": "cd packages/db && bun install",
-    "db:generate": "cd packages/db && bun run db:generate",
-    "db:migrate": "cd packages/db && bun run db:migrate",
-    "db:push": "cd packages/db && bun run db:push",
-    "db:studio": "cd packages/db && bun run db:studio"
+    "db:generate": "dotenv -- turbo run db:generate",
+    "db:migrate": "dotenv -- turbo run db:migrate",
+    "db:push": "dotenv -- turbo run db:push",
+    "db:studio": "dotenv -- turbo run db:studio"
   },
   "devDependencies": {
     "@types/node": "22.13.8",
     "@zero/tsconfig": "workspace:*",
+    "dotenv-cli": "^8.0.0",
     "husky": "9.1.7",
     "prettier": "3.5.3",
     "prettier-plugin-sort-imports": "1.8.6",
@@ -35,12 +35,5 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ],
-  "dependencies": {
-    "@types/dompurify": "^3.2.0",
-    "dompurify": "^3.2.5",
-    "he": "^1.2.0",
-    "openai": "^4.90.0",
-    "posthog-js": "^1.234.4"
-  }
+  ]
 }
