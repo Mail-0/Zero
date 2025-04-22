@@ -32,10 +32,10 @@ export const AddConnectionDialog = ({
           <Button
             size={'dropdownItem'}
             variant={'dropdownItem'}
-            className={cn('w-full justify-start gap-2', className)}
+            className={cn('w-full justify-start gap-2 opacity-60 hover:opacity-90', className)}
           >
-            <UserPlus size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
-            <p className="text-[13px] opacity-60">{t('pages.settings.connections.addEmail')}</p>
+            <UserPlus size={16} strokeWidth={2} aria-hidden="true" />
+            <p className="text-[13px]">{t('pages.settings.connections.addEmail')}</p> 
           </Button>
         )}
       </DialogTrigger>

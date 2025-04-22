@@ -234,36 +234,36 @@ export function NavUser() {
 
               <DropdownMenuSeparator className="my-1" />
 
-              <DropdownMenuItem onClick={handleThemeToggle} className="cursor-pointer">
+              <DropdownMenuItem onClick={handleThemeToggle} className="cursor-pointer opacity-60 hover:opacity-90">
                 <div className="flex w-full items-center gap-2">
                   {theme === 'dark' ? (
-                    <MoonIcon className="size-4 opacity-60" />
+                    <MoonIcon className="size-4" />
                   ) : (
-                    <SunIcon className="size-4 opacity-60" />
+                    <SunIcon className="size-4" />
                   )}
-                  <p className="text-[13px] opacity-60">{t('common.navUser.appTheme')}</p>
+                  <p className="text-[13px]">{t('common.navUser.appTheme')}</p>
                 </div>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href={getSettingsHref()} className="cursor-pointer">
+              <DropdownMenuItem asChild className="cursor-pointer opacity-60 hover:opacity-90">
+                <Link href={getSettingsHref()}>
                   <div className="flex items-center gap-2">
-                    <Settings size={16} className="opacity-60" />
-                    <p className="text-[13px] opacity-60">{t('common.actions.settings')}</p>
+                    <Settings size={16} />
+                    <p className="text-[13px]">{t('common.actions.settings')}</p>
                   </div>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer opacity-60 hover:opacity-90">
                 <a href="https://discord.gg/0email" target="_blank" className="w-full">
                   <div className="flex items-center gap-2">
-                    <HelpCircle size={16} className="opacity-60" />
-                    <p className="text-[13px] opacity-60">{t('common.navUser.customerSupport')}</p>
+                    <HelpCircle size={16} />
+                    <p className="text-[13px]">{t('common.navUser.customerSupport')}</p>
                   </div>
                 </a>
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
+              <DropdownMenuItem className="cursor-pointer opacity-60 hover:opacity-90" onClick={handleLogout}>
                 <div className="flex items-center gap-2">
-                  <LogOut size={16} className="opacity-60" />
-                  <p className="text-[13px] opacity-60">{t('common.actions.logout')}</p>
+                  <LogOut size={16} />
+                  <p className="text-[13px]">{t('common.actions.logout')}</p>
                 </div>
               </DropdownMenuItem>
 
@@ -294,10 +294,10 @@ export function NavUser() {
             <p className="text-muted-foreground px-2 py-1 text-[11px] font-medium">
               Debug
             </p>
-            <DropdownMenuItem onClick={handleClearCache}>
+            <DropdownMenuItem className="cursor-pointer opacity-60 hover:opacity-90" onClick={handleClearCache}>
               <div className="flex items-center gap-2">
-                <HelpCircle size={16} className="opacity-60" />
-                <p className="text-[13px] opacity-60">Clear Local Cache</p>
+                <HelpCircle size={16} />
+                <p className="text-[13px]">Clear Local Cache</p>
               </div>
             </DropdownMenuItem>
           </>
