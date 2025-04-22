@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 
 export default async function Home() {
   const session = await getSession();
-  if (session) {
+  if (session.data?.user.id) {
     redirect('/mail/inbox');
   }
 
