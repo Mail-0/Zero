@@ -1,10 +1,4 @@
-import {
-  checkRateLimit,
-  getAuthenticatedUserId,
-  getRatelimitModule,
-  processIP,
-  throwUnauthorizedGracefully,
-} from '../utils';
+import { checkRateLimit, getAuthenticatedUserId, getRatelimitModule, processIP } from '../utils';
 import { type NextRequest, NextResponse } from 'next/server';
 import { getActiveDriver } from '@/actions/utils';
 import { Ratelimit } from '@upstash/ratelimit';
@@ -43,8 +37,11 @@ export const GET = async (req: NextRequest) => {
       headers,
     });
   } catch (error) {
-    console.log('Error getting threads:', error);
-    await throwUnauthorizedGracefully(req);
-    return NextResponse.redirect(`https://${req.nextUrl.hostname}`);
+    return NextResponse.json(
+      { threads: [], nextPageToken: undefined },
+      {
+        status: 400,
+      },
+    );
   }
 };

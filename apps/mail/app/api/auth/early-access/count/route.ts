@@ -35,6 +35,6 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error('Error fetching early access count:', error);
 
-    return NextResponse.json({ error: 'Failed to fetch signup count' }, { status: 500 });
+    return NextResponse.json({ count: 0 }, { status: 400 });
   }
 }

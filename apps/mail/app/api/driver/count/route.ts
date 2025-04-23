@@ -1,10 +1,4 @@
-import {
-  checkRateLimit,
-  getAuthenticatedUserId,
-  getRatelimitModule,
-  processIP,
-  throwUnauthorizedGracefully,
-} from '../../utils';
+import { checkRateLimit, getAuthenticatedUserId, getRatelimitModule, processIP } from '../../utils';
 import { type NextRequest, NextResponse } from 'next/server';
 import { getActiveDriver } from '@/actions/utils';
 import { Ratelimit } from '@upstash/ratelimit';
@@ -31,8 +25,9 @@ export const GET = async (req: NextRequest) => {
       headers,
     });
   } catch (error) {
-    console.log('Error getting connections:', error);
-    await throwUnauthorizedGracefully(req);
-    return NextResponse.redirect(`https://${req.nextUrl.hostname}`);
+    console.warn('Error getting count:', error);
+    return NextResponse.json([], {
+      status: 400,
+    });
   }
 };

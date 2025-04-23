@@ -1,24 +1,17 @@
 'use server';
-import { throwUnauthorizedGracefully } from '@/app/api/utils';
 import { IGetThreadResponse } from '@/app/api/driver/types';
-import { FatalErrors, getActiveDriver } from './utils';
+import { getActiveDriver } from './utils';
 import { ParsedMessage } from '@/types';
 
-export const getMail = async ({ id }: { id: string }): Promise<IGetThreadResponse> => {
+export const getMail = async ({ id }: { id: string }): Promise<IGetThreadResponse | null> => {
   if (!id) {
     throw new Error('Missing required fields');
   }
   try {
     const driver = await getActiveDriver();
     const mailData = await driver.get(id);
-
-    if (!mailData) {
-      throw new Error('Mail data not found');
-    }
-
     return mailData;
   } catch (error) {
-    if (FatalErrors.includes((error as Error).message)) await throwUnauthorizedGracefully();
     console.error('Error getting mail:', error);
     throw error;
   }
@@ -30,7 +23,6 @@ export const markAsRead = async ({ ids }: { ids: string[] }) => {
     await driver.markAsRead(ids);
     return { success: true };
   } catch (error) {
-    if (FatalErrors.includes((error as Error).message)) await throwUnauthorizedGracefully();
     console.error('Error marking message as read:', error);
     throw error;
   }
@@ -42,7 +34,6 @@ export const markAsUnread = async ({ ids }: { ids: string[] }) => {
     await driver.markAsUnread(ids);
     return { success: true };
   } catch (error) {
-    if (FatalErrors.includes((error as Error).message)) await throwUnauthorizedGracefully();
     console.error('Error marking message as unread:', error);
     throw error;
   }
@@ -77,7 +68,6 @@ export const modifyLabels = async ({
     console.log('Server: No label changes specified');
     return { success: false, error: 'No label changes specified' };
   } catch (error) {
-    if (FatalErrors.includes((error as Error).message)) await throwUnauthorizedGracefully();
     console.error('Error updating thread labels:', error);
     throw error;
   }
@@ -119,7 +109,6 @@ export const toggleStar = async ({ ids }: { ids: string[] }) => {
 
     return { success: true };
   } catch (error) {
-    if (FatalErrors.includes((error as Error).message)) await throwUnauthorizedGracefully();
     console.error('Error toggling star:', error);
     throw error;
   }

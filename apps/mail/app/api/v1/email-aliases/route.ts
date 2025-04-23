@@ -8,7 +8,7 @@ export async function GET() {
 
     if (!connection?.accessToken || !connection.refreshToken) {
       console.error('Unauthorized: No valid connection found');
-      return [];
+      return NextResponse.json([], { status: 401 });
     }
 
     const driver = await createDriver(connection.providerId, {
@@ -22,6 +22,6 @@ export async function GET() {
     return NextResponse.json(aliases);
   } catch (error) {
     console.error('Error fetching email aliases:', error);
-    return NextResponse.json({ error: 'Failed to fetch email aliases' }, { status: 500 });
+    return NextResponse.json([], { status: 400 });
   }
 }

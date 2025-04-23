@@ -1,19 +1,14 @@
-import { throwUnauthorizedGracefully } from '../utils';
 import { headers } from 'next/headers';
 import type { Note } from './types';
 import { notesManager } from './db';
 import { auth } from '@/lib/auth';
 export type { Note } from './types';
 
-async function getCurrentUserId(): Promise<string> {
+async function getCurrentUserId() {
   try {
     const headersList = await headers();
     const session = await auth.api.getSession({ headers: headersList });
-
-    if (!session?.user?.id) {
-      return throwUnauthorizedGracefully() as never;
-    }
-    return session.user.id;
+    return session?.user.id ?? null;
   } catch (error) {
     console.error('Error getting current user ID:', error);
     throw new Error('Authentication failed');
@@ -24,7 +19,8 @@ export const notes = {
   async getThreadNotes(threadId: string): Promise<Note[]> {
     try {
       const userId = await getCurrentUserId();
-      return await notesManager.getThreadNotes(userId, threadId);
+      if (userId) return await notesManager.getThreadNotes(userId, threadId);
+      return [];
     } catch (error) {
       console.error(`Error getting thread notes for threadId ${threadId}:`, error);
       throw error;
@@ -36,10 +32,11 @@ export const notes = {
     content: string,
     color: string = 'default',
     isPinned: boolean = false,
-  ): Promise<Note> {
+  ) {
     try {
       const userId = await getCurrentUserId();
-      return await notesManager.createNote(userId, threadId, content, color, isPinned);
+      if (userId) return await notesManager.createNote(userId, threadId, content, color, isPinned);
+      return null;
     } catch (error) {
       console.error(`Error creating note in thread ${threadId}:`, error);
       throw error;
@@ -49,10 +46,11 @@ export const notes = {
   async updateNote(
     noteId: string,
     data: Partial<Omit<Note, 'id' | 'userId' | 'threadId' | 'createdAt' | 'updatedAt'>>,
-  ): Promise<Note> {
+  ) {
     try {
       const userId = await getCurrentUserId();
-      return await notesManager.updateNote(userId, noteId, data);
+      if (userId) return await notesManager.updateNote(userId, noteId, data);
+      return null;
     } catch (error) {
       console.error(`Error updating note ${noteId}:`, error);
       throw error;
@@ -62,7 +60,8 @@ export const notes = {
   async deleteNote(noteId: string): Promise<boolean> {
     try {
       const userId = await getCurrentUserId();
-      return await notesManager.deleteNote(userId, noteId);
+      if (userId) return await notesManager.deleteNote(userId, noteId);
+      return false;
     } catch (error) {
       console.error(`Error deleting note ${noteId}:`, error);
       throw error;
@@ -74,7 +73,8 @@ export const notes = {
   ): Promise<boolean> {
     try {
       const userId = await getCurrentUserId();
-      return await notesManager.reorderNotes(userId, notesArray);
+      if (userId) return await notesManager.reorderNotes(userId, notesArray);
+      return false;
     } catch (error) {
       console.error('Error reordering notes:', error);
       throw error;
