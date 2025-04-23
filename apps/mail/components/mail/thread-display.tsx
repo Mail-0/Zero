@@ -15,6 +15,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useParams } from 'next/navigation';
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { moveThreadsTo, ThreadDestination } from '@/lib/thread-actions';
 import { useThread, useThreads } from '@/hooks/use-threads';
@@ -34,7 +40,6 @@ import { ParsedMessage } from '@/types';
 import { Inbox } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { toast } from 'sonner';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface ThreadDisplayProps {
   threadParam?: any;
@@ -86,9 +91,6 @@ export function ThreadDemo({ messages, isMobile }: ThreadDisplayProps) {
               ))}
             </div>
           </ScrollArea>
-          <div className="relative flex-shrink-0 md:top-1">
-            <ReplyCompose />
-          </div>
         </div>
       </div>
     </div>
@@ -222,49 +224,6 @@ export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
     },
     [threadId, folder, mutateStats, mutateThreads, handleClose, t],
   );
-
-  const handleMarkAsUnread = useCallback(async () => {
-    if (!emailData || !threadId) return;
-
-    const promise = async () => {
-      const result = await markAsUnread({ ids: [threadId] });
-      if (!result.success) throw new Error('Failed to mark as unread');
-
-      setMail((prev) => ({ ...prev, bulkSelected: [] }));
-      await Promise.allSettled([mutateStats(), mutateThread()]);
-      handleClose();
-    };
-
-    toast.promise(promise(), {
-      loading: t('common.actions.markingAsUnread'),
-      success: t('common.mail.markedAsUnread'),
-      error: t('common.mail.failedToMarkAsUnread'),
-    });
-  }, [emailData, threadId, t]);
-
-  const handleFavourites = async () => {
-    if (!emailData || !threadId) return;
-    const done = Promise.all([mutateThreads()]);
-    if (emailData.latest?.tags?.includes('STARRED')) {
-      toast.promise(
-        modifyLabels({ threadId: [threadId], removeLabels: ['STARRED'] }).then(() => done),
-        {
-          success: t('common.actions.removedFromFavorites'),
-          loading: t('common.actions.removingFromFavorites'),
-          error: t('common.actions.failedToRemoveFromFavorites'),
-        },
-      );
-    } else {
-      toast.promise(
-        modifyLabels({ threadId: [threadId], addLabels: ['STARRED'] }).then(() => done),
-        {
-          success: t('common.actions.addedToFavorites'),
-          loading: t('common.actions.addingToFavorites'),
-          error: t('common.actions.failedToAddToFavorites'),
-        },
-      );
-    }
-  };
 
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {

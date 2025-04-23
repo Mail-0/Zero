@@ -1,12 +1,5 @@
-import {
-  processIP,
-  getRatelimitModule,
-  checkRateLimit,
-  getAuthenticatedUserId,
-  throwUnauthorizedGracefully,
-} from '../../utils';
+import { processIP, getRatelimitModule, checkRateLimit, getAuthenticatedUserId } from '../../utils';
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchThreadNotes } from '@/actions/notes';
 import { Ratelimit } from '@upstash/ratelimit';
 import { notesManager } from '../../notes/db';
 
@@ -31,6 +24,7 @@ export const GET = async (req: NextRequest) => {
       return NextResponse.json({ error: 'Missing threadId' }, { status: 400 });
     }
 
+    if (!userId) return NextResponse.json([], { status: 401 });
     const notes = await notesManager.getThreadNotes(userId, searchParams.get('threadId')!);
 
     return NextResponse.json(notes, {
@@ -39,7 +33,8 @@ export const GET = async (req: NextRequest) => {
     });
   } catch (error) {
     console.warn('Error getting thread notes:', error);
-    await throwUnauthorizedGracefully();
-    return NextResponse.json([]);
+    return NextResponse.json([], {
+      status: 400,
+    });
   }
 };

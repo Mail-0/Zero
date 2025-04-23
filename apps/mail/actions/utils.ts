@@ -1,6 +1,5 @@
-import { throwUnauthorizedGracefully } from '@/app/api/utils';
+import { account, connection } from '@zero/db/schema';
 import { createDriver } from '@/app/api/driver';
-import { connection } from '@zero/db/schema';
 import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 import { and, eq } from 'drizzle-orm';
@@ -12,19 +11,22 @@ export const FatalErrors = ['invalid_grant'];
 export const deleteActiveConnection = async () => {
   const headersList = await headers();
   const session = await auth.api.getSession({ headers: headersList });
-  if (!session || !session.connectionId) {
-    throw throwUnauthorizedGracefully();
-  }
-
-  try {
-    await db
-      .delete(connection)
-      .where(and(eq(connection.userId, session.user.id), eq(connection.id, session.connectionId)));
-    console.log('Server: Successfully deleted connection, please reload');
-    return revalidatePath('/mail');
-  } catch (error) {
-    console.error('Server: Error deleting connection:', error);
-    throw error;
+  if (session?.connectionId) {
+    try {
+      console.log('Server: Successfully deleted connection, please reload');
+      await auth.api.signOut({ headers: headersList });
+      await db
+        .delete(connection)
+        .where(
+          and(eq(connection.userId, session.user.id), eq(connection.id, session.connectionId)),
+        );
+      return revalidatePath('/mail/inbox');
+    } catch (error) {
+      console.error('Server: Error deleting connection:', error);
+      throw error;
+    }
+  } else {
+    console.log('No connection ID found');
   }
 };
 
@@ -33,7 +35,7 @@ export const getActiveDriver = async () => {
   const session = await auth.api.getSession({ headers: headersList });
 
   if (!session || !session.connectionId) {
-    throw throwUnauthorizedGracefully();
+    throw new Error('Invalid session');
   }
 
   const [_connection] = await db
@@ -42,11 +44,11 @@ export const getActiveDriver = async () => {
     .where(and(eq(connection.userId, session.user.id), eq(connection.id, session.connectionId)));
 
   if (!_connection) {
-    throw throwUnauthorizedGracefully();
+    throw new Error('Invalid connection');
   }
 
   if (!_connection.accessToken || !_connection.refreshToken) {
-    throw throwUnauthorizedGracefully();
+    throw new Error('Invalid connection');
   }
 
   const driver = await createDriver(_connection.providerId, {
@@ -64,8 +66,8 @@ export const getActiveConnection = async () => {
   const headersList = await headers();
 
   const session = await auth.api.getSession({ headers: headersList });
-  if (!session?.user) throw throwUnauthorizedGracefully();
-  if (!session.connectionId) throw throwUnauthorizedGracefully();
+  if (!session?.user) return null;
+  if (!session.connectionId) return null;
 
   const [_connection] = await db
     .select()
