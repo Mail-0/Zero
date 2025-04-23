@@ -1,10 +1,4 @@
-import {
-  processIP,
-  getRatelimitModule,
-  checkRateLimit,
-  getAuthenticatedUserId,
-  throwUnauthorizedGracefully,
-} from '../../utils';
+import { processIP, getRatelimitModule, checkRateLimit, getAuthenticatedUserId } from '../../utils';
 import { NextRequest, NextResponse } from 'next/server';
 import { Ratelimit } from '@upstash/ratelimit';
 import { connection } from '@zero/db/schema';
@@ -28,6 +22,7 @@ export const GET = async (req: NextRequest) => {
       );
     }
 
+    if (!userId) return NextResponse.json([], { status: 401 });
     const connections = (await db
       .select({
         id: connection.id,
@@ -44,7 +39,8 @@ export const GET = async (req: NextRequest) => {
       headers,
     });
   } catch (error) {
-    console.warn('Error getting connections:', error);
-    return throwUnauthorizedGracefully(req);
+    return NextResponse.json([], {
+      status: 400,
+    });
   }
 };

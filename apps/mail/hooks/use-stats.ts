@@ -1,6 +1,5 @@
 'use client';
 import { useSession } from '@/lib/auth-client';
-import { mailCount } from '@/actions/mail';
 import axios from 'axios';
 import useSWR from 'swr';
 

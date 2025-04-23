@@ -1,10 +1,4 @@
-import {
-  checkRateLimit,
-  getAuthenticatedUserId,
-  getRatelimitModule,
-  processIP,
-  throwUnauthorizedGracefully,
-} from '../../utils';
+import { checkRateLimit, getAuthenticatedUserId, getRatelimitModule, processIP } from '../../utils';
 import { type NextRequest, NextResponse } from 'next/server';
 import { getActiveDriver } from '@/actions/utils';
 import { Ratelimit } from '@upstash/ratelimit';
@@ -32,6 +26,8 @@ export const GET = async (req: NextRequest) => {
     });
   } catch (error) {
     console.warn('Error getting count:', error);
-    return throwUnauthorizedGracefully(req);
+    return NextResponse.json([], {
+      status: 400,
+    });
   }
 };

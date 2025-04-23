@@ -1,6 +1,5 @@
 'use server';
 
-import { throwUnauthorizedGracefully } from '@/app/api/utils';
 import { createDriver } from '@/app/api/driver';
 import { getActiveConnection } from './utils';
 import { Sender } from '@/types';
@@ -33,7 +32,7 @@ export async function sendEmail({
   const connection = await getActiveConnection();
 
   if (!connection?.accessToken || !connection.refreshToken) {
-    return throwUnauthorizedGracefully() as never;
+    return null;
   }
 
   const driver = await createDriver(connection.providerId, {

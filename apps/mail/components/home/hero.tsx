@@ -89,10 +89,9 @@ export default function Hero({ title }: { title: ReactNode }) {
   return (
     <div className="animate-fade-in mx-auto w-full pt-20 md:px-0 md:pt-20">
       {title}
-      <div className="mx-auto w-full max-w-4xl">
+      <div className="mx-auto flex w-full max-w-4xl justify-center">
         <Balancer className="dark:text-shinyGray mx-auto mt-3 text-center text-[15px] leading-tight text-gray-600 sm:text-[22px]">
-          Zero is an AI native email client that manages your email so you don't have to. The first
-          open source email app that puts your privacy and safety first.
+          Zero is an AI native email client that manages your email so you don't have to.
         </Balancer>
       </div>
 

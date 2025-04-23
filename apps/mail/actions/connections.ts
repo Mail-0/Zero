@@ -1,8 +1,7 @@
 'use server';
 
-import { getAuthenticatedUserId, throwUnauthorizedGracefully } from '@/app/api/utils';
+import { getAuthenticatedUserId } from '@/app/api/utils';
 import { connection, user } from '@zero/db/schema';
-import { type IConnection } from '@/types';
 import { headers } from 'next/headers';
 import { and, eq } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
@@ -14,13 +13,13 @@ export async function deleteConnection(connectionId: string) {
     const session = await auth.api.getSession({ headers: headersList });
 
     if (!session) {
-      return throwUnauthorizedGracefully() as never;
+      return { success: false, error: 'Session not found' };
     }
 
     const userId = session?.user?.id;
 
     if (!userId) {
-      return throwUnauthorizedGracefully() as never;
+      return { success: false, error: 'User not found' };
     }
 
     await db
@@ -42,18 +41,8 @@ export async function deleteConnection(connectionId: string) {
 
 export async function putConnection(connectionId: string) {
   try {
-    const headersList = await headers();
-    const session = await auth.api.getSession({ headers: headersList });
-
-    if (!session) {
-      return throwUnauthorizedGracefully() as never;
-    }
-
-    const userId = session?.user?.id;
-
-    if (!userId) {
-      return throwUnauthorizedGracefully() as never;
-    }
+    const userId = await getAuthenticatedUserId();
+    if (!userId) return { success: false, error: 'User not found' };
 
     const [foundConnection] = await db
       .select()
@@ -62,7 +51,7 @@ export async function putConnection(connectionId: string) {
       .limit(1);
 
     if (!foundConnection) {
-      throw new Error('Connection not found');
+      return { success: false, error: 'Connection not found' };
     }
 
     await db
@@ -75,6 +64,6 @@ export async function putConnection(connectionId: string) {
     return { success: true };
   } catch (error) {
     console.error('Failed to update connection:', error);
-    throw new Error('Failed to update connection');
+    return { success: false, error: String(error) };
   }
 }
