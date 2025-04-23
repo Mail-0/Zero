@@ -163,6 +163,11 @@ export const navigationConfig: Record<string, NavConfig> = {
             icon: SparklesIcon,
           },
           {
+            title: 'navigation.settings.labels',
+            url: '/settings/labels',
+            icon: SparklesIcon,
+          },
+          {
             title: 'navigation.settings.signatures',
             url: '/settings/signatures',
             icon: MessageSquareIcon,

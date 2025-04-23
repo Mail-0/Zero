@@ -8,6 +8,7 @@ import SecurityPage from '../security/page';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import GeneralPage from '../general/page';
+import LabelsPage from '../labels/page';
 
 const settingsPages: Record<string, React.ComponentType> = {
   general: GeneralPage,
@@ -16,6 +17,7 @@ const settingsPages: Record<string, React.ComponentType> = {
   appearance: AppearancePage,
   shortcuts: ShortcutsPage,
   notifications: NotificationsPage,
+  labels: LabelsPage,
 };
 
 export default function SettingsPage() {
