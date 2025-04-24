@@ -1,8 +1,19 @@
 {
   "name": "zero",
   "version": "0.1.0",
-  "private": true,
+  "devDependencies": {
+    "@types/node": "22.13.8",
+    "@zero/tsconfig": "workspace:*",
+    "dotenv-cli": "^8.0.0",
+    "husky": "9.1.7",
+    "prettier": "3.5.3",
+    "prettier-plugin-sort-imports": "1.8.6",
+    "prettier-plugin-tailwindcss": "0.6.11",
+    "turbo": "^2.5.0",
+    "typescript": "5.8.2"
+  },
   "packageManager": "bun@1.2.5",
+  "private": true,
   "scripts": {
     "prepare": "husky",
     "dev": "dotenv -- turbo run dev",
@@ -21,22 +32,8 @@
     "db:push": "dotenv -- turbo run db:push",
     "db:studio": "dotenv -- turbo run db:studio"
   },
-  "devDependencies": {
-    "@types/node": "22.13.8",
-    "@zero/tsconfig": "workspace:*",
-    "dotenv-cli": "^8.0.0",
-    "husky": "9.1.7",
-    "prettier": "3.5.3",
-    "prettier-plugin-sort-imports": "1.8.6",
-    "prettier-plugin-tailwindcss": "0.6.11",
-    "turbo": "^2.5.0",
-    "typescript": "5.8.2"
-  },
   "workspaces": [
     "apps/*",
     "packages/*"
-  ],
-  "dependencies": {
-    "posthog-js": "^1.236.5"
-  }
+  ]
 }
