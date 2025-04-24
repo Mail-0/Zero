@@ -913,6 +913,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       return withErrorHandler(
         'createDraft',
         async () => {
+          const message = data.message.replace(/<br>/g, '</p><p>');
           const msg = createMimeMessage();
           msg.setSender('me');
           msg.setTo(data.to);
@@ -923,7 +924,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
           msg.setSubject(data.subject);
           msg.addMessage({
             contentType: 'text/html',
-            data: data.message || '',
+            data: message || '',
           });
 
           if (data.attachments?.length > 0) {
