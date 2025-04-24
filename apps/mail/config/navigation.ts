@@ -75,7 +75,7 @@ export const navigationConfig: Record<string, NavConfig> = {
             icon: ArchiveIcon,
           },
           {
-            id: 'bin',
+            id: 'trash',
             title: 'navigation.sidebar.bin',
             url: '/mail/bin',
             icon: DeleteIcon,
