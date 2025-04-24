@@ -1023,6 +1023,18 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
         id: id,
       });
     },
+    revokeRefreshToken: async (refreshToken: string) => {
+      if (!refreshToken) {
+        return false;
+      }
+      try {
+        await auth.revokeToken(refreshToken);
+        return true;
+      } catch (error: any) {
+        console.error('Failed to revoke Google token:', error.message);
+        return false;
+      }
+    },
   };
 
   return manager;

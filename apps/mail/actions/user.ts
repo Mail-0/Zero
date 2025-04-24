@@ -1,10 +1,7 @@
 'use server';
 
-import { connection, user } from '@zero/db/schema';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
-import { eq } from 'drizzle-orm';
-import { db } from '@zero/db';
 
 export async function deleteUser() {
   const headersList = await headers();
@@ -18,17 +15,10 @@ export async function deleteUser() {
 
   const { success, message } = await auth.api.deleteUser({
     body: {
-      callbackURL: '/login',
+      callbackURL: '/',
     },
     headers: headersList,
   });
-
-  if (success) {
-    await db.delete(connection).where(eq(connection.userId, userId));
-    await db.delete(user).where(eq(user.id, userId));
-
-    await auth.api.signOut({ headers: headersList });
-  }
 
   return { success, message };
 }

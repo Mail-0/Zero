@@ -18,9 +18,10 @@ import {
 } from '@/components/ui/form';
 import { SettingsCard } from '@/components/settings/settings-card';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { AlertTriangle, Route } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { AlertTriangle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { deleteUser } from '@/actions/user';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
@@ -40,6 +41,7 @@ function DeleteAccountDialog() {
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const t = useTranslations();
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -57,6 +59,7 @@ function DeleteAccountDialog() {
         return;
       }
       toast.success('Account deleted successfully');
+      router.push('/');
       setIsOpen(false);
     } catch (error) {
       console.error('Failed to delete account:', error);
