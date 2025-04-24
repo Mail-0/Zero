@@ -559,14 +559,29 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       );
     },
     getScope,
-    getUserInfo: (tokens: IConfig['auth']) => {
+    getUserInfo: async (tokens: IConfig['auth']) => {
       return withErrorHandler(
         'getUserInfo',
-        () => {
+        async () => {
           auth.setCredentials({ ...tokens, scope: getScope() });
-          return google
+          const response = await google
             .people({ version: 'v1', auth })
             .people.get({ resourceName: 'people/me', personFields: 'names,photos,emailAddresses' });
+          
+          // Extract email from emailAddresses array
+          const email = response.data.emailAddresses?.[0]?.value || null;
+          
+          // Extract name from names array
+          const name = response.data.names?.[0]?.displayName || null;
+          
+          // Extract photo URL from photos array
+          const photo = response.data.photos?.[0]?.url || null;
+          
+          return {
+            address: email,
+            name: name,
+            photo: photo,
+          };
         },
         { tokens },
       );
