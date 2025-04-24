@@ -607,44 +607,46 @@ export function CreateEmail({
                   />
                 )}
 
-                <div className="flex items-center">
-                  <div className="text-muted-foreground w-20 flex-shrink-0 pr-3 text-right text-[1rem] font-[600] opacity-50 md:w-24">
-                    {t('common.searchBar.from')}
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-between text-left font-normal"
-                        disabled={isLoadingAliases || isLoading}
+                {aliases && aliases.length > 1 && (
+                  <div className="flex items-center">
+                    <div className="text-muted-foreground w-20 flex-shrink-0 pr-3 text-right text-[1rem] font-[600] opacity-50 md:w-24">
+                      {t('common.searchBar.from')}
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-between text-left font-normal"
+                          disabled={isLoadingAliases || isLoading}
+                        >
+                          <span>{selectedFromEmail || aliases?.[0]?.email || userEmail}</span>
+                          <ChevronDown className="h-4 w-4 opacity-50" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        className="w-[var(--radix-dropdown-trigger-width)]"
+                        align="start"
                       >
-                        <span>{selectedFromEmail || aliases?.[0]?.email || userEmail}</span>
-                        <ChevronDown className="h-4 w-4 opacity-50" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      className="w-[var(--radix-dropdown-trigger-width)]"
-                      align="start"
-                    >
-                      {isLoadingAliases ? (
-                        <div className="px-2 py-1 text-center text-sm">Loading...</div>
-                      ) : aliases && aliases.length > 0 ? (
-                        aliases.map((alias) => (
-                          <DropdownMenuItem
-                            key={alias.email}
-                            onClick={() => setSelectedFromEmail(alias.email)}
-                            className="cursor-pointer"
-                          >
-                            {alias.name ? `${alias.name} <${alias.email}>` : alias.email}
-                            {alias.primary && ' (Primary)'}
-                          </DropdownMenuItem>
-                        ))
-                      ) : (
-                        <div className="px-2 py-1 text-center text-sm">{userEmail}</div>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+                        {isLoadingAliases ? (
+                          <div className="px-2 py-1 text-center text-sm">Loading...</div>
+                        ) : aliases && aliases.length > 0 ? (
+                          aliases.map((alias) => (
+                            <DropdownMenuItem
+                              key={alias.email}
+                              onClick={() => setSelectedFromEmail(alias.email)}
+                              className="cursor-pointer"
+                            >
+                              {alias.name ? `${alias.name} <${alias.email}>` : alias.email}
+                              {alias.primary && ' (Primary)'}
+                            </DropdownMenuItem>
+                          ))
+                        ) : (
+                          <div className="px-2 py-1 text-center text-sm">{userEmail}</div>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                )}
 
                 <div className="flex items-center">
                   <div className="text-muted-foreground w-20 flex-shrink-0 pr-3 text-right text-[1rem] font-[600] opacity-50 md:w-24">
