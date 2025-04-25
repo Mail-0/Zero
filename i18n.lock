@@ -19,6 +19,9 @@ checksums:
     common/actions/movingToInbox: 6ed6d10efa5858a3631d89cb5f00d238
     common/actions/movedToSpam: daec566f29b9f53f9a52f7c789cf305c
     common/actions/movingToSpam: 6f72275c731f9159ecc5a7d46b908c8c
+    common/actions/deletingMail: 101a9b9e18992289b88823fecf0616bd
+    common/actions/failedToDeleteMail: c54c5dd8bc5b6037f5142b187a9c1b35
+    common/actions/deletedMail: 6ed845566bc1e84d636a88d3e4788550
     common/actions/archiving: 55a5ce6fc03a5bd9be92c0e3182a2b75
     common/actions/archived: cf5127ecfd7e43a35466a1ba5fe16450
     common/actions/failedToMove: 29672fc2a832d1e41dfa4aec2ef4136e
@@ -217,6 +220,7 @@ checksums:
     common/mail/mute: 3ade14017ee6826e52a7e9fa75a54852
     common/mail/moveToSpam: e06d86eee5c8c14a347764d7dd7c2f0d
     common/mail/moveToInbox: 75b5f96eeba8305782ae5dc684ea4355
+    common/mail/deleteFromBin: 116802933c93b87c23323885d2cfc61a
     common/mail/unarchive: 671fc7e9d7c8cb4d182a25a46551c168
     common/mail/archive: fa813ab3074103e5daad07462af25789
     common/mail/moveToBin: 0a1bbf5cacd49c0b7c770d35dac8b5fa
