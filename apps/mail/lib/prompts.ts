@@ -153,10 +153,6 @@ export const EmailAssistantPrompt = ({
     currentSubject?: string,
     currentDraft?: string,
     recipients?: string[]
-    conversationHistory?: {
-        role: 'user' | 'assistant' | 'system',
-        content: string,
-    }[]
     prompt: string,
 }) => {
     const currentSubjectContent = currentSubject ? `\n\n<current_subject>${currentSubject}</current_subject>\n\n` : '';
