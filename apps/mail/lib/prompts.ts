@@ -148,7 +148,6 @@ export const EmailAssistantPrompt = ({
     currentSubject,
     currentDraft,
     recipients,
-    conversationHistory = [],
     prompt,
 }: {
     currentSubject?: string,
@@ -172,19 +171,11 @@ export const EmailAssistantPrompt = ({
     </dynamic_context>
     \n\n`;
 
-    // conversation history without enclosing
-    const conversationHistoryString = conversationHistory
-      .map((msg) => `<message role="${msg.role}">${msg.content}</message>`)
-      .join('\n');
-    // add the prompt as a role user message
-    const conversationHistoryWithPrompt = conversationHistoryString + `\n<message role="user">${prompt}</message>`;
-    // wrap in conversation history tags
-    const conversationHistoryWithPromptWrapped = `<conversation_history>\n${conversationHistoryWithPrompt}\n</conversation_history>`;
+    const promptMessage = `\n<message role="user">${prompt}</message>`;
 
     return `
         ${dynamicContext}
-        
-        ${conversationHistory}
+        ${promptMessage}
     `
 
 }

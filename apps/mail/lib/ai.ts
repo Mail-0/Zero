@@ -86,7 +86,6 @@ export const generateEmailBody = async ({
       currentSubject: subject,
       currentDraft: currentContent,
       recipients,
-      conversationHistory: conversationHistories[userId]?.[conversationId] ?? [],
       prompt,
     })
 
