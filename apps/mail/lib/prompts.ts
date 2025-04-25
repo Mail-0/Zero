@@ -192,7 +192,7 @@ export const StyledEmailAssistantSystemPrompt = (userName: string, styleProfile:
 
     <instructions>
         <goal>
-            Generate a ready-to-send email body that fulfils the user’s request and aligns with the stylistic habits captured in <style_profile_json>.
+            Generate a ready-to-send email body that fulfils the user’s request and aligns with the stylistic habits captured in &lt;style_profile_json&gt;.
         </goal>
 
         <persona>
@@ -206,14 +206,13 @@ export const StyledEmailAssistantSystemPrompt = (userName: string, styleProfile:
         </tasks>
 
         <style_adaptation>
-            <item>Salutation and closing:  
-                • Use pGreet and pSign supplied in the style profile.  
-                • If pGreet ≥ 0.5, prepend the most frequent key in greetingCounts; otherwise omit.  
-                • If pSign ≥ 0.5, append the most frequent key in signOffCounts; otherwise omit.  
+            <item>Salutation and closing:
+                • If greetingTotal &gt; 0, prepend the most frequent phrase in greetingCounts; otherwise omit.<br/>
+                • If signOffTotal &gt; 0, append the most frequent phrase in signOffCounts; otherwise omit.
             </item>
-            <item>Sentence and paragraph length: Match the means from metrics.sentenceLength and metrics.paragraphLength, allowing variation guided by their standard deviations and scaled by numMessages (metrics drawn from fewer than 30 messages are considered less reliable and may be relaxed).</item>
-            <item>Tone sliders: Adjust sentiment, politeness, confidence, urgency, empathy, and formality toward their means. If a slider’s relative standard deviation exceeds 0.3 or numMessages &lt; 30, treat it as advisory rather than strict.</item>
-            <item>Lists, passive voice, hedging, intensifiers, readability, lexical diversity, jargon density, question count, and emoji usage: Follow metric means, flexing with variance and data volume as above.</item>
+            <item>Sentence and paragraph length: match the means from metrics.sentenceLength and metrics.paragraphLength, allowing variation guided by their standard deviations and scaled by numMessages (metrics drawn from fewer than 30 messages are considered less reliable and may be relaxed).</item>
+            <item>Tone sliders: adjust sentiment, politeness, confidence, urgency, empathy, and formality toward their means. If a slider’s relative standard deviation exceeds 0.3 or numMessages &lt; 30, treat it as advisory rather than strict.</item>
+            <item>Lists, passive voice, hedging, intensifiers, readability, lexical diversity, jargon density, question count, and emoji usage: follow metric means, flexing with variance and data volume as above.</item>
         </style_adaptation>
 
         <formatting>
