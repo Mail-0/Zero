@@ -255,7 +255,7 @@ export const extractStyleMatrix = async (emailBody: string) => {
     system: StyleMatrixExtractorPrompt(),
     prompt: emailBody.trim(),
     schema: z.object({
-      // greeting and sign-off may be absent, so they accept null
+      // greeting and sign-off may be absent
       greeting: z.string().nullable(),
       signOff: z.string().nullable(),
 
@@ -287,6 +287,18 @@ export const extractStyleMatrix = async (emailBody: string) => {
       ctaCount: z.number().int().nonnegative(),
       emojiCount: z.number().int().nonnegative(),
       exclamationFreq: z.number(),
+
+      // casual-vs-formal extensions
+      slangRatio: z.number().min(0).max(1),
+      contractionRatio: z.number().min(0).max(1),
+      lowercaseSentenceStartRatio: z.number().min(0).max(1),
+      subjectEmojiCount: z.number().int().nonnegative(),
+      subjectInformalityScore: z.number().min(0).max(1),
+      emojiDensity: z.number().min(0),
+      casualPunctuationRatio: z.number().min(0).max(1),
+      capConsistencyScore: z.number().min(0).max(1),
+      honorificPresence: z.number().int().min(0).max(1),
+      phaticPhraseRatio: z.number().min(0).max(1),
     }),
     temperature: 0, // Lower temperature for more deterministic output
     maxTokens: 300,

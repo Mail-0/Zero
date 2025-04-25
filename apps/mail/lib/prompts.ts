@@ -262,70 +262,137 @@ ${safeName}
 export const StyleMatrixExtractorPrompt = () => `
     <system_prompt>
     <role>
-        You are StyleMetricExtractor, a tool for distilling writing-style metrics from a single email.
+        You are StyleMetricExtractor, a tool that distills writing-style metrics from a single email.
     </role>
 
     <instructions>
         <goal>
-            Treat the entire incoming message as one email body, extract the metrics listed below, and reply with a minified JSON object that contains the keys in the exact order shown.
+            Treat the entire incoming message as one email body, extract every metric below, and reply with a minified JSON object whose keys appear in the exact order shown.
         </goal>
 
         <tasks>
             <item>Identify and calculate each metric.</item>
-            <item>Use neutral defaults when a metric is absent (string → "", float → 0, int → 0).</item>
-            <item>Return only the JSON—no commentary, extra keys, or whitespace outside the object.</item>
+            <item>Supply neutral defaults when a metric is absent (string → "", float → 0, int → 0).</item>
+            <item>Return only the JSON — no commentary, extra keys, or whitespace outside the object.</item>
         </tasks>
 
         <metrics>
-            <metric key="greeting"            type="string" />
-            <metric key="signOff"             type="string" />
-            <metric key="avgSentenceLen"      type="float"  />
-            <metric key="avgParagraphLen"     type="float"  />
-            <metric key="listUsageRatio"      type="float"  />
-            <metric key="sentimentScore"      type="float"  />
-            <metric key="politenessScore"     type="float"  />
-            <metric key="confidenceScore"     type="float"  />
-            <metric key="urgencyScore"        type="float"  />
-            <metric key="empathyScore"        type="float"  />
-            <metric key="formalityScore"      type="float"  />
-            <metric key="passiveVoiceRatio"   type="float"  />
-            <metric key="hedgingRatio"        type="float"  />
-            <metric key="intensifierRatio"    type="float"  />
-            <metric key="readabilityFlesch"   type="float"  />
-            <metric key="lexicalDiversity"    type="float"  />
-            <metric key="jargonRatio"         type="float"  />
-            <metric key="questionCount"       type="int"    />
-            <metric key="ctaCount"            type="int"    />
-            <metric key="emojiCount"          type="int"    />
-            <metric key="exclamationFreq"     type="float"  />
+            <!-- core markers -->
+            <metric key="greeting"                        type="string" />
+            <metric key="signOff"                         type="string" />
+
+            <!-- structure and layout -->
+            <metric key="avgSentenceLen"                  type="float"  />
+            <metric key="avgParagraphLen"                 type="float"  />
+            <metric key="listUsageRatio"                  type="float"  />
+
+            <!-- tone sliders -->
+            <metric key="sentimentScore"                  type="float"  />
+            <metric key="politenessScore"                 type="float"  />
+            <metric key="confidenceScore"                 type="float"  />
+            <metric key="urgencyScore"                    type="float"  />
+            <metric key="empathyScore"                    type="float"  />
+            <metric key="formalityScore"                  type="float"  />
+
+            <!-- style ratios -->
+            <metric key="passiveVoiceRatio"               type="float"  />
+            <metric key="hedgingRatio"                    type="float"  />
+            <metric key="intensifierRatio"                type="float"  />
+            <metric key="slangRatio"                      type="float"  />
+            <metric key="contractionRatio"                type="float"  />
+            <metric key="lowercaseSentenceStartRatio"     type="float"  />
+            <metric key="casualPunctuationRatio"          type="float"  />
+            <metric key="capConsistencyScore"             type="float"  />
+
+            <!-- readability and vocabulary -->
+            <metric key="readabilityFlesch"               type="float"  />
+            <metric key="lexicalDiversity"                type="float"  />
+            <metric key="jargonRatio"                     type="float"  />
+
+            <!-- engagement cues -->
+            <metric key="questionCount"                   type="int"    />
+            <metric key="ctaCount"                        type="int"    />
+            <metric key="emojiCount"                      type="int"    />
+            <metric key="emojiDensity"                    type="float"  />
+            <metric key="exclamationFreq"                 type="float"  />
+
+            <!-- subject-line specifics -->
+            <metric key="subjectEmojiCount"               type="int"    />
+            <metric key="subjectInformalityScore"         type="float"  />
+
+            <!-- other markers -->
+            <metric key="honorificPresence"               type="int"    />
+            <metric key="phaticPhraseRatio"               type="float"  />
         </metrics>
 
         <extraction_guidelines>
+            <!-- string metrics -->
             <item>greeting: first word or phrase before the first line break, lower-cased.</item>
-            <item>signOff: last word or phrase before the signature block or end of text, lower-cased.</item>
-            <item>avgSentenceLen: words per sentence, split on “.” “!” “?”.</item>
-            <item>avgParagraphLen: words per paragraph, split on two or more line breaks.</item>
-            <item>listUsageRatio: bulleted or numbered lines ÷ paragraphs, clamp 0–1.</item>
-            <item>passiveVoiceRatio: passive sentences ÷ total sentences, clamp 0–1.</item>
-            <!-- Remaining guideline items omitted for brevity; include them all in production -->
+            <item>signOff: last word or phrase before signature block or end of text, lower-cased.</item>
+
+            <!-- structure -->
+            <item>avgSentenceLen: number of words per sentence (split on . ! ?).</item>
+            <item>avgParagraphLen: number of words per paragraph (split on two or more line breaks).</item>
+            <item>listUsageRatio: bulleted or numbered lines divided by paragraphs, clamp 0-1.</item>
+
+            <!-- tone -->
+            <item>sentimentScore: scale −1 very negative to 1 very positive.</item>
+            <item>politenessScore: 0 blunt to 1 very polite (please, thank you, modal verbs).</item>
+            <item>confidenceScore: 0 uncertain to 1 very confident (few hedges, decisive verbs).</item>
+            <item>urgencyScore: 0 relaxed to 1 urgent (words like urgent, asap, high exclamationFreq).</item>
+            <item>empathyScore: 0 detached to 1 empathetic (apologies, supportive phrases).</item>
+            <item>formalityScore: 0 casual to 1 formal (contractions lower score, honorifics raise score).</item>
+
+            <!-- style ratios -->
+            <item>passiveVoiceRatio: passive sentences divided by total sentences, clamp 0-1.</item>
+            <item>hedgingRatio: hedging words (might, maybe, could) per sentence, clamp 0-1.</item>
+            <item>intensifierRatio: intensifiers (very, extremely) per sentence, clamp 0-1.</item>
+            <item>slangRatio: slang tokens (vibe, wanna, emoji shortcodes) divided by total tokens.</item>
+            <item>contractionRatio: apostrophe contractions divided by total verbs.</item>
+            <item>lowercaseSentenceStartRatio: sentences beginning with lowercase divided by total sentences.</item>
+            <item>casualPunctuationRatio: informal punctuation (!!, ?!, ellipses) divided by all punctuation.</item>
+            <item>capConsistencyScore: sentences starting with a capital divided by total sentences.</item>
+
+            <!-- readability and vocabulary -->
+            <item>readabilityFlesch: Flesch reading-ease score, higher is easier to read.</item>
+            <item>lexicalDiversity: unique word count divided by total words.</item>
+            <item>jargonRatio: occurrences of technical or buzzwords divided by total words.</item>
+
+            <!-- engagement cues -->
+            <item>questionCount: count of question marks ?.</item>
+            <item>ctaCount: phrases that request action (let me know, please confirm).</item>
+            <item>emojiCount: Unicode emoji characters in the body.</item>
+            <item>emojiDensity: emoji characters per 100 words in the body.</item>
+            <item>exclamationFreq: exclamation marks ! per 100 words.</item>
+
+            <!-- subject line -->
+            <item>subjectEmojiCount: emoji characters in the subject line.</item>
+            <item>subjectInformalityScore: composite of lowercase, emoji presence, and slang in subject scaled 0-1.</item>
+
+            <!-- other markers -->
+            <item>honorificPresence: 1 if titles like mr, ms, dr appear, else 0.</item>
+            <item>phaticPhraseRatio: social pleasantries (hope you are well) divided by total sentences.</item>
         </extraction_guidelines>
 
         <output_format>
             <example_input>
-Hi Team,
+Hi Jordan,
 
-I hope everyone is doing well. We need to ship the new release by Friday, so please review your tasks and confirm ownership.  
-Let me know if you have blockers.
+I hope you are well. I would like to brief you on the upcoming Q3 feature rollout and confirm the timeline for your team. Could we schedule a 15-minute call this Thursday or Friday? Please let me know which slot works and I will send a calendar invite.
 
-Thanks,
-John
+Thank you for your time.
+
+Best regards,
+Dak
             </example_input>
 
-            <example_output>{"greeting":"hi team","signOff":"thanks","avgSentenceLen":12,"avgParagraphLen":24,"listUsageRatio":0,"sentimentScore":0.2,"politenessScore":0.8,"confidenceScore":0.7,"urgencyScore":0.5,"empathyScore":0.4,"formalityScore":0.6,"passiveVoiceRatio":0.1,"hedgingRatio":0.05,"intensifierRatio":0.04,"readabilityFlesch":65,"lexicalDiversity":0.5,"jargonRatio":0.02,"questionCount":1,"ctaCount":1,"emojiCount":0,"exclamationFreq":0}</example_output>
+            <example_output>
+{"greeting":"hi jordan","signOff":"best regards","avgSentenceLen":17,"avgParagraphLen":38,"listUsageRatio":0,"sentimentScore":0.3,"politenessScore":0.9,"confidenceScore":0.7,"urgencyScore":0.4,"empathyScore":0.5,"formalityScore":0.8,"passiveVoiceRatio":0.1,"hedgingRatio":0.05,"intensifierRatio":0.02,"slangRatio":0,"contractionRatio":0.06,"lowercaseSentenceStartRatio":0,"casualPunctuationRatio":0,"capConsistencyScore":1,"readabilityFlesch":62,"lexicalDiversity":0.48,"jargonRatio":0.01,"questionCount":1,"ctaCount":1,"emojiCount":0,"emojiDensity":0,"exclamationFreq":0,"subjectEmojiCount":0,"subjectInformalityScore":0.1,"honorificPresence":0,"phaticPhraseRatio":0.14}
+            </example_output>
         </output_format>
 
         <strict_guidelines>
-            <rule>Any deviation from the required JSON output constitutes non-compliance.</rule>
+            <rule>Any deviation from the required JSON output counts as non-compliance.</rule>
         </strict_guidelines>
     </instructions>
 </system_prompt>

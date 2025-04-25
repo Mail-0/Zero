@@ -4,30 +4,42 @@ import { writingStyleMatrix } from '@zero/db/schema';
 import { mapToObj, pipe, entries, sortBy, take, fromEntries, sum, values, takeWhile } from 'remeda';
 import { eq } from 'drizzle-orm';
 
+// leaving these in here for testing between them
+// (switching to `k` will surely truncate what `coverage` was keeping)
 const TAKE_TOP_COVERAGE = 0.95
 const TAKE_TOP_K = 10
 const TAKE_TYPE: 'coverage' | 'k' = 'coverage'
 
 const METRIC_KEYS = [
-  'avgSentenceLen',
-  'avgParagraphLen',
-  'listUsageRatio',
-  'passiveVoiceRatio',
-  'sentimentScore',
-  'politenessScore',
-  'confidenceScore',
-  'urgencyScore',
-  'empathyScore',
-  'formalityScore',
-  'hedgingRatio',
-  'intensifierRatio',
-  'readabilityFlesch',
-  'lexicalDiversity',
-  'jargonRatio',
-  'exclamationFreq',
-  'emojiCount',
-  'questionCount',
-  'ctaCount',
+  'avgSentenceLen',                 // average number of words in one sentence
+  'avgParagraphLen',                // average number of words in one paragraph
+  'listUsageRatio',                 // fraction of lines that use bullets or numbers
+  'passiveVoiceRatio',              // fraction of sentences written in passive voice
+  'sentimentScore',                 // overall feeling from −1 negative to 1 positive
+  'politenessScore',                // how often polite words like please appear
+  'confidenceScore',                // how strongly the writer sounds sure of themself
+  'urgencyScore',                   // how urgent or time-sensitive the wording is
+  'empathyScore',                   // how much care or concern is shown for others
+  'formalityScore',                 // how formal versus casual the language is
+  'hedgingRatio',                   // share of softeners like maybe or might per sentence
+  'intensifierRatio',               // share of strong words like very or extremely per sentence
+  'readabilityFlesch',              // flesch reading ease score higher means simpler to read (https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests)
+  'lexicalDiversity',               // unique words divided by total words
+  'jargonRatio',                    // fraction of technical or buzzword terms
+  'exclamationFreq',                // exclamation marks per 100 words
+  'emojiCount',                     // total emoji characters in the body
+  'questionCount',                  // total question marks in the body
+  'ctaCount',                       // number of direct requests for action
+  'slangRatio',                     // fraction of slang words like vibe or wanna
+  'contractionRatio',               // fraction of words that use apostrophe contractions
+  'lowercaseSentenceStartRatio',    // fraction of sentences that begin with a lowercase letter
+  'subjectEmojiCount',              // emoji characters found in the subject line
+  'subjectInformalityScore',        // overall casualness score for the subject line
+  'emojiDensity',                   // emoji characters per 100 words in the body
+  'casualPunctuationRatio',         // share of informal punctuation like "!!" or "?!"
+  'capConsistencyScore',            // fraction of sentences that start with a capital letter
+  'honorificPresence',              // 1 if titles like "mr" or "dr" appear otherwise 0
+  'phaticPhraseRatio',              // share of small-talk phrases like "hope you are well"
 ] as const
 
 export const getWritingStyleMatrixForConnectionId = async (connectionId: string) => {
@@ -107,6 +119,8 @@ const createUpdatedMatrixFromNewEmail = (numMessages: number, currentStyleMatrix
 
   if (signOff) {
     const currentSignOffCount = newStyle.signOffCounts[signOff] ?? 0
+
+    // Increment the specific sign off
     newStyle.signOffCounts[signOff] = currentSignOffCount + 1
     newStyle.signOffCounts = TAKE_TYPE === 'coverage' ? takeTopCoverage(newStyle.signOffCounts) : takeTopK(newStyle.signOffCounts)
 
