@@ -29,15 +29,6 @@ interface UserContext {
   email?: string;
 }
 
-// Keyed by user to prevent cross‑tenant bleed‑through and allow GC per‑user
-const conversationHistories: Record<
-  string,                                     // userId
-  Record<
-    string,                                   // conversationId
-    { role: 'user' | 'assistant' | 'system'; content: string }[]
-  >
-> = {};
-
 const genericFailureMessage = "Unable to fulfill your request.";
 export const generateEmailBody = async ({
   prompt,
