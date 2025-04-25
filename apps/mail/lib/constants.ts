@@ -104,3 +104,27 @@ export const emailProviders = [
     providerId: "google",
   },
 ] as const;
+
+interface GmailColor {
+  textColor: string;
+  backgroundColor: string;
+}
+
+export const GMAIL_COLORS: GmailColor[] = [
+  { textColor: '#000000', backgroundColor: '#E2E2E2' },
+  { textColor: '#D50000', backgroundColor: '#F28B82' },
+  { textColor: '#EF6C00', backgroundColor: '#FBBC04' },
+  { textColor: '#F9A825', backgroundColor: '#FFF475' },
+  { textColor: '#188038', backgroundColor: '#CCFF90' },
+  { textColor: '#1967D2', backgroundColor: '#AECBFA' },
+  { textColor: '#9334E6', backgroundColor: '#D7AEFB' },
+  { textColor: '#D93025', backgroundColor: '#FDCFE8' },
+  { textColor: '#3C1E1E', backgroundColor: '#E6C9A8' },
+  { textColor: '#3C4043', backgroundColor: '#E8EAED' },
+  { textColor: '#0B4B3F', backgroundColor: '#A7FFEB' },
+  { textColor: '#174EA6', backgroundColor: '#C5CAE9' },
+  { textColor: '#33691E', backgroundColor: '#F0F4C3' },
+  { textColor: '#007B83', backgroundColor: '#B2EBF2' },
+  { textColor: '#5B2C6F', backgroundColor: '#E1BEE7' },
+  { textColor: '#BF360C', backgroundColor: '#FFAB91' },
+];

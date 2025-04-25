@@ -3,6 +3,8 @@ import { deleteActiveConnection, FatalErrors } from '@/actions/utils';
 import { IOutgoingMessage, type ParsedMessage } from '@/types';
 import { type IConfig, type MailManager } from './types';
 import { type gmail_v1, google } from 'googleapis';
+import { filterSuggestions } from '@/lib/filter';
+import { GMAIL_COLORS } from '@/lib/constants';
 import { cleanSearchValue } from '@/lib/utils';
 import { createMimeMessage } from 'mimetext';
 import * as he from 'he';
@@ -911,6 +913,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       return withErrorHandler(
         'createDraft',
         async () => {
+          const message = data.message.replace(/<br>/g, '</p><p>');
           const msg = createMimeMessage();
           msg.setSender('me');
           msg.setTo(data.to);
@@ -921,7 +924,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
           msg.setSubject(data.subject);
           msg.addMessage({
             contentType: 'text/html',
-            data: data.message || '',
+            data: message || '',
           });
 
           if (data.attachments?.length > 0) {
@@ -968,6 +971,70 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
         },
         { data },
       );
+    },
+    getUserLabels: async () => {
+      const res = await gmail.users.labels.list({
+        userId: 'me',
+      });
+      return res.data.labels;
+    },
+    getLabel: async (labelId: string) => {
+      const res = await gmail.users.labels.get({
+        userId: 'me',
+        id: labelId,
+      });
+      return res.data;
+    },
+    createLabel: async (label) => {
+      const res = await gmail.users.labels.create({
+        userId: 'me',
+        requestBody: {
+          name: label.name,
+          labelListVisibility: 'labelShow',
+          messageListVisibility: 'show',
+          color: label.color
+            ? {
+                backgroundColor: label.color.backgroundColor,
+                textColor: label.color.textColor,
+              }
+            : undefined,
+        },
+      });
+      return res.data;
+    },
+    updateLabel: async (id, label) => {
+      const res = await gmail.users.labels.update({
+        userId: 'me',
+        id: id,
+        requestBody: {
+          name: label.name,
+          color: label.color
+            ? {
+                backgroundColor: label.color.backgroundColor,
+                textColor: label.color.textColor,
+              }
+            : undefined,
+        },
+      });
+      return res.data;
+    },
+    deleteLabel: async (id) => {
+      await gmail.users.labels.delete({
+        userId: 'me',
+        id: id,
+      });
+    },
+    revokeRefreshToken: async (refreshToken: string) => {
+      if (!refreshToken) {
+        return false;
+      }
+      try {
+        await auth.revokeToken(refreshToken);
+        return true;
+      } catch (error: any) {
+        console.error('Failed to revoke Google token:', error.message);
+        return false;
+      }
     },
   };
 

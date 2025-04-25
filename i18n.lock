@@ -256,6 +256,8 @@ checksums:
     navigation/settings/appearance: cdd8c41c5fb859234e8a603544fce631
     navigation/settings/signatures: 681d432cf5709e710da79b9d0155aaa2
     navigation/settings/shortcuts: db3330ed3240c398054f3be23c52851f
+    navigation/settings/labels: 6f15627a90002323eac018274b6922d6
+    navigation/settings/danger-zone: ab5417cabdfa70b0a7c9d407ec69b450
     pages/error/notFound/title: 5b1dea4722f8fd52b68f7ac5ce89875d
     pages/error/notFound/description: 057147f33cbf65e4049928e7afa4103d
     pages/error/notFound/goBack: b917ea82facb90c88c523b255d29f84b
@@ -347,6 +349,14 @@ checksums:
     pages/settings/shortcuts/actions/pressKeys: c000cad4c6e6b701c9437998d6726ebf
     pages/settings/shortcuts/actions/releaseKeys: dfa63857eb8a9b8486eacb589b66591b
     pages/settings/shortcuts/actions/selectAll: ef9e1f8aaf1fbbdf868934209c85aea2
+    pages/settings/labels/title: 6f15627a90002323eac018274b6922d6
+    pages/settings/labels/description: 0418ef2ed4c3ca5082fddd6686b8596d
+    pages/settings/danger-zone/title: ab5417cabdfa70b0a7c9d407ec69b450
+    pages/settings/danger-zone/description: 3f881579c9b1558714e38471e020e78b
+    pages/settings/danger-zone/warning: 3d8b13374ffd3cefc0f3f7ce077bd9c9
+    pages/settings/danger-zone/confirmation: ab3ed2b0fd15fc48825b6d60270d1b19
+    pages/settings/danger-zone/deleteAccount: f5f7b88ff3122fb0d3a330e2b99d7e3d
+    pages/settings/danger-zone/deleting: 683cd814a3fc94e50b3e4e4a9c90c19c
     pages/createEmail/invalidEmail: b2d9f25626f2d15c7c63e0281bccc247
     pages/createEmail/body: e88eb1ea71f5ef886aa43ea6ba292d87
     pages/createEmail/example: ff2b301b819e5067ce63d236731e50c2

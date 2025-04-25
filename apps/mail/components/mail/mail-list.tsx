@@ -44,8 +44,10 @@ import { useMail } from '@/components/mail/use-mail';
 import type { VirtuosoHandle } from 'react-virtuoso';
 import { useKeyState } from '@/hooks/use-hot-key';
 import { useSession } from '@/lib/auth-client';
+import { RenderLabels } from './render-labels';
 import { Badge } from '@/components/ui/badge';
 import { useTranslations } from 'next-intl';
+import { Label } from '@/hooks/use-labels';
 import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Categories } from './mail';
@@ -356,6 +358,9 @@ const Thread = memo(
                         {getThreadData.hasUnread && !isMailSelected ? (
                           <span className="size-2 rounded bg-[#006FFE]" />
                         ) : null}
+                        <span className="space-x-2">
+                          <RenderLabels ids={threadLabels} />
+                        </span>
                       </p>
                       {getThreadData.totalReplies > 1 ? (
                         <Tooltip>
@@ -385,7 +390,7 @@ const Thread = memo(
                     <p className={cn('mt-1 line-clamp-1 text-xs opacity-70 transition-opacity')}>
                       {highlightText(latestMessage.subject, searchValue.highlight)}
                     </p>
-                    <MailLabels labels={threadLabels} />
+                    {/* <MailLabels labels={threadLabels} /> */}
                   </div>
                   {emailContent && (
                     <div className="text-muted-foreground mt-2 line-clamp-2 text-xs">

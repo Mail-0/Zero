@@ -295,7 +295,9 @@
       "security": "Security",
       "appearance": "Appearance",
       "signatures": "Signatures",
-      "shortcuts": "Shortcuts"
+      "shortcuts": "Shortcuts",
+      "labels": "Labels",
+      "danger-zone": "Danger Zone"
     }
   },
   "pages": {
@@ -408,6 +410,18 @@
           "releaseKeys": "Release keys",
           "selectAll": "Select All"
         }
+      },
+      "labels": {
+        "title": "Labels",
+        "description": "Manage your labels for better organization of your emails."
+      },
+      "danger-zone": {
+        "title": "Danger Zone",
+        "description": "Permanently delete your account and all associated data.",
+        "warning": "This action cannot be undone.",
+        "confirmation": "Please type DELETE to confirm account deletion",
+        "deleteAccount": "Delete Account",
+        "deleting": "Deleting..."
       }
     },
     "createEmail": {

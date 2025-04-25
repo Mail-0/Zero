@@ -75,7 +75,7 @@ export const navigationConfig: Record<string, NavConfig> = {
             icon: ArchiveIcon,
           },
           {
-            id: 'bin',
+            id: 'trash',
             title: 'navigation.sidebar.bin',
             url: '/mail/bin',
             icon: DeleteIcon,
@@ -155,11 +155,16 @@ export const navigationConfig: Record<string, NavConfig> = {
             title: 'navigation.settings.security',
             url: '/settings/security',
             icon: ShieldCheckIcon,
-            disabled: true,
+            // disabled: true,
           },
           {
             title: 'navigation.settings.appearance',
             url: '/settings/appearance',
+            icon: SparklesIcon,
+          },
+          {
+            title: 'navigation.settings.labels',
+            url: '/settings/labels',
             icon: SparklesIcon,
           },
           {
@@ -173,6 +178,11 @@ export const navigationConfig: Record<string, NavConfig> = {
             url: '/settings/shortcuts',
             icon: KeyboardIcon,
             disabled: true,
+          },
+          {
+            title: 'navigation.settings.danger-zone',
+            url: '/settings/danger-zone',
+            icon: KeyboardIcon,
           },
           // {
           //   title: "Notifications",
