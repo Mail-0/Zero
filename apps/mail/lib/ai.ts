@@ -53,8 +53,8 @@ export const generateEmailBodyV2 = async ({
   conversationId?: string,
   userContext?: UserContext,
 }): Promise<AIBodyResponse[]> => {
-  if (!process.env.GROQ_API_KEY) {
-    throw new Error('Groq API key is not configured');
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OpenAI API key is not configured');
   }
 
   const headersList = await headers()
