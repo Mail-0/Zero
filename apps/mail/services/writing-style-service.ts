@@ -10,7 +10,12 @@ const TAKE_TOP_COVERAGE = 0.95
 const TAKE_TOP_K = 10
 const TAKE_TYPE: 'coverage' | 'k' = 'coverage'
 
-const METRIC_KEYS = [
+// Using Welford Variance Algorithm (https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance)
+// Welford’s online algorithm continuously updates the running mean and variance using just three
+// numbers—sample count, current mean, and cumulative squared deviation (M₂). Therefore, each new value
+// can be processed the moment it arrives, with no need to store earlier data, while maintaining high
+// numerical accuracy.
+const MEAN_METRIC_KEYS = [
   'avgSentenceLen',                 // average number of words in one sentence
   'avgParagraphLen',                // average number of words in one paragraph
   'listUsageRatio',                 // fraction of lines that use bullets or numbers
@@ -27,19 +32,27 @@ const METRIC_KEYS = [
   'lexicalDiversity',               // unique words divided by total words
   'jargonRatio',                    // fraction of technical or buzzword terms
   'exclamationFreq',                // exclamation marks per 100 words
-  'emojiCount',                     // total emoji characters in the body
-  'questionCount',                  // total question marks in the body
-  'ctaCount',                       // number of direct requests for action
   'slangRatio',                     // fraction of slang words like vibe or wanna
   'contractionRatio',               // fraction of words that use apostrophe contractions
   'lowercaseSentenceStartRatio',    // fraction of sentences that begin with a lowercase letter
-  'subjectEmojiCount',              // emoji characters found in the subject line
-  'subjectInformalityScore',        // overall casualness score for the subject line
   'emojiDensity',                   // emoji characters per 100 words in the body
   'casualPunctuationRatio',         // share of informal punctuation like "!!" or "?!"
   'capConsistencyScore',            // fraction of sentences that start with a capital letter
-  'honorificPresence',              // 1 if titles like "mr" or "dr" appear otherwise 0
   'phaticPhraseRatio',              // share of small-talk phrases like "hope you are well"
+] as const
+
+const SUM_METRIC_KEYS = [
+  'questionCount',                  // total question marks in the body
+  'ctaCount',                       // number of direct requests for action
+  'emojiCount',                     // total emoji characters in the body
+  'honorificPresence',              // 1 if titles like "mr" or "dr" appear otherwise 0
+  'greetingTotal',                  // total number of greetings
+  'signOffTotal',                   // total number of sign offs
+] as const
+
+const TOP_COUNTS_KEYS = [
+  'greeting',
+  'signoff',
 ] as const
 
 export const getWritingStyleMatrixForConnectionId = async (connectionId: string) => {
@@ -94,9 +107,16 @@ const createUpdatedMatrixFromNewEmail = (numMessages: number, currentStyleMatrix
     ...currentStyleMatrix,
   }
 
-  // Update each metric
-  for (const key of METRIC_KEYS) {
-    newStyle.metrics[key] = updateStat(currentStyleMatrix.metrics[key], emailStyleMatrix[key], newNumMessages)
+  for (const key of MEAN_METRIC_KEYS) {
+    newStyle[key] = updateWelfordMetric(currentStyleMatrix[key], emailStyleMatrix[key])
+  }
+
+  for (const key of SUM_METRIC_KEYS) {
+    newStyle[key] = currentStyleMatrix[key] + emailStyleMatrix[key]
+  }
+
+  for (const key of TOP_COUNTS_KEYS) {
+
   }
 
   // We already did sanitization in the extractStyleMatrix()
@@ -114,7 +134,6 @@ const createUpdatedMatrixFromNewEmail = (numMessages: number, currentStyleMatrix
 
     // Record the total number of greetings
     newStyle.greetingTotal = newStyle.greetingTotal + 1
-    newStyle.pGreet = newStyle.greetingTotal / newNumMessages
   }
 
   if (signOff) {
@@ -126,7 +145,6 @@ const createUpdatedMatrixFromNewEmail = (numMessages: number, currentStyleMatrix
 
     // Record the total number of sign offs
     newStyle.signOffTotal = newStyle.signOffTotal + 1
-    newStyle.pSign = newStyle.signOffTotal / newNumMessages
   }
 
   return newStyle
@@ -168,7 +186,7 @@ const takeTopK = (data: Record<string, number>, k = TAKE_TOP_K) => {
   )
 }
 
-const updateStat = (currentStat: RunningStat, value: number, newTotalEmails: number) => {
+const updateStat = (currentStat: WelfordState, value: number, newTotalEmails: number) => {
   const delta = value - currentStat.mean
   const mean = currentStat.mean + delta / newTotalEmails
   const m2 = currentStat.m2 + delta * (value - mean)
@@ -180,56 +198,61 @@ const updateStat = (currentStat: RunningStat, value: number, newTotalEmails: num
 }
 
 const initializeStyleMatrixFromEmail = (matrix: EmailMatrix): WritingStyleMatrix => {
-  const initializedMetrics = mapToObj(METRIC_KEYS, (key) => {
+  const initializedWelfordMetrics = mapToObj(MEAN_METRIC_KEYS, (key) => {
     return [
       key,
-      initializeRunningState(matrix[key]),
+      initializeWelfordMetric(matrix[key]),
     ]
   })
 
-  const greetingTotal = matrix.greeting ? 1 : 0
-  const signOffTotal = matrix.signOff ? 1 : 0
+  const initializedSumMetrics = mapToObj(SUM_METRIC_KEYS, (key) => {
+    return [
+      key,
+      matrix[key],
+    ]
+  })
 
   return {
-    greetingCounts: matrix.greeting ? {
-      [matrix.greeting]: 1,
-    } : {},
-    greetingTotal,
-    signOffCounts: matrix.signOff ? {
-      [matrix.signOff]: 1,
-    }: {},
-    signOffTotal,
-    pGreet: greetingTotal, // these initialize the same
-    pSign: signOffTotal, // these initialize the same
-    metrics: initializedMetrics,
+    ...initializedWelfordMetrics,
+    ...initializedSumMetrics,
   }
 }
 
-const initializeRunningState = (statValue: number) => {
+const updateWelfordMetric = (previousState: WelfordState, value: number) => {
+  const count = previousState.count + 1
+  const delta = value - previousState.mean
+  const mean = previousState.mean + delta / count
+  const m2 = previousState.m2 + delta * (value - mean)
+
   return {
+    count,
+    mean,
+    m2,
+  }
+}
+
+const initializeWelfordMetric = (statValue: number) => {
+  return {
+    count: 1,
     mean: statValue,
     m2: 0,
   }
 }
 
-export type RunningStat = {
+export type WelfordState = {
+  count: number
   mean: number
   m2: number
 }
 
-export type EmailMetrics = Record<typeof METRIC_KEYS[number], number>
+export type EmailMetrics = Record<typeof MEAN_METRIC_KEYS[number], number>
+  & Record<typeof SUM_METRIC_KEYS[number], number>
+
 export type EmailMatrix = {
   greeting: string | null
   signOff: string | null
 } & EmailMetrics
 
-export type StyleMetrics = Record<typeof METRIC_KEYS[number], RunningStat>
-export type WritingStyleMatrix = {
-  greetingCounts: Record<string, number>
-  greetingTotal: number
-  pGreet: number
-  signOffCounts: Record<string, number>
-  signOffTotal: number
-  pSign: number
-  metrics: StyleMetrics
-}
+export type WritingStyleMatrix = Record<typeof MEAN_METRIC_KEYS[number], WelfordState>
+  & Record<typeof SUM_METRIC_KEYS[number], number>
+  & Record<typeof TOP_COUNTS_KEYS[number], Record<string, number>>

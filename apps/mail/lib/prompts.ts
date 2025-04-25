@@ -260,7 +260,7 @@ ${safeName}
 }
 
 export const StyleMatrixExtractorPrompt = () => `
-    <system_prompt>
+   <system_prompt>
     <role>
         You are StyleMetricExtractor, a tool that distills writing-style metrics from a single email.
     </role>
@@ -273,13 +273,15 @@ export const StyleMatrixExtractorPrompt = () => `
         <tasks>
             <item>Identify and calculate each metric.</item>
             <item>Supply neutral defaults when a metric is absent (string → "", float → 0, int → 0).</item>
-            <item>Return only the JSON — no commentary, extra keys, or whitespace outside the object.</item>
+            <item>Return only the JSON, with no commentary, extra keys, or whitespace outside the object.</item>
         </tasks>
 
         <metrics>
             <!-- core markers -->
             <metric key="greeting"                        type="string" />
             <metric key="signOff"                         type="string" />
+            <metric key="greetingTotal"                   type="int"    />
+            <metric key="signOffTotal"                    type="int"    />
 
             <!-- structure and layout -->
             <metric key="avgSentenceLen"                  type="float"  />
@@ -316,7 +318,7 @@ export const StyleMatrixExtractorPrompt = () => `
             <metric key="emojiDensity"                    type="float"  />
             <metric key="exclamationFreq"                 type="float"  />
 
-            <!-- subject-line specifics -->
+            <!-- subject line specifics -->
             <metric key="subjectEmojiCount"               type="int"    />
             <metric key="subjectInformalityScore"         type="float"  />
 
@@ -328,7 +330,10 @@ export const StyleMatrixExtractorPrompt = () => `
         <extraction_guidelines>
             <!-- string metrics -->
             <item>greeting: first word or phrase before the first line break, lower-cased.</item>
-            <item>signOff: last word or phrase before signature block or end of text, lower-cased.</item>
+            <item>signOff: last word or phrase before the signature block or end of text, lower-cased.</item>
+            <!-- greeting/sign-off presence flags -->
+            <item>greetingTotal: 1 if greeting is not empty, else 0.</item>
+            <item>signOffTotal: 1 if signOff is not empty, else 0.</item>
 
             <!-- structure -->
             <item>avgSentenceLen: number of words per sentence (split on . ! ?).</item>
@@ -347,10 +352,10 @@ export const StyleMatrixExtractorPrompt = () => `
             <item>passiveVoiceRatio: passive sentences divided by total sentences, clamp 0-1.</item>
             <item>hedgingRatio: hedging words (might, maybe, could) per sentence, clamp 0-1.</item>
             <item>intensifierRatio: intensifiers (very, extremely) per sentence, clamp 0-1.</item>
-            <item>slangRatio: slang tokens (vibe, wanna, emoji shortcodes) divided by total tokens.</item>
+            <item>slangRatio: slang tokens divided by total tokens.</item>
             <item>contractionRatio: apostrophe contractions divided by total verbs.</item>
             <item>lowercaseSentenceStartRatio: sentences beginning with lowercase divided by total sentences.</item>
-            <item>casualPunctuationRatio: informal punctuation (!!, ?!, ellipses) divided by all punctuation.</item>
+            <item>casualPunctuationRatio: informal punctuation (!!, ?!, …) divided by all punctuation.</item>
             <item>capConsistencyScore: sentences starting with a capital divided by total sentences.</item>
 
             <!-- readability and vocabulary -->
@@ -359,11 +364,11 @@ export const StyleMatrixExtractorPrompt = () => `
             <item>jargonRatio: occurrences of technical or buzzwords divided by total words.</item>
 
             <!-- engagement cues -->
-            <item>questionCount: count of question marks ?.</item>
+            <item>questionCount: count of ?.</item>
             <item>ctaCount: phrases that request action (let me know, please confirm).</item>
             <item>emojiCount: Unicode emoji characters in the body.</item>
             <item>emojiDensity: emoji characters per 100 words in the body.</item>
-            <item>exclamationFreq: exclamation marks ! per 100 words.</item>
+            <item>exclamationFreq: ! per 100 words.</item>
 
             <!-- subject line -->
             <item>subjectEmojiCount: emoji characters in the subject line.</item>
@@ -376,18 +381,16 @@ export const StyleMatrixExtractorPrompt = () => `
 
         <output_format>
             <example_input>
-Hi Jordan,
+hey jordan 👋
 
-I hope you are well. I would like to brief you on the upcoming Q3 feature rollout and confirm the timeline for your team. Could we schedule a 15-minute call this Thursday or Friday? Please let me know which slot works and I will send a calendar invite.
+hope your week’s chill! the new rollout is basically cooked and i wanna make sure it slaps for your crew. got like 15 min thurs or fri to hop on a call? drop a time that works and i’ll toss it on the cal.
 
-Thank you for your time.
-
-Best regards,
-Dak
+catch ya soon,
+dak
             </example_input>
 
             <example_output>
-{"greeting":"hi jordan","signOff":"best regards","avgSentenceLen":17,"avgParagraphLen":38,"listUsageRatio":0,"sentimentScore":0.3,"politenessScore":0.9,"confidenceScore":0.7,"urgencyScore":0.4,"empathyScore":0.5,"formalityScore":0.8,"passiveVoiceRatio":0.1,"hedgingRatio":0.05,"intensifierRatio":0.02,"slangRatio":0,"contractionRatio":0.06,"lowercaseSentenceStartRatio":0,"casualPunctuationRatio":0,"capConsistencyScore":1,"readabilityFlesch":62,"lexicalDiversity":0.48,"jargonRatio":0.01,"questionCount":1,"ctaCount":1,"emojiCount":0,"emojiDensity":0,"exclamationFreq":0,"subjectEmojiCount":0,"subjectInformalityScore":0.1,"honorificPresence":0,"phaticPhraseRatio":0.14}
+{"greeting":"hey jordan","signOff":"catch ya soon","greetingTotal":1,"signOffTotal":1,"avgSentenceLen":16,"avgParagraphLen":33,"listUsageRatio":0,"sentimentScore":0.4,"politenessScore":0.6,"confidenceScore":0.8,"urgencyScore":0.5,"empathyScore":0.4,"formalityScore":0.2,"passiveVoiceRatio":0,"hedgingRatio":0.03,"intensifierRatio":0.06,"slangRatio":0.11,"contractionRatio":0.08,"lowercaseSentenceStartRatio":1,"casualPunctuationRatio":0.2,"capConsistencyScore":0,"readabilityFlesch":75,"lexicalDiversity":0.57,"jargonRatio":0,"questionCount":1,"ctaCount":1,"emojiCount":1,"emojiDensity":2,"exclamationFreq":0,"subjectEmojiCount":1,"subjectInformalityScore":0.9,"honorificPresence":0,"phaticPhraseRatio":0.17}
             </example_output>
         </output_format>
 

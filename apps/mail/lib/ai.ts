@@ -292,8 +292,6 @@ export const extractStyleMatrix = async (emailBody: string) => {
       slangRatio: z.number().min(0).max(1),
       contractionRatio: z.number().min(0).max(1),
       lowercaseSentenceStartRatio: z.number().min(0).max(1),
-      subjectEmojiCount: z.number().int().nonnegative(),
-      subjectInformalityScore: z.number().min(0).max(1),
       emojiDensity: z.number().min(0),
       casualPunctuationRatio: z.number().min(0).max(1),
       capConsistencyScore: z.number().min(0).max(1),
@@ -306,9 +304,13 @@ export const extractStyleMatrix = async (emailBody: string) => {
     maxRetries: 3,
   })
 
+  const greeting = object.greeting?.trim().toLowerCase()
+  const signOff = object.signOff?.trim().toLowerCase()
   return {
     ...object,
-    greeting: object.greeting?.trim().toLowerCase() ?? null,
-    signOff: object.signOff?.trim().toLowerCase() ?? null,
+    greeting: greeting ?? null,
+    signOff: signOff ?? null,
+    greetingTotal: greeting ? 1 : 0,
+    signOffTotal: signOff ? 1 : 0,
   }
 }
