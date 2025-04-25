@@ -77,6 +77,7 @@ checksums:
     common/searchBar/recipient: cccd041f08a57c1ae658324b5073fc7d
     common/searchBar/sender: a2d18a44b4320d124f6f33a32023e74f
     common/searchBar/subject: de5b885eb327b2f233f3b67aab4c4c0a
+    common/searchBar/from: 3d84daca8c92c8609deeab4b294b4afb
     common/searchBar/dateRange: be548c93a997ed6c2e9ac5c943faac10
     common/searchBar/category: 1b0340cd175aa5a2be745a0d54908466
     common/searchBar/folder: 55abc55b8ff7891f38db1a5b7bf97765
@@ -237,6 +238,9 @@ checksums:
     common/mail/loadMore: 365c2d8dfc53ac7e9188acd5274e2837
     common/mail/imagesHidden: b80d357fa53259eeca5b4bc6f4492558
     common/mail/showImages: b9e8dc2ce5380180886b89cbe9d51508
+    common/mail/noEmails: 999c0c96bd60076639ea4d5215f36106
+    common/mail/noSearchResults: 3176102f55edd2d913f3fa95f03bd380
+    common/mail/clearSearch: 0ee4a80abe134b7edd90c74f03638877
     common/units/mb: ed9c3b369a1ac40741b182458b69143a
     navigation/sidebar/inbox: 57e9db873911bf848c79e2ed546ecf45
     navigation/sidebar/drafts: 76dab0f0b2e6c4933b80f69e388070d0
@@ -339,6 +343,10 @@ checksums:
     pages/settings/shortcuts/actions/goToDrafts: dfa22fb17b8fa3a3d5672505d104e18c
     pages/settings/shortcuts/actions/expandEmailView: ad31f53032e788ee0e30b14f484a6ec3
     pages/settings/shortcuts/actions/helpWithShortcuts: f8b89d2e465e3a93ff9c5397a114a094
+    pages/settings/shortcuts/actions/recordHotkey: ae6d389f2e9a27e68b34349658df365b
+    pages/settings/shortcuts/actions/pressKeys: c000cad4c6e6b701c9437998d6726ebf
+    pages/settings/shortcuts/actions/releaseKeys: dfa63857eb8a9b8486eacb589b66591b
+    pages/settings/shortcuts/actions/selectAll: ef9e1f8aaf1fbbdf868934209c85aea2
     pages/createEmail/invalidEmail: b2d9f25626f2d15c7c63e0281bccc247
     pages/createEmail/body: e88eb1ea71f5ef886aa43ea6ba292d87
     pages/createEmail/example: ff2b301b819e5067ce63d236731e50c2

@@ -913,6 +913,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       return withErrorHandler(
         'createDraft',
         async () => {
+          const message = data.message.replace(/<br>/g, '</p><p>');
           const msg = createMimeMessage();
           msg.setSender('me');
           msg.setTo(data.to);
@@ -923,7 +924,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
           msg.setSubject(data.subject);
           msg.addMessage({
             contentType: 'text/html',
-            data: data.message || '',
+            data: message || '',
           });
 
           if (data.attachments?.length > 0) {
@@ -1022,6 +1023,18 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
         userId: 'me',
         id: id,
       });
+    },
+    revokeRefreshToken: async (refreshToken: string) => {
+      if (!refreshToken) {
+        return false;
+      }
+      try {
+        await auth.revokeToken(refreshToken);
+        return true;
+      } catch (error: any) {
+        console.error('Failed to revoke Google token:', error.message);
+        return false;
+      }
     },
   };
 

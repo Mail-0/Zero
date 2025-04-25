@@ -268,6 +268,25 @@ export function CreateEmail({
     }
   };
 
+  const handleEditEmail = (type: 'to' | 'cc' | 'bcc', index: number, newEmail: string) => {
+    // Only validate and edit when Enter is pressed
+    const trimmedEmail = newEmail.trim();
+    if (!trimmedEmail) return;
+
+    const emailState = type === 'to' ? toEmails : type === 'cc' ? ccEmails : bccEmails;
+    const setEmailState = type === 'to' ? setToEmails : type === 'cc' ? setCcEmails : setBccEmails;
+
+    if (isValidEmail(trimmedEmail)) {
+      const newEmails = [...emailState];
+      newEmails[index] = trimmedEmail;
+      setEmailState(newEmails);
+      setHasUnsavedChanges(true);
+    } else {
+      // Show error for invalid email
+      toast.error(t('pages.createEmail.invalidEmail'));
+    }
+  };
+
   const saveDraft = React.useCallback(async () => {
     if (!hasUnsavedChanges) return;
     if (!toEmails.length || !subjectInput || !messageContent) return;
@@ -570,6 +589,7 @@ export function CreateEmail({
                   filteredContacts={[]}
                   isLoading={isLoading}
                   onAddEmail={handleAddEmail}
+                  onEditEmail={handleEditEmail}
                   hasUnsavedChanges={hasUnsavedChanges}
                   setHasUnsavedChanges={setHasUnsavedChanges}
                   className="w-24 text-right"
@@ -585,6 +605,7 @@ export function CreateEmail({
                     filteredContacts={[]}
                     isLoading={isLoading}
                     onAddEmail={handleAddEmail}
+                    onEditEmail={handleEditEmail}
                     hasUnsavedChanges={hasUnsavedChanges}
                     setHasUnsavedChanges={setHasUnsavedChanges}
                     className="w-24 text-right"
@@ -601,50 +622,53 @@ export function CreateEmail({
                     filteredContacts={[]}
                     isLoading={isLoading}
                     onAddEmail={handleAddEmail}
+                    onEditEmail={handleEditEmail}
                     hasUnsavedChanges={hasUnsavedChanges}
                     setHasUnsavedChanges={setHasUnsavedChanges}
                     className="w-24 text-right"
                   />
                 )}
 
-                <div className="flex items-center">
-                  <div className="text-muted-foreground w-20 flex-shrink-0 pr-3 text-right text-[1rem] font-[600] opacity-50 md:w-24">
-                    {t('common.searchBar.from')}
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-between text-left font-normal"
-                        disabled={isLoadingAliases || isLoading}
+                {aliases && aliases.length > 1 && (
+                  <div className="flex items-center">
+                    <div className="text-muted-foreground w-20 flex-shrink-0 pr-3 text-right text-[1rem] font-[600] opacity-50 md:w-24">
+                      {t('common.searchBar.from')}
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-between text-left font-normal"
+                          disabled={isLoadingAliases || isLoading}
+                        >
+                          <span>{selectedFromEmail || aliases?.[0]?.email || userEmail}</span>
+                          <ChevronDown className="h-4 w-4 opacity-50" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        className="w-[var(--radix-dropdown-trigger-width)]"
+                        align="start"
                       >
-                        <span>{selectedFromEmail || aliases?.[0]?.email || userEmail}</span>
-                        <ChevronDown className="h-4 w-4 opacity-50" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      className="w-[var(--radix-dropdown-trigger-width)]"
-                      align="start"
-                    >
-                      {isLoadingAliases ? (
-                        <div className="px-2 py-1 text-center text-sm">Loading...</div>
-                      ) : aliases && aliases.length > 0 ? (
-                        aliases.map((alias) => (
-                          <DropdownMenuItem
-                            key={alias.email}
-                            onClick={() => setSelectedFromEmail(alias.email)}
-                            className="cursor-pointer"
-                          >
-                            {alias.name ? `${alias.name} <${alias.email}>` : alias.email}
-                            {alias.primary && ' (Primary)'}
-                          </DropdownMenuItem>
-                        ))
-                      ) : (
-                        <div className="px-2 py-1 text-center text-sm">{userEmail}</div>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+                        {isLoadingAliases ? (
+                          <div className="px-2 py-1 text-center text-sm">Loading...</div>
+                        ) : aliases && aliases.length > 0 ? (
+                          aliases.map((alias) => (
+                            <DropdownMenuItem
+                              key={alias.email}
+                              onClick={() => setSelectedFromEmail(alias.email)}
+                              className="cursor-pointer"
+                            >
+                              {alias.name ? `${alias.name} <${alias.email}>` : alias.email}
+                              {alias.primary && ' (Primary)'}
+                            </DropdownMenuItem>
+                          ))
+                        ) : (
+                          <div className="px-2 py-1 text-center text-sm">{userEmail}</div>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                )}
 
                 <div className="flex items-center">
                   <div className="text-muted-foreground w-20 flex-shrink-0 pr-3 text-right text-[1rem] font-[600] opacity-50 md:w-24">
@@ -782,7 +806,7 @@ export function CreateEmail({
                             </p>
                           </div>
                           <Separator />
-                          <div className="touch-auto overflow-y-auto overflow-x-hidden overscroll-contain px-1 py-1">
+                          <div className="touch-auto overflow-y-auto  max-h-[40vh] overflow-x-hidden overscroll-contain px-1 py-1">
                             <div className="grid grid-cols-2 gap-2">
                               {attachments.map((file, index) => (
                                 <div
