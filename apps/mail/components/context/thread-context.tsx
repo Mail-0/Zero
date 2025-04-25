@@ -161,7 +161,6 @@ export function ThreadContextMenu({
 
   const handleFavorites = () => {
     const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
-    console.log('targets', targets);
     const promise = toggleStar({ ids: targets }).then(() => {
       setMail((prev) => ({ ...prev, bulkSelected: [] }));
       return mutateThread();
