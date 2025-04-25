@@ -10,10 +10,11 @@ import {
 } from './sidebar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { usePathname, useSearchParams } from 'next/navigation';
+import { useSearchValue } from '@/hooks/use-search-value';
 import { clearBulkSelectionAtom } from '../mail/use-mail';
 import { type MessageKey } from '@/config/navigation';
+import { Label, useLabels } from '@/hooks/use-labels';
 import { type NavItem } from '@/config/navigation';
-import { useLabels } from '@/hooks/use-labels';
 import { useSession } from '@/lib/auth-client';
 import { Badge } from '@/components/ui/badge';
 import { GoldenTicketModal } from '../golden';
@@ -60,6 +61,7 @@ export function NavMain({ items }: NavMainProps) {
   const searchParams = useSearchParams();
   const { data: session, isPending } = useSession();
   const [category] = useQueryState('category');
+  const [searchValue, setSearchValue] = useSearchValue();
 
   const { labels } = useLabels();
 
@@ -154,6 +156,24 @@ export function NavMain({ items }: NavMainProps) {
     [pathname, searchParams],
   );
 
+  const handleFilterByLabel = (label: Label) => () => {
+    const existingValue = searchValue.value;
+    if (existingValue.includes(`label:${label.name}`)) {
+      setSearchValue({
+        value: existingValue.replace(`label:${label.name}`, ''),
+        highlight: '',
+        folder: '',
+      });
+      return;
+    }
+    const newValue = existingValue ? `${existingValue} label:${label.name}` : `label:${label.name}`;
+    setSearchValue({
+      value: newValue,
+      highlight: '',
+      folder: '',
+    });
+  };
+
   return (
     <SidebarGroup className="space-y-2.5 py-0">
       <SidebarMenu>
@@ -189,16 +209,17 @@ export function NavMain({ items }: NavMainProps) {
                   <div className="space-y-1 pb-2" style={{ height: 'auto' }}>
                     {labels.map((label) => (
                       <NavItem
+                        onClick={handleFilterByLabel(label)}
                         key={label.id}
                         title={label.name}
-                        href={`/mail/inbox?q=${encodeURIComponent(label.name.toLocaleLowerCase())}`}
+                        href={`/mail/inbox`}
                         icon={() => (
                           <div
                             className="size-4 rounded-md"
                             style={{ backgroundColor: label.color?.backgroundColor || '#E2E2E2' }}
                           />
                         )}
-                        url={`/mail/inbox?q=${encodeURIComponent(label.name.toLocaleLowerCase())}`}
+                        url={`/mail/inbox`}
                       />
                     ))}
                   </div>
@@ -269,7 +290,12 @@ function NavItem(item: NavItemProps & { href: string }) {
   return (
     <Collapsible defaultOpen={item.isActive}>
       <CollapsibleTrigger asChild>
-        <Link {...linkProps} prefetch target={item.target}>
+        <Link
+          {...linkProps}
+          prefetch
+          onClick={item.onClick ? item.onClick : undefined}
+          target={item.target}
+        >
           {buttonContent}
         </Link>
       </CollapsibleTrigger>

@@ -784,7 +784,7 @@ export function CreateEmail({
                             </p>
                           </div>
                           <Separator />
-                          <div className="touch-auto overflow-y-auto overflow-x-hidden overscroll-contain px-1 py-1">
+                          <div className="touch-auto overflow-y-auto  max-h-[40vh] overflow-x-hidden overscroll-contain px-1 py-1">
                             <div className="grid grid-cols-2 gap-2">
                               {attachments.map((file, index) => (
                                 <div
