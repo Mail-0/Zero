@@ -19,6 +19,9 @@
       "movingToInbox": "Wird in Posteingang verschoben...",
       "movedToSpam": "In Spam verschoben",
       "movingToSpam": "Wird in Spam verschoben...",
+      "deletingMail": "E-Mail wird gelöscht...",
+      "failedToDeleteMail": "E-Mail konnte nicht gelöscht werden",
+      "deletedMail": "E-Mail gelöscht",
       "archiving": "Wird archiviert...",
       "archived": "Archiviert",
       "failedToMove": "Nachricht konnte nicht verschoben werden",
@@ -87,6 +90,7 @@
       "recipient": "Empfänger",
       "sender": "Absender",
       "subject": "Betreff",
+      "from": "Von",
       "dateRange": "Zeitraum",
       "category": "Kategorie",
       "folder": "Ordner",
@@ -248,6 +252,7 @@
       "mute": "Stummschalten",
       "moveToSpam": "In Spam verschieben",
       "moveToInbox": "In Posteingang verschieben",
+      "deleteFromBin": "Aus Papierkorb löschen",
       "unarchive": "Entarchivieren",
       "archive": "Archivieren",
       "moveToBin": "In den Papierkorb verschieben",
@@ -268,7 +273,10 @@
       "noLabelsAvailable": "No labels available",
       "loadMore": "Mehr anzeigen",
       "imagesHidden": "Bilder sind aus Sicherheitsgründen ausgeblendet",
-      "showImages": "Bilder anzeigen"
+      "showImages": "Bilder anzeigen",
+      "noEmails": "Keine E-Mails verfügbar",
+      "noSearchResults": "Keine Suchergebnisse gefunden",
+      "clearSearch": "Suche leeren"
     },
     "units": {
       "mb": "{amount} MB"
@@ -291,7 +299,9 @@
       "security": "Sicherheit",
       "appearance": "Gestaltung",
       "signatures": "Signaturen",
-      "shortcuts": "Shortcuts"
+      "shortcuts": "Shortcuts",
+      "labels": "Labels",
+      "danger-zone": "Gefahrenbereich"
     }
   },
   "pages": {
@@ -398,8 +408,24 @@
           "viewEmailDetails": "E-Mail-Details anzeigen",
           "goToDrafts": "Zu den Entwürfen",
           "expandEmailView": "E-Mail-Ansicht vergrößern",
-          "helpWithShortcuts": "Hilfe mit Verknüpfungen"
+          "helpWithShortcuts": "Hilfe mit Verknüpfungen",
+          "recordHotkey": "Tastenkombination aufnehmen",
+          "pressKeys": "Tasten drücken",
+          "releaseKeys": "Tasten loslassen",
+          "selectAll": "Alle auswählen"
         }
+      },
+      "labels": {
+        "title": "Labels",
+        "description": "Verwalte deine Labels für eine bessere Organisation deiner E-Mails."
+      },
+      "danger-zone": {
+        "title": "Gefahrenbereich",
+        "description": "Lösche dein Konto und alle zugehörigen Daten dauerhaft.",
+        "warning": "Diese Aktion kann nicht rückgängig gemacht werden.",
+        "confirmation": "Bitte gib DELETE ein, um die Kontolöschung zu bestätigen",
+        "deleteAccount": "Konto löschen",
+        "deleting": "Wird gelöscht..."
       }
     },
     "createEmail": {

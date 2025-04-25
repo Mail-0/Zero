@@ -19,6 +19,9 @@
       "movingToInbox": "Pārvieto uz iesūtni...",
       "movedToSpam": "Pārvietots uz mēstulēm",
       "movingToSpam": "Pārvieto uz mēstulēm...",
+      "deletingMail": "Dzēš e-pastu...",
+      "failedToDeleteMail": "Neizdevās dzēst e-pastu",
+      "deletedMail": "E-pasts dzēsts",
       "archiving": "Arhivē...",
       "archived": "Arhivēts",
       "failedToMove": "Neizdevās pārvietot ziņojumu",
@@ -87,6 +90,7 @@
       "recipient": "Saņēmējs",
       "sender": "Sūtītājs",
       "subject": "Temats",
+      "from": "No",
       "dateRange": "Datumu diapazons",
       "category": "Kategorija",
       "folder": "Mape",
@@ -248,6 +252,7 @@
       "mute": "Apklusināt",
       "moveToSpam": "Pārvietot uz Mēstulēm",
       "moveToInbox": "Pārvietot uz Iesūtni",
+      "deleteFromBin": "Dzēst no atkritnes",
       "unarchive": "Izņemt no arhīva",
       "archive": "Arhivēt",
       "moveToBin": "Pārvietot uz atkritni",
@@ -268,7 +273,10 @@
       "noLabelsAvailable": "Nav pieejamas iezīmes",
       "loadMore": "Ielādēt vairāk",
       "imagesHidden": "Attēli ir paslēpti drošības apsvērumu dēļ",
-      "showImages": "Rādīt attēlus"
+      "showImages": "Rādīt attēlus",
+      "noEmails": "Nav pieejamu e-pastu",
+      "noSearchResults": "Meklēšanas rezultāti nav atrasti",
+      "clearSearch": "Notīrīt meklēšanu"
     },
     "units": {
       "mb": "{amount} MB"
@@ -291,7 +299,9 @@
       "security": "Drošība",
       "appearance": "Izskats",
       "signatures": "Paraksti",
-      "shortcuts": "Īsceļi"
+      "shortcuts": "Īsceļi",
+      "labels": "Iezīmes",
+      "danger-zone": "Bīstamā zona"
     }
   },
   "pages": {
@@ -398,8 +408,24 @@
           "viewEmailDetails": "Skatīt e-pasta detaļas",
           "goToDrafts": "Doties uz Melnrakstiem",
           "expandEmailView": "Izvērst e-pasta skatu",
-          "helpWithShortcuts": "Tastatūras īsceļu palīdzība"
+          "helpWithShortcuts": "Tastatūras īsceļu palīdzība",
+          "recordHotkey": "Ierakstīt karstumtaustiņu",
+          "pressKeys": "Nospiediet taustiņus",
+          "releaseKeys": "Atlaidiet taustiņus",
+          "selectAll": "Atlasīt visu"
         }
+      },
+      "labels": {
+        "title": "Iezīmes",
+        "description": "Pārvaldiet savas iezīmes, lai labāk organizētu e-pastus."
+      },
+      "danger-zone": {
+        "title": "Bīstamā zona",
+        "description": "Neatgriezeniski dzēst jūsu kontu un visus ar to saistītos datus.",
+        "warning": "Šo darbību nevar atsaukt.",
+        "confirmation": "Lūdzu, ierakstiet DELETE, lai apstiprinātu konta dzēšanu",
+        "deleteAccount": "Dzēst kontu",
+        "deleting": "Dzēš..."
       }
     },
     "createEmail": {

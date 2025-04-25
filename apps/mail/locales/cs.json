@@ -19,6 +19,9 @@
       "movingToInbox": "Přesouvání do doručené pošty...",
       "movedToSpam": "Přesunuto do spamu",
       "movingToSpam": "Přesouvání do spamu...",
+      "deletingMail": "Mazání e-mailu...",
+      "failedToDeleteMail": "Nepodařilo se smazat e-mail",
+      "deletedMail": "E-mail smazán",
       "archiving": "Archivace...",
       "archived": "Archivováno",
       "failedToMove": "Nepodařilo se přesunout zprávu",
@@ -87,6 +90,7 @@
       "recipient": "Příjemce",
       "sender": "Odesílatel",
       "subject": "Předmět",
+      "from": "Od",
       "dateRange": "Časové rozmezí",
       "category": "Kategorie",
       "folder": "Složka",
@@ -248,6 +252,7 @@
       "mute": "Ztlumit",
       "moveToSpam": "Přesunout do šložky Spam",
       "moveToInbox": "Přesunout do složky Doporučená pošta",
+      "deleteFromBin": "Smazat z koše",
       "unarchive": "Obnovit z archivu",
       "archive": "Archiv",
       "moveToBin": "Přesunout do koše",
@@ -268,7 +273,10 @@
       "noLabelsAvailable": "Nejsou dostupné žádné štítky",
       "loadMore": "Načíst více",
       "imagesHidden": "Obrázky jsou z bezpečnostních důvodů skryty",
-      "showImages": "Zobrazit obrázky"
+      "showImages": "Zobrazit obrázky",
+      "noEmails": "Žádné e-maily k dispozici",
+      "noSearchResults": "Nenalezeny žádné výsledky vyhledávání",
+      "clearSearch": "Vymazat vyhledávání"
     },
     "units": {
       "mb": "{amount} MB"
@@ -291,7 +299,9 @@
       "security": "Zabezpečení",
       "appearance": "Vzhled",
       "signatures": "Podpisy",
-      "shortcuts": "Zástupci"
+      "shortcuts": "Zástupci",
+      "labels": "Štítky",
+      "danger-zone": "Nebezpečná zóna"
     }
   },
   "pages": {
@@ -398,8 +408,24 @@
           "viewEmailDetails": "Zobrazit detaily emailu",
           "goToDrafts": "Přejít do Konceptů",
           "expandEmailView": "Rozbalit zobrazení emailu",
-          "helpWithShortcuts": "Nápověda se zkratkami"
+          "helpWithShortcuts": "Nápověda se zkratkami",
+          "recordHotkey": "Nahrát klávesovou zkratku",
+          "pressKeys": "Stiskněte klávesy",
+          "releaseKeys": "Uvolněte klávesy",
+          "selectAll": "Vybrat vše"
         }
+      },
+      "labels": {
+        "title": "Štítky",
+        "description": "Spravujte své štítky pro lepší organizaci vašich e-mailů."
+      },
+      "danger-zone": {
+        "title": "Nebezpečná zóna",
+        "description": "Trvale smažte svůj účet a všechna související data.",
+        "warning": "Tuto akci nelze vrátit zpět.",
+        "confirmation": "Pro potvrzení smazání účtu napište DELETE",
+        "deleteAccount": "Smazat účet",
+        "deleting": "Mazání..."
       }
     },
     "createEmail": {

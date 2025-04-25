@@ -19,6 +19,9 @@
       "movingToInbox": "Movent a la safata d'entrada...",
       "movedToSpam": "Mogut a spam",
       "movingToSpam": "Movent a spam...",
+      "deletingMail": "Eliminant correu...",
+      "failedToDeleteMail": "No s'ha pogut eliminar el correu",
+      "deletedMail": "Correu eliminat",
       "archiving": "Arxivant...",
       "archived": "Arxivat",
       "failedToMove": "No s'ha pogut moure el missatge",
@@ -87,6 +90,7 @@
       "recipient": "Destinatari",
       "sender": "Remitent",
       "subject": "Assumpte",
+      "from": "De",
       "dateRange": "Interval de dates",
       "category": "Categoria",
       "folder": "Carpeta",
@@ -248,6 +252,7 @@
       "mute": "Silenciar",
       "moveToSpam": "Moure a spam",
       "moveToInbox": "Moure a safata d'entrada",
+      "deleteFromBin": "Eliminar de la paperera",
       "unarchive": "Desarxivar",
       "archive": "Arxivar",
       "moveToBin": "Moure a la paperera",
@@ -268,7 +273,10 @@
       "noLabelsAvailable": "No hi ha etiquetes disponibles",
       "loadMore": "Carregar més",
       "imagesHidden": "Les imatges estan ocultes per raons de seguretat",
-      "showImages": "Mostrar imatges"
+      "showImages": "Mostrar imatges",
+      "noEmails": "No hi ha correus disponibles",
+      "noSearchResults": "No s'han trobat resultats de cerca",
+      "clearSearch": "Esborra la cerca"
     },
     "units": {
       "mb": "{amount} MB"
@@ -291,7 +299,9 @@
       "security": "Seguretat",
       "appearance": "Aparença",
       "signatures": "Signatures",
-      "shortcuts": "Dreceres"
+      "shortcuts": "Dreceres",
+      "labels": "Etiquetes",
+      "danger-zone": "Zona perillosa"
     }
   },
   "pages": {
@@ -398,8 +408,24 @@
           "viewEmailDetails": "Veure els detalls del correu",
           "goToDrafts": "Anar a Esborranys",
           "expandEmailView": "Expandir la vista del correu.",
-          "helpWithShortcuts": "Ajuda amb les dreceres"
+          "helpWithShortcuts": "Ajuda amb les dreceres",
+          "recordHotkey": "Enregistra drecera",
+          "pressKeys": "Prem les tecles",
+          "releaseKeys": "Deixa anar les tecles",
+          "selectAll": "Selecciona-ho tot"
         }
+      },
+      "labels": {
+        "title": "Etiquetes",
+        "description": "Gestiona les teves etiquetes per organitzar millor els teus correus."
+      },
+      "danger-zone": {
+        "title": "Zona perillosa",
+        "description": "Elimina permanentment el teu compte i totes les dades associades.",
+        "warning": "Aquesta acció no es pot desfer.",
+        "confirmation": "Si us plau, escriu DELETE per confirmar l'eliminació del compte",
+        "deleteAccount": "Elimina el compte",
+        "deleting": "Eliminant..."
       }
     },
     "createEmail": {
