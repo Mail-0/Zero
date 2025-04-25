@@ -58,9 +58,13 @@ export async function sendEmail({
   });
 
   after(async () => {
-    console.warn('Saving writing style matrix...')
-    await updateWritingStyleMatrix(connection.id, message)
-    console.warn('Saved writing style matrix.')
+    try {
+      console.warn('Saving writing style matrix...')
+      await updateWritingStyleMatrix(connection.id, message)
+      console.warn('Saved writing style matrix.')
+    } catch (error) {
+      console.error('Failed to save writing style matrix', error)
+    }
   })
 
   return { success: true };
