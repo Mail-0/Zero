@@ -35,5 +35,10 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "dompurify": "^3.2.5",
+    "mail": "^0.2.3",
+    "posthog-js": "^1.236.6"
+  }
 }
