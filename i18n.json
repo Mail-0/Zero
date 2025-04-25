@@ -20,7 +20,9 @@
       "tr",
       "hu",
       "fa",
-      "vi"
+      "vi",
+      "zh_CN",
+      "zh_TW"
     ]
   },
   "buckets": {

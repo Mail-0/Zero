@@ -40,6 +40,7 @@ import { ParsedMessage } from '@/types';
 import { Inbox } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { toast } from 'sonner';
+import { Note } from '../../app/api/notes/types';
 
 interface ThreadDisplayProps {
   threadParam?: any;
@@ -142,7 +143,7 @@ export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
   const { mutate: mutateThreads } = useThreads();
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isNotesOpen, setIsNotesOpen] = useState(false);
+  const [isNotesPanelOpen, setIsNotesPanelOpen] = useState(false);
   const [mail, setMail] = useMail();
   const t = useTranslations();
   const { mutate: mutateStats } = useStats();
@@ -283,6 +284,7 @@ export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
             <ThreadSubject subject={emailData.latest?.subject} />
           </div>
           <div className="flex items-center md:gap-2">
+            {threadId && <NotesPanel threadId={threadId} />}
             <ThreadActionButton
               icon={Reply}
               label={t('common.threadDisplay.reply')}
@@ -320,15 +322,6 @@ export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {/* {threadId && (
-                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                    <StickyNote className="mr-2 h-4 w-4" />
-                    <span>{t('common.notes.title')}</span>
-                    <div className="absolute right-0 top-0" onClick={(e) => e.stopPropagation()}>
-                      <NotesPanel threadId={threadId} />
-                    </div>
-                  </DropdownMenuItem>
-                )} */}
                 <DropdownMenuItem onClick={() => setIsFullscreen(!isFullscreen)}>
                   <Expand className="mr-2 h-4 w-4" />
                   <span>

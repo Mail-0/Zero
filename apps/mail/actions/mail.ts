@@ -1,6 +1,6 @@
 'use server';
+import { deleteActiveConnection, FatalErrors, getActiveDriver } from './utils';
 import { IGetThreadResponse } from '@/app/api/driver/types';
-import { getActiveDriver } from './utils';
 import { ParsedMessage } from '@/types';
 
 export const getMail = async ({ id }: { id: string }): Promise<IGetThreadResponse | null> => {
@@ -91,7 +91,7 @@ export const toggleStar = async ({ ids }: { ids: string[] }) => {
       if (result.status === 'fulfilled' && result.value && result.value.messages.length > 0) {
         processedThreads++;
         const isThreadStarred = result.value.messages.some((message: ParsedMessage) =>
-          message.tags?.includes('STARRED'),
+          message.tags?.find((tag) => tag.startsWith('STARRED')),
         );
         if (isThreadStarred) {
           anyStarred = true;
@@ -110,6 +110,19 @@ export const toggleStar = async ({ ids }: { ids: string[] }) => {
     return { success: true };
   } catch (error) {
     console.error('Error toggling star:', error);
+    throw error;
+  }
+};
+
+export const deleteThread = async ({ id }: { id: string }) => {
+  console.log('Deleting thread:', id);
+  try {
+    const driver = await getActiveDriver();
+    await driver.delete(id);
+    return { success: true };
+  } catch (error) {
+    if (FatalErrors.includes((error as Error).message)) await deleteActiveConnection();
+    console.error('Error deleting thread:', error);
     throw error;
   }
 };

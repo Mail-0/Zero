@@ -23,7 +23,7 @@ export const useThreadNotes = (threadId: string) => {
     async () => {
       try {
         const result = await fetcher('/api/driver/notes?threadId=' + threadId);
-        return result.data || [];
+        return result || [];
       } catch (err: any) {
         console.error('Error fetching notes:', err);
         toast.error(t('common.notes.errors.failedToLoadNotes'));

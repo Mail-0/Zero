@@ -26,7 +26,7 @@ import {
   MailOpen,
 } from 'lucide-react';
 import { moveThreadsTo, ThreadDestination } from '@/lib/thread-actions';
-import { markAsRead, markAsUnread, toggleStar } from '@/actions/mail';
+import { deleteThread, markAsRead, markAsUnread, toggleStar } from '@/actions/mail';
 import { useThread, useThreads } from '@/hooks/use-threads';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useParams, useRouter } from 'next/navigation';
@@ -231,6 +231,22 @@ export function ThreadContextMenu({
       disabled: false,
     },
   ];
+  const handleDelete = () => async () => {
+		try {
+        const promise = deleteThread({ id: threadId }).then(() => {
+          setMail(prev => ({ ...prev, bulkSelected: [] }));
+          return mutate();
+        });
+        toast.promise(promise, {
+          loading: t('common.actions.deletingMail'),
+          success: t('common.actions.deletedMail'),
+          error: t('common.actions.failedToDeleteMail'),
+        });
+    } catch (error) {
+        console.error(`Error deleting ${threadId? 'email' : 'thread'}:`, error);
+      }
+    };
+
 
   const getActions = () => {
     if (isSpam) {
@@ -261,6 +277,13 @@ export function ThreadContextMenu({
           action: handleMove(LABELS.TRASH, LABELS.INBOX),
           disabled: false,
         },
+        {
+          id: 'delete-from-bin',
+          label: t('common.mail.deleteFromBin'),
+          icon: <Trash className="mr-2.5 h-4 w-4" />,
+          action: handleDelete(),
+          disabled: false,
+        }
       ];
     }
 

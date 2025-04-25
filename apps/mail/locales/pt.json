@@ -19,6 +19,9 @@
       "movingToInbox": "Movendo para a caixa de entrada...",
       "movedToSpam": "Movido para spam",
       "movingToSpam": "Movendo para spam...",
+      "deletingMail": "Excluindo e-mail...",
+      "failedToDeleteMail": "Falha ao excluir e-mail",
+      "deletedMail": "E-mail excluído",
       "archiving": "Arquivando...",
       "archived": "Arquivado",
       "failedToMove": "Falha ao mover mensagem",
@@ -87,6 +90,7 @@
       "recipient": "Destinatário",
       "sender": "Remetente",
       "subject": "Assunto",
+      "from": "De",
       "dateRange": "Intervalo de datas",
       "category": "Categoria",
       "folder": "Pasta",
@@ -248,6 +252,7 @@
       "mute": "Silenciar",
       "moveToSpam": "Mover para spam",
       "moveToInbox": "Mover para a caixa de entrada",
+      "deleteFromBin": "Excluir da lixeira",
       "unarchive": "Desarquivar",
       "archive": "Arquivo",
       "moveToBin": "Mover para a lixeira",
@@ -268,7 +273,10 @@
       "noLabelsAvailable": "Nenhuma etiqueta disponível",
       "loadMore": "Carregar mais",
       "imagesHidden": "As imagens estão ocultas por motivos de segurança",
-      "showImages": "Mostrar imagens"
+      "showImages": "Mostrar imagens",
+      "noEmails": "Nenhum e-mail disponível",
+      "noSearchResults": "Nenhum resultado de pesquisa encontrado",
+      "clearSearch": "Limpar pesquisa"
     },
     "units": {
       "mb": "{amount} MB"
@@ -291,7 +299,9 @@
       "security": "Segurança",
       "appearance": "Aparência",
       "signatures": "Assinaturas",
-      "shortcuts": "Atalhos"
+      "shortcuts": "Atalhos",
+      "labels": "Etiquetas",
+      "danger-zone": "Zona de perigo"
     }
   },
   "pages": {
@@ -398,8 +408,24 @@
           "viewEmailDetails": "Ver os detalhes do E-Mail",
           "goToDrafts": "Ir para Rascunhos",
           "expandEmailView": "Expandir Visualização do E-mail",
-          "helpWithShortcuts": "Ajuda com atalhos"
+          "helpWithShortcuts": "Ajuda com atalhos",
+          "recordHotkey": "Gravar atalho",
+          "pressKeys": "Pressione as teclas",
+          "releaseKeys": "Solte as teclas",
+          "selectAll": "Selecionar tudo"
         }
+      },
+      "labels": {
+        "title": "Etiquetas",
+        "description": "Gerencie suas etiquetas para melhor organização dos seus e-mails."
+      },
+      "danger-zone": {
+        "title": "Zona de perigo",
+        "description": "Exclua permanentemente sua conta e todos os dados associados.",
+        "warning": "Esta ação não pode ser desfeita.",
+        "confirmation": "Digite DELETE para confirmar a exclusão da conta",
+        "deleteAccount": "Excluir conta",
+        "deleting": "Excluindo..."
       }
     },
     "createEmail": {

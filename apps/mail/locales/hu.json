@@ -19,6 +19,9 @@
       "movingToInbox": "Áthelyezés a beérkező levelekhez...",
       "movedToSpam": "Áthelyezve a spambe",
       "movingToSpam": "Áthelyezés a spambe...",
+      "deletingMail": "E-mail törlése...",
+      "failedToDeleteMail": "Nem sikerült törölni az e-mailt",
+      "deletedMail": "E-mail törölve",
       "archiving": "Archiválás...",
       "archived": "Archiválva",
       "failedToMove": "Nem sikerült áthelyezni az üzenetet",
@@ -87,6 +90,7 @@
       "recipient": "Címzett",
       "sender": "Feladó",
       "subject": "Tárgy",
+      "from": "Feladó",
       "dateRange": "Dátumtartomány",
       "category": "Kategória",
       "folder": "Mappa",
@@ -248,6 +252,7 @@
       "mute": "Némítás",
       "moveToSpam": "Áthelyezés a spambe",
       "moveToInbox": "Áthelyezés a beérkező levelekbe",
+      "deleteFromBin": "Törlés a Lomtárból",
       "unarchive": "Visszaállítás az archívumból",
       "archive": "Archiválás",
       "moveToBin": "Áthelyezés a kukába",
@@ -268,7 +273,10 @@
       "noLabelsAvailable": "Nincsenek elérhető címkék",
       "loadMore": "Továbbiak betöltése",
       "imagesHidden": "A képek biztonsági okokból rejtve vannak",
-      "showImages": "Képek megjelenítése"
+      "showImages": "Képek megjelenítése",
+      "noEmails": "Nincsenek elérhető e-mailek",
+      "noSearchResults": "Nincs találat a keresésre",
+      "clearSearch": "Keresés törlése"
     },
     "units": {
       "mb": "{amount} MB"
@@ -291,7 +299,9 @@
       "security": "Biztonság",
       "appearance": "Megjelenés",
       "signatures": "Aláírások",
-      "shortcuts": "Gyorsbillentyűk"
+      "shortcuts": "Gyorsbillentyűk",
+      "labels": "Címkék",
+      "danger-zone": "Veszélyes zóna"
     }
   },
   "pages": {
@@ -398,8 +408,24 @@
           "viewEmailDetails": "E-mail részletek megtekintése",
           "goToDrafts": "Ugrás a piszkozatokhoz",
           "expandEmailView": "E-mail nézet kibontása",
-          "helpWithShortcuts": "Segítség a gyorsbillentyűkhöz"
+          "helpWithShortcuts": "Segítség a gyorsbillentyűkhöz",
+          "recordHotkey": "Gyorsbillentyű rögzítése",
+          "pressKeys": "Nyomja le a billentyűket",
+          "releaseKeys": "Engedje fel a billentyűket",
+          "selectAll": "Összes kijelölése"
         }
+      },
+      "labels": {
+        "title": "Címkék",
+        "description": "Kezelje címkéit az e-mailek jobb rendszerezése érdekében."
+      },
+      "danger-zone": {
+        "title": "Veszélyes zóna",
+        "description": "Véglegesen törölheti fiókját és minden kapcsolódó adatát.",
+        "warning": "Ez a művelet nem vonható vissza.",
+        "confirmation": "Kérjük, írja be a DELETE szót a fiók törlésének megerősítéséhez",
+        "deleteAccount": "Fiók törlése",
+        "deleting": "Törlés..."
       }
     },
     "createEmail": {
