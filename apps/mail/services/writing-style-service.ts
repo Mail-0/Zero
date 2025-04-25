@@ -91,7 +91,6 @@ const createUpdatedMatrixFromNewEmail = (numMessages: number, currentStyleMatrix
   const {
     greeting,
     signOff,
-    signatureHash,
   } = emailStyleMatrix
 
   if (greeting) {
@@ -103,6 +102,7 @@ const createUpdatedMatrixFromNewEmail = (numMessages: number, currentStyleMatrix
 
     // Record the total number of greetings
     newStyle.greetingTotal = newStyle.greetingTotal + 1
+    newStyle.pGreet = newStyle.greetingTotal / newNumMessages
   }
 
   if (signOff) {
@@ -112,15 +112,7 @@ const createUpdatedMatrixFromNewEmail = (numMessages: number, currentStyleMatrix
 
     // Record the total number of sign offs
     newStyle.signOffTotal = newStyle.signOffTotal + 1
-  }
-
-  if (signatureHash) {
-    const currentSignatureHashCount = newStyle.signatureHashCounts[signatureHash] ?? 0
-    newStyle.signatureHashCounts[signatureHash] = currentSignatureHashCount + 1
-    newStyle.signatureHashCounts = TAKE_TYPE === 'coverage' ? takeTopCoverage(newStyle.signatureHashCounts) : takeTopK(newStyle.signatureHashCounts)
-
-    // Record the total number of signature hashes
-    newStyle.signatureHashTotal = newStyle.signatureHashTotal + 1
+    newStyle.pSign = newStyle.signOffTotal / newNumMessages
   }
 
   return newStyle
@@ -181,19 +173,20 @@ const initializeStyleMatrixFromEmail = (matrix: EmailMatrix): WritingStyleMatrix
     ]
   })
 
+  const greetingTotal = matrix.greeting ? 1 : 0
+  const signOffTotal = matrix.signOff ? 1 : 0
+
   return {
     greetingCounts: matrix.greeting ? {
       [matrix.greeting]: 1,
     } : {},
-    greetingTotal: matrix.greeting ? 1 : 0,
+    greetingTotal,
     signOffCounts: matrix.signOff ? {
       [matrix.signOff]: 1,
     }: {},
-    signOffTotal: matrix.signOff ? 1 : 0,
-    signatureHashCounts: matrix.signatureHash ? {
-      [matrix.signatureHash]: 1,
-    }: {},
-    signatureHashTotal: matrix.signatureHash ? 1 : 0,
+    signOffTotal,
+    pGreet: greetingTotal, // these initialize the same
+    pSign: signOffTotal, // these initialize the same
     metrics: initializedMetrics,
   }
 }
@@ -214,16 +207,15 @@ export type EmailMetrics = Record<typeof METRIC_KEYS[number], number>
 export type EmailMatrix = {
   greeting: string | null
   signOff: string | null
-  signatureHash: string | null
 } & EmailMetrics
 
 export type StyleMetrics = Record<typeof METRIC_KEYS[number], RunningStat>
 export type WritingStyleMatrix = {
   greetingCounts: Record<string, number>
   greetingTotal: number
+  pGreet: number
   signOffCounts: Record<string, number>
   signOffTotal: number
-  signatureHashCounts: Record<string, number>
-  signatureHashTotal: number
+  pSign: number
   metrics: StyleMetrics
 }

@@ -22,7 +22,6 @@ export async function generateAIEmailBody({
   currentContent,
   subject,
   to,
-  conversationId,
   userContext,
 }: {
   prompt: string;
@@ -51,7 +50,6 @@ export async function generateAIEmailBody({
       currentContent,
       recipients: to,
       subject,
-      conversationId,
       userContext,
     });
 

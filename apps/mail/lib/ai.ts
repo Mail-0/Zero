@@ -44,13 +44,11 @@ export const generateEmailBody = async ({
   currentContent,
   recipients,
   subject,
-  conversationId = generateConversationId(),
 }: {
   prompt: string,
   currentContent?: string,
   recipients?: string[],
   subject?: string, // Subject for context only
-  conversationId?: string,
   userContext?: UserContext,
 }): Promise<AIBodyResponse[]> => {
   try {
@@ -75,11 +73,7 @@ export const generateEmailBody = async ({
     const writingStyleMatrix = await getWritingStyleMatrixForConnectionId(session.connectionId)
 
     const systemPrompt = writingStyleMatrix ?
-      StyledEmailAssistantSystemPrompt(userName, writingStyleMatrix.style, {
-        currentSubject: subject,
-        currentDraft: currentContent,
-        recipients,
-      }) :
+      StyledEmailAssistantSystemPrompt(userName, writingStyleMatrix.style) :
       EmailAssistantSystemPrompt(userName);
 
     const finalPrompt = EmailAssistantPrompt({
@@ -99,6 +93,7 @@ export const generateEmailBody = async ({
       temperature: 0.35, // controlled creativity
       frequencyPenalty: 0.2, // dampen phrase repetition
       presencePenalty: 0.1, // nudge the model to add fresh info
+      maxRetries: 1,
     })
 
     return postProcessMessage(text)
@@ -257,7 +252,7 @@ export const extractStyleMatrix = async (emailBody: string) => {
     object,
   } = await generateObject({
     model: openai('gpt-4o-mini'),
-    system: StyleMatrixExtractorPrompt,
+    system: StyleMatrixExtractorPrompt(),
     prompt: emailBody.trim(),
     schema: z.object({
       // greeting and sign-off may be absent, so they accept null
@@ -292,9 +287,6 @@ export const extractStyleMatrix = async (emailBody: string) => {
       ctaCount: z.number().int().nonnegative(),
       emojiCount: z.number().int().nonnegative(),
       exclamationFreq: z.number(),
-
-      // signature
-      signatureHash: z.string()
     }),
     temperature: 0, // Lower temperature for more deterministic output
     maxTokens: 300,
@@ -306,6 +298,5 @@ export const extractStyleMatrix = async (emailBody: string) => {
     ...object,
     greeting: object.greeting?.trim().toLowerCase() ?? null,
     signOff: object.signOff?.trim().toLowerCase() ?? null,
-    signatureHash: object.signatureHash?.trim().toLowerCase() ?? null,
   }
 }

@@ -283,7 +283,6 @@ export const AIAssistant = ({
         currentContent: generatedBody?.content || currentContent,
         subject,
         to: recipients,
-        conversationId,
         userContext: { name: userName, email: userEmail },
       });
       console.log('AI Assistant: Received Body Result:', JSON.stringify(bodyResult));
@@ -314,7 +313,7 @@ export const AIAssistant = ({
         console.log('AI Assistant: Requesting email subject...');
         const subjectResult = await generateAISubject({ body: bodyResult.content });
         console.log('AI Assistant: Received Subject Result:', subjectResult);
-        
+
         if (subjectResult && subjectResult.trim() !== '') {
           finalSubject = subjectResult;
           setGeneratedSubject(finalSubject);
@@ -330,7 +329,7 @@ export const AIAssistant = ({
         setErrorOccurred(true);
         throw new Error("Body generation resulted in empty content.");
       }
-      
+
       setShowActions(true);
       setPrompt('');
 
