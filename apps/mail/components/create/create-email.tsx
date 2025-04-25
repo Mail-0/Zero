@@ -268,6 +268,25 @@ export function CreateEmail({
     }
   };
 
+  const handleEditEmail = (type: 'to' | 'cc' | 'bcc', index: number, newEmail: string) => {
+    // Only validate and edit when Enter is pressed
+    const trimmedEmail = newEmail.trim();
+    if (!trimmedEmail) return;
+
+    const emailState = type === 'to' ? toEmails : type === 'cc' ? ccEmails : bccEmails;
+    const setEmailState = type === 'to' ? setToEmails : type === 'cc' ? setCcEmails : setBccEmails;
+
+    if (isValidEmail(trimmedEmail)) {
+      const newEmails = [...emailState];
+      newEmails[index] = trimmedEmail;
+      setEmailState(newEmails);
+      setHasUnsavedChanges(true);
+    } else {
+      // Show error for invalid email
+      toast.error(t('pages.createEmail.invalidEmail'));
+    }
+  };
+
   const saveDraft = React.useCallback(async () => {
     if (!hasUnsavedChanges) return;
     if (!toEmails.length || !subjectInput || !messageContent) return;
@@ -570,6 +589,7 @@ export function CreateEmail({
                   filteredContacts={[]}
                   isLoading={isLoading}
                   onAddEmail={handleAddEmail}
+                  onEditEmail={handleEditEmail}
                   hasUnsavedChanges={hasUnsavedChanges}
                   setHasUnsavedChanges={setHasUnsavedChanges}
                   className="w-24 text-right"
@@ -585,6 +605,7 @@ export function CreateEmail({
                     filteredContacts={[]}
                     isLoading={isLoading}
                     onAddEmail={handleAddEmail}
+                    onEditEmail={handleEditEmail}
                     hasUnsavedChanges={hasUnsavedChanges}
                     setHasUnsavedChanges={setHasUnsavedChanges}
                     className="w-24 text-right"
@@ -601,6 +622,7 @@ export function CreateEmail({
                     filteredContacts={[]}
                     isLoading={isLoading}
                     onAddEmail={handleAddEmail}
+                    onEditEmail={handleEditEmail}
                     hasUnsavedChanges={hasUnsavedChanges}
                     setHasUnsavedChanges={setHasUnsavedChanges}
                     className="w-24 text-right"
