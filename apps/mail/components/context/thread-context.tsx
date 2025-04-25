@@ -100,7 +100,7 @@ export function ThreadContextMenu({
 
   const isStarred = useMemo(() => {
     return threadData?.latest?.tags?.includes('STARRED') ?? false;
-  }, [threadData]);
+  }, [threadData, selectedThreads, mail.bulkSelected]);
 
   const noopAction = () => async () => {
     toast.info(t('common.actions.featureNotImplemented'));
