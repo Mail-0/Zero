@@ -836,8 +836,16 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       return withErrorHandler(
         'sendDraft',
         async () => {
+          const { raw } = await parseOutgoing(data);
           await gmail.users.drafts.send({
             userId: 'me',
+            requestBody: {
+              id: draftId,
+              message: {
+                raw,
+                id: draftId,
+              },
+            },
           });
         },
         { draftId, data },
