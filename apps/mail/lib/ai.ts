@@ -7,7 +7,8 @@ import {
   EmailAssistantSystemPrompt,
   SubjectGenerationSystemPrompt,
   StyleMatrixExtractorPrompt,
-  StyledEmailAssistantSystemPrompt, EmailAssistantPrompt
+  StyledEmailAssistantSystemPrompt,
+  EmailAssistantPrompt,
 } from './prompts';
 import { generateText, generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';

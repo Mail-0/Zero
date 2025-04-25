@@ -84,7 +84,7 @@
     "novel": "1.0.2",
     "nuqs": "2.4.0",
     "postgres": "3.4.5",
-    "posthog-js": "^1.236.6",
+    "posthog-js": "1.236.6",
     "react": "19.0.0",
     "react-day-picker": "8.10.1",
     "react-dom": "19.0.0",
@@ -104,7 +104,8 @@
     "tiptap-extension-global-drag-handle": "0.1.18",
     "tiptap-markdown": "0.8.10",
     "vaul": "1.1.2",
-    "zod": "3.24.2"
+    "zod": "3.24.2",
+    "dompurify": "3.2.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "3.3.0",

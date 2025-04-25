@@ -1,7 +1,7 @@
 // The brain.ts file in /actions should replace this file once ready.
 'use server';
 
-import { generateEmailBody, generateEmailBodyV2, generateSubjectForEmail } from '@/lib/ai';
+import { generateEmailBodyV2, generateSubjectForEmail } from '@/lib/ai';
 import { headers } from 'next/headers';
 import { JSONContent } from 'novel';
 import { auth } from '@/lib/auth';
@@ -53,7 +53,7 @@ export async function generateAIEmailBody({
       subject,
       conversationId,
       userContext,
-    });
+    );
 
     const response = responses[0];
     if (!response) {
