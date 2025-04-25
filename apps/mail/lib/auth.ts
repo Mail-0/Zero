@@ -1,11 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { connection, user as _user, account, userSettings, earlyAccess } from '@zero/db/schema';
+import {
+  connection,
+  user as _user,
+  account,
+  userSettings,
+  earlyAccess,
+  session,
+} from '@zero/db/schema';
 import { createAuthMiddleware, customSession } from 'better-auth/plugins';
 import { Account, betterAuth, type BetterAuthOptions } from 'better-auth';
 import { getBrowserTimezone, isValidTimezone } from '@/lib/timezones';
 import { defaultUserSettings } from '@zero/db/user_settings_default';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { getSocialProviders } from './auth-providers';
+import { getActiveDriver } from '@/actions/utils';
 import { createDriver } from '@/app/api/driver';
 import { redirect } from 'next/navigation';
 import { APIError } from 'better-auth/api';
@@ -75,6 +83,26 @@ const options = {
   advanced: {
     ipAddress: {
       disableIpTracking: true,
+    },
+  },
+  user: {
+    deleteUser: {
+      enabled: true,
+      beforeDelete: async (user, request) => {
+        const driver = await getActiveDriver();
+        const refreshToken = (
+          await db.select().from(connection).where(eq(connection.userId, user.id)).limit(1)
+        )[0]?.refreshToken;
+        const revoked = await driver.revokeRefreshToken(refreshToken || '');
+        if (!revoked) {
+          console.error('Failed to revoke refresh token');
+          return;
+        }
+        await db.delete(account).where(eq(account.userId, user.id));
+        await db.delete(session).where(eq(session.userId, user.id));
+        await db.delete(connection).where(eq(connection.userId, user.id));
+        await db.delete(_user).where(eq(_user.id, user.id));
+      },
     },
   },
   session: {

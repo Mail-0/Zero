@@ -84,6 +84,7 @@
     "novel": "1.0.2",
     "nuqs": "2.4.0",
     "postgres": "3.4.5",
+    "posthog-js": "^1.236.6",
     "react": "19.0.0",
     "react-day-picker": "8.10.1",
     "react-dom": "19.0.0",
