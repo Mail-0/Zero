@@ -52,7 +52,7 @@ const SUM_METRIC_KEYS = [
 
 const TOP_COUNTS_KEYS = [
   'greeting',
-  'signoff',
+  'signOff',
 ] as const
 
 export const getWritingStyleMatrixForConnectionId = async (connectionId: string) => {
@@ -102,7 +102,6 @@ export const updateWritingStyleMatrix = async (connectionId: string, emailBody: 
 }
 
 const createUpdatedMatrixFromNewEmail = (numMessages: number, currentStyleMatrix: WritingStyleMatrix, emailStyleMatrix: EmailMatrix) => {
-  const newNumMessages = numMessages + 1
   const newStyle = {
     ...currentStyleMatrix,
   }
@@ -116,35 +115,11 @@ const createUpdatedMatrixFromNewEmail = (numMessages: number, currentStyleMatrix
   }
 
   for (const key of TOP_COUNTS_KEYS) {
-
-  }
-
-  // We already did sanitization in the extractStyleMatrix()
-  const {
-    greeting,
-    signOff,
-  } = emailStyleMatrix
-
-  if (greeting) {
-    const currentGreetingCount = newStyle.greetingCounts[greeting] ?? 0
-
-    // Increment the specific greeting
-    newStyle.greetingCounts[greeting] = currentGreetingCount + 1
-    newStyle.greetingCounts = TAKE_TYPE === 'coverage' ? takeTopCoverage(newStyle.greetingCounts) : takeTopK(newStyle.greetingCounts)
-
-    // Record the total number of greetings
-    newStyle.greetingTotal = newStyle.greetingTotal + 1
-  }
-
-  if (signOff) {
-    const currentSignOffCount = newStyle.signOffCounts[signOff] ?? 0
-
-    // Increment the specific sign off
-    newStyle.signOffCounts[signOff] = currentSignOffCount + 1
-    newStyle.signOffCounts = TAKE_TYPE === 'coverage' ? takeTopCoverage(newStyle.signOffCounts) : takeTopK(newStyle.signOffCounts)
-
-    // Record the total number of sign offs
-    newStyle.signOffTotal = newStyle.signOffTotal + 1
+    const emailValue = emailStyleMatrix[key]
+    if (emailValue) {
+      newStyle[key][emailValue] = (newStyle[key][emailValue] ?? 0) + 1
+      newStyle[key] = TAKE_TYPE === 'coverage' ? takeTopCoverage(newStyle[key]) : takeTopK(newStyle[key])
+    }
   }
 
   return newStyle
@@ -212,9 +187,17 @@ const initializeStyleMatrixFromEmail = (matrix: EmailMatrix): WritingStyleMatrix
     ]
   })
 
+  const initializedTopCountMetrics = mapToObj(TOP_COUNTS_KEYS, (key) => {
+    return [
+      key,
+      matrix[key] ? { [matrix[key]]: 1 } : {},
+    ]
+  })
+
   return {
     ...initializedWelfordMetrics,
     ...initializedSumMetrics,
+    ...initializedTopCountMetrics,
   }
 }
 
@@ -245,13 +228,9 @@ export type WelfordState = {
   m2: number
 }
 
-export type EmailMetrics = Record<typeof MEAN_METRIC_KEYS[number], number>
+export type EmailMatrix = Record<typeof MEAN_METRIC_KEYS[number], number>
   & Record<typeof SUM_METRIC_KEYS[number], number>
-
-export type EmailMatrix = {
-  greeting: string | null
-  signOff: string | null
-} & EmailMetrics
+  & Record<typeof TOP_COUNTS_KEYS[number], string | null>
 
 export type WritingStyleMatrix = Record<typeof MEAN_METRIC_KEYS[number], WelfordState>
   & Record<typeof SUM_METRIC_KEYS[number], number>
