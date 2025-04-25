@@ -39,7 +39,7 @@ const conversationHistories: Record<
 > = {};
 
 const genericFailureMessage = "Unable to fulfill your request.";
-export const generateEmailBodyV2 = async ({
+export const generateEmailBody = async ({
   prompt,
   currentContent,
   recipients,
@@ -53,55 +53,66 @@ export const generateEmailBodyV2 = async ({
   conversationId?: string,
   userContext?: UserContext,
 }): Promise<AIBodyResponse[]> => {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('OpenAI API key is not configured');
-  }
+  try {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OpenAI API key is not configured');
+    }
 
-  const headersList = await headers()
-  const session = await auth.api.getSession({ headers: headersList });
+    const headersList = await headers()
+    const session = await auth.api.getSession({ headers: headersList });
 
-  if (!session) {
-    throw new Error('Unauthorized');
-  }
+    if (!session) {
+      throw new Error('Unauthorized');
+    }
 
-  if (!session.connectionId) {
-    throw new Error('No active connection');
-  }
+    if (!session.connectionId) {
+      throw new Error('No active connection');
+    }
 
-  const userName = session.user.name ?? 'User'
-  const userId = session.user.id ?? 'anonymous'
+    const userName = session.user.name ?? 'User'
+    const userId = session.user.id ?? 'anonymous'
 
-  const writingStyleMatrix = await getWritingStyleMatrixForConnectionId(session.connectionId)
+    const writingStyleMatrix = await getWritingStyleMatrixForConnectionId(session.connectionId)
 
-  const systemPrompt = writingStyleMatrix ?
-    StyledEmailAssistantSystemPrompt(userName, writingStyleMatrix.style, {
+    const systemPrompt = writingStyleMatrix ?
+      StyledEmailAssistantSystemPrompt(userName, writingStyleMatrix.style, {
+        currentSubject: subject,
+        currentDraft: currentContent,
+        recipients,
+      }) :
+      EmailAssistantSystemPrompt(userName);
+
+    const finalPrompt = EmailAssistantPrompt({
       currentSubject: subject,
       currentDraft: currentContent,
       recipients,
-    }) :
-    EmailAssistantSystemPrompt(userName);
+      conversationHistory: conversationHistories[userId]?.[conversationId] ?? [],
+      prompt,
+    })
 
-  const finalPrompt = EmailAssistantPrompt({
-    currentSubject: subject,
-    currentDraft: currentContent,
-    recipients,
-    conversationHistory: conversationHistories[userId]?.[conversationId] ?? [],
-    prompt,
-  })
+    const {
+      text,
+    } = await generateText({
+      model: openai('gpt-4o'),
+      system: systemPrompt,
+      prompt: finalPrompt,
+      maxTokens: 600,
+      temperature: 0.35, // controlled creativity
+      frequencyPenalty: 0.2, // dampen phrase repetition
+      presencePenalty: 0.1, // nudge the model to add fresh info
+    })
 
-  const {
-    text,
-  } = await generateText({
-    model: openai('gpt-4o'),
-    system: systemPrompt,
-    prompt: finalPrompt,
-    maxTokens: 600,
-    temperature: 0.35, // controlled creativity
-    frequencyPenalty: 0.2, // dampen phrase repetition
-    presencePenalty: 0.1, // nudge the model to add fresh info
-  })
-
-  return postProcessMessage(text)
+    return postProcessMessage(text)
+  } catch (error) {
+    console.error(`Error during AI email body generation process...`, error);
+    return [
+      {
+        id: 'error-' + Date.now(),
+        body: genericFailureMessage,
+        type: 'system',
+      },
+    ];
+  }
 }
 
 const postProcessMessage = (text: string): AIBodyResponse[] => {
@@ -162,160 +173,6 @@ const postProcessMessage = (text: string): AIBodyResponse[] => {
     console.log(`AI Assistant (Body): AI response is email body content...`);
     return [
       { id: 'email-' + Date.now(), body: generatedBody, type: 'email', position: 'replace' },
-    ];
-  }
-}
-
-// --- Generate Email Body ---
-export async function generateEmailBody(
-  prompt: string,
-  currentContent?: string,
-  recipients?: string[],
-  subject?: string, // Subject for context only
-  conversationId?: string,
-  userContext?: UserContext,
-): Promise<AIBodyResponse[]> { // Returns body-focused response
-  const headersList = await headers();
-  const session = await auth.api.getSession({ headers: headersList });
-  const userName = session?.user.name || 'User';
-  const convId = conversationId || generateConversationId();
-  const userId = session?.user?.id || 'anonymous';
-
-  console.log(`AI Assistant (Body): Processing prompt for convId ${convId}: "${prompt}"`);
-
-  try {
-    if (!process.env.GROQ_API_KEY) {
-      throw new Error('Groq API key is not configured');
-    }
-
-    // Initialize nested structure if needed
-    if (!conversationHistories[userId]) {
-      conversationHistories[userId] = {};
-    }
-    if (!conversationHistories[userId][convId]) {
-      conversationHistories[userId][convId] = [];
-    }
-
-    // Use the BODY-ONLY system prompt
-    const baseSystemPrompt = EmailAssistantSystemPrompt(userName);
-
-    // Dynamic context (can still include subject)
-    let dynamicContext = '\n\n<dynamic_context>\n';
-    if (subject) {
-      dynamicContext += `  <current_subject>${subject}</current_subject>\n`;
-    }
-    if (currentContent) {
-      dynamicContext += `  <current_draft>${currentContent}</current_draft>\n`;
-    }
-    if (recipients && recipients.length > 0) {
-      dynamicContext += `  <recipients>${recipients.join(', ')}</recipients>\n`;
-    }
-    dynamicContext += '</dynamic_context>\n';
-    const fullSystemPrompt = baseSystemPrompt + (dynamicContext.length > 30 ? dynamicContext : '');
-
-    // Build conversation history string
-    const conversationHistory = conversationHistories[userId][convId]
-      .filter((msg) => msg.role === 'user' || msg.role === 'assistant')
-      .map((msg) => `<message role="${msg.role}">${msg.content}</message>`)
-      .join('\n');
-
-    // Combine history with current prompt
-    const fullPrompt = conversationHistory + `\n<message role="user">${prompt}</message>`;
-
-    // Prepare embeddings context
-    const embeddingTexts: Record<string, string> = {};
-    if (currentContent) { embeddingTexts.currentEmail = currentContent; }
-    if (prompt) { embeddingTexts.userPrompt = prompt; }
-    const previousMessages = conversationHistories[userId][convId].slice(-4);
-    if (previousMessages.length > 0) {
-      embeddingTexts.conversationHistory = previousMessages.map((msg) => `${msg.role}: ${msg.content}`).join('\n\n');
-    }
-    let embeddings = {};
-    try { embeddings = await createEmbeddings(embeddingTexts); } catch (e) { console.error('Embedding error:', e); }
-
-    console.log(`AI Assistant (Body): Calling generateCompletions for convId ${convId}...`);
-    const { completion: generatedBodyRaw } = await generateCompletions({
-      model: 'gpt-4', // Using the more capable model
-      systemPrompt: fullSystemPrompt,
-      prompt: fullPrompt,
-      temperature: 0.7,
-      embeddings,
-      userName: userName,
-    });
-    console.log(`AI Assistant (Body): Received completion for convId ${convId}:`, generatedBodyRaw);
-
-    // --- Post-processing: Remove common conversational prefixes ---
-    let generatedBody = generatedBodyRaw;
-    const prefixesToRemove = [
-        /^Here is the generated email body:/i,
-        /^Sure, here's the email body:/i,
-        /^Okay, here is the body:/i,
-        /^Here's the draft:/i,
-        /^Here is the email body:/i,
-        /^Here is your email body:/i,
-        // Add more prefixes if needed
-    ];
-    for (const prefixRegex of prefixesToRemove) {
-        if (prefixRegex.test(generatedBody.trimStart())) {
-            generatedBody = generatedBody.trimStart().replace(prefixRegex, '').trimStart();
-            console.log(`AI Assistant Post-Check (Body): Removed prefix matching ${prefixRegex}`);
-            break;
-        }
-    }
-    // --- End Post-processing ---
-
-    // Comprehensive safety checks for HTML tags and code blocks
-    const unsafePattern = /(```|~~~|<[^>]+>|&lt;[^&]+&gt;|<script|<style|\bjavascript:|data:)/i;
-    if (unsafePattern.test(generatedBody)) {
-      console.warn(`AI Assistant Post-Check (Body): Detected forbidden content format (HTML/code)... Overriding.`);
-      return [
-        { id: 'override-' + Date.now(), body: genericFailureMessage, type: 'system' },
-      ];
-    }
-
-    const lowerBody = generatedBody.toLowerCase();
-    const isRefusal =
-        lowerBody.includes("i cannot") ||
-        lowerBody.includes("i'm unable to") ||
-        lowerBody.includes("i am unable to") ||
-        lowerBody.includes("as an ai") ||
-        lowerBody.includes("my purpose is to assist") ||
-        lowerBody.includes("violates my safety guidelines") ||
-        lowerBody.includes("sorry, i can only assist with email body");
-
-    if (isRefusal) {
-        console.warn(`AI Assistant Post-Check (Body): Detected refusal/interjection. Overriding.`);
-        return [
-            { id: 'refusal-' + Date.now(), body: genericFailureMessage, type: 'system' },
-        ];
-    }
-
-    // Add user prompt and cleaned/validated body to history
-    conversationHistories[userId][convId].push({ role: 'user', content: prompt });
-    conversationHistories[userId][convId].push({ role: 'assistant', content: generatedBody }); // Log the potentially cleaned body
-
-    const isClarificationNeeded = checkIfQuestion(generatedBody);
-
-    if (isClarificationNeeded) {
-       console.log(`AI Assistant (Body): AI response is a clarification question...`);
-       return [
-         { id: 'question-' + Date.now(), body: generatedBody, type: 'question', position: 'replace' },
-       ];
-     } else {
-       console.log(`AI Assistant (Body): AI response is email body content...`);
-       return [
-         { id: 'email-' + Date.now(), body: generatedBody, type: 'email', position: 'replace' },
-       ];
-     }
-
-  } catch (error) {
-    console.error(`Error during AI email body generation process...`, error);
-    return [
-      {
-        id: 'error-' + Date.now(),
-        body: genericFailureMessage,
-        type: 'system',
-      },
     ];
   }
 }
