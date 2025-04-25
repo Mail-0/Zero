@@ -99,13 +99,8 @@ export function ThreadContextMenu({
   }, [threadData]);
 
   const isStarred = useMemo(() => {
-    // TODO
-    return false;
-    // if (mail.bulkSelected.length) {
-    //   return selectedThreads.every((thread) => thread.tags?.includes('STARRED'));
-    // }
-    // return selectedThreads[0]?.tags?.includes('STARRED') ?? false;
-  }, [selectedThreads, mail.bulkSelected]);
+    return threadData?.latest?.tags?.includes('STARRED') ?? false;
+  }, [threadData]);
 
   const noopAction = () => async () => {
     toast.info(t('common.actions.featureNotImplemented'));
@@ -166,9 +161,10 @@ export function ThreadContextMenu({
 
   const handleFavorites = () => {
     const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
+    console.log('targets', targets);
     const promise = toggleStar({ ids: targets }).then(() => {
       setMail((prev) => ({ ...prev, bulkSelected: [] }));
-      return mutate();
+      return mutateThread();
     });
 
     toast.promise(promise, {
@@ -353,7 +349,7 @@ export function ThreadContextMenu({
         <Star className="mr-2.5 h-4 w-4" />
       ),
       action: handleFavorites,
-      disabled: true,
+      disabled: false,
     },
     {
       id: 'mute',
