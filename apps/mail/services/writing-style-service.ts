@@ -185,15 +185,15 @@ const initializeStyleMatrixFromEmail = (matrix: EmailMatrix): WritingStyleMatrix
     greetingCounts: matrix.greeting ? {
       [matrix.greeting]: 1,
     } : {},
-    greetingTotal: 1,
+    greetingTotal: matrix.greeting ? 1 : 0,
     signOffCounts: matrix.signOff ? {
       [matrix.signOff]: 1,
     }: {},
-    signOffTotal: 1,
+    signOffTotal: matrix.signOff ? 1 : 0,
     signatureHashCounts: matrix.signatureHash ? {
       [matrix.signatureHash]: 1,
     }: {},
-    signatureHashTotal: 1,
+    signatureHashTotal: matrix.signatureHash ? 1 : 0,
     metrics: initializedMetrics,
   }
 }
