@@ -1,7 +1,7 @@
 // The brain.ts file in /actions should replace this file once ready.
 'use server';
 
-import { generateEmailBody, generateSubjectForEmail } from '@/lib/ai';
+import { generateEmailBody, generateEmailBodyV2, generateSubjectForEmail } from '@/lib/ai';
 import { headers } from 'next/headers';
 import { JSONContent } from 'novel';
 import { auth } from '@/lib/auth';
@@ -45,15 +45,15 @@ export async function generateAIEmailBody({
           type: 'system',
        };
     }
-    
-    const responses = await generateEmailBody(
+
+    const responses = await generateEmailBodyV2({
       prompt,
       currentContent,
-      to,
+      recipients: to,
       subject,
       conversationId,
       userContext,
-    );
+    });
 
     const response = responses[0];
     if (!response) {
@@ -72,7 +72,7 @@ export async function generateAIEmailBody({
     console.log("--- End Action Layer (Body) Log ---");
 
     const responseBody = response.body ?? '';
-    
+
     if (!responseBody) {
         console.error('AI Action Error (Body): Missing body field on response');
         const errorMsg = 'AI returned an unexpected format.';
@@ -82,7 +82,7 @@ export async function generateAIEmailBody({
             type: 'system',
         };
     }
-    
+
     const jsonContent = createJsonContentFromBody(responseBody);
 
     return {
@@ -90,7 +90,7 @@ export async function generateAIEmailBody({
       jsonContent,
       type: response.type,
     };
-    
+
   } catch (error) {
     console.error('Error in generateAIEmailBody action:', error);
     const errorMsg = 'Sorry, I encountered an unexpected error while generating the email body.';
@@ -145,7 +145,7 @@ function createJsonContentFromBody(bodyText: string): JSONContent {
         content: [
             {
                 type: 'paragraph',
-                content: [{ type: 'text', text: bodyText.trim() }], 
+                content: [{ type: 'text', text: bodyText.trim() }],
             }
         ],
     };

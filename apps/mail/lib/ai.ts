@@ -44,7 +44,6 @@ export const generateEmailBodyV2 = async ({
   recipients,
   subject,
   conversationId = generateConversationId(),
-  userContext,
 }: {
   prompt: string,
   currentContent?: string,
@@ -52,7 +51,7 @@ export const generateEmailBodyV2 = async ({
   subject?: string, // Subject for context only
   conversationId?: string,
   userContext?: UserContext,
-}) => {
+}): Promise<AIBodyResponse[]> => {
   if (!process.env.GROQ_API_KEY) {
     throw new Error('Groq API key is not configured');
   }
@@ -104,7 +103,7 @@ export const generateEmailBodyV2 = async ({
   return postProcessMessage(text)
 }
 
-const postProcessMessage = (text: string) => {
+const postProcessMessage = (text: string): AIBodyResponse[] => {
   // --- Post-processing: Remove common conversational prefixes ---
   let generatedBody = text;
   const prefixesToRemove = [
