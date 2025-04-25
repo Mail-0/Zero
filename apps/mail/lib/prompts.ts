@@ -171,7 +171,7 @@ export const EmailAssistantPrompt = ({
     </dynamic_context>
     \n\n`;
 
-    const promptMessage = `\n<message role="user">${prompt}</message>`;
+    const promptMessage = `\n<message role="user">${escapeXml(prompt)}</message>`;
 
     return `
         ${dynamicContext}
