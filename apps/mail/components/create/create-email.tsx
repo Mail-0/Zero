@@ -354,7 +354,7 @@ export function CreateEmail({
       // Use the selected from email or the first alias (or default user email)
       const fromEmail = selectedFromEmail || (aliases?.[0]?.email ?? userEmail);
 
-      await sendEmail({
+      const emailData = {
         to: toEmails.map((email) => ({ email, name: email.split('@')[0] || email })),
         cc: showCc
           ? ccEmails.map((email) => ({ email, name: email.split('@')[0] || email }))
@@ -366,7 +366,13 @@ export function CreateEmail({
         message: messageContent,
         attachments: attachments,
         fromEmail: fromEmail,
-      });
+      };
+
+      if (draftId) {
+        await sendEmail({ ...emailData, draftId });
+      } else {
+        await sendEmail(emailData);
+      }
 
       // Track different email sending scenarios
       if (showCc && showBcc) {
@@ -398,6 +404,8 @@ export function CreateEmail({
       setResetEditorKey((prev) => prev + 1);
 
       setHasUnsavedChanges(false);
+      // Clear the draftId after successful send
+      setDraftId(null);
     } catch (error) {
       console.error('Error sending email:', error);
       setIsLoading(false);
@@ -806,7 +814,7 @@ export function CreateEmail({
                             </p>
                           </div>
                           <Separator />
-                          <div className="touch-auto overflow-y-auto  max-h-[40vh] overflow-x-hidden overscroll-contain px-1 py-1">
+                          <div className="max-h-[40vh] touch-auto overflow-y-auto overflow-x-hidden overscroll-contain px-1 py-1">
                             <div className="grid grid-cols-2 gap-2">
                               {attachments.map((file, index) => (
                                 <div

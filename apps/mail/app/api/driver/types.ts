@@ -10,6 +10,7 @@ export interface IGetThreadResponse {
 export interface MailManager {
   get(id: string): Promise<IGetThreadResponse>;
   create(data: IOutgoingMessage): Promise<any>;
+  sendDraft(id: string, data: IOutgoingMessage): Promise<any>;
   createDraft(data: any): Promise<any>;
   getDraft: (id: string) => Promise<any>;
   listDrafts: (q?: string, maxResults?: number, pageToken?: string) => Promise<any>;

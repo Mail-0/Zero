@@ -1,19 +1,19 @@
 'use server';
-import { getActiveConnection } from './utils';
 import axios from 'axios';
 
-export const EnableBrain = async () => {
+export const EnableBrain = async ({
+  connection,
+}: {
+  connection: { id: string; providerId: string };
+}) => {
   if (!process.env.BRAIN_URL) {
-    return null;
+    return false;
   }
 
-  const connection = await getActiveConnection();
-
-  if (!connection?.accessToken || !connection.refreshToken) {
-    return;
-  }
-
-  return await axios.put(process.env.BRAIN_URL + `/subscribe/${connection.providerId}`, {
-    connectionId: connection.id,
-  });
+  return await axios
+    .put(process.env.BRAIN_URL + `/subscribe/${connection.providerId}`, {
+      connectionId: connection.id,
+    })
+    .catch((error) => false)
+    .then(() => true);
 };

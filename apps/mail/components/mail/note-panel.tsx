@@ -287,22 +287,25 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
 
   const handleAddNote = async () => {
     if (newNoteContent.trim()) {
-      setIsAddingNewNote(true);
-      toast.promise(
-        createNote({
-          threadId,
-          color: selectedColor !== 'default' ? selectedColor : undefined,
-          content: newNoteContent,
-        }),
-        {
-          success: t('common.notes.noteUpdated'),
-          loading: 'loading',
-        },
-      );
-      await mutate();
+      const noteData = {
+        threadId,
+        color: selectedColor !== 'default' ? selectedColor : undefined,
+        content: newNoteContent.trim(),
+      };
       setNewNoteContent('');
-      setIsAddingNewNote(false);
       setSelectedColor('default');
+      setIsAddingNewNote(false);
+
+      const promise = async () => {
+        await createNote(noteData);
+        await mutate();
+      };
+
+      toast.promise(promise(), {
+        loading: t('common.actions.loading'),
+        success: t('common.notes.noteAdded'),
+        error: t('common.notes.errors.failedToAddNote'),
+      });
     }
   };
 
@@ -319,18 +322,24 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
 
   const handleEditNote = async () => {
     if (editingNoteId && editContent.trim()) {
-      toast.promise(
-        updateNote(editingNoteId, {
-          content: editContent.trim(),
-        }),
-        {
-          success: t('common.notes.noteUpdated'),
-          loading: 'loading',
-        },
-      );
-      await mutate();
+      const noteId = editingNoteId;
+      const contentToSave = editContent.trim();
+
       setEditingNoteId(null);
       setEditContent('');
+
+      const promise = async () => {
+        await updateNote(noteId, {
+          content: contentToSave,
+        });
+        await mutate();
+      };
+
+      toast.promise(promise(), {
+        loading: t('common.actions.saving'),
+        success: t('common.notes.noteUpdated'),
+        error: t('common.notes.errors.failedToUpdateNote'),
+      });
     }
   };
 
@@ -346,14 +355,20 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
 
   const handleDeleteNote = async () => {
     if (noteToDelete) {
-      toast.promise(deleteNote(noteToDelete), {
-        success: t('common.notes.noteDeleted'),
-        loading: 'loading',
-      });
-      await mutate();
-      toast.success(t('common.notes.noteDeleted'));
+      const noteId = noteToDelete;
       setDeleteConfirmOpen(false);
       setNoteToDelete(null);
+
+      const promise = async () => {
+        await deleteNote(noteId);
+        await mutate();
+      };
+
+      toast.promise(promise(), {
+        loading: t('common.actions.loading'),
+        success: t('common.notes.noteDeleted'),
+        error: t('common.notes.errors.failedToDeleteNote'),
+      });
     }
   };
 
@@ -363,16 +378,34 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
   };
 
   const togglePinNote = async (noteId: string, isPinned: boolean) => {
-    await updateNote(noteId, {
+    const action = updateNote(noteId, {
       isPinned: !isPinned,
     });
+
+    toast.promise(action, {
+      loading: t('common.actions.loading'),
+      success: isPinned
+        ? t('common.notes.noteUnpinned')
+        : t('common.notes.notePinned'),
+      error: t('common.notes.errors.failedToUpdateNote'),
+    });
+
+    await action;
     return await mutate();
   };
 
   const handleChangeNoteColor = async (noteId: string, color: string) => {
-    await updateNote(noteId, {
+    const action = updateNote(noteId, {
       color,
     });
+
+    toast.promise(action, {
+      loading: t('common.actions.loading'),
+      success: t('common.notes.colorChanged'),
+      error: t('common.notes.errors.failedToUpdateNoteColor'),
+    });
+
+    await action;
     return await mutate();
   };
 
@@ -403,7 +436,16 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
         const reorderedPinnedNotes = assignOrdersAfterPinnedReorder(newPinnedNotes);
 
         const newNotes = [...reorderedPinnedNotes, ...unpinnedNotes];
-        await reorderNotes(newNotes);
+        const action = reorderNotes(newNotes);
+
+        toast.promise(action, {
+          loading: t('common.actions.loading'),
+          success: t('common.notes.notesReordered'),
+          error: t('common.notes.errors.failedToReorderNotes'),
+        });
+
+        await action;
+        await mutate();
       } else {
         const oldIndex = unpinnedNotes.findIndex((n) => n.id === active.id);
         const newIndex = unpinnedNotes.findIndex((n) => n.id === over.id);
@@ -415,9 +457,17 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
         );
 
         const newNotes = [...pinnedNotes, ...reorderedUnpinnedNotes];
-        await reorderNotes(newNotes);
+        const action = reorderNotes(newNotes);
+
+        toast.promise(action, {
+          loading: t('common.actions.loading'),
+          success: t('common.notes.notesReordered'),
+          error: t('common.notes.errors.failedToReorderNotes'),
+        });
+
+        await action;
+        await mutate();
       }
-      await mutate();
     }
 
     setActiveId(null);
@@ -460,7 +510,9 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
             )}
             onClick={() => setIsOpen(!isOpen)}
           >
-           
+            <StickyNote
+              className={cn('h-4 w-4', notes.length > 0 && 'fill-amber-200 dark:fill-amber-900')}
+            />
             {notes.length > 0 && (
               <span className="bg-primary text-primary-foreground absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px]">
                 {notes.length}

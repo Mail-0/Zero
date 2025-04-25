@@ -19,6 +19,9 @@
       "movingToInbox": "Gelen kutusuna taşınıyor...",
       "movedToSpam": "İstenmeyen kutusuna taşındı",
       "movingToSpam": "İstenmeyen kutusuna taşınıyor...",
+      "deletingMail": "E-posta siliniyor...",
+      "failedToDeleteMail": "E-posta silinemedi",
+      "deletedMail": "E-posta silindi",
       "archiving": "Arşivleniyor...",
       "archived": "Arşivlendi",
       "failedToMove": "Mesaj taşınamadı",
@@ -87,6 +90,7 @@
       "recipient": "Alıcı",
       "sender": "Gönderen",
       "subject": "Konu",
+      "from": "Kimden",
       "dateRange": "Tarih aralığı",
       "category": "Kategori",
       "folder": "Klasör",
@@ -248,6 +252,7 @@
       "mute": "Sustur",
       "moveToSpam": "İstenmeyen Kutusuna Taşı",
       "moveToInbox": "Gelen Kutusuna Taşı",
+      "deleteFromBin": "Çöp Kutusundan Sil",
       "unarchive": "Arşivden Çıkar",
       "archive": "Arşivle",
       "moveToBin": "Çöp Kutusuna Taşı",
@@ -268,7 +273,10 @@
       "noLabelsAvailable": "Etiket bulunmuyor",
       "loadMore": "Daha fazla yükle",
       "imagesHidden": "Görseller güvenlik nedeniyle gizlenmiştir",
-      "showImages": "Görselleri Göster"
+      "showImages": "Görselleri Göster",
+      "noEmails": "Hiç e-posta yok",
+      "noSearchResults": "Arama sonucu bulunamadı",
+      "clearSearch": "Aramayı temizle"
     },
     "units": {
       "mb": "{amount} MB"
@@ -291,7 +299,9 @@
       "security": "Güvenlik",
       "appearance": "Görünüm",
       "signatures": "İmzalar",
-      "shortcuts": "Kısayollar"
+      "shortcuts": "Kısayollar",
+      "labels": "Etiketler",
+      "danger-zone": "Tehlikeli Bölge"
     }
   },
   "pages": {
@@ -398,8 +408,24 @@
           "viewEmailDetails": "E-posta Detaylarını Görüntüle",
           "goToDrafts": "Taslaklara Git",
           "expandEmailView": "E-posta Görünümünü Genişlet",
-          "helpWithShortcuts": "Kısayollar Hakkında Yardım"
+          "helpWithShortcuts": "Kısayollar Hakkında Yardım",
+          "recordHotkey": "Kısayol Tuşu Kaydet",
+          "pressKeys": "Tuşlara bas",
+          "releaseKeys": "Tuşları bırak",
+          "selectAll": "Tümünü Seç"
         }
+      },
+      "labels": {
+        "title": "Etiketler",
+        "description": "E-postalarınızı daha iyi düzenlemek için etiketlerinizi yönetin."
+      },
+      "danger-zone": {
+        "title": "Tehlikeli Bölge",
+        "description": "Hesabınızı ve ilişkili tüm verileri kalıcı olarak silin.",
+        "warning": "Bu eylem geri alınamaz.",
+        "confirmation": "Hesap silme işlemini onaylamak için lütfen DELETE yazın",
+        "deleteAccount": "Hesabı Sil",
+        "deleting": "Siliniyor..."
       }
     },
     "createEmail": {
