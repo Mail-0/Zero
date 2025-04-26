@@ -107,6 +107,10 @@ const options = {
     },
   },
   session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60, // 7 days
+    },
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day (every 1 day the session expiration is updated)
   },
@@ -275,7 +279,7 @@ const options = {
               void EnableBrain({
                 connection: { id: newConnectionId, providerId: userAccount.providerId },
               });
-              console.log('Created new connection for user', newConnection);
+              console.warn('Created new connection for user', user.email);
             }
           }
         }
