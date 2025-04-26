@@ -66,6 +66,7 @@
     "date-fns": "4.1.0",
     "deepmerge": "4.3.1",
     "dexie": "4.0.11",
+    "dompurify": "^3.2.5",
     "drizzle-orm": "0.39.3",
     "email-addresses": "5.0.0",
     "flags": "^3.2.0",

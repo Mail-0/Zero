@@ -562,11 +562,16 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
     getUserInfo: (tokens: IConfig['auth']) => {
       return withErrorHandler(
         'getUserInfo',
-        () => {
+        async () => {
           auth.setCredentials({ ...tokens, scope: getScope() });
-          return google
+          const res = await google
             .people({ version: 'v1', auth })
             .people.get({ resourceName: 'people/me', personFields: 'names,photos,emailAddresses' });
+          return {
+            address: res.data.emailAddresses?.[0]?.value ?? '',
+            name: res.data.names?.[0]?.displayName ?? '',
+            photo: res.data.photos?.[0]?.url ?? '',
+          };
         },
         { tokens },
       );
@@ -830,6 +835,25 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
           });
         },
         { threadIds, options },
+      );
+    },
+    sendDraft: async (draftId: string, data: IOutgoingMessage) => {
+      return withErrorHandler(
+        'sendDraft',
+        async () => {
+          const { raw } = await parseOutgoing(data);
+          await gmail.users.drafts.send({
+            userId: 'me',
+            requestBody: {
+              id: draftId,
+              message: {
+                raw,
+                id: draftId,
+              },
+            },
+          });
+        },
+        { draftId, data },
       );
     },
     getDraft: async (draftId: string) => {

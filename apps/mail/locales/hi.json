@@ -19,6 +19,9 @@
       "movingToInbox": "इनबॉक्स में स्थानांतरित कर रहा है...",
       "movedToSpam": "स्पैम में स्थानांतरित किया गया",
       "movingToSpam": "स्पैम में स्थानांतरित कर रहा है...",
+      "deletingMail": "मेल डिलीट हो रहा है...",
+      "failedToDeleteMail": "मेल डिलीट करने में विफल",
+      "deletedMail": "मेल डिलीट किया गया",
       "archiving": "आर्काइव कर रहा है...",
       "archived": "आर्काइव किया गया",
       "failedToMove": "संदेश स्थानांतरित करने में विफल",
@@ -87,6 +90,7 @@
       "recipient": "प्राप्तकर्ता",
       "sender": "सेंडर",
       "subject": "विषय",
+      "from": "प्रेषक",
       "dateRange": "तारीख़ रेंज",
       "category": "वर्ग",
       "folder": "फोल्डर",
@@ -248,6 +252,7 @@
       "mute": "म्यूट करें",
       "moveToSpam": "स्पैम में ले जाएं",
       "moveToInbox": "इनबॉक्स में ले जाएं",
+      "deleteFromBin": "बिन से डिलीट करें",
       "unarchive": "अनआर्काइव करें",
       "archive": "आर्काइव करें",
       "moveToBin": "बिन में ले जाएं",
@@ -268,7 +273,10 @@
       "noLabelsAvailable": "कोई लेबल उपलब्ध नहीं",
       "loadMore": "और लोड करें",
       "imagesHidden": "सुरक्षा कारणों से छवियां छिपाई गई हैं",
-      "showImages": "छवियां दिखाएं"
+      "showImages": "छवियां दिखाएं",
+      "noEmails": "कोई ईमेल उपलब्ध नहीं",
+      "noSearchResults": "कोई खोज परिणाम नहीं मिला",
+      "clearSearch": "खोज मिटाएँ"
     },
     "units": {
       "mb": "{amount} MB"
@@ -291,7 +299,9 @@
       "security": "सुरक्षा",
       "appearance": "अपियरेंस",
       "signatures": "हस्ताक्षर",
-      "shortcuts": "शॉर्टकट"
+      "shortcuts": "शॉर्टकट",
+      "labels": "लेबल",
+      "danger-zone": "खतरे का क्षेत्र"
     }
   },
   "pages": {
@@ -398,8 +408,24 @@
           "viewEmailDetails": "ईमेल विवरण देखें",
           "goToDrafts": "ड्राफ्ट पर जाएं",
           "expandEmailView": "ईमेल व्यू विस्तारित करें",
-          "helpWithShortcuts": "शॉर्टकट से मदद करें"
+          "helpWithShortcuts": "शॉर्टकट से मदद करें",
+          "recordHotkey": "हॉटकी रिकॉर्ड करें",
+          "pressKeys": "कीज़ दबाएँ",
+          "releaseKeys": "कीज़ छोड़ें",
+          "selectAll": "सभी चुनें"
         }
+      },
+      "labels": {
+        "title": "लेबल",
+        "description": "अपने ईमेल के बेहतर संगठन के लिए अपने लेबल प्रबंधित करें।"
+      },
+      "danger-zone": {
+        "title": "खतरे का क्षेत्र",
+        "description": "अपना अकाउंट और सभी संबंधित डेटा स्थायी रूप से डिलीट करें।",
+        "warning": "यह क्रिया वापस नहीं ली जा सकती।",
+        "confirmation": "अकाउंट डिलीट करने की पुष्टि के लिए कृपया DELETE टाइप करें",
+        "deleteAccount": "अकाउंट डिलीट करें",
+        "deleting": "डिलीट हो रहा है..."
       }
     },
     "createEmail": {

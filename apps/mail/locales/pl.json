@@ -19,6 +19,9 @@
       "movingToInbox": "Przenoszenie do skrzynki odbiorczej...",
       "movedToSpam": "Przeniesiono do spamu",
       "movingToSpam": "Przenoszenie do spamu...",
+      "deletingMail": "Usuwanie wiadomości...",
+      "failedToDeleteMail": "Nie udało się usunąć wiadomości",
+      "deletedMail": "Wiadomość usunięta",
       "archiving": "Archiwizowanie...",
       "archived": "Zarchiwizowano",
       "failedToMove": "Nie udało się przenieść wiadomości",
@@ -87,6 +90,7 @@
       "recipient": "Odbiorca",
       "sender": "Nadawca",
       "subject": "Temat",
+      "from": "Od",
       "dateRange": "Zakres dat",
       "category": "Kategoria",
       "folder": "Folder",
@@ -248,6 +252,7 @@
       "mute": "Wycisz",
       "moveToSpam": "Przenieś do spamu",
       "moveToInbox": "Przenieś do skrzynki odbiorczej",
+      "deleteFromBin": "Usuń z kosza",
       "unarchive": "Przywróć z archiwum",
       "archive": "Archiwizuj",
       "moveToBin": "Przenieś do kosza",
@@ -268,7 +273,10 @@
       "noLabelsAvailable": "Brak dostępnych etykiet",
       "loadMore": "Wczytaj więcej",
       "imagesHidden": "Obrazy są ukryte ze względów bezpieczeństwa",
-      "showImages": "Pokaż obrazy"
+      "showImages": "Pokaż obrazy",
+      "noEmails": "Brak dostępnych wiadomości",
+      "noSearchResults": "Nie znaleziono wyników wyszukiwania",
+      "clearSearch": "Wyczyść wyszukiwanie"
     },
     "units": {
       "mb": "{amount} MB"
@@ -291,7 +299,9 @@
       "security": "Bezpieczeństwo",
       "appearance": "Wygląd",
       "signatures": "Podpisy",
-      "shortcuts": "Skróty"
+      "shortcuts": "Skróty",
+      "labels": "Etykiety",
+      "danger-zone": "Strefa zagrożenia"
     }
   },
   "pages": {
@@ -398,8 +408,24 @@
           "viewEmailDetails": "Zobacz szczegóły e-maila",
           "goToDrafts": "Przejdź do wersji roboczych",
           "expandEmailView": "Rozwiń widok e-maila",
-          "helpWithShortcuts": "Pomoc ze skrótami"
+          "helpWithShortcuts": "Pomoc ze skrótami",
+          "recordHotkey": "Nagraj skrót klawiszowy",
+          "pressKeys": "Naciśnij klawisze",
+          "releaseKeys": "Zwolnij klawisze",
+          "selectAll": "Zaznacz wszystko"
         }
+      },
+      "labels": {
+        "title": "Etykiety",
+        "description": "Zarządzaj swoimi etykietami, aby lepiej organizować wiadomości e-mail."
+      },
+      "danger-zone": {
+        "title": "Strefa zagrożenia",
+        "description": "Trwale usuń swoje konto i wszystkie powiązane dane.",
+        "warning": "Tej operacji nie można cofnąć.",
+        "confirmation": "Wpisz USUŃ, aby potwierdzić usunięcie konta",
+        "deleteAccount": "Usuń konto",
+        "deleting": "Usuwanie..."
       }
     },
     "createEmail": {

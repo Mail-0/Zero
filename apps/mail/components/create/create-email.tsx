@@ -268,6 +268,25 @@ export function CreateEmail({
     }
   };
 
+  const handleEditEmail = (type: 'to' | 'cc' | 'bcc', index: number, newEmail: string) => {
+    // Only validate and edit when Enter is pressed
+    const trimmedEmail = newEmail.trim();
+    if (!trimmedEmail) return;
+
+    const emailState = type === 'to' ? toEmails : type === 'cc' ? ccEmails : bccEmails;
+    const setEmailState = type === 'to' ? setToEmails : type === 'cc' ? setCcEmails : setBccEmails;
+
+    if (isValidEmail(trimmedEmail)) {
+      const newEmails = [...emailState];
+      newEmails[index] = trimmedEmail;
+      setEmailState(newEmails);
+      setHasUnsavedChanges(true);
+    } else {
+      // Show error for invalid email
+      toast.error(t('pages.createEmail.invalidEmail'));
+    }
+  };
+
   const saveDraft = React.useCallback(async () => {
     if (!hasUnsavedChanges) return;
     if (!toEmails.length || !subjectInput || !messageContent) return;
@@ -335,7 +354,7 @@ export function CreateEmail({
       // Use the selected from email or the first alias (or default user email)
       const fromEmail = selectedFromEmail || (aliases?.[0]?.email ?? userEmail);
 
-      await sendEmail({
+      const emailData = {
         to: toEmails.map((email) => ({ email, name: email.split('@')[0] || email })),
         cc: showCc
           ? ccEmails.map((email) => ({ email, name: email.split('@')[0] || email }))
@@ -347,7 +366,13 @@ export function CreateEmail({
         message: messageContent,
         attachments: attachments,
         fromEmail: fromEmail,
-      });
+      };
+
+      if (draftId) {
+        await sendEmail({ ...emailData, draftId });
+      } else {
+        await sendEmail(emailData);
+      }
 
       // Track different email sending scenarios
       if (showCc && showBcc) {
@@ -379,6 +404,8 @@ export function CreateEmail({
       setResetEditorKey((prev) => prev + 1);
 
       setHasUnsavedChanges(false);
+      // Clear the draftId after successful send
+      setDraftId(null);
     } catch (error) {
       console.error('Error sending email:', error);
       setIsLoading(false);
@@ -570,6 +597,7 @@ export function CreateEmail({
                   filteredContacts={[]}
                   isLoading={isLoading}
                   onAddEmail={handleAddEmail}
+                  onEditEmail={handleEditEmail}
                   hasUnsavedChanges={hasUnsavedChanges}
                   setHasUnsavedChanges={setHasUnsavedChanges}
                   className="w-24 text-right"
@@ -585,6 +613,7 @@ export function CreateEmail({
                     filteredContacts={[]}
                     isLoading={isLoading}
                     onAddEmail={handleAddEmail}
+                    onEditEmail={handleEditEmail}
                     hasUnsavedChanges={hasUnsavedChanges}
                     setHasUnsavedChanges={setHasUnsavedChanges}
                     className="w-24 text-right"
@@ -601,6 +630,7 @@ export function CreateEmail({
                     filteredContacts={[]}
                     isLoading={isLoading}
                     onAddEmail={handleAddEmail}
+                    onEditEmail={handleEditEmail}
                     hasUnsavedChanges={hasUnsavedChanges}
                     setHasUnsavedChanges={setHasUnsavedChanges}
                     className="w-24 text-right"
@@ -784,7 +814,7 @@ export function CreateEmail({
                             </p>
                           </div>
                           <Separator />
-                          <div className="touch-auto overflow-y-auto  max-h-[40vh] overflow-x-hidden overscroll-contain px-1 py-1">
+                          <div className="max-h-[40vh] touch-auto overflow-y-auto overflow-x-hidden overscroll-contain px-1 py-1">
                             <div className="grid grid-cols-2 gap-2">
                               {attachments.map((file, index) => (
                                 <div

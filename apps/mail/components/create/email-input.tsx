@@ -11,6 +11,7 @@ interface EmailInputProps {
   filteredContacts: any[];
   isLoading: boolean;
   onAddEmail: (type: 'to' | 'cc' | 'bcc', email: string) => void;
+  onEditEmail: (type: 'to' | 'cc' | 'bcc', index: number, email: string) => void;
   hasUnsavedChanges: boolean;
   setHasUnsavedChanges: (value: boolean) => void;
   className?: string;
@@ -25,13 +26,17 @@ export function EmailInput({
   filteredContacts,
   isLoading,
   onAddEmail,
+  onEditEmail,
   className,
   setHasUnsavedChanges,
 }: EmailInputProps) {
   const t = useTranslations();
   const [selectedContactIndex, setSelectedContactIndex] = useState(0);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editValue, setEditValue] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const editInputRef = useRef<HTMLInputElement>(null);
 
   const handleEmailInputChange = (value: string) => {
     setInputValue(value);
@@ -66,11 +71,35 @@ export function EmailInput({
     setHasUnsavedChanges(true);
   };
 
+  const handleChipClick = (index: number, email: string) => {
+    setEditingIndex(index);
+    setEditValue(email);
+    setTimeout(() => {
+      const input = editInputRef.current;
+      if (input) {
+        input.focus();
+        // Move cursor to the end instead of selecting
+        const length = input.value.length;
+        input.setSelectionRange(length, length);
+      }
+    }, 0);
+  };
+
+  const handleEditKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      onEditEmail(type, index, editValue);
+      setEditingIndex(null);
+      setEditValue('');
+    } else if (e.key === 'Escape') {
+      setEditingIndex(null);
+      setEditValue('');
+    }
+  };
+
   return (
     <div className="flex items-center">
-      <div
-        className={`text-muted-foreground flex-shrink-0 pr-3 text-[1rem] font-[600] opacity-50 ${className}`}
-      >
+      <div className={`text-muted-foreground flex-shrink-0 pr-3 text-[1rem] font-[600] opacity-50 ${className}`}>
         {type === 'to'
           ? t('common.mailDisplay.to')
           : `${type.charAt(0).toUpperCase()}${type.slice(1)}`}
@@ -81,9 +110,27 @@ export function EmailInput({
             key={index}
             className="bg-accent flex items-center gap-1 rounded-md border px-2 text-sm font-medium"
           >
-            <span className="max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap">
-              {email}
-            </span>
+            {editingIndex === index ? (
+              <div className="relative flex items-center">
+                <input
+                  ref={editInputRef}
+                  type="text"
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  onKeyDown={(e) => handleEditKeyDown(e, index)}
+                  onBlur={() => setEditingIndex(null)}
+                  className="w-[150px] bg-transparent focus:outline-none pr-6"
+                />
+                <span className="absolute right-1 text-xs text-muted-foreground">↵</span>
+              </div>
+            ) : (
+              <span
+                onClick={() => handleChipClick(index, email)}
+                className="max-w-[150px] cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap"
+              >
+                {email}
+              </span>
+            )}
             <button
               tabIndex={-1}
               type="button"

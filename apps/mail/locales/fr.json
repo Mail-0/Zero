@@ -19,6 +19,9 @@
       "movingToInbox": "Déplacement vers la boîte de réception...",
       "movedToSpam": "Déplacé vers les indésirables",
       "movingToSpam": "Déplacement vers les indésirables...",
+      "deletingMail": "Suppression du mail...",
+      "failedToDeleteMail": "Échec de la suppression du mail",
+      "deletedMail": "Mail supprimé",
       "archiving": "Archivage...",
       "archived": "Archivé",
       "failedToMove": "Échec du déplacement du message",
@@ -87,6 +90,7 @@
       "recipient": "Destinataire",
       "sender": "Expéditeur",
       "subject": "Sujet",
+      "from": "De",
       "dateRange": "Plage de dates",
       "category": "Catégorie",
       "folder": "Dossier",
@@ -248,6 +252,7 @@
       "mute": "Couper le son",
       "moveToSpam": "Déplacer dans les indésirables",
       "moveToInbox": "Déplacer dans boîte de réception",
+      "deleteFromBin": "Supprimer définitivement",
       "unarchive": "Désarchiver",
       "archive": "Archiver",
       "moveToBin": "Déplacer vers la corbeille",
@@ -268,7 +273,10 @@
       "noLabelsAvailable": "Aucune étiquette disponible",
       "loadMore": "Charger plus d'éléments",
       "imagesHidden": "Les images sont masquées pour des raisons de sécurité",
-      "showImages": "Afficher les images"
+      "showImages": "Afficher les images",
+      "noEmails": "Aucun email disponible",
+      "noSearchResults": "Aucun résultat trouvé",
+      "clearSearch": "Effacer la recherche"
     },
     "units": {
       "mb": "{amount} Mo"
@@ -291,7 +299,9 @@
       "security": "Sécurité",
       "appearance": "Apparence",
       "signatures": "Signatures",
-      "shortcuts": "Raccourcis"
+      "shortcuts": "Raccourcis",
+      "labels": "Étiquettes",
+      "danger-zone": "Zone dangereuse"
     }
   },
   "pages": {
@@ -398,8 +408,24 @@
           "viewEmailDetails": "Voir les détails de l'email",
           "goToDrafts": "Aller aux brouillons",
           "expandEmailView": "Agrandir la vue de l'email",
-          "helpWithShortcuts": "Aide sur les raccourcis"
+          "helpWithShortcuts": "Aide sur les raccourcis",
+          "recordHotkey": "Enregistrer le raccourci",
+          "pressKeys": "Appuyez sur les touches",
+          "releaseKeys": "Relâchez les touches",
+          "selectAll": "Tout sélectionner"
         }
+      },
+      "labels": {
+        "title": "Étiquettes",
+        "description": "Gérez vos étiquettes pour mieux organiser vos emails."
+      },
+      "danger-zone": {
+        "title": "Zone dangereuse",
+        "description": "Supprimez définitivement votre compte et toutes les données associées.",
+        "warning": "Cette action ne peut pas être annulée.",
+        "confirmation": "Veuillez saisir SUPPRIMER pour confirmer la suppression du compte",
+        "deleteAccount": "Supprimer le compte",
+        "deleting": "Suppression en cours..."
       }
     },
     "createEmail": {

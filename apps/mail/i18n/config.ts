@@ -1,6 +1,8 @@
 const LANGUAGES = {
   en: 'English',
   ar: 'Arabic',
+  zh_TW: 'Chinese (Traditional)',
+  zh_CN: 'Chinese (Simplified)',
   ca: 'Catalan',
   de: 'German',
   es: 'Spanish',

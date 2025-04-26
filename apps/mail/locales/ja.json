@@ -19,6 +19,9 @@
       "movingToInbox": "受信箱に移動中...",
       "movedToSpam": "迷惑メールに移動しました",
       "movingToSpam": "迷惑メールに移動中...",
+      "deletingMail": "メールを削除中...",
+      "failedToDeleteMail": "メールの削除に失敗しました",
+      "deletedMail": "メールを削除しました",
       "archiving": "アーカイブ中...",
       "archived": "アーカイブしました",
       "failedToMove": "メッセージの移動に失敗しました",
@@ -87,6 +90,7 @@
       "recipient": "宛先",
       "sender": "差出人",
       "subject": "件名",
+      "from": "差出人",
       "dateRange": "期間",
       "category": "カテゴリー",
       "folder": "フォルダー",
@@ -248,6 +252,7 @@
       "mute": "ミュート",
       "moveToSpam": "迷惑メールに移動",
       "moveToInbox": "受信箱に移動",
+      "deleteFromBin": "ゴミ箱から削除",
       "unarchive": "アーカイブ解除",
       "archive": "アーカイブ",
       "moveToBin": "ゴミ箱に移動",
@@ -268,7 +273,10 @@
       "noLabelsAvailable": "利用可能なラベルがありません",
       "loadMore": "さらに読み込む",
       "imagesHidden": "セキュリティ上の理由により画像は非表示になっています",
-      "showImages": "画像を表示"
+      "showImages": "画像を表示",
+      "noEmails": "メールがありません",
+      "noSearchResults": "検索結果が見つかりませんでした",
+      "clearSearch": "検索をクリア"
     },
     "units": {
       "mb": "{amount} MB"
@@ -291,7 +299,9 @@
       "security": "セキュリティ",
       "appearance": "外観",
       "signatures": "署名",
-      "shortcuts": "ショートカット"
+      "shortcuts": "ショートカット",
+      "labels": "ラベル",
+      "danger-zone": "危険ゾーン"
     }
   },
   "pages": {
@@ -398,8 +408,24 @@
           "viewEmailDetails": "メール詳細を表示",
           "goToDrafts": "下書きを開く",
           "expandEmailView": "メールビューを展開",
-          "helpWithShortcuts": "ショートカットのヘルプ"
+          "helpWithShortcuts": "ショートカットのヘルプ",
+          "recordHotkey": "ホットキーを記録",
+          "pressKeys": "キーを押す",
+          "releaseKeys": "キーを離す",
+          "selectAll": "すべて選択"
         }
+      },
+      "labels": {
+        "title": "ラベル",
+        "description": "メールをより良く整理するためのラベルを管理します。"
+      },
+      "danger-zone": {
+        "title": "危険ゾーン",
+        "description": "アカウントと関連するすべてのデータを完全に削除します。",
+        "warning": "この操作は元に戻せません。",
+        "confirmation": "アカウント削除を確認するために「DELETE」と入力してください",
+        "deleteAccount": "アカウントを削除",
+        "deleting": "削除中..."
       }
     },
     "createEmail": {

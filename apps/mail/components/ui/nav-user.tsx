@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  BrainCircuitIcon,
   ChevronDown,
   HelpCircle,
   LogIn,
@@ -18,19 +19,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useConnections } from '@/hooks/use-connections';
-import { useRouter } from 'next/navigation';
 import { signOut, useSession } from '@/lib/auth-client';
 import { AddConnectionDialog } from '../connection/add';
 import { putConnection } from '@/actions/connections';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { dexieStorageProvider } from '@/lib/idb';
 import { SunIcon } from '../icons/animated/sun';
+import { EnableBrain } from '@/actions/brain';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { type IConnection } from '@/types';
 import { useTheme } from 'next-themes';
 import { toast } from 'sonner';
-import { dexieStorageProvider } from '@/lib/idb';
-import { usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 export function NavUser() {
@@ -60,6 +62,12 @@ export function NavUser() {
   const handleClearCache = useCallback(async () => {
     dexieStorageProvider().clear();
     toast.success('Cache cleared successfully');
+  }, []);
+
+  const handleEnableBrain = useCallback(async () => {
+    // This takes too long, not waiting
+    const enabled = await EnableBrain({});
+    if (enabled) toast.success('Brain enabled successfully');
   }, []);
 
   const activeAccount = useMemo(() => {
@@ -95,11 +103,14 @@ export function NavUser() {
   };
 
   const handleLogout = async () => {
-    toast.promise(signOut().then(() => router.push('/login')), {
-      loading: 'Signing out...',
-      success: () => 'Signed out successfully!',
-      error: 'Error signing out',
-    });
+    toast.promise(
+      signOut().then(() => router.push('/login')),
+      {
+        loading: 'Signing out...',
+        success: () => 'Signed out successfully!',
+        error: 'Error signing out',
+      },
+    );
   };
 
   return (
@@ -266,7 +277,6 @@ export function NavUser() {
                   <p className="text-[13px] opacity-60">{t('common.actions.logout')}</p>
                 </div>
               </DropdownMenuItem>
-
             </>
           ) : (
             <>
@@ -291,13 +301,17 @@ export function NavUser() {
               </a>
             </div>
             <DropdownMenuSeparator className="mt-1" />
-            <p className="text-muted-foreground px-2 py-1 text-[11px] font-medium">
-              Debug
-            </p>
+            <p className="text-muted-foreground px-2 py-1 text-[11px] font-medium">Debug</p>
             <DropdownMenuItem onClick={handleClearCache}>
               <div className="flex items-center gap-2">
                 <HelpCircle size={16} className="opacity-60" />
                 <p className="text-[13px] opacity-60">Clear Local Cache</p>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleEnableBrain}>
+              <div className="flex items-center gap-2">
+                <BrainCircuitIcon size={16} className="opacity-60" />
+                <p className="text-[13px] opacity-60">Enable Brain</p>
               </div>
             </DropdownMenuItem>
           </>

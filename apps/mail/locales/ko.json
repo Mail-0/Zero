@@ -19,6 +19,9 @@
       "movingToInbox": "받은 편지함으로 이동 중...",
       "movedToSpam": "스팸으로 이동됨",
       "movingToSpam": "스팸으로 이동 중...",
+      "deletingMail": "메일 삭제 중...",
+      "failedToDeleteMail": "메일 삭제 실패",
+      "deletedMail": "메일 삭제됨",
       "archiving": "보관 중...",
       "archived": "보관됨",
       "failedToMove": "메시지 이동 실패",
@@ -87,6 +90,7 @@
       "recipient": "받는 사람",
       "sender": "보낸 사람",
       "subject": "제목",
+      "from": "보낸 사람",
       "dateRange": "날짜 범위",
       "category": "카테고리",
       "folder": "폴더",
@@ -248,6 +252,7 @@
       "mute": "음소거",
       "moveToSpam": "스팸 편지함으로 이동",
       "moveToInbox": "받은 편지함으로 이동",
+      "deleteFromBin": "휴지통에서 삭제",
       "unarchive": "보관 해제",
       "archive": "보관처리",
       "moveToBin": "휴지통으로 이동",
@@ -268,7 +273,10 @@
       "noLabelsAvailable": "사용 가능한 라벨 없음",
       "loadMore": "더 불러오기",
       "imagesHidden": "보안상의 이유로 이미지가 숨겨져 있습니다",
-      "showImages": "이미지 표시"
+      "showImages": "이미지 표시",
+      "noEmails": "이메일이 없습니다",
+      "noSearchResults": "검색 결과가 없습니다",
+      "clearSearch": "검색 지우기"
     },
     "units": {
       "mb": "{amount} MB"
@@ -291,7 +299,9 @@
       "security": "보안",
       "appearance": "외관",
       "signatures": "서명",
-      "shortcuts": "단축키"
+      "shortcuts": "단축키",
+      "labels": "라벨",
+      "danger-zone": "위험 구역"
     }
   },
   "pages": {
@@ -398,8 +408,24 @@
           "viewEmailDetails": "이메일 세부 사항 보기",
           "goToDrafts": "임시보관함으로 이동",
           "expandEmailView": "이메일 뷰 확장",
-          "helpWithShortcuts": "단축키 도움말"
+          "helpWithShortcuts": "단축키 도움말",
+          "recordHotkey": "단축키 기록",
+          "pressKeys": "키 누르기",
+          "releaseKeys": "키 놓기",
+          "selectAll": "모두 선택"
         }
+      },
+      "labels": {
+        "title": "라벨",
+        "description": "이메일을 더 효율적으로 정리하기 위한 라벨을 관리하세요."
+      },
+      "danger-zone": {
+        "title": "위험 구역",
+        "description": "계정과 관련된 모든 데이터를 영구적으로 삭제합니다.",
+        "warning": "이 작업은 되돌릴 수 없습니다.",
+        "confirmation": "계정 삭제를 확인하려면 DELETE를 입력하세요",
+        "deleteAccount": "계정 삭제",
+        "deleting": "삭제 중..."
       }
     },
     "createEmail": {
