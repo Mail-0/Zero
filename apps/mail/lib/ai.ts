@@ -1,6 +1,5 @@
 'use server';
-import { createEmbeddings, generateCompletions } from './groq';
-import { generateConversationId } from './utils';
+import { generateCompletions } from './groq';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
 import {
@@ -12,6 +11,7 @@ import {
 } from './prompts';
 import { generateText, generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
+import { groq } from '@ai-sdk/groq';
 import { z } from 'zod';
 import { getWritingStyleMatrixForConnectionId } from '@/services/writing-style-service';
 
@@ -77,7 +77,7 @@ export const generateEmailBody = async ({
     const {
       text,
     } = await generateText({
-      model: openai('gpt-4o'),
+      model: groq(''),
       system: systemPrompt,
       prompt: finalPrompt,
       maxTokens: 600,
@@ -242,7 +242,7 @@ export const extractStyleMatrix = async (emailBody: string) => {
   const {
     object,
   } = await generateObject({
-    model: openai('gpt-4o-mini'),
+    model: groq('llama-3.1-8b-instant'),
     system: StyleMatrixExtractorPrompt(),
     prompt: emailBody.trim(),
     schema: z.object({

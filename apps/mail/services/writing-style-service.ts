@@ -2,7 +2,11 @@ import { extractStyleMatrix } from '@/lib/ai';
 import { db } from '@zero/db';
 import { writingStyleMatrix } from '@zero/db/schema';
 import { mapToObj, pipe, entries, sortBy, take, fromEntries, sum, values, takeWhile } from 'remeda';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
+import { EmailStyleSummaryUpdaterSystemPrompt, EmailStyleSummaryUserPrompt } from '@/lib/prompts';
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
+import pRetry from 'p-retry';
 
 // leaving these in here for testing between them
 // (switching to `k` will surely truncate what `coverage` was keeping)
@@ -70,34 +74,36 @@ export const getWritingStyleMatrixForConnectionId = async (connectionId: string)
 export const updateWritingStyleMatrix = async (connectionId: string, emailBody: string) => {
   const emailStyleMatrix = await extractStyleMatrix(emailBody)
 
-  await db.transaction(async (tx) => {
-    const existingMatrix = await tx.query.writingStyleMatrix.findFirst({
-      where: (table, ops) => {
-        return ops.eq(table.connectionId, connectionId)
-      },
-      columns: {
-        numMessages: true,
-        style: true,
+  await pRetry(async () => {
+    await db.transaction(async (tx) => {
+      const [existingMatrix] = await tx
+        .select({
+          numMessages: writingStyleMatrix.numMessages,
+          style: writingStyleMatrix.style,
+        })
+        .from(writingStyleMatrix)
+        .where(eq(writingStyleMatrix.connectionId, connectionId))
+        .for('update')
+
+      if (!existingMatrix) {
+        const newStyle = initializeStyleMatrixFromEmail(emailStyleMatrix)
+
+        await tx.insert(writingStyleMatrix).values({
+          connectionId,
+          numMessages: 1,
+          style: newStyle,
+        })
+      } else {
+        const newStyle = createUpdatedMatrixFromNewEmail(existingMatrix.numMessages, existingMatrix.style, emailStyleMatrix)
+
+        await tx.update(writingStyleMatrix).set({
+          numMessages: existingMatrix.numMessages + 1,
+          style: newStyle,
+        }).where(eq(writingStyleMatrix.connectionId, connectionId))
       }
     })
-
-    if (!existingMatrix) {
-      // First email
-      const newStyleMatrix = initializeStyleMatrixFromEmail(emailStyleMatrix)
-
-      await tx.insert(writingStyleMatrix).values({
-        connectionId,
-        numMessages: 1,
-        style: newStyleMatrix,
-      })
-    } else {
-      const newStyleMatrix = createUpdatedMatrixFromNewEmail(existingMatrix.numMessages, existingMatrix.style, emailStyleMatrix)
-
-      await tx.update(writingStyleMatrix).set({
-        numMessages: existingMatrix.numMessages + 1,
-        style: newStyleMatrix,
-      }).where(eq(writingStyleMatrix.connectionId, connectionId))
-    }
+  }, {
+    retries: 1,
   })
 }
 
@@ -161,18 +167,7 @@ const takeTopK = (data: Record<string, number>, k = TAKE_TOP_K) => {
   )
 }
 
-const updateStat = (currentStat: WelfordState, value: number, newTotalEmails: number) => {
-  const delta = value - currentStat.mean
-  const mean = currentStat.mean + delta / newTotalEmails
-  const m2 = currentStat.m2 + delta * (value - mean)
-
-  return {
-    mean,
-    m2,
-  }
-}
-
-const initializeStyleMatrixFromEmail = (matrix: EmailMatrix): WritingStyleMatrix => {
+const initializeStyleMatrixFromEmail = (matrix: EmailMatrix) => {
   const initializedWelfordMetrics = mapToObj(MEAN_METRIC_KEYS, (key) => {
     return [
       key,
@@ -228,10 +223,17 @@ export type WelfordState = {
   m2: number
 }
 
-export type EmailMatrix = Record<typeof MEAN_METRIC_KEYS[number], number>
+export type SummaryState = {
+  weight: number
+  summary: string
+}
+
+export type EmailMatrix =
+  & Record<typeof MEAN_METRIC_KEYS[number], number>
   & Record<typeof SUM_METRIC_KEYS[number], number>
   & Record<typeof TOP_COUNTS_KEYS[number], string | null>
 
-export type WritingStyleMatrix = Record<typeof MEAN_METRIC_KEYS[number], WelfordState>
+export type WritingStyleMatrix =
+  & Record<typeof MEAN_METRIC_KEYS[number], WelfordState>
   & Record<typeof SUM_METRIC_KEYS[number], number>
   & Record<typeof TOP_COUNTS_KEYS[number], Record<string, number>>

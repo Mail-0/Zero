@@ -19,9 +19,11 @@
     "db:generate": "dotenv -- turbo run db:generate",
     "db:migrate": "dotenv -- turbo run db:migrate",
     "db:push": "dotenv -- turbo run db:push",
-    "db:studio": "dotenv -- turbo run db:studio"
+    "db:studio": "dotenv -- turbo run db:studio",
+    "scripts": "dotenv -- bun run --cwd apps/mail --silent --elide-lines=0 scripts"
   },
   "devDependencies": {
+    "@inquirer/prompts": "^7.5.0",
     "@types/node": "22.13.8",
     "@zero/tsconfig": "workspace:*",
     "dotenv-cli": "^8.0.0",
@@ -35,5 +37,8 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "@ai-sdk/groq": "^1.2.8"
+  }
 }

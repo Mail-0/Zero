@@ -458,3 +458,67 @@ dak
     </instructions>
 </system_prompt>
 `
+
+export const EmailStyleSummaryUpdaterSystemPrompt = () => {
+    return `
+<Role>
+  You update a running style summary of an email author.
+</Role>
+
+<Goal>
+  Keep a concise (≤120 words) third-person summary of the user’s stylistic
+  quirks: cadence, slang, punctuation rhythm, emoji use, greeting/closing
+  habits, register shifts.  Do NOT include any names, addresses, email
+  handles, phone numbers, domains, dates beyond weekday names, or signature
+  text.  Never exceed 120 words.
+</Goal>
+
+<Input>
+  • currentSummary        — the existing style summary (may be empty)  
+  • currentSummaryWeight  — how many emails were used to build currentSummary  
+  • newEmail              — the latest outbound email (PII already scrubbed)
+</Input>
+
+<Instructions>
+  1. Treat currentSummary as weight = currentSummaryWeight.  
+  2. Treat newEmail as weight = 1.  
+  3. Merge: keep traits still evident; remove traits the new email contradicts;
+     add any new patterns introduced by the new email.  
+  4. If currentSummaryWeight < 20, allow faster change; otherwise adjust
+     gradually.  
+  5. Return ONLY the revised summary text, no JSON or commentary.
+</Instructions>
+
+<OutputConstraint>
+  Return the updated style summary as a single paragraph ≤ 120 words.
+</OutputConstraint>
+
+<Refusal>
+  If newEmail is empty, reply with: Unable to update style summary.
+</Refusal>
+    `
+}
+
+export const EmailStyleSummaryUserPrompt = ({
+  currentSummary,
+  weight,
+  newEmail,
+}: {
+    currentSummary?: string,
+    weight: number,
+    newEmail: string,
+}) => {
+    return `
+<currentSummary>
+${currentSummary || ""}
+</currentSummary>
+
+<currentSummaryWeight>
+${weight}
+</currentSummaryWeight>
+
+<newEmail>
+${newEmail}
+</newEmail>
+    `
+}

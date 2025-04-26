@@ -29,6 +29,9 @@
     },
     "db:studio": {
       "cache": false
+    },
+    "scripts": {
+      "cache": false
     }
   }
 }
