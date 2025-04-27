@@ -7,7 +7,7 @@ import persuasiveEmails from './styles/persuasive_emails.json'
 import genZEmails from './styles/genz_emails.json'
 import conciseEmails from './styles/concise_emails.json'
 import friendlyEmails from './styles/friendly_emails.json'
-import { keys, randomInteger, take } from 'remeda';
+import { keys, take } from 'remeda';
 import { db } from '@zero/db';
 import { writingStyleMatrix } from '@zero/db/schema';
 import { eq } from 'drizzle-orm';

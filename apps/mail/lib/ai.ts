@@ -10,7 +10,6 @@ import {
   EmailAssistantPrompt,
 } from './prompts';
 import { generateText, generateObject } from 'ai';
-import { openai } from '@ai-sdk/openai';
 import { groq } from '@ai-sdk/groq';
 import { z } from 'zod';
 import { getWritingStyleMatrixForConnectionId } from '@/services/writing-style-service';
@@ -77,7 +76,7 @@ export const generateEmailBody = async ({
     const {
       text,
     } = await generateText({
-      model: groq(''),
+      model: groq('llama-3.1-8b-instant'),
       system: systemPrompt,
       prompt: finalPrompt,
       maxTokens: 600,
@@ -292,7 +291,7 @@ export const extractStyleMatrix = async (emailBody: string) => {
     temperature: 0, // Lower temperature for more deterministic output
     maxTokens: 300,
     mode: 'json',
-    maxRetries: 3,
+    maxRetries: 5,
   })
 
   const greeting = object.greeting?.trim().toLowerCase()

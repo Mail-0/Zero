@@ -2,10 +2,7 @@ import { extractStyleMatrix } from '@/lib/ai';
 import { db } from '@zero/db';
 import { writingStyleMatrix } from '@zero/db/schema';
 import { mapToObj, pipe, entries, sortBy, take, fromEntries, sum, values, takeWhile } from 'remeda';
-import { eq, sql } from 'drizzle-orm';
-import { EmailStyleSummaryUpdaterSystemPrompt, EmailStyleSummaryUserPrompt } from '@/lib/prompts';
-import { openai } from '@ai-sdk/openai';
-import { generateText } from 'ai';
+import { eq } from 'drizzle-orm';
 import pRetry from 'p-retry';
 
 // leaving these in here for testing between them
@@ -221,11 +218,6 @@ export type WelfordState = {
   count: number
   mean: number
   m2: number
-}
-
-export type SummaryState = {
-  weight: number
-  summary: string
 }
 
 export type EmailMatrix =

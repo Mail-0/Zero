@@ -11,6 +11,7 @@
     "scripts": "bun run ./scripts/run.ts"
   },
   "dependencies": {
+    "@ai-sdk/groq": "^1.2.8",
     "@better-fetch/fetch": "^1.1.18",
     "@coinbase/cookie-manager": "1.1.8",
     "@dnd-kit/core": "6.3.1",
