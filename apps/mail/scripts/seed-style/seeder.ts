@@ -162,8 +162,8 @@ const getNumberOfEmails = async (maxSize: number) => {
   })
 }
 
-export const seedStyleMatrixCommand = subcommands({
-  name: 'seed-style-matrix',
+export const seedStyleCommand = subcommands({
+  name: 'seed-style',
   description: 'Seed style matrix for a given Connection ID',
   cmds: {
     seed,

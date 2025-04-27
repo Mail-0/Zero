@@ -1,10 +1,10 @@
 import { subcommands, run } from 'cmd-ts'
-import { seedStyleMatrixCommand } from '@zero/mail/scripts/seed-style-matrix/seeder';
+import { seedStyleCommand } from '@zero/mail/scripts/seed-style/seeder';
 
 const app = subcommands({
   name: 'scripts',
   cmds: {
-    'seed-style': seedStyleMatrixCommand,
+    'seed-style': seedStyleCommand,
   },
 })
 
