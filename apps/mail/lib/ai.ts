@@ -13,6 +13,9 @@ import { generateText, generateObject } from 'ai';
 import { groq } from '@ai-sdk/groq';
 import { z } from 'zod';
 import { getWritingStyleMatrixForConnectionId } from '@/services/writing-style-service';
+import { ChatGroq } from '@langchain/groq'
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { JsonOutputParser } from "@langchain/core/output_parsers";
 
 // AIResponse for Body Generation
 interface AIBodyResponse {
@@ -238,66 +241,85 @@ export const extractStyleMatrix = async (emailBody: string) => {
     throw new Error('Invalid body provided.')
   }
 
-  const {
-    object,
-  } = await generateObject({
-    model: groq('llama-3.1-8b-instant'),
-    system: StyleMatrixExtractorPrompt(),
-    prompt: emailBody.trim(),
-    schema: z.object({
-      // greeting and sign-off may be absent
-      greeting: z.string().nullable(),
-      signOff: z.string().nullable(),
+  const schema = z.object({
+    // greeting and sign-off may be absent
+    greeting: z.string().nullable(),
+    signOff: z.string().nullable(),
 
-      // structural
-      avgSentenceLen: z.number(),
-      avgParagraphLen: z.number(),
-      listUsageRatio: z.number().min(0).max(1),
+    // structural
+    avgSentenceLen: z.number(),
+    avgParagraphLen: z.number(),
+    listUsageRatio: z.number().min(0).max(1),
 
-      // tone
-      sentimentScore: z.number().min(-1).max(1),
-      politenessScore: z.number().min(0).max(1),
-      confidenceScore: z.number().min(0).max(1),
-      urgencyScore: z.number().min(0).max(1),
-      empathyScore: z.number().min(0).max(1),
-      formalityScore: z.number().min(0).max(1),
+    // tone
+    sentimentScore: z.number().min(-1).max(1),
+    politenessScore: z.number().min(0).max(1),
+    confidenceScore: z.number().min(0).max(1),
+    urgencyScore: z.number().min(0).max(1),
+    empathyScore: z.number().min(0).max(1),
+    formalityScore: z.number().min(0).max(1),
 
-      // style ratios
-      passiveVoiceRatio: z.number().min(0).max(1),
-      hedgingRatio: z.number().min(0).max(1),
-      intensifierRatio: z.number().min(0).max(1),
+    // style ratios
+    passiveVoiceRatio: z.number().min(0).max(1),
+    hedgingRatio: z.number().min(0).max(1),
+    intensifierRatio: z.number().min(0).max(1),
 
-      // readability and vocabulary
-      readabilityFlesch: z.number(),
-      lexicalDiversity: z.number().min(0).max(1),
-      jargonRatio: z.number().min(0).max(1),
+    // readability and vocabulary
+    readabilityFlesch: z.number(),
+    lexicalDiversity: z.number().min(0).max(1),
+    jargonRatio: z.number().min(0).max(1),
 
-      // engagement cues
-      questionCount: z.number().int().nonnegative(),
-      ctaCount: z.number().int().nonnegative(),
-      emojiCount: z.number().int().nonnegative(),
-      exclamationFreq: z.number(),
+    // engagement cues
+    questionCount: z.number().int().nonnegative(),
+    ctaCount: z.number().int().nonnegative(),
+    emojiCount: z.number().int().nonnegative(),
+    exclamationFreq: z.number(),
 
-      // casual-vs-formal extensions
-      slangRatio: z.number().min(0).max(1),
-      contractionRatio: z.number().min(0).max(1),
-      lowercaseSentenceStartRatio: z.number().min(0).max(1),
-      emojiDensity: z.number().min(0),
-      casualPunctuationRatio: z.number().min(0).max(1),
-      capConsistencyScore: z.number().min(0).max(1),
-      honorificPresence: z.number().int().min(0).max(1),
-      phaticPhraseRatio: z.number().min(0).max(1),
-    }),
-    temperature: 0, // Lower temperature for more deterministic output
-    maxTokens: 300,
-    mode: 'json',
-    maxRetries: 5,
+    // casual-vs-formal extensions
+    slangRatio: z.number().min(0).max(1),
+    contractionRatio: z.number().min(0).max(1),
+    lowercaseSentenceStartRatio: z.number().min(0).max(1),
+    emojiDensity: z.number().min(0),
+    casualPunctuationRatio: z.number().min(0).max(1),
+    capConsistencyScore: z.number().min(0).max(1),
+    honorificPresence: z.number().int().min(0).max(1),
+    phaticPhraseRatio: z.number().min(0).max(1),
   })
 
-  const greeting = object.greeting?.trim().toLowerCase()
-  const signOff = object.signOff?.trim().toLowerCase()
+  const prompt = ChatPromptTemplate.fromMessages([
+    [
+      'system',
+      StyleMatrixExtractorPrompt(),
+    ],
+    [
+      'human',
+      '{input}',
+    ],
+  ]);
+  const llm = new ChatGroq({
+    model: 'llama-3.1-8b-instant',
+    temperature: 0,
+    maxTokens: 300,
+    maxRetries: 5,
+  }).bind({
+    response_format: {
+      type: 'json_object',
+    },
+  })
+
+  const parser = new JsonOutputParser<z.infer<typeof schema>>();
+  const chain = prompt
+    .pipe(llm)
+    .pipe(parser)
+
+  const result = await chain.invoke({
+    input: emailBody.trim(),
+  })
+
+  const greeting = result.greeting?.trim().toLowerCase()
+  const signOff = result.signOff?.trim().toLowerCase()
   return {
-    ...object,
+    ...result,
     greeting: greeting ?? null,
     signOff: signOff ?? null,
     greetingTotal: greeting ? 1 : 0,

@@ -11,6 +11,7 @@ import { keys, take } from 'remeda';
 import { db } from '@zero/db';
 import { writingStyleMatrix } from '@zero/db/schema';
 import { eq } from 'drizzle-orm';
+import pRetry from 'p-retry';
 
 const mapping = {
   professional: professionalEmails,
@@ -27,7 +28,13 @@ const runSeeder = async (connectionId: string, style: keyof typeof mapping, size
 
   await pAll(testDataSet.map((email, index) => async () => {
     console.warn('Seeding email', index)
-    await updateWritingStyleMatrix(connectionId, email.body)
+    await pRetry(async () => {
+      await updateWritingStyleMatrix(connectionId, email.body)
+    }, {
+      retries: 5,
+      maxTimeout: 60_000,
+      minTimeout: 1_000,
+    })
   }), { concurrency: 1 })
 
   console.warn('Seeded style matrix for connection', connectionId)

@@ -331,6 +331,9 @@ export const StyleMatrixExtractorPrompt = () => `
             <item>Identify and calculate each metric.</item>
             <item>Supply neutral defaults when a metric is absent (string → "", float → 0, int → 0).</item>
             <item>Return only the JSON, with no commentary, extra keys, or whitespace outside the object.</item>
+            <!-- new -->
+            <item>Ensure all 33 metrics appear exactly once, in order, using correct JSON types (strings quoted, numbers bare). Do not output NaN, null, or omit any key.</item>
+            <item>Guarantee the output parses as valid JSON in any standard JSON parser.</item>
         </tasks>
 
         <metrics>
@@ -447,12 +450,13 @@ dak
             </example_input>
 
             <example_output>
-{"greeting":"hey jordan","signOff":"catch ya soon","greetingTotal":1,"signOffTotal":1,"avgSentenceLen":16,"avgParagraphLen":33,"listUsageRatio":0,"sentimentScore":0.4,"politenessScore":0.6,"confidenceScore":0.8,"urgencyScore":0.5,"empathyScore":0.4,"formalityScore":0.2,"passiveVoiceRatio":0,"hedgingRatio":0.03,"intensifierRatio":0.06,"slangRatio":0.11,"contractionRatio":0.08,"lowercaseSentenceStartRatio":1,"casualPunctuationRatio":0.2,"capConsistencyScore":0,"readabilityFlesch":75,"lexicalDiversity":0.57,"jargonRatio":0,"questionCount":1,"ctaCount":1,"emojiCount":1,"emojiDensity":2,"exclamationFreq":0,"subjectEmojiCount":1,"subjectInformalityScore":0.9,"honorificPresence":0,"phaticPhraseRatio":0.17}
+{{"greeting":"hey jordan","signOff":"catch ya soon","greetingTotal":1,"signOffTotal":1,"avgSentenceLen":16,"avgParagraphLen":33,"listUsageRatio":0,"sentimentScore":0.4,"politenessScore":0.6,"confidenceScore":0.8,"urgencyScore":0.5,"empathyScore":0.4,"formalityScore":0.2,"passiveVoiceRatio":0,"hedgingRatio":0.03,"intensifierRatio":0.06,"slangRatio":0.11,"contractionRatio":0.08,"lowercaseSentenceStartRatio":1,"casualPunctuationRatio":0.2,"capConsistencyScore":0,"readabilityFlesch":75,"lexicalDiversity":0.57,"jargonRatio":0,"questionCount":1,"ctaCount":1,"emojiCount":1,"emojiDensity":2,"exclamationFreq":0,"subjectEmojiCount":1,"subjectInformalityScore":0.9,"honorificPresence":0,"phaticPhraseRatio":0.17}}
             </example_output>
         </output_format>
 
         <strict_guidelines>
             <rule>Any deviation from the required JSON output counts as non-compliance.</rule>
+            <rule>The output must be valid JSON and include all 33 keys in the exact order specified.</rule>
         </strict_guidelines>
     </instructions>
 </system_prompt>

@@ -20,6 +20,8 @@
     "@dnd-kit/utilities": "3.2.2",
     "@flags-sdk/statsig": "^0.2.2",
     "@hookform/resolvers": "4.1.2",
+    "@langchain/core": "^0.3.49",
+    "@langchain/groq": "^0.2.2",
     "@langchain/openai": "^0.5.5",
     "@radix-ui/react-accordion": "1.2.3",
     "@radix-ui/react-avatar": "1.1.3",
