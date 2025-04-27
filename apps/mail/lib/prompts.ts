@@ -173,7 +173,6 @@ export const EmailAssistantPrompt = ({
         ${dynamicContext}
         ${promptMessage}
     `
-
 }
 
 export const StyledEmailAssistantSystemPrompt = (userName: string, styleProfile: WritingStyleMatrix) => {
