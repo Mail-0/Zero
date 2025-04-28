@@ -240,10 +240,22 @@ export function NavUser() {
                   </>
                 ) : (
                   <>
-                    <div className="text-sm font-medium">
+                    <div
+                      className={cn(
+                        'text-sm font-medium',
+                        settings?.hidePersonalInformation && 'blur-[6px]',
+                      )}
+                    >
                       {activeAccount?.name || session?.user.name || 'User'}
                     </div>
-                    <div className="text-muted-foreground text-xs">{activeAccount.email}</div>
+                    <div
+                      className={cn(
+                        'text-muted-foreground text-xs',
+                        settings?.hidePersonalInformation && 'blur-[6px]',
+                      )}
+                    >
+                      {activeAccount.email}
+                    </div>
                   </>
                 )}
               </div>
