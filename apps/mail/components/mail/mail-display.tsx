@@ -772,31 +772,36 @@ const MailDisplay = ({
                       <button
                         className="dark: flex h-7 items-center gap-1 rounded-[5px] border bg-[#FAFAFA] px-4 text-sm font-medium hover:bg-[#F0F0F0] dark:bg-[#262626] dark:hover:bg-[#303030]"
                         onClick={() => {
-                          // Handle attachment
-                          const attachmentType = getAttachmentType(attachment.mimeType)
-                          // Create blob URL for attachments
-                          const byteCharacters = atob(attachment.body);
-                          const byteNumbers = new Array(byteCharacters.length);
-                          for (let i = 0; i < byteCharacters.length; i++) {
-                            byteNumbers[i] = byteCharacters.charCodeAt(i);
-                          }
-                          const byteArray = new Uint8Array(byteNumbers);
-                          const blob = new Blob([byteArray], { type: attachment.mimeType });
-                          const blobUrl = URL.createObjectURL(blob);
-                          // const link = document.createElement('a');
-                          // link.href = blobUrl;
-                          // document.body.appendChild(link);
-                          // link.click();
-                          // document.body.removeChild(link);
-                          // window.URL.revokeObjectURL(blobUrl);
+                          // Handle attachment preview
+                          const attachmentType = getAttachmentType(attachment.mimeType);
+                          try {
+                            // Convert base64 to blob for all attachments
+                            const byteCharacters = atob(attachment.body);
+                            const byteNumbers = new Array(byteCharacters.length);
+                            for (let i = 0; i < byteCharacters.length; i++) {
+                              byteNumbers[i] = byteCharacters.charCodeAt(i);
+                            }
+                            const byteArray = new Uint8Array(byteNumbers);
+                            const blob = new Blob([byteArray], { type: attachment.mimeType });
+                            const blobUrl = URL.createObjectURL(blob);
+                            // const link = document.createElement('a');
+                            // link.href = blobUrl;
+                            // document.body.appendChild(link);
+                            // link.click();
+                            // document.body.removeChild(link);
+                            // window.URL.revokeObjectURL(blobUrl);
 
-                          setSelectedAttachment({
-                            id: attachment.attachmentId,
-                            name: attachment.filename,
-                            type: attachmentType,
-                            url: blobUrl
-                          });
-                        }}
+                            setSelectedAttachment({
+                              id: attachment.attachmentId,
+                              name: attachment.filename,
+                              type: attachmentType,
+                              url: blobUrl
+                            });
+                          } catch (error) {
+                            console.error("Error handling attachment:", error);
+                          }
+                        }
+                        }
                       >
                         {getFileIcon(attachment.filename)}
                         <span className="text-black dark:text-white">

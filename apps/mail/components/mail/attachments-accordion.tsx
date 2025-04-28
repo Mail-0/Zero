@@ -15,38 +15,27 @@ type Props = {
 
 const AttachmentsAccordion = ({ attachments, setSelectedAttachment }: Props) => {
   const handleAttachmentClick = (attachment: Attachment) => {
-    // Handle preview for images and PDFs
-    if (attachment.mimeType?.startsWith('image/') || attachment.mimeType === 'application/pdf') {
+    // Handle attachment preview
+    try {
+      // Convert base64 to blob for all attachments
+      const byteCharacters = atob(attachment.body);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: attachment.mimeType });
+      const blobUrl = URL.createObjectURL(blob);
+
+      // Set selected attachment for preview
       setSelectedAttachment({
         id: attachment.attachmentId,
         name: attachment.filename,
         type: getAttachmentType(attachment.mimeType),
-        url: attachment.url || `data:${attachment.mimeType};base64,${attachment.body}`,
+        url: blobUrl
       });
-    } else {
-      // Handle download for other file types
-      try {
-        // Convert base64 to blob
-        const byteCharacters = atob(attachment.body);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: attachment.mimeType });
-
-        // Create object URL and trigger download
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = attachment.filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-      } catch (error) {
-        console.error('Error downloading attachment:', error);
-      }
+    } catch (error) {
+      console.error('Error handling attachment:', error);
     }
   };
 
