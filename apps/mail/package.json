@@ -3,8 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "setup:pdf": "bun run ./scripts/setup-pdf-worker.ts",
-    "dev": "bun run setup:pdf && next dev --turbo",
+    "dev": "next dev --turbo",
     "dev:turbo": "next dev",
     "build": "next build --turbopack",
     "start": "next start",

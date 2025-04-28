@@ -22,6 +22,7 @@
     "db:studio": "dotenv -- turbo run db:studio"
   },
   "devDependencies": {
+    "@faker-js/faker": "^9.7.0",
     "@types/node": "22.13.8",
     "@zero/tsconfig": "workspace:*",
     "dotenv-cli": "^8.0.0",
