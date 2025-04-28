@@ -1,20 +1,27 @@
 'use server';
-import { throwUnauthorizedGracefully } from '@/app/api/utils';
 import { getActiveConnection } from './utils';
 import axios from 'axios';
 
-export const EnableBrain = async () => {
+export const EnableBrain = async ({
+  connection,
+}: {
+  connection?: { id: string; providerId: string } | null;
+}) => {
   if (!process.env.BRAIN_URL) {
-    return null;
+    return false;
+  }
+  if (!connection) {
+    connection = await getActiveConnection();
   }
 
-  const connection = await getActiveConnection();
-
-  if (!connection?.accessToken || !connection.refreshToken) {
-    return throwUnauthorizedGracefully();
+  if (!connection?.id) {
+    return false;
   }
 
-  return await axios.put(process.env.BRAIN_URL + `/subscribe/${connection.providerId}`, {
-    connectionId: connection.id,
-  });
+  return await axios
+    .put(process.env.BRAIN_URL + `/subscribe/${connection.providerId}`, {
+      connectionId: connection.id,
+    })
+    .catch((error) => false)
+    .then(() => true);
 };

@@ -26,7 +26,7 @@ import {
   MailOpen,
 } from 'lucide-react';
 import { moveThreadsTo, ThreadDestination } from '@/lib/thread-actions';
-import { markAsRead, markAsUnread, toggleStar } from '@/actions/mail';
+import { deleteThread, markAsRead, markAsUnread, toggleStar } from '@/actions/mail';
 import { useThread, useThreads } from '@/hooks/use-threads';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useParams, useRouter } from 'next/navigation';
@@ -38,7 +38,9 @@ import { useMail } from '../mail/use-mail';
 import { type ReactNode } from 'react';
 import { useQueryState } from 'nuqs';
 import { useMemo } from 'react';
+import { useAtom } from 'jotai';
 import { toast } from 'sonner';
+import { backgroundQueueAtom } from '@/store/backgroundQueue';
 
 interface EmailAction {
   id: string;
@@ -86,26 +88,26 @@ export function ThreadContextMenu({
   const router = useRouter();
   const [, setMode] = useQueryState('mode');
   const [, setThreadId] = useQueryState('threadId');
-  const { mutate: mutateThread } = useThread(threadId);
+  const [, setBackgroundQueue] = useAtom(backgroundQueueAtom);
+  const { mutate: mutateThread, data: threadData } = useThread(threadId);
   const selectedThreads = useMemo(() => {
     if (mail.bulkSelected.length) {
       return threads.filter((thread) => mail.bulkSelected.includes(thread.id));
     }
-    return threads.filter((thread) => thread.id === threadId || thread.threadId === threadId);
+    return threads.filter((thread) => thread.id === threadId);
   }, [mail.bulkSelected, threadId, threads]);
 
   const isUnread = useMemo(() => {
-    if (mail.bulkSelected.length) {
-      return selectedThreads.some((thread) => thread.unread);
-    }
-    return selectedThreads[0]?.unread ?? false;
-  }, [selectedThreads, mail.bulkSelected]);
+    return threadData?.hasUnread ?? false;
+  }, [threadData]);
 
   const isStarred = useMemo(() => {
-    if (mail.bulkSelected.length) {
-      return selectedThreads.every((thread) => thread.tags?.includes('STARRED'));
-    }
-    return selectedThreads[0]?.tags?.includes('STARRED') ?? false;
+    // TODO
+    return false;
+    // if (mail.bulkSelected.length) {
+    //   return selectedThreads.every((thread) => thread.tags?.includes('STARRED'));
+    // }
+    // return selectedThreads[0]?.tags?.includes('STARRED') ?? false;
   }, [selectedThreads, mail.bulkSelected]);
 
   const noopAction = () => async () => {
@@ -131,35 +133,16 @@ export function ThreadContextMenu({
         threadIds: targets,
         currentFolder: currentFolder,
         destination,
-      }).then(async () => {
-        await Promise.all([mutate(), mutateStats()]);
-        setMail({ ...mail, bulkSelected: [] });
       });
-
-      let loadingMessage = t('common.actions.moving');
-      let successMessage = t('common.actions.movedToInbox');
-
-      if (destination === FOLDERS.INBOX) {
-        loadingMessage = t('common.actions.movingToInbox');
-        successMessage = t('common.actions.movedToInbox');
-      } else if (destination === FOLDERS.SPAM) {
-        loadingMessage = t('common.actions.movingToSpam');
-        successMessage = t('common.actions.movedToSpam');
-      } else if (destination === FOLDERS.ARCHIVE) {
-        loadingMessage = t('common.actions.archiving');
-        successMessage = t('common.actions.archived');
-      } else if (destination === FOLDERS.BIN) {
-        loadingMessage = t('common.actions.movingToBin');
-        successMessage = t('common.actions.movedToBin');
-      }
-
+      targets.forEach((threadId) => setBackgroundQueue({ type: 'add', threadId }));
       toast.promise(promise, {
-        loading: loadingMessage,
-        success: successMessage,
+        finally: async () => {
+          await Promise.all([mutate(), mutateStats()]);
+          setMail({ ...mail, bulkSelected: [] });
+          targets.forEach((threadId) => setBackgroundQueue({ type: 'delete', threadId }));
+        },
         error: t('common.actions.failedToMove'),
       });
-
-      await promise;
     } catch (error) {
       console.error(`Error moving ${threadId ? 'email' : 'thread'}:`, error);
     }
@@ -237,6 +220,22 @@ export function ThreadContextMenu({
       disabled: false,
     },
   ];
+  const handleDelete = () => async () => {
+		try {
+        const promise = deleteThread({ id: threadId }).then(() => {
+          setMail(prev => ({ ...prev, bulkSelected: [] }));
+          return mutate();
+        });
+        toast.promise(promise, {
+          loading: t('common.actions.deletingMail'),
+          success: t('common.actions.deletedMail'),
+          error: t('common.actions.failedToDeleteMail'),
+        });
+    } catch (error) {
+        console.error(`Error deleting ${threadId? 'email' : 'thread'}:`, error);
+      }
+    };
+
 
   const getActions = () => {
     if (isSpam) {
@@ -267,6 +266,13 @@ export function ThreadContextMenu({
           action: handleMove(LABELS.TRASH, LABELS.INBOX),
           disabled: false,
         },
+        {
+          id: 'delete-from-bin',
+          label: t('common.mail.deleteFromBin'),
+          icon: <Trash className="mr-2.5 h-4 w-4" />,
+          action: handleDelete(),
+          disabled: false,
+        }
       ];
     }
 
@@ -354,7 +360,7 @@ export function ThreadContextMenu({
         <Star className="mr-2.5 h-4 w-4" />
       ),
       action: handleFavorites,
-      disabled: false,
+      disabled: true,
     },
     {
       id: 'mute',

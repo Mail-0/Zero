@@ -1,24 +1,6 @@
 'use client';
 
 import {
-  ArchiveX,
-  BellOff,
-  X,
-  Inbox,
-  Tag,
-  AlertTriangle,
-  User,
-  Bell,
-  ListMinusIcon,
-  ArrowRightIcon,
-  Loader2,
-  Archive,
-  RotateCw,
-  Mail,
-  MailOpen,
-  Trash,
-} from 'lucide-react';
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -28,12 +10,16 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  ArchiveX,
+  BellOff,
+  Inbox,
+  ListMinusIcon,
+  ArrowRightIcon,
+  Loader2,
+  Archive,
+  MailOpen,
+  Trash,
+} from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { moveThreadsTo, ThreadDestination, getAvailableActions } from '@/lib/thread-actions';
@@ -42,19 +28,21 @@ import { useState, useCallback, useMemo, useEffect, useRef, memo } from 'react';
 import { ThreadDisplay, ThreadDemo } from '@/components/mail/thread-display';
 import { MailList, MailListDemo } from '@/components/mail/mail-list';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
-import { useParams } from 'next/navigation';
 import { useMediaQuery } from '../../hooks/use-media-query';
+import { Filter, Lightning, Mail, X } from '../icons/icons';
 import { useSearchValue } from '@/hooks/use-search-value';
+import { useHotkeysContext } from 'react-hotkeys-hook';
 import { useMail } from '@/components/mail/use-mail';
 import { SidebarToggle } from '../ui/sidebar-toggle';
 import { getMail, markAsRead } from '@/actions/mail';
 import { Skeleton } from '@/components/ui/skeleton';
 import { clearBulkSelectionAtom } from './use-mail';
 import { useThreads } from '@/hooks/use-threads';
+import { Tag, User, Bell } from '../icons/icons';
 import { Button } from '@/components/ui/button';
-import { useHotkeysContext } from 'react-hotkeys-hook';
 import { useSession } from '@/lib/auth-client';
 import { useStats } from '@/hooks/use-stats';
+import { useParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { SearchBar } from './search-bar';
@@ -122,7 +110,7 @@ export function DemoMailLayout() {
             defaultSize={isMobile ? 100 : 25}
             minSize={isMobile ? 100 : 25}
           >
-            <div className="bg-offsetLight dark:bg-offsetDark flex-1 flex-col overflow-y-auto shadow-inner md:flex md:rounded-2xl md:border md:shadow-sm">
+            <div className="bg-offsetLight dark:bg-offsetDark flex-1 flex-col overflow-y-auto shadow-inner md:flex md:rounded-[5px] md:border md:shadow-sm">
               <div
                 className={cn(
                   'compose-loading h-0.5 w-full transition-opacity',
@@ -135,6 +123,7 @@ export function DemoMailLayout() {
                 )}
               >
                 <SidebarToggle className="h-fit px-2" />
+
                 <div>
                   <MailCategoryTabs
                     iconsOnly={true}
@@ -175,13 +164,13 @@ export function DemoMailLayout() {
 
           {isDesktop && mail.selected && (
             <>
-              <ResizableHandle className="opacity-0" />
+              <div className="opacity-0" />
               <ResizablePanel
                 className="bg-offsetLight dark:bg-offsetDark shadow-sm md:flex md:rounded-2xl md:border md:shadow-sm"
                 defaultSize={75}
                 minSize={25}
               >
-                <div className="relative hidden h-[calc(100vh-(12px+14px))] max-h-[800px] flex-1 md:block">
+                <div className="relative hidden h-[calc(100dvh-(12px+14px))] max-h-[800px] flex-1 md:block">
                   <ThreadDemo messages={selectedMail ? [selectedMail] : []} />
                 </div>
               </ResizablePanel>
@@ -192,7 +181,7 @@ export function DemoMailLayout() {
         {/* Mobile Drawer */}
         {isMobile && (
           <Drawer open={!!threadIdParam}>
-            <DrawerContent className="bg-offsetLight dark:bg-offsetDark h-[calc(100vh-3rem)] overflow-hidden p-0">
+            <DrawerContent className="bg-offsetLight dark:bg-offsetDark h-[calc(100dvh-3rem)] overflow-hidden p-0">
               <DrawerHeader className="sr-only">
                 <DrawerTitle>Email Details</DrawerTitle>
               </DrawerHeader>
@@ -295,47 +284,47 @@ export function MailLayout() {
     }
   }, []);
 
+  const category = useQueryState('category');
+
   return (
     <TooltipProvider delayDuration={0}>
-      <div className="rounded-inherit flex">
+      <div className="rounded-inherit relative z-[5] mt-1 flex p-0">
         <ResizablePanelGroup
           direction="horizontal"
           autoSaveId="mail-panel-layout"
-          className="rounded-inherit gap-0.5 overflow-hidden"
+          className="rounded-inherit gap-1 overflow-hidden"
         >
-          <ResizablePanel
-            className={cn('border-none !bg-transparent', threadId ? 'md:hidden lg:block' : '')}
-            defaultSize={isMobile ? 100 : 25}
-            minSize={isMobile ? 100 : 25}
-          >
-            <div className="bg-offsetLight dark:bg-offsetDark flex-1 flex-col overflow-y-auto shadow-inner md:flex md:rounded-2xl md:border md:shadow-sm">
+          <div className={cn('border-none !bg-transparent', threadId ? 'md:hidden lg:block' : '')}>
+            <div className="bg-panelLight dark:bg-panelDark h-[calc(100dvh-0.5rem)] w-screen flex-1 flex-col overflow-y-auto overflow-x-hidden border-[#E7E7E7] shadow-inner md:flex md:max-w-[415px] md:rounded-2xl md:border md:shadow-sm dark:border-[#252525]">
               <div
                 className={cn(
-                  'sticky top-0 z-10 flex items-center justify-between gap-1.5 border-b p-2 transition-colors md:min-h-14',
+                  'sticky top-0 z-10 flex items-center justify-between gap-1.5 border-b border-[#E7E7E7] p-2 px-[20px] transition-colors md:min-h-14 dark:border-[#252525]',
                 )}
               >
-                <div className="flex items-center gap-2">
-                  <SidebarToggle className="h-fit px-2" />
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => {
-                          // Trigger a refresh of the mail list
-                          const event = new CustomEvent('refreshMailList');
-                          window.dispatchEvent(event);
-                        }}
-                      >
-                        <RotateCw className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>{t('common.actions.refresh')}</TooltipContent>
-                  </Tooltip>
+                <div className="flex w-full items-center justify-between gap-2">
+                  <div>
+                    <SidebarToggle className="h-fit px-2" />
+                  </div>
+                  <div>
+                    {/* <Button variant="ghost" className={cn('md:h-fit md:px-2')}>
+                      <Filter className="dark:fill-iconDark fill-iconLight" />
+                    </Button> */}
+                  </div>
+                  {/* <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => {
+                      // Trigger a refresh of the mail list
+                      const event = new CustomEvent('refreshMailList');
+                      window.dispatchEvent(event);
+                    }}
+                  >
+                    <ArrowCircle className="dark:fill-iconDark fill-iconLight" />
+                  </Button> */}
                 </div>
 
-                {mail.bulkSelected.length > 0 ? (
+                {/* {mail.bulkSelected.length > 0 ? (
                   <>
                     <div className="flex flex-1 items-center justify-center">
                       <span className="text-sm font-medium tabular-nums">
@@ -362,68 +351,66 @@ export function MailLayout() {
                     <div className="flex flex-1 justify-center">
                       <SearchBar />
                     </div>
-                    {!threadId && (
-                      <div className="flex items-center">
-                        <CategorySelect />
-                      </div>
-                    )}
+                    <div className="flex items-center">
+                      <CategorySelect />
+                    </div>
                   </>
-                )}
+                )} */}
+              </div>
+              <div className="p-2 px-[22px]">
+                <SearchBar />
+                <div className="mt-2">
+                  {folder === 'inbox' && <CategorySelect />}
+                </div>
               </div>
               <div
                 className={cn(
-                  'compose-loading relative bottom-0.5 z-20 h-0.5 w-full transition-opacity',
+                  `${category[0] === 'Important' ? 'bg-[#F59E0D]' : category[0] === 'All Mail' ? 'bg-[#006FFE]' : category[0] === 'Personal' ? 'bg-[#39ae4a]' : category[0] === 'Updates' ? 'bg-[#8B5CF6]' : category[0] === 'Promotions' ? 'bg-[#F43F5E]' : 'bg-[#F59E0D]'}`,
+                  'relative bottom-0.5 z-20 h-0.5 w-full transition-opacity',
                   isValidating ? 'opacity-100' : 'opacity-0',
                 )}
               />
-              <div className="h-[calc(100dvh-56px)] overflow-hidden pt-0 md:h-[calc(100dvh-(8px+8px+14px+44px))]">
+              <div className="h-[calc(100vh-9.8rem)] overflow-hidden pt-0">
                 <MailList isCompact={true} />
               </div>
             </div>
-          </ResizablePanel>
+          </div>
 
-          <ResizableHandle className="opacity-0" />
-
-          {isDesktop ? (
-            <>
-              <ResizablePanel
-                className={cn(
-                  'bg-offsetLight dark:bg-offsetDark shadow-sm md:rounded-2xl md:border md:shadow-sm',
-                  threadId ? 'md:flex' : 'hidden',
-                )}
-                defaultSize={75}
-                minSize={35}
-              >
-                <div className="relative hidden h-[calc(100vh-(12px+14px))] flex-1 md:block">
-                  <ThreadDisplay onClose={handleClose} id={threadId ?? undefined} />
-                </div>
-              </ResizablePanel>
-            </>
-          ) : null}
-        </ResizablePanelGroup>
-
-        {/* Mobile Drawer */}
-        {isMobile && (
-          <Drawer
-            open={!!threadId}
-            onOpenChange={(isOpen) => {
-              if (!isOpen) handleClose();
-            }}
-          >
-            <DrawerContent className="bg-offsetLight dark:bg-offsetDark h-[calc(100vh-4rem)] overflow-hidden p-0">
-              <DrawerHeader className="sr-only">
-                <DrawerTitle>Email Details</DrawerTitle>
-              </DrawerHeader>
-              <div className="flex h-full flex-col overflow-hidden">
-                <div className="flex-1 overflow-hidden">
-                  {threadId ? (
-                    <ThreadDisplay onClose={handleClose} isMobile={true} id={threadId} />
-                  ) : null}
-                </div>
+          {isDesktop && (
+            <ResizablePanel
+              className="bg-panelLight dark:bg-panelDark mr-1 hidden w-fit border-[#E7E7E7] shadow-sm md:flex md:rounded-2xl md:border md:shadow-sm dark:border-[#252525]"
+              defaultSize={30}
+              minSize={30}
+            >
+              <div className="relative hidden h-[calc(100vh-(12px+14px))] flex-1 md:block">
+                <ThreadDisplay onClose={handleClose} id={threadId ?? undefined} />
               </div>
-            </DrawerContent>
-          </Drawer>
-        )}
+            </ResizablePanel>
+          )}
+
+          {/* Mobile Drawer */}
+          {isMobile && (
+            <Drawer
+              open={!!threadId}
+              onOpenChange={(isOpen) => {
+                if (!isOpen) handleClose();
+              }}
+            >
+              <DrawerContent className="bg-panelLight dark:bg-panelDark h-[calc(100vh-4rem)] overflow-hidden p-0">
+                <DrawerHeader className="sr-only">
+                  <DrawerTitle>Email Details</DrawerTitle>
+                </DrawerHeader>
+                <div className="flex h-full flex-col overflow-hidden">
+                  <div className="flex-1 overflow-hidden">
+                    {threadId ? (
+                      <ThreadDisplay onClose={handleClose} isMobile={true} id={threadId} />
+                    ) : null}
+                  </div>
+                </div>
+              </DrawerContent>
+            </Drawer>
+          )}
+        </ResizablePanelGroup>
       </div>
     </TooltipProvider>
   );
@@ -471,7 +458,8 @@ function BulkSelectActions() {
     try {
       const response = await markAsRead({ ids: mail.bulkSelected });
       if (response.success) {
-        // TODO: fix this, it needs useThread mutation 
+        // TODO: fix this, it needs useThread mutation
+        // TODO: fix this, it needs useThread mutation
         await mutateThreads();
         await mutateStats();
         setMail((prev) => ({
@@ -594,58 +582,100 @@ function BulkSelectActions() {
 
 export const Categories = () => {
   const t = useTranslations();
-
+  const [category] = useQueryState('category', {
+    defaultValue: 'Important',
+  });
   return [
     {
-      id: 'Primary',
+      id: 'Important',
       name: t('common.mailCategories.important'),
       searchValue: 'is:important',
-      icon: <AlertTriangle className="h-4 w-4" />,
-      colors:
-        'border-0 text-amber-800 bg-amber-100 dark:bg-amber-900/20 dark:text-amber-500 dark:hover:bg-amber-900/30',
+      icon: (
+        <Lightning
+          className={cn(
+            'fill-[#6D6D6D] dark:fill-[#989898]',
+            category === 'Important' && 'dark:fill-white fill-white',
+          )}
+        />
+      ),
     },
     {
       id: 'All Mail',
-      name: t('common.mailCategories.allMail') || 'All Mail',
+      name: 'All Mail',
       searchValue: 'is:inbox',
-      icon: <Mail className="h-4 w-4" />,
+      icon: (
+        <Mail
+          className={cn(
+            'fill-[#6D6D6D] dark:fill-[#989898]',
+            category === 'All Mail' && 'dark:fill-white fill-white',
+          )}
+        />
+      ),
       colors:
-        'border-0 bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30',
+        'border-0 bg-[#006FFE] text-white dark:bg-[#006FFE] dark:text-white dark:hover:bg-[#006FFE]/90',
     },
     {
       id: 'Personal',
       name: t('common.mailCategories.personal'),
       searchValue: 'is:personal',
-      icon: <User className="h-4 w-4" />,
-      colors:
-        'border-0 text-green-800 bg-green-100 dark:bg-green-900/20 dark:text-green-500 dark:hover:bg-green-900/30',
+      icon: (
+        <User
+          className={cn(
+            'fill-[#6D6D6D] dark:fill-[#989898]',
+            category === 'Personal' && 'dark:fill-white fill-white',
+          )}
+        />
+      ),
     },
     {
       id: 'Updates',
       name: t('common.mailCategories.updates'),
       searchValue: 'is:updates',
-      icon: <Bell className="h-4 w-4" />,
-      colors:
-        'border-0 text-purple-800 bg-purple-100 dark:bg-purple-900/20 dark:text-purple-500 dark:hover:bg-purple-900/30',
+      icon: (
+        <Bell
+          className={cn(
+            'fill-[#6D6D6D] dark:fill-[#989898]',
+            category === 'Updates' && 'dark:fill-white fill-white',
+          )}
+        />
+      ),
     },
     {
       id: 'Promotions',
-      name: t('common.mailCategories.promotions'),
+      name: 'Promotions',
       searchValue: 'is:promotions',
-      icon: <Tag className="h-4 w-4 rotate-90" />,
-      colors:
-        'border-0 text-red-800 bg-red-100 dark:bg-red-900/20 dark:text-red-500 dark:hover:bg-red-900/30',
-    },
-    {
-      id: 'Unread',
-      name: t('common.mailCategories.unread'),
-      searchValue: 'is:unread',
-      icon: <MailOpen className="h-4 w-4" />,
-      colors:
-        'border-0 text-red-800 bg-red-100 dark:bg-red-900/20 dark:text-red-500 dark:hover:bg-red-900/30',
+      icon: (
+        <Tag
+          className={cn(
+            'fill-[#6D6D6D] dark:fill-[#989898]',
+            category === 'Promotions' && 'dark:fill-white fill-white',
+          )}
+        />
+      ),
     },
   ];
 };
+
+type CategoryType = ReturnType<typeof Categories>[0];
+
+function getCategoryColor(categoryId: string): string {
+  switch (categoryId.toLowerCase()) {
+    case 'primary':
+      return 'bg-[#006FFE]';
+    case 'all mail':
+      return 'bg-[#006FFE]';
+    case 'important':
+      return 'bg-[#F59E0D]';
+    case 'promotions':
+      return 'bg-[#F43F5E]';
+    case 'personal':
+      return 'bg-[#39ae4a]';
+    case 'updates':
+      return 'bg-[#8B5CF6]';
+    default:
+      return 'bg-base-primary-500';
+  }
+}
 
 function CategorySelect() {
   const [, setSearchValue] = useSearchValue();
@@ -653,67 +683,96 @@ function CategorySelect() {
   const router = useRouter();
   const { folder } = useParams<{ folder: string }>();
   const [category, setCategory] = useQueryState('category', {
-    defaultValue: 'Primary',
+    defaultValue: 'Important',
   });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const activeTabElementRef = useRef<HTMLButtonElement>(null);
 
-  // Skip category selection for drafts, spam, sent, archive, and bin pages
-  const shouldShowCategorySelect = !['draft', 'spam', 'sent', 'archive', 'bin'].includes(folder || '');
+  // Only show category selection for inbox folder
+  if (folder !== 'inbox') return <div className="h-8"></div>;
 
-  if (!shouldShowCategorySelect) return null;
+  // Primary category is always the first one
+  const primaryCategory = categories[0];
+  if (!primaryCategory) return null;
 
-  return (
-    <Select
-      onValueChange={(value: string) => {
-        const selectedCategory = categories.find((cat) => cat.id === value);
+  const renderCategoryButton = (cat: CategoryType, isOverlay = false) => {
+    const isSelected = cat.id === (category || 'Primary');
+    const bgColor = getCategoryColor(cat.id);
 
-        if (selectedCategory) {
+    return (
+      <button
+        key={cat.id}
+        ref={isSelected && !isOverlay ? activeTabElementRef : null}
+        onClick={() => {
+          setCategory(cat.id);
           setSearchValue({
-            value: selectedCategory.searchValue || '',
+            value: cat.searchValue || '',
             highlight: '',
             folder: '',
           });
-
-          setCategory(value);
-        }
-      }}
-      value={category || 'Important'}
-    >
-      <SelectTrigger className="bg-popover h-9 w-fit">
-        {category ? (
-          <div className="flex items-center gap-2">
-            <span className="block md:hidden">
-              {categories.find((cat) => cat.id === category)?.icon}
-            </span>
-            <span className="hidden w-full md:block">
-              <SelectValue placeholder="Select category" />
-            </span>
-          </div>
-        ) : (
-          <SelectValue placeholder="Select category" />
+        }}
+        className={cn(
+          'flex h-8 items-center justify-center gap-1 overflow-hidden rounded-md transition-all duration-300 ease-out border dark:border-none',
+          isSelected
+            ? cn('flex-1 px-3 text-white border-none', bgColor)
+            : 'w-8 bg-white hover:bg-gray-100 dark:bg-[#313131] dark:hover:bg-[#313131]/80',
         )}
-      </SelectTrigger>
-      <SelectContent>
-        {categories.map((category) => (
-          <SelectItem key={category.id} value={category.id} className="cursor-pointer">
-            <div className="flex items-center gap-2">
-              {category.icon}
-              <span>{category.name}</span>
+        tabIndex={isOverlay ? -1 : undefined}
+      >
+        <div className="relative overflow-hidden">{cat.icon}</div>
+        {isSelected && (
+          <div className="flex items-center justify-center gap-2.5 px-0.5">
+            <div className="animate-in fade-in-0 slide-in-from-right-4 justify-start text-sm leading-none text-white duration-300">
+              {cat.name}
             </div>
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+          </div>
+        )}
+      </button>
+    );
+  };
+
+  // Update clip path when category changes
+  useEffect(() => {
+    const container = containerRef.current;
+    const activeTabElement = activeTabElementRef.current;
+
+    if (category && container && activeTabElement) {
+      const { offsetLeft, offsetWidth } = activeTabElement;
+      const clipLeft = Math.max(0, offsetLeft - 2);
+      const clipRight = Math.min(container.offsetWidth, offsetLeft + offsetWidth + 2);
+      const containerWidth = container.offsetWidth;
+
+      if (containerWidth) {
+        container.style.clipPath = `inset(0 ${Number(100 - (clipRight / containerWidth) * 100).toFixed(2)}% 0 ${Number((clipLeft / containerWidth) * 100).toFixed(2)}%)`;
+      }
+    }
+  }, [category]);
+
+  return (
+    <div className="relative w-full">
+      <div className="flex w-full items-start justify-start gap-2">
+        {categories.map((cat) => renderCategoryButton(cat))}
+      </div>
+
+      <div
+        aria-hidden
+        className="absolute inset-0 z-10 overflow-hidden transition-[clip-path] duration-300 ease-in-out"
+        ref={containerRef}
+      >
+        <div className="flex w-full items-start justify-start gap-2">
+          {categories.map((cat) => renderCategoryButton(cat, true))}
+        </div>
+      </div>
+    </div>
   );
 }
 
 function MailCategoryTabs({
   iconsOnly = false,
-  isLoading = false,
   onCategoryChange,
   initialCategory,
 }: {
   iconsOnly?: boolean;
-  isLoading?: boolean;
   onCategoryChange?: (category: string) => void;
   initialCategory?: string;
 }) {
@@ -739,14 +798,14 @@ function MailCategoryTabs({
   }, [activeCategory, onCategoryChange]);
 
   useEffect(() => {
-    if (activeTab && !isLoading) {
+    if (activeTab) {
       setSearchValue({
         value: activeTab.searchValue,
         highlight: '',
         folder: '',
       });
     }
-  }, [activeCategory, setSearchValue, isLoading]);
+  }, [activeCategory, setSearchValue]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -817,7 +876,7 @@ function MailCategoryTabs({
                   className={cn(
                     'flex h-7 items-center gap-1.5 rounded-full px-2 text-xs font-medium transition-all duration-200',
                     activeCategory === category.id
-                      ? category.colors
+                      ? 'bg-primary text-white'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
                   )}
                 >
@@ -848,13 +907,10 @@ function MailCategoryTabs({
                 onClick={() => {
                   setActiveCategory(category.id);
                 }}
-                className={cn(
-                  'flex h-7 items-center gap-1.5 rounded-full px-2 text-xs font-medium',
-                  category.colors,
-                )}
+                className={cn('flex items-center gap-1.5 rounded-full px-2 text-xs font-medium')}
                 tabIndex={-1}
               >
-                {category.icon}
+                <p>{category.icon}</p>
                 <span className={cn('hidden', !iconsOnly && 'md:inline')}>{category.name}</span>
               </button>
             </li>

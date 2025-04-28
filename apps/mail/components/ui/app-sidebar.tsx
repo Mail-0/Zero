@@ -1,18 +1,32 @@
 'use client';
 
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogOverlay,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { SquarePenIcon, type SquarePenIconHandle } from '../icons/animated/square-pen';
 import { Sidebar, SidebarContent, SidebarHeader } from '@/components/ui/sidebar';
-import { navigationConfig } from '@/config/navigation';
+import { navigationConfig, bottomNavItems } from '@/config/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSidebar } from '@/components/ui/sidebar';
+import { CreateEmail } from '../create/create-email';
+import { PencilCompose, X } from '../icons/icons';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useSession } from '@/lib/auth-client';
 import React, { useMemo, useRef } from 'react';
 import { usePathname } from 'next/navigation';
+import { GoldenTicketModal } from '../golden';
 import { useStats } from '@/hooks/use-stats';
 import { useTranslations } from 'next-intl';
 import { FOLDERS } from '@/lib/utils';
 import { NavMain } from './nav-main';
 import { NavUser } from './nav-user';
+import { useQueryState } from 'nuqs';
 import { Button } from './button';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -21,7 +35,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: stats } = useStats();
 
   const pathname = usePathname();
-
+  const { data: session, isPending } = useSession();
   const { currentSection, navItems } = useMemo(() => {
     // Find which section we're in based on the pathname
     const section = Object.entries(navigationConfig).find(([, config]) =>
@@ -53,16 +67,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }, [pathname, stats]);
 
   const showComposeButton = currentSection === 'mail';
+  const { state } = useSidebar();
 
   return (
-    <>
+    <div>
       <Sidebar
         collapsible="icon"
         {...props}
-        className="bg-offsetWhite dark:bg-offsetDark flex flex-col items-center select-none"
+        className={`flex select-none flex-col items-center ${state === 'collapsed' ? '' : ''}`}
       >
-        <div className="flex w-full flex-col">
-          <SidebarHeader className="flex flex-col gap-2 p-2">
+        <div className={`relative z-20 flex w-full flex-col ${state === 'collapsed' ? 'px-0' : 'px-2'}`}>
+          <SidebarHeader className="flex flex-col gap-2 pt-[18px]">
             <NavUser />
             <AnimatePresence mode="wait">
               {showComposeButton && (
@@ -77,7 +92,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               )}
             </AnimatePresence>
           </SidebarHeader>
-          <SidebarContent className="py-0 pt-0">
+          <SidebarContent className={`py-0 pt-0 ${state !== 'collapsed' ? 'mt-5' : ''}`}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentSection}
@@ -93,26 +108,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarContent>
         </div>
 
-        <div className="mb-4 mt-auto flex w-full items-center px-4">
-          <Link href="/" className="relative h-6 w-6">
-            <Image
-              src="/black-icon.svg"
-              alt="0.email Logo"
-              width={24}
-              height={24}
-              className="object-contain dark:hidden"
-            />
-            <Image
-              src="/white-icon.svg"
-              alt="0.email Logo"
-              width={24}
-              height={24}
-              className="hidden object-contain dark:block"
-            />
-          </Link>
+        <div className="mt-auto flex w-full flex-col px-2">
+          <div className="mx-2">
+            {!session || isPending ? null : !session?.hasUsedTicket ? <GoldenTicketModal /> : null}
+          </div>
+          <SidebarContent className="py-0 pt-0">
+            <NavMain items={bottomNavItems} />
+          </SidebarContent>
         </div>
       </Sidebar>
-    </>
+    </div>
   );
 }
 
@@ -121,22 +126,39 @@ function ComposeButton() {
   const { state } = useSidebar();
   const isMobile = useIsMobile();
   const t = useTranslations();
+
+  const [dialogOpen, setDialogOpen] = useQueryState('isComposeOpen');
+  const [, setDraftId] = useQueryState('draftId');
+  const [, setTo] = useQueryState('to');
+
+  const handleOpenChange = (open: boolean) => {
+    setDialogOpen(open ? 'true' : null);
+    if (!open) {
+      setDraftId(null);
+      setTo(null);
+    }
+  };
   return (
-    <Button
-      asChild
-      className="bg-secondary bg-black text-primary hover:bg-black/80 dark:bg-white dark:hover:bg-white/80 relative isolate mt-1 h-8 w-[calc(100%)] overflow-hidden whitespace-nowrap shadow-inner text-white dark:text-black"
-      onMouseEnter={() => () => iconRef.current?.startAnimation?.()}
-      onMouseLeave={() => () => iconRef.current?.stopAnimation?.()}
-    >
-      <Link prefetch shallow href="/mail/create">
-        {state === 'collapsed' && !isMobile ? (
-          <SquarePenIcon ref={iconRef} className="size-4" />
-        ) : (
-          <>
-            <span className="text-center text-sm">{t('common.actions.create')}</span>
-          </>
-        )}
-      </Link>
-    </Button>
+    <Dialog open={!!dialogOpen} onOpenChange={handleOpenChange}>
+      <DialogTitle></DialogTitle>
+      <DialogDescription></DialogDescription>
+
+      <DialogTrigger asChild>
+        <button className="inline-flex h-8 w-full items-center justify-center gap-1 self-stretch overflow-hidden rounded-md border border-gray-200 bg-transparent text-black dark:border-none dark:bg-gradient-to-b dark:from-white/20 dark:to-white/10 dark:text-white dark:outline dark:outline-1 dark:outline-offset-[-1px] dark:outline-white/5">
+          {state === 'collapsed' && !isMobile ? (
+            <PencilCompose className="fill-iconLight dark:fill-iconDark mt-0.5 text-black" />
+          ) : (
+            <div className="flex items-center justify-center gap-2.5 pl-0.5 pr-1">
+              <PencilCompose className="fill-iconLight dark:fill-iconDark" />
+              <div className="justify-start text-sm leading-none">New email</div>
+            </div>
+          )}
+        </button>
+      </DialogTrigger>
+
+      <DialogContent className="max-w-screen h-screen border-none bg-transparent p-0 shadow-none">
+        <CreateEmail />
+      </DialogContent>
+    </Dialog>
   );
 }

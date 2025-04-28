@@ -1,7 +1,21 @@
+import { Label } from '@/hooks/use-labels';
+
 export interface User {
   name: string;
   email: string;
   avatar: string;
+}
+
+export interface ISendEmail {
+  to: Sender[];
+  subject: string;
+  message: string;
+  attachments?: File[];
+  headers?: Record<string, string>;
+  cc?: Sender[];
+  bcc?: Sender[];
+  threadId?: string;
+  fromEmail?: string;
 }
 
 export interface Account {
@@ -30,7 +44,7 @@ export interface SidebarData {
 }
 
 export interface Sender {
-  name: string;
+  name?: string;
   email: string;
 }
 
@@ -39,7 +53,7 @@ export interface ParsedMessage {
   connectionId?: string;
   title: string;
   subject: string;
-  tags: string[];
+  tags: Label[];
   sender: Sender;
   to: Sender[];
   cc: Sender[] | null;
@@ -117,4 +131,5 @@ export interface IOutgoingMessage {
   attachments: any[];
   headers: Record<string, string>;
   threadId?: string;
+  fromEmail?: string;
 }

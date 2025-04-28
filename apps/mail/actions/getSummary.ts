@@ -1,5 +1,4 @@
 'use server';
-import { throwUnauthorizedGracefully } from '@/app/api/utils';
 import { connection, summary } from '@zero/db/schema';
 import { headers } from 'next/headers';
 import { and, eq } from 'drizzle-orm';
@@ -12,7 +11,7 @@ export const GetSummary = async (threadId: string) => {
   const session = await auth.api.getSession({ headers: headersList });
 
   if (!session || !session.connectionId) {
-    return throwUnauthorizedGracefully();
+    return null;
   }
 
   const [_connection] = await db
@@ -21,7 +20,7 @@ export const GetSummary = async (threadId: string) => {
     .where(and(eq(connection.userId, session.user.id), eq(connection.id, session.connectionId)));
 
   if (!_connection) {
-    return throwUnauthorizedGracefully();
+    return null;
   }
 
   try {

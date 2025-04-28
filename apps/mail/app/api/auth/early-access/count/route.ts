@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Ratelimit } from '@upstash/ratelimit';
 import { earlyAccess } from '@zero/db/schema';
+import { processIP } from '@/app/api/utils';
 import { count } from 'drizzle-orm';
 import { redis } from '@/lib/redis';
 import { db } from '@zero/db';
@@ -14,17 +15,7 @@ const ratelimit = new Ratelimit({
 
 export async function GET(req: NextRequest) {
   try {
-    const ip = req.headers.get('CF-Connecting-IP');
-    if (!ip) {
-      console.log('No IP detected');
-      return NextResponse.json({ error: 'No IP detected' }, { status: 400 });
-    }
-    console.log(
-      'Request from IP:',
-      ip,
-      req.headers.get('x-forwarded-for'),
-      req.headers.get('CF-Connecting-IP'),
-    );
+    const ip = processIP(req);
     const { success, limit, reset, remaining } = await ratelimit.limit(ip);
 
     const headers = {
@@ -44,6 +35,6 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error('Error fetching early access count:', error);
 
-    return NextResponse.json({ error: 'Failed to fetch signup count' }, { status: 500 });
+    return NextResponse.json({ count: 0 }, { status: 400 });
   }
 }

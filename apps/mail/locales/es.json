@@ -19,6 +19,9 @@
       "movingToInbox": "Moviendo a la bandeja de entrada...",
       "movedToSpam": "Movido a spam",
       "movingToSpam": "Moviendo a spam...",
+      "deletingMail": "Eliminando correo...",
+      "failedToDeleteMail": "Error al eliminar el correo",
+      "deletedMail": "Correo eliminado",
       "archiving": "Archivando...",
       "archived": "Archivado",
       "failedToMove": "Error al mover el mensaje",
@@ -87,6 +90,7 @@
       "recipient": "Destinatario",
       "sender": "Remitente",
       "subject": "Asunto",
+      "from": "De",
       "dateRange": "Rango de fechas",
       "category": "Categoría",
       "folder": "Carpeta",
@@ -248,6 +252,7 @@
       "mute": "Silenciar",
       "moveToSpam": "Mover a spam",
       "moveToInbox": "Mover a bandeja de entrada",
+      "deleteFromBin": "Eliminar de la papelera",
       "unarchive": "Desarchivar",
       "archive": "Archivar",
       "moveToBin": "Mover a la papelera",
@@ -268,7 +273,10 @@
       "noLabelsAvailable": "No hay etiquetas disponibles",
       "loadMore": "Load more",
       "imagesHidden": "Las imágenes están ocultas por razones de seguridad",
-      "showImages": "Mostrar imágenes"
+      "showImages": "Mostrar imágenes",
+      "noEmails": "No hay correos disponibles",
+      "noSearchResults": "No se encontraron resultados",
+      "clearSearch": "Limpiar búsqueda"
     },
     "units": {
       "mb": "{amount} MB"
@@ -278,9 +286,9 @@
     "sidebar": {
       "inbox": "Bandeja de entrada",
       "drafts": "Borradores",
-      "sent": "Enviado",
+      "sent": "Enviados",
       "spam": "Spam",
-      "archive": "Archivar",
+      "archive": "Archivados",
       "bin": "Papelera de reciclaje",
       "feedback": "Sugerencias",
       "settings": "Configuración"
@@ -291,7 +299,9 @@
       "security": "Seguridad",
       "appearance": "Apariencia",
       "signatures": "Firmas",
-      "shortcuts": "Accesos directos"
+      "shortcuts": "Accesos directos",
+      "labels": "Etiquetas",
+      "danger-zone": "Zona de peligro"
     }
   },
   "pages": {
@@ -398,8 +408,24 @@
           "viewEmailDetails": "Ver detalles de email",
           "goToDrafts": "Ir a la carpeta de borradores",
           "expandEmailView": "Expandir vista de email",
-          "helpWithShortcuts": "Ayuda con accesos directos"
+          "helpWithShortcuts": "Ayuda con accesos directos",
+          "recordHotkey": "Grabar atajo",
+          "pressKeys": "Presionar teclas",
+          "releaseKeys": "Soltar teclas",
+          "selectAll": "Seleccionar todo"
         }
+      },
+      "labels": {
+        "title": "Etiquetas",
+        "description": "Administra tus etiquetas para una mejor organización de tus correos."
+      },
+      "danger-zone": {
+        "title": "Zona de peligro",
+        "description": "Elimina permanentemente tu cuenta y todos los datos asociados.",
+        "warning": "Esta acción no se puede deshacer.",
+        "confirmation": "Por favor escribe DELETE para confirmar la eliminación de la cuenta",
+        "deleteAccount": "Eliminar cuenta",
+        "deleting": "Eliminando..."
       }
     },
     "createEmail": {

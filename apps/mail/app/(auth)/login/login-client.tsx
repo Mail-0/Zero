@@ -42,13 +42,22 @@ const getProviderIcon = (providerId: string, className?: string): ReactNode => {
 
     case 'zero':
       return (
-        <Image
-          src="/white-icon.svg"
-          alt="Zero"
-          width={15}
-          height={15}
-          className="mr-2 invert dark:invert-0"
-        />
+        <>
+          <Image
+            src="/white-icon.svg"
+            alt="Zero"
+            width={15}
+            height={15}
+            className="mr-2 hidden dark:block"
+          />
+          <Image
+            src="/black-icon.svg"
+            alt="Zero"
+            width={15}
+            height={15}
+            className="mr-2 block dark:hidden"
+          />
+        </>
       );
     default:
       return null;
@@ -149,7 +158,14 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
             alt="Zero"
             width={40}
             height={40}
-            className="cursor-pointer invert dark:invert-0"
+            className="cursor-pointer hidden dark:block"
+          />
+          <Image
+            src="/black-icon.svg"
+            alt="Zero"
+            width={40}
+            height={40}
+            className="cursor-pointer block dark:hidden"
           />
         </Link>
       </div>

@@ -23,6 +23,7 @@ Thank you for your interest in contributing to 0.email! We're excited to have yo
 ## Getting Started
 
 1. **Fork the Repository**
+
    - Click the 'Fork' button at the top right of this repository
    - Clone your fork locally: `git clone https://github.com/YOUR-USERNAME/Zero.git`
 
@@ -30,9 +31,8 @@ Thank you for your interest in contributing to 0.email! We're excited to have yo
    - Install [Bun](https://bun.sh)
    - Clone the repository and install dependencies: `bun install`
    - Start the database locally: `bun docker:up`
-   - Copy `.env.example` to `.env` in both `apps/mail` and `packages/db` folders
+   - Copy `.env.example` to `.env` in project root
    - Set up your Google OAuth credentials (see [README.md](../README.md))
-   - Install database dependencies: `bun db:dependencies`
    - Initialize the database: `bun db:push`
 
 ## Development Workflow
@@ -42,7 +42,7 @@ Thank you for your interest in contributing to 0.email! We're excited to have yo
    ```bash
    # Start database locally
    bun docker:up
-   
+
    # Start the development server
    bun dev
    ```
@@ -112,29 +112,24 @@ Zero uses PostgreSQL with Drizzle ORM. Here's how to work with it:
 2. **Common Database Tasks**
 
    ```bash
-   # Install database dependencies
-   bun db:dependencies
-   
    # Apply schema changes to development database
    bun db:push
-   
+
    # Create migration files after schema changes
    bun db:generate
-   
+
    # Apply migrations (for production)
    bun db:migrate
-   
+
    # View and edit data with Drizzle Studio
    bun db:studio
    ```
 
 3. **Database Connection**
 
-   Make sure your database connection string is in both:
-   - `apps/mail/.env`
-   - `packages/db/.env`
-
+   Make sure your database connection string is in `.env`
    For local development:
+
    ```
    DATABASE_URL="postgresql://postgres:postgres@localhost:5432/zerodotemail"
    ```
@@ -181,13 +176,15 @@ Zero uses PostgreSQL with Drizzle ORM. Here's how to work with it:
 When implementing new features, follow these guidelines:
 
 1. **Add English Source Strings**
+
    - Place all user-facing text in `apps/mail/locales/en.json`
    - Organize strings according to the existing structure
    - Use descriptive, hierarchical keys that identify the feature and context
    - Example: `"pages.settings.connections.disconnectSuccess": "Account disconnected successfully"`
 
 2. **Follow i18n Formatting Standards**
-   - Variables: `{variableName}` 
+
+   - Variables: `{variableName}`
    - Pluralization: `{count, plural, =0 {items} one {item} other {items}}`
    - Avoid string concatenation to ensure proper translation
 

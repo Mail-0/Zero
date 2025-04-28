@@ -1,6 +1,7 @@
 'use client';
 
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
+import { EditorProvider } from '@/components/providers/editor-provider';
 import { AISidebarProvider } from '@/components/ui/ai-sidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
@@ -10,7 +11,7 @@ import { PostHogProvider } from './posthog-provider';
 
 export function Providers({ children, ...props }: React.ComponentProps<typeof NextThemesProvider>) {
   return (
-    <AISidebarProvider>
+    // <AISidebarProvider>
       <JotaiProvider>
         <NuqsAdapter>
           <NextThemesProvider {...props}>
@@ -20,6 +21,6 @@ export function Providers({ children, ...props }: React.ComponentProps<typeof Ne
           </NextThemesProvider>
         </NuqsAdapter>
       </JotaiProvider>
-    </AISidebarProvider>
+    // </AISidebarProvider>
   );
 }

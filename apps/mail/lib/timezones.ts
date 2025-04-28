@@ -1,3 +1,4 @@
+'use client';
 export const getBrowserTimezone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 export const isValidTimezone = (timezone: string) => {

@@ -1,9 +1,8 @@
 'use server';
 
-import { throwUnauthorizedGracefully } from '@/app/api/utils';
 import { createDriver } from '@/app/api/driver';
 import { getActiveConnection } from './utils';
-import { Sender } from '@/types';
+import { ISendEmail } from '@/types';
 
 export async function sendEmail({
   to,
@@ -14,16 +13,9 @@ export async function sendEmail({
   cc,
   headers: additionalHeaders = {},
   threadId,
-}: {
-  to: Sender[];
-  subject: string;
-  message: string;
-  attachments: File[];
-  headers?: Record<string, string>;
-  cc?: Sender[];
-  bcc?: Sender[];
-  threadId?: string;
-}) {
+  fromEmail,
+  draftId,
+}: ISendEmail & { draftId?: string }) {
   if (!to || !subject || !message) {
     throw new Error('Missing required fields');
   }
@@ -31,7 +23,7 @@ export async function sendEmail({
   const connection = await getActiveConnection();
 
   if (!connection?.accessToken || !connection.refreshToken) {
-    return throwUnauthorizedGracefully();
+    return null;
   }
 
   const driver = await createDriver(connection.providerId, {
@@ -42,16 +34,23 @@ export async function sendEmail({
     },
   });
 
-  await driver.create({
+  const emailData = {
     subject,
     to,
     message,
-    attachments,
+    attachments: attachments || [],
     headers: additionalHeaders,
     cc,
     bcc,
     threadId,
-  });
+    fromEmail,
+  };
+
+  if (draftId) {
+    await driver.sendDraft(draftId, emailData);
+  } else {
+    await driver.create(emailData);
+  }
 
   return { success: true };
 }

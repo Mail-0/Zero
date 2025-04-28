@@ -1,6 +1,8 @@
 const LANGUAGES = {
   en: 'English',
   ar: 'Arabic',
+  zh_TW: 'Chinese (Traditional)',
+  zh_CN: 'Chinese (Simplified)',
   ca: 'Catalan',
   de: 'German',
   es: 'Spanish',
@@ -15,6 +17,7 @@ const LANGUAGES = {
   lv: 'Latvian',
   hu: 'Hungarian',
   fa: 'Farsi',
+  vi: 'Vietnamese',
 } as const;
 
 export type Locale = keyof typeof LANGUAGES;

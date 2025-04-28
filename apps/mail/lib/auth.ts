@@ -1,12 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { connection, user as _user, account, userSettings, earlyAccess } from '@zero/db/schema';
+import {
+  connection,
+  user as _user,
+  account,
+  userSettings,
+  earlyAccess,
+  session,
+} from '@zero/db/schema';
 import { createAuthMiddleware, customSession } from 'better-auth/plugins';
+import { Account, betterAuth, type BetterAuthOptions } from 'better-auth';
 import { getBrowserTimezone, isValidTimezone } from '@/lib/timezones';
 import { defaultUserSettings } from '@zero/db/user_settings_default';
-import { betterAuth, type BetterAuthOptions } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { getSocialProviders } from './auth-providers';
+import { getActiveDriver } from '@/actions/utils';
+import { createDriver } from '@/app/api/driver';
+import { EnableBrain } from '@/actions/brain';
 import { redirect } from 'next/navigation';
+import { APIError } from 'better-auth/api';
 import { eq } from 'drizzle-orm';
 import { Resend } from 'resend';
 import { db } from '@zero/db';
@@ -17,20 +28,110 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : { emails: { send: async (...args: any[]) => console.log(args) } };
 
+const connectionHandlerHook = async (account: Account) => {
+  if (!account.accessToken || !account.refreshToken) {
+    console.error('Missing Access/Refresh Tokens', { account });
+    throw new APIError('EXPECTATION_FAILED', { message: 'Missing Access/Refresh Tokens' });
+  }
+
+  const driver = await createDriver(account.providerId, {});
+  const userInfo = await driver
+    .getUserInfo({
+      access_token: account.accessToken,
+      refresh_token: account.refreshToken,
+      email: '',
+    })
+    .catch(() => {
+      throw new APIError('UNAUTHORIZED', { message: 'Failed to get user info' });
+    });
+
+  if (!userInfo?.address) {
+    console.error('Missing email in user info:', { userInfo });
+    throw new APIError('BAD_REQUEST', { message: 'Missing "email" in user info' });
+  }
+
+  const updatingInfo = {
+    name: userInfo.name || 'Unknown',
+    picture: userInfo.photo || '',
+    accessToken: account.accessToken,
+    refreshToken: account.refreshToken,
+    scope: driver.getScope(),
+    expiresAt: new Date(Date.now() + (account.accessTokenExpiresAt?.getTime() || 3600000)),
+  };
+
+  await db
+    .insert(connection)
+    .values({
+      providerId: account.providerId,
+      id: crypto.randomUUID(),
+      email: userInfo.address,
+      userId: account.userId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...updatingInfo,
+    })
+    .onConflictDoUpdate({
+      target: [connection.email, connection.userId],
+      set: {
+        ...updatingInfo,
+        updatedAt: new Date(),
+      },
+    });
+};
+
 const options = {
-  database: drizzleAdapter(db, {
-    provider: 'pg',
-  }),
+  database: drizzleAdapter(db, { provider: 'pg' }),
   advanced: {
     ipAddress: {
       disableIpTracking: true,
     },
   },
+  user: {
+    deleteUser: {
+      enabled: true,
+      beforeDelete: async (user, request) => {
+        const driver = await getActiveDriver();
+        const refreshToken = (
+          await db.select().from(connection).where(eq(connection.userId, user.id)).limit(1)
+        )[0]?.refreshToken;
+        const revoked = await driver.revokeRefreshToken(refreshToken || '');
+        if (!revoked) {
+          console.error('Failed to revoke refresh token');
+          return;
+        }
+        await db.delete(account).where(eq(account.userId, user.id));
+        await db.delete(session).where(eq(session.userId, user.id));
+        await db.delete(connection).where(eq(connection.userId, user.id));
+        await db.delete(_user).where(eq(_user.id, user.id));
+      },
+    },
+  },
   session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60, // 7 days
+    },
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day (every 1 day the session expiration is updated)
   },
   socialProviders: getSocialProviders(),
+  account: {
+    accountLinking: {
+      enabled: true,
+      allowDifferentEmails: true,
+      trustedProviders: ['google', 'microsoft'],
+    },
+  },
+  databaseHooks: {
+    account: {
+      create: {
+        after: connectionHandlerHook,
+      },
+      update: {
+        after: connectionHandlerHook,
+      },
+    },
+  },
   emailAndPassword: {
     enabled: false,
     requireEmailVerification: true,
@@ -97,7 +198,7 @@ const options = {
             console.log('Tried to add user to earlyAccess after error, failed', foundUser, err),
           );
         try {
-          redirect('/login?error=early_access_required');
+          throw redirect('/login?error=early_access_required');
         } catch (error) {
           console.warn('Error redirecting to login page:', error);
         }
@@ -154,9 +255,10 @@ const options = {
             .where(eq(account.userId, user.id))
             .limit(1);
           if (userAccount) {
+            const newConnectionId = crypto.randomUUID();
             // create a new connection
             const [newConnection] = await db.insert(connection).values({
-              id: crypto.randomUUID(),
+              id: newConnectionId,
               userId: user.id,
               email: user.email,
               name: user.name,
@@ -171,9 +273,13 @@ const options = {
               createdAt: new Date(),
               updatedAt: new Date(),
             } as any);
+
             // this type error is pissing me tf off
             if (newConnection) {
-              console.log('Created new connection for user', newConnection);
+              void EnableBrain({
+                connection: { id: newConnectionId, providerId: userAccount.providerId },
+              });
+              console.warn('Created new connection for user', user.email);
             }
           }
         }

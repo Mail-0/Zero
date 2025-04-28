@@ -1,7 +1,8 @@
-import { useSession } from "@/lib/auth-client";
-import useSWR from "swr";
-import { defaultUserSettings } from "@zero/db/user_settings_default";
-import { getBrowserTimezone } from "@/lib/timezones";
+'use client';
+import { defaultUserSettings } from '@zero/db/user_settings_default';
+import { getBrowserTimezone } from '@/lib/timezones';
+import { useSession } from '@/lib/auth-client';
+import useSWR from 'swr';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -24,7 +25,7 @@ export function useSettings() {
 
         return userSettings;
       } catch (error) {
-        console.error("Failed to load settings:", error);
+        console.error('Failed to load settings:', error);
         throw error;
       }
     },

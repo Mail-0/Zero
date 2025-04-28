@@ -19,6 +19,9 @@ checksums:
     common/actions/movingToInbox: 6ed6d10efa5858a3631d89cb5f00d238
     common/actions/movedToSpam: daec566f29b9f53f9a52f7c789cf305c
     common/actions/movingToSpam: 6f72275c731f9159ecc5a7d46b908c8c
+    common/actions/deletingMail: 101a9b9e18992289b88823fecf0616bd
+    common/actions/failedToDeleteMail: c54c5dd8bc5b6037f5142b187a9c1b35
+    common/actions/deletedMail: 6ed845566bc1e84d636a88d3e4788550
     common/actions/archiving: 55a5ce6fc03a5bd9be92c0e3182a2b75
     common/actions/archived: cf5127ecfd7e43a35466a1ba5fe16450
     common/actions/failedToMove: 29672fc2a832d1e41dfa4aec2ef4136e
@@ -77,6 +80,7 @@ checksums:
     common/searchBar/recipient: cccd041f08a57c1ae658324b5073fc7d
     common/searchBar/sender: a2d18a44b4320d124f6f33a32023e74f
     common/searchBar/subject: de5b885eb327b2f233f3b67aab4c4c0a
+    common/searchBar/from: 3d84daca8c92c8609deeab4b294b4afb
     common/searchBar/dateRange: be548c93a997ed6c2e9ac5c943faac10
     common/searchBar/category: 1b0340cd175aa5a2be745a0d54908466
     common/searchBar/folder: 55abc55b8ff7891f38db1a5b7bf97765
@@ -216,6 +220,7 @@ checksums:
     common/mail/mute: 3ade14017ee6826e52a7e9fa75a54852
     common/mail/moveToSpam: e06d86eee5c8c14a347764d7dd7c2f0d
     common/mail/moveToInbox: 75b5f96eeba8305782ae5dc684ea4355
+    common/mail/deleteFromBin: 116802933c93b87c23323885d2cfc61a
     common/mail/unarchive: 671fc7e9d7c8cb4d182a25a46551c168
     common/mail/archive: fa813ab3074103e5daad07462af25789
     common/mail/moveToBin: 0a1bbf5cacd49c0b7c770d35dac8b5fa
@@ -237,6 +242,9 @@ checksums:
     common/mail/loadMore: 365c2d8dfc53ac7e9188acd5274e2837
     common/mail/imagesHidden: b80d357fa53259eeca5b4bc6f4492558
     common/mail/showImages: b9e8dc2ce5380180886b89cbe9d51508
+    common/mail/noEmails: 999c0c96bd60076639ea4d5215f36106
+    common/mail/noSearchResults: 3176102f55edd2d913f3fa95f03bd380
+    common/mail/clearSearch: 0ee4a80abe134b7edd90c74f03638877
     common/units/mb: ed9c3b369a1ac40741b182458b69143a
     navigation/sidebar/inbox: 57e9db873911bf848c79e2ed546ecf45
     navigation/sidebar/drafts: 76dab0f0b2e6c4933b80f69e388070d0
@@ -252,6 +260,8 @@ checksums:
     navigation/settings/appearance: cdd8c41c5fb859234e8a603544fce631
     navigation/settings/signatures: 681d432cf5709e710da79b9d0155aaa2
     navigation/settings/shortcuts: db3330ed3240c398054f3be23c52851f
+    navigation/settings/labels: 6f15627a90002323eac018274b6922d6
+    navigation/settings/danger-zone: ab5417cabdfa70b0a7c9d407ec69b450
     pages/error/notFound/title: 5b1dea4722f8fd52b68f7ac5ce89875d
     pages/error/notFound/description: 057147f33cbf65e4049928e7afa4103d
     pages/error/notFound/goBack: b917ea82facb90c88c523b255d29f84b
@@ -339,6 +349,18 @@ checksums:
     pages/settings/shortcuts/actions/goToDrafts: dfa22fb17b8fa3a3d5672505d104e18c
     pages/settings/shortcuts/actions/expandEmailView: ad31f53032e788ee0e30b14f484a6ec3
     pages/settings/shortcuts/actions/helpWithShortcuts: f8b89d2e465e3a93ff9c5397a114a094
+    pages/settings/shortcuts/actions/recordHotkey: ae6d389f2e9a27e68b34349658df365b
+    pages/settings/shortcuts/actions/pressKeys: c000cad4c6e6b701c9437998d6726ebf
+    pages/settings/shortcuts/actions/releaseKeys: dfa63857eb8a9b8486eacb589b66591b
+    pages/settings/shortcuts/actions/selectAll: ef9e1f8aaf1fbbdf868934209c85aea2
+    pages/settings/labels/title: 6f15627a90002323eac018274b6922d6
+    pages/settings/labels/description: 0418ef2ed4c3ca5082fddd6686b8596d
+    pages/settings/danger-zone/title: ab5417cabdfa70b0a7c9d407ec69b450
+    pages/settings/danger-zone/description: 3f881579c9b1558714e38471e020e78b
+    pages/settings/danger-zone/warning: 3d8b13374ffd3cefc0f3f7ce077bd9c9
+    pages/settings/danger-zone/confirmation: ab3ed2b0fd15fc48825b6d60270d1b19
+    pages/settings/danger-zone/deleteAccount: f5f7b88ff3122fb0d3a330e2b99d7e3d
+    pages/settings/danger-zone/deleting: 683cd814a3fc94e50b3e4e4a9c90c19c
     pages/createEmail/invalidEmail: b2d9f25626f2d15c7c63e0281bccc247
     pages/createEmail/body: e88eb1ea71f5ef886aa43ea6ba292d87
     pages/createEmail/example: ff2b301b819e5067ce63d236731e50c2

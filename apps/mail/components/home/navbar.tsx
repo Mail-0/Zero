@@ -71,9 +71,16 @@ export default function Navbar() {
         <Image
           src="/white-icon.svg"
           alt="zerodotemail"
-          className="h-6 w-6 invert dark:invert-0"
+          className="h-6 w-6 hidden dark:block"
           width={180}
           height={180}
+        />
+        <Image
+          src="/black-icon.svg"
+          alt="zerodotemail"
+          width={180}
+          height={180}
+          className="h-6 w-6 block dark:hidden"
         />
       </Link>
       {/* Mobile Navigation */}
@@ -96,7 +103,14 @@ export default function Navbar() {
                 <Image
                   src="/white-icon.svg"
                   alt="zerodotemail"
-                  className="size-6 invert dark:invert-0"
+                  className="size-6 hidden dark:block"
+                  width={180}
+                  height={180}
+                />
+                <Image
+                  src="/black-icon.svg"
+                  alt="zerodotemail"
+                  className="size-6 block dark:hidden"
                   width={180}
                   height={180}
                 />

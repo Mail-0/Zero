@@ -19,6 +19,9 @@
       "movingToInbox": "Moving to inbox...",
       "movedToSpam": "Moved to spam",
       "movingToSpam": "Moving to spam...",
+      "deletingMail": "Deleting mail...",
+      "failedToDeleteMail": "Failed to delete mail",
+      "deletedMail": "Mail deleted",
       "archiving": "Archiving...",
       "archived": "Archived",
       "failedToMove": "Failed to move message",
@@ -87,6 +90,7 @@
       "recipient": "Recipient",
       "sender": "Sender",
       "subject": "Subject",
+      "from": "From",
       "dateRange": "Date range",
       "category": "Category",
       "folder": "Folder",
@@ -108,7 +112,8 @@
       "documentation": "Documentation",
       "appTheme": "App Theme",
       "accounts": "Accounts",
-      "signIn": "Sign in"
+      "signIn": "Sign in",
+      "otherAccounts": "Other Accounts"
     },
     "mailCategories": {
       "primary": "Primary",
@@ -136,7 +141,7 @@
       "from": "From",
       "to": "To",
       "cc": "Cc",
-      "bcc":"Bcc",
+      "bcc": "Bcc",
       "date": "Date",
       "mailedBy": "Mailed-By",
       "signedBy": "Signed-By",
@@ -166,7 +171,9 @@
       "muteThread": "Mute thread",
       "favourites": "Favourites",
       "disableImages": "Hide Images",
-      "enableImages": "Show Images"
+      "enableImages": "Show Images",
+      "star": "Star",
+      "unstar": "Unstar"
     },
     "notes": {
       "title": "Notes",
@@ -248,6 +255,7 @@
       "mute": "Mute",
       "moveToSpam": "Move to Spam",
       "moveToInbox": "Move to Inbox",
+      "deleteFromBin": "Delete from Bin",
       "unarchive": "Unarchive",
       "archive": "Archive",
       "moveToBin": "Move to Bin",
@@ -294,7 +302,9 @@
       "security": "Security",
       "appearance": "Appearance",
       "signatures": "Signatures",
-      "shortcuts": "Shortcuts"
+      "shortcuts": "Shortcuts",
+      "labels": "Labels",
+      "danger-zone": "Danger Zone"
     }
   },
   "pages": {
@@ -407,6 +417,18 @@
           "releaseKeys": "Release keys",
           "selectAll": "Select All"
         }
+      },
+      "labels": {
+        "title": "Labels",
+        "description": "Manage your labels for better organization of your emails."
+      },
+      "danger-zone": {
+        "title": "Danger Zone",
+        "description": "Permanently delete your account and all associated data.",
+        "warning": "This action cannot be undone.",
+        "confirmation": "Please type DELETE to confirm account deletion",
+        "deleteAccount": "Delete Account",
+        "deleting": "Deleting..."
       }
     },
     "createEmail": {
@@ -417,6 +439,7 @@
       "addMore": "Add more",
       "dropFilesToAttach": "Drop files to attach",
       "writeYourMessageHere": "Write your message here...",
+      "emailSent": "Email sent",
       "emailSentSuccessfully": "Email sent successfully",
       "failedToSendEmail": "Failed to send email. Please try again.",
       "signature": {

@@ -69,21 +69,18 @@ You can set up Zero in two ways:
    # Install dependencies
    bun install
 
-   # Install database dependencies
-   bun db:dependencies
-
    # Start database locally
    bun docker:up
    ```
 
 2. **Set Up Environment**
 
-   - Copy `.env.example` to `.env` in both `apps/mail` and `packages/db` folders
+   - Copy `.env.example` to `.env` in project root
      ```bash
-     cp apps/mail/.env.example apps/mail/.env && cp packages/db/.env.example packages/db/.env
+     cp .env.example .env
      ```
    - Configure your environment variables (see below)
-   - Install database dependencies: `bun db:dependencies`
+   - Start the database with the provided docker compose setup: `bun docker:up`
    - Initialize the database: `bun db:push`
 
 3. **Start the App**
@@ -152,16 +149,13 @@ bun install
    - Add authorized redirect URIs:
      - Development:
        - `http://localhost:3000/api/auth/callback/google`
-       - `http://localhost:3000/api/v1/mail/auth/google/callback`
      - Production:
        - `https://your-production-url/api/auth/callback/google`
-       - `https://your-production-url/api/v1/mail/auth/google/callback`
    - Add to `.env`:
 
      ```env
      GOOGLE_CLIENT_ID=your_client_id
      GOOGLE_CLIENT_SECRET=your_client_secret
-     GOOGLE_REDIRECT_URI=http://localhost:3000/api/v1/mail/auth/google/callback
      ```
 
    - Add yourself as a test user:
@@ -171,30 +165,11 @@ bun install
      - Add your email and click 'Save'
 
 > [!WARNING]
-> The `GOOGLE_REDIRECT_URI` must match **exactly** what you configure in the Google Cloud Console, including the protocol (http/https), domain, and path - these are provided above.
-
-3. **GitHub OAuth Setup** (Optional)
-
-   <details>
-   <summary>Click to expand GitHub OAuth setup instructions</summary>
-
-   - Go to [GitHub Developer Setting](https://github.com/settings/developers)
-   - Create a new OAuth App
-   - Add authorized redirect URIs:
-     - Development: `http://localhost:3000/api/auth/callback/github`
-     - Production: `https://your-production-url/api/auth/callback/github`
-   - Add to `.env`:
-
-     ```env
-     GITHUB_CLIENT_ID=your_client_id
-     GITHUB_CLIENT_SECRET=your_client_secret
-     ```
-
-     </details>
+> The authorized redirect URIs in Google Cloud Console must match **exactly** what you configure in the `.env`, including the protocol (http/https), domain, and path - these are provided above.
 
 ### Environment Variables
 
-Copy `.env.example` located in the `apps/mail` folder to `.env` in the same folder and configure the following variables:
+Copy `.env.example` located in the project folder to `.env` in the same folder and configure the following variables:
 
 ```env
 # Auth
@@ -203,11 +178,6 @@ BETTER_AUTH_SECRET=     # Required: Secret key for authentication
 # Google OAuth (Required for Gmail integration)
 GOOGLE_CLIENT_ID=       # Required for Gmail integration
 GOOGLE_CLIENT_SECRET=   # Required for Gmail integration
-GOOGLE_REDIRECT_URI=    # Required for Gmail integration
-
-# GitHub OAuth (Optional)
-GITHUB_CLIENT_ID=       # Optional: For GitHub authentication
-GITHUB_CLIENT_SECRET=   # Optional: For GitHub authentication
 
 # Database
 DATABASE_URL=           # Required: PostgreSQL connection string for backend connection
@@ -217,15 +187,7 @@ REDIS_URL=              # Redis URL for caching (http://localhost:8079 for local
 REDIS_TOKEN=            # Redis token (upstash-local-token for local dev)
 ```
 
-To be able to run `bun db:push` and push the schemas to the database you also have to add a `.env` file to the `packages/db` folder (so `packages/db/.env`) with the following content:
-
-```env
-DATABASE_URL=          # Required: PostgreSQL connection string for migrations
-```
-
 For local development a connection string example is provided in the `.env.example` file located in the same folder as the database.
-
-**Note:** The `DATABASE_URL` connection string in the `apps/mail/.env` has to be the same as the one in `packages/db/.env`
 
 ### Database Setup
 
@@ -248,10 +210,7 @@ Zero uses PostgreSQL for storing data. Here's how to set it up:
 
 2. **Set Up Database Connection**
 
-   Make sure your database connection string is in:
-
-   - `apps/mail/.env`
-   - `packages/db/.env`
+   Make sure your database connection string is in `.env` file.
 
    For local development use:
 
@@ -260,12 +219,6 @@ Zero uses PostgreSQL for storing data. Here's how to set it up:
    ```
 
 3. **Database Commands**
-
-   - **Install database dependencies**:
-
-     ```bash
-     bun db:dependencies
-     ```
 
    - **Set up database tables**:
 
@@ -289,6 +242,7 @@ Zero uses PostgreSQL for storing data. Here's how to set it up:
      ```bash
      bun db:studio
      ```
+     > If you run `bun dev` in your terminal, the studio command should be automatically running with the app.
 
 ## Contribute
 

@@ -5,7 +5,7 @@ on:
 
 jobs:
   autofix:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2204
     steps:
       - name: Checkout Code 🛎
         uses: actions/checkout@v4
@@ -16,7 +16,7 @@ jobs:
           bun-version: latest
 
       - name: Setup Node 📦
-        uses: actions/setup-node@v4
+        uses: useblacksmith/setup-node@v5
         with:
           node-version: latest
 

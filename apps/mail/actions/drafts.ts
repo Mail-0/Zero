@@ -1,5 +1,4 @@
 'use server';
-import { throwUnauthorizedGracefully } from '@/app/api/utils';
 import { getActiveDriver } from './utils';
 
 export const getDrafts = async ({
@@ -16,32 +15,21 @@ export const getDrafts = async ({
     return await driver.listDrafts(q, max, pageToken);
   } catch (error) {
     console.error('Error getting threads:', error);
-    await throwUnauthorizedGracefully();
-    // throw error;
-    return { messages: [], nextPageToken: null };
+    throw error;
   }
 };
 
 export const createDraft = async (data: any) => {
   try {
     const driver = await getActiveDriver();
-
-    const res = await driver.createDraft(data);
-
-    return { success: true, id: res.id };
+    return await driver.createDraft(data);
   } catch (error) {
     console.error('Error creating draft:', error);
-    return { success: false, error: String(error) };
+    throw error;
   }
 };
 
 export const getDraft = async (id: string) => {
-  if (!id) {
-    throw new Error('Missing draft ID');
-  }
-
-  console.log('getting email:', id);
-
   try {
     const driver = await getActiveDriver();
     return await driver.getDraft(id);

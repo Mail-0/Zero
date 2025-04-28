@@ -1,7 +1,6 @@
 import { Ratelimit, Algorithm, RatelimitConfig } from '@upstash/ratelimit';
-import { deleteActiveConnection } from '@/actions/utils';
+import { NextRequest, NextResponse } from 'next/server';
 import { redirect } from 'next/navigation';
-import { NextRequest } from 'next/server';
 import { headers } from 'next/headers';
 import { redis } from '@/lib/redis';
 import { auth } from '@/lib/auth';
@@ -20,34 +19,11 @@ export const getRatelimitModule = (config: {
   return ratelimit;
 };
 
-export const throwUnauthorizedGracefully = async () => {
-  console.warn('Unauthorized, redirecting to login');
-  try {
-    const headersList = await headers();
-    await auth.api.signOut({ headers: headersList });
-    redirect('/login?error=unauthorized');
-  } catch (error) {
-    console.warn('Error signing out & redirecting to login:', error);
-    throw error;
-  }
-};
-
-export async function getAuthenticatedUserId(): Promise<string> {
+export async function getAuthenticatedUserId(): Promise<string | null> {
   const headersList = await headers();
   const session = await auth.api.getSession({ headers: headersList });
 
-  if (!session?.user?.id) {
-    return throwUnauthorizedGracefully();
-  }
-
-  return session.user.id;
-}
-
-// Forcefully logout the user, this will delete the active connection
-export async function logoutUser() {
-  await deleteActiveConnection();
-  const headersList = await headers();
-  await auth.api.signOut({ headers: headersList });
+  return session?.user.id ?? null;
 }
 
 export const checkRateLimit = async (ratelimit: Ratelimit, finalIp: string) => {
@@ -70,4 +46,47 @@ export const processIP = (req: NextRequest) => {
   }
   const cleanIp = ip?.split(',')[0]?.trim() ?? null;
   return cfIP ?? cleanIp ?? '127.0.0.1';
+};
+
+// Helper function for delays
+export const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Exponential backoff helper function
+export const withExponentialBackoff = async <T>(
+  operation: () => Promise<T>,
+  maxRetries = 3,
+  initialDelay = 1000,
+  maxDelay = 10000,
+): Promise<T> => {
+  let retries = 0;
+  let delayMs = initialDelay;
+
+  while (true) {
+    try {
+      return await operation();
+    } catch (error: any) {
+      if (retries >= maxRetries) {
+        throw error;
+      }
+
+      // Check if error is rate limit related
+      const isRateLimit =
+        error?.code === 429 ||
+        error?.errors?.[0]?.reason === 'rateLimitExceeded' ||
+        error?.errors?.[0]?.reason === 'userRateLimitExceeded';
+
+      if (!isRateLimit) {
+        throw error;
+      }
+
+      console.log(
+        `Rate limit hit, retrying in ${delayMs}ms (attempt ${retries + 1}/${maxRetries})`,
+      );
+      await delay(delayMs);
+
+      // Exponential backoff with jitter
+      delayMs = Math.min(delayMs * 2 + Math.random() * 1000, maxDelay);
+      retries++;
+    }
+  }
 };

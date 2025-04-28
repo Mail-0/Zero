@@ -1,14 +1,18 @@
 'use client';
+import { backgroundQueueAtom, isThreadInBackgroundQueueAtom } from '@/store/backgroundQueue';
 import { useParams, useSearchParams } from 'next/navigation';
 import { IGetThreadResponse } from '@/app/api/driver/types';
 import type { InitialThread, ParsedMessage } from '@/types';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useSession } from '@/lib/auth-client';
 import { defaultPageSize } from '@/lib/utils';
+import { useAtom, useAtomValue } from 'jotai';
+import { Label } from '@/hooks/use-labels';
 import useSWRInfinite from 'swr/infinite';
 import useSWR, { preload } from 'swr';
 import { useQueryState } from 'nuqs';
 import { useMemo } from 'react';
+import { toast } from 'sonner';
 import axios from 'axios';
 
 export const preloadThread = async (userId: string, threadId: string, connectionId: string) => {
@@ -80,6 +84,8 @@ export const useThreads = () => {
   const { folder } = useParams<{ folder: string }>();
   const [searchValue] = useSearchValue();
   const { data: session } = useSession();
+  const [backgroundQueue] = useAtom(backgroundQueueAtom);
+  const isInQueue = useAtomValue(isThreadInBackgroundQueueAtom);
 
   const { data, error, size, setSize, isLoading, isValidating, mutate } = useSWRInfinite(
     (_, previousPageData) => {
@@ -118,8 +124,14 @@ export const useThreads = () => {
 
   // Flatten threads from all pages and sort by receivedOn date (newest first)
   const threads = useMemo(
-    () => (data ? data.flatMap((e) => e.threads).filter(Boolean) : []),
-    [data, session],
+    () =>
+      data
+        ? data
+            .flatMap((e) => e.threads)
+            .filter(Boolean)
+            .filter((e) => !isInQueue(`thread:${e.id}`))
+        : [],
+    [data, session, backgroundQueue, isInQueue],
   );
   const isEmpty = useMemo(() => threads.length === 0, [threads]);
   const isReachingEnd = isEmpty || (data && !data[data.length - 1]?.nextPageToken);

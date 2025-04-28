@@ -19,6 +19,9 @@
       "movingToInbox": "جارٍ النقل إلى صندوق الوارد...",
       "movedToSpam": "تم النقل إلى البريد المزعج",
       "movingToSpam": "جارٍ النقل إلى البريد المزعج...",
+      "deletingMail": "جارٍ حذف البريد...",
+      "failedToDeleteMail": "فشل حذف البريد",
+      "deletedMail": "تم حذف البريد",
       "archiving": "جارٍ الأرشفة...",
       "archived": "تمت الأرشفة",
       "failedToMove": "فشل نقل الرسالة",
@@ -87,6 +90,7 @@
       "recipient": "المستلم",
       "sender": "المرسل",
       "subject": "الموضوع",
+      "from": "من",
       "dateRange": "النطاق الزمني",
       "category": "الفئة",
       "folder": "المجلد",
@@ -248,6 +252,7 @@
       "mute": "كتم",
       "moveToSpam": "نقل إلى البريد المزعج",
       "moveToInbox": "نقل إلى صندوق الوارد",
+      "deleteFromBin": "حذف من سلة المهملات",
       "unarchive": "إلغاء الأرشفة",
       "archive": "أرشفة",
       "moveToBin": "نقل إلى سلة المهملات",
@@ -268,7 +273,10 @@
       "noLabelsAvailable": "لا توجد تصنيفات متاحة",
       "loadMore": "تحميل المزيد",
       "imagesHidden": "تم إخفاء الصور لأسباب أمنية",
-      "showImages": "عرض الصور"
+      "showImages": "عرض الصور",
+      "noEmails": "لا توجد رسائل بريد متاحة",
+      "noSearchResults": "لم يتم العثور على نتائج بحث",
+      "clearSearch": "مسح البحث"
     },
     "units": {
       "mb": "{amount} ميجابايت"
@@ -291,7 +299,9 @@
       "security": "الأمان",
       "appearance": "المظهر",
       "signatures": "التوقيعات",
-      "shortcuts": "الاختصارات"
+      "shortcuts": "الاختصارات",
+      "labels": "التصنيفات",
+      "danger-zone": "منطقة الخطر"
     }
   },
   "pages": {
@@ -398,8 +408,24 @@
           "viewEmailDetails": "عرض تفاصيل البريد الإلكتروني",
           "goToDrafts": "الانتقال إلى المسودات",
           "expandEmailView": "توسيع عرض البريد الإلكتروني",
-          "helpWithShortcuts": "المساعدة في اختصارات لوحة المفاتيح"
+          "helpWithShortcuts": "المساعدة في اختصارات لوحة المفاتيح",
+          "recordHotkey": "تسجيل اختصار",
+          "pressKeys": "اضغط على المفاتيح",
+          "releaseKeys": "حرر المفاتيح",
+          "selectAll": "تحديد الكل"
         }
+      },
+      "labels": {
+        "title": "التصنيفات",
+        "description": "إدارة التصنيفات لتنظيم رسائل البريد الإلكتروني بشكل أفضل."
+      },
+      "danger-zone": {
+        "title": "منطقة الخطر",
+        "description": "حذف حسابك وجميع البيانات المرتبطة به بشكل دائم.",
+        "warning": "لا يمكن التراجع عن هذا الإجراء.",
+        "confirmation": "يرجى كتابة DELETE لتأكيد حذف الحساب",
+        "deleteAccount": "حذف الحساب",
+        "deleting": "جارٍ الحذف..."
       }
     },
     "createEmail": {
