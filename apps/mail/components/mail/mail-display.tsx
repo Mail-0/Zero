@@ -42,10 +42,10 @@ import { useTranslations } from 'next-intl';
 import { MailIframe } from './mail-iframe';
 import { MailLabels } from './mail-list';
 import { FileText } from 'lucide-react';
+import { format, set } from 'date-fns';
 import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Badge } from '../ui/badge';
-import { format } from 'date-fns';
 import Image from 'next/image';
 
 // Add formatFileSize utility function
@@ -283,17 +283,7 @@ const AiSummary = ({
   );
 };
 
-const MailDisplay = ({
-  emailData,
-  isFullscreen,
-  isMuted,
-  index,
-  totalEmails,
-  demo,
-  onReply,
-  onReplyAll,
-  onForward,
-}: Props) => {
+const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [unsubscribed, setUnsubscribed] = useState(false);
   const [isUnsubscribing, setIsUnsubscribing] = useState(false);
@@ -309,15 +299,9 @@ const MailDisplay = ({
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const t = useTranslations();
+  const [activeReplyId, setActiveReplyId] = useQueryState('activeReplyId');
 
-  const { data } = demo
-    ? {
-      data: {
-        content:
-          'This email talks about how Zero Email is the future of email. It is a new way to send and receive emails that is more secure and private.',
-      },
-    }
-    : useSummary(emailData.id);
+  console.warn(emailData, 'emailData');
 
   useEffect(() => {
     if (!demo) {
@@ -418,13 +402,7 @@ const MailDisplay = ({
                   {totalEmails && `[${totalEmails}]`}
                 </span>
               </p>
-              <div className="mb-4 mt-1 flex items-center gap-1">
-                <Calendar className="size-3.5 fill-[#6D6D6D] dark:fill-[#8C8C8C]" />
-                <span className="text-sm font-medium text-[#6D6D6D] dark:text-[#8C8C8C]">
-                  {formatDate(emailData?.receivedOn)}
-                </span>
-              </div>
-              <div className="flex items-center gap-4">
+              <div className="mt-2 flex items-center gap-4">
                 {emailData?.tags ? (
                   <MailDisplayLabels labels={emailData?.tags.map((t) => t.name) || []} />
                 ) : null}
@@ -453,7 +431,7 @@ const MailDisplay = ({
                     const renderPerson = (person: Person) => (
                       <div
                         key={person.email}
-                        className="inline-flex items-center justify-start gap-1.5 overflow-hidden rounded-full border border-[#DBDBDB] bg-white  dark:border-[#2B2B2B] dark:bg-[#1A1A1A]"
+                        className="inline-flex items-center justify-start gap-1.5 overflow-hidden rounded-full border border-[#DBDBDB] bg-white p-1 pr-2 dark:border-[#2B2B2B] dark:bg-[#1A1A1A]"
                       >
                         <Avatar className="h-5 w-5">
                           <AvatarImage src={getEmailLogo(person.email)} className="rounded-full" />
@@ -491,7 +469,7 @@ const MailDisplay = ({
                   })()}
                 </div>
               </div>
-              <AiSummary />
+              {/* <AiSummary /> */}
             </>
           )}
         </div>
@@ -815,15 +793,12 @@ const MailDisplay = ({
                   ))}
                 </div>
               ) : null}
-              <div className="mb-4 mt-3 flex gap-2">
+              <div className="mb-2 mt-2 flex gap-2">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (onReply) {
-                      onReply();
-                    } else {
-                      setMode('reply');
-                    }
+                    setMode('reply');
+                    setActiveReplyId(emailData.id);
                   }}
                   className="inline-flex h-7 items-center justify-center gap-1 overflow-hidden rounded-md border bg-white px-1.5 dark:border-none dark:bg-[#313131]"
                 >
@@ -837,11 +812,8 @@ const MailDisplay = ({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (onReplyAll) {
-                      onReplyAll();
-                    } else {
-                      setMode('replyAll');
-                    }
+                    setMode('replyAll');
+                    setActiveReplyId(emailData.id);
                   }}
                   className="inline-flex h-7 items-center justify-center gap-1 overflow-hidden rounded-md border bg-white px-1.5 dark:border-none dark:bg-[#313131]"
                 >
@@ -855,11 +827,8 @@ const MailDisplay = ({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (onForward) {
-                      onForward();
-                    } else {
-                      setMode('forward');
-                    }
+                    setMode('forward');
+                    setActiveReplyId(emailData.id);
                   }}
                   className="inline-flex h-7 items-center justify-center gap-1 overflow-hidden rounded-md border bg-white px-1.5 dark:border-none dark:bg-[#313131]"
                 >

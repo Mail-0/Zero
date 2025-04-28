@@ -6,6 +6,7 @@ import {
   userSettings,
   earlyAccess,
   session,
+  userHotkeys,
 } from '@zero/db/schema';
 import { createAuthMiddleware, customSession } from 'better-auth/plugins';
 import { Account, betterAuth, type BetterAuthOptions } from 'better-auth';
@@ -99,10 +100,15 @@ const options = {
           console.error('Failed to revoke refresh token');
           return;
         }
-        await db.delete(account).where(eq(account.userId, user.id));
-        await db.delete(session).where(eq(session.userId, user.id));
-        await db.delete(connection).where(eq(connection.userId, user.id));
-        await db.delete(_user).where(eq(_user.id, user.id));
+
+        await db.transaction(async (tx) => {
+          await tx.delete(connection).where(eq(connection.userId, user.id));
+          await tx.delete(account).where(eq(account.userId, user.id));
+          await tx.delete(session).where(eq(session.userId, user.id));
+          await tx.delete(userSettings).where(eq(userSettings.userId, user.id));
+          await tx.delete(_user).where(eq(_user.id, user.id));
+          await tx.delete(userHotkeys).where(eq(userHotkeys.userId, user.id));
+        });
       },
     },
   },

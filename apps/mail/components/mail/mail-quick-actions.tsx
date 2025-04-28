@@ -45,6 +45,7 @@ export const MailQuickActions = memo(
     const currentFolder = folder ?? '';
     const isInbox = currentFolder === FOLDERS.INBOX;
     const isArchiveFolder = currentFolder === FOLDERS.ARCHIVE;
+    const [, setActiveReplyId] = useQueryState('activeReplyId');
 
     const closeThreadIfOpen = useCallback(() => {
       if (!latestMessage) return;
@@ -52,6 +53,7 @@ export const MailQuickActions = memo(
 
       if (threadId === messageId) {
         setThreadId(null);
+        setActiveReplyId(null);
       }
 
       if (resetNavigation) {

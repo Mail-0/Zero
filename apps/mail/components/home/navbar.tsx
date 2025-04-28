@@ -3,6 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../u
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { useSession } from '@/lib/auth-client';
 import { useEffect, useState } from 'react';
+import { redirect } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import { Button } from '../ui/button';
 import Image from 'next/image';
@@ -11,6 +12,10 @@ import Link from 'next/link';
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { data: session } = useSession();
+
+  if (session) {
+    redirect('/mail');
+  }
 
   // Automatically lose sheet on lg screen
   useEffect(() => {
@@ -27,11 +32,7 @@ export default function Navbar() {
     return (
       <>
         <Button asChild>
-          <Link
-            href={session ? '/mail' : '/login'}
-          >
-            {session ? 'Open Zero' : 'Get Started'}
-          </Link>
+          <Link href={'/login'}>Get Started</Link>
         </Button>
         <Button
           className="w-full bg-gray-900 text-white hover:bg-black dark:bg-white dark:text-black dark:hover:bg-white/90"
@@ -40,18 +41,14 @@ export default function Navbar() {
           <Link href="https://cal.com/team/0/chat">Contact</Link>
         </Button>
       </>
-    )
+    );
   };
 
   const desktopNavContent = () => {
     return (
       <>
         <Button asChild>
-          <Link
-            href={session ? "/mail" : "/login"}
-          >
-            {session ? 'Open Zero' : 'Get Started'}
-          </Link>
+          <Link href={'/login'}>Get Started</Link>
         </Button>
 
         {/* It is better to enable this button when we implement our own mail server, no need for it honestly */}
@@ -62,8 +59,8 @@ export default function Navbar() {
           <Link href={session ? '/mail' : '/login'}>Get Started</Link>
         </Button> */}
       </>
-    )
-  }
+    );
+  };
 
   return (
     <div className="mx-auto flex w-full items-center justify-between p-4 px-3 lg:px-4">
@@ -71,7 +68,7 @@ export default function Navbar() {
         <Image
           src="/white-icon.svg"
           alt="zerodotemail"
-          className="h-6 w-6 hidden dark:block"
+          className="hidden h-6 w-6 dark:block"
           width={180}
           height={180}
         />
@@ -80,7 +77,7 @@ export default function Navbar() {
           alt="zerodotemail"
           width={180}
           height={180}
-          className="h-6 w-6 block dark:hidden"
+          className="block h-6 w-6 dark:hidden"
         />
       </Link>
       {/* Mobile Navigation */}
@@ -103,14 +100,14 @@ export default function Navbar() {
                 <Image
                   src="/white-icon.svg"
                   alt="zerodotemail"
-                  className="size-6 hidden dark:block"
+                  className="hidden size-6 dark:block"
                   width={180}
                   height={180}
                 />
                 <Image
                   src="/black-icon.svg"
                   alt="zerodotemail"
-                  className="size-6 block dark:hidden"
+                  className="block size-6 dark:hidden"
                   width={180}
                   height={180}
                 />
@@ -118,17 +115,13 @@ export default function Navbar() {
                   <X className="dark:hover:bg-accent h-9 w-9 cursor-pointer rounded-md p-2 text-gray-800 hover:bg-gray-100 dark:text-white" />
                 </SheetTrigger>
               </div>
-              <div className="mt-7 flex flex-col space-y-4 px-3">
-                {mobileNavContent()}
-              </div>
+              <div className="mt-7 flex flex-col space-y-4 px-3">{mobileNavContent()}</div>
             </div>
           </SheetContent>
         </Sheet>
       </div>
 
-      <div className="hidden items-center gap-4 lg:flex">
-        {desktopNavContent()}
-      </div>
+      <div className="hidden items-center gap-4 lg:flex">{desktopNavContent()}</div>
     </div>
   );
 }

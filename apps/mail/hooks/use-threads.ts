@@ -7,7 +7,7 @@ import { useSearchValue } from '@/hooks/use-search-value';
 import { useSession } from '@/lib/auth-client';
 import { defaultPageSize } from '@/lib/utils';
 import { useAtom, useAtomValue } from 'jotai';
-import { Label } from '@/hooks/use-labels';
+import { useDebounce } from './use-debounce';
 import useSWRInfinite from 'swr/infinite';
 import useSWR, { preload } from 'swr';
 import { useQueryState } from 'nuqs';
@@ -29,30 +29,6 @@ type FetchEmailsTuple = [
   pageToken?: string,
 ];
 
-// TODO: improve the filters
-const fetchEmails = async ([
-  _,
-  folder,
-  q,
-  max,
-  labelIds,
-  pageToken,
-]: FetchEmailsTuple): Promise<RawResponse> => {
-  try {
-    const searchParams = new URLSearchParams({
-      folder,
-      q,
-      max: max?.toString() ?? defaultPageSize.toString(),
-      pageToken: pageToken ?? '',
-    } as Record<string, string>);
-    const response = await axios.get<RawResponse>(`/api/driver?${searchParams.toString()}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching emails:', error);
-    throw error;
-  }
-};
-
 const fetchThread = async (args: any[]) => {
   const [_, id] = args;
   try {
@@ -65,7 +41,7 @@ const fetchThread = async (args: any[]) => {
 };
 
 // Based on gmail
-interface RawResponse {
+export interface RawResponse {
   nextPageToken: string | undefined;
   threads: InitialThread[];
   resultSizeEstimate: number;
@@ -87,7 +63,15 @@ export const useThreads = () => {
   const [backgroundQueue] = useAtom(backgroundQueueAtom);
   const isInQueue = useAtomValue(isThreadInBackgroundQueueAtom);
 
-  const { data, error, size, setSize, isLoading, isValidating, mutate } = useSWRInfinite(
+  const {
+    data,
+    error,
+    size,
+    setSize,
+    isLoading,
+    isValidating,
+    mutate: originalMutate,
+  } = useSWRInfinite(
     (_, previousPageData) => {
       if (!session?.user.id || !session.connectionId) return null;
       return getKey(previousPageData, [
@@ -115,10 +99,9 @@ export const useThreads = () => {
       return res.data;
     },
     {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
+      revalidateOnFocus: true,
+      revalidateIfStale: true,
       revalidateOnMount: true,
-      refreshInterval: 30000 * 2,
     },
   );
 
@@ -140,6 +123,8 @@ export const useThreads = () => {
     await setSize(size + 1);
   };
 
+  const debouncedMutate = useDebounce(originalMutate, 3000);
+
   return {
     data: {
       threads,
@@ -150,7 +135,7 @@ export const useThreads = () => {
     error,
     loadMore,
     isReachingEnd,
-    mutate,
+    mutate: debouncedMutate,
   };
 };
 
@@ -164,7 +149,15 @@ export const useThread = (threadId: string | null) => {
     () => axios.get<IGetThreadResponse>(`/api/driver/${id}`).then((res) => res.data),
   );
 
-  const hasUnread = useMemo(() => data?.messages.some((e) => e.unread), [data]);
+  const isGroupThread = useMemo(() => {
+    if (!data?.latest?.id) return false;
+    const totalRecipients = [
+      ...(data.latest.to || []),
+      ...(data.latest.cc || []),
+      ...(data.latest.bcc || []),
+    ].length;
+    return totalRecipients > 1;
+  }, [data]);
 
-  return { data, isLoading, error, hasUnread, mutate };
+  return { data, isLoading, error, isGroupThread, hasUnread: data?.hasUnread, mutate };
 };

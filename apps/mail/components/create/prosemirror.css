@@ -4,14 +4,14 @@
 }
 
 /* Add placeholder styles */
-.ProseMirror p.is-editor-empty:first-child::before {
+/* .ProseMirror p.is-editor-empty:first-child::before {
   color: #616161;
   opacity: 0.5;
-  content: 'Start your email here';
+  content: 'Start your asd here';
   float: left;
   height: 0;
   pointer-events: none;
-}
+} */
 
 /* Custom image styles */
 

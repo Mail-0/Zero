@@ -91,7 +91,7 @@ export const toggleStar = async ({ ids }: { ids: string[] }) => {
       if (result.status === 'fulfilled' && result.value && result.value.messages.length > 0) {
         processedThreads++;
         const isThreadStarred = result.value.messages.some((message: ParsedMessage) =>
-          message.tags?.find((tag) => tag.startsWith('STARRED')),
+          message.tags?.some((tag) => tag.name.toLowerCase().startsWith('starred')),
         );
         if (isThreadStarred) {
           anyStarred = true;

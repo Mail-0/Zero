@@ -1,22 +1,23 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { defaultUserSettings } from '@zero/db/user_settings_default';
-import { fixNonReadableColors, template } from '@/lib/email-utils';
+import { fixNonReadableColors } from '@/lib/email-utils';
 import { saveUserSettings } from '@/actions/settings';
 import { getBrowserTimezone } from '@/lib/timezones';
+import { template } from '@/lib/email-utils.client';
 import { useSettings } from '@/hooks/use-settings';
 import { useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
-import DOMPurify from 'dompurify';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export function MailIframe({ html, senderEmail }: { html: string; senderEmail: string }) {
   const { settings, mutate } = useSettings();
-  const isTrustedSender = settings?.trustedSenders?.includes(senderEmail);
-  const [cspViolation, setCspViolation] = useState(false);
-  const [imagesEnabled, setImagesEnabled] = useState(
-    isTrustedSender || settings?.externalImages || false,
+  const isTrustedSender = useMemo(
+    () => settings?.externalImages || settings?.trustedSenders?.includes(senderEmail),
+    [settings, senderEmail],
   );
+  const [cspViolation, setCspViolation] = useState(false);
+  const [imagesEnabled, setImagesEnabled] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [height, setHeight] = useState(0);
   const { resolvedTheme } = useTheme();
@@ -24,8 +25,6 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
   const onTrustSender = useCallback(
     async (senderEmail: string) => {
       setImagesEnabled(true);
-
-      console.log(settings);
 
       const existingSettings = settings ?? {
         ...defaultUserSettings,
@@ -48,7 +47,11 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
     [settings, mutate],
   );
 
-  const iframeDoc = useMemo(() => template(html, imagesEnabled), [html, imagesEnabled]);
+  useEffect(() => {
+    if (isTrustedSender) {
+      setImagesEnabled(true);
+    }
+  }, [isTrustedSender]);
 
   const t = useTranslations();
 
@@ -65,23 +68,26 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
 
   useEffect(() => {
     if (!iframeRef.current) return;
-    const url = URL.createObjectURL(new Blob([iframeDoc], { type: 'text/html' }));
-    iframeRef.current.src = url;
-    const handler = () => {
-      if (iframeRef.current?.contentWindow?.document.body) {
-        calculateAndSetHeight();
-        fixNonReadableColors(iframeRef.current.contentWindow.document.body);
-      }
-      // setLoaded(true);
-      // Recalculate after a slight delay to catch any late-loading content
-      setTimeout(calculateAndSetHeight, 500);
-    };
-    iframeRef.current.onload = handler;
+    template(html, imagesEnabled).then((htmlDoc) => {
+      if (!iframeRef.current) return;
+      const url = URL.createObjectURL(new Blob([htmlDoc], { type: 'text/html' }));
+      iframeRef.current.src = url;
+      const handler = () => {
+        if (iframeRef.current?.contentWindow?.document.body) {
+          calculateAndSetHeight();
+          fixNonReadableColors(iframeRef.current.contentWindow.document.body);
+        }
+        // setLoaded(true);
+        // Recalculate after a slight delay to catch any late-loading content
+        setTimeout(calculateAndSetHeight, 500);
+      };
+      iframeRef.current.onload = handler;
+    });
 
     return () => {
-      URL.revokeObjectURL(url);
+      //   URL.revokeObjectURL(url);
     };
-  }, [iframeDoc, calculateAndSetHeight]);
+  }, [calculateAndSetHeight, html, imagesEnabled]);
 
   useEffect(() => {
     if (iframeRef.current?.contentWindow?.document.body) {
@@ -129,7 +135,6 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
         </div>
       )}
       <iframe
-        onClick={calculateAndSetHeight}
         height={height}
         ref={iframeRef}
         className={cn('w-full flex-1 overflow-hidden transition-opacity duration-200')}

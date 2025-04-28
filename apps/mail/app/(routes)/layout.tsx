@@ -12,7 +12,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="flex h-screen w-screen overflow-hidden">
           <SWRConfig
             value={{
-              //   provider: typeof window !== 'undefined' ? dexieStorageProvider : undefined,
+              provider: typeof window !== 'undefined' ? dexieStorageProvider : undefined,
               revalidateOnFocus: false,
               revalidateIfStale: false,
               shouldRetryOnError: false,

@@ -7,6 +7,7 @@ import { filterSuggestions } from '@/lib/filter';
 import { GMAIL_COLORS } from '@/lib/constants';
 import { cleanSearchValue } from '@/lib/utils';
 import { createMimeMessage } from 'mimetext';
+import { toByteArray } from 'base64-js';
 import * as he from 'he';
 
 class StandardizedError extends Error {
@@ -29,14 +30,8 @@ function fromBase64Url(str: string) {
 }
 
 function fromBinary(str: string) {
-  return decodeURIComponent(
-    atob(str.replace(/-/g, '+').replace(/_/g, '/'))
-      .split('')
-      .map(function (c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      })
-      .join(''),
-  );
+  const bytes = toByteArray(str.replace(/-/g, '+').replace(/_/g, '/'));
+  return new TextDecoder().decode(bytes);
 }
 
 const findHtmlBody = (parts: any[]): string => {
@@ -664,6 +659,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
               format: 'full',
               quotaUser: config.auth?.email,
             });
+
             if (!res.data.messages)
               return { messages: [], latest: undefined, hasUnread: false, totalReplies: 0 };
             let hasUnread = false;
@@ -675,7 +671,18 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
                   message.payload?.parts?.[0]?.body?.data ||
                   '';
 
-                const decodedBody = bodyData ? fromBinary(bodyData) : '';
+                const decodedBody = bodyData
+                  ? he
+                      .decode(fromBinary(bodyData))
+                      .replace(/<[^>]*>/g, '')
+                      .trim() === fromBinary(bodyData).trim()
+                    ? he.decode(fromBinary(bodyData).replace(/\n/g, '<br>'))
+                    : he.decode(fromBinary(bodyData))
+                  : '';
+
+                if (id === '196784c9e42c15cb') {
+                  console.log('decodedBody', bodyData);
+                }
 
                 let processedBody = decodedBody;
                 if (message.payload?.parts) {
@@ -779,7 +786,12 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
                 return fullEmailData;
               }),
             );
-            return { messages, latest: messages[0], hasUnread, totalReplies: messages.length };
+            return {
+              messages,
+              latest: messages[messages.length - 1],
+              hasUnread,
+              totalReplies: messages.length,
+            };
           });
         },
         { id, email: config.auth?.email },

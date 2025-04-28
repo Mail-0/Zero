@@ -25,11 +25,13 @@ import {
   Trash,
   MailOpen,
 } from 'lucide-react';
-import { moveThreadsTo, ThreadDestination } from '@/lib/thread-actions';
 import { deleteThread, markAsRead, markAsUnread, toggleStar } from '@/actions/mail';
+import { moveThreadsTo, ThreadDestination } from '@/lib/thread-actions';
+import { backgroundQueueAtom } from '@/store/backgroundQueue';
 import { useThread, useThreads } from '@/hooks/use-threads';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useParams, useRouter } from 'next/navigation';
+import { SuccessEmailToast } from '../theme/toast';
 import { modifyLabels } from '@/actions/mail';
 import { LABELS, FOLDERS } from '@/lib/utils';
 import { useStats } from '@/hooks/use-stats';
@@ -40,7 +42,6 @@ import { useQueryState } from 'nuqs';
 import { useMemo } from 'react';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
-import { backgroundQueueAtom } from '@/store/backgroundQueue';
 
 interface EmailAction {
   id: string;
@@ -75,40 +76,32 @@ export function ThreadContextMenu({
 }: EmailContextMenuProps) {
   const { folder } = useParams<{ folder: string }>();
   const [mail, setMail] = useMail();
-  const {
-    data: { threads },
-    mutate,
-    isLoading,
-    isValidating,
-  } = useThreads();
+  const { mutate, isLoading, isValidating } = useThreads();
   const currentFolder = folder ?? '';
   const isArchiveFolder = currentFolder === FOLDERS.ARCHIVE;
   const { mutate: mutateStats } = useStats();
   const t = useTranslations();
-  const router = useRouter();
   const [, setMode] = useQueryState('mode');
   const [, setThreadId] = useQueryState('threadId');
   const [, setBackgroundQueue] = useAtom(backgroundQueueAtom);
   const { mutate: mutateThread, data: threadData } = useThread(threadId);
-  const selectedThreads = useMemo(() => {
-    if (mail.bulkSelected.length) {
-      return threads.filter((thread) => mail.bulkSelected.includes(thread.id));
-    }
-    return threads.filter((thread) => thread.id === threadId);
-  }, [mail.bulkSelected, threadId, threads]);
+  //   const selectedThreads = useMemo(() => {
+  //     if (mail.bulkSelected.length) {
+  //       return threads.filter((thread) => mail.bulkSelected.includes(thread.id));
+  //     }
+  //     return threads.filter((thread) => thread.id === threadId);
+  //   }, [mail.bulkSelected, threadId, threads]);
 
   const isUnread = useMemo(() => {
     return threadData?.hasUnread ?? false;
   }, [threadData]);
 
   const isStarred = useMemo(() => {
-    // TODO
-    return false;
-    // if (mail.bulkSelected.length) {
-    //   return selectedThreads.every((thread) => thread.tags?.includes('STARRED'));
-    // }
-    // return selectedThreads[0]?.tags?.includes('STARRED') ?? false;
-  }, [selectedThreads, mail.bulkSelected]);
+    // TODO support bulk select
+    return threadData?.messages.some((message) =>
+      message.tags?.some((tag) => tag.name.toLowerCase() === 'starred'),
+    );
+  }, [threadData]);
 
   const noopAction = () => async () => {
     toast.info(t('common.actions.featureNotImplemented'));
@@ -148,53 +141,52 @@ export function ThreadContextMenu({
     }
   };
 
-  const handleFavorites = () => {
+  const handleFavorites = async () => {
     const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
-    const promise = toggleStar({ ids: targets }).then(() => {
-      setMail((prev) => ({ ...prev, bulkSelected: [] }));
-      return mutate();
-    });
-
-    toast.promise(promise, {
-      loading: isStarred
-        ? t('common.actions.removingFromFavorites')
-        : t('common.actions.addingToFavorites'),
-      success: isStarred
-        ? t('common.actions.removedFromFavorites')
-        : t('common.actions.addedToFavorites'),
-      error: t('common.actions.failedToModifyFavorites'),
-    });
+    if (!isStarred) {
+      toast.custom((id) => <SuccessEmailToast message={t('common.actions.addedToFavorites')} />);
+    } else {
+      toast.custom((id) => (
+        <SuccessEmailToast message={t('common.actions.removedFromFavorites')} />
+      ));
+    }
+    await toggleStar({ ids: targets });
+    setMail((prev) => ({ ...prev, bulkSelected: [] }));
+    return await Promise.allSettled([mutateThread(), mutate()]);
   };
 
   const handleReadUnread = () => {
     const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
     const action = isUnread ? markAsRead : markAsUnread;
 
-    const promise = action({ ids: targets }).then(() => {
-      setMail((prev) => ({ ...prev, bulkSelected: [] }));
-      return mutateThread();
-    });
+    const promise = action({ ids: targets });
 
     toast.promise(promise, {
-      loading: t(isUnread ? 'common.actions.markingAsRead' : 'common.actions.markingAsUnread'),
-      success: t(isUnread ? 'common.mail.markedAsRead' : 'common.mail.markedAsUnread'),
       error: t(isUnread ? 'common.mail.failedToMarkAsRead' : 'common.mail.failedToMarkAsUnread'),
+      async finally() {
+        setMail((prev) => ({ ...prev, bulkSelected: [] }));
+        await Promise.allSettled([mutateThread(), mutate()]);
+      },
     });
   };
+  const [, setActiveReplyId] = useQueryState('activeReplyId');
 
   const handleThreadReply = () => {
     setMode('reply');
     setThreadId(threadId);
+    if (threadData?.latest) setActiveReplyId(threadData?.latest?.id);
   };
 
   const handleThreadReplyAll = () => {
     setMode('replyAll');
     setThreadId(threadId);
+    if (threadData?.latest) setActiveReplyId(threadData?.latest?.id);
   };
 
   const handleThreadForward = () => {
     setMode('forward');
     setThreadId(threadId);
+    if (threadData?.latest) setActiveReplyId(threadData?.latest?.id);
   };
 
   const primaryActions: EmailAction[] = [
@@ -221,21 +213,20 @@ export function ThreadContextMenu({
     },
   ];
   const handleDelete = () => async () => {
-		try {
-        const promise = deleteThread({ id: threadId }).then(() => {
-          setMail(prev => ({ ...prev, bulkSelected: [] }));
-          return mutate();
-        });
-        toast.promise(promise, {
-          loading: t('common.actions.deletingMail'),
-          success: t('common.actions.deletedMail'),
-          error: t('common.actions.failedToDeleteMail'),
-        });
+    try {
+      const promise = deleteThread({ id: threadId }).then(() => {
+        setMail((prev) => ({ ...prev, bulkSelected: [] }));
+        return mutate();
+      });
+      toast.promise(promise, {
+        loading: t('common.actions.deletingMail'),
+        success: t('common.actions.deletedMail'),
+        error: t('common.actions.failedToDeleteMail'),
+      });
     } catch (error) {
-        console.error(`Error deleting ${threadId? 'email' : 'thread'}:`, error);
-      }
-    };
-
+      console.error(`Error deleting ${threadId ? 'email' : 'thread'}:`, error);
+    }
+  };
 
   const getActions = () => {
     if (isSpam) {
@@ -272,7 +263,7 @@ export function ThreadContextMenu({
           icon: <Trash className="mr-2.5 h-4 w-4" />,
           action: handleDelete(),
           disabled: false,
-        }
+        },
       ];
     }
 
@@ -360,7 +351,6 @@ export function ThreadContextMenu({
         <Star className="mr-2.5 h-4 w-4" />
       ),
       action: handleFavorites,
-      disabled: true,
     },
     {
       id: 'mute',

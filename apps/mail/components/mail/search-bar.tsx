@@ -3,6 +3,7 @@ import { parseNaturalLanguageSearch, parseNaturalLanguageDate } from '@/lib/util
 import { cn, extractFilterValue, type FilterSuggestion } from '@/lib/utils';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSearchValue } from '@/hooks/use-search-value';
+import { usePathname, useRouter } from 'next/navigation';
 import { Calendar } from '@/components/ui/calendar';
 import { type DateRange } from 'react-day-picker';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -90,8 +91,9 @@ type SearchForm = {
 
 export function SearchBar() {
   // const [popoverOpen, setPopoverOpen] = useState(false);
-  const [searchValue, setSearchValue] = useSearchValue();
+  const [, setSearchValue] = useSearchValue();
   const [isSearching, setIsSearching] = useState(false);
+  const pathname = usePathname();
 
   const form = useForm<SearchForm>({
     defaultValues: {
@@ -115,6 +117,12 @@ export function SearchBar() {
   });
 
   const q = form.watch('q');
+
+  useEffect(() => {
+    if (pathname !== '/mail/inbox') {
+      resetSearch();
+    }
+  }, [pathname]);
 
   const submitSearch = useCallback(
     async (data: SearchForm) => {
@@ -256,12 +264,15 @@ export function SearchBar() {
   return (
     <div className="relative flex-1 md:max-w-[600px]">
       <form className="relative flex items-center" onSubmit={form.handleSubmit(submitSearch)}>
-        <Search className="dark:text-[#727272] text-[#6D6D6D] absolute left-2.5 h-4 w-4 z-10" aria-hidden="true" />
-        
+        <Search
+          className="absolute left-2.5 z-10 h-4 w-4 text-[#6D6D6D] dark:text-[#727272]"
+          aria-hidden="true"
+        />
+
         <div className="relative w-full">
           <Input
             placeholder={'Search...'}
-            className="bg-white dark:bg-[#141414] text-muted-foreground placeholder:text-muted-foreground/70 h-[32px] w-full select-none rounded-md border dark:border-none pl-9 pr-14 shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+            className="text-muted-foreground placeholder:text-muted-foreground/70 h-[32px] w-full select-none rounded-md border bg-white pl-9 pr-14 shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-none dark:bg-[#141414]"
             {...form.register('q')}
             value={q}
             disabled={isSearching}

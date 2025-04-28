@@ -80,3 +80,78 @@ export const highlightText = (text: string, highlight: string) => {
     );
   });
 };
+
+import {
+  Html,
+  Head,
+  Body,
+  Container,
+  Section,
+  Column,
+  Row,
+  Text,
+  Link,
+  Preview,
+  render,
+} from '@react-email/components';
+
+interface EmailTemplateProps {
+  content: string;
+  imagesEnabled: boolean;
+  nonce: string;
+}
+
+const generateNonce = () => {
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  return btoa(String.fromCharCode(...array));
+};
+
+const EmailTemplate = ({ content, imagesEnabled, nonce }: EmailTemplateProps) => {
+  return (
+    <Html>
+      <Head>
+        <meta
+          httpEquiv="Content-Security-Policy"
+          content={
+            imagesEnabled
+              ? `default-src 'none'; img-src * data: blob: 'unsafe-inline'; style-src 'unsafe-inline' *; font-src *; script-src 'nonce-${nonce}';`
+              : `default-src 'none'; img-src data:; style-src 'unsafe-inline' *; font-src *; script-src 'nonce-${nonce}';`
+          }
+        />
+        <script nonce={nonce}>
+          {`
+            document.addEventListener('securitypolicyviolation', (e) => {
+              // Send the violation details to the parent window
+              window.parent.postMessage({
+                type: 'csp-violation',
+              }, '*');
+            });
+          `}
+        </script>
+      </Head>
+      <Body style={{ margin: 0, padding: 0 }}>
+        <Container>
+          <Section>
+            <Row>
+              <Column>
+                <div dangerouslySetInnerHTML={{ __html: content }} />
+              </Column>
+            </Row>
+          </Section>
+        </Container>
+      </Body>
+    </Html>
+  );
+};
+
+export const template = async (html: string, imagesEnabled: boolean = false) => {
+  if (typeof DOMParser === 'undefined') return html;
+  const nonce = generateNonce();
+
+  // Create the email template
+  const emailHtml = await render(
+    <EmailTemplate content={html} imagesEnabled={imagesEnabled} nonce={nonce} />,
+  );
+  return emailHtml;
+};

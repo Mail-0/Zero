@@ -83,7 +83,9 @@ export function DemoMailLayout() {
       };
 
       const filterTag = categoryMap[activeCategory as keyof typeof categoryMap];
-      const filtered = items.filter((item) => item.tags && item.tags.includes(filterTag));
+      const filtered = items.filter(
+        (item) => item.tags && item.tags.find((e) => e.name === filterTag),
+      );
       setFilteredItems(filtered);
     }
   }, [activeCategory]);
@@ -257,9 +259,11 @@ export function MailLayout() {
       disableScope('mail-list');
     };
   }, [threadId, enableScope, disableScope]);
+  const [, setActiveReplyId] = useQueryState('activeReplyId');
 
   const handleClose = useCallback(() => {
     setThreadId(null);
+    setActiveReplyId(null);
   }, [setThreadId]);
 
   // Add mailto protocol handler registration
@@ -359,9 +363,7 @@ export function MailLayout() {
               </div>
               <div className="p-2 px-[22px]">
                 <SearchBar />
-                <div className="mt-2">
-                  {folder === 'inbox' && <CategorySelect />}
-                </div>
+                <div className="mt-2">{folder === 'inbox' && <CategorySelect />}</div>
               </div>
               <div
                 className={cn(
@@ -594,7 +596,7 @@ export const Categories = () => {
         <Lightning
           className={cn(
             'fill-[#6D6D6D] dark:fill-[#989898]',
-            category === 'Important' && 'dark:fill-white fill-white',
+            category === 'Important' && 'fill-white dark:fill-white',
           )}
         />
       ),
@@ -607,7 +609,7 @@ export const Categories = () => {
         <Mail
           className={cn(
             'fill-[#6D6D6D] dark:fill-[#989898]',
-            category === 'All Mail' && 'dark:fill-white fill-white',
+            category === 'All Mail' && 'fill-white dark:fill-white',
           )}
         />
       ),
@@ -622,7 +624,7 @@ export const Categories = () => {
         <User
           className={cn(
             'fill-[#6D6D6D] dark:fill-[#989898]',
-            category === 'Personal' && 'dark:fill-white fill-white',
+            category === 'Personal' && 'fill-white dark:fill-white',
           )}
         />
       ),
@@ -635,7 +637,7 @@ export const Categories = () => {
         <Bell
           className={cn(
             'fill-[#6D6D6D] dark:fill-[#989898]',
-            category === 'Updates' && 'dark:fill-white fill-white',
+            category === 'Updates' && 'fill-white dark:fill-white',
           )}
         />
       ),
@@ -648,7 +650,7 @@ export const Categories = () => {
         <Tag
           className={cn(
             'fill-[#6D6D6D] dark:fill-[#989898]',
-            category === 'Promotions' && 'dark:fill-white fill-white',
+            category === 'Promotions' && 'fill-white dark:fill-white',
           )}
         />
       ),
@@ -712,9 +714,9 @@ function CategorySelect() {
           });
         }}
         className={cn(
-          'flex h-8 items-center justify-center gap-1 overflow-hidden rounded-md transition-all duration-300 ease-out border dark:border-none',
+          'flex h-8 items-center justify-center gap-1 overflow-hidden rounded-md border transition-all duration-300 ease-out dark:border-none',
           isSelected
-            ? cn('flex-1 px-3 text-white border-none', bgColor)
+            ? cn('flex-1 border-none px-3 text-white', bgColor)
             : 'w-8 bg-white hover:bg-gray-100 dark:bg-[#313131] dark:hover:bg-[#313131]/80',
         )}
         tabIndex={isOverlay ? -1 : undefined}

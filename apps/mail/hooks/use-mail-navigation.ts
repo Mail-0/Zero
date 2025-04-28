@@ -65,14 +65,14 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
       if (index === null || !items[index]) return;
 
       const message = items[index];
-      const threadId = message.threadId ?? message.id;
+      const threadId = message.id;
 
       // Only navigate if there's already a thread open
       const currentThreadId = window.location.search.includes('threadId=');
       if (currentThreadId) {
         onNavigate(threadId);
       }
-      
+
       setMail((prev) => ({
         ...prev,
         bulkSelected: [],
@@ -162,8 +162,7 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
       }
 
       const message = items[focusedIndex];
-      const threadId = message.threadId ?? message.id;
-      onNavigate(threadId);
+      if (message) onNavigate(message.id);
     },
     [focusedIndex, isQuickActionMode, getThreadElement, items, onNavigate, quickActionIndex],
   );
@@ -314,4 +313,4 @@ export default function useMailListHotkeys() {
   const [removingEmails, setRemovingEmails] = useState<Set<string>>(new Set());
 
   return [removingEmails, setRemovingEmails] as const;
-} 
+}
