@@ -325,6 +325,8 @@
         "dynamicContentDescription": "ईमेल्स को डायनामिक कंटेंट दिखाने की अनुमति दें।",
         "externalImages": "बाहरी इमेजेस प्रदर्शित करें",
         "externalImagesDescription": "ईमेल्स को बाहरी स्रोतों से इमेजेस दिखाने की अनुमति दें।",
+        "hidePersonalInformation": "व्यक्तिगत जानकारी छिपाएं",
+        "hidePersonalInformationDescription": "आपके नाम और ईमेल पते को इंटरफ़ेस से छिपाएं।",
         "trustedSenders": "विश्वसनीय प्रेषक",
         "trustedSendersDescription": "इन प्रेषकों के लिए हमेशा चित्र प्रदर्शित करें।",
         "languageChangedTo": "भाषा {locale} में बदल दी गई",

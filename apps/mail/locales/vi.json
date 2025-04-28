@@ -325,6 +325,8 @@
         "dynamicContentDescription": "Cho phép email hiển thị nội dung động.",
         "externalImages": "Hiển thị hình ảnh từ bên ngoài",
         "externalImagesDescription": "Cho phép email hiển thị hình ảnh từ nguồn bên ngoài.",
+        "hidePersonalInformation": "Ẩn thông tin cá nhân",
+        "hidePersonalInformationDescription": "Ẩn tên và email của bạn khỏi giao diện.",
         "trustedSenders": "Người gửi tin cậy",
         "trustedSendersDescription": "Luôn hiển thị hình ảnh từ những người gửi này.",
         "languageChangedTo": "Đã chuyển ngôn ngữ sang {locale}",

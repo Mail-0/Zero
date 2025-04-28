@@ -325,6 +325,8 @@
         "dynamicContentDescription": "Allow emails to display dynamic content.",
         "externalImages": "Display External Images",
         "externalImagesDescription": "Allow emails to display images from external sources.",
+        "hidePersonalInformation": "Hide Personal Information",
+        "hidePersonalInformationDescription": "Hides your name and email from the UI.",
         "trustedSenders": "Trusted Senders",
         "trustedSendersDescription": "Always display images for these senders.",
         "languageChangedTo": "Language changed to {locale}",

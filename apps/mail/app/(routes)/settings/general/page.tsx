@@ -235,6 +235,25 @@ export default function GeneralPage() {
               />
               <FormField
                 control={form.control}
+                name="hidePersonalInformation"
+                render={({ field }) => (
+                  <FormItem className="bg-popover flex w-full flex-row items-center justify-between rounded-lg border p-4 md:w-auto">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">
+                        {t('pages.settings.general.hidePersonalInformation')}
+                      </FormLabel>
+                      <FormDescription>
+                        {t('pages.settings.general.hidePersonalInformationDescription')}
+                      </FormDescription>
+                    </div>
+                    <FormControl className="ml-4">
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="trustedSenders"
                 render={({ field }) =>
                   (field.value?.length || 0) > 0 && !externalImages ? (

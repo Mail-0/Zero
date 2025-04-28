@@ -325,6 +325,8 @@
         "dynamicContentDescription": "Povolit emailům zobrazení dynamického obsahu.",
         "externalImages": "Zobrazit externí obrázky",
         "externalImagesDescription": "Povolit zobrazení emailů z externích zdrojů.",
+        "hidePersonalInformation": "Skrýt osobní údaje",
+        "hidePersonalInformationDescription": "Skrýt vaše jméno a emailovou adresu v rozhraní.",
         "trustedSenders": "Důvěryhodní odesílatelé",
         "trustedSendersDescription": "Vždy zobrazovat obrázky od těchto odesílatelů.",
         "languageChangedTo": "Jazyk změněn na {locale}",

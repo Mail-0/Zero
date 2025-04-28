@@ -325,6 +325,8 @@
         "dynamicContentDescription": "允许邮件显示动态内容。",
         "externalImages": "显示外部图片",
         "externalImagesDescription": "允许邮件显示来自外部来源的图片。",
+        "hidePersonalInformation": "隐藏个人信息",
+        "hidePersonalInformationDescription": "在界面中隐藏您的姓名和邮箱地址。",
         "trustedSenders": "信任发件人",
         "trustedSendersDescription": "始终显示这些发件人的图片。",
         "languageChangedTo": "语言已更改为{locale}",

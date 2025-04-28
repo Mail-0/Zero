@@ -325,6 +325,8 @@
         "dynamicContentDescription": "允許電子郵件顯示動態內容。",
         "externalImages": "顯示外部圖片",
         "externalImagesDescription": "允許電子郵件顯示來自外部來源的圖片。",
+        "hidePersonalInformation": "隱藏個人資訊",
+        "hidePersonalInformationDescription": "在介面中隱藏您的姓名和電子郵件地址。",
         "trustedSenders": "信任的寄件者",
         "trustedSendersDescription": "自動顯示這些寄件者的圖片。",
         "languageChangedTo": "語言已變更為 {locale}",

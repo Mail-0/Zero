@@ -8,6 +8,7 @@ export const defaultUserSettings = {
   customPrompt: '',
   trustedSenders: [],
   isOnboarded: false,
+  hidePersonalInformation: false,
 } satisfies UserSettings;
 
 export const userSettingsSchema = z.object({
@@ -18,6 +19,7 @@ export const userSettingsSchema = z.object({
   customPrompt: z.string(),
   isOnboarded: z.boolean().optional(),
   trustedSenders: z.string().array().optional(),
+  hidePersonalInformation: z.boolean().optional(),
 });
 
 export type UserSettings = z.infer<typeof userSettingsSchema>;

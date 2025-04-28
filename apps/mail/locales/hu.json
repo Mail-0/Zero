@@ -325,6 +325,8 @@
         "dynamicContentDescription": "E-mailek dinamikus tartalmának megjelenítése.",
         "externalImages": "Külső képek megjelenítése",
         "externalImagesDescription": "E-mailekben külső forrásból származó képek megjelenítésének engedélyezése.",
+        "hidePersonalInformation": "Személyes adatok elrejtése",
+        "hidePersonalInformationDescription": "A felhasználói felületen elrejti a nevét és e-mail címét.",
         "trustedSenders": "Megbízható feladók",
         "trustedSendersDescription": "Mindig jelenítsd meg a képeket ezektől a feladóktól.",
         "languageChangedTo": "Nyelv megváltoztatva erre: {locale}",

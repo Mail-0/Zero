@@ -25,6 +25,7 @@ import { useConnections } from '@/hooks/use-connections';
 import { signOut, useSession } from '@/lib/auth-client';
 import { AddConnectionDialog } from '../connection/add';
 import { putConnection } from '@/actions/connections';
+import { useSettings } from '@/hooks/use-settings';
 import { dexieStorageProvider } from '@/lib/idb';
 import { SunIcon } from '../icons/animated/sun';
 import { EnableBrain } from '@/actions/brain';
@@ -32,6 +33,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { type IConnection } from '@/types';
 import { useTheme } from 'next-themes';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -42,6 +44,7 @@ export function NavUser() {
   const [isRendered, setIsRendered] = useState(false);
   const { theme, resolvedTheme, setTheme } = useTheme();
   const t = useTranslations();
+  const { settings, isLoading: isSettingsLoading } = useSettings();
 
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -122,13 +125,18 @@ export function NavUser() {
               size="lg"
               className="data-[state=open]:text-sidebar-accent-foreground group mt-2 h-[32px] bg-transparent px-0 hover:bg-transparent"
             >
-              {isLoading ? (
+              {isLoading || isSettingsLoading ? (
                 <>
                   <div className="bg-primary/10 size-8 animate-pulse rounded-lg" />
                 </>
               ) : (
                 <>
-                  <Avatar className="size-[32px] rounded-lg">
+                  <Avatar
+                    className={cn(
+                      'size-[32px] rounded-lg',
+                      settings?.hidePersonalInformation && 'blur-lg',
+                    )}
+                  >
                     <AvatarImage
                       className="rounded-lg"
                       src={
@@ -138,23 +146,46 @@ export function NavUser() {
                     />
                     <AvatarFallback className="relative overflow-hidden rounded-lg">
                       <div className="absolute inset-0" />
-                      <span className="relative z-10">
-                        {(activeAccount?.name || session?.user.name || 'User')
-                          .split(' ')
-                          .map((n) => n[0])
-                          .join('')
-                          .toUpperCase()
-                          .slice(0, 2)}
-                      </span>
+                      {!isSettingsLoading && !settings?.hidePersonalInformation ? (
+                        <span className="relative z-10">
+                          {(activeAccount?.name || session?.user.name || 'User')
+                            .split(' ')
+                            .map((n) => n[0])
+                            .join('')
+                            .toUpperCase()
+                            .slice(0, 2)}
+                        </span>
+                      ) : (
+                        <span className="relative z-10">??</span>
+                      )}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex min-w-0 flex-col gap-0.5 leading-none">
-                    <span className="truncate font-medium tracking-tight">
-                      {activeAccount?.name || session?.user.name || 'User'}
-                    </span>
-                    <span className="text-muted-foreground/70 truncate text-[11px]">
-                      {activeAccount?.email || session?.user.email}
-                    </span>
+                    {isSettingsLoading ? (
+                      <>
+                        <div className="h-[14px] w-full animate-pulse rounded-lg"></div>
+                        <div className="h-[11px] w-full animate-pulse rounded-lg"></div>
+                      </>
+                    ) : (
+                      <>
+                        <span
+                          className={cn(
+                            'truncate font-medium tracking-tight',
+                            settings?.hidePersonalInformation && 'blur-[6px]',
+                          )}
+                        >
+                          {activeAccount?.name || session?.user.name || 'User'}
+                        </span>
+                        <span
+                          className={cn(
+                            'text-muted-foreground/70 truncate text-[11px]',
+                            settings?.hidePersonalInformation && 'blur-[6px]',
+                          )}
+                        >
+                          {activeAccount?.email || session?.user.email}
+                        </span>{' '}
+                      </>
+                    )}
                   </div>
                   <ChevronDown className="ml-auto size-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
                 </>
@@ -172,28 +203,49 @@ export function NavUser() {
         {session && activeAccount && (
           <>
             <div className="flex flex-col items-center p-3 text-center">
-              <Avatar className="border-border/50 mb-2 size-14 rounded-xl border">
-                <AvatarImage
-                  className="rounded-xl"
-                  src={(activeAccount?.picture ?? undefined) || (session?.user.image ?? undefined)}
-                  alt={activeAccount?.name || session?.user.name || 'User'}
-                />
-                <AvatarFallback className="rounded-xl">
-                  <span>
-                    {(activeAccount?.name || session?.user.name || 'User')
-                      .split(' ')
-                      .map((n) => n[0])
-                      .join('')
-                      .toUpperCase()
-                      .slice(0, 2)}
-                  </span>
-                </AvatarFallback>
-              </Avatar>
+              {isSettingsLoading ? (
+                <>
+                  <div className="size-14 animate-pulse rounded-xl"></div>
+                </>
+              ) : (
+                <Avatar className="border-border/50 mb-2 size-14 rounded-xl border">
+                  <AvatarImage
+                    className="rounded-xl"
+                    src={
+                      (activeAccount?.picture ?? undefined) || (session?.user.image ?? undefined)
+                    }
+                    alt={activeAccount?.name || session?.user.name || 'User'}
+                  />
+                  <AvatarFallback className="rounded-xl">
+                    {!isSettingsLoading && !settings?.hidePersonalInformation ? (
+                      <span>
+                        {(activeAccount?.name || session?.user.name || 'User')
+                          .split(' ')
+                          .map((n) => n[0])
+                          .join('')
+                          .toUpperCase()
+                          .slice(0, 2)}
+                      </span>
+                    ) : (
+                      <span>??</span>
+                    )}
+                  </AvatarFallback>
+                </Avatar>
+              )}
               <div className="w-full">
-                <div className="text-sm font-medium">
-                  {activeAccount?.name || session?.user.name || 'User'}
-                </div>
-                <div className="text-muted-foreground text-xs">{activeAccount.email}</div>
+                {isSettingsLoading ? (
+                  <>
+                    <div className="h-5 w-full animate-pulse rounded-lg"></div>
+                    <div className="h-4 w-full animate-pulse rounded-lg"></div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-sm font-medium">
+                      {activeAccount?.name || session?.user.name || 'User'}
+                    </div>
+                    <div className="text-muted-foreground text-xs">{activeAccount.email}</div>
+                  </>
+                )}
               </div>
             </div>
             <DropdownMenuSeparator />
@@ -221,18 +273,36 @@ export function NavUser() {
                         alt={connection.name || connection.email}
                       />
                       <AvatarFallback className="rounded-lg text-[10px]">
-                        {(connection.name || connection.email)
-                          .split(' ')
-                          .map((n) => n[0])
-                          .join('')
-                          .toUpperCase()
-                          .slice(0, 2)}
+                        {!isSettingsLoading && !settings?.hidePersonalInformation ? (
+                          <>
+                            {(connection.name || connection.email)
+                              .split(' ')
+                              .map((n) => n[0])
+                              .join('')
+                              .toUpperCase()
+                              .slice(0, 2)}
+                          </>
+                        ) : (
+                          <>??</>
+                        )}
                       </AvatarFallback>
                     </Avatar>
                     <div className="-space-y-0.5">
-                      <p className="text-[12px]">{connection.name || connection.email}</p>
+                      <p
+                        className={cn(
+                          'text-[12px]',
+                          settings?.hidePersonalInformation && 'blur-[6px]',
+                        )}
+                      >
+                        {connection.name || connection.email}
+                      </p>
                       {connection.name && (
-                        <p className="text-muted-foreground text-[11px]">
+                        <p
+                          className={cn(
+                            'text-muted-foreground text-[11px]',
+                            settings?.hidePersonalInformation && 'blur-[6px]',
+                          )}
+                        >
                           {connection.email.length > 25
                             ? `${connection.email.slice(0, 25)}...`
                             : connection.email}

@@ -325,6 +325,8 @@
         "dynamicContentDescription": "Dynamischen Inhalt erlauben",
         "externalImages": "Externe Bilder anzeigen",
         "externalImagesDescription": "Das Anzeigen externer Bilder erlauben.",
+        "hidePersonalInformation": "Persönliche Informationen ausblenden",
+        "hidePersonalInformationDescription": "Ihre Namen und E-Mail-Adresse in der Benutzeroberfläche ausblenden.",
         "trustedSenders": "Vertrauenswürdige Absender",
         "trustedSendersDescription": "Bilder von diesen Absendern immer anzeigen.",
         "languageChangedTo": "Sprache zu {locale} geändert",

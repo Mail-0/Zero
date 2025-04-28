@@ -325,6 +325,8 @@
         "dynamicContentDescription": "Autoriser les courriels à afficher du contenu dynamique.",
         "externalImages": "Afficher les images externes",
         "externalImagesDescription": "Autoriser les courriels à afficher des images provenant de sources externes.",
+        "hidePersonalInformation": "Masquer les informations personnelles",
+        "hidePersonalInformationDescription": "Masque votre nom et votre adresse e-mail dans l'interface.",
         "trustedSenders": "Expéditeurs de confiance",
         "trustedSendersDescription": "Toujours afficher les images pour ces expéditeurs.",
         "languageChangedTo": "Langue changée en {locale}",

@@ -325,6 +325,8 @@
         "dynamicContentDescription": "Permet que els correus mostrin contingut dinàmic.",
         "externalImages": "Mostrar imatges externes",
         "externalImagesDescription": "Permet que els correus mostrin imatges des de fonts externes.",
+        "hidePersonalInformation": "Ocultar informació personal",
+        "hidePersonalInformationDescription": "Ocultar el seu nom i adreça de correu electrònic en la interfície.",
         "trustedSenders": "Remitents de confiança",
         "trustedSendersDescription": "Mostra sempre les imatges d'aquests remitents.",
         "languageChangedTo": "Idioma canviat a {locale}",

@@ -15,11 +15,13 @@ import { AddConnectionDialog } from '@/components/connection/add';
 import { useConnections } from '@/hooks/use-connections';
 import { deleteConnection } from '@/actions/connections';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useSettings } from '@/hooks/use-settings';
 import { emailProviders } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/lib/auth-client';
 import { useTranslations } from 'next-intl';
 import { Trash, Plus } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import Image from 'next/image';
 import { toast } from 'sonner';
@@ -29,6 +31,7 @@ export default function ConnectionsPage() {
   const { data: connections, mutate, isLoading } = useConnections();
   const [openTooltip, setOpenTooltip] = useState<string | null>(null);
   const t = useTranslations();
+  const { settings, isLoading: isSettingsLoading } = useSettings();
 
   const disconnectAccount = async (connectionId: string) => {
     try {
@@ -49,7 +52,7 @@ export default function ConnectionsPage() {
         description={t('pages.settings.connections.description')}
       >
         <div className="space-y-6">
-          {isLoading ? (
+          {isLoading || isSettingsLoading ? (
             <div className="grid gap-4 md:grid-cols-3">
               {[...Array(3)].map((_, i) => (
                 <div
@@ -79,7 +82,10 @@ export default function ConnectionsPage() {
                       <Image
                         src={connection.picture}
                         alt=""
-                        className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                        className={cn(
+                          'h-12 w-12 shrink-0 rounded-lg object-cover',
+                          settings?.hidePersonalInformation && 'blur-lg',
+                        )}
                         width={48}
                         height={48}
                       />
@@ -91,7 +97,14 @@ export default function ConnectionsPage() {
                       </div>
                     )}
                     <div className="flex min-w-0 flex-col gap-1">
-                      <span className="truncate text-sm font-medium">{connection.name}</span>
+                      <span
+                        className={cn(
+                          'truncate text-sm font-medium',
+                          settings?.hidePersonalInformation && 'blur-[6px]',
+                        )}
+                      >
+                        {connection.name}
+                      </span>
                       <div className="text-muted-foreground flex items-center gap-2 text-xs">
                         <Tooltip
                           delayDuration={0}
@@ -104,7 +117,10 @@ export default function ConnectionsPage() {
                         >
                           <TooltipTrigger asChild>
                             <span
-                              className="max-w-[180px] cursor-default truncate sm:max-w-[240px] md:max-w-[300px]"
+                              className={cn(
+                                'max-w-[180px] cursor-default truncate sm:max-w-[240px] md:max-w-[300px]',
+                                settings?.hidePersonalInformation && 'blur-[6px]',
+                              )}
                               onClick={() => {
                                 if (window.innerWidth <= 768) {
                                   setOpenTooltip(

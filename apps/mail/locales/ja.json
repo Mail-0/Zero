@@ -325,6 +325,8 @@
         "dynamicContentDescription": "電子メールの動的なコンテンツの表示を許可します。",
         "externalImages": "外部画像を表示する",
         "externalImagesDescription": "電子メールによる外部ソースからの画像の表示を許可します。",
+        "hidePersonalInformation": "個人情報を非表示にする",
+        "hidePersonalInformationDescription": "UIであなたの名前とメールアドレスを非表示にします。",
         "trustedSenders": "信頼できる送信者",
         "trustedSendersDescription": "これらの送信者からの画像を常に表示します。",
         "languageChangedTo": "言語を {locale}に変更しました",

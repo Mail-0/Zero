@@ -325,6 +325,8 @@
         "dynamicContentDescription": "السماح للرسائل بعرض محتوى ديناميكي.",
         "externalImages": "عرض الصور الخارجية",
         "externalImagesDescription": "السماح للرسائل بعرض صور من مصادر خارجية.",
+        "hidePersonalInformation": "إخفاء المعلومات الشخصية",
+        "hidePersonalInformationDescription": "إخفاء اسمك وعنوان بريدك الإلكتروني في الواجهة.",
         "trustedSenders": "المرسلون الموثوقون",
         "trustedSendersDescription": "عرض الصور دائماً لهؤلاء المرسلين.",
         "languageChangedTo": "تم تغيير اللغة إلى {locale}",

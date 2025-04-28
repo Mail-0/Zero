@@ -325,6 +325,8 @@
         "dynamicContentDescription": "Zezwalaj na wyświetlanie dynamicznej zawartości w e-mailach.",
         "externalImages": "Wyświetlaj obrazy zewnętrzne",
         "externalImagesDescription": "Zezwalaj na wyświetlanie obrazów z zewnętrznych źródeł w e-mailach.",
+        "hidePersonalInformation": "Ukryj informacje osobiste",
+        "hidePersonalInformationDescription": "Ukrywa Twoje imię i adres e-mail w interfejsie.",
         "trustedSenders": "Zaufani nadawcy",
         "trustedSendersDescription": "Zawsze wyświetlaj obrazy od tych nadawców.",
         "languageChangedTo": "Język zmieniony na {locale}",

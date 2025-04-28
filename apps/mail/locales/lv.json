@@ -325,6 +325,8 @@
         "dynamicContentDescription": "Atļaut e-pastiem rādīt dinamisku saturu.",
         "externalImages": "Rādīt ārējos attēlus",
         "externalImagesDescription": "Atļaut e-pastiem rādīt attēlus no ārējiem avotiem.",
+        "hidePersonalInformation": "Slēpt personas informāciju",
+        "hidePersonalInformationDescription": "Slēpj jūsu vārdu un e-pasta adresi lietotāja interfeisā.",
         "trustedSenders": "Uzticami sūtītāji",
         "trustedSendersDescription": "Vienmēr rādīt attēlus no šiem sūtītājiem.",
         "languageChangedTo": "Valoda nomainīta uz {locale}",

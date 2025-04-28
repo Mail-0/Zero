@@ -325,6 +325,8 @@
         "dynamicContentDescription": "به ایمیل‌ها اجازه دهید محتوای پویا را نمایش دهند.",
         "externalImages": "نمایش تصاویر خارجی",
         "externalImagesDescription": "به ایمیل‌ها اجازه دهید تصاویر از منابع خارجی را نمایش دهند.",
+        "hidePersonalInformation": "اطلاعات شخصی را پنهان کنید",
+        "hidePersonalInformationDescription": "نام و آدرس ایمیل خود را در رابط کاربری پنهان کنید.",
         "trustedSenders": "فرستنده‌های مورد اعتماد",
         "trustedSendersDescription": "همیشه تصاویر را برای این فرستنده‌ها نمایش بده.",
         "languageChangedTo": "زبان به {locale} تغییر کرد",

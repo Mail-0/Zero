@@ -325,6 +325,8 @@
         "dynamicContentDescription": "이메일에 동적 콘텐츠를 표시하도록 허용합니다.",
         "externalImages": "외부 이미지 표시",
         "externalImagesDescription": "이메일에 외부 소스의 이미지를 표시하도록 허용합니다.",
+        "hidePersonalInformation": "개인 정보 숨김",
+        "hidePersonalInformationDescription": "이메일 표시에서 이름과 이메일 주소를 숨깁니다.",
         "trustedSenders": "신뢰할 수 있는 발신자",
         "trustedSendersDescription": "이 발신자들의 이미지를 항상 표시합니다.",
         "languageChangedTo": "언어가 {locale}(으)로 변경되었습니다",

@@ -325,6 +325,8 @@
         "dynamicContentDescription": "E-postaların dinamik içerik göstermesine izin verin.",
         "externalImages": "Harici Görselleri Göster",
         "externalImagesDescription": "E-postaların harici kaynaklardan görselleri göstermesine izin verin.",
+        "hidePersonalInformation": "Kişisel Bilgileri Gizle",
+        "hidePersonalInformationDescription": "E-posta görünümünde kişisel bilgilerinizi gizleyin.",
         "trustedSenders": "Güvenilir Göndericiler",
         "trustedSendersDescription": "Bu göndericilerin görsellerini her zaman göster.",
         "languageChangedTo": "Dil {locale} olarak değiştirildi",

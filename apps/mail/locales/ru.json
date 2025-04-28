@@ -325,6 +325,8 @@
         "dynamicContentDescription": "Позволяет электронной почте отображать динамический контент.",
         "externalImages": "Отображать изображения из внешних источников",
         "externalImagesDescription": "Позволяет электронной почте отображать изображения из внешних источников.",
+        "hidePersonalInformation": "Скрыть личную информацию",
+        "hidePersonalInformationDescription": "Скрывает ваше имя и электронную почту в интерфейсе.",
         "trustedSenders": "Доверенные отправители",
         "trustedSendersDescription": "Всегда отображать изображения от этих отправителей.",
         "languageChangedTo": "Язык изменен на {locale}",
