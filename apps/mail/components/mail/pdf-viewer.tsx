@@ -11,7 +11,6 @@ import { pdfjs } from 'react-pdf';
 // Configure PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.mjs`;
 
-
 interface PDFViewerProps {
   url: string;
   onClose: () => void;
