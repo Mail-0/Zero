@@ -80,6 +80,15 @@ const getFileIcon = (filename: string) => {
   }
 };
 
+const getAttachmentType = (mimeType: string): string => {
+  // Return exact strings that AttachmentDialog expects
+  if (mimeType.startsWith('image/')) return 'image';
+  if (mimeType === 'application/pdf') return 'pdf';
+  if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'excel';
+  if (mimeType.includes('word') || mimeType.includes('document')) return 'word';
+  return 'other';
+};
+
 const StreamingText = ({ text }: { text: string }) => {
   const [displayText, setDisplayText] = useState('');
   const [isComplete, setIsComplete] = useState(false);
@@ -143,6 +152,12 @@ type Props = {
   totalEmails?: number;
   demo?: boolean;
   subject?: string;
+  setSelectedAttachment: (attachment: null | {
+    id: string;
+    name: string;
+    type: string;
+    url: string;
+  }) => void;
   onReply?: () => void;
   onReplyAll?: () => void;
   onForward?: () => void;
@@ -297,11 +312,11 @@ const MailDisplay = ({
 
   const { data } = demo
     ? {
-        data: {
-          content:
-            'This email talks about how Zero Email is the future of email. It is a new way to send and receive emails that is more secure and private.',
-        },
-      }
+      data: {
+        content:
+          'This email talks about how Zero Email is the future of email. It is a new way to send and receive emails that is more secure and private.',
+      },
+    }
     : useSummary(emailData.id);
 
   useEffect(() => {
@@ -323,9 +338,9 @@ const MailDisplay = ({
     () =>
       emailData.listUnsubscribe
         ? getListUnsubscribeAction({
-            listUnsubscribe: emailData.listUnsubscribe,
-            listUnsubscribePost: emailData.listUnsubscribePost,
-          })
+          listUnsubscribe: emailData.listUnsubscribe,
+          listUnsubscribePost: emailData.listUnsubscribePost,
+        })
         : undefined,
     [emailData.listUnsubscribe, emailData.listUnsubscribePost],
   );
@@ -757,28 +772,30 @@ const MailDisplay = ({
                       <button
                         className="dark: flex h-7 items-center gap-1 rounded-[5px] border bg-[#FAFAFA] px-4 text-sm font-medium hover:bg-[#F0F0F0] dark:bg-[#262626] dark:hover:bg-[#303030]"
                         onClick={() => {
-                          try {
-                            // Convert base64 to blob
-                            const byteCharacters = atob(attachment.body);
-                            const byteNumbers = new Array(byteCharacters.length);
-                            for (let i = 0; i < byteCharacters.length; i++) {
-                              byteNumbers[i] = byteCharacters.charCodeAt(i);
-                            }
-                            const byteArray = new Uint8Array(byteNumbers);
-                            const blob = new Blob([byteArray], { type: attachment.mimeType });
-
-                            // Create object URL and trigger download
-                            const url = window.URL.createObjectURL(blob);
-                            const link = document.createElement('a');
-                            link.href = url;
-                            link.download = attachment.filename;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            window.URL.revokeObjectURL(url);
-                          } catch (error) {
-                            console.error('Error downloading attachment:', error);
+                          // Handle attachment
+                          const attachmentType = getAttachmentType(attachment.mimeType)
+                          // Create blob URL for attachments
+                          const byteCharacters = atob(attachment.body);
+                          const byteNumbers = new Array(byteCharacters.length);
+                          for (let i = 0; i < byteCharacters.length; i++) {
+                            byteNumbers[i] = byteCharacters.charCodeAt(i);
                           }
+                          const byteArray = new Uint8Array(byteNumbers);
+                          const blob = new Blob([byteArray], { type: attachment.mimeType });
+                          const blobUrl = URL.createObjectURL(blob);
+                          // const link = document.createElement('a');
+                          // link.href = blobUrl;
+                          // document.body.appendChild(link);
+                          // link.click();
+                          // document.body.removeChild(link);
+                          // window.URL.revokeObjectURL(blobUrl);
+
+                          setSelectedAttachment({
+                            id: attachment.attachmentId,
+                            name: attachment.filename,
+                            type: attachmentType,
+                            url: blobUrl
+                          });
                         }}
                       >
                         {getFileIcon(attachment.filename)}
@@ -853,7 +870,11 @@ const MailDisplay = ({
           </div>
         </div>
       </div>
-    </div>
+      <AttachmentDialog
+        selectedAttachment={selectedAttachment}
+        setSelectedAttachment={setSelectedAttachment}
+      />
+    </div >
   );
 };
 

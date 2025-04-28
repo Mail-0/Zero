@@ -546,6 +546,7 @@ export function ThreadDisplay({ isMobile, id }: ThreadDisplayProps) {
                         onReply={() => replyToMessage(message.id, 'reply')}
                         onReplyAll={() => replyToMessage(message.id, 'replyAll')}
                         onForward={() => replyToMessage(message.id, 'forward')}
+                        setSelectedAttachment={setSelectedAttachment}
                       />
                       {mode && activeReplyId === message.id && (
                         <div className="px-4 py-2" id={`reply-composer-${message.id}`}>
