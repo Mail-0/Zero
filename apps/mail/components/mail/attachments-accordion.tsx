@@ -15,17 +15,46 @@ type Props = {
 
 const AttachmentsAccordion = ({ attachments, setSelectedAttachment }: Props) => {
   const handleAttachmentClick = (attachment: Attachment) => {
-    setSelectedAttachment({
-      id: attachment.attachmentId,
-      name: attachment.filename,
-      type: getAttachmentType(attachment.mimeType),
-      url: attachment.url || `data:${attachment.mimeType};base64,${attachment.body}`,
-    });
+    // Handle preview for images and PDFs
+    if (attachment.mimeType?.startsWith('image/') || attachment.mimeType === 'application/pdf') {
+      setSelectedAttachment({
+        id: attachment.attachmentId,
+        name: attachment.filename,
+        type: getAttachmentType(attachment.mimeType),
+        url: attachment.url || `data:${attachment.mimeType};base64,${attachment.body}`,
+      });
+    } else {
+      // Handle download for other file types
+      try {
+        // Convert base64 to blob
+        const byteCharacters = atob(attachment.body);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: attachment.mimeType });
+
+        // Create object URL and trigger download
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = attachment.filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error('Error downloading attachment:', error);
+      }
+    }
   };
 
   const getAttachmentType = (mimeType: string): string => {
     if (mimeType.startsWith('image/')) return 'image';
     if (mimeType === 'application/pdf') return 'pdf';
+    if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'excel';
+    if (mimeType.includes('word') || mimeType.includes('document')) return 'word';
     return 'other';
   };
 
@@ -48,7 +77,11 @@ const AttachmentsAccordion = ({ attachments, setSelectedAttachment }: Props) => 
                 >
                   <button
                     className="w-full text-left"
-                    onClick={() => handleAttachmentClick(attachment)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleAttachmentClick(attachment);
+                    }}
                   >
                     <div className="bg-muted flex h-24 items-center justify-center">
                       {attachment.mimeType.startsWith('image/') ? (
