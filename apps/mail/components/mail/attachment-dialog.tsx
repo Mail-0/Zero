@@ -2,14 +2,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Download, ExternalLink } from 'lucide-react';
 import { Button } from '../ui/button';
 import { PDFViewer } from '@/components/mail/pdf-viewer';
+import { useEffect } from 'react'
 
 type Props = {
-  selectedAttachment: null | {
+  selectedAttachment: {
     id: string;
     name: string;
     type: string;
     url: string;
-  };
+  } | null;
   setSelectedAttachment: (
     attachment: null | {
       id: string;
@@ -20,11 +21,28 @@ type Props = {
   ) => void;
 };
 
+
 const AttachmentDialog = ({ selectedAttachment, setSelectedAttachment }: Props) => {
+
+  // Cleanup blob URL when dialog unmounts or attachment changes to prevent memory leaks
+  const cleanupBlobUrl = () => {
+    if (selectedAttachment?.url?.startsWith('blob:')) {
+      URL.revokeObjectURL(selectedAttachment.url);
+    }
+  };
+  useEffect(() => {
+    return cleanupBlobUrl;
+  }, [selectedAttachment]);
+
   return (
     <Dialog
       open={!!selectedAttachment}
-      onOpenChange={(open) => !open && setSelectedAttachment(null)}
+      onOpenChange={(open) => {
+        if (!open) {
+          cleanupBlobUrl();
+          setSelectedAttachment(null);
+        }
+      }}
     >
       <DialogContent className="!max-w-4xl">
         <DialogHeader>
