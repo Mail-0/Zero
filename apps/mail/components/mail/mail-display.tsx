@@ -748,7 +748,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                   {emailData?.attachments.map((attachment, index) => (
                     <div key={index}>
                       <button
-                        className="dark: flex h-7 items-center gap-1 rounded-[5px] border bg-[#FAFAFA] px-4 text-sm font-medium hover:bg-[#F0F0F0] dark:bg-[#262626] dark:hover:bg-[#303030]"
+                        className="flex h-7 items-center gap-1 rounded-[5px] border bg-[#FAFAFA] px-4 py-6 sm:py-2 text-sm font-medium hover:bg-[#F0F0F0] dark:bg-[#262626] dark:hover:bg-[#303030]"
                         onClick={() => {
                           // Handle attachment preview
                           const attachmentType = getAttachmentType(attachment.mimeType);
