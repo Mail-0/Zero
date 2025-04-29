@@ -44,7 +44,7 @@ const AttachmentDialog = ({ selectedAttachment, setSelectedAttachment }: Props) 
         }
       }}
     >
-      <DialogContent className="!max-w-4xl">
+      <DialogContent className="!max-w-6xl">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>{selectedAttachment?.name}</span>
@@ -55,29 +55,30 @@ const AttachmentDialog = ({ selectedAttachment, setSelectedAttachment }: Props) 
                   download
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="flex items-center gap-2"
                 >
                   <Download className="mr-1 h-4 w-4" />
-                  Download
+                  <span className="hidden sm:inline">Download</span>
                 </a>
               </Button>
               <Button variant="outline" size="sm" asChild>
-                <a href={selectedAttachment?.url} target="_blank" rel="noopener noreferrer">
+                <a href={selectedAttachment?.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
                   <ExternalLink className="mr-1 h-4 w-4" />
-                  Open
+                  <span className="hidden sm:inline">Open</span>
                 </a>
               </Button>
             </div>
           </DialogTitle>
         </DialogHeader>
-        <div className="bg-muted mt-4 flex min-h-[300px] items-center justify-center rounded-md p-4">
+        <div className="bg-muted mt-2 flex min-h-[300px] items-center justify-center rounded-md p-4">
           {selectedAttachment?.type === 'image' ? (
             <img
               src={selectedAttachment.url || '/placeholder.svg'}
               alt={selectedAttachment.name}
-              className="max-h-[500px] max-w-full object-contain"
+              className="max-h-full max-w-full object-contain"
             />
           ) : selectedAttachment?.type === 'pdf' ? (
-            <div className="w-full h-[500px]">
+            <div className="w-full h-full ">
               <PDFViewer
                 url={selectedAttachment.url}
                 onClose={() => setSelectedAttachment(null)}
@@ -86,11 +87,10 @@ const AttachmentDialog = ({ selectedAttachment, setSelectedAttachment }: Props) 
           ) : (
             <div className="text-center">
               <div className="mb-4 text-6xl">
-                {selectedAttachment?.type === 'pdf' && '📄'}
                 {selectedAttachment?.type === 'excel' && '📊'}
                 {selectedAttachment?.type === 'word' && '📝'}
                 {selectedAttachment &&
-                  !['pdf', 'excel', 'word', 'image'].includes(selectedAttachment.type) &&
+                  !['excel', 'word', 'image'].includes(selectedAttachment.type) &&
                   '📎'}
               </div>
               <p className="text-muted-foreground">Preview not available</p>
