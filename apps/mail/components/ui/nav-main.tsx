@@ -232,6 +232,20 @@ export function NavMain({ items }: NavMainProps) {
     });
   };
 
+  // Function to reset search when clicking on Inbox
+  const handleResetSearch = useCallback(() => {
+    // Only reset if there's an active search
+    if (searchValue.value || searchValue.highlight || searchValue.folder) {
+      setSearchValue({
+        value: '',
+        highlight: '',
+        folder: '',
+        isLoading: false,
+        isAISearching: false,
+      });
+    }
+  }, [setSearchValue, searchValue]);
+
   return (
     <SidebarGroup className={`${state !== 'collapsed' ? '' : 'mt-1'} space-y-2.5 py-0`}>
       <SidebarMenu>
@@ -258,6 +272,7 @@ export function NavMain({ items }: NavMainProps) {
                     href={getHref(item)}
                     target={item.target}
                     title={item.title}
+                    onClick={item.id === 'inbox' ? handleResetSearch : item.onClick}
                   />
                 ))}
               </div>

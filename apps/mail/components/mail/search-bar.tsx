@@ -91,7 +91,7 @@ type SearchForm = {
 
 export function SearchBar() {
   // const [popoverOpen, setPopoverOpen] = useState(false);
-  const [, setSearchValue] = useSearchValue();
+  const [searchValue, setSearchValue] = useSearchValue();
   const [isSearching, setIsSearching] = useState(false);
   const pathname = usePathname();
 
@@ -117,6 +117,14 @@ export function SearchBar() {
   });
 
   const q = form.watch('q');
+  
+  // Monitor changes to searchValue and update form accordingly
+  useEffect(() => {
+    // If searchValue is empty but the input isn't, clear the input
+    if (!searchValue.value && q) {
+      form.setValue('q', '');
+    }
+  }, [searchValue, q, form]);
 
   useEffect(() => {
     if (pathname !== '/mail/inbox') {
