@@ -1,6 +1,17 @@
 'use client';
 
-import { HelpCircle, LogIn, LogOut, MoonIcon, Settings, Plus, ChevronDown } from 'lucide-react';
+import {
+  HelpCircle,
+  LogIn,
+  LogOut,
+  MoonIcon,
+  Settings,
+  Plus,
+  ChevronDown,
+  BrainCircuitIcon,
+  BrainIcon,
+  CopyCheckIcon,
+} from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CircleCheck, ThreeDots } from '../icons/icons';
 import { SunIcon } from '../icons/animated/sun';
@@ -28,8 +39,8 @@ import { useTranslations } from 'next-intl';
 import { type IConnection } from '@/types';
 import { useTheme } from 'next-themes';
 import { Button } from './button';
-import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 export function NavUser() {
   const { data: session, refetch } = useSession();
@@ -55,6 +66,11 @@ export function NavUser() {
     dexieStorageProvider().clear();
     toast.success('Cache cleared successfully');
   }, []);
+
+  const handleCopyConnectionId = useCallback(async () => {
+    await navigator.clipboard.writeText(session?.connectionId || '');
+    toast.success('Connection ID copied to clipboard');
+  }, [session]);
 
   const handleEnableBrain = useCallback(async () => {
     // This takes too long, not waiting
@@ -385,10 +401,22 @@ export function NavUser() {
                       <p className="text-muted-foreground px-2 py-1 text-[11px] font-medium">
                         Debug
                       </p>
+                      <DropdownMenuItem onClick={handleCopyConnectionId}>
+                        <div className="flex items-center gap-2">
+                          <CopyCheckIcon size={16} className="opacity-60" />
+                          <p className="text-[13px] opacity-60">Copy Connection ID</p>
+                        </div>
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={handleClearCache}>
                         <div className="flex items-center gap-2">
                           <HelpCircle size={16} className="opacity-60" />
                           <p className="text-[13px] opacity-60">Clear Local Cache</p>
+                        </div>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleEnableBrain}>
+                        <div className="flex items-center gap-2">
+                          <BrainIcon size={16} className="opacity-60" />
+                          <p className="text-[13px] opacity-60">Enable Brain Activity</p>
                         </div>
                       </DropdownMenuItem>
                     </>

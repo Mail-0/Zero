@@ -19,7 +19,8 @@
     "db:generate": "dotenv -- turbo run db:generate",
     "db:migrate": "dotenv -- turbo run db:migrate",
     "db:push": "dotenv -- turbo run db:push",
-    "db:studio": "dotenv -- turbo run db:studio"
+    "db:studio": "dotenv -- turbo run db:studio",
+    "scripts": "dotenv -- bun run --cwd apps/mail --silent --elide-lines=0 scripts"
   },
   "devDependencies": {
     "@faker-js/faker": "^9.7.0",

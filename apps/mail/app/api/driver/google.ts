@@ -1,10 +1,8 @@
 import { parseAddressList, parseFrom, wasSentWithTLS } from '@/lib/email-utils';
-import { IGetThreadResponse, type IConfig, type MailManager } from './types';
 import { deleteActiveConnection, FatalErrors } from '@/actions/utils';
 import { IOutgoingMessage, type ParsedMessage } from '@/types';
+import { type IConfig, type MailManager } from './types';
 import { type gmail_v1, google } from 'googleapis';
-import { filterSuggestions } from '@/lib/filter';
-import { GMAIL_COLORS } from '@/lib/constants';
 import { cleanSearchValue } from '@/lib/utils';
 import { createMimeMessage } from 'mimetext';
 import { toByteArray } from 'base64-js';
@@ -661,8 +659,15 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
             });
 
             if (!res.data.messages)
-              return { messages: [], latest: undefined, hasUnread: false, totalReplies: 0 };
+              return {
+                messages: [],
+                latest: undefined,
+                hasUnread: false,
+                totalReplies: 0,
+                labels: [],
+              };
             let hasUnread = false;
+            const labels = new Set<string>();
             const messages: ParsedMessage[] = await Promise.all(
               res.data.messages.map(async (message) => {
                 const bodyData =
@@ -725,6 +730,14 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
                 }
 
                 const parsedData = parse(message);
+                if (parsedData.tags) {
+                  parsedData.tags.forEach((tag) => {
+                    if (tag.id) {
+                      if (labels.has(tag.id)) return;
+                      labels.add(tag.id);
+                    }
+                  });
+                }
 
                 const attachments = await Promise.all(
                   message.payload?.parts
@@ -787,6 +800,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
               }),
             );
             return {
+              labels: Array.from(labels).map((id) => ({ id, name: id })),
               messages,
               latest: messages[messages.length - 1],
               hasUnread,

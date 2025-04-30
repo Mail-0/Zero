@@ -87,6 +87,7 @@ export function EmailComposer({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [messageLength, setMessageLength] = useState(0);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const toInputRef = React.useRef<HTMLInputElement>(null);
   const [threadId] = useQueryState('threadId');
   const [mode] = useQueryState('mode');
   const [isComposeOpen] = useQueryState('isComposeOpen');
@@ -94,6 +95,12 @@ export function EmailComposer({
   const { data: session } = useSession();
   const [draftId] = useQueryState('draftId');
   const { data: draft } = useDraft(draftId ?? null);
+
+  React.useEffect(() => {
+    if (isComposeOpen === 'true' && toInputRef.current) {
+      toInputRef.current.focus();
+    }
+  }, [isComposeOpen]);
 
   React.useEffect(() => {
     if (draft) {
@@ -338,10 +345,23 @@ export function EmailComposer({
                 </div>
               ))}
               <input
+                ref={toInputRef}
                 className="h-6 flex-1 bg-transparent text-sm font-normal leading-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white"
                 placeholder="Enter email"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                    e.preventDefault();
+                    if (isValidEmail(e.currentTarget.value.trim())) {
+                      setValue('to', [...toEmails, e.currentTarget.value.trim()]);
+                      e.currentTarget.value = '';
+                      setHasUnsavedChanges(true);
+                    } else {
+                      toast.error('Please enter a valid email address');
+                    }
+                  } else if (
+                    (e.key === ' ' && e.currentTarget.value.trim()) ||
+                    (e.key === 'Tab' && e.currentTarget.value.trim())
+                  ) {
                     e.preventDefault();
                     if (isValidEmail(e.currentTarget.value.trim())) {
                       setValue('to', [...toEmails, e.currentTarget.value.trim()]);
@@ -359,18 +379,31 @@ export function EmailComposer({
                     setHasUnsavedChanges(true);
                   }
                 }}
+                onBlur={(e) => {
+                  if (e.currentTarget.value.trim()) {
+                    if (isValidEmail(e.currentTarget.value.trim())) {
+                      setValue('to', [...toEmails, e.currentTarget.value.trim()]);
+                      e.currentTarget.value = '';
+                      setHasUnsavedChanges(true);
+                    } else {
+                      toast.error('Please enter a valid email address');
+                    }
+                  }
+                }}
               />
             </div>
           </div>
 
           <div className="flex gap-2">
             <button
+              tabIndex={-1}
               className="flex h-full items-center gap-2 text-sm font-medium text-[#8C8C8C] hover:text-[#A8A8A8]"
               onClick={() => setShowCc(!showCc)}
             >
               <span>Cc</span>
             </button>
             <button
+              tabIndex={-1}
               className="flex h-full items-center gap-2 text-sm font-medium text-[#8C8C8C] hover:text-[#A8A8A8]"
               onClick={() => setShowBcc(!showBcc)}
             >
@@ -378,6 +411,7 @@ export function EmailComposer({
             </button>
             {onClose && (
               <button
+                tabIndex={-1}
                 className="flex h-full items-center gap-2 text-sm font-medium text-[#8C8C8C] hover:text-[#A8A8A8]"
                 onClick={onClose}
               >
@@ -433,6 +467,15 @@ export function EmailComposer({
                       } else {
                         toast.error('Please enter a valid email address');
                       }
+                    } else if (e.key === ' ' && e.currentTarget.value.trim()) {
+                      e.preventDefault();
+                      if (isValidEmail(e.currentTarget.value.trim())) {
+                        setValue('cc', [...(ccEmails || []), e.currentTarget.value.trim()]);
+                        e.currentTarget.value = '';
+                        setHasUnsavedChanges(true);
+                      } else {
+                        toast.error('Please enter a valid email address');
+                      }
                     } else if (
                       e.key === 'Backspace' &&
                       !e.currentTarget.value &&
@@ -440,6 +483,17 @@ export function EmailComposer({
                     ) {
                       setValue('cc', ccEmails.slice(0, -1));
                       setHasUnsavedChanges(true);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (e.currentTarget.value.trim()) {
+                      if (isValidEmail(e.currentTarget.value.trim())) {
+                        setValue('cc', [...(ccEmails || []), e.currentTarget.value.trim()]);
+                        e.currentTarget.value = '';
+                        setHasUnsavedChanges(true);
+                      } else {
+                        toast.error('Please enter a valid email address');
+                      }
                     }
                   }}
                 />
@@ -492,6 +546,15 @@ export function EmailComposer({
                       } else {
                         toast.error('Please enter a valid email address');
                       }
+                    } else if (e.key === ' ' && e.currentTarget.value.trim()) {
+                      e.preventDefault();
+                      if (isValidEmail(e.currentTarget.value.trim())) {
+                        setValue('bcc', [...(bccEmails || []), e.currentTarget.value.trim()]);
+                        e.currentTarget.value = '';
+                        setHasUnsavedChanges(true);
+                      } else {
+                        toast.error('Please enter a valid email address');
+                      }
                     } else if (
                       e.key === 'Backspace' &&
                       !e.currentTarget.value &&
@@ -499,6 +562,17 @@ export function EmailComposer({
                     ) {
                       setValue('bcc', bccEmails.slice(0, -1));
                       setHasUnsavedChanges(true);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (e.currentTarget.value.trim()) {
+                      if (isValidEmail(e.currentTarget.value.trim())) {
+                        setValue('bcc', [...(bccEmails || []), e.currentTarget.value.trim()]);
+                        e.currentTarget.value = '';
+                        setHasUnsavedChanges(true);
+                      } else {
+                        toast.error('Please enter a valid email address');
+                      }
                     }
                   }}
                 />

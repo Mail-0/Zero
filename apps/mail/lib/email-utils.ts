@@ -105,7 +105,7 @@ export const getListUnsubscribeAction = ({
 };
 
 const FALLBACK_SENDER = {
-  name: 'No Sender Name',
+  name: '',
   email: 'no-sender@unknown',
 };
 

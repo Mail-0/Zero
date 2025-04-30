@@ -3,6 +3,8 @@
 import { createDriver } from '@/app/api/driver';
 import { getActiveConnection } from './utils';
 import { ISendEmail } from '@/types';
+import { updateWritingStyleMatrix } from '@/services/writing-style-service';
+import { after } from 'next/server';
 
 export async function sendEmail({
   to,
@@ -52,5 +54,16 @@ export async function sendEmail({
     await driver.create(emailData);
   }
 
+  after(async () => {
+    try {
+      console.warn('Saving writing style matrix...')
+      await updateWritingStyleMatrix(connection.id, message)
+      console.warn('Saved writing style matrix.')
+    } catch (error) {
+      console.error('Failed to save writing style matrix', error)
+    }
+  })
+
   return { success: true };
 }
+

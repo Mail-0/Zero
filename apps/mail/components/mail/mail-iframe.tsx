@@ -64,6 +64,9 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
 
     // Use the larger of the two values to ensure all content is visible
     setHeight(Math.max(boundingRectHeight, scrollHeight));
+    if (body.innerText.trim() === '') {
+      setHeight(0);
+    }
   }, [iframeRef, setHeight]);
 
   useEffect(() => {
@@ -72,6 +75,7 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
       if (!iframeRef.current) return;
       const url = URL.createObjectURL(new Blob([htmlDoc], { type: 'text/html' }));
       iframeRef.current.src = url;
+
       const handler = () => {
         if (iframeRef.current?.contentWindow?.document.body) {
           calculateAndSetHeight();
@@ -137,7 +141,7 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
       <iframe
         height={height}
         ref={iframeRef}
-        className={cn('w-full flex-1 overflow-hidden transition-opacity duration-200')}
+        className={cn('!min-h-0 w-full flex-1 overflow-hidden transition-opacity duration-200')}
         title="Email Content"
         // allow-scripts is safe, because the CSP will prevent scripts from running that don't have our unique nonce.
         sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-scripts"

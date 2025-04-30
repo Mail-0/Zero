@@ -6,6 +6,7 @@ export interface IGetThreadResponse {
   latest: ParsedMessage | undefined;
   hasUnread: boolean;
   totalReplies: number;
+  labels: { id: string; name: string }[];
 }
 
 export interface ParsedDraft {

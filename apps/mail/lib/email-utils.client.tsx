@@ -119,6 +119,34 @@ const EmailTemplate = ({ content, imagesEnabled, nonce }: EmailTemplateProps) =>
               : `default-src 'none'; img-src data:; style-src 'unsafe-inline' *; font-src *; script-src 'nonce-${nonce}';`
           }
         />
+        <style>
+          {`
+            @media (prefers-color-scheme: dark) {
+              body, table, td, div, p {
+                background: transparent !important;
+                background-color: #1A1A1A !important;
+                font-size: 16px !important;
+              }
+              * {
+                background: transparent !important;
+                background-color: #1A1A1A !important;
+                font-size: 16px !important;
+              }
+            }
+            @media (prefers-color-scheme: light) {
+              body, table, td, div, p {
+                background: transparent !important;
+                background-color: white !important;
+                font-size: 16px !important;
+              }
+              * {
+                background: transparent !important;
+                background-color: white !important;
+                font-size: 16px !important;
+              }
+            }
+          `}
+        </style>
         <script nonce={nonce}>
           {`
             document.addEventListener('securitypolicyviolation', (e) => {
@@ -130,12 +158,12 @@ const EmailTemplate = ({ content, imagesEnabled, nonce }: EmailTemplateProps) =>
           `}
         </script>
       </Head>
-      <Body style={{ margin: 0, padding: 0 }}>
-        <Container>
-          <Section>
-            <Row>
-              <Column>
-                <div dangerouslySetInnerHTML={{ __html: content }} />
+      <Body style={{ margin: 0, padding: 0, background: 'transparent' }}>
+        <Container style={{ width: '100%', maxWidth: '100%', background: 'transparent', padding: 0, margin: 0 }}>
+          <Section style={{ width: '100%', background: 'transparent', padding: 0, margin: 0 }}>
+            <Row style={{ background: 'transparent', padding: 0, margin: 0 }}>
+              <Column style={{ background: 'transparent', padding: 0, margin: 0 }}>
+                <div style={{ background: 'transparent', fontSize: '16px', lineHeight: '1.5' }} dangerouslySetInnerHTML={{ __html: content }} />
               </Column>
             </Row>
           </Section>

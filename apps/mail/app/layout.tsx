@@ -51,16 +51,17 @@ export default async function RootLayout({
           content={(await headers()).get('x-user-eu-region') || 'false'}
         />
       </head>
-      <body className={cn(geistSans.variable, geistMono.variable, 'antialiased')} suppressHydrationWarning>
+      <body
+        className={cn(geistSans.variable, geistMono.variable, 'antialiased')}
+        suppressHydrationWarning
+      >
         <Providers attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <NextIntlClientProvider messages={messages}>
-            <CookieProvider>
-              {children}
-              {cookies}
-              <Toast />
-              <Analytics />
-              {/* {isEuRegion && <CookieConsent />} */}
-            </CookieProvider>
+            {children}
+            {cookies}
+            <Toast />
+            <Analytics />
+            {/* {isEuRegion && <CookieConsent />} */}
           </NextIntlClientProvider>
         </Providers>
       </body>

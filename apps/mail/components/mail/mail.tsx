@@ -121,7 +121,7 @@ export function DemoMailLayout() {
               />
               <div
                 className={cn(
-                  'sticky top-0 z-10 flex items-center justify-between gap-1.5 p-2 transition-colors',
+                  'sticky top-0 z-[5] flex items-center justify-between gap-1.5 p-2 transition-colors',
                 )}
               >
                 <SidebarToggle className="h-fit px-2" />
@@ -302,7 +302,7 @@ export function MailLayout() {
             <div className="bg-panelLight dark:bg-panelDark h-[calc(100dvh-0.5rem)] w-screen flex-1 flex-col overflow-y-auto overflow-x-hidden border-[#E7E7E7] shadow-inner md:flex md:max-w-[415px] md:rounded-2xl md:border md:shadow-sm dark:border-[#252525]">
               <div
                 className={cn(
-                  'sticky top-0 z-10 flex items-center justify-between gap-1.5 border-b border-[#E7E7E7] p-2 px-[20px] transition-colors md:min-h-14 dark:border-[#252525]',
+                  'sticky top-0 z-[15] flex items-center justify-between gap-1.5 border-b border-[#E7E7E7] p-2 px-[20px] transition-colors md:min-h-14 dark:border-[#252525]',
                 )}
               >
                 <div className="flex w-full items-center justify-between gap-2">
@@ -368,11 +368,11 @@ export function MailLayout() {
               <div
                 className={cn(
                   `${category[0] === 'Important' ? 'bg-[#F59E0D]' : category[0] === 'All Mail' ? 'bg-[#006FFE]' : category[0] === 'Personal' ? 'bg-[#39ae4a]' : category[0] === 'Updates' ? 'bg-[#8B5CF6]' : category[0] === 'Promotions' ? 'bg-[#F43F5E]' : 'bg-[#F59E0D]'}`,
-                  'relative bottom-0.5 z-20 h-0.5 w-full transition-opacity',
+                  'relative bottom-0.5 z-[5] h-0.5 w-full transition-opacity',
                   isValidating ? 'opacity-100' : 'opacity-0',
                 )}
               />
-              <div className="h-[calc(100vh-9.8rem)] overflow-hidden pt-0">
+              <div className="h-[calc(100vh-9.8rem)] overflow-hidden pt-0 relative z-[1]">
                 <MailList isCompact={true} />
               </div>
             </div>
@@ -680,9 +680,9 @@ function getCategoryColor(categoryId: string): string {
 }
 
 function CategorySelect() {
+  const [mail, setMail] = useMail();
   const [, setSearchValue] = useSearchValue();
   const categories = Categories();
-  const router = useRouter();
   const { folder } = useParams<{ folder: string }>();
   const [category, setCategory] = useQueryState('category', {
     defaultValue: 'Important',
@@ -739,6 +739,7 @@ function CategorySelect() {
     const activeTabElement = activeTabElementRef.current;
 
     if (category && container && activeTabElement) {
+      setMail({ ...mail, bulkSelected: [] });
       const { offsetLeft, offsetWidth } = activeTabElement;
       const clipLeft = Math.max(0, offsetLeft - 2);
       const clipRight = Math.min(container.offsetWidth, offsetLeft + offsetWidth + 2);

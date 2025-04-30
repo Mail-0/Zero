@@ -217,7 +217,7 @@ export function NavMain({ items }: NavMainProps) {
               <div className="mr-0 pr-0">
                 <div
                   className={cn(
-                    'hide-scrollbar mx-2 flex h-full max-h-[30vh] flex-row flex-wrap gap-2 overflow-auto',
+                    'hide-scrollbar mx-2 flex h-full max-h-[20vh] flex-row flex-wrap gap-2 overflow-auto',
                   )}
                 >
                   {labels.map((label) => (

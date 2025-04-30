@@ -301,12 +301,14 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
   const t = useTranslations();
   const [activeReplyId, setActiveReplyId] = useQueryState('activeReplyId');
 
-  console.warn(emailData, 'emailData');
-
   useEffect(() => {
     if (!demo) {
+      if (activeReplyId === emailData.id) {
+        setIsCollapsed(false);
+      } else {
+        setIsCollapsed(activeReplyId ? true : totalEmails ? index !== totalEmails - 1 : false);
+      }
       // Set all emails to collapsed by default except the last one
-      setIsCollapsed(totalEmails ? index !== totalEmails - 1 : false);
       if (totalEmails && index === totalEmails - 1) {
         if (totalEmails > 5) {
           setTimeout(() => {
@@ -316,7 +318,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
         }
       }
     }
-  }, [index, emailData.id, totalEmails, demo]);
+  }, [index, activeReplyId, emailData.id, totalEmails, demo]);
 
   const listUnsubscribeAction = useMemo(
     () =>
@@ -500,7 +502,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                         <Popover open={openDetailsPopover} onOpenChange={handlePopoverChange}>
                           <PopoverTrigger asChild>
                             <button
-                              className="hover:bg-iconLight dark:hover:bg-iconDark/20 flex items-center gap-2 rounded-md p-2"
+                              className="hover:bg-iconLight/10 dark:hover:bg-iconDark/20 flex items-center gap-2 rounded-md p-2"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 e.preventDefault();

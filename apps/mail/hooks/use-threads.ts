@@ -159,5 +159,13 @@ export const useThread = (threadId: string | null) => {
     return totalRecipients > 1;
   }, [data]);
 
-  return { data, isLoading, error, isGroupThread, hasUnread: data?.hasUnread, mutate };
+  return {
+    data,
+    isLoading,
+    labels: data?.labels,
+    error,
+    isGroupThread,
+    hasUnread: data?.hasUnread,
+    mutate,
+  };
 };

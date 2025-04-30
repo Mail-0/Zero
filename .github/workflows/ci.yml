@@ -3,9 +3,16 @@ name: autofix.ci
 on:
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   autofix:
-    runs-on: blacksmith-4vcpu-ubuntu-2204
+    timeout-minutes: 10
+    env:
+      RUNNER_IMAGE: ubuntu-latest
+    runs-on: ${{ env.RUNNER_IMAGE }}
     steps:
       - name: Checkout Code 🛎
         uses: actions/checkout@v4
@@ -16,9 +23,10 @@ jobs:
           bun-version: latest
 
       - name: Setup Node 📦
-        uses: useblacksmith/setup-node@v5
+        uses: actions/setup-node@v4
         with:
           node-version: latest
+          cache: 'bun'
 
       - name: Install dependencies 📦
         run: bun install

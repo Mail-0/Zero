@@ -64,7 +64,7 @@ export function PDFViewer({ url }: PDFViewerProps) {
       </div>
       <div className="relative flex flex-col h-full w-full bg-background">
         {/* PDF content with scroll */}
-        <div className="flex-1 overflow-auto p-4">
+        <div className="flex-1 overflow-auto flex justify-center p-4">
           <div
             ref={containerRef}
             className="flex flex-col items-center"
@@ -73,8 +73,8 @@ export function PDFViewer({ url }: PDFViewerProps) {
             <Document
               file={url}
               onLoadSuccess={onDocumentLoadSuccess}
-              error={<p>Failed to load PDF</p>}
-              loading={<p>Loading PDF...</p>}
+              error={<div>Failed to load PDF</div>}
+              loading={<div>Loading PDF...</div>}
             >
               {Array.from(new Array(numPages), (el, index) => (
                 <Page

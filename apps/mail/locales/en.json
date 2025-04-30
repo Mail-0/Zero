@@ -34,6 +34,7 @@
       "failedToModifyFavorites": "Failed to modify favorites",
       "movingToBin": "Moving to bin...",
       "movedToBin": "Moved to bin",
+      "Bin": "Bin",
       "failedToMoveToBin": "Failed to move to bin",
       "markingAsRead": "Marking as read...",
       "markingAsUnread": "Marking as unread...",
