@@ -324,38 +324,35 @@ export function NavMain({ items }: NavMainProps) {
                               )}
                             />
                           </div>
-                          <div className="space-y-2">
+                          <div className="space-y-4">
                             <UILabel>Color</UILabel>
-                            <div className="w-full space-y-4">
-                              <div className="w-full [&>.react-colorful]:w-full">
-                                <HexColorPicker
-                                  color={formColor?.backgroundColor || '#E2E2E2'}
-                                  onChange={(color) =>
-                                    form.setValue('color', {
+                            <div className="w-full">
+                              <div className="grid grid-cols-7 gap-4">
+                                {[
+                                  // Row 1 - Grayscale
+                                  '#000000', '#434343', '#666666', '#999999', '#cccccc', '#ffffff',
+                                  // Row 2 - Warm colors
+                                  '#fb4c2f', '#ffad47', '#fad165', '#ff7537', '#cc3a21', '#8a1c0a',
+                                  // Row 3 - Cool colors
+                                  '#16a766', '#43d692', '#4a86e8', '#285bac', '#3c78d8', '#0d3472',
+                                  // Row 4 - Purple tones
+                                  '#a479e2', '#b99aff', '#653e9b', '#3d188e', '#f691b3', '#994a64',
+                                  // Row 5 - Pastels
+                                  '#f6c5be', '#ffe6c7', '#c6f3de', '#c9daf8',
+                                ].map((color) => (
+                                  <button
+                                    key={color}
+                                    type="button"
+                                    className={`h-10 w-10 rounded-[4px] border-[0.5px] border-white/10 ${
+                                      formColor?.backgroundColor === color ? 'ring-2 ring-blue-500' : ''
+                                    }`}
+                                    style={{ backgroundColor: color }}
+                                    onClick={() => form.setValue('color', {
                                       backgroundColor: color,
-                                      textColor: '#ffffff',
-                                    })
-                                  }
-                                />
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Input
-                                  value={formColor?.backgroundColor || '#E2E2E2'}
-                                  onChange={(e) =>
-                                    form.setValue('color', {
-                                      backgroundColor: e.target.value,
-                                      textColor: '#ffffff',
-                                    })
-                                  }
-                                  placeholder="#000000"
-                                  className="flex-1 font-mono"
-                                />
-                                <div
-                                  className="h-9 w-9 flex-shrink-0 rounded-md border"
-                                  style={{
-                                    backgroundColor: formColor?.backgroundColor || '#E2E2E2',
-                                  }}
-                                />
+                                      textColor: '#ffffff'
+                                    })}
+                                  />
+                                ))}
                               </div>
                             </div>
                           </div>

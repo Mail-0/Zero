@@ -32,12 +32,14 @@ import { COLORS } from './colors';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { HexColorPicker } from 'react-colorful';
+import { Command } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Bin } from '@/components/icons/icons';
+import { CurvedArrow } from '@/components/icons/icons';
 
 export default function LabelsPage() {
   const t = useTranslations();
@@ -137,49 +139,56 @@ export default function LabelsPage() {
                           )}
                         />
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-4">
                         <Label>Color</Label>
-                        <div className="space-y-4 w-full">
-                          <div className="w-full [&>.react-colorful]:w-full">
-                            <HexColorPicker
-                              color={formColor?.backgroundColor || '#E2E2E2'}
-                              onChange={(color) =>
-                                form.setValue('color', {
+                        <div className="w-full">
+                          <div className="grid grid-cols-7 gap-4">
+                            {[
+                              // Row 1 - Grayscale
+                              '#000000', '#434343', '#666666', '#999999', '#cccccc', '#ffffff',
+                              // Row 2 - Warm colors
+                              '#fb4c2f', '#ffad47', '#fad165', '#ff7537', '#cc3a21', '#8a1c0a',
+                              // Row 3 - Cool colors
+                              '#16a766', '#43d692', '#4a86e8', '#285bac', '#3c78d8', '#0d3472',
+                              // Row 4 - Purple tones
+                              '#a479e2', '#b99aff', '#653e9b', '#3d188e', '#f691b3', '#994a64',
+                              // Row 5 - Pastels
+                              '#f6c5be', '#ffe6c7', '#c6f3de', '#c9daf8'
+                            ].map((color) => (
+                              <button
+                                key={color}
+                                type="button"
+                                className={`h-10 w-10 rounded-[4px] border-[0.5px] border-white/10 ${
+                                  formColor?.backgroundColor === color ? 'ring-2 ring-blue-500' : ''
+                                }`}
+                                style={{ backgroundColor: color }}
+                                onClick={() => form.setValue('color', {
                                   backgroundColor: color,
-                                  textColor: '#ffffff',
-                                })
-                              }
-                            />
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Input
-                              value={formColor?.backgroundColor || '#E2E2E2'}
-                              onChange={(e) =>
-                                form.setValue('color', {
-                                  backgroundColor: e.target.value,
-                                  textColor: '#ffffff',
-                                })
-                              }
-                              placeholder="#000000"
-                              className="font-mono flex-1"
-                            />
-                            <div
-                              className="h-9 w-9 rounded-md border flex-shrink-0"
-                              style={{
-                                backgroundColor: formColor?.backgroundColor || '#E2E2E2',
-                              }}
-                            />
+                                  textColor: '#ffffff'
+                                })}
+                              />
+                            ))}
                           </div>
                         </div>
                       </div>
                     </div>
                     <div className="flex justify-end space-x-2">
-                      <Button type="button" variant="outline" onClick={handleClose}>
+                      <Button
+                        className="h-8"
+                        type="button"
+                        variant="outline"
+                        onClick={handleClose}
+                      >
                         Cancel
                       </Button>
-                      <Button onClick={form.handleSubmit(onSubmit)}>
+                      <Button className="h-8 [&_svg]:size-4" onClick={form.handleSubmit(onSubmit)}>
                         {editingLabel ? 'Save Changes' : 'Create Label'}
+                        <div className="flex h-5 items-center justify-center gap-1 rounded-sm bg-white/10 px-1 dark:bg-black/10 ">
+                          <Command className="h-3 w-3 text-white dark:text-[#929292]" />
+                          <CurvedArrow className="mt-1.5 h-3.5 w-3.5 fill-white dark:fill-[#929292]" />
+                        </div>
                       </Button>
+                      
                     </div>
                  
                 </DialogContent>
@@ -215,7 +224,7 @@ export default function LabelsPage() {
                               backgroundColor: label.color?.backgroundColor,
                             }}
                           >
-                            <span className="dark:text-whitemix-blend-difference text-black">
+                            <span className="dark:text-whitemix-blend-difference darK:text-black">
                               {label.name}
                             </span>
                           </Badge>

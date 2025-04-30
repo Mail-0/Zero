@@ -76,7 +76,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {...props}
         className={`flex select-none flex-col items-center ${state === 'collapsed' ? '' : ''}`}
       >
-        <div className={`relative z-20 flex w-full flex-col ${state === 'collapsed' ? 'px-0' : 'px-2'}`}>
+        <div className={`relative z-20 flex w-full flex-col ${state === 'collapsed' ? 'px-0' : 'md:px-2'}`}>
           <SidebarHeader className="flex flex-col gap-2 pt-[18px]">
             <NavUser />
             <AnimatePresence mode="wait">
