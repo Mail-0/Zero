@@ -21,6 +21,10 @@ export const GET = async (req: NextRequest) => {
     );
   }
 
+  if (!userId) {
+    return NextResponse.json({ settings: defaultUserSettings }, { status: 200 });
+  }
+
   const [result] = await db
     .select()
     .from(userSettings)

@@ -1,16 +1,21 @@
 import {
   Archive,
-  ArrowLeft,
   Bin,
   ExclamationCircle,
   Folder,
   Inbox,
   MessageSquare,
+  NotesList,
   PaperPlane,
   SettingsGear,
   Sparkles,
+  Stars,
   Tabs,
   Users,
+  ArrowLeft,
+  Danger,
+  Sheet,
+  Plane2,
 } from '@/components/icons/icons';
 import { SettingsGearIcon } from '@/components/icons/animated/settings-gear';
 import { ArrowLeftIcon } from '@/components/icons/animated/arrow-left';
@@ -69,7 +74,7 @@ export const navigationConfig: Record<string, NavConfig> = {
             id: 'sent',
             title: 'navigation.sidebar.sent',
             url: '/mail/sent',
-            icon: PaperPlane,
+            icon: Plane2,
           },
         ],
       },
@@ -153,12 +158,12 @@ export const navigationConfig: Record<string, NavConfig> = {
           {
             title: 'navigation.settings.appearance',
             url: '/settings/appearance',
-            icon: SparklesIcon,
+            icon: Stars,
           },
           {
             title: 'navigation.settings.labels',
             url: '/settings/labels',
-            icon: SparklesIcon,
+            icon: Sheet,
           },
           {
             title: 'navigation.settings.signatures',
@@ -170,17 +175,28 @@ export const navigationConfig: Record<string, NavConfig> = {
             title: 'navigation.settings.shortcuts',
             url: '/settings/shortcuts',
             icon: Tabs,
-            disabled: true,
           },
+          // {
+          //   title: 'navigation.settings.signatures',
+          //   url: '/settings/signatures',
+          //   icon: MessageSquareIcon,
+          //   disabled: true,
+          // },
+          // {
+          //   title: 'navigation.settings.shortcuts',
+          //   url: '/settings/shortcuts',
+          //   icon: Tabs,
+          //   disabled: true,
+          // },
           // {
           //   title: "Notifications",
           //   url: "/settings/notifications",
           //   icon: BellIcon,
           // },
           {
-            title: 'navigation.settings.dangerZone',
+            title: 'navigation.settings.deleteAccount',
             url: '/settings/danger-zone',
-            icon: BadgeAlertIcon,
+            icon: Danger,
           },
         ].map((item) => ({
           ...item,
@@ -200,6 +216,7 @@ export const bottomNavItems = [
         title: 'navigation.sidebar.feedback',
         url: 'https://feedback.0.email',
         icon: MessageSquare,
+        target: '_blank',
       },
       {
         id: 'settings',

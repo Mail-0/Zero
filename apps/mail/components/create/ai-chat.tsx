@@ -1,21 +1,23 @@
 'use client';
 
-import { ArrowUpIcon, Mic, CheckIcon, XIcon, Plus, Command } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ArrowUpIcon, Mic, CheckIcon, XIcon, Plus, Command, ArrowDownCircle } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useConnections } from '@/hooks/use-connections';
 import { useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { useThread } from '@/hooks/use-threads';
 import { useSession } from '@/lib/auth-client';
 import { CurvedArrow } from '../icons/icons';
 import { AITextarea } from './ai-textarea';
+import { useChat } from '@ai-sdk/react';
+import { useQueryState } from 'nuqs';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import VoiceChat from './voice';
 import { nanoid } from 'nanoid';
+import Image from 'next/image';
 import { toast } from 'sonner';
-import Link from 'next/link';
 
 interface Message {
   id: string;
@@ -42,16 +44,37 @@ interface Message {
 interface AIChatProps {
   editor: any;
   onMessagesChange?: (messages: Message[]) => void;
+  onReset?: () => void;
 }
 
-export function AIChat({ editor, onMessagesChange }: AIChatProps) {
+const renderThread = (thread: { id: string; title: string; snippet: string }) => {
+  const [, setThreadId] = useQueryState('threadId');
+  const { data: getThread } = useThread(thread.id);
+  return getThread ? (
+    <div
+      onClick={() => setThreadId(thread.id)}
+      key={thread.id}
+      className="bg-subtleBlack cursor-pointer rounded-md border p-2 hover:bg-black"
+    >
+      <p>{getThread.latest?.subject}</p>
+    </div>
+  ) : null;
+};
+
+const RenderThreads = ({
+  threads,
+}: {
+  threads: { id: string; title: string; snippet: string }[];
+}) => {
+  const [, setThreadId] = useQueryState('threadId');
+  return threads.map(renderThread);
+};
+
+export function AIChat({ editor, onMessagesChange, onReset }: AIChatProps) {
   const [value, setValue] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [showVoiceChat, setShowVoiceChat] = useState(false);
   const [expandedResults, setExpandedResults] = useState<Set<string>>(new Set());
   const [searchValue, setSearchValue] = useSearchValue();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -61,7 +84,10 @@ export function AIChat({ editor, onMessagesChange }: AIChatProps) {
   const { data: session } = useSession();
   const { data: connections } = useConnections();
 
-  const activeAccount = connections?.find((connection) => connection.id === session?.connectionId);
+  const { messages, input, setInput, error, handleSubmit, status } = useChat({
+    api: '/api/chat',
+    maxSteps: 5,
+  });
 
   // Scroll to bottom function
   const scrollToBottom = useCallback(() => {
@@ -73,73 +99,68 @@ export function AIChat({ editor, onMessagesChange }: AIChatProps) {
   // Auto scroll when messages change
   useEffect(() => {
     scrollToBottom();
-    if (onMessagesChange) {
-      onMessagesChange(messages);
-    }
+    // if (onMessagesChange) {
+    //   onMessagesChange(messages);
+    // }
   }, [messages, onMessagesChange, scrollToBottom]);
 
-  const handleSendMessage = async () => {
-    if (!value.trim() || isLoading) return;
-
-    const userMessage: Message = {
-      id: generateId(),
-      role: 'user',
-      content: value.trim(),
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setValue('');
-    setIsLoading(true);
-
-    try {
-      // Always treat messages as search requests for now
-      const response = await fetch('/api/ai-search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: [...messages, userMessage],
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get response');
-      }
-
-      const data = await response.json();
-
-      // Update the search value
-      setSearchValue({
-        value: data.searchQuery,
-        highlight: value.trim(),
-        isLoading: false,
-        isAISearching: false,
-        folder: searchValue.folder,
-      });
-
-      // Add assistant message with search results
-      const assistantMessage: Message = {
-        id: generateId(),
-        role: 'assistant',
-        content: data.content,
-        timestamp: new Date(),
-        type: 'search',
-        searchContent: {
-          searchDisplay: data.searchDisplay,
-          results: data.results,
-        },
-      };
-
-      setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error('Error:', error);
-      toast.error('Failed to generate response. Please try again.');
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    if (onReset) {
+      onReset();
     }
-  };
+  }, [onReset]);
+
+  //   const handleSendMessage = async () => {
+  //     if (!value.trim() || isLoading) return;
+
+  //     const userMessage: Message = {
+  //       id: generateId(),
+  //       role: 'user',
+  //       content: value.trim(),
+  //       timestamp: new Date(),
+  //     };
+
+  //     setMessages((prev) => [...prev, userMessage]);
+  //     setValue('');
+  //     setIsLoading(true);
+
+  //     try {
+  //       if (!response.ok) {
+  //         throw new Error('Failed to get response');
+  //       }
+
+  //       const data = await response.json();
+
+  //       // Update the search value
+  //       setSearchValue({
+  //         value: data.searchQuery,
+  //         highlight: value.trim(),
+  //         isLoading: false,
+  //         isAISearching: false,
+  //         folder: searchValue.folder,
+  //       });
+
+  //       // Add assistant message with search results
+  //       const assistantMessage: Message = {
+  //         id: generateId(),
+  //         role: 'assistant',
+  //         content: data.content,
+  //         timestamp: new Date(),
+  //         type: 'search',
+  //         searchContent: {
+  //           searchDisplay: data.searchDisplay,
+  //           results: data.results,
+  //         },
+  //       };
+
+  //       setMessages((prev) => [...prev, assistantMessage]);
+  //     } catch (error) {
+  //       console.error('Error:', error);
+  //       toast.error('Failed to generate response. Please try again.');
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
 
   const handleAcceptSuggestion = (emailContent: { subject?: string; content: string }) => {
     if (!editor) {
@@ -180,27 +201,11 @@ export function AIChat({ editor, onMessagesChange }: AIChatProps) {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
-      handleSendMessage();
+      handleSubmit();
     }
   };
 
   const generateId = () => nanoid();
-
-  const formatTimestamp = (date: Date) => {
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / 60000);
-
-    if (minutes < 1) return 'just now';
-    if (minutes === 1) return '1 minute ago';
-    if (minutes < 60) return `${minutes} minutes ago`;
-
-    const hours = Math.floor(minutes / 60);
-    if (hours === 1) return '1 hour ago';
-    if (hours < 24) return `${hours} hours ago`;
-
-    return date.toLocaleDateString();
-  };
 
   const handleThreadClick = (threadId: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -228,113 +233,103 @@ export function AIChat({ editor, onMessagesChange }: AIChatProps) {
       .replace(/&amp;/g, '&');
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-
-    try {
-      setIsLoading(true);
-      // Create FormData to send files
-      const formData = new FormData();
-      Array.from(files).forEach((file) => {
-        formData.append('files', file);
-      });
-
-      // Send files to your API endpoint
-      const response = await fetch('/api/upload-files', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to upload files');
-      }
-
-      const data = await response.json();
-
-      // Add a message with the uploaded files
-      const userMessage: Message = {
-        id: generateId(),
-        role: 'user',
-        content: `I've uploaded ${files.length} file(s)`,
-        timestamp: new Date(),
-        type: 'email',
-        emailContent: {
-          content: `Files uploaded: ${Array.from(files)
-            .map((f) => f.name)
-            .join(', ')}`,
-        },
-      };
-
-      setMessages((prev) => [...prev, userMessage]);
-      toast.success('Files uploaded successfully');
-    } catch (error) {
-      console.error('Error uploading files:', error);
-      toast.error('Failed to upload files');
-    } finally {
-      setIsLoading(false);
-      // Reset the file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  };
-
   return (
     <div className="flex h-full flex-col">
       {/* Messages container */}
       <div className="flex-1 overflow-y-auto" ref={messagesContainerRef}>
-        <div className="min-h-full space-y-4">
-          {messages.map((message, index) => (
-            <div
-              key={message.id}
-              className={cn(
-                'flex flex-col gap-2 rounded-lg',
-                message.role === 'user' ? 'border-border border bg-[] p-4' : '',
-              )}
-            >
-              <div className="flex items-center gap-2">
-                {message.role === 'user' ? (
-                  <>
-                    <Avatar className="size-6 rounded-lg">
-                      <AvatarImage
-                        className="rounded-lg"
-                        src={
-                          (activeAccount?.picture ?? undefined) ||
-                          (session?.user.image ?? undefined)
-                        }
-                        alt={activeAccount?.name || session?.user.name || 'User'}
-                      />
-                      <AvatarFallback className="rounded-lg text-xs">
-                        {(activeAccount?.name || session?.user.name || 'User')
-                          .split(' ')
-                          .map((n) => n[0])
-                          .join('')
-                          .toUpperCase()
-                          .slice(0, 2)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="font-medium">
-                      {activeAccount?.name || session?.user.name || 'You'}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <Avatar className="size-5">
-                      <AvatarImage src="/white-icon.svg" alt="Zero" />
-                      <AvatarFallback className="rounded-lg text-xs">Zero</AvatarFallback>
-                    </Avatar>
-                    <span className="font-medium">Zero</span>
-                  </>
-                )}
-                <span className="text-muted-foreground text-sm">
-                  {formatTimestamp(message.timestamp)}
-                </span>
+        <div className="min-h-full space-y-4 px-4 py-4">
+          {!messages.length ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div className="relative mb-4 h-[44px] w-[44px]">
+                <Image src="/black-icon.svg" alt="Zero Logo" fill className="dark:hidden" />
+                <Image src="/white-icon.svg" alt="Zero Logo" fill className="hidden dark:block" />
               </div>
+              <p className="mb-1 mt-2 hidden text-sm font-medium text-black md:block dark:text-white">
+                Ask anything about your emails
+              </p>
+              <p className="mb-3 text-sm text-[#8C8C8C] dark:text-[#929292]">
+                Ask to do or show anything using natural language
+              </p>
 
-              <div className="prose dark:prose-invert">{message.content}</div>
+              <div className="mt-6 flex w-full flex-col items-center gap-2">
+                {/* First row */}
+                <div className="no-scrollbar relative flex w-full justify-center overflow-x-auto">
+                  <div className="flex gap-4 px-4">
+                    <p className="flex-shrink-0 whitespace-nowrap rounded-md bg-[#f0f0f0] p-1 px-2 text-sm text-[#555555] dark:bg-[#262626] dark:text-[#929292]">
+                      Find invoice from Stripe
+                    </p>
+                    <p className="flex-shrink-0 whitespace-nowrap rounded-md bg-[#f0f0f0] p-1 px-2 text-sm text-[#555555] dark:bg-[#262626] dark:text-[#929292]">
+                      Reply to Nick
+                    </p>
+                    <p className="flex-shrink-0 whitespace-nowrap rounded-md bg-[#f0f0f0] p-1 px-2 text-sm text-[#555555] dark:bg-[#262626] dark:text-[#929292]">
+                      Show recent design feedback
+                    </p>
+                  </div>
+                  {/* Left mask */}
+                  <div className="from-panelLight dark:from-panelDark pointer-events-none absolute bottom-0 left-0 top-0 w-12 bg-gradient-to-r to-transparent"></div>
+                  {/* Right mask */}
+                  <div className="from-panelLight dark:from-panelDark pointer-events-none absolute bottom-0 right-0 top-0 w-12 bg-gradient-to-l to-transparent"></div>
+                </div>
 
-              {message.type === 'search' &&
+                {/* Second row */}
+                <div className="no-scrollbar relative flex w-full justify-center overflow-x-auto">
+                  <div className="flex gap-4 px-4">
+                    <p className="flex-shrink-0 whitespace-nowrap rounded-md bg-[#f0f0f0] p-1 px-2 text-sm text-[#555555] dark:bg-[#262626] dark:text-[#929292]">
+                      Schedule meeting with Sarah
+                    </p>
+                    <p className="flex-shrink-0 whitespace-nowrap rounded-md bg-[#f0f0f0] p-1 px-2 text-sm text-[#555555] dark:bg-[#262626] dark:text-[#929292]">
+                      What did alex say about the design
+                    </p>
+                  </div>
+                  {/* Left mask */}
+                  <div className="from-panelLight dark:from-panelDark pointer-events-none absolute bottom-0 left-0 top-0 w-12 bg-gradient-to-r to-transparent"></div>
+                  {/* Right mask */}
+                  <div className="from-panelLight dark:from-panelDark pointer-events-none absolute bottom-0 right-0 top-0 w-12 bg-gradient-to-l to-transparent"></div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            messages.map((message, index) => (
+              <div
+                key={`${message.id}-${index}`}
+                className={cn(
+                  'flex w-fit max-w-[80%] flex-col gap-2 rounded-xl text-sm shadow',
+                  message.role === 'user'
+                    ? 'overflow-wrap-anywhere ml-auto break-words bg-[#f0f0f0] p-2 dark:bg-[#313131]' // User messages aligned to right
+                    : 'overflow-wrap-anywhere mr-auto break-words bg-[#f0f0f0] p-3 dark:bg-[#313131]', // Assistant messages aligned to left
+                )}
+              >
+                {/* <div className="prose dark:prose-invert overflow-wrap-anywhere break-words text-sm font-medium">
+                  {message.content}
+                </div> */}
+
+                {message.parts.map((part) => {
+                  if (part.type === 'text') {
+                    return <p>{part.text}</p>;
+                  }
+                  if (part.type === 'reasoning') {
+                    return <p>Reasoning: {part.reasoning}</p>;
+                  }
+                  if (part.type === 'tool-invocation') {
+                    return (
+                      'result' in part.toolInvocation &&
+                      ('threads' in part.toolInvocation.result ? (
+                        <RenderThreads threads={part.toolInvocation.result.threads} />
+                      ) : (
+                        <p>No threads found</p>
+                      ))
+                    );
+                  }
+                  if (part.type === 'source') {
+                    return <p>Source: {part.source.title}</p>;
+                  }
+                  //   if (part.type === 'step-start') {
+                  //     return <ArrowDownCircle className="mx-auto h-4 w-4" />;
+                  //   }
+                  //   return <p>{part.type}</p>;
+                })}
+
+                {/* {message.type === 'search' &&
                 message.searchContent &&
                 message.searchContent.results.length > 0 && (
                   <div className="bg-muted space-y-4 rounded-lg px-4 pt-3">
@@ -411,14 +406,16 @@ export function AIChat({ editor, onMessagesChange }: AIChatProps) {
                     </Button>
                   </div>
                 </div>
-              )}
-            </div>
-          ))}
+              )} */}
+              </div>
+            ))
+          )}
           {/* Invisible element to scroll to */}
           <div ref={messagesEndRef} />
 
+          {JSON.stringify(error)}
           {/* Loading indicator */}
-          {isLoading && (
+          {status === 'submitted' && (
             <div className="flex flex-col gap-2 rounded-lg">
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground text-sm">zero is thinking...</span>
@@ -429,50 +426,29 @@ export function AIChat({ editor, onMessagesChange }: AIChatProps) {
       </div>
 
       {/* Fixed input at bottom */}
-      <div className="mb-[17px] ml-1.5 flex-shrink-0">
+      <div className="mb-[7px] flex-shrink-0 px-1.5">
         <div className="bg-offsetLight border-border/50 relative rounded-2xl border dark:bg-[#141414]">
           {showVoiceChat ? (
             <VoiceChat onClose={() => setShowVoiceChat(false)} />
           ) : (
             <div className="flex flex-col p-2">
               <div className="mb-2 w-full">
-                <AITextarea
-                  ref={textareaRef}
-                  value={value}
-                  onChange={(e) => setValue(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Ask AI to do anything..."
-                  className="placeholder:text-muted-foreground h-[44px] w-full resize-none rounded-[5px] bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
-                />
+                <form id="ai-chat-form" onSubmit={handleSubmit}>
+                  <AITextarea
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Ask AI to do anything..."
+                    className="placeholder:text-muted-foreground h-[44px] w-full resize-none rounded-[5px] bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                </form>
               </div>
               <div className="flex items-center justify-between">
-                {/* <div className="flex items-center gap-1">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileUpload}
-                    multiple
-                    className="hidden"
-                    accept=".pdf,.doc,.docx,.txt,.md"
-                  />
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex h-7 items-center justify-center gap-0.5 overflow-hidden rounded-md bg-gradient-to-b from-black/5 to-black/10 dark:from-white/20 dark:to-white/10 px-1.5 outline outline-1 outline-offset-[-1px] outline-black/5 dark:outline-white/5 border border-border/50"
-                    disabled={isLoading}
-                  >
-                    <Plus className="relative h-4 w-4 overflow-hidden text-black dark:text-white" />
-                    <div className="flex items-center justify-center gap-2.5 px-0.5">
-                      <div className="justify-start text-center text-sm leading-none text-black dark:text-white">
-                        {isLoading ? 'Uploading...' : 'Add files'}
-                      </div>
-                    </div>
-                  </button>
-                </div> */}
                 <div></div>
                 <button
-                  className="border-border/50 inline-flex h-7 items-center justify-center gap-1.5 overflow-hidden rounded-md border bg-white pl-1.5 pr-1 dark:bg-[#262626] cursor-pointer"
-                  disabled={!value.trim() || isLoading}
-                  onClick={handleSendMessage}
+                  form="ai-chat-form"
+                  type="submit"
+                  className="border-border/50 inline-flex h-7 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-md border bg-white pl-1.5 pr-1 dark:bg-[#262626]"
+                  disabled={!input.trim()}
                 >
                   <div className="flex items-center justify-center gap-2.5 pl-0.5">
                     <div className="justify-start text-center text-sm leading-none text-black dark:text-white">
@@ -480,7 +456,6 @@ export function AIChat({ editor, onMessagesChange }: AIChatProps) {
                     </div>
                   </div>
                   <div className="flex h-5 items-center justify-center gap-1 rounded-sm bg-black/10 px-1 dark:bg-white/10">
-                    <Command className="h-3.5 w-3.5 text-black dark:text-[#929292]" />
                     <CurvedArrow className="mt-1.5 h-4 w-4 fill-black dark:fill-[#929292]" />
                   </div>
                 </button>

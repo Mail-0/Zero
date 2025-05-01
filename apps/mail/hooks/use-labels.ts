@@ -1,3 +1,4 @@
+import { useSession } from '@/lib/auth-client';
 import { useMemo } from 'react';
 import axios from 'axios';
 import useSWR from 'swr';
@@ -12,13 +13,19 @@ export interface Label {
   };
 }
 
-const fetcher = async (url: string) => {
-  const response = await axios.get(url);
+const fetcher = async () => {
+  const response = await axios.get('/api/v1/labels');
   return response.data;
 };
 
 export function useLabels() {
-  const { data: labels, error, isLoading, mutate } = useSWR<Label[]>('/api/v1/labels', fetcher);
+  const { data: session } = useSession();
+  const {
+    data: labels,
+    error,
+    isLoading,
+    mutate,
+  } = useSWR<Label[]>(session ? [session?.connectionId, 'user-labels'] : null, fetcher);
 
   return {
     mutate,

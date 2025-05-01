@@ -1,4 +1,5 @@
 'use client';
+
 import { defaultUserSettings } from '@zero/db/user_settings_default';
 import { getBrowserTimezone } from '@/lib/timezones';
 import { useSession } from '@/lib/auth-client';

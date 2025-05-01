@@ -39,7 +39,7 @@ export const AddConnectionDialog = ({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl p-6 rounded-xl border bg-white dark:bg-[#1A1A1A]" showOverlay={true}>
         <DialogHeader>
           <DialogTitle>{t('pages.settings.connections.connectEmail')}</DialogTitle>
           <DialogDescription>

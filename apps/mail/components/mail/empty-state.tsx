@@ -118,7 +118,7 @@ function EmptyState({ folder, className }: EmptyStateProps) {
     <div>
       {noConnection ? (
         <Dialog open={noConnection}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent showOverlay className="sm:max-w-md p-4 border" >
             <DialogHeader>
               <DialogTitle>Connect Email</DialogTitle>
               <DialogDescription>Select an email provider to connect</DialogDescription>

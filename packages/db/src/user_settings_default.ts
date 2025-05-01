@@ -8,6 +8,7 @@ export const defaultUserSettings = {
   customPrompt: '',
   trustedSenders: [],
   isOnboarded: false,
+  colorTheme: 'system',
 } satisfies UserSettings;
 
 export const userSettingsSchema = z.object({
@@ -18,6 +19,7 @@ export const userSettingsSchema = z.object({
   customPrompt: z.string(),
   isOnboarded: z.boolean().optional(),
   trustedSenders: z.string().array().optional(),
+  colorTheme: z.enum(['light', 'dark', 'system']).default('system'),
 });
 
 export type UserSettings = z.infer<typeof userSettingsSchema>;

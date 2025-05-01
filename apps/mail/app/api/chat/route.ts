@@ -1,58 +1,126 @@
-import { generateCompletions } from '@/lib/groq';
+import { getActiveConnection } from '@/actions/utils';
+import { ToolInvocation, streamText } from 'ai';
 import { NextResponse } from 'next/server';
+import { createDriver } from '../driver';
+import { openai } from '@ai-sdk/openai';
+import prompt from './prompt';
+import { z } from 'zod';
+
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+  toolInvocations?: ToolInvocation[];
+}
 
 export async function POST(req: Request) {
-  try {
-    const { messages, context } = await req.json();
-
-    const lastMessage = messages[messages.length - 1].content;
-
-    let systemPrompt =
-      'You are a helpful AI assistant. Provide clear, concise, and accurate responses.';
-
-    // If this is an email request, modify the system prompt
-    if (context?.isEmailRequest) {
-      systemPrompt = `You are an email writing assistant. Generate professional, well-structured emails.
-When generating an email, always follow this format:
-1. Keep the tone professional but friendly
-2. Be concise and clear
-3. Include a clear subject line
-4. Structure the email with a greeting, body, and closing
-5. Use appropriate formatting
-
-Output format:
-{
-  "emailContent": "The full email content",
-  "subject": "A clear subject line",
-  "content": "A brief message explaining the generated email"
-}`;
-    }
-
-    const { completion } = await generateCompletions({
-      model: 'llama3-8b-8192',
-      systemPrompt,
-      prompt: context?.isEmailRequest
-        ? `Generate a professional email for the following request: ${lastMessage}`
-        : lastMessage,
-      temperature: 0.7,
-      max_tokens: 500,
-      userName: 'User',
-    });
-
-    // If this was an email request, try to parse the JSON response
-    if (context?.isEmailRequest) {
-      try {
-        const emailData = JSON.parse(completion);
-        return NextResponse.json(emailData);
-      } catch (error) {
-        // If parsing fails, return the completion as regular content
-        return NextResponse.json({ content: completion });
-      }
-    }
-
-    return NextResponse.json({ content: completion });
-  } catch (error) {
-    console.error('Chat API Error:', error);
-    return NextResponse.json({ error: 'Failed to generate response' }, { status: 400 });
+  const connection = await getActiveConnection();
+  if (!connection) throw new Error('No active connection found');
+  const { messages }: { messages: Message[] } = await req.json();
+  if (!connection?.accessToken || !connection?.refreshToken) {
+    console.error('Unauthorized: No valid connection found');
+    return NextResponse.json({}, { status: 401 });
   }
+
+  const driver = await createDriver(connection.providerId, {
+    auth: {
+      access_token: connection.accessToken,
+      refresh_token: connection.refreshToken!,
+      email: connection.email,
+    },
+  });
+
+  const result = streamText({
+    model: openai('gpt-4o'),
+    system: prompt,
+    messages,
+    tools: {
+      listThreads: {
+        description: 'List email threads',
+        parameters: z.object({
+          folder: z
+            .string()
+            .optional()
+            .default('inbox')
+            .describe('The folder to list threads from'),
+          query: z.string().optional().describe('The search query'),
+          maxResults: z.number().optional().default(20).describe('The maximum number of results'),
+          labelIds: z.array(z.string()).optional().describe('The label IDs to filter by'),
+        }),
+        execute: async ({ folder, query, maxResults, labelIds }) => {
+          return driver.list(folder, query, maxResults, labelIds, undefined);
+        },
+      },
+      archiveThreads: {
+        description: 'Archive email threads by removing them from inbox',
+        parameters: z.object({
+          threadIds: z.array(z.string()).describe('Array of thread IDs to archive'),
+        }),
+        execute: async ({ threadIds }) => {
+          await driver.modifyLabels(threadIds, {
+            removeLabels: ['INBOX'],
+            addLabels: [],
+          });
+          return { archived: threadIds.length };
+        },
+      },
+      markThreadsRead: {
+        description: 'Mark email threads as read',
+        parameters: z.object({
+          threadIds: z.array(z.string()).describe('Array of thread IDs to mark as read'),
+        }),
+        execute: async ({ threadIds }) => {
+          await driver.markAsRead(threadIds);
+          return { marked: threadIds.length };
+        },
+      },
+      markThreadsUnread: {
+        description: 'Mark email threads as unread',
+        parameters: z.object({
+          threadIds: z.array(z.string()).describe('Array of thread IDs to mark as unread'),
+        }),
+        execute: async ({ threadIds }) => {
+          await driver.markAsUnread(threadIds);
+          return { marked: threadIds.length };
+        },
+      },
+      createLabel: {
+        description: 'Create a new label',
+        parameters: z.object({
+          name: z.string().describe('Name of the label to create'),
+          backgroundColor: z.string().optional().describe('Background color for the label'),
+          textColor: z.string().optional().describe('Text color for the label'),
+        }),
+        execute: async ({ name, backgroundColor = '#e3e3e3', textColor = '#666666' }) => {
+          const label = await driver.createLabel({
+            name,
+            color: { backgroundColor: '#FFFFFF', textColor: '#000000' },
+          });
+          return { created: label.id };
+        },
+      },
+      addLabelsToThreads: {
+        description: 'Add labels to email threads',
+        parameters: z.object({
+          threadIds: z.array(z.string()).describe('Array of thread IDs to label'),
+          labelIds: z.array(z.string()).describe('Array of label IDs to add'),
+        }),
+        execute: async ({ threadIds, labelIds }) => {
+          await driver.modifyLabels(threadIds, {
+            addLabels: labelIds,
+            removeLabels: [],
+          });
+          return { labeled: threadIds.length };
+        },
+      },
+      getUserLabels: {
+        description: 'Get all user labels',
+        parameters: z.object({}),
+        execute: async () => {
+          return driver.getUserLabels();
+        },
+      },
+    },
+  });
+
+  return result.toDataStreamResponse();
 }

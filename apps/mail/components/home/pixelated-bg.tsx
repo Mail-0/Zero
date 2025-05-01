@@ -95,8 +95,8 @@ export function PixelatedLeft(props: SVGProps<SVGSVGElement>) {
           gradientUnits="userSpaceOnUse"
           gradientTransform="translate(231 586) rotate(-180) scale(400.5 198.209)"
         >
-          <stop stopColor="white" stop-opacity="0.28" />
-          <stop offset="0.67991" stopColor="white" stop-opacity="0" />
+          <stop stopColor="white" stopOpacity="0.28" />
+          <stop offset="0.67991" stopColor="white" stopOpacity="0" />
         </radialGradient>
         <image
           id="image0_1_696"
@@ -165,8 +165,8 @@ export function PixelatedRight(props: SVGProps<SVGSVGElement>) {
           gradientUnits="userSpaceOnUse"
           gradientTransform="translate(233 120) rotate(-180) scale(400.5 198.209)"
         >
-          <stop stopColor="white" stop-opacity="0.28" />
-          <stop offset="0.67991" stopColor="white" stop-opacity="0" />
+          <stop stopColor="white" stopOpacity="0.28" />
+          <stop offset="0.67991" stopColor="white" stopOpacity="0" />
         </radialGradient>
         <image
           id="image0_1_699"

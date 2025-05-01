@@ -178,7 +178,6 @@ const options = {
       const [foundUser] = await db
         .select({
           activeConnectionId: _user.defaultConnectionId,
-          hasEarlyAccess: earlyAccess.isEarlyAccess,
           hasUsedTicket: earlyAccess.hasUsedTicket,
         })
         .from(_user)
@@ -186,29 +185,29 @@ const options = {
         .where(eq(_user.id, user.id))
         .limit(1);
 
-      // Check early access and proceed
-      if (
-        !foundUser?.hasEarlyAccess &&
-        process.env.NODE_ENV === 'production' &&
-        process.env.EARLY_ACCESS_ENABLED
-      ) {
-        await db
-          .insert(earlyAccess)
-          .values({
-            id: crypto.randomUUID(),
-            email: user.email,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          })
-          .catch((err) =>
-            console.log('Tried to add user to earlyAccess after error, failed', foundUser, err),
-          );
-        try {
-          throw redirect('/login?error=early_access_required');
-        } catch (error) {
-          console.warn('Error redirecting to login page:', error);
-        }
-      }
+      //   // Check early access and proceed
+      //   if (
+      //     !foundUser?.hasEarlyAccess &&
+      //     process.env.NODE_ENV === 'production' &&
+      //     process.env.EARLY_ACCESS_ENABLED
+      //   ) {
+      //     await db
+      //       .insert(earlyAccess)
+      //       .values({
+      //         id: crypto.randomUUID(),
+      //         email: user.email,
+      //         createdAt: new Date(),
+      //         updatedAt: new Date(),
+      //       })
+      //       .catch((err) =>
+      //         console.log('Tried to add user to earlyAccess after error, failed', foundUser, err),
+      //       );
+      //     try {
+      //       throw redirect('/login?error=early_access_required');
+      //     } catch (error) {
+      //       console.warn('Error redirecting to login page:', error);
+      //     }
+      //   }
 
       let activeConnection = null;
 

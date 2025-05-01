@@ -10,198 +10,58 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
-  ArchiveX,
-  BellOff,
-  Inbox,
-  ListMinusIcon,
-  ArrowRightIcon,
-  Loader2,
-  Archive,
-  MailOpen,
-  Trash,
-} from 'lucide-react';
+  Archive2,
+  Bell,
+  CurvedArrow,
+  Eye,
+  Important,
+  Lightning,
+  Mail,
+  Star2,
+  Tag,
+  User,
+  X,
+  MessageSquare,
+} from '../icons/icons';
+import {
+  bulkArchive,
+  bulkDeleteThread,
+  bulkStar,
+  getMail,
+  markAsImportant,
+  markAsRead,
+} from '@/actions/mail';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { moveThreadsTo, ThreadDestination, getAvailableActions } from '@/lib/thread-actions';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
-import { useState, useCallback, useMemo, useEffect, useRef, memo } from 'react';
-import { ThreadDisplay, ThreadDemo } from '@/components/mail/thread-display';
+import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { ThreadDemo, ThreadDisplay } from '@/components/mail/thread-display';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MailList, MailListDemo } from '@/components/mail/mail-list';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
 import { useMediaQuery } from '../../hooks/use-media-query';
-import { Filter, Lightning, Mail, X } from '../icons/icons';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useHotkeysContext } from 'react-hotkeys-hook';
+import { useParams, useRouter } from 'next/navigation';
 import { useMail } from '@/components/mail/use-mail';
 import { SidebarToggle } from '../ui/sidebar-toggle';
-import { getMail, markAsRead } from '@/actions/mail';
 import { Skeleton } from '@/components/ui/skeleton';
 import { clearBulkSelectionAtom } from './use-mail';
 import { useThreads } from '@/hooks/use-threads';
-import { Tag, User, Bell } from '../icons/icons';
 import { Button } from '@/components/ui/button';
+import { Command, Loader2 } from 'lucide-react';
 import { useSession } from '@/lib/auth-client';
 import { useStats } from '@/hooks/use-stats';
-import { useParams } from 'next/navigation';
-import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { SearchBar } from './search-bar';
 import { useQueryState } from 'nuqs';
 import { cn } from '@/lib/utils';
-import items from './demo.json';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
-
-export function DemoMailLayout() {
-  const [mail, setMail] = useState({
-    selected: 'demo',
-    bulkSelected: [],
-  });
-  const [selectedMail, setSelectedMail] = useState<any>(null);
-  const isMobile = false;
-  const isValidating = false;
-  const isLoading = false;
-  const isDesktop = true;
-  const [threadIdParam] = useQueryState('threadId');
-  const [activeCategory, setActiveCategory] = useState('Primary');
-  const [filteredItems, setFilteredItems] = useState(items);
-
-  const handleSelectMail = useCallback((message: any) => {
-    setSelectedMail(message);
-    setMail((prev) => ({ ...prev, selected: message.id }));
-  }, []);
-
-  useEffect(() => {
-    if (activeCategory === 'All Mail') {
-      setFilteredItems(items);
-    } else {
-      const categoryMap = {
-        Primary: 'important',
-        Personal: 'personal',
-        Updates: 'updates',
-        Promotions: 'promotions',
-      };
-
-      const filterTag = categoryMap[activeCategory as keyof typeof categoryMap];
-      const filtered = items.filter(
-        (item) => item.tags && item.tags.find((e) => e.name === filterTag),
-      );
-      setFilteredItems(filtered);
-    }
-  }, [activeCategory]);
-
-  useEffect(() => {
-    if (filteredItems.length > 0 && !selectedMail) {
-      handleSelectMail(filteredItems[0]);
-    }
-  }, [filteredItems, selectedMail, handleSelectMail]);
-
-  return (
-    <TooltipProvider delayDuration={0}>
-      <div className="rounded-inherit flex">
-        <ResizablePanelGroup
-          direction="horizontal"
-          autoSaveId="mail-panel-layout"
-          className="rounded-inherit gap-1.5 overflow-hidden"
-        >
-          <ResizablePanel
-            className={cn(
-              'border-none !bg-transparent',
-              mail?.selected ? 'md:hidden lg:block' : '', // Hide on md, but show again on lg and up
-            )}
-            defaultSize={isMobile ? 100 : 25}
-            minSize={isMobile ? 100 : 25}
-          >
-            <div className="bg-offsetLight dark:bg-offsetDark flex-1 flex-col overflow-y-auto shadow-inner md:flex md:rounded-[5px] md:border md:shadow-sm">
-              <div
-                className={cn(
-                  'compose-loading h-0.5 w-full transition-opacity',
-                  isValidating ? 'opacity-50' : 'opacity-0',
-                )}
-              />
-              <div
-                className={cn(
-                  'sticky top-0 z-[5] flex items-center justify-between gap-1.5 p-2 transition-colors',
-                )}
-              >
-                <SidebarToggle className="h-fit px-2" />
-
-                <div>
-                  <MailCategoryTabs
-                    iconsOnly={true}
-                    onCategoryChange={(category) => {
-                      setActiveCategory(category);
-                    }}
-                    initialCategory={activeCategory}
-                  />
-                </div>
-              </div>
-
-              <div className="h-[calc(100dvh-56px)] max-h-[800px] overflow-hidden pt-0 md:h-[calc(100dvh-(8px+8px+14px+44px))]">
-                {isLoading ? (
-                  <div className="flex flex-col">
-                    {[...Array(8)].map((_, i) => (
-                      <div key={i} className="flex flex-col px-4 py-3">
-                        <div className="flex w-full items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Skeleton className="h-4 w-24" />
-                          </div>
-                          <Skeleton className="h-3 w-12" />
-                        </div>
-                        <Skeleton className="mt-2 h-3 w-32" />
-                        <Skeleton className="mt-2 h-3 w-full" />
-                        <div className="mt-2 flex gap-2">
-                          <Skeleton className="h-4 w-16 rounded-md" />
-                          <Skeleton className="h-4 w-16 rounded-md" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <MailListDemo items={filteredItems} onSelectMail={handleSelectMail} />
-                )}
-              </div>
-            </div>
-          </ResizablePanel>
-
-          {isDesktop && mail.selected && (
-            <>
-              <div className="opacity-0" />
-              <ResizablePanel
-                className="bg-offsetLight dark:bg-offsetDark shadow-sm md:flex md:rounded-2xl md:border md:shadow-sm"
-                defaultSize={75}
-                minSize={25}
-              >
-                <div className="relative hidden h-[calc(100dvh-(12px+14px))] max-h-[800px] flex-1 md:block">
-                  <ThreadDemo messages={selectedMail ? [selectedMail] : []} />
-                </div>
-              </ResizablePanel>
-            </>
-          )}
-        </ResizablePanelGroup>
-
-        {/* Mobile Drawer */}
-        {isMobile && (
-          <Drawer open={!!threadIdParam}>
-            <DrawerContent className="bg-offsetLight dark:bg-offsetDark h-[calc(100dvh-3rem)] overflow-hidden p-0">
-              <DrawerHeader className="sr-only">
-                <DrawerTitle>Email Details</DrawerTitle>
-              </DrawerHeader>
-              <div className="flex h-full flex-col overflow-hidden">
-                <div className="flex-1 overflow-hidden">
-                  <ThreadDisplay isMobile={true} messages={selectedMail ? [selectedMail] : []} />
-                </div>
-              </div>
-            </DrawerContent>
-          </Drawer>
-        )}
-      </div>
-    </TooltipProvider>
-  );
-}
+import { useAISidebar } from '@/components/ui/ai-sidebar';
 
 export function MailLayout() {
-  const { folder } = useParams<{ folder: string }>();
+  const params = useParams<{ folder: string }>();
+  const folder = params?.folder ?? 'inbox';
   const [mail, setMail] = useMail();
   const [, clearBulkSelection] = useAtom(clearBulkSelectionAtom);
   const [isMobile, setIsMobile] = useState(false);
@@ -210,6 +70,7 @@ export function MailLayout() {
   const t = useTranslations();
   const prevFolderRef = useRef(folder);
   const { enableScope, disableScope } = useHotkeysContext();
+  const { toggleOpen: toggleAISidebar } = useAISidebar();
 
   useEffect(() => {
     if (prevFolderRef.current !== folder && mail.bulkSelected.length > 0) {
@@ -292,14 +153,19 @@ export function MailLayout() {
 
   return (
     <TooltipProvider delayDuration={0}>
-      <div className="rounded-inherit relative z-[5] mt-1 flex p-0">
+      <div className="rounded-inherit relative z-[5] flex p-0 md:mt-1">
         <ResizablePanelGroup
           direction="horizontal"
           autoSaveId="mail-panel-layout"
           className="rounded-inherit gap-1 overflow-hidden"
         >
-          <div className={cn('border-none !bg-transparent', threadId ? 'md:hidden lg:block' : '')}>
-            <div className="bg-panelLight dark:bg-panelDark h-[calc(100dvh-0.5rem)] w-screen flex-1 flex-col overflow-y-auto overflow-x-hidden border-[#E7E7E7] shadow-inner md:flex md:max-w-[415px] md:rounded-2xl md:border md:shadow-sm dark:border-[#252525]">
+          <div
+            className={cn(
+              'w-full border-none !bg-transparent lg:w-fit',
+              threadId ? 'md:hidden lg:block' : '',
+            )}
+          >
+            <div className="bg-panelLight dark:bg-panelDark h-screen flex-1 flex-col overflow-y-auto overflow-x-hidden border-[#E7E7E7] shadow-inner md:flex md:h-[calc(100dvh-0.5rem)] md:rounded-2xl md:border md:shadow-sm lg:w-screen lg:max-w-[415px] dark:border-[#252525]">
               <div
                 className={cn(
                   'sticky top-0 z-[15] flex items-center justify-between gap-1.5 border-b border-[#E7E7E7] p-2 px-[20px] transition-colors md:min-h-14 dark:border-[#252525]',
@@ -310,9 +176,29 @@ export function MailLayout() {
                     <SidebarToggle className="h-fit px-2" />
                   </div>
                   <div>
-                    {/* <Button variant="ghost" className={cn('md:h-fit md:px-2')}>
-                      <Filter className="dark:fill-iconDark fill-iconLight" />
-                    </Button> */}
+                    {mail.bulkSelected.length > 0 ? (
+                      <div>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => {
+                                setMail({ ...mail, bulkSelected: [] });
+                              }}
+                              className="flex h-6 items-center gap-1 rounded-md bg-[#313131] px-2 text-xs text-[#A0A0A0] hover:bg-[#252525]"
+                            >
+                              <X className="h-3 w-3 fill-[#A0A0A0]" />
+                              <span>esc</span>
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>Click or press ESC to exit selection mode</TooltipContent>
+                        </Tooltip>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2">
+                        </div>
+                      </>
+                    )}
                   </div>
                   {/* <Button
                     variant="ghost"
@@ -327,43 +213,14 @@ export function MailLayout() {
                     <ArrowCircle className="dark:fill-iconDark fill-iconLight" />
                   </Button> */}
                 </div>
-
-                {/* {mail.bulkSelected.length > 0 ? (
-                  <>
-                    <div className="flex flex-1 items-center justify-center">
-                      <span className="text-sm font-medium tabular-nums">
-                        {t('common.mail.selected', { count: mail.bulkSelected.length })}
-                      </span>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-muted-foreground ml-1.5 h-8 w-fit px-2"
-                            onClick={() => setMail({ ...mail, bulkSelected: [] })}
-                          >
-                            <X />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>{t('common.mail.clearSelection')}</TooltipContent>
-                      </Tooltip>
-                    </div>
-                    <BulkSelectActions />
-                  </>
-                ) : (
-                  <>
-                    <div className="flex flex-1 justify-center">
-                      <SearchBar />
-                    </div>
-                    <div className="flex items-center">
-                      <CategorySelect />
-                    </div>
-                  </>
-                )} */}
               </div>
               <div className="p-2 px-[22px]">
                 <SearchBar />
-                <div className="mt-2">{folder === 'inbox' && <CategorySelect />}</div>
+                <div className="mt-2">
+                  {folder === 'inbox' && (
+                    <CategorySelect isMultiSelectMode={mail.bulkSelected.length > 0} />
+                  )}
+                </div>
               </div>
               <div
                 className={cn(
@@ -372,7 +229,7 @@ export function MailLayout() {
                   isValidating ? 'opacity-100' : 'opacity-0',
                 )}
               />
-              <div className="h-[calc(100vh-9.8rem)] overflow-hidden pt-0 relative z-[1]">
+              <div className="relative z-[1] h-[calc(100vh-9.8rem)] overflow-hidden pt-0">
                 <MailList isCompact={true} />
               </div>
             </div>
@@ -380,12 +237,12 @@ export function MailLayout() {
 
           {isDesktop && (
             <ResizablePanel
-              className="bg-panelLight dark:bg-panelDark mr-1 hidden w-fit border-[#E7E7E7] shadow-sm md:flex md:rounded-2xl md:border md:shadow-sm dark:border-[#252525]"
+              className={`bg-panelLight dark:bg-panelDark ${threadId ? 'mr-1' : 'lg:mr-1'} w-fit rounded-2xl border border-[#E7E7E7] shadow-sm lg:flex lg:shadow-sm dark:border-[#252525]`}
               defaultSize={30}
               minSize={30}
             >
-              <div className="relative hidden h-[calc(100vh-(12px+14px))] flex-1 md:block">
-                <ThreadDisplay onClose={handleClose} id={threadId ?? undefined} />
+              <div className="relative h-[calc(100vh-(10px))] flex-1 lg:h-[calc(100vh-(12px+14px))]">
+                <ThreadDisplay />
               </div>
             </ResizablePanel>
           )}
@@ -398,15 +255,13 @@ export function MailLayout() {
                 if (!isOpen) handleClose();
               }}
             >
-              <DrawerContent className="bg-panelLight dark:bg-panelDark h-[calc(100vh-4rem)] overflow-hidden p-0">
+              <DrawerContent className="bg-panelLight dark:bg-panelDark mx-1 h-[calc(100dvh-3rem)] p-0">
                 <DrawerHeader className="sr-only">
                   <DrawerTitle>Email Details</DrawerTitle>
                 </DrawerHeader>
-                <div className="flex h-full flex-col overflow-hidden">
-                  <div className="flex-1 overflow-hidden">
-                    {threadId ? (
-                      <ThreadDisplay onClose={handleClose} isMobile={true} id={threadId} />
-                    ) : null}
+                <div className="flex h-full flex-col">
+                  <div className="h-full overflow-y-auto">
+                    {threadId ? <ThreadDisplay /> : null}
                   </div>
                 </div>
               </DrawerContent>
@@ -423,6 +278,11 @@ function BulkSelectActions() {
   const [errorQty, setErrorQty] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isUnsub, setIsUnsub] = useState(false);
+  const [mail, setMail] = useMail();
+  const params = useParams<{ folder: string }>();
+  const folder = params?.folder ?? 'inbox';
+  const { mutate: mutateThreads } = useThreads();
+  const { mutate: mutateStats } = useStats();
 
   const handleMassUnsubscribe = async () => {
     setIsLoading(true);
@@ -440,9 +300,12 @@ function BulkSelectActions() {
               });
           }
         }),
-      ).then(() => {
+      ).then(async () => {
         setIsUnsub(false);
         setIsLoading(false);
+        await mutateThreads();
+        await mutateStats();
+        setMail({ ...mail, bulkSelected: [] });
       }),
       {
         loading: 'Unsubscribing...',
@@ -451,30 +314,6 @@ function BulkSelectActions() {
       },
     );
   };
-  const [mail, setMail] = useMail();
-  const { folder } = useParams<{ folder: string }>();
-  const { mutate: mutateThreads } = useThreads();
-  const { mutate: mutateStats } = useStats();
-
-  const handleMarkAsRead = useCallback(async () => {
-    try {
-      const response = await markAsRead({ ids: mail.bulkSelected });
-      if (response.success) {
-        // TODO: fix this, it needs useThread mutation
-        // TODO: fix this, it needs useThread mutation
-        await mutateThreads();
-        await mutateStats();
-        setMail((prev) => ({
-          ...prev,
-          bulkSelected: [],
-        }));
-        toast.success(t('common.mail.markedAsRead'));
-      }
-    } catch (error) {
-      console.error('Error marking as read', error);
-      toast.error(t('common.mail.failedToMarkAsRead'));
-    }
-  }, [mail, setMail, mutateThreads, mutateStats, t]);
 
   const onMoveSuccess = useCallback(async () => {
     await mutateThreads();
@@ -482,44 +321,128 @@ function BulkSelectActions() {
     setMail({ ...mail, bulkSelected: [] });
   }, [mail, setMail, mutateThreads, mutateStats]);
 
-  const availableActions = getAvailableActions(folder).filter(
-    (action): action is Exclude<ThreadDestination, null> => action !== null,
-  );
-
-  const actionButtons = {
-    spam: {
-      icon: <ArchiveX />,
-      tooltip: t('common.mail.moveToSpam'),
-    },
-    archive: {
-      icon: <Archive />,
-      tooltip: t('common.mail.archive'),
-    },
-    inbox: {
-      icon: <Inbox />,
-      tooltip: t('common.mail.moveToInbox'),
-    },
-    bin: {
-      icon: <Trash />,
-      tooltip: t('common.mail.moveToBin'),
-    },
-  };
-
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-2">
+      <button
+        className="flex h-8 flex-1 items-center justify-center gap-1 overflow-hidden rounded-md border bg-white px-3 text-sm transition-all duration-300 ease-out hover:bg-gray-100 dark:border-none dark:bg-[#313131] dark:hover:bg-[#313131]/80"
+        onClick={() => {
+          if (mail.bulkSelected.length === 0) return;
+          toast.promise(markAsRead({ ids: mail.bulkSelected }).then(onMoveSuccess), {
+            loading: 'Marking as read...',
+            success: 'All done! marked as read',
+            error: 'Something went wrong!',
+          });
+        }}
+      >
+        <div className="relative overflow-visible">
+          <Eye className="fill-[#9D9D9D] dark:fill-[#9D9D9D]" />
+        </div>
+        <div className="flex items-center justify-center gap-2.5">
+          <div className="justify-start leading-none">Mark all as read</div>
+        </div>
+      </button>
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            className="flex aspect-square h-8 items-center justify-center gap-1 overflow-hidden rounded-md border bg-white px-2 text-sm transition-all duration-300 ease-out hover:bg-gray-100 dark:border-none dark:bg-[#313131] dark:hover:bg-[#313131]/80"
+            onClick={() => {
+              if (mail.bulkSelected.length === 0) return;
+              toast.promise(markAsImportant({ ids: mail.bulkSelected }).then(onMoveSuccess), {
+                loading: 'Marking as important...',
+                success: 'All done! marked as important',
+                error: 'Something went wrong!',
+              });
+            }}
+          >
+            <div className="relative overflow-visible">
+              <Lightning className="fill-[#9D9D9D] dark:fill-[#9D9D9D]" />
+            </div>
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>{t('common.mail.markAsImportant')}</TooltipContent>
+      </Tooltip>
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            className="flex aspect-square h-8 items-center justify-center gap-1 overflow-hidden rounded-md border bg-white px-2 text-sm transition-all duration-300 ease-out hover:bg-gray-100 dark:border-none dark:bg-[#313131] dark:hover:bg-[#313131]/80"
+            onClick={() => {
+              if (mail.bulkSelected.length === 0) return;
+              toast.promise(bulkArchive({ ids: mail.bulkSelected }).then(onMoveSuccess), {
+                loading: 'Moving to archive...',
+                success: 'All done! moved to archive',
+                error: 'Something went wrong!',
+              });
+            }}
+          >
+            <div className="relative overflow-visible">
+              <Archive2 className="fill-[#9D9D9D]" />
+            </div>
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>{t('common.mail.archive')}</TooltipContent>
+      </Tooltip>
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            className="flex aspect-square h-8 items-center justify-center gap-1 overflow-hidden rounded-md border bg-white px-2 text-sm transition-all duration-300 ease-out hover:bg-gray-100 dark:border-none dark:bg-[#313131] dark:hover:bg-[#313131]/80"
+            onClick={() => {
+              if (mail.bulkSelected.length === 0) return;
+              toast.promise(bulkStar({ ids: mail.bulkSelected }).then(onMoveSuccess), {
+                loading: 'Marking as starred...',
+                success: 'All done! marked as starred',
+                error: 'Something went wrong!',
+              });
+            }}
+          >
+            <div className="relative overflow-visible">
+              <Star2 className="fill-[#9D9D9D] stroke-[#9D9D9D] dark:stroke-[#9D9D9D]" />
+            </div>
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>{t('common.mail.starAll')}</TooltipContent>
+      </Tooltip>
+
       <Dialog onOpenChange={setIsUnsub} open={isUnsub}>
         <Tooltip>
           <TooltipTrigger asChild>
             <DialogTrigger asChild>
-              <Button variant="ghost" className="md:h-fit md:px-2">
-                <ListMinusIcon />
-              </Button>
+              <button className="flex aspect-square h-8 items-center justify-center gap-1 overflow-hidden rounded-md border bg-white px-2 text-sm transition-all duration-300 ease-out hover:bg-gray-100 dark:border-none dark:bg-[#313131] dark:hover:bg-[#313131]/80">
+                <div className="relative overflow-visible">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2.3}
+                    stroke="currentColor"
+                    className="size-4"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636"
+                      strokeOpacity={0.6}
+                    />
+                  </svg>
+                </div>
+              </button>
             </DialogTrigger>
           </TooltipTrigger>
-          <TooltipContent>{t('common.mailDisplay.unsubscribe')}</TooltipContent>
+          <TooltipContent>{t('common.mail.unSubscribeFromAll')}</TooltipContent>
         </Tooltip>
 
-        <DialogContent>
+        <DialogContent
+          showOverlay
+          className="bg-panelLight dark:bg-panelDark max-w-lg rounded-xl border p-4"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+              e.preventDefault();
+              handleMassUnsubscribe();
+            }
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Mass Unsubscribe</DialogTitle>
             <DialogDescription>
@@ -527,57 +450,60 @@ function BulkSelectActions() {
               action is required to unsubscribe from certain threads, you will be notified.
             </DialogDescription>
           </DialogHeader>
-          <p className={'text-muted-foreground text-sm text-red-500'}>Errors: {errorQty}</p>
+
           <DialogFooter>
-            <Button disabled={isLoading} onClick={handleMassUnsubscribe}>
-              {!isLoading && <span>Begin</span>}{' '}
-              {isLoading ? (
-                <Loader2 className={'animate-spin'} />
-              ) : (
-                <ArrowRightIcon className="h-4 w-4" />
-              )}
+            <Button variant="outline" className="mt-3 h-8" onClick={() => setIsUnsub(false)}>
+              <span>Cancel</span>{' '}
+            </Button>
+            <Button
+              className="mt-3 h-8 [&_svg]:size-3.5"
+              disabled={isLoading}
+              onClick={handleMassUnsubscribe}
+            >
+              {<span>Unsubscribe</span>}{' '}
+              <div className="flex h-5 items-center justify-center gap-1 rounded-sm bg-white/10 px-1 dark:bg-black/10">
+                <Command className="h-2 w-3 text-white dark:text-[#929292]" />
+                <CurvedArrow className="mt-1.5 h-5 w-3.5 fill-white dark:fill-[#929292]" />
+              </div>
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button variant="ghost" className="md:h-fit md:px-2">
-            <BellOff />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>{t('common.mail.mute')}</TooltipContent>
-      </Tooltip>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button variant="ghost" className="md:h-fit md:px-2" onClick={handleMarkAsRead}>
-            <MailOpen />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>{t('common.mail.markAsRead')}</TooltipContent>
-      </Tooltip>
 
-      {availableActions.map((action) => (
-        <Tooltip key={action}>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              className="md:h-fit md:px-2"
-              onClick={() => {
-                if (mail.bulkSelected.length === 0) return;
-                moveThreadsTo({
-                  threadIds: mail.bulkSelected,
-                  currentFolder: folder,
-                  destination: action,
-                }).then(onMoveSuccess);
-              }}
-            >
-              {actionButtons[action].icon}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{actionButtons[action].tooltip}</TooltipContent>
-        </Tooltip>
-      ))}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            className="flex aspect-square h-8 items-center justify-center gap-1 overflow-hidden rounded-md border border-red-500 bg-red-600 px-2 text-sm transition-all duration-300 ease-out hover:bg-red-600/80 dark:border-[#6E2532] dark:bg-[#411D23] dark:hover:bg-[#313131]/80 hover:dark:bg-[#411D23]/60"
+            onClick={() => {
+              if (mail.bulkSelected.length === 0) return;
+              toast.promise(bulkDeleteThread({ ids: mail.bulkSelected }).then(onMoveSuccess), {
+                loading: 'Moving to bin...',
+                success: 'All done! moved to bin',
+                error: 'Something went wrong!',
+              });
+            }}
+          >
+            <div className="relative overflow-visible">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M5 3.25V4H2.75C2.33579 4 2 4.33579 2 4.75C2 5.16421 2.33579 5.5 2.75 5.5H3.05L3.86493 13.6493C3.94161 14.4161 4.58685 15 5.35748 15H10.6425C11.4131 15 12.0584 14.4161 12.1351 13.6493L12.95 5.5H13.25C13.6642 5.5 14 5.16421 14 4.75C14 4.33579 13.6642 4 13.25 4H11V3.25C11 2.00736 9.99264 1 8.75 1H7.25C6.00736 1 5 2.00736 5 3.25ZM7.25 2.5C6.83579 2.5 6.5 2.83579 6.5 3.25V4H9.5V3.25C9.5 2.83579 9.16421 2.5 8.75 2.5H7.25ZM6.05044 6.00094C6.46413 5.98025 6.81627 6.29885 6.83696 6.71255L7.11195 12.2125C7.13264 12.6262 6.81404 12.9784 6.40034 12.9991C5.98665 13.0197 5.63451 12.7011 5.61383 12.2875L5.33883 6.78745C5.31814 6.37376 5.63674 6.02162 6.05044 6.00094ZM9.95034 6.00094C10.364 6.02162 10.6826 6.37376 10.662 6.78745L10.387 12.2875C10.3663 12.7011 10.0141 13.0197 9.60044 12.9991C9.18674 12.9784 8.86814 12.6262 8.88883 12.2125L9.16383 6.71255C9.18451 6.29885 9.53665 5.98025 9.95034 6.00094Z"
+                  fill="#F43F5E"
+                  style={{ fill: '#F43F5E', fillOpacity: 1 }}
+                />
+              </svg>
+            </div>
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>{t('common.mail.moveToBin')}</TooltipContent>
+      </Tooltip>
     </div>
   );
 }
@@ -679,11 +605,12 @@ function getCategoryColor(categoryId: string): string {
   }
 }
 
-function CategorySelect() {
+function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
   const [mail, setMail] = useMail();
-  const [, setSearchValue] = useSearchValue();
+  const [searchValue, setSearchValue] = useSearchValue();
   const categories = Categories();
-  const { folder } = useParams<{ folder: string }>();
+  const params = useParams<{ folder: string }>();
+  const folder = params?.folder ?? 'inbox';
   const [category, setCategory] = useQueryState('category', {
     defaultValue: 'Important',
   });
@@ -709,7 +636,7 @@ function CategorySelect() {
           setCategory(cat.id);
           setSearchValue({
             value: cat.searchValue || '',
-            highlight: '',
+            highlight: searchValue.highlight,
             folder: '',
           });
         }}
@@ -721,7 +648,7 @@ function CategorySelect() {
         )}
         tabIndex={isOverlay ? -1 : undefined}
       >
-        <div className="relative overflow-hidden">{cat.icon}</div>
+        <div className="relative overflow-visible">{cat.icon}</div>
         {isSelected && (
           <div className="flex items-center justify-center gap-2.5 px-0.5">
             <div className="animate-in fade-in-0 slide-in-from-right-4 justify-start text-sm leading-none text-white duration-300">
@@ -750,6 +677,10 @@ function CategorySelect() {
       }
     }
   }, [category]);
+
+  if (isMultiSelectMode) {
+    return <BulkSelectActions />;
+  }
 
   return (
     <div className="relative w-full">

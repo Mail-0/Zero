@@ -3,8 +3,10 @@
 import { keyboardShortcuts } from '@/config/shortcuts';
 import { useShortcuts } from './use-hotkey-utils';
 import { useRouter } from 'next/navigation';
+import { useQueryState } from 'nuqs';
 
 export function GlobalHotkeys() {
+  const [composeOpen, setComposeOpen] = useQueryState('isComposeOpen');
   const router = useRouter();
   const scope = 'global';
 
@@ -13,9 +15,10 @@ export function GlobalHotkeys() {
     inbox: () => router.push('/mail/inbox'),
     sentMail: () => router.push('/mail/sent'),
     search: () => {
-      console.log('search');
+      console.log('well well well');
+      document.getElementsByName('q')[0]?.focus();
     },
-    newEmail: () => router.push('/mail/compose'),
+    newEmail: () => setComposeOpen('true'),
   };
 
   const globalShortcuts = keyboardShortcuts.filter((shortcut) => shortcut.scope === scope);

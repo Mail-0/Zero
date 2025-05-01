@@ -1,18 +1,18 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
 import { EmailComposer } from '../create/email-composer';
 import { useHotkeysContext } from 'react-hotkeys-hook';
 import { constructReplyBody } from '@/lib/utils';
 import { useThread } from '@/hooks/use-threads';
 import { useSession } from '@/lib/auth-client';
+import { useDraft } from '@/hooks/use-drafts';
 import { useTranslations } from 'next-intl';
 import { sendEmail } from '@/actions/send';
 import { useQueryState } from 'nuqs';
+import { useEffect } from 'react';
 import { Sender } from '@/types';
 import { toast } from 'sonner';
-import { SuccessEmailToast } from '../theme/toast';
 
 interface ReplyComposeProps {
   messageId?: string;
@@ -26,9 +26,12 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
   const { enableScope, disableScope } = useHotkeysContext();
   const { aliases, isLoading: isLoadingAliases } = useEmailAliases();
   const t = useTranslations();
+  const [draftId, setDraftId] = useQueryState('draftId');
+  const { data: draft, isLoading: isDraftLoading } = useDraft(draftId ?? null);
 
   // Find the specific message to reply to
-  const replyToMessage = messageId && emailData?.messages.find(msg => msg.id === messageId) || emailData?.latest;
+  const replyToMessage =
+    (messageId && emailData?.messages.find((msg) => msg.id === messageId)) || emailData?.latest;
 
   // Initialize recipients and subject when mode changes
   useEffect(() => {
@@ -48,7 +51,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
     if (mode === 'reply') {
       // Reply to sender
       const to: string[] = [];
-      
+
       // If the sender is not the current user, add them to the recipients
       if (senderEmail !== userEmail) {
         to.push(replyToMessage.sender.email);
@@ -56,7 +59,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
         // If we're replying to our own email, reply to the first recipient
         to.push(replyToMessage.to[0].email);
       }
-      
+
       // Initialize email composer with these recipients
       // Note: The actual initialization happens in the EmailComposer component
     } else if (mode === 'replyAll') {
@@ -83,7 +86,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
           cc.push(recipient.email);
         }
       });
-      
+
       // Initialize email composer with these recipients
     } else if (mode === 'forward') {
       // For forward, we start with empty recipients
@@ -143,8 +146,8 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
         headers: {
           'In-Reply-To': replyToMessage?.messageId ?? '',
           References: [
-            ...(replyToMessage?.references ? replyToMessage.references.split(' ') : []), 
-            replyToMessage?.messageId
+            ...(replyToMessage?.references ? replyToMessage.references.split(' ') : []),
+            replyToMessage?.messageId,
           ]
             .filter(Boolean)
             .join(' '),
@@ -156,16 +159,14 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
       // Reset states
       setMode(null);
       await mutate();
-      toast.custom((id) => (
-        <div className='relative top-0 left-32'>
-          <SuccessEmailToast message={t('pages.createEmail.emailSent')} />
-        </div>
-      ));
+      toast.success(t('pages.createEmail.emailSent'));
     } catch (error) {
       console.error('Error sending email:', error);
       toast.error(t('pages.createEmail.failedToSendEmail'));
     }
   };
+
+  console.log('draftcontent', draft);
 
   useEffect(() => {
     if (mode) {
@@ -180,12 +181,36 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
 
   if (!mode || !emailData) return null;
 
+  if (draftId && isDraftLoading) {
+    // wait for the draft if requesting one
+    return null;
+  }
+
   return (
     <div className="w-full rounded-xl bg-white dark:bg-[#141414]">
       <EmailComposer
         className="w-full !max-w-none border pb-1 dark:bg-[#141414]"
         onSendEmail={handleSendEmail}
-        onClose={() => setMode(null)}
+        onClose={async () => {
+          await setMode(null);
+          await setDraftId(null);
+        }}
+        initialMessage={draft?.content}
+        initialTo={draft?.to}
+        initialSubject={draft?.subject}
+        threadContent={emailData.messages.map((message) => {
+          return {
+            body: message.decodedBody ?? '',
+            from: message.sender.name ?? message.sender.email,
+            to: message.to.reduce<string[]>((to, recipient) => {
+              if (recipient.name) {
+                to.push(recipient.name);
+              }
+
+              return to;
+            }, []),
+          };
+        })}
       />
     </div>
   );

@@ -37,9 +37,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Golden ticket already claimed' }, { status: 400 });
     }
 
-    if (!foundUser.isEarlyAccess && process.env.EARLY_ACCESS_ENABLED) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-    }
+    // if (!foundUser.isEarlyAccess && process.env.EARLY_ACCESS_ENABLED) {
+    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    // }
 
     const resend = process.env.RESEND_API_KEY
       ? new Resend(process.env.RESEND_API_KEY)

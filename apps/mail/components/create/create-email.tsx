@@ -30,6 +30,8 @@ export function CreateEmail({
   const { aliases, isLoading: isLoadingAliases } = useEmailAliases();
   const [draftId, setDraftId] = useQueryState('draftId');
   const [composeOpen, setComposeOpen] = useQueryState('isComposeOpen');
+  const { data: draft } = useDraft(draftId ?? null);
+  const t = useTranslations();
 
   const activeAccount = React.useMemo(() => {
     if (!session) return null;
@@ -49,40 +51,36 @@ export function CreateEmail({
     message: string;
     attachments: File[];
   }) => {
-    try {
-      // Use the selected from email or the first alias (or default user email)
-      const fromEmail = aliases?.[0]?.email ?? userEmail;
+    // Use the selected from email or the first alias (or default user email)
+    const fromEmail = aliases?.[0]?.email ?? userEmail;
 
-      await sendEmail({
-        to: data.to.map((email) => ({ email, name: email.split('@')[0] || email })),
-        cc: data.cc?.map((email) => ({ email, name: email.split('@')[0] || email })),
-        bcc: data.bcc?.map((email) => ({ email, name: email.split('@')[0] || email })),
-        subject: data.subject,
-        message: data.message,
-        attachments: data.attachments,
-        fromEmail: fromEmail,
-        draftId: draftId || undefined,
-      });
+    await sendEmail({
+      to: data.to.map((email) => ({ email, name: email.split('@')[0] || email })),
+      cc: data.cc?.map((email) => ({ email, name: email.split('@')[0] || email })),
+      bcc: data.bcc?.map((email) => ({ email, name: email.split('@')[0] || email })),
+      subject: data.subject,
+      message: data.message,
+      attachments: data.attachments,
+      fromEmail,
+      draftId: draftId ?? undefined,
+    });
 
-      // Track different email sending scenarios
-      if (data.cc && data.bcc) {
-        console.log(posthog.capture('Create Email Sent with CC and BCC'));
-      } else if (data.cc) {
-        console.log(posthog.capture('Create Email Sent with CC'));
-      } else if (data.bcc) {
-        console.log(posthog.capture('Create Email Sent with BCC'));
-      } else {
-        console.log(posthog.capture('Create Email Sent'));
-      }
+    // Clear draft ID from URL
+    await setDraftId(null);
 
-      toast.success(t('pages.createEmail.emailSentSuccessfully'));
-    } catch (error) {
-      console.error('Error sending email:', error);
-      toast.error(t('pages.createEmail.failedToSendEmail'));
+    // Track different email sending scenarios
+    if (data.cc && data.bcc) {
+      console.log(posthog.capture('Create Email Sent with CC and BCC'));
+    } else if (data.cc) {
+      console.log(posthog.capture('Create Email Sent with CC'));
+    } else if (data.bcc) {
+      console.log(posthog.capture('Create Email Sent with BCC'));
+    } else {
+      console.log(posthog.capture('Create Email Sent'));
     }
-  };
 
-  const t = useTranslations();
+    toast.success(t('pages.createEmail.emailSentSuccessfully'));
+  };
 
   return (
     <>
@@ -95,7 +93,13 @@ export function CreateEmail({
             </button>
           </DialogClose>
         </div>
-        <EmailComposer className="mb-12 rounded-2xl border" onSendEmail={handleSendEmail} />
+        <EmailComposer
+          className="mb-12 rounded-2xl border"
+          onSendEmail={handleSendEmail}
+          initialMessage={draft?.content}
+          initialTo={draft?.to?.map((e) => e.replace(/[<>]/g, ''))}
+          initialSubject={draft?.subject}
+        />
       </div>
     </>
   );

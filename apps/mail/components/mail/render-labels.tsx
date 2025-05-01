@@ -8,10 +8,8 @@ import { Popover } from '../ui/popover';
 import { cn } from '@/lib/utils';
 import * as React from 'react';
 
-export const RenderLabels = ({ labels }: { labels: Label[] }) => {
+export const RenderLabels = ({ count = 1, labels }: { count?: number; labels: Label[] }) => {
   const [searchValue, setSearchValue] = useSearchValue();
-  const label = React.useMemo(() => labels[0], [labels]);
-
   const handleFilterByLabel = (label: Label) => (event: any) => {
     event.stopPropagation();
     const existingValue = searchValue.value;
@@ -31,30 +29,48 @@ export const RenderLabels = ({ labels }: { labels: Label[] }) => {
     });
   };
 
-  if (!label) return null;
+  if (!labels.length) return null;
+
+  const visibleLabels = labels.slice(0, count);
+  const hiddenLabels = labels.slice(count);
 
   return (
-    <span
-      key={label.id}
-      className="dark:bg-subtleBlack bg-subtleWhite text-primary inline-block truncate rounded border px-1.5 py-0.5 text-xs font-medium"
-      style={{ backgroundColor: label.color?.backgroundColor, color: label.color?.textColor }}
-    >
-      {label.name}
-      {labels.length > 1 && (
+    <div className="flex gap-1">
+      {visibleLabels.map((label) => (
+        <button
+          key={label.id}
+          onClick={handleFilterByLabel(label)}
+          className={cn(
+            'dark:bg-subtleBlack bg-subtleWhite text-primary inline-block truncate rounded border px-1.5 py-0.5 text-xs font-medium',
+            searchValue.value.includes(`label:${label.name}`) &&
+              'border-neutral-800 dark:border-white',
+          )}
+          style={{ backgroundColor: label.color?.backgroundColor, color: label.color?.textColor }}
+        >
+          {label.name}
+        </button>
+      ))}
+      {hiddenLabels.length > 0 && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className="text-muted-foreground text-[10px]"> (+{labels.length - 1})</span>
+            <button className="text-muted-foreground dark:bg-subtleBlack bg-subtleWhite inline-block truncate rounded border px-1.5 py-0.5 text-xs font-medium">
+              +{hiddenLabels.length}
+            </button>
           </TooltipTrigger>
-          <TooltipContent className="flex gap-1">
-            {labels.map((label) => (
+          <TooltipContent className="z-[99] flex gap-1 px-1 py-1">
+            {hiddenLabels.map((label) => (
               <button
+                key={label.id}
                 onClick={handleFilterByLabel(label)}
                 className={cn(
                   'dark:bg-subtleBlack bg-subtleWhite inline-block truncate rounded border px-1.5 py-0.5 text-xs font-medium',
                   searchValue.value.includes(`label:${label.name}`) &&
-                    'border-purple-800 bg-purple-800/30',
+                    'border-neutral-800 dark:border-white',
                 )}
-                key={label.id}
+                style={{
+                  backgroundColor: label.color?.backgroundColor,
+                  color: label.color?.textColor,
+                }}
               >
                 {label.name}
               </button>
@@ -62,6 +78,6 @@ export const RenderLabels = ({ labels }: { labels: Label[] }) => {
           </TooltipContent>
         </Tooltip>
       )}
-    </span>
+    </div>
   );
 };

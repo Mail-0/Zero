@@ -2,6 +2,10 @@ import { useCallback, useEffect, useState, useRef } from 'react';
 import { useMail } from '@/components/mail/use-mail';
 import { useHotkeys } from 'react-hotkeys-hook';
 import type { InitialThread } from '@/types';
+import { atom, useAtom } from 'jotai';
+
+export const focusedIndexAtom = atom<number | null>(null);
+export const isQuickActionModeAtom = atom<boolean>(false);
 
 export interface UseMailNavigationProps {
   items: InitialThread[];
@@ -11,8 +15,8 @@ export interface UseMailNavigationProps {
 
 export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNavigationProps) {
   const [, setMail] = useMail();
-  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
-  const [isQuickActionMode, setIsQuickActionMode] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useAtom(focusedIndexAtom);
+  const [isQuickActionMode, setIsQuickActionMode] = useAtom(isQuickActionModeAtom);
   const [quickActionIndex, setQuickActionIndex] = useState(0);
   const hoveredMailRef = useRef<string | null>(null);
   const keyboardActiveRef = useRef(false);
@@ -113,7 +117,7 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
         return newIndex;
       });
     },
-    [isQuickActionMode, items.length, scrollIntoView, getHoveredIndex, navigateToThread],
+    [isQuickActionMode, items],
   );
 
   const handleArrowDown = useCallback(
@@ -220,9 +224,9 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
   useHotkeys('ArrowUp', handleArrowUp);
   useHotkeys('ArrowDown', handleArrowDown);
   useHotkeys('Enter', handleEnter);
-  useHotkeys('Tab', handleTab);
-  useHotkeys('ArrowRight', handleArrowRight);
-  useHotkeys('ArrowLeft', handleArrowLeft);
+  //   useHotkeys('Tab', handleTab);
+  //   useHotkeys('ArrowRight', handleArrowRight);
+  //   useHotkeys('ArrowLeft', handleArrowLeft);
   useHotkeys('Escape', handleEscape);
 
   const handleMouseEnter = useCallback((threadId: string) => {

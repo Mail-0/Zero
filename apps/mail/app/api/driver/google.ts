@@ -1,5 +1,6 @@
 import { parseAddressList, parseFrom, wasSentWithTLS } from '@/lib/email-utils';
 import { deleteActiveConnection, FatalErrors } from '@/actions/utils';
+import { sanitizeTipTapHtml } from '@/lib/sanitize-tip-tap-html';
 import { IOutgoingMessage, type ParsedMessage } from '@/types';
 import { type IConfig, type MailManager } from './types';
 import { type gmail_v1, google } from 'googleapis';
@@ -62,7 +63,7 @@ const parseDraft = (draft: gmail_v1.Schema$Draft) => {
 
   if (payload) {
     if (payload.parts) {
-      const textPart = payload.parts.find((part) => part.mimeType === 'text/plain');
+      const textPart = payload.parts.find((part) => part.mimeType === 'text/html');
       if (textPart?.body?.data) {
         content = fromBinary(textPart.body.data);
       }
@@ -70,6 +71,8 @@ const parseDraft = (draft: gmail_v1.Schema$Draft) => {
       content = fromBinary(payload.body.data);
     }
   }
+
+  // TODO: Hook up CC and BCC from the draft so it can populate the composer on open.
 
   return {
     id: draft.id || '',
@@ -371,7 +374,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
 
     msg.addMessage({
       contentType: 'text/html',
-      data: message.trim(),
+      data: await sanitizeTipTapHtml(message.trim()),
     });
 
     if (headers) {
@@ -965,7 +968,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       return withErrorHandler(
         'createDraft',
         async () => {
-          const message = data.message.replace(/<br>/g, '</p><p>');
+          const message = await sanitizeTipTapHtml(data.message);
           const msg = createMimeMessage();
           msg.setSender('me');
           msg.setTo(data.to);

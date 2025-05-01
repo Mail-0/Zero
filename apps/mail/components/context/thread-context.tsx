@@ -31,12 +31,13 @@ import { backgroundQueueAtom } from '@/store/backgroundQueue';
 import { useThread, useThreads } from '@/hooks/use-threads';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useParams, useRouter } from 'next/navigation';
-import { SuccessEmailToast } from '../theme/toast';
+import { useLabels } from '@/hooks/use-labels';
 import { modifyLabels } from '@/actions/mail';
 import { LABELS, FOLDERS } from '@/lib/utils';
 import { useStats } from '@/hooks/use-stats';
 import { useTranslations } from 'next-intl';
 import { useMail } from '../mail/use-mail';
+import { Checkbox } from '../ui/checkbox';
 import { type ReactNode } from 'react';
 import { useQueryState } from 'nuqs';
 import { useMemo } from 'react';
@@ -63,6 +64,49 @@ interface EmailContextMenuProps {
   isBin?: boolean;
   refreshCallback?: () => void;
 }
+
+const LabelsList = ({ threadId }: { threadId: string }) => {
+  const { labels } = useLabels();
+  const { data: thread, mutate } = useThread(threadId);
+  const t = useTranslations();
+
+  if (!labels || !thread) return null;
+
+  const handleToggleLabel = async (labelId: string) => {
+    if (!labelId) return;
+    const hasLabel = thread.labels?.map((label) => label.id).includes(labelId);
+    await modifyLabels({
+      threadId: [threadId],
+      addLabels: hasLabel ? [] : [labelId],
+      removeLabels: hasLabel ? [labelId] : [],
+    });
+    mutate();
+  };
+
+  return (
+    <>
+      {labels
+        .filter((label) => label.id)
+        .map((label) => (
+          <ContextMenuItem
+            key={label.id}
+            onClick={() => label.id && handleToggleLabel(label.id)}
+            className="font-normal"
+          >
+            <div className="flex items-center">
+              <Checkbox
+                checked={
+                  label.id ? thread.labels?.map((label) => label.id).includes(label.id) : false
+                }
+                className="mr-2 h-4 w-4"
+              />
+              {label.name}
+            </div>
+          </ContextMenuItem>
+        ))}
+    </>
+  );
+};
 
 export function ThreadContextMenu({
   children,
@@ -144,11 +188,9 @@ export function ThreadContextMenu({
   const handleFavorites = async () => {
     const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
     if (!isStarred) {
-      toast.custom((id) => <SuccessEmailToast message={t('common.actions.addedToFavorites')} />);
+      toast.success(t('common.actions.addedToFavorites'));
     } else {
-      toast.custom((id) => (
-        <SuccessEmailToast message={t('common.actions.removedFromFavorites')} />
-      ));
+      toast.success(t('common.actions.removedFromFavorites'));
     }
     await toggleStar({ ids: targets });
     setMail((prev) => ({ ...prev, bulkSelected: [] }));
@@ -352,13 +394,13 @@ export function ThreadContextMenu({
       ),
       action: handleFavorites,
     },
-    {
-      id: 'mute',
-      label: t('common.mail.muteThread'),
-      icon: <BellOff className="mr-2.5 h-4 w-4" />,
-      action: noopAction,
-      disabled: true, // TODO: Mute thread functionality to be implemented
-    },
+    // {
+    //   id: 'mute',
+    //   label: t('common.mail.muteThread'),
+    //   icon: <BellOff className="mr-2.5 h-4 w-4" />,
+    //   action: noopAction,
+    //   disabled: true, // TODO: Mute thread functionality to be implemented
+    // },
   ];
 
   const renderAction = (action: EmailAction) => {
@@ -386,30 +428,23 @@ export function ThreadContextMenu({
 
         <ContextMenuSeparator />
 
+        <ContextMenuSub>
+          <ContextMenuSubTrigger className="font-normal">
+            <Tag className="mr-2.5 h-4 w-4" />
+            {t('common.mail.labels')}
+          </ContextMenuSubTrigger>
+          <ContextMenuSubContent className="w-48">
+            <LabelsList threadId={threadId} />
+          </ContextMenuSubContent>
+        </ContextMenuSub>
+
+        <ContextMenuSeparator />
+
         {getActions().map(renderAction as any)}
 
         <ContextMenuSeparator />
 
         {otherActions.map(renderAction)}
-
-        {/* <ContextMenuSeparator />
-
-				<ContextMenuSub>
-					<ContextMenuSubTrigger className="font-normal">
-						<Tag className="mr-2.5 h-4 w-4" />
-						{t('common.mail.labels')}
-					</ContextMenuSubTrigger>
-					<ContextMenuSubContent className="w-48">
-						<ContextMenuItem className="font-normal">
-							<MailPlus className="mr-2.5 h-4 w-4" />
-							{t('common.mail.createNewLabel')}
-						</ContextMenuItem>
-						<ContextMenuSeparator />
-						<ContextMenuItem disabled className="text-muted-foreground italic">
-							{t('common.mail.noLabelsAvailable')}
-						</ContextMenuItem>
-					</ContextMenuSubContent>
-				</ContextMenuSub> */}
       </ContextMenuContent>
     </ContextMenu>
   );

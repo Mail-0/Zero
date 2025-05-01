@@ -11,12 +11,12 @@ import { SidebarMenuButton, useSidebar } from '@/components/ui/sidebar';
 import { Form, FormField, FormItem, FormLabel } from './ui/form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CurvedArrow, Ticket } from './icons/icons';
+import { useEffect, useState, useRef } from 'react';
 import { Command, TicketIcon } from 'lucide-react';
 import { MessageKey } from '@/config/navigation';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSession } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -49,7 +49,7 @@ export const GoldenTicketModal = () => {
   const onSubmit = async (data: z.infer<typeof schema>) => {
     if (isSubmitting.current) return;
     isSubmitting.current = true;
-    
+
     try {
       const response = await fetch('/api/golden-ticket', {
         method: 'POST',
@@ -102,67 +102,71 @@ export const GoldenTicketModal = () => {
           <p className="mt-0.5 truncate text-[13px]">Invite a friend</p>
         </SidebarMenuButton>
       </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="flex flex-col gap-4">
-            <Image
-              src="/white-icon.svg"
-              alt="Zero"
-              width={32}
-              height={32}
-              className="hidden dark:block"
-            />
-            <Image
-              src="/black-icon.svg"
-              alt="Zero"
-              width={32}
-              height={32}
-              className="block dark:hidden"
-            />
-            <span>Welcome to Zero! 🎉 ✨</span>
-          </DialogTitle>
-          <DialogDescription className="flex flex-col gap-3 pt-3">
-            <span>
-              Zero is still in early beta 🚀 and will continue to grow and improve from this point
-              on. If you know a friend who wants to test and try out Zero, send them an invite! 💌
-            </span>
-            <span>You can only invite one person, so make it count! 🎯 ⭐️</span>
-          </DialogDescription>
-        </DialogHeader>
-        <form 
-          onSubmit={form.handleSubmit(onSubmit)} 
-          className="space-y-2"
-          onKeyDown={handleKeyDown}
+      <div className="container mx-auto max-w-[750px]">
+        <DialogContent
+          showOverlay={true}
+          className="bg-panelLight dark:bg-panelDark w-full max-w-[500px] rounded-xl p-5"
         >
-          <Form {...form}>
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <Input
-                    placeholder="nizzy@gmail.com"
-                    {...field}
-                    className="h-8 placeholder:opacity-20"
-                  />
-                </FormItem>
-              )}
-            />
-            <div className="flex justify-end gap-2 pt-1">
-              <Button onClick={handleMaybeLater} type="button" variant="outline" className="h-7">
-                Maybe Later
-              </Button>
-              <Button disabled={!email} type="submit" className="h-7">
-                <span className="mr-">Send invite</span>
-                <div className="flex h-5 items-center justify-center gap-1 rounded-sm dark:bg-black/10 px-1 bg-white/10">
-                  <Command className="h-2 w-2 text-black dark:text-[#929292]" />
-                  <CurvedArrow className="mt-1.5 h-3 w-3 fill-black dark:fill-[#929292]" />
-                </div>
-              </Button>
-            </div>
-          </Form>
-        </form>
-      </DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex flex-col gap-4">
+              <Image
+                src="/white-icon.svg"
+                alt="Zero"
+                width={32}
+                height={32}
+                className="hidden dark:block"
+              />
+              <Image
+                src="/black-icon.svg"
+                alt="Zero"
+                width={32}
+                height={32}
+                className="block dark:hidden"
+              />
+              <span>Welcome to Zero! 🎉 ✨</span>
+            </DialogTitle>
+            <DialogDescription className="flex flex-col gap-3 py-3">
+              <span>
+                Zero is still in early beta 🚀 and will continue to grow and improve from this point
+                on. If you know a friend who wants to test and try out Zero, send them an invite! 💌
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-2"
+            onKeyDown={handleKeyDown}
+          >
+            <Form {...form}>
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <Input
+                      placeholder="nizzy@gmail.com"
+                      {...field}
+                      className="h-8 placeholder:opacity-20"
+                    />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end gap-2 pt-1">
+                <Button onClick={handleMaybeLater} type="button" variant="outline" className="h-7">
+                  Maybe Later
+                </Button>
+                <Button disabled={!email} type="submit" className="h-7">
+                  <span className="mr-">Send invite</span>
+                  <div className="flex h-5 items-center justify-center gap-1 rounded-sm bg-white/10 px-1 dark:bg-black/10">
+                    <Command className="h-2 w-2 text-black dark:text-[#929292]" />
+                    <CurvedArrow className="mt-1.5 h-3 w-3 fill-black dark:fill-[#929292]" />
+                  </div>
+                </Button>
+              </div>
+            </Form>
+          </form>
+        </DialogContent>
+      </div>
     </Dialog>
   );
 };

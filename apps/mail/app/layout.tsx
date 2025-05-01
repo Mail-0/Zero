@@ -1,10 +1,12 @@
+import { CircleX, AlertCircle, AlertOctagon } from 'lucide-react';
 import { CookieProvider } from '@/providers/cookie-provider';
 import { getLocale, getMessages } from 'next-intl/server';
+import { CircleCheck } from '@/components/icons/icons';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/react';
 import { NextIntlClientProvider } from 'next-intl';
+import CustomToaster from '@/components/ui/toast';
 import { siteConfig } from '@/lib/site-config';
-import { Toast } from '@/components/ui/toast';
 import { Providers } from '@/lib/providers';
 import { headers } from 'next/headers';
 import type { Viewport } from 'next';
@@ -59,7 +61,7 @@ export default async function RootLayout({
           <NextIntlClientProvider messages={messages}>
             {children}
             {cookies}
-            <Toast />
+            <CustomToaster />
             <Analytics />
             {/* {isEuRegion && <CookieConsent />} */}
           </NextIntlClientProvider>

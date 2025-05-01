@@ -74,10 +74,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <Sidebar
         collapsible="icon"
         {...props}
-        className={`flex select-none flex-col items-center ${state === 'collapsed' ? '' : ''}`}
+        className={`flex select-none flex-col items-center h-screen top-2.5 ${state === 'collapsed' ? '' : ''}`}
       >
-        <div className={`relative z-20 flex w-full flex-col ${state === 'collapsed' ? 'px-0' : 'px-2'}`}>
-          <SidebarHeader className="flex flex-col gap-2 pt-[18px]">
+        <div
+          className={`relative z-20 flex  w-full flex-col ${state === 'collapsed' ? 'px-0' : 'md:px-2 '}`}
+        >
+          <SidebarHeader className=" flex flex-col gap-2">
             <NavUser />
             <AnimatePresence mode="wait">
               {showComposeButton && (
@@ -108,9 +110,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarContent>
         </div>
 
-        <div className="mt-auto flex w-full flex-col px-2">
-          <div className="mx-2">
-            {!session || isPending ? null : !session?.hasUsedTicket ? <GoldenTicketModal /> : null}
+        <div className={`mt-auto flex w-full flex-col ${state !== 'collapsed' ? 'px-2' : ''}`}>
+          <div className="mx-2 relative top-2.5">
+          <GoldenTicketModal />
           </div>
           <SidebarContent className="py-0 pt-0">
             <NavMain items={bottomNavItems} />
@@ -130,13 +132,15 @@ function ComposeButton() {
   const [dialogOpen, setDialogOpen] = useQueryState('isComposeOpen');
   const [, setDraftId] = useQueryState('draftId');
   const [, setTo] = useQueryState('to');
+  const [, setActiveReplyId] = useQueryState('activeReplyId');
+  const [, setMode] = useQueryState('mode');
 
   const handleOpenChange = (open: boolean) => {
     setDialogOpen(open ? 'true' : null);
-    if (!open) {
-      setDraftId(null);
-      setTo(null);
-    }
+    setDraftId(null);
+    setTo(null);
+    setActiveReplyId(null);
+    setMode(null);
   };
   return (
     <Dialog open={!!dialogOpen} onOpenChange={handleOpenChange}>
@@ -156,7 +160,7 @@ function ComposeButton() {
         </button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-screen h-screen border-none bg-transparent p-0 shadow-none">
+      <DialogContent className="h-screen w-screen max-w-none border-none bg-[#FAFAFA] p-0 shadow-none dark:bg-[#141414]">
         <CreateEmail />
       </DialogContent>
     </Dialog>

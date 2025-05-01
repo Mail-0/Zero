@@ -15,14 +15,14 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { ArrowRight, CurvedArrow } from '../icons/icons';
 import { Command, Menu, MoveRight } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { SuccessEmailToast } from '../theme/toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CurvedArrow } from '../icons/icons';
 import Balancer from 'react-wrap-balancer';
 import { useForm } from 'react-hook-form';
+import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { toast } from 'sonner';
@@ -30,7 +30,6 @@ import Link from 'next/link';
 import axios from 'axios';
 import React from 'react';
 import { z } from 'zod';
-import { useTheme } from 'next-themes';
 
 const tabs = [
   { label: 'Chat With Your Inbox', value: 'smart-categorization' },
@@ -225,8 +224,8 @@ export default function HomeContent() {
               </SheetTitle>
             </SheetHeader>
             <div className="mt-4 flex flex-col space-y-4">
-              <Link href="/investor" className="text-sm font-medium">
-                Investors
+              <Link href="/about" className="text-sm font-medium">
+                About
               </Link>
               <Link href="#" className="text-sm font-medium">
                 Solutions
@@ -250,26 +249,29 @@ export default function HomeContent() {
       </div>
 
       <section className="mt-32 flex flex-col items-center px-4 md:mt-40">
-        <div className="border-input/50 mb-6 inline-flex items-center gap-4 rounded-full border bg-[#2a2a2a] px-4 py-1 pr-1.5">
+        <div className="border-input/50 mb-6 inline-flex items-center gap-4 rounded-full border border-[#2A2A2A] bg-[#1E1E1E] px-4 py-1 pr-1.5">
           <span className="text-sm">See what's new from 0.email</span>
           <Link
-            href="/#"
-            className="text-foreground ml-2 flex items-center gap-1 rounded-full bg-gradient-to-b from-neutral-600 to-neutral-700 px-3 py-1 text-sm"
+            href="https://x.com/zerodotemail"
+            target="_blank"
+            className="text-foreground flex items-center gap-1 rounded-full bg-gradient-to-b from-neutral-600 to-neutral-700 px-3 py-1 text-sm"
           >
             <span>Learn More</span>
-            <MoveRight className="!size-4" />
+            <ArrowRight className="ml-1" />
           </Link>
         </div>
-        <Balancer className="mb-3 max-w-[1130px] text-center text-6xl font-semibold">
-          <h1 className="text-center text-4xl font-medium md:text-6xl">
+        <h1 className="text-center text-4xl font-medium md:text-6xl">
+          <Balancer className="mb-3 max-w-[1130px]">
             AI Powered Email, Built to Save You Time
-          </h1>
-        </Balancer>
+          </Balancer>
+        </h1>
         <p className="mx-auto mb-4 max-w-2xl text-center text-base font-medium text-[#B7B7B7] md:text-lg">
           Zero is an AI native email client that manages your inbox, so you don't have to.
         </p>
 
-        <Button className="h-8">Get Started</Button>
+        
+          <Button className="h-8"><Link href="/login">Get Started</Link></Button>
+     
       </section>
       <section className="relative mt-10 hidden flex-col justify-center md:flex">
         <div className="bg-border absolute left-1/2 top-0 h-px w-full -translate-x-1/2 md:container xl:max-w-7xl" />
@@ -278,14 +280,14 @@ export default function HomeContent() {
           onValueChange={handleTabChange}
           className="flex w-full flex-col items-center gap-0"
         >
-          <div className="tabs-container relative hidden w-full max-w-[40rem] justify-center md:flex md:max-w-max">
+          {/* <div className="tabs-container relative hidden w-full max-w-[40rem] justify-center md:flex md:max-w-max">
             <TabsList className="relative h-fit w-full rounded-none bg-transparent pb-0 md:w-auto">
               <div className="bg-border absolute -top-4 left-0 h-[calc(100%+16px)] w-px" />
               <div className="bg-border absolute -top-4 right-0 h-[calc(100%+16px)] w-px" />
-              {/* Glow */}
+         
               <CustomTabGlow glowStyle={glowStyle} />
 
-              {/* Tab Triggers */}
+              
               {tabs.map((tab, index) => (
                 <TabsTrigger
                   key={tab.value}
@@ -299,7 +301,7 @@ export default function HomeContent() {
                 </TabsTrigger>
               ))}
             </TabsList>
-          </div>
+          </div> */}
           <div className="relative flex w-full justify-center md:border-t">
             <div className="container relative md:border-x xl:max-w-7xl">
               <PixelatedLeft

@@ -47,11 +47,11 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
     [settings, mutate],
   );
 
-  useEffect(() => {
-    if (isTrustedSender) {
-      setImagesEnabled(true);
-    }
-  }, [isTrustedSender]);
+  // useEffect(() => {
+  //   if (isTrustedSender) {
+  //     setImagesEnabled(true);
+  //   }
+  // }, [isTrustedSender]);
 
   const t = useTranslations();
 

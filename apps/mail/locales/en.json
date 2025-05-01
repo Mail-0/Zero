@@ -73,12 +73,13 @@
         "goToBin": "Go to Bin",
         "goToSettings": "Go to Settings",
         "newEmail": "New Email",
-        "composeMessage": "Compose message",
+        "composeMessage": "New Email",
         "searchEmails": "Search Emails",
         "toggleTheme": "Toggle Theme",
         "backToMail": "Back to Mail",
         "goToDocs": "Go to docs",
-        "helpWithShortcuts": "Help with shortcuts"
+        "helpWithShortcuts": "Help with shortcuts",
+        "commandPalette": "Command Palette"
       }
     },
     "searchBar": {
@@ -253,7 +254,6 @@
       "failedToMarkAsUnread": "Failed to mark as unread",
       "selected": "{count} selected",
       "clearSelection": "Clear Selection",
-      "mute": "Mute",
       "moveToSpam": "Move to Spam",
       "moveToInbox": "Move to Inbox",
       "deleteFromBin": "Delete from Bin",
@@ -280,7 +280,17 @@
       "showImages": "Show Images",
       "noEmails": "No emails available",
       "noSearchResults": "No search results found",
-      "clearSearch": "Clear search"
+      "clearSearch": "Clear search",
+      "markAsImportant": "Mark as Important",
+      "unSubscribeFromAll": "Unsubscribe from all",
+      "starAll": "Star all",
+      "mute": "Mute",
+      "unmute": "Unmute",
+      "muted": "Muted",
+      "failedToMute": "Failed to mute",
+      "failedToUnmute": "Failed to unmute",
+      "archived": "Archived",
+      "failedToArchive": "Failed to archive"
     },
     "units": {
       "mb": "{amount} MB"
@@ -305,7 +315,8 @@
       "signatures": "Signatures",
       "shortcuts": "Shortcuts",
       "labels": "Labels",
-      "dangerZone": "Danger Zone"
+      "dangerZone": "Danger Zone",
+      "deleteAccount": "Delete Account"
     }
   },
   "pages": {
@@ -405,7 +416,7 @@
           "markAsUnread": "Mark as Unread",
           "muteThread": "Mute Thread",
           "printEmail": "Print Email",
-          "archiveEmail": "Archive Email",
+          "archiveEmail": "Archive Thread",
           "markAsSpam": "Mark as Spam",
           "moveToFolder": "Move to Folder",
           "undoLastAction": "Undo Last Action",
@@ -416,7 +427,9 @@
           "recordHotkey": "Record Hotkey",
           "pressKeys": "Press keys",
           "releaseKeys": "Release keys",
-          "selectAll": "Select All"
+          "selectAll": "Select All",
+          "commandPalette": "Command Palette",
+          "markAsRead": "Mark as Read"
         }
       },
       "labels": {

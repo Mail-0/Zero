@@ -21,7 +21,7 @@ export function SettingsCard({
   return (
     <Card
       className={cn(
-        'bg-offsetLight dark:bg-offsetDark w-full border-none px-0 shadow-none',
+        'bg-panelLight dark:bg-panelDark w-full border-none px-0 shadow-none',
         className,
       )}
     >
