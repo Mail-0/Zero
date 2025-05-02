@@ -186,14 +186,19 @@ const Thread = memo(
     const { data: getThreadData, isLoading, isGroupThread } = useThread(demo ? null : message.id);
     const [isHovered, setIsHovered] = useState(false);
     const [isStarred, setIsStarred] = useState(false);
+<<<<<<< HEAD
     const queryClient = useQueryClient();
     const trpc = useTRPC();
 
     const { mutateAsync: toggleStar } = useMutation(trpc.mail.toggleStar.mutationOptions());
+=======
+    const [ isTrash, setIsTrash ] = useState(false);
+>>>>>>> 686bd056 (add trash state check to hide bin action)
 
     // Set initial star state based on email data
     useEffect(() => {
       if (getThreadData?.latest?.tags) {
+        setIsTrash(getThreadData.latest.tags.some((tag) => tag.name === 'TRASH'));
         setIsStarred(getThreadData.latest.tags.some((tag) => tag.name === 'STARRED'));
       }
     }, [getThreadData?.latest?.tags]);
@@ -518,7 +523,7 @@ const Thread = memo(
                     {t('common.threadDisplay.archive')}
                   </TooltipContent>
                 </Tooltip>
-                <Tooltip>
+                {!isTrash && <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
@@ -532,7 +537,7 @@ const Thread = memo(
                   <TooltipContent className="mb-1 bg-white dark:bg-[#1A1A1A]">
                     {t('common.actions.Bin')}
                   </TooltipContent>
-                </Tooltip>
+                </Tooltip>}
               </div>
             )}
 
