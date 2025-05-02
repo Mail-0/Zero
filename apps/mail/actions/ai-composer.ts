@@ -7,11 +7,10 @@ import {
 import { StyledEmailAssistantSystemPrompt } from '@/actions/ai-composer-prompt';
 import type { Message } from '@microsoft/microsoft-graph-types';
 import { stripHtml } from 'string-strip-html';
-import { google } from '@ai-sdk/google';
-import { openai } from '@ai-sdk/openai';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
 import { generateText } from 'ai';
+import { getAIModel } from '@/lib/ai-providers';
 
 export const aiCompose = async ({
   prompt,
@@ -58,8 +57,9 @@ export const aiCompose = async ({
     } as const;
   });
 
+  const model = getAIModel('ollama', 'moondream:1.8b-v2-q5_1');
   const { text } = await generateText({
-    model: openai('gpt-4o-mini'),
+    model,
     messages: [
       {
         role: 'system',

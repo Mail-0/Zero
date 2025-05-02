@@ -2,7 +2,7 @@ import { getActiveConnection } from '@/actions/utils';
 import { ToolInvocation, streamText } from 'ai';
 import { NextResponse } from 'next/server';
 import { createDriver } from '../driver';
-import { openai } from '@ai-sdk/openai';
+import { getAIModel } from '@/lib/ai-providers';
 import prompt from './prompt';
 import { z } from 'zod';
 
@@ -29,8 +29,10 @@ export async function POST(req: Request) {
     },
   });
 
+  const model = getAIModel('ollama', 'llava:7b');
+
   const result = streamText({
-    model: openai('gpt-4o'),
+    model,
     system: prompt,
     messages,
     tools: {

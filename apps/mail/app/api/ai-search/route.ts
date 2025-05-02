@@ -1,6 +1,6 @@
 import { getActiveDriver } from '@/actions/utils';
 import { type gmail_v1 } from 'googleapis';
-import { openai } from '@ai-sdk/openai';
+import { getAIModel } from '@/lib/ai-providers';
 import { generateText, tool } from 'ai';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
@@ -76,9 +76,9 @@ For subject/content searches, include relevant synonyms and related terms.
 
 Important: This is a search-only assistant. Do not generate email content or handle email composition requests.`,
     };
-
+    const model = getAIModel('ollama', 'llava:7b');
     const { text, steps } = await generateText({
-      model: openai('gpt-3.5-turbo'),
+      model,
       messages: [systemMessage, ...messages],
       tools: {
         emailSearch: emailSearchTool,
