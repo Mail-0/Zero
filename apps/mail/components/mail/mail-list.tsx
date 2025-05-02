@@ -135,7 +135,7 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
                       'text-md flex items-baseline gap-1 group-hover:opacity-100',
                     )}
                   >
-                    <span className={cn('max-w-[20ch] truncate text-sm')}>
+                    <span className={cn('max-w-[25ch] truncate text-sm')}>
                       {cleanNameDisplay(draft?.to?.[0] || 'noname') || ''}
                     </span>
                   </span>
@@ -144,7 +144,7 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
               <div className="flex justify-between">
                 <p
                   className={cn(
-                    'mt-1 line-clamp-1 max-w-[50ch] text-sm text-[#8C8C8C] md:max-w-[25ch]',
+                    'mt-1 line-clamp-1 max-w-[50ch] text-sm text-[#8C8C8C] md:max-w-[30ch]',
                   )}
                 >
                   {draft?.subject}
@@ -610,7 +610,7 @@ const Thread = memo(
                         {isFolderSent ? (
                           <span>{highlightText(latestMessage.subject, searchValue.highlight)}</span>
                         ) : (
-                          <span className={cn('max-w-[18ch] truncate text-sm')}>
+                          <span className={cn('truncate text-sm md:max-w-[15ch] xl:max-w-[25ch]')}>
                             {highlightText(
                               cleanNameDisplay(latestMessage.sender.name) || '',
                               searchValue.highlight,
@@ -659,7 +659,7 @@ const Thread = memo(
                     ) : (
                       <p
                         className={cn(
-                          'mt-1 line-clamp-1 max-w-[50ch] text-sm text-[#8C8C8C] md:max-w-[25ch]',
+                          'mt-1 line-clamp-1 max-w-[50ch] text-sm text-[#8C8C8C] md:max-w-[40ch]',
                         )}
                       >
                         {highlightText(latestMessage.subject, searchValue.highlight)}

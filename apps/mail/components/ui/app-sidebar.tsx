@@ -120,7 +120,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           className={`mt-auto flex w-full flex-col ${state !== 'collapsed' ? 'px-0 md:px-2' : ''}`}
         >
           <SidebarContent className="py-0 pt-0">
-            <div className="px-2">
+            <div className="sm:px-2">
               <GoldenTicketModal />
             </div>
 
