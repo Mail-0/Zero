@@ -34,7 +34,7 @@ import { backgroundQueueAtom } from '@/store/backgroundQueue';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
 import { useThread, useThreads } from '@/hooks/use-threads';
 import { useAISidebar } from '@/components/ui/ai-sidebar';
-import { markAsRead, markAsUnread } from '@/actions/mail';
+import { markAsRead, markAsUnread, toggleStar } from '@/actions/mail';
 import { useHotkeysContext } from 'react-hotkeys-hook';
 import { MailDisplaySkeleton } from './mail-skeleton';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -159,6 +159,7 @@ export function ThreadDisplay() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [mail, setMail] = useMail();
   const [isStarred, setIsStarred] = useState(false);
+  const [ isTrash, setIsTrash ] = useState(false);
   const t = useTranslations();
   const { mutate: mutateStats } = useStats();
   const [mode, setMode] = useQueryState('mode');
@@ -293,6 +294,7 @@ export function ThreadDisplay() {
     } else {
       toast.success(t('common.actions.removedFromFavorites'));
     }
+    await toggleStar({ ids: [id] });
     mutateThreads();
   }, [emailData, id, isStarred, mutateThreads, t]);
 
@@ -300,6 +302,7 @@ export function ThreadDisplay() {
   useEffect(() => {
     if (emailData?.latest?.tags) {
       // Check if any tag has the name 'STARRED'
+      setIsTrash(emailData.latest.tags.some((tag) => tag.name === 'TRASH'));
       setIsStarred(emailData.latest.tags.some((tag) => tag.name === 'STARRED'));
     }
   }, [emailData?.latest?.tags]);
@@ -524,7 +527,7 @@ export function ThreadDisplay() {
                   </Tooltip>
                 </TooltipProvider>
 
-                <TooltipProvider delayDuration={0}>
+                {!isTrash && <TooltipProvider delayDuration={0}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
@@ -538,7 +541,7 @@ export function ThreadDisplay() {
                       {t('common.mail.moveToBin')}
                     </TooltipContent>
                   </Tooltip>
-                </TooltipProvider>
+                </TooltipProvider>}
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
