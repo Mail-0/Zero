@@ -187,7 +187,7 @@ const Thread = memo(
     const [isHovered, setIsHovered] = useState(false);
     const [isStarred, setIsStarred] = useState(false);
 
-    const isTrash = useMemo(() => getThreadData?.latest?.tags?.some(tag => tag.name === 'TRASH') ?? false, [getThreadData?.latest?.tags]);
+    const isTrash = folder === 'bin';
 <<<<<<< HEAD
     const queryClient = useQueryClient();
     const trpc = useTRPC();

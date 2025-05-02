@@ -174,7 +174,7 @@ export function ThreadDisplay() {
   const trpc = useTRPC();
   const { mutateAsync: markAsRead } = useMutation(trpc.mail.markAsRead.mutationOptions());
 
-  const isTrash = useMemo(() => emailData?.latest?.tags?.some(tag => tag.name === 'TRASH') ?? false, [emailData?.latest?.tags]);
+  const isTrash = folder === 'bin';
 
   const handlePrevious = useCallback(() => {
     if (!id || !items.length || focusedIndex === null) return;
