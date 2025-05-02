@@ -172,7 +172,7 @@ export function ThreadDisplay() {
     data: { threads: items = [] },
   } = useThreads();
 
-  const isTrash = useMemo(() => emailData?.latest?.tags?.some(tag => tag.name === 'TRASH') ?? false, [emailData?.latest?.tags]);
+  const isTrash = folder === 'bin';
 
   const handlePrevious = useCallback(() => {
     if (!id || !items.length || focusedIndex === null) return;
