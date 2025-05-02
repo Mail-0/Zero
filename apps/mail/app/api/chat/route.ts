@@ -2,7 +2,7 @@ import { getActiveConnection } from '@/actions/utils';
 import { ToolInvocation, streamText } from 'ai';
 import { NextResponse } from 'next/server';
 import { createDriver } from '../driver';
-import { getAIModel } from '@/lib/ai-providers';
+import { getAIModel, AIProvider } from '@/lib/ai-providers';
 import prompt from './prompt';
 import { z } from 'zod';
 
@@ -29,8 +29,21 @@ export async function POST(req: Request) {
     },
   });
 
-  const model = getAIModel('ollama', 'llava:7b');
+  // Initialize AI model using environment variables with fallbacks
+  // DEFAULT_AI_PROVIDER: 'openai' | 'ollama' (if configured)
+  // DEFAULT_AI_MODEL: model name (e.g. 'gpt-3.5-turbo' for OpenAI)
+  let model;
+  try {
+    model = getAIModel({ 
+      provider: (process.env.DEFAULT_AI_PROVIDER ?? 'openai') as AIProvider,
+      model: process.env.DEFAULT_AI_MODEL ?? 'gpt-3.5-turbo'
+    });
+  } catch (error) {
+    console.error('Failed to initialize AI model:', error);
+    return NextResponse.json({ error: 'Unable to initialize AI model' }, { status: 500 });
+  }
 
+  // Stream text using the configured AI model
   const result = streamText({
     model,
     system: prompt,
