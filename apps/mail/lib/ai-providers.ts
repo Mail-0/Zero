@@ -6,11 +6,13 @@ export type AIProvider = 'openai' | 'ollama' | 'google';
 
 export const getAIModel = (provider: AIProvider, model: string) => {
   switch (provider) {
-    case 'openai':
+    case 'openai': {
       return openai(model);
-    case 'google':
+    }
+    case 'google': {
       return google(model);
-    case 'ollama':
+    }
+    case 'ollama': {
       const ollamaClient = createOllama({
         baseURL: process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434/api',
         ...(process.env.OLLAMA_API_KEY && {
@@ -20,6 +22,7 @@ export const getAIModel = (provider: AIProvider, model: string) => {
         })
       });
       return ollamaClient(model);
+    }
     default:
       throw new Error(`Unsupported AI provider: ${provider}`);
   }
