@@ -223,6 +223,7 @@ export const bottomNavItems = [
         title: 'navigation.sidebar.settings',
         url: '/settings/general',
         icon: SettingsGear,
+        isSettingsButton: true,
       },
     ],
   },

@@ -129,25 +129,25 @@ export function NavMain({ items }: NavMainProps) {
       const currentFrom = searchParams.get('from');
 
       // Handle settings navigation
-      // if (item.isSettingsButton) {
-      // Include current path with category query parameter if present
-      //   const currentPath = category
-      //     ? `${pathname}?category=${encodeURIComponent(category)}`
-      //     : pathname;
-      //   return `${item.url}?from=${encodeURIComponent(currentPath)}`;
-      // }
+      if (item.isSettingsButton) {
+        // Include current path with category query parameter if present
+        const currentPath = category
+          ? `${pathname}?category=${encodeURIComponent(category)}`
+          : pathname;
+        return `${item.url}?from=${encodeURIComponent(currentPath)}`;
+      }
 
       // Handle back button with redirect protection
-      // if (item.isBackButton) {
-      //   if (currentFrom) {
-      //     const decodedFrom = decodeURIComponent(currentFrom);
-      //     if (isValidInternalUrl(decodedFrom)) {
-      //       return decodedFrom;
-      //     }
-      //   }
-      //   // Fall back to safe default if URL is missing or invalid
-      //   return '/mail';
-      // }
+      if (item.isBackButton) {
+        if (currentFrom) {
+          const decodedFrom = decodeURIComponent(currentFrom);
+          if (isValidInternalUrl(decodedFrom)) {
+            return decodedFrom;
+          }
+        }
+        // Fall back to safe default if URL is missing or invalid
+        return '/mail';
+      }
 
       // Handle settings pages navigation
       if (item.isSettingsPage && currentFrom) {
@@ -253,12 +253,10 @@ export function NavMain({ items }: NavMainProps) {
             className="group/collapsible"
           >
             <SidebarMenuItem>
-              {state !== 'collapsed' ? (
-                section.title ? (
-                  <p className="mx-2 mb-2 text-[13px] text-[#6D6D6D] dark:text-[#898989]">
-                    {section.title}
-                  </p>
-                ) : null
+              {state !== 'collapsed' && section.title ? (
+                <p className="mx-2 mb-2 text-[13px] text-[#6D6D6D] dark:text-[#898989]">
+                  {section.title}
+                </p>
               ) : (
                 <div className="mx-2 mb-4 mt-2 h-[0.5px] bg-[#6D6D6D]/50 dark:bg-[#262626]" />
               )}
@@ -277,7 +275,7 @@ export function NavMain({ items }: NavMainProps) {
             </SidebarMenuItem>
           </Collapsible>
         ))}
-        {!pathname.includes('/settings') && !isBottomNav && state !== 'collapsed' && (
+        {!pathname.includes('/settings') && state !== 'collapsed' && (
           <Collapsible defaultOpen={true} className="group/collapsible">
             <SidebarMenuItem className="mb-4" style={{ height: 'auto' }}>
               <div className="mx-2 mb-4 flex items-center justify-between">
@@ -374,11 +372,10 @@ export function NavMain({ items }: NavMainProps) {
                                           <button
                                             key={color}
                                             type="button"
-                                            className={`h-10 w-10 rounded-[4px] border-[0.5px] border-white/10 ${
-                                              field.value?.backgroundColor === color
+                                            className={`h-10 w-10 rounded-[4px] border-[0.5px] border-white/10 ${field.value?.backgroundColor === color
                                                 ? 'ring-2 ring-blue-500'
                                                 : ''
-                                            }`}
+                                              }`}
                                             style={{ backgroundColor: color }}
                                             onClick={() =>
                                               form.setValue('color', {
@@ -494,24 +491,15 @@ function NavItem(item: NavItemProps & { href: string }) {
       <p className="mt-0.5 min-w-0 flex-1 truncate text-[13px]">{t(item.title as MessageKey)}</p>
       {stats
         ? stats.some((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase()) && (
-            <Badge className="text-muted-foreground ml-auto shrink-0 rounded-full border-none bg-transparent">
-              {stats
-                .find((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase())
-                ?.count?.toLocaleString() || '0'}
-            </Badge>
-          )
+          <Badge className="text-muted-foreground ml-auto shrink-0 rounded-full border-none bg-transparent">
+            {stats
+              .find((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase())
+              ?.count?.toLocaleString() || '0'}
+          </Badge>
+        )
         : null}
     </SidebarMenuButton>
   );
-
-  if (item.isBackButton) {
-    return (
-      // TODO: Fix back link to go back a step not to /mail/inbox
-      <Link {...linkProps} href="/mail/inbox">
-        {buttonContent}
-      </Link>
-    );
-  }
 
   return (
     <Collapsible defaultOpen={item.isActive}>
