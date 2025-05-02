@@ -761,7 +761,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                 </div>
               )}
               {emailData?.attachments && emailData?.attachments.length > 0 ? (
-                <div className="mb-4 flex items-center gap-2 pt-4 px-4">
+                <div className="mb-4 flex items-center flex-wrap gap-2 pt-4 px-4">
                   {emailData?.attachments.map((attachment, index) => (
                     <div key={index}>
                       <button
