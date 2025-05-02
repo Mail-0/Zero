@@ -57,7 +57,7 @@ export const aiCompose = async ({
     } as const;
   });
 
-  const model = getAIModel('ollama', 'moondream:1.8b-v2-q5_1');
+  const model = getAIModel('ollama', 'llava:7b');
   const { text } = await generateText({
     model,
     messages: [

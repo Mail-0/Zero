@@ -31,11 +31,13 @@
     "prettier-plugin-sort-imports": "1.8.6",
     "prettier-plugin-tailwindcss": "0.6.11",
     "turbo": "^2.5.0",
-    "typescript": "5.8.2",
-    "ollama-ai-provider": "^1.2.0"
+    "typescript": "5.8.2"
   },
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "ollama-ai-provider": "^1.2.0"
+  }
 }
