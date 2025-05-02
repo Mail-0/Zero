@@ -254,9 +254,11 @@ export function NavMain({ items }: NavMainProps) {
           >
             <SidebarMenuItem>
               {state !== 'collapsed' ? (
-                <p className="mx-2 mb-2 text-[13px] text-[#6D6D6D] dark:text-[#898989]">
-                  {section.title}
-                </p>
+                section.title ? (
+                  <p className="mx-2 mb-2 text-[13px] text-[#6D6D6D] dark:text-[#898989]">
+                    {section.title}
+                  </p>
+                ) : null
               ) : (
                 <div className="mx-2 mb-4 mt-2 h-[0.5px] bg-[#6D6D6D]/50 dark:bg-[#262626]" />
               )}
@@ -421,7 +423,7 @@ export function NavMain({ items }: NavMainProps) {
               <div className="mr-0 pr-0">
                 <div
                   className={cn(
-                    'hide-scrollbar flex h-full max-h-[15vh] flex-row flex-wrap gap-2 overflow-scroll sm:max-h-none',
+                    'hide-scrollbar flex h-full max-h-[13vh] flex-row flex-wrap gap-2 overflow-scroll sm:max-h-[16vh]',
                   )}
                 >
                   {labels.map((label) => (
