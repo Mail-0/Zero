@@ -628,36 +628,72 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
     const isSelected = cat.id === (category || 'Primary');
     const bgColor = getCategoryColor(cat.id);
 
-    return (
-      <button
-        key={cat.id}
-        ref={isSelected && !isOverlay ? activeTabElementRef : null}
-        onClick={() => {
-          setCategory(cat.id);
-          setSearchValue({
-            value: cat.searchValue || '',
-            highlight: searchValue.highlight,
-            folder: '',
-          });
-        }}
-        className={cn(
-          'flex h-8 items-center justify-center gap-1 overflow-hidden rounded-md border transition-all duration-300 ease-out dark:border-none',
-          isSelected
-            ? cn('flex-1 border-none px-3 text-white', bgColor)
-            : 'w-8 bg-white hover:bg-gray-100 dark:bg-[#313131] dark:hover:bg-[#313131]/80',
-        )}
-        tabIndex={isOverlay ? -1 : undefined}
-      >
-        <div className="relative overflow-visible">{cat.icon}</div>
-        {isSelected && (
-          <div className="flex items-center justify-center gap-2.5 px-0.5">
-            <div className="animate-in fade-in-0 slide-in-from-right-4 justify-start text-sm leading-none text-white duration-300">
-              {cat.name}
+    // For the actual button that users interact with (not overlay)
+    if (!isOverlay) {
+      return (
+        <TooltipProvider key={cat.id} delayDuration={300}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                ref={isSelected ? activeTabElementRef : null}
+                onClick={() => {
+                  setCategory(cat.id);
+                  setSearchValue({
+                    value: cat.searchValue || '',
+                    highlight: searchValue.highlight,
+                    folder: '',
+                  });
+                }}
+                className={cn(
+                  'flex h-8 items-center justify-center gap-1 overflow-hidden rounded-md border transition-all duration-300 ease-out dark:border-none',
+                  isSelected
+                    ? cn('flex-1 border-none px-3 text-white', bgColor)
+                    : 'w-8 bg-white hover:bg-gray-100 dark:bg-[#313131] dark:hover:bg-[#313131]/80',
+                )}
+              >
+                <div className="relative overflow-visible">{cat.icon}</div>
+                {isSelected && (
+                  <div className="flex items-center justify-center gap-2.5 px-0.5">
+                    <div className="animate-in fade-in-0 slide-in-from-right-4 justify-start text-sm leading-none text-white duration-300">
+                      {cat.name}
+                    </div>
+                  </div>
+                )}
+              </button>
+            </TooltipTrigger>
+            {!isSelected && (
+              <TooltipContent side="top" className="text-xs">
+                {cat.name}
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
+      );
+    } else {
+      // For the overlay buttons (visual only)
+      return (
+        <button
+          key={cat.id}
+          ref={isSelected ? activeTabElementRef : null}
+          className={cn(
+            'flex h-8 items-center justify-center gap-1 overflow-hidden rounded-md border transition-all duration-300 ease-out dark:border-none',
+            isSelected
+              ? cn('flex-1 border-none px-3 text-white', bgColor)
+              : 'w-8 bg-white hover:bg-gray-100 dark:bg-[#313131] dark:hover:bg-[#313131]/80',
+          )}
+          tabIndex={-1}
+        >
+          <div className="relative overflow-visible">{cat.icon}</div>
+          {isSelected && (
+            <div className="flex items-center justify-center gap-2.5 px-0.5">
+              <div className="animate-in fade-in-0 slide-in-from-right-4 justify-start text-sm leading-none text-white duration-300">
+                {cat.name}
+              </div>
             </div>
-          </div>
-        )}
-      </button>
-    );
+          )}
+        </button>
+      );
+    }
   };
 
   // Update clip path when category changes
