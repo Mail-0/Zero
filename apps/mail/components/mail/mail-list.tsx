@@ -186,6 +186,8 @@ const Thread = memo(
     const { data: getThreadData, isLoading, isGroupThread } = useThread(demo ? null : message.id);
     const [isHovered, setIsHovered] = useState(false);
     const [isStarred, setIsStarred] = useState(false);
+
+    const isTrash = useMemo(() => getThreadData?.latest?.tags?.some(tag => tag.name === 'TRASH') ?? false, [getThreadData?.latest?.tags]);
 <<<<<<< HEAD
     const queryClient = useQueryClient();
     const trpc = useTRPC();
@@ -198,7 +200,6 @@ const Thread = memo(
     // Set initial star state based on email data
     useEffect(() => {
       if (getThreadData?.latest?.tags) {
-        setIsTrash(getThreadData.latest.tags.some((tag) => tag.name === 'TRASH'));
         setIsStarred(getThreadData.latest.tags.some((tag) => tag.name === 'STARRED'));
       }
     }, [getThreadData?.latest?.tags]);

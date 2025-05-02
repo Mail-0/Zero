@@ -163,7 +163,6 @@ export function ThreadDisplay() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [mail, setMail] = useMail();
   const [isStarred, setIsStarred] = useState(false);
-  const [ isTrash, setIsTrash ] = useState(false);
   const t = useTranslations();
   const { refetch: refetchStats } = useStats();
   const [mode, setMode] = useQueryState('mode');
@@ -174,6 +173,8 @@ export function ThreadDisplay() {
   const [focusedIndex, setFocusedIndex] = useAtom(focusedIndexAtom);
   const trpc = useTRPC();
   const { mutateAsync: markAsRead } = useMutation(trpc.mail.markAsRead.mutationOptions());
+
+  const isTrash = useMemo(() => emailData?.latest?.tags?.some(tag => tag.name === 'TRASH') ?? false, [emailData?.latest?.tags]);
 
   const handlePrevious = useCallback(() => {
     if (!id || !items.length || focusedIndex === null) return;
@@ -304,7 +305,6 @@ export function ThreadDisplay() {
   useEffect(() => {
     if (emailData?.latest?.tags) {
       // Check if any tag has the name 'STARRED'
-      setIsTrash(emailData.latest.tags.some((tag) => tag.name === 'TRASH'));
       setIsStarred(emailData.latest.tags.some((tag) => tag.name === 'STARRED'));
     }
   }, [emailData?.latest?.tags]);
