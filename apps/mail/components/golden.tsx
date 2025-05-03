@@ -98,7 +98,7 @@ export const GoldenTicketModal = () => {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <SidebarMenuButton tooltip={'Invite a friend'}>
-          <Ticket className="relative mr-2.5 h-3 w-3.5" />
+          <Ticket className="relative mr-2 h-3 w-3.5" />
           <p className="mt-0.5 truncate text-[13px]">Invite a friend</p>
         </SidebarMenuButton>
       </DialogTrigger>

@@ -4,7 +4,7 @@ export const defaultUserSettings = {
   language: 'en',
   timezone: 'UTC',
   dynamicContent: false,
-  externalImages: false,
+  externalImages: true,
   customPrompt: '',
   trustedSenders: [],
   isOnboarded: false,

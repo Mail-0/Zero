@@ -42,7 +42,7 @@ export default function AppearancePage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      colorTheme: settings?.colorTheme || '',
+      colorTheme: settings?.colorTheme || theme,
     },
   });
 
@@ -55,6 +55,7 @@ export default function AppearancePage() {
 
     function update() {
       setTheme(newTheme);
+      form.setValue('colorTheme', newTheme as z.infer<typeof formSchema>['colorTheme']);
     }
 
     if (document.startViewTransition && nextResolvedTheme !== resolvedTheme) {
@@ -109,7 +110,7 @@ export default function AppearancePage() {
           <form id="appearance-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <div className="space-y-4">
               <div className="max-w-sm space-y-2">
-                {settings.colorTheme ? (
+                {settings.colorTheme || theme ? (
                   <FormField
                     control={form.control}
                     name="colorTheme"
@@ -120,9 +121,8 @@ export default function AppearancePage() {
                           <Select
                             onValueChange={(value) => {
                               handleThemeChange(value);
-                              field.onChange(value);
                             }}
-                            defaultValue={settings.colorTheme}
+                            defaultValue={form.getValues().colorTheme}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Select theme">

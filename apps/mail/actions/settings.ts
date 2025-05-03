@@ -22,11 +22,8 @@ export async function saveUserSettings(settings: UserSettings) {
   try {
     const userId = await getAuthenticatedUserId();
     if (!userId) throw new Error('No user ID found');
-    console.error(settings, 'before');
 
     settings = validateSettings(settings);
-
-    console.error(settings, 'after');
 
     const timestamp = new Date();
 

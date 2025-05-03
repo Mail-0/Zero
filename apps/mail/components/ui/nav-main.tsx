@@ -129,25 +129,25 @@ export function NavMain({ items }: NavMainProps) {
       const currentFrom = searchParams.get('from');
 
       // Handle settings navigation
-      // if (item.isSettingsButton) {
-      // Include current path with category query parameter if present
-      //   const currentPath = category
-      //     ? `${pathname}?category=${encodeURIComponent(category)}`
-      //     : pathname;
-      //   return `${item.url}?from=${encodeURIComponent(currentPath)}`;
-      // }
+      if (item.isSettingsButton) {
+        // Include current path with category query parameter if present
+        const currentPath = category
+          ? `${pathname}?category=${encodeURIComponent(category)}`
+          : pathname;
+        return `${item.url}?from=${encodeURIComponent(currentPath)}`;
+      }
 
       // Handle back button with redirect protection
-      // if (item.isBackButton) {
-      //   if (currentFrom) {
-      //     const decodedFrom = decodeURIComponent(currentFrom);
-      //     if (isValidInternalUrl(decodedFrom)) {
-      //       return decodedFrom;
-      //     }
-      //   }
-      //   // Fall back to safe default if URL is missing or invalid
-      //   return '/mail';
-      // }
+      if (item.isBackButton) {
+        if (currentFrom) {
+          const decodedFrom = decodeURIComponent(currentFrom);
+          if (isValidInternalUrl(decodedFrom)) {
+            return decodedFrom;
+          }
+        }
+        // Fall back to safe default if URL is missing or invalid
+        return '/mail';
+      }
 
       // Handle settings pages navigation
       if (item.isSettingsPage && currentFrom) {
@@ -254,9 +254,11 @@ export function NavMain({ items }: NavMainProps) {
           >
             <SidebarMenuItem>
               {state !== 'collapsed' ? (
-                <p className="mx-2 mb-2 text-[13px] text-[#6D6D6D] dark:text-[#898989]">
-                  {section.title}
-                </p>
+                section.title ? (
+                  <p className="mx-2 mb-2 text-[13px] text-[#6D6D6D] dark:text-[#898989]">
+                    {section.title}
+                  </p>
+                ) : null
               ) : (
                 <div className="mx-2 mb-4 mt-2 h-[0.5px] bg-[#6D6D6D]/50 dark:bg-[#262626]" />
               )}
@@ -421,7 +423,7 @@ export function NavMain({ items }: NavMainProps) {
               <div className="mr-0 pr-0">
                 <div
                   className={cn(
-                    'hide-scrollbar flex h-full max-h-[15vh] flex-row flex-wrap gap-2 overflow-scroll sm:max-h-none',
+                    'hide-scrollbar flex h-full max-h-[13vh] flex-row flex-wrap gap-2 overflow-scroll sm:max-h-[16vh]',
                   )}
                 >
                   {labels.map((label) => (
@@ -501,15 +503,6 @@ function NavItem(item: NavItemProps & { href: string }) {
         : null}
     </SidebarMenuButton>
   );
-
-  if (item.isBackButton) {
-    return (
-      // TODO: Fix back link to go back a step not to /mail/inbox
-      <Link {...linkProps} href="/mail/inbox">
-        {buttonContent}
-      </Link>
-    );
-  }
 
   return (
     <Collapsible defaultOpen={item.isActive}>
