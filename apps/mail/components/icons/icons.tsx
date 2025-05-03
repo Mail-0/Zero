@@ -1329,7 +1329,7 @@ export const Paper = ({ className }: { className?: string }) => (
   <svg
     width="18"
     height="22"
-    viewBox="0 -3 10 28"
+    viewBox="0 -3 14 28"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
     className={className}
