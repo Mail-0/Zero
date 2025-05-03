@@ -169,7 +169,7 @@ export function MailLayout() {
               threadId ? 'md:hidden lg:block' : '',
             )}
           >
-            <div className="bg-panelLight dark:bg-panelDark h-screen flex-1 flex-col overflow-y-auto overflow-x-hidden border-[#E7E7E7] shadow-inner md:flex md:h-[calc(100dvh-0.5rem)] md:rounded-2xl md:border md:shadow-sm lg:w-screen lg:max-w-[415px] dark:border-[#252525]">
+            <div className="bg-panelLight dark:bg-panelDark h-screen flex-1 flex-col overflow-y-auto overflow-x-hidden border-[#E7E7E7] shadow-inner md:flex md:h-[calc(100dvh-0.5rem)] md:rounded-2xl md:border md:shadow-sm lg:w-screen lg:max-w-[415px] xl:max-w-[500px] dark:border-[#252525]">
               <div
                 className={cn(
                   'sticky top-0 z-[15] flex items-center justify-between gap-1.5 border-b border-[#E7E7E7] p-2 px-[20px] transition-colors md:min-h-14 dark:border-[#252525]',
@@ -503,27 +503,13 @@ export const Categories = () => {
       id: 'Important',
       name: t('common.mailCategories.important'),
       searchValue: 'is:important',
-      icon: (
-        <Lightning
-          className={cn(
-            'fill-[#6D6D6D] dark:fill-[#989898]',
-            category === 'Important' && 'fill-white dark:fill-white',
-          )}
-        />
-      ),
+      icon: <Lightning className={cn('fill-white dark:fill-white')} />,
     },
     {
       id: 'All Mail',
       name: 'All Mail',
       searchValue: 'is:inbox',
-      icon: (
-        <Mail
-          className={cn(
-            'fill-[#6D6D6D] dark:fill-[#989898]',
-            category === 'All Mail' && 'fill-white dark:fill-white',
-          )}
-        />
-      ),
+      icon: <Mail className={cn('fill-white dark:fill-white')} />,
       colors:
         'border-0 bg-[#006FFE] text-white dark:bg-[#006FFE] dark:text-white dark:hover:bg-[#006FFE]/90',
     },
@@ -531,53 +517,25 @@ export const Categories = () => {
       id: 'Personal',
       name: t('common.mailCategories.personal'),
       searchValue: 'is:personal',
-      icon: (
-        <User
-          className={cn(
-            'fill-[#6D6D6D] dark:fill-[#989898]',
-            category === 'Personal' && 'fill-white dark:fill-white',
-          )}
-        />
-      ),
+      icon: <User className={cn('fill-white dark:fill-white')} />,
     },
     {
       id: 'Updates',
       name: t('common.mailCategories.updates'),
       searchValue: 'is:updates',
-      icon: (
-        <Bell
-          className={cn(
-            'fill-[#6D6D6D] dark:fill-[#989898]',
-            category === 'Updates' && 'fill-white dark:fill-white',
-          )}
-        />
-      ),
+      icon: <Bell className={cn('fill-white dark:fill-white')} />,
     },
     {
       id: 'Promotions',
       name: 'Promotions',
       searchValue: 'is:promotions',
-      icon: (
-        <Tag
-          className={cn(
-            'fill-[#6D6D6D] dark:fill-[#989898]',
-            category === 'Promotions' && 'fill-white dark:fill-white',
-          )}
-        />
-      ),
+      icon: <Tag className={cn('fill-white dark:fill-white')} />,
     },
     {
       id: 'Unread',
       name: 'Unread',
       searchValue: 'is:unread',
-      icon: (
-        <ScanEye
-          className={cn(
-            'h-4 w-4 fill-[#6D6D6D] dark:fill-[#989898]',
-            category === 'Unread' && 'fill-white dark:fill-white',
-          )}
-        />
-      ),
+      icon: <ScanEye className={cn('h-4 w-4 fill-white dark:fill-white')} />,
     },
   ];
 };
@@ -599,7 +557,7 @@ function getCategoryColor(categoryId: string): string {
     case 'updates':
       return 'bg-[#8B5CF6]';
     case 'unread':
-      return 'bg-[#006FFE]';
+      return 'bg-[#FF4800]';
     default:
       return 'bg-base-primary-500';
   }
@@ -624,39 +582,45 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
   const primaryCategory = categories[0];
   if (!primaryCategory) return null;
 
-  const renderCategoryButton = (cat: CategoryType, isOverlay = false) => {
+  const renderCategoryButton = (cat: CategoryType, isOverlay = false, idx?: number) => {
     const isSelected = cat.id === (category || 'Primary');
     const bgColor = getCategoryColor(cat.id);
 
     return (
-      <button
-        key={cat.id}
-        ref={isSelected && !isOverlay ? activeTabElementRef : null}
-        onClick={() => {
-          setCategory(cat.id);
-          setSearchValue({
-            value: cat.searchValue || '',
-            highlight: searchValue.highlight,
-            folder: '',
-          });
-        }}
-        className={cn(
-          'flex h-8 items-center justify-center gap-1 overflow-hidden rounded-md border transition-all duration-300 ease-out dark:border-none',
-          isSelected
-            ? cn('flex-1 border-none px-3 text-white', bgColor)
-            : 'w-8 bg-white hover:bg-gray-100 dark:bg-[#313131] dark:hover:bg-[#313131]/80',
-        )}
-        tabIndex={isOverlay ? -1 : undefined}
-      >
-        <div className="relative overflow-visible">{cat.icon}</div>
-        {isSelected && (
-          <div className="flex items-center justify-center gap-2.5 px-0.5">
-            <div className="animate-in fade-in-0 slide-in-from-right-4 justify-start text-sm leading-none text-white duration-300">
-              {cat.name}
-            </div>
-          </div>
-        )}
-      </button>
+      <Tooltip key={cat.id}>
+        <TooltipTrigger asChild>
+          <button
+            ref={!isOverlay ? activeTabElementRef : null}
+            onClick={() => {
+              setCategory(cat.id);
+              setSearchValue({
+                value: cat.searchValue || '',
+                highlight: searchValue.highlight,
+                folder: '',
+              });
+            }}
+            className={cn(
+              'flex h-8 items-center justify-center gap-1 overflow-hidden rounded-md border transition-all duration-300 ease-out dark:border-none',
+              isSelected
+                ? cn('flex-1 border-none px-3 text-white', bgColor)
+                : 'w-8 bg-white hover:bg-gray-100 dark:bg-[#313131] dark:hover:bg-[#313131]/80',
+            )}
+            tabIndex={isOverlay ? -1 : undefined}
+          >
+            <div className="relative overflow-visible">{cat.icon}</div>
+            {isSelected && (
+              <div className="flex items-center justify-center gap-2.5 px-0.5">
+                <div className="animate-in fade-in-0 slide-in-from-right-4 justify-start text-sm leading-none text-white duration-300">
+                  {cat.name}
+                </div>
+              </div>
+            )}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" align={isSelected ? 'center' : idx === 0 ? 'start' : 'end'}>
+          <span>{cat.name}</span>
+        </TooltipContent>
+      </Tooltip>
     );
   };
 
@@ -685,7 +649,7 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
   return (
     <div className="relative w-full">
       <div className="flex w-full items-start justify-start gap-2">
-        {categories.map((cat) => renderCategoryButton(cat))}
+        {categories.map((cat, idx) => renderCategoryButton(cat, false, idx))}
       </div>
 
       <div
@@ -694,7 +658,7 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
         ref={containerRef}
       >
         <div className="flex w-full items-start justify-start gap-2">
-          {categories.map((cat) => renderCategoryButton(cat, true))}
+          {categories.map((cat, idx) => renderCategoryButton(cat, true, idx))}
         </div>
       </div>
     </div>
@@ -814,7 +778,7 @@ function MailCategoryTabs({
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
                   )}
                 >
-                  {category.icon}
+                  <div className="relative overflow-visible">{category.icon}</div>
                   <span className={cn('hidden', !iconsOnly && 'md:inline')}>{category.name}</span>
                 </button>
               </TooltipTrigger>
@@ -844,7 +808,7 @@ function MailCategoryTabs({
                 className={cn('flex items-center gap-1.5 rounded-full px-2 text-xs font-medium')}
                 tabIndex={-1}
               >
-                <p>{category.icon}</p>
+                <div className="relative overflow-visible">{category.icon}</div>
                 <span className={cn('hidden', !iconsOnly && 'md:inline')}>{category.name}</span>
               </button>
             </li>

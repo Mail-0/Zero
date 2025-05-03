@@ -129,25 +129,25 @@ export function NavMain({ items }: NavMainProps) {
       const currentFrom = searchParams.get('from');
 
       // Handle settings navigation
-      // if (item.isSettingsButton) {
-      // Include current path with category query parameter if present
-      //   const currentPath = category
-      //     ? `${pathname}?category=${encodeURIComponent(category)}`
-      //     : pathname;
-      //   return `${item.url}?from=${encodeURIComponent(currentPath)}`;
-      // }
+      if (item.isSettingsButton) {
+        // Include current path with category query parameter if present
+        const currentPath = category
+          ? `${pathname}?category=${encodeURIComponent(category)}`
+          : pathname;
+        return `${item.url}?from=${encodeURIComponent(currentPath)}`;
+      }
 
       // Handle back button with redirect protection
-      // if (item.isBackButton) {
-      //   if (currentFrom) {
-      //     const decodedFrom = decodeURIComponent(currentFrom);
-      //     if (isValidInternalUrl(decodedFrom)) {
-      //       return decodedFrom;
-      //     }
-      //   }
-      //   // Fall back to safe default if URL is missing or invalid
-      //   return '/mail';
-      // }
+      if (item.isBackButton) {
+        if (currentFrom) {
+          const decodedFrom = decodeURIComponent(currentFrom);
+          if (isValidInternalUrl(decodedFrom)) {
+            return decodedFrom;
+          }
+        }
+        // Fall back to safe default if URL is missing or invalid
+        return '/mail';
+      }
 
       // Handle settings pages navigation
       if (item.isSettingsPage && currentFrom) {
@@ -503,15 +503,6 @@ function NavItem(item: NavItemProps & { href: string }) {
         : null}
     </SidebarMenuButton>
   );
-
-  if (item.isBackButton) {
-    return (
-      // TODO: Fix back link to go back a step not to /mail/inbox
-      <Link {...linkProps} href="/mail/inbox">
-        {buttonContent}
-      </Link>
-    );
-  }
 
   return (
     <Collapsible defaultOpen={item.isActive}>

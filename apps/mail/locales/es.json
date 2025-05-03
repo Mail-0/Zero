@@ -12,7 +12,6 @@
       "signedOutSuccess": "Sesión cerrada correctamente",
       "signOutError": "Error al cerrar sesión",
       "refresh": "Actualizar",
-      "loading": "Loading...",
       "featureNotImplemented": "Esta función aún no está implementada",
       "moving": "Moviendo...",
       "movedToInbox": "Movido a la bandeja de entrada",
@@ -116,7 +115,6 @@
     },
     "mailCategories": {
       "primary": "Principal",
-      "allMail": "All Mail",
       "important": "Importante",
       "personal": "Personal",
       "updates": "Actualizaciones",
