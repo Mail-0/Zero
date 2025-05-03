@@ -22,6 +22,9 @@
     "db:studio": "dotenv -- turbo run db:studio",
     "scripts": "dotenv -- bun run --cwd apps/mail --silent --elide-lines=0 scripts"
   },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "latest"
+  },
   "devDependencies": {
     "@types/node": "22.13.8",
     "@zero/tsconfig": "workspace:*",
