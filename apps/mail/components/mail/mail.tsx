@@ -503,13 +503,13 @@ export const Categories = () => {
       id: 'Important',
       name: t('common.mailCategories.important'),
       searchValue: 'is:important',
-      icon: <Lightning className={cn('fill-white dark:fill-white')} />,
+      icon: <Lightning className="fill-current" />,
     },
     {
       id: 'All Mail',
       name: 'All Mail',
       searchValue: 'is:inbox',
-      icon: <Mail className={cn('fill-white dark:fill-white')} />,
+      icon: <Mail className="fill-current" />,
       colors:
         'border-0 bg-[#006FFE] text-white dark:bg-[#006FFE] dark:text-white dark:hover:bg-[#006FFE]/90',
     },
@@ -517,25 +517,25 @@ export const Categories = () => {
       id: 'Personal',
       name: t('common.mailCategories.personal'),
       searchValue: 'is:personal',
-      icon: <User className={cn('fill-white dark:fill-white')} />,
+      icon: <User className="fill-current" />,
     },
     {
       id: 'Updates',
       name: t('common.mailCategories.updates'),
       searchValue: 'is:updates',
-      icon: <Bell className={cn('fill-white dark:fill-white')} />,
+      icon: <Bell className="fill-current" />,
     },
     {
       id: 'Promotions',
       name: 'Promotions',
       searchValue: 'is:promotions',
-      icon: <Tag className={cn('fill-white dark:fill-white')} />,
+      icon: <Tag className="fill-current" />,
     },
     {
       id: 'Unread',
       name: 'Unread',
       searchValue: 'is:unread',
-      icon: <ScanEye className={cn('h-4 w-4 fill-white dark:fill-white')} />,
+      icon: <ScanEye className="h-4 w-4 fill-current" />,
     },
   ];
 };
@@ -607,7 +607,10 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
             )}
             tabIndex={isOverlay ? -1 : undefined}
           >
-            <div className="relative overflow-visible">{cat.icon}</div>
+            <div className={cn(
+              "relative overflow-visible",
+              isSelected ? "text-white" : "text-black dark:text-white"
+            )}>{cat.icon}</div>
             {isSelected && (
               <div className="flex items-center justify-center gap-2.5 px-0.5">
                 <div className="animate-in fade-in-0 slide-in-from-right-4 justify-start text-sm leading-none text-white duration-300">
