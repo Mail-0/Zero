@@ -20,6 +20,7 @@ import VoiceChat from './voice';
 import { nanoid } from 'nanoid';
 import Image from 'next/image';
 import { toast } from 'sonner';
+import { Input } from '../ui/input';
 
 interface Message {
   id: string;
@@ -50,41 +51,38 @@ const renderThread = (thread: { id: string; title: string; snippet: string }) =>
     <div
       onClick={() => setThreadId(thread.id)}
       key={thread.id}
-      className="dark:bg-subtleBlack bg-subtleWhite hover:bg-offsetLight/30 dark:hover:bg-offsetDark/30 cursor-pointer rounded-lg border p-2"
+      className="hover:bg-offsetLight/30 dark:hover:bg-offsetDark/30 cursor-pointer rounded-lg"
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Avatar className="h-8 w-8">
-            <AvatarImage
-              className="rounded-full"
-              src={getEmailLogo(getThread.latest?.sender?.email)}
-            />
-            <AvatarFallback className="rounded-full bg-[#FFFFFF] font-bold text-[#9F9F9F] dark:bg-[#373737]">
-              {getThread.latest?.sender?.name?.[0]?.toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <p className="text-sm font-medium text-black dark:text-white">
-            {getThread.latest?.sender?.name}
-          </p>
+      
+        <div className="flex cursor-pointer items-center justify-between p-2">
+          <div className="flex w-full items-center gap-3">
+            <Avatar className="h-8 w-8">
+              <AvatarImage
+                className="rounded-full"
+                src={getEmailLogo(getThread.latest?.sender?.email)}
+              />
+              <AvatarFallback className="rounded-full bg-[#FFFFFF] font-bold text-[#9F9F9F] dark:bg-[#373737]">
+                {getThread.latest?.sender?.name?.[0]?.toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex w-full flex-col gap-1.5">
+              <div className="flex w-full items-center justify-between gap-2 ">
+                <p className="text-sm font-medium text-black dark:text-white">
+                  {getThread.latest?.sender?.name}
+                </p>
+                <span className="max-w-[180px] truncate text-xs text-[#8C8C8C] dark:text-[#8C8C8C]">
+                  {getThread.latest.receivedOn
+                    ? format(getThread.latest.receivedOn, 'MMMM do')
+                    : ''}
+                </span>
+              </div>
+              <span className="max-w-[220px] truncate text-xs text-[#8C8C8C] dark:text-[#8C8C8C]">
+                {getThread.latest?.subject}
+              </span>
+            </div>
+          </div>
         </div>
-        <div>
-          {getThread.latest.receivedOn ? (
-            <p
-              className={cn(
-                'text-nowrap text-xs font-normal text-[#6D6D6D] opacity-70 transition-opacity group-hover:opacity-100 dark:text-[#8C8C8C]',
-              )}
-            >
-              {format(getThread.latest.receivedOn, 'dd/MM/yy hh:mm a')}
-            </p>
-          ) : null}
-        </div>
-      </div>
-      <div className="mb-1 ml-0.5 mt-2 flex items-center gap-2">
-        <p className="overflow-wrap opacity-50">{getThread.latest?.subject}</p>
-      </div>
-      {/* <p className="text-xs font-normal text-[#6D6D6D] opacity-70 transition-opacity group-hover:opacity-100 dark:text-[#8C8C8C]">
-        {getThread.latest?.title}
-      </p> */}
+ 
     </div>
   ) : null;
 };
@@ -138,6 +136,8 @@ export function AIChat() {
                 Ask to do or show anything using natural language
               </p>
 
+              {/* Example Thread */}
+
               <div className="mt-6 flex w-full flex-col items-center gap-2">
                 {/* First row */}
                 <div className="no-scrollbar relative flex w-full justify-center overflow-x-auto">
@@ -176,31 +176,37 @@ export function AIChat() {
               </div>
             </div>
           ) : (
-            messages.map((message, index) => (
-              <div
-                key={`${message.id}-${index}`}
-                className={cn(
-                  'flex w-fit flex-col gap-2 rounded-xl text-sm shadow',
-                  message.role === 'user'
-                    ? 'overflow-wrap-anywhere text-subtleWhite dark:text-offsetDark ml-auto break-words bg-[#313131] p-2 dark:bg-[#f0f0f0]' // User messages aligned to right
-                    : 'overflow-wrap-anywhere mr-auto break-words bg-[#f0f0f0] p-2 dark:bg-[#313131]', // Assistant messages aligned to left
-                )}
-              >
-                {message.parts.map((part) => {
-                  if (part.type === 'text') {
-                    return <Markdown>{part.text}</Markdown>;
-                  }
-                  if (part.type === 'tool-invocation') {
-                    return (
-                      'result' in part.toolInvocation &&
-                      ('threads' in part.toolInvocation.result ? (
-                        <RenderThreads threads={part.toolInvocation.result.threads} />
-                      ) : null)
-                    );
-                  }
-                })}
-              </div>
-            ))
+            messages.map((message, index) => {
+              // Separate text and tool-invocation parts
+              const textParts = message.parts.filter(part => part.type === 'text');
+              const toolParts = message.parts.filter(part => part.type === 'tool-invocation');
+              return (
+                <div key={`${message.id}-${index}`} className="flex flex-col gap-2">
+                  {/* Text in chat bubble */}
+                  {textParts.length > 0 && (
+                    <div
+                      className={cn(
+                        'flex w-fit flex-col gap-2 rounded-xl text-sm shadow',
+                        message.role === 'user'
+                          ? 'overflow-wrap-anywhere text-subtleWhite dark:text-offsetDark ml-auto break-words bg-[#313131] p-2 dark:bg-[#f0f0f0]'
+                          : 'overflow-wrap-anywhere mr-auto break-words bg-[#f0f0f0] p-2 dark:bg-[#313131]'
+                      )}
+                    >
+                      {textParts.map((part) => (
+                        <Markdown key={part.text}>{part.text}</Markdown>
+                      ))}
+                    </div>
+                  )}
+                  {/* Threads below the bubble */}
+                  {toolParts.map((part, idx) => (
+                    'result' in part.toolInvocation &&
+                    'threads' in part.toolInvocation.result ? (
+                      <RenderThreads threads={part.toolInvocation.result.threads} key={idx} />
+                    ) : null
+                  ))}
+                </div>
+              );
+            })
           )}
           <div ref={messagesEndRef} />
 
@@ -214,45 +220,37 @@ export function AIChat() {
             </div>
           )}
           {(status === 'error' || !!error) && (
-            <div className="text-red-500">Error, please try again later</div>
+            <div className="text-red-500 text-sm">Error, please try again later</div>
           )}
         </div>
       </div>
 
       {/* Fixed input at bottom */}
-      <div className="mb-[7px] flex-shrink-0 px-1.5">
-        <div className="bg-offsetLight border-border/50 relative rounded-2xl border dark:bg-[#141414]">
+      <div className="mb-4 flex-shrink-0 px-4">
+        <div className="bg-offsetLight border-border/50 relative  dark:bg-[#141414] rounded-lg">
           {showVoiceChat ? (
             <VoiceChat onClose={() => setShowVoiceChat(false)} />
           ) : (
-            <div className="flex flex-col p-2">
-              <div className="mb-2 w-full">
-                <form id="ai-chat-form" onSubmit={handleSubmit}>
-                  <AITextarea
+            <div className="flex flex-col ">
+              <div className="w-full">
+                <form id="ai-chat-form" onSubmit={handleSubmit} className="relative">
+                  <Input
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Ask AI to do anything..."
-                    className="placeholder:text-muted-foreground h-[44px] w-full resize-none rounded-[5px] bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="placeholder:text-muted-foreground h-8 w-full resize-none rounded-lg bg-white dark:bg-[#202020] px-3 py-2 pr-16 text-sm focus-visible:outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
                   />
-                </form>
-              </div>
-              <div className="flex items-center justify-between">
-                <div></div>
-                <button
-                  form="ai-chat-form"
-                  type="submit"
-                  className="border-border/50 inline-flex h-7 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-md border bg-white pl-1.5 pr-1 dark:bg-[#262626]"
-                  disabled={!input.trim() || status !== 'ready'}
-                >
-                  <div className="flex items-center justify-center gap-2.5 pl-0.5">
-                    <div className="justify-start text-center text-sm leading-none text-black dark:text-white">
-                      Send{' '}
+                  <button
+                    form="ai-chat-form"
+                    type="submit"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 inline-flex h-6 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-lg "
+                    disabled={!input.trim() || status !== 'ready'}
+                  >
+                    <div className="flex h-5 items-center justify-center gap-1 rounded-sm bg-black/10 px-1 dark:bg[#141414]">
+                      <CurvedArrow className="mt-1.5 h-4 w-4 fill-black dark:fill-[#929292]" />
                     </div>
-                  </div>
-                  <div className="flex h-5 items-center justify-center gap-1 rounded-sm bg-black/10 px-1 dark:bg-white/10">
-                    <CurvedArrow className="mt-1.5 h-4 w-4 fill-black dark:fill-[#929292]" />
-                  </div>
-                </button>
+                  </button>
+                </form>
               </div>
             </div>
           )}
