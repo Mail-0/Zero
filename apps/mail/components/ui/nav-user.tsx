@@ -418,11 +418,11 @@ export function NavUser() {
         )}
       </div>
       {state !== 'collapsed' && (
-        <div className="my-2 flex flex-col items-start gap-1 space-y-1">
+        <div className="my-2 flex w-full flex-col items-start gap-1 space-y-1">
           <div className="text-[13px] leading-none text-black dark:text-white">
             {activeAccount?.name || session.user.name || 'User'}
           </div>
-          <div className="text-xs font-normal leading-none text-[#898989]">
+          <div className="max-w-[180px] truncate text-xs font-normal leading-none text-[#898989]" title={activeAccount?.email || session.user.email || ''}>
             {activeAccount?.email || session.user.email}
           </div>
         </div>
