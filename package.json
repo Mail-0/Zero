@@ -36,5 +36,8 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "ollama-ai-provider": "^1.2.0"
+  }
 }

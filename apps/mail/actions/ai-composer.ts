@@ -7,11 +7,11 @@ import {
 import { StyledEmailAssistantSystemPrompt } from '@/actions/ai-composer-prompt';
 import type { Message } from '@microsoft/microsoft-graph-types';
 import { stripHtml } from 'string-strip-html';
-import { google } from '@ai-sdk/google';
-import { openai } from '@ai-sdk/openai';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
 import { generateText } from 'ai';
+import { getAIModel } from '@/lib/ai-providers';
+import { AIProvider } from '@/lib/ai-providers';
 
 export const aiCompose = async ({
   prompt,
@@ -58,8 +58,23 @@ export const aiCompose = async ({
     } as const;
   });
 
+  // Initialize AI model using environment variables with fallbacks
+  // DEFAULT_AI_PROVIDER: 'openai' | 'ollama' (if configured)
+  // DEFAULT_AI_MODEL: model name (e.g. 'gpt-3.5-turbo' for OpenAI)
+  let model;
+  try {
+    model = getAIModel({ 
+      provider: (process.env.DEFAULT_AI_PROVIDER ?? 'openai') as AIProvider,
+      model: process.env.DEFAULT_AI_MODEL ?? 'gpt-3.5-turbo'
+    });
+  } catch (error) {
+    console.error('Failed to initialize AI model:', error);
+    throw new Error('Unable to initialize AI model. Please check your configuration.');
+  }
+
+  // Generate email text using the configured AI model
   const { text } = await generateText({
-    model: openai('gpt-4o-mini'),
+    model,
     messages: [
       {
         role: 'system',
