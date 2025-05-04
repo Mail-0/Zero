@@ -1,20 +1,19 @@
-import { account, connection } from '@zero/db/schema';
+import { connection } from '@zero/db/schema';
 import { createDriver } from '@/lib/driver';
 import { revalidatePath } from 'next/cache';
-import { headers } from 'next/headers';
+import { toByteArray } from 'base64-js';
 import { and, eq } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { db } from '@zero/db';
 
 export const FatalErrors = ['invalid_grant'];
 
-export const deleteActiveConnection = async () => {
-  const headersList = await headers();
-  const session = await auth.api.getSession({ headers: headersList });
+export const deleteActiveConnection = async (request: Request) => {
+  const session = await auth.api.getSession({ headers: request.headers });
   if (session?.connectionId) {
     try {
       console.log('Server: Successfully deleted connection, please reload');
-      await auth.api.signOut({ headers: headersList });
+      await auth.api.signOut({ headers: request.headers });
       await db
         .delete(connection)
         .where(
@@ -52,8 +51,8 @@ export const getActiveDriver = async (request: Request) => {
 
   const driver = await createDriver(_connection.providerId, {
     auth: {
-      access_token: _connection.accessToken,
-      refresh_token: _connection.refreshToken,
+      accessToken: _connection.accessToken,
+      refreshToken: _connection.refreshToken,
       email: _connection.email,
     },
   });
@@ -66,20 +65,13 @@ export function fromBase64Url(str: string) {
 }
 
 export function fromBinary(str: string) {
-  return decodeURIComponent(
-    atob(str.replace(/-/g, '+').replace(/_/g, '/'))
-      .split('')
-      .map(function (c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      })
-      .join(''),
-  );
+  const bytes = toByteArray(str.replace(/-/g, '+').replace(/_/g, '/'));
+  return new TextDecoder().decode(bytes);
 }
 
 export const findHtmlBody = (parts: any[]): string => {
   for (const part of parts) {
     if (part.mimeType === 'text/html' && part.body?.data) {
-      console.log('✓ Driver: Found HTML content in message part');
       return part.body.data;
     }
     if (part.parts) {
@@ -90,3 +82,30 @@ export const findHtmlBody = (parts: any[]): string => {
   console.log('⚠️ Driver: No HTML content found in message parts');
   return '';
 };
+
+export class StandardizedError extends Error {
+  code: string;
+  operation: string;
+  context?: Record<string, any>;
+  originalError: unknown;
+  constructor(error: Error & { code: string }, operation: string, context?: Record<string, any>) {
+    super(error?.message || 'An unknown error occurred');
+    this.name = 'StandardizedError';
+    this.code = error?.code || 'UNKNOWN_ERROR';
+    this.operation = operation;
+    this.context = context;
+    this.originalError = error;
+  }
+}
+
+export function sanitizeContext(context?: Record<string, any>) {
+  if (!context) return undefined;
+  const sanitized = { ...context };
+  const sensitive = ['tokens', 'refresh_token', 'code', 'message', 'raw', 'data'];
+  for (const key of sensitive) {
+    if (key in sanitized) {
+      sanitized[key] = '[REDACTED]';
+    }
+  }
+  return sanitized;
+}

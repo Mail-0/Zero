@@ -54,7 +54,7 @@ const VoiceChat = ({ onClose }: VoiceChatProps) => {
         const threadContents = await Promise.all(
           threads.slice(0, 20).map(async (thread) => {
             try {
-              const data = await trpcClient.mail.get.query(thread.id);
+              const data = await trpcClient.mail.get.query({ id: thread.id });
               if (!data.messages?.length) return null;
 
               const latestMessage = data.messages[data.messages.length - 1]!;
@@ -69,7 +69,7 @@ const VoiceChat = ({ onClose }: VoiceChatProps) => {
               - Status: ${data.hasUnread ? 'Unread' : 'Read'}
               - Replies: ${data.totalReplies}
               - Tags: ${(latestMessage.tags || []).join(', ')}
-              - Importance: ${(latestMessage.tags || []).includes('important') ? 'high' : 'normal'}
+              - Importance: ${(latestMessage.tags || []).find((tag) => tag.name === 'important') ? 'high' : 'normal'}
               - Received: ${new Date(latestMessage.receivedOn).toLocaleString()}
               -------------------
             `;

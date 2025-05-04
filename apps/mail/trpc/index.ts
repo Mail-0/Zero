@@ -8,11 +8,10 @@ import { draftsRouter } from './routes/drafts';
 import { labelsRouter } from './routes/label';
 import { brainRouter } from './routes/brain';
 import { notesRouter } from './routes/notes';
-import type { HonoVariables } from './hono';
 import { mailRouter } from './routes/mail';
 import { userRouter } from './routes/user';
+import type { HonoContext } from './hono';
 import { aiRouter } from './routes/ai';
-import type { Context } from 'hono';
 import { router } from './trpc';
 
 export const appRouter = router({
@@ -35,5 +34,5 @@ export type AppRouter = typeof appRouter;
 export type Inputs = inferRouterInputs<AppRouter>;
 export type Outputs = inferRouterOutputs<AppRouter>;
 
-export const serverTrpc = (c: Context<{ Variables: HonoVariables }>) =>
+export const serverTrpc = (c: HonoContext) =>
   appRouter.createCaller({ c, session: c.var.session, db: c.var.db });

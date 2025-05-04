@@ -1,13 +1,12 @@
 import { connectionToDriver, getActiveConnection } from '@/lib/server-utils';
 import { Ratelimit, RatelimitConfig } from '@upstash/ratelimit';
+import { HonoContext, HonoVariables } from './hono';
 import { initTRPC, TRPCError } from '@trpc/server';
-import { HonoVariables } from './hono';
 import { redis } from '@/lib/redis';
 import superjson from 'superjson';
-import { Context } from 'hono';
 
 type TrpcContext = {
-  c: Context<{ Variables: HonoVariables }>;
+  c: HonoContext;
 } & HonoVariables;
 
 const t = initTRPC.context<TrpcContext>().create({ transformer: superjson });
@@ -35,18 +34,17 @@ export const activeConnectionProcedure = privateProcedure.use(async ({ ctx, next
 
 export const activeDriverProcedure = activeConnectionProcedure.use(async ({ ctx, next }) => {
   const { activeConnection } = ctx;
-  const driver = await connectionToDriver(activeConnection);
+  const driver = await connectionToDriver(activeConnection, ctx.c);
   return next({ ctx: { ...ctx, driver } });
 });
 
-export const ensureBrainAvailableMiddleware = t.middleware(async ({ next }) => {
-  if (!process.env.BRAIN_URL)
-    throw new TRPCError({
-      code: 'SERVICE_UNAVAILABLE',
-      message: `Brain Server is not available on this instance`,
-    });
-
-  return next();
+export const brainServerAvailableMiddleware = t.middleware(async ({ next, ctx }) => {
+  return next({
+    ctx: {
+      ...ctx,
+      brainServerAvailable: !!process.env.BRAIN_URL,
+    },
+  });
 });
 
 export const processIP = (req: Request) => {

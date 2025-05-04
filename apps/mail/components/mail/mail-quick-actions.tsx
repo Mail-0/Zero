@@ -9,14 +9,13 @@ import { Archive, Mail, Inbox } from 'lucide-react';
 import { useCallback, memo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useStats } from '@/hooks/use-stats';
-import type { InitialThread } from '@/types';
 import { useTranslations } from 'next-intl';
 import { cn, FOLDERS } from '@/lib/utils';
 import { useQueryState } from 'nuqs';
 import { toast } from 'sonner';
 
 interface MailQuickActionsProps {
-  message: InitialThread;
+  message: { id: string };
   className?: string;
   isHovered?: boolean;
   isInQuickActionMode?: boolean;

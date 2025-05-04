@@ -24,10 +24,15 @@ export const labelsRouter = router({
     .input(
       z.object({
         name: z.string(),
-        color: z.object({
-          backgroundColor: z.string(),
-          textColor: z.string(),
-        }),
+        color: z
+          .object({
+            backgroundColor: z.string(),
+            textColor: z.string(),
+          })
+          .default({
+            backgroundColor: '',
+            textColor: '',
+          }),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -49,11 +54,13 @@ export const labelsRouter = router({
       z.object({
         id: z.string(),
         name: z.string(),
-        type: z.string(),
-        color: z.object({
-          backgroundColor: z.string(),
-          textColor: z.string(),
-        }),
+        type: z.string().optional(),
+        color: z
+          .object({
+            backgroundColor: z.string(),
+            textColor: z.string(),
+          })
+          .optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

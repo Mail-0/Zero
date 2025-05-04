@@ -1,4 +1,6 @@
-import { type IOutgoingMessage, type InitialThread, type ParsedMessage } from '@/types';
+import { type IOutgoingMessage, type ParsedMessage } from '@/types';
+import { type CreateDraftData } from '../schemas';
+import { type HonoContext } from '@/trpc/hono';
 import { type Label } from '@/types';
 
 export interface IGetThreadResponse {
@@ -9,59 +11,12 @@ export interface IGetThreadResponse {
   labels: { id: string; name: string }[];
 }
 
-export interface ParsedDraft {
+export interface ParsedDraft<T = unknown> {
   id: string;
   to?: string[];
   subject?: string;
   content?: string;
-  // todo: add <T>
-  rawMessage?: any;
-}
-
-export interface MailManager {
-  getIdType: (id: string) => 'thread' | 'draft';
-  get(id: string): Promise<IGetThreadResponse>;
-  create(data: IOutgoingMessage): Promise<any>;
-  sendDraft(id: string, data: IOutgoingMessage): Promise<any>;
-  createDraft(data: any): Promise<any>;
-  getDraft: (id: string) => Promise<ParsedDraft>;
-  listDrafts: (q?: string, maxResults?: number, pageToken?: string) => Promise<any>;
-  delete(id: string): Promise<any>;
-  list<T>(
-    folder: string,
-    query?: string,
-    maxResults?: number,
-    labelIds?: string[],
-    pageToken?: string | number,
-  ): Promise<(T & { threads: InitialThread[] }) | undefined>;
-  count(): Promise<{ count?: number; label?: string }[]>;
-  generateConnectionAuthUrl(userId: string): string;
-  getTokens(
-    code: string,
-  ): Promise<{ tokens: { access_token?: any; refresh_token?: any; expiry_date?: number } }>;
-  getUserInfo(tokens: IConfig['auth']): Promise<{ address: string; name: string; photo: string }>;
-  getScope(): string;
-  markAsRead(id: string[]): Promise<void>;
-  markAsUnread(id: string[]): Promise<void>;
-  normalizeIds(id: string[]): { threadIds: string[] };
-  modifyLabels(
-    id: string[],
-    options: { addLabels: string[]; removeLabels: string[] },
-  ): Promise<void>;
-  getAttachment(messageId: string, attachmentId: string): Promise<string | undefined>;
-  getUserLabels(): Promise<Label[]>;
-  getLabel: (labelId: string) => Promise<any>;
-  createLabel(label: {
-    name: string;
-    color?: { backgroundColor: string; textColor: string };
-  }): Promise<any>;
-  updateLabel(
-    id: string,
-    label: { name: string; color?: { backgroundColor: string; textColor: string } },
-  ): Promise<any>;
-  deleteLabel(id: string): Promise<void>;
-  getEmailAliases(): Promise<{ email: string; name?: string; primary?: boolean }[]>;
-  revokeRefreshToken(refreshToken: string): Promise<boolean>;
+  rawMessage?: T;
 }
 
 export interface IConfig {
@@ -70,4 +25,65 @@ export interface IConfig {
     refresh_token: string;
     email: string;
   };
+}
+
+export type ManagerConfig = {
+  auth: {
+    accessToken: string;
+    refreshToken: string;
+    email: string;
+  };
+  c?: HonoContext;
+};
+
+export interface MailManager {
+  config: ManagerConfig;
+  get(id: string): Promise<IGetThreadResponse>;
+  create(data: IOutgoingMessage): Promise<{ id?: string | null }>;
+  sendDraft(id: string, data: IOutgoingMessage): Promise<void>;
+  createDraft(
+    data: CreateDraftData,
+  ): Promise<{ id?: string | null; success?: boolean; error?: string }>;
+  getDraft(id: string): Promise<ParsedDraft>;
+  listDrafts(params: { q?: string; maxResults?: number; pageToken?: string }): Promise<{
+    threads: { id: string; $raw: unknown }[];
+    nextPageToken: string | null;
+  }>;
+  delete(id: string): Promise<void>;
+  list(params: {
+    folder: string;
+    query?: string;
+    maxResults?: number;
+    labelIds?: string[];
+    pageToken?: string | number;
+  }): Promise<{ threads: { id: string; $raw?: unknown }[]; nextPageToken: string | null }>;
+  count(): Promise<{ count?: number; label?: string }[]>;
+  getTokens(
+    code: string,
+  ): Promise<{ tokens: { access_token?: string; refresh_token?: string; expiry_date?: number } }>;
+  getUserInfo(
+    tokens: ManagerConfig['auth'],
+  ): Promise<{ address: string; name: string; photo: string }>;
+  getScope(): string;
+  markAsRead(threadIds: string[]): Promise<void>;
+  markAsUnread(threadIds: string[]): Promise<void>;
+  normalizeIds(id: string[]): { threadIds: string[] };
+  modifyLabels(
+    id: string[],
+    options: { addLabels: string[]; removeLabels: string[] },
+  ): Promise<void>;
+  getAttachment(messageId: string, attachmentId: string): Promise<string | undefined>;
+  getUserLabels(): Promise<Label[]>;
+  getLabel(id: string): Promise<Label>;
+  createLabel(label: {
+    name: string;
+    color?: { backgroundColor: string; textColor: string };
+  }): Promise<void>;
+  updateLabel(
+    id: string,
+    label: { name: string; color?: { backgroundColor: string; textColor: string } },
+  ): Promise<void>;
+  deleteLabel(id: string): Promise<void>;
+  getEmailAliases(): Promise<{ email: string; name?: string; primary?: boolean }[]>;
+  revokeRefreshToken(refreshToken: string): Promise<boolean>;
 }

@@ -59,11 +59,16 @@ export default function LabelsPage() {
 
   const onSubmit = async (data: LabelType) => {
     try {
-      toast.promise(editingLabel ? updateLabel(editingLabel.id!, data) : createLabel(data), {
-        loading: 'Saving label...',
-        success: 'Label saved successfully',
-        error: 'Failed to save label',
-      });
+      toast.promise(
+        editingLabel
+          ? updateLabel({ id: editingLabel.id!, name: data.name, color: data.color })
+          : createLabel({ color: data.color, name: data.name }),
+        {
+          loading: 'Saving label...',
+          success: 'Label saved successfully',
+          error: 'Failed to save label',
+        },
+      );
     } catch (error) {
       console.error('Error saving label:', error);
     } finally {

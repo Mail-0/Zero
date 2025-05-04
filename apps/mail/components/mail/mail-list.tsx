@@ -59,7 +59,6 @@ import { useStats } from '@/hooks/use-stats';
 import { useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
 import { Button } from '../ui/button';
-import type { Label } from '@/types';
 import { useQueryState } from 'nuqs';
 import { Categories } from './mail';
 import items from './demo.json';
@@ -667,7 +666,7 @@ const Thread = memo(
                         {highlightText(latestMessage.subject, searchValue.highlight)}
                       </p>
                     )}
-                    {threadLabels ? <MailLabels labels={threadLabels} /> : null}
+                    {getThreadData.labels ? <MailLabels labels={getThreadData.labels} /> : null}
                   </div>
                   {emailContent && (
                     <div className="text-muted-foreground mt-2 line-clamp-2 text-xs">

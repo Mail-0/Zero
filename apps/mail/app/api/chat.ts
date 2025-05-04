@@ -1,20 +1,19 @@
 import { connectionToDriver, getActiveConnection } from '@/lib/server-utils';
 import { prompt } from '@/lib/chat-prompts';
-import { HonoVariables } from '@/trpc/hono';
+import { HonoContext } from '@/trpc/hono';
 import { openai } from '@ai-sdk/openai';
 import { streamText } from 'ai';
-import { Context } from 'hono';
 import { z } from 'zod';
 
-export const chatHandler = async (c: Context<{ Variables: HonoVariables }>) => {
+export const chatHandler = async (c: HonoContext) => {
   const driver = await getActiveConnection(c)
-    .then(connectionToDriver)
+    .then((conn) => connectionToDriver(conn, c))
     .catch((err) => {
       console.error('Error in getActiveConnection:', err);
       throw c.json({ error: 'Failed to get active connection' }, 500);
     });
 
-  const messages = await c.req.json().catch((err) => {
+  const messages = await c.req.json().catch((err: Error) => {
     console.error('Error parsing JSON:', err);
     throw c.json({ error: 'Failed to parse request body' }, 400);
   });
@@ -37,7 +36,7 @@ export const chatHandler = async (c: Context<{ Variables: HonoVariables }>) => {
           labelIds: z.array(z.string()).optional().describe('The label IDs to filter by'),
         }),
         execute: async ({ folder, query, maxResults, labelIds }) => {
-          return driver.list(folder, query, maxResults, labelIds, undefined);
+          return driver.list({ folder, query, maxResults, labelIds });
         },
       },
       archiveThreads: {

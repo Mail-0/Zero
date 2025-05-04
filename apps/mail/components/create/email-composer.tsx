@@ -21,6 +21,7 @@ import { useMutation } from '@tanstack/react-query';
 import { cn, formatFileSize } from '@/lib/utils';
 import { useThread } from '@/hooks/use-threads';
 import { useSession } from '@/lib/auth-client';
+import { serializeFiles } from '@/lib/schemas';
 import { Input } from '@/components/ui/input';
 import { EditorContent } from '@tiptap/react';
 import { useForm } from 'react-hook-form';
@@ -323,7 +324,7 @@ export function EmailComposer({
         bcc: values.bcc?.join(', '),
         subject: values.subject,
         message: messageText,
-        attachments: values.attachments,
+        attachments: await serializeFiles(values.attachments ?? []),
         id: draftId,
       };
 

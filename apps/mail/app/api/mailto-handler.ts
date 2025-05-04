@@ -1,4 +1,4 @@
-import { HonoVariables } from '@/trpc/hono';
+import { HonoContext, HonoVariables } from '@/trpc/hono';
 import { serverTrpc } from '@/trpc';
 import { Context } from 'hono';
 
@@ -80,7 +80,7 @@ async function parseMailtoUrl(mailtoUrl: string) {
 
 // Function to create a draft and get its ID
 async function createDraftFromMailto(
-  c: Context<{ Variables: HonoVariables }>,
+  c: HonoContext,
   mailtoData: { to: string; subject: string; body: string },
 ) {
   try {
@@ -103,6 +103,7 @@ async function createDraftFromMailto(
     </body></html>`;
 
     const draftData = {
+      id: null,
       to: mailtoData.to,
       subject: mailtoData.subject,
       message: htmlContent,
@@ -130,7 +131,7 @@ async function createDraftFromMailto(
   return null;
 }
 
-export async function mailtoHandler(c: Context<{ Variables: HonoVariables }>) {
+export async function mailtoHandler(c: HonoContext) {
   if (!c.var.session?.user) return c.redirect('/login');
 
   // Get the mailto parameter from the URL

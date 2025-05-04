@@ -97,16 +97,15 @@ export const generateSearchQuery = activeDriverProcedure
       const searchExplanation = toolCall.args.explanation || 'matching your search criteria';
 
       // Get the email driver and fetch results
-      const results = await driver.list('', searchQuery, 20);
+      const results = await driver.list({ folder: '', query: searchQuery, maxResults: 20 });
 
       // Process the results - use the raw response from Gmail API
       const processResultPromises =
         results?.threads?.map(async (thread) => {
-          const rawThread = thread as gmail_v1.Schema$Thread;
-
+          const rawThread = thread.$raw as gmail_v1.Schema$Thread;
           try {
             // Get the thread data using our existing driver
-            const threadData = await driver.get(rawThread.id!);
+            const threadData = await driver.get(thread.id);
             const firstMessage = threadData.messages[0];
 
             if (!firstMessage) {

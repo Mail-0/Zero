@@ -1,22 +1,20 @@
-import { type IConfig, type MailManager } from './types';
-import { driver as microsoftDriver } from './microsoft';
-import { driver as googleDriver } from './google';
+import { MailManager, ManagerConfig } from './types';
+import { GoogleMailManager } from './google';
 
 const SupportedProviders = {
-  google: googleDriver,
-  microsoft: microsoftDriver,
+  google: GoogleMailManager,
+  // microsoft: microsoftDriver,
 };
 
 export const createDriver = async (
-  provider: keyof typeof SupportedProviders | string,
-  config: IConfig,
+  provider: keyof typeof SupportedProviders | (string & {}),
+  config: ManagerConfig,
 ): Promise<MailManager> => {
   const factory = SupportedProviders[provider as keyof typeof SupportedProviders];
   if (!factory) throw new Error('Provider not supported');
   switch (provider) {
-    case 'microsoft':
     case 'google':
-      return factory(config);
+      return new GoogleMailManager(config);
     default:
       throw new Error('Provider not supported');
   }

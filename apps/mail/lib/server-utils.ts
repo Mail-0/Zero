@@ -1,10 +1,9 @@
 import { connection } from '@zero/db/schema';
-import { HonoVariables } from '@/trpc/hono';
+import { HonoContext } from '@/trpc/hono';
 import { createDriver } from './driver';
 import { and, eq } from 'drizzle-orm';
-import { Context } from 'hono';
 
-export const getActiveConnection = async (c: Context<{ Variables: HonoVariables }>) => {
+export const getActiveConnection = async (c: HonoContext) => {
   const { session, db } = c.var;
   if (!session?.user) throw new Error('Session Not Found');
   if (!session.connectionId) throw new Error('No active connection found for the user');
@@ -22,13 +21,17 @@ export const getActiveConnection = async (c: Context<{ Variables: HonoVariables 
   return activeConnection;
 };
 
-export const connectionToDriver = async (activeConnection: typeof connection.$inferSelect) => {
+export const connectionToDriver = async (
+  activeConnection: typeof connection.$inferSelect,
+  c: HonoContext,
+) => {
   const driver = await createDriver(activeConnection.providerId, {
     auth: {
-      access_token: activeConnection.accessToken,
-      refresh_token: activeConnection.refreshToken!,
+      accessToken: activeConnection.accessToken,
+      refreshToken: activeConnection.refreshToken!,
       email: activeConnection.email,
     },
+    c,
   });
   return driver;
 };

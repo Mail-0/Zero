@@ -1,199 +1,742 @@
+import {
+  deleteActiveConnection,
+  FatalErrors,
+  findHtmlBody,
+  fromBase64Url,
+  fromBinary,
+  sanitizeContext,
+  StandardizedError,
+} from '../driver-utils';
 import { parseAddressList, parseFrom, wasSentWithTLS } from '@/lib/email-utils';
-import { IGetThreadResponse, type IConfig, type MailManager } from './types';
-import { deleteActiveConnection, FatalErrors } from '@/lib/driver-utils';
-import { sanitizeTipTapHtml } from '@/lib/sanitize-tip-tap-html';
-import { IOutgoingMessage, type ParsedMessage } from '@/types';
-import { type gmail_v1, google } from 'googleapis';
-import { cleanSearchValue } from '@/lib/utils';
+import { IOutgoingMessage, Label, ParsedMessage } from '@/types';
+import { sanitizeTipTapHtml } from '../sanitize-tip-tap-html';
+import { withExponentialBackoff } from '@/app/api/utils';
+import { MailManager, ManagerConfig } from './types';
+import { gmail_v1, google } from 'googleapis';
+import { setTimeout } from 'timers/promises';
+import { CreateDraftData } from '../schemas';
 import { createMimeMessage } from 'mimetext';
-import { toByteArray } from 'base64-js';
+import { cleanSearchValue } from '../utils';
 import * as he from 'he';
 
-class StandardizedError extends Error {
-  code: string;
-  operation: string;
-  context?: Record<string, any>;
-  originalError: unknown;
-  constructor(error: Error & { code: string }, operation: string, context?: Record<string, any>) {
-    super(error?.message || 'An unknown error occurred');
-    this.name = 'StandardizedError';
-    this.code = error?.code || 'UNKNOWN_ERROR';
-    this.operation = operation;
-    this.context = context;
-    this.originalError = error;
+export class GoogleMailManager implements MailManager {
+  private auth;
+  private gmail;
+
+  constructor(public config: ManagerConfig) {
+    this.auth = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID as string,
+      process.env.GOOGLE_CLIENT_SECRET as string,
+      process.env.GOOGLE_REDIRECT_URI as string,
+    );
+
+    if (config.auth)
+      this.auth.setCredentials({
+        refresh_token: config.auth.refreshToken,
+        scope: this.getScope(),
+      });
+
+    this.gmail = google.gmail({ version: 'v1', auth: this.auth });
   }
-}
 
-function fromBase64Url(str: string) {
-  return str.replace(/-/g, '+').replace(/_/g, '/');
-}
-
-function fromBinary(str: string) {
-  const bytes = toByteArray(str.replace(/-/g, '+').replace(/_/g, '/'));
-  return new TextDecoder().decode(bytes);
-}
-
-const findHtmlBody = (parts: any[]): string => {
-  for (const part of parts) {
-    if (part.mimeType === 'text/html' && part.body?.data) {
-      return part.body.data;
-    }
-    if (part.parts) {
-      const found = findHtmlBody(part.parts);
-      if (found) return found;
-    }
+  public getScope(): string {
+    return [
+      'https://www.googleapis.com/auth/gmail.modify',
+      'https://www.googleapis.com/auth/userinfo.profile',
+      'https://www.googleapis.com/auth/userinfo.email',
+    ].join(' ');
   }
-  return '';
-};
 
-const parseDraft = (draft: gmail_v1.Schema$Draft) => {
-  if (!draft.message) return null;
+  public getAttachment(messageId: string, attachmentId: string) {
+    return this.withErrorHandler(
+      'getAttachment',
+      async () => {
+        const response = await this.gmail.users.messages.attachments.get({
+          userId: 'me',
+          messageId,
+          id: attachmentId,
+        });
 
-  const headers = draft.message.payload?.headers || [];
-  const to =
-    headers
-      .find((h) => h.name === 'To')
-      ?.value?.split(',')
-      .map((e) => e.trim())
-      .filter(Boolean) || [];
-  const subject = headers.find((h) => h.name === 'Subject')?.value;
+        const attachmentData = response.data.data || '';
 
-  let content = '';
-  const payload = draft.message.payload;
+        const base64 = fromBase64Url(attachmentData);
 
-  if (payload) {
-    if (payload.parts) {
-      const textPart = payload.parts.find((part) => part.mimeType === 'text/html');
-      if (textPart?.body?.data) {
-        content = fromBinary(textPart.body.data);
+        return base64;
+      },
+      { messageId, attachmentId },
+    );
+  }
+
+  public getEmailAliases() {
+    return this.withErrorHandler('getEmailAliases', async () => {
+      const profile = await this.gmail.users.getProfile({
+        userId: 'me',
+      });
+
+      const primaryEmail = profile.data.emailAddress || '';
+      const aliases: { email: string; name?: string; primary?: boolean }[] = [
+        { email: primaryEmail, primary: true },
+      ];
+
+      const settings = await this.gmail.users.settings.sendAs.list({
+        userId: 'me',
+      });
+
+      if (settings.data.sendAs) {
+        settings.data.sendAs.forEach((alias) => {
+          if (alias.isPrimary && alias.sendAsEmail === primaryEmail) {
+            return;
+          }
+
+          aliases.push({
+            email: alias.sendAsEmail || '',
+            name: alias.displayName || undefined,
+            primary: alias.isPrimary || false,
+          });
+        });
       }
-    } else if (payload.body?.data) {
-      content = fromBinary(payload.body.data);
-    }
+
+      return aliases;
+    });
   }
 
-  // TODO: Hook up CC and BCC from the draft so it can populate the composer on open.
+  public markAsRead(threadIds: string[]) {
+    return this.withErrorHandler(
+      'markAsRead',
+      async () => {
+        await this.modifyThreadLabels(threadIds, { removeLabelIds: ['UNREAD'] });
+      },
+      { threadIds },
+    );
+  }
 
-  return {
-    id: draft.id || '',
-    to,
-    subject: subject ? he.decode(subject).trim() : '',
-    content,
-    rawMessage: draft.message,
-  };
-};
+  public markAsUnread(threadIds: string[]) {
+    return this.withErrorHandler(
+      'markAsUnread',
+      async () => {
+        await this.modifyThreadLabels(threadIds, { addLabelIds: ['UNREAD'] });
+      },
+      { threadIds },
+    );
+  }
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+  public getUserInfo(tokens: ManagerConfig['auth']) {
+    return this.withErrorHandler(
+      'getUserInfo',
+      async () => {
+        const res = await google
+          .people({ version: 'v1', auth: this.auth })
+          .people.get({ resourceName: 'people/me', personFields: 'names,photos,emailAddresses' });
+        return {
+          address: res.data.emailAddresses?.[0]?.value ?? '',
+          name: res.data.names?.[0]?.displayName ?? '',
+          photo: res.data.photos?.[0]?.url ?? '',
+        };
+      },
+      { tokens },
+    );
+  }
 
-const withExponentialBackoff = async <T>(
-  operation: () => Promise<T>,
-  maxRetries = 3,
-  initialDelay = 1000,
-  maxDelay = 10000,
-): Promise<T> => {
-  let retries = 0;
-  let delayMs = initialDelay;
+  public getTokens<T>(code: string) {
+    return this.withErrorHandler(
+      'getTokens',
+      async () => {
+        const { tokens } = await this.auth.getToken(code);
+        return { tokens } as T;
+      },
+      { code },
+    );
+  }
 
-  while (true) {
+  public count() {
+    return this.withErrorHandler(
+      'count',
+      async () => {
+        const userLabels = await this.gmail.users.labels.list({
+          userId: 'me',
+        });
+
+        if (!userLabels.data.labels) {
+          return [];
+        }
+        return Promise.all(
+          userLabels.data.labels.map(async (label) => {
+            const res = await this.gmail.users.labels.get({
+              userId: 'me',
+              id: label.id ?? undefined,
+            });
+            return {
+              label: res.data.name ?? res.data.id ?? '',
+              count: Number(res.data.threadsUnread) ?? undefined,
+            };
+          }),
+        );
+      },
+      { email: this.config.auth?.email },
+    );
+  }
+
+  public list(params: {
+    folder: string;
+    query?: string;
+    maxResults?: number;
+    labelIds?: string[];
+    pageToken?: string;
+  }) {
+    const { folder, query: q, maxResults = 100, labelIds: _labelIds = [], pageToken } = params;
+    return this.withErrorHandler(
+      'list',
+      async () => {
+        const { folder: normalizedFolder, q: normalizedQ } = this.normalizeSearch(folder, q ?? '');
+        const labelIds = [..._labelIds];
+        if (normalizedFolder) labelIds.push(normalizedFolder.toUpperCase());
+
+        const res = await this.gmail.users.threads.list({
+          userId: 'me',
+          q: normalizedQ ? normalizedQ : undefined,
+          labelIds: folder === 'inbox' ? labelIds : [],
+          maxResults,
+          pageToken: pageToken ? pageToken : undefined,
+          quotaUser: this.config.auth?.email,
+        });
+        return {
+          threads: (res.data.threads ?? [])
+            .filter((thread) => typeof thread.id === 'string')
+            .map((thread) => ({ id: thread.id!, $raw: thread })),
+          nextPageToken: res.data.nextPageToken ?? null,
+        };
+      },
+      { folder, q, maxResults, _labelIds, pageToken, email: this.config.auth?.email },
+    );
+  }
+
+  public get(id: string) {
+    return this.withErrorHandler(
+      'get',
+      async () => {
+        return withExponentialBackoff(async () => {
+          const res = await this.gmail.users.threads.get({
+            userId: 'me',
+            id,
+            format: 'full',
+            quotaUser: this.config.auth?.email,
+          });
+
+          if (!res.data.messages)
+            return {
+              messages: [],
+              latest: undefined,
+              hasUnread: false,
+              totalReplies: 0,
+              labels: [],
+            };
+          let hasUnread = false;
+          const labels = new Set<string>();
+          const messages: ParsedMessage[] = await Promise.all(
+            res.data.messages.map(async (message) => {
+              const bodyData =
+                message.payload?.body?.data ||
+                (message.payload?.parts ? findHtmlBody(message.payload.parts) : '') ||
+                message.payload?.parts?.[0]?.body?.data ||
+                '';
+
+              const decodedBody = bodyData
+                ? he
+                    .decode(fromBinary(bodyData))
+                    .replace(/<[^>]*>/g, '')
+                    .trim() === fromBinary(bodyData).trim()
+                  ? he.decode(fromBinary(bodyData).replace(/\n/g, '<br>'))
+                  : he.decode(fromBinary(bodyData))
+                : '';
+
+              let processedBody = decodedBody;
+              if (message.payload?.parts) {
+                const inlineImages = message.payload.parts.filter((part) => {
+                  const contentDisposition =
+                    part.headers?.find((h) => h.name?.toLowerCase() === 'content-disposition')
+                      ?.value || '';
+                  const isInline = contentDisposition.toLowerCase().includes('inline');
+                  const hasContentId = part.headers?.some(
+                    (h) => h.name?.toLowerCase() === 'content-id',
+                  );
+                  return isInline && hasContentId;
+                });
+
+                for (const part of inlineImages) {
+                  const contentId = part.headers?.find(
+                    (h) => h.name?.toLowerCase() === 'content-id',
+                  )?.value;
+                  if (contentId && part.body?.attachmentId) {
+                    try {
+                      const imageData = await this.getAttachment(
+                        message.id!,
+                        part.body.attachmentId,
+                      );
+                      if (imageData) {
+                        const cleanContentId = contentId.replace(/[<>]/g, '');
+
+                        const escapedContentId = cleanContentId.replace(
+                          /[.*+?^${}()|[\]\\]/g,
+                          '\\$&',
+                        );
+                        processedBody = processedBody.replace(
+                          new RegExp(`cid:${escapedContentId}`, 'g'),
+                          `data:${part.mimeType};base64,${imageData}`,
+                        );
+                      }
+                    } catch (error) {}
+                  }
+                }
+              }
+
+              const parsedData = this.parse(message);
+              if (parsedData.tags) {
+                parsedData.tags.forEach((tag) => {
+                  if (tag.id) {
+                    if (labels.has(tag.id)) return;
+                    labels.add(tag.id);
+                  }
+                });
+              }
+
+              const attachments = await Promise.all(
+                message.payload?.parts
+                  ?.filter((part) => {
+                    if (!part.filename || part.filename.length === 0) return false;
+
+                    const contentDisposition =
+                      part.headers?.find((h) => h.name?.toLowerCase() === 'content-disposition')
+                        ?.value || '';
+                    const isInline = contentDisposition.toLowerCase().includes('inline');
+
+                    const hasContentId = part.headers?.some(
+                      (h) => h.name?.toLowerCase() === 'content-id',
+                    );
+
+                    return !isInline || (isInline && !hasContentId);
+                  })
+                  ?.map(async (part) => {
+                    const attachmentId = part.body?.attachmentId;
+                    if (!attachmentId) {
+                      return null;
+                    }
+
+                    try {
+                      if (!message.id) {
+                        return null;
+                      }
+                      const attachmentData = await this.getAttachment(message.id, attachmentId);
+                      return {
+                        filename: part.filename || '',
+                        mimeType: part.mimeType || '',
+                        size: Number(part.body?.size || 0),
+                        attachmentId: attachmentId,
+                        headers: part.headers || [],
+                        body: attachmentData ?? '',
+                      };
+                    } catch (error) {
+                      return null;
+                    }
+                  }) || [],
+              ).then((attachments) =>
+                attachments.filter((a): a is NonNullable<typeof a> => a !== null),
+              );
+
+              const fullEmailData = {
+                ...parsedData,
+                body: '',
+                processedHtml: '',
+                blobUrl: '',
+                decodedBody: processedBody,
+                attachments,
+              };
+
+              if (fullEmailData.unread) hasUnread = true;
+
+              return fullEmailData;
+            }),
+          );
+          return {
+            labels: Array.from(labels).map((id) => ({ id, name: id })),
+            messages,
+            latest: messages[messages.length - 1],
+            hasUnread,
+            totalReplies: messages.length,
+          };
+        });
+      },
+      { id, email: this.config.auth?.email },
+    );
+  }
+
+  public create(data: IOutgoingMessage) {
+    return this.withErrorHandler(
+      'create',
+      async () => {
+        const { raw } = await this.parseOutgoing(data);
+        const res = await this.gmail.users.messages.send({
+          userId: 'me',
+          requestBody: {
+            raw,
+            threadId: data.threadId,
+          },
+        });
+        return res.data;
+      },
+      { data, email: this.config.auth?.email },
+    );
+  }
+
+  public delete(id: string) {
+    return this.withErrorHandler(
+      'delete',
+      async () => {
+        const res = await this.gmail.users.messages.delete({ userId: 'me', id });
+        return res.data;
+      },
+      { id },
+    );
+  }
+
+  public normalizeIds(ids: string[]) {
+    return this.withSyncErrorHandler(
+      'normalizeIds',
+      () => {
+        const threadIds: string[] = ids.map((id) =>
+          id.startsWith('thread:') ? id.substring(7) : id,
+        );
+        return { threadIds };
+      },
+      { ids },
+    );
+  }
+
+  public modifyLabels(
+    threadIds: string[],
+    options: { addLabels: string[]; removeLabels: string[] },
+  ) {
+    return this.withErrorHandler(
+      'modifyLabels',
+      async () => {
+        await this.modifyThreadLabels(threadIds, {
+          addLabelIds: options.addLabels,
+          removeLabelIds: options.removeLabels,
+        });
+      },
+      { threadIds, options },
+    );
+  }
+
+  public sendDraft(draftId: string, data: IOutgoingMessage) {
+    return this.withErrorHandler(
+      'sendDraft',
+      async () => {
+        const { raw } = await this.parseOutgoing(data);
+        await this.gmail.users.drafts.send({
+          userId: 'me',
+          requestBody: {
+            id: draftId,
+            message: {
+              raw,
+              id: draftId,
+            },
+          },
+        });
+      },
+      { draftId, data },
+    );
+  }
+  public getDraft(draftId: string) {
+    return this.withErrorHandler(
+      'getDraft',
+      async () => {
+        const res = await this.gmail.users.drafts.get({
+          userId: 'me',
+          id: draftId,
+          format: 'full',
+        });
+
+        if (!res.data) {
+          throw new Error('Draft not found');
+        }
+
+        const parsedDraft = this.parseDraft(res.data);
+        if (!parsedDraft) {
+          throw new Error('Failed to parse draft');
+        }
+
+        return parsedDraft;
+      },
+      { draftId },
+    );
+  }
+  public listDrafts(params: { q?: string; maxResults?: number; pageToken?: string }) {
+    const { q, maxResults = 20, pageToken } = params;
+    return this.withErrorHandler(
+      'listDrafts',
+      async () => {
+        const { q: normalizedQ } = this.normalizeSearch('', q ?? '');
+        const res = await this.gmail.users.drafts.list({
+          userId: 'me',
+          q: normalizedQ ? normalizedQ : undefined,
+          maxResults,
+          pageToken: pageToken ? pageToken : undefined,
+        });
+
+        const drafts = await Promise.all(
+          (res.data.drafts || []).map(async (draft) => {
+            if (!draft.id) return null;
+            try {
+              const msg = await this.gmail.users.drafts.get({
+                userId: 'me',
+                id: draft.id,
+                format: 'full',
+              });
+              const message = msg.data.message;
+              if (!message) return null;
+
+              const parsed = this.parse(message);
+              const headers = message.payload?.headers || [];
+              const date = headers.find((h) => h.name?.toLowerCase() === 'date')?.value;
+
+              return {
+                ...parsed,
+                id: draft.id,
+                threadId: draft.message?.id,
+                receivedOn: date || new Date().toISOString(),
+              };
+            } catch (error) {
+              return null;
+            }
+          }),
+        );
+
+        const sortedDrafts = [...drafts]
+          .filter((draft) => draft !== null)
+          .sort((a, b) => {
+            const dateA = new Date(a?.receivedOn || new Date()).getTime();
+            const dateB = new Date(b?.receivedOn || new Date()).getTime();
+            return dateB - dateA;
+          });
+
+        return {
+          threads: sortedDrafts.map((draft) => ({
+            id: draft.id,
+            $raw: draft,
+          })),
+          nextPageToken: res.data.nextPageToken ?? null,
+        };
+      },
+      { q, maxResults, pageToken },
+    );
+  }
+  public createDraft(data: CreateDraftData) {
+    return this.withErrorHandler(
+      'createDraft',
+      async () => {
+        const message = await sanitizeTipTapHtml(data.message);
+        const msg = createMimeMessage();
+        msg.setSender('me');
+        msg.setTo(data.to.split(', ').map((recipient: string) => ({ addr: recipient })));
+        if (data.cc)
+          msg.setCc(data.cc?.split(', ').map((recipient: string) => ({ addr: recipient })));
+        if (data.bcc)
+          msg.setBcc(data.bcc?.split(', ').map((recipient: string) => ({ addr: recipient })));
+
+        msg.setSubject(data.subject);
+        msg.addMessage({
+          contentType: 'text/html',
+          data: message || '',
+        });
+
+        if (data.attachments && data.attachments?.length > 0) {
+          for (const attachment of data.attachments) {
+            const arrayBuffer = await attachment.arrayBuffer();
+            const base64Data = Buffer.from(arrayBuffer).toString('base64');
+            msg.addAttachment({
+              filename: attachment.name,
+              contentType: attachment.type,
+              data: base64Data,
+            });
+          }
+        }
+
+        const mimeMessage = msg.asRaw();
+        const encodedMessage = Buffer.from(mimeMessage)
+          .toString('base64')
+          .replace(/\+/g, '-')
+          .replace(/\//g, '_')
+          .replace(/=+$/, '');
+
+        const requestBody = {
+          message: {
+            raw: encodedMessage,
+          },
+        };
+
+        let res;
+
+        if (data.id) {
+          res = await this.gmail.users.drafts.update({
+            userId: 'me',
+            id: data.id,
+            requestBody,
+          });
+        } else {
+          res = await this.gmail.users.drafts.create({
+            userId: 'me',
+            requestBody,
+          });
+        }
+
+        return res.data;
+      },
+      { data },
+    );
+  }
+  public async getUserLabels() {
+    const res = await this.gmail.users.labels.list({
+      userId: 'me',
+    });
+    // wtf google, null values for EVERYTHING?
+    return (
+      res.data.labels?.map((label) => ({
+        id: label.id ?? '',
+        name: label.name ?? '',
+        type: label.type ?? '',
+        color: {
+          backgroundColor: label.color?.backgroundColor ?? '',
+          textColor: label.color?.textColor ?? '',
+        },
+      })) ?? []
+    );
+  }
+  public async getLabel(labelId: string): Promise<Label> {
+    const res = await this.gmail.users.labels.get({
+      userId: 'me',
+      id: labelId,
+    });
+    return {
+      id: labelId,
+      name: res.data.name ?? '',
+      color: {
+        backgroundColor: res.data.color?.backgroundColor ?? '',
+        textColor: res.data.color?.textColor ?? '',
+      },
+      type: res.data.type ?? 'user',
+    };
+  }
+  public async createLabel(label: {
+    name: string;
+    color?: { backgroundColor: string; textColor: string };
+  }) {
+    const res = await this.gmail.users.labels.create({
+      userId: 'me',
+      requestBody: {
+        name: label.name,
+        labelListVisibility: 'labelShow',
+        messageListVisibility: 'show',
+        color: label.color
+          ? {
+              backgroundColor: label.color.backgroundColor,
+              textColor: label.color.textColor,
+            }
+          : undefined,
+      },
+    });
+  }
+  public async updateLabel(id: string, label: Label) {
+    const res = await this.gmail.users.labels.update({
+      userId: 'me',
+      id: id,
+      requestBody: {
+        name: label.name,
+        color: label.color
+          ? {
+              backgroundColor: label.color.backgroundColor,
+              textColor: label.color.textColor,
+            }
+          : undefined,
+      },
+    });
+  }
+  public async deleteLabel(id: string) {
+    await this.gmail.users.labels.delete({
+      userId: 'me',
+      id: id,
+    });
+  }
+  public async revokeRefreshToken(refreshToken: string) {
+    if (!refreshToken) {
+      return false;
+    }
     try {
-      return await operation();
+      await this.auth.revokeToken(refreshToken);
+      return true;
     } catch (error: any) {
-      if (retries >= maxRetries) {
-        throw error;
-      }
-
-      const isRateLimit =
-        error?.code === 429 ||
-        error?.errors?.[0]?.reason === 'rateLimitExceeded' ||
-        error?.errors?.[0]?.reason === 'userRateLimitExceeded';
-
-      if (!isRateLimit) {
-        throw error;
-      }
-
-      await delay(delayMs);
-
-      delayMs = Math.min(delayMs * 2 + Math.random() * 1000, maxDelay);
-      retries++;
+      console.error('Failed to revoke Google token:', error.message);
+      return false;
     }
   }
-};
 
-function sanitizeContext(context?: Record<string, any>) {
-  if (!context) return undefined;
-  const sanitized = { ...context };
-  const sensitive = ['tokens', 'refresh_token', 'code', 'message', 'raw', 'data'];
-  for (const key of sensitive) {
-    if (key in sanitized) {
-      sanitized[key] = '[REDACTED]';
+  // ===============================================
+
+  private async modifyThreadLabels(
+    threadIds: string[],
+    requestBody: gmail_v1.Schema$ModifyThreadRequest,
+  ) {
+    if (threadIds.length === 0) {
+      return;
+    }
+
+    const chunkSize = 15;
+    const delayBetweenChunks = 100;
+    const allResults = [];
+
+    for (let i = 0; i < threadIds.length; i += chunkSize) {
+      const chunk = threadIds.slice(i, i + chunkSize);
+
+      const promises = chunk.map(async (threadId) => {
+        try {
+          const response = await this.gmail.users.threads.modify({
+            userId: 'me',
+            id: threadId,
+            requestBody: requestBody,
+          });
+          return { threadId, status: 'fulfilled' as const, value: response.data };
+        } catch (error: any) {
+          const errorMessage = error?.errors?.[0]?.message || error.message || error;
+          return { threadId, status: 'rejected' as const, reason: { error: errorMessage } };
+        }
+      });
+
+      const chunkResults = await Promise.all(promises);
+      allResults.push(...chunkResults);
+
+      if (i + chunkSize < threadIds.length) {
+        await setTimeout(delayBetweenChunks);
+      }
+    }
+
+    const failures = allResults.filter((result) => result.status === 'rejected');
+    if (failures.length > 0) {
+      const failureReasons = failures.map((f) => ({ threadId: f.threadId, reason: f.reason }));
     }
   }
-  return sanitized;
-}
-
-const withErrorHandler = async <T>(
-  operation: string,
-  fn: () => Promise<T> | T,
-  context?: Record<string, any>,
-): Promise<T> => {
-  try {
-    return await Promise.resolve(fn());
-  } catch (error: any) {
-    const isFatal = FatalErrors.includes(error.message);
-    console.error(`[${isFatal ? 'FATAL_ERROR' : 'ERROR'}] [Gmail Driver] Operation: ${operation}`, {
-      error: error.message,
-      code: error.code,
-      context: sanitizeContext(context),
-      stack: error.stack,
-      isFatal,
-    });
-    if (isFatal) await deleteActiveConnection();
-    throw new StandardizedError(error, operation, context);
+  private normalizeSearch(folder: string, q: string) {
+    if (folder !== 'inbox') {
+      q = cleanSearchValue(q);
+      if (folder === 'bin') {
+        return { folder: undefined, q: `in:trash ${q}` };
+      }
+      if (folder === 'archive') {
+        return { folder: undefined, q: `in:archive ${q}` };
+      }
+      return { folder, q: `in:${folder} ${q}` };
+    }
+    return { folder, q };
   }
-};
-
-const withSyncErrorHandler = <T>(
-  operation: string,
-  fn: () => T,
-  context?: Record<string, any>,
-): T => {
-  try {
-    return fn();
-  } catch (error: any) {
-    const isFatal = FatalErrors.includes(error.message);
-    console.error(`[Gmail Driver Error] Operation: ${operation}`, {
-      error: error.message,
-      code: error.code,
-      context: sanitizeContext(context),
-      stack: error.stack,
-      isFatal,
-    });
-    if (isFatal) void deleteActiveConnection();
-    throw new StandardizedError(error, operation, context);
-  }
-};
-
-const getScope = () =>
-  [
-    'https://www.googleapis.com/auth/gmail.modify',
-    'https://www.googleapis.com/auth/userinfo.profile',
-    'https://www.googleapis.com/auth/userinfo.email',
-  ].join(' ');
-
-export const driver = async (config: IConfig): Promise<MailManager> => {
-  const auth = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID as string,
-    process.env.GOOGLE_CLIENT_SECRET as string,
-    process.env.GOOGLE_REDIRECT_URI as string,
-  );
-
-  if (config.auth) {
-    auth.setCredentials({
-      refresh_token: config.auth.refresh_token,
-      scope: getScope(),
-    });
-  }
-  const parse = ({
+  private parse({
     id,
     threadId,
     snippet,
@@ -202,7 +745,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
   }: gmail_v1.Schema$Message): Omit<
     ParsedMessage,
     'body' | 'processedHtml' | 'blobUrl' | 'totalReplies'
-  > => {
+  > {
     const receivedOn =
       payload?.headers?.find((h) => h.name?.toLowerCase() === 'date')?.value || 'Failed';
     const sender =
@@ -256,7 +799,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       threadId: threadId || '',
       title: snippet ? he.decode(snippet).trim() : 'ERROR',
       tls: wasSentWithTLS(receivedHeaders) || !!hasTLSReport,
-      tags: labelIds?.map((l) => ({ id: l, name: l })) || [],
+      tags: labelIds?.map((l) => ({ id: l, name: l, type: 'user' })) || [],
       listUnsubscribe,
       listUnsubscribePost,
       replyTo,
@@ -270,8 +813,8 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
       subject: subject ? subject.replace(/"/g, '').trim() : '(no subject)',
       messageId,
     };
-  };
-  const parseOutgoing = async ({
+  }
+  private async parseOutgoing({
     to,
     subject,
     message,
@@ -280,10 +823,10 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
     cc,
     bcc,
     fromEmail,
-  }: IOutgoingMessage) => {
+  }: IOutgoingMessage) {
     const msg = createMimeMessage();
 
-    const defaultFromEmail = config.auth?.email || 'nobody@example.com';
+    const defaultFromEmail = this.config.auth?.email || 'nobody@example.com';
     const senderEmail = fromEmail || defaultFromEmail;
 
     msg.setSender({ name: '', addr: senderEmail });
@@ -417,693 +960,85 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
     return {
       raw: encodedMessage,
     };
-  };
-  const normalizeSearch = (folder: string, q: string) => {
-    if (folder !== 'inbox') {
-      q = cleanSearchValue(q);
-      if (folder === 'bin') {
-        return { folder: undefined, q: `in:trash ${q}` };
-      }
-      if (folder === 'archive') {
-        return { folder: undefined, q: `in:archive ${q}` };
-      }
-      return { folder, q: `in:${folder} ${q}` };
-    }
-    return { folder, q };
-  };
-  const gmail = google.gmail({ version: 'v1', auth });
+  }
+  private parseDraft(draft: gmail_v1.Schema$Draft) {
+    if (!draft.message) return null;
 
-  const modifyThreadLabels = async (
-    threadIds: string[],
-    requestBody: gmail_v1.Schema$ModifyThreadRequest,
-  ) => {
-    if (threadIds.length === 0) {
-      return;
-    }
+    const headers = draft.message.payload?.headers || [];
+    const to =
+      headers
+        .find((h) => h.name === 'To')
+        ?.value?.split(',')
+        .map((e) => e.trim())
+        .filter(Boolean) || [];
+    const subject = headers.find((h) => h.name === 'Subject')?.value;
 
-    const chunkSize = 15;
-    const delayBetweenChunks = 100;
-    const allResults = [];
+    let content = '';
+    const payload = draft.message.payload;
 
-    for (let i = 0; i < threadIds.length; i += chunkSize) {
-      const chunk = threadIds.slice(i, i + chunkSize);
-
-      const promises = chunk.map(async (threadId) => {
-        try {
-          const response = await gmail.users.threads.modify({
-            userId: 'me',
-            id: threadId,
-            requestBody: requestBody,
-          });
-          return { threadId, status: 'fulfilled' as const, value: response.data };
-        } catch (error: any) {
-          const errorMessage = error?.errors?.[0]?.message || error.message || error;
-          return { threadId, status: 'rejected' as const, reason: { error: errorMessage } };
+    if (payload) {
+      if (payload.parts) {
+        const textPart = payload.parts.find((part) => part.mimeType === 'text/html');
+        if (textPart?.body?.data) {
+          content = fromBinary(textPart.body.data);
         }
-      });
-
-      const chunkResults = await Promise.all(promises);
-      allResults.push(...chunkResults);
-
-      if (i + chunkSize < threadIds.length) {
-        await delay(delayBetweenChunks);
+      } else if (payload.body?.data) {
+        content = fromBinary(payload.body.data);
       }
     }
 
-    const failures = allResults.filter((result) => result.status === 'rejected');
-    if (failures.length > 0) {
-      const failureReasons = failures.map((f) => ({ threadId: f.threadId, reason: f.reason }));
+    // TODO: Hook up CC and BCC from the draft so it can populate the composer on open.
+
+    return {
+      id: draft.id || '',
+      to,
+      subject: subject ? he.decode(subject).trim() : '',
+      content,
+      rawMessage: draft.message,
+    };
+  }
+
+  private async withErrorHandler<T>(
+    operation: string,
+    fn: () => Promise<T> | T,
+    context?: Record<string, any>,
+  ): Promise<T> {
+    try {
+      return await Promise.resolve(fn());
+    } catch (error: any) {
+      const isFatal = FatalErrors.includes(error.message);
+      console.error(
+        `[${isFatal ? 'FATAL_ERROR' : 'ERROR'}] [Gmail Driver] Operation: ${operation}`,
+        {
+          error: error.message,
+          code: error.code,
+          context: sanitizeContext(context),
+          stack: error.stack,
+          isFatal,
+        },
+      );
+      if (isFatal && this.config.c) await deleteActiveConnection(this.config.c.req.raw);
+      throw new StandardizedError(error, operation, context);
     }
-  };
-
-  const manager: MailManager = {
-    getAttachment: async (messageId: string, attachmentId: string) => {
-      return withErrorHandler(
-        'getAttachment',
-        async () => {
-          const response = await gmail.users.messages.attachments.get({
-            userId: 'me',
-            messageId,
-            id: attachmentId,
-          });
-
-          const attachmentData = response.data.data || '';
-
-          const base64 = fromBase64Url(attachmentData);
-
-          return base64;
-        },
-        { messageId, attachmentId },
-      );
-    },
-    getEmailAliases: async () => {
-      return withErrorHandler('getEmailAliases', async () => {
-        const profile = await gmail.users.getProfile({
-          userId: 'me',
-        });
-
-        const primaryEmail = profile.data.emailAddress || '';
-        const aliases: { email: string; name?: string; primary?: boolean }[] = [
-          { email: primaryEmail, primary: true },
-        ];
-
-        const settings = await gmail.users.settings.sendAs.list({
-          userId: 'me',
-        });
-
-        if (settings.data.sendAs) {
-          settings.data.sendAs.forEach((alias) => {
-            if (alias.isPrimary && alias.sendAsEmail === primaryEmail) {
-              return;
-            }
-
-            aliases.push({
-              email: alias.sendAsEmail || '',
-              name: alias.displayName || undefined,
-              primary: alias.isPrimary || false,
-            });
-          });
-        }
-
-        return aliases;
+  }
+  private withSyncErrorHandler<T>(
+    operation: string,
+    fn: () => T,
+    context?: Record<string, any>,
+  ): T {
+    try {
+      return fn();
+    } catch (error: any) {
+      const isFatal = FatalErrors.includes(error.message);
+      console.error(`[Gmail Driver Error] Operation: ${operation}`, {
+        error: error.message,
+        code: error.code,
+        context: sanitizeContext(context),
+        stack: error.stack,
+        isFatal,
       });
-    },
-    markAsRead: async (threadIds: string[]) => {
-      return withErrorHandler(
-        'markAsRead',
-        async () => {
-          await modifyThreadLabels(threadIds, { removeLabelIds: ['UNREAD'] });
-        },
-        { threadIds },
-      );
-    },
-    markAsUnread: async (threadIds: string[]) => {
-      return withErrorHandler(
-        'markAsUnread',
-        async () => {
-          await modifyThreadLabels(threadIds, { addLabelIds: ['UNREAD'] });
-        },
-        { threadIds },
-      );
-    },
-    getScope,
-    getIdType: (id: string) => {
-      if (id.startsWith('r')) {
-        return 'draft';
-      }
-      return 'thread';
-    },
-    getUserInfo: (tokens: IConfig['auth']) => {
-      return withErrorHandler(
-        'getUserInfo',
-        async () => {
-          auth.setCredentials({ ...tokens, scope: getScope() });
-          const res = await google
-            .people({ version: 'v1', auth })
-            .people.get({ resourceName: 'people/me', personFields: 'names,photos,emailAddresses' });
-          return {
-            address: res.data.emailAddresses?.[0]?.value ?? '',
-            name: res.data.names?.[0]?.displayName ?? '',
-            photo: res.data.photos?.[0]?.url ?? '',
-          };
-        },
-        { tokens },
-      );
-    },
-    getTokens: async <T>(code: string) => {
-      return withErrorHandler(
-        'getTokens',
-        async () => {
-          const { tokens } = await auth.getToken(code);
-          return { tokens } as T;
-        },
-        { code },
-      );
-    },
-    generateConnectionAuthUrl: (userId: string) => {
-      return withSyncErrorHandler(
-        'generateConnectionAuthUrl',
-        () => {
-          return auth.generateAuthUrl({
-            access_type: 'offline',
-            scope: getScope(),
-            include_granted_scopes: true,
-            prompt: 'consent',
-            state: userId,
-          });
-        },
-        { userId },
-      );
-    },
-    count: async () => {
-      return withErrorHandler(
-        'count',
-        async () => {
-          const userLabels = await gmail.users.labels.list({
-            userId: 'me',
-          });
-
-          if (!userLabels.data.labels) {
-            return [];
-          }
-          return Promise.all(
-            userLabels.data.labels.map(async (label) => {
-              const res = await gmail.users.labels.get({
-                userId: 'me',
-                id: label.id ?? undefined,
-              });
-              return {
-                label: res.data.name ?? res.data.id ?? '',
-                count: Number(res.data.threadsUnread) ?? undefined,
-              };
-            }),
-          );
-        },
-        { email: config.auth?.email },
-      );
-    },
-    list: async (
-      folder: string,
-      q: string,
-      maxResults = 20,
-      _labelIds: string[] = [],
-      pageToken?: string,
-    ) => {
-      return withErrorHandler(
-        'list',
-        async () => {
-          const { folder: normalizedFolder, q: normalizedQ } = normalizeSearch(folder, q ?? '');
-          const labelIds = [..._labelIds];
-          if (normalizedFolder) labelIds.push(normalizedFolder.toUpperCase());
-
-          const res = await gmail.users.threads.list({
-            userId: 'me',
-            q: normalizedQ ? normalizedQ : undefined,
-            labelIds: folder === 'inbox' ? labelIds : [],
-            maxResults,
-            pageToken: pageToken ? pageToken : undefined,
-            quotaUser: config.auth?.email,
-          });
-          return { ...res.data, threads: res.data.threads } as any;
-        },
-        { folder, q, maxResults, _labelIds, pageToken, email: config.auth?.email },
-      );
-    },
-    get: async (id: string) => {
-      return withErrorHandler(
-        'get',
-        async () => {
-          return withExponentialBackoff(async () => {
-            const res = await gmail.users.threads.get({
-              userId: 'me',
-              id,
-              format: 'full',
-              quotaUser: config.auth?.email,
-            });
-
-            if (!res.data.messages)
-              return {
-                messages: [],
-                latest: undefined,
-                hasUnread: false,
-                totalReplies: 0,
-                labels: [],
-              };
-            let hasUnread = false;
-            const labels = new Set<string>();
-            const messages: ParsedMessage[] = await Promise.all(
-              res.data.messages.map(async (message) => {
-                const bodyData =
-                  message.payload?.body?.data ||
-                  (message.payload?.parts ? findHtmlBody(message.payload.parts) : '') ||
-                  message.payload?.parts?.[0]?.body?.data ||
-                  '';
-
-                const decodedBody = bodyData
-                  ? he
-                      .decode(fromBinary(bodyData))
-                      .replace(/<[^>]*>/g, '')
-                      .trim() === fromBinary(bodyData).trim()
-                    ? he.decode(fromBinary(bodyData).replace(/\n/g, '<br>'))
-                    : he.decode(fromBinary(bodyData))
-                  : '';
-
-                if (id === '196784c9e42c15cb') {
-                  console.log('decodedBody', bodyData);
-                }
-
-                let processedBody = decodedBody;
-                if (message.payload?.parts) {
-                  const inlineImages = message.payload.parts.filter((part) => {
-                    const contentDisposition =
-                      part.headers?.find((h) => h.name?.toLowerCase() === 'content-disposition')
-                        ?.value || '';
-                    const isInline = contentDisposition.toLowerCase().includes('inline');
-                    const hasContentId = part.headers?.some(
-                      (h) => h.name?.toLowerCase() === 'content-id',
-                    );
-                    return isInline && hasContentId;
-                  });
-
-                  for (const part of inlineImages) {
-                    const contentId = part.headers?.find(
-                      (h) => h.name?.toLowerCase() === 'content-id',
-                    )?.value;
-                    if (contentId && part.body?.attachmentId) {
-                      try {
-                        const imageData = await manager.getAttachment(
-                          message.id!,
-                          part.body.attachmentId,
-                        );
-                        if (imageData) {
-                          const cleanContentId = contentId.replace(/[<>]/g, '');
-
-                          const escapedContentId = cleanContentId.replace(
-                            /[.*+?^${}()|[\]\\]/g,
-                            '\\$&',
-                          );
-                          processedBody = processedBody.replace(
-                            new RegExp(`cid:${escapedContentId}`, 'g'),
-                            `data:${part.mimeType};base64,${imageData}`,
-                          );
-                        }
-                      } catch (error) {}
-                    }
-                  }
-                }
-
-                const parsedData = parse(message);
-                if (parsedData.tags) {
-                  parsedData.tags.forEach((tag) => {
-                    if (tag.id) {
-                      if (labels.has(tag.id)) return;
-                      labels.add(tag.id);
-                    }
-                  });
-                }
-
-                const attachments = await Promise.all(
-                  message.payload?.parts
-                    ?.filter((part) => {
-                      if (!part.filename || part.filename.length === 0) return false;
-
-                      const contentDisposition =
-                        part.headers?.find((h) => h.name?.toLowerCase() === 'content-disposition')
-                          ?.value || '';
-                      const isInline = contentDisposition.toLowerCase().includes('inline');
-
-                      const hasContentId = part.headers?.some(
-                        (h) => h.name?.toLowerCase() === 'content-id',
-                      );
-
-                      return !isInline || (isInline && !hasContentId);
-                    })
-                    ?.map(async (part) => {
-                      const attachmentId = part.body?.attachmentId;
-                      if (!attachmentId) {
-                        return null;
-                      }
-
-                      try {
-                        if (!message.id) {
-                          return null;
-                        }
-                        const attachmentData = await manager.getAttachment(
-                          message.id,
-                          attachmentId,
-                        );
-                        return {
-                          filename: part.filename || '',
-                          mimeType: part.mimeType || '',
-                          size: Number(part.body?.size || 0),
-                          attachmentId: attachmentId,
-                          headers: part.headers || [],
-                          body: attachmentData ?? '',
-                        };
-                      } catch (error) {
-                        return null;
-                      }
-                    }) || [],
-                ).then((attachments) =>
-                  attachments.filter((a): a is NonNullable<typeof a> => a !== null),
-                );
-
-                const fullEmailData = {
-                  ...parsedData,
-                  body: '',
-                  processedHtml: '',
-                  blobUrl: '',
-                  decodedBody: processedBody,
-                  attachments,
-                };
-
-                if (fullEmailData.unread) hasUnread = true;
-
-                return fullEmailData;
-              }),
-            );
-            return {
-              labels: Array.from(labels).map((id) => ({ id, name: id })),
-              messages,
-              latest: messages[messages.length - 1],
-              hasUnread,
-              totalReplies: messages.length,
-            };
-          });
-        },
-        { id, email: config.auth?.email },
-      );
-    },
-    create: async (data) => {
-      return withErrorHandler(
-        'create',
-        async () => {
-          const { raw } = await parseOutgoing(data);
-          const res = await gmail.users.messages.send({
-            userId: 'me',
-            requestBody: {
-              raw,
-              threadId: data.threadId,
-            },
-          });
-          return res.data;
-        },
-        { data, email: config.auth?.email },
-      );
-    },
-    delete: async (id: string) => {
-      return withErrorHandler(
-        'delete',
-        async () => {
-          const res = await gmail.users.messages.delete({ userId: 'me', id });
-          return res.data;
-        },
-        { id },
-      );
-    },
-    normalizeIds: (ids: string[]) => {
-      return withSyncErrorHandler(
-        'normalizeIds',
-        () => {
-          const threadIds: string[] = ids.map((id) =>
-            id.startsWith('thread:') ? id.substring(7) : id,
-          );
-          return { threadIds };
-        },
-        { ids },
-      );
-    },
-    modifyLabels: async (
-      threadIds: string[],
-      options: { addLabels: string[]; removeLabels: string[] },
-    ) => {
-      return withErrorHandler(
-        'modifyLabels',
-        async () => {
-          await modifyThreadLabels(threadIds, {
-            addLabelIds: options.addLabels,
-            removeLabelIds: options.removeLabels,
-          });
-        },
-        { threadIds, options },
-      );
-    },
-    sendDraft: async (draftId: string, data: IOutgoingMessage) => {
-      return withErrorHandler(
-        'sendDraft',
-        async () => {
-          const { raw } = await parseOutgoing(data);
-          await gmail.users.drafts.send({
-            userId: 'me',
-            requestBody: {
-              id: draftId,
-              message: {
-                raw,
-                id: draftId,
-              },
-            },
-          });
-        },
-        { draftId, data },
-      );
-    },
-    getDraft: async (draftId: string) => {
-      return withErrorHandler(
-        'getDraft',
-        async () => {
-          const res = await gmail.users.drafts.get({
-            userId: 'me',
-            id: draftId,
-            format: 'full',
-          });
-
-          if (!res.data) {
-            throw new Error('Draft not found');
-          }
-
-          const parsedDraft = parseDraft(res.data);
-          if (!parsedDraft) {
-            throw new Error('Failed to parse draft');
-          }
-
-          return parsedDraft;
-        },
-        { draftId },
-      );
-    },
-    listDrafts: async (q?: string, maxResults = 20, pageToken?: string) => {
-      return withErrorHandler(
-        'listDrafts',
-        async () => {
-          const { q: normalizedQ } = normalizeSearch('', q ?? '');
-          const res = await gmail.users.drafts.list({
-            userId: 'me',
-            q: normalizedQ ? normalizedQ : undefined,
-            maxResults,
-            pageToken: pageToken ? pageToken : undefined,
-          });
-
-          const drafts = await Promise.all(
-            (res.data.drafts || [])
-              .map(async (draft) => {
-                if (!draft.id) return null;
-                try {
-                  const msg = await gmail.users.drafts.get({
-                    userId: 'me',
-                    id: draft.id,
-                    format: 'full',
-                  });
-                  const message = msg.data.message;
-                  if (!message) return null;
-
-                  const parsed = parse(message as any);
-                  const headers = message.payload?.headers || [];
-                  const date = headers.find((h) => h.name?.toLowerCase() === 'date')?.value;
-
-                  return {
-                    ...parsed,
-                    id: draft.id,
-                    threadId: draft.message?.id,
-                    receivedOn: date || new Date().toISOString(),
-                  };
-                } catch (error) {
-                  return null;
-                }
-              })
-              .filter((msg): msg is NonNullable<typeof msg> => msg !== null),
-          );
-
-          const sortedDrafts = [...drafts].sort((a, b) => {
-            const dateA = new Date(a?.receivedOn || new Date()).getTime();
-            const dateB = new Date(b?.receivedOn || new Date()).getTime();
-            return dateB - dateA;
-          });
-
-          return { ...res.data, threads: sortedDrafts };
-        },
-        { q, maxResults, pageToken },
-      );
-    },
-    createDraft: async (data: any) => {
-      return withErrorHandler(
-        'createDraft',
-        async () => {
-          const message = await sanitizeTipTapHtml(data.message);
-          const msg = createMimeMessage();
-          msg.setSender('me');
-          msg.setTo(data.to.split(', ').map((recipient: string) => ({ addr: recipient })));
-          if (data.cc)
-            msg.setCc(data.cc?.split(', ').map((recipient: string) => ({ addr: recipient })));
-          if (data.bcc)
-            msg.setBcc(data.bcc?.split(', ').map((recipient: string) => ({ addr: recipient })));
-
-          msg.setSubject(data.subject);
-          msg.addMessage({
-            contentType: 'text/html',
-            data: message || '',
-          });
-
-          if (data.attachments?.length > 0) {
-            for (const attachment of data.attachments) {
-              const arrayBuffer = await attachment.arrayBuffer();
-              const base64Data = Buffer.from(arrayBuffer).toString('base64');
-              msg.addAttachment({
-                filename: attachment.name,
-                contentType: attachment.type,
-                data: base64Data,
-              });
-            }
-          }
-
-          const mimeMessage = msg.asRaw();
-          const encodedMessage = Buffer.from(mimeMessage)
-            .toString('base64')
-            .replace(/\+/g, '-')
-            .replace(/\//g, '_')
-            .replace(/=+$/, '');
-
-          const requestBody = {
-            message: {
-              raw: encodedMessage,
-            },
-          };
-
-          let res;
-
-          if (data.id) {
-            res = await gmail.users.drafts.update({
-              userId: 'me',
-              id: data.id,
-              requestBody,
-            });
-          } else {
-            res = await gmail.users.drafts.create({
-              userId: 'me',
-              requestBody,
-            });
-          }
-
-          return res.data;
-        },
-        { data },
-      );
-    },
-    getUserLabels: async () => {
-      const res = await gmail.users.labels.list({
-        userId: 'me',
-      });
-      // wtf google, null values for EVERYTHING?
-      return (
-        res.data.labels?.map((label) => ({
-          id: label.id ?? '',
-          name: label.name ?? '',
-          type: label.type ?? '',
-          color: {
-            backgroundColor: label.color?.backgroundColor ?? '',
-            textColor: label.color?.textColor ?? '',
-          },
-        })) ?? []
-      );
-    },
-    getLabel: async (labelId: string) => {
-      const res = await gmail.users.labels.get({
-        userId: 'me',
-        id: labelId,
-      });
-      return res.data;
-    },
-    createLabel: async (label) => {
-      const res = await gmail.users.labels.create({
-        userId: 'me',
-        requestBody: {
-          name: label.name,
-          labelListVisibility: 'labelShow',
-          messageListVisibility: 'show',
-          color: label.color
-            ? {
-                backgroundColor: label.color.backgroundColor,
-                textColor: label.color.textColor,
-              }
-            : undefined,
-        },
-      });
-      return res.data;
-    },
-    updateLabel: async (id, label) => {
-      const res = await gmail.users.labels.update({
-        userId: 'me',
-        id: id,
-        requestBody: {
-          name: label.name,
-          color: label.color
-            ? {
-                backgroundColor: label.color.backgroundColor,
-                textColor: label.color.textColor,
-              }
-            : undefined,
-        },
-      });
-      return res.data;
-    },
-    deleteLabel: async (id) => {
-      await gmail.users.labels.delete({
-        userId: 'me',
-        id: id,
-      });
-    },
-    revokeRefreshToken: async (refreshToken: string) => {
-      if (!refreshToken) {
-        return false;
-      }
-      try {
-        await auth.revokeToken(refreshToken);
-        return true;
-      } catch (error: any) {
-        console.error('Failed to revoke Google token:', error.message);
-        return false;
-      }
-    },
-  };
-
-  return manager;
-};
+      if (isFatal && this.config.c) void deleteActiveConnection(this.config.c.req.raw);
+      throw new StandardizedError(error, operation, context);
+    }
+  }
+}

@@ -1,6 +1,7 @@
-import { defaultPageSize, deserializeFiles, FOLDERS, serializedFileSchema } from '@/lib/utils';
 import { activeDriverProcedure, createRateLimiterMiddleware, router } from '../trpc';
 import { updateWritingStyleMatrix } from '@/services/writing-style-service';
+import { deserializeFiles, serializedFileSchema } from '@/lib/schemas';
+import { defaultPageSize, FOLDERS } from '@/lib/utils';
 import { Ratelimit } from '@upstash/ratelimit';
 import { z } from 'zod';
 
@@ -44,10 +45,15 @@ export const mailRouter = router({
       const { folder, max, cursor, q } = input;
       const { driver } = ctx;
       if (folder === FOLDERS.DRAFT) {
-        const drafts = await driver.listDrafts(q, max, cursor);
+        const drafts = await driver.listDrafts({ q, maxResults: max, pageToken: cursor });
         return drafts;
       }
-      const threadsResponse = await driver.list(folder, q, max, undefined, cursor);
+      const threadsResponse = await driver.list({
+        folder,
+        query: q,
+        maxResults: max,
+        pageToken: cursor,
+      });
       return threadsResponse;
     }),
   markAsRead: activeDriverProcedure

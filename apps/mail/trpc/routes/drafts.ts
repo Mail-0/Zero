@@ -1,9 +1,9 @@
 import { activeDriverProcedure, router } from '../trpc';
+import { createDraftData } from '@/lib/schemas';
 import { z } from 'zod';
 
 export const draftsRouter = router({
-  // TODO: figure out the types
-  create: activeDriverProcedure.input(z.unknown()).mutation(async ({ input, ctx }) => {
+  create: activeDriverProcedure.input(createDraftData).mutation(async ({ input, ctx }) => {
     const { driver } = ctx;
     return driver.createDraft(input);
   }),
@@ -23,6 +23,6 @@ export const draftsRouter = router({
     .query(async ({ input, ctx }) => {
       const { driver } = ctx;
       const { q, max, pageToken } = input;
-      return driver.listDrafts(q, max, pageToken);
+      return driver.listDrafts({ q, maxResults: max, pageToken });
     }),
 });
