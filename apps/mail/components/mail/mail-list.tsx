@@ -188,6 +188,7 @@ const Thread = memo(
     const [isStarred, setIsStarred] = useState(false);
     const queryClient = useQueryClient();
     const trpc = useTRPC();
+    const isTrash = folder === 'bin';
 
     const { mutateAsync: toggleStar } = useMutation(trpc.mail.toggleStar.mutationOptions());
 
@@ -518,7 +519,7 @@ const Thread = memo(
                     {t('common.threadDisplay.archive')}
                   </TooltipContent>
                 </Tooltip>
-                <Tooltip>
+                {!isTrash && <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
@@ -532,7 +533,7 @@ const Thread = memo(
                   <TooltipContent className="mb-1 bg-white dark:bg-[#1A1A1A]">
                     {t('common.actions.Bin')}
                   </TooltipContent>
-                </Tooltip>
+                </Tooltip>}
               </div>
             )}
 

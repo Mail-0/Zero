@@ -169,6 +169,9 @@ export function ThreadDisplay() {
   const [focusedIndex, setFocusedIndex] = useAtom(focusedIndexAtom);
   const trpc = useTRPC();
   const { mutateAsync: markAsRead } = useMutation(trpc.mail.markAsRead.mutationOptions());
+  const isTrash = folder === 'bin';
+
+  const { mutateAsync: toggleStar } = useMutation(trpc.mail.toggleStar.mutationOptions());
 
   const handlePrevious = useCallback(() => {
     if (!id || !items.length || focusedIndex === null) return;
@@ -291,6 +294,7 @@ export function ThreadDisplay() {
     } else {
       toast.success(t('common.actions.removedFromFavorites'));
     }
+    toggleStar({ ids: [id] });
     mutateThreads();
   }, [emailData, id, isStarred, mutateThreads, t]);
 
@@ -522,7 +526,7 @@ export function ThreadDisplay() {
                   </Tooltip>
                 </TooltipProvider>
 
-                <TooltipProvider delayDuration={0}>
+                {!isTrash && <TooltipProvider delayDuration={0}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
@@ -536,7 +540,7 @@ export function ThreadDisplay() {
                       {t('common.mail.moveToBin')}
                     </TooltipContent>
                   </Tooltip>
-                </TooltipProvider>
+                </TooltipProvider>}
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
