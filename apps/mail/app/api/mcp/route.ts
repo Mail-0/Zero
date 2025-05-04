@@ -11,9 +11,7 @@ import OpenAI from 'openai';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { _, messages } = body;
-
-    console.log('----- Received messages:', messages);
+    const { messages } = body;
 
     // Call Klavis API to create Resend MCP Server and set auth token. 
     // TODO: 
@@ -27,9 +25,12 @@ export async function POST(req: NextRequest) {
       throw new Error('Failed to set MCP server auth token');
     }
 
+    let client: Client | undefined;
+    let transport: SSEClientTransport | undefined;
+
     try {
       // Create a new MCP client for each message
-      const { client, transport } = await createMcpClient(serverUrl);
+      ({ client, transport } = await createMcpClient(serverUrl));
 
       // Get available tools from MCP server
       const mcpTools = await client.listTools();
@@ -97,10 +98,6 @@ export async function POST(req: NextRequest) {
         result = llmResponse.choices[0]?.message.content || 'No response from LLM';
       }
 
-      // Close the transport at the end of the request
-      await transport.close();
-      console.log('Disconnected from MCP server');
-
       const apiResponse = {
         id: crypto.randomUUID(),
         role: 'assistant',
@@ -109,7 +106,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(apiResponse);
     } catch (error) {
       console.error('Error with MCP client:', error);
-      return NextResponse.json({ error: 'Failed to process with MCP client' }, { status: 500 });
+      throw error; // Re-throw to be caught by outer catch
+    } finally {
+      if (transport) {
+        await transport.close();
+        console.log('Disconnected from MCP server');
+      }
     }
   } catch (error) {
     console.error('Error in MCP API:', error);

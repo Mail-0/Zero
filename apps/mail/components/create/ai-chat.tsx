@@ -102,7 +102,7 @@ export function AIChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  const { messages, input, setInput, error, handleSubmit, status } = useChat({
+  const { messages, input, setInput, error, handleSubmit, status, setMessages } = useChat({
     api: '/api/chat',
     maxSteps: 5,
   });
@@ -245,7 +245,6 @@ export function AIChat() {
                       const userInput = input;
                       setInput('');
                       
-                      // Add user message to the chat
                       const userMessage = {
                         id: nanoid(),
                         role: 'user' as const,
@@ -253,14 +252,16 @@ export function AIChat() {
                         createdAt: new Date(),
                         parts: [{ type: 'text' as const, text: userInput }]
                       };
-                      messages.push(userMessage);
+                      
+                      const updatedMessages = [...messages, userMessage];
+                      setMessages(updatedMessages);
                       
                       const response = await fetch('/api/mcp', {
                         method: 'POST',
                         headers: {
                           'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({ input: userInput, messages: messages }),
+                        body: JSON.stringify({ messages: updatedMessages }),
                       });
 
                       if (!response.ok) {
@@ -269,7 +270,6 @@ export function AIChat() {
                       
                       const data = await response.json();
                       
-                      // Add assistant message to the chat
                       const assistantMessage = {
                         id: nanoid(),
                         role: 'assistant' as const,
@@ -278,15 +278,9 @@ export function AIChat() {
                         parts: [{ type: 'text' as const, text: data.content || "No response received" }]
                       };
                       
-                      messages.push(assistantMessage);
-                      
-                      // Force a re-render
-                      setInput(' ');
-                      setTimeout(() => setInput(''), 10);
-                      
+                      setMessages([...updatedMessages, assistantMessage]);
                     } catch (error) {
                       toast.error('Failed to connect to MCP');
-                      setInput('');
                     }
                   }}
                 >
