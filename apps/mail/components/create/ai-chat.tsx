@@ -253,8 +253,6 @@ export function AIChat() {
                       if (!response.ok) {
                         throw new Error('MCP request failed');
                       }
-                      
-                      toast.success('Processed with MCP');
                     } catch (error) {
                       toast.error('Failed to connect to MCP');
                     }

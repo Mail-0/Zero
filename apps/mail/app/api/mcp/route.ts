@@ -7,7 +7,9 @@ import {
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { NextRequest, NextResponse } from 'next/server';
+import OpenAI from 'openai';
 
+// For demo purposes, No message history and streaming
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -28,21 +30,99 @@ export async function POST(req: NextRequest) {
 
     try {
       // Create a new MCP client for each message
-      const { client, transport } = await createMcpClient(serverUrl);
+      const { client, transport } = await createMcpClient('http://localhost:5001/sse');
 
-      await listTools(client);
+      // Get available tools
+      const mcpTools = await client.listTools();
+
+      // Create OpenAI client
+      const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+
+      // Create an OpenAI message with the available tools
+      const llmResponse = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: input}],
+        tools: mcpTools.tools.map(tool => ({
+          type: 'function',
+          function: {
+            name: tool.name,
+            description: tool.description || '',
+            parameters: tool.inputSchema || {}
+          }
+        })),
+        tool_choice: 'auto',
+      });
+      console.log('----- LLM Response:', llmResponse.choices[0]?.message.content);
+
+      let result;
+      // Handle tool calls if present
+      const toolCalls = llmResponse.choices[0]?.message.tool_calls;
+      if (toolCalls && toolCalls.length > 0) {
+        const toolCall = toolCalls[0];
+        if (toolCall) {
+          console.log('----- Tool Call:', toolCall.function.name, toolCall.function.arguments);
+          
+          // Parse parameters from JSON string
+          const params = JSON.parse(toolCall.function.arguments || '{}');
+          console.log('----- Tool Call:', toolCall.function.name, toolCall.function.arguments);
+          console.log('----- Tool Params:', params);
+          
+          // Call the requested tool
+          result = await callTool(client, toolCall.function.name, params);
+          
+          console.log('----- Tool Result:', result);
+          
+          // Send the result back to OpenAI for further processing
+          const followUpResponse = await openai.chat.completions.create({
+            model: 'gpt-4o',
+            max_tokens: 1024,
+            messages: [
+              { role: 'user', content: input },
+              { 
+                role: 'assistant', 
+                tool_calls: [{ 
+                  id: toolCall.id, 
+                  type: 'function',
+                  function: {
+                    name: toolCall.function.name,
+                    arguments: toolCall.function.arguments
+                  }
+                }]
+              },
+              { 
+                role: 'tool', 
+                tool_call_id: toolCall.id,
+                content: JSON.stringify(result)
+              }
+            ]
+          });
+          
+          // Use the processed response
+          result = followUpResponse.choices[0]?.message.content || 'No response from follow-up LLM call';
+        } else {
+          result = 'Tool call was received but details were undefined';
+        }
+      } else {
+        // No tool call, just return the text response
+        result = llmResponse.choices[0]?.message.content || 'No response from LLM';
+      }
+
+      console.log('----- Final Result:', result);
 
       // Close the transport when done
       await transport.close();
       console.log('Disconnected from MCP server');
 
-      const response = {
+      const apiResponse = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: input ? `Processed via MCP: ${input}` : 'No input provided',
+        content: result,
       };
 
-      return NextResponse.json(response);
+      return NextResponse.json(apiResponse);
     } catch (error) {
       console.error('Error with MCP client:', error);
       return NextResponse.json({ error: 'Failed to process with MCP client' }, { status: 500 });
@@ -83,27 +163,22 @@ async function createMcpClient(url: string): Promise<{
 }
 
 /**
- * List available tools on the MCP Server
+ * Call a tool using the MCP client
+ * @param client The MCP client
+ * @param toolName The name of the tool to call
+ * @param params The parameters to pass to the tool
+ * @returns The result of the tool call
  */
-async function listTools(client: Client): Promise<void> {
-  try {
-    const toolsRequest: ListToolsRequest = {
-      method: 'tools/list',
-      params: {},
-    };
-    const toolsResult = await client.request(toolsRequest, ListToolsResultSchema);
-
-    console.log('Available tools:');
-    if (toolsResult.tools.length === 0) {
-      console.log('  No tools available');
-    } else {
-      for (const tool of toolsResult.tools) {
-        console.log(`  - ${tool.name}: ${tool.description}`);
-      }
+async function callTool(client: Client, toolName: string, params: any) {
+  const request: CallToolRequest = {
+    method: 'tools/call',
+    params: {
+      name: toolName,
+      arguments: params
     }
-  } catch (error) {
-    console.log(`Tools not supported by this server: ${error}`);
-  }
+  };
+  const result = await client.request(request, CallToolResultSchema);
+  return result;
 }
 
 /**
