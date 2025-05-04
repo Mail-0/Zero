@@ -1,12 +1,17 @@
 import { mapToObj, pipe, entries, sortBy, take, fromEntries, sum, values, takeWhile } from 'remeda';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { writingStyleMatrix } from '@zero/db/schema';
-import { google } from '@ai-sdk/google';
+import { withTracing } from '@posthog/ai';
 import { jsonrepair } from 'jsonrepair';
+import { PostHog } from 'posthog-node';
 import { generateObject } from 'ai';
 import { eq } from 'drizzle-orm';
 import { db } from '@zero/db';
 import pRetry from 'p-retry';
 import { z } from 'zod';
+
+// LLM Observability with PostHog
+const posthog = new PostHog(process.env.NEXT_PUBLIC_POSTHOG_KEY!);
 
 // leaving these in here for testing between them
 // (switching to `k` will surely truncate what `coverage` was keeping)
@@ -333,8 +338,14 @@ const extractStyleMatrix = async (emailBody: string) => {
     throw new Error('Invalid body provided.');
   }
 
+  const google = createGoogleGenerativeAI();
+  const model = withTracing(google('gemini-2.0-flash'), posthog, {
+    // posthogTraceId: crypto.randomUUID(),
+    // unsure of what to use here
+  });
+
   const { object: result } = await generateObject({
-    model: google('gemini-2.0-flash'),
+    model,
     schema,
     temperature: 0,
     maxTokens: 600,
