@@ -526,7 +526,7 @@ export function ThreadDisplay() {
                   </Tooltip>
                 </TooltipProvider>
 
-                {!isTrash && <TooltipProvider delayDuration={0}>
+                <TooltipProvider delayDuration={0}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
@@ -537,10 +537,10 @@ export function ThreadDisplay() {
                       </button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">
-                      {t('common.mail.moveToBin')}
+                      { isTrash ? 'Delete from bin' : t('common.mail.moveToBin')}
                     </TooltipContent>
                   </Tooltip>
-                </TooltipProvider>}
+                </TooltipProvider>
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

@@ -519,7 +519,7 @@ const Thread = memo(
                     {t('common.threadDisplay.archive')}
                   </TooltipContent>
                 </Tooltip>
-                {!isTrash && <Tooltip>
+                <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
@@ -531,9 +531,9 @@ const Thread = memo(
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent className="mb-1 bg-white dark:bg-[#1A1A1A]">
-                    {t('common.actions.Bin')}
+                    {isTrash ? 'Delete from bin' : t('common.actions.Bin')}
                   </TooltipContent>
-                </Tooltip>}
+                </Tooltip>
               </div>
             )}
 
