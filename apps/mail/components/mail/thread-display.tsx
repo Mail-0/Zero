@@ -36,7 +36,7 @@ import { useThread, useThreads } from '@/hooks/use-threads';
 import { useAISidebar } from '@/components/ui/ai-sidebar';
 <<<<<<< HEAD
 =======
-import { markAsRead, markAsUnread, toggleStar } from '@/actions/mail';
+import { markAsRead, markAsUnread, toggleStar, toggleStar } from '@/actions/mail';
 >>>>>>> 686bd056 (add trash state check to hide bin action)
 import { useHotkeysContext } from 'react-hotkeys-hook';
 import { MailDisplaySkeleton } from './mail-skeleton';
@@ -173,6 +173,13 @@ export function ThreadDisplay() {
   const [focusedIndex, setFocusedIndex] = useAtom(focusedIndexAtom);
   const trpc = useTRPC();
   const { mutateAsync: markAsRead } = useMutation(trpc.mail.markAsRead.mutationOptions());
+
+
+
+  
+  const {
+    data: { threads: items = [] },
+  } = useThreads();
 
   const isTrash = folder === 'bin';
 
