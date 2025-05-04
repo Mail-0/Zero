@@ -1,5 +1,11 @@
 FROM oven/bun:canary
 
+ENV DATABASE_URL="postgres://placeholder"
+ENV REDIS_URL="redis://placeholder"
+ENV BETTER_AUTH_SECRET="dummy"
+ENV GOOGLE_CLIENT_ID="dummy"
+ENV GOOGLE_CLIENT_SECRET="dummy"
+
 WORKDIR /app
 
 # Install turbo globally
