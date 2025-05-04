@@ -242,25 +242,57 @@ export function AIChat() {
                   className="border-border/50 inline-flex h-7 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-md border bg-white pl-1.5 pr-1 dark:bg-[#262626]"
                   onClick={async () => {
                     try {
+                      const userInput = input;
+                      setInput('');
+                      
+                      // Add user message to the chat
+                      const userMessage = {
+                        id: nanoid(),
+                        role: 'user' as const,
+                        content: userInput,
+                        createdAt: new Date(),
+                        parts: [{ type: 'text' as const, text: userInput }]
+                      };
+                      messages.push(userMessage);
+                      
                       const response = await fetch('/api/mcp', {
                         method: 'POST',
                         headers: {
                           'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({ input }),
+                        body: JSON.stringify({ input: userInput, messages: messages }),
                       });
-                      
+
                       if (!response.ok) {
                         throw new Error('MCP request failed');
                       }
+                      
+                      const data = await response.json();
+                      
+                      // Add assistant message to the chat
+                      const assistantMessage = {
+                        id: nanoid(),
+                        role: 'assistant' as const,
+                        content: data.content || "No response received",
+                        createdAt: new Date(),
+                        parts: [{ type: 'text' as const, text: data.content || "No response received" }]
+                      };
+                      
+                      messages.push(assistantMessage);
+                      
+                      // Force a re-render
+                      setInput(' ');
+                      setTimeout(() => setInput(''), 10);
+                      
                     } catch (error) {
                       toast.error('Failed to connect to MCP');
+                      setInput('');
                     }
                   }}
                 >
                   <div className="flex items-center justify-center gap-2.5 pl-0.5">
                     <div className="justify-start text-center text-sm leading-none text-black dark:text-white">
-                      MCP{' '}
+                      MCP Send{' '}
                     </div>
                   </div>
                   <div className="flex h-5 items-center justify-center gap-1 rounded-sm bg-black/10 px-1 dark:bg-white/10">

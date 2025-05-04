@@ -1,6 +1,4 @@
 import {
-  ListToolsRequest,
-  ListToolsResultSchema,
   CallToolRequest,
   CallToolResultSchema,
 } from '@modelcontextprotocol/sdk/types.js';
@@ -9,14 +7,18 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-// For demo purposes, No message history and streaming
+// For demo purposes, streaming is not supported.
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { input } = body;
+    const { _, messages } = body;
 
-    console.log('----- Received input:', input);
+    console.log('----- Received messages:', messages);
 
+    // Call Klavis API to create Resend MCP Server and set auth token. 
+    // TODO: 
+    // 1. Set userId
+    // 2. only need to create mcp server instance and set auth token once to save on api cost. (Note: Klavis will not create a new instance if it already exists.)
     const userId = '123456789';
     const { serverUrl, instanceId } = await createMcpServerInstance('Resend', userId, 'Zero');
     const response = await setMcpServerAuthToken(instanceId, process.env.RESEND_API_KEY || '');
@@ -25,26 +27,21 @@ export async function POST(req: NextRequest) {
       throw new Error('Failed to set MCP server auth token');
     }
 
-    console.log('----- MCP Server URL:', serverUrl);
-    console.log('----- MCP Instance ID:', instanceId);
-
     try {
       // Create a new MCP client for each message
-      const { client, transport } = await createMcpClient('http://localhost:5001/sse');
+      const { client, transport } = await createMcpClient(serverUrl);
 
-      // Get available tools
+      // Get available tools from MCP server
       const mcpTools = await client.listTools();
 
-      // Create OpenAI client
       const openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY,
       });
 
-      // Create an OpenAI message with the available tools
       const llmResponse = await openai.chat.completions.create({
         model: 'gpt-4o',
         max_tokens: 1024,
-        messages: [{ role: 'user', content: input}],
+        messages: messages,
         tools: mcpTools.tools.map(tool => ({
           type: 'function',
           function: {
@@ -55,7 +52,6 @@ export async function POST(req: NextRequest) {
         })),
         tool_choice: 'auto',
       });
-      console.log('----- LLM Response:', llmResponse.choices[0]?.message.content);
 
       let result;
       // Handle tool calls if present
@@ -63,24 +59,16 @@ export async function POST(req: NextRequest) {
       if (toolCalls && toolCalls.length > 0) {
         const toolCall = toolCalls[0];
         if (toolCall) {
-          console.log('----- Tool Call:', toolCall.function.name, toolCall.function.arguments);
           
-          // Parse parameters from JSON string
           const params = JSON.parse(toolCall.function.arguments || '{}');
-          console.log('----- Tool Call:', toolCall.function.name, toolCall.function.arguments);
-          console.log('----- Tool Params:', params);
-          
-          // Call the requested tool
           result = await callTool(client, toolCall.function.name, params);
           
-          console.log('----- Tool Result:', result);
-          
-          // Send the result back to OpenAI for further processing
+          // Send the result to OpenAI for further processing
           const followUpResponse = await openai.chat.completions.create({
             model: 'gpt-4o',
             max_tokens: 1024,
             messages: [
-              { role: 'user', content: input },
+              ...messages,
               { 
                 role: 'assistant', 
                 tool_calls: [{ 
@@ -100,7 +88,6 @@ export async function POST(req: NextRequest) {
             ]
           });
           
-          // Use the processed response
           result = followUpResponse.choices[0]?.message.content || 'No response from follow-up LLM call';
         } else {
           result = 'Tool call was received but details were undefined';
@@ -110,9 +97,7 @@ export async function POST(req: NextRequest) {
         result = llmResponse.choices[0]?.message.content || 'No response from LLM';
       }
 
-      console.log('----- Final Result:', result);
-
-      // Close the transport when done
+      // Close the transport at the end of the request
       await transport.close();
       console.log('Disconnected from MCP server');
 
@@ -121,7 +106,6 @@ export async function POST(req: NextRequest) {
         role: 'assistant',
         content: result,
       };
-
       return NextResponse.json(apiResponse);
     } catch (error) {
       console.error('Error with MCP client:', error);
@@ -183,9 +167,9 @@ async function callTool(client: Client, toolName: string, params: any) {
 
 /**
  * Create an MCP server instance using the Klavis AI API
- * @param serverName Name of the server
+ * @param serverName Name of the server, e.g. 'Resend'
  * @param userId Unique user ID
- * @param platformName Platform name
+ * @param platformName Platform name, set to 'Zero'
  * @returns Response containing serverUrl and instanceId
  */
 async function createMcpServerInstance(
