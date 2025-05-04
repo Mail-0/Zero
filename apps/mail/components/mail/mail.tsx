@@ -503,25 +503,13 @@ export const Categories = () => {
       id: 'Important',
       name: t('common.mailCategories.important'),
       searchValue: 'is:important',
-      icon: (
-        <Lightning
-          className={cn(
-            'fill-white dark:fill-white',
-          )}
-        />
-      ),
+      icon: <Lightning className={cn('fill-white dark:fill-white')} />,
     },
     {
       id: 'All Mail',
       name: 'All Mail',
       searchValue: 'is:inbox',
-      icon: (
-        <Mail
-          className={cn(
-            'fill-white dark:fill-white',
-          )}
-        />
-      ),
+      icon: <Mail className={cn('fill-white dark:fill-white')} />,
       colors:
         'border-0 bg-[#006FFE] text-white dark:bg-[#006FFE] dark:text-white dark:hover:bg-[#006FFE]/90',
     },
@@ -529,49 +517,25 @@ export const Categories = () => {
       id: 'Personal',
       name: t('common.mailCategories.personal'),
       searchValue: 'is:personal',
-      icon: (
-        <User
-          className={cn(
-            'fill-white dark:fill-white',
-          )}
-        />
-      ),
+      icon: <User className={cn('fill-white dark:fill-white')} />,
     },
     {
       id: 'Updates',
       name: t('common.mailCategories.updates'),
       searchValue: 'is:updates',
-      icon: (
-        <Bell
-          className={cn(
-            'fill-white dark:fill-white',
-          )}
-        />
-      ),
+      icon: <Bell className={cn('fill-white dark:fill-white')} />,
     },
     {
       id: 'Promotions',
       name: 'Promotions',
       searchValue: 'is:promotions',
-      icon: (
-        <Tag
-          className={cn(
-            'fill-white dark:fill-white',
-          )}
-        />
-      ),
+      icon: <Tag className={cn('fill-white dark:fill-white')} />,
     },
     {
       id: 'Unread',
       name: 'Unread',
       searchValue: 'is:unread',
-      icon: (
-        <ScanEye
-          className={cn(
-            'h-4 w-4 fill-white dark:fill-white',
-          )}
-        />
-      ),
+      icon: <ScanEye className={cn('h-4 w-4 fill-white dark:fill-white')} />,
     },
   ];
 };
@@ -622,37 +586,11 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
     const isSelected = cat.id === (category || 'Primary');
     const bgColor = getCategoryColor(cat.id);
 
-    return isSelected ? (
-      <button
-        ref={!isOverlay ? activeTabElementRef : null}
-        onClick={() => {
-          setCategory(cat.id);
-          setSearchValue({
-            value: cat.searchValue || '',
-            highlight: searchValue.highlight,
-            folder: '',
-          });
-        }}
-        className={cn(
-          'flex h-8 items-center justify-center gap-1 overflow-hidden rounded-md border transition-all duration-300 ease-out dark:border-none',
-          'flex-1 border-none px-3 text-white',
-          bgColor,
-          idx === 0 && 'ml-2',
-        )}
-        tabIndex={isOverlay ? -1 : undefined}
-      >
-        <div className="relative overflow-visible">{cat.icon}</div>
-        <div className="flex items-center justify-center gap-2.5 px-0.5">
-          <div className="animate-in fade-in-0 slide-in-from-right-4 justify-start text-sm leading-none text-white duration-300">
-            {cat.name}
-          </div>
-        </div>
-      </button>
-    ) : (
+    return (
       <Tooltip key={cat.id}>
         <TooltipTrigger asChild>
           <button
-            ref={null}
+            ref={!isOverlay ? activeTabElementRef : null}
             onClick={() => {
               setCategory(cat.id);
               setSearchValue({
@@ -663,16 +601,23 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
             }}
             className={cn(
               'flex h-8 items-center justify-center gap-1 overflow-hidden rounded-md border transition-all duration-300 ease-out dark:border-none',
-              'w-8',
-              bgColor,
-              idx === 0 && 'ml-2',
+              isSelected
+                ? cn('flex-1 border-none px-3 text-white', bgColor)
+                : 'w-8 bg-white hover:bg-gray-100 dark:bg-[#313131] dark:hover:bg-[#313131]/80',
             )}
             tabIndex={isOverlay ? -1 : undefined}
           >
             <div className="relative overflow-visible">{cat.icon}</div>
+            {isSelected && (
+              <div className="flex items-center justify-center gap-2.5 px-0.5">
+                <div className="animate-in fade-in-0 slide-in-from-right-4 justify-start text-sm leading-none text-white duration-300">
+                  {cat.name}
+                </div>
+              </div>
+            )}
           </button>
         </TooltipTrigger>
-        <TooltipContent side={idx === 0 ? 'top' : undefined} align={idx === 0 ? 'top' : undefined} sideOffset={idx === 0 ? 4 : undefined}>
+        <TooltipContent side="bottom" align={isSelected ? 'center' : idx === 0 ? 'start' : 'end'}>
           <span>{cat.name}</span>
         </TooltipContent>
       </Tooltip>
@@ -833,9 +778,7 @@ function MailCategoryTabs({
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
                   )}
                 >
-                  <div className="relative overflow-visible">
-                    {category.icon}
-                  </div>
+                  <div className="relative overflow-visible">{category.icon}</div>
                   <span className={cn('hidden', !iconsOnly && 'md:inline')}>{category.name}</span>
                 </button>
               </TooltipTrigger>
@@ -865,9 +808,7 @@ function MailCategoryTabs({
                 className={cn('flex items-center gap-1.5 rounded-full px-2 text-xs font-medium')}
                 tabIndex={-1}
               >
-                <div className="relative overflow-visible">
-                  {category.icon}
-                </div>
+                <div className="relative overflow-visible">{category.icon}</div>
                 <span className={cn('hidden', !iconsOnly && 'md:inline')}>{category.name}</span>
               </button>
             </li>
