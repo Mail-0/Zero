@@ -17,6 +17,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { use, useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
+import { useSession } from '@/lib/auth-client';
 import { Input } from '@/components/ui/input';
 import { Command, Menu } from 'lucide-react';
 import { Separator } from '../ui/separator';
@@ -91,6 +93,8 @@ export default function HomeContent() {
   const [glowStyle, setGlowStyle] = useState({ left: 0, width: 0 });
   const [open, setOpen] = useState(false);
   const { setTheme } = useTheme();
+  const router = useRouter();
+  const { data: session, isPending } = useSession();
 
   useEffect(() => {
     setTheme('dark');
@@ -110,6 +114,13 @@ export default function HomeContent() {
       setGlowStyle({ left: newLeft, width: newWidth });
     }
   }, []);
+
+  useEffect(() => {
+      if (!isPending && session?.connectionId) {
+        router.push('/mail');
+      }
+    }, [session, isPending, router]);
+  
 
   useEffect(() => {
     if (tabs[0] && tabs[0].value) {
