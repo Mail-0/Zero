@@ -1,10 +1,14 @@
+import { createOpenAI, openai } from '@ai-sdk/openai';
 import { getActiveDriver } from '@/actions/utils';
 import { type gmail_v1 } from 'googleapis';
-import { openai } from '@ai-sdk/openai';
+import { withTracing } from '@posthog/ai';
 import { generateText, tool } from 'ai';
 import { headers } from 'next/headers';
+import { PostHog } from 'posthog-node';
 import { auth } from '@/lib/auth';
 import { z } from 'zod';
+
+const posthog = new PostHog(process.env.NEXT_PUBLIC_POSTHOG_KEY!);
 
 // Define our email search tool
 const emailSearchTool = tool({
@@ -77,8 +81,13 @@ For subject/content searches, include relevant synonyms and related terms.
 Important: This is a search-only assistant. Do not generate email content or handle email composition requests.`,
     };
 
+    const openai = createOpenAI();
+    const model = withTracing(openai('gpt-3.5-turbo'), posthog, {
+      posthogDistinctId: session.user.id,
+    });
+
     const { text, steps } = await generateText({
-      model: openai('gpt-3.5-turbo'),
+      model,
       messages: [systemMessage, ...messages],
       tools: {
         emailSearch: emailSearchTool,
@@ -151,6 +160,8 @@ Important: This is a search-only assistant. Do not generate email content or han
     } else {
       summary += `\n\nI couldn't find any emails ${searchExplanation}. Would you like to try a different search?`;
     }
+
+    await posthog.shutdown();
 
     return new Response(
       JSON.stringify({

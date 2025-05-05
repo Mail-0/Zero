@@ -1,8 +1,10 @@
 import { getActiveConnection } from '@/actions/utils';
 import { ToolInvocation, streamText } from 'ai';
+import { createOpenAI } from '@ai-sdk/openai';
 import { NextResponse } from 'next/server';
+import { withTracing } from '@posthog/ai';
 import { createDriver } from '../driver';
-import { openai } from '@ai-sdk/openai';
+import { PostHog } from 'posthog-node';
 import prompt from './prompt';
 import { z } from 'zod';
 
@@ -11,6 +13,8 @@ interface Message {
   content: string;
   toolInvocations?: ToolInvocation[];
 }
+
+const posthog = new PostHog(process.env.NEXT_PUBLIC_POSTHOG_KEY!);
 
 export async function POST(req: Request) {
   const connection = await getActiveConnection();
@@ -29,8 +33,13 @@ export async function POST(req: Request) {
     },
   });
 
+  const openai = createOpenAI();
+  const model = withTracing(openai('gpt-4o'), posthog, {
+    posthogDistinctId: connection.userId,
+  });
+
   const result = streamText({
-    model: openai('gpt-4o'),
+    model,
     system: prompt,
     messages,
     tools: {
@@ -129,6 +138,8 @@ export async function POST(req: Request) {
       },
     },
   });
+
+  await posthog.shutdown();
 
   return result.toDataStreamResponse();
 }

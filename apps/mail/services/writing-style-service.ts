@@ -1,12 +1,19 @@
 import { mapToObj, pipe, entries, sortBy, take, fromEntries, sum, values, takeWhile } from 'remeda';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { writingStyleMatrix } from '@zero/db/schema';
-import { google } from '@ai-sdk/google';
+import { withTracing } from '@posthog/ai';
 import { jsonrepair } from 'jsonrepair';
+import { PostHog } from 'posthog-node';
+import { headers } from 'next/headers';
 import { generateObject } from 'ai';
+import { auth } from '@/lib/auth';
 import { eq } from 'drizzle-orm';
 import { db } from '@zero/db';
 import pRetry from 'p-retry';
 import { z } from 'zod';
+
+// LLM Observability with PostHog
+const posthog = new PostHog(process.env.NEXT_PUBLIC_POSTHOG_KEY!);
 
 // leaving these in here for testing between them
 // (switching to `k` will surely truncate what `coverage` was keeping)
@@ -333,8 +340,15 @@ const extractStyleMatrix = async (emailBody: string) => {
     throw new Error('Invalid body provided.');
   }
 
+  const session = await auth.api.getSession({ headers: await headers() });
+
+  const google = createGoogleGenerativeAI();
+  const model = withTracing(google('gemini-2.0-flash'), posthog, {
+    posthogDistinctId: session?.user?.id,
+  });
+
   const { object: result } = await generateObject({
-    model: google('gemini-2.0-flash'),
+    model,
     schema,
     temperature: 0,
     maxTokens: 600,
@@ -358,6 +372,8 @@ const extractStyleMatrix = async (emailBody: string) => {
       }
     },
   });
+
+  await posthog.shutdown();
 
   const greeting = result.greetingForm?.trim().toLowerCase();
   const signOff = result.signOffForm?.trim().toLowerCase();

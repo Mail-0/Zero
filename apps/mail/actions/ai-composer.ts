@@ -7,11 +7,15 @@ import {
 import { StyledEmailAssistantSystemPrompt } from '@/actions/ai-composer-prompt';
 import type { Message } from '@microsoft/microsoft-graph-types';
 import { stripHtml } from 'string-strip-html';
+import { createOpenAI } from '@ai-sdk/openai';
+import { withTracing } from '@posthog/ai';
 import { google } from '@ai-sdk/google';
-import { openai } from '@ai-sdk/openai';
 import { headers } from 'next/headers';
+import { PostHog } from 'posthog-node';
 import { auth } from '@/lib/auth';
 import { generateText } from 'ai';
+
+const posthog = new PostHog(process.env.NEXT_PUBLIC_POSTHOG_KEY!);
 
 export const aiCompose = async ({
   prompt,
@@ -58,8 +62,13 @@ export const aiCompose = async ({
     } as const;
   });
 
+  const openai = createOpenAI();
+  const model = withTracing(openai('gpt-4o-mini'), posthog, {
+    posthogDistinctId: session.userId,
+  });
+
   const { text } = await generateText({
-    model: openai('gpt-4o-mini'),
+    model,
     messages: [
       {
         role: 'system',
@@ -97,6 +106,8 @@ export const aiCompose = async ({
     presencePenalty: 0.1, // nudge the model to add fresh info
     maxRetries: 1,
   });
+
+  await posthog.shutdown();
 
   return {
     newBody: text,
