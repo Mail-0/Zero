@@ -139,5 +139,7 @@ export async function POST(req: Request) {
     },
   });
 
+  await posthog.shutdown();
+
   return result.toDataStreamResponse();
 }

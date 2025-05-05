@@ -161,6 +161,8 @@ Important: This is a search-only assistant. Do not generate email content or han
       summary += `\n\nI couldn't find any emails ${searchExplanation}. Would you like to try a different search?`;
     }
 
+    await posthog.shutdown();
+
     return new Response(
       JSON.stringify({
         content: summary,

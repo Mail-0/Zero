@@ -373,6 +373,8 @@ const extractStyleMatrix = async (emailBody: string) => {
     },
   });
 
+  await posthog.shutdown();
+
   const greeting = result.greetingForm?.trim().toLowerCase();
   const signOff = result.signOffForm?.trim().toLowerCase();
   return {

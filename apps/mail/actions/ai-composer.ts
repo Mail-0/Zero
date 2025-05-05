@@ -107,6 +107,8 @@ export const aiCompose = async ({
     maxRetries: 1,
   });
 
+  await posthog.shutdown();
+
   return {
     newBody: text,
   };
