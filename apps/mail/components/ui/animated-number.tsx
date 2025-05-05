@@ -16,7 +16,7 @@ export function AnimatedNumber({
   springOptions,
   as = 'span',
 }: AnimatedNumberProps) {
-  const MotionComponent = motion.create(as as keyof JSX.IntrinsicElements);
+  const MotionComponent = motion.create(as);
 
   const spring = useSpring(value, springOptions);
   const display = useTransform(spring, (current) => Math.round(current).toLocaleString());

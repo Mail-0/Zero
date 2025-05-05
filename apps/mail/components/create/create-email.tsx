@@ -2,13 +2,14 @@
 import { useEmailAliases } from '@/hooks/use-email-aliases';
 import { useConnections } from '@/hooks/use-connections';
 import { useHotkeysContext } from 'react-hotkeys-hook';
+import { useTRPC } from '@/providers/query-provider';
 import { DialogClose } from '@/components/ui/dialog';
-import { useSettings } from '@/hooks/use-settings';
+import { useMutation } from '@tanstack/react-query';
 import { EmailComposer } from './email-composer';
 import { useSession } from '@/lib/auth-client';
+import { serializeFiles } from '@/lib/schemas';
 import { useDraft } from '@/hooks/use-drafts';
 import { useTranslations } from 'next-intl';
-import { sendEmail } from '@/actions/send';
 import { useQueryState } from 'nuqs';
 import { X } from '../icons/icons';
 import posthog from 'posthog-js';
@@ -26,17 +27,19 @@ export function CreateEmail({
   initialBody?: string;
 }) {
   const { data: session } = useSession();
-  const { data: connections } = useConnections();
-  const { aliases, isLoading: isLoadingAliases } = useEmailAliases();
+  const { data } = useConnections();
+  const { data: aliases, isLoading: isLoadingAliases } = useEmailAliases();
   const [draftId, setDraftId] = useQueryState('draftId');
   const [composeOpen, setComposeOpen] = useQueryState('isComposeOpen');
   const { data: draft } = useDraft(draftId ?? null);
   const t = useTranslations();
+  const trpc = useTRPC();
+  const { mutateAsync: sendEmail } = useMutation(trpc.mail.send.mutationOptions());
 
   const activeAccount = React.useMemo(() => {
     if (!session) return null;
-    return connections?.find((connection) => connection.id === session?.activeConnection?.id);
-  }, [session, connections]);
+    return data?.connections?.find((connection) => connection.id === session?.activeConnection?.id);
+  }, [session, data]);
 
   const userName =
     activeAccount?.name || session?.activeConnection?.name || session?.user?.name || '';
@@ -60,7 +63,7 @@ export function CreateEmail({
       bcc: data.bcc?.map((email) => ({ email, name: email.split('@')[0] || email })),
       subject: data.subject,
       message: data.message,
-      attachments: data.attachments,
+      attachments: await serializeFiles(data.attachments),
       fromEmail,
       draftId: draftId ?? undefined,
     });
@@ -94,7 +97,7 @@ export function CreateEmail({
           </DialogClose>
         </div>
         <EmailComposer
-          className="mb-12 rounded-2xl border relative z-50"
+          className="relative z-50 mb-12 rounded-2xl border"
           onSendEmail={handleSendEmail}
           initialMessage={draft?.content}
           initialTo={draft?.to?.map((e) => e.replace(/[<>]/g, ''))}

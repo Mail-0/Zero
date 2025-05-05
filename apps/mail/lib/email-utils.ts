@@ -1,5 +1,5 @@
 import { parseFrom as _parseFrom, parseAddressList as _parseAddressList } from 'email-addresses';
-import { Sender } from '@/types';
+import type { Sender } from '@/types';
 import Color from 'color';
 
 export const fixNonReadableColors = (rootElement: HTMLElement, minContrast = 3.5) => {

@@ -49,9 +49,9 @@ export const TextButtons = () => {
                 height={16}
                 className="h-4 w-4"
               />
-            ) : (
-              <item.icon className="h-4 w-4" />
-            )}
+            ) : null
+            // <item.icon className="h-4 w-4" />
+            }
             <span className="text-xs">{item.label}</span>
           </Button>
         </EditorBubbleItem>

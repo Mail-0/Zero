@@ -157,6 +157,7 @@ const useComposeEditor = ({
   onTab,
   myInfo,
   sender,
+  autofocus = false,
 }: {
   initialValue?: Record<string, unknown> | string | null;
   isReadOnly?: boolean;
@@ -181,6 +182,7 @@ const useComposeEditor = ({
     name?: string;
     email?: string;
   };
+  autofocus?: boolean;
 }) => {
   const extensions = [
     ...defaultExtensions,
@@ -218,10 +220,16 @@ const useComposeEditor = ({
 
   return useEditor({
     editable: !isReadOnly,
+    autofocus: autofocus ? 'end' : false,
     onCreate: ({ editor }) => {
       if (onLengthChange) {
         const content = editor.getText();
         void onLengthChange(content.length);
+      }
+      if (autofocus) {
+        setTimeout(() => {
+          editor.commands.focus('end');
+        }, 100);
       }
     },
     onUpdate: ({ editor }) => {

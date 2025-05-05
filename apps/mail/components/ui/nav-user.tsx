@@ -7,11 +7,10 @@ import {
   MoonIcon,
   Settings,
   Plus,
-  ChevronDown,
-  BrainCircuitIcon,
   BrainIcon,
   CopyCheckIcon,
 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CircleCheck, ThreeDots } from '../icons/icons';
 import { SunIcon } from '../icons/animated/sun';
@@ -26,18 +25,20 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { DisableBrain, EnableBrain } from '@/actions/brain';
 import { useConnections } from '@/hooks/use-connections';
 import { signOut, useSession } from '@/lib/auth-client';
 import { AddConnectionDialog } from '../connection/add';
-import { putConnection } from '@/actions/connections';
+import { useTRPC } from '@/providers/query-provider';
 import { useSidebar } from '@/components/ui/sidebar';
+import { useMutation } from '@tanstack/react-query';
 import { useBrainState } from '@/hooks/use-summary';
-import { dexieStorageProvider } from '@/lib/idb';
+import { useBilling } from '@/hooks/use-billing';
+import { Gauge } from '@/components/ui/gauge';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { type IConnection } from '@/types';
 import { useTheme } from 'next-themes';
+import { Progress } from './progress';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -45,12 +46,18 @@ import { toast } from 'sonner';
 export function NavUser() {
   const { data: session, refetch } = useSession();
   const router = useRouter();
-  const { data: connections, isLoading, mutate } = useConnections();
+  const { data, isLoading, refetch: refetchConnections } = useConnections();
   const [isRendered, setIsRendered] = useState(false);
   const { theme, resolvedTheme, setTheme } = useTheme();
   const t = useTranslations();
   const { state } = useSidebar();
-
+  const trpc = useTRPC();
+  const { mutateAsync: setDefaultConnection } = useMutation(
+    trpc.connections.setDefault.mutationOptions(),
+  );
+  const { mutateAsync: EnableBrain } = useMutation(trpc.brain.enableBrain.mutationOptions());
+  const { mutateAsync: DisableBrain } = useMutation(trpc.brain.disableBrain.mutationOptions());
+  const { chatMessages, brainActivity } = useBilling();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -63,7 +70,6 @@ export function NavUser() {
   }, [pathname, searchParams]);
 
   const handleClearCache = useCallback(async () => {
-    dexieStorageProvider().clear();
     toast.success('Cache cleared successfully');
   }, []);
 
@@ -75,26 +81,28 @@ export function NavUser() {
   const handleEnableBrain = useCallback(async () => {
     // This takes too long, not waiting
     const enabled = await EnableBrain({});
+    await refetchBrainState();
     if (enabled) toast.success('Brain enabled successfully');
   }, []);
 
   const handleDisableBrain = useCallback(async () => {
     // This takes too long, not waiting
     const enabled = await DisableBrain({});
+    await refetchBrainState();
     if (enabled) toast.success('Brain disabled');
   }, []);
 
   const activeAccount = useMemo(() => {
-    if (!session) return null;
-    return connections?.find((connection) => connection.id === session?.connectionId);
-  }, [session, connections]);
+    if (!session || !data) return null;
+    return data.connections?.find((connection) => connection.id === session?.connectionId);
+  }, [session, data]);
 
   useEffect(() => setIsRendered(true), []);
 
-  const handleAccountSwitch = (connection: IConnection) => async () => {
-    await putConnection(connection.id);
+  const handleAccountSwitch = (connectionId: string) => async () => {
+    await setDefaultConnection({ connectionId });
     refetch();
-    mutate();
+    refetchConnections();
   };
 
   const handleLogout = async () => {
@@ -108,7 +116,7 @@ export function NavUser() {
     );
   };
 
-  const { data: brainState } = useBrainState();
+  const { data: brainState, refetch: refetchBrainState } = useBrainState();
 
   const handleThemeToggle = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -189,12 +197,12 @@ export function NavUser() {
                       {t('common.navUser.accounts')}
                     </p>
 
-                    {connections
+                    {data?.connections
                       ?.filter((connection) => connection.id !== session.connectionId)
                       .map((connection) => (
                         <DropdownMenuItem
                           key={connection.id}
-                          onClick={handleAccountSwitch(connection)}
+                          onClick={handleAccountSwitch(connection.id)}
                           className="flex cursor-pointer items-center gap-3 py-1"
                         >
                           <Avatar className="size-7 rounded-lg">
@@ -280,14 +288,14 @@ export function NavUser() {
             </DropdownMenu>
           )
         ) : (
-          <div className="mt-0. flex w-full items-center justify-between">
+          <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-2">
-              {connections?.map((connection) => (
+              {data?.connections.slice(0, 3).map((connection) => (
                 <div
                   key={connection.id}
-                  onClick={handleAccountSwitch(connection)}
+                  onClick={handleAccountSwitch(connection.id)}
                   className={`flex cursor-pointer items-center ${
-                    connection.id === session.connectionId && connections.length > 1
+                    connection.id === session.connectionId && data.connections.length > 1
                       ? 'outline-mainBlue rounded-[5px] outline outline-2'
                       : ''
                   }`}
@@ -308,12 +316,62 @@ export function NavUser() {
                           .slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
-                    {connection.id === session.connectionId && connections.length > 1 && (
+                    {connection.id === session.connectionId && data.connections.length > 1 && (
                       <CircleCheck className="fill-mainBlue absolute -bottom-2 -right-2 size-4 rounded-full bg-white dark:bg-black" />
                     )}
                   </div>
                 </div>
               ))}
+
+              {data?.connections && data.connections.length > 3 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="hover:bg-muted flex h-7 w-7 cursor-pointer items-center justify-center rounded-[5px]">
+                      <span className="text-[10px]">+{data.connections.length - 3}</span>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    className="ml-3 min-w-56 bg-white font-medium dark:bg-[#131313]"
+                    align="end"
+                    side={'bottom'}
+                    sideOffset={8}
+                  >
+                    {data.connections.slice(3).map((connection) => (
+                      <DropdownMenuItem
+                        key={connection.id}
+                        onClick={handleAccountSwitch(connection.id)}
+                        className="flex cursor-pointer items-center gap-3 py-1"
+                      >
+                        <Avatar className="size-7 rounded-lg">
+                          <AvatarImage
+                            className="rounded-lg"
+                            src={connection.picture || undefined}
+                            alt={connection.name || connection.email}
+                          />
+                          <AvatarFallback className="rounded-lg text-[10px]">
+                            {(connection.name || connection.email)
+                              .split(' ')
+                              .map((n) => n[0])
+                              .join('')
+                              .toUpperCase()
+                              .slice(0, 2)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="-space-y-0.5">
+                          <p className="text-[12px]">{connection.name || connection.email}</p>
+                          {connection.name && (
+                            <p className="text-muted-foreground text-[11px]">
+                              {connection.email.length > 25
+                                ? `${connection.email.slice(0, 25)}...`
+                                : connection.email}
+                            </p>
+                          )}
+                        </div>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
 
               <AddConnectionDialog>
                 <button className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-[5px] border border-dashed dark:bg-[#262626] dark:text-[#929292]">
@@ -321,6 +379,7 @@ export function NavUser() {
                 </button>
               </AddConnectionDialog>
             </div>
+
             <div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -399,7 +458,7 @@ export function NavUser() {
                     <DropdownMenuItem onClick={handleEnableBrain}>
                       <div className="flex items-center gap-2">
                         <BrainIcon size={16} className="opacity-60" />
-                        <p className="text-[13px] opacity-60">Enable Brain Activity</p>
+                        <p className="text-[13px] opacity-60">Enable Auto Labeling</p>
                       </div>
                     </DropdownMenuItem>
                   ) : null}
@@ -407,7 +466,7 @@ export function NavUser() {
                     <DropdownMenuItem onClick={handleDisableBrain}>
                       <div className="flex items-center gap-2">
                         <BrainIcon size={16} className="opacity-60" />
-                        <p className="text-[13px] opacity-60">Disable Brain Activity</p>
+                        <p className="text-[13px] opacity-60">Disable Auto Labeling</p>
                       </div>
                     </DropdownMenuItem>
                   ) : null}
@@ -417,16 +476,75 @@ export function NavUser() {
           </div>
         )}
       </div>
+      {state === 'collapsed' && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="mt-2">
+              <Gauge value={50 - chatMessages.remaining!} size="small" showValue={true} />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent className="text-xs">
+            <p>You've used {50 - chatMessages.remaining!} out of 50 chat messages.</p>
+            <p>Upgrade for unlimited messages!</p>
+          </TooltipContent>
+        </Tooltip>
+      )}
       {state !== 'collapsed' && (
-        <div className="my-2 flex flex-col items-start gap-1 space-y-1">
-          <div className="text-[13px] leading-none text-black dark:text-white">
-            {activeAccount?.name || session.user.name || 'User'}
+        <div className="flex items-center justify-between gap-2">
+          <div className="my-2 flex flex-col items-start gap-1 space-y-1">
+            <div className="text-[13px] leading-none text-black dark:text-white">
+              {activeAccount?.name || session.user.name || 'User'}
+            </div>
+            <div className="text-xs font-normal leading-none text-[#898989]">
+              {activeAccount?.email || session.user.email}
+            </div>
           </div>
-          <div className="text-xs font-normal leading-none text-[#898989]">
-            {activeAccount?.email || session.user.email}
-          </div>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div>
+                <Gauge value={50 - chatMessages.remaining!} size="small" showValue={true} />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent className="text-xs">
+              <p>You've used {50 - chatMessages.remaining!} out of 50 chat messages.</p>
+              <p>Upgrade for unlimited messages!</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       )}
+
+      <div className="space-y-1">
+        {/* <div>
+          <div className="text-muted-foreground flex justify-between text-[10px] uppercase tracking-widest">
+            <span>AI Chats</span>
+            {chatMessages.unlimited ? (
+              <span>Unlimited</span>
+            ) : (
+              <span>
+                {chatMessages.remaining}/{chatMessages.total}
+              </span>
+            )}
+          </div>
+          <Progress className="h-1" value={(chatMessages.remaining! / chatMessages.total) * 100} />
+        </div> */}
+        {/* <div>
+          <div className="text-muted-foreground flex justify-between text-[10px] uppercase tracking-widest">
+            <span>AI Labels</span>
+            {brainActivity.unlimited ? (
+              <span>Unlimited</span>
+            ) : (
+              <span>
+                {brainActivity.remaining}/{brainActivity.total}
+              </span>
+            )}
+          </div>
+          <Progress
+            className="h-1"
+            value={(brainActivity.remaining! / brainActivity.total) * 100}
+          />
+        </div> */}
+      </div>
     </div>
   );
 }

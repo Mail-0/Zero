@@ -5,10 +5,9 @@ import { MAX_URL_LENGTH } from './constants';
 import { filterSuggestions } from './filter';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { JSONContent } from 'novel';
+import type { JSONContent } from 'novel';
+import type { Sender } from '@/types';
 import LZString from 'lz-string';
-import { Sender } from '@/types';
-import axios from 'axios';
 
 export const FOLDERS = {
   SPAM: 'spam',
@@ -125,8 +124,6 @@ export const truncateFileName = (name: string, maxLength = 15) => {
   }
   return `${name.slice(0, maxLength)}...`;
 };
-
-export const fetcher = (url: string) => axios.get(url).then((res) => res.data);
 
 export type FilterSuggestion = {
   filter: string;

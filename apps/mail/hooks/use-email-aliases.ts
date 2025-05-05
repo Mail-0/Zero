@@ -1,25 +1,13 @@
-'use client';
-
-import useSWRImmutable from 'swr/immutable';
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
-
-export type EmailAlias = {
-  email: string;
-  name?: string;
-  primary?: boolean;
-};
+import { useTRPC } from '@/providers/query-provider';
+import { useQuery } from '@tanstack/react-query';
 
 export function useEmailAliases() {
-  const { data, error, isLoading, mutate } = useSWRImmutable<EmailAlias[]>(
-    '/api/v1/email-aliases',
-    fetcher,
+  const trpc = useTRPC();
+  const emailAliasesQuery = useQuery(
+    trpc.mail.getEmailAliases.queryOptions(void 0, {
+      initialData: [] as { email: string; name: string; primary?: boolean }[],
+      staleTime: 1000 * 60 * 60, // 1 hour
+    }),
   );
-
-  return {
-    aliases: data || [],
-    isLoading,
-    error,
-    mutate,
-  };
+  return emailAliasesQuery;
 }

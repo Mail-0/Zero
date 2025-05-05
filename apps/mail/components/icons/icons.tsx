@@ -280,6 +280,25 @@ export const SettingsGear = ({ className }: { className?: string }) => (
   </svg>
 );
 
+export const LockIcon = ({ className }: { className?: string }) => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 16 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M5.5 5C5.5 3.34315 6.84315 2 8.5 2C10.1569 2 11.5 3.34315 11.5 5V6.5H5.5V5ZM4 6.5V5C4 2.51472 6.01472 0.5 8.5 0.5C10.9853 0.5 13 2.51472 13 5V6.5H13.25C14.2165 6.5 15 7.2835 15 8.25V13.25C15 14.2165 14.2165 15 13.25 15H3.75C2.7835 15 2 14.2165 2 13.25V8.25C2 7.2835 2.7835 6.5 3.75 6.5H4Z"
+      fill="var(--icon-color)"
+      fillOpacity="0.5"
+    />
+  </svg>
+);
+
 export const MessageSquare = ({ className }: { className?: string }) => (
   <svg
     width="16"
@@ -1329,7 +1348,7 @@ export const Paper = ({ className }: { className?: string }) => (
   <svg
     width="18"
     height="22"
-    viewBox="0 -3 10 28"
+    viewBox="0 -3 14 28"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
     className={className}

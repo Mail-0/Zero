@@ -3,15 +3,17 @@
 import { useEmailAliases } from '@/hooks/use-email-aliases';
 import { EmailComposer } from '../create/email-composer';
 import { useHotkeysContext } from 'react-hotkeys-hook';
+import { useTRPC } from '@/providers/query-provider';
+import { useMutation } from '@tanstack/react-query';
 import { constructReplyBody } from '@/lib/utils';
 import { useThread } from '@/hooks/use-threads';
 import { useSession } from '@/lib/auth-client';
+import { serializeFiles } from '@/lib/schemas';
 import { useDraft } from '@/hooks/use-drafts';
 import { useTranslations } from 'next-intl';
-import { sendEmail } from '@/actions/send';
+import { useEffect, useState } from 'react';
+import type { Sender } from '@/types';
 import { useQueryState } from 'nuqs';
-import { useEffect } from 'react';
-import { Sender } from '@/types';
 import { toast } from 'sonner';
 
 interface ReplyComposeProps {
@@ -20,14 +22,16 @@ interface ReplyComposeProps {
 
 export default function ReplyCompose({ messageId }: ReplyComposeProps) {
   const [threadId] = useQueryState('threadId');
-  const { data: emailData, mutate } = useThread(threadId);
+  const { data: emailData, refetch } = useThread(threadId);
   const { data: session } = useSession();
   const [mode, setMode] = useQueryState('mode');
   const { enableScope, disableScope } = useHotkeysContext();
-  const { aliases, isLoading: isLoadingAliases } = useEmailAliases();
+  const { data: aliases, isLoading: isLoadingAliases } = useEmailAliases();
   const t = useTranslations();
   const [draftId, setDraftId] = useQueryState('draftId');
   const { data: draft, isLoading: isDraftLoading } = useDraft(draftId ?? null);
+  const trpc = useTRPC();
+  const { mutateAsync: sendEmail } = useMutation(trpc.mail.send.mutationOptions());
 
   // Find the specific message to reply to
   const replyToMessage =
@@ -141,7 +145,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
         bcc: bccRecipients,
         subject: data.subject,
         message: replyBody,
-        attachments: data.attachments,
+        attachments: await serializeFiles(data.attachments),
         fromEmail: aliases?.[0]?.email || userEmail,
         headers: {
           'In-Reply-To': replyToMessage?.messageId ?? '',
@@ -158,7 +162,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
 
       // Reset states
       setMode(null);
-      await mutate();
+      await refetch();
       toast.success(t('pages.createEmail.emailSent'));
     } catch (error) {
       console.error('Error sending email:', error);
@@ -178,6 +182,16 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
       disableScope('compose');
     };
   }, [mode, enableScope, disableScope]);
+
+  // Add effect to handle initial focus
+  const [shouldFocus, setShouldFocus] = useState(true);
+  useEffect(() => {
+    if (mode) {
+      setShouldFocus(true);
+    } else {
+      setShouldFocus(false);
+    }
+  }, [mode]);
 
   if (!mode || !emailData) return null;
 
@@ -206,19 +220,18 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
               if (recipient.name) {
                 to.push(recipient.name);
               }
-
               return to;
             }, []),
             cc: message.cc?.reduce<string[]>((cc, recipient) => {
               if (recipient.name) {
                 cc.push(recipient.name);
               }
-
               return cc;
             }, []),
             subject: message.subject,
           };
         })}
+        autofocus={shouldFocus}
       />
     </div>
   );

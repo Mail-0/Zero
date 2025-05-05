@@ -1,13 +1,16 @@
-export type ShortcutType = 'single' | 'combination';
+import { z } from 'zod';
 
-export type Shortcut = {
-  keys: string[];
-  action: string;
-  type: ShortcutType;
-  description: string;
-  scope: string;
-  preventDefault?: boolean;
-};
+export const shortcutSchema = z.object({
+  keys: z.array(z.string()),
+  action: z.string(),
+  type: z.enum(['single', 'combination']),
+  description: z.string(),
+  scope: z.string(),
+  preventDefault: z.boolean().optional(),
+});
+
+export type Shortcut = z.infer<typeof shortcutSchema>;
+export type ShortcutType = Shortcut['type'];
 
 const threadDisplayShortcuts: Shortcut[] = [
   // {
