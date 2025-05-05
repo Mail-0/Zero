@@ -4,7 +4,7 @@ import { sanitizeTipTapHtml } from '@/lib/sanitize-tip-tap-html';
 import { IOutgoingMessage, type ParsedMessage } from '@/types';
 import { type IConfig, type MailManager } from './types';
 import { type gmail_v1, google } from 'googleapis';
-import { cleanSearchValue } from '@/lib/utils';
+import { cleanSearchValue, LABELS } from '@/lib/utils';
 import { createMimeMessage } from 'mimetext';
 import { toByteArray } from 'base64-js';
 import * as he from 'he';
@@ -614,7 +614,7 @@ export const driver = async (config: IConfig): Promise<MailManager> => {
               });
               return {
                 label: res.data.name ?? res.data.id ?? '',
-                count: Number(res.data.threadsUnread) ?? undefined,
+                count: res.data.name == LABELS.SENT ? Number(res.data.messagesTotal) : Number(res.data.threadsUnread) ?? undefined,
               };
             }),
           );
