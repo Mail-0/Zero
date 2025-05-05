@@ -83,8 +83,7 @@ Important: This is a search-only assistant. Do not generate email content or han
 
     const openai = createOpenAI();
     const model = withTracing(openai('gpt-3.5-turbo'), posthog, {
-      // posthogTraceId: crypto.randomUUID(),
-      // unsure of what to use here
+      posthogDistinctId: session.user.id,
     });
 
     const { text, steps } = await generateText({

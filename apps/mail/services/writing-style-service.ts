@@ -4,7 +4,9 @@ import { writingStyleMatrix } from '@zero/db/schema';
 import { withTracing } from '@posthog/ai';
 import { jsonrepair } from 'jsonrepair';
 import { PostHog } from 'posthog-node';
+import { headers } from 'next/headers';
 import { generateObject } from 'ai';
+import { auth } from '@/lib/auth';
 import { eq } from 'drizzle-orm';
 import { db } from '@zero/db';
 import pRetry from 'p-retry';
@@ -338,10 +340,11 @@ const extractStyleMatrix = async (emailBody: string) => {
     throw new Error('Invalid body provided.');
   }
 
+  const session = await auth.api.getSession({ headers: await headers() });
+
   const google = createGoogleGenerativeAI();
   const model = withTracing(google('gemini-2.0-flash'), posthog, {
-    // posthogTraceId: crypto.randomUUID(),
-    // unsure of what to use here
+    posthogDistinctId: session?.user?.id,
   });
 
   const { object: result } = await generateObject({

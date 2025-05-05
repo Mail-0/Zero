@@ -1,12 +1,12 @@
 import { getActiveConnection } from '@/actions/utils';
 import { ToolInvocation, streamText } from 'ai';
-import { NextResponse } from 'next/server';
-import { createDriver } from '../driver';
 import { createOpenAI } from '@ai-sdk/openai';
+import { NextResponse } from 'next/server';
+import { withTracing } from '@posthog/ai';
+import { createDriver } from '../driver';
+import { PostHog } from 'posthog-node';
 import prompt from './prompt';
 import { z } from 'zod';
-import { PostHog } from 'posthog-node';
-import { withTracing } from '@posthog/ai';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -35,10 +35,9 @@ export async function POST(req: Request) {
 
   const openai = createOpenAI();
   const model = withTracing(openai('gpt-4o'), posthog, {
-    // posthogTraceId: crypto.randomUUID(),
-    // unsure of what to use here
+    posthogDistinctId: connection.userId,
   });
-  
+
   const result = streamText({
     model,
     system: prompt,
