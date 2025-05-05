@@ -140,7 +140,7 @@ export default function ConnectionsPage() {
                           {t('pages.settings.connections.disconnectDescription')}
                         </DialogDescription>
                       </DialogHeader>
-                      <div className="flex justify-end gap-4">
+                      <div className="flex justify-end gap-4 mt-4">
                         <DialogClose asChild>
                           <Button variant="outline">
                             {t('pages.settings.connections.cancel')}

@@ -352,7 +352,7 @@ const Thread = memo(
               'hover:bg-offsetLight hover:bg-primary/5 group relative flex cursor-pointer flex-col items-start overflow-clip rounded-lg border border-transparent px-4 py-3 text-left text-sm transition-all hover:opacity-100',
 
               (isMailSelected || isMailBulkSelected || isKeyboardFocused) &&
-                'border-border bg-primary/5 opacity-100',
+              'border-border bg-primary/5 opacity-100',
               isKeyboardFocused && 'ring-primary/50 ring-2',
             )}
           >
@@ -447,6 +447,17 @@ const Thread = memo(
 
     if (demo) return demoContent;
 
+
+
+    const handleBulkSelect = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      const threadId = latestMessage?.threadId ?? message.id;
+      setMail((prev: Config) => ({
+        ...prev,
+        bulkSelected: [...prev.bulkSelected, threadId],
+      }));
+    }
+
     const content =
       latestMessage && getThreadData ? (
         <div className="select-none py-1" onClick={onClick ? onClick(latestMessage) : undefined}>
@@ -458,7 +469,7 @@ const Thread = memo(
             className={cn(
               'hover:bg-offsetLight hover:bg-primary/5 group relative mx-[8px] flex cursor-pointer flex-col items-start rounded-[10px] border-transparent py-3 text-left text-sm transition-all hover:opacity-100',
               (isMailSelected || isMailBulkSelected || isKeyboardFocused) &&
-                'border-border bg-primary/5 opacity-100',
+              'border-border bg-primary/5 opacity-100',
               isKeyboardFocused && 'ring-primary/50',
               'relative',
             )}
@@ -557,32 +568,18 @@ const Thread = memo(
                   {isGroupThread ? (
                     <div
                       className="flex h-full w-full items-center justify-center rounded-full bg-[#FFFFFF] p-2 dark:bg-[#373737]"
-                      onClick={(e: React.MouseEvent) => {
-                        e.stopPropagation();
-                        const threadId = latestMessage.threadId ?? message.id;
-                        setMail((prev: Config) => ({
-                          ...prev,
-                          bulkSelected: [...prev.bulkSelected, threadId],
-                        }));
-                      }}
+                      onClick={handleBulkSelect}
                     >
                       <GroupPeople className="h-4 w-4" />
                     </div>
                   ) : (
                     <>
                       <AvatarImage
-                        onClick={(e: React.MouseEvent) => {
-                          e.stopPropagation();
-                          const threadId = latestMessage.threadId ?? message.id;
-                          setMail((prev: Config) => ({
-                            ...prev,
-                            bulkSelected: [...prev.bulkSelected, threadId],
-                          }));
-                        }}
+                        onClick={handleBulkSelect}
                         className="rounded-full bg-[#FFFFFF] dark:bg-[#373737]"
                         src={getEmailLogo(latestMessage.sender.email)}
                       />
-                      <AvatarFallback className="rounded-full bg-[#FFFFFF] font-bold text-[#9F9F9F] dark:bg-[#373737]">
+                      <AvatarFallback  onClick={handleBulkSelect} className="rounded-full bg-[#FFFFFF] font-bold text-[#9F9F9F] dark:bg-[#373737]">
                         {cleanName[0]?.toUpperCase()}
                       </AvatarFallback>
                     </>
