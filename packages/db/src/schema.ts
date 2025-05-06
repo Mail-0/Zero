@@ -1,7 +1,15 @@
-import { pgTableCreator, text, timestamp, boolean, integer, jsonb, primaryKey } from 'drizzle-orm/pg-core';
+import {
+  pgTableCreator,
+  text,
+  timestamp,
+  boolean,
+  integer,
+  jsonb,
+  primaryKey,
+} from 'drizzle-orm/pg-core';
+import type { WritingStyleMatrix } from '@zero/mail/services/writing-style-service';
 import { defaultUserSettings } from '@zero/db/user_settings_default';
 import { unique } from 'drizzle-orm/pg-core';
-import type { WritingStyleMatrix } from '@zero/mail/services/writing-style-service';
 
 export const createTable = pgTableCreator((name) => `mail0_${name}`);
 
@@ -92,6 +100,7 @@ export const connection = createTable(
     expiresAt: timestamp('expires_at').notNull(),
     createdAt: timestamp('created_at').notNull(),
     updatedAt: timestamp('updated_at').notNull(),
+    themeId: text('theme_id'),
   },
   (t) => [unique().on(t.userId, t.email)],
 );
@@ -133,17 +142,41 @@ export const userSettings = createTable('user_settings', {
   updatedAt: timestamp('updated_at').notNull(),
 });
 
-export const writingStyleMatrix = createTable('writing_style_matrix', {
-  connectionId: text()
+export const writingStyleMatrix = createTable(
+  'writing_style_matrix',
+  {
+    connectionId: text()
+      .notNull()
+      .references(() => connection.id),
+    numMessages: integer().notNull(),
+    style: jsonb().$type<WritingStyleMatrix>().notNull(),
+    updatedAt: timestamp()
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => {
+    return [
+      primaryKey({
+        columns: [table.connectionId],
+      }),
+    ];
+  },
+);
+
+export const theme = createTable('theme', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
     .notNull()
-    .references(() => connection.id),
-  numMessages: integer().notNull(),
-  style: jsonb().$type<WritingStyleMatrix>().notNull(),
-  updatedAt: timestamp().defaultNow().notNull().$onUpdate(() => new Date())
-}, (table) => {
-  return [
-    primaryKey({
-      columns: [table.connectionId],
-    }),
-  ]
-})
+    .references(() => user.id),
+  name: text('name').notNull(),
+  colors: jsonb('colors').notNull(), // { primary, secondary, background, etc. }
+  fonts: jsonb('fonts').notNull(), // { body, heading, etc. }
+  spacing: jsonb('spacing').notNull(), // { base, lg, sm, etc. }
+  shadows: jsonb('shadows').notNull(), // { card, modal, etc. }
+  radius: jsonb('radius').notNull(), // { button, card, etc. }
+  backgrounds: jsonb('backgrounds').notNull(), // { main, accent, etc. }
+  isPublic: boolean('is_public').notNull().default(false),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
