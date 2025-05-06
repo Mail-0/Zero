@@ -1,0 +1,1 @@
+ALTER TABLE "mail0_connection" ADD COLUMN "theme_id" text;
