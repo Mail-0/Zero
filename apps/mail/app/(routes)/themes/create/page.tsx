@@ -47,6 +47,7 @@ export default function CreateThemePage() {
                                       type={control.type}
                                       label={control.label}
                                       name={control.name}
+                                      sliderConfig={control.sliderConfig}
                                     />
                                   ))}
                                 </AccordionContent>

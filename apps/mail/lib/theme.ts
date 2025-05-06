@@ -25,6 +25,7 @@ export const StyleSchema = z.object({
   'chart-3': z.string(),
   'chart-4': z.string(),
   'chart-5': z.string(),
+  radius: z.string(),
 });
 
 export type TStyleSchema = z.infer<typeof StyleSchema>;

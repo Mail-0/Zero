@@ -29,6 +29,7 @@ export function CreateThemeFormProvider({ children }: { children: React.ReactNod
         'muted-foreground': '#ffffff',
         'secondary-foreground': '#000000',
         secondary: '#f1f1f1',
+        radius: '0.5em',
       },
     },
   });

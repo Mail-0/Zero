@@ -2,7 +2,7 @@ import { type ThemeStylesSchema, type TStyleSchemaKey } from '@/lib/theme';
 import { type FieldPath } from 'react-hook-form';
 import { type z } from 'zod';
 
-export type ThemeEditorControlType = 'color';
+export type ThemeEditorControlType = 'color' | 'slider';
 
 export type ThemeEditorControlName = Exclude<
   FieldPath<z.infer<typeof ThemeStylesSchema>>,
@@ -12,9 +12,21 @@ export type ThemeEditorControlName = Exclude<
 type ThemeEditorControl = {
   name: ThemeEditorControlName;
   label: string;
-  type: ThemeEditorControlType;
-};
-
+} & (
+  | {
+      type: 'color';
+      sliderConfig?: never;
+    }
+  | {
+      type: 'slider';
+      sliderConfig: {
+        min: number;
+        max: number;
+        step: number;
+        unit: string;
+      };
+    }
+);
 type ThemeEditorSection = {
   id: string;
   label: string;
@@ -331,5 +343,23 @@ export const themeEditorControlConfig: ThemeEditorControlConfig = {
     },
   ],
   typography: [],
-  other: [],
+  other: [
+    {
+      id: 'radius',
+      label: 'Radius',
+      controls: [
+        {
+          name: 'light.radius',
+          label: 'Radius',
+          type: 'slider',
+          sliderConfig: {
+            min: 0,
+            max: 100,
+            step: 1,
+            unit: 'em',
+          },
+        },
+      ],
+    },
+  ],
 };
