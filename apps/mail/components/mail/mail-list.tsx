@@ -449,12 +449,21 @@ const Thread = memo(
 
 
 
-    const handleBulkSelect = (e: React.MouseEvent) => {
+    const addThreadToBulkSelection = (e: React.MouseEvent) => {
       e.stopPropagation();
       const threadId = latestMessage?.threadId ?? message.id;
       setMail((prev: Config) => ({
         ...prev,
         bulkSelected: [...prev.bulkSelected, threadId],
+      }));
+    }
+
+    const removeThreadFromBulkSelection = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      const threadId = latestMessage?.threadId ?? message.id;
+      setMail((prev: Config) => ({
+        ...prev,
+        bulkSelected: prev.bulkSelected.filter((id: string) => id !== threadId),
       }));
     }
 
@@ -547,41 +556,34 @@ const Thread = memo(
             <div className="flex w-full items-center justify-between gap-4 px-4">
               <div>
                 <Avatar className="h-8 w-8 rounded-full border dark:border-none">
-                  <div
+                  {isMailBulkSelected ? (<div
                     className={cn(
                       'flex h-full w-full items-center justify-center rounded-full bg-blue-500 p-2 dark:bg-blue-500',
-                      {
-                        hidden: !isMailBulkSelected,
-                      },
                     )}
-                    onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation();
-                      const threadId = latestMessage.threadId ?? message.id;
-                      setMail((prev: Config) => ({
-                        ...prev,
-                        bulkSelected: prev.bulkSelected.filter((id: string) => id !== threadId),
-                      }));
-                    }}
+                    onClick={removeThreadFromBulkSelection}
                   >
                     <Check className="h-4 w-4 text-white" />
-                  </div>
-                  {isGroupThread ? (
-                    <div
-                      className="flex h-full w-full items-center justify-center rounded-full bg-[#FFFFFF] p-2 dark:bg-[#373737]"
-                      onClick={handleBulkSelect}
-                    >
-                      <GroupPeople className="h-4 w-4" />
-                    </div>
-                  ) : (
+                  </div>) : (
                     <>
-                      <AvatarImage
-                        onClick={handleBulkSelect}
-                        className="rounded-full bg-[#FFFFFF] dark:bg-[#373737]"
-                        src={getEmailLogo(latestMessage.sender.email)}
-                      />
-                      <AvatarFallback  onClick={handleBulkSelect} className="rounded-full bg-[#FFFFFF] font-bold text-[#9F9F9F] dark:bg-[#373737]">
-                        {cleanName[0]?.toUpperCase()}
-                      </AvatarFallback>
+                      {isGroupThread ? (
+                        <div
+                          className="flex h-full w-full items-center justify-center rounded-full bg-[#FFFFFF] p-2 dark:bg-[#373737]"
+                          onClick={addThreadToBulkSelection}
+                        >
+                          <GroupPeople className="h-4 w-4" />
+                        </div>
+                      ) : (
+                        <>
+                          <AvatarImage
+                            onClick={addThreadToBulkSelection}
+                            className="rounded-full bg-[#FFFFFF] dark:bg-[#373737]"
+                            src={getEmailLogo(latestMessage.sender.email)}
+                          />
+                          <AvatarFallback onClick={addThreadToBulkSelection} className="rounded-full bg-[#FFFFFF] font-bold text-[#9F9F9F] dark:bg-[#373737]">
+                            {cleanName[0]?.toUpperCase()}
+                          </AvatarFallback>
+                        </>
+                      )}
                     </>
                   )}
                 </Avatar>
