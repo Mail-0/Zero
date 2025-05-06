@@ -26,20 +26,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  bulkArchive,
-  bulkDeleteThread,
-  bulkStar,
-  getMail,
-  markAsImportant,
-  markAsRead,
-} from '@/actions/mail';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { ThreadDemo, ThreadDisplay } from '@/components/mail/thread-display';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MailList, MailListDemo } from '@/components/mail/mail-list';
+import { trpcClient, useTRPC } from '@/providers/query-provider';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
 import { useMediaQuery } from '../../hooks/use-media-query';
 import { useAISidebar } from '@/components/ui/ai-sidebar';
@@ -49,9 +42,11 @@ import { useParams, useRouter } from 'next/navigation';
 import { useMail } from '@/components/mail/use-mail';
 import { SidebarToggle } from '../ui/sidebar-toggle';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useMutation } from '@tanstack/react-query';
 import { useBrainState } from '@/hooks/use-summary';
 import { clearBulkSelectionAtom } from './use-mail';
 import { useThreads } from '@/hooks/use-threads';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/lib/auth-client';
 import { useStats } from '@/hooks/use-stats';
@@ -68,7 +63,7 @@ export function MailLayout() {
   const folder = params?.folder ?? 'inbox';
   const [mail, setMail] = useMail();
   const [, clearBulkSelection] = useAtom(clearBulkSelectionAtom);
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile();
   const router = useRouter();
   const { data: session, isPending } = useSession();
   const t = useTranslations();
@@ -89,21 +84,9 @@ export function MailLayout() {
     }
   }, [session?.user, isPending]);
 
-  const { isLoading, isValidating } = useThreads();
+  const [{ isLoading, isFetching }] = useThreads();
 
   const isDesktop = useMediaQuery('(min-width: 768px)');
-
-  // Check if we're on mobile on mount and when window resizes
-  useEffect(() => {
-    const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < 768); // 768px is the 'md' breakpoint
-    };
-
-    checkIsMobile();
-    window.addEventListener('resize', checkIsMobile);
-
-    return () => window.removeEventListener('resize', checkIsMobile);
-  }, []);
 
   const [threadId, setThreadId] = useQueryState('threadId');
 
@@ -145,7 +128,7 @@ export function MailLayout() {
         // This ensures we don't keep the email content in the URL
         navigator.registerProtocolHandler(
           'mailto',
-          `${window.location.origin}/mail/compose/handle-mailto?mailto=%s`,
+          `${window.location.origin}/api/mailto-handler?mailto=%s`,
         );
       } catch (error) {
         console.error('Failed to register protocol handler:', error);
@@ -223,9 +206,9 @@ export function MailLayout() {
               </div>
               <div
                 className={cn(
-                  `${category[0] === 'Important' ? 'bg-[#F59E0D]' : category[0] === 'All Mail' ? 'bg-[#006FFE]' : category[0] === 'Personal' ? 'bg-[#39ae4a]' : category[0] === 'Updates' ? 'bg-[#8B5CF6]' : category[0] === 'Promotions' ? 'bg-[#F43F5E]' : category[0] === 'Unread' ? 'bg-[#006FFE]' : 'bg-[#F59E0D]'}`,
+                  `${category[0] === 'Important' ? 'bg-[#F59E0D]' : category[0] === 'All Mail' ? 'bg-[#006FFE]' : category[0] === 'Personal' ? 'bg-[#39ae4a]' : category[0] === 'Updates' ? 'bg-[#8B5CF6]' : category[0] === 'Promotions' ? 'bg-[#F43F5E]' : category[0] === 'Unread' ? 'bg-[#FF4800]' : 'bg-[#F59E0D]'}`,
                   'relative bottom-0.5 z-[5] h-0.5 w-full transition-opacity',
-                  isValidating ? 'opacity-100' : 'opacity-0',
+                  isFetching ? 'opacity-100' : 'opacity-0',
                 )}
               />
               <div className="relative z-[1] h-[calc(100dvh-(2px+88px+49px+2px))] overflow-hidden pt-0 md:h-[calc(100dvh-9.8rem)]">
@@ -275,13 +258,20 @@ export function MailLayout() {
 function BulkSelectActions() {
   const t = useTranslations();
   const [errorQty, setErrorQty] = useState(0);
+  const [threadId, setThreadId] = useQueryState('threadId');
   const [isLoading, setIsLoading] = useState(false);
   const [isUnsub, setIsUnsub] = useState(false);
   const [mail, setMail] = useMail();
   const params = useParams<{ folder: string }>();
   const folder = params?.folder ?? 'inbox';
-  const { mutate: mutateThreads } = useThreads();
-  const { mutate: mutateStats } = useStats();
+  const [{ refetch: refetchThreads }] = useThreads();
+  const { refetch: refetchStats } = useStats();
+  const trpc = useTRPC();
+  const { mutateAsync: markAsRead } = useMutation(trpc.mail.markAsRead.mutationOptions());
+  const { mutateAsync: markAsImportant } = useMutation(trpc.mail.markAsImportant.mutationOptions());
+  const { mutateAsync: bulkArchive } = useMutation(trpc.mail.bulkArchive.mutationOptions());
+  const { mutateAsync: bulkStar } = useMutation(trpc.mail.bulkStar.mutationOptions());
+  const { mutateAsync: bulkDeleteThread } = useMutation(trpc.mail.bulkDelete.mutationOptions());
 
   const handleMassUnsubscribe = async () => {
     setIsLoading(true);
@@ -289,7 +279,7 @@ function BulkSelectActions() {
       Promise.all(
         mail.bulkSelected.filter(Boolean).map(async (bulkSelected) => {
           await new Promise((resolve) => setTimeout(resolve, 499));
-          const emailData = await getMail({ id: bulkSelected });
+          const emailData = await trpcClient.mail.get.query({ id: bulkSelected });
           if (emailData) {
             const firstEmail = emailData.latest;
             if (firstEmail)
@@ -302,8 +292,8 @@ function BulkSelectActions() {
       ).then(async () => {
         setIsUnsub(false);
         setIsLoading(false);
-        await mutateThreads();
-        await mutateStats();
+        await refetchThreads();
+        await refetchStats();
         setMail({ ...mail, bulkSelected: [] });
       }),
       {
@@ -315,10 +305,11 @@ function BulkSelectActions() {
   };
 
   const onMoveSuccess = useCallback(async () => {
-    await mutateThreads();
-    await mutateStats();
+    if (threadId && mail.bulkSelected.includes(threadId)) setThreadId(null);
+    refetchThreads();
+    refetchStats();
     setMail({ ...mail, bulkSelected: [] });
-  }, [mail, setMail, mutateThreads, mutateStats]);
+  }, [mail, setMail, refetchThreads, refetchStats, threadId, setThreadId]);
 
   return (
     <div className="flex items-center gap-2">
@@ -502,40 +493,70 @@ export const Categories = () => {
     {
       id: 'Important',
       name: t('common.mailCategories.important'),
-      searchValue: 'is:important',
-      icon: <Lightning className={cn('fill-white dark:fill-white')} />,
+      searchValue: 'is:important NOT is:sent NOT is:draft',
+      icon: (
+        <Lightning
+          className={cn('fill-[#6D6D6D] dark:fill-white', category === 'Important' && 'fill-white')}
+        />
+      ),
     },
     {
       id: 'All Mail',
       name: 'All Mail',
-      searchValue: 'is:inbox',
-      icon: <Mail className={cn('fill-white dark:fill-white')} />,
+      searchValue: 'NOT is:draft (is:inbox OR (is:sent AND to:me))',
+      icon: (
+        <Mail
+          className={cn('fill-[#6D6D6D] dark:fill-white', category === 'All Mail' && 'fill-white')}
+        />
+      ),
       colors:
         'border-0 bg-[#006FFE] text-white dark:bg-[#006FFE] dark:text-white dark:hover:bg-[#006FFE]/90',
     },
     {
       id: 'Personal',
       name: t('common.mailCategories.personal'),
-      searchValue: 'is:personal',
-      icon: <User className={cn('fill-white dark:fill-white')} />,
+      searchValue: 'is:personal NOT is:sent NOT is:draft',
+      icon: (
+        <User
+          className={cn('fill-[#6D6D6D] dark:fill-white', category === 'Personal' && 'fill-white')}
+        />
+      ),
     },
     {
       id: 'Updates',
       name: t('common.mailCategories.updates'),
-      searchValue: 'is:updates',
-      icon: <Bell className={cn('fill-white dark:fill-white')} />,
+      searchValue: 'is:updates NOT is:sent NOT is:draft',
+      icon: (
+        <Bell
+          className={cn('fill-[#6D6D6D] dark:fill-white', category === 'Updates' && 'fill-white')}
+        />
+      ),
     },
     {
       id: 'Promotions',
       name: 'Promotions',
-      searchValue: 'is:promotions',
-      icon: <Tag className={cn('fill-white dark:fill-white')} />,
+      searchValue: 'is:promotions NOT is:sent NOT is:draft',
+      icon: (
+        <Tag
+          className={cn(
+            'fill-[#6D6D6D] dark:fill-white',
+            category === 'Promotions' && 'fill-white',
+          )}
+        />
+      ),
     },
     {
       id: 'Unread',
       name: 'Unread',
-      searchValue: 'is:unread',
-      icon: <ScanEye className={cn('h-4 w-4 fill-white dark:fill-white')} />,
+      searchValue: 'is:unread NOT is:sent NOT is:draft',
+      icon: (
+        <ScanEye
+          className={cn(
+            'h-4 w-4 fill-[#6D6D6D] dark:fill-white',
+            category === 'Unread' && 'fill-white',
+          )}
+        />
+      ),
     },
   ];
 };
@@ -617,9 +638,11 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
             )}
           </button>
         </TooltipTrigger>
-        <TooltipContent side="bottom" align={isSelected ? 'center' : idx === 0 ? 'start' : 'end'}>
-          <span>{cat.name}</span>
-        </TooltipContent>
+        {!isSelected && (
+          <TooltipContent side="top" className={`${idx === 0 ? 'ml-4' : ''}`}>
+            <span>{cat.name}</span>
+          </TooltipContent>
+        )}
       </Tooltip>
     );
   };
@@ -654,7 +677,7 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
 
       <div
         aria-hidden
-        className="absolute inset-0 z-10 overflow-hidden transition-[clip-path] duration-300 ease-in-out"
+        className="pointer-events-none absolute inset-0 z-10 overflow-hidden transition-[clip-path] duration-300 ease-in-out"
         ref={containerRef}
       >
         <div className="flex w-full items-start justify-start gap-2">
@@ -794,7 +817,7 @@ function MailCategoryTabs({
 
       <div
         aria-hidden
-        className="absolute inset-0 z-10 overflow-hidden transition-[clip-path] duration-300 ease-in-out"
+        className="pointer-events-none absolute inset-0 z-10 overflow-hidden transition-[clip-path] duration-300 ease-in-out"
         ref={containerRef}
       >
         <ul className="flex justify-center gap-1.5">

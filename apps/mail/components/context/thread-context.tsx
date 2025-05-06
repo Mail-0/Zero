@@ -25,14 +25,14 @@ import {
   Trash,
   MailOpen,
 } from 'lucide-react';
-import { deleteThread, markAsRead, markAsUnread, toggleStar } from '@/actions/mail';
-import { moveThreadsTo, ThreadDestination } from '@/lib/thread-actions';
+import { moveThreadsTo, type ThreadDestination } from '@/lib/thread-actions';
 import { backgroundQueueAtom } from '@/store/backgroundQueue';
 import { useThread, useThreads } from '@/hooks/use-threads';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useParams, useRouter } from 'next/navigation';
+import { useTRPC } from '@/providers/query-provider';
+import { useMutation } from '@tanstack/react-query';
 import { useLabels } from '@/hooks/use-labels';
-import { modifyLabels } from '@/actions/mail';
 import { LABELS, FOLDERS } from '@/lib/utils';
 import { useStats } from '@/hooks/use-stats';
 import { useTranslations } from 'next-intl';
@@ -66,9 +66,11 @@ interface EmailContextMenuProps {
 }
 
 const LabelsList = ({ threadId }: { threadId: string }) => {
-  const { labels } = useLabels();
-  const { data: thread, mutate } = useThread(threadId);
+  const { data: labels } = useLabels();
+  const { data: thread, refetch } = useThread(threadId);
   const t = useTranslations();
+  const trpc = useTRPC();
+  const { mutateAsync: modifyLabels } = useMutation(trpc.mail.modifyLabels.mutationOptions());
 
   if (!labels || !thread) return null;
 
@@ -80,7 +82,7 @@ const LabelsList = ({ threadId }: { threadId: string }) => {
       addLabels: hasLabel ? [] : [labelId],
       removeLabels: hasLabel ? [labelId] : [],
     });
-    mutate();
+    refetch();
   };
 
   return (
@@ -120,21 +122,27 @@ export function ThreadContextMenu({
 }: EmailContextMenuProps) {
   const { folder } = useParams<{ folder: string }>();
   const [mail, setMail] = useMail();
-  const { mutate, isLoading, isValidating } = useThreads();
+  const [{ refetch, isLoading, isFetching }, threads] = useThreads();
   const currentFolder = folder ?? '';
   const isArchiveFolder = currentFolder === FOLDERS.ARCHIVE;
-  const { mutate: mutateStats } = useStats();
+  const { refetch: refetchStats } = useStats();
   const t = useTranslations();
   const [, setMode] = useQueryState('mode');
   const [, setThreadId] = useQueryState('threadId');
   const [, setBackgroundQueue] = useAtom(backgroundQueueAtom);
-  const { mutate: mutateThread, data: threadData } = useThread(threadId);
-  //   const selectedThreads = useMemo(() => {
-  //     if (mail.bulkSelected.length) {
-  //       return threads.filter((thread) => mail.bulkSelected.includes(thread.id));
-  //     }
-  //     return threads.filter((thread) => thread.id === threadId);
-  //   }, [mail.bulkSelected, threadId, threads]);
+  const { refetch: refetchThread, data: threadData } = useThread(threadId);
+  const trpc = useTRPC();
+  const { mutateAsync: markAsRead } = useMutation(trpc.mail.markAsRead.mutationOptions());
+  const { mutateAsync: markAsUnread } = useMutation(trpc.mail.markAsUnread.mutationOptions());
+  const { mutateAsync: toggleStar } = useMutation(trpc.mail.toggleStar.mutationOptions());
+  const { mutateAsync: deleteThread } = useMutation(trpc.mail.delete.mutationOptions());
+
+  const selectedThreads = useMemo(() => {
+    if (mail.bulkSelected.length) {
+      return threads.filter((thread) => mail.bulkSelected.includes(thread.id));
+    }
+    return threads.filter((thread) => thread.id === threadId);
+  }, [mail.bulkSelected, threadId, threads]);
 
   const isUnread = useMemo(() => {
     return threadData?.hasUnread ?? false;
@@ -174,7 +182,7 @@ export function ThreadContextMenu({
       targets.forEach((threadId) => setBackgroundQueue({ type: 'add', threadId }));
       toast.promise(promise, {
         finally: async () => {
-          await Promise.all([mutate(), mutateStats()]);
+          await Promise.all([refetch(), refetchStats()]);
           setMail({ ...mail, bulkSelected: [] });
           targets.forEach((threadId) => setBackgroundQueue({ type: 'delete', threadId }));
         },
@@ -194,7 +202,7 @@ export function ThreadContextMenu({
     }
     await toggleStar({ ids: targets });
     setMail((prev) => ({ ...prev, bulkSelected: [] }));
-    return await Promise.allSettled([mutateThread(), mutate()]);
+    return await Promise.allSettled([refetchThread(), refetch()]);
   };
 
   const handleReadUnread = () => {
@@ -207,7 +215,7 @@ export function ThreadContextMenu({
       error: t(isUnread ? 'common.mail.failedToMarkAsRead' : 'common.mail.failedToMarkAsUnread'),
       async finally() {
         setMail((prev) => ({ ...prev, bulkSelected: [] }));
-        await Promise.allSettled([mutateThread(), mutate()]);
+        await Promise.allSettled([refetchThread(), refetch()]);
       },
     });
   };
@@ -258,7 +266,7 @@ export function ThreadContextMenu({
     try {
       const promise = deleteThread({ id: threadId }).then(() => {
         setMail((prev) => ({ ...prev, bulkSelected: [] }));
-        return mutate();
+        return refetch();
       });
       toast.promise(promise, {
         loading: t('common.actions.deletingMail'),
@@ -420,7 +428,7 @@ export function ThreadContextMenu({
 
   return (
     <ContextMenu>
-      <ContextMenuTrigger disabled={isLoading || isValidating} className="w-full">
+      <ContextMenuTrigger disabled={isLoading || isFetching} className="w-full">
         {children}
       </ContextMenuTrigger>
       <ContextMenuContent className="w-56" onContextMenu={(e) => e.preventDefault()}>

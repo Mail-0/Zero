@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { useMail } from '@/components/mail/use-mail';
 import { useHotkeys } from 'react-hotkeys-hook';
-import type { InitialThread } from '@/types';
 import { atom, useAtom } from 'jotai';
 
 export const focusedIndexAtom = atom<number | null>(null);
 export const isQuickActionModeAtom = atom<boolean>(false);
 
 export interface UseMailNavigationProps {
-  items: InitialThread[];
+  items: { id: string }[];
   containerRef: React.RefObject<HTMLDivElement | null>;
   onNavigate: (threadId: string) => void;
 }

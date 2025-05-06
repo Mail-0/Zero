@@ -1,14 +1,10 @@
-import { CircleX, AlertCircle, AlertOctagon } from 'lucide-react';
-import { CookieProvider } from '@/providers/cookie-provider';
-import { getLocale, getMessages } from 'next-intl/server';
-import { CircleCheck } from '@/components/icons/icons';
+import { ClientProviders } from '@/providers/client-providers';
+import { ServerProviders } from '@/providers/server-providers';
+import { headers as nextHeaders } from 'next/headers';
 import { Geist, Geist_Mono } from 'next/font/google';
-import { Analytics } from '@vercel/analytics/react';
-import { NextIntlClientProvider } from 'next-intl';
-import CustomToaster from '@/components/ui/toast';
 import { siteConfig } from '@/lib/site-config';
-import { Providers } from '@/lib/providers';
-import { headers } from 'next/headers';
+import type { PropsWithChildren } from 'react';
+import { getLocale } from 'next-intl/server';
 import type { Viewport } from 'next';
 import { cn } from '@/lib/utils';
 import Script from 'next/script';
@@ -24,7 +20,7 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
-export const metadata = siteConfig;
+export { siteConfig as metadata };
 
 export const viewport: Viewport = {
   themeColor: [
@@ -33,41 +29,21 @@ export const viewport: Viewport = {
   ],
 };
 
-export default async function RootLayout({
-  children,
-  cookies,
-}: Readonly<{
-  children: React.ReactNode;
-  cookies: React.ReactNode;
-}>) {
-  // const isEuRegion = (await headers()).get('x-user-eu-region') === 'true';
+export default async function RootLayout({ children }: PropsWithChildren) {
+  const headers = await nextHeaders();
   const locale = await getLocale();
-  const messages = await getMessages();
 
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
-        {/* <script src="https://unpkg.com/react-scan/dist/auto.global.js" /> */}
         <Script src="https://unpkg.com/web-streams-polyfill/dist/polyfill.js" />
-        <meta name="x-user-country" content={(await headers()).get('x-user-country') || ''} />
-        <meta
-          name="x-user-eu-region"
-          content={(await headers()).get('x-user-eu-region') || 'false'}
-        />
+        <meta name="x-user-country" content={headers.get('x-user-country') || ''} />
+        <meta name="x-user-eu-region" content={headers.get('x-user-eu-region') || 'false'} />
       </head>
-      <body
-        className={cn(geistSans.variable, geistMono.variable, 'antialiased')}
-        suppressHydrationWarning
-      >
-        <Providers attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <NextIntlClientProvider messages={messages}>
-            {children}
-            {cookies}
-            <CustomToaster />
-            <Analytics />
-            {/* {isEuRegion && <CookieConsent />} */}
-          </NextIntlClientProvider>
-        </Providers>
+      <body className={cn(geistSans.variable, geistMono.variable, 'antialiased')}>
+        <ServerProviders>
+          <ClientProviders>{children}</ClientProviders>
+        </ServerProviders>
       </body>
     </html>
   );

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { defaultUserSettings } from '@zero/db/user_settings_default';
 import { fixNonReadableColors } from '@/lib/email-utils';
-import { saveUserSettings } from '@/actions/settings';
+import { useTRPC } from '@/providers/query-provider';
 import { getBrowserTimezone } from '@/lib/timezones';
 import { template } from '@/lib/email-utils.client';
+import { useMutation } from '@tanstack/react-query';
 import { useSettings } from '@/hooks/use-settings';
 import { useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
@@ -11,40 +12,42 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export function MailIframe({ html, senderEmail }: { html: string; senderEmail: string }) {
-  const { settings, mutate } = useSettings();
+  const { data, refetch } = useSettings();
   const isTrustedSender = useMemo(
-    () => settings?.externalImages || settings?.trustedSenders?.includes(senderEmail),
-    [settings, senderEmail],
+    () => data?.settings?.externalImages || data?.settings?.trustedSenders?.includes(senderEmail),
+    [data?.settings, senderEmail],
   );
   const [cspViolation, setCspViolation] = useState(false);
-  const [imagesEnabled, setImagesEnabled] = useState(settings?.externalImages || true);
+  const [imagesEnabled, setImagesEnabled] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [height, setHeight] = useState(0);
   const { resolvedTheme } = useTheme();
+  const trpc = useTRPC();
+  const { mutateAsync: saveUserSettings } = useMutation(trpc.settings.save.mutationOptions());
 
   const onTrustSender = useCallback(
     async (senderEmail: string) => {
       setImagesEnabled(true);
 
-      const existingSettings = settings ?? {
+      const existingSettings = data?.settings ?? {
         ...defaultUserSettings,
         timezone: getBrowserTimezone(),
       };
 
       const { success } = await saveUserSettings({
         ...existingSettings,
-        trustedSenders: settings?.trustedSenders
-          ? settings.trustedSenders.concat(senderEmail)
+        trustedSenders: data?.settings.trustedSenders
+          ? data.settings.trustedSenders.concat(senderEmail)
           : [senderEmail],
       });
 
       if (!success) {
         toast.error('Failed to trust sender');
       } else {
-        mutate();
+        refetch();
       }
     },
-    [settings, mutate],
+    [data?.settings, refetch],
   );
 
   useEffect(() => {
@@ -121,7 +124,7 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
 
   return (
     <>
-      {cspViolation && !imagesEnabled && !settings?.externalImages && (
+      {cspViolation && !imagesEnabled && !data?.settings?.externalImages && (
         <div className="flex items-center justify-start bg-amber-600/20 px-2 py-1 text-sm text-amber-600">
           <p>{t('common.actions.hiddenImagesWarning')}</p>
           <button
