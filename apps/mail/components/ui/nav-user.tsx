@@ -422,7 +422,10 @@ export function NavUser() {
           <div className="text-[13px] leading-none text-black dark:text-white">
             {activeAccount?.name || session.user.name || 'User'}
           </div>
-          <div className="text-xs font-normal leading-none text-[#898989]">
+          <div
+            title={activeAccount?.email || session.user.email}
+            className="line-clamp-1 break-all text-xs font-normal leading-none text-[#898989]"
+          >
             {activeAccount?.email || session.user.email}
           </div>
         </div>
