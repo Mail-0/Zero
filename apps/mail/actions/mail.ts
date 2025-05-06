@@ -195,11 +195,11 @@ export const checkSpamEmails = async () => {
     const driver = await getActiveDriver();
     
     // Get all emails from spam folder
-    const spamEmails = await driver.list("spam");
+    const spamEmails = await driver.list('spam');
     
     // Return count and whether there are any emails
     return { 
-      hasEmails: !!(spamEmails && spamEmails.threads && spamEmails.threads.length > 0),
+      hasEmails: !!spamEmails?.threads?.length,
       count: spamEmails?.threads?.length || 0
     };
   } catch (error) {
@@ -213,17 +213,17 @@ export const deleteAllSpamEmails = async () => {
     const driver = await getActiveDriver();
     
     // Get all emails from spam folder
-    const spamEmails = await driver.list("spam");
-    console.log(spamEmails);
-    if (!spamEmails || spamEmails.threads.length === 0) {
+    const spamEmails = await driver.list('spam');
+    
+    if (!spamEmails || !spamEmails.threads || spamEmails.threads.length === 0) {
       return { success: true, message: 'No spam emails to delete' };
     }
     
     // Extract email IDs
     const emailIds = spamEmails.threads.map((thread) => thread.id);
     
-    // Use bulkDeleteThread to move them to trash
-    await driver.modifyLabels(emailIds, { addLabels: ['TRASH'], removeLabels: [] });
+    // Use existing bulkDeleteThread function to move emails to trash
+    await bulkDeleteThread({ ids: emailIds });
     
     return { 
       success: true, 

@@ -80,6 +80,8 @@ export function MailLayout() {
   const { mutate: mutateThreads } = useThreads();
   const { mutate: mutateStats } = useStats();
   const [hasSpamEmails, setHasSpamEmails] = useState(false);
+  // Track when spam emails are deleted to refresh the UI
+  const [spamDeleteCounter, setSpamDeleteCounter] = useState(0);
 
   useEffect(() => {
     if (prevFolderRef.current !== folder && mail.bulkSelected.length > 0) {
@@ -142,6 +144,8 @@ export function MailLayout() {
         .then(async (result) => {
           await mutateThreads();
           await mutateStats();
+          // Increment counter to trigger useEffect to check if there are any spam emails left
+          setSpamDeleteCounter(prev => prev + 1);
           return result;
         })
         .catch((error) => {
@@ -195,7 +199,7 @@ export function MailLayout() {
       
       checkForSpamEmails();
     }
-  }, [folder]);
+  }, [folder, spamDeleteCounter]);
 
   return (
     <TooltipProvider delayDuration={0}>
