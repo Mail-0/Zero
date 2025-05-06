@@ -194,6 +194,13 @@ const composeShortcuts: Shortcut[] = [
     description: 'Send email',
     scope: 'compose',
   },
+  {
+    keys: ['escape'],
+    action: 'closeCompose',
+    type: 'single',
+    description: 'Close compose',
+    scope: 'compose',
+  },
 ];
 
 export const keyboardShortcuts: Shortcut[] = [
