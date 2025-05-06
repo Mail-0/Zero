@@ -176,6 +176,13 @@
       "when": 1746136173178,
       "tag": "0024_familiar_wiccan",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1746529079916,
+      "tag": "0025_salty_the_fallen",
+      "breakpoints": true
     }
   ]
 }

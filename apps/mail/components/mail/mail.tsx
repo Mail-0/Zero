@@ -33,6 +33,8 @@ import {
   getMail,
   markAsImportant,
   markAsRead,
+  deleteAllSpamEmails,
+  checkSpamEmails
 } from '@/actions/mail';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
@@ -75,6 +77,9 @@ export function MailLayout() {
   const prevFolderRef = useRef(folder);
   const { enableScope, disableScope } = useHotkeysContext();
   const { data: brainState } = useBrainState();
+  const { mutate: mutateThreads } = useThreads();
+  const { mutate: mutateStats } = useStats();
+  const [hasSpamEmails, setHasSpamEmails] = useState(false);
 
   useEffect(() => {
     if (prevFolderRef.current !== folder && mail.bulkSelected.length > 0) {
@@ -131,6 +136,26 @@ export function MailLayout() {
     setActiveReplyId(null);
   }, [setThreadId]);
 
+  const onDeleteAllSpam = useCallback(async () => {
+    toast.promise(
+      deleteAllSpamEmails()
+        .then(async (result) => {
+          await mutateThreads();
+          await mutateStats();
+          return result;
+        })
+        .catch((error) => {
+          console.error("Failed to delete spam emails:", error);
+          throw error;
+        }),
+      {
+        loading: 'Deleting all spam emails...',
+        success: (result) => result.message || 'Successfully deleted all spam emails',
+        error: (err) => err.message || 'Failed to delete spam emails',
+      }
+    );
+  }, [mutateThreads, mutateStats]);
+
   // Add mailto protocol handler registration
   useEffect(() => {
     // Register as a mailto protocol handler if browser supports it
@@ -154,6 +179,23 @@ export function MailLayout() {
   }, []);
 
   const category = useQueryState('category');
+
+  // Check if spam folder has emails when in spam folder
+  useEffect(() => {
+    if (folder === 'spam') {
+      const checkForSpamEmails = async () => {
+        try {
+          const result = await checkSpamEmails();
+          setHasSpamEmails(result.hasEmails);
+        } catch (error) {
+          console.error('Error checking spam emails:', error);
+          setHasSpamEmails(false);
+        }
+      };
+      
+      checkForSpamEmails();
+    }
+  }, [folder]);
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -215,6 +257,19 @@ export function MailLayout() {
               </div>
               <div className="p-2 px-[22px]">
                 <SearchBar />
+                {folder === 'spam' && hasSpamEmails && (
+                  <div className="mt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center justify-center gap-2 w-full border-[#FCCDD5] hover:bg-[#FDE4E9]/10 dark:border-[#6E2532] dark:hover:bg-[#411D23]/60"
+                      onClick={onDeleteAllSpam}
+                    >
+                      <Trash className="h-4 w-4 text-[#F43F5E] fill-[#F43F5E]" />
+                      <span>Delete All Spam</span>
+                    </Button>
+                  </div>
+                )}
                 <div className="mt-2">
                   {folder === 'inbox' && (
                     <CategorySelect isMultiSelectMode={mail.bulkSelected.length > 0} />
@@ -408,7 +463,7 @@ function BulkSelectActions() {
         <Tooltip>
           <TooltipTrigger asChild>
             <DialogTrigger asChild>
-              <button className="flex aspect-square h-8 items-center justify-center gap-1 overflow-hidden rounded-md border bg-white px-2 text-sm transition-all duration-300 ease-out hover:bg-gray-100 dark:border-none dark:bg-[#313131] dark:hover:bg-[#313131]/80">
+              <button className="flex aspect-square h-8 items-center justify-center gap-1 overflow-hidden rounded-md border border-[#FCCDD5] bg-[#FDE4E9] px-2 text-sm transition-all duration-300 ease-out hover:bg-[#FDE4E9]/80 dark:border-[#6E2532] dark:bg-[#411D23] dark:hover:bg-[#313131]/80 hover:dark:bg-[#411D23]/60">
                 <div className="relative overflow-visible">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -483,7 +538,7 @@ function BulkSelectActions() {
             }}
           >
             <div className="relative overflow-visible">
-              <Trash className="fill-[#F43F5E]" />
+              <Trash className="h-4 w-4 text-[#F43F5E] fill-[#F43F5E]" />
             </div>
           </button>
         </TooltipTrigger>
@@ -674,7 +729,10 @@ function MailCategoryTabs({
   onCategoryChange?: (category: string) => void;
   initialCategory?: string;
 }) {
-  const [, setSearchValue] = useSearchValue();
+  const t = useTranslations();
+  const [category] = useQueryState('category', {
+    defaultValue: 'Important',
+  });
   const categories = Categories();
 
   // Initialize with just the initialCategory or "Primary"

@@ -189,3 +189,48 @@ export const muteThread = async ({ ids }: { ids: string[] }) => {
     throw error;
   }
 };
+
+export const checkSpamEmails = async () => {
+  try {
+    const driver = await getActiveDriver();
+    
+    // Get all emails from spam folder
+    const spamEmails = await driver.list("spam");
+    
+    // Return count and whether there are any emails
+    return { 
+      hasEmails: !!(spamEmails && spamEmails.threads && spamEmails.threads.length > 0),
+      count: spamEmails?.threads?.length || 0
+    };
+  } catch (error) {
+    console.error('Error checking spam emails:', error);
+    return { hasEmails: false, count: 0 };
+  }
+};
+
+export const deleteAllSpamEmails = async () => {
+  try {
+    const driver = await getActiveDriver();
+    
+    // Get all emails from spam folder
+    const spamEmails = await driver.list("spam");
+    console.log(spamEmails);
+    if (!spamEmails || spamEmails.threads.length === 0) {
+      return { success: true, message: 'No spam emails to delete' };
+    }
+    
+    // Extract email IDs
+    const emailIds = spamEmails.threads.map((thread) => thread.id);
+    
+    // Use bulkDeleteThread to move them to trash
+    await driver.modifyLabels(emailIds, { addLabels: ['TRASH'], removeLabels: [] });
+    
+    return { 
+      success: true, 
+      message: `Successfully deleted ${emailIds.length} email(s) from spam folder` 
+    };
+  } catch (error) {
+    console.error('Error deleting all spam emails:', error);
+    throw error;
+  }
+};
