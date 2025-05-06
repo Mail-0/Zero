@@ -25,19 +25,23 @@ import {
   Trash,
   MailOpen,
 } from 'lucide-react';
-import { moveThreadsTo, ThreadDestination } from '@/lib/thread-actions';
-import { deleteThread, markAsRead, markAsUnread, toggleStar } from '@/actions/mail';
+import { moveThreadsTo, type ThreadDestination } from '@/lib/thread-actions';
+import { backgroundQueueAtom } from '@/store/backgroundQueue';
 import { useThread, useThreads } from '@/hooks/use-threads';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useParams, useRouter } from 'next/navigation';
-import { modifyLabels } from '@/actions/mail';
+import { useTRPC } from '@/providers/query-provider';
+import { useMutation } from '@tanstack/react-query';
+import { useLabels } from '@/hooks/use-labels';
 import { LABELS, FOLDERS } from '@/lib/utils';
 import { useStats } from '@/hooks/use-stats';
 import { useTranslations } from 'next-intl';
 import { useMail } from '../mail/use-mail';
+import { Checkbox } from '../ui/checkbox';
 import { type ReactNode } from 'react';
 import { useQueryState } from 'nuqs';
 import { useMemo } from 'react';
+import { useAtom } from 'jotai';
 import { toast } from 'sonner';
 
 interface EmailAction {
@@ -61,6 +65,51 @@ interface EmailContextMenuProps {
   refreshCallback?: () => void;
 }
 
+const LabelsList = ({ threadId }: { threadId: string }) => {
+  const { data: labels } = useLabels();
+  const { data: thread, refetch } = useThread(threadId);
+  const t = useTranslations();
+  const trpc = useTRPC();
+  const { mutateAsync: modifyLabels } = useMutation(trpc.mail.modifyLabels.mutationOptions());
+
+  if (!labels || !thread) return null;
+
+  const handleToggleLabel = async (labelId: string) => {
+    if (!labelId) return;
+    const hasLabel = thread.labels?.map((label) => label.id).includes(labelId);
+    await modifyLabels({
+      threadId: [threadId],
+      addLabels: hasLabel ? [] : [labelId],
+      removeLabels: hasLabel ? [labelId] : [],
+    });
+    refetch();
+  };
+
+  return (
+    <>
+      {labels
+        .filter((label) => label.id)
+        .map((label) => (
+          <ContextMenuItem
+            key={label.id}
+            onClick={() => label.id && handleToggleLabel(label.id)}
+            className="font-normal"
+          >
+            <div className="flex items-center">
+              <Checkbox
+                checked={
+                  label.id ? thread.labels?.map((label) => label.id).includes(label.id) : false
+                }
+                className="mr-2 h-4 w-4"
+              />
+              {label.name}
+            </div>
+          </ContextMenuItem>
+        ))}
+    </>
+  );
+};
+
 export function ThreadContextMenu({
   children,
   emailId,
@@ -73,20 +122,21 @@ export function ThreadContextMenu({
 }: EmailContextMenuProps) {
   const { folder } = useParams<{ folder: string }>();
   const [mail, setMail] = useMail();
-  const {
-    data: { threads },
-    mutate,
-    isLoading,
-    isValidating,
-  } = useThreads();
+  const [{ refetch, isLoading, isFetching }, threads] = useThreads();
   const currentFolder = folder ?? '';
   const isArchiveFolder = currentFolder === FOLDERS.ARCHIVE;
-  const { mutate: mutateStats } = useStats();
+  const { refetch: refetchStats } = useStats();
   const t = useTranslations();
-  const router = useRouter();
   const [, setMode] = useQueryState('mode');
   const [, setThreadId] = useQueryState('threadId');
-  const { mutate: mutateThread, data: threadData } = useThread(threadId);
+  const [, setBackgroundQueue] = useAtom(backgroundQueueAtom);
+  const { refetch: refetchThread, data: threadData } = useThread(threadId);
+  const trpc = useTRPC();
+  const { mutateAsync: markAsRead } = useMutation(trpc.mail.markAsRead.mutationOptions());
+  const { mutateAsync: markAsUnread } = useMutation(trpc.mail.markAsUnread.mutationOptions());
+  const { mutateAsync: toggleStar } = useMutation(trpc.mail.toggleStar.mutationOptions());
+  const { mutateAsync: deleteThread } = useMutation(trpc.mail.delete.mutationOptions());
+
   const selectedThreads = useMemo(() => {
     if (mail.bulkSelected.length) {
       return threads.filter((thread) => mail.bulkSelected.includes(thread.id));
@@ -99,13 +149,11 @@ export function ThreadContextMenu({
   }, [threadData]);
 
   const isStarred = useMemo(() => {
-    // TODO
-    return false;
-    // if (mail.bulkSelected.length) {
-    //   return selectedThreads.every((thread) => thread.tags?.includes('STARRED'));
-    // }
-    // return selectedThreads[0]?.tags?.includes('STARRED') ?? false;
-  }, [selectedThreads, mail.bulkSelected]);
+    // TODO support bulk select
+    return threadData?.messages.some((message) =>
+      message.tags?.some((tag) => tag.name.toLowerCase() === 'starred'),
+    );
+  }, [threadData]);
 
   const noopAction = () => async () => {
     toast.info(t('common.actions.featureNotImplemented'));
@@ -130,87 +178,65 @@ export function ThreadContextMenu({
         threadIds: targets,
         currentFolder: currentFolder,
         destination,
-      }).then(async () => {
-        await Promise.all([mutate(), mutateStats()]);
-        setMail({ ...mail, bulkSelected: [] });
       });
-
-      let loadingMessage = t('common.actions.moving');
-      let successMessage = t('common.actions.movedToInbox');
-
-      if (destination === FOLDERS.INBOX) {
-        loadingMessage = t('common.actions.movingToInbox');
-        successMessage = t('common.actions.movedToInbox');
-      } else if (destination === FOLDERS.SPAM) {
-        loadingMessage = t('common.actions.movingToSpam');
-        successMessage = t('common.actions.movedToSpam');
-      } else if (destination === FOLDERS.ARCHIVE) {
-        loadingMessage = t('common.actions.archiving');
-        successMessage = t('common.actions.archived');
-      } else if (destination === FOLDERS.BIN) {
-        loadingMessage = t('common.actions.movingToBin');
-        successMessage = t('common.actions.movedToBin');
-      }
-
+      targets.forEach((threadId) => setBackgroundQueue({ type: 'add', threadId }));
       toast.promise(promise, {
-        loading: loadingMessage,
-        success: successMessage,
+        finally: async () => {
+          await Promise.all([refetch(), refetchStats()]);
+          setMail({ ...mail, bulkSelected: [] });
+          targets.forEach((threadId) => setBackgroundQueue({ type: 'delete', threadId }));
+        },
         error: t('common.actions.failedToMove'),
       });
-
-      await promise;
     } catch (error) {
       console.error(`Error moving ${threadId ? 'email' : 'thread'}:`, error);
     }
   };
 
-  const handleFavorites = () => {
+  const handleFavorites = async () => {
     const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
-    const promise = toggleStar({ ids: targets }).then(() => {
-      setMail((prev) => ({ ...prev, bulkSelected: [] }));
-      return mutate();
-    });
-
-    toast.promise(promise, {
-      loading: isStarred
-        ? t('common.actions.removingFromFavorites')
-        : t('common.actions.addingToFavorites'),
-      success: isStarred
-        ? t('common.actions.removedFromFavorites')
-        : t('common.actions.addedToFavorites'),
-      error: t('common.actions.failedToModifyFavorites'),
-    });
+    if (!isStarred) {
+      toast.success(t('common.actions.addedToFavorites'));
+    } else {
+      toast.success(t('common.actions.removedFromFavorites'));
+    }
+    await toggleStar({ ids: targets });
+    setMail((prev) => ({ ...prev, bulkSelected: [] }));
+    return await Promise.allSettled([refetchThread(), refetch()]);
   };
 
   const handleReadUnread = () => {
     const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
     const action = isUnread ? markAsRead : markAsUnread;
 
-    const promise = action({ ids: targets }).then(() => {
-      setMail((prev) => ({ ...prev, bulkSelected: [] }));
-      return mutateThread();
-    });
+    const promise = action({ ids: targets });
 
     toast.promise(promise, {
-      loading: t(isUnread ? 'common.actions.markingAsRead' : 'common.actions.markingAsUnread'),
-      success: t(isUnread ? 'common.mail.markedAsRead' : 'common.mail.markedAsUnread'),
       error: t(isUnread ? 'common.mail.failedToMarkAsRead' : 'common.mail.failedToMarkAsUnread'),
+      async finally() {
+        setMail((prev) => ({ ...prev, bulkSelected: [] }));
+        await Promise.allSettled([refetchThread(), refetch()]);
+      },
     });
   };
+  const [, setActiveReplyId] = useQueryState('activeReplyId');
 
   const handleThreadReply = () => {
     setMode('reply');
     setThreadId(threadId);
+    if (threadData?.latest) setActiveReplyId(threadData?.latest?.id);
   };
 
   const handleThreadReplyAll = () => {
     setMode('replyAll');
     setThreadId(threadId);
+    if (threadData?.latest) setActiveReplyId(threadData?.latest?.id);
   };
 
   const handleThreadForward = () => {
     setMode('forward');
     setThreadId(threadId);
+    if (threadData?.latest) setActiveReplyId(threadData?.latest?.id);
   };
 
   const primaryActions: EmailAction[] = [
@@ -237,21 +263,20 @@ export function ThreadContextMenu({
     },
   ];
   const handleDelete = () => async () => {
-		try {
-        const promise = deleteThread({ id: threadId }).then(() => {
-          setMail(prev => ({ ...prev, bulkSelected: [] }));
-          return mutate();
-        });
-        toast.promise(promise, {
-          loading: t('common.actions.deletingMail'),
-          success: t('common.actions.deletedMail'),
-          error: t('common.actions.failedToDeleteMail'),
-        });
+    try {
+      const promise = deleteThread({ id: threadId }).then(() => {
+        setMail((prev) => ({ ...prev, bulkSelected: [] }));
+        return refetch();
+      });
+      toast.promise(promise, {
+        loading: t('common.actions.deletingMail'),
+        success: t('common.actions.deletedMail'),
+        error: t('common.actions.failedToDeleteMail'),
+      });
     } catch (error) {
-        console.error(`Error deleting ${threadId? 'email' : 'thread'}:`, error);
-      }
-    };
-
+      console.error(`Error deleting ${threadId ? 'email' : 'thread'}:`, error);
+    }
+  };
 
   const getActions = () => {
     if (isSpam) {
@@ -288,7 +313,7 @@ export function ThreadContextMenu({
           icon: <Trash className="mr-2.5 h-4 w-4" />,
           action: handleDelete(),
           disabled: false,
-        }
+        },
       ];
     }
 
@@ -376,15 +401,14 @@ export function ThreadContextMenu({
         <Star className="mr-2.5 h-4 w-4" />
       ),
       action: handleFavorites,
-      disabled: true,
     },
-    {
-      id: 'mute',
-      label: t('common.mail.muteThread'),
-      icon: <BellOff className="mr-2.5 h-4 w-4" />,
-      action: noopAction,
-      disabled: true, // TODO: Mute thread functionality to be implemented
-    },
+    // {
+    //   id: 'mute',
+    //   label: t('common.mail.muteThread'),
+    //   icon: <BellOff className="mr-2.5 h-4 w-4" />,
+    //   action: noopAction,
+    //   disabled: true, // TODO: Mute thread functionality to be implemented
+    // },
   ];
 
   const renderAction = (action: EmailAction) => {
@@ -404,11 +428,23 @@ export function ThreadContextMenu({
 
   return (
     <ContextMenu>
-      <ContextMenuTrigger disabled={isLoading || isValidating} className="w-full">
+      <ContextMenuTrigger disabled={isLoading || isFetching} className="w-full">
         {children}
       </ContextMenuTrigger>
       <ContextMenuContent className="w-56" onContextMenu={(e) => e.preventDefault()}>
         {primaryActions.map(renderAction)}
+
+        <ContextMenuSeparator />
+
+        <ContextMenuSub>
+          <ContextMenuSubTrigger className="font-normal">
+            <Tag className="mr-2.5 h-4 w-4" />
+            {t('common.mail.labels')}
+          </ContextMenuSubTrigger>
+          <ContextMenuSubContent className="w-48">
+            <LabelsList threadId={threadId} />
+          </ContextMenuSubContent>
+        </ContextMenuSub>
 
         <ContextMenuSeparator />
 
@@ -417,25 +453,6 @@ export function ThreadContextMenu({
         <ContextMenuSeparator />
 
         {otherActions.map(renderAction)}
-
-        {/* <ContextMenuSeparator />
-
-				<ContextMenuSub>
-					<ContextMenuSubTrigger className="font-normal">
-						<Tag className="mr-2.5 h-4 w-4" />
-						{t('common.mail.labels')}
-					</ContextMenuSubTrigger>
-					<ContextMenuSubContent className="w-48">
-						<ContextMenuItem className="font-normal">
-							<MailPlus className="mr-2.5 h-4 w-4" />
-							{t('common.mail.createNewLabel')}
-						</ContextMenuItem>
-						<ContextMenuSeparator />
-						<ContextMenuItem disabled className="text-muted-foreground italic">
-							{t('common.mail.noLabelsAvailable')}
-						</ContextMenuItem>
-					</ContextMenuSubContent>
-				</ContextMenuSub> */}
       </ContextMenuContent>
     </ContextMenu>
   );

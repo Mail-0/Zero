@@ -1,16 +1,18 @@
-import * as React from 'react';
+'use client';
 
 import { cn } from '@/lib/utils';
+import React from 'react';
 
-export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
+interface TextareaProps extends React.TextareaHTMLAttributes<HTMLInputElement> {}
 
-const AITextarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
+const AITextarea = React.forwardRef<HTMLInputElement, TextareaProps>(
   ({ className, ...props }, ref) => {
     return (
-      <textarea
+      <input
         className={cn(
-          'border-input ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex min-h-[80px] w-full rounded-md border bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+          'placeholder:text-muted-foreground w-full bg-transparent px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50',
           'placeholder:animate-shine placeholder:bg-gradient-to-r placeholder:from-neutral-500 placeholder:via-neutral-300 placeholder:to-neutral-500 placeholder:bg-[length:200%_100%] placeholder:bg-clip-text placeholder:text-transparent',
+          'border-0 focus:outline-none focus:ring-0',
           className,
         )}
         ref={ref}
@@ -19,6 +21,7 @@ const AITextarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     );
   },
 );
-AITextarea.displayName = 'Textarea';
+
+AITextarea.displayName = 'AITextarea';
 
 export { AITextarea };

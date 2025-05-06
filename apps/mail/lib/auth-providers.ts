@@ -37,10 +37,10 @@ export const authProviders: ProviderConfig[] = [
     ],
     config: {
       // TODO: Remove this before going to prod, it's to force to get `refresh_token` from google, some users don't have it yet.
-      //   prompt:
-      //     process.env.NODE_ENV === 'production' && !process.env.FORCE_GMAIL_CONSENT
-      //       ? undefined
-      //       : 'consent',
+      prompt:
+        process.env.NODE_ENV === 'production' && !process.env.FORCE_GMAIL_CONSENT
+          ? undefined
+          : 'consent',
       accessType: 'offline',
       scope: ['https://www.googleapis.com/auth/gmail.modify'],
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -48,6 +48,25 @@ export const authProviders: ProviderConfig[] = [
     },
     required: true,
   },
+  //   {
+  //     id: 'microsoft',
+  //     name: 'Microsoft',
+  //     requiredEnvVars: ['MICROSOFT_CLIENT_ID', 'MICROSOFT_CLIENT_SECRET'],
+  //     envVarInfo: [
+  //       { name: 'MICROSOFT_CLIENT_ID', source: 'Microsoft Azure App ID' },
+  //       { name: 'MICROSOFT_CLIENT_SECRET', source: 'Microsoft Azure App Password' },
+  //     ],
+  //     config: {
+  //       clientId: process.env.MICROSOFT_CLIENT_ID!,
+  //       clientSecret: process.env.MICROSOFT_CLIENT_SECRET!,
+  //       redirectUri: process.env.MICROSOFT_REDIRECT_URI!,
+  //       scope: ['https://graph.microsoft.com/User.Read', 'offline_access'],
+  //       authority: 'https://login.microsoftonline.com/common',
+  //       responseType: 'code',
+  //       prompt: 'consent',
+  //       loginHint: 'email',
+  //     },
+  //   },
   // Commented out GitHub provider
   // {
   //   id: "github",

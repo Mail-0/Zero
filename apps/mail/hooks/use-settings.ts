@@ -1,39 +1,17 @@
-import { useSession } from "@/lib/auth-client";
-import useSWR from "swr";
-import { defaultUserSettings } from "@zero/db/user_settings_default";
-import { getBrowserTimezone } from "@/lib/timezones";
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+import { useTRPC } from '@/providers/query-provider';
+import { useQuery } from '@tanstack/react-query';
+import { useSession } from '@/lib/auth-client';
 
 export function useSettings() {
   const { data: session } = useSession();
+  const trpc = useTRPC();
 
-  const userId = session?.user.id;
-  const { data, error, isLoading, mutate } = useSWR(
-    userId ? [`user-settings`, userId] : null,
-    async () => {
-      try {
-        const userSettings = await fetcher(`/api/auth/settings`);
-        // Return default settings if user has no settings saved, getting the current timezone from the browser
-        if (!userSettings) {
-          return {
-            ...defaultUserSettings,
-            timezone: getBrowserTimezone(),
-          };
-        }
-
-        return userSettings;
-      } catch (error) {
-        console.error("Failed to load settings:", error);
-        throw error;
-      }
-    },
+  const settingsQuery = useQuery(
+    trpc.settings.get.queryOptions(void 0, {
+      enabled: !!session?.user.id,
+      staleTime: Infinity,
+    }),
   );
 
-  return {
-    settings: data,
-    isLoading,
-    error,
-    mutate,
-  };
+  return settingsQuery;
 }

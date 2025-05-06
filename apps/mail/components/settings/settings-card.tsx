@@ -1,3 +1,4 @@
+'use client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
@@ -20,11 +21,11 @@ export function SettingsCard({
   return (
     <Card
       className={cn(
-        'bg-offsetLight dark:bg-offsetDark w-full border-none px-0 shadow-none',
+        'bg-panelLight dark:bg-panelDark w-full border-none px-0 shadow-none',
         className,
       )}
     >
-      <CardHeader className="px-0 pt-0 flex flex-row items-start justify-between">
+      <CardHeader className="flex flex-row items-start justify-between px-0 pt-0">
         <div>
           <CardTitle>{title}</CardTitle>
           {description && <CardDescription>{description}</CardDescription>}

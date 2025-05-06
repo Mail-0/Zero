@@ -15,7 +15,7 @@ export function HotkeyProviderWrapper({ children }: HotkeyProviderWrapperProps) 
   return (
     <HotkeysProvider initiallyActiveScopes={['global']}>
       <GlobalHotkeys />
-      {/* <MailListHotkeys /> */}
+      <MailListHotkeys />
       <ThreadDisplayHotkeys />
       <ComposeHotkeys />
       {children}

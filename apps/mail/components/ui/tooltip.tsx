@@ -13,11 +13,11 @@ const Tooltip = TooltipPrimitive.Root;
 const TooltipTrigger = TooltipPrimitive.Trigger;
 
 const tooltipVariants = cva(
-  'z-50 overflow-hidden rounded-md border px-3 py-1.5 text-sm shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
+  'z-50 overflow-visible rounded-lg text-sm shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
   {
     variants: {
       variant: {
-        default: 'bg-popover text-popover-foreground',
+        default: 'bg-popover text-popover-foreground border px-3 py-1.5',
         destructive:
           'bg-destructive/10 text-destructive dark:bg-destructive/20 border-destructive [border-width:0.5px]',
         outline: 'border-border',
@@ -31,6 +31,7 @@ const tooltipVariants = cva(
           'bg-purple-100/90 text-purple-900 dark:bg-purple-900/20 dark:text-purple-300 border-purple-900 [border-width:0.5px]',
         forums:
           'bg-blue-100/90 text-blue-900 dark:bg-blue-900/20 dark:text-blue-300 border-blue-900 [border-width:0.5px]',
+        sidebar: 'backdrop-blur-xl bg-white/80 dark:bg-[#413F3E] p-2.5 flex flex-col gap-2',
       },
     },
     defaultVariants: {
@@ -52,7 +53,21 @@ const TooltipContent = React.forwardRef<
     sideOffset={sideOffset}
     className={cn(tooltipVariants({ variant }), className)}
     {...props}
-  />
+  >
+    {variant === 'sidebar' && (
+      <svg
+        width="6"
+        height="10"
+        viewBox="0 0 6 10"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="absolute left-[-6px] top-1/2 -translate-y-1/2"
+      >
+        <path d="M6 0L0 5L6 10V0Z" className="fill-white/80 dark:fill-[#413F3E]" />
+      </svg>
+    )}
+    {props.children}
+  </TooltipPrimitive.Content>
 ));
 TooltipContent.displayName = TooltipPrimitive.Content.displayName;
 

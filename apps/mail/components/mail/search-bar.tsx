@@ -1,76 +1,13 @@
-import { matchFilterPrefix, filterSuggestionsFunction, filterSuggestions } from '@/lib/filter';
 import { parseNaturalLanguageSearch, parseNaturalLanguageDate } from '@/lib/utils';
-import { cn, extractFilterValue, type FilterSuggestion } from '@/lib/utils';
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSearchValue } from '@/hooks/use-search-value';
-import { Calendar } from '@/components/ui/calendar';
+import { useState, useEffect, useCallback } from 'react';
 import { type DateRange } from 'react-day-picker';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { Input } from '@/components/ui/input';
-import { useTranslations } from 'next-intl';
+import { usePathname } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { Search, X } from 'lucide-react';
 import { format } from 'date-fns';
 import React from 'react';
-
-const SEARCH_SUGGESTIONS = [
-  '"Emails from last week..."',
-  '"Emails with attachments..."',
-  '"Unread emails..."',
-  '"Emails from Caroline and Josh..."',
-  '"Starred emails..."',
-  '"Emails with links..."',
-  '"Emails from last month..."',
-  '"Emails in Inbox..."',
-  '"Emails with PDF attachments..."',
-  '"Emails delivered to me..."',
-];
-
-// function DateFilter({ date, setDate }: { date: DateRange; setDate: (date: DateRange) => void }) {
-//   const t = useTranslations('common.searchBar');
-
-//   return (
-//     <div className="grid gap-2">
-//       <Popover>
-//         <PopoverTrigger asChild>
-//           <Button
-//             id="date"
-//             variant={'outline'}
-//             className={cn(
-//               'justify-start text-left font-normal',
-//               !date && 'text-muted-foreground',
-//               'bg-muted/50 h-10 rounded-md',
-//             )}
-//           >
-//             <CalendarIcon className="mr-2 h-4 w-4" />
-//             {date?.from ? (
-//               date.to ? (
-//                 <>
-//                   {format(date.from, 'LLL dd, y')} - {format(date.to, 'LLL dd, y')}
-//                 </>
-//               ) : (
-//                 format(date.from, 'LLL dd, y')
-//               )
-//             ) : (
-//               <span>{t('pickDateRange')}</span>
-//             )}
-//           </Button>
-//         </PopoverTrigger>
-//         <PopoverContent className="w-auto rounded-md p-0" align="start">
-//           <Calendar
-//             initialFocus
-//             mode="range"
-//             defaultMonth={date?.from}
-//             selected={date}
-//             onSelect={(range) => range && setDate(range)}
-//             numberOfMonths={useIsMobile() ? 1 : 2}
-//             disabled={(date) => date > new Date()}
-//           />
-//         </PopoverContent>
-//       </Popover>
-//     </div>
-//   );
-// }
 
 type SearchForm = {
   subject: string;
@@ -90,8 +27,9 @@ type SearchForm = {
 
 export function SearchBar() {
   // const [popoverOpen, setPopoverOpen] = useState(false);
-  const [searchValue, setSearchValue] = useSearchValue();
+  const [, setSearchValue] = useSearchValue();
   const [isSearching, setIsSearching] = useState(false);
+  const pathname = usePathname();
 
   const form = useForm<SearchForm>({
     defaultValues: {
@@ -115,6 +53,12 @@ export function SearchBar() {
   });
 
   const q = form.watch('q');
+
+  useEffect(() => {
+    if (pathname !== '/mail/inbox') {
+      resetSearch();
+    }
+  }, [pathname]);
 
   const submitSearch = useCallback(
     async (data: SearchForm) => {
@@ -254,13 +198,17 @@ export function SearchBar() {
   }, [form, setSearchValue]);
 
   return (
-    <div className="relative flex-1 md:max-w-[600px]">
+    <div className="relative flex-1 lg:max-w-[600px]">
       <form className="relative flex items-center" onSubmit={form.handleSubmit(submitSearch)}>
-        <Search className="text-muted-foreground absolute left-2.5 h-4 w-4" aria-hidden="true" />
+        <Search
+          className="absolute left-2.5 z-10 h-4 w-4 text-[#6D6D6D] dark:text-[#727272]"
+          aria-hidden="true"
+        />
+
         <div className="relative w-full">
           <Input
             placeholder={'Search...'}
-            className="bg-muted-foreground/20 dark:bg-muted/50 text-muted-foreground ring-muted placeholder:text-muted-foreground/70 h-8 w-full select-none rounded-md border-none pl-9 pr-14 shadow-none transition-all duration-300"
+            className="text-muted-foreground placeholder:text-muted-foreground/70 h-[32px] w-full select-none rounded-md border bg-white pl-9 pr-14 shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-none dark:bg-[#141414]"
             {...form.register('q')}
             value={q}
             disabled={isSearching}
@@ -276,214 +224,6 @@ export function SearchBar() {
             </button>
           )}
         </div>
-        {/* <div className="absolute right-1 z-20 flex items-center gap-1">
-          {filtering && (
-            <button
-              type="button"
-              onClick={resetSearch}
-              className="ring-offset-background focus:ring-ring rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2"
-              disabled={isSearching}
-            >
-              <X className="h-4 w-4" />
-              <span className="sr-only">{t('common.searchBar.clearSearch')}</span>
-            </button>
-          )}
-          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  'text-muted-foreground hover:bg-muted/70 hover:text-foreground h-7 w-7 rounded-md p-0',
-                  popoverOpen && 'bg-muted/70 text-foreground',
-                )}
-                type="button"
-                disabled={isSearching}
-              >
-                <SlidersHorizontal className="h-4 w-4" />
-                <span className="sr-only">{t('common.searchBar.advancedSearch')}</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              className="bg-popover w-[min(calc(100vw-2rem),400px)] rounded-md border p-4 shadow-lg sm:w-[500px] md:w-[600px]"
-              side="bottom"
-              sideOffset={15}
-              alignOffset={-8}
-              align="end"
-            >
-              <div className="space-y-5">
-                <div>
-                  <h2 className="mb-3 text-xs font-semibold">
-                    {t('common.searchBar.quickFilters')}
-                  </h2>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="bg-muted/50 hover:bg-muted h-7 rounded-md text-xs"
-                      onClick={() => form.setValue('q', 'is:unread')}
-                    >
-                      {t('common.searchBar.unread')}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="bg-muted/50 hover:bg-muted h-7 rounded-md text-xs"
-                      onClick={() => form.setValue('q', 'has:attachment')}
-                    >
-                      {t('common.searchBar.hasAttachment')}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="bg-muted/50 hover:bg-muted h-7 rounded-md text-xs"
-                      onClick={() => form.setValue('q', 'is:starred')}
-                    >
-                      {t('common.searchBar.starred')}
-                    </Button>
-                  </div>
-                </div>
-
-                <Separator className="bg-border/50" />
-
-                <div className="grid gap-5">
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold">
-                      {t('common.searchBar.searchIn')}
-                    </label>
-                    <Select
-                      onValueChange={(value) => form.setValue('folder', value)}
-                      value={form.watch('folder')}
-                    >
-                      <SelectTrigger className="bg-muted/50 h-8 rounded-md capitalize">
-                        <SelectValue placeholder="All Mail" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-md">
-                        {FOLDER_NAMES.map((inbox) => (
-                          <SelectItem key={inbox} value={inbox} className="capitalize">
-                            {inbox}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold">{t('common.searchBar.subject')}</label>
-                    <Input
-                      placeholder={t('common.searchBar.subject')}
-                      {...form.register('subject')}
-                      className="bg-muted/50 h-8 rounded-md"
-                    />
-                  </div>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <label className="text-xs font-semibold">
-                        {t('common.mailDisplay.from')}
-                      </label>
-                      <Input
-                        placeholder={t('common.searchBar.sender')}
-                        {...form.register('from')}
-                        className="bg-muted/50 h-8 rounded-md"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-xs font-semibold">{t('common.mailDisplay.to')}</label>
-                      <Input
-                        placeholder={t('common.searchBar.recipient')}
-                        {...form.register('to')}
-                        className="bg-muted/50 h-8 rounded-md"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold">
-                      {t('common.searchBar.dateRange')}
-                    </label>
-                    <DateFilter
-                      date={value.dateRange}
-                      setDate={(range) => form.setValue('dateRange', range)}
-                    />
-                  </div>
-                </div>
-
-                <Separator className="bg-border/50" />
-
-                <div>
-                  <h2 className="mb-3 text-xs font-semibold">{t('common.searchBar.category')}</h2>
-                  <div className="flex flex-wrap gap-2">
-                    <Toggle
-                      variant="outline"
-                      size="sm"
-                      className="bg-muted/50 data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:ring-primary/20 h-7 rounded-md text-xs transition-colors data-[state=on]:ring-1"
-                      pressed={form.watch('category') === 'primary'}
-                      onPressedChange={(pressed) =>
-                        form.setValue('category', pressed ? 'primary' : '')
-                      }
-                    >
-                      {t('common.mailCategories.primary')}
-                    </Toggle>
-                    <Toggle
-                      variant="outline"
-                      size="sm"
-                      className="bg-muted/50 data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:ring-primary/20 h-7 rounded-md text-xs transition-colors data-[state=on]:ring-1"
-                      pressed={form.watch('category') === 'updates'}
-                      onPressedChange={(pressed) =>
-                        form.setValue('category', pressed ? 'updates' : '')
-                      }
-                    >
-                      {t('common.mailCategories.updates')}
-                    </Toggle>
-                    <Toggle
-                      variant="outline"
-                      size="sm"
-                      className="bg-muted/50 data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:ring-primary/20 h-7 rounded-md text-xs transition-colors data-[state=on]:ring-1"
-                      pressed={form.watch('category') === 'promotions'}
-                      onPressedChange={(pressed) =>
-                        form.setValue('category', pressed ? 'promotions' : '')
-                      }
-                    >
-                      {t('common.mailCategories.promotions')}
-                    </Toggle>
-                    <Toggle
-                      variant="outline"
-                      size="sm"
-                      className="bg-muted/50 data-[state=on]:bg-primary/10 data-[state=on]:text-primary data-[state=on]:ring-primary/20 h-7 rounded-md text-xs transition-colors data-[state=on]:ring-1"
-                      pressed={form.watch('category') === 'social'}
-                      onPressedChange={(pressed) =>
-                        form.setValue('category', pressed ? 'social' : '')
-                      }
-                    >
-                      {t('common.mailCategories.social')}
-                    </Toggle>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <Button
-                    onClick={resetSearch}
-                    variant="ghost"
-                    size="sm"
-                    className="text-muted-foreground hover:bg-muted hover:text-foreground h-8 rounded-md text-xs transition-colors"
-                  >
-                    {t('common.searchBar.reset')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 rounded-md text-xs shadow-none transition-colors"
-                    type="submit"
-                    onClick={() => setPopoverOpen(false)}
-                  >
-                    {t('common.searchBar.applyFilters')}
-                  </Button>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div> */}
       </form>
     </div>
   );

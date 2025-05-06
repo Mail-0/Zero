@@ -19,8 +19,8 @@ import { keyboardShortcuts } from '@/config/shortcuts';
 import { ArrowUpRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { CircleHelp } from 'lucide-react';
-import { Pencil } from 'lucide-react';
 import * as React from 'react';
+import { Pencil2 } from '../icons/icons';
 
 type CommandPaletteContext = {
   open: boolean;
@@ -77,7 +77,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
       item: {
         title: 'common.commandPalette.commands.composeMessage',
         url: '/mail/create',
-        icon: Pencil
+        icon: Pencil2
       }
     });
 
@@ -147,7 +147,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           <DialogDescription>{t('common.commandPalette.description')}</DialogDescription>
         </VisuallyHidden>
         <CommandInput autoFocus placeholder={t('common.commandPalette.placeholder')} />
-        <CommandList>
+        <CommandList >
           <CommandEmpty>{t('common.commandPalette.noResults')}</CommandEmpty>
           {allCommands.map((group, groupIndex) => (
             <React.Fragment key={groupIndex}>
@@ -166,8 +166,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                         <item.icon
                           size={16}
                           strokeWidth={2}
-                          
-                          className="opacity-60"
+                          className="opacity-60 h-4 w-4"
                           aria-hidden="true"
                         />
                       )}

@@ -1,12 +1,13 @@
 import { format, isToday, isThisMonth, differenceInCalendarMonths } from 'date-fns';
+import { getBrowserTimezone } from './timezones';
+import { formatInTimeZone } from 'date-fns-tz';
 import { MAX_URL_LENGTH } from './constants';
 import { filterSuggestions } from './filter';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { JSONContent } from 'novel';
+import type { JSONContent } from 'novel';
+import type { Sender } from '@/types';
 import LZString from 'lz-string';
-import { Sender } from '@/types';
-import axios from 'axios';
 
 export const FOLDERS = {
   SPAM: 'spam',
@@ -74,6 +75,7 @@ export const formatDate = (date: string) => {
       return '';
     }
 
+    const timezone = getBrowserTimezone();
     // Parse the date string to a Date object
     const dateObj = new Date(date);
     const now = new Date();
@@ -86,7 +88,7 @@ export const formatDate = (date: string) => {
 
     // If it's today, always show the time
     if (isToday(dateObj)) {
-      return format(dateObj, 'h:mm a');
+      return formatInTimeZone(dateObj, timezone, 'h:mm a');
     }
 
     // Calculate hours difference between now and the email date
@@ -94,16 +96,16 @@ export const formatDate = (date: string) => {
 
     // If it's not today but within the last 12 hours, show the time
     if (hoursDifference <= 12) {
-      return format(dateObj, 'h:mm a');
+      return formatInTimeZone(dateObj, timezone, 'h:mm a');
     }
 
     // If it's this month or last month, show the month and day
     if (isThisMonth(dateObj) || differenceInCalendarMonths(now, dateObj) === 1) {
-      return format(dateObj, 'MMM dd');
+      return formatInTimeZone(dateObj, timezone, 'MMM dd');
     }
 
     // Otherwise show the date in MM/DD/YY format
-    return format(dateObj, 'MM/dd/yy');
+    return formatInTimeZone(dateObj, timezone, 'MM/dd/yy');
   } catch (error) {
     console.error('Error formatting date', error);
     return '';
@@ -122,8 +124,6 @@ export const truncateFileName = (name: string, maxLength = 15) => {
   }
   return `${name.slice(0, maxLength)}...`;
 };
-
-export const fetcher = (url: string) => axios.get(url).then((res) => res.data);
 
 export type FilterSuggestion = {
   filter: string;

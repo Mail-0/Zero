@@ -4,6 +4,8 @@ import { atom } from "jotai";
 export interface DraftType {
   id: string;
   recipient?: string;
+  cc?: string;
+  bcc?: string;
   subject?: string;
   message?: string;
 }

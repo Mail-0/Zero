@@ -1,18 +1,26 @@
-import { MessageSquareIcon } from '@/components/icons/animated/message-square';
-import { SettingsGearIcon } from '@/components/icons/animated/settings-gear';
-import { CheckCheckIcon } from '@/components/icons/animated/check-check';
-import { ArrowLeftIcon } from '@/components/icons/animated/arrow-left';
-import { BookTextIcon } from '@/components/icons/animated/book-text';
-import { ShieldCheckIcon } from '@/components/icons/animated/shield';
-import { KeyboardIcon } from '@/components/icons/animated/keyboard';
-import { SparklesIcon } from '@/components/icons/animated/sparkles';
-import { ArchiveIcon } from '@/components/icons/animated/archive';
-import { DeleteIcon } from '@/components/icons/animated/trash';
-import { UsersIcon } from '@/components/icons/animated/users';
-import { InboxIcon } from '@/components/icons/animated/inbox';
-import { XIcon } from '@/components/icons/animated/x';
-import { NestedKeyOf } from 'next-intl';
-import { MessageKeys } from 'next-intl';
+import {
+  Archive,
+  Bin,
+  ExclamationCircle,
+  Folder,
+  Inbox,
+  MessageSquare,
+  NotesList,
+  PaperPlane,
+  SettingsGear,
+  Sparkles,
+  Stars,
+  Tabs,
+  Users,
+  ArrowLeft,
+  Danger,
+  Sheet,
+  Plane2,
+  LockIcon,
+} from '@/components/icons/icons';
+import type { NestedKeyOf, MessageKeys } from 'next-intl';
+import { MessageSquareIcon } from 'lucide-react';
+
 export interface NavItem {
   id?: string;
   title: string;
@@ -42,58 +50,48 @@ export const navigationConfig: Record<string, NavConfig> = {
     path: '/mail',
     sections: [
       {
-        title: '',
+        title: 'Core',
         items: [
           {
             id: 'inbox',
             title: 'navigation.sidebar.inbox',
             url: '/mail/inbox',
-            icon: InboxIcon,
+            icon: Inbox,
           },
           {
             id: 'drafts',
             title: 'navigation.sidebar.drafts',
             url: '/mail/draft',
-            icon: BookTextIcon,
+            icon: Folder,
           },
           {
             id: 'sent',
             title: 'navigation.sidebar.sent',
             url: '/mail/sent',
-            icon: CheckCheckIcon,
+            icon: Plane2,
+          },
+        ],
+      },
+      {
+        title: 'Management',
+        items: [
+          {
+            id: 'archive',
+            title: 'navigation.sidebar.archive',
+            url: '/mail/archive',
+            icon: Archive,
           },
           {
             id: 'spam',
             title: 'navigation.sidebar.spam',
             url: '/mail/spam',
-            icon: XIcon,
-          },
-          {
-            id: 'archive',
-            title: 'navigation.sidebar.archive',
-            url: '/mail/archive',
-            icon: ArchiveIcon,
+            icon: ExclamationCircle,
           },
           {
             id: 'trash',
             title: 'navigation.sidebar.bin',
             url: '/mail/bin',
-            icon: DeleteIcon,
-            disabled: false,
-          },
-          // {
-          //   id: 'settings',
-          //   title: 'navigation.sidebar.settings',
-          //   url: '/settings/general',
-          //   icon: SettingsGearIcon,
-          //   isSettingsButton: true,
-          // },
-          {
-            id: 'feedback',
-            title: 'navigation.sidebar.feedback',
-            url: 'https://feedback.0.email',
-            icon: MessageSquareIcon,
-            target: '_blank',
+            icon: Bin,
           },
         ],
       },
@@ -137,35 +135,34 @@ export const navigationConfig: Record<string, NavConfig> = {
           {
             title: 'common.actions.back',
             url: '/mail',
-            icon: ArrowLeftIcon,
+            icon: ArrowLeft,
             isBackButton: true,
           },
 
           {
             title: 'navigation.settings.general',
             url: '/settings/general',
-            icon: SettingsGearIcon,
+            icon: SettingsGear,
           },
           {
             title: 'navigation.settings.connections',
             url: '/settings/connections',
-            icon: UsersIcon,
+            icon: Users,
           },
           {
-            title: 'navigation.settings.security',
-            url: '/settings/security',
-            icon: ShieldCheckIcon,
-            // disabled: true,
+            title: 'navigation.settings.privacy',
+            url: '/settings/privacy',
+            icon: LockIcon,
           },
           {
             title: 'navigation.settings.appearance',
             url: '/settings/appearance',
-            icon: SparklesIcon,
+            icon: Stars,
           },
           {
             title: 'navigation.settings.labels',
             url: '/settings/labels',
-            icon: SparklesIcon,
+            icon: Sheet,
           },
           {
             title: 'navigation.settings.signatures',
@@ -176,19 +173,30 @@ export const navigationConfig: Record<string, NavConfig> = {
           {
             title: 'navigation.settings.shortcuts',
             url: '/settings/shortcuts',
-            icon: KeyboardIcon,
-            disabled: true,
+            icon: Tabs,
           },
-          {
-            title: 'navigation.settings.danger-zone',
-            url: '/settings/danger-zone',
-            icon: KeyboardIcon,
-          },
+          // {
+          //   title: 'navigation.settings.signatures',
+          //   url: '/settings/signatures',
+          //   icon: MessageSquareIcon,
+          //   disabled: true,
+          // },
+          // {
+          //   title: 'navigation.settings.shortcuts',
+          //   url: '/settings/shortcuts',
+          //   icon: Tabs,
+          //   disabled: true,
+          // },
           // {
           //   title: "Notifications",
           //   url: "/settings/notifications",
           //   icon: BellIcon,
           // },
+          {
+            title: 'navigation.settings.deleteAccount',
+            url: '/settings/danger-zone',
+            icon: Danger,
+          },
         ].map((item) => ({
           ...item,
           isSettingsPage: true,
@@ -197,3 +205,25 @@ export const navigationConfig: Record<string, NavConfig> = {
     ],
   },
 };
+
+export const bottomNavItems = [
+  {
+    title: '',
+    items: [
+      {
+        id: 'feedback',
+        title: 'navigation.sidebar.feedback',
+        url: 'https://feedback.0.email',
+        icon: MessageSquare,
+        target: '_blank',
+      },
+      {
+        id: 'settings',
+        title: 'navigation.sidebar.settings',
+        url: '/settings/general',
+        icon: SettingsGear,
+        isSettingsButton: true,
+      },
+    ],
+  },
+];

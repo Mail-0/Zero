@@ -34,9 +34,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { AnyExtension, Editor as TiptapEditor, useCurrentEditor } from '@tiptap/react';
+import { useEditor as useEditorContext } from '@/components/providers/editor-provider';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TextButtons } from '@/components/create/selectors/text-buttons';
+import { Editor as TiptapEditor, useCurrentEditor } from '@tiptap/react';
 import { suggestionItems } from '@/components/create/slash-command';
 import { defaultExtensions } from '@/components/create/extensions';
 import { ImageResizer, handleCommandNavigation } from 'novel';
@@ -45,15 +46,18 @@ import EditorMenu from '@/components/create/editor-menu';
 import { UploadedFileIcon } from './uploaded-file-icon';
 import { Separator } from '@/components/ui/separator';
 import { AutoComplete } from './editor-autocomplete';
+import { Editor as CoreEditor } from '@tiptap/core';
 import { cn, truncateFileName } from '@/lib/utils';
+import { TextSelection } from 'prosemirror-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { EditorView } from 'prosemirror-view';
 import { useTranslations } from 'next-intl';
 import { Markdown } from 'tiptap-markdown';
 import { useReducer, useRef } from 'react';
+import { Slice } from 'prosemirror-model';
 import { useState } from 'react';
 import React from 'react';
-import { TextSelection } from 'prosemirror-state';
 
 export const defaultEditorContent = {
   type: 'doc',
@@ -83,10 +87,13 @@ interface EditorProps {
     email?: string;
   };
   onTab?: () => boolean;
+  onEditorReady?: (editor: TiptapEditor) => void;
   includeSignature?: boolean;
   onSignatureToggle?: (include: boolean) => void;
   signature?: string;
   hasSignature?: boolean;
+  readOnly?: boolean;
+  hideToolbar?: boolean;
 }
 
 interface EditorState {
@@ -177,7 +184,7 @@ const MenuBar = () => {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    type='button'
+                    type="button"
                     tabIndex={-1}
                     variant="ghost"
                     size="icon"
@@ -194,7 +201,7 @@ const MenuBar = () => {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    type='button'
+                    type="button"
                     tabIndex={-1}
                     variant="ghost"
                     size="icon"
@@ -210,7 +217,7 @@ const MenuBar = () => {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    type='button'
+                    type="button"
                     tabIndex={-1}
                     variant="ghost"
                     size="icon"
@@ -228,7 +235,7 @@ const MenuBar = () => {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    type='button'
+                    type="button"
                     tabIndex={-1}
                     variant="ghost"
                     size="icon"
@@ -243,7 +250,7 @@ const MenuBar = () => {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    type='button'
+                    type="button"
                     tabIndex={-1}
                     variant="ghost"
                     size="icon"
@@ -263,7 +270,7 @@ const MenuBar = () => {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    type='button'
+                    type="button"
                     tabIndex={-1}
                     variant="ghost"
                     size="icon"
@@ -278,7 +285,7 @@ const MenuBar = () => {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    type='button'
+                    type="button"
                     tabIndex={-1}
                     variant="ghost"
                     size="icon"
@@ -340,6 +347,8 @@ export default function Editor({
   onAttachmentsChange,
   senderInfo,
   myInfo,
+  readOnly,
+  hideToolbar,
 }: EditorProps) {
   const [state, dispatch] = useReducer(editorReducer, {
     openNode: false,
@@ -348,9 +357,8 @@ export default function Editor({
     openAI: false,
   });
 
-  // Add a ref to store the editor content to prevent losing it on refresh
+  // Remove context usage
   const contentRef = useRef<string>('');
-  // Add a ref to the editor instance
   const editorRef = useRef<TiptapEditor>(null);
   const t = useTranslations();
 
@@ -427,9 +435,10 @@ export default function Editor({
 
   return (
     <div
-      className={`relative w-full max-w-[450px] sm:max-w-[600px] ${className || ''}`}
+      className={`relative w-full ${className || ''}`}
       onClick={focusEditor}
       onKeyDown={(e) => {
+        if (readOnly) return;
         // Handle tab key
         if (e.key === 'Tab' && !e.shiftKey) {
           if (onTab && onTab()) {
@@ -488,10 +497,12 @@ export default function Editor({
             }),
           ]}
           ref={containerRef}
-          className="cursor-text relative"
+          className="hide-scrollbar relative max-h-[500px] min-h-[220px] cursor-text overflow-auto"
           editorProps={{
+            editable: () => !readOnly,
             handleDOMEvents: {
               mousedown: (view, event) => {
+                if (readOnly) return false;
                 const coords = view.posAtCoords({
                   left: event.clientX,
                   top: event.clientY,
@@ -510,6 +521,7 @@ export default function Editor({
                 return false;
               },
               keydown: (view, event) => {
+                if (readOnly) return false;
                 if (event.key === 'Tab' && !event.shiftKey) {
                   if (onTab && onTab()) {
                     event.preventDefault();
@@ -526,34 +538,38 @@ export default function Editor({
                 return handleCommandNavigation(event);
               },
               focus: () => {
-                onFocus?.();
+                if (!readOnly) onFocus?.();
                 return false;
               },
               blur: () => {
-                onBlur?.();
+                if (!readOnly) onBlur?.();
                 return false;
               },
             },
-            handleDrop: (view, event, _slice, moved) =>
-              handleImageDrop(view, event, moved, (file) => {
+            handleDrop: (view, event, _slice, moved) => {
+              if (readOnly) return false;
+              return handleImageDrop(view, event, moved, (file) => {
                 onAttachmentsChange?.([file]);
-              }),
+              });
+            },
             attributes: {
-              class: 'prose dark:prose-invert prose-headings:font-title font-default focus:outline-none max-w-full min-h-[200px] py-2',
+              class: cn(
+                'prose dark:prose-invert prose-headings:font-title focus:outline-none max-w-full min-h-[200px]',
+                readOnly && 'pointer-events-none select-text',
+              ),
               'data-placeholder': placeholder,
             },
           }}
           onCreate={({ editor }) => {
             editorRef.current = editor;
           }}
+          onDestroy={() => {}}
           onUpdate={({ editor }) => {
+            if (readOnly) return;
             // Store the content in the ref to prevent losing it
             contentRef.current = editor.getHTML();
             onChange(editor.getHTML());
           }}
-          slotBefore={
-            <MenuBar />
-          }
           slotAfter={null}
         >
           {/* Make sure the command palette doesn't cause a refresh */}

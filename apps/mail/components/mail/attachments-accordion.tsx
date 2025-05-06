@@ -1,7 +1,7 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { formatFileSize, getFileIcon } from '@/lib/utils';
+import type { Attachment } from '@/types';
 import { Paperclip } from 'lucide-react';
-import { Attachment } from '@/types';
 
 type Props = {
   attachments: Attachment[];
@@ -27,6 +27,9 @@ const AttachmentsAccordion = ({ attachments, setSelectedAttachment }: Props) => 
           <AccordionContent>
             <div className="flex gap-3 overflow-x-auto pb-2">
               {attachments.map((attachment) => {
+                const isImage = attachment.mimeType.includes('image');
+                const dataUrl = `data:${attachment.mimeType};base64,${attachment.body}`;
+
                 return (
                   <div
                     key={attachment.attachmentId}
@@ -39,30 +42,22 @@ const AttachmentsAccordion = ({ attachments, setSelectedAttachment }: Props) => 
                           id: attachment.attachmentId,
                           name: attachment.filename,
                           type: attachment.mimeType,
-                          url: `data:${attachment.mimeType};base64,${attachment.body}`,
+                          url: dataUrl,
                         })
                       }
                     >
                       <div className="bg-muted flex h-24 items-center justify-center">
-                        {attachment.mimeType.includes('image') ? (
-                          (() => {
-                            if (!attachment.body) return null;
-
-                            const dataUrl = `data:${attachment.mimeType};base64,${attachment.body}`;
-
-                            return (
-                              <img
-                                src={dataUrl}
-                                alt={attachment.filename}
-                                className="max-h-full max-w-full object-cover"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                  console.error('Failed to load image:', attachment.filename);
-                                }}
-                              />
-                            );
-                          })()
+                        {isImage ? (
+                          <img
+                            src={dataUrl}
+                            alt={attachment.filename}
+                            className="max-h-full max-w-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              console.error('Failed to load image:', attachment.filename);
+                            }}
+                          />
                         ) : (
                           <div className="text-muted-foreground text-2xl">
                             {getFileIcon(attachment.mimeType)}
@@ -70,10 +65,17 @@ const AttachmentsAccordion = ({ attachments, setSelectedAttachment }: Props) => 
                         )}
                       </div>
                       <div className="p-2">
-                        <p className="truncate text-sm font-medium">{attachment.filename}</p>
-                        <p className="text-muted-foreground text-xs">
-                          {formatFileSize(attachment.size)}
-                        </p>
+                        <div className="flex items-center justify-between gap-2">
+                          <span
+                            className="max-w-[150px] overflow-hidden truncate text-ellipsis whitespace-nowrap text-sm font-medium"
+                            title={attachment.filename}
+                          >
+                            {attachment.filename}
+                          </span>
+                          <span className="text-muted-foreground flex-shrink-0 text-xs">
+                            {formatFileSize(attachment.size)}
+                          </span>
+                        </div>
                       </div>
                     </button>
                   </div>
