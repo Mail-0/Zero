@@ -2,6 +2,7 @@
 
 import { ScrollArea, ScrollBar } from '../ui/scroll-area';
 import { useFullscreen } from '@/hooks/use-fullscreen';
+import { CardsStats } from './card-stats';
 import { cn } from '@/lib/utils';
 
 export const ThemePreview = () => {
@@ -16,6 +17,7 @@ export const ThemePreview = () => {
     >
       <ScrollArea className="m-4 mt-2 flex flex-1 flex-col overflow-hidden rounded-lg border">
         <div className="flex h-full flex-1 flex-col">
+          <CardsStats />
           <ScrollBar orientation="horizontal" />
         </div>
       </ScrollArea>
