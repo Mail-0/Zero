@@ -1,18 +1,21 @@
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { useMail } from '@/components/mail/use-mail';
 import { useHotkeys } from 'react-hotkeys-hook';
-import type { InitialThread } from '@/types';
+import { atom, useAtom } from 'jotai';
+
+export const focusedIndexAtom = atom<number | null>(null);
+export const isQuickActionModeAtom = atom<boolean>(false);
 
 export interface UseMailNavigationProps {
-  items: InitialThread[];
+  items: { id: string }[];
   containerRef: React.RefObject<HTMLDivElement | null>;
   onNavigate: (threadId: string) => void;
 }
 
 export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNavigationProps) {
   const [, setMail] = useMail();
-  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
-  const [isQuickActionMode, setIsQuickActionMode] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useAtom(focusedIndexAtom);
+  const [isQuickActionMode, setIsQuickActionMode] = useAtom(isQuickActionModeAtom);
   const [quickActionIndex, setQuickActionIndex] = useState(0);
   const hoveredMailRef = useRef<string | null>(null);
   const keyboardActiveRef = useRef(false);
@@ -65,14 +68,14 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
       if (index === null || !items[index]) return;
 
       const message = items[index];
-      const threadId = message.threadId ?? message.id;
+      const threadId = message.id;
 
       // Only navigate if there's already a thread open
       const currentThreadId = window.location.search.includes('threadId=');
       if (currentThreadId) {
         onNavigate(threadId);
       }
-      
+
       setMail((prev) => ({
         ...prev,
         bulkSelected: [],
@@ -113,7 +116,7 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
         return newIndex;
       });
     },
-    [isQuickActionMode, items.length, scrollIntoView, getHoveredIndex, navigateToThread],
+    [isQuickActionMode, items],
   );
 
   const handleArrowDown = useCallback(
@@ -162,8 +165,7 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
       }
 
       const message = items[focusedIndex];
-      const threadId = message.threadId ?? message.id;
-      onNavigate(threadId);
+      if (message) onNavigate(message.id);
     },
     [focusedIndex, isQuickActionMode, getThreadElement, items, onNavigate, quickActionIndex],
   );
@@ -221,9 +223,9 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
   useHotkeys('ArrowUp', handleArrowUp);
   useHotkeys('ArrowDown', handleArrowDown);
   useHotkeys('Enter', handleEnter);
-  useHotkeys('Tab', handleTab);
-  useHotkeys('ArrowRight', handleArrowRight);
-  useHotkeys('ArrowLeft', handleArrowLeft);
+  //   useHotkeys('Tab', handleTab);
+  //   useHotkeys('ArrowRight', handleArrowRight);
+  //   useHotkeys('ArrowLeft', handleArrowLeft);
   useHotkeys('Escape', handleEscape);
 
   const handleMouseEnter = useCallback((threadId: string) => {
@@ -314,4 +316,4 @@ export default function useMailListHotkeys() {
   const [removingEmails, setRemovingEmails] = useState<Set<string>>(new Set());
 
   return [removingEmails, setRemovingEmails] as const;
-} 
+}

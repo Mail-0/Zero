@@ -15,6 +15,7 @@
       "loading": "Loading...",
       "featureNotImplemented": "This feature is not implemented yet",
       "moving": "Moving...",
+      "moved": "Moved",
       "movedToInbox": "Moved to inbox",
       "movingToInbox": "Moving to inbox...",
       "movedToSpam": "Moved to spam",
@@ -34,6 +35,7 @@
       "failedToModifyFavorites": "Failed to modify favorites",
       "movingToBin": "Moving to bin...",
       "movedToBin": "Moved to bin",
+      "Bin": "Bin",
       "failedToMoveToBin": "Failed to move to bin",
       "markingAsRead": "Marking as read...",
       "markingAsUnread": "Marking as unread...",
@@ -44,7 +46,8 @@
       "cancel": "Cancel",
       "save": "Save",
       "remove": "Remove",
-      "settings": "Settings"
+      "settings": "Settings",
+      "exitSelectionModeEsc": "Click or press ESC to exit selection mode"
     },
     "themes": {
       "dark": "Dark",
@@ -72,12 +75,13 @@
         "goToBin": "Go to Bin",
         "goToSettings": "Go to Settings",
         "newEmail": "New Email",
-        "composeMessage": "Compose message",
+        "composeMessage": "New Email",
         "searchEmails": "Search Emails",
         "toggleTheme": "Toggle Theme",
         "backToMail": "Back to Mail",
         "goToDocs": "Go to docs",
-        "helpWithShortcuts": "Help with shortcuts"
+        "helpWithShortcuts": "Help with shortcuts",
+        "commandPalette": "Command Palette"
       }
     },
     "searchBar": {
@@ -112,7 +116,8 @@
       "documentation": "Documentation",
       "appTheme": "App Theme",
       "accounts": "Accounts",
-      "signIn": "Sign in"
+      "signIn": "Sign in",
+      "otherAccounts": "Other Accounts"
     },
     "mailCategories": {
       "primary": "Primary",
@@ -170,7 +175,9 @@
       "muteThread": "Mute thread",
       "favourites": "Favourites",
       "disableImages": "Hide Images",
-      "enableImages": "Show Images"
+      "enableImages": "Show Images",
+      "star": "Star",
+      "unstar": "Unstar"
     },
     "notes": {
       "title": "Notes",
@@ -249,7 +256,6 @@
       "failedToMarkAsUnread": "Failed to mark as unread",
       "selected": "{count} selected",
       "clearSelection": "Clear Selection",
-      "mute": "Mute",
       "moveToSpam": "Move to Spam",
       "moveToInbox": "Move to Inbox",
       "deleteFromBin": "Delete from Bin",
@@ -276,10 +282,28 @@
       "showImages": "Show Images",
       "noEmails": "No emails available",
       "noSearchResults": "No search results found",
-      "clearSearch": "Clear search"
+      "clearSearch": "Clear search",
+      "markAsImportant": "Mark as Important",
+      "unSubscribeFromAll": "Unsubscribe from all",
+      "starAll": "Star all",
+      "mute": "Mute",
+      "unmute": "Unmute",
+      "muted": "Muted",
+      "failedToMute": "Failed to mute",
+      "failedToUnmute": "Failed to unmute",
+      "archived": "Archived",
+      "failedToArchive": "Failed to archive"
     },
     "units": {
       "mb": "{amount} MB"
+    },
+    "labels": {
+      "deleteLabel": "Delete Label",
+      "deleteLabelConfirm": "Are you sure you want to delete this label?",
+      "deleteLabelConfirmDescription": "This action cannot be undone.",
+      "deleteLabelConfirmCancel": "Cancel",
+      "deleteLabelConfirmDelete": "Delete",
+      "deleteLabelSuccess": "Label deleted successfully"
     }
   },
   "navigation": {
@@ -301,7 +325,9 @@
       "signatures": "Signatures",
       "shortcuts": "Shortcuts",
       "labels": "Labels",
-      "danger-zone": "Danger Zone"
+      "dangerZone": "Danger Zone",
+      "deleteAccount": "Delete Account",
+      "privacy": "Privacy"
     }
   },
   "pages": {
@@ -403,7 +429,7 @@
           "markAsUnread": "Mark as Unread",
           "muteThread": "Mute Thread",
           "printEmail": "Print Email",
-          "archiveEmail": "Archive Email",
+          "archiveEmail": "Archive Thread",
           "markAsSpam": "Mark as Spam",
           "moveToFolder": "Move to Folder",
           "undoLastAction": "Undo Last Action",
@@ -414,20 +440,33 @@
           "recordHotkey": "Record Hotkey",
           "pressKeys": "Press keys",
           "releaseKeys": "Release keys",
-          "selectAll": "Select All"
+          "selectAll": "Select All",
+          "commandPalette": "Command Palette",
+          "markAsRead": "Mark as Read",
+          "exitSelectionMode": "Exit Selection Mode"
         }
       },
       "labels": {
         "title": "Labels",
         "description": "Manage your labels for better organization of your emails."
       },
-      "danger-zone": {
+      "dangerZone": {
         "title": "Danger Zone",
         "description": "Permanently delete your account and all associated data.",
         "warning": "This action cannot be undone.",
         "confirmation": "Please type DELETE to confirm account deletion",
         "deleteAccount": "Delete Account",
-        "deleting": "Deleting..."
+        "deleting": "Deleting...",
+        "deleted": "Account deleted successfully",
+        "error": "Failed to delete account"
+      },
+      "privacy": {
+        "title": "Privacy",
+        "description": "Manage your privacy and security preferences for email content.",
+        "externalImages": "Display External Images",
+        "externalImagesDescription": "Allow emails to display images from external sources.",
+        "trustedSenders": "Trusted Senders",
+        "trustedSendersDescription": "Always display images for these senders."
       }
     },
     "createEmail": {
@@ -438,6 +477,7 @@
       "addMore": "Add more",
       "dropFilesToAttach": "Drop files to attach",
       "writeYourMessageHere": "Write your message here...",
+      "emailSent": "Email sent",
       "emailSentSuccessfully": "Email sent successfully",
       "failedToSendEmail": "Failed to send email. Please try again.",
       "signature": {

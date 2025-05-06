@@ -17,15 +17,16 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { availableLocales, locales, type Locale } from '@/i18n/config';
+import { useForm, type ControllerRenderProps } from 'react-hook-form';
 import { userSettingsSchema } from '@zero/db/user_settings_default';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { SettingsCard } from '@/components/settings/settings-card';
-import { availableLocales, locales, Locale } from '@/i18n/config';
-import { useForm, ControllerRenderProps } from 'react-hook-form';
 import { useState, useEffect, useMemo, memo } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTranslations, useLocale } from 'next-intl';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { saveUserSettings } from '@/actions/settings';
+import { useTRPC } from '@/providers/query-provider';
 import { getBrowserTimezone } from '@/lib/timezones';
 import { Textarea } from '@/components/ui/textarea';
 import { useSettings } from '@/hooks/use-settings';
@@ -119,7 +120,10 @@ export default function GeneralPage() {
   const [isSaving, setIsSaving] = useState(false);
   const locale = useLocale();
   const t = useTranslations();
-  const { settings, mutate } = useSettings();
+  const { data } = useSettings();
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const { mutateAsync: saveUserSettings } = useMutation(trpc.settings.save.mutationOptions());
 
   const form = useForm<z.infer<typeof userSettingsSchema>>({
     resolver: zodResolver(userSettingsSchema),
@@ -127,25 +131,25 @@ export default function GeneralPage() {
       language: locale,
       timezone: getBrowserTimezone(),
       dynamicContent: false,
-      externalImages: true,
       customPrompt: '',
-      trustedSenders: [],
     },
   });
 
-  const externalImages = form.watch('externalImages');
-
   useEffect(() => {
-    if (settings) {
-      form.reset(settings);
+    if (data?.settings) {
+      form.reset(data.settings);
     }
-  }, [form, settings]);
+  }, [form, data?.settings]);
 
   async function onSubmit(values: z.infer<typeof userSettingsSchema>) {
     setIsSaving(true);
+    const saved = data?.settings ? { ...data.settings } : undefined;
     try {
       await saveUserSettings(values);
-      await mutate(values, { revalidate: false });
+      queryClient.setQueryData(trpc.settings.get.queryKey(), (updater) => {
+        if (!updater) return;
+        return { settings: { ...updater.settings, ...values } };
+      });
       if (values.language !== locale) {
         await changeLocale(values.language as Locale);
         const localeName = new Intl.DisplayNames([values.language], { type: 'language' }).of(
@@ -158,7 +162,11 @@ export default function GeneralPage() {
     } catch (error) {
       console.error('Failed to save settings:', error);
       toast.error(t('common.settings.failedToSave'));
-      await mutate();
+      // Revert the optimistic update
+      queryClient.setQueryData(trpc.settings.get.queryKey(), (updater) => {
+        if (!updater) return;
+        return saved ? { settings: { ...updater.settings, ...saved } } : updater;
+      });
     } finally {
       setIsSaving(false);
     }

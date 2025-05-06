@@ -75,7 +75,10 @@ export default function Footer() {
 
           <div className="flex items-center justify-center gap-3 md:justify-end">
             <ThemeToggle className="ml-3" />
-            <div className="text-sm text-gray-500 dark:text-gray-400">Zero Email Inc. © 2025</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Zero Email Inc. © 2025</div>|
+            <a href="mailto:founders@0.email" className="text-sm text-gray-500 dark:text-gray-400">
+              founders@0.email
+            </a>
           </div>
         </div>
 

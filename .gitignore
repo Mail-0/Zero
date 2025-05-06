@@ -47,3 +47,4 @@ next-env.d.ts
 .vscode
 .turbo
 i18n.cache
+apps/mail/scripts.ts

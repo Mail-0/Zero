@@ -61,7 +61,7 @@
   }
 
   .dark {
-    --background: 240 3.9% 7%;
+    --background: 1;
     --foreground: 0 0% 98%;
     --card: 240 5.9% 10%;
     --card-foreground: 0 0% 98%;
@@ -230,10 +230,10 @@
 
 .compose-gradient-text-shiny {
   background: linear-gradient(
-    90deg, 
-    rgba(255, 213, 208, 1) 0%, 
+    90deg,
+    rgba(255, 213, 208, 1) 0%,
     rgba(255, 255, 255, 1) 25%,
-    rgba(219, 255, 228, 1) 50%, 
+    rgba(219, 255, 228, 1) 50%,
     rgba(255, 255, 255, 1) 75%,
     rgba(226, 214, 255, 1) 100%
   );
@@ -316,4 +316,8 @@
 
 .animate-blink {
   animation: blink 0.8s ease-in-out infinite;
+}
+
+.tiptap p {
+  margin-bottom: 0.3rem;
 }

@@ -51,9 +51,6 @@ export async function GET() {
             Experience email the way you want with 0 - the first open source email app that puts
             your privacy and safety first.
           </div>
-          <div tw="text-[36px] text-center mt-10" style={{ fontFamily: 'light' }}>
-            Early Access Users: 12,000
-          </div>
           {/* <div tw="text-3xl rounded-xl mt-16 text-primary w-[16rem] flex items-center justify-center h-20">
             <span tw="mr-2 border-2 border-white w-full h-16 bg-white/20 rounded-lg flex items-center justify-center">
               Register Now

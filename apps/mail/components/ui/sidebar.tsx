@@ -41,7 +41,7 @@ const Sidebar = React.forwardRef<
       return (
         <div
           className={cn(
-            'text-sidebar-foreground flex h-full w-[--sidebar-width] flex-col bg-white dark:bg-black',
+            'text-sidebar-foreground bg-lightBackground dark:bg-darkBackground flex h-full w-[--sidebar-width] flex-col',
             className,
           )}
           ref={ref}
@@ -58,7 +58,7 @@ const Sidebar = React.forwardRef<
           <SheetContent
             data-sidebar="sidebar"
             data-mobile="true"
-            className="text-sidebar-foreground w-[--sidebar-width] bg-white p-0 dark:bg-black [&>button]:hidden"
+            className="text-sidebar-foreground bg-lightBackground dark:bg-darkBackground w-[--sidebar-width] p-4 [&>button]:hidden"
             style={
               {
                 '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
@@ -112,7 +112,7 @@ const Sidebar = React.forwardRef<
         >
           <div
             data-sidebar="sidebar"
-            className="group-data-[variant=floating]:border-sidebar-border flex h-full w-full flex-col bg-white group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:shadow dark:bg-black"
+            className="group-data-[variant=floating]:border-sidebar-border bg-lightBackground dark:bg-darkBackground flex h-full w-full flex-col group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:shadow"
           >
             {children}
           </div>
@@ -218,7 +218,7 @@ const SidebarHeader = React.forwardRef<HTMLDivElement, React.ComponentProps<'div
       <div
         ref={ref}
         data-sidebar="header"
-        className={cn('flex flex-col gap-2 p-2', className)}
+        className={cn('flex flex-col gap-2 md:p-2', className)}
         {...props}
       />
     );
@@ -278,7 +278,7 @@ const SidebarGroup = React.forwardRef<HTMLDivElement, React.ComponentProps<'div'
       <div
         ref={ref}
         data-sidebar="group"
-        className={cn('relative flex w-full min-w-0 flex-col p-2', className)}
+        className={cn('relative flex w-full min-w-0 flex-col !pt-0 md:p-2', className)}
         {...props}
       />
     );
@@ -435,12 +435,20 @@ const SidebarMenuButton = React.forwardRef<
     return (
       <Tooltip>
         <TooltipTrigger asChild>{button}</TooltipTrigger>
-        <TooltipContent
-          side="right"
-          align="center"
-          hidden={state !== 'collapsed' || isMobile}
-          {...tooltip}
-        />
+        {state === 'collapsed' && (
+          <TooltipContent
+            side="right"
+            align="center"
+            variant="sidebar"
+            hidden={state !== 'collapsed' || isMobile}
+            sideOffset={8}
+            {...tooltip}
+          >
+            <div className="text-base-gray-950 text-sm font-medium leading-none dark:text-white">
+              {typeof tooltip === 'string' ? tooltip : tooltip.children}
+            </div>
+          </TooltipContent>
+        )}
       </Tooltip>
     );
   },

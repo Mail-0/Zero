@@ -1,75 +1,6 @@
 import { parseFrom as _parseFrom, parseAddressList as _parseAddressList } from 'email-addresses';
-import { EMAIL_HTML_TEMPLATE } from './constants';
-import { Sender } from '@/types';
+import type { Sender } from '@/types';
 import Color from 'color';
-
-export const template = (html: string, imagesEnabled: boolean = false) => {
-  if (typeof DOMParser === 'undefined') return html;
-  const htmlParser = new DOMParser();
-  const doc = htmlParser.parseFromString(html, 'text/html');
-  const template = htmlParser.parseFromString(EMAIL_HTML_TEMPLATE, 'text/html');
-  Array.from(doc.head.children).forEach((child) => {
-    // Skip any existing CSP meta tags
-    if (child instanceof HTMLMetaElement && child.httpEquiv === 'Content-Security-Policy') return;
-    template.head.appendChild(child);
-  });
-
-  const array = new Uint8Array(16);
-  crypto.getRandomValues(array);
-  const nonce = btoa(String.fromCharCode(...array));
-  // Add CSP meta tag based on imagesEnabled state
-  const cspMeta = template.createElement('meta');
-  cspMeta.httpEquiv = 'Content-Security-Policy';
-  cspMeta.content = imagesEnabled
-    ? `default-src 'none'; img-src * data: blob: 'unsafe-inline'; style-src 'unsafe-inline' *; font-src *; script-src 'nonce-${nonce}';`
-    : `default-src 'none'; img-src data:; style-src 'unsafe-inline' *; font-src *; script-src 'nonce-${nonce}';`;
-  template.head.appendChild(cspMeta);
-
-  // Add a script to listen for security policy violations
-  const script = template.createElement('script');
-  script.setAttribute("nonce", nonce)
-  script.textContent = `
-    document.addEventListener('securitypolicyviolation', (e) => {
-      // Send the violation details to the parent window
-      window.parent.postMessage({
-        type: 'csp-violation',
-      }, '*');
-    });
-  `;
-  template.head.appendChild(script);
-
-  template.body.innerHTML = doc.body.innerHTML;
-  template.body.style.backgroundColor = getComputedStyle(document.body).getPropertyValue(
-    'background-color',
-  );
-
-  template.querySelectorAll('a').forEach((a) => {
-    if (a.href || !a.textContent) return;
-    if (URL.canParse(a.textContent)) a.href = a.textContent;
-    else if (a.textContent.includes('@')) a.href = `mailto:${a.textContent}`;
-  });
-
-  const quoteElements = [
-    '.gmail_quote',
-    'blockquote',
-    '[class*="quote"]', // quote partial match for class names
-    '[id*="quote"]', // quote partial match for id names
-  ];
-
-  for (const selector of quoteElements) {
-    const element = template.querySelector(selector);
-    if (!element) continue;
-    const details = document.createElement('details');
-    details.classList.add('auto-details');
-    const summary = document.createElement('summary');
-    details.appendChild(summary);
-    details.appendChild(element.cloneNode(true));
-    element.parentNode?.replaceChild(details, element);
-    break;
-  }
-
-  return template.documentElement.outerHTML;
-};
 
 export const fixNonReadableColors = (rootElement: HTMLElement, minContrast = 3.5) => {
   const elements = Array.from<HTMLElement>(rootElement.querySelectorAll('*'));
@@ -174,7 +105,7 @@ export const getListUnsubscribeAction = ({
 };
 
 const FALLBACK_SENDER = {
-  name: 'No Sender Name',
+  name: '',
   email: 'no-sender@unknown',
 };
 
@@ -218,6 +149,35 @@ export const parseAddressList = (header: string): Sender[] => {
       email: address.address || FALLBACK_SENDER.email,
     };
   });
+};
+
+// Helper function to clean email addresses by removing angle brackets
+export const cleanEmailAddresses = (emails: string | undefined) => {
+  if (!emails || emails.trim() === '') return undefined;
+  // Split by commas and clean each address individually
+  return emails
+    .split(',')
+    .map(email => email.trim().replace(/^<|>$/g, ''))
+    .filter(Boolean); // Remove any empty entries
+};
+
+// Format recipients for display or sending
+export const formatRecipients = (recipients: string[] | undefined) => {
+  if (!recipients || recipients.length === 0) return undefined;
+  return recipients.join(', ');
+};
+
+/**
+ * Format recipients for MIME message creation
+ * Handles both string and array formats for recipients
+ */
+export const formatMimeRecipients = (recipients: string | string[]) => {
+  if (Array.isArray(recipients)) {
+    return recipients.map(recipient => ({ addr: recipient }));
+  } else if (typeof recipients === 'string' && recipients.trim() !== '') {
+    return recipients.split(',').map(recipient => ({ addr: recipient.trim() }));
+  }
+  return null;
 };
 
 export const wasSentWithTLS = (receivedHeaders: string[]) => {

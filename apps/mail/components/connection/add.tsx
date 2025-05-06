@@ -6,6 +6,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '../ui/dialog';
+import { useBilling } from '@/hooks/use-billing';
 import { emailProviders } from '@/lib/constants';
 import { authClient } from '@/lib/auth-client';
 import { Plus, UserPlus } from 'lucide-react';
@@ -13,6 +14,8 @@ import { useTranslations } from 'next-intl';
 import { Button } from '../ui/button';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
+import { usePathname } from 'next/navigation'
+import { useMemo } from 'react';
 
 export const AddConnectionDialog = ({
   children,
@@ -23,7 +26,28 @@ export const AddConnectionDialog = ({
   className?: string;
   onOpenChange?: (open: boolean) => void;
 }) => {
+  const { connections, attach } = useBilling();
   const t = useTranslations();
+
+  const pathname = usePathname();
+  const canCreateConnection = useMemo(() => {
+    if (!connections?.remaining && !connections?.unlimited) return false;
+    return (connections?.unlimited && !connections?.remaining) || (connections?.remaining ?? 0) > 0;
+  }, [connections]);
+
+  const handleUpgrade = async () => {
+    if (attach) {
+      return attach({
+        productId: 'pro-example',
+      })
+        .catch((error) => {
+          console.error('Failed to upgrade:', error);
+        })
+        .then(() => {
+          console.log('Upgraded successfully');
+        });
+    }
+  };
 
   return (
     <Dialog onOpenChange={onOpenChange}>
@@ -39,13 +63,33 @@ export const AddConnectionDialog = ({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        className="w-full max-w-sm rounded-xl border bg-white p-6 sm:max-w-md dark:bg-[#1A1A1A]"
+        showOverlay={true}
+      >
         <DialogHeader>
           <DialogTitle>{t('pages.settings.connections.connectEmail')}</DialogTitle>
           <DialogDescription>
             {t('pages.settings.connections.connectEmailDescription')}
           </DialogDescription>
         </DialogHeader>
+        {!canCreateConnection && (
+          <div className="mt-2 flex justify-between gap-2 rounded-lg border border-red-800 bg-red-800/20 p-2">
+            <span className="text-sm">
+              You can only connect 1 email in the free tier.{' '}
+              <span
+                onClick={handleUpgrade}
+                className="hover:bg-subtleWhite hover:text-subtleBlack cursor-pointer underline"
+              >
+                Upgrade
+              </span>{' '}
+              to connect more.
+            </span>
+            <Button onClick={handleUpgrade} className="text-sm">
+              $20<span className="text-muted-foreground -ml-2 text-xs">/month</span>
+            </Button>
+          </div>
+        )}
         <motion.div
           className="mt-4 grid grid-cols-2 gap-4"
           initial={{ opacity: 0 }}
@@ -62,11 +106,13 @@ export const AddConnectionDialog = ({
               whileTap={{ scale: 0.97 }}
             >
               <Button
+                disabled={!canCreateConnection}
                 variant="outline"
                 className="h-24 w-full flex-col items-center justify-center gap-2"
                 onClick={async () =>
                   await authClient.linkSocial({
                     provider: provider.providerId,
+                    callbackURL: pathname
                   })
                 }
               >
@@ -86,7 +132,7 @@ export const AddConnectionDialog = ({
           >
             <Button
               variant="outline"
-              className="h-24 flex-col items-center justify-center gap-2 border-dashed"
+              className="h-24 w-full flex-col items-center justify-center gap-2 border-dashed"
             >
               <Plus className="h-12 w-12" />
               <span className="text-xs">{t('pages.settings.connections.moreComingSoon')}</span>

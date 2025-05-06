@@ -1,7 +1,7 @@
 import { default as flattenColorPalette } from 'tailwindcss/lib/util/flattenColorPalette';
 import sharedConfig from '../../packages/tailwind-config/tailwind.config';
-import * as defaultTheme from 'tailwindcss/defaultTheme';
-import * as animate from 'tailwindcss-animate';
+import defaultTheme from 'tailwindcss/defaultTheme';
+import animate from 'tailwindcss-animate';
 import type { Config } from 'tailwindcss';
 
 export default {
@@ -15,9 +15,16 @@ export default {
   theme: {
     extend: {
       colors: {
+        darkBackground: '#141414',
+        lightBackground: '#FFFFFF',
         offsetDark: '#0A0A0A',
         offsetLight: '#F5F5F5',
+        panelDark: '#1A1A1A',
+        panelLight: '#FFFFFF',
+        iconDark: '#898989',
+        iconLight: '#6D6D6D',
         logout: '#D93036',
+        mainBlue: '#437DFB',
         subtleWhite: '#EAEAEA',
         subtleBlack: '#1F1F1F',
         background: 'hsl(var(--background))',
@@ -141,6 +148,14 @@ export default {
             height: '0',
           },
         },
+        gauge_fadeIn: {
+          from: { opacity: '0' },
+          to: { opacity: '1' },
+        },
+        gauge_fill: {
+          from: { 'stroke-dashoffset': '332', opacity: '0' },
+          to: { opacity: '1' },
+        },
       },
       animation: {
         'fade-up': 'fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
@@ -150,6 +165,8 @@ export default {
         'shine-slow': 'shine-slow 8s linear infinite',
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        gauge_fadeIn: 'gauge_fadeIn 1s ease forwards',
+        gauge_fill: 'gauge_fill 1s ease forwards',
       },
     },
   },

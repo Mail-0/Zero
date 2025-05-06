@@ -1,13 +1,29 @@
 'use client';
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from './dialog';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import { useState, useEffect, useContext, createContext, useCallback } from 'react';
+import { AI_SIDEBAR_COOKIE_NAME, SIDEBAR_COOKIE_MAX_AGE } from '@/lib/constants';
+import { ResizablePanelGroup, ResizablePanel } from '@/components/ui/resizable';
+import { StyledEmailAssistantSystemPrompt, AiChatPrompt } from '@/lib/prompts';
+import { useEditor } from '@/components/providers/editor-provider';
 import { AIChat } from '@/components/create/ai-chat';
+import { X, Paper } from '@/components/icons/icons';
+import { GitBranchPlus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { X, MessageSquare } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
+import { usePathname } from 'next/navigation';
+import { getCookie } from '@/lib/utils';
+import { Textarea } from './textarea';
 import { cn } from '@/lib/utils';
-import Image from 'next/image';
-import { useTranslations } from 'next-intl';
-import { createContext, useContext } from 'react';
+import Link from 'next/link';
 
 interface AISidebarProps {
   className?: string;
@@ -30,64 +46,195 @@ export function useAISidebar() {
 }
 
 export function AISidebarProvider({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
+  // Initialize state from cookie
+  const [open, setOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const aiSidebarCookie = getCookie(AI_SIDEBAR_COOKIE_NAME);
+      return aiSidebarCookie ? aiSidebarCookie === 'true' : false;
+    }
+    return false;
+  });
 
   const toggleOpen = () => setOpen((prev) => !prev);
 
+  // Save state to cookie when it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      document.cookie = `${AI_SIDEBAR_COOKIE_NAME}=${open}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
+    }
+  }, [open]);
+
   return (
     <AISidebarContext.Provider value={{ open, setOpen, toggleOpen }}>
-      {children}
-      {/* <AISidebar /> */}
+      <AISidebar>{children}</AISidebar>
     </AISidebarContext.Provider>
   );
 }
 
-export function AISidebar({ className }: AISidebarProps) {
+export function AISidebar({ children, className }: AISidebarProps & { children: React.ReactNode }) {
   const { open, setOpen } = useAISidebar();
+  const { editor } = useEditor();
+  const [hasMessages, setHasMessages] = useState(false);
+  const [resetKey, setResetKey] = useState(0);
+  const pathname = usePathname();
+
+  useHotkeys('Meta+0', () => {
+    setOpen(!open);
+  });
+
+  useHotkeys('Control+0', () => {
+    setOpen(!open);
+  });
+
+  const handleNewChat = useCallback(() => {
+    setResetKey((prev) => prev + 1);
+    setHasMessages(false);
+  }, []);
+
+  // Only show on /mail pages
+  const isMailPage = pathname?.startsWith('/mail');
+  if (!isMailPage) {
+    return <>{children}</>;
+  }
 
   return (
-    <>
-      <aside
-        className={cn(
-          'fixed inset-y-4 right-4 z-40 my-2 mr-2',
-          'bg-background w-[400px]',
-          'rounded-xl border shadow-lg',
-          'transition-all duration-300 ease-in-out',
-          'flex flex-col',
-          'bg-offsetLight dark:bg-offsetDark overflow-y-auto',
-          open ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0',
-          className,
-        )}
+    <TooltipProvider delayDuration={0}>
+      <ResizablePanelGroup
+        direction="horizontal"
+        className={cn('bg-lightBackground dark:bg-darkBackground p-0')}
       >
-        <div className="flex h-full flex-col">
-          <div className="flex h-full flex-col p-2 px-3">
-            <div className="mb-4 flex items-center justify-end">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="md:h-fit md:p-2"
-                onClick={() => setOpen(false)}
-              >
-                <X size={20} />
-              </Button>
-            </div>
-            <div className="flex flex-1 flex-col items-center justify-center gap-4">
-              <div className="relative h-20 w-20">
-                <Image src="/black-icon.svg" alt="Zero Logo" fill className="dark:hidden" />
-                <Image src="/white-icon.svg" alt="Zero Logo" fill className="hidden dark:block" />
+        <ResizablePanel>{children}</ResizablePanel>
+
+        {open && (
+          <>
+            <ResizablePanel
+              defaultSize={20}
+              minSize={20}
+              maxSize={35}
+              className="bg-panelLight dark:bg-panelDark ml- mr-1.5 mt-1 h-[calc(98vh+12px)] border-[#E7E7E7] shadow-sm md:rounded-2xl md:border md:shadow-sm dark:border-[#252525]"
+            >
+              <div className={cn('h-[calc(98vh+15px)]', 'flex flex-col', '', className)}>
+                <div className="flex h-full flex-col">
+                  <div className="relative flex items-center justify-between border-b border-[#E7E7E7] px-2.5 pb-2.5 pt-[17.6px] dark:border-[#252525]">
+                    <TooltipProvider delayDuration={0}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            onClick={() => setOpen(false)}
+                            variant="ghost"
+                            className="md:h-fit md:px-2"
+                          >
+                            <X className="dark:fill-iconDark fill-iconLight" />
+                            <span className="sr-only">Close chat</span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Close chat</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+
+                    <div className="flex">
+                      <TooltipProvider delayDuration={0}>
+                        <Dialog>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <DialogTrigger asChild>
+                                <Button variant="ghost" className="md:h-fit md:px-2 [&>svg]:size-3">
+                                  <Paper className="dark:fill-iconDark fill-iconLight h-3.5 w-3.5" />
+                                </Button>
+                              </DialogTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent>Prompts</TooltipContent>
+                          </Tooltip>
+                          <DialogContent
+                            showOverlay={true}
+                            className="dark:bg-panelDark bg-panelLight max-w-2xl rounded-2xl p-4"
+                          >
+                            <DialogHeader>
+                              <DialogTitle>AI System Prompts</DialogTitle>
+                              <DialogDescription>
+                                We believe in Open Source, so we're open sourcing our AI system
+                                prompts. Soon you will be able to customize them to your liking. For
+                                now, here are the default prompts:
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="text-muted-foreground mb-1 mt-4 flex gap-2 text-sm">
+                              <span>Zero Chat / System Prompt</span>
+                              <Link
+                                href={'https://github.com/Mail-0/Zero.git'}
+                                target="_blank"
+                                className="flex items-center gap-1 underline"
+                              >
+                                <span>Contribute</span>
+                                <GitBranchPlus className="h-4 w-4" />
+                              </Link>
+                            </div>
+                            <Textarea className="min-h-60" readOnly value={AiChatPrompt()} />
+                            <div className="text-muted-foreground mb-1 mt-4 flex gap-2 text-sm">
+                              <span>Zero Compose / System Prompt</span>
+                              <Link
+                                href={'https://github.com/Mail-0/Zero.git'}
+                                target="_blank"
+                                className="flex items-center gap-1 underline"
+                              >
+                                <span>Contribute</span>
+                                <GitBranchPlus className="h-4 w-4" />
+                              </Link>
+                            </div>
+                            <Textarea
+                              className="min-h-60"
+                              readOnly
+                              value={StyledEmailAssistantSystemPrompt().trim()}
+                            />
+                          </DialogContent>
+                        </Dialog>
+                      </TooltipProvider>
+
+                      <TooltipProvider delayDuration={0}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              onClick={handleNewChat}
+                              variant="ghost"
+                              className="md:h-fit md:px-2"
+                            >
+                              <Plus className="dark:text-iconDark text-iconLight" />
+                              <span className="sr-only">New chat</span>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>New chat</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </div>
+                  <div className="b relative flex-1 overflow-hidden">
+                    <AIChat key={resetKey} />
+                  </div>
+                </div>
               </div>
-              <p className="animate-shine mt-2 hidden bg-gradient-to-r from-neutral-500 via-neutral-300 to-neutral-500 bg-[length:200%_100%] bg-clip-text text-lg text-transparent opacity-50 md:block">
-                Ask Zero a question...
-              </p>
-            </div>
-            <div className="mt-auto">
-              <AIChat />
-            </div>
-          </div>
-        </div>
-      </aside>
-    </>
+            </ResizablePanel>
+          </>
+        )}
+      </ResizablePanelGroup>
+    </TooltipProvider>
   );
 }
 
 export default AISidebar;
+
+// Add this style to the file to hide scrollbars
+const noScrollbarStyle = `
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+`;
+
+if (typeof document !== 'undefined') {
+  // Add the style to the document head when on client
+  const style = document.createElement('style');
+  style.innerHTML = noScrollbarStyle;
+  document.head.appendChild(style);
+}

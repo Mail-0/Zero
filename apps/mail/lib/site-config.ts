@@ -11,7 +11,7 @@ export const siteConfig: Metadata = {
     icon: "/favicon.ico",
   },
   applicationName: "Zero",
-  creator: "@nizzyabi @bruvimtired @ripgrim @user12224 @praashh @mrgsub",
+  creator: "@nizzyabi @bruvimtired @ripgrim @needleXO @dakdevs @mrgsub",
   openGraph: {
     title: TITLE,
     description: DESCRIPTION,

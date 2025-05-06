@@ -22,14 +22,14 @@ export default function TermsOfService() {
   };
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col overflow-auto bg-white dark:bg-black">
+    <div className="relative flex min-h-screen w-full flex-col overflow-auto bg-white dark:bg-[#111111]">
       <div className="relative z-10 flex flex-grow flex-col">
         {/* Back Button */}
         <div className="absolute left-4 top-4 md:left-8 md:top-8">
           <Button
             variant="ghost"
             size="sm"
-            className="dark:text-muted-foreground gap-2 text-gray-600 hover:text-gray-900 dark:hover:text-white"
+            className="gap-2 text-gray-600 hover:text-gray-900 dark:text-white dark:hover:text-white/80"
             onClick={() => router.push('/')}
           >
             <ArrowLeft className="h-4 w-4" />
@@ -38,14 +38,14 @@ export default function TermsOfService() {
         </div>
 
         <div className="container mx-auto max-w-4xl px-4 py-16">
-          <Card className="overflow-hidden rounded-xl border-none bg-gray-50/80 shadow-xl backdrop-blur-lg dark:bg-black/40">
-            <CardHeader className="space-y-4 bg-gray-100/90 px-8 py-8 dark:bg-black/60">
+          <Card className="overflow-hidden rounded-xl border-none bg-gray-50/80 dark:bg-transparent">
+            <CardHeader className="space-y-4 px-8 py-8">
               <div className="space-y-2 text-center">
-                <CardTitle className="text-3xl font-bold tracking-tight text-gray-900 md:text-4xl dark:text-white">
+                <CardTitle className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white md:text-4xl">
                   Terms of Service
                 </CardTitle>
                 <div className="flex items-center justify-center gap-2">
-                  <p className="dark:text-muted-foreground text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 dark:text-white/60">
                     Last updated: {LAST_UPDATED}
                   </p>
                 </div>
@@ -59,7 +59,7 @@ export default function TermsOfService() {
                   <div
                     key={section.title}
                     id={sectionId}
-                    className="group rounded-xl border border-gray-200 bg-white/70 p-6 transition-all hover:border-gray-300 hover:bg-white dark:border-gray-800/10 dark:bg-black/20 dark:hover:border-gray-700/30 dark:hover:bg-black/30"
+                    className="p-6"
                   >
                     <div className="mb-4 flex items-center justify-between">
                       <h2 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
@@ -67,7 +67,7 @@ export default function TermsOfService() {
                       </h2>
                       <button
                         onClick={() => handleCopyLink(sectionId)}
-                        className="dark:text-muted-foreground text-gray-400 transition-all hover:text-gray-700 dark:hover:text-white"
+                        className="text-gray-400 transition-all hover:text-gray-700 dark:text-white/60 dark:hover:text-white/80"
                         aria-label={`Copy link to ${section.title} section`}
                       >
                         <Link2
@@ -75,7 +75,7 @@ export default function TermsOfService() {
                         />
                       </button>
                     </div>
-                    <div className="prose prose-sm prose-a:text-blue-600 prose-a:no-underline hover:prose-a:text-blue-800 dark:prose-invert dark:prose-a:text-blue-300 dark:hover:prose-a:text-blue-200 max-w-none text-gray-700 dark:text-gray-300">
+                    <div className="prose prose-sm prose-a:text-blue-600 hover:prose-a:text-blue-800 dark:prose-a:text-blue-400 dark:hover:prose-a:text-blue-300 max-w-none text-gray-600 dark:text-white/80">
                       {section.content}
                     </div>
                   </div>
