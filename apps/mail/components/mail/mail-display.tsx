@@ -254,7 +254,7 @@ const AiSummary = () => {
 
   return (
     <div
-      className="border-panelBorder mt-2 max-w-3xl rounded-xl border bg-white px-4 py-2"
+      className="bg-muted/40 mt-2 max-w-3xl rounded-xl border border-[#8B5CF6] px-4 py-2"
       onClick={(e) => e.stopPropagation()}
     >
       <div className="flex cursor-pointer items-center" onClick={handleToggle}>
