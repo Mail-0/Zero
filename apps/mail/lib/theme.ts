@@ -45,3 +45,5 @@ export const CreateThemeSchema = ThemeStylesSchema.extend({
 export type TCreateThemeSchema = z.infer<typeof CreateThemeSchema>;
 
 export type TThemeStyles = z.infer<typeof ThemeStylesSchema>;
+
+export type TThemeMode = 'light' | 'dark';

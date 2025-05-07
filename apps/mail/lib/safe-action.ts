@@ -26,5 +26,12 @@ export const authActionClient = actionClient.use(async ({ next }) => {
   }
 
   // Return the next middleware with `userId` value in the context
-  return next({ ctx: { session } });
+  return next({
+    ctx: {
+      session: {
+        ...session,
+        connectionId: session.connectionId,
+      },
+    },
+  });
 });

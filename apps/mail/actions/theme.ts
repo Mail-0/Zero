@@ -1,10 +1,12 @@
 'use server';
 
+import { connectionTheme, theme } from '@zero/db/schema';
 import { authActionClient } from '@/lib/safe-action';
 import { CreateThemeSchema } from '@/lib/theme';
 import { TThemeStyles } from '@/lib/theme';
-import { theme } from '@zero/db/schema';
+import { and, eq } from 'drizzle-orm';
 import { db } from '@zero/db';
+import { z } from 'zod';
 interface SaveThemeProps {
   name: string;
   styles: TThemeStyles;
@@ -53,4 +55,54 @@ export const saveThemeAction = authActionClient
       visibility: theme_[0].visibility,
       userId: theme_[0].userId,
     };
+  });
+
+export const setConnectionThemeAction = authActionClient
+  .schema(
+    z.object({
+      themeId: z.string(),
+    }),
+  )
+  .action(async ({ ctx, parsedInput }) => {
+    const { session } = ctx;
+    const { themeId } = parsedInput;
+
+    const prevTheme = await db.query.theme.findFirst({
+      where: and(eq(theme.id, themeId), eq(theme.userId, session.user.id)),
+    });
+
+    if (!prevTheme) {
+      throw new Error('Theme not found');
+    }
+
+    await db.delete(connectionTheme).where(eq(connectionTheme.connectionId, session.connectionId));
+
+    await db.insert(connectionTheme).values({
+      connectionId: session.connectionId,
+      themeId: prevTheme.id,
+    });
+
+    return {
+      ...prevTheme,
+    };
+  });
+
+export const removeConnectionThemeAction = authActionClient
+  .schema(
+    z.object({
+      themeId: z.string(),
+    }),
+  )
+  .action(async ({ ctx, parsedInput }) => {
+    const { session } = ctx;
+    const { themeId } = parsedInput;
+
+    await db
+      .delete(connectionTheme)
+      .where(
+        and(
+          eq(connectionTheme.connectionId, session.connectionId),
+          eq(connectionTheme.themeId, themeId),
+        ),
+      );
   });

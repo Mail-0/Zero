@@ -40,15 +40,20 @@ import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { ThreadDemo, ThreadDisplay } from '@/components/mail/thread-display';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MailList, MailListDemo } from '@/components/mail/mail-list';
+import { TThemeStyles, TThemeMode } from '@zero/mail/lib/theme';
+import { applyThemeToElement } from '@/lib/theme/apply-theme';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
 import { useMediaQuery } from '../../hooks/use-media-query';
 import { useAISidebar } from '@/components/ui/ai-sidebar';
 import { useSearchValue } from '@/hooks/use-search-value';
+import { connectionTheme, theme } from '@zero/db/schema';
+import { defaultThemes } from '../theme/default-themes';
 import { useHotkeysContext } from 'react-hotkeys-hook';
 import { useParams, useRouter } from 'next/navigation';
 import { useMail } from '@/components/mail/use-mail';
 import { SidebarToggle } from '../ui/sidebar-toggle';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ThemeSelect } from '../theme/theme-select';
 import { useBrainState } from '@/hooks/use-summary';
 import { clearBulkSelectionAtom } from './use-mail';
 import { useThreads } from '@/hooks/use-threads';
@@ -58,12 +63,23 @@ import { useStats } from '@/hooks/use-stats';
 import { useTranslations } from 'next-intl';
 import { SearchBar } from './search-bar';
 import { Command } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { useQueryState } from 'nuqs';
 import { cn } from '@/lib/utils';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
+interface MailLayoutProps {
+  userThemes: {
+    id: string;
+    name: string;
+  }[];
+  currentTheme?: {
+    id: string;
+    styles: TThemeStyles;
+  };
+}
 
-export function MailLayout() {
+export function MailLayout({ userThemes, currentTheme }: MailLayoutProps) {
   const params = useParams<{ folder: string }>();
   const folder = params?.folder ?? 'inbox';
   const [mail, setMail] = useMail();
@@ -75,6 +91,20 @@ export function MailLayout() {
   const prevFolderRef = useRef(folder);
   const { enableScope, disableScope } = useHotkeysContext();
   const { data: brainState } = useBrainState();
+  const { resolvedTheme } = useTheme();
+
+  useEffect(() => {
+    if (resolvedTheme) {
+      const root = document.documentElement;
+      if (root) {
+        applyThemeToElement(
+          root,
+          currentTheme?.styles ?? defaultThemes,
+          resolvedTheme as TThemeMode,
+        );
+      }
+    }
+  }, [resolvedTheme, currentTheme?.id]);
 
   useEffect(() => {
     if (prevFolderRef.current !== folder && mail.bulkSelected.length > 0) {
@@ -178,6 +208,9 @@ export function MailLayout() {
                 <div className="flex w-full items-center justify-between gap-2">
                   <div>
                     <SidebarToggle className="h-fit px-2" />
+                  </div>
+                  <div>
+                    <ThemeSelect userThemes={userThemes} currentTheme={currentTheme} />
                   </div>
                   <div>
                     {mail.bulkSelected.length > 0 ? (
