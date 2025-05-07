@@ -1,8 +1,16 @@
-import { type ThemeStylesSchema, type TStyleSchemaKey } from '@/lib/theme';
+import {
+  sansSerifFontLabelValues,
+  monoFontLabelValues,
+  serifFontLabelValues,
+  DEFAULT_FONT_SANS,
+  DEFAULT_FONT_MONO,
+  DEFAULT_FONT_SERIF,
+} from './default-themes';
+import { type ThemeStylesSchema } from '@/lib/theme';
 import { type FieldPath } from 'react-hook-form';
 import { type z } from 'zod';
 
-export type ThemeEditorControlType = 'color' | 'slider';
+export type ThemeEditorControlType = 'color' | 'slider' | 'select';
 
 export type ThemeEditorControlName = Exclude<
   FieldPath<z.infer<typeof ThemeStylesSchema>>,
@@ -16,6 +24,7 @@ type ThemeEditorControl = {
   | {
       type: 'color';
       sliderConfig?: never;
+      options?: never;
     }
   | {
       type: 'slider';
@@ -25,6 +34,12 @@ type ThemeEditorControl = {
         step: number;
         unit: string;
       };
+      options?: never;
+    }
+  | {
+      type: 'select';
+      options: { label: string; value: string }[];
+      sliderConfig?: never;
     }
 );
 type ThemeEditorSection = {
@@ -342,7 +357,47 @@ export const themeEditorControlConfig: ThemeEditorControlConfig = {
       ],
     },
   ],
-  typography: [],
+  typography: [
+    {
+      id: 'font-family',
+      label: 'Font Family',
+      controls: [
+        {
+          name: 'light.font-sans',
+          label: 'Font Sans',
+          type: 'select',
+          options: [
+            ...sansSerifFontLabelValues,
+            ...serifFontLabelValues,
+            ...monoFontLabelValues,
+            { label: 'System', value: DEFAULT_FONT_SANS },
+          ],
+        },
+        {
+          name: 'light.font-serif',
+          label: 'Font Serif',
+          type: 'select',
+          options: [
+            ...sansSerifFontLabelValues,
+            ...serifFontLabelValues,
+            ...monoFontLabelValues,
+            { label: 'System', value: DEFAULT_FONT_SERIF },
+          ],
+        },
+        {
+          name: 'light.font-mono',
+          label: 'Font Mono',
+          type: 'select',
+          options: [
+            ...sansSerifFontLabelValues,
+            ...serifFontLabelValues,
+            ...monoFontLabelValues,
+            { label: 'System', value: DEFAULT_FONT_MONO },
+          ],
+        },
+      ],
+    },
+  ],
   other: [
     {
       id: 'radius',

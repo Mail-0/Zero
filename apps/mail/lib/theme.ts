@@ -26,6 +26,9 @@ export const StyleSchema = z.object({
   'chart-4': z.string(),
   'chart-5': z.string(),
   radius: z.string(),
+  'font-sans': z.string(),
+  'font-serif': z.string(),
+  'font-mono': z.string(),
 });
 
 export type TStyleSchema = z.infer<typeof StyleSchema>;

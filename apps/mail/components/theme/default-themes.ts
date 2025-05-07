@@ -1,5 +1,14 @@
 import { type TThemeStyles } from '@/lib/theme';
 
+export const DEFAULT_FONT_SANS =
+  'Geist, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"';
+
+export const DEFAULT_FONT_SERIF =
+  'Geist, ui-serif, Georgia, Cambria, "Times New Roman", Times, serif';
+
+export const DEFAULT_FONT_MONO =
+  'Geist_Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace';
+
 export const defaultThemes: TThemeStyles = {
   light: {
     background: '0 0% 100%',
@@ -27,6 +36,9 @@ export const defaultThemes: TThemeStyles = {
     'chart-4': '43 74% 66%',
     'chart-5': '27 87% 67%',
     radius: '0.5rem',
+    'font-sans': DEFAULT_FONT_SANS,
+    'font-serif': DEFAULT_FONT_SERIF,
+    'font-mono': DEFAULT_FONT_MONO,
   },
   dark: {
     background: '0 0% 0%',
@@ -55,3 +67,50 @@ export const defaultThemes: TThemeStyles = {
     'chart-5': '340 75% 55%',
   },
 };
+
+export const sansSerifFonts = [
+  'Inter',
+  'Roboto',
+  'Open Sans',
+  'Poppins',
+  'Montserrat',
+  'Outfit',
+  'Plus Jakarta Sans',
+  'DM Sans',
+  'Geist',
+  'Oxanium',
+];
+
+export const serifFonts = [
+  'Merriweather',
+  'Playfair Display',
+  'Lora',
+  'Source Serif Pro',
+  'Libre Baskerville',
+  'Space Grotesk',
+];
+
+export const monoFonts = [
+  'JetBrains Mono',
+  'Fira Code',
+  'Source Code Pro',
+  'IBM Plex Mono',
+  'Roboto Mono',
+  'Space Mono',
+  'Geist Mono',
+];
+
+export const sansSerifFontLabelValues = sansSerifFonts.map((font) => ({
+  label: font,
+  value: `${font}, sans-serif`,
+}));
+
+export const serifFontLabelValues = serifFonts.map((font) => ({
+  label: font,
+  value: `${font}, serif`,
+}));
+
+export const monoFontLabelValues = monoFonts.map((font) => ({
+  label: font,
+  value: `${font}, monospace`,
+}));
