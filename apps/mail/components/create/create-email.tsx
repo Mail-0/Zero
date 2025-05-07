@@ -17,6 +17,7 @@ import { useQueryState } from 'nuqs';
 import { X } from '../icons/icons';
 import posthog from 'posthog-js';
 import { toast } from 'sonner';
+import * as React from 'react';
 import './prosemirror.css';
 
 // Define the draft type to include CC and BCC fields
@@ -132,7 +133,28 @@ export function CreateEmail({
     toast.success(t('pages.createEmail.emailSentSuccessfully'));
   };
 
-  useEffect(() => {
+  React.useEffect(() => {
+    // Enable the compose scope for hotkeys
+    enableScope('compose');
+
+    // Register a hotkey for ESC to close the dialog
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setDialogOpen(false);
+      }
+    };
+
+    // Add event listener
+    window.addEventListener('keydown', handleEsc);
+
+    // Clean up
+    return () => {
+      window.removeEventListener('keydown', handleEsc);
+      disableScope('compose');
+    };
+  }, [enableScope, disableScope]);
+
+  React.useEffect(() => {
     if (!dialogOpen) {
       router.push('/mail');
     }
@@ -160,10 +182,10 @@ export function CreateEmail({
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <div className="flex min-h-screen flex-col items-center justify-center gap-1">
           <div className="flex w-[750px] justify-start">
-            <DialogClose asChild className="flex">
-              <button className="flex items-center gap-1 rounded-lg bg-[#F0F0F0] px-2 py-1.5 dark:bg-[#1A1A1A]">
-                <X className="mt-0.5 h-3.5 w-3.5 fill-[#6D6D6D] dark:fill-[#929292]" />
-                <span className="text-sm font-medium text-[#6D6D6D] dark:text-white">esc</span>
+            <DialogClose asChild className="flex" onClick={() => setDialogOpen(false)}>
+              <button className="bg-muted/40 flex items-center gap-1 rounded-lg px-2 py-1.5">
+                <X className="fill-muted-foreground mt-0.5 h-3.5 w-3.5" />
+                <span className="text-foreground text-sm font-medium">esc</span>
               </button>
             </DialogClose>
           </div>

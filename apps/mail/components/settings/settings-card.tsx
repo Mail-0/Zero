@@ -19,12 +19,7 @@ export function SettingsCard({
   className,
 }: SettingsCardProps) {
   return (
-    <Card
-      className={cn(
-        'bg-panelLight dark:bg-panelDark w-full border-none px-0 shadow-none',
-        className,
-      )}
-    >
+    <Card className={cn('bg-panel w-full border-none px-0 shadow-none', className)}>
       <CardHeader className="flex flex-row items-start justify-between px-0 pt-0">
         <div>
           <CardTitle>{title}</CardTitle>

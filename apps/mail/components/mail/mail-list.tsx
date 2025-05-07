@@ -144,7 +144,7 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
               <div className="flex justify-between">
                 <p
                   className={cn(
-                    'mt-1 line-clamp-1 max-w-[50ch] text-sm text-[#8C8C8C] md:max-w-[30ch]',
+                    'text-muted-foreground mt-1 line-clamp-1 max-w-[50ch] text-sm md:max-w-[30ch]',
                   )}
                 >
                   {draft?.subject}
@@ -359,8 +359,8 @@ const Thread = memo(
             <div className="flex w-full items-center justify-between gap-4">
               <Avatar className="h-8 w-8">
                 {isGroupThread ? (
-                  <div className="bg-muted-foreground/50 dark:bg-muted/50 flex h-full w-full items-center justify-center rounded-full p-2">
-                    <Users className="h-4 w-4" />
+                  <div className="bg-muted flex h-full w-full items-center justify-center rounded-full p-2">
+                    <Users className="text-muted-foreground h-4 w-4" />
                   </div>
                 ) : (
                   <>
@@ -467,7 +467,7 @@ const Thread = memo(
             {isHovered && !isMobile && (
               <div
                 className={cn(
-                  'absolute right-2 z-[25] flex -translate-y-1/2 items-center gap-1 rounded-xl border bg-white p-1 shadow-sm dark:bg-[#1A1A1A]',
+                  'bg-panel absolute right-2 z-[25] flex -translate-y-1/2 items-center gap-1 rounded-xl border p-1 shadow-sm',
                   index === 0 ? 'top-4' : 'top-[-1]',
                 )}
               >
@@ -484,12 +484,12 @@ const Thread = memo(
                           'h-4 w-4',
                           isStarred
                             ? 'fill-yellow-400 stroke-yellow-400'
-                            : 'fill-transparent stroke-[#9D9D9D] dark:stroke-[#9D9D9D]',
+                            : 'stroke-muted-foreground fill-transparent',
                         )}
                       />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="mb-1 bg-white dark:bg-[#1A1A1A]">
+                  <TooltipContent className="mb-1">
                     {isStarred ? t('common.threadDisplay.unstar') : t('common.threadDisplay.star')}
                   </TooltipContent>
                 </Tooltip>
@@ -501,10 +501,10 @@ const Thread = memo(
                       className="h-6 w-6 [&_svg]:size-3.5"
                       onClick={() => moveThreadTo('archive')}
                     >
-                      <Archive2 className="fill-[#9D9D9D]" />
+                      <Archive2 className="fill-muted-foreground" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="mb-1 bg-white dark:bg-[#1A1A1A]">
+                  <TooltipContent className="mb-1">
                     {t('common.threadDisplay.archive')}
                   </TooltipContent>
                 </Tooltip>
@@ -514,15 +514,13 @@ const Thread = memo(
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 hover:bg-[#FDE4E9] dark:hover:bg-[#411D23] [&_svg]:size-3.5"
+                        className="hover:bg-destructive h-6 w-6 [&_svg]:size-3.5"
                         onClick={() => moveThreadTo('bin')}
                       >
-                        <Trash className="fill-[#F43F5E]" />
+                        <Trash className="fill-destructive-foreground" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent className="mb-1 bg-white dark:bg-[#1A1A1A]">
-                      {t('common.actions.Bin')}
-                    </TooltipContent>
+                    <TooltipContent className="mb-1">{t('common.actions.Bin')}</TooltipContent>
                   </Tooltip>
                 ) : null}
               </div>
@@ -550,16 +548,16 @@ const Thread = memo(
                     <Check className="h-4 w-4 text-white" />
                   </div>
                   {isGroupThread ? (
-                    <div className="flex h-full w-full items-center justify-center rounded-full bg-[#FFFFFF] p-2 dark:bg-[#373737]">
-                      <GroupPeople className="h-4 w-4" />
+                    <div className="bg-muted flex h-full w-full items-center justify-center rounded-full p-2">
+                      <GroupPeople className="text-muted-foreground h-4 w-4" />
                     </div>
                   ) : (
                     <>
                       <AvatarImage
-                        className="rounded-full bg-[#FFFFFF] dark:bg-[#373737]"
+                        className="rounded-full"
                         src={getEmailLogo(latestMessage.sender.email)}
                       />
-                      <AvatarFallback className="rounded-full bg-[#FFFFFF] font-bold text-[#9F9F9F] dark:bg-[#373737]">
+                      <AvatarFallback className="rounded-full">
                         {cleanName[0]?.toUpperCase()}
                       </AvatarFallback>
                     </>
@@ -616,7 +614,7 @@ const Thread = memo(
                     {latestMessage.receivedOn ? (
                       <p
                         className={cn(
-                          'text-nowrap text-xs font-normal text-[#6D6D6D] opacity-70 transition-opacity group-hover:opacity-100 dark:text-[#8C8C8C]',
+                          'text-muted-foreground text-nowrap text-xs font-normal opacity-70 transition-opacity group-hover:opacity-100',
                           isMailSelected && 'opacity-100',
                         )}
                       >
@@ -636,7 +634,7 @@ const Thread = memo(
                     ) : (
                       <p
                         className={cn(
-                          'mt-1 line-clamp-1 max-w-[50ch] text-sm text-[#8C8C8C] md:max-w-[40ch]',
+                          'text-muted-foreground mt-1 line-clamp-1 max-w-[50ch] text-sm md:max-w-[40ch]',
                         )}
                       >
                         {highlightText(latestMessage.subject, searchValue.highlight)}
@@ -904,7 +902,7 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
                 />
                 <div className="mt-5">
                   <p className="text-lg">It's empty here</p>
-                  <p className="text-md text-[#6D6D6D] dark:text-white/50">
+                  <p className="text-md text-foreground/70">
                     Search for another email or{' '}
                     <button className="underline" onClick={clearFilters}>
                       clear filters

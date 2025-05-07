@@ -167,7 +167,7 @@ export function NavUser() {
                 </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                className="ml-3 w-[--radix-dropdown-menu-trigger-width] min-w-56 bg-white font-medium dark:bg-[#131313]"
+                className="ml-3 w-[--radix-dropdown-menu-trigger-width] min-w-56 font-medium"
                 align="end"
                 side={'bottom'}
                 sideOffset={8}
@@ -331,7 +331,7 @@ export function NavUser() {
                       </AvatarFallback>
                     </Avatar>
                     {activeAccount.id === session.connectionId && data.connections.length > 1 && (
-                      <CircleCheck className="fill-mainBlue absolute -bottom-2 -right-2 size-4 rounded-full bg-white dark:bg-black" />
+                      <CircleCheck className="fill-mainBlue bg-background absolute -bottom-2 -right-2 size-4 rounded-full" />
                     )}
                   </div>
                 </div>
@@ -385,7 +385,7 @@ export function NavUser() {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
-                    className="ml-3 min-w-56 bg-white font-medium dark:bg-[#131313]"
+                    className="ml-3 min-w-56 font-medium"
                     align="end"
                     side={'bottom'}
                     sideOffset={8}
@@ -428,7 +428,7 @@ export function NavUser() {
               )}
 
               <AddConnectionDialog>
-                <button className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-[5px] border border-dashed dark:bg-[#262626] dark:text-[#929292]">
+                <button className="text-muted-foreground flex h-7 w-7 cursor-pointer items-center justify-center rounded-[5px] border border-dashed">
                   <Plus className="size-4" />
                 </button>
               </AddConnectionDialog>
@@ -438,11 +438,11 @@ export function NavUser() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className={cn('md:h-fit md:px-2')}>
-                    <ThreeDots className="fill-iconLight dark:fill-iconDark" />
+                    <ThreeDots className="fill-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
-                  className="ml-3 min-w-56 bg-white font-medium dark:bg-[#131313]"
+                  className="ml-3 min-w-56 font-medium"
                   align="end"
                   side={'bottom'}
                   sideOffset={8}
@@ -538,10 +538,10 @@ export function NavUser() {
       {state !== 'collapsed' && (
         <div className="flex items-center justify-between gap-2">
           <div className="my-2 flex flex-col items-start gap-1 space-y-1">
-            <div className="text-[13px] leading-none text-black dark:text-white">
+            <div className="text-foreground text-[13px] leading-none">
               {activeAccount?.name || session.user.name || 'User'}
             </div>
-            <div className="max-w-[150px] overflow-hidden truncate text-xs font-normal leading-none text-[#898989]">
+            <div className="text-muted-foreground max-w-[150px] overflow-hidden truncate text-xs font-normal leading-none">
               {activeAccount?.email || session.user.email}
             </div>
           </div>

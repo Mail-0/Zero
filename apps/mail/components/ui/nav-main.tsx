@@ -265,7 +265,7 @@ export function NavMain({ items }: NavMainProps) {
             <SidebarMenuItem>
               {state !== 'collapsed' ? (
                 section.title ? (
-                  <p className="mx-2 mb-2 text-[13px] text-[#6D6D6D] dark:text-[#898989]">
+                  <p className="text-sidebar-foreground/70 mx-2 mb-2 text-[13px]">
                     {section.title}
                   </p>
                 ) : null
@@ -291,7 +291,7 @@ export function NavMain({ items }: NavMainProps) {
           <Collapsible defaultOpen={true} className="group/collapsible">
             <SidebarMenuItem className="mb-4" style={{ height: 'auto' }}>
               <div className="mx-2 mb-4 flex items-center justify-between">
-                <span className="text-[13px] text-[#6D6D6D] dark:text-[#898989]">Labels</span>
+                <span className="text-sidebar-foreground/70 text-[13px]">Labels</span>
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                   <DialogTrigger asChild>
                     <Button
@@ -299,7 +299,7 @@ export function NavMain({ items }: NavMainProps) {
                       size="icon"
                       className="mr-1 h-4 w-4 p-0 hover:bg-transparent"
                     >
-                      <Plus className="h-3 w-3 text-[#6D6D6D] dark:text-[#898989]" />
+                      <Plus className="text-sidebar-foreground/70 h-3 w-3" />
                     </Button>
                   </DialogTrigger>
                   <DialogContent showOverlay={true}>
@@ -416,8 +416,8 @@ export function NavMain({ items }: NavMainProps) {
                           <Button className="h-8" type="submit">
                             Create Label
                             <div className="gap- flex h-5 items-center justify-center rounded-sm bg-white/10 px-1 dark:bg-black/10">
-                              <Command className="h-2 w-2 text-white dark:text-[#929292]" />
-                              <CurvedArrow className="mt-1.5 h-3 w-3 fill-white dark:fill-[#929292]" />
+                              <Command className="text-foreground h-2 w-2" />
+                              <CurvedArrow className="fill-foreground mt-1.5 h-3 w-3" />
                             </div>
                           </Button>
                         </div>
@@ -477,7 +477,7 @@ export function NavMain({ items }: NavMainProps) {
                                         'max-w-[20ch] truncate rounded border px-1.5 py-0.5 text-xs',
                                         searchValue.value.includes(`label:${label.name}`)
                                           ? 'border-accent-foreground'
-                                          : 'dark:bg-subtleBlack',
+                                          : 'bg-accent/40 border-accent',
                                       )}
                                     >
                                       {label.name}
@@ -508,8 +508,8 @@ export function NavMain({ items }: NavMainProps) {
                                             className={cn(
                                               'max-w-[20ch] truncate rounded border px-1.5 py-0.5 text-xs',
                                               searchValue.value.includes(`label:${label.name}`)
-                                                ? 'border-accent-foreground'
-                                                : 'dark:bg-subtleBlack',
+                                                ? 'border-accent/40 bg-accent'
+                                                : 'bg-accent/40 border-accent/40',
                                             )}
                                           >
                                             {folderParts.map((part, index) => (
@@ -573,12 +573,12 @@ function NavItem(item: NavItemProps & { href: string }) {
     <SidebarMenuButton
       tooltip={state === 'collapsed' ? t(item.title as MessageKey) : undefined}
       className={cn(
-        'hover:bg-subtleWhite flex items-center dark:hover:bg-[#202020]',
-        item.isActive && 'bg-subtleWhite text-accent-foreground dark:bg-[#202020]',
+        'hover:bg-sidebar-accent flex items-center',
+        item.isActive && 'text-sidebar-accent-foreground bg-sidebar-accent',
       )}
       onClick={() => setOpenMobile(false)}
     >
-      {item.icon && <item.icon ref={iconRef} className="mr-2 shrink-0" />}
+      {item.icon && <item.icon ref={iconRef} className="text-muted-foreground/60 mr-2 shrink-0" />}
       <p className="mt-0.5 min-w-0 flex-1 truncate text-[13px]">{t(item.title as MessageKey)}</p>
       {stats &&
         item.id?.toLowerCase() !== 'sent' &&

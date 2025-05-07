@@ -374,23 +374,23 @@ export function EmailComposer({
   return (
     <div
       className={cn(
-        'w-full max-w-[750px] overflow-hidden rounded-2xl bg-[#FAFAFA] p-0 py-0 shadow-sm dark:bg-[#1A1A1A]',
+        'bg-panel w-full max-w-[750px] overflow-hidden rounded-2xl p-0 py-0 shadow-sm',
         className,
       )}
     >
-      <div className="border-b border-[#E7E7E7] pb-2 dark:border-[#252525]">
+      <div className="border-panelBorder border-b pb-2">
         <div className="flex justify-between px-3 pt-3">
           <div className="flex items-center gap-2">
-            <p className="text-sm font-medium text-[#8C8C8C]">To:</p>
+            <p className="text-muted-foreground text-sm font-medium">To:</p>
             <div className="flex flex-wrap items-center gap-2">
               {toEmails.map((email, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-1 rounded-full border border-[#DBDBDB] px-1 py-0.5 pr-2 dark:border-[#2B2B2B]"
+                  className="border-muted flex items-center gap-1 rounded-full border px-1 py-0.5 pr-2"
                 >
-                  <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
+                  <span className="text-foreground flex gap-1 py-0.5 text-sm">
                     <Avatar className="h-5 w-5">
-                      <AvatarFallback className="rounded-full bg-[#F5F5F5] text-xs font-bold text-[#6D6D6D] dark:bg-[#373737] dark:text-[#9B9B9B]">
+                      <AvatarFallback className="bg-accent text-muted-foreground rounded-full text-xs font-bold">
                         {email.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
@@ -406,13 +406,13 @@ export function EmailComposer({
                     }}
                     className="text-white/50 hover:text-white/90"
                   >
-                    <X className="mt-0.5 h-3.5 w-3.5 fill-black dark:fill-[#9A9A9A]" />
+                    <X className="fill-muted-foreground mt-0.5 h-3.5 w-3.5" />
                   </button>
                 </div>
               ))}
               <input
                 ref={toInputRef}
-                className="h-6 flex-1 bg-transparent text-sm font-normal leading-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white"
+                className="placeholder:text-muted-foreground/70 text-foreground h-6 flex-1 bg-transparent text-sm font-normal leading-normal focus:outline-none"
                 placeholder="Enter email"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && e.currentTarget.value.trim()) {
@@ -463,14 +463,14 @@ export function EmailComposer({
           <div className="flex gap-2">
             <button
               tabIndex={-1}
-              className="flex h-full items-center gap-2 text-sm font-medium text-[#8C8C8C] hover:text-[#A8A8A8]"
+              className="text-muted-foreground/80 hover:text-muted-foreground flex h-full items-center gap-2 text-sm font-medium"
               onClick={() => setShowCc(!showCc)}
             >
               <span>Cc</span>
             </button>
             <button
               tabIndex={-1}
-              className="flex h-full items-center gap-2 text-sm font-medium text-[#8C8C8C] hover:text-[#A8A8A8]"
+              className="text-muted-foreground/80 hover:text-muted-foreground flex h-full items-center gap-2 text-sm font-medium"
               onClick={() => setShowBcc(!showBcc)}
             >
               <span>Bcc</span>
@@ -481,7 +481,7 @@ export function EmailComposer({
                 className="flex h-full items-center gap-2 text-sm font-medium text-[#8C8C8C] hover:text-[#A8A8A8]"
                 onClick={onClose}
               >
-                <X className="h-3.5 w-3.5 fill-[#9A9A9A]" />
+                <X className="fill-muted-foreground mt-0.5 h-3.5 w-3.5" />
               </button>
             )}
           </div>
@@ -491,16 +491,16 @@ export function EmailComposer({
           {/* CC Section */}
           {showCc && (
             <div className="flex items-center gap-2 px-3">
-              <p className="text-sm font-medium text-[#8C8C8C]">Cc:</p>
+              <p className="text-muted-foreground text-sm font-medium">Cc:</p>
               <div className="flex flex-1 flex-wrap items-center gap-2">
                 {ccEmails?.map((email, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-1 rounded-full border border-[#DBDBDB] px-2 py-0.5 dark:border-[#2B2B2B]"
+                    className="border-muted flex items-center gap-1 rounded-full border px-1 py-0.5 pr-2"
                   >
-                    <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
+                    <span className="text-foreground flex gap-1 py-0.5 text-sm">
                       <Avatar className="h-5 w-5">
-                        <AvatarFallback className="rounded-full bg-[#F5F5F5] text-xs font-bold text-[#6D6D6D] dark:bg-[#373737] dark:text-[#9B9B9B]">
+                        <AvatarFallback className="bg-accent text-muted-foreground rounded-full text-xs font-bold">
                           {email.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
@@ -516,12 +516,12 @@ export function EmailComposer({
                       }}
                       className="text-white/50 hover:text-white/90"
                     >
-                      <X className="mt-0.5 h-3.5 w-3.5 fill-black dark:fill-[#9A9A9A]" />
+                      <X className="fill-muted-foreground mt-0.5 h-3.5 w-3.5" />
                     </button>
                   </div>
                 ))}
                 <input
-                  className="h-6 flex-1 bg-transparent text-sm font-normal leading-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white"
+                  className="placeholder:text-muted-foreground/70 text-foreground h-6 flex-1 bg-transparent text-sm font-normal leading-normal focus:outline-none"
                   placeholder="Enter email"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && e.currentTarget.value.trim()) {
@@ -570,16 +570,16 @@ export function EmailComposer({
           {/* BCC Section */}
           {showBcc && (
             <div className="flex items-center gap-2 px-3">
-              <p className="text-sm font-medium text-[#8C8C8C]">Bcc:</p>
+              <p className="text-muted-foreground text-sm font-medium">Bcc:</p>
               <div className="flex flex-1 flex-wrap items-center gap-2">
                 {bccEmails?.map((email, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-1 rounded-full border border-[#DBDBDB] px-2 py-0.5 dark:border-[#2B2B2B]"
+                    className="border-muted flex items-center gap-1 rounded-full border px-1 py-0.5 pr-2"
                   >
-                    <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
+                    <span className="text-foreground flex gap-1 py-0.5 text-sm">
                       <Avatar className="h-5 w-5">
-                        <AvatarFallback className="rounded-full bg-[#F5F5F5] text-xs font-bold text-[#6D6D6D] dark:bg-[#373737] dark:text-[#9B9B9B]">
+                        <AvatarFallback className="bg-accent text-muted-foreground rounded-full text-xs font-bold">
                           {email.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
@@ -595,12 +595,12 @@ export function EmailComposer({
                       }}
                       className="text-white/50 hover:text-white/90"
                     >
-                      <X className="mt-0.5 h-3.5 w-3.5 fill-black dark:fill-[#9A9A9A]" />
+                      <X className="fill-muted-foreground mt-0.5 h-3.5 w-3.5" />
                     </button>
                   </div>
                 ))}
                 <input
-                  className="h-6 flex-1 bg-transparent text-sm font-normal leading-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white"
+                  className="placeholder:text-muted-foreground/70 text-foreground h-6 flex-1 bg-transparent text-sm font-normal leading-normal focus:outline-none"
                   placeholder="Enter email"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && e.currentTarget.value.trim()) {
@@ -650,9 +650,9 @@ export function EmailComposer({
 
       {/* Subject */}
       <div className="flex items-center gap-2 p-3">
-        <p className="text-sm font-medium text-[#8C8C8C]">Subject:</p>
+        <p className="text-muted-foreground text-sm font-medium">Subject:</p>
         <input
-          className="h-4 w-full bg-transparent text-sm font-normal leading-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white/90"
+          className="placeholder:text-muted-foreground/70 text-foreground h-4 flex-1 bg-transparent text-sm font-normal leading-normal focus:outline-none"
           placeholder="Re: Design review feedback"
           value={subjectInput}
           onChange={(e) => {
@@ -663,7 +663,7 @@ export function EmailComposer({
       </div>
 
       {/* Message Content */}
-      <div className="relative -bottom-1 flex flex-col items-start justify-start gap-2 self-stretch border-t bg-[#FFFFFF] px-3 py-3 outline-white/5 dark:bg-[#202020]">
+      <div className="bg-popover/30 relative -bottom-1 flex flex-col items-start justify-start gap-2 self-stretch border-t px-3 py-3 outline-white">
         <div className="flex flex-col gap-2.5 self-stretch">
           <EditorContent editor={editor} />
         </div>
@@ -673,19 +673,19 @@ export function EmailComposer({
           <div className="flex items-center justify-start gap-2">
             <div className="flex items-center justify-start gap-2">
               <button
-                className="flex h-7 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-md bg-black pl-1.5 pr-1 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white"
+                className="bg-primary flex h-7 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-md pl-1.5 pr-1 disabled:cursor-not-allowed disabled:opacity-50"
                 onClick={handleSend}
                 disabled={isLoading}
               >
                 <div className="flex items-center justify-center gap-2.5 pl-0.5">
-                  <div className="text-center text-sm leading-none text-white dark:text-black">
+                  <div className="text-primary-foreground text-center text-sm leading-none">
                     <span className="hidden md:block">Send email</span>
                     <span className="block md:hidden">Send</span>
                   </div>
                 </div>
-                <div className="flex h-5 items-center justify-center gap-1 rounded-sm bg-white/10 px-1 dark:bg-black/10">
-                  <Command className="h-3.5 w-3.5 text-white dark:text-black" />
-                  <CurvedArrow className="mt-1.5 h-4 w-4 fill-white dark:fill-black" />
+                <div className="bg-primary-foreground/10 flex h-5 items-center justify-center gap-1 rounded-sm px-1">
+                  <Command className="text-primary-foreground h-3.5 w-3.5" />
+                  <CurvedArrow className="fill-primary-foreground mt-1.5 h-4 w-4" />
                 </div>
               </button>
 
@@ -717,7 +717,7 @@ export function EmailComposer({
                 <Popover modal={true}>
                   <PopoverTrigger asChild>
                     <button
-                      className="focus-visible:ring-ring flex items-center gap-1.5 rounded-md border border-[#E7E7E7] bg-white/5 px-2 py-1 text-sm hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:border-[#2B2B2B]"
+                      className="focus-visible:ring-ring flex items-center gap-1.5 rounded-md border bg-white/5 px-2 py-1 text-sm hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:border-none"
                       aria-label={`View ${attachments.length} attached ${pluralize('file', attachments.length)}`}
                     >
                       <Paperclip className="h-3.5 w-3.5 text-[#9A9A9A]" />
@@ -726,16 +726,14 @@ export function EmailComposer({
                   </PopoverTrigger>
 
                   <PopoverContent
-                    className="z-[100] w-[340px] rounded-lg p-0 shadow-lg dark:bg-[#202020]"
+                    className="z-[100] w-[340px] rounded-lg p-0 shadow-lg"
                     align="start"
                     sideOffset={6}
                   >
                     <div className="flex flex-col">
-                      <div className="border-b border-[#E7E7E7] p-3 dark:border-[#2B2B2B]">
-                        <h4 className="text-sm font-semibold text-black dark:text-white/90">
-                          Attachments
-                        </h4>
-                        <p className="text-xs text-[#6D6D6D] dark:text-[#9B9B9B]">
+                      <div className="border-muted border-b p-3">
+                        <h4 className="text-foreground text-sm font-semibold">Attachments</h4>
+                        <p className="text-muted-foreground text-xs">
                           {pluralize('file', attachments.length, true)}
                         </p>
                       </div>
@@ -753,7 +751,7 @@ export function EmailComposer({
                           return (
                             <div
                               key={file.name + index}
-                              className="group flex items-center justify-between gap-3 rounded-md px-1.5 py-1.5 hover:bg-black/5 dark:hover:bg-white/10"
+                              className="hover:bg-primary/10 group flex items-center justify-between gap-3 rounded-md px-1.5 py-1.5"
                             >
                               <div className="flex min-w-0 flex-1 items-center gap-3">
                                 <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded bg-[#F0F0F0] dark:bg-[#2C2C2C]">
@@ -780,17 +778,17 @@ export function EmailComposer({
                                 </div>
                                 <div className="flex min-w-0 flex-1 flex-col">
                                   <p
-                                    className="flex items-baseline text-sm text-black dark:text-white/90"
+                                    className="text-foreground flex items-baseline text-sm"
                                     title={file.name}
                                   >
                                     <span className="truncate">{truncatedName}</span>
                                     {extension && (
-                                      <span className="ml-0.5 flex-shrink-0 text-[10px] text-[#8C8C8C] dark:text-[#9A9A9A]">
+                                      <span className="text-muted-foreground ml-0.5 flex-shrink-0 text-[10px]">
                                         .{extension}
                                       </span>
                                     )}
                                   </p>
-                                  <p className="text-xs text-[#6D6D6D] dark:text-[#9B9B9B]">
+                                  <p className="text-muted-foreground text-xs">
                                     {formatFileSize(file.size)}
                                   </p>
                                 </div>
@@ -809,10 +807,10 @@ export function EmailComposer({
                                   });
                                   setHasUnsavedChanges(true);
                                 }}
-                                className="focus-visible:ring-ring ml-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-transparent hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2"
+                                className="focus-visible:ring-ring group/x ml-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-transparent hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2"
                                 aria-label={`Remove ${file.name}`}
                               >
-                                <XIcon className="h-3.5 w-3.5 text-[#6D6D6D] hover:text-black dark:text-[#9B9B9B] dark:hover:text-white" />
+                                <XIcon className="text-muted-foreground group-hover/x:text-primary-foreground h-3.5 w-3.5" />
                               </button>
                             </div>
                           );
@@ -850,7 +848,7 @@ export function EmailComposer({
                 ) : null}
               </AnimatePresence>
               <button
-                className="flex h-7 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-md border border-[#8B5CF6] pl-1.5 pr-2 dark:bg-[#252525]"
+                className="border-panelBorder flex h-7 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-md border pl-1.5 pr-2"
                 onClick={async () => {
                   if (!toEmails.length || !subjectInput.trim()) {
                     toast.error('Please enter a recipient and subject');
@@ -864,14 +862,12 @@ export function EmailComposer({
                 <div className="flex items-center justify-center gap-2.5 pl-0.5">
                   <div className="flex h-5 items-center justify-center gap-1 rounded-sm">
                     {aiIsLoading ? (
-                      <Loader className="h-3.5 w-3.5 animate-spin fill-black dark:fill-white" />
+                      <Loader className="fill-muted-foreground h-3.5 w-3.5 animate-spin" />
                     ) : (
-                      <Sparkles className="h-3.5 w-3.5 fill-black dark:fill-white" />
+                      <Sparkles className="fill-foreground h-3.5 w-3.5" />
                     )}
                   </div>
-                  <div className="text-center text-sm leading-none text-black dark:text-white">
-                    Generate
-                  </div>
+                  <div className="text-foreground text-center text-sm leading-none">Generate</div>
                 </div>
               </button>
             </div>

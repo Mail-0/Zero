@@ -71,19 +71,16 @@ export const AddConnectionDialog = ({
           </DialogDescription>
         </DialogHeader>
         {!canCreateConnection && (
-          <div className="mt-2 flex justify-between gap-2 rounded-lg border border-red-800 bg-red-800/20 p-2">
+          <div className="border-destructive-foreground/40 bg-destructive/40 mt-2 flex justify-between gap-2 rounded-lg border p-2">
             <span className="text-sm">
               You can only connect 1 email in the free tier.{' '}
-              <span
-                onClick={handleUpgrade}
-                className="hover:bg-subtleWhite hover:text-subtleBlack cursor-pointer underline"
-              >
+              <span onClick={handleUpgrade} className="hover:bg-muted cursor-pointer underline">
                 Upgrade
               </span>{' '}
               to connect more.
             </span>
             <Button onClick={handleUpgrade} className="text-sm">
-              $20<span className="text-muted-foreground -ml-2 text-xs">/month</span>
+              $20<span className="text-foreground/80 -ml-2 text-xs">/month</span>
             </Button>
           </div>
         )}

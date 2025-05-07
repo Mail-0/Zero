@@ -117,9 +117,8 @@ function SortableNote({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'group relative mb-3 overflow-hidden rounded-md border border-[#E7E7E7] p-3 dark:border-[#252525]',
+        'border-muted group relative mb-3 overflow-hidden rounded-md border p-3',
         note.isPinned && 'ring-1 ring-amber-200 dark:ring-amber-800',
-        note.color === 'default' ? 'bg-white dark:bg-[#202020]' : '',
       )}
     >
       <div
@@ -132,18 +131,16 @@ function SortableNote({
 
       <div className="flex items-start gap-3 pl-1.5">
         <div className="min-w-0 flex-1">
-          <p className="whitespace-pre-wrap break-words text-sm text-black dark:text-white/90">
-            {note.content}
-          </p>
+          <p className="whitespace-pre-wrap break-words text-sm">{note.content}</p>
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="mt-2 flex cursor-default items-center text-xs text-[#8C8C8C]">
+              <div className="text-muted-foreground mt-2 flex cursor-default items-center text-xs">
                 <Clock className="mr-1 h-3 w-3" />
                 <span>{formatRelativeTime(note.createdAt, format)}</span>
               </div>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">
+            <TooltipContent side="bottom">
               {note.updatedAt > note.createdAt ? (
                 <>
                   <p>
@@ -179,28 +176,16 @@ function SortableNote({
                 <span className="sr-only">More</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="border-[#E7E7E7] bg-[#FAFAFA] dark:border-[#252525] dark:bg-[#1A1A1A]"
-            >
-              <DropdownMenuItem
-                onClick={onEdit}
-                className="text-black focus:bg-white focus:text-black dark:text-white/90 dark:focus:bg-[#202020] dark:focus:text-white"
-              >
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onEdit}>
                 <Edit className="mr-2 h-4 w-4" />
                 <span>{t('common.notes.actions.edit')}</span>
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={onCopy}
-                className="text-black focus:bg-white focus:text-black dark:text-white/90 dark:focus:bg-[#202020] dark:focus:text-white"
-              >
+              <DropdownMenuItem onClick={onCopy}>
                 <Copy className="mr-2 h-4 w-4" />
                 <span>{t('common.notes.actions.copy')}</span>
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={onTogglePin}
-                className="text-black focus:bg-white focus:text-black dark:text-white/90 dark:focus:bg-[#202020] dark:focus:text-white"
-              >
+              <DropdownMenuItem onClick={onTogglePin}>
                 {note.isPinned ? (
                   <>
                     <PinOff className="mr-2 h-4 w-4" />
@@ -214,20 +199,16 @@ function SortableNote({
                 )}
               </DropdownMenuItem>
               <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="text-black focus:bg-white focus:text-black dark:text-white/90 dark:focus:bg-[#202020] dark:focus:text-white">
+                <DropdownMenuSubTrigger>
                   <PaintBucket className="mr-2 h-4 w-4" />
                   <span>{t('common.notes.actions.changeColor')}</span>
                 </DropdownMenuSubTrigger>
                 <DropdownMenuPortal>
-                  <DropdownMenuSubContent className="w-48 border-[#E7E7E7] bg-[#FAFAFA] dark:border-[#252525] dark:bg-[#1A1A1A]">
+                  <DropdownMenuSubContent className="w-48">
                     <DropdownMenuRadioGroup value={note.color} onValueChange={onColorChange}>
                       {NOTE_COLORS.map((color) => {
                         return (
-                          <DropdownMenuRadioItem
-                            key={color.value}
-                            value={color.value}
-                            className="text-black focus:bg-white focus:text-black dark:text-white/90 dark:focus:bg-[#202020] dark:focus:text-white"
-                          >
+                          <DropdownMenuRadioItem key={color.value} value={color.value}>
                             <div className="flex items-center">
                               <div
                                 className={cn(
@@ -246,11 +227,8 @@ function SortableNote({
                   </DropdownMenuSubContent>
                 </DropdownMenuPortal>
               </DropdownMenuSub>
-              <DropdownMenuSeparator className="bg-[#E7E7E7] dark:bg-[#252525]" />
-              <DropdownMenuItem
-                onClick={onDelete}
-                className="text-red-600 focus:bg-white focus:text-red-600 dark:text-red-400 dark:focus:bg-[#202020] dark:focus:text-red-400"
-              >
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={onDelete} className="text-destructive-foreground">
                 <Trash2 className="mr-2 h-4 w-4" />
                 <span>{t('common.notes.actions.delete')}</span>
               </DropdownMenuItem>
@@ -530,20 +508,18 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
     <div className="relative" ref={panelRef}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
             className={cn(
-              'inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md bg-white dark:bg-[#313131]',
+              'bg-popover inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md',
               notes.length > 0 && 'text-amber-500',
-              isOpen && 'bg-white/80 dark:bg-[#313131]/80',
+              isOpen && 'bg-accent',
             )}
             onClick={() => setIsOpen(!isOpen)}
           >
             <StickyNote
               className={cn(
                 'h-4 w-4',
-                notes.length > 0 ? 'fill-amber-200 dark:fill-amber-900' : 'text-[#9A9A9A]',
+                notes.length > 0 ? 'fill-amber-200 dark:fill-amber-900' : 'text-muted-foreground',
               )}
             />
             {notes.length > 0 && (
@@ -552,20 +528,20 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
               </span>
             )}
             <span className="sr-only">{t('common.notes.title')}</span>
-          </Button>
+          </button>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">
+        <TooltipContent side="bottom">
           <p>{t('common.notes.noteCount', { count: notes.length })}</p>
         </TooltipContent>
       </Tooltip>
 
       {isOpen && (
         <div
-          className="animate-in fade-in-20 zoom-in-95 fixed right-0 top-[5rem] z-50 h-[calc(100vh-5rem)] max-h-[calc(100vh-5rem)] w-full max-w-[100vw] overflow-hidden rounded-t-lg border border-t bg-[#FAFAFA] shadow-lg duration-100 sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:h-auto sm:max-h-[80vh] sm:w-[400px] sm:max-w-[90vw] sm:rounded-xl sm:border dark:border-[#252525] dark:bg-[#1A1A1A]"
+          className="animate-in fade-in-20 zoom-in-95 bg-panel fixed right-0 top-[5rem] z-50 h-[calc(100vh-5rem)] max-h-[calc(100vh-5rem)] w-full max-w-[100vw] overflow-hidden rounded-t-lg border border-t shadow-lg duration-100 sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:h-auto sm:max-h-[80vh] sm:w-[400px] sm:max-w-[90vw] sm:rounded-xl sm:border"
           onClick={handlePanelClick}
         >
-          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E7E7E7] p-3 dark:border-[#252525]">
-            <h3 className="flex items-center text-sm font-medium text-black dark:text-white">
+          <div className="border-muted sticky top-0 z-10 flex items-center justify-between border-b p-3">
+            <h3 className="flex items-center text-sm font-medium">
               <StickyNote className="mr-2 h-4 w-4" />
               {t('common.notes.title')}{' '}
               {notes.length > 0 && (
@@ -588,12 +564,12 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
           {notes.length > 0 && (
             <div className="sticky top-[49px] z-10 px-3 pb-0 pt-2">
               <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-[#9A9A9A]" />
+                <Search className="text-muted-foreground absolute left-2 top-2.5 h-4 w-4" />
                 <Input
                   placeholder={t('common.notes.search')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="border-[#E7E7E7] bg-white pl-8 text-sm text-black placeholder:text-[#797979] focus:outline-none dark:border-[#252525] dark:bg-[#202020] dark:text-white"
+                  className="ring-offset-panel pl-8 text-sm focus:outline-none"
                 />
               </div>
             </div>
@@ -610,19 +586,12 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                 <div className="p-3">
                   {notes.length === 0 && !isAddingNewNote ? (
                     <div className="flex flex-col items-center justify-center py-8 text-center">
-                      <StickyNote className="mb-2 h-12 w-12 text-[#8C8C8C] opacity-50" />
-                      <p className="text-sm text-black dark:text-white/90">
-                        {t('common.notes.empty')}
-                      </p>
-                      <p className="mb-4 mt-1 max-w-[80%] text-xs text-[#8C8C8C]">
+                      <StickyNote className="text-muted-foreground mb-2 h-12 w-12" />
+                      <p className="text-sm">{t('common.notes.empty')}</p>
+                      <p className="text-muted-foreground mb-4 mt-1 max-w-[80%] text-xs">
                         {t('common.notes.emptyDescription')}
                       </p>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        className="mt-1 bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
-                        onClick={() => setIsAddingNewNote(true)}
-                      >
+                      <Button variant="default" size="sm" onClick={() => setIsAddingNewNote(true)}>
                         <PlusCircle className="mr-2 h-4 w-4" />
                         {t('common.notes.addNote')}
                       </Button>
@@ -631,14 +600,14 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                     <>
                       {searchQuery && filteredNotes.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-6 text-center">
-                          <AlertCircle className="mb-2 h-10 w-10 text-[#8C8C8C] opacity-50" />
-                          <p className="text-sm text-black dark:text-white/90">
+                          <AlertCircle className="text-muted-foreground mb-2 h-10 w-10 opacity-50" />
+                          <p className="text-sm">
                             {t('common.notes.noMatchingNotes', { query: searchQuery })}
                           </p>
                           <Button
-                            variant="outline"
+                            variant="secondary"
                             size="sm"
-                            className="mt-4 border-[#E7E7E7] bg-white text-black dark:border-[#252525] dark:bg-[#313131] dark:text-white/90"
+                            className="mt-4"
                             onClick={() => setSearchQuery('')}
                           >
                             {t('common.notes.clearSearch')}
@@ -706,7 +675,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                       )}
 
                       {isAddingNewNote && (
-                        <div className="relative mb-3 overflow-hidden rounded-md border border-[#E7E7E7] bg-[#FFFFFF] p-3 dark:border-[#252525] dark:bg-[#202020]">
+                        <div className="relative mb-3 overflow-hidden rounded-md border p-3">
                           <div
                             className={cn(
                               'absolute bottom-0 left-0 top-0 w-1.5 border-l-4',
@@ -725,7 +694,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                               value={newNoteContent}
                               onChange={(e) => setNewNoteContent(e.target.value)}
                               onKeyDown={(e) => handleKeyDown(e, 'add')}
-                              className="min-h-[120px] resize-none border-none bg-transparent text-black focus:outline-none dark:text-white/90"
+                              className="min-h-[120px] resize-none border-none bg-transparent focus:outline-none"
                               placeholder={t('common.notes.addYourNote')}
                             />
 
@@ -781,7 +750,6 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="text-[#8C8C8C] hover:bg-white/10 hover:text-[#a0a0a0]"
                                 onClick={() => {
                                   setIsAddingNewNote(false);
                                   setNewNoteContent('');
@@ -792,7 +760,6 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                               <Button
                                 variant="default"
                                 size="sm"
-                                className="bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
                                 onClick={() => void handleAddNote()}
                                 disabled={!newNoteContent.trim()}
                               >
@@ -805,9 +772,9 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
 
                       {!isAddingNewNote && (
                         <Button
-                          variant="outline"
                           size="sm"
-                          className="mt-1 w-full border-[#E7E7E7] bg-white/5 hover:bg-white/10 dark:border-[#252525] dark:text-white/90"
+                          variant="secondary"
+                          className="mt-1 w-full"
                           onClick={() => setIsAddingNewNote(true)}
                         >
                           <PlusCircle className="mr-2 h-4 w-4" />
@@ -821,9 +788,9 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
 
               <DragOverlay>
                 {activeId ? (
-                  <div className="rounded-md border border-[#E7E7E7] bg-white p-3 pl-7 shadow-md dark:border-[#252525] dark:bg-[#202020]">
+                  <div className="bg-popover text-popover-foreground rounded-md p-3 pl-7 shadow-md">
                     <div className="pl-1.5">
-                      <div className="whitespace-pre-wrap break-words text-sm text-black dark:text-white/90">
+                      <div className="whitespace-pre-wrap break-words text-sm">
                         {notes.find((n) => n.id === activeId)?.content}
                       </div>
                     </div>
@@ -833,9 +800,9 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
             </DndContext>
 
             {editingNoteId && (
-              <div className="border-t border-[#E7E7E7] bg-[#FAFAFA] p-3 dark:border-[#252525] dark:bg-[#1A1A1A]">
+              <div className="border-muted border-t p-3">
                 <div className="space-y-2">
-                  <div className="mb-1 text-xs font-medium text-[#8C8C8C]">
+                  <div className="text-muted-foreground mb-1 text-xs font-medium">
                     {t('common.notes.editNote')}:
                   </div>
                   <Textarea
@@ -843,7 +810,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                     value={editContent}
                     onChange={(e) => setEditContent(e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e, 'edit')}
-                    className="min-h-[100px] resize-none border-[#E7E7E7] bg-[#FFFFFF] text-sm text-black dark:border-[#252525] dark:bg-[#202020] dark:text-white/90"
+                    className="min-h-[100px] resize-none text-sm"
                     placeholder={t('common.notes.addYourNote')}
                   />
 
@@ -851,7 +818,6 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-[#8C8C8C] hover:bg-white/10 hover:text-[#a0a0a0]"
                       onClick={() => {
                         setEditingNoteId(null);
                         setEditContent('');
@@ -859,12 +825,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                     >
                       {t('common.notes.cancel')}
                     </Button>
-                    <Button
-                      variant="default"
-                      size="sm"
-                      className="bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
-                      onClick={() => void handleEditNote()}
-                    >
+                    <Button variant="default" size="sm" onClick={() => void handleEditNote()}>
                       {t('common.actions.saveChanges')}
                     </Button>
                   </div>

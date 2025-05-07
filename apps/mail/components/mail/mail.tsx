@@ -153,10 +153,10 @@ export function MailLayout() {
               threadId ? 'md:hidden lg:block' : '',
             )}
           >
-            <div className="bg-panelLight dark:bg-panelDark h-screen flex-1 flex-col overflow-y-auto overflow-x-hidden border-[#E7E7E7] shadow-inner md:flex md:h-[calc(100dvh-0.5rem)] md:rounded-2xl md:border md:shadow-sm lg:w-screen lg:max-w-[415px] xl:max-w-[500px] dark:border-[#252525]">
+            <div className="bg-panel border-panelBorder h-screen flex-1 flex-col overflow-y-auto overflow-x-hidden shadow-inner md:flex md:h-[calc(100dvh-0.5rem)] md:rounded-2xl md:border md:shadow-sm lg:w-screen lg:max-w-[415px] xl:max-w-[500px]">
               <div
                 className={cn(
-                  'sticky top-0 z-[15] flex items-center justify-between gap-1.5 border-b border-[#E7E7E7] p-2 px-[20px] transition-colors md:min-h-14 dark:border-[#252525]',
+                  'border-panelBorder sticky top-0 z-[15] flex items-center justify-between gap-1.5 border-b p-2 px-[20px] transition-colors md:min-h-14',
                 )}
               >
                 <div className="flex w-full items-center justify-between gap-2">
@@ -233,7 +233,7 @@ export function MailLayout() {
 
           {isDesktop && (
             <ResizablePanel
-              className={`bg-panelLight dark:bg-panelDark ${threadId ? 'mr-1' : 'lg:mr-1'} w-fit rounded-2xl border border-[#E7E7E7] shadow-sm lg:flex lg:shadow-sm dark:border-[#252525]`}
+              className={`bg-panel ${threadId ? 'mr-1' : 'lg:mr-1'} border-panelBorder w-fit rounded-2xl border shadow-sm lg:flex lg:shadow-sm`}
               defaultSize={30}
               minSize={30}
             >
@@ -251,7 +251,7 @@ export function MailLayout() {
                 if (!isOpen) handleClose();
               }}
             >
-              <DrawerContent className="bg-panelLight dark:bg-panelDark h-[calc(100dvh-3rem)] p-0">
+              <DrawerContent className="bg-panel h-[calc(100dvh-3rem)] p-0">
                 <DrawerHeader className="sr-only">
                   <DrawerTitle>Email Details</DrawerTitle>
                 </DrawerHeader>
@@ -517,7 +517,7 @@ export const Categories = () => {
       searchValue: 'is:important NOT is:sent NOT is:draft',
       icon: (
         <Lightning
-          className={cn('fill-[#6D6D6D] dark:fill-white', category === 'Important' && 'fill-white')}
+          className={cn('fill-muted-foreground', category === 'Important' && 'fill-white')}
         />
       ),
     },
@@ -526,9 +526,7 @@ export const Categories = () => {
       name: 'All Mail',
       searchValue: 'NOT is:draft (is:inbox OR (is:sent AND to:me))',
       icon: (
-        <Mail
-          className={cn('fill-[#6D6D6D] dark:fill-white', category === 'All Mail' && 'fill-white')}
-        />
+        <Mail className={cn('fill-muted-foreground', category === 'All Mail' && 'fill-white')} />
       ),
       colors:
         'border-0 bg-[#006FFE] text-white dark:bg-[#006FFE] dark:text-white dark:hover:bg-[#006FFE]/90',
@@ -538,9 +536,7 @@ export const Categories = () => {
       name: t('common.mailCategories.personal'),
       searchValue: 'is:personal NOT is:sent NOT is:draft',
       icon: (
-        <User
-          className={cn('fill-[#6D6D6D] dark:fill-white', category === 'Personal' && 'fill-white')}
-        />
+        <User className={cn('fill-muted-foreground', category === 'Personal' && 'fill-white')} />
       ),
     },
     {
@@ -548,9 +544,7 @@ export const Categories = () => {
       name: t('common.mailCategories.updates'),
       searchValue: 'is:updates NOT is:sent NOT is:draft',
       icon: (
-        <Bell
-          className={cn('fill-[#6D6D6D] dark:fill-white', category === 'Updates' && 'fill-white')}
-        />
+        <Bell className={cn('fill-muted-foreground', category === 'Updates' && 'fill-white')} />
       ),
     },
     {
@@ -558,12 +552,7 @@ export const Categories = () => {
       name: 'Promotions',
       searchValue: 'is:promotions NOT is:sent NOT is:draft',
       icon: (
-        <Tag
-          className={cn(
-            'fill-[#6D6D6D] dark:fill-white',
-            category === 'Promotions' && 'fill-white',
-          )}
-        />
+        <Tag className={cn('fill-muted-foreground', category === 'Promotions' && 'fill-white')} />
       ),
     },
     {
@@ -572,10 +561,7 @@ export const Categories = () => {
       searchValue: 'is:unread NOT is:sent NOT is:draft',
       icon: (
         <ScanEye
-          className={cn(
-            'h-4 w-4 fill-[#6D6D6D] dark:fill-white',
-            category === 'Unread' && 'fill-white',
-          )}
+          className={cn('fill-muted-foreground h-4 w-4', category === 'Unread' && 'fill-white')}
         />
       ),
     },
@@ -642,10 +628,8 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
               });
             }}
             className={cn(
-              'flex h-8 items-center justify-center gap-1 overflow-hidden rounded-md border transition-all duration-300 ease-out dark:border-none',
-              isSelected
-                ? cn('flex-1 border-none px-3 text-white', bgColor)
-                : 'w-8 bg-white hover:bg-gray-100 dark:bg-[#313131] dark:hover:bg-[#313131]/80',
+              'flex h-8 items-center justify-center gap-1 overflow-hidden rounded-md transition-all duration-300 ease-out',
+              isSelected ? cn('flex-1 border-none px-3 text-white', bgColor) : 'bg-popover w-8',
             )}
             tabIndex={isOverlay ? -1 : undefined}
           >

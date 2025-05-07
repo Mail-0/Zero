@@ -21,7 +21,7 @@ const CustomToaster = (props: Props) => {
       }}
       toastOptions={{
         classNames: {
-          title: 'title flex-1 justify-center text-black dark:text-white text-sm leading-none',
+          title: 'title flex-1 justify-center text-foreground text-sm leading-none',
           description: 'description',
           actionButton: 'action-button',
           cancelButton: 'cancel-button',
@@ -31,7 +31,7 @@ const CustomToaster = (props: Props) => {
           icon: 'px-4',
           content: 'px py-3',
           default:
-            'w-96 px-1.5 py-1.5 bg-white dark:bg-[#2C2C2C] rounded-xl inline-flex items-center gap-2 overflow-visible border dark:border-none',
+            'w-96 px-1.5 py-1.5 bg-popover rounded-xl inline-flex items-center gap-2 overflow-visible dark:border-transparent',
         },
       }}
     />

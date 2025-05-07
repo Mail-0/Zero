@@ -30,7 +30,7 @@ const renderThread = (thread: { id: string; title: string; snippet: string }) =>
     <div
       onClick={() => setThreadId(thread.id)}
       key={thread.id}
-      className="hover:bg-offsetLight/30 dark:hover:bg-offsetDark/30 cursor-pointer rounded-lg"
+      className="hover:bg-muted/50 cursor-pointer rounded-lg"
     >
       <div className="flex cursor-pointer items-center justify-between p-2">
         <div className="flex w-full items-center gap-3">
@@ -39,20 +39,20 @@ const renderThread = (thread: { id: string; title: string; snippet: string }) =>
               className="rounded-full"
               src={getEmailLogo(getThread.latest?.sender?.email)}
             />
-            <AvatarFallback className="rounded-full bg-[#FFFFFF] font-bold text-[#9F9F9F] dark:bg-[#373737]">
+            <AvatarFallback className="bg-muted text-muted-foreground rounded-full font-bold">
               {getThread.latest?.sender?.name?.[0]?.toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="flex w-full flex-col gap-1.5">
             <div className="flex w-full items-center justify-between gap-2">
-              <p className="text-sm font-medium text-black dark:text-white">
+              <p className="text-foreground text-sm font-medium">
                 {getThread.latest?.sender?.name}
               </p>
-              <span className="max-w-[180px] truncate text-xs text-[#8C8C8C] dark:text-[#8C8C8C]">
+              <span className="text-muted-foreground max-w-[180px] truncate text-xs">
                 {getThread.latest.receivedOn ? format(getThread.latest.receivedOn, 'MMMM do') : ''}
               </span>
             </div>
-            <span className="max-w-[220px] truncate text-xs text-[#8C8C8C] dark:text-[#8C8C8C]">
+            <span className="text-muted-foreground max-w-[220px] truncate text-xs">
               {getThread.latest?.subject}
             </span>
           </div>
@@ -88,16 +88,16 @@ const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => voi
             <button
               key={index}
               onClick={() => onQueryClick(query)}
-              className="flex-shrink-0 whitespace-nowrap rounded-md bg-[#f0f0f0] p-1 px-2 text-sm text-[#555555] dark:bg-[#262626] dark:text-[#929292]"
+              className="bg-muted text-muted-foreground flex-shrink-0 whitespace-nowrap rounded-md p-1 px-2 text-sm"
             >
               {query}
             </button>
           ))}
         </div>
         {/* Left mask */}
-        <div className="from-panelLight dark:from-panelDark pointer-events-none absolute bottom-0 left-0 top-0 w-12 bg-gradient-to-r to-transparent"></div>
+        <div className="from-panel pointer-events-none absolute bottom-0 left-0 top-0 w-12 bg-gradient-to-r to-transparent"></div>
         {/* Right mask */}
-        <div className="from-panelLight dark:from-panelDark pointer-events-none absolute bottom-0 right-0 top-0 w-12 bg-gradient-to-l to-transparent"></div>
+        <div className="from-panel pointer-events-none absolute bottom-0 right-0 top-0 w-12 bg-gradient-to-l to-transparent"></div>
       </div>
 
       {/* Second row */}
@@ -107,16 +107,16 @@ const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => voi
             <button
               key={index}
               onClick={() => onQueryClick(query)}
-              className="flex-shrink-0 whitespace-nowrap rounded-md bg-[#f0f0f0] p-1 px-2 text-sm text-[#555555] dark:bg-[#262626] dark:text-[#929292]"
+              className="bg-muted text-muted-foreground flex-shrink-0 whitespace-nowrap rounded-md p-1 px-2 text-sm"
             >
               {query}
             </button>
           ))}
         </div>
         {/* Left mask */}
-        <div className="from-panelLight dark:from-panelDark pointer-events-none absolute bottom-0 left-0 top-0 w-12 bg-gradient-to-r to-transparent"></div>
+        <div className="from-panel pointer-events-none absolute bottom-0 left-0 top-0 w-12 bg-gradient-to-r to-transparent"></div>
         {/* Right mask */}
-        <div className="from-panelLight dark:from-panelDark pointer-events-none absolute bottom-0 right-0 top-0 w-12 bg-gradient-to-l to-transparent"></div>
+        <div className="from-panel pointer-events-none absolute bottom-0 right-0 top-0 w-12 bg-gradient-to-l to-transparent"></div>
       </div>
     </div>
   );
@@ -188,10 +188,10 @@ export function AIChat() {
                 <Image src="/black-icon.svg" alt="Zero Logo" fill className="dark:hidden" />
                 <Image src="/white-icon.svg" alt="Zero Logo" fill className="hidden dark:block" />
               </div>
-              <p className="mb-1 mt-2 hidden text-center text-sm font-medium text-black md:block dark:text-white">
+              <p className="text-foreground mb-1 mt-2 hidden text-center text-sm font-medium md:block">
                 Ask anything about your emails
               </p>
-              <p className="mb-3 text-center text-sm text-[#8C8C8C] dark:text-[#929292]">
+              <p className="text-muted-foreground mb-3 text-center text-sm">
                 Ask to do or show anything using natural language
               </p>
 
@@ -260,7 +260,7 @@ export function AIChat() {
 
       {/* Fixed input at bottom */}
       <div className="mb-4 flex-shrink-0 px-4">
-        <div className="bg-offsetLight border-border/50 relative rounded-lg dark:bg-[#141414]">
+        <div className="bg-popover border-border/50 relative rounded-lg dark:bg-[#141414]">
           {showVoiceChat ? (
             <VoiceChat onClose={() => setShowVoiceChat(false)} />
           ) : (
@@ -273,7 +273,7 @@ export function AIChat() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Ask AI to do anything..."
-                    className="placeholder:text-muted-foreground h-8 w-full resize-none rounded-lg bg-white px-3 py-2 pr-16 text-sm focus-visible:outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#202020]"
+                    className="placeholder:text-muted-foreground bg-background h-8 w-full resize-none rounded-lg px-3 py-2 pr-16 text-sm focus-visible:outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
                   />
                   {status === 'ready' ? (
                     <button
