@@ -1,77 +1,13 @@
-import { matchFilterPrefix, filterSuggestionsFunction, filterSuggestions } from '@/lib/filter';
 import { parseNaturalLanguageSearch, parseNaturalLanguageDate } from '@/lib/utils';
-import { cn, extractFilterValue, type FilterSuggestion } from '@/lib/utils';
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSearchValue } from '@/hooks/use-search-value';
-import { usePathname, useRouter } from 'next/navigation';
-import { Calendar } from '@/components/ui/calendar';
+import { useState, useEffect, useCallback } from 'react';
 import { type DateRange } from 'react-day-picker';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { Input } from '@/components/ui/input';
-import { useTranslations } from 'next-intl';
+import { usePathname } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { Search, X } from 'lucide-react';
 import { format } from 'date-fns';
 import React from 'react';
-
-const SEARCH_SUGGESTIONS = [
-  '"Emails from last week..."',
-  '"Emails with attachments..."',
-  '"Unread emails..."',
-  '"Emails from Caroline and Josh..."',
-  '"Starred emails..."',
-  '"Emails with links..."',
-  '"Emails from last month..."',
-  '"Emails in Inbox..."',
-  '"Emails with PDF attachments..."',
-  '"Emails delivered to me..."',
-];
-
-// function DateFilter({ date, setDate }: { date: DateRange; setDate: (date: DateRange) => void }) {
-//   const t = useTranslations('common.searchBar');
-
-//   return (
-//     <div className="grid gap-2">
-//       <Popover>
-//         <PopoverTrigger asChild>
-//           <Button
-//             id="date"
-//             variant={'outline'}
-//             className={cn(
-//               'justify-start text-left font-normal',
-//               !date && 'text-muted-foreground',
-//               'bg-muted/50 h-10 rounded-md',
-//             )}
-//           >
-//             <CalendarIcon className="mr-2 h-4 w-4" />
-//             {date?.from ? (
-//               date.to ? (
-//                 <>
-//                   {format(date.from, 'LLL dd, y')} - {format(date.to, 'LLL dd, y')}
-//                 </>
-//               ) : (
-//                 format(date.from, 'LLL dd, y')
-//               )
-//             ) : (
-//               <span>{t('pickDateRange')}</span>
-//             )}
-//           </Button>
-//         </PopoverTrigger>
-//         <PopoverContent className="w-auto rounded-md p-0" align="start">
-//           <Calendar
-//             initialFocus
-//             mode="range"
-//             defaultMonth={date?.from}
-//             selected={date}
-//             onSelect={(range) => range && setDate(range)}
-//             numberOfMonths={useIsMobile() ? 1 : 2}
-//             disabled={(date) => date > new Date()}
-//           />
-//         </PopoverContent>
-//       </Popover>
-//     </div>
-//   );
-// }
 
 type SearchForm = {
   subject: string;

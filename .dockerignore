@@ -1,0 +1,8 @@
+LICENSE
+ROADMAP.md
+README.md
+.gitignore
+.husky
+.github
+.devcontainer
+.env.example

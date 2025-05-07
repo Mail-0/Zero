@@ -296,6 +296,14 @@
     },
     "units": {
       "mb": "{amount} MB"
+    },
+    "labels": {
+      "deleteLabel": "Delete Label",
+      "deleteLabelConfirm": "Are you sure you want to delete this label?",
+      "deleteLabelConfirmDescription": "This action cannot be undone.",
+      "deleteLabelConfirmCancel": "Cancel",
+      "deleteLabelConfirmDelete": "Delete",
+      "deleteLabelSuccess": "Label deleted successfully"
     }
   },
   "navigation": {
@@ -307,10 +315,11 @@
       "archive": "Archive",
       "bin": "Bin",
       "feedback": "Feedback",
-      "settings": "Settings"
+      "settings": "Settings",
+      "customizeTheme": "Customize Theme"
     },
     "settings": {
-      "general": "General Settings",
+      "general": "General",
       "connections": "Connections",
       "security": "Security",
       "appearance": "Appearance",
@@ -318,7 +327,8 @@
       "shortcuts": "Shortcuts",
       "labels": "Labels",
       "dangerZone": "Danger Zone",
-      "deleteAccount": "Delete Account"
+      "deleteAccount": "Delete Account",
+      "privacy": "Privacy"
     }
   },
   "pages": {
@@ -340,10 +350,6 @@
         "selectTimezone": "Select a timezone",
         "dynamicContent": "Dynamic Content",
         "dynamicContentDescription": "Allow emails to display dynamic content.",
-        "externalImages": "Display External Images",
-        "externalImagesDescription": "Allow emails to display images from external sources.",
-        "trustedSenders": "Trusted Senders",
-        "trustedSendersDescription": "Always display images for these senders.",
         "languageChangedTo": "Language changed to {locale}",
         "customPrompt": "Custom AI Prompt",
         "customPromptPlaceholder": "Enter your custom prompt for the AI...",
@@ -448,6 +454,14 @@
         "deleting": "Deleting...",
         "deleted": "Account deleted successfully",
         "error": "Failed to delete account"
+      },
+      "privacy": {
+        "title": "Privacy",
+        "description": "Manage your privacy and security preferences for email content.",
+        "externalImages": "Display External Images",
+        "externalImagesDescription": "Allow emails to display images from external sources.",
+        "trustedSenders": "Trusted Senders",
+        "trustedSendersDescription": "Always display images for these senders."
       }
     },
     "createEmail": {

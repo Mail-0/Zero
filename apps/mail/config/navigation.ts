@@ -16,17 +16,11 @@ import {
   Danger,
   Sheet,
   Plane2,
+  LockIcon,
 } from '@/components/icons/icons';
-import { SettingsGearIcon } from '@/components/icons/animated/settings-gear';
-import { ArrowLeftIcon } from '@/components/icons/animated/arrow-left';
-import { ShieldCheckIcon } from '@/components/icons/animated/shield';
-import { KeyboardIcon } from '@/components/icons/animated/keyboard';
-import { SparklesIcon } from '@/components/icons/animated/sparkles';
-import { BadgeAlertIcon } from '@/components/icons/animated/alert';
-import { UsersIcon } from '@/components/icons/animated/users';
-import { MessageSquareIcon } from 'lucide-react';
-import { NestedKeyOf } from 'next-intl';
-import { MessageKeys } from 'next-intl';
+import type { NestedKeyOf, MessageKeys } from 'next-intl';
+import { MessageSquareIcon, Palette } from 'lucide-react';
+
 export interface NavItem {
   id?: string;
   title: string;
@@ -156,6 +150,11 @@ export const navigationConfig: Record<string, NavConfig> = {
             icon: Users,
           },
           {
+            title: 'navigation.settings.privacy',
+            url: '/settings/privacy',
+            icon: LockIcon,
+          },
+          {
             title: 'navigation.settings.appearance',
             url: '/settings/appearance',
             icon: Stars,
@@ -211,6 +210,15 @@ export const bottomNavItems = [
   {
     title: '',
     items: [
+      {
+        id: 'customize-theme',
+        title: 'navigation.sidebar.customizeTheme',
+        icon: Palette,
+        url: '#',
+        onClick: () => {
+          document.dispatchEvent(new CustomEvent('open-theme-customizer'));
+        },
+      },
       {
         id: 'feedback',
         title: 'navigation.sidebar.feedback',

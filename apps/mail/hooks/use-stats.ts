@@ -1,30 +1,17 @@
-'use client';
+import { useTRPC } from '@/providers/query-provider';
+import { useQuery } from '@tanstack/react-query';
 import { useSession } from '@/lib/auth-client';
-import { useDebounce } from './use-debounce';
-import axios from 'axios';
-import useSWR from 'swr';
 
 export const useStats = () => {
   const { data: session } = useSession();
+  const trpc = useTRPC();
 
-  const {
-    data = [],
-    isValidating,
-    isLoading,
-    mutate: originalMutate,
-    error,
-  } = useSWR<{ label: string; count: number }[]>(
-    session?.connectionId ? `/mail-count/${session?.connectionId}` : null,
-    () => axios.get('/api/driver/count').then((res) => res.data),
+  const statsQuery = useQuery(
+    trpc.mail.count.queryOptions(void 0, {
+      enabled: !!session?.user.id,
+      staleTime: 1000 * 60 * 60, // 1 hour
+    }),
   );
 
-  const debouncedMutate = useDebounce(originalMutate, 3000);
-
-  return {
-    data: data ?? [],
-    isValidating,
-    isLoading,
-    mutate: debouncedMutate,
-    error,
-  };
+  return statsQuery;
 };

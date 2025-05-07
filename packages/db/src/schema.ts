@@ -1,8 +1,17 @@
-import { pgTableCreator, text, timestamp, boolean, integer, jsonb, primaryKey } from 'drizzle-orm/pg-core';
-import { defaultUserSettings } from '@zero/db/user_settings_default';
-import { unique } from 'drizzle-orm/pg-core';
+import {
+  pgTableCreator,
+  text,
+  timestamp,
+  boolean,
+  integer,
+  jsonb,
+  primaryKey,
+  unique,
+} from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 import type { WritingStyleMatrix } from '@zero/mail/services/writing-style-service';
-
+import { defaultUserSettings } from '@zero/db/user_settings_default';
+import type { ThemeStyles } from '@zero/mail/types/theme';
 export const createTable = pgTableCreator((name) => `mail0_${name}`);
 
 export const user = createTable('user', {
@@ -133,17 +142,73 @@ export const userSettings = createTable('user_settings', {
   updatedAt: timestamp('updated_at').notNull(),
 });
 
-export const writingStyleMatrix = createTable('writing_style_matrix', {
-  connectionId: text()
+export const writingStyleMatrix = createTable(
+  'writing_style_matrix',
+  {
+    connectionId: text()
+      .notNull()
+      .references(() => connection.id, { onDelete: 'cascade' }),
+    numMessages: integer().notNull(),
+    style: jsonb().$type<WritingStyleMatrix>().notNull(),
+    updatedAt: timestamp()
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => {
+    return [
+      primaryKey({
+        columns: [table.connectionId],
+      }),
+    ];
+  },
+);
+
+export const theme = createTable('theme', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
     .notNull()
-    .references(() => connection.id),
-  numMessages: integer().notNull(),
-  style: jsonb().$type<WritingStyleMatrix>().notNull(),
-  updatedAt: timestamp().defaultNow().notNull().$onUpdate(() => new Date())
-}, (table) => {
-  return [
-    primaryKey({
-      columns: [table.connectionId],
-    }),
-  ]
-})
+    .references(() => user.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  styles: jsonb('styles').$type<ThemeStyles>().notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const themeConnectionMap = createTable(
+  'theme_connection_map',
+  {
+    id: text('id').primaryKey(),
+    themeId: text('theme_id')
+      .notNull()
+      .references(() => theme.id, { onDelete: 'cascade' }),
+    connectionId: text('connection_id')
+      .notNull()
+      .references(() => connection.id, { onDelete: 'cascade' }),
+    isDefault: boolean('is_default').default(false),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    isVisibleOnMarketplace: boolean('is_visible_on_marketplace').default(false),
+  },
+  (table) => ({
+    uniqueConstraint: unique().on(table.themeId, table.connectionId),
+  }),
+);
+
+export const themeRelations = relations(theme, ({ many }) => ({
+  connections: many(themeConnectionMap),
+}));
+
+export const connectionRelations = relations(connection, ({ many }) => ({
+  themes: many(themeConnectionMap),
+}));
+
+export const themeConnectionMapRelations = relations(themeConnectionMap, ({ one }) => ({
+  theme: one(theme, {
+    fields: [themeConnectionMap.themeId],
+    references: [theme.id],
+  }),
+  connection: one(connection, {
+    fields: [themeConnectionMap.connectionId],
+    references: [connection.id],
+  }),
+}));

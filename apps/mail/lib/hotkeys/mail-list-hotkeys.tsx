@@ -1,14 +1,10 @@
 'use client';
 
-import {
-  bulkArchive,
-  markAsUnread as markAsUnreadAction,
-  muteThread as muteThreadAction,
-  markAsRead as markAsReadAction,
-} from '@/actions/mail';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { keyboardShortcuts } from '@/config/shortcuts';
 import { useCallback, useEffect, useRef } from 'react';
 import { useMail } from '@/components/mail/use-mail';
+import { useTRPC } from '@/providers/query-provider';
 import { useShortcuts } from './use-hotkey-utils';
 import { useThreads } from '@/hooks/use-threads';
 import { useStats } from '@/hooks/use-stats';
@@ -18,13 +14,14 @@ import { toast } from 'sonner';
 export function MailListHotkeys() {
   const scope = 'mail-list';
   const [mail, setMail] = useMail();
-  const {
-    data: { threads: items },
-    mutate,
-  } = useThreads();
-  const { mutate: mutateStats } = useStats();
+  const [{ refetch }, items] = useThreads();
+  const { refetch: mutateStats } = useStats();
   const t = useTranslations();
   const hoveredEmailId = useRef<string | null>(null);
+  const trpc = useTRPC();
+  const { mutateAsync: bulkArchive } = useMutation(trpc.mail.bulkArchive.mutationOptions());
+  const { mutateAsync: markAsUnreadAction } = useMutation(trpc.mail.markAsUnread.mutationOptions());
+  const { mutateAsync: markAsReadAction } = useMutation(trpc.mail.markAsRead.mutationOptions());
 
   useEffect(() => {
     const handleEmailHover = (event: CustomEvent<{ id: string | null }>) => {
@@ -60,7 +57,7 @@ export function MailListHotkeys() {
       toast.promise(markAsReadAction({ ids: [hoveredEmailId.current] }), {
         loading: t('common.actions.loading'),
         success: async () => {
-          await Promise.all([mutate(), mutateStats()]);
+          await Promise.all([refetch(), mutateStats()]);
           return t('common.mail.markedAsRead');
         },
         error: t('common.mail.failedToMarkAsRead'),
@@ -77,19 +74,19 @@ export function MailListHotkeys() {
     toast.promise(markAsReadAction({ ids: idsToMark }), {
       loading: t('common.actions.loading'),
       success: async () => {
-        await Promise.all([mutate(), mutateStats()]);
+        await Promise.all([refetch(), mutateStats()]);
         return t('common.mail.markedAsRead');
       },
       error: t('common.mail.failedToMarkAsRead'),
     });
-  }, [mail.bulkSelected, mutate, mutateStats, t]);
+  }, [mail.bulkSelected, refetch, mutateStats, t]);
 
   const markAsUnread = useCallback(() => {
     if (hoveredEmailId.current) {
       toast.promise(markAsUnreadAction({ ids: [hoveredEmailId.current] }), {
         loading: t('common.actions.loading'),
         success: async () => {
-          await Promise.all([mutate(), mutateStats()]);
+          await Promise.all([refetch(), mutateStats()]);
           return t('common.mail.markedAsUnread');
         },
         error: t('common.mail.failedToMarkAsUnread'),
@@ -106,19 +103,19 @@ export function MailListHotkeys() {
     toast.promise(markAsUnreadAction({ ids: idsToMark }), {
       loading: t('common.actions.loading'),
       success: async () => {
-        await Promise.all([mutate(), mutateStats()]);
+        await Promise.all([refetch(), mutateStats()]);
         return t('common.mail.markedAsUnread');
       },
       error: t('common.mail.failedToMarkAsUnread'),
     });
-  }, [mail]);
+  }, [mail.bulkSelected, refetch, mutateStats, t]);
 
   const archiveEmail = useCallback(async () => {
     if (hoveredEmailId.current) {
       toast.promise(bulkArchive({ ids: [hoveredEmailId.current] }), {
         loading: t('common.actions.loading'),
         success: async () => {
-          await Promise.all([mutate(), mutateStats()]);
+          await Promise.all([refetch(), mutateStats()]);
           return t('common.mail.archived');
         },
         error: t('common.mail.failedToArchive'),
@@ -135,7 +132,7 @@ export function MailListHotkeys() {
     toast.promise(markAsUnreadAction({ ids: idsToMark }), {
       loading: t('common.actions.loading'),
       success: async () => {
-        await Promise.all([mutate(), mutateStats()]);
+        await Promise.all([refetch(), mutateStats()]);
         return t('common.mail.archived');
       },
       error: t('common.mail.failedToArchive'),
@@ -148,35 +145,6 @@ export function MailListHotkeys() {
       bulkSelected: [],
     }));
   }, []);
-
-  // const muteThread = useCallback(async () => {
-  //   if (hoveredEmailId.current) {
-  //     toast.promise(muteThreadAction({ ids: [hoveredEmailId.current] }), {
-  //       loading: t('common.actions.loading'),
-  //       success: async () => {
-  //         await Promise.all([mutate(), mutateStats()]);
-  //         return t('common.mail.muted');
-  //       },
-  //       error: t('common.mail.failedToMute'),
-  //     });
-  //     return;
-  //   }
-
-  //   const idsToMark = mail.bulkSelected;
-  //   if (idsToMark.length === 0) {
-  //     toast.info(t('common.mail.noEmailsToSelect'));
-  //     return;
-  //   }
-
-  //   toast.promise(muteThreadAction({ ids: idsToMark }), {
-  //     loading: t('common.actions.loading'),
-  //     success: async () => {
-  //       await Promise.all([mutate(), mutateStats()]);
-  //       return t('common.mail.muted');
-  //     },
-  //     error: t('common.mail.failedToMute'),
-  //   });
-  // }, [items, mutate, t]);
 
   const handlers = {
     markAsRead,

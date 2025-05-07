@@ -23,24 +23,31 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Label as LabelType, useLabels } from '@/hooks/use-labels';
+import { LabelSidebarContextMenu } from '../context/label-sidebar-context';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { clearBulkSelectionAtom } from '../mail/use-mail';
 import { Label as UILabel } from '@/components/ui/label';
 import { type MessageKey } from '@/config/navigation';
+import { useTRPC } from '@/providers/query-provider';
+import { CurvedArrow, Folder } from '../icons/icons';
 import { Command, SettingsIcon } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
 import { type NavItem } from '@/config/navigation';
-import { createLabel } from '@/hooks/use-labels';
+import type { Label as LabelType } from '@/types';
 import { Button } from '@/components/ui/button';
 import { HexColorPicker } from 'react-colorful';
+import { useLabels } from '@/hooks/use-labels';
 import { useSession } from '@/lib/auth-client';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { GoldenTicketModal } from '../golden';
 import { useStats } from '@/hooks/use-stats';
-import { CurvedArrow } from '../icons/icons';
 import { useTranslations } from 'next-intl';
 import { useRef, useCallback } from 'react';
 import { BASE_URL } from '@/lib/constants';
@@ -93,9 +100,12 @@ export function NavMain({ items }: NavMainProps) {
     },
   });
 
+  const trpc = useTRPC();
+
+  const { mutateAsync: createLabel } = useMutation(trpc.labels.create.mutationOptions());
   const formColor = form.watch('color');
 
-  const { labels, mutate } = useLabels();
+  const { data, refetch } = useLabels();
   const { state } = useSidebar();
 
   // Check if these are bottom navigation items by looking at the first section's title
@@ -225,7 +235,7 @@ export function NavMain({ items }: NavMainProps) {
         success: 'Label created successfully',
         error: 'Failed to create label',
         finally: () => {
-          mutate();
+          refetch();
         },
       });
     } catch (error) {
@@ -269,6 +279,7 @@ export function NavMain({ items }: NavMainProps) {
                     {...item}
                     isActive={isUrlActive(item.url)}
                     href={getHref(item)}
+                    onClick={(e) => item.onClick?.(e)}
                     target={item.target}
                     title={item.title}
                   />
@@ -292,10 +303,7 @@ export function NavMain({ items }: NavMainProps) {
                       <Plus className="h-3 w-3 text-[#6D6D6D] dark:text-[#898989]" />
                     </Button>
                   </DialogTrigger>
-                  <DialogContent
-                    showOverlay={true}
-                    className="bg-panelLight dark:bg-panelDark w-full max-w-[500px] rounded-xl p-4"
-                  >
+                  <DialogContent showOverlay={true}>
                     <DialogHeader>
                       <DialogTitle>Create New Label</DialogTitle>
                     </DialogHeader>
@@ -423,27 +431,108 @@ export function NavMain({ items }: NavMainProps) {
               <div className="mr-0 pr-0">
                 <div
                   className={cn(
-                    'hide-scrollbar flex h-full max-h-[13vh] flex-row flex-wrap gap-2 overflow-scroll sm:max-h-[16vh]',
+                    'hide-scrollbar flex h-full max-h-[calc(100vh-40rem)] min-h-[4rem] flex-row flex-wrap gap-2 overflow-scroll',
                   )}
                 >
-                  {labels.map((label) => (
-                    <div
-                      onClick={handleFilterByLabel(label)}
-                      key={label.id}
-                      className="flex items-center gap-2 text-sm"
-                    >
-                      <span
-                        className={cn(
-                          'max-w-[20ch] truncate rounded border px-1.5 py-0.5 text-xs',
-                          searchValue.value.includes(`label:${label.name}`)
-                            ? 'border-accent-foreground'
-                            : 'dark:bg-subtleBlack',
-                        )}
-                      >
-                        {label.name}
-                      </span>
-                    </div>
-                  ))}
+                  {(() => {
+                    if (!data) return null;
+
+                    const groupedLabels = data.reduce(
+                      (acc, label) => {
+                        const isFolderLabel = /[^/]+\/[^/]+/.test(label.name);
+                        if (isFolderLabel) {
+                          const [groupName] = label.name.split('/') as [string];
+                          if (!acc[groupName]) {
+                            acc[groupName] = [];
+                          }
+                          acc[groupName].push(label);
+                        } else {
+                          if (!acc['other']) {
+                            acc['other'] = [];
+                          }
+                          acc['other'].push(label);
+                        }
+                        return acc;
+                      },
+                      {} as Record<string, typeof data>,
+                    );
+
+                    return (
+                      <>
+                        {Object.entries(groupedLabels)
+                          .sort(([a], [b]) => {
+                            if (a === 'other') return 1;
+                            if (b === 'other') return -1;
+                            return a.localeCompare(b);
+                          })
+                          .map(([groupName, labels]) => {
+                            if (groupName === 'other') {
+                              return labels.map((label) => (
+                                <LabelSidebarContextMenu labelId={label.id} key={label.id}>
+                                  <div
+                                    onClick={handleFilterByLabel(label)}
+                                    className="flex cursor-pointer items-center gap-2 text-sm"
+                                  >
+                                    <span
+                                      className={cn(
+                                        'max-w-[20ch] truncate rounded border px-1.5 py-0.5 text-xs',
+                                        searchValue.value.includes(`label:${label.name}`)
+                                          ? 'border-accent-foreground'
+                                          : 'dark:bg-subtleBlack',
+                                      )}
+                                    >
+                                      {label.name}
+                                    </span>
+                                  </div>
+                                </LabelSidebarContextMenu>
+                              ));
+                            }
+
+                            return (
+                              <DropdownMenu key={groupName}>
+                                <DropdownMenuTrigger className="text-muted-foreground hover:text-foreground flex w-full items-center gap-2 px-1.5 py-0.5 text-xs">
+                                  <span>
+                                    <Folder className="h-4 w-4" />
+                                  </span>
+                                  <span className="truncate">{groupName}</span>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-56">
+                                  {labels.map((label) => {
+                                    const folderParts = label.name.split('/').slice(1);
+                                    return (
+                                      <LabelSidebarContextMenu labelId={label.id} key={label.id}>
+                                        <div
+                                          onClick={handleFilterByLabel(label)}
+                                          className="flex cursor-pointer items-center gap-2 text-sm"
+                                        >
+                                          <span
+                                            className={cn(
+                                              'max-w-[20ch] truncate rounded border px-1.5 py-0.5 text-xs',
+                                              searchValue.value.includes(`label:${label.name}`)
+                                                ? 'border-accent-foreground'
+                                                : 'dark:bg-subtleBlack',
+                                            )}
+                                          >
+                                            {folderParts.map((part, index) => (
+                                              <span key={index}>
+                                                {part}
+                                                {index < folderParts.length - 1 && (
+                                                  <span className="text-muted-foreground">/</span>
+                                                )}
+                                              </span>
+                                            ))}
+                                          </span>
+                                        </div>
+                                      </LabelSidebarContextMenu>
+                                    );
+                                  })}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            );
+                          })}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </SidebarMenuItem>
@@ -492,15 +581,15 @@ function NavItem(item: NavItemProps & { href: string }) {
     >
       {item.icon && <item.icon ref={iconRef} className="mr-2 shrink-0" />}
       <p className="mt-0.5 min-w-0 flex-1 truncate text-[13px]">{t(item.title as MessageKey)}</p>
-      {stats
-        ? stats.some((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase()) && (
-            <Badge className="text-muted-foreground ml-auto shrink-0 rounded-full border-none bg-transparent">
-              {stats
-                .find((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase())
-                ?.count?.toLocaleString() || '0'}
-            </Badge>
-          )
-        : null}
+      {stats &&
+        item.id?.toLowerCase() !== 'sent' &&
+        stats.some((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase()) && (
+          <Badge className="text-muted-foreground ml-auto shrink-0 rounded-full border-none bg-transparent">
+            {stats
+              .find((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase())
+              ?.count?.toLocaleString() || '0'}
+          </Badge>
+        )}
     </SidebarMenuButton>
   );
 

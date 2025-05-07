@@ -1,6 +1,6 @@
-import { customSessionClient } from "better-auth/client/plugins";
-import { createAuthClient } from "better-auth/react";
-import type { auth } from "@/lib/auth"; // Import the auth instance as a type
+import { customSessionClient } from 'better-auth/client/plugins';
+import { createAuthClient } from 'better-auth/react';
+import type { auth } from '@/lib/auth';
 
 export const authClient = createAuthClient({
   baseURL: process.env.NEXT_PUBLIC_APP_URL,
@@ -8,3 +8,4 @@ export const authClient = createAuthClient({
 });
 
 export const { signIn, signUp, signOut, useSession, getSession, $fetch } = authClient;
+export type Session = Awaited<ReturnType<(typeof auth)['api']['getSession']>>;

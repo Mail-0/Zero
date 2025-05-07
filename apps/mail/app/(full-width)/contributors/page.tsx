@@ -27,12 +27,11 @@ import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Discord, Twitter } from '@/components/icons/icons';
 import { Separator } from '@/components/ui/separator';
 import { useEffect, useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { fetcher } from '@/lib/utils';
 import Image from 'next/image';
 import Link from 'next/link';
-import useSWR from 'swr';
 
 interface Contributor {
   login: string;
@@ -56,11 +55,20 @@ interface ActivityData {
   pullRequests: number;
 }
 
-const excludedUsernames = ['bot1', 'dependabot', 'github-actions', 'zerodotemail', 'autofix-ci[bot]'];
+const excludedUsernames = [
+  'bot1',
+  'dependabot',
+  'github-actions',
+  'zerodotemail',
+  'autofix-ci[bot]',
+];
 const coreTeamMembers = ['nizzyabi', 'ahmetskilinc', 'ripgrim', 'needlexo', 'dakdevs', 'mrgsub'];
 const REPOSITORY = 'Mail-0/Zero';
 
-const specialRoles: Record<string, { role: string; position: number; x?: string; website?: string }> = {
+const specialRoles: Record<
+  string,
+  { role: string; position: number; x?: string; website?: string }
+> = {
   nizzyabi: {
     role: 'Founder & CEO',
     position: 1,
@@ -134,17 +142,22 @@ export default function OpenPage() {
 
   useEffect(() => setIsRendered(true), []);
 
-  const { data: initialContributors } = useSWR<Contributor[]>(
-    `https://api.github.com/repos/${REPOSITORY}/contributors?per_page=100&page=1`,
-    fetcher,
-  );
+  const { data: initialContributors } = useQuery({
+    queryFn: () =>
+      fetch(`https://api.github.com/repos/${REPOSITORY}/contributors?per_page=100&page=1`).then(
+        (res) => res.json(),
+      ) as Promise<Contributor[]>,
+    queryKey: ['contributors', REPOSITORY],
+  });
 
-  const { data: additionalContributors } = useSWR<Contributor[]>(
-    initialContributors?.length === 100
-      ? `https://api.github.com/repos/${REPOSITORY}/contributors?per_page=100&page=2`
-      : null,
-    fetcher,
-  );
+  const { data: additionalContributors } = useQuery({
+    queryFn: () =>
+      fetch(`https://api.github.com/repos/${REPOSITORY}/contributors?per_page=100&page=2`).then(
+        (res) => res.json(),
+      ) as Promise<Contributor[]>,
+    queryKey: ['additional-contributors', REPOSITORY],
+    enabled: initialContributors && initialContributors?.length === 100,
+  });
 
   useEffect(() => {
     if (initialContributors) {
@@ -156,39 +169,42 @@ export default function OpenPage() {
     }
   }, [initialContributors, additionalContributors]);
 
-  const { data: repoData, error: repoError } = useSWR(
-    `https://api.github.com/repos/${REPOSITORY}`,
-    fetcher,
-  );
+  const { data: repoData, error: repoError } = useQuery({
+    queryFn: () => fetch(`https://api.github.com/repos/${REPOSITORY}`).then((res) => res.json()),
+    queryKey: ['repo-data', REPOSITORY],
+  });
 
-  const { data: commitsData, error: commitsError } = useSWR(
-    `https://api.github.com/repos/${REPOSITORY}/commits?per_page=100`,
-    fetcher,
-  );
+  const { data: commitsData, error: commitsError } = useQuery({
+    queryFn: () =>
+      fetch(`https://api.github.com/repos/${REPOSITORY}/commits?per_page=100`).then((res) =>
+        res.json(),
+      ),
+    queryKey: ['commits-data', REPOSITORY],
+  });
 
-  const { data: prsData, error: prsError } = useSWR(
-    `https://api.github.com/repos/${REPOSITORY}/pulls?state=open`,
-    fetcher,
-  );
+  const { data: prsData, error: prsError } = useQuery({
+    queryFn: () =>
+      fetch(`https://api.github.com/repos/${REPOSITORY}/pulls?state=open`).then((res) =>
+        res.json(),
+      ),
+    queryKey: ['prs-data', REPOSITORY],
+  });
 
-  const filteredCoreTeam = useMemo(
-    () => {
-      return allContributors
-        ?.filter(
-          (contributor) =>
-            !excludedUsernames.includes(contributor.login) &&
-            coreTeamMembers.some(
-              (member) => member.toLowerCase() === contributor.login.toLowerCase(),
-            ),
-        )
-        .sort((a, b) => {
-          const positionA = specialRoles[a.login.toLowerCase()]?.position || 999;
-          const positionB = specialRoles[b.login.toLowerCase()]?.position || 999;
-          return positionA - positionB;
-        });
-    },
-    [allContributors],
-  );
+  const filteredCoreTeam = useMemo(() => {
+    return allContributors
+      ?.filter(
+        (contributor) =>
+          !excludedUsernames.includes(contributor.login) &&
+          coreTeamMembers.some(
+            (member) => member.toLowerCase() === contributor.login.toLowerCase(),
+          ),
+      )
+      .sort((a, b) => {
+        const positionA = specialRoles[a.login.toLowerCase()]?.position || 999;
+        const positionB = specialRoles[b.login.toLowerCase()]?.position || 999;
+        return positionA - positionB;
+      });
+  }, [allContributors]);
 
   const filteredContributors = useMemo(
     () =>
@@ -837,7 +853,7 @@ export default function OpenPage() {
                           return (
                             <g transform={`translate(${x},${y})`}>
                               <foreignObject x="-12" y="8" width="24" height="24">
-                                <Avatar className="h-6 w-6  ring-1 ring-neutral-200 dark:ring-neutral-800">
+                                <Avatar className="h-6 w-6 ring-1 ring-neutral-200 dark:ring-neutral-800">
                                   <AvatarImage src={contributor?.avatar_url} />
                                   <AvatarFallback className="text-[8px]">
                                     {payload.value.slice(0, 2).toUpperCase()}
