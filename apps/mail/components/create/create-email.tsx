@@ -17,7 +17,6 @@ import { useQueryState } from 'nuqs';
 import { X } from '../icons/icons';
 import posthog from 'posthog-js';
 import { toast } from 'sonner';
-import * as React from 'react';
 import './prosemirror.css';
 
 // Define the draft type to include CC and BCC fields
@@ -133,28 +132,7 @@ export function CreateEmail({
     toast.success(t('pages.createEmail.emailSentSuccessfully'));
   };
 
-  React.useEffect(() => {
-    // Enable the compose scope for hotkeys
-    enableScope('compose');
-
-    // Register a hotkey for ESC to close the dialog
-    const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setDialogOpen(false);
-      }
-    };
-
-    // Add event listener
-    window.addEventListener('keydown', handleEsc);
-
-    // Clean up
-    return () => {
-      window.removeEventListener('keydown', handleEsc);
-      disableScope('compose');
-    };
-  }, [enableScope, disableScope]);
-
-  React.useEffect(() => {
+  useEffect(() => {
     if (!dialogOpen) {
       router.push('/mail');
     }
