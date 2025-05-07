@@ -13,6 +13,7 @@ import type { Viewport } from 'next';
 import { cn } from '@/lib/utils';
 import Script from 'next/script';
 import './globals.css';
+import { TRPCProvider } from '@/components/providers/trpc-provider';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -61,11 +62,13 @@ export default async function RootLayout({
       >
         <Providers attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <NextIntlClientProvider messages={messages}>
-            {children}
-            {cookies}
-            <CustomToaster />
-            <Analytics />
-            {/* {isEuRegion && <CookieConsent />} */}
+            <TRPCProvider>
+              {children}
+              {cookies}
+              <CustomToaster />
+              <Analytics />
+              {/* {isEuRegion && <CookieConsent />} */}
+            </TRPCProvider>
           </NextIntlClientProvider>
         </Providers>
       </body>

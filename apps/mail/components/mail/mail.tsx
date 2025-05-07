@@ -1,5 +1,7 @@
 'use client';
 
+import { api } from '../../utils/trpc';
+
 import {
   Archive2,
   Bell,
@@ -83,6 +85,20 @@ export function MailLayout() {
   // Track when spam emails are deleted to refresh the UI
   const [spamDeleteCounter, setSpamDeleteCounter] = useState(0);
 
+  // Create the mutation at the top level of the component
+  const deleteAllSpamMutation = api.mail.deleteAllSpam.useMutation({
+    onSuccess: (data: { success: boolean; message: string }) => {
+      mutateThreads();
+      mutateStats();
+      setSpamDeleteCounter(prev => prev + 1);
+      toast.success(data.message || 'Successfully deleted all spam emails');
+    },
+    onError: (error: { message?: string }) => {
+      console.error("Failed to delete spam emails:", error);
+      toast.error(error.message || 'Failed to delete spam emails');
+    }
+  });
+
   useEffect(() => {
     if (prevFolderRef.current !== folder && mail.bulkSelected.length > 0) {
       clearBulkSelection();
@@ -138,27 +154,23 @@ export function MailLayout() {
     setActiveReplyId(null);
   }, [setThreadId]);
 
-  const onDeleteAllSpam = useCallback(async () => {
+  // Callback that uses the mutation
+  const onDeleteAllSpam = useCallback(() => {
+    // Use toast.promise instead of separate loading/success/error toasts
     toast.promise(
-      deleteAllSpamEmails()
-        .then(async (result) => {
-          await mutateThreads();
-          await mutateStats();
-          // Increment counter to trigger useEffect to check if there are any spam emails left
-          setSpamDeleteCounter(prev => prev + 1);
-          return result;
-        })
-        .catch((error) => {
-          console.error("Failed to delete spam emails:", error);
-          throw error;
-        }),
+      new Promise<{ success: boolean; message: string }>((resolve, reject) => {
+        deleteAllSpamMutation.mutate(undefined, {
+          onSuccess: (data: { success: boolean; message: string }) => resolve(data),
+          onError: (error: { message?: string }) => reject(error)
+        });
+      }),
       {
         loading: 'Deleting all spam emails...',
-        success: (result) => result.message || 'Successfully deleted all spam emails',
-        error: (err) => err.message || 'Failed to delete spam emails',
+        success: (data: { success: boolean; message: string }) => data.message || 'Successfully deleted all spam emails',
+        error: (err: { message?: string }) => err.message || 'Failed to delete spam emails',
       }
     );
-  }, [mutateThreads, mutateStats]);
+  }, [deleteAllSpamMutation]);
 
   // Add mailto protocol handler registration
   useEffect(() => {
@@ -186,6 +198,9 @@ export function MailLayout() {
 
   // Check if spam folder has emails when in spam folder
   useEffect(() => {
+    if(folder === 'bin') {
+      return;
+    }
     if (folder === 'spam') {
       const checkForSpamEmails = async () => {
         try {

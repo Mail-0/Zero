@@ -214,7 +214,7 @@ export const deleteAllSpamEmails = async () => {
     
     // Get all emails from spam folder
     const spamEmails = await driver.list('spam');
-    
+    console.log(spamEmails?.threads?.length);
     if (!spamEmails || !spamEmails.threads || spamEmails.threads.length === 0) {
       return { success: true, message: 'No spam emails to delete' };
     }
