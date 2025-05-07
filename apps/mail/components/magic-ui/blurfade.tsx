@@ -15,8 +15,8 @@ interface BlurFadeProps extends MotionProps {
   children: React.ReactNode;
   className?: string;
   variant?: {
-    hidden: { y: number };
-    visible: { y: number };
+    hidden: { [key: string]: number | string };
+    visible: { [key: string]: number | string };
   };
   duration?: number;
   delay?: number;
