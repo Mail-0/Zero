@@ -3,13 +3,13 @@
 import { FieldPath, useFormContext } from 'react-hook-form';
 import { ThemeEditorControlType } from './theme-config';
 import { FormField, FormMessage } from '../ui/form';
+import { hslToHex, hexToHSL } from './converter';
 import { ThemeStylesSchema } from '@/lib/theme';
 import { Input } from '@/components/ui/input';
 import { Slider } from '../ui/slider';
-import { Toggle } from '../ui/toggle';
 import { Label } from '../ui/label';
+import { useState } from 'react';
 import { z } from 'zod';
-
 type ThemeFieldRendererProps = {
   type: ThemeEditorControlType;
   label: string;
@@ -32,45 +32,89 @@ export const ThemeFieldRenderer = ({
 
   switch (type) {
     case 'color':
-      return (
-        <FormField
-          control={form.control}
-          name={name}
-          render={({ field }) => (
-            <div className="flex flex-col gap-1">
-              <Label>{label}</Label>
-              <Input type="color" {...field} />
-              <FormMessage />
-            </div>
-          )}
-        />
-      );
+      return <ColorFieldRenderer label={label} name={name} />;
     case 'slider':
       if (!sliderConfig) {
         throw new Error('Slider config is required');
       }
-      return (
-        <FormField
-          control={form.control}
-          name={name}
-          render={({ field }) => (
-            <div className="flex flex-col gap-4">
-              <Label>{label}</Label>
-              <Slider
-                onValueChange={(value) => {
-                  field.onChange(String(value[0]));
-                }}
-                value={[Number(field.value?.replace(sliderConfig.unit, ''))]}
-                min={sliderConfig.min}
-                max={sliderConfig.max}
-                step={sliderConfig.step}
-              />
-              <FormMessage />
-            </div>
-          )}
-        />
-      );
+      return <SliderFieldRenderer label={label} name={name} sliderConfig={sliderConfig} />;
     default:
       return null;
   }
 };
+
+function ColorFieldRenderer({
+  label,
+  name,
+}: {
+  label: string;
+  name: Exclude<FieldPath<z.infer<typeof ThemeStylesSchema>>, 'dark' | 'light'>;
+}) {
+  const form = useFormContext<z.infer<typeof ThemeStylesSchema>>();
+  const [value, setValue] = useState(() => hslToHex(`hsl(${form.getValues(name)})`));
+
+  return (
+    <FormField
+      control={form.control}
+      name={name}
+      render={({ field }) => (
+        <div className="flex flex-col gap-1">
+          <Label>{label}</Label>
+          <Input
+            {...field}
+            value={value}
+            onChange={(e) => {
+              setValue(e.target.value);
+
+              field.onChange(hexToHSL(e.target.value));
+            }}
+            type="color"
+          />
+          <FormMessage />
+        </div>
+      )}
+    />
+  );
+}
+
+function SliderFieldRenderer({
+  label,
+  name,
+  sliderConfig,
+}: {
+  label: string;
+  name: Exclude<FieldPath<z.infer<typeof ThemeStylesSchema>>, 'dark' | 'light'>;
+  sliderConfig: {
+    min: number;
+    max: number;
+    step: number;
+    unit: string;
+  };
+}) {
+  const form = useFormContext<z.infer<typeof ThemeStylesSchema>>();
+  const [value, setValue] = useState(() => [
+    Number(form.getValues(name)?.replace(sliderConfig.unit, '')),
+  ]);
+  return (
+    <FormField
+      control={form.control}
+      name={name}
+      render={({ field }) => (
+        <div className="flex flex-col gap-4">
+          <Label>{label}</Label>
+          <Slider
+            onValueChange={(value) => {
+              setValue(value);
+              field.onChange(`${value[0]}${sliderConfig.unit}`);
+            }}
+            value={value}
+            min={sliderConfig.min}
+            max={sliderConfig.max}
+            step={sliderConfig.step}
+          />
+          <FormMessage />
+        </div>
+      )}
+    />
+  );
+}
