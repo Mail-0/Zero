@@ -30,6 +30,8 @@ import Link from 'next/link';
 import axios from 'axios';
 import React from 'react';
 import { z } from 'zod';
+import { BlurFade } from '../magic-ui/blurfade';
+import { Badge } from '../ui/badge';
 
 const tabs = [
   { label: 'Chat With Your Inbox', value: 'smart-categorization' },
@@ -130,6 +132,9 @@ export default function HomeContent() {
         className="absolute -top-32 left-1/2 -z-10 h-auto w-screen min-w-[1920px] -translate-x-1/2 object-cover opacity-5"
         style={{ mixBlendMode: 'screen' }}
       />
+      <BlurFade>
+
+      
       {/* Desktop Navigation - Hidden on mobile */}
       <header className="fixed z-50 hidden w-full items-center justify-center px-4 pt-6 md:flex">
         <nav className="border-input/50 bg-popover flex w-full max-w-3xl items-center justify-between gap-2 rounded-xl border-t p-2 px-4">
@@ -326,7 +331,9 @@ export default function HomeContent() {
           />
         </div>
       </div>
+      </BlurFade>
     </main>
+    
   );
 }
 
