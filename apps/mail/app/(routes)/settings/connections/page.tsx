@@ -20,7 +20,9 @@ import { Button } from '@/components/ui/button';
 import { useSession } from '@/lib/auth-client';
 import { useTranslations } from 'next-intl';
 import { Trash, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { ThemeSelector } from '@/components/connection/theme-selector';
+import { ThemeEditor } from '@/components/connection/theme-editor';
 import Image from 'next/image';
 import { toast } from 'sonner';
 
@@ -29,6 +31,121 @@ export default function ConnectionsPage() {
   const { data: connections, mutate, isLoading } = useConnections();
   const [openTooltip, setOpenTooltip] = useState<string | null>(null);
   const t = useTranslations();
+  // Theme state
+  const [themes, setThemes] = useState<any[]>([]);
+  const [themeLoading, setThemeLoading] = useState(false);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorInitial, setEditorInitial] = useState<any>(undefined);
+  // Map of connectionId to selected themeId
+  const [connectionThemes, setConnectionThemes] = useState<Record<string, string | null>>({});
+
+  // Fetch themes on mount
+  useEffect(() => {
+    setThemeLoading(true);
+    fetch('/api/themes')
+      .then((r) => r.json())
+      .then((data) => setThemes(data))
+      .finally(() => setThemeLoading(false));
+  }, []);
+
+  // Fetch and set theme for each connection when connections change
+  useEffect(() => {
+    if (!connections || connections.length === 0) return;
+    // For each connection, fetch its themeId from the backend
+    const fetchThemesForConnections = async () => {
+      const mapping: Record<string, string | null> = {};
+      await Promise.all(
+        connections.map(async (conn) => {
+          try {
+            const res = await fetch(`/api/connections/${conn.id}`);
+            if (res.ok) {
+              const data = await res.json();
+              mapping[conn.id] = data.themeId || null;
+            } else {
+              mapping[conn.id] = null;
+            }
+          } catch {
+            mapping[conn.id] = null;
+          }
+        })
+      );
+      setConnectionThemes(mapping);
+    };
+    fetchThemesForConnections();
+  }, [connections]);
+
+  // Handler for theme selection per connection
+  // Update theme for a connection and persist to backend
+  const handleThemeChange = async (connectionId: string, themeId: string) => {
+    setConnectionThemes((prev) => ({ ...prev, [connectionId]: themeId }));
+    try {
+      const res = await fetch(`/api/connections/${connectionId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ themeId }),
+      });
+      if (!res.ok) throw new Error('Failed to update theme');
+      // Show success toast
+      if (typeof window !== 'undefined') {
+        const { toast } = await import('sonner');
+        toast.success('Theme updated!');
+      }
+    } catch (e) {
+      if (typeof window !== 'undefined') {
+        const { toast } = await import('sonner');
+        toast.error('Failed to update theme.');
+      }
+      // Optionally revert UI state here if needed
+      setConnectionThemes((prev) => ({ ...prev, [connectionId]: undefined }));
+      console.error(e);
+    }
+  };
+
+  // Handler to open theme editor
+  const handleCreateTheme = () => {
+    setEditorInitial(undefined);
+    setEditorOpen(true);
+  };
+
+  // Handler to save new theme or add copied theme
+  const handleSaveTheme = async (values: any) => {
+    // Generate a temporary ID for optimistic update
+    const tempId = `temp-${Math.random().toString(36).slice(2)}`;
+    const optimisticTheme = { ...values, id: tempId, saving: true };
+    setThemes((prev) => [...prev, optimisticTheme]);
+
+    try {
+      const res = await fetch('/api/themes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      });
+      if (res.ok) {
+        const newTheme = await res.json();
+        setThemes((prev) =>
+          prev.map((t) => (t.id === tempId ? newTheme : t))
+        );
+      } else {
+        setThemes((prev) => prev.filter((t) => t.id !== tempId));
+        toast.error('Failed to save theme.');
+      }
+    } catch (err) {
+      setThemes((prev) => prev.filter((t) => t.id !== tempId));
+      toast.error('Failed to save theme.');
+    }
+  };
+
+  // Listen for theme-copied event to update the theme list
+  useEffect(() => {
+    const handler = (e: any) => {
+      if (e.detail) {
+        setThemes((prev) => [...prev, e.detail]);
+        toast.success('Theme copied to your collection!');
+      }
+    };
+    window.addEventListener('theme-copied', handler);
+    return () => window.removeEventListener('theme-copied', handler);
+  }, []);
 
   const disconnectAccount = async (connectionId: string) => {
     try {
@@ -120,6 +237,29 @@ export default function ConnectionsPage() {
                             <div className="font-mono">{connection.email}</div>
                           </TooltipContent>
                         </Tooltip>
+                        {/* Theme Selector */}
+                        <div className="mt-2">
+                          <div className="flex items-center gap-2">
+                            <ThemeSelector
+                              value={connectionThemes[connection.id] ?? null}
+                              onChange={(themeId) => handleThemeChange(connection.id, themeId)}
+                              onCreateTheme={handleCreateTheme}
+                              options={themes.map((t) => ({ id: t.id, name: t.name }))}
+                            />
+                            {/* Show badge if selected theme is public */}
+                            {(() => {
+                              const selectedTheme = themes.find(
+                                (t) => t.id === connectionThemes[connection.id]
+                              );
+                              if (selectedTheme?.isPublic) {
+                                return (
+                                  <span className="ml-2 rounded bg-green-100 px-2 py-0.5 text-xs text-green-800 border border-green-200">Public</span>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -174,6 +314,17 @@ export default function ConnectionsPage() {
           </div>
         </div>
       </SettingsCard>
+      {/* Theme Editor Modal */}
+      <ThemeEditor
+        open={editorOpen}
+        onOpenChange={setEditorOpen}
+        onSave={handleSaveTheme}
+        initialValues={editorInitial}
+        onDelete={async (id: string) => {
+          setThemes((prev) => prev.filter((t) => t.id !== id));
+          toast.success('Theme deleted.');
+        }}
+      />
     </div>
   );
 }
