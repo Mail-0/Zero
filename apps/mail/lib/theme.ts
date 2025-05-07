@@ -37,4 +37,11 @@ export const ThemeStylesSchema = z.object({
   light: StyleSchema.partial(),
 });
 
+export const CreateThemeSchema = ThemeStylesSchema.extend({
+  name: z.string().min(1),
+  visibility: z.enum(['PUBLIC', 'PRIVATE']),
+});
+
+export type TCreateThemeSchema = z.infer<typeof CreateThemeSchema>;
+
 export type TThemeStyles = z.infer<typeof ThemeStylesSchema>;

@@ -12,7 +12,9 @@ import { ThemeFieldRenderer } from '@/components/theme/theme-field-renderer';
 import { themeEditorControlConfig } from '@/components/theme/theme-config';
 import { ThemePreview } from '@/components/theme/theme-preview';
 import { ResizablePanelGroup } from '@/components/ui/resizable';
+import { ActionBar } from '@/components/theme/actionbar';
 import { ScrollArea } from '@/components/ui/scroll-area';
+
 export default function CreateThemePage() {
   return (
     <CreateThemeFormProvider>
@@ -65,6 +67,7 @@ export default function CreateThemePage() {
             <ResizablePanel defaultSize={70} minSize={20}>
               <div className="flex h-full flex-col">
                 <div className="flex min-h-0 flex-1 flex-col">
+                  <ActionBar />
                   <ThemePreview />
                 </div>
               </div>
