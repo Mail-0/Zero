@@ -2,36 +2,25 @@
 
 import {
   NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
+  NavigationMenuItem, NavigationMenuList,
   NavigationMenuTrigger,
   NavigationMenuContent,
-  ListItem,
-  navigationMenuTriggerStyle,
+  ListItem
 } from '@/components/ui/navigation-menu';
 import { PixelatedBackground, PixelatedLeft, PixelatedRight } from '@/components/home/pixelated-bg';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { ArrowRight, CurvedArrow, Discord, GitHub, LinkedIn, Twitter } from '../icons/icons';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
-import { use, useCallback, useEffect, useRef, useState } from 'react';
+import { ArrowRight, Discord, GitHub, LinkedIn, Twitter } from '../icons/icons';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Command, Menu } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import Balancer from 'react-wrap-balancer';
-import { useForm } from 'react-hook-form';
 import { useTheme } from 'next-themes';
-import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import { toast } from 'sonner';
 import Link from 'next/link';
-import axios from 'axios';
-import React from 'react';
 import { z } from 'zod';
 import { BlurFade } from '../magic-ui/blurfade';
-import { Badge } from '../ui/badge';
 
 const tabs = [
   { label: 'Chat With Your Inbox', value: 'smart-categorization' },
