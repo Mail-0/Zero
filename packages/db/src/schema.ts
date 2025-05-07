@@ -6,10 +6,13 @@ import {
   integer,
   jsonb,
   primaryKey,
+  json,
 } from 'drizzle-orm/pg-core';
 import type { WritingStyleMatrix } from '@zero/mail/services/writing-style-service';
 import { defaultUserSettings } from '@zero/db/user_settings_default';
+import type { TThemeStyles } from '@zero/mail/lib/theme';
 import { unique } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 
 export const createTable = pgTableCreator((name) => `mail0_${name}`);
 
@@ -162,3 +165,48 @@ export const writingStyleMatrix = createTable(
     ];
   },
 );
+
+export const connectionTheme = createTable(
+  'connection_theme',
+  {
+    connectionId: text('connection_id')
+      .notNull()
+      .references(() => connection.id),
+    themeId: text('theme_id')
+      .notNull()
+      .references(() => theme.id),
+  },
+  (table) => {
+    return [
+      primaryKey({
+        columns: [table.connectionId, table.themeId],
+      }),
+    ];
+  },
+);
+
+export const connectionThemeRelations = relations(connectionTheme, ({ one }) => ({
+  connection: one(connection, {
+    fields: [connectionTheme.connectionId],
+    references: [connection.id],
+  }),
+  theme: one(theme, {
+    fields: [connectionTheme.themeId],
+    references: [theme.id],
+  }),
+}));
+
+export const theme = createTable('theme', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  styles: json('style').$type<TThemeStyles>().notNull(),
+  visibility: text('visibility', { enum: ['PUBLIC', 'PRIVATE'] })
+    .default('PRIVATE')
+    .notNull(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  isFeatured: boolean('is_featured').notNull().default(false),
+  createdAt: timestamp('created_at').notNull(),
+  updatedAt: timestamp('updated_at').notNull(),
+});

@@ -7,6 +7,7 @@ import { draftsRouter } from './routes/drafts';
 import { labelsRouter } from './routes/label';
 import { brainRouter } from './routes/brain';
 import { notesRouter } from './routes/notes';
+import { themeRouter } from './routes/theme';
 import { mailRouter } from './routes/mail';
 import { userRouter } from './routes/user';
 import type { HonoContext } from './hono';
@@ -25,6 +26,7 @@ export const appRouter = router({
   shortcut: shortcutRouter,
   settings: settingsRouter,
   user: userRouter,
+  theme: themeRouter,
 });
 
 export type AppRouter = typeof appRouter;

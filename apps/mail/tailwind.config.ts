@@ -86,8 +86,9 @@ export default {
         sm: 'calc(var(--radius) - 4px)',
       },
       fontFamily: {
-        sans: ['Geist', ...defaultTheme.fontFamily.sans],
-        mono: ['Geist_Mono', ...defaultTheme.fontFamily.mono],
+        sans: ['var(--font-sans)'],
+        serif: ['var(--font-serif)'],
+        mono: ['var(--font-mono)'],
       },
       keyframes: {
         'fade-up': {
