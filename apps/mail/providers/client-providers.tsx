@@ -9,8 +9,9 @@ import { useSettings } from '@/hooks/use-settings';
 import CustomToaster from '@/components/ui/toast';
 import { Provider as JotaiProvider } from 'jotai';
 import type { PropsWithChildren } from 'react';
-import { ThemeProvider } from 'next-themes';
+
 import { ThemeCustomizer } from '@/components/theme-customizer';
+import { ThemeProvider } from './theme-providers';
 
 export function ClientProviders({ children }: PropsWithChildren) {
   const { data } = useSettings();
@@ -22,10 +23,11 @@ export function ClientProviders({ children }: PropsWithChildren) {
       <AISidebarProvider>
         <JotaiProvider>
           <ThemeProvider
-            attribute="class"
-            enableSystem
-            disableTransitionOnChange
-            defaultTheme={theme}
+            // attribute="class"
+            // enableSystem
+            // disableTransitionOnChange
+            // @ts-ignore
+            defaultTheme={'dark'}
           >
             <SidebarProvider>
               <PostHogProvider>

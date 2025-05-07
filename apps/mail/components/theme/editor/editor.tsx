@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useThemePresetStore } from '@/store/theme-preset-store';
 import type { Theme, ThemeStyles } from '@/types/theme';
 import { useEditorStore } from '@/store/editor-store';
+import type { ThemeEditorState } from '@zero/mail/types/editor';
 import { ActionBar } from './action-bar/action-bar';
 import { type EditorConfig } from '@/types/editor';
 import { authClient } from '@/lib/auth-client';
@@ -41,10 +42,11 @@ const Editor: React.FC<EditorProps> = ({ config, themePromise }) => {
     }
   }, [loadSavedPresets, session?.user]);
 
-  const initialTheme = themePromise ? use(themePromise) : null;
+  const initialTheme = null;
 
   const handleStyleChange = React.useCallback(
     (newStyles: ThemeStyles) => {
+      console.log('newStyles', newStyles);
       const prev = useEditorStore.getState().themeState;
       setThemeState({ ...prev, styles: newStyles });
     },
@@ -74,6 +76,10 @@ const Editor: React.FC<EditorProps> = ({ config, themePromise }) => {
       {/* Desktop Layout */}
       <div className="hidden h-full md:block">
         <div className="flex h-full flex-col">
+          {/* <p className='text-[4px]'>
+
+          {JSON.stringify(themeState)}
+          </p> */}
           <Controls
             // @ts-ignore
             styles={styles}
@@ -118,4 +124,6 @@ const Editor: React.FC<EditorProps> = ({ config, themePromise }) => {
   );
 };
 
-export default Editor;
+const MemoizedEditor = React.memo(Editor);
+
+export default MemoizedEditor;

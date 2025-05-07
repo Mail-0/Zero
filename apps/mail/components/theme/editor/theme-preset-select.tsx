@@ -37,6 +37,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "./action-bar/components/theme-toggle";
 
 interface ThemePresetSelectProps {
   presets: Record<string, ThemePreset>;
@@ -430,7 +431,7 @@ const ThemePresetSelect: React.FC<ThemePresetSelectProps> = ({
           </PopoverContent>
         </Popover>
       </TooltipProvider>
-
+      <ThemeToggle />
       <ThemeCycleButton direction="prev" onClick={() => cycleTheme("prev")} />
       <ThemeCycleButton direction="next" onClick={() => cycleTheme("next")} />
     </div>

@@ -12,15 +12,10 @@ import {
   SheetContent,
   SheetTitle
 } from "@/components/ui/sheet";
+import Editor from "./theme/editor/editor";
+import ThemeControlPanel from "./theme/editor/theme-control-panel";
 
-// Dynamically import the editor to avoid SSR issues
-const Editor = dynamic(() => import("@/components/theme/editor/editor"), { 
-  ssr: false,
-  loading: () => <div className="p-8 text-center">Loading theme editor...</div>
-});
 
-// Dynamically import required components
-const ThemeControlPanel = dynamic(() => import("@/components/theme/editor/theme-control-panel"), { ssr: false });
 
 export function ThemeCustomizer() {
   const [open, setOpen] = useState(false);
@@ -59,7 +54,7 @@ export function ThemeCustomizer() {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetContent
         side="right"
-        className="bg-darkBackground px-0 py-1"
+        className="dark:bg-darkBackground bg-lightBackground text-black dark:text-white px-0 py-1"
         overlayClassName="bg-transparent"
       >
         <SheetTitle className="sr-only">Customize Theme</SheetTitle>

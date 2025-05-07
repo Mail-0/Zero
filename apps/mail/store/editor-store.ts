@@ -49,7 +49,12 @@ export const useEditorStore = create<EditorStore>()(
       themeState: defaultThemeState,
       themeCheckpoint: null,
       setThemeState: (state: ThemeEditorState) => {
-        set({ themeState: state });
+        const currentState = get().themeState;
+        if (!isDeepEqual(currentState.styles, state.styles) || 
+            currentState.currentMode !== state.currentMode || 
+            currentState.preset !== state.preset) {
+          set({ themeState: state });
+        }
       },
       applyThemePreset: (preset: string) => {
         const themeState = get().themeState;

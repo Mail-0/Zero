@@ -81,7 +81,7 @@ const ThemeControlPanel = ({
 
   const radius = parseFloat(currentStyles.radius.replace("rem", ""));
 
-  const theme = use(themePromise);
+  const theme =null;
 
   return (
     <>

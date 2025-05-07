@@ -10,6 +10,7 @@ import { useThemeActions } from "@/components/theme/hooks/use-theme-actions";
 import { usePostHog } from "posthog-js/react";
 import { useThemePresetStore } from "@/store/theme-preset-store";
 import { toast } from "sonner";
+import { ThemeToggle } from "./components/theme-toggle";
 
 export function ActionBar() {
   const {
@@ -122,7 +123,6 @@ export function ActionBar() {
   return (
     <div className="border-b">
       <div className="flex h-14 items-center justify-end gap-4 px-4">
-  
       </div>
 
       <ThemeSaveDialog
