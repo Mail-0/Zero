@@ -3,8 +3,8 @@
 import { PopoverContent, PopoverTrigger } from '@radix-ui/react-popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { useSearchValue } from '@/hooks/use-search-value';
-import { Label } from '@/hooks/use-labels';
 import { Popover } from '../ui/popover';
+import type { Label } from '@/types';
 import { cn } from '@/lib/utils';
 import * as React from 'react';
 

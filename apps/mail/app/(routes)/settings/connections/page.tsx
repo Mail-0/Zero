@@ -13,8 +13,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { SettingsCard } from '@/components/settings/settings-card';
 import { AddConnectionDialog } from '@/components/connection/add';
 import { useConnections } from '@/hooks/use-connections';
-import { deleteConnection } from '@/actions/connections';
+import { useTRPC } from '@/providers/query-provider';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useMutation } from '@tanstack/react-query';
 import { emailProviders } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/lib/auth-client';
@@ -25,21 +26,26 @@ import Image from 'next/image';
 import { toast } from 'sonner';
 
 export default function ConnectionsPage() {
+  const { data, isLoading, refetch: refetchConnections } = useConnections();
   const { refetch } = useSession();
-  const { data: connections, mutate, isLoading } = useConnections();
   const [openTooltip, setOpenTooltip] = useState<string | null>(null);
   const t = useTranslations();
+  const trpc = useTRPC();
+  const { mutateAsync: deleteConnection } = useMutation(trpc.connections.delete.mutationOptions());
 
   const disconnectAccount = async (connectionId: string) => {
-    try {
-      await deleteConnection(connectionId);
-      toast.success(t('pages.settings.connections.disconnectSuccess'));
-      mutate();
-      refetch();
-    } catch (error) {
-      console.error('Error disconnecting account:', error);
-      toast.error(t('pages.settings.connections.disconnectError'));
-    }
+    await deleteConnection(
+      { connectionId },
+      {
+        onError: (error) => {
+          console.error('Error disconnecting account:', error);
+          toast.error(t('pages.settings.connections.disconnectError'));
+        },
+      },
+    );
+    toast.success(t('pages.settings.connections.disconnectSuccess'));
+    refetchConnections();
+    refetch();
   };
 
   return (
@@ -67,9 +73,9 @@ export default function ConnectionsPage() {
                 </div>
               ))}
             </div>
-          ) : connections?.length ? (
+          ) : data?.connections?.length ? (
             <div className="lg: grid gap-4 sm:grid-cols-1 md:grid-cols-2">
-              {connections.map((connection) => (
+              {data.connections.map((connection) => (
                 <div
                   key={connection.id}
                   className="bg-popover flex items-center justify-between rounded-lg border p-4"

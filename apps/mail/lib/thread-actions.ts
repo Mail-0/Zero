@@ -1,4 +1,4 @@
-import { modifyLabels } from '@/actions/mail';
+import { trpcClient } from '@/providers/query-provider';
 import { LABELS, FOLDERS } from '@/lib/utils';
 
 export type ThreadDestination = 'inbox' | 'archive' | 'spam' | 'bin' | null;
@@ -88,7 +88,7 @@ export async function moveThreadsTo({ threadIds, currentFolder, destination }: M
       return;
     }
 
-    return modifyLabels({
+    return trpcClient.mail.modifyLabels.mutate({
       threadId: threadIds,
       addLabels: addLabel ? [addLabel] : [],
       removeLabels: removeLabel ? [removeLabel] : [],

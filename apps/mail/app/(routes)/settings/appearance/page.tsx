@@ -17,15 +17,16 @@ import {
 } from '@/components/ui/select';
 import { SettingsCard } from '@/components/settings/settings-card';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { saveUserSettings } from '@/actions/settings';
+import type { MessageKey } from '@/config/navigation';
+import { useTRPC } from '@/providers/query-provider';
+import { useMutation } from '@tanstack/react-query';
 import { useSettings } from '@/hooks/use-settings';
-import { MessageKey } from '@/config/navigation';
 import { Laptop, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
-import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTheme } from 'next-themes';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
@@ -33,16 +34,20 @@ const formSchema = z.object({
   colorTheme: z.enum(['dark', 'light', 'system', '']),
 });
 
+type Theme = 'dark' | 'light' | 'system';
+
 export default function AppearancePage() {
   const [isSaving, setIsSaving] = useState(false);
   const t = useTranslations();
-  const { settings, mutate } = useSettings();
+  const { data, refetch } = useSettings();
   const { theme, systemTheme, resolvedTheme, setTheme } = useTheme();
+  const trpc = useTRPC();
+  const { mutateAsync: saveUserSettings } = useMutation(trpc.settings.save.mutationOptions());
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      colorTheme: settings?.colorTheme || theme,
+      colorTheme: data?.settings.colorTheme || (theme as Theme),
     },
   });
 
@@ -72,28 +77,22 @@ export default function AppearancePage() {
     setIsSaving(true);
     try {
       await saveUserSettings({
-        ...settings,
-        colorTheme: values.colorTheme,
+        ...(data?.settings ? data.settings : {}),
+        colorTheme: values.colorTheme as Theme,
       });
-      await mutate(
-        {
-          ...settings,
-          colorTheme: values.colorTheme,
-        },
-        { revalidate: false },
-      );
+      await refetch();
 
       toast.success(t('common.settings.saved'));
     } catch (error) {
       console.error('Failed to save settings:', error);
       toast.error(t('common.settings.failedToSave'));
-      await mutate();
+      await refetch();
     } finally {
       setIsSaving(false);
     }
   }
 
-  if (!settings) return null;
+  if (!data?.settings) return null;
 
   return (
     <div className="grid gap-6">
@@ -110,7 +109,7 @@ export default function AppearancePage() {
           <form id="appearance-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <div className="space-y-4">
               <div className="max-w-sm space-y-2">
-                {settings.colorTheme || theme ? (
+                {data.settings.colorTheme || theme ? (
                   <FormField
                     control={form.control}
                     name="colorTheme"

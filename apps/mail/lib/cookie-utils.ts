@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import { CookieCategory } from "./cookies";
+import type { CookieCategory } from './cookies';
 
 interface CookieOptions {
   category: CookieCategory;
   path?: string;
   domain?: string;
   secure?: boolean;
-  sameSite?: "Strict" | "Lax" | "None";
+  sameSite?: 'Strict' | 'Lax' | 'None';
   expires?: Date;
 }
 
 const DEFAULT_OPTIONS = {
-  path: "/",
+  path: '/',
   maxAge: 365 * 24 * 60 * 60,
 };
 
@@ -33,17 +33,17 @@ class CookieUtils {
 
     if (options.path) cookieOptions.push(`path=${options.path}`);
     if (options.domain) cookieOptions.push(`domain=${options.domain}`);
-    if (options.secure) cookieOptions.push("secure");
+    if (options.secure) cookieOptions.push('secure');
     if (options.sameSite) cookieOptions.push(`samesite=${options.sameSite}`);
     if (options.expires) cookieOptions.push(`expires=${options.expires.toUTCString()}`);
 
-    document.cookie = `${cookieString}${cookieOptions.length ? "; " + cookieOptions.join("; ") : ""}`;
+    document.cookie = `${cookieString}${cookieOptions.length ? '; ' + cookieOptions.join('; ') : ''}`;
   }
 
   static getCookie(name: string): string | null {
-    const cookies = document.cookie.split(";");
+    const cookies = document.cookie.split(';');
     for (const cookie of cookies) {
-      const parts = cookie.split("=").map((c) => c.trim());
+      const parts = cookie.split('=').map((c) => c.trim());
       const cookieName = parts[0];
       const cookieValue = parts[1];
       if (cookieName === name && cookieValue !== undefined) {
@@ -53,19 +53,19 @@ class CookieUtils {
     return null;
   }
 
-  static deleteCookie(name: string, options?: Pick<CookieOptions, "path" | "domain">): void {
+  static deleteCookie(name: string, options?: Pick<CookieOptions, 'path' | 'domain'>): void {
     const opts: CookieOptions = {
       ...options,
-      category: "necessary",
+      category: 'necessary',
       expires: new Date(0),
     };
-    this.setCookie(name, "", opts);
+    this.setCookie(name, '', opts);
   }
 
   static getAllCookies(): { [key: string]: string } {
-    return document.cookie.split(";").reduce(
+    return document.cookie.split(';').reduce(
       (acc, cookie) => {
-        const [name, value] = cookie.split("=").map((c) => c.trim());
+        const [name, value] = cookie.split('=').map((c) => c.trim());
         if (name && value) {
           acc[name] = decodeURIComponent(value);
         }
@@ -81,52 +81,52 @@ class CookieUtils {
     Object.keys(allCookies).forEach((cookieName) => {
       const cookieCategory = this.getCookieCategory(cookieName);
       if (cookieCategory === category) {
-        this.deleteCookie(cookieName, { path: "/" });
+        this.deleteCookie(cookieName, { path: '/' });
       }
     });
   }
 
   static cleanupRejectedCookies(acceptedCategories: CookieCategory[]): void {
     const cookieMapping: Record<string, CookieCategory> = {
-      _ga: "analytics",
-      _gid: "analytics",
-      _fbp: "marketing",
+      _ga: 'analytics',
+      _gid: 'analytics',
+      _fbp: 'marketing',
       // TODO: Add more cookie mappings as needed
     };
 
-    const cookies = document.cookie.split(";");
+    const cookies = document.cookie.split(';');
     for (const cookie of cookies) {
-      const parts = cookie.split("=").map((c) => c.trim());
+      const parts = cookie.split('=').map((c) => c.trim());
       const cookieName = parts[0];
       if (
         cookieName &&
         cookieMapping[cookieName] &&
         !acceptedCategories.includes(cookieMapping[cookieName])
       ) {
-        this.deleteCookie(cookieName, { path: "/" });
+        this.deleteCookie(cookieName, { path: '/' });
       }
     }
   }
 
   static cleanupMarketingCookies(): void {
     const marketingCookies = [
-      "_fbp",
-      "_gcl_au",
-      "_uetsid",
-      "_uetvid",
+      '_fbp',
+      '_gcl_au',
+      '_uetsid',
+      '_uetvid',
       // TODO: Add more marketing cookie names as needed
     ];
 
     marketingCookies.forEach((cookieName) => {
-      this.deleteCookie(cookieName, { path: "/" });
+      this.deleteCookie(cookieName, { path: '/' });
     });
   }
 
   static getCookiesByCategory(category: CookieCategory): string[] {
     const cookieMapping: Record<string, CookieCategory> = {
-      _ga: "analytics",
-      _gid: "analytics",
-      _fbp: "marketing",
+      _ga: 'analytics',
+      _gid: 'analytics',
+      _fbp: 'marketing',
       // TODO:Add more cookie mappings as needed
     };
 

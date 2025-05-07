@@ -2,11 +2,21 @@
 
 import { keyboardShortcuts } from '@/config/shortcuts';
 import { useShortcuts } from './use-hotkey-utils';
+import { useQueryState } from 'nuqs';
 
 export function ComposeHotkeys() {
   const scope = 'compose';
+  const [isComposeOpen, setIsComposeOpen] = useQueryState('isComposeOpen');
 
-  const handlers = {};
+  const handlers = {
+    closeCompose: () => {
+      if (isComposeOpen === 'true') {
+        setIsComposeOpen('false');
+      } else {
+        setIsComposeOpen('true');
+      }
+    },
+  };
 
   const composeShortcuts = keyboardShortcuts.filter((shortcut) => shortcut.scope === scope);
 

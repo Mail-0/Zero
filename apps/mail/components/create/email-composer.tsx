@@ -16,18 +16,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Command, Paperclip, Plus } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Avatar, AvatarFallback } from '../ui/avatar';
-import { aiCompose } from '@/actions/ai-composer';
+import { useTRPC } from '@/providers/query-provider';
+import { useMutation } from '@tanstack/react-query';
+import { useRef, useState, useEffect } from 'react';
 import { cn, formatFileSize } from '@/lib/utils';
 import { useThread } from '@/hooks/use-threads';
 import { useSession } from '@/lib/auth-client';
-import { createDraft } from '@/actions/drafts';
+import { serializeFiles } from '@/lib/schemas';
 import { Input } from '@/components/ui/input';
 import { EditorContent } from '@tiptap/react';
 import { useForm } from 'react-hook-form';
-import { useRef, useState } from 'react';
 import { useQueryState } from 'nuqs';
 import pluralize from 'pluralize';
-import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -55,6 +55,7 @@ interface EmailComposerProps {
   }) => Promise<void>;
   onClose?: () => void;
   className?: string;
+  autofocus?: boolean;
 }
 
 const isValidEmail = (email: string): boolean => {
@@ -85,6 +86,7 @@ export function EmailComposer({
   onSendEmail,
   onClose,
   className,
+  autofocus = false,
 }: EmailComposerProps) {
   const [showCc, setShowCc] = useState(initialCc.length > 0);
   const [showBcc, setShowBcc] = useState(initialBcc.length > 0);
@@ -95,13 +97,17 @@ export function EmailComposer({
   const toInputRef = useRef<HTMLInputElement>(null);
   const [threadId] = useQueryState('threadId');
   const [mode] = useQueryState('mode');
-  const [isComposeOpen] = useQueryState('isComposeOpen');
+  const [isComposeOpen, setIsComposeOpen] = useQueryState('isComposeOpen');
   const { data: emailData } = useThread(threadId ?? null);
   const { data: session } = useSession();
   const [draftId] = useQueryState('draftId');
   // const { data: draft } = useDraft(draftId ?? null);
   const [aiGeneratedMessage, setAiGeneratedMessage] = useState<string | null>(null);
   const [aiIsLoading, setAiIsLoading] = useState(false);
+
+  const trpc = useTRPC();
+  const { mutateAsync: aiCompose } = useMutation(trpc.ai.compose.mutationOptions());
+  const { mutateAsync: createDraft } = useMutation(trpc.drafts.create.mutationOptions());
 
   useEffect(() => {
     if (isComposeOpen === 'true' && toInputRef.current) {
@@ -226,14 +232,24 @@ export function EmailComposer({
     },
     onModEnter: () => {
       void handleSend();
-
       return true;
     },
     onAttachmentsChange: (files) => {
       handleAttachment(files);
     },
     placeholder: 'Start your email here',
+    autofocus,
   });
+
+  // Add effect to focus editor when component mounts
+  useEffect(() => {
+    if (autofocus && editor) {
+      const timeoutId = setTimeout(() => {
+        editor.commands.focus('end');
+      }, 100);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [editor, autofocus]);
 
   const handleSend = async () => {
     try {
@@ -251,6 +267,7 @@ export function EmailComposer({
       setHasUnsavedChanges(false);
       editor.commands.clearContent(true);
       form.reset();
+      setIsComposeOpen(null);
     } catch (error) {
       console.error('Error sending email:', error);
       toast.error('Failed to send email');
@@ -307,7 +324,7 @@ export function EmailComposer({
 
     if (!hasUnsavedChanges) return;
     console.log('DRAFT HTML', editor.getHTML());
-    const messageText = editor.getHTML();
+    const messageText = editor.getText();
     console.log(values, messageText);
     if (!values.to.length || !values.subject.length || !messageText.length) return;
 
@@ -318,8 +335,8 @@ export function EmailComposer({
         cc: values.cc?.join(', '),
         bcc: values.bcc?.join(', '),
         subject: values.subject,
-        message: messageText,
-        attachments: values.attachments,
+        message: editor.getHTML(),
+        attachments: await serializeFiles(values.attachments ?? []),
         id: draftId,
       };
 
@@ -650,11 +667,9 @@ export function EmailComposer({
           <div className="flex items-center justify-start gap-2">
             <div className="flex items-center justify-start gap-2">
               <button
-                className="flex h-7 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-md bg-black pl-1.5 pr-1 dark:bg-white"
+                className="flex h-7 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-md bg-black pl-1.5 pr-1 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white"
                 onClick={handleSend}
-                disabled={
-                  isLoading || !toEmails.length || !editor.getHTML().trim() || !subjectInput.trim()
-                }
+                disabled={isLoading}
               >
                 <div className="flex items-center justify-center gap-2.5 pl-0.5">
                   <div className="text-center text-sm leading-none text-white dark:text-black">
@@ -696,7 +711,7 @@ export function EmailComposer({
                 <Popover modal={true}>
                   <PopoverTrigger asChild>
                     <button
-                      className="flex items-center gap-1.5 rounded-md border border-[#E7E7E7] bg-white/5 px-2 py-1 text-sm hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-[#2B2B2B]"
+                      className="focus-visible:ring-ring flex items-center gap-1.5 rounded-md border border-[#E7E7E7] bg-white/5 px-2 py-1 text-sm hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:border-[#2B2B2B]"
                       aria-label={`View ${attachments.length} attached ${pluralize('file', attachments.length)}`}
                     >
                       <Paperclip className="h-3.5 w-3.5 text-[#9A9A9A]" />
@@ -718,18 +733,16 @@ export function EmailComposer({
                           {pluralize('file', attachments.length, true)}
                         </p>
                       </div>
-                      <div className="max-h-[250px] flex-1 space-y-0.5 overflow-y-auto p-1.5 
-                                     [&::-webkit-scrollbar]:hidden
-                                     [scrollbar-width:none]
-                                     [-ms-overflow-style:none]">
+                      <div className="max-h-[250px] flex-1 space-y-0.5 overflow-y-auto p-1.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {attachments.map((file: File, index: number) => {
                           const nameParts = file.name.split('.');
                           const extension = nameParts.length > 1 ? nameParts.pop() : undefined;
                           const nameWithoutExt = nameParts.join('.');
                           const maxNameLength = 22;
-                          const truncatedName = nameWithoutExt.length > maxNameLength
-                            ? `${nameWithoutExt.slice(0, maxNameLength)}…`
-                            : nameWithoutExt;
+                          const truncatedName =
+                            nameWithoutExt.length > maxNameLength
+                              ? `${nameWithoutExt.slice(0, maxNameLength)}…`
+                              : nameWithoutExt;
 
                           return (
                             <div
@@ -747,19 +760,29 @@ export function EmailComposer({
                                     />
                                   ) : (
                                     <span className="text-sm" aria-hidden="true">
-                                      {file.type.includes('pdf') ? '📄' : 
-                                       file.type.includes('excel') || file.type.includes('spreadsheetml') ? '📊' : 
-                                       file.type.includes('word') || file.type.includes('wordprocessingml') ? '📝' : '📎'}
+                                      {file.type.includes('pdf')
+                                        ? '📄'
+                                        : file.type.includes('excel') ||
+                                            file.type.includes('spreadsheetml')
+                                          ? '📊'
+                                          : file.type.includes('word') ||
+                                              file.type.includes('wordprocessingml')
+                                            ? '📝'
+                                            : '📎'}
                                     </span>
                                   )}
                                 </div>
                                 <div className="flex min-w-0 flex-1 flex-col">
-                                  <p 
+                                  <p
                                     className="flex items-baseline text-sm text-black dark:text-white/90"
                                     title={file.name}
                                   >
                                     <span className="truncate">{truncatedName}</span>
-                                    {extension && <span className="ml-0.5 flex-shrink-0 text-[10px] text-[#8C8C8C] dark:text-[#9A9A9A]">.{extension}</span>}
+                                    {extension && (
+                                      <span className="ml-0.5 flex-shrink-0 text-[10px] text-[#8C8C8C] dark:text-[#9A9A9A]">
+                                        .{extension}
+                                      </span>
+                                    )}
                                   </p>
                                   <p className="text-xs text-[#6D6D6D] dark:text-[#9B9B9B]">
                                     {formatFileSize(file.size)}
@@ -770,15 +793,17 @@ export function EmailComposer({
                               <button
                                 type="button"
                                 onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                                  e.preventDefault(); 
-                                  e.stopPropagation(); 
-                                  const updatedAttachments = attachments.filter((_, i) => i !== index);
-                                  setValue('attachments', updatedAttachments, { shouldDirty: true });
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  const updatedAttachments = attachments.filter(
+                                    (_, i) => i !== index,
+                                  );
+                                  setValue('attachments', updatedAttachments, {
+                                    shouldDirty: true,
+                                  });
                                   setHasUnsavedChanges(true);
                                 }}
-                                className="ml-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full 
-                                         bg-transparent hover:bg-black/5 
-                                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                className="focus-visible:ring-ring ml-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-transparent hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2"
                                 aria-label={`Remove ${file.name}`}
                               >
                                 <XIcon className="h-3.5 w-3.5 text-[#6D6D6D] hover:text-black dark:text-[#9B9B9B] dark:hover:text-white" />
@@ -848,7 +873,7 @@ export function EmailComposer({
               <TooltipTrigger asChild>
                 <button
                   disabled
-                  className="flex h-7 items-center gap-0.5 overflow-hidden rounded-md bg-white/5 px-1.5 shadow-sm hover:bg-white/10"
+                  className="flex h-7 items-center gap-0.5 overflow-hidden rounded-md bg-white/5 px-1.5 shadow-sm hover:bg-white/10 disabled:opacity-50"
                 >
                   <Smile className="h-3 w-3 fill-[#9A9A9A]" />
                   <span className="px-0.5 text-sm">Casual</span>
@@ -862,7 +887,7 @@ export function EmailComposer({
               <TooltipTrigger asChild>
                 <button
                   disabled
-                  className="flex h-7 items-center gap-0.5 overflow-hidden rounded-md bg-white/5 px-1.5 shadow-sm hover:bg-white/10"
+                  className="flex h-7 items-center gap-0.5 overflow-hidden rounded-md bg-white/5 px-1.5 shadow-sm hover:bg-white/10 disabled:opacity-50"
                 >
                   {messageLength < 50 && <ShortStack className="h-3 w-3 fill-[#9A9A9A]" />}
                   {messageLength >= 50 && messageLength < 200 && (
@@ -941,7 +966,7 @@ const ContentPreview = ({
     className="absolute bottom-full right-0 z-30 w-[400px] overflow-hidden rounded-xl border bg-white shadow-md dark:bg-black"
   >
     <div
-      className="max-h-60 min-h-[150px] overflow-y-auto rounded-md p-1 p-3 text-sm"
+      className="max-h-60 min-h-[150px] overflow-y-auto rounded-md p-1 text-sm"
       style={{
         scrollbarGutter: 'stable',
       }}
