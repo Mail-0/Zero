@@ -1,8 +1,19 @@
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 
+interface Theme {
+  id: string;
+  name: string;
+  colors: Record<string, string>;
+  fonts: {
+    body: string;
+    [key: string]: string;
+  };
+  isPublic: boolean;
+}
+
 export function ThemeMarketplace() {
-  const [themes, setThemes] = useState<any[]>([]);
+  const [themes, setThemes] = useState<Theme[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copyingId, setCopyingId] = useState<string | null>(null);
@@ -10,11 +21,27 @@ export function ThemeMarketplace() {
 
   useEffect(() => {
     setLoading(true);
-    fetch('/api/v1/themes?public=1')
-      .then((res) => res.json())
+    const abortController = new AbortController();
+
+    fetch('/api/v1/themes?public=1', {
+      signal: abortController.signal,
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return res.json();
+      })
       .then((data) => setThemes(Array.isArray(data) ? data : []))
-      .catch(() => setError('Failed to load public themes'))
+      .catch((err) => {
+        if (err.name !== 'AbortError') {
+          console.error('Error fetching themes:', err);
+          setError('Failed to load public themes');
+        }
+      })
       .finally(() => setLoading(false));
+
+    return () => {
+      abortController.abort();
+    };
   }, []);
 
   const handleCopy = async (themeId: string) => {
