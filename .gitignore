@@ -34,6 +34,7 @@ yarn-error.log*
 bun-debug.log*
 # env files (can opt-in for committing if needed)
 .env
+.dev.vars
 
 # vercel
 .vercel
@@ -48,3 +49,6 @@ next-env.d.ts
 .turbo
 i18n.cache
 apps/mail/scripts.ts
+
+.wrangler
+worker-configuration.d.ts

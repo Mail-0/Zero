@@ -8,10 +8,10 @@ import { createTRPCClient, httpBatchLink, loggerLink } from '@trpc/client';
 import { QueryCache, QueryClient, hashKey } from '@tanstack/react-query';
 import { createTRPCContext } from '@trpc/tanstack-react-query';
 import { useSession, type Session } from '@/lib/auth-client';
+import type { AppRouter } from '@zero/server/trpc';
 import { CACHE_BURST_KEY } from '@/lib/constants';
 import type { PropsWithChildren } from 'react';
 import { get, set, del } from 'idb-keyval';
-import type { AppRouter } from '@/trpc';
 import superjson from 'superjson';
 import { toast } from 'sonner';
 

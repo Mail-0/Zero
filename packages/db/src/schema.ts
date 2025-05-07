@@ -7,7 +7,6 @@ import {
   jsonb,
   primaryKey,
 } from 'drizzle-orm/pg-core';
-import type { WritingStyleMatrix } from '@zero/mail/services/writing-style-service';
 import { defaultUserSettings } from '@zero/db/user_settings_default';
 import { unique } from 'drizzle-orm/pg-core';
 
@@ -148,7 +147,9 @@ export const writingStyleMatrix = createTable(
       .notNull()
       .references(() => connection.id, { onDelete: 'cascade' }),
     numMessages: integer().notNull(),
-    style: jsonb().$type<WritingStyleMatrix>().notNull(),
+    // TODO: way too much pain to get this type to work,
+    // revisit later
+    style: jsonb().$type<unknown>().notNull(),
     updatedAt: timestamp()
       .defaultNow()
       .notNull()

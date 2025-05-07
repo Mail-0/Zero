@@ -6,9 +6,10 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { CreateEmail } from '@/components/create/create-email';
+
+import { authProxy } from '@/lib/auth-proxy';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
-import { auth } from '@/lib/auth';
 
 // Define the type for search params
 interface ComposePageProps {
@@ -24,7 +25,7 @@ interface ComposePageProps {
 
 export default async function ComposePage({ searchParams }: ComposePageProps) {
   const headersList = await headers();
-  const session = await auth.api.getSession({ headers: headersList });
+  const session = await authProxy.api.getSession({ headers: headersList });
 
   if (!session) {
     redirect('/login');
@@ -59,4 +60,3 @@ export default async function ComposePage({ searchParams }: ComposePageProps) {
     </Dialog>
   );
 }
-

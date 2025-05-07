@@ -1,4 +1,4 @@
-import { type Note } from './notes-manager';
+import type { Note } from '@/types';
 import React from 'react';
 
 export const NOTE_COLORS = [
