@@ -260,7 +260,7 @@ export function AIChat() {
 
       {/* Fixed input at bottom */}
       <div className="mb-4 flex-shrink-0 px-4">
-        <div className="bg-popover border-border/50 relative rounded-lg dark:bg-[#141414]">
+        <div className="bg-popover border-border/50 relative rounded-lg">
           {showVoiceChat ? (
             <VoiceChat onClose={() => setShowVoiceChat(false)} />
           ) : (
