@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  AnimatePresence,
   motion,
   useInView,
   UseInViewOptions,
@@ -59,7 +58,6 @@ export function BlurFade({
   };
   const combinedVariants = variant || defaultVariants;
   return (
-    <AnimatePresence>
       <motion.div
         ref={ref}
         initial="hidden"
@@ -76,6 +74,5 @@ export function BlurFade({
       >
         {children}
       </motion.div>
-    </AnimatePresence>
   );
 }
