@@ -22,10 +22,18 @@ function ThemeSelect({ userThemes, currentTheme }: ThemeSelectProps) {
 
   const router = useRouter();
   const { mutateAsync: setConnectionTheme } = useMutation(
-    trpc.theme.setConnectionTheme.mutationOptions(),
+    trpc.theme.setConnectionTheme.mutationOptions({
+      onSuccess() {
+        router.refresh();
+      },
+    }),
   );
-  const { mutateAsync: removeConnectionTheme } = useMutation(
-    trpc.theme.removeConnectionTheme.mutationOptions(),
+  const { mutateAsync: resetConnectionTheme } = useMutation(
+    trpc.theme.resetConnectionTheme.mutationOptions({
+      onSuccess() {
+        router.refresh();
+      },
+    }),
   );
   const [selectedTheme, setSelectedTheme] = useState<string | undefined>(() => {
     if (currentTheme) {
@@ -39,9 +47,7 @@ function ThemeSelect({ userThemes, currentTheme }: ThemeSelectProps) {
       value={selectedTheme}
       onValueChange={(value) => {
         if (value === defaultValue) {
-          removeConnectionTheme({
-            themeId: selectedTheme as string,
-          });
+          resetConnectionTheme();
         } else {
           setConnectionTheme({
             themeId: value,
@@ -49,7 +55,6 @@ function ThemeSelect({ userThemes, currentTheme }: ThemeSelectProps) {
         }
 
         setSelectedTheme(value);
-        router.refresh();
       }}
     >
       <SelectTrigger>

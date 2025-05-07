@@ -80,30 +80,16 @@ export const themeRouter = router({
       };
     }),
 
-  removeConnectionTheme: privateProcedure
-    .input(
-      z.object({
-        themeId: z.string(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { session, db } = ctx;
-      const { themeId } = input;
+  resetConnectionTheme: privateProcedure.mutation(async ({ ctx }) => {
+    const { session, db } = ctx;
 
-      if (!session.connectionId) {
-        throw new Error('No connection ID');
-      }
+    if (!session.connectionId) {
+      throw new Error('No connection ID');
+    }
 
-      await db
-        .delete(connectionTheme)
-        .where(
-          and(
-            eq(connectionTheme.connectionId, session.connectionId),
-            eq(connectionTheme.themeId, themeId),
-          ),
-        );
-      return {
-        success: true,
-      };
-    }),
+    await db.delete(connectionTheme).where(eq(connectionTheme.connectionId, session.connectionId));
+    return {
+      success: true,
+    };
+  }),
 });

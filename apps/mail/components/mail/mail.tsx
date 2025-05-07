@@ -88,6 +88,8 @@ export function MailLayout({ userThemes, currentTheme }: MailLayoutProps) {
   const { data: brainState } = useBrainState();
   const { resolvedTheme } = useTheme();
 
+  const themeId = currentTheme ? currentTheme.id : 'default';
+
   useEffect(() => {
     if (resolvedTheme) {
       const root = document.documentElement;
@@ -99,7 +101,7 @@ export function MailLayout({ userThemes, currentTheme }: MailLayoutProps) {
         );
       }
     }
-  }, [resolvedTheme, currentTheme?.id]);
+  }, [resolvedTheme, themeId]);
 
   useEffect(() => {
     if (prevFolderRef.current !== folder && mail.bulkSelected.length > 0) {
