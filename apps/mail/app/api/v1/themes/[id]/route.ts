@@ -1,6 +1,6 @@
+import { getAuthenticatedUserId } from '../../../utils';
 import { NextRequest, NextResponse } from 'next/server';
 import { theme as themeTable } from '@zero/db/schema';
-import { getAuthenticatedUserId } from '../../utils';
 import { eq, and } from 'drizzle-orm';
 import { db } from '@zero/db';
 

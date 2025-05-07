@@ -13,10 +13,20 @@ import { Button } from '@/components/ui/button';
 import { useSession } from '@/lib/auth-client';
 import { ThemeEditor } from './ThemeEditor';
 
+interface ThemeContextValue {
+  activeThemeId: string | null;
+  setActiveThemeId(id: string): void;
+}
+
 // ThemeContext for active theme
-const ThemeContext = createContext<any>(null);
+const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
+
 export function useThemeManager() {
-  return useContext(ThemeContext);
+  const context = useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error('useThemeManager must be used within a ThemeManagerProvider');
+  }
+  return context;
 }
 
 export function ThemeManagerProvider({ children }: { children: React.ReactNode }) {
@@ -64,6 +74,10 @@ export function ThemeManagerProvider({ children }: { children: React.ReactNode }
     // Set color variables
     Object.entries(theme.colors || {}).forEach(([key, value]) => {
       root.style.setProperty(`--theme-color-${key}`, value as string);
+    });
+    // Set background variables
+    Object.entries(theme.backgrounds ?? {}).forEach(([key, value]) => {
+      root.style.setProperty(`--theme-bg-${key}`, value as string);
     });
     // Set font variables
     Object.entries(theme.fonts || {}).forEach(([key, value]) => {
