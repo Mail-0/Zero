@@ -9,6 +9,7 @@ import { brainRouter } from './routes/brain';
 import { notesRouter } from './routes/notes';
 import { mailRouter } from './routes/mail';
 import { userRouter } from './routes/user';
+import { themeRouter } from './routes/theme';
 import type { HonoContext } from './hono';
 import { aiRouter } from './routes/ai';
 import { router } from './trpc';
@@ -24,6 +25,7 @@ export const appRouter = router({
   notes: notesRouter,
   shortcut: shortcutRouter,
   settings: settingsRouter,
+  theme: themeRouter,
   user: userRouter,
 });
 

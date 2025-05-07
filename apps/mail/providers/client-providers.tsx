@@ -10,6 +10,7 @@ import CustomToaster from '@/components/ui/toast';
 import { Provider as JotaiProvider } from 'jotai';
 import type { PropsWithChildren } from 'react';
 import { ThemeProvider } from 'next-themes';
+import { ThemeCustomizer } from '@/components/theme-customizer';
 
 export function ClientProviders({ children }: PropsWithChildren) {
   const { data } = useSettings();
@@ -29,6 +30,7 @@ export function ClientProviders({ children }: PropsWithChildren) {
             <SidebarProvider>
               <PostHogProvider>
                 {children}
+                <ThemeCustomizer />
                 <CustomToaster />
                 <Analytics />
               </PostHogProvider>

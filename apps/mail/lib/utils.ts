@@ -8,6 +8,8 @@ import { twMerge } from 'tailwind-merge';
 import type { JSONContent } from 'novel';
 import type { Sender } from '@/types';
 import LZString from 'lz-string';
+// @ts-ignore
+import { isEqual } from "@ngard/tiny-isequal";
 
 export const FOLDERS = {
   SPAM: 'spam',
@@ -592,3 +594,7 @@ export const cleanSearchValue = (q: string): string => {
     .replace(/\s+/g, ' ') // Replace multiple spaces with single space
     .trim();
 };
+
+export const isDeepEqual = (a: unknown, b: unknown): boolean => {
+  return isEqual(a, b);
+}

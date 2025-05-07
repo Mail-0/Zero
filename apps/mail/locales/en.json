@@ -315,7 +315,8 @@
       "archive": "Archive",
       "bin": "Bin",
       "feedback": "Feedback",
-      "settings": "Settings"
+      "settings": "Settings",
+      "customizeTheme": "Customize Theme"
     },
     "settings": {
       "general": "General",

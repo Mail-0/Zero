@@ -279,6 +279,7 @@ export function NavMain({ items }: NavMainProps) {
                     {...item}
                     isActive={isUrlActive(item.url)}
                     href={getHref(item)}
+                    onClick={(e) => item.onClick?.(e)}
                     target={item.target}
                     title={item.title}
                   />

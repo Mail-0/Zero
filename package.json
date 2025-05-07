@@ -23,6 +23,7 @@
     "scripts": "dotenv -- bun run --cwd apps/mail --silent --elide-lines=0 scripts"
   },
   "devDependencies": {
+    "@types/culori": "^4.0.0",
     "@types/node": "22.13.8",
     "@zero/tsconfig": "workspace:*",
     "dotenv-cli": "^8.0.0",
@@ -36,5 +37,10 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "@ngard/tiny-isequal": "^1.1.0",
+    "@radix-ui/react-slider": "^1.3.4",
+    "culori": "^4.0.1"
+  }
 }

@@ -19,7 +19,7 @@ import {
   LockIcon,
 } from '@/components/icons/icons';
 import type { NestedKeyOf, MessageKeys } from 'next-intl';
-import { MessageSquareIcon } from 'lucide-react';
+import { MessageSquareIcon, Palette } from 'lucide-react';
 
 export interface NavItem {
   id?: string;
@@ -210,6 +210,15 @@ export const bottomNavItems = [
   {
     title: '',
     items: [
+      {
+        id: 'customize-theme',
+        title: 'navigation.sidebar.customizeTheme',
+        icon: Palette,
+        url: '#',
+        onClick: () => {
+          document.dispatchEvent(new CustomEvent('open-theme-customizer'));
+        },
+      },
       {
         id: 'feedback',
         title: 'navigation.sidebar.feedback',
