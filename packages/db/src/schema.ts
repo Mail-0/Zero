@@ -10,9 +10,10 @@ import {
 } from 'drizzle-orm/pg-core';
 import type { WritingStyleMatrix } from '@zero/mail/services/writing-style-service';
 import { defaultUserSettings } from '@zero/db/user_settings_default';
-import { type TThemeStyles } from '@zero/mail/lib/theme';
+import type { TThemeStyles } from '@zero/mail/lib/theme';
 import { unique } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+
 export const createTable = pgTableCreator((name) => `mail0_${name}`);
 
 export const user = createTable('user', {
@@ -148,7 +149,7 @@ export const writingStyleMatrix = createTable(
   {
     connectionId: text()
       .notNull()
-      .references(() => connection.id),
+      .references(() => connection.id, { onDelete: 'cascade' }),
     numMessages: integer().notNull(),
     style: jsonb().$type<WritingStyleMatrix>().notNull(),
     updatedAt: timestamp()

@@ -1,8 +1,8 @@
-"use server";
+'use server';
 
-import { I18N_LOCALE_COOKIE_NAME } from "@/lib/constants";
-import { defaultLocale, locales, Locale } from "./config";
-import { cookies, headers } from "next/headers";
+import { defaultLocale, locales, type Locale } from './config';
+import { I18N_LOCALE_COOKIE_NAME } from '@/lib/constants';
+import { cookies, headers } from 'next/headers';
 
 export async function getLocale() {
   const headersList = await headers();
@@ -16,11 +16,11 @@ export async function getLocale() {
   }
 
   // extract browser locale from accept-language header
-  const acceptLanguage = headersList.get("accept-language");
+  const acceptLanguage = headersList.get('accept-language');
   if (acceptLanguage) {
     // try to get the locale with and without region (ex: "en" and "en-US")
-    const reqLocale = acceptLanguage.split(",")[0]?.trim();
-    const reqLocaleWithoutRegion = reqLocale?.split("-")[0]?.trim();
+    const reqLocale = acceptLanguage.split(',')[0]?.trim();
+    const reqLocaleWithoutRegion = reqLocale?.split('-')[0]?.trim();
 
     // check if the locale is supported
     if (locales.includes(reqLocale as Locale)) {

@@ -29,7 +29,7 @@ services:
     image: hiett/serverless-redis-http:latest
     environment:
       SRH_MODE: env
-      SRH_TOKEN: ${REDIS_TOKEN}
+      SRH_TOKEN: upstash-local-token
       SRH_CONNECTION_STRING: 'redis://valkey:6379'
     ports:
       - 8079:80

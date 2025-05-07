@@ -22,9 +22,7 @@ concurrency:
 jobs:
   main:
     timeout-minutes: 15
-    env:
-      RUNNER_IMAGE: ubuntu-latest
-    runs-on: ${{ env.RUNNER_IMAGE }}
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Code 🛎
         uses: actions/checkout@v4
@@ -38,7 +36,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: latest
-          cache: 'bun'
 
       - name: Install dependencies 📦
         run: bun install

@@ -35,9 +35,9 @@ import {
 } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useEditor as useEditorContext } from '@/components/providers/editor-provider';
-import { AnyExtension, Editor as TiptapEditor, useCurrentEditor } from '@tiptap/react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TextButtons } from '@/components/create/selectors/text-buttons';
+import { Editor as TiptapEditor, useCurrentEditor } from '@tiptap/react';
 import { suggestionItems } from '@/components/create/slash-command';
 import { defaultExtensions } from '@/components/create/extensions';
 import { ImageResizer, handleCommandNavigation } from 'novel';
@@ -497,7 +497,7 @@ export default function Editor({
             }),
           ]}
           ref={containerRef}
-          className="hide-scrollbar relative min-h-[220px] max-h-[500px] cursor-text overflow-auto"
+          className="hide-scrollbar relative max-h-[500px] min-h-[220px] cursor-text overflow-auto"
           editorProps={{
             editable: () => !readOnly,
             handleDOMEvents: {

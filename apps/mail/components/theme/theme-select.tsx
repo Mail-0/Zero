@@ -1,8 +1,8 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { setConnectionThemeAction, removeConnectionThemeAction } from '@/actions/theme';
 import { useAction } from 'next-safe-action/hooks';
+import type { TThemeStyles } from '@/lib/theme';
 import { useRouter } from 'next/navigation';
-import { TThemeStyles } from '@/lib/theme';
 import { useState } from 'react';
 interface ThemeSelectProps {
   userThemes: {

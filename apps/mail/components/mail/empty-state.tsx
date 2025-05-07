@@ -105,20 +105,20 @@ function EmptyState({ folder, className }: EmptyStateProps) {
 
   const config = FOLDER_CONFIGS[folder] ?? FOLDER_CONFIGS.inbox;
   const Icon = config.icon;
-  const connections = useConnections();
+  const { data, isLoading } = useConnections();
   const noConnection = useMemo(
-    () => connections.data && connections.data.length === 0,
-    [connections?.data],
+    () => data?.connections && data.connections.length === 0,
+    [data?.connections],
   );
 
   // Don't render anything while loading
-  if (connections.isLoading) return null;
+  if (isLoading) return null;
 
   return (
     <div>
       {noConnection ? (
         <Dialog open={noConnection}>
-          <DialogContent showOverlay className="sm:max-w-md p-4 border" >
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Connect Email</DialogTitle>
               <DialogDescription>Select an email provider to connect</DialogDescription>

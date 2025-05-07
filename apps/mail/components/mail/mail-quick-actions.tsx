@@ -1,21 +1,21 @@
 'use client';
 
-import { moveThreadsTo, ThreadDestination } from '@/lib/thread-actions';
+import { moveThreadsTo, type ThreadDestination } from '@/lib/thread-actions';
 import { useThread, useThreads } from '@/hooks/use-threads';
-import { markAsRead, markAsUnread } from '@/actions/mail';
 import { useParams, useRouter } from 'next/navigation';
+import { useTRPC } from '@/providers/query-provider';
+import { useMutation } from '@tanstack/react-query';
 import { Archive, Mail, Inbox } from 'lucide-react';
 import { useCallback, memo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useStats } from '@/hooks/use-stats';
-import type { InitialThread } from '@/types';
 import { useTranslations } from 'next-intl';
 import { cn, FOLDERS } from '@/lib/utils';
 import { useQueryState } from 'nuqs';
 import { toast } from 'sonner';
 
 interface MailQuickActionsProps {
-  message: InitialThread;
+  message: { id: string };
   className?: string;
   isHovered?: boolean;
   isInQuickActionMode?: boolean;
@@ -32,11 +32,15 @@ export const MailQuickActions = memo(
     selectedQuickActionIndex = 0,
     resetNavigation,
   }: MailQuickActionsProps) => {
-    const { data: threadData, mutate: mutateThread } = useThread(id);
+    const trpc = useTRPC();
+    const { mutateAsync: markAsRead } = useMutation(trpc.mail.markAsRead.mutationOptions());
+    const { mutateAsync: markAsUnread } = useMutation(trpc.mail.markAsUnread.mutationOptions());
+
+    const { data: threadData, refetch: refetchThread } = useThread(id);
     const latestMessage = threadData?.latest;
     const { folder } = useParams<{ folder: string }>();
-    const { mutate, isLoading } = useThreads();
-    const { mutate: mutateStats } = useStats();
+    const [{ refetch, isLoading }] = useThreads();
+    const { refetch: mutateStats } = useStats();
     const t = useTranslations();
     const router = useRouter();
     const [isProcessing, setIsProcessing] = useState(false);
@@ -76,7 +80,7 @@ export const MailQuickActions = memo(
             currentFolder: currentFolder,
             destination: destination as ThreadDestination,
           }).then(async () => {
-            await Promise.all([mutate(), mutateStats()]);
+            await Promise.all([refetch(), mutateStats()]);
 
             const actionType = isArchiveFolder ? 'unarchive' : 'archive';
             toast.success(t(`common.mail.${actionType}`));
@@ -94,7 +98,7 @@ export const MailQuickActions = memo(
         latestMessage,
         currentFolder,
         isArchiveFolder,
-        mutate,
+        refetch,
         mutateStats,
         t,
         isProcessing,
@@ -113,25 +117,37 @@ export const MailQuickActions = memo(
           const threadId = latestMessage.threadId ?? latestMessage.id;
 
           if (latestMessage.unread) {
-            await markAsRead({ ids: [threadId] }).then((response) => {
-              if (response.success) {
-                mutateThread();
-                toast.success(t('common.mail.markedAsRead'));
-              } else {
-                toast.error(t('common.mail.failedToMarkAsRead'));
-              }
-              closeThreadIfOpen();
-            });
+            await markAsRead(
+              { ids: [threadId] },
+              {
+                onSuccess: () => {
+                  refetchThread();
+                  toast.success(t('common.mail.markedAsRead'));
+                },
+                onError: () => {
+                  toast.error(t('common.mail.failedToMarkAsRead'));
+                },
+                onSettled: () => {
+                  closeThreadIfOpen();
+                },
+              },
+            );
           } else {
-            await markAsUnread({ ids: [threadId] }).then((response) => {
-              if (response.success) {
-                mutateThread();
-                toast.success(t('common.mail.markedAsUnread'));
-              } else {
-                toast.error(t('common.mail.failedToMarkAsUnread'));
-              }
-              closeThreadIfOpen();
-            });
+            await markAsUnread(
+              { ids: [threadId] },
+              {
+                onSuccess: () => {
+                  refetchThread();
+                  toast.success(t('common.mail.markedAsUnread'));
+                },
+                onError: () => {
+                  toast.error(t('common.mail.failedToMarkAsUnread'));
+                },
+                onSettled: () => {
+                  closeThreadIfOpen();
+                },
+              },
+            );
           }
         } catch (error) {
           console.error('Error toggling read status', error);
@@ -139,7 +155,16 @@ export const MailQuickActions = memo(
           setIsProcessing(false);
         }
       },
-      [latestMessage, mutate, t, isProcessing, isLoading, closeThreadIfOpen],
+      [
+        latestMessage,
+        markAsRead,
+        markAsUnread,
+        refetchThread,
+        t,
+        isProcessing,
+        isLoading,
+        closeThreadIfOpen,
+      ],
     );
 
     const handleDelete = useCallback(
