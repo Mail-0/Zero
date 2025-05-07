@@ -301,7 +301,7 @@ const ThemePresetSelect: React.FC<ThemePresetSelectProps> = ({
               <ChevronDown className="size-4 shrink-0" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="p-0 w-[300px] ml-4" align="center">
+          <PopoverContent className="p-0 w-[300px] ml-4 z-50" align="center">
             <Command className="rounded-lg border shadow-md w-full">
               <div className="flex items-center w-full">
                 <div className="flex items-center w-full border-b px-3 py-1">
@@ -330,7 +330,7 @@ const ThemePresetSelect: React.FC<ThemePresetSelectProps> = ({
                 <CommandEmpty>No themes found.</CommandEmpty>
 
                 {/* Saved Themes Group */}
-                {filteredSavedThemes.length > 0 && (
+                {/* {filteredSavedThemes.length > 0 && (
                   <>
                     <CommandGroup heading="Saved Themes">
                       {filteredSavedThemes
@@ -375,9 +375,9 @@ const ThemePresetSelect: React.FC<ThemePresetSelectProps> = ({
                     </CommandGroup>
                     <Separator className="my-2" />
                   </>
-                )}
+                )} */}
 
-                {filteredSavedThemes.length === 0 && search.trim() === "" && (
+                {/* {filteredSavedThemes.length === 0 && search.trim() === "" && (
                   <>
                     <div className="pt-2 px-2 text-xs text-muted-foreground flex items-center gap-1.5">
                       <div className="flex items-center gap-1 px-2 py-1 border rounded-md">
@@ -388,10 +388,10 @@ const ThemePresetSelect: React.FC<ThemePresetSelectProps> = ({
                     </div>
                     <Separator className="my-2" />
                   </>
-                )}
+                )} */}
 
                 {/* Default Theme Group */}
-                {filteredDefaultThemes.length > 0 && (
+                {/* {filteredDefaultThemes.length > 0 && (
                   <CommandGroup heading="Built-in Themes">
                     {filteredDefaultThemes.map((presetName, index) => (
                       <CommandItem
@@ -424,7 +424,7 @@ const ThemePresetSelect: React.FC<ThemePresetSelectProps> = ({
                       </CommandItem>
                     ))}
                   </CommandGroup>
-                )}
+                )} */}
               </ScrollArea>
             </Command>
           </PopoverContent>

@@ -1,13 +1,17 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useTheme } from "next-themes";
 import { useEditorStore } from "@/store/editor-store";
 import { Maximize2, Minimize2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle
+} from "@/components/ui/sheet";
 
 // Dynamically import the editor to avoid SSR issues
 const Editor = dynamic(() => import("@/components/theme/editor/editor"), { 
@@ -52,28 +56,17 @@ export function ThemeCustomizer() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent
-        className={cn(
-          "p-0 border-t rounded-t-xl rounded-b-none shadow-xl",
-          "left-0 right-0 bottom-0 top-auto translate-x-0 translate-y-0",
-          isExpanded 
-            ? "h-[90vh] max-w-full" 
-            : "h-[50vh] max-w-full"
-        )}
-        showOverlay={true}
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetContent
+        side="right"
+        className="bg-darkBackground px-0 py-1"
+        overlayClassName="bg-transparent"
       >
+        <SheetTitle className="sr-only">Customize Theme</SheetTitle>
         <div className="flex items-center justify-between p-2 border-b">
           <h2 className="text-lg font-medium">Customize Theme</h2>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={toggleExpand}
-              className="h-8 w-8"
-            >
-              {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-            </Button>
+    
             <Button 
               variant="ghost" 
               size="icon" 
@@ -94,13 +87,13 @@ export function ThemeCustomizer() {
                 defaultState: {
                   styles: themeState.styles
                 },
-                controls: ThemeControlPanel,
+                controls: ThemeControlPanel as React.ComponentType<unknown>
               }}
               themePromise={Promise.resolve(null)}
             />
           )}
         </div>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 } 
