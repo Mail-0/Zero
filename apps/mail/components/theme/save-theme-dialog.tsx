@@ -11,10 +11,11 @@ import {
 } from '../ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
+import type { TCreateThemeSchema } from '@/lib/theme';
+import { useTRPC } from '@/providers/query-provider';
+import { useMutation } from '@tanstack/react-query';
 import { useAction } from 'next-safe-action/hooks';
-import { saveThemeAction } from '@/actions/theme';
 import { useFormContext } from 'react-hook-form';
-import { TCreateThemeSchema } from '@/lib/theme';
 import { useRouter } from 'next/navigation';
 import { Button } from '../ui/button';
 import { Heart } from 'lucide-react';
@@ -49,19 +50,22 @@ export function SaveThemeDialog() {
 function SaveThemeForm() {
   const router = useRouter();
   const form = useFormContext<TCreateThemeSchema>();
+  const trpc = useTRPC();
 
-  const action = useAction(saveThemeAction, {
-    onSuccess: () => {
-      toast.success('Theme saved successfully');
-      router.push('/themes');
-    },
-    onError: () => {
-      toast.error('Failed to save theme');
-    },
-  });
+  const { mutateAsync: saveTheme } = useMutation(
+    trpc.theme.save.mutationOptions({
+      onSuccess: () => {
+        toast.success('Theme saved successfully');
+        router.push('/themes');
+      },
+      onError: () => {
+        toast.error('Failed to save theme');
+      },
+    }),
+  );
 
   const onSubmit = (data: TCreateThemeSchema) => {
-    action.execute(data);
+    saveTheme(data);
   };
 
   return (

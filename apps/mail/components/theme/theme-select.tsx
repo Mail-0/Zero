@@ -1,6 +1,6 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { setConnectionThemeAction, removeConnectionThemeAction } from '@/actions/theme';
-import { useAction } from 'next-safe-action/hooks';
+import { useTRPC } from '@/providers/query-provider';
+import { useMutation } from '@tanstack/react-query';
 import type { TThemeStyles } from '@/lib/theme';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -18,9 +18,15 @@ interface ThemeSelectProps {
 const defaultValue = 'default';
 
 function ThemeSelect({ userThemes, currentTheme }: ThemeSelectProps) {
+  const trpc = useTRPC();
+
   const router = useRouter();
-  const action = useAction(setConnectionThemeAction);
-  const removeAction = useAction(removeConnectionThemeAction);
+  const { mutateAsync: setConnectionTheme } = useMutation(
+    trpc.theme.setConnectionTheme.mutationOptions(),
+  );
+  const { mutateAsync: removeConnectionTheme } = useMutation(
+    trpc.theme.removeConnectionTheme.mutationOptions(),
+  );
   const [selectedTheme, setSelectedTheme] = useState<string | undefined>(() => {
     if (currentTheme) {
       return currentTheme.id;
@@ -33,11 +39,11 @@ function ThemeSelect({ userThemes, currentTheme }: ThemeSelectProps) {
       value={selectedTheme}
       onValueChange={(value) => {
         if (value === defaultValue) {
-          removeAction.execute({
+          removeConnectionTheme({
             themeId: selectedTheme as string,
           });
         } else {
-          action.execute({
+          setConnectionTheme({
             themeId: value,
           });
         }

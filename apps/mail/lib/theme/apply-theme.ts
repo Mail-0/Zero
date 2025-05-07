@@ -1,4 +1,4 @@
-import { TStyleSchema, TThemeMode, TThemeStyles } from '../theme';
+import type { TStyleSchema, TThemeMode, TThemeStyles } from '../theme';
 
 export const COMMON_STYLES = ['font-sans', 'font-serif', 'font-mono', 'radius'];
 

@@ -4,9 +4,8 @@ import { ScrollArea, ScrollBar } from '../ui/scroll-area';
 import { useFullscreen } from '@/hooks/use-fullscreen';
 import { useFormContext } from 'react-hook-form';
 import { ThemeStylesSchema } from '@/lib/theme';
+import type { CSSProperties } from 'react';
 import { CardsStats } from './card-stats';
-import { hexToHSL } from './converter';
-import { CSSProperties } from 'react';
 import { cn } from '@/lib/utils';
 import { z } from 'zod';
 export const ThemePreview = () => {

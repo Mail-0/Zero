@@ -1,7 +1,7 @@
 'use client';
 
-import { FieldPath, useFormContext } from 'react-hook-form';
-import { ThemeEditorControlType } from './theme-config';
+import { type FieldPath, useFormContext } from 'react-hook-form';
+import type { ThemeEditorControlType } from './theme-config';
 import { FormField, FormMessage } from '../ui/form';
 import { hslToHex, hexToHSL } from './converter';
 import { ThemeStylesSchema } from '@/lib/theme';
