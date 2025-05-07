@@ -228,8 +228,8 @@ export function AIChat() {
                       className={cn(
                         'flex w-fit flex-col gap-2 rounded-xl text-sm shadow',
                         message.role === 'user'
-                          ? 'overflow-wrap-anywhere text-subtleWhite dark:text-offsetDark ml-auto break-words bg-[#313131] p-2 dark:bg-[#f0f0f0]'
-                          : 'overflow-wrap-anywhere mr-auto break-words bg-[#f0f0f0] p-2 dark:bg-[#313131]',
+                          ? 'overflow-wrap-anywhere text-primary-foreground bg-primary ml-auto break-words p-2'
+                          : 'overflow-wrap-anywhere bg-secondary mr-auto break-words p-2',
                       )}
                     >
                       {textParts.map((part) => (
@@ -282,8 +282,8 @@ export function AIChat() {
                       className="absolute right-1 top-1/2 inline-flex h-6 -translate-y-1/2 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-lg"
                       disabled={!input.trim() || !chatMessages.enabled}
                     >
-                      <div className="dark:bg[#141414] flex h-5 items-center justify-center gap-1 rounded-sm bg-black/10 px-1">
-                        <CurvedArrow className="mt-1.5 h-4 w-4 fill-black dark:fill-[#929292]" />
+                      <div className="flex h-5 items-center justify-center gap-1 rounded-sm bg-black/10 px-1">
+                        <CurvedArrow className="fill-primary dark:fill-primary/80 mt-1.5 h-4 w-4" />
                       </div>
                     </button>
                   ) : (
@@ -292,8 +292,8 @@ export function AIChat() {
                       type="button"
                       className="absolute right-1 top-1/2 inline-flex h-6 -translate-y-1/2 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-lg"
                     >
-                      <div className="dark:bg[#141414] flex h-5 items-center justify-center gap-1 rounded-sm bg-black/10 px-1">
-                        <Stop className="h-4 w-4 fill-black dark:fill-[#929292]" />
+                      <div className="flex h-5 items-center justify-center gap-1 rounded-sm px-1">
+                        <Stop className="fill-primary h-4 w-4" />
                       </div>
                     </button>
                   )}
