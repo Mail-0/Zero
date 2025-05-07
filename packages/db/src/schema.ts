@@ -2,8 +2,20 @@ import { pgTableCreator, text, timestamp, boolean, integer, jsonb, primaryKey } 
 import { defaultUserSettings } from '@zero/db/user_settings_default';
 import { unique } from 'drizzle-orm/pg-core';
 import type { WritingStyleMatrix } from '@zero/mail/services/writing-style-service';
-
 export const createTable = pgTableCreator((name) => `mail0_${name}`);
+
+export const theme = createTable('theme', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id),
+  name: text('name').notNull(),
+  description: text('description'),
+  config: jsonb('config').notNull(), // stores colors, fonts, spacing, etc.
+  isPublic: boolean('is_public').notNull().default(false),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
 
 export const user = createTable('user', {
   id: text('id').primaryKey(),
@@ -92,6 +104,7 @@ export const connection = createTable(
     expiresAt: timestamp('expires_at').notNull(),
     createdAt: timestamp('created_at').notNull(),
     updatedAt: timestamp('updated_at').notNull(),
+    themeId: text('theme_id').references(() => theme.id),
   },
   (t) => [unique().on(t.userId, t.email)],
 );
