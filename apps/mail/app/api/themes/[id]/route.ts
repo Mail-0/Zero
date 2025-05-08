@@ -5,7 +5,7 @@ import { headers } from 'next/headers';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const headersList = await headers();
@@ -15,7 +15,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const themeId = params.id;
+    const { id: themeId } = await context.params;
     const result = await getThemeById(themeId);
 
     if (!result.success) {
@@ -31,7 +31,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const headersList = await headers();
@@ -41,7 +41,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const themeId = params.id;
+    const { id: themeId } = await context.params;
     const data = await request.json();
     const result = await updateTheme({
       id: themeId,
@@ -61,7 +61,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const headersList = await headers();
@@ -71,7 +71,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const themeId = params.id;
+    const { id: themeId } = await context.params;
     const result = await deleteTheme(themeId);
 
     if (!result.success) {

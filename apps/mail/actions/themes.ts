@@ -306,6 +306,12 @@ export async function applyThemeToConnection(themeId: string) {
   const headersList = await headers();
   const session = await auth.api.getSession({ headers: headersList });
   
+  console.log('Session in applyThemeToConnection:', JSON.stringify({
+    userId: session?.user?.id,
+    connectionId: session?.connectionId,
+    hasSessionData: !!session
+  }));
+
   if (!session?.user?.id) {
     return { success: false, error: 'Not authenticated' };
   }
@@ -342,6 +348,8 @@ export async function applyThemeToConnection(themeId: string) {
         return { success: true, message: 'Theme already applied to this connection' };
       }
       
+      console.log('Removing connection from existing theme:', existingConnectionTheme.id);
+      
       // Remove connection from the existing theme
       await db
         .update(theme)
@@ -349,19 +357,31 @@ export async function applyThemeToConnection(themeId: string) {
         .where(eq(theme.id, existingConnectionTheme.id));
     }
     
+    console.log('Assigning theme to connection:', { themeId, connectionId: session.connectionId });
+    
     // Assign the selected theme to the connection
     await db
       .update(theme)
       .set({ connectionId: session.connectionId })
       .where(eq(theme.id, themeId));
     
+    console.log('Revalidating paths after applying theme');
     revalidatePath('/');
+    revalidatePath('/settings/themes');
     
     return { 
       success: true, 
       message: 'Theme applied successfully', 
       theme: themeData,
-      connectionId: session.connectionId
+      connectionId: session.connectionId,
+      sessionInfo: {
+        userId: session.user.id,
+        hasConnectionId: !!session.connectionId,
+        activeConnection: session.activeConnection ? {
+          id: session.activeConnection.id,
+          email: session.activeConnection.email
+        } : null
+      }
     };
   } catch (error) {
     console.error('Error applying theme to connection:', error);

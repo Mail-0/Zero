@@ -10,6 +10,8 @@ import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import Link from 'next/link';
 import { useSession } from '@/lib/auth-client';
+import { useConnections } from '@/hooks/use-connections';
+import { putConnection } from '@/actions/connections';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +22,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { getUserThemes } from '@/actions/themes';
+import { useCustomTheme } from '@/providers/custom-theme-provider';
+import { defaultThemeSettings } from '@zero/db/theme_settings_default';
 
 interface Theme {
   id: string;
@@ -40,8 +45,10 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isInitializing, setIsInitializing] = useState(initialThemes.length === 0);
-  const { data: session } = useSession();
+  const { data: session, refetch } = useSession();
   const { create, copy, initializeDefaults, applyToConnection } = useThemeActions();
+  const { data: connections, isLoading, mutate } = useConnections();
+  const { applyThemeSettings } = useCustomTheme();
 
   // Create default themes if none exist (after component mounts)
   useEffect(() => {
@@ -68,6 +75,22 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
     
     createDefaults();
   }, [initialThemes.length, initializeDefaults]);
+
+  // Log session information for debugging
+  useEffect(() => {
+    if (session) {
+      console.log('Session details:', {
+        hasSession: !!session,
+        userId: session.user?.id,
+        connectionId: session.connectionId,
+        sessionProperties: Object.keys(session),
+        hasActiveConnection: !!session.activeConnection,
+        activeConnectionId: session.activeConnection?.id,
+      });
+    } else {
+      console.log('No session available');
+    }
+  }, [session]);
 
   const selectedTheme = selectedThemeId ? themes.find(t => t.id === selectedThemeId) : null;
 
@@ -98,38 +121,48 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
     if (!selectedThemeId || !selectedTheme) return;
 
     try {
-      const updatedTheme: Theme = {
-        id: selectedThemeId,
+      const updatedThemeData = {
         name,
         settings,
         isPublic,
         connectionId: selectedTheme.connectionId,
       };
       
-      // Optimistic update
+      // Call the actual server action to update the DB
+      const updateResult = await fetch(`/api/themes/${selectedThemeId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedThemeData),
+      });
+
+      if (!updateResult.ok) {
+        const errorData = await updateResult.json();
+        toast.error(errorData.error || 'Failed to save theme changes to server');
+        return; // Stop if server update fails
+      }
+
+      const savedTheme = await updateResult.json();
+
+      // Update local state optimistically (or after confirmation)
+      const updatedThemeForState: Theme = {
+        id: selectedThemeId,
+        name: savedTheme.name,
+        settings: savedTheme.settings,
+        isPublic: savedTheme.isPublic,
+        connectionId: savedTheme.connectionId,
+      };
       setThemes(prev =>
-        prev.map(theme => (theme.id === selectedThemeId ? updatedTheme : theme))
+        prev.map(theme => (theme.id === selectedThemeId ? updatedThemeForState : theme))
       );
       
       setIsEditing(false);
       toast.success('Theme updated successfully');
-      
-      // Server update in background - can add error handling if needed
-      const result = await fetch(`/api/themes/${selectedThemeId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          settings,
-          isPublic,
-        }),
-      });
-      
-      if (!result.ok) {
-        toast.error('Changes may not have been saved to the server');
+
+      // If the updated theme is the currently active one, re-apply its settings visually
+      if (selectedTheme.connectionId === session?.connectionId) {
+        applyThemeSettings(savedTheme.settings);
       }
+      
     } catch (error) {
       console.error('Error updating theme:', error);
       toast.error('Failed to update theme');
@@ -140,8 +173,10 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
     if (!selectedThemeId) return;
 
     try {
-      // Optimistic delete
+      const themeToDelete = themes.find(t => t.id === selectedThemeId);
+      // Optimistic delete from local state
       setThemes(prev => prev.filter(theme => theme.id !== selectedThemeId));
+      const wasActive = themeToDelete?.connectionId === session?.connectionId;
       setSelectedThemeId(null);
       setDeleteDialogOpen(false);
       toast.success('Theme deleted successfully');
@@ -153,27 +188,68 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
       
       if (!result.ok) {
         toast.error('Theme may not have been deleted on the server');
+        // Optionally revert local state deletion here
+      } else {
+        // If the deleted theme was the active one, apply default settings
+        if (wasActive) {
+          applyThemeSettings(defaultThemeSettings);
+          // Provider will handle cache invalidation on next load/fetch
+        }
       }
     } catch (error) {
       console.error('Error deleting theme:', error);
       toast.error('Failed to delete theme');
+      // Optionally revert local state deletion here
+    }
+  };
+
+  const refreshThemes = async () => {
+    try {
+      // Get fresh themes data from the server using the server action
+      const result = await getUserThemes();
+      if (result.success) {
+        setThemes(result.themes || []);
+        toast.success('Themes refreshed');
+      } else {
+        toast.error('Failed to refresh themes: ' + (result.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error refreshing themes:', error);
+      toast.error('Failed to refresh themes');
     }
   };
 
   const handleApplyTheme = async (themeId: string) => {
     try {
+      console.log('Applying theme:', themeId, 'for connection:', session?.connectionId);
+      
+      if (!session?.connectionId) {
+        toast.error('No active connection found. Please select a connection.');
+        return;
+      }
+      
       const result = await applyToConnection(themeId);
-      if (result.success) {
-        // Optimistic update - mark the theme as applied to the current connection
+
+      if (result.success && result.theme) {
+        const appliedThemeSettings = result.theme.settings as ThemeSettings;
+        
+        // 1. Apply visually using the context function
+        applyThemeSettings(appliedThemeSettings);
+        
+        // 2. Update local state for the checkmark/button state
         setThemes(prev => 
           prev.map(t => ({
             ...t,
-            connectionId: t.id === themeId ? (session?.connectionId || null) : 
-                          (t.connectionId === session?.connectionId ? null : t.connectionId)
+            // Mark the applied theme for the current connection
+            connectionId: t.id === themeId ? session.connectionId : 
+                          // Unmark any previous theme for this connection
+                          (t.connectionId === session.connectionId ? null : t.connectionId)
           }))
         );
-        toast.success('Theme applied successfully');
+        toast.success(`Theme applied successfully to connection: ${session.connectionId.substring(0, 8)}...`);
+
       } else {
+        console.error('Error response from applyToConnection:', result);
         toast.error(result.error || 'Failed to apply theme');
       }
     } catch (error) {
@@ -224,11 +300,51 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
           <Button onClick={() => setIsCreating(true)}>
             <PlusCircle className="mr-2 h-4 w-4" /> Create New Theme
           </Button>
+          <Button variant="outline" onClick={refreshThemes}>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh
+          </Button>
           <Button variant="outline" asChild>
             <Link href="/settings/themes/marketplace">
               <ExternalLink className="mr-2 h-4 w-4" /> Theme Marketplace
             </Link>
           </Button>
+        </div>
+      </div>
+      
+      {/* Connection Debug Info */}
+      <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md text-sm">
+        <p>Connection Status: {session ? 'Logged in' : 'Not logged in'}</p>
+        <p>Connection ID: {session?.connectionId ? `${session.connectionId.substring(0, 8)}...` : 'No connection ID'}</p>
+        <p>User ID: {session?.user?.id ? `${session.user.id.substring(0, 8)}...` : 'No user ID'}</p>
+        
+        {/* Connection Switcher */}
+        <div className="mt-4">
+          <p className="font-medium mb-2">Switch Connection:</p>
+          <div className="flex flex-wrap gap-2">
+            {connections?.map((conn) => (
+              <Button 
+                key={conn.id} 
+                size="sm"
+                variant={conn.id === session?.connectionId ? "default" : "outline"}
+                onClick={async () => {
+                  try {
+                    await putConnection(conn.id);
+                    toast.success(`Switched to connection: ${conn.email}`);
+                    refetch();
+                    mutate();
+                  } catch (error) {
+                    console.error('Error switching connection:', error);
+                    toast.error('Failed to switch connection');
+                  }
+                }}
+              >
+                {conn.id === session?.connectionId ? '✓ ' : ''}{conn.email}
+              </Button>
+            ))}
+          </div>
         </div>
       </div>
 

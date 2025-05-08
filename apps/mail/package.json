@@ -82,6 +82,7 @@
     "clsx": "2.1.1",
     "cmdk": "1.0.0",
     "color": "5.0.0",
+    "colord": "^2.9.3",
     "date-fns": "4.1.0",
     "date-fns-tz": "^3.2.0",
     "deepmerge": "4.3.1",
