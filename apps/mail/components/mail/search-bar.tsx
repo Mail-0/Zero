@@ -201,14 +201,14 @@ export function SearchBar() {
     <div className="relative flex-1 lg:max-w-[600px]">
       <form className="relative flex items-center" onSubmit={form.handleSubmit(submitSearch)}>
         <Search
-          className="absolute left-2.5 z-10 h-4 w-4 text-[#6D6D6D] dark:text-[#727272]"
+          className="text-muted-foreground absolute left-2.5 z-10 h-4 w-4"
           aria-hidden="true"
         />
 
         <div className="relative w-full">
           <Input
             placeholder={'Search...'}
-            className="text-muted-foreground placeholder:text-muted-foreground/70 h-[32px] w-full select-none rounded-md border bg-white pl-9 pr-14 shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-none dark:bg-[#141414]"
+            className="text-muted-foreground placeholder:text-muted-foreground/70 bg-background h-[32px] w-full select-none rounded-md border pl-9 pr-14 shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-transparent"
             {...form.register('q')}
             value={q}
             disabled={isSearching}

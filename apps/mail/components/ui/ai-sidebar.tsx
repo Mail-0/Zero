@@ -96,10 +96,7 @@ export function AISidebar({ children, className }: AISidebarProps & { children: 
 
   return (
     <TooltipProvider delayDuration={0}>
-      <ResizablePanelGroup
-        direction="horizontal"
-        className={cn('bg-lightBackground dark:bg-darkBackground p-0')}
-      >
+      <ResizablePanelGroup direction="horizontal" className={cn('bg-background p-0')}>
         <ResizablePanel>{children}</ResizablePanel>
 
         {open && (
@@ -108,11 +105,11 @@ export function AISidebar({ children, className }: AISidebarProps & { children: 
               defaultSize={20}
               minSize={20}
               maxSize={35}
-              className="bg-panelLight dark:bg-panelDark ml- mr-1.5 mt-1 h-[calc(98vh+12px)] border-[#E7E7E7] shadow-sm md:rounded-2xl md:border md:shadow-sm dark:border-[#252525]"
+              className="bg-panel ml- border-panelBorder mr-1.5 mt-1 h-[calc(98vh+12px)] shadow-sm md:rounded-2xl md:border md:shadow-sm"
             >
               <div className={cn('h-[calc(98vh+15px)]', 'flex flex-col', '', className)}>
                 <div className="flex h-full flex-col">
-                  <div className="relative flex items-center justify-between border-b border-[#E7E7E7] px-2.5 pb-2.5 pt-[17.6px] dark:border-[#252525]">
+                  <div className="border-panelBorder relative flex items-center justify-between border-b px-2.5 pb-2.5 pt-[17.6px]">
                     <TooltipProvider delayDuration={0}>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -121,7 +118,7 @@ export function AISidebar({ children, className }: AISidebarProps & { children: 
                             variant="ghost"
                             className="md:h-fit md:px-2"
                           >
-                            <X className="dark:fill-iconDark fill-iconLight" />
+                            <X className="fill-muted-foreground" />
                             <span className="sr-only">Close chat</span>
                           </Button>
                         </TooltipTrigger>
@@ -136,7 +133,7 @@ export function AISidebar({ children, className }: AISidebarProps & { children: 
                             <TooltipTrigger asChild>
                               <DialogTrigger asChild>
                                 <Button variant="ghost" className="md:h-fit md:px-2 [&>svg]:size-3">
-                                  <Paper className="dark:fill-iconDark fill-iconLight h-3.5 w-3.5" />
+                                  <Paper className="fill-muted-foreground h-3.5 w-3.5" />
                                 </Button>
                               </DialogTrigger>
                             </TooltipTrigger>
@@ -195,7 +192,7 @@ export function AISidebar({ children, className }: AISidebarProps & { children: 
                               variant="ghost"
                               className="md:h-fit md:px-2"
                             >
-                              <Plus className="dark:text-iconDark text-iconLight" />
+                              <Plus className="text-muted-foreground" />
                               <span className="sr-only">New chat</span>
                             </Button>
                           </TooltipTrigger>

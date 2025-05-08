@@ -72,29 +72,37 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
     }
   }, [iframeRef, setHeight]);
 
+  const { theme } = useTheme();
+
   useEffect(() => {
     if (!iframeRef.current) return;
-    template(html, imagesEnabled).then((htmlDoc) => {
-      if (!iframeRef.current) return;
-      const url = URL.createObjectURL(new Blob([htmlDoc], { type: 'text/html' }));
-      iframeRef.current.src = url;
 
-      const handler = () => {
-        if (iframeRef.current?.contentWindow?.document.body) {
-          calculateAndSetHeight();
-          fixNonReadableColors(iframeRef.current.contentWindow.document.body);
-        }
-        // setLoaded(true);
-        // Recalculate after a slight delay to catch any late-loading content
-        setTimeout(calculateAndSetHeight, 500);
-      };
-      iframeRef.current.onload = handler;
+    requestAnimationFrame(() => {
+      const styles = getComputedStyle(document.documentElement);
+      const backgroundColor = styles.getPropertyValue('--panel').trim();
+
+      template(html, imagesEnabled, backgroundColor).then((htmlDoc) => {
+        if (!iframeRef.current) return;
+        const url = URL.createObjectURL(new Blob([htmlDoc], { type: 'text/html' }));
+        iframeRef.current.src = url;
+
+        const handler = () => {
+          if (iframeRef.current?.contentWindow?.document.body) {
+            calculateAndSetHeight();
+            fixNonReadableColors(iframeRef.current.contentWindow.document.body);
+          }
+          // setLoaded(true);
+          // Recalculate after a slight delay to catch any late-loading content
+          setTimeout(calculateAndSetHeight, 500);
+        };
+        iframeRef.current.onload = handler;
+      });
     });
 
     return () => {
       //   URL.revokeObjectURL(url);
     };
-  }, [calculateAndSetHeight, html, imagesEnabled]);
+  }, [calculateAndSetHeight, html, imagesEnabled, theme]);
 
   useEffect(() => {
     if (iframeRef.current?.contentWindow?.document.body) {

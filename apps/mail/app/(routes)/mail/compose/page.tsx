@@ -6,6 +6,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { CreateEmail } from '@/components/create/create-email';
+
 import { authProxy } from '@/lib/auth-proxy';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
@@ -46,7 +47,7 @@ export default async function ComposePage({ searchParams }: ComposePageProps) {
       <DialogTitle></DialogTitle>
       <DialogDescription></DialogDescription>
       <DialogTrigger></DialogTrigger>
-      <DialogContent className="h-screen w-screen max-w-none border-none bg-[#FAFAFA] p-0 shadow-none dark:bg-[#141414]">
+      <DialogContent className="bg-background/50 h-screen w-screen max-w-none border-none p-0 shadow-none">
         <CreateEmail
           initialTo={params.to || ''}
           initialSubject={params.subject || ''}

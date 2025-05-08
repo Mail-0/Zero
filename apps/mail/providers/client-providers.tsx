@@ -24,7 +24,7 @@ export function ClientProviders({ children }: PropsWithChildren) {
             attribute="class"
             enableSystem
             disableTransitionOnChange
-            defaultTheme={theme}
+            defaultTheme={'custom'}
           >
             <SidebarProvider>
               <PostHogProvider>

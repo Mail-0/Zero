@@ -201,9 +201,9 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
   }
 
   return (
-    <div className="w-full rounded-xl bg-white dark:bg-[#141414]">
+    <div className="w-full rounded-xl">
       <EmailComposer
-        className="w-full !max-w-none border pb-1 dark:bg-[#141414]"
+        className="w-full !max-w-none border pb-1"
         onSendEmail={handleSendEmail}
         onClose={async () => {
           await setMode(null);

@@ -4,7 +4,9 @@ import { Html, Head, Body, Container, Section, Column, Row, render } from '@reac
 import { getListUnsubscribeAction } from '@/lib/email-utils';
 import { trpcClient } from '@/providers/query-provider';
 import type { ParsedMessage } from '@/types';
+import { useEffect, useState } from 'react';
 import { track } from '@vercel/analytics';
+import { useTheme } from 'next-themes';
 
 export const handleUnsubscribe = async ({ emailData }: { emailData: ParsedMessage }) => {
   try {
@@ -87,6 +89,7 @@ interface EmailTemplateProps {
   content: string;
   imagesEnabled: boolean;
   nonce: string;
+  backgroundColor: string;
 }
 
 const generateNonce = () => {
@@ -109,10 +112,10 @@ const forceExternalLinks = (html: string): string => {
 
 const getProxiedUrl = (url: string) => {
   if (url.startsWith('data:') || url.startsWith('blob:')) return url;
-  
+
   const proxyUrl = process.env.NEXT_PUBLIC_IMAGE_PROXY?.trim();
   if (!proxyUrl) return url;
-  
+
   return proxyUrl + encodeURIComponent(url);
 };
 
@@ -123,12 +126,15 @@ const proxyImageUrls = (html: string): string => {
   doc.querySelectorAll('img').forEach((img) => {
     const src = img.getAttribute('src');
     if (!src) return;
-    
+
     const proxiedUrl = getProxiedUrl(src);
     if (proxiedUrl !== src) {
       img.setAttribute('data-original-src', src);
       img.setAttribute('src', proxiedUrl);
-      img.setAttribute('onerror', `this.onerror=null; this.src=this.getAttribute('data-original-src');`);
+      img.setAttribute(
+        'onerror',
+        `this.onerror=null; this.src=this.getAttribute('data-original-src');`,
+      );
     }
   });
 
@@ -150,7 +156,7 @@ const proxyImageUrls = (html: string): string => {
   return doc.body.innerHTML;
 };
 
-const EmailTemplate = ({ content, imagesEnabled, nonce }: EmailTemplateProps) => {
+const EmailTemplate = ({ content, imagesEnabled, nonce, backgroundColor }: EmailTemplateProps) => {
   return (
     <Html>
       <Head>
@@ -188,33 +194,17 @@ const EmailTemplate = ({ content, imagesEnabled, nonce }: EmailTemplateProps) =>
               font-weight: 700;
               font-style: normal;
             }
-            @media (prefers-color-scheme: dark) {
-              body, table, td, div, p {
-                background: transparent !important;
-                background-color: #1A1A1A !important;
-                font-size: 16px !important;
-                font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-              }
-              * {
-                background: transparent !important;
-                background-color: #1A1A1A !important;
-                font-size: 16px !important;
-                font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-              }
+            body, table, td, div, p {
+              background: transparent !important;
+              background-color: hsl(${backgroundColor}) !important;
+              font-size: 16px !important;
+              font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
             }
-            @media (prefers-color-scheme: light) {
-              body, table, td, div, p {
-                background: transparent !important;
-                background-color: white !important;
-                font-size: 16px !important;
-                font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-              }
-              * {
-                background: transparent !important;
-                background-color: white !important;
-                font-size: 16px !important;
-                font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-              }
+            * {
+              background: transparent !important;
+              background-color: hsl(${backgroundColor}) !important;
+              font-size: 16px !important;
+              font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
             }
           `}
         </style>
@@ -252,17 +242,26 @@ const EmailTemplate = ({ content, imagesEnabled, nonce }: EmailTemplateProps) =>
   );
 };
 
-export const template = async (html: string, imagesEnabled: boolean = false) => {
+export const template = async (
+  html: string,
+  imagesEnabled: boolean = false,
+  backgroundColor: string,
+) => {
   if (typeof DOMParser === 'undefined') return html;
   const nonce = generateNonce();
   let processedHtml = forceExternalLinks(html);
-  
+
   if (imagesEnabled) {
     processedHtml = proxyImageUrls(processedHtml);
   }
 
   const emailHtml = await render(
-    <EmailTemplate content={processedHtml} imagesEnabled={imagesEnabled} nonce={nonce} />,
+    <EmailTemplate
+      content={processedHtml}
+      imagesEnabled={imagesEnabled}
+      nonce={nonce}
+      backgroundColor={backgroundColor}
+    />,
   );
   return emailHtml;
 };

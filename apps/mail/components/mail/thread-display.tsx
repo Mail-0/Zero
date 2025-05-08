@@ -138,7 +138,7 @@ function ThreadActionButton({
             onMouseEnter={() => iconRef.current?.startAnimation?.()}
             onMouseLeave={() => iconRef.current?.stopAnimation?.()}
           >
-            <Icon ref={iconRef} className="dark:fill-iconDark fill-iconLight" />
+            <Icon ref={iconRef} className="fill-muted-foreground" />
             <span className="sr-only">{label}</span>
           </Button>
         </TooltipTrigger>
@@ -342,7 +342,7 @@ export function ThreadDisplay() {
     >
       <div
         className={cn(
-          'bg-panelLight dark:bg-panelDark relative flex flex-col overflow-hidden rounded-xl transition-all duration-300',
+          'bg-panel relative flex flex-col overflow-hidden rounded-xl transition-all duration-300',
           isMobile ? 'h-full' : 'h-full',
           !isMobile && !isFullscreen && 'rounded-r-lg',
           isFullscreen ? 'fixed inset-0 z-50' : '',
@@ -360,9 +360,7 @@ export function ThreadDisplay() {
               />
               <div className="mt-5">
                 <p className="text-lg">It's empty here</p>
-                <p className="text-md text-[#6D6D6D] dark:text-white/50">
-                  Choose an email to view details
-                </p>
+                <p className="text-md text-foreground/70">Choose an email to view details</p>
               </div>
             </div>
             {!isSidebarOpen && (
@@ -407,8 +405,8 @@ export function ThreadDisplay() {
           <>
             <div
               className={cn(
-                'flex flex-shrink-0 items-center border-b border-[#E7E7E7] px-1 pb-1 md:px-3 md:pb-[11px] md:pt-[12px] dark:border-[#252525]',
-                isMobile && 'bg-panelLight dark:bg-panelDark sticky top-0 z-10 mt-2',
+                'border-panelBorder flex flex-shrink-0 items-center border-b px-1 pb-1 md:px-3 md:pb-[11px] md:pt-[12px]',
+                isMobile && 'bg-panel sticky top-0 z-10 mt-2',
               )}
             >
               <div className="flex flex-1 items-center gap-2">
@@ -417,14 +415,12 @@ export function ThreadDisplay() {
                     <TooltipTrigger asChild>
                       <button
                         onClick={handleClose}
-                        className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md hover:bg-white md:hidden dark:hover:bg-[#313131]"
+                        className="hover:bg-muted inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md md:hidden"
                       >
-                        <X className="fill-iconLight dark:fill-iconDark h-3.5 w-3.5" />
+                        <X className="fill-muted-foreground h-3.5 w-3.5" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">
-                      {t('common.actions.close')}
-                    </TooltipContent>
+                    <TooltipContent side="bottom">{t('common.actions.close')}</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
                 <ThreadActionButton
@@ -434,21 +430,19 @@ export function ThreadDisplay() {
                   className="hidden md:flex"
                 />
                 {/* <ThreadSubject subject={emailData.latest?.subject} /> */}
-                <div className="dark:bg-iconDark/20 relative h-3 w-0.5 rounded-full bg-[#E7E7E7]" />{' '}
+                <div className="bg-muted relative h-3 w-0.5 rounded-full" />{' '}
                 <div className="flex items-center gap-1">
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button
                           onClick={handlePrevious}
-                          className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md hover:bg-white md:hidden dark:hover:bg-[#313131]"
+                          className="hover:bg-muted inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md md:hidden"
                         >
-                          <ChevronLeft className="fill-iconLight dark:fill-iconDark h-3.5 w-3.5" />
+                          <ChevronLeft className="fill-muted-foreground h-3.5 w-3.5" />
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">
-                        Previous email
-                      </TooltipContent>
+                      <TooltipContent side="bottom">Previous email</TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                   <ThreadActionButton
@@ -462,14 +456,12 @@ export function ThreadDisplay() {
                       <TooltipTrigger asChild>
                         <button
                           onClick={handleNext}
-                          className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md hover:bg-white md:hidden dark:hover:bg-[#313131]"
+                          className="hover:bg-muted inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md md:hidden"
                         >
-                          <ChevronRight className="fill-iconLight dark:fill-iconDark h-3.5 w-3.5" />
+                          <ChevronRight className="fill-muted-foreground h-3.5 w-3.5" />
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">
-                        Next email
-                      </TooltipContent>
+                      <TooltipContent side="bottom">Next email</TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                   <ThreadActionButton
@@ -487,19 +479,19 @@ export function ThreadDisplay() {
                     <TooltipTrigger asChild>
                       <button
                         onClick={handleToggleStar}
-                        className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md bg-white dark:bg-[#313131]"
+                        className="bg-popover inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md"
                       >
                         <Star
                           className={cn(
                             'ml-[2px] mt-[2.4px] h-5 w-5',
                             isStarred
                               ? 'fill-yellow-400 stroke-yellow-400'
-                              : 'fill-transparent stroke-[#9D9D9D] dark:stroke-[#9D9D9D]',
+                              : 'stroke-muted-foreground fill-transparent stroke-[1.5px]',
                           )}
                         />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">
+                    <TooltipContent side="bottom">
                       {isStarred
                         ? t('common.threadDisplay.unstar')
                         : t('common.threadDisplay.star')}
@@ -511,12 +503,12 @@ export function ThreadDisplay() {
                     <TooltipTrigger asChild>
                       <button
                         onClick={() => moveThreadTo('archive')}
-                        className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md bg-white dark:bg-[#313131]"
+                        className="bg-popover inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md"
                       >
-                        <Archive className="fill-iconLight dark:fill-iconDark" />
+                        <Archive className="text-muted-foreground" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">
+                    <TooltipContent side="bottom">
                       {t('common.threadDisplay.archive')}
                     </TooltipContent>
                   </Tooltip>
@@ -528,25 +520,23 @@ export function ThreadDisplay() {
                       <TooltipTrigger asChild>
                         <button
                           onClick={() => moveThreadTo('bin')}
-                          className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md border border-[#FCCDD5] bg-[#FDE4E9] dark:border-[#6E2532] dark:bg-[#411D23]"
+                          className="border-destructive-foreground/30 bg-destructive inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md border"
                         >
-                          <Trash className="fill-[#F43F5E]" />
+                          <Trash className="fill-destructive-foreground" />
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">
-                        {t('common.mail.moveToBin')}
-                      </TooltipContent>
+                      <TooltipContent side="bottom">{t('common.mail.moveToBin')}</TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 )}
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md bg-white dark:bg-[#313131]">
-                      <ThreeDots className="fill-iconLight dark:fill-iconDark" />
+                    <button className="bg-popover inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md">
+                      <ThreeDots className="fill-muted-foreground" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-white dark:bg-[#313131]">
+                  <DropdownMenuContent align="end">
                     {/* <DropdownMenuItem onClick={() => setIsFullscreen(!isFullscreen)}>
                       <Expand className="fill-iconLight dark:fill-iconDark mr-2" />
                       <span>
@@ -564,13 +554,13 @@ export function ThreadDisplay() {
                     ) : (
                       <>
                         <DropdownMenuItem onClick={() => moveThreadTo('spam')}>
-                          <ArchiveX className="fill-iconLight dark:fill-iconDark mr-2" />
+                          <ArchiveX className="fill-muted-foreground mr-2" />
                           <span>{t('common.threadDisplay.moveToSpam')}</span>
                         </DropdownMenuItem>
                         {emailData.latest?.listUnsubscribe ||
                         emailData.latest?.listUnsubscribePost ? (
                           <DropdownMenuItem onClick={handleUnsubscribeProcess}>
-                            <ShieldAlertIcon className="fill-iconLight dark:fill-iconDark mr-2" />
+                            <ShieldAlertIcon className="fill-muted-foreground mr-2" />
                             <span>Unsubscribe</span>
                           </DropdownMenuItem>
                         ) : null}
@@ -591,7 +581,7 @@ export function ThreadDisplay() {
                       key={message.id}
                       className={cn(
                         'transition-all duration-200',
-                        index > 0 && 'border-border border-t',
+                        index > 0 && 'border-panelBorder border-t',
                         mode && activeReplyId === message.id && '',
                       )}
                     >

@@ -209,7 +209,7 @@ const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
         return (
           <Badge
             key={`${label}-${index}`}
-            className={`rounded-md p-1 ${bgColor} -ml-1.5 border-2 border-white transition-transform first:ml-0 dark:border-[#1A1A1A]`}
+            className={`rounded-md p-1 ${bgColor} border-panel -ml-1.5 border-2 transition-transform first:ml-0`}
           >
             {icon}
           </Badge>
@@ -254,7 +254,7 @@ const AiSummary = () => {
 
   return (
     <div
-      className="mt-2 max-w-3xl rounded-xl border border-[#8B5CF6] bg-white px-4 py-2 dark:bg-[#252525]"
+      className="bg-muted/40 mt-2 max-w-3xl rounded-xl border border-[#8B5CF6] px-4 py-2"
       onClick={(e) => e.stopPropagation()}
     >
       <div className="flex cursor-pointer items-center" onClick={handleToggle}>
@@ -385,15 +385,15 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
         <PopoverTrigger asChild>
           <div
             key={person.email}
-            className="inline-flex items-center justify-start gap-1.5 overflow-hidden rounded-full border border-[#DBDBDB] bg-white p-1 pr-2 dark:border-[#2B2B2B] dark:bg-[#1A1A1A]"
+            className="border-muted-foreground/30 bg-muted/40 inline-flex items-center justify-start gap-1.5 overflow-hidden rounded-full border p-1 pr-2"
           >
             <Avatar className="h-5 w-5">
               <AvatarImage src={getEmailLogo(person.email)} className="rounded-full" />
-              <AvatarFallback className="rounded-full bg-[#F5F5F5] text-xs font-bold dark:bg-[#373737]">
+              <AvatarFallback className="text-muted-foreground rounded-full text-xs font-bold">
                 {getFirstLetterCharacter(person.name || person.email)}
               </AvatarFallback>
             </Avatar>
-            <div className="justify-start text-sm font-medium leading-none text-[#1A1A1A] dark:text-white">
+            <div className="text-muted-foreground justify-start text-sm font-medium leading-none">
               {person.name || person.email}
             </div>
           </div>
@@ -438,7 +438,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
         <div className={cn('px-4', index === 0 && 'border-b py-4')}>
           {index === 0 && (
             <>
-              <span className="inline-flex items-center gap-2 font-medium text-black dark:text-white">
+              <span className="text-foreground inline-flex items-center gap-2 font-medium">
                 <span>
                   {emailData.subject}{' '}
                   <span className="text-[#6D6D6D] dark:text-[#8C8C8C]">
@@ -454,7 +454,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                 {threadLabels.length ? (
                   <div className="bg-iconLight dark:bg-iconDark/20 relative h-3 w-0.5 rounded-full" />
                 ) : null}
-                <div className="flex items-center gap-2 text-sm text-[#6D6D6D] dark:text-[#8C8C8C]">
+                <div className="text-muted-foreground flex items-center gap-2 text-sm">
                   {(() => {
                     if (people.length <= 2) {
                       return people.map(renderPerson);
@@ -504,7 +504,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                   className="rounded-full"
                   src={getEmailLogo(emailData?.sender?.email)}
                 />
-                <AvatarFallback className="rounded-full bg-[#FFFFFF] font-bold text-[#9F9F9F] dark:bg-[#373737]">
+                <AvatarFallback className="rounded-full font-bold">
                   {getFirstLetterCharacter(emailData?.sender?.name)}
                 </AvatarFallback>
               </Avatar>
@@ -520,7 +520,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                         <Popover open={openDetailsPopover} onOpenChange={handlePopoverChange}>
                           <PopoverTrigger asChild>
                             <button
-                              className="hover:bg-iconLight/10 dark:hover:bg-iconDark/20 flex items-center gap-2 rounded-md p-2"
+                              className="hover:bg-muted/50 flex items-center gap-2 rounded-md p-2"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 e.preventDefault();
@@ -528,13 +528,11 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                               }}
                               ref={triggerRef}
                             >
-                              <p className="text-xs text-[#6D6D6D] underline dark:text-[#8C8C8C]">
-                                Details
-                              </p>
+                              <p className="text-muted-foreground text-xs underline">Details</p>
                             </button>
                           </PopoverTrigger>
                           <PopoverContent
-                            className="align-items-start w-[420px] rounded-lg border p-3 text-left shadow-lg dark:bg-[#1A1A1A]"
+                            className="align-items-start w-[420px] rounded-lg border p-3 text-left shadow-lg"
                             onBlur={(e) => {
                               if (!triggerRef.current?.contains(e.relatedTarget)) {
                                 setOpenDetailsPopover(false);
@@ -544,7 +542,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                           >
                             <div className="space-y-1 text-sm">
                               <div className="flex">
-                                <span className="w-24 text-end text-gray-500">
+                                <span className="text-muted-foreground/60 w-24 text-end">
                                   {t('common.mailDisplay.from')}:
                                 </span>
                                 <div className="ml-3">
@@ -559,7 +557,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                                 </div>
                               </div>
                               <div className="flex">
-                                <span className="w-24 text-end text-gray-500">
+                                <span className="text-muted-foreground/60 w-24 text-end">
                                   {t('common.mailDisplay.to')}:
                                 </span>
                                 <span className="text-muted-foreground ml-3">
@@ -568,7 +566,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                               </div>
                               {emailData?.cc && emailData.cc.length > 0 && (
                                 <div className="flex">
-                                  <span className="w-24 text-end text-gray-500">
+                                  <span className="text-muted-foreground/60 w-24 text-end">
                                     {t('common.mailDisplay.cc')}:
                                   </span>
                                   <span className="text-muted-foreground ml-3">
@@ -580,7 +578,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                               )}
                               {emailData?.bcc && emailData.bcc.length > 0 && (
                                 <div className="flex">
-                                  <span className="w-24 text-end text-gray-500">
+                                  <span className="text-muted-foreground/60 w-24 text-end">
                                     {t('common.mailDisplay.bcc')}:
                                   </span>
                                   <span className="text-muted-foreground ml-3">
@@ -591,7 +589,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                                 </div>
                               )}
                               <div className="flex">
-                                <span className="w-24 text-end text-gray-500">
+                                <span className="text-muted-foreground/60 w-24 text-end">
                                   {t('common.mailDisplay.date')}:
                                 </span>
                                 <span className="text-muted-foreground ml-3">
@@ -599,7 +597,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                                 </span>
                               </div>
                               <div className="flex">
-                                <span className="w-24 text-end text-gray-500">
+                                <span className="text-muted-foreground/60 w-24 text-end">
                                   {t('common.mailDisplay.mailedBy')}:
                                 </span>
                                 <span className="text-muted-foreground ml-3">
@@ -607,7 +605,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                                 </span>
                               </div>
                               <div className="flex">
-                                <span className="w-24 text-end text-gray-500">
+                                <span className="text-muted-foreground/60 w-24 text-end">
                                   {t('common.mailDisplay.signedBy')}:
                                 </span>
                                 <span className="text-muted-foreground ml-3">
@@ -616,7 +614,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                               </div>
                               {emailData.tls && (
                                 <div className="flex items-center">
-                                  <span className="w-24 text-end text-gray-500">
+                                  <span className="text-muted-foreground/60 w-24 text-end">
                                     {t('common.mailDisplay.security')}:
                                   </span>
                                   <div className="text-muted-foreground ml-3 flex items-center gap-1">
@@ -630,12 +628,12 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                         </Popover>
                       </div>
 
-                      <time className="text-sm font-medium text-[#6D6D6D] dark:text-[#8C8C8C]">
+                      <time className="text-muted-foreground text-sm font-medium">
                         {formatDate(emailData?.receivedOn)}
                       </time>
                     </div>
                     <div className="flex items-center gap-1 pb-2">
-                      <p className="text-sm font-medium text-[#6D6D6D] dark:text-[#8C8C8C]">
+                      <p className="text-muted-foreground text-sm font-medium">
                         To:{' '}
                         {(() => {
                           // Combine to and cc recipients
@@ -670,7 +668,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                         })()}
                       </p>
                       {(emailData?.bcc?.length || 0) > 0 && (
-                        <p className="text-sm font-medium text-[#6D6D6D] dark:text-[#8C8C8C]">
+                        <p className="text-muted-foreground text-sm font-medium">
                           Bcc:{' '}
                           {emailData?.bcc?.map((recipient, index) => (
                             <span key={recipient.email}>
@@ -768,7 +766,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                   {emailData?.attachments.map((attachment, index) => (
                     <div key={index}>
                       <button
-                        className="dark: flex h-7 items-center gap-1 rounded-[5px] border bg-[#FAFAFA] px-4 text-sm font-medium hover:bg-[#F0F0F0] dark:bg-[#262626] dark:hover:bg-[#303030]"
+                        className="bg-muted/50 hover:bg-muted flex h-7 items-center gap-1 rounded-[5px] border px-4 text-sm font-medium"
                         onClick={() => {
                           try {
                             // Convert base64 to blob
@@ -795,10 +793,10 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                         }}
                       >
                         {getFileIcon(attachment.filename)}
-                        <span className="max-w-[15ch] truncate text-sm text-black dark:text-white">
+                        <span className="text-foreground max-w-[15ch] truncate text-sm">
                           {attachment.filename}
                         </span>{' '}
-                        <span className="whitespace-nowrap text-sm text-[#6D6D6D] dark:text-[#929292]">
+                        <span className="text-muted-foreground/60 whitespace-nowrap text-sm">
                           {formatFileSize(attachment.size)}
                         </span>
                       </button>
@@ -813,13 +811,11 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                     setMode('reply');
                     setActiveReplyId(emailData.id);
                   }}
-                  className="inline-flex h-7 items-center justify-center gap-1 overflow-hidden rounded-md border bg-white px-1.5 dark:border-none dark:bg-[#313131]"
+                  className="dark:bg-muted inline-flex h-7 items-center justify-center gap-1 overflow-hidden rounded-md border px-1.5 dark:border-none"
                 >
-                  <Reply className="fill-[#6D6D6D] dark:fill-[#9B9B9B]" />
+                  <Reply className="fill-muted-foreground" />
                   <div className="flex items-center justify-center gap-2.5 pl-0.5 pr-1">
-                    <div className="justify-start text-sm leading-none text-black dark:text-white">
-                      Reply
-                    </div>
+                    <div className="text-foreground justify-start text-sm leading-none">Reply</div>
                   </div>
                 </button>
                 <button
@@ -828,11 +824,11 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                     setMode('replyAll');
                     setActiveReplyId(emailData.id);
                   }}
-                  className="inline-flex h-7 items-center justify-center gap-1 overflow-hidden rounded-md border bg-white px-1.5 dark:border-none dark:bg-[#313131]"
+                  className="dark:bg-muted inline-flex h-7 items-center justify-center gap-1 overflow-hidden rounded-md border px-1.5 dark:border-none"
                 >
-                  <ReplyAll className="fill-[#6D6D6D] dark:fill-[#9B9B9B]" />
+                  <ReplyAll className="fill-muted-foreground" />
                   <div className="flex items-center justify-center gap-2.5 pl-0.5 pr-1">
-                    <div className="justify-start text-sm leading-none text-black dark:text-white">
+                    <div className="text-foreground justify-start text-sm leading-none">
                       Reply All
                     </div>
                   </div>
@@ -843,11 +839,11 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                     setMode('forward');
                     setActiveReplyId(emailData.id);
                   }}
-                  className="inline-flex h-7 items-center justify-center gap-1 overflow-hidden rounded-md border bg-white px-1.5 dark:border-none dark:bg-[#313131]"
+                  className="dark:bg-muted inline-flex h-7 items-center justify-center gap-1 overflow-hidden rounded-md border px-1.5 dark:border-none"
                 >
-                  <Forward className="fill-[#6D6D6D] dark:fill-[#9B9B9B]" />
+                  <Forward className="fill-muted-foreground" />
                   <div className="flex items-center justify-center gap-2.5 pl-0.5 pr-1">
-                    <div className="justify-start text-sm leading-none text-black dark:text-white">
+                    <div className="text-foreground justify-start text-sm leading-none">
                       Forward
                     </div>
                   </div>
