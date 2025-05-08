@@ -27,6 +27,8 @@ import { UsersIcon } from '@/components/icons/animated/users';
 import { MessageSquareIcon } from 'lucide-react';
 import { NestedKeyOf } from 'next-intl';
 import { MessageKeys } from 'next-intl';
+import { PaintBucket } from 'lucide-react';
+
 export interface NavItem {
   id?: string;
   title: string;
@@ -35,9 +37,11 @@ export interface NavItem {
   badge?: number;
   isBackButton?: boolean;
   isSettingsButton?: boolean;
+  isSidebarThemeSelector?: boolean;
   disabled?: boolean;
   target?: string;
 }
+
 export type MessageKey = MessageKeys<IntlMessages, NestedKeyOf<IntlMessages>>;
 
 interface NavSection {
@@ -216,6 +220,13 @@ export const bottomNavItems = [
   {
     title: '',
     items: [
+      {
+        id: 'theme-selector',
+        title: 'navigation.sidebar.theme',
+        url: '#',
+        icon: PaintBucket,
+        isSidebarThemeSelector: true,
+      },
       {
         id: 'feedback',
         title: 'navigation.sidebar.feedback',

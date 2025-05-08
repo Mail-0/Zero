@@ -52,6 +52,8 @@ import { useAtom } from 'jotai';
 import { toast } from 'sonner';
 import * as React from 'react';
 import Link from 'next/link';
+import { SidebarThemeSelector } from '../theme/sidebar-theme-selector';
+import { SidebarThemeSwitch } from '../theme/sidebar-theme-switcher';
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
   ref?: React.Ref<SVGSVGElement>;
@@ -458,7 +460,32 @@ function NavItem(item: NavItemProps & { href: string }) {
   const iconRef = useRef<IconRefType>(null);
   const { data: stats } = useStats();
   const t = useTranslations();
-  const { state } = useSidebar();
+  const { state, isMobile } = useSidebar();
+  const [, setBulkSelection] = useAtom(clearBulkSelectionAtom);
+  const { data: session } = useSession();
+  const shouldRenderIcon = state === 'collapsed' || isMobile;
+  
+  const handleMouseEnter = () => {
+    if (iconRef.current?.startAnimation) {
+      iconRef.current.startAnimation();
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (iconRef.current?.stopAnimation) {
+      iconRef.current.stopAnimation();
+    }
+  };
+
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    setBulkSelection();
+    item.onClick?.(e);
+  };
+
+  // If this is a sidebar theme selector, render the component directly
+  if (item.isSidebarThemeSelector) {
+    return <SidebarThemeSelector />;
+  }
 
   if (item.disabled) {
     return (
@@ -510,7 +537,7 @@ function NavItem(item: NavItemProps & { href: string }) {
         <Link
           {...linkProps}
           prefetch
-          onClick={item.onClick ? item.onClick : undefined}
+          onClick={handleClick}
           target={item.target}
         >
           {buttonContent}

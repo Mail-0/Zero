@@ -302,12 +302,14 @@
     "sidebar": {
       "inbox": "Inbox",
       "drafts": "Drafts",
+      "unread": "Unread",
       "sent": "Sent",
-      "spam": "Spam",
       "archive": "Archive",
+      "spam": "Spam",
       "bin": "Bin",
+      "settings": "Settings",
       "feedback": "Feedback",
-      "settings": "Settings"
+      "theme": "Theme"
     },
     "settings": {
       "general": "General Settings",
