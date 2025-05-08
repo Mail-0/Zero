@@ -2,6 +2,9 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
 import * as schema from "./schema";
+export * from "./schema";
+export * from "./theme_settings_presets";
+export * from "./theme_settings_default";
 
 /**
  * Cache the database connection in development. This avoids creating a new connection on every HMR

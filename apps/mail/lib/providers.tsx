@@ -21,9 +21,9 @@ export function Providers({ children, ...props }: React.ComponentProps<typeof Ne
         <JotaiProvider>
           <NextThemesProvider {...props} defaultTheme={theme}>
             <CustomThemeProvider>
-              <SidebarProvider>
-                <PostHogProvider>{children}</PostHogProvider>
-              </SidebarProvider>
+            <SidebarProvider>
+              <PostHogProvider>{children}</PostHogProvider>
+            </SidebarProvider>
             </CustomThemeProvider>
           </NextThemesProvider>
         </JotaiProvider>

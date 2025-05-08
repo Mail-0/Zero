@@ -5,7 +5,7 @@ import { useThemeActions } from '@/hooks/use-themes';
 import { ThemeSettings } from '@zero/db/schema';
 import { ThemeEditorWithPreview, ThemePreview } from '@/components/theme/theme-editor';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Pencil, Trash2, ExternalLink, Check } from 'lucide-react';
+import { PlusCircle, Pencil, Trash2, ExternalLink, Check, Library } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import Link from 'next/link';
@@ -46,7 +46,7 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isInitializing, setIsInitializing] = useState(initialThemes.length === 0);
   const { data: session, refetch } = useSession();
-  const { create, copy, initializeDefaults, applyToConnection } = useThemeActions();
+  const { create, copy, initializeDefaults, addPresetThemes, applyToConnection } = useThemeActions();
   const { data: connections, isLoading, mutate } = useConnections();
   const { applyThemeSettings } = useCustomTheme();
 
@@ -258,6 +258,14 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
     }
   };
 
+  const handleAddPresetThemes = async () => {
+    toast.promise(addPresetThemes(), {
+      loading: 'Adding preset themes...',
+      success: (result) => result.message || 'Preset themes processed.',
+      error: (err) => err.error || 'Failed to add preset themes.',
+    });
+  };
+
   if (isInitializing) {
     return (
       <div className="flex flex-col items-center justify-center p-8">
@@ -294,11 +302,19 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Your Themes</h3>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Your Themes</h2>
         <div className="flex gap-2">
-          <Button onClick={() => setIsCreating(true)}>
-            <PlusCircle className="mr-2 h-4 w-4" /> Create New Theme
+          <Button onClick={handleAddPresetThemes} variant="outline">
+            <Library className="mr-2 h-4 w-4" />
+            Add Preset Themes
+          </Button>
+          <Button onClick={() => {
+            setSelectedThemeId(null);
+            setIsCreating(true);
+          }}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Create New Theme
           </Button>
           <Button variant="outline" onClick={refreshThemes}>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">

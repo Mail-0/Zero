@@ -3,21 +3,23 @@
 import useSWR from 'swr';
 import { useCallback } from 'react';
 import { 
-  createTheme,
-  updateTheme,
-  deleteTheme,
-  getUserThemes,
-  getPublicThemes,
-  getThemeById,
-  getConnectionTheme,
-  copyPublicTheme,
-  createDefaultThemes,
-  applyThemeToConnection,
+  createTheme as createThemeAction,
+  updateTheme as updateThemeAction,
+  deleteTheme as deleteThemeAction,
+  getUserThemes as getUserThemesAction,
+  getPublicThemes as getPublicThemesAction,
+  getThemeById as getThemeByIdAction,
+  getConnectionTheme as getConnectionThemeAction,
+  copyPublicTheme as copyPublicThemeAction,
+  createDefaultThemes as createDefaultThemesAction,
+  createPresetThemes as createPresetThemesAction,
+  applyThemeToConnection as applyThemeToConnectionAction,
 } from '@/actions/themes';
 import { ThemeSettings } from '@zero/db/schema';
+import { useSWRConfig } from 'swr';
 
 export function useUserThemes() {
-  const { data, error, isLoading, mutate } = useSWR('user-themes', getUserThemes);
+  const { data, error, isLoading, mutate } = useSWR('user-themes', getUserThemesAction);
 
   return {
     themes: data?.themes || [],
@@ -28,7 +30,7 @@ export function useUserThemes() {
 }
 
 export function usePublicThemes() {
-  const { data, error, isLoading, mutate } = useSWR('public-themes', getPublicThemes);
+  const { data, error, isLoading, mutate } = useSWR('public-themes', getPublicThemesAction);
 
   return {
     themes: data?.themes || [],
@@ -41,7 +43,7 @@ export function usePublicThemes() {
 export function useTheme(id: string) {
   const { data, error, isLoading, mutate } = useSWR(
     id ? `theme-${id}` : null,
-    () => getThemeById(id)
+    () => getThemeByIdAction(id)
   );
 
   const update = useCallback(
@@ -51,7 +53,7 @@ export function useTheme(id: string) {
       settings?: ThemeSettings;
       isPublic?: boolean;
     }) => {
-      const result = await updateTheme({
+      const result = await updateThemeAction({
         id,
         ...updateData,
       });
@@ -64,7 +66,7 @@ export function useTheme(id: string) {
   );
 
   const remove = useCallback(async () => {
-    const result = await deleteTheme(id);
+    const result = await deleteThemeAction(id);
     if (result.success) {
       mutate(undefined);
     }
@@ -84,7 +86,7 @@ export function useTheme(id: string) {
 export function useConnectionTheme(connectionId: string) {
   const { data, error, isLoading, mutate } = useSWR(
     connectionId ? `connection-theme-${connectionId}` : null,
-    () => getConnectionTheme(connectionId)
+    () => getConnectionThemeAction(connectionId)
   );
 
   return {
@@ -96,6 +98,7 @@ export function useConnectionTheme(connectionId: string) {
 }
 
 export function useThemeActions() {
+  const { mutate: mutateSWR } = useSWRConfig();
   const { mutate: mutateUserThemes } = useUserThemes();
   const { mutate: mutatePublicThemes } = usePublicThemes();
 
@@ -106,7 +109,7 @@ export function useThemeActions() {
       settings: ThemeSettings;
       isPublic?: boolean;
     }) => {
-      const result = await createTheme(themeData);
+      const result = await createThemeAction(themeData);
       if (result.success) {
         mutateUserThemes();
         if (themeData.isPublic) {
@@ -119,28 +122,41 @@ export function useThemeActions() {
   );
 
   const update = useCallback(
-    async (updateData: {
+    async (themeData: {
       id: string;
       name?: string;
       connectionId?: string | null;
       settings?: ThemeSettings;
       isPublic?: boolean;
     }) => {
-      const result = await updateTheme(updateData);
+      const result = await updateThemeAction(themeData);
       if (result.success) {
         mutateUserThemes();
-        if (updateData.isPublic) {
-          mutatePublicThemes();
+        mutateSWR(`theme-${themeData.id}`);
+        if (themeData.connectionId) {
+          mutateSWR(`connection-theme-${themeData.connectionId}`);
         }
       }
       return result;
     },
-    [mutateUserThemes, mutatePublicThemes]
+    [mutateUserThemes, mutateSWR]
+  );
+
+  const remove = useCallback(
+    async (id: string) => {
+      const result = await deleteThemeAction(id);
+      if (result.success) {
+        mutateUserThemes();
+        mutateSWR(`theme-${id}`, undefined, { revalidate: false });
+      }
+      return result;
+    },
+    [mutateUserThemes, mutateSWR]
   );
 
   const copy = useCallback(
     async (id: string) => {
-      const result = await copyPublicTheme(id);
+      const result = await copyPublicThemeAction(id);
       if (result.success) {
         mutateUserThemes();
       }
@@ -150,7 +166,15 @@ export function useThemeActions() {
   );
 
   const initializeDefaults = useCallback(async () => {
-    const result = await createDefaultThemes();
+    const result = await createDefaultThemesAction();
+    if (result.success) {
+      mutateUserThemes();
+    }
+    return result;
+  }, [mutateUserThemes]);
+
+  const addPresetThemes = useCallback(async () => {
+    const result = await createPresetThemesAction();
     if (result.success) {
       mutateUserThemes();
     }
@@ -158,18 +182,23 @@ export function useThemeActions() {
   }, [mutateUserThemes]);
 
   const applyToConnection = useCallback(async (themeId: string, targetConnectionId?: string) => {
-    const result = await applyThemeToConnection(themeId, targetConnectionId);
+    const result = await applyThemeToConnectionAction(themeId, targetConnectionId);
     if (result.success) {
       mutateUserThemes();
+      if (result.connectionId) {
+        mutateSWR(`connection-theme-${result.connectionId}`);
+      }
     }
     return result;
-  }, [mutateUserThemes]);
+  }, [mutateUserThemes, mutateSWR]);
 
   return {
     create,
     update,
+    remove,
     copy,
     initializeDefaults,
+    addPresetThemes,
     applyToConnection,
   };
 } 

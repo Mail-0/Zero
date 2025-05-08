@@ -1,10 +1,17 @@
 'use server';
 
-import { db } from '@zero/db';
-import { theme } from '@zero/db/schema';
+import { 
+  db, 
+  theme, 
+  ThemeSettings,
+  defaultThemeSettings, 
+  darkThemeSettings,
+  sunsetHorizonThemeSettings, 
+  sunsetHorizonDarkThemeSettings,
+  cyberpunkThemeSettings,
+  cyberpunkDarkThemeSettings
+} from '@zero/db';
 import { eq, and } from 'drizzle-orm';
-import { defaultThemeSettings, darkThemeSettings } from '@zero/db/theme_settings_default';
-import { ThemeSettings } from '@zero/db/schema';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
@@ -272,7 +279,7 @@ export async function createDefaultThemes() {
     });
 
     if (existingThemes.length > 0) {
-      return { success: true, message: 'User already has themes' };
+      return { success: true, message: 'User already has themes, no defaults created' };
     }
 
     // Create default light theme
@@ -291,8 +298,10 @@ export async function createDefaultThemes() {
       isPublic: false,
     });
 
+    revalidatePath('/');
+    revalidatePath('/settings/themes');
 
-    return { success: true, message: 'Default themes created' };
+    return { success: true, message: 'Default light and dark themes created' };
   } catch (error) {
     console.error('Error creating default themes:', error);
     return { success: false, error: 'Failed to create default themes' };
@@ -390,5 +399,60 @@ export async function applyThemeToConnection(themeId: string, targetConnectionId
   } catch (error) {
     console.error('Error applying theme to connection:', error);
     return { success: false, error: 'Failed to apply theme to connection' };
+  }
+}
+
+export async function createPresetThemes() {
+  const headersList = await headers();
+  const session = await auth.api.getSession({ headers: headersList });
+  
+  if (!session?.user?.id) {
+    return { success: false, error: 'Not authenticated' };
+  }
+
+  try {
+    const userId = session.user.id;
+    const createdMessages: string[] = [];
+
+    // Helper to check and create a preset theme
+    const checkAndCreate = async (themeName: string, themeSettings: ThemeSettings) => {
+      const existing = await db.query.theme.findFirst({
+        where: and(eq(theme.userId, userId), eq(theme.name, themeName)),
+      });
+      if (!existing) {
+        await db.insert(theme).values({
+          name: themeName,
+          userId,
+          settings: themeSettings,
+          isPublic: false,
+        });
+        return `${themeName} created`;
+      }
+      return null;
+    };
+
+    // Sunset Horizon Themes
+    let msg = await checkAndCreate('Sunset Horizon', sunsetHorizonThemeSettings);
+    if (msg) createdMessages.push(msg);
+    msg = await checkAndCreate('Sunset Horizon Dark', sunsetHorizonDarkThemeSettings);
+    if (msg) createdMessages.push(msg);
+
+    // Cyberpunk Themes
+    msg = await checkAndCreate('Cyberpunk', cyberpunkThemeSettings);
+    if (msg) createdMessages.push(msg);
+    msg = await checkAndCreate('Cyberpunk Dark', cyberpunkDarkThemeSettings);
+    if (msg) createdMessages.push(msg);
+
+    if (createdMessages.length > 0) {
+      revalidatePath('/');
+      revalidatePath('/settings/themes');
+      return { success: true, message: `Preset themes processed: ${createdMessages.join(', ')}.` };
+    }
+
+    return { success: true, message: 'All preset themes already exist for this user.' };
+
+  } catch (error) {
+    console.error('Error creating or checking preset themes:', error);
+    return { success: false, error: 'Failed to process preset themes' };
   }
 } 

@@ -185,37 +185,37 @@ export default function ConnectionsPage() {
                       </SelectContent>
                     </Select>
 
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-muted-foreground hover:text-primary ml-4 shrink-0"
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>{t('pages.settings.connections.disconnectTitle')}</DialogTitle>
-                          <DialogDescription>
-                            {t('pages.settings.connections.disconnectDescription')}
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="flex justify-end gap-4">
-                          <DialogClose asChild>
-                            <Button variant="outline">
-                              {t('pages.settings.connections.cancel')}
-                            </Button>
-                          </DialogClose>
-                          <DialogClose asChild>
-                            <Button onClick={() => disconnectAccount(connection.id)}>
-                              {t('pages.settings.connections.remove')}
-                            </Button>
-                          </DialogClose>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-muted-foreground hover:text-primary ml-4 shrink-0"
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>{t('pages.settings.connections.disconnectTitle')}</DialogTitle>
+                        <DialogDescription>
+                          {t('pages.settings.connections.disconnectDescription')}
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="flex justify-end gap-4">
+                        <DialogClose asChild>
+                          <Button variant="outline">
+                            {t('pages.settings.connections.cancel')}
+                          </Button>
+                        </DialogClose>
+                        <DialogClose asChild>
+                          <Button onClick={() => disconnectAccount(connection.id)}>
+                            {t('pages.settings.connections.remove')}
+                          </Button>
+                        </DialogClose>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                   </div>
                 </div>
               ))}
