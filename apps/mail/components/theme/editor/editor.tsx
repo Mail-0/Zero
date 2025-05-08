@@ -2,9 +2,10 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useThemePresetStore } from '@/store/theme-preset-store';
-import type { Theme, ThemeStyles } from '@/types/theme';
-import { useEditorStore } from '@/store/editor-store';
 import type { ThemeEditorState } from '@zero/mail/types/editor';
+import type { Theme, ThemeStyles } from '@/types/theme';
+import ThemeControlPanel from './theme-control-panel';
+import { useEditorStore } from '@/store/editor-store';
 import { ActionBar } from './action-bar/action-bar';
 import { type EditorConfig } from '@/types/editor';
 import { authClient } from '@/lib/auth-client';
@@ -13,7 +14,6 @@ import { Sliders } from 'lucide-react';
 
 interface EditorProps {
   config: EditorConfig;
-  themePromise: Promise<Theme | null>;
 }
 
 const isThemeStyles = (styles: unknown): styles is ThemeStyles => {
@@ -26,11 +26,10 @@ const isThemeStyles = (styles: unknown): styles is ThemeStyles => {
   );
 };
 
-const Editor: React.FC<EditorProps> = ({ config, themePromise }) => {
+const Editor: React.FC<EditorProps> = ({ config }) => {
   const themeState = useEditorStore((state) => state.themeState);
   const setThemeState = useEditorStore((state) => state.setThemeState);
   const saveThemeCheckpoint = useEditorStore((state) => state.saveThemeCheckpoint);
-  const Controls = config.controls;
 
   const loadSavedPresets = useThemePresetStore((state) => state.loadSavedPresets);
 
@@ -42,8 +41,6 @@ const Editor: React.FC<EditorProps> = ({ config, themePromise }) => {
     }
   }, [loadSavedPresets, session?.user]);
 
-  const initialTheme = null;
-
   const handleStyleChange = React.useCallback(
     (newStyles: ThemeStyles) => {
       console.log('newStyles', newStyles);
@@ -53,22 +50,6 @@ const Editor: React.FC<EditorProps> = ({ config, themePromise }) => {
     [setThemeState],
   );
 
-  useEffect(() => {
-    if (initialTheme && isThemeStyles(initialTheme.styles)) {
-      const prev = useEditorStore.getState().themeState;
-      setThemeState({ ...prev, styles: initialTheme.styles });
-      saveThemeCheckpoint();
-    }
-  }, [initialTheme, setThemeState, saveThemeCheckpoint]);
-
-  if (initialTheme && !isThemeStyles(initialTheme.styles)) {
-    return (
-      <div className="text-destructive flex h-full items-center justify-center">
-        Fetched theme data is invalid.
-      </div>
-    );
-  }
-
   const styles = themeState.styles;
 
   return (
@@ -76,16 +57,10 @@ const Editor: React.FC<EditorProps> = ({ config, themePromise }) => {
       {/* Desktop Layout */}
       <div className="hidden h-full md:block">
         <div className="flex h-full flex-col">
-          {/* <p className='text-[4px]'>
-
-          {JSON.stringify(themeState)}
-          </p> */}
-          <Controls
-            // @ts-ignore
+          <ThemeControlPanel
             styles={styles}
             onChange={handleStyleChange}
             currentMode={themeState.currentMode}
-            themePromise={themePromise}
           />
         </div>
       </div>
@@ -104,12 +79,10 @@ const Editor: React.FC<EditorProps> = ({ config, themePromise }) => {
           </TabsList>
           <TabsContent value="controls" className="mt-0 h-[calc(100%-2.5rem)]">
             <div className="flex h-full flex-col">
-              <Controls
-                // @ts-ignore
+              <ThemeControlPanel
                 styles={styles}
                 onChange={handleStyleChange}
                 currentMode={themeState.currentMode}
-                themePromise={themePromise}
               />
             </div>
           </TabsContent>
@@ -124,6 +97,4 @@ const Editor: React.FC<EditorProps> = ({ config, themePromise }) => {
   );
 };
 
-const MemoizedEditor = React.memo(Editor);
-
-export default MemoizedEditor;
+export default Editor;

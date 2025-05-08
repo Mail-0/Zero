@@ -5,11 +5,6 @@ export interface BaseEditorState {
   styles: ThemeStyles;
 }
 
-// Interface for editor-specific controls
-export interface EditorControls {
-  // Controls can be added per editor type as needed
-}
-
 // Interface for editor-specific preview props
 export interface EditorPreviewProps {
   styles: ThemeStyles;
@@ -30,5 +25,4 @@ export interface EditorConfig {
   name: string;
   description: string;
   defaultState: BaseEditorState;
-  controls: React.ComponentType<unknown>;
 }

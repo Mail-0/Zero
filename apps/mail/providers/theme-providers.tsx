@@ -32,7 +32,6 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   useEffect(() => {
     const root = document.documentElement;
     if (!root) return;
-
     applyThemeToElement(themeState, root);
   }, [themeState]);
 

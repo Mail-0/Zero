@@ -68,13 +68,6 @@ export interface ThemeEditorPreviewProps {
   currentMode: "light" | "dark";
 }
 
-export interface ThemeEditorControlsProps {
-  styles: ThemeStyles;
-  currentMode: "light" | "dark";
-  onChange: (styles: ThemeStyles) => void;
-  themePromise: Promise<Theme | null>;
-}
-
 export type ThemePreset = {
   source?: "SAVED" | "BUILT_IN";
   createdAt?: string;

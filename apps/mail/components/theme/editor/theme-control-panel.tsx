@@ -1,7 +1,7 @@
 "use client";
 
 import React, { use } from "react";
-import { type ThemeEditorControlsProps, type ThemeStyleProps } from "@/types/theme";
+import { type Theme, type ThemeStyleProps, type ThemeStyles } from "@/types/theme";
 import ControlSection from "./control-section";
 import ColorPicker from "./color-picker";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -31,11 +31,17 @@ import TabsTriggerPill from "./theme-preview/tabs-trigger-pill";
 import ThemeEditActions from "./theme-edit-actions";
 import { useThemePresetStore } from "@/store/theme-preset-store";
 
+
+interface ThemeEditorControlsProps {
+  styles: ThemeStyles;
+  currentMode: "light" | "dark";
+  onChange: (styles: ThemeStyles) => void;
+}
+
 const ThemeControlPanel = ({
   styles,
   currentMode,
   onChange,
-  themePromise,
 }: ThemeEditorControlsProps) => {
   const { applyThemePreset, themeState } = useEditorStore();
   const presets = useThemePresetStore((state) => state.getAllPresets());
@@ -118,12 +124,12 @@ const ThemeControlPanel = ({
               >
                 <ColorPicker
                   color={currentStyles.primary}
-                  onChange={(color) => updateStyle("primary", color)}
+                  onChange={(color) => updateStyle("background", color)}
                   label="Primary"
                 />
                 <ColorPicker
                   color={currentStyles["primary-foreground"]}
-                  onChange={(color) => updateStyle("primary-foreground", color)}
+                  onChange={(color) => updateStyle("foreground", color)}
                   label="Primary Foreground"
                 />
               </ControlSection>
