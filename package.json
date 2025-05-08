@@ -5,6 +5,7 @@
   "packageManager": "bun@1.2.5",
   "scripts": {
     "prepare": "husky",
+    "cf-install": "cd apps/server && (cp ../../.env .dev.vars)||true && bun run types",
     "dev": "dotenv -- turbo run dev",
     "build": "dotenv -- turbo run build",
     "start": "dotenv -- turbo run start",

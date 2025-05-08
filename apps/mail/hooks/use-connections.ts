@@ -1,19 +1,8 @@
-import { deleteConnection, putConnection } from "@/actions/connections";
-import { type IConnection } from "@/types";
-import useSWR from "swr";
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+import { useTRPC } from '@/providers/query-provider';
+import { useQuery } from '@tanstack/react-query';
 
 export const useConnections = () => {
-  const { data, error, isLoading, mutate } = useSWR<IConnection[]>(
-    "/api/driver/connections",
-    fetcher
-  );
-
-  return {
-    data,
-    error,
-    isLoading,
-    mutate,
-  };
+  const trpc = useTRPC();
+  const connectionsQuery = useQuery(trpc.connections.list.queryOptions(void 0));
+  return connectionsQuery;
 };

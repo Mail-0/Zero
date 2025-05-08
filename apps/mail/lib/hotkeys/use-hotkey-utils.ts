@@ -1,13 +1,9 @@
 'use client';
 
 // TODO: Implement shortcuts syncing and caching
-import { Shortcut, keyboardShortcuts } from '@/config/shortcuts';
+import { type Shortcut, keyboardShortcuts } from '@/config/shortcuts';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useCallback, useMemo } from 'react';
-import useSWR from 'swr';
-
-import { updateShortcuts } from '@/actions/shortcuts';
-import axios from 'axios';
 
 export const useShortcutCache = (userId?: string) => {
   // const { data: shortcuts, mutate } = useSWR<Shortcut[]>(

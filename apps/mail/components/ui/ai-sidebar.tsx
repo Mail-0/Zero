@@ -11,8 +11,8 @@ import {
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { useState, useEffect, useContext, createContext, useCallback } from 'react';
 import { AI_SIDEBAR_COOKIE_NAME, SIDEBAR_COOKIE_MAX_AGE } from '@/lib/constants';
-import { StyledEmailAssistantSystemPrompt } from '@/actions/ai-composer-prompt';
-import { ResizablePanelGroup, ResizablePanel } from '@/components/ui/resizable';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import { StyledEmailAssistantSystemPrompt, AiChatPrompt } from '@/lib/prompts';
 import { useEditor } from '@/components/providers/editor-provider';
 import { AIChat } from '@/components/create/ai-chat';
 import { X, Paper } from '@/components/icons/icons';
@@ -20,11 +20,12 @@ import { GitBranchPlus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { usePathname } from 'next/navigation';
-import prompt from '@/app/api/chat/prompt';
 import { getCookie } from '@/lib/utils';
 import { Textarea } from './textarea';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useBilling } from '@/hooks/use-billing';
+import { Gauge } from '@/components/ui/gauge';
 
 interface AISidebarProps {
   className?: string;
@@ -74,10 +75,23 @@ export function AISidebarProvider({ children }: { children: React.ReactNode }) {
 
 export function AISidebar({ children, className }: AISidebarProps & { children: React.ReactNode }) {
   const { open, setOpen } = useAISidebar();
-  const { editor } = useEditor();
-  const [hasMessages, setHasMessages] = useState(false);
   const [resetKey, setResetKey] = useState(0);
   const pathname = usePathname();
+  const { chatMessages, attach } = useBilling();
+
+  const handleUpgrade = async () => {
+    if (attach) {
+      return attach({
+        productId: 'pro-example',
+      })
+        .catch((error: Error) => {
+          console.error('Failed to upgrade:', error);
+        })
+        .then(() => {
+          console.log('Upgraded successfully');
+        });
+    }
+  };
 
   useHotkeys('Meta+0', () => {
     setOpen(!open);
@@ -89,7 +103,6 @@ export function AISidebar({ children, className }: AISidebarProps & { children: 
 
   const handleNewChat = useCallback(() => {
     setResetKey((prev) => prev + 1);
-    setHasMessages(false);
   }, []);
 
   // Only show on /mail pages
@@ -100,23 +113,25 @@ export function AISidebar({ children, className }: AISidebarProps & { children: 
 
   return (
     <TooltipProvider delayDuration={0}>
+      
       <ResizablePanelGroup
         direction="horizontal"
         className={cn('bg-lightBackground dark:bg-darkBackground p-0')}
       >
+       
         <ResizablePanel>{children}</ResizablePanel>
-
+        <ResizableHandle className='opacity-0'/>
         {open && (
           <>
             <ResizablePanel
-              defaultSize={25}
+              defaultSize={20}
               minSize={20}
-              maxSize={45}
-              className="bg-panelLight dark:bg-panelDark ml- mr-1.5 mt-1 h-[calc(98vh+12px)] border-[#E7E7E7] shadow-sm md:rounded-2xl md:border md:shadow-sm dark:border-[#252525]"
+              maxSize={35}
+              className="bg-panelLight dark:bg-panelDark mr-1.5 mt-1 h-[calc(98vh+12px)] border-[#E7E7E7] shadow-sm md:rounded-2xl md:border md:shadow-sm dark:border-[#252525]"
             >
               <div className={cn('h-[calc(98vh+15px)]', 'flex flex-col', '', className)}>
                 <div className="flex h-full flex-col">
-                  <div className="relative flex items-center justify-between border-b border-[#E7E7E7] px-2.5 pb-[10px] pt-[17.6px] dark:border-[#252525]">
+                  <div className="relative flex items-center justify-between border-b border-[#E7E7E7] px-2.5 pb-2.5 pt-[17.6px] dark:border-[#252525]">
                     <TooltipProvider delayDuration={0}>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -133,71 +148,95 @@ export function AISidebar({ children, className }: AISidebarProps & { children: 
                       </Tooltip>
                     </TooltipProvider>
 
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="ghost" className="md:h-fit md:px-2 [&>svg]:size-3">
-                          <Paper className="dark:fill-iconDark fill-iconLight h-3.5 w-3.5" />
-                          <span>Prompts</span>
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent
-                        showOverlay={true}
-                        className="dark:bg-panelDark bg-panelLight max-w-2xl rounded-2xl p-4"
-                      >
-                        <DialogHeader>
-                          <DialogTitle>AI System Prompts</DialogTitle>
-                          <DialogDescription>
-                            We believe in Open Source, so we're open sourcing our AI system prompts.
-                            Soon you will be able to customize them to your liking. For now, here
-                            are the default prompts:
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="text-muted-foreground mb-1 mt-4 flex gap-2 text-sm">
-                          <span>Zero Chat / System Prompt</span>
-                          <Link
-                            href={'https://github.com/Mail-0/Zero.git'}
-                            target="_blank"
-                            className="flex items-center gap-1 underline"
-                          >
-                            <span>Contribute</span>
-                            <GitBranchPlus className="h-4 w-4" />
-                          </Link>
-                        </div>
-                        <Textarea className="min-h-60" readOnly value={prompt} />
-                        <div className="text-muted-foreground mb-1 mt-4 flex gap-2 text-sm">
-                          <span>Zero Compose / System Prompt</span>
-                          <Link
-                            href={'https://github.com/Mail-0/Zero.git'}
-                            target="_blank"
-                            className="flex items-center gap-1 underline"
-                          >
-                            <span>Contribute</span>
-                            <GitBranchPlus className="h-4 w-4" />
-                          </Link>
-                        </div>
-                        <Textarea
-                          className="min-h-60"
-                          readOnly
-                          value={StyledEmailAssistantSystemPrompt().trim()}
-                        />
-                      </DialogContent>
-                    </Dialog>
+                    <div className="flex items-center gap-2"> 
+                      <TooltipProvider delayDuration={0}>
+                        <Tooltip>
+                          <TooltipTrigger asChild className='md:h-fit md:px-2'>
+                            <div>
+                              <Gauge value={50 - chatMessages.remaining!} size="small" showValue={true} />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>You've used {50 - chatMessages.remaining!} out of 50 chat messages.</p>
+                            <p className='mb-2'>Upgrade for unlimited messages!</p>
+                            <Button onClick={handleUpgrade} className="w-full h-8">Upgrade</Button>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
 
-                    <TooltipProvider delayDuration={0}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            onClick={handleNewChat}
-                            variant="ghost"
-                            className="md:h-fit md:px-2"
-                          >
-                            <Plus className="dark:text-iconDark text-iconLight" />
-                            <span className="sr-only">New chat</span>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>New chat</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                      <TooltipProvider delayDuration={0}>
+                        <Dialog>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <DialogTrigger asChild>
+                                <Button variant="ghost" className="md:h-fit md:px-2 [&>svg]:size-3">
+                                  <Paper className="dark:fill-iconDark fill-iconLight h-3.5 w-3.5" />
+                                </Button>
+                              </DialogTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent>Prompts</TooltipContent>
+                          </Tooltip>
+                          <DialogContent showOverlay={true}>
+                            <DialogHeader>
+                              <DialogTitle>AI System Prompts</DialogTitle>
+                              <DialogDescription>
+                                We believe in Open Source, so we're open sourcing our AI system
+                                prompts. Soon you will be able to customize them to your liking. For
+                                now, here are the default prompts:
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="text-muted-foreground mb-1 mt-4 flex gap-2 text-sm">
+                              <span>Zero Chat / System Prompt</span>
+                              <Link
+                                href={'https://github.com/Mail-0/Zero.git'}
+                                target="_blank"
+                                className="flex items-center gap-1 underline"
+                              >
+                                <span>Contribute</span>
+                                <GitBranchPlus className="h-4 w-4" />
+                              </Link>
+                            </div>
+                            <Textarea
+                              className="min-h-60"
+                              readOnly
+                              value={AiChatPrompt('', '', '')}
+                            />
+                            <div className="text-muted-foreground mb-1 mt-4 flex gap-2 text-sm">
+                              <span>Zero Compose / System Prompt</span>
+                              <Link
+                                href={'https://github.com/Mail-0/Zero.git'}
+                                target="_blank"
+                                className="flex items-center gap-1 underline"
+                              >
+                                <span>Contribute</span>
+                                <GitBranchPlus className="h-4 w-4" />
+                              </Link>
+                            </div>
+                            <Textarea
+                              className="min-h-60"
+                              readOnly
+                              value={StyledEmailAssistantSystemPrompt().trim()}
+                            />
+                          </DialogContent>
+                        </Dialog>
+                      </TooltipProvider>
+
+                      <TooltipProvider delayDuration={0}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              onClick={handleNewChat}
+                              variant="ghost"
+                              className="md:h-fit md:px-2"
+                            >
+                              <Plus className="dark:text-iconDark text-iconLight" />
+                              <span className="sr-only">New chat</span>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>New chat</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                   </div>
                   <div className="b relative flex-1 overflow-hidden">
                     <AIChat key={resetKey} />

@@ -1,0 +1,41 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "zero-server",
+  "compatibility_date": "2025-05-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "src/main.ts",
+  "env": {
+    "staging": {
+      "observability": {
+        "enabled": true,
+      },
+      "hyperdrive": [
+        {
+          "binding": "HYPERDRIVE",
+          "id": "57834ddb6716440496c8836f6d99bc9a",
+          "localConnectionString": "postgresql://postgres:postgres@localhost:5432/zerodotemail",
+        },
+      ],
+      "vars": {
+        "NODE_ENV": "development",
+        "FORCE_GMAIL_CONSENT": "true",
+      },
+    },
+    "production": {
+      "observability": {
+        "enabled": true,
+      },
+      "hyperdrive": [
+        {
+          "binding": "HYPERDRIVE",
+          "id": "",
+          "localConnectionString": "postgresql://postgres:postgres@localhost:5432/zerodotemail",
+        },
+      ],
+      "vars": {
+        "NODE_ENV": "production",
+        "FORCE_GMAIL_CONSENT": "true",
+      },
+    },
+  },
+}

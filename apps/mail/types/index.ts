@@ -1,4 +1,12 @@
-import { Label } from '@/hooks/use-labels';
+export type Label = {
+  id: string;
+  name: string;
+  color?: {
+    backgroundColor: string;
+    textColor: string;
+  };
+  type: string;
+};
 
 export interface User {
   name: string;
@@ -82,18 +90,13 @@ export interface IConnection {
   picture?: string;
 }
 
-export interface InitialThread {
-  id: string;
-}
-
 export interface Attachment {
   attachmentId: string;
   filename: string;
   mimeType: string;
   size: number;
   body: string;
-  // TODO: Fix typing
-  headers: any;
+  headers: { name?: string | null; value?: string | null }[];
 }
 export interface MailListProps {
   isCompact?: boolean;
@@ -127,8 +130,20 @@ export interface IOutgoingMessage {
   bcc?: Sender[];
   subject: string;
   message: string;
-  attachments: any[];
+  attachments: File[];
   headers: Record<string, string>;
   threadId?: string;
   fromEmail?: string;
+}
+
+export interface Note {
+  id: string;
+  userId: string;
+  threadId: string;
+  content: string;
+  color: string;
+  isPinned: boolean | null;
+  order: number;
+  createdAt: Date;
+  updatedAt: Date;
 }

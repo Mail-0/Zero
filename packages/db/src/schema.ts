@@ -1,7 +1,14 @@
-import { pgTableCreator, text, timestamp, boolean, integer, jsonb, primaryKey, uuid } from 'drizzle-orm/pg-core';
+import {
+  pgTableCreator,
+  text,
+  timestamp,
+  boolean,
+  integer,
+  jsonb,
+  primaryKey,
+} from 'drizzle-orm/pg-core';
 import { defaultUserSettings } from '@zero/db/user_settings_default';
 import { unique } from 'drizzle-orm/pg-core';
-import type { WritingStyleMatrix } from '@zero/mail/services/writing-style-service';
 
 export const createTable = pgTableCreator((name) => `mail0_${name}`);
 
@@ -133,75 +140,26 @@ export const userSettings = createTable('user_settings', {
   updatedAt: timestamp('updated_at').notNull(),
 });
 
-export const writingStyleMatrix = createTable('writing_style_matrix', {
-  connectionId: text()
-    .notNull()
-    .references(() => connection.id),
-  numMessages: integer().notNull(),
-  style: jsonb().$type<WritingStyleMatrix>().notNull(),
-  updatedAt: timestamp().defaultNow().notNull().$onUpdate(() => new Date())
-}, (table) => {
-  return [
-    primaryKey({
-      columns: [table.connectionId],
-    }),
-  ]
-})
-
-export type ThemeSettings = {
-  // Colors
-  colors: {
-    background: string;
-    foreground: string;
-    primary: string;
-    primaryForeground?: string;
-    secondary: string;
-    secondaryForeground?: string;
-    accent: string;
-    accentForeground?: string;
-    muted: string;
-    mutedForeground?: string;
-    border: string;
-    cardForeground?: string;
-    popoverForeground?: string;
-    destructive?: string;
-    destructiveForeground?: string;
-  };
-  // Fonts
-  fonts: {
-    family: string;
-    size: number;
-    weight: number;
-  };
-  // Spacing
-  spacing: {
-    padding: number;
-    margin: number;
-  };
-  // Shadows
-  shadows: {
-    intensity: number;
-    color: string;
-  };
-  // Corner Radius
-  cornerRadius: number;
-  // Backgrounds
-  background: {
-    type: 'color' | 'gradient' | 'image';
-    value: string;
-  };
-};
-
-export const theme = createTable('theme', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  name: text('name').notNull(),
-  userId: text('user_id')
-    .notNull()
-    .references(() => user.id, { onDelete: 'cascade' }),
-  connectionId: text('connection_id')
-    .references(() => connection.id, { onDelete: 'set null' }),
-  isPublic: boolean('is_public').default(false).notNull(),
-  settings: jsonb('settings').$type<ThemeSettings>().notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow().$onUpdate(() => new Date()),
-});
+export const writingStyleMatrix = createTable(
+  'writing_style_matrix',
+  {
+    connectionId: text()
+      .notNull()
+      .references(() => connection.id, { onDelete: 'cascade' }),
+    numMessages: integer().notNull(),
+    // TODO: way too much pain to get this type to work,
+    // revisit later
+    style: jsonb().$type<unknown>().notNull(),
+    updatedAt: timestamp()
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => {
+    return [
+      primaryKey({
+        columns: [table.connectionId],
+      }),
+    ];
+  },
+);

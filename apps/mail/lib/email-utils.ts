@@ -1,5 +1,5 @@
 import { parseFrom as _parseFrom, parseAddressList as _parseAddressList } from 'email-addresses';
-import { Sender } from '@/types';
+import type { Sender } from '@/types';
 import Color from 'color';
 
 export const fixNonReadableColors = (rootElement: HTMLElement, minContrast = 3.5) => {
@@ -149,6 +149,35 @@ export const parseAddressList = (header: string): Sender[] => {
       email: address.address || FALLBACK_SENDER.email,
     };
   });
+};
+
+// Helper function to clean email addresses by removing angle brackets
+export const cleanEmailAddresses = (emails: string | undefined) => {
+  if (!emails || emails.trim() === '') return undefined;
+  // Split by commas and clean each address individually
+  return emails
+    .split(',')
+    .map(email => email.trim().replace(/^<|>$/g, ''))
+    .filter(Boolean); // Remove any empty entries
+};
+
+// Format recipients for display or sending
+export const formatRecipients = (recipients: string[] | undefined) => {
+  if (!recipients || recipients.length === 0) return undefined;
+  return recipients.join(', ');
+};
+
+/**
+ * Format recipients for MIME message creation
+ * Handles both string and array formats for recipients
+ */
+export const formatMimeRecipients = (recipients: string | string[]) => {
+  if (Array.isArray(recipients)) {
+    return recipients.map(recipient => ({ addr: recipient }));
+  } else if (typeof recipients === 'string' && recipients.trim() !== '') {
+    return recipients.split(',').map(recipient => ({ addr: recipient.trim() }));
+  }
+  return null;
 };
 
 export const wasSentWithTLS = (receivedHeaders: string[]) => {

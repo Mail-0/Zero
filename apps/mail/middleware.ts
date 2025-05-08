@@ -1,14 +1,13 @@
-import { EU_COUNTRIES } from './constants/countries';
+import { type NextRequest, NextResponse } from 'next/server';
 import { navigationConfig } from '@/config/navigation';
 import { geolocation } from '@vercel/functions';
-import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
+import { EU_COUNTRIES } from './lib/countries';
 
 const disabledRoutes = Object.values(navigationConfig)
-  .flatMap(section => section.sections)
-  .flatMap(group => group.items)
-  .filter(item => item.disabled && item.url !== '#')
-  .map(item => item.url);
+  .flatMap((section) => section.sections)
+  .flatMap((group) => group.items)
+  .filter((item) => item.disabled && item.url !== '#')
+  .map((item) => item.url);
 
 export function middleware(request: NextRequest) {
   const response = NextResponse.next();
@@ -25,7 +24,7 @@ export function middleware(request: NextRequest) {
   }
 
   const pathname = request.nextUrl.pathname;
-  if (disabledRoutes.some(route => pathname.startsWith(route))) {
+  if (disabledRoutes.some((route) => pathname.startsWith(route))) {
     return NextResponse.redirect(new URL('/mail/inbox', request.url));
   }
 

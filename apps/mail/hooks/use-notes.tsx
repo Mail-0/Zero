@@ -1,47 +1,27 @@
-import { fetchThreadNotes } from '@/actions/notes';
-import type { Note } from '@/app/api/notes/types';
+import { useTRPC } from '@/providers/query-provider';
+import { useQuery } from '@tanstack/react-query';
 import { useSession } from '@/lib/auth-client';
 import { useTranslations } from 'next-intl';
-import { useMemo } from 'react';
-import { toast } from 'sonner';
-import useSWR from 'swr';
-
-export type { Note };
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+import type { Note } from '@/types';
 
 export const useThreadNotes = (threadId: string) => {
   const t = useTranslations();
   const { data: session } = useSession();
-  const {
-    data: notes = [],
-    error,
-    isLoading,
-    mutate,
-  } = useSWR<Note[]>(
-    session?.connectionId && threadId ? ['notes', session.connectionId, threadId] : null,
-    async () => {
-      try {
-        const result = await fetcher('/api/driver/notes?threadId=' + threadId);
-        return result || [];
-      } catch (err: any) {
-        console.error('Error fetching notes:', err);
-        toast.error(t('common.notes.errors.failedToLoadNotes'));
-        throw err;
-      }
-    },
+  const trpc = useTRPC();
+
+  const noteQuery = useQuery(
+    trpc.notes.list.queryOptions(
+      { threadId },
+      {
+        enabled: !!session?.connectionId && !!threadId,
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        initialData: { notes: [] as Note[] },
+        meta: {
+          customError: t('common.notes.errors.failedToLoadNotes'),
+        },
+      },
+    ),
   );
 
-  const hasNotes = useMemo(() => {
-    if (!notes) return false;
-    return notes.length > 0;
-  }, [notes]);
-
-  return {
-    data: notes,
-    error,
-    mutate,
-    isLoading: isLoading,
-    hasNotes,
-  };
+  return noteQuery;
 };

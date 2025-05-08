@@ -1,5 +1,5 @@
 {
-  "id": "b3bcee12-528d-4859-bcec-f681d4f216dd",
+  "id": "04ff140a-0f92-49cb-b4bc-f19fc7743056",
   "prevId": "f1ada8dc-22a2-459a-a0ac-0389ea5e9945",
   "version": "7",
   "dialect": "postgresql",
@@ -507,98 +507,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.mail0_theme": {
-      "name": "mail0_theme",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "connection_id": {
-          "name": "connection_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "is_public": {
-          "name": "is_public",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "settings": {
-          "name": "settings",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "mail0_theme_user_id_mail0_user_id_fk": {
-          "name": "mail0_theme_user_id_mail0_user_id_fk",
-          "tableFrom": "mail0_theme",
-          "tableTo": "mail0_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "mail0_theme_connection_id_mail0_connection_id_fk": {
-          "name": "mail0_theme_connection_id_mail0_connection_id_fk",
-          "tableFrom": "mail0_theme",
-          "tableTo": "mail0_connection",
-          "columnsFrom": [
-            "connection_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.mail0_user": {
       "name": "mail0_user",
       "schema": "",
@@ -882,7 +790,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
