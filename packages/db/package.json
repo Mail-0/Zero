@@ -23,6 +23,7 @@
     ".": "./src/index.ts",
     "./schema": "./src/schema.ts",
     "./user_settings_default": "./src/user_settings_default.ts",
-    "./theme_settings_default": "./src/theme_settings_default.ts"
+    "./theme_settings_default": "./src/theme_settings_default.ts",
+    "./theme_settings_presets": "./src/theme_settings_presets.ts"
   }
 }

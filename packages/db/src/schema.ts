@@ -6,11 +6,57 @@ import {
   integer,
   jsonb,
   primaryKey,
+  uuid,
 } from 'drizzle-orm/pg-core';
 import { defaultUserSettings } from '@zero/db/user_settings_default';
 import { unique } from 'drizzle-orm/pg-core';
 
 export const createTable = pgTableCreator((name) => `mail0_${name}`);
+
+// Theme settings type
+export type ThemeSettings = {
+  // Colors
+  colors: {
+    background: string;
+    foreground: string;
+    primary: string;
+    primaryForeground?: string;
+    secondary: string;
+    secondaryForeground?: string;
+    accent: string;
+    accentForeground?: string;
+    muted: string;
+    mutedForeground?: string;
+    border: string;
+    cardForeground?: string;
+    popoverForeground?: string;
+    destructive?: string;
+    destructiveForeground?: string;
+  };
+  // Fonts
+  fonts: {
+    family: string;
+    size: number;
+    weight: number;
+  };
+  // Spacing
+  spacing: {
+    padding: number;
+    margin: number;
+  };
+  // Shadows
+  shadows: {
+    intensity: number;
+    color: string;
+  };
+  // Corner Radius
+  cornerRadius: number;
+  // Backgrounds
+  background: {
+    type: 'color' | 'gradient' | 'image';
+    value: string;
+  };
+};
 
 export const user = createTable('user', {
   id: text('id').primaryKey(),
@@ -143,10 +189,10 @@ export const userSettings = createTable('user_settings', {
 export const writingStyleMatrix = createTable(
   'writing_style_matrix',
   {
-    connectionId: text()
-      .notNull()
+  connectionId: text()
+    .notNull()
       .references(() => connection.id, { onDelete: 'cascade' }),
-    numMessages: integer().notNull(),
+  numMessages: integer().notNull(),
     // TODO: way too much pain to get this type to work,
     // revisit later
     style: jsonb().$type<unknown>().notNull(),
@@ -156,10 +202,24 @@ export const writingStyleMatrix = createTable(
       .$onUpdate(() => new Date()),
   },
   (table) => {
-    return [
-      primaryKey({
-        columns: [table.connectionId],
-      }),
+  return [
+    primaryKey({
+      columns: [table.connectionId],
+    }),
     ];
   },
 );
+
+export const theme = createTable('theme', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  connectionId: text('connection_id')
+    .references(() => connection.id, { onDelete: 'set null' }),
+  isPublic: boolean('is_public').default(false).notNull(),
+  settings: jsonb('settings').$type<ThemeSettings>().notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().$onUpdate(() => new Date()),
+});

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useThemeActions } from '@/hooks/use-themes';
-import { ThemeSettings } from '@zero/db/schema';
+import type { ThemeSettings } from '@zero/db/schema';
 import { ThemeEditorWithPreview, ThemePreview } from '@/components/theme/theme-editor';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Pencil, Trash2, ExternalLink, Check, Library } from 'lucide-react';
@@ -11,7 +11,7 @@ import { Card } from '@/components/ui/card';
 import Link from 'next/link';
 import { useSession } from '@/lib/auth-client';
 import { useConnections } from '@/hooks/use-connections';
-import { putConnection } from '@/actions/connections';
+import { useTRPCClient } from '@/providers/query-provider';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,7 +22,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { getUserThemes } from '@/actions/themes';
 import { useCustomTheme } from '@/providers/custom-theme-provider';
 import { defaultThemeSettings } from '@zero/db/theme_settings_default';
 
@@ -46,9 +45,10 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isInitializing, setIsInitializing] = useState(initialThemes.length === 0);
   const { data: session, refetch } = useSession();
-  const { create, copy, initializeDefaults, addPresetThemes, applyToConnection } = useThemeActions();
-  const { data: connections, isLoading, mutate } = useConnections();
+  const { create, copy, update, remove, initializeDefaults, addPresetThemes, applyToConnection } = useThemeActions();
+  const { data: connections, isLoading } = useConnections();
   const { applyThemeSettings } = useCustomTheme();
+  const client = useTRPCClient();
 
   // Create default themes if none exist (after component mounts)
   useEffect(() => {
@@ -62,7 +62,7 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
             // Force reload to show the new themes
             window.location.reload();
           } else {
-            toast.error(result.error || 'Failed to create default themes');
+            toast.error('Failed to create default themes');
           }
         } catch (error) {
           console.error('Error creating default themes:', error);
@@ -109,7 +109,7 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
         setIsCreating(false);
         toast.success('Theme created successfully');
       } else {
-        toast.error(result.error || 'Failed to create theme');
+        toast.error('Failed to create theme');
       }
     } catch (error) {
       console.error('Error creating theme:', error);
@@ -122,47 +122,40 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
 
     try {
       const updatedThemeData = {
+        id: selectedThemeId,
         name,
         settings,
         isPublic,
         connectionId: selectedTheme.connectionId,
       };
       
-      // Call the actual server action to update the DB
-      const updateResult = await fetch(`/api/themes/${selectedThemeId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedThemeData),
-      });
+      // Call the tRPC client to update the theme
+      const result = await update(updatedThemeData);
 
-      if (!updateResult.ok) {
-        const errorData = await updateResult.json();
-        toast.error(errorData.error || 'Failed to save theme changes to server');
-        return; // Stop if server update fails
+      if (result.success && result.theme) {
+        // Update local state
+        const updatedThemeForState: Theme = {
+          id: selectedThemeId,
+          name: result.theme.name,
+          settings: result.theme.settings,
+          isPublic: result.theme.isPublic,
+          connectionId: result.theme.connectionId,
+        };
+        
+        setThemes(prev =>
+          prev.map(theme => (theme.id === selectedThemeId ? updatedThemeForState : theme))
+        );
+        
+        setIsEditing(false);
+        toast.success('Theme updated successfully');
+
+        // If the updated theme is the currently active one, re-apply its settings visually
+        if (selectedTheme.connectionId === session?.connectionId) {
+          applyThemeSettings(result.theme.settings);
+        }
+      } else {
+        toast.error('Failed to update theme');
       }
-
-      const savedTheme = await updateResult.json();
-
-      // Update local state optimistically (or after confirmation)
-      const updatedThemeForState: Theme = {
-        id: selectedThemeId,
-        name: savedTheme.name,
-        settings: savedTheme.settings,
-        isPublic: savedTheme.isPublic,
-        connectionId: savedTheme.connectionId,
-      };
-      setThemes(prev =>
-        prev.map(theme => (theme.id === selectedThemeId ? updatedThemeForState : theme))
-      );
-      
-      setIsEditing(false);
-      toast.success('Theme updated successfully');
-
-      // If the updated theme is the currently active one, re-apply its settings visually
-      if (selectedTheme.connectionId === session?.connectionId) {
-        applyThemeSettings(savedTheme.settings);
-      }
-      
     } catch (error) {
       console.error('Error updating theme:', error);
       toast.error('Failed to update theme');
@@ -174,44 +167,45 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
 
     try {
       const themeToDelete = themes.find(t => t.id === selectedThemeId);
+      const wasActive = themeToDelete?.connectionId === session?.connectionId;
+      
       // Optimistic delete from local state
       setThemes(prev => prev.filter(theme => theme.id !== selectedThemeId));
-      const wasActive = themeToDelete?.connectionId === session?.connectionId;
       setSelectedThemeId(null);
       setDeleteDialogOpen(false);
-      toast.success('Theme deleted successfully');
       
-      // Server delete in background
-      const result = await fetch(`/api/themes/${selectedThemeId}`, {
-        method: 'DELETE',
-      });
+      // Delete on server via tRPC
+      const result = await remove(selectedThemeId);
       
-      if (!result.ok) {
-        toast.error('Theme may not have been deleted on the server');
-        // Optionally revert local state deletion here
-      } else {
+      if (result.success) {
+        toast.success('Theme deleted successfully');
+        
         // If the deleted theme was the active one, apply default settings
         if (wasActive) {
           applyThemeSettings(defaultThemeSettings);
-          // Provider will handle cache invalidation on next load/fetch
         }
+      } else {
+        toast.error('Failed to delete theme');
+        // Refetch themes to restore correct state
+        refreshThemes();
       }
     } catch (error) {
       console.error('Error deleting theme:', error);
       toast.error('Failed to delete theme');
-      // Optionally revert local state deletion here
+      refreshThemes();
     }
   };
 
   const refreshThemes = async () => {
     try {
-      // Get fresh themes data from the server using the server action
-      const result = await getUserThemes();
+      // Get fresh themes data from the server using tRPC
+      const result = await client.themes.getUserThemes.query();
+      
       if (result.success) {
         setThemes(result.themes || []);
         toast.success('Themes refreshed');
       } else {
-        toast.error('Failed to refresh themes: ' + (result.error || 'Unknown error'));
+        toast.error('Failed to refresh themes');
       }
     } catch (error) {
       console.error('Error refreshing themes:', error);
@@ -250,7 +244,7 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
 
       } else {
         console.error('Error response from applyToConnection:', result);
-        toast.error(result.error || 'Failed to apply theme');
+        toast.error('Failed to apply theme');
       }
     } catch (error) {
       console.error('Error applying theme:', error);
@@ -262,7 +256,7 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
     toast.promise(addPresetThemes(), {
       loading: 'Adding preset themes...',
       success: (result) => result.message || 'Preset themes processed.',
-      error: (err) => err.error || 'Failed to add preset themes.',
+      error: (err) => 'Failed to add preset themes.',
     });
   };
 

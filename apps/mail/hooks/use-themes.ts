@@ -2,24 +2,16 @@
 
 import useSWR from 'swr';
 import { useCallback } from 'react';
-import { 
-  createTheme as createThemeAction,
-  updateTheme as updateThemeAction,
-  deleteTheme as deleteThemeAction,
-  getUserThemes as getUserThemesAction,
-  getPublicThemes as getPublicThemesAction,
-  getThemeById as getThemeByIdAction,
-  getConnectionTheme as getConnectionThemeAction,
-  copyPublicTheme as copyPublicThemeAction,
-  createDefaultThemes as createDefaultThemesAction,
-  createPresetThemes as createPresetThemesAction,
-  applyThemeToConnection as applyThemeToConnectionAction,
-} from '@/actions/themes';
-import { ThemeSettings } from '@zero/db/schema';
+import { useTRPCClient } from '@/providers/query-provider';
+import type { ThemeSettings } from '@zero/db/schema';
 import { useSWRConfig } from 'swr';
 
 export function useUserThemes() {
-  const { data, error, isLoading, mutate } = useSWR('user-themes', getUserThemesAction);
+  const client = useTRPCClient();
+  const { data, error, isLoading, mutate } = useSWR(
+    'user-themes', 
+    () => client.themes.getUserThemes.query()
+  );
 
   return {
     themes: data?.themes || [],
@@ -30,7 +22,11 @@ export function useUserThemes() {
 }
 
 export function usePublicThemes() {
-  const { data, error, isLoading, mutate } = useSWR('public-themes', getPublicThemesAction);
+  const client = useTRPCClient();
+  const { data, error, isLoading, mutate } = useSWR(
+    'public-themes', 
+    () => client.themes.getPublicThemes.query()
+  );
 
   return {
     themes: data?.themes || [],
@@ -40,10 +36,11 @@ export function usePublicThemes() {
   };
 }
 
-export function useTheme(id: string) {
+export function useTheme(id: string | null | undefined) {
+  const client = useTRPCClient();
   const { data, error, isLoading, mutate } = useSWR(
     id ? `theme-${id}` : null,
-    () => getThemeByIdAction(id)
+    () => id ? client.themes.getById.query(id) : null
   );
 
   const update = useCallback(
@@ -53,7 +50,8 @@ export function useTheme(id: string) {
       settings?: ThemeSettings;
       isPublic?: boolean;
     }) => {
-      const result = await updateThemeAction({
+      if (!id) throw new Error("Theme ID is required for update.");
+      const result = await client.themes.update.mutate({
         id,
         ...updateData,
       });
@@ -62,16 +60,17 @@ export function useTheme(id: string) {
       }
       return result;
     },
-    [id, mutate]
+    [id, mutate, client]
   );
 
   const remove = useCallback(async () => {
-    const result = await deleteThemeAction(id);
+    if (!id) throw new Error("Theme ID is required for delete.");
+    const result = await client.themes.delete.mutate(id);
     if (result.success) {
-      mutate(undefined);
+      mutate(undefined); 
     }
     return result;
-  }, [id, mutate]);
+  }, [id, mutate, client]);
 
   return {
     theme: data?.theme,
@@ -83,14 +82,24 @@ export function useTheme(id: string) {
   };
 }
 
-export function useConnectionTheme(connectionId: string) {
+export function useConnectionTheme(connectionId: string | null | undefined) {
+  const client = useTRPCClient();
   const { data, error, isLoading, mutate } = useSWR(
     connectionId ? `connection-theme-${connectionId}` : null,
-    () => getConnectionThemeAction(connectionId)
+    () => connectionId ? client.themes.getConnectionTheme.query(connectionId) : null,
+    {
+      shouldRetryOnError: false,
+      revalidateOnFocus: false,
+      dedupingInterval: 5000, 
+      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        if (retryCount >= 3) return;
+        setTimeout(() => revalidate({ retryCount }), 3000);
+      }
+    }
   );
 
   return {
-    theme: data?.theme,
+    theme: data?.success ? data.theme : null,
     isLoading,
     error,
     mutate,
@@ -98,9 +107,11 @@ export function useConnectionTheme(connectionId: string) {
 }
 
 export function useThemeActions() {
+  const client = useTRPCClient();
   const { mutate: mutateSWR } = useSWRConfig();
-  const { mutate: mutateUserThemes } = useUserThemes();
-  const { mutate: mutatePublicThemes } = usePublicThemes();
+  
+  const revalidateUserThemes = () => mutateSWR('user-themes');
+  const revalidatePublicThemes = () => mutateSWR('public-themes');
 
   const create = useCallback(
     async (themeData: {
@@ -109,16 +120,16 @@ export function useThemeActions() {
       settings: ThemeSettings;
       isPublic?: boolean;
     }) => {
-      const result = await createThemeAction(themeData);
+      const result = await client.themes.create.mutate(themeData);
       if (result.success) {
-        mutateUserThemes();
+        revalidateUserThemes();
         if (themeData.isPublic) {
-          mutatePublicThemes();
+          revalidatePublicThemes();
         }
       }
       return result;
     },
-    [mutateUserThemes, mutatePublicThemes]
+    [client, revalidateUserThemes, revalidatePublicThemes]
   );
 
   const update = useCallback(
@@ -129,9 +140,9 @@ export function useThemeActions() {
       settings?: ThemeSettings;
       isPublic?: boolean;
     }) => {
-      const result = await updateThemeAction(themeData);
+      const result = await client.themes.update.mutate(themeData);
       if (result.success) {
-        mutateUserThemes();
+        revalidateUserThemes();
         mutateSWR(`theme-${themeData.id}`);
         if (themeData.connectionId) {
           mutateSWR(`connection-theme-${themeData.connectionId}`);
@@ -139,58 +150,59 @@ export function useThemeActions() {
       }
       return result;
     },
-    [mutateUserThemes, mutateSWR]
+    [client, revalidateUserThemes, mutateSWR]
   );
 
   const remove = useCallback(
     async (id: string) => {
-      const result = await deleteThemeAction(id);
+      const result = await client.themes.delete.mutate(id);
       if (result.success) {
-        mutateUserThemes();
+        revalidateUserThemes();
         mutateSWR(`theme-${id}`, undefined, { revalidate: false });
       }
       return result;
     },
-    [mutateUserThemes, mutateSWR]
+    [client, revalidateUserThemes, mutateSWR]
   );
 
   const copy = useCallback(
     async (id: string) => {
-      const result = await copyPublicThemeAction(id);
+      const result = await client.themes.copyPublicTheme.mutate(id);
       if (result.success) {
-        mutateUserThemes();
+        revalidateUserThemes();
       }
       return result;
     },
-    [mutateUserThemes]
+    [client, revalidateUserThemes]
   );
 
   const initializeDefaults = useCallback(async () => {
-    const result = await createDefaultThemesAction();
+    const result = await client.themes.createDefaultThemes.mutate();
     if (result.success) {
-      mutateUserThemes();
+      revalidateUserThemes();
     }
     return result;
-  }, [mutateUserThemes]);
+  }, [client, revalidateUserThemes]);
 
   const addPresetThemes = useCallback(async () => {
-    const result = await createPresetThemesAction();
+    const result = await client.themes.createPresetThemes.mutate();
     if (result.success) {
-      mutateUserThemes();
+      revalidateUserThemes();
     }
     return result;
-  }, [mutateUserThemes]);
+  }, [client, revalidateUserThemes]);
 
   const applyToConnection = useCallback(async (themeId: string, targetConnectionId?: string) => {
-    const result = await applyThemeToConnectionAction(themeId, targetConnectionId);
+    const result = await client.themes.applyThemeToConnection.mutate({ themeId, connectionId: targetConnectionId });
     if (result.success) {
-      mutateUserThemes();
-      if (result.connectionId) {
-        mutateSWR(`connection-theme-${result.connectionId}`);
+      revalidateUserThemes();
+      const castResult = result as unknown as { success: boolean; connectionId?: string | null; theme?: any }; 
+      if (castResult.connectionId) {
+        mutateSWR(`connection-theme-${castResult.connectionId}`);
       }
     }
     return result;
-  }, [mutateUserThemes, mutateSWR]);
+  }, [client, revalidateUserThemes, mutateSWR]);
 
   return {
     create,
@@ -202,3 +214,4 @@ export function useThemeActions() {
     applyToConnection,
   };
 } 
+ 

@@ -221,7 +221,7 @@ export const bottomNavItems = [
         id: 'theme-selector',
         title: 'navigation.sidebar.theme',
         url: '#',
-        icon: PaintBucket,
+        icon: Sparkles,
         isSidebarThemeSelector: true,
       },
       {
