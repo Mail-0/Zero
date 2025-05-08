@@ -291,7 +291,6 @@ export async function createDefaultThemes() {
       isPublic: false,
     });
 
-    revalidatePath('/');
 
     return { success: true, message: 'Default themes created' };
   } catch (error) {

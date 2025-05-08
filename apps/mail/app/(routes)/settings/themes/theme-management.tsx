@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useThemeActions } from '@/hooks/use-themes';
 import { ThemeSettings } from '@zero/db/schema';
 import { ThemeEditorWithPreview, ThemePreview } from '@/components/theme/theme-editor';
@@ -38,7 +38,34 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(initialThemes.length === 0);
   const { create, copy, initializeDefaults } = useThemeActions();
+
+  // Create default themes if none exist (after component mounts)
+  useEffect(() => {
+    const createDefaults = async () => {
+      if (initialThemes.length === 0) {
+        try {
+          setIsInitializing(true);
+          const result = await initializeDefaults();
+          if (result.success) {
+            toast.success('Default themes created successfully');
+            // Force reload to show the new themes
+            window.location.reload();
+          } else {
+            toast.error(result.error || 'Failed to create default themes');
+          }
+        } catch (error) {
+          console.error('Error creating default themes:', error);
+          toast.error('Failed to create default themes');
+        } finally {
+          setIsInitializing(false);
+        }
+      }
+    };
+    
+    createDefaults();
+  }, [initialThemes.length, initializeDefaults]);
 
   const selectedTheme = selectedThemeId ? themes.find(t => t.id === selectedThemeId) : null;
 
@@ -130,6 +157,15 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
       toast.error('Failed to delete theme');
     }
   };
+
+  if (isInitializing) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8">
+        <p className="text-lg mb-2">Creating default themes...</p>
+        <p className="text-sm text-muted-foreground">This will only take a moment</p>
+      </div>
+    );
+  }
 
   if (isCreating) {
     return (

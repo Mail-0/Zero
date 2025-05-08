@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { ThemeManagement } from './theme-management';
 import { EmptyPlaceholder } from '@/components/empty-placeholder';
-import { getUserThemes, createDefaultThemes } from '@/actions/themes';
+import { getUserThemes } from '@/actions/themes';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
 
@@ -28,14 +28,12 @@ async function ThemeSettings() {
   const { success, themes = [] } = await getUserThemes();
 
   if (!success || themes.length === 0) {
-    // Create default themes for the user if they don't have any
-    await createDefaultThemes();
     return (
       <EmptyPlaceholder>
         <div className="text-center">
-          <p>Creating default themes for you...</p>
+          <p>No themes found</p>
           <p className="text-sm text-muted-foreground mt-2">
-            Refresh the page to see your themes
+            Setting up your default themes...
           </p>
         </div>
       </EmptyPlaceholder>
