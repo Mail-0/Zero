@@ -12,6 +12,7 @@ import {
   getConnectionTheme,
   copyPublicTheme,
   createDefaultThemes,
+  applyThemeToConnection,
 } from '@/actions/themes';
 import { ThemeSettings } from '@zero/db/schema';
 
@@ -136,9 +137,18 @@ export function useThemeActions() {
     return result;
   }, [mutateUserThemes]);
 
+  const applyToConnection = useCallback(async (themeId: string) => {
+    const result = await applyThemeToConnection(themeId);
+    if (result.success) {
+      mutateUserThemes();
+    }
+    return result;
+  }, [mutateUserThemes]);
+
   return {
     create,
     copy,
     initializeDefaults,
+    applyToConnection,
   };
 } 

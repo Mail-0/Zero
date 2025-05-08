@@ -5,10 +5,11 @@ import { useThemeActions } from '@/hooks/use-themes';
 import { ThemeSettings } from '@zero/db/schema';
 import { ThemeEditorWithPreview, ThemePreview } from '@/components/theme/theme-editor';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Pencil, Trash2, ExternalLink } from 'lucide-react';
+import { PlusCircle, Pencil, Trash2, ExternalLink, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import Link from 'next/link';
+import { useSession } from '@/lib/auth-client';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,7 +40,8 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isInitializing, setIsInitializing] = useState(initialThemes.length === 0);
-  const { create, copy, initializeDefaults } = useThemeActions();
+  const { data: session } = useSession();
+  const { create, copy, initializeDefaults, applyToConnection } = useThemeActions();
 
   // Create default themes if none exist (after component mounts)
   useEffect(() => {
@@ -158,6 +160,28 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
     }
   };
 
+  const handleApplyTheme = async (themeId: string) => {
+    try {
+      const result = await applyToConnection(themeId);
+      if (result.success) {
+        // Optimistic update - mark the theme as applied to the current connection
+        setThemes(prev => 
+          prev.map(t => ({
+            ...t,
+            connectionId: t.id === themeId ? (session?.connectionId || null) : 
+                          (t.connectionId === session?.connectionId ? null : t.connectionId)
+          }))
+        );
+        toast.success('Theme applied successfully');
+      } else {
+        toast.error(result.error || 'Failed to apply theme');
+      }
+    } catch (error) {
+      console.error('Error applying theme:', error);
+      toast.error('Failed to apply theme');
+    }
+  };
+
   if (isInitializing) {
     return (
       <div className="flex flex-col items-center justify-center p-8">
@@ -252,13 +276,34 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
               <div className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-semibold">{theme.name}</h4>
-                  {theme.isPublic && (
-                    <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-                      Public
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {theme.connectionId === session?.connectionId && (
+                      <span className="text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 px-2 py-1 rounded-full flex items-center">
+                        <Check className="h-3 w-3 mr-1" /> Active
+                      </span>
+                    )}
+                    {theme.isPublic && (
+                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                        Public
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="flex gap-2 mt-2">
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <Button 
+                    size="sm" 
+                    variant={theme.connectionId === session?.connectionId ? "outline" : "default"}
+                    onClick={() => handleApplyTheme(theme.id)}
+                    disabled={theme.connectionId === session?.connectionId}
+                  >
+                    {theme.connectionId === session?.connectionId ? (
+                      <>
+                        <Check className="h-4 w-4 mr-1" /> Applied
+                      </>
+                    ) : (
+                      "Apply Theme"
+                    )}
+                  </Button>
                   <Button 
                     size="sm" 
                     variant="outline" 

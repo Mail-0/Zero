@@ -297,4 +297,74 @@ export async function createDefaultThemes() {
     console.error('Error creating default themes:', error);
     return { success: false, error: 'Failed to create default themes' };
   }
+}
+
+/**
+ * Apply a theme to the current active connection
+ */
+export async function applyThemeToConnection(themeId: string) {
+  const headersList = await headers();
+  const session = await auth.api.getSession({ headers: headersList });
+  
+  if (!session?.user?.id) {
+    return { success: false, error: 'Not authenticated' };
+  }
+  
+  if (!session.connectionId) {
+    return { success: false, error: 'No active connection' };
+  }
+
+  try {
+    // First find the theme and verify ownership
+    const themeData = await db.query.theme.findFirst({
+      where: and(
+        eq(theme.id, themeId),
+        eq(theme.userId, session.user.id)
+      ),
+    });
+
+    if (!themeData) {
+      return { success: false, error: 'Theme not found or not authorized' };
+    }
+    
+    // Check if there's already a theme assigned to this connection
+    const existingConnectionTheme = await db.query.theme.findFirst({
+      where: and(
+        eq(theme.connectionId, session.connectionId),
+        eq(theme.userId, session.user.id)
+      ),
+    });
+    
+    if (existingConnectionTheme) {
+      // Update existing connection theme assignment
+      if (existingConnectionTheme.id === themeId) {
+        // Already assigned
+        return { success: true, message: 'Theme already applied to this connection' };
+      }
+      
+      // Remove connection from the existing theme
+      await db
+        .update(theme)
+        .set({ connectionId: null })
+        .where(eq(theme.id, existingConnectionTheme.id));
+    }
+    
+    // Assign the selected theme to the connection
+    await db
+      .update(theme)
+      .set({ connectionId: session.connectionId })
+      .where(eq(theme.id, themeId));
+    
+    revalidatePath('/');
+    
+    return { 
+      success: true, 
+      message: 'Theme applied successfully', 
+      theme: themeData,
+      connectionId: session.connectionId
+    };
+  } catch (error) {
+    console.error('Error applying theme to connection:', error);
+    return { success: false, error: 'Failed to apply theme to connection' };
+  }
 } 
