@@ -2,7 +2,7 @@
 
 import { useUserThemes, useThemeActions, useConnectionTheme } from '@/hooks/use-themes';
 import { useSession } from '@/lib/auth-client';
-import { PaintBucket } from 'lucide-react';
+import { PaintBucket, RotateCcw } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import {
   DropdownMenu,
@@ -20,7 +20,7 @@ import Link from 'next/link';
 export function SidebarThemeSelector() {
   const { data: session } = useSession();
   const { themes, isLoading: isLoadingThemes } = useUserThemes();
-  const { applyToConnection } = useThemeActions();
+  const { applyToConnection, update } = useThemeActions();
   const [isRendered, setIsRendered] = useState(false);
   const t = useTranslations();
   
@@ -46,6 +46,44 @@ export function SidebarThemeSelector() {
     }
   };
 
+  const handleResetToDefault = async () => {
+    try {
+      // Find the default theme if it exists
+      const defaultTheme = themes.find(theme => 
+        theme.name.toLowerCase().includes('default') || 
+        theme.name === 'Light Theme' || 
+        theme.name === 'System'
+      );
+      
+      if (defaultTheme) {
+        // If a default theme exists, apply it
+        await handleThemeSelect(defaultTheme.id);
+      } else {
+        // If there's a current theme applied, we need to remove it
+        // This will effectively reset to the system default
+        if (activeTheme) {
+          // Clear the current connection's theme assignment by updating the theme
+          // to remove the connectionId
+          const result = await update({
+            id: activeTheme.id,
+            connectionId: null
+          });
+          
+          if (result.success) {
+            mutate();
+            toast.success('Reset to default theme');
+          } else {
+            toast.error(result.error || 'Failed to reset theme');
+          }
+        } else {
+          toast.info('Already using default theme');
+        }
+      }
+    } catch (error) {
+      toast.error('An error occurred while resetting theme');
+    }
+  };
+
   if (!isRendered || !session) return null;
 
   return (
@@ -58,6 +96,17 @@ export function SidebarThemeSelector() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">
         <DropdownMenuLabel>Select Theme</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        
+        {/* Reset to Default option */}
+        <DropdownMenuItem 
+          onClick={handleResetToDefault}
+          className="flex items-center text-muted-foreground hover:text-foreground"
+        >
+          <RotateCcw className="mr-2 h-4 w-4" />
+          <span>Reset to Default</span>
+        </DropdownMenuItem>
+        
         <DropdownMenuSeparator />
         
         {isLoadingThemes ? (

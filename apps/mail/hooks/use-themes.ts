@@ -118,6 +118,26 @@ export function useThemeActions() {
     [mutateUserThemes, mutatePublicThemes]
   );
 
+  const update = useCallback(
+    async (updateData: {
+      id: string;
+      name?: string;
+      connectionId?: string | null;
+      settings?: ThemeSettings;
+      isPublic?: boolean;
+    }) => {
+      const result = await updateTheme(updateData);
+      if (result.success) {
+        mutateUserThemes();
+        if (updateData.isPublic) {
+          mutatePublicThemes();
+        }
+      }
+      return result;
+    },
+    [mutateUserThemes, mutatePublicThemes]
+  );
+
   const copy = useCallback(
     async (id: string) => {
       const result = await copyPublicTheme(id);
@@ -147,6 +167,7 @@ export function useThemeActions() {
 
   return {
     create,
+    update,
     copy,
     initializeDefaults,
     applyToConnection,
