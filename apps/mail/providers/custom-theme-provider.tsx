@@ -140,8 +140,12 @@ export function CustomThemeProvider({ children }: { children: React.ReactNode })
       '--destructive', '--destructive-foreground',
       // Radius
       '--radius',
-      // Fonts (Attempted)
-      '--font-family-sans' 
+      // Fonts
+      '--font-family-sans', '--font-size-base',
+      // Spacing
+      '--spacing-unit',
+      // Shadows
+      '--shadow-base'
     ];
 
     const clearCustomStyles = () => {
@@ -156,6 +160,7 @@ export function CustomThemeProvider({ children }: { children: React.ReactNode })
       document.body.style.backgroundSize = '';
       document.body.style.backgroundPosition = '';
       document.body.style.backgroundRepeat = '';
+      document.documentElement.style.fontSize = '';
       removeGoogleFontLink();
     };
 
@@ -200,13 +205,26 @@ export function CustomThemeProvider({ children }: { children: React.ReactNode })
       root.style.setProperty('--radius', `${settings.cornerRadius}px`);
 
       // --- Apply Fonts --- 
-      // Attempt 1: Set CSS Variable (Tailwind *might* pick this up if configured)
-       root.style.setProperty('--font-family-sans', settings.fonts.family);
-      // Attempt 2: Directly style body (More reliable but less clean)
-      // document.body.style.fontFamily = settings.fonts.family;
+      root.style.setProperty('--font-family-sans', settings.fonts.family);
       loadGoogleFont(settings.fonts.family, settings.fonts.weight);
-      document.body.style.fontSize = `${settings.fonts.size}px`;
+      
+      const baseFontSizePx = `${settings.fonts.size}px`;
+      root.style.setProperty('--font-size-base', baseFontSizePx);
+      document.documentElement.style.fontSize = baseFontSizePx; // For rem unit calculations
+      document.body.style.fontSize = baseFontSizePx; // For direct body font size
       document.body.style.fontWeight = String(settings.fonts.weight);
+
+      // --- Apply Spacing --- 
+      // Using padding as the base unit for spacing. This can be expanded.
+      root.style.setProperty('--spacing-unit', `${settings.spacing.padding}px`);
+
+      // --- Apply Shadows ---
+      // Simple shadow based on intensity and color. 
+      // Example: intensity 10 -> 0 5px 10px color
+      const shadowX = 0;
+      const shadowY = Math.round(settings.shadows.intensity / 2);
+      const shadowBlur = settings.shadows.intensity;
+      root.style.setProperty('--shadow-base', `${shadowX}px ${shadowY}px ${shadowBlur}px ${settings.shadows.color}`);
 
       // --- Apply Background --- 
       if (settings.background.type === 'gradient') {

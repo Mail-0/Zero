@@ -285,7 +285,11 @@ export function ThemeEditorWithPreview({
                           </SelectTrigger>
                           <SelectContent>
                             {googleFonts.map(font => (
-                              <SelectItem key={font.name} value={font.name}>
+                              <SelectItem 
+                                key={font.name} 
+                                value={font.name}
+                                style={{ fontFamily: font.name }}
+                              >
                                 {font.name}
                               </SelectItem>
                             ))}
