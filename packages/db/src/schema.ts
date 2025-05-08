@@ -154,10 +154,18 @@ export type ThemeSettings = {
     background: string;
     foreground: string;
     primary: string;
+    primaryForeground?: string;
     secondary: string;
+    secondaryForeground?: string;
     accent: string;
+    accentForeground?: string;
     muted: string;
+    mutedForeground?: string;
     border: string;
+    cardForeground?: string;
+    popoverForeground?: string;
+    destructive?: string;
+    destructiveForeground?: string;
   };
   // Fonts
   fonts: {

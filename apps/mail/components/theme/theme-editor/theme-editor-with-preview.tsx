@@ -232,43 +232,49 @@ export function ThemeEditorWithPreview({
 
                   <TabsContent value="colors" className="space-y-4 pt-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {Object.entries(settings.colors).map(([key, value]) => (
-                        <div key={key} className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <Label htmlFor={`color-${key}`} className="capitalize">{key}</Label>
-                            {activeColorPicker === key ? (
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                onClick={() => setActiveColorPicker(null)}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            ) : null}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="w-10 h-10 rounded border cursor-pointer" 
-                              style={{ backgroundColor: value }}
-                              onClick={() => setActiveColorPicker(activeColorPicker === key ? null : key)}
-                            />
-                            <Input
-                              id={`color-${key}`}
-                              value={value}
-                              onChange={(e) => updateColor(key, e.target.value)}
-                            />
-                          </div>
-                          {activeColorPicker === key && (
-                            <div className="relative z-10 mt-2">
-                              <ChromePicker 
-                                color={value} 
-                                onChange={(color) => updateColor(key, color.hex)} 
-                                disableAlpha={false}
+                      {Object.entries(settings.colors).map(([key, value]) => {
+                        const formatLabel = (s: string) => s.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
+                        
+                        if (value === undefined) return null;
+
+                        return (
+                          <div key={key} className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <Label htmlFor={`color-${key}`} className="capitalize">{formatLabel(key)}</Label>
+                              {activeColorPicker === key ? (
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  onClick={() => setActiveColorPicker(null)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              ) : null}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div 
+                                className="w-10 h-10 rounded border cursor-pointer" 
+                                style={{ backgroundColor: String(value) }}
+                                onClick={() => setActiveColorPicker(activeColorPicker === key ? null : key)}
+                              />
+                              <Input
+                                id={`color-${key}`}
+                                value={String(value)}
+                                onChange={(e) => updateColor(key, e.target.value)}
                               />
                             </div>
-                          )}
-                        </div>
-                      ))}
+                            {activeColorPicker === key && (
+                              <div className="relative z-10 mt-2">
+                                <ChromePicker 
+                                  color={String(value)}
+                                  onChange={(color) => updateColor(key, color.hex)} 
+                                  disableAlpha={false}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </TabsContent>
 

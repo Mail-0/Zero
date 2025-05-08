@@ -174,28 +174,26 @@ export function CustomThemeProvider({ children }: { children: React.ReactNode })
       root.style.setProperty('--background', toHslString(settings.colors.background));
       root.style.setProperty('--foreground', toHslString(settings.colors.foreground));
       
-      root.style.setProperty('--card', toHslString(settings.colors.muted)); // Map card background to muted
-      root.style.setProperty('--card-foreground', toHslString(settings.colors.foreground));
+      root.style.setProperty('--card', toHslString(settings.colors.muted)); 
+      root.style.setProperty('--card-foreground', toHslString(settings.colors.cardForeground || settings.colors.foreground));
       
-      root.style.setProperty('--popover', toHslString(settings.colors.muted)); // Map popover background to muted
-      root.style.setProperty('--popover-foreground', toHslString(settings.colors.foreground));
+      root.style.setProperty('--popover', toHslString(settings.colors.muted)); 
+      root.style.setProperty('--popover-foreground', toHslString(settings.colors.popoverForeground || settings.colors.foreground));
 
       root.style.setProperty('--primary', toHslString(settings.colors.primary));
-      // TODO: primary-foreground needs contrast calculation or a dedicated theme setting
-      // root.style.setProperty('--primary-foreground', toHslString(settings.colors.primaryForeground || defaultLight.primaryForeground)); 
+      root.style.setProperty('--primary-foreground', toHslString(settings.colors.primaryForeground || defaultThemeSettings.colors.primaryForeground)); 
       
       root.style.setProperty('--secondary', toHslString(settings.colors.secondary));
-      // TODO: secondary-foreground needs contrast calculation or dedicated setting
+      root.style.setProperty('--secondary-foreground', toHslString(settings.colors.secondaryForeground || defaultThemeSettings.colors.secondaryForeground));
 
       root.style.setProperty('--muted', toHslString(settings.colors.muted));
-      // TODO: muted-foreground needs contrast calculation or dedicated setting
+      root.style.setProperty('--muted-foreground', toHslString(settings.colors.mutedForeground || defaultThemeSettings.colors.mutedForeground));
 
       root.style.setProperty('--accent', toHslString(settings.colors.accent));
-      // TODO: accent-foreground needs contrast calculation or dedicated setting
+      root.style.setProperty('--accent-foreground', toHslString(settings.colors.accentForeground || defaultThemeSettings.colors.accentForeground));
 
-      // Destructive might not have a direct mapping, use default or add to settings
-      // root.style.setProperty('--destructive', toHslString(settings.colors.destructive || defaultLight.destructive));
-      // root.style.setProperty('--destructive-foreground', toHslString(settings.colors.destructiveForeground || defaultLight.destructiveForeground));
+      root.style.setProperty('--destructive', toHslString(settings.colors.destructive || defaultThemeSettings.colors.destructive));
+      root.style.setProperty('--destructive-foreground', toHslString(settings.colors.destructiveForeground || defaultThemeSettings.colors.destructiveForeground));
 
       root.style.setProperty('--border', toHslString(settings.colors.border));
       root.style.setProperty('--input', toHslString(settings.colors.border)); // Map input border to border
