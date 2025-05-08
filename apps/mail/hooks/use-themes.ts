@@ -137,8 +137,8 @@ export function useThemeActions() {
     return result;
   }, [mutateUserThemes]);
 
-  const applyToConnection = useCallback(async (themeId: string) => {
-    const result = await applyThemeToConnection(themeId);
+  const applyToConnection = useCallback(async (themeId: string, targetConnectionId?: string) => {
+    const result = await applyThemeToConnection(themeId, targetConnectionId);
     if (result.success) {
       mutateUserThemes();
     }

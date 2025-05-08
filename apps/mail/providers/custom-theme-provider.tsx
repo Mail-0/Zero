@@ -41,6 +41,41 @@ function toHslString(colorValue: string | undefined): string {
   }
 }
 
+const GOOGLE_FONT_LINK_ID = 'custom-theme-google-font';
+
+function loadGoogleFont(fontFamily: string | undefined, fontWeight: number | undefined) {
+  if (typeof window === 'undefined' || !fontFamily) return;
+
+  const existingLink = document.getElementById(GOOGLE_FONT_LINK_ID);
+  if (existingLink) {
+    existingLink.remove();
+  }
+
+  if (fontFamily === defaultThemeSettings.fonts.family || !fontFamily.trim()) {
+    // Don't load if it's the default (e.g., 'Geist') or empty
+    return;
+  }
+
+  // Load a common set of weights for better typographic flexibility
+  const weightsToLoad = '300;400;500;700'; 
+  const fontQuery = `${fontFamily.replace(/ /g, '+')}:wght@${weightsToLoad}`;
+  const link = document.createElement('link');
+  link.id = GOOGLE_FONT_LINK_ID;
+  link.href = `https://fonts.googleapis.com/css2?family=${fontQuery}&display=swap`;
+  link.rel = 'stylesheet';
+  document.head.appendChild(link);
+  console.log('Loading Google Font:', fontFamily, fontWeight);
+}
+
+function removeGoogleFontLink() {
+  if (typeof window === 'undefined') return;
+  const existingLink = document.getElementById(GOOGLE_FONT_LINK_ID);
+  if (existingLink) {
+    existingLink.remove();
+    console.log('Removed Google Font link.');
+  }
+}
+
 export function CustomThemeProvider({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
   const connectionId = session?.connectionId;
@@ -89,76 +124,111 @@ export function CustomThemeProvider({ children }: { children: React.ReactNode })
     }
   }, [connectionId, dbTheme, isLoadingDbTheme, mutateConnectionTheme]);
 
-  // 2. Apply theme settings to CSS variables when they change
+  // 2. Apply theme settings to CSS variables, respecting light/dark mode
   useEffect(() => {
-    if (!appliedSettings || typeof window === 'undefined') return;
+    // Ensure execution only in the browser
+    if (typeof window === 'undefined') return;
 
-    console.log('Updating CSS variables with new theme settings');
     const root = document.documentElement;
-    const settings = appliedSettings;
+    const customVars = [
+      // Core Colors
+      '--background', '--foreground', '--primary', '--primary-foreground', 
+      '--secondary', '--secondary-foreground', '--accent', '--accent-foreground', 
+      '--muted', '--muted-foreground', '--border', '--input', '--ring',
+      // Component Colors
+      '--card', '--card-foreground', '--popover', '--popover-foreground',
+      '--destructive', '--destructive-foreground',
+      // Radius
+      '--radius',
+      // Fonts (Attempted)
+      '--font-family-sans' 
+    ];
 
-    // --- Apply Colors --- 
-    // Update the core ShadCN/Tailwind CSS variables
-    root.style.setProperty('--background', toHslString(settings.colors.background));
-    root.style.setProperty('--foreground', toHslString(settings.colors.foreground));
-    root.style.setProperty('--primary', toHslString(settings.colors.primary));
-    // Assuming primary-foreground is derived or a fixed contrast color for now
-    // root.style.setProperty('--primary-foreground', toHslString(calculateContrastColor(settings.colors.primary)));
-    root.style.setProperty('--secondary', toHslString(settings.colors.secondary));
-    root.style.setProperty('--accent', toHslString(settings.colors.accent));
-    root.style.setProperty('--muted', toHslString(settings.colors.muted));
-    root.style.setProperty('--border', toHslString(settings.colors.border));
-    // Need to handle card, popover, destructive etc. - map them or use primary/secondary/muted?
-    // For simplicity, let's map card/popover to background/muted initially
-    root.style.setProperty('--card', toHslString(settings.colors.background)); // Or settings.colors.muted?
-    root.style.setProperty('--popover', toHslString(settings.colors.background)); // Or settings.colors.muted?
-    root.style.setProperty('--card-foreground', toHslString(settings.colors.foreground));
-    root.style.setProperty('--popover-foreground', toHslString(settings.colors.foreground));
+    const clearCustomStyles = () => {
+      console.log('Clearing custom theme styles for dark mode or reset.');
+      customVars.forEach(v => root.style.removeProperty(v));
+      // Clear direct body styles
+      document.body.style.fontFamily = '';
+      document.body.style.fontSize = '';
+      document.body.style.fontWeight = '';
+      document.body.style.background = '';
+      document.body.style.backgroundImage = '';
+      document.body.style.backgroundSize = '';
+      document.body.style.backgroundPosition = '';
+      document.body.style.backgroundRepeat = '';
+      removeGoogleFontLink();
+    };
 
-    // --- Apply Corner Radius --- 
-    root.style.setProperty('--radius', `${settings.cornerRadius}px`);
+    if (appliedSettings && appliedSettings !== defaultThemeSettings) {
+      // Apply custom theme settings
+      console.log('Applying custom theme settings');
+      clearCustomStyles(); // Clear potential previous styles before applying new ones
+      const settings = appliedSettings;
 
-    // --- Apply Fonts --- 
-    // Tailwind primarily uses utility classes for fonts (e.g., font-sans, text-lg, font-bold).
-    // Directly setting --font-family-sans might work if Tailwind picks it up.
-    // A more robust way might involve dynamically adding a class to the body or using inline styles
-    // where needed, but let's try the variable first.
-    root.style.setProperty('--font-family-sans', settings.fonts.family);
-    // We won't override base font size/weight via CSS vars as it conflicts easily with Tailwind utils.
-    // Components needing specific themed font styles might need inline styles.
+      // --- Apply Colors --- 
+      root.style.setProperty('--background', toHslString(settings.colors.background));
+      root.style.setProperty('--foreground', toHslString(settings.colors.foreground));
+      
+      root.style.setProperty('--card', toHslString(settings.colors.muted)); // Map card background to muted
+      root.style.setProperty('--card-foreground', toHslString(settings.colors.foreground));
+      
+      root.style.setProperty('--popover', toHslString(settings.colors.muted)); // Map popover background to muted
+      root.style.setProperty('--popover-foreground', toHslString(settings.colors.foreground));
 
-    // --- Apply Background --- 
-    // Clear previous background styles first
-    document.body.style.background = '';
-    document.body.style.backgroundImage = '';
-    document.body.style.backgroundSize = '';
-    document.body.style.backgroundPosition = '';
-    document.body.style.backgroundRepeat = '';
+      root.style.setProperty('--primary', toHslString(settings.colors.primary));
+      // TODO: primary-foreground needs contrast calculation or a dedicated theme setting
+      // root.style.setProperty('--primary-foreground', toHslString(settings.colors.primaryForeground || defaultLight.primaryForeground)); 
+      
+      root.style.setProperty('--secondary', toHslString(settings.colors.secondary));
+      // TODO: secondary-foreground needs contrast calculation or dedicated setting
 
-    if (settings.background.type === 'color') {
-      // Let the --background CSS variable handle this via Tailwind's bg-background class
-      // document.body.style.backgroundColor = settings.background.value;
-    } else if (settings.background.type === 'gradient') {
-      document.body.style.background = settings.background.value;
-    } else if (settings.background.type === 'image') {
-      document.body.style.backgroundImage = `url(${settings.background.value})`;
-      document.body.style.backgroundSize = 'cover';
-      document.body.style.backgroundPosition = 'center';
-      document.body.style.backgroundRepeat = 'no-repeat';
+      root.style.setProperty('--muted', toHslString(settings.colors.muted));
+      // TODO: muted-foreground needs contrast calculation or dedicated setting
+
+      root.style.setProperty('--accent', toHslString(settings.colors.accent));
+      // TODO: accent-foreground needs contrast calculation or dedicated setting
+
+      // Destructive might not have a direct mapping, use default or add to settings
+      // root.style.setProperty('--destructive', toHslString(settings.colors.destructive || defaultLight.destructive));
+      // root.style.setProperty('--destructive-foreground', toHslString(settings.colors.destructiveForeground || defaultLight.destructiveForeground));
+
+      root.style.setProperty('--border', toHslString(settings.colors.border));
+      root.style.setProperty('--input', toHslString(settings.colors.border)); // Map input border to border
+      root.style.setProperty('--ring', toHslString(settings.colors.primary)); // Map ring to primary
+
+      // --- Apply Corner Radius --- 
+      root.style.setProperty('--radius', `${settings.cornerRadius}px`);
+
+      // --- Apply Fonts --- 
+      // Attempt 1: Set CSS Variable (Tailwind *might* pick this up if configured)
+       root.style.setProperty('--font-family-sans', settings.fonts.family);
+      // Attempt 2: Directly style body (More reliable but less clean)
+      // document.body.style.fontFamily = settings.fonts.family;
+      loadGoogleFont(settings.fonts.family, settings.fonts.weight);
+      document.body.style.fontSize = `${settings.fonts.size}px`;
+      document.body.style.fontWeight = String(settings.fonts.weight);
+
+      // --- Apply Background --- 
+      if (settings.background.type === 'gradient') {
+        document.body.style.background = settings.background.value;
+      } else if (settings.background.type === 'image') {
+        document.body.style.backgroundImage = `url(${settings.background.value})`;
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundPosition = 'center';
+        document.body.style.backgroundRepeat = 'no-repeat';
+      }
+      // Color background is handled by root.style.setProperty('--background')
+    }
+    // If systemThemeMode is light but !appliedSettings, defaults from CSS will apply after clearCustomStyles.
+
+    // If no custom settings are applied, or if they are the default ones, clear custom styles
+    // to let next-themes handle base styling (light/dark).
+    else {
+        console.log('No custom theme or default theme applied, clearing custom styles for next-themes defaults.');
+        clearCustomStyles();
     }
 
-    // --- Apply Shadows (Complex) --- 
-    // Tailwind uses utility classes (shadow-sm, shadow-md, etc.). Overriding these
-    // via CSS variables is not standard. Components needing custom shadows might
-    // need inline styles: `style={{ boxShadow: \`0 0 ${settings.shadows.intensity}px ${settings.shadows.color}\` }}`
-    // We could set a general --shadow-color variable if useful elsewhere.
-    // root.style.setProperty('--shadow-color', settings.shadows.color);
-
-    // --- Apply Spacing (Complex) --- 
-    // Similar to shadows, Tailwind uses utility classes (p-4, m-2). Overriding base
-    // spacing globally via CSS vars is difficult. The settings are likely for component-level use.
-
-  }, [appliedSettings]);
+  }, [appliedSettings]); // Dependencies: appliedSettings and systemThemeMode // Dependency changed to just appliedSettings
 
   // Function to manually apply settings (e.g., after creating/editing)
   const applyThemeSettings = (settings: ThemeSettings) => {
@@ -170,11 +240,12 @@ export function CustomThemeProvider({ children }: { children: React.ReactNode })
     }
   };
 
+  // Memoize the context value
   const value = useMemo(() => ({
     themeSettings: currentThemeSettings,
     isLoading: !isInitialized,
     applyThemeSettings,
-  }), [currentThemeSettings, isInitialized, applyThemeSettings]);
+  }), [currentThemeSettings, isInitialized, applyThemeSettings]); // Correct dependencies
 
   return (
     <CustomThemeContext.Provider value={value}>

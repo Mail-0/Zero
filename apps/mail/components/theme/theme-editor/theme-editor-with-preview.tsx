@@ -22,6 +22,20 @@ import { toast } from 'sonner';
 import { ThemePreview } from './theme-preview';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
+const googleFonts = [
+  { name: 'Roboto', weights: ['300', '400', '500', '700'] },
+  { name: 'Open Sans', weights: ['300', '400', '600', '700'] },
+  { name: 'Lato', weights: ['300', '400', '700'] },
+  { name: 'Montserrat', weights: ['300', '400', '500', '600', '700'] },
+  { name: 'Oswald', weights: ['300', '400', '500', '600', '700'] },
+  { name: 'Source Sans Pro', weights: ['300', '400', '600', '700'] },
+  { name: 'Raleway', weights: ['300', '400', '500', '600', '700'] },
+  { name: 'Poppins', weights: ['300', '400', '500', '600', '700'] },
+  { name: 'Noto Sans', weights: ['400', '700'] },
+  { name: 'Ubuntu', weights: ['300', '400', '500', '700'] },
+  // Add more fonts as desired
+];
+
 interface ThemeEditorWithPreviewProps {
   initialSettings?: ThemeSettings;
   initialName?: string;
@@ -267,14 +281,14 @@ export function ThemeEditorWithPreview({
                           onValueChange={(value) => updateFont('family', value)}
                         >
                           <SelectTrigger id="font-family">
-                            <SelectValue placeholder="Select font family" />
+                            <SelectValue placeholder="Select a font family" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Geist">Geist</SelectItem>
-                            <SelectItem value="Arial">Arial</SelectItem>
-                            <SelectItem value="Helvetica">Helvetica</SelectItem>
-                            <SelectItem value="Inter">Inter</SelectItem>
-                            <SelectItem value="Roboto">Roboto</SelectItem>
+                            {googleFonts.map(font => (
+                              <SelectItem key={font.name} value={font.name}>
+                                {font.name}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>

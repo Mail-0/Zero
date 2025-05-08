@@ -19,16 +19,24 @@ import { emailProviders } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/lib/auth-client';
 import { useTranslations } from 'next-intl';
-import { Trash, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { Trash, Plus, Palette } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { toast } from 'sonner';
+import { useUserThemes, useThemeActions } from '@/hooks/use-themes';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function ConnectionsPage() {
   const { refetch } = useSession();
   const { data: connections, mutate, isLoading } = useConnections();
   const [openTooltip, setOpenTooltip] = useState<string | null>(null);
   const t = useTranslations();
+  const router = useRouter();
+
+  const { themes: userThemes, isLoading: isLoadingUserThemes } = useUserThemes();
+  const { applyToConnection } = useThemeActions();
 
   const disconnectAccount = async (connectionId: string) => {
     try {
@@ -40,6 +48,38 @@ export default function ConnectionsPage() {
       console.error('Error disconnecting account:', error);
       toast.error(t('pages.settings.connections.disconnectError'));
     }
+  };
+
+  const handleThemeChange = async (newThemeId: string, connectionId: string) => {
+    if (newThemeId === 'manage-themes') {
+      router.push('/settings/themes/theme-management');
+      return;
+    }
+    if (newThemeId === 'none') {
+      const themeToDetach = userThemes.find(theme => theme.connectionId === connectionId);
+      if (themeToDetach) {
+        toast.info("Selecting 'None' will be handled by choosing a default theme or having no theme linked. For now, select an actual theme or manage themes.");
+        return;
+      }
+    }
+
+    toast.promise(applyToConnection(newThemeId, connectionId), {
+      loading: 'Applying theme...',
+      success: (result) => {
+        if (result.success) {
+          mutate();
+          return 'Theme applied successfully!';
+        } else {
+          throw new Error(result.error || 'Failed to apply theme');
+        }
+      },
+      error: (err) => err.message || 'Could not apply theme.',
+    });
+  };
+
+  const getConnectionCurrentThemeId = (connectionId: string): string => {
+    const currentTheme = userThemes.find(theme => theme.connectionId === connectionId);
+    return currentTheme ? currentTheme.id : 'system-default';
   };
 
   return (
@@ -123,37 +163,60 @@ export default function ConnectionsPage() {
                       </div>
                     </div>
                   </div>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-muted-foreground hover:text-primary ml-4 shrink-0"
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>{t('pages.settings.connections.disconnectTitle')}</DialogTitle>
-                        <DialogDescription>
-                          {t('pages.settings.connections.disconnectDescription')}
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="flex justify-end gap-4">
-                        <DialogClose asChild>
-                          <Button variant="outline">
-                            {t('pages.settings.connections.cancel')}
-                          </Button>
-                        </DialogClose>
-                        <DialogClose asChild>
-                          <Button onClick={() => disconnectAccount(connection.id)}>
-                            {t('pages.settings.connections.remove')}
-                          </Button>
-                        </DialogClose>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  <div className="flex items-center gap-1 ml-4 shrink-0">
+                    <Select
+                      value={getConnectionCurrentThemeId(connection.id)}
+                      onValueChange={(newThemeId) => handleThemeChange(newThemeId, connection.id)}
+                    >
+                      <SelectTrigger className="w-[180px] h-9" aria-label={`Theme for ${connection.name}`}>
+                        <Palette className="h-4 w-4 mr-2 opacity-50" />
+                        <SelectValue placeholder="Select theme" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="system-default">System Default</SelectItem>
+                        {userThemes && userThemes.map(theme => (
+                          <SelectItem key={theme.id} value={theme.id}>{theme.name}</SelectItem>
+                        ))}
+                        <SelectItem value="manage-themes">
+                          <Link href="/settings/themes/theme-management" className="flex items-center">
+                            <Plus className="h-4 w-4 mr-2" /> Manage / Create
+                          </Link>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-primary ml-4 shrink-0"
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>{t('pages.settings.connections.disconnectTitle')}</DialogTitle>
+                          <DialogDescription>
+                            {t('pages.settings.connections.disconnectDescription')}
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="flex justify-end gap-4">
+                          <DialogClose asChild>
+                            <Button variant="outline">
+                              {t('pages.settings.connections.cancel')}
+                            </Button>
+                          </DialogClose>
+                          <DialogClose asChild>
+                            <Button onClick={() => disconnectAccount(connection.id)}>
+                              {t('pages.settings.connections.remove')}
+                            </Button>
+                          </DialogClose>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </div>
               ))}
             </div>

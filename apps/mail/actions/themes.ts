@@ -302,13 +302,17 @@ export async function createDefaultThemes() {
 /**
  * Apply a theme to the current active connection
  */
-export async function applyThemeToConnection(themeId: string) {
+export async function applyThemeToConnection(themeId: string, targetConnectionId?: string) {
   const headersList = await headers();
   const session = await auth.api.getSession({ headers: headersList });
   
+  const effectiveConnectionId = targetConnectionId || session?.connectionId;
+
   console.log('Session in applyThemeToConnection:', JSON.stringify({
     userId: session?.user?.id,
-    connectionId: session?.connectionId,
+    originalSessionConnectionId: session?.connectionId,
+    targetConnectionIdProvided: !!targetConnectionId,
+    effectiveConnectionId: effectiveConnectionId,
     hasSessionData: !!session
   }));
 
@@ -316,8 +320,8 @@ export async function applyThemeToConnection(themeId: string) {
     return { success: false, error: 'Not authenticated' };
   }
   
-  if (!session.connectionId) {
-    return { success: false, error: 'No active connection' };
+  if (!effectiveConnectionId) {
+    return { success: false, error: 'No active or target connection specified' };
   }
 
   try {
@@ -336,7 +340,7 @@ export async function applyThemeToConnection(themeId: string) {
     // Check if there's already a theme assigned to this connection
     const existingConnectionTheme = await db.query.theme.findFirst({
       where: and(
-        eq(theme.connectionId, session.connectionId),
+        eq(theme.connectionId, effectiveConnectionId),
         eq(theme.userId, session.user.id)
       ),
     });
@@ -357,12 +361,12 @@ export async function applyThemeToConnection(themeId: string) {
         .where(eq(theme.id, existingConnectionTheme.id));
     }
     
-    console.log('Assigning theme to connection:', { themeId, connectionId: session.connectionId });
+    console.log('Assigning theme to connection:', { themeId, connectionId: effectiveConnectionId });
     
     // Assign the selected theme to the connection
     await db
       .update(theme)
-      .set({ connectionId: session.connectionId })
+      .set({ connectionId: effectiveConnectionId })
       .where(eq(theme.id, themeId));
     
     console.log('Revalidating paths after applying theme');
@@ -373,7 +377,7 @@ export async function applyThemeToConnection(themeId: string) {
       success: true, 
       message: 'Theme applied successfully', 
       theme: themeData,
-      connectionId: session.connectionId,
+      connectionId: effectiveConnectionId,
       sessionInfo: {
         userId: session.user.id,
         hasConnectionId: !!session.connectionId,
