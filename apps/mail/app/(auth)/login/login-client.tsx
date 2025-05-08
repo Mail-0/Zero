@@ -1,9 +1,8 @@
 'use client';
 
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useEffect, type ReactNode, useState, Suspense } from 'react';
+import type { EnvVarInfo } from '@zero/server/auth-providers';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { type EnvVarInfo } from '@/lib/auth-providers';
 import { signIn, useSession } from '@/lib/auth-client';
 import { Google } from '@/components/icons/icons';
 import { Button } from '@/components/ui/button';

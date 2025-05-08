@@ -186,7 +186,7 @@ export function MailLayout() {
                     ) : null}
                   </div>
                   <div className="flex items-center gap-2">
-                    {true ? (
+                    {brainState?.enabled ? (
                       <Button
                         variant="outline"
                         size={'sm'}

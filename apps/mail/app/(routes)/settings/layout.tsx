@@ -1,12 +1,13 @@
-import { Suspense } from 'react';
-import { auth } from '@/lib/auth';
-import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
 import { SettingsLayoutContent } from '@/components/ui/settings-content';
+import { authProxy } from '@/lib/auth-proxy';
+import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
+import { Suspense } from 'react';
+
 export default async function SettingsLayout({ children }: { children: React.ReactNode }) {
   const headersList = await headers();
-  const session = await auth.api.getSession({ headers: headersList });
-  
+  const session = await authProxy.api.getSession({ headers: headersList });
+
   if (!session) {
     redirect('/login');
   }

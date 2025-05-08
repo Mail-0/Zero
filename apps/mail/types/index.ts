@@ -135,3 +135,15 @@ export interface IOutgoingMessage {
   threadId?: string;
   fromEmail?: string;
 }
+
+export interface Note {
+  id: string;
+  userId: string;
+  threadId: string;
+  content: string;
+  color: string;
+  isPinned: boolean | null;
+  order: number;
+  createdAt: Date;
+  updatedAt: Date;
+}

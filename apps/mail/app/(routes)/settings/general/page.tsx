@@ -16,7 +16,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { availableLocales, locales, type Locale } from '@/i18n/config';
 import { useForm, type ControllerRenderProps } from 'react-hook-form';
 import { userSettingsSchema } from '@zero/db/user_settings_default';

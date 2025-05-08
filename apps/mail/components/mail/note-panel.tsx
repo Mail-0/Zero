@@ -73,10 +73,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { useMutation } from '@tanstack/react-query';
 import { useThreadNotes } from '@/hooks/use-notes';
 import { Button } from '@/components/ui/button';
-import type { Note } from '@/lib/notes-manager';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { CSS } from '@dnd-kit/utilities';
+import type { Note } from '@/types';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
