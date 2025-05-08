@@ -169,10 +169,10 @@ export function MailLayout() {
               threadId ? 'md:hidden lg:block' : '',
             )}
           >
-            <div className="bg-panelLight dark:bg-panelDark h-screen flex-1 flex-col overflow-y-auto overflow-x-hidden border-[#E7E7E7] shadow-inner md:flex md:h-[calc(100dvh-0.5rem)] md:rounded-2xl md:border md:shadow-sm lg:w-screen lg:max-w-[415px] xl:max-w-[500px] dark:border-[#252525]">
+            <div className="bg-card h-screen flex-1 flex-col overflow-y-auto overflow-x-hidden border-border shadow-inner md:flex md:h-[calc(100dvh-0.5rem)] md:rounded-2xl md:border md:shadow-sm lg:w-screen lg:max-w-[415px] xl:max-w-[500px]">
               <div
                 className={cn(
-                  'sticky top-0 z-[15] flex items-center justify-between gap-1.5 border-b border-[#E7E7E7] p-2 px-[20px] transition-colors md:min-h-14 dark:border-[#252525]',
+                  'sticky top-0 z-[15] flex items-center justify-between gap-1.5 border-b border-border p-2 px-[20px] transition-colors md:min-h-14',
                 )}
               >
                 <div className="flex w-full items-center justify-between gap-2">
@@ -188,9 +188,9 @@ export function MailLayout() {
                               onClick={() => {
                                 setMail({ ...mail, bulkSelected: [] });
                               }}
-                              className="flex h-6 items-center gap-1 rounded-md bg-[#313131] px-2 text-xs text-[#A0A0A0] hover:bg-[#252525]"
+                              className="flex h-6 items-center gap-1 rounded-md bg-muted px-2 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:ring-1 focus-visible:ring-ring"
                             >
-                              <X className="h-3 w-3 fill-[#A0A0A0]" />
+                              <X className="h-3 w-3 fill-muted-foreground" />
                               <span>esc</span>
                             </button>
                           </TooltipTrigger>
@@ -236,7 +236,7 @@ export function MailLayout() {
 
           {isDesktop && (
             <ResizablePanel
-              className={`bg-panelLight dark:bg-panelDark ${threadId ? 'mr-1' : 'lg:mr-1'} w-fit rounded-2xl border border-[#E7E7E7] shadow-sm lg:flex lg:shadow-sm dark:border-[#252525]`}
+              className={`bg-card ${threadId ? 'mr-1' : 'lg:mr-1'} w-fit rounded-2xl border border-border shadow-sm lg:flex lg:shadow-sm`}
               defaultSize={30}
               minSize={30}
             >
@@ -254,7 +254,7 @@ export function MailLayout() {
                 if (!isOpen) handleClose();
               }}
             >
-              <DrawerContent className="bg-panelLight dark:bg-panelDark h-[calc(100dvh-3rem)] p-0">
+              <DrawerContent className="bg-card h-[calc(100dvh-3rem)] p-0">
                 <DrawerHeader className="sr-only">
                   <DrawerTitle>Email Details</DrawerTitle>
                 </DrawerHeader>
@@ -434,7 +434,7 @@ function BulkSelectActions() {
 
         <DialogContent
           showOverlay
-          className="bg-panelLight dark:bg-panelDark max-w-lg rounded-xl border p-4"
+          className="bg-card max-w-lg rounded-xl border p-4"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
               e.preventDefault();
