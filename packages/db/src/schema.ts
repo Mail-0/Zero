@@ -1,4 +1,4 @@
-import { pgTableCreator, text, timestamp, boolean, integer, jsonb, primaryKey } from 'drizzle-orm/pg-core';
+import { pgTableCreator, text, timestamp, boolean, integer, jsonb, primaryKey, uuid } from 'drizzle-orm/pg-core';
 import { defaultUserSettings } from '@zero/db/user_settings_default';
 import { unique } from 'drizzle-orm/pg-core';
 import type { WritingStyleMatrix } from '@zero/mail/services/writing-style-service';
@@ -147,3 +147,53 @@ export const writingStyleMatrix = createTable('writing_style_matrix', {
     }),
   ]
 })
+
+export type ThemeSettings = {
+  // Colors
+  colors: {
+    background: string;
+    foreground: string;
+    primary: string;
+    secondary: string;
+    accent: string;
+    muted: string;
+    border: string;
+  };
+  // Fonts
+  fonts: {
+    family: string;
+    size: number;
+    weight: number;
+  };
+  // Spacing
+  spacing: {
+    padding: number;
+    margin: number;
+  };
+  // Shadows
+  shadows: {
+    intensity: number;
+    color: string;
+  };
+  // Corner Radius
+  cornerRadius: number;
+  // Backgrounds
+  background: {
+    type: 'color' | 'gradient' | 'image';
+    value: string;
+  };
+};
+
+export const theme = createTable('theme', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  connectionId: text('connection_id')
+    .references(() => connection.id, { onDelete: 'set null' }),
+  isPublic: boolean('is_public').default(false).notNull(),
+  settings: jsonb('settings').$type<ThemeSettings>().notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().$onUpdate(() => new Date()),
+});
