@@ -9,7 +9,17 @@ import {
   sunsetHorizonThemeSettings, 
   sunsetHorizonDarkThemeSettings,
   cyberpunkThemeSettings,
-  cyberpunkDarkThemeSettings
+  cyberpunkDarkThemeSettings,
+  amberMinimalThemeSettings,
+  amberMinimalDarkThemeSettings,
+  amethystHazeThemeSettings,
+  amethystHazeDarkThemeSettings,
+  boldTechThemeSettings,
+  boldTechDarkThemeSettings,
+  bubblegumThemeSettings,
+  bubblegumDarkThemeSettings,
+  caffeineThemeSettings,
+  caffeineDarkThemeSettings
 } from '@zero/db';
 import { eq, and } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
@@ -441,6 +451,36 @@ export async function createPresetThemes() {
     msg = await checkAndCreate('Cyberpunk', cyberpunkThemeSettings);
     if (msg) createdMessages.push(msg);
     msg = await checkAndCreate('Cyberpunk Dark', cyberpunkDarkThemeSettings);
+    if (msg) createdMessages.push(msg);
+
+    // Amber Minimal Themes
+    msg = await checkAndCreate('Amber Minimal', amberMinimalThemeSettings);
+    if (msg) createdMessages.push(msg);
+    msg = await checkAndCreate('Amber Minimal Dark', amberMinimalDarkThemeSettings);
+    if (msg) createdMessages.push(msg);
+
+    // Amethyst Haze Themes
+    msg = await checkAndCreate('Amethyst Haze', amethystHazeThemeSettings);
+    if (msg) createdMessages.push(msg);
+    msg = await checkAndCreate('Amethyst Haze Dark', amethystHazeDarkThemeSettings);
+    if (msg) createdMessages.push(msg);
+
+    // Bold Tech Themes
+    msg = await checkAndCreate('Bold Tech', boldTechThemeSettings);
+    if (msg) createdMessages.push(msg);
+    msg = await checkAndCreate('Bold Tech Dark', boldTechDarkThemeSettings);
+    if (msg) createdMessages.push(msg);
+
+    // Bubblegum Themes
+    msg = await checkAndCreate('Bubblegum', bubblegumThemeSettings);
+    if (msg) createdMessages.push(msg);
+    msg = await checkAndCreate('Bubblegum Dark', bubblegumDarkThemeSettings);
+    if (msg) createdMessages.push(msg);
+
+    // Caffeine Themes
+    msg = await checkAndCreate('Caffeine', caffeineThemeSettings);
+    if (msg) createdMessages.push(msg);
+    msg = await checkAndCreate('Caffeine Dark', caffeineDarkThemeSettings);
     if (msg) createdMessages.push(msg);
 
     if (createdMessages.length > 0) {

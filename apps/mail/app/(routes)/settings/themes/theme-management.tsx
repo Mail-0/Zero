@@ -329,40 +329,6 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
           </Button>
         </div>
       </div>
-      
-      {/* Connection Debug Info */}
-      <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md text-sm">
-        <p>Connection Status: {session ? 'Logged in' : 'Not logged in'}</p>
-        <p>Connection ID: {session?.connectionId ? `${session.connectionId.substring(0, 8)}...` : 'No connection ID'}</p>
-        <p>User ID: {session?.user?.id ? `${session.user.id.substring(0, 8)}...` : 'No user ID'}</p>
-        
-        {/* Connection Switcher */}
-        <div className="mt-4">
-          <p className="font-medium mb-2">Switch Connection:</p>
-          <div className="flex flex-wrap gap-2">
-            {connections?.map((conn) => (
-              <Button 
-                key={conn.id} 
-                size="sm"
-                variant={conn.id === session?.connectionId ? "default" : "outline"}
-                onClick={async () => {
-                  try {
-                    await putConnection(conn.id);
-                    toast.success(`Switched to connection: ${conn.email}`);
-                    refetch();
-                    mutate();
-                  } catch (error) {
-                    console.error('Error switching connection:', error);
-                    toast.error('Failed to switch connection');
-                  }
-                }}
-              >
-                {conn.id === session?.connectionId ? '✓ ' : ''}{conn.email}
-              </Button>
-            ))}
-          </div>
-        </div>
-      </div>
 
       {themes.length === 0 ? (
         <div className="text-center p-8 border rounded-md bg-card">
