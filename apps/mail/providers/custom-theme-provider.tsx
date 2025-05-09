@@ -79,8 +79,12 @@ function removeGoogleFontLink() {
 export function CustomThemeProvider({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
   const connectionId = session?.connectionId;
-  const { theme: dbTheme, isLoading: isLoadingDbTheme, mutate: mutateConnectionTheme } = useConnectionTheme(connectionId || '');
-  const { resolvedTheme: systemThemeMode } = useNextTheme(); // 'light' or 'dark'
+  const { 
+    theme: dbTheme, 
+    isLoading: isLoadingDbTheme, 
+    invalidate: invalidateConnectionTheme
+  } = useConnectionTheme(connectionId || '');
+  const { resolvedTheme: systemThemeMode } = useNextTheme();
 
   const [appliedSettings, setAppliedSettings] = useState<ThemeSettings | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -99,8 +103,7 @@ export function CustomThemeProvider({ children }: { children: React.ReactNode })
           console.log('Applying theme from localStorage for connection:', connectionId);
           setAppliedSettings(JSON.parse(cachedSettings));
           setIsInitialized(true);
-          // Optionally revalidate in background
-          mutateConnectionTheme(); 
+
         } else if (dbTheme) {
           console.log('Applying theme from DB fetch for connection:', connectionId);
           setAppliedSettings(dbTheme.settings);
@@ -121,8 +124,10 @@ export function CustomThemeProvider({ children }: { children: React.ReactNode })
       // No active connection, apply default settings
       setAppliedSettings(defaultThemeSettings);
       setIsInitialized(true);
+      // Clear any specific connection theme if connectionId is removed
+      // This might involve clearing local storage for the previous connection if needed.
     }
-  }, [connectionId, dbTheme, isLoadingDbTheme, mutateConnectionTheme]);
+  }, [connectionId, dbTheme, isLoadingDbTheme, invalidateConnectionTheme]);
 
   // 2. Apply theme settings to CSS variables, respecting light/dark mode
   useEffect(() => {

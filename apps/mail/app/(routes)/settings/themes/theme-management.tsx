@@ -1,17 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useThemeActions } from '@/hooks/use-themes';
+import { useUserThemes, useThemeActions } from '@/hooks/use-themes';
 import type { ThemeSettings } from '@zero/db/schema';
 import { ThemeEditorWithPreview, ThemePreview } from '@/components/theme/theme-editor';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Pencil, Trash2, ExternalLink, Check, Library } from 'lucide-react';
+import { PlusCircle, Pencil, Trash2, ExternalLink, Check, Library, RefreshCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import Link from 'next/link';
 import { useSession } from '@/lib/auth-client';
-import { useConnections } from '@/hooks/use-connections';
-import { useTRPCClient } from '@/providers/query-provider';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +22,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useCustomTheme } from '@/providers/custom-theme-provider';
 import { defaultThemeSettings } from '@zero/db/theme_settings_default';
+import { EmptyPlaceholder } from '@/components/empty-placeholder';
 
 interface Theme {
   id: string;
@@ -34,63 +33,55 @@ interface Theme {
 }
 
 interface ThemeManagementProps {
-  initialThemes: Theme[];
+  initialThemes?: Theme[];
 }
 
-export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
+export function ThemeManagement({ initialThemes = [] }: ThemeManagementProps) {
+  const { 
+    themes: fetchedThemes, 
+    isLoading: isLoadingThemes, 
+    error: themesError, 
+    invalidate: invalidateUserThemes 
+  } = useUserThemes();
+  
   const [themes, setThemes] = useState<Theme[]>(initialThemes);
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(initialThemes.length === 0);
-  const { data: session, refetch } = useSession();
-  const { create, copy, update, remove, initializeDefaults, addPresetThemes, applyToConnection } = useThemeActions();
-  const { data: connections, isLoading } = useConnections();
+  const [isInitializingDefaults, setIsInitializingDefaults] = useState(false);
+  
+  const { data: session } = useSession();
+  const { create, update, remove, initializeDefaults, addPresetThemes, applyToConnection } = useThemeActions();
   const { applyThemeSettings } = useCustomTheme();
-  const client = useTRPCClient();
 
-  // Create default themes if none exist (after component mounts)
   useEffect(() => {
-    const createDefaults = async () => {
-      if (initialThemes.length === 0) {
+    if (!isLoadingThemes && fetchedThemes) {
+      setThemes(fetchedThemes);
+    }
+  }, [fetchedThemes, isLoadingThemes]);
+
+  useEffect(() => {
+    const createDefaultsIfNeeded = async () => {
+      if (!isLoadingThemes && fetchedThemes && fetchedThemes.length === 0 && !isInitializingDefaults) {
+        setIsInitializingDefaults(true);
         try {
-          setIsInitializing(true);
           const result = await initializeDefaults();
           if (result.success) {
             toast.success('Default themes created successfully');
-            // Force reload to show the new themes
-            window.location.reload();
           } else {
-            toast.error('Failed to create default themes');
+            toast.error('Failed to create default themes. The server indicated an issue.');
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error('Error creating default themes:', error);
-          toast.error('Failed to create default themes');
+          toast.error(error.message || 'Failed to create default themes due to an exception.');
         } finally {
-          setIsInitializing(false);
+          setIsInitializingDefaults(false);
         }
       }
     };
-    
-    createDefaults();
-  }, [initialThemes.length, initializeDefaults]);
-
-  // Log session information for debugging
-  useEffect(() => {
-    if (session) {
-      console.log('Session details:', {
-        hasSession: !!session,
-        userId: session.user?.id,
-        connectionId: session.connectionId,
-        sessionProperties: Object.keys(session),
-        hasActiveConnection: !!session.activeConnection,
-        activeConnectionId: session.activeConnection?.id,
-      });
-    } else {
-      console.log('No session available');
-    }
-  }, [session]);
+    createDefaultsIfNeeded();
+  }, [fetchedThemes, isLoadingThemes, initializeDefaults, isInitializingDefaults]);
 
   const selectedTheme = selectedThemeId ? themes.find(t => t.id === selectedThemeId) : null;
 
@@ -98,174 +89,133 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
     try {
       const result = await create({ settings, name, isPublic });
       if (result.success && result.theme) {
-        const newTheme: Theme = {
-          id: result.theme.id,
-          name: result.theme.name,
-          settings: result.theme.settings,
-          isPublic: result.theme.isPublic,
-          connectionId: result.theme.connectionId || null,
-        };
-        setThemes(prev => [newTheme, ...prev]);
         setIsCreating(false);
         toast.success('Theme created successfully');
       } else {
-        toast.error('Failed to create theme');
+        toast.error('Failed to create theme. The server indicated an issue.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating theme:', error);
-      toast.error('Failed to create theme');
+      toast.error(error.message || 'Failed to create theme due to an exception.');
     }
   };
 
   const handleUpdateTheme = async (settings: ThemeSettings, name: string, isPublic: boolean) => {
     if (!selectedThemeId || !selectedTheme) return;
-
     try {
-      const updatedThemeData = {
+      const result = await update({
         id: selectedThemeId,
         name,
         settings,
         isPublic,
         connectionId: selectedTheme.connectionId,
-      };
-      
-      // Call the tRPC client to update the theme
-      const result = await update(updatedThemeData);
+      });
 
       if (result.success && result.theme) {
-        // Update local state
-        const updatedThemeForState: Theme = {
-          id: selectedThemeId,
-          name: result.theme.name,
-          settings: result.theme.settings,
-          isPublic: result.theme.isPublic,
-          connectionId: result.theme.connectionId,
-        };
-        
-        setThemes(prev =>
-          prev.map(theme => (theme.id === selectedThemeId ? updatedThemeForState : theme))
-        );
-        
         setIsEditing(false);
         toast.success('Theme updated successfully');
-
-        // If the updated theme is the currently active one, re-apply its settings visually
         if (selectedTheme.connectionId === session?.connectionId) {
           applyThemeSettings(result.theme.settings);
         }
       } else {
-        toast.error('Failed to update theme');
+        toast.error('Failed to update theme. The server indicated an issue.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating theme:', error);
-      toast.error('Failed to update theme');
+      toast.error(error.message || 'Failed to update theme due to an exception.');
     }
   };
 
   const handleDeleteTheme = async () => {
     if (!selectedThemeId) return;
+    const themeToDelete = themes.find(t => t.id === selectedThemeId);
+    const wasActive = themeToDelete?.connectionId === session?.connectionId;
+
+    const previousThemes = themes;
+    setThemes(prev => prev.filter(theme => theme.id !== selectedThemeId));
+    setSelectedThemeId(null);
+    setDeleteDialogOpen(false);
 
     try {
-      const themeToDelete = themes.find(t => t.id === selectedThemeId);
-      const wasActive = themeToDelete?.connectionId === session?.connectionId;
-      
-      // Optimistic delete from local state
-      setThemes(prev => prev.filter(theme => theme.id !== selectedThemeId));
-      setSelectedThemeId(null);
-      setDeleteDialogOpen(false);
-      
-      // Delete on server via tRPC
       const result = await remove(selectedThemeId);
-      
       if (result.success) {
         toast.success('Theme deleted successfully');
-        
-        // If the deleted theme was the active one, apply default settings
         if (wasActive) {
           applyThemeSettings(defaultThemeSettings);
         }
       } else {
-        toast.error('Failed to delete theme');
-        // Refetch themes to restore correct state
-        refreshThemes();
+        toast.error('Failed to delete theme. The server indicated an issue.');
+        setThemes(previousThemes);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting theme:', error);
-      toast.error('Failed to delete theme');
-      refreshThemes();
+      toast.error(error.message || 'Failed to delete theme due to an exception.');
+      setThemes(previousThemes);
     }
   };
 
-  const refreshThemes = async () => {
-    try {
-      // Get fresh themes data from the server using tRPC
-      const result = await client.themes.getUserThemes.query();
-      
-      if (result.success) {
-        setThemes(result.themes || []);
-        toast.success('Themes refreshed');
-      } else {
-        toast.error('Failed to refresh themes');
-      }
-    } catch (error) {
-      console.error('Error refreshing themes:', error);
-      toast.error('Failed to refresh themes');
-    }
+  const handleRefreshThemes = () => {
+    invalidateUserThemes();
+    toast.info('Refreshing themes...');
   };
-
+  
   const handleApplyTheme = async (themeId: string) => {
+    if (!session?.connectionId) {
+      toast.error('No active connection found. Please select a connection.');
+      return;
+    }
     try {
-      console.log('Applying theme:', themeId, 'for connection:', session?.connectionId);
-      
-      if (!session?.connectionId) {
-        toast.error('No active connection found. Please select a connection.');
-        return;
-      }
-      
-      const result = await applyToConnection(themeId);
-
+      const result = await applyToConnection({ themeId, targetConnectionId: session.connectionId });
       if (result.success && result.theme) {
-        const appliedThemeSettings = result.theme.settings as ThemeSettings;
-        
-        // 1. Apply visually using the context function
-        applyThemeSettings(appliedThemeSettings);
-        
-        // 2. Update local state for the checkmark/button state
-        setThemes(prev => 
-          prev.map(t => ({
-            ...t,
-            // Mark the applied theme for the current connection
-            connectionId: t.id === themeId ? session.connectionId : 
-                          // Unmark any previous theme for this connection
-                          (t.connectionId === session.connectionId ? null : t.connectionId)
-          }))
-        );
+        applyThemeSettings(result.theme.settings as ThemeSettings);
         toast.success(`Theme applied successfully to connection: ${session.connectionId.substring(0, 8)}...`);
-
       } else {
-        console.error('Error response from applyToConnection:', result);
-        toast.error('Failed to apply theme');
+        toast.error('Failed to apply theme. The server indicated an issue.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error applying theme:', error);
-      toast.error('Failed to apply theme');
+      toast.error(error.message || 'Failed to apply theme due to an exception.');
     }
   };
 
   const handleAddPresetThemes = async () => {
-    toast.promise(addPresetThemes(), {
-      loading: 'Adding preset themes...',
-      success: (result) => result.message || 'Preset themes processed.',
-      error: (err) => 'Failed to add preset themes.',
-    });
+    try {
+        const promise = addPresetThemes();
+        toast.promise(promise, {
+            loading: 'Adding preset themes...',
+            success: (result: any) => result.message || 'Preset themes processed successfully.',
+            error: (err: any) => err.message || 'Failed to add preset themes.',
+        });
+        await promise; // Ensure we wait for the promise if further actions depend on it
+    } catch (error: any) {
+        // This catch might be redundant if toast.promise handles all errors,
+        // but kept for safety or if direct error handling is needed beyond toast.
+        console.error('Error in handleAddPresetThemes:', error);
+        toast.error(error.message || 'An unexpected error occurred while adding preset themes.');
+    }
   };
-
-  if (isInitializing) {
+  
+  if (isLoadingThemes || isInitializingDefaults) {
     return (
       <div className="flex flex-col items-center justify-center p-8">
-        <p className="text-lg mb-2">Creating default themes...</p>
-        <p className="text-sm text-muted-foreground">This will only take a moment</p>
+        <RefreshCcw className="h-8 w-8 animate-spin text-muted-foreground mb-4" />
+        <p className="text-lg mb-2">{isInitializingDefaults ? 'Initializing default themes...' : 'Loading your themes...'}</p>
+        <p className="text-sm text-muted-foreground">Please wait a moment.</p>
       </div>
+    );
+  }
+
+  if (themesError) {
+    return (
+      <EmptyPlaceholder>
+        <div className="text-center">
+          <p className="text-destructive">Error loading themes</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            {(themesError as Error).message || "We couldn't fetch your themes. Please try refreshing."}
+          </p>
+          <Button onClick={handleRefreshThemes} className="mt-4">Refresh</Button>
+        </div>
+      </EmptyPlaceholder>
     );
   }
 
@@ -310,10 +260,8 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
             <PlusCircle className="mr-2 h-4 w-4" />
             Create New Theme
           </Button>
-          <Button variant="outline" onClick={refreshThemes}>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
+          <Button variant="outline" onClick={handleRefreshThemes}>
+            <RefreshCcw className="h-4 w-4 mr-2" /> 
             Refresh
           </Button>
           <Button variant="outline" asChild>
@@ -324,17 +272,22 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
         </div>
       </div>
 
-      {themes.length === 0 ? (
-        <div className="text-center p-8 border rounded-md bg-card">
-          <p>You don't have any themes yet.</p>
-          <Button onClick={() => setIsCreating(true)} className="mt-4">
-            <PlusCircle className="mr-2 h-4 w-4" /> Create Your First Theme
-          </Button>
-        </div>
+      {themes.length === 0 && !isLoadingThemes && !isInitializingDefaults ? (
+        <EmptyPlaceholder>
+          <div className="text-center">
+            <p>You don't have any themes yet.</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Try creating a new theme or adding some presets!
+            </p>
+            <Button onClick={() => setIsCreating(true)} className="mt-4">
+              <PlusCircle className="mr-2 h-4 w-4" /> Create Your First Theme
+            </Button>
+          </div>
+        </EmptyPlaceholder>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {themes.map((theme) => (
-            <Card key={theme.id} className="overflow-hidden">
+            <Card key={theme.id} className="overflow-hidden flex flex-col">
               <div 
                 className="h-40 cursor-pointer" 
                 style={{ 
@@ -343,8 +296,9 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
                     ? theme.settings.background.value 
                     : theme.settings.background.type === 'gradient'
                       ? theme.settings.background.value
-                      : `url(${theme.settings.background.value})`,
+                      : `url('''${theme.settings.background.value}''')`,
                   backgroundSize: 'cover',
+                  backgroundPosition: 'center',
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
@@ -353,22 +307,23 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
                 onClick={() => setSelectedThemeId(theme.id === selectedThemeId ? null : theme.id)}
               >
                 <div 
-                  className="rounded-lg p-3"
+                  className="rounded-lg p-3 text-center break-words"
                   style={{
                     backgroundColor: theme.settings.colors.muted,
                     color: theme.settings.colors.foreground,
                     border: `1px solid ${theme.settings.colors.border}`,
                     fontFamily: theme.settings.fonts.family,
-                    boxShadow: `0 0 ${theme.settings.shadows.intensity}px ${theme.settings.shadows.color}`,
+                    boxShadow: `0 0 ${theme.settings.shadows.intensity || 0}px ${theme.settings.shadows.color || 'transparent'}`,
+                    maxWidth: '90%',
                   }}
                 >
                   {theme.name}
                 </div>
               </div>
-              <div className="p-4">
+              <div className="p-4 flex flex-col flex-grow">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-semibold">{theme.name}</h4>
-                  <div className="flex items-center gap-2">
+                  <h4 className="font-semibold truncate" title={theme.name}>{theme.name}</h4>
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     {theme.connectionId === session?.connectionId && (
                       <span className="text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 px-2 py-1 rounded-full flex items-center">
                         <Check className="h-3 w-3 mr-1" /> Active
@@ -381,12 +336,13 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
                     )}
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="flex flex-wrap gap-2 mt-auto">
                   <Button 
                     size="sm" 
                     variant={theme.connectionId === session?.connectionId ? "outline" : "default"}
                     onClick={() => handleApplyTheme(theme.id)}
-                    disabled={theme.connectionId === session?.connectionId}
+                    disabled={theme.connectionId === session?.connectionId || !session?.connectionId}
+                    title={!session?.connectionId ? "No active connection to apply theme" : (theme.connectionId === session?.connectionId ? "Theme is already applied to active connection" : "Apply this theme to your active connection")}
                   >
                     {theme.connectionId === session?.connectionId ? (
                       <>
@@ -437,12 +393,12 @@ export function ThemeManagement({ initialThemes }: ThemeManagementProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the theme. This action cannot be undone.
+              This will permanently delete the theme "{themes.find(t => t.id === selectedThemeId)?.name || 'this theme'}". This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteTheme} className="bg-destructive text-destructive-foreground">
+            <AlertDialogAction onClick={handleDeleteTheme} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

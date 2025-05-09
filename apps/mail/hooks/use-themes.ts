@@ -1,217 +1,223 @@
 'use client';
 
-import useSWR from 'swr';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { useTRPCClient } from '@/providers/query-provider';
 import type { ThemeSettings } from '@zero/db/schema';
-import { useSWRConfig } from 'swr';
 
 export function useUserThemes() {
   const client = useTRPCClient();
-  const { data, error, isLoading, mutate } = useSWR(
-    'user-themes', 
-    () => client.themes.getUserThemes.query()
-  );
+  const queryClient = useQueryClient();
+
+  const { data, error, isLoading } = useQuery({
+    queryKey: ['user-themes'],
+    queryFn: () => client.themes.getUserThemes.query(),
+  });
 
   return {
     themes: data?.themes || [],
     isLoading,
     error,
-    mutate,
+    invalidate: () => queryClient.invalidateQueries({ queryKey: ['user-themes'] }),
   };
 }
 
 export function usePublicThemes() {
   const client = useTRPCClient();
-  const { data, error, isLoading, mutate } = useSWR(
-    'public-themes', 
-    () => client.themes.getPublicThemes.query()
-  );
+  const queryClient = useQueryClient();
+
+  const { data, error, isLoading } = useQuery({
+    queryKey: ['public-themes'],
+    queryFn: () => client.themes.getPublicThemes.query(),
+  });
 
   return {
     themes: data?.themes || [],
     isLoading,
     error,
-    mutate,
+    invalidate: () => queryClient.invalidateQueries({ queryKey: ['public-themes'] }),
   };
 }
 
 export function useTheme(id: string | null | undefined) {
   const client = useTRPCClient();
-  const { data, error, isLoading, mutate } = useSWR(
-    id ? `theme-${id}` : null,
-    () => id ? client.themes.getById.query(id) : null
-  );
+  const queryClient = useQueryClient();
 
-  const update = useCallback(
-    async (updateData: {
+  const queryKey = ['theme', id];
+
+  const { data, error, isLoading } = useQuery({
+    queryKey,
+    queryFn: () => (id ? client.themes.getById.query(id) : Promise.resolve(null)),
+    enabled: !!id,
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (updateData: {
       name?: string;
       connectionId?: string | null;
       settings?: ThemeSettings;
       isPublic?: boolean;
     }) => {
-      if (!id) throw new Error("Theme ID is required for update.");
-      const result = await client.themes.update.mutate({
-        id,
-        ...updateData,
-      });
-      if (result.success) {
-        mutate();
-      }
-      return result;
+      if (!id) throw new Error('Theme ID is required for update.');
+      return client.themes.update.mutate({ id, ...updateData });
     },
-    [id, mutate, client]
-  );
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: ['user-themes'] });
+      // Potentially invalidate public themes if isPublic changes
+    },
+  });
 
-  const remove = useCallback(async () => {
-    if (!id) throw new Error("Theme ID is required for delete.");
-    const result = await client.themes.delete.mutate(id);
-    if (result.success) {
-      mutate(undefined); 
-    }
-    return result;
-  }, [id, mutate, client]);
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (!id) throw new Error('Theme ID is required for delete.');
+      return client.themes.delete.mutate(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: ['user-themes'] });
+      // Potentially invalidate public themes if it was public
+      // And remove from cache
+      queryClient.removeQueries({ queryKey });
+    },
+  });
 
   return {
     theme: data?.theme,
     isLoading,
     error,
-    update,
-    remove,
-    mutate,
+    update: updateMutation.mutateAsync,
+    remove: deleteMutation.mutateAsync,
+    invalidate: () => queryClient.invalidateQueries({ queryKey }),
   };
 }
 
 export function useConnectionTheme(connectionId: string | null | undefined) {
   const client = useTRPCClient();
-  const { data, error, isLoading, mutate } = useSWR(
-    connectionId ? `connection-theme-${connectionId}` : null,
-    () => connectionId ? client.themes.getConnectionTheme.query(connectionId) : null,
-    {
-      shouldRetryOnError: false,
-      revalidateOnFocus: false,
-      dedupingInterval: 5000, 
-      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
-        if (retryCount >= 3) return;
-        setTimeout(() => revalidate({ retryCount }), 3000);
-      }
-    }
-  );
+  const queryClient = useQueryClient();
+  const queryKey = ['connection-theme', connectionId];
+
+  const { data, error, isLoading } = useQuery({
+    queryKey,
+    queryFn: () =>
+      connectionId
+        ? client.themes.getConnectionTheme.query(connectionId)
+        : Promise.resolve(null),
+    enabled: !!connectionId,
+    retry: (failureCount, err: any) => {
+        if (err?.data?.code === 'NOT_FOUND') return false; // Don't retry if theme not found for connection
+        return failureCount < 3;
+    },
+    retryDelay: 3000,
+    refetchOnWindowFocus: false,
+  });
+
+  // Memoize the invalidate function using connectionId in the dependency array for stability
+  const invalidate = useCallback(() => {
+    // Reconstruct queryKey here or use the one from the outer scope if its stability is ensured.
+    // For safety, using connectionId directly to form the key ensures this callback only changes when connectionId changes.
+    queryClient.invalidateQueries({ queryKey: ['connection-theme', connectionId] });
+  }, [queryClient, connectionId]);
 
   return {
     theme: data?.success ? data.theme : null,
     isLoading,
     error,
-    mutate,
+    invalidate, // Return the memoized function
   };
 }
 
 export function useThemeActions() {
   const client = useTRPCClient();
-  const { mutate: mutateSWR } = useSWRConfig();
-  
-  const revalidateUserThemes = () => mutateSWR('user-themes');
-  const revalidatePublicThemes = () => mutateSWR('public-themes');
+  const queryClient = useQueryClient();
 
-  const create = useCallback(
-    async (themeData: {
+  const createMutation = useMutation({
+    mutationFn: (themeData: {
       name: string;
       connectionId?: string;
       settings: ThemeSettings;
       isPublic?: boolean;
-    }) => {
-      const result = await client.themes.create.mutate(themeData);
-      if (result.success) {
-        revalidateUserThemes();
-        if (themeData.isPublic) {
-          revalidatePublicThemes();
-        }
+    }) => client.themes.create.mutate(themeData),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['user-themes'] });
+      if (variables.isPublic) {
+        queryClient.invalidateQueries({ queryKey: ['public-themes'] });
       }
-      return result;
     },
-    [client, revalidateUserThemes, revalidatePublicThemes]
-  );
+  });
 
-  const update = useCallback(
-    async (themeData: {
+  const updateMutation = useMutation({
+    mutationFn: (themeData: {
       id: string;
       name?: string;
       connectionId?: string | null;
       settings?: ThemeSettings;
       isPublic?: boolean;
-    }) => {
-      const result = await client.themes.update.mutate(themeData);
-      if (result.success) {
-        revalidateUserThemes();
-        mutateSWR(`theme-${themeData.id}`);
-        if (themeData.connectionId) {
-          mutateSWR(`connection-theme-${themeData.connectionId}`);
-        }
+    }) => client.themes.update.mutate(themeData),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['user-themes'] });
+      queryClient.invalidateQueries({ queryKey: ['theme', variables.id] });
+      if (variables.connectionId) {
+        queryClient.invalidateQueries({ queryKey: ['connection-theme', variables.connectionId] });
       }
-      return result;
+      // If isPublic status changes, invalidate public themes
+      // This requires knowing the previous state or refetching based on variables.isPublic
+      if (variables.isPublic !== undefined) {
+         queryClient.invalidateQueries({ queryKey: ['public-themes'] });
+      }
     },
-    [client, revalidateUserThemes, mutateSWR]
-  );
+  });
 
-  const remove = useCallback(
-    async (id: string) => {
-      const result = await client.themes.delete.mutate(id);
-      if (result.success) {
-        revalidateUserThemes();
-        mutateSWR(`theme-${id}`, undefined, { revalidate: false });
-      }
-      return result;
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => client.themes.delete.mutate(id),
+    onSuccess: (data, id) => {
+      queryClient.invalidateQueries({ queryKey: ['user-themes'] });
+      queryClient.removeQueries({ queryKey: ['theme', id] });
+      // If it was a public theme, consider invalidating public-themes
+      // This requires knowing if the deleted theme was public.
     },
-    [client, revalidateUserThemes, mutateSWR]
-  );
+  });
 
-  const copy = useCallback(
-    async (id: string) => {
-      const result = await client.themes.copyPublicTheme.mutate(id);
-      if (result.success) {
-        revalidateUserThemes();
-      }
-      return result;
+  const copyMutation = useMutation({
+    mutationFn: (id: string) => client.themes.copyPublicTheme.mutate(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-themes'] });
     },
-    [client, revalidateUserThemes]
-  );
+  });
 
-  const initializeDefaults = useCallback(async () => {
-    const result = await client.themes.createDefaultThemes.mutate();
-    if (result.success) {
-      revalidateUserThemes();
-    }
-    return result;
-  }, [client, revalidateUserThemes]);
+  const initializeDefaultsMutation = useMutation({
+    mutationFn: () => client.themes.createDefaultThemes.mutate(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-themes'] });
+    },
+  });
+  
+  const addPresetThemesMutation = useMutation({
+    mutationFn: () => client.themes.createPresetThemes.mutate(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-themes'] });
+    },
+  });
 
-  const addPresetThemes = useCallback(async () => {
-    const result = await client.themes.createPresetThemes.mutate();
-    if (result.success) {
-      revalidateUserThemes();
-    }
-    return result;
-  }, [client, revalidateUserThemes]);
-
-  const applyToConnection = useCallback(async (themeId: string, targetConnectionId?: string) => {
-    const result = await client.themes.applyThemeToConnection.mutate({ themeId, connectionId: targetConnectionId });
-    if (result.success) {
-      revalidateUserThemes();
-      const castResult = result as unknown as { success: boolean; connectionId?: string | null; theme?: any }; 
-      if (castResult.connectionId) {
-        mutateSWR(`connection-theme-${castResult.connectionId}`);
+  const applyToConnectionMutation = useMutation({
+    mutationFn: (data: { themeId: string; targetConnectionId?: string }) =>
+      client.themes.applyThemeToConnection.mutate({ themeId: data.themeId, connectionId: data.targetConnectionId }),
+    onSuccess: (result: any) => { // Cast to any to access potential connectionId for now
+      queryClient.invalidateQueries({ queryKey: ['user-themes'] });
+      if (result?.success && result?.connectionId) {
+        queryClient.invalidateQueries({ queryKey: ['connection-theme', result.connectionId] });
       }
-    }
-    return result;
-  }, [client, revalidateUserThemes, mutateSWR]);
+    },
+  });
 
   return {
-    create,
-    update,
-    remove,
-    copy,
-    initializeDefaults,
-    addPresetThemes,
-    applyToConnection,
+    create: createMutation.mutateAsync,
+    update: updateMutation.mutateAsync,
+    remove: deleteMutation.mutateAsync,
+    copy: copyMutation.mutateAsync,
+    initializeDefaults: initializeDefaultsMutation.mutateAsync,
+    addPresetThemes: addPresetThemesMutation.mutateAsync,
+    applyToConnection: applyToConnectionMutation.mutateAsync,
   };
 } 
  
