@@ -3,6 +3,16 @@
 @tailwind utilities;
 
 :root {
+  --theme-color-primary: #fbbf24;
+  --theme-color-secondary: #6366f1;
+  --theme-color-background: #18181b;
+  --theme-color-surface: #232329;
+  --theme-color-text: #fff;
+  --theme-font-body: Inter, sans-serif;
+  --theme-font-heading: Inter, sans-serif;
+  --theme-radius-card: 12px;
+  --theme-radius-button: 8px;
+  --theme-shadow-card: 0 2px 8px rgba(0, 0, 0, 0.2);
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
@@ -103,7 +113,10 @@
   }
 
   body {
-    @apply bg-background font-sans text-foreground;
+    @apply bg-background text-foreground font-sans;
+    background: var(--theme-color-background);
+    color: var(--theme-color-text);
+    font-family: var(--theme-font-body);
   }
 }
 
@@ -112,9 +125,9 @@
     pointer-events: none !important;
   }
 
-  *[class^="text-"] {
+  *[class^='text-'] {
     color: transparent;
-    @apply animate-pulse select-none rounded-md bg-foreground/20;
+    @apply bg-foreground/20 animate-pulse select-none rounded-md;
   }
 
   .skeleton-bg {
@@ -122,7 +135,7 @@
   }
 
   .skeleton-div {
-    @apply animate-pulse bg-foreground/20;
+    @apply bg-foreground/20 animate-pulse;
   }
 }
 
@@ -166,8 +179,8 @@
   @apply bg-blue-200 hover:bg-blue-300 dark:bg-blue-500/40 dark:text-blue-50 dark:hover:bg-blue-400/50;
 }
 
-.dark [data-hide-on-theme="dark"],
-.light [data-hide-on-theme="light"] {
+.dark [data-hide-on-theme='dark'],
+.light [data-hide-on-theme='light'] {
   display: none;
 }
 
@@ -202,26 +215,45 @@
 }
 
 .compose-loading {
-  background: #016FFE;
+  background: #016ffe;
   animation: none;
 }
 
 .compose-gradient-animated {
-  background: linear-gradient(90deg, rgba(255, 213, 208, 1), rgba(219, 255, 228, 1), rgba(226, 214, 255, 1), rgba(255, 213, 208, 1));
+  background: linear-gradient(
+    90deg,
+    rgba(255, 213, 208, 1),
+    rgba(219, 255, 228, 1),
+    rgba(226, 214, 255, 1),
+    rgba(255, 213, 208, 1)
+  );
   background-size: 300% 100%;
   animation: gradient-animation 8s ease infinite;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
 }
 
 @keyframes gradient-animation {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .compose-gradient-text {
-  background: linear-gradient(90deg, rgba(255, 213, 208, 1) 0%, rgba(219, 255, 228, 1) 50%, rgba(226, 214, 255, 1) 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 213, 208, 1) 0%,
+    rgba(219, 255, 228, 1) 50%,
+    rgba(226, 214, 255, 1) 100%
+  );
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -245,7 +277,7 @@
 }
 
 .compose-gradient-text-shiny::after {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
@@ -270,12 +302,12 @@
 
 /* Hide scrollbar but keep functionality */
 .hide-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 .hide-scrollbar::-webkit-scrollbar {
-  display: none;  /* Chrome, Safari and Opera */
+  display: none; /* Chrome, Safari and Opera */
 }
 
 /* Animation keyframes */
@@ -298,7 +330,8 @@
 }
 
 @keyframes blink {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -320,4 +353,27 @@
 
 .tiptap p {
   margin-bottom: 0.3rem;
+}
+
+.card {
+  background: var(--theme-color-surface);
+  color: var(--theme-color-text);
+  border-radius: var(--theme-radius-card);
+  box-shadow: var(--theme-shadow-card);
+}
+
+.text-theme {
+  color: var(--theme-color-text);
+}
+
+.bg-theme-primary {
+  background: var(--theme-color-primary);
+}
+
+.bg-theme-secondary {
+  background: var(--theme-color-secondary);
+}
+
+.bg-theme-surface {
+  background: var(--theme-color-surface);
 }

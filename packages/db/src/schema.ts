@@ -99,6 +99,7 @@ export const connection = createTable(
     expiresAt: timestamp('expires_at').notNull(),
     createdAt: timestamp('created_at').notNull(),
     updatedAt: timestamp('updated_at').notNull(),
+    themeId: text('theme_id'),
   },
   (t) => [unique().on(t.userId, t.email)],
 );
@@ -163,3 +164,20 @@ export const writingStyleMatrix = createTable(
     ];
   },
 );
+
+export const theme = createTable('theme', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id),
+  name: text('name').notNull(),
+  colors: jsonb('colors').notNull(), // { primary, secondary, background, etc. }
+  fonts: jsonb('fonts').notNull(), // { body, heading, etc. }
+  spacing: jsonb('spacing').notNull(), // { base, lg, sm, etc. }
+  shadows: jsonb('shadows').notNull(), // { card, modal, etc. }
+  radius: jsonb('radius').notNull(), // { button, card, etc. }
+  backgrounds: jsonb('backgrounds').notNull(), // { main, accent, etc. }
+  isPublic: boolean('is_public').notNull().default(false),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
