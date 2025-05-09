@@ -3,10 +3,10 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { useSession } from '@/lib/auth-client';
 import { useConnectionTheme } from '@/hooks/use-themes';
-import { ThemeSettings } from '@zero/db/schema';
+import { type ThemeSettings } from '@zero/db/schema';
 import { defaultThemeSettings } from '@zero/db/theme_settings_default';
 import { useTheme as useNextTheme } from 'next-themes';
-import { colord, extend, HslColor } from 'colord';
+import { colord, extend, type HslColor } from 'colord';
 
 interface CustomThemeContextProps {
   themeSettings: ThemeSettings;
