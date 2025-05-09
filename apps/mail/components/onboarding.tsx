@@ -10,17 +10,17 @@ const steps = [
   {
     title: 'Welcome to Zero Email!',
     description: 'Your new intelligent email experience starts here.',
-    video: '/onboarding/get-started.png',
+    video: 'https://assets.0.email/get-started.png',
   },
   {
     title: 'Chat with your inbox',
     description: 'Zero allows you to chat with your inbox and do tasks on your behalf.',
-    video: '/onboarding/step2.gif',
+    video: 'https://assets.0.email/step2.gif',
   },
   {
     title: 'AI Compose & Reply',
     description: 'Our AI assistant allows you to write emails with a single click.',
-    video: '/onboarding/step1.gif',
+    video: 'https://assets.0.email/step1.gif',
   },
   {
     title: 'Label your emails',
@@ -70,17 +70,6 @@ export function OnboardingDialog({
     }
   }, [currentStep]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        handleNext();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentStep]);
-
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
@@ -116,20 +105,29 @@ export function OnboardingDialog({
             </p>
           </div>
 
-          {/* Video/GIF Section */}
-          <div className="flex items-center justify-center">
-            {steps[currentStep]?.video && (
-              <div className="bg-muted aspect-video w-full max-w-4xl overflow-hidden rounded-lg">
-                <Image
-                  priority
-                  width={500}
-                  height={500}
-                  src={steps[currentStep].video}
-                  alt={steps[currentStep].title}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            )}
+          <div className="relative flex items-center justify-center">
+            <div className="bg-muted aspect-video w-full max-w-4xl overflow-hidden rounded-lg">
+              {steps.map(
+                (step, index) =>
+                  step.video && (
+                    <div
+                      key={index}
+                      className={`absolute inset-0 transition-opacity duration-300 ${
+                        index === currentStep ? 'opacity-100' : 'opacity-0'
+                      }`}
+                    >
+                      <Image
+                        priority
+                        width={500}
+                        height={500}
+                        src={step.video}
+                        alt={step.title}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  ),
+              )}
+            </div>
           </div>
 
           <div className="mx-auto flex w-full max-w-xl gap-2">

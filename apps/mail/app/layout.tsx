@@ -1,5 +1,6 @@
 import { ClientProviders } from '@/providers/client-providers';
 import { ServerProviders } from '@/providers/server-providers';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { headers as nextHeaders } from 'next/headers';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { siteConfig } from '@/lib/site-config';
@@ -44,6 +45,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         <ServerProviders>
           <ClientProviders>{children}</ClientProviders>
         </ServerProviders>
+        <SpeedInsights />
       </body>
     </html>
   );

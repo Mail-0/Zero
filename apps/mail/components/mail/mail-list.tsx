@@ -178,12 +178,10 @@ const Thread = memo(
     const { refetch: refetchStats } = useStats();
     const { data: getThreadData, isLoading, isGroupThread } = useThread(demo ? null : message.id);
     const [isStarred, setIsStarred] = useState(false);
-    const queryClient = useQueryClient();
     const trpc = useTRPC();
-
+    const queryClient = useQueryClient();
     const { mutateAsync: toggleStar } = useMutation(trpc.mail.toggleStar.mutationOptions());
 
-    // Set initial star state based on email data
     useEffect(() => {
       if (getThreadData?.latest?.tags) {
         setIsStarred(getThreadData.latest.tags.some((tag) => tag.name === 'STARRED'));
@@ -230,7 +228,13 @@ const Thread = memo(
         toast.promise(promise, {
           error: t('common.actions.failedToMove'),
           finally: async () => {
-            await Promise.all([refetchStats(), refetchThreads()]);
+            await Promise.all([
+              refetchStats(),
+              refetchThreads(),
+              queryClient.invalidateQueries({
+                queryKey: trpc.mail.get.queryKey({ id: message.id }),
+              }),
+            ]);
           },
         });
       },
