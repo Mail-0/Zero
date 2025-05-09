@@ -16,6 +16,7 @@ import { useConnections } from '@/hooks/use-connections';
 import { useTRPC } from '@/providers/query-provider';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useMutation } from '@tanstack/react-query';
+import { useThreads } from '@/hooks/use-threads';
 import { emailProviders } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/lib/auth-client';
@@ -36,6 +37,7 @@ export default function ConnectionsPage() {
   const t = useTranslations();
   const trpc = useTRPC();
   const { mutateAsync: deleteConnection } = useMutation(trpc.connections.delete.mutationOptions());
+  const [{ refetch: refetchThreads }] = useThreads();
 
   const disconnectAccount = async (connectionId: string) => {
     await deleteConnection(
@@ -50,6 +52,7 @@ export default function ConnectionsPage() {
     toast.success(t('pages.settings.connections.disconnectSuccess'));
     refetchConnections();
     refetch();
+    refetchThreads();
   };
 
   return (

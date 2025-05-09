@@ -45,6 +45,14 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/mailto-handler',
+        destination: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/mailto-handler`,
+      },
+    ];
+  },
 };
 
 const withNextIntl = createNextIntlPlugin('./i18n/request.ts');

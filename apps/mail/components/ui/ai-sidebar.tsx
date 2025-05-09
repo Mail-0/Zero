@@ -9,23 +9,23 @@ import {
   DialogTrigger,
 } from './dialog';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useState, useEffect, useContext, createContext, useCallback } from 'react';
 import { AI_SIDEBAR_COOKIE_NAME, SIDEBAR_COOKIE_MAX_AGE } from '@/lib/constants';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { StyledEmailAssistantSystemPrompt, AiChatPrompt } from '@/lib/prompts';
 import { useEditor } from '@/components/providers/editor-provider';
 import { AIChat } from '@/components/create/ai-chat';
 import { X, Paper } from '@/components/icons/icons';
 import { GitBranchPlus, Plus } from 'lucide-react';
+import { useBilling } from '@/hooks/use-billing';
 import { Button } from '@/components/ui/button';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { Gauge } from '@/components/ui/gauge';
 import { usePathname } from 'next/navigation';
 import { getCookie } from '@/lib/utils';
 import { Textarea } from './textarea';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
-import { useBilling } from '@/hooks/use-billing';
-import { Gauge } from '@/components/ui/gauge';
 
 interface AISidebarProps {
   className?: string;
@@ -80,17 +80,17 @@ export function AISidebar({ children, className }: AISidebarProps & { children: 
   const { chatMessages, attach } = useBilling();
 
   const handleUpgrade = async () => {
-    if (attach) {
-      return attach({
-        productId: 'pro-example',
-      })
-        .catch((error: Error) => {
-          console.error('Failed to upgrade:', error);
-        })
-        .then(() => {
-          console.log('Upgraded successfully');
-        });
-    }
+    // if (attach) {
+    //   return attach({
+    //     productId: 'pro-example',
+    //   })
+    //     .catch((error: Error) => {
+    //       console.error('Failed to upgrade:', error);
+    //     })
+    //     .then(() => {
+    //       console.log('Upgraded successfully');
+    //     });
+    // }
   };
 
   useHotkeys('Meta+0', () => {
@@ -113,14 +113,12 @@ export function AISidebar({ children, className }: AISidebarProps & { children: 
 
   return (
     <TooltipProvider delayDuration={0}>
-      
       <ResizablePanelGroup
         direction="horizontal"
         className={cn('bg-lightBackground dark:bg-darkBackground p-0')}
       >
-       
         <ResizablePanel>{children}</ResizablePanel>
-        <ResizableHandle className='opacity-0'/>
+        <ResizableHandle className="opacity-0" />
         {open && (
           <>
             <ResizablePanel
@@ -148,18 +146,26 @@ export function AISidebar({ children, className }: AISidebarProps & { children: 
                       </Tooltip>
                     </TooltipProvider>
 
-                    <div className="flex items-center gap-2"> 
+                    <div className="flex items-center gap-2">
                       <TooltipProvider delayDuration={0}>
                         <Tooltip>
-                          <TooltipTrigger asChild className='md:h-fit md:px-2'>
+                          <TooltipTrigger asChild className="md:h-fit md:px-2">
                             <div>
-                              <Gauge value={50 - chatMessages.remaining!} size="small" showValue={true} />
+                              <Gauge
+                                value={50 - chatMessages.remaining!}
+                                size="small"
+                                showValue={true}
+                              />
                             </div>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>You've used {50 - chatMessages.remaining!} out of 50 chat messages.</p>
-                            <p className='mb-2'>Upgrade for unlimited messages!</p>
-                            <Button onClick={handleUpgrade} className="w-full h-8">Upgrade</Button>
+                            <p>
+                              You've used {50 - chatMessages.remaining!} out of 50 chat messages.
+                            </p>
+                            <p className="mb-2">Upgrade for unlimited messages!</p>
+                            <Button onClick={handleUpgrade} className="h-8 w-full">
+                              Upgrade
+                            </Button>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>

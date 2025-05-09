@@ -30,11 +30,12 @@ import { AddConnectionDialog } from '../connection/add';
 import { useTRPC } from '@/providers/query-provider';
 import { useSidebar } from '@/components/ui/sidebar';
 import { useBrainState } from '@/hooks/use-summary';
-import { useBilling } from '@/hooks/use-billing';
 import { useThreads } from '@/hooks/use-threads';
 import { SunIcon } from '../icons/animated/sun';
+import { useLabels } from '@/hooks/use-labels';
 import { clear as idbClear } from 'idb-keyval';
 import { Gauge } from '@/components/ui/gauge';
+import { useStats } from '@/hooks/use-stats';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { type IConnection } from '@/types';
@@ -54,13 +55,14 @@ export function NavUser() {
   const t = useTranslations();
   const { state } = useSidebar();
   const trpc = useTRPC();
+  const { refetch: refetchStats } = useStats();
   const [{ refetch: refetchThreads }] = useThreads();
+  const { refetch: refetchLabels } = useLabels();
   const { mutateAsync: setDefaultConnection } = useMutation(
     trpc.connections.setDefault.mutationOptions(),
   );
   const { mutateAsync: EnableBrain } = useMutation(trpc.brain.enableBrain.mutationOptions());
   const { mutateAsync: DisableBrain } = useMutation(trpc.brain.disableBrain.mutationOptions());
-  const { chatMessages } = useBilling();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
@@ -112,17 +114,20 @@ export function NavUser() {
     refetch();
     refetchConnections();
     refetchThreads();
+    refetchLabels();
+    refetchStats();
   };
 
   const handleLogout = async () => {
-    toast.promise(
-      signOut().then(() => router.push('/login')),
-      {
-        loading: 'Signing out...',
-        success: () => 'Signed out successfully!',
-        error: 'Error signing out',
+    toast.promise(signOut(), {
+      loading: 'Signing out...',
+      success: () => 'Signed out successfully!',
+      error: 'Error signing out',
+      finally() {
+        handleClearCache();
+        router.push('/login');
       },
-    );
+    });
   };
 
   const { data: brainState, refetch: refetchBrainState } = useBrainState();
@@ -522,7 +527,7 @@ export function NavUser() {
           </div>
         )}
       </div>
-      
+
       {state !== 'collapsed' && (
         <div className="flex items-center justify-between gap-2">
           <div className="my-2 flex flex-col items-start gap-1 space-y-1">
@@ -534,9 +539,7 @@ export function NavUser() {
             </div>
           </div>
 
-          <div className="ml-2">
-            {/* Gauge component removed */}
-          </div>
+          <div className="ml-2">{/* Gauge component removed */}</div>
         </div>
       )}
 

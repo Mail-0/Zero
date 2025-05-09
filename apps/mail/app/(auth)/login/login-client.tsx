@@ -2,10 +2,12 @@
 
 import { useEffect, type ReactNode, useState, Suspense } from 'react';
 import type { EnvVarInfo } from '@zero/server/auth-providers';
-import { useRouter, useSearchParams } from 'next/navigation';
+import ErrorMessage from '@/app/(auth)/login/error-message';
 import { signIn, useSession } from '@/lib/auth-client';
 import { Google } from '@/components/icons/icons';
 import { Button } from '@/components/ui/button';
+import { TriangleAlert } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -66,25 +68,15 @@ const getProviderIcon = (providerId: string, className?: string): ReactNode => {
 
 function LoginClientContent({ providers, isProd }: LoginClientProps) {
   const router = useRouter();
-  const searchParams = useSearchParams() ?? new URLSearchParams();
   const { data: session, isPending } = useSession();
   const [expandedProviders, setExpandedProviders] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    const error = searchParams.get('error');
-    if (error === 'early_access_required') {
-      toast.error('Early access is required to log in');
-    }
-
-    if (error === 'unauthorized') {
-      toast.error('Zero could not load your data from the 3rd party provider. Please try again.');
-    }
-
     const missing = providers.find((p) => p.required && !p.enabled);
     if (missing?.id) {
       setExpandedProviders({ [missing.id]: true });
     }
-  }, [searchParams, providers, router]);
+  }, [providers, router]);
 
   const missingRequiredProviders = providers
     .filter((p) => p.required && !p.enabled)
@@ -132,8 +124,6 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
           callbackURL: `${process.env.NEXT_PUBLIC_APP_URL}/mail`,
         }),
         {
-          loading: 'Redirecting...',
-          success: 'Redirected successfully!',
           error: 'Login redirect failed',
         },
       );
@@ -159,20 +149,7 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
             <div className="rounded-lg border border-black/10 bg-black/5 p-5 dark:border-white/10 dark:bg-white/5">
               <div className="flex flex-col space-y-4">
                 <div className="flex items-center">
-                  <svg
-                    className="h-5 w-5 text-black dark:text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                    />
-                  </svg>
+                  <TriangleAlert size={28} />
                   <h3 className="ml-2 text-base font-medium text-black dark:text-white">
                     Configuration Required
                   </h3>
@@ -297,26 +274,15 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
           {shouldShowSimplifiedMessage && (
             <div className="rounded-lg border border-black/10 bg-black/5 p-4 dark:border-white/10 dark:bg-white/5">
               <div className="flex items-center">
-                <svg
-                  className="h-5 w-5 text-black dark:text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
+                <TriangleAlert size={28} />
                 <p className="ml-2 text-sm text-black/80 dark:text-white/80">
                   Authentication service unavailable
                 </p>
               </div>
             </div>
           )}
+
+          <ErrorMessage />
 
           {!hasMissingRequiredProviders && (
             <div className="relative z-10 mx-auto flex w-full flex-col items-center justify-center gap-2">

@@ -40,7 +40,11 @@ export const authProviders = (env: Record<string, string>): ProviderConfig[] => 
       prompt:
         env.NODE_ENV === 'production' && env.FORCE_GMAIL_CONSENT !== 'true' ? undefined : 'consent',
       accessType: 'offline',
-      scope: ['https://www.googleapis.com/auth/gmail.modify'],
+      scope: [
+        'https://www.googleapis.com/auth/gmail.modify',
+        'https://www.googleapis.com/auth/userinfo.profile',
+        'https://www.googleapis.com/auth/userinfo.email',
+      ],
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,
     },

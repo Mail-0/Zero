@@ -16,13 +16,13 @@ import { useStats } from '@/hooks/use-stats';
 import { useParams } from 'next/navigation';
 import { CheckCircle2 } from 'lucide-react';
 import { useChat } from '@ai-sdk/react';
+import { Button } from '../ui/button';
 import { format } from 'date-fns-tz';
 import { useQueryState } from 'nuqs';
 import { Input } from '../ui/input';
 import { useState } from 'react';
 import VoiceChat from './voice';
 import Image from 'next/image';
-import { Button } from '../ui/button';
 
 const renderThread = (thread: { id: string; title: string; snippet: string }) => {
   const [, setThreadId] = useQueryState('threadId');
@@ -128,7 +128,7 @@ export function AIChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { refetch, chatMessages, attach } = useBilling();
+  const { refetch, chatMessages } = useBilling();
   const [threadId] = useQueryState('threadId');
   const { refetch: refetchLabels } = useLabels();
   const { refetch: refetchStats } = useStats();
@@ -140,7 +140,7 @@ export function AIChat() {
 
   const { messages, input, setInput, error, handleSubmit, status, stop } = useChat({
     api: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/chat`,
-    fetch: (url, options) => fetch(url, { ...options, credentials: 'include' }),
+    fetch: (url, options) => fetch(url, { ...options, method: 'POST', credentials: 'include' }),
     maxSteps: 5,
     body: {
       threadId: threadId ?? undefined,
@@ -154,10 +154,10 @@ export function AIChat() {
   const refetchAll = useCallback(() => {
     refetchLabels();
     refetchStats();
-    refetchThread();
+    if (threadId) refetchThread();
     queryClient.invalidateQueries({ queryKey: trpc.mail.get.queryKey() });
     refetch();
-  }, [refetchLabels, refetchStats, refetchThread, queryClient, trpc.mail.get.queryKey]);
+  }, [threadId, queryClient, trpc.mail.get.queryKey]);
 
   useEffect(() => {
     if (prevStatusRef.current === 'streaming' && status === 'ready') {
@@ -177,17 +177,17 @@ export function AIChat() {
   }, [messages, scrollToBottom]);
 
   const handleUpgrade = async () => {
-    if (attach) {
-      return attach({
-        productId: 'pro-example',
-      })
-        .catch((error: Error) => {
-          console.error('Failed to upgrade:', error);
-        })
-        .then(() => {
-          console.log('Upgraded successfully');
-        });
-    }
+    // if (attach) {
+    //   return attach({
+    //     productId: 'pro-example',
+    //   })
+    //     .catch((error: Error) => {
+    //       console.error('Failed to upgrade:', error);
+    //     })
+    //     .then(() => {
+    //       console.log('Upgraded successfully');
+    //     });
+    // }
   };
 
   return (
@@ -196,8 +196,12 @@ export function AIChat() {
         <div className="min-h-full space-y-4 px-4 py-4">
           {chatMessages && !chatMessages.enabled ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <TextShimmer className="text-center text-xl font-medium ">Upgrade to Zero Pro for unlimited AI chats</TextShimmer>
-              <Button onClick={handleUpgrade} className="mt-2 w-52 h-8">Upgrade</Button>
+              <TextShimmer className="text-center text-xl font-medium">
+                Upgrade to Zero Pro for unlimited AI chats
+              </TextShimmer>
+              <Button onClick={handleUpgrade} className="mt-2 h-8 w-52">
+                Upgrade
+              </Button>
             </div>
           ) : !messages.length ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center">

@@ -6,8 +6,8 @@ import {
 } from '@tanstack/react-query-persist-client';
 import { createTRPCClient, httpBatchLink, loggerLink } from '@trpc/client';
 import { QueryCache, QueryClient, hashKey } from '@tanstack/react-query';
+import { useSession, type Session, signOut } from '@/lib/auth-client';
 import { createTRPCContext } from '@trpc/tanstack-react-query';
-import { useSession, type Session } from '@/lib/auth-client';
 import type { AppRouter } from '@zero/server/trpc';
 import { CACHE_BURST_KEY } from '@/lib/constants';
 import type { PropsWithChildren } from 'react';
@@ -35,7 +35,15 @@ export const makeQueryClient = (session: Session | null) =>
       onError: (err, { meta }) => {
         if (meta && meta.noGlobalError === true) return;
         if (meta && typeof meta.customError === 'string') toast.error(meta.customError);
-        else toast.error(err.message || 'Something went wrong');
+        else if (err.message === 'Required scopes missing') {
+          signOut({
+            fetchOptions: {
+              onSuccess: () => {
+                window.location.href = '/login?error=required_scopes_missing';
+              },
+            },
+          });
+        } else toast.error(err.message || 'Something went wrong');
       },
     }),
     defaultOptions: {
@@ -44,7 +52,9 @@ export const makeQueryClient = (session: Session | null) =>
         refetchOnWindowFocus: false,
         queryKeyHashFn: (queryKey) =>
           hashKey([
-            session ? { userId: session.user.id, connectionId: session.connectionId } : undefined,
+            session
+              ? { userId: session.user.id, connectionId: session.connectionId }
+              : { userId: null, connectionId: null },
             ...queryKey,
           ]),
         gcTime: 1000 * 60 * 60 * 24,

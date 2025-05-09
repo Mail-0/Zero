@@ -869,7 +869,7 @@ export function EmailComposer({
                       <Sparkles className="h-3.5 w-3.5 fill-black dark:fill-white" />
                     )}
                   </div>
-                  <div className="text-center text-sm leading-none text-black dark:text-white">
+                  <div className="text-center text-sm leading-none text-black dark:text-white hidden md:block">
                     Generate
                   </div>
                 </div>
@@ -879,7 +879,7 @@ export function EmailComposer({
               <TooltipTrigger asChild>
                 <button
                   disabled
-                  className="flex h-7 items-center gap-0.5 overflow-hidden rounded-md bg-white/5 px-1.5 shadow-sm hover:bg-white/10 disabled:opacity-50"
+                  className="h-7 items-center gap-0.5 overflow-hidden rounded-md bg-white/5 px-1.5 shadow-sm hover:bg-white/10 disabled:opacity-50 hidden md:flex"
                 >
                   <Smile className="h-3 w-3 fill-[#9A9A9A]" />
                   <span className="px-0.5 text-sm">Casual</span>
@@ -893,7 +893,7 @@ export function EmailComposer({
               <TooltipTrigger asChild>
                 <button
                   disabled
-                  className="flex h-7 items-center gap-0.5 overflow-hidden rounded-md bg-white/5 px-1.5 shadow-sm hover:bg-white/10 disabled:opacity-50"
+                  className="flex h-7 items-center gap-0.5 overflow-hidden rounded-md bg-white/5 px-1.5 shadow-sm hover:bg-white/10 disabled:opacity-50 hidden md:flex"
                 >
                   {messageLength < 50 && <ShortStack className="h-3 w-3 fill-[#9A9A9A]" />}
                   {messageLength >= 50 && messageLength < 200 && (

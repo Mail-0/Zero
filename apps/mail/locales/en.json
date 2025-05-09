@@ -504,5 +504,10 @@
         }
       }
     }
+  },
+  "errorMessages": {
+    "required_scopes_missing": "We’re missing the permissions needed to craft your full experience. Please sign in again and allow the requested access.",
+    "early_access_required": "Early access is required to log in",
+    "unauthorized": "Zero could not load your data from the 3rd party provider. Please try again."
   }
 }

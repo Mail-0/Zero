@@ -198,7 +198,7 @@ export function SearchBar() {
   }, [form, setSearchValue]);
 
   return (
-    <div className="relative flex-1 lg:max-w-[600px]">
+    <div className="relative flex-1">
       <form className="relative flex items-center" onSubmit={form.handleSubmit(submitSearch)}>
         <Search
           className="absolute left-2.5 z-10 h-4 w-4 text-[#6D6D6D] dark:text-[#727272]"

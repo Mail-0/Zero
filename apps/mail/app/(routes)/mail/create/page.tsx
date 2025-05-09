@@ -13,7 +13,7 @@ interface CreatePageProps {
 }
 
 export default async function CreatePage({ searchParams }: CreatePageProps) {
-  const headersList = await headers();
+  const headersList = new Headers(Object.fromEntries(await (await headers()).entries()));
   const session = await authProxy.api.getSession({ headers: headersList });
   if (!session) {
     redirect('/login');

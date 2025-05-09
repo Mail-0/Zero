@@ -1,6 +1,7 @@
 import { connectionToDriver, getActiveConnection } from '../lib/server-utils';
 import { Ratelimit, type RatelimitConfig } from '@upstash/ratelimit';
 import type { HonoContext, HonoVariables } from '../ctx';
+import { StandardizedError } from '../lib/driver/utils';
 import { initTRPC, TRPCError } from '@trpc/server';
 import { env } from 'cloudflare:workers';
 import { redis } from '../lib/services';
@@ -35,7 +36,18 @@ export const activeConnectionProcedure = privateProcedure.use(async ({ ctx, next
 export const activeDriverProcedure = activeConnectionProcedure.use(async ({ ctx, next }) => {
   const { activeConnection } = ctx;
   const driver = connectionToDriver(activeConnection, ctx.c);
-  return next({ ctx: { ...ctx, driver } });
+  const res = await next({ ctx: { ...ctx, driver } });
+
+  // This is for when the user has not granted the required scopes for GMail
+  if (!res.ok && res.error.message === 'Precondition check failed.') {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: 'Required scopes missing',
+      cause: res.error,
+    });
+  }
+
+  return res;
 });
 
 export const brainServerAvailableMiddleware = t.middleware(async ({ next, ctx }) => {

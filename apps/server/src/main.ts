@@ -27,6 +27,8 @@ const api = new Hono<{ Variables: HonoVariables; Bindings: Env }>()
     c.set('session', session);
     await next();
   })
+  .post('/chat', async (c) => chatHandler(c))
+  .get('/mailto-handler', async (c) => mailtoHandler(c))
   .on(['GET', 'POST'], '/auth/*', (c) => c.var.auth.handler(c.req.raw))
   .use(
     trpcServer({
@@ -39,8 +41,6 @@ const api = new Hono<{ Variables: HonoVariables; Bindings: Env }>()
       },
     }),
   )
-  .post('/chat', async (c) => chatHandler(c))
-  .get('/mailto-handler', async (c) => mailtoHandler(c))
   .onError(async (err, c) => {
     if (err instanceof Response) return err;
     console.error('Error in Hono handler:', err);
@@ -55,6 +55,7 @@ const api = new Hono<{ Variables: HonoVariables; Bindings: Env }>()
 
 const app = new Hono()
   .get('/', (c) => c.json({ message: 'Zero Server is Up!' }))
+  .get('/mail/inbox', (c) => c.redirect(env.NEXT_PUBLIC_APP_URL))
   .route('/api', api);
 
 export default app;
