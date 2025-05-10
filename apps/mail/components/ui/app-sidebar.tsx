@@ -12,6 +12,7 @@ import {
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarHeader,
   SidebarMenu,
@@ -79,10 +80,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {...props}
         className={`top-2.5 flex h-screen select-none flex-col items-center ${state === 'collapsed' ? '' : ''} pb-2`}
       >
-        <div
-          className={`relative z-20 flex w-full flex-col ${state === 'collapsed' ? 'px-0' : 'md:px-2'}`}
-        >
-          <SidebarHeader className="flex flex-col">
+          <SidebarHeader className={`flex flex-col gap-2  ${state === 'collapsed' ? 'px-2' : 'md:px-4'}`}>
             {session && <NavUser />}
             <AnimatePresence mode="wait">
               {showComposeButton && (
@@ -97,7 +95,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               )}
             </AnimatePresence>
           </SidebarHeader>
-          <SidebarContent className={`py-0 pt-0 ${state !== 'collapsed' ? 'mt-5' : ''}`}>
+
+          <SidebarContent className={`py-0 pt-0 scrollbar scrollbar-w-1 scrollbar-thumb-accent/40 scrollbar-track-transparent hover:scrollbar-thumb-accent scrollbar-thumb-rounded-full  ${state !== 'collapsed' ? 'mt-5 md:px-4' : 'px-2'}`}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentSection}
@@ -111,15 +110,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </motion.div>
             </AnimatePresence>
           </SidebarContent>
-        </div>
-
-        <div
-          className={`mt-auto flex w-full flex-col ${state !== 'collapsed' ? 'px-0 md:px-2' : ''}`}
-        >
-          <SidebarContent className="py-0 pt-0">
+        
+          <SidebarFooter className={`pb-0 px-0 ${state === 'collapsed' ? 'md:px-2' : 'md:px-4'}`}>
+            <GoldenTicketModal />
             <NavMain items={bottomNavItems} />
-          </SidebarContent>
-        </div>
+          </SidebarFooter>
+      
       </Sidebar>
     </div>
   );

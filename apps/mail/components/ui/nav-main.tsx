@@ -254,7 +254,7 @@ export function NavMain({ items }: NavMainProps) {
   };
 
   return (
-    <SidebarGroup className={`${state !== 'collapsed' ? '' : 'mt-1'} space-y-2.5 py-0`}>
+    <SidebarGroup className={`${state !== 'collapsed' ? '' : 'mt-1'} space-y-2.5 py-0 md:px-0`}>
       <SidebarMenu>
         {items.map((section) => (
           <Collapsible
