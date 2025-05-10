@@ -46,3 +46,73 @@ export const GMAIL_COLORS: GmailColor[] = [
   { textColor: '#5B2C6F', backgroundColor: '#E1BEE7' },
   { textColor: '#BF360C', backgroundColor: '#FFAB91' },
 ];
+
+export const COLORS = {
+  BLUE: {
+    300: '#93C5FD',
+    400: '#60A5FA',
+    600: '#2563EB',
+    700: '#1D4ED8',
+  },
+  NEUTRAL: {
+    BLACK: '#000000',
+    WHITE: '#FFFFFF',
+  },
+} as const;
+
+export const THEME_COLORS = {
+  DARK: {
+    BACKGROUND: 'transparent',
+    TEXT: COLORS.NEUTRAL.WHITE,
+    LINK: COLORS.BLUE[400],
+    LINK_HOVER: COLORS.BLUE[300],
+  },
+  LIGHT: {
+    BACKGROUND: 'transparent',
+    TEXT: COLORS.NEUTRAL.BLACK,
+    LINK: COLORS.BLUE[600],
+    LINK_HOVER: COLORS.BLUE[700],
+  },
+} as const;
+
+export const FONT_WEIGHTS = {
+  REGULAR: 400,
+  MEDIUM: 500,
+  SEMIBOLD: 600,
+  BOLD: 700,
+} as const;
+
+export const FONTS = {
+  PRIMARY: 'Geist',
+  FALLBACK: '-apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+} as const;
+
+export const FONT_FACES = [
+  {
+    weight: FONT_WEIGHTS.REGULAR,
+    name: 'Regular',
+  },
+  {
+    weight: FONT_WEIGHTS.MEDIUM,
+    name: 'Medium',
+  },
+  {
+    weight: FONT_WEIGHTS.SEMIBOLD,
+    name: 'SemiBold',
+  },
+  {
+    weight: FONT_WEIGHTS.BOLD,
+    name: 'Bold',
+  },
+] as const;
+
+export const CSP_DIRECTIVES = {
+  DEFAULT: "default-src 'none'",
+  STYLE: "style-src 'unsafe-inline' * data:",
+  FONT: "font-src * data:",
+  SCRIPT: (nonce: string) => `script-src 'nonce-${nonce}'`,
+  IMAGES: {
+    ENABLED: "img-src * data: blob: 'unsafe-inline'",
+    DISABLED: "img-src data:",
+  },
+} as const;

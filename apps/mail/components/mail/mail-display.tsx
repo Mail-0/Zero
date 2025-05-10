@@ -754,7 +754,9 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
           <div className="min-h-0 overflow-hidden">
             <div className="h-fit w-full p-0">
               {emailData?.decodedBody ? (
-                <MailIframe html={emailData?.decodedBody} senderEmail={emailData.sender.email} />
+                <div className="overflow-hidden">
+                  <MailIframe html={emailData?.decodedBody} senderEmail={emailData.sender.email} />
+                </div>
               ) : (
                 <div
                   className="flex h-[500px] w-full items-center justify-center"

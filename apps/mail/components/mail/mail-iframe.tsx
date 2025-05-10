@@ -61,12 +61,31 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
   const calculateAndSetHeight = useCallback(() => {
     if (!iframeRef.current?.contentWindow?.document.body) return;
 
-    const body = iframeRef.current.contentWindow.document.body;
-    const boundingRectHeight = body.getBoundingClientRect().height;
-    const scrollHeight = body.scrollHeight;
+    const doc = iframeRef.current.contentWindow.document;
+    const body = doc.body;
+    const html = doc.documentElement;
 
-    // Use the larger of the two values to ensure all content is visible
-    setHeight(Math.max(boundingRectHeight, scrollHeight));
+    body.style.margin = '0';
+    body.style.padding = '0';
+    html.style.margin = '0';
+    html.style.padding = '0';
+    
+    body.style.width = '100%';
+    body.style.maxWidth = '100%';
+    body.style.overflow = 'hidden';
+    html.style.overflow = 'hidden';
+
+    const elements = body.getElementsByTagName('*');
+    let maxHeight = body.scrollHeight;
+
+    for (const element of elements) {
+      const rect = element.getBoundingClientRect();
+      const bottom = rect.top + rect.height;
+      maxHeight = Math.max(maxHeight, bottom);
+    }
+
+    setHeight(Math.ceil(maxHeight + 5));
+    
     if (body.innerText.trim() === '') {
       setHeight(0);
     }
@@ -83,17 +102,20 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
         if (iframeRef.current?.contentWindow?.document.body) {
           calculateAndSetHeight();
           fixNonReadableColors(iframeRef.current.contentWindow.document.body);
+          
+          const resizeObserver = new ResizeObserver(() => {
+            calculateAndSetHeight();
+          });
+          resizeObserver.observe(iframeRef.current.contentWindow.document.body);
         }
-        // setLoaded(true);
-        // Recalculate after a slight delay to catch any late-loading content
         setTimeout(calculateAndSetHeight, 500);
       };
       iframeRef.current.onload = handler;
-    });
 
-    return () => {
-      //   URL.revokeObjectURL(url);
-    };
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    });
   }, [calculateAndSetHeight, html, imagesEnabled]);
 
   useEffect(() => {
@@ -141,20 +163,24 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
           </button>
         </div>
       )}
-      <iframe
-        height={height}
-        ref={iframeRef}
-        className={cn(
-          '!min-h-0 w-full flex-1 overflow-hidden px-4 transition-opacity duration-200',
-        )}
-        title="Email Content"
-        // allow-scripts is safe, because the CSP will prevent scripts from running that don't have our unique nonce.
-        sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-scripts"
-        style={{
-          width: '100%',
-          overflow: 'hidden',
-        }}
-      />
+      <div className="w-full overflow-hidden">
+        <iframe
+          height={height}
+          ref={iframeRef}
+          className="w-full border-0 bg-transparent no-scrollbar"
+          title="Email Content"
+          sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-scripts"
+          style={{
+            width: '100%',
+            overflow: 'hidden',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            display: 'block',
+            minHeight: '0',
+            maxHeight: `${height}px`
+          }}
+        />
+      </div>
     </>
   );
 }

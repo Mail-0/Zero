@@ -104,96 +104,127 @@ export const getListUnsubscribeAction = ({
   return null;
 };
 
-const FALLBACK_SENDER = {
+const FALLBACK_SENDER: Sender = {
   name: '',
   email: 'no-sender@unknown',
-};
+} as const;
 
-export const parseFrom = (fromHeader: string) => {
-  const parsedSender = _parseFrom(fromHeader);
-  if (!parsedSender) return FALLBACK_SENDER;
+export const parseFrom = (fromHeader: string | null | undefined): Sender => {
+  if (!fromHeader?.trim()) return FALLBACK_SENDER;
+  
+  try {
+    const parsedSender = _parseFrom(fromHeader);
+    if (!parsedSender) return FALLBACK_SENDER;
 
-  // Technically the "From" header can include multiple email addresses according to
-  // RFC 2822, but this isn't used in practice. So we only show the first.
-  const firstSender = parsedSender[0];
-  if (!firstSender) return FALLBACK_SENDER;
+    const firstSender = parsedSender[0];
+    if (!firstSender) return FALLBACK_SENDER;
 
-  if (firstSender.type === 'group') {
-    const name = firstSender.name || FALLBACK_SENDER.name;
-    const firstAddress = firstSender.addresses?.[0]?.address;
-    const email = firstAddress || FALLBACK_SENDER.email;
-    return { name, email };
-  }
-
-  const name = firstSender.name || firstSender.address;
-
-  const email = firstSender.address || FALLBACK_SENDER.email;
-
-  return { name, email };
-};
-
-export const parseAddressList = (header: string): Sender[] => {
-  const parsedAddressList = _parseAddressList(header);
-  if (!parsedAddressList) return [FALLBACK_SENDER];
-
-  return parsedAddressList?.flatMap((address) => {
-    if (address.type === 'group') {
-      return (address.addresses || []).flatMap((address) => ({
-        name: address.name || FALLBACK_SENDER.name,
-        email: address.address || FALLBACK_SENDER.email,
-      }));
+    if (firstSender.type === 'group') {
+      const name = firstSender.name || FALLBACK_SENDER.name;
+      const firstAddress = firstSender.addresses?.[0]?.address;
+      const email = firstAddress || FALLBACK_SENDER.email;
+      return { name, email };
     }
 
     return {
-      name: address.name || FALLBACK_SENDER.name,
-      email: address.address || FALLBACK_SENDER.email,
+      name: firstSender.name || firstSender.address || FALLBACK_SENDER.name,
+      email: firstSender.address || FALLBACK_SENDER.email,
     };
-  });
+  } catch (error) {
+    console.warn('Error parsing From header:', error);
+    return FALLBACK_SENDER;
+  }
 };
 
-// Helper function to clean email addresses by removing angle brackets
-export const cleanEmailAddresses = (emails: string | undefined) => {
-  if (!emails || emails.trim() === '') return undefined;
-  // Split by commas and clean each address individually
+export const parseAddressList = (header: string | null | undefined): Sender[] => {
+  if (!header?.trim()) return [FALLBACK_SENDER];
+
+  try {
+    const parsedAddressList = _parseAddressList(header);
+    if (!parsedAddressList?.length) return [FALLBACK_SENDER];
+
+    return parsedAddressList.flatMap((address): Sender[] => {
+      if (address.type === 'group') {
+        return (address.addresses || []).map((addr): Sender => ({
+          name: addr.name || FALLBACK_SENDER.name,
+          email: addr.address || FALLBACK_SENDER.email,
+        }));
+      }
+
+      return [{
+        name: address.name || FALLBACK_SENDER.name,
+        email: address.address || FALLBACK_SENDER.email,
+      }];
+    });
+  } catch (error) {
+    console.warn('Error parsing address list:', error);
+    return [FALLBACK_SENDER];
+  }
+};
+
+export const cleanEmailAddresses = (emails: string | null | undefined): string[] | undefined => {
+  if (!emails?.trim()) return undefined;
+  
   return emails
     .split(',')
-    .map(email => email.trim().replace(/^<|>$/g, ''))
-    .filter(Boolean); // Remove any empty entries
+    .map(email => email.trim().replace(/^[<\s]+|[>\s]+$/g, ''))
+    .filter(Boolean);
 };
 
-// Format recipients for display or sending
-export const formatRecipients = (recipients: string[] | undefined) => {
-  if (!recipients || recipients.length === 0) return undefined;
+export const formatRecipients = (recipients: string[] | undefined | null): string | undefined => {
+  if (!recipients?.length) return undefined;
   return recipients.join(', ');
 };
 
-/**
- * Format recipients for MIME message creation
- * Handles both string and array formats for recipients
- */
-export const formatMimeRecipients = (recipients: string | string[]) => {
-  if (Array.isArray(recipients)) {
-    return recipients.map(recipient => ({ addr: recipient }));
-  } else if (typeof recipients === 'string' && recipients.trim() !== '') {
-    return recipients.split(',').map(recipient => ({ addr: recipient.trim() }));
+export interface MimeRecipient {
+  addr: string;
+  name?: string;
+}
+
+export const formatMimeRecipients = (recipients: string | string[] | null | undefined): MimeRecipient[] | null => {
+  if (!recipients) return null;
+
+  try {
+    if (Array.isArray(recipients)) {
+      return recipients
+        .filter(Boolean)
+        .map(recipient => ({ addr: recipient.trim() }));
+    }
+    
+    if (typeof recipients === 'string' && recipients.trim()) {
+      return recipients
+        .split(',')
+        .map(recipient => recipient.trim())
+        .filter(Boolean)
+        .map(recipient => ({ addr: recipient }));
+    }
+  } catch (error) {
+    console.warn('Error formatting MIME recipients:', error);
   }
+  
   return null;
 };
 
-export const wasSentWithTLS = (receivedHeaders: string[]) => {
-  const tlsIndicators = [
+export const TLS_SECURITY_PATTERNS = {
+  PROTOCOL: [
     /using\s+TLS/i,
     /with\s+ESMTPS/i,
     /version=TLS[0-9_.]+/i,
     /TLSv[0-9.]+/i,
+  ],
+  CIPHER: [
     /cipher=[A-Z0-9-]+/i,
-  ];
+    /with\s+[A-Z0-9-]+\s+encryption/i,
+  ],
+} as const;
 
+export const wasSentWithTLS = (receivedHeaders: string[]): boolean => {
   for (const header of receivedHeaders.reverse()) {
-    for (const indicator of tlsIndicators) {
-      if (indicator.test(header)) {
-        return true;
-      }
+    const hasProtocol = TLS_SECURITY_PATTERNS.PROTOCOL.some(pattern => pattern.test(header));
+    const hasCipher = TLS_SECURITY_PATTERNS.CIPHER.some(pattern => pattern.test(header));
+    
+    if (hasProtocol || hasCipher) {
+      return true;
     }
   }
 
