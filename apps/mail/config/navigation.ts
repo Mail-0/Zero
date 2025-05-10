@@ -29,9 +29,11 @@ export interface NavItem {
   badge?: number;
   isBackButton?: boolean;
   isSettingsButton?: boolean;
+  isSidebarThemeSelector?: boolean;
   disabled?: boolean;
   target?: string;
 }
+
 export type MessageKey = MessageKeys<IntlMessages, NestedKeyOf<IntlMessages>>;
 
 interface NavSection {
@@ -160,6 +162,11 @@ export const navigationConfig: Record<string, NavConfig> = {
             icon: Stars,
           },
           {
+            title: 'navigation.settings.themes',
+            url: '/settings/themes',
+            icon: Sparkles,
+          },
+          {
             title: 'navigation.settings.labels',
             url: '/settings/labels',
             icon: Sheet,
@@ -210,6 +217,13 @@ export const bottomNavItems = [
   {
     title: '',
     items: [
+      {
+        id: 'theme-selector',
+        title: 'navigation.sidebar.theme',
+        url: '#',
+        icon: Sparkles,
+        isSidebarThemeSelector: true,
+      },
       {
         id: 'feedback',
         title: 'navigation.sidebar.feedback',

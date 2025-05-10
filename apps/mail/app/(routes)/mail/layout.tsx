@@ -6,7 +6,7 @@ export default function MailLayout({ children }: { children: React.ReactNode }) 
   return (
     <HotkeyProviderWrapper>
       <AppSidebar />
-      <div className="bg-lightBackground dark:bg-darkBackground w-full">{children}</div>
+      <div className="bg-background w-full">{children}</div>
       <OnboardingWrapper />
     </HotkeyProviderWrapper>
   );

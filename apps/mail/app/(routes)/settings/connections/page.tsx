@@ -21,10 +21,14 @@ import { emailProviders } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/lib/auth-client';
 import { useTranslations } from 'next-intl';
-import { Trash, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { Trash, Plus, Palette } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { toast } from 'sonner';
+import { useUserThemes, useThemeActions } from '@/hooks/use-themes';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function ConnectionsPage() {
   const { data, isLoading, refetch: refetchConnections } = useConnections();
@@ -132,6 +136,28 @@ export default function ConnectionsPage() {
                       </div>
                     </div>
                   </div>
+                  <div className="flex items-center gap-1 ml-4 shrink-0">
+                    <Select
+                      value={getConnectionCurrentThemeId(connection.id)}
+                      onValueChange={(newThemeId) => handleThemeChange(newThemeId, connection.id)}
+                    >
+                      <SelectTrigger className="w-[180px] h-9" aria-label={`Theme for ${connection.name}`}>
+                        <Palette className="h-4 w-4 mr-2 opacity-50" />
+                        <SelectValue placeholder="Select theme" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="system-default">System Default</SelectItem>
+                        {userThemes && userThemes.map(theme => (
+                          <SelectItem key={theme.id} value={theme.id}>{theme.name}</SelectItem>
+                        ))}
+                        <SelectItem value="manage-themes">
+                          <Link href="/settings/themes/theme-management" className="flex items-center">
+                            <Plus className="h-4 w-4 mr-2" /> Manage / Create
+                          </Link>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button
@@ -163,6 +189,7 @@ export default function ConnectionsPage() {
                       </div>
                     </DialogContent>
                   </Dialog>
+                  </div>
                 </div>
               ))}
             </div>

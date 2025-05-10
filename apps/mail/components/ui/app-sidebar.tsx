@@ -149,9 +149,9 @@ function ComposeButton() {
       <DialogDescription></DialogDescription>
 
       <DialogTrigger asChild>
-        <button className="inline-flex h-8 w-full items-center justify-center gap-1 self-stretch overflow-hidden rounded-md border border-gray-200 bg-transparent text-black dark:border-none dark:bg-gradient-to-b dark:from-white/20 dark:to-white/10 dark:text-white dark:outline dark:outline-1 dark:outline-offset-[-1px] dark:outline-white/5">
+        <button className="inline-flex h-8 w-full items-center justify-center gap-1 self-stretch overflow-hidden rounded-md border border-border bg-transparent text-foreground hover:bg-muted focus-visible:ring-1 focus-visible:ring-ring">
           {state === 'collapsed' && !isMobile ? (
-            <PencilCompose className="fill-iconLight dark:fill-iconDark mt-0.5 text-black" />
+            <PencilCompose className="fill-foreground mt-0.5" />
           ) : (
             <div className="flex items-center justify-center gap-2.5 pl-0.5 pr-1">
               <PencilCompose className="fill-iconLight dark:fill-iconDark" />
@@ -163,7 +163,7 @@ function ComposeButton() {
         </button>
       </DialogTrigger>
 
-      <DialogContent className="h-screen w-screen max-w-none border-none bg-[#FAFAFA] p-0 shadow-none dark:bg-[#141414]">
+      <DialogContent className="h-screen w-screen max-w-none border-none bg-card p-0 shadow-none">
         <CreateEmail />
       </DialogContent>
     </Dialog>

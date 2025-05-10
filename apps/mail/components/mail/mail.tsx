@@ -153,7 +153,7 @@ export function MailLayout() {
             <div className="w-full md:h-[calc(100dvh-0.5rem)]">
               <div
                 className={cn(
-                  'sticky top-0 z-[15] flex items-center justify-between gap-1.5 border-b border-[#E7E7E7] p-2 px-[20px] transition-colors md:min-h-14 dark:border-[#252525]',
+                  'sticky top-0 z-[15] flex items-center justify-between gap-1.5 border-b border-border p-2 px-[20px] transition-colors md:min-h-14',
                 )}
               >
                 <div className="flex w-full items-center justify-between gap-2">
@@ -169,9 +169,9 @@ export function MailLayout() {
                               onClick={() => {
                                 setMail({ ...mail, bulkSelected: [] });
                               }}
-                              className="flex h-6 items-center gap-1 rounded-md bg-[#313131] px-2 text-xs text-[#A0A0A0] hover:bg-[#252525]"
+                              className="flex h-6 items-center gap-1 rounded-md bg-muted px-2 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:ring-1 focus-visible:ring-ring"
                             >
-                              <X className="h-3 w-3 fill-[#A0A0A0]" />
+                              <X className="h-3 w-3 fill-muted-foreground" />
                               <span>esc</span>
                             </button>
                           </TooltipTrigger>
@@ -246,7 +246,7 @@ export function MailLayout() {
                 if (!isOpen) handleClose();
               }}
             >
-              <DrawerContent className="bg-panelLight dark:bg-panelDark h-[calc(100dvh-3rem)] p-0">
+              <DrawerContent className="bg-card h-[calc(100dvh-3rem)] p-0">
                 <DrawerHeader className="sr-only">
                   <DrawerTitle>Email Details</DrawerTitle>
                 </DrawerHeader>
