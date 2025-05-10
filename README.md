@@ -70,7 +70,7 @@ You can set up Zero in two ways:
    bun install
 
    # Start database locally
-   bun docker:up
+   bun docker:db:up
    ```
 
 2. **Set Up Environment**
@@ -80,7 +80,7 @@ You can set up Zero in two ways:
      cp .env.example .env
      ```
    - Configure your environment variables (see below)
-   - Start the database with the provided docker compose setup: `bun docker:up`
+   - Start the database with the provided docker compose setup: `bun docker:db:up`
    - Initialize the database: `bun db:push`
 
 3. **Start the App**
@@ -198,7 +198,7 @@ Zero uses PostgreSQL for storing data. Here's how to set it up:
    Run this command to start a local PostgreSQL instance:
 
    ```bash
-   bun docker:up
+   bun docker:db:up
    ```
 
    This creates a database with:

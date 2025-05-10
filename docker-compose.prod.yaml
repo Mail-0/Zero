@@ -1,0 +1,93 @@
+services:
+  zero:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+        DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-zerodotemail}
+        BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-my-better-auth-secret}
+        BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
+        BETTER_AUTH_TRUSTED_ORIGINS: ${BETTER_AUTH_TRUSTED_ORIGINS:-http://localhost:3000}
+        GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+        GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+        REDIS_URL: http://upstash-proxy:80
+        REDIS_TOKEN: ${REDIS_TOKEN:-upstash-local-token}
+        RESEND_API_KEY: ${RESEND_API_KEY}
+        OPENAI_API_KEY: ${OPENAI_API_KEY}
+        AI_SYSTEM_PROMPT: ${AI_SYSTEM_PROMPT}
+        GROQ_API_KEY: ${GROQ_API_KEY}
+        GOOGLE_GENERATIVE_AI_API_KEY: ${GOOGLE_GENERATIVE_AI_API_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+      valkey:
+        condition: service_healthy
+      upstash-proxy:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '--quiet', 'http://127.0.0.1:3000']
+      interval: 90s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    ports:
+      - 3000:3000
+
+  migrations:
+    build:
+      context: .
+      dockerfile: docker/db/Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-zerodotemail}
+    depends_on:
+      - db
+    command: ['bun', 'run', 'db:migrate']
+    restart: 'no'
+
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-zerodotemail}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', 'postgres', '-d', 'zerodotemail']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  valkey:
+    image: docker.io/bitnami/valkey:8.0
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - VALKEY_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+    volumes:
+      - valkey-data:/bitnami/valkey/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-h', 'localhost', '-p', '6379', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  upstash-proxy:
+    image: hiett/serverless-redis-http:latest
+    environment:
+      SRH_MODE: env
+      SRH_TOKEN: ${REDIS_TOKEN:-upstash-local-token}
+      SRH_CONNECTION_STRING: 'redis://valkey:6379'
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '--quiet', 'http://127.0.0.1:80']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  valkey-data:
+  postgres-data:
