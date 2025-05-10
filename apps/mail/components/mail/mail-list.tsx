@@ -1068,6 +1068,6 @@ function getDefaultBadgeStyle(label: string): ComponentProps<typeof Badge>['vari
 // Helper function to clean name display
 const cleanNameDisplay = (name?: string) => {
   if (!name) return '';
-  const match = name.match(/^[^a-zA-Z0-9.]*(.*?)[^a-zA-Z0-9.]*$/);
+  const match = name.match(/^[^\p{L}\p{N}.]*(.*?)[^\p{L}\p{N}.]*$/u);
   return match ? match[1] : name;
 };
