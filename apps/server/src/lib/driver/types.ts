@@ -28,6 +28,8 @@ export interface IConfig {
 
 export type ManagerConfig = {
   auth: {
+    userId: string;
+    // accountId: string;
     accessToken: string;
     refreshToken: string;
     email: string;

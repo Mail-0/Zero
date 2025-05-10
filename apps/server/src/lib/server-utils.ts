@@ -33,10 +33,12 @@ export const connectionToDriver = (
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         refreshToken: activeConnection.refreshToken!,
         email: activeConnection.email,
+        // accountId: activeConnection.id,
+        userId: activeConnection.userId,
       },
       c,
     },
-    c.env,
+    c,
   );
   return driver;
 };

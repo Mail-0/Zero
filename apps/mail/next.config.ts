@@ -52,6 +52,10 @@ const nextConfig: NextConfig = {
         source: '/api/mailto-handler',
         destination: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/mailto-handler`,
       },
+      {
+        source: '/api/:path*',
+        destination: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/:path*`,
+      },
     ];
   },
 };

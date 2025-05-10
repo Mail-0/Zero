@@ -14,17 +14,20 @@ import type { MailManager, ManagerConfig } from './types';
 import { type gmail_v1, google } from 'googleapis';
 import type { CreateDraftData } from '../schemas';
 import { setTimeout } from 'timers/promises';
+import type { HonoContext } from '../../ctx';
 import { createMimeMessage } from 'mimetext';
 import { cleanSearchValue } from '../utils';
-import { env } from 'cloudflare:workers';
 import * as he from 'he';
 
 export class GoogleMailManager implements MailManager {
   private auth;
   private gmail;
 
-  constructor(public config: ManagerConfig) {
-    this.auth = new google.auth.OAuth2(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET);
+  constructor(
+    public config: ManagerConfig,
+    c: HonoContext,
+  ) {
+    this.auth = new google.auth.OAuth2(c.env.GOOGLE_CLIENT_ID, c.env.GOOGLE_CLIENT_SECRET);
 
     if (config.auth)
       this.auth.setCredentials({
@@ -34,7 +37,6 @@ export class GoogleMailManager implements MailManager {
 
     this.gmail = google.gmail({ version: 'v1', auth: this.auth });
   }
-
   public getScope(): string {
     return [
       'https://www.googleapis.com/auth/gmail.modify',
@@ -42,7 +44,6 @@ export class GoogleMailManager implements MailManager {
       'https://www.googleapis.com/auth/userinfo.email',
     ].join(' ');
   }
-
   public getAttachment(messageId: string, attachmentId: string) {
     return this.withErrorHandler(
       'getAttachment',
@@ -62,7 +63,6 @@ export class GoogleMailManager implements MailManager {
       { messageId, attachmentId },
     );
   }
-
   public getEmailAliases() {
     return this.withErrorHandler('getEmailAliases', async () => {
       const profile = await this.gmail.users.getProfile({
@@ -95,7 +95,6 @@ export class GoogleMailManager implements MailManager {
       return aliases;
     });
   }
-
   public markAsRead(threadIds: string[]) {
     return this.withErrorHandler(
       'markAsRead',
@@ -105,7 +104,6 @@ export class GoogleMailManager implements MailManager {
       { threadIds },
     );
   }
-
   public markAsUnread(threadIds: string[]) {
     return this.withErrorHandler(
       'markAsUnread',
@@ -115,7 +113,6 @@ export class GoogleMailManager implements MailManager {
       { threadIds },
     );
   }
-
   public getUserInfo() {
     return this.withErrorHandler(
       'getUserInfo',
@@ -132,7 +129,6 @@ export class GoogleMailManager implements MailManager {
       {},
     );
   }
-
   public getTokens<T>(code: string) {
     return this.withErrorHandler(
       'getTokens',
@@ -143,7 +139,6 @@ export class GoogleMailManager implements MailManager {
       { code },
     );
   }
-
   public count() {
     return this.withErrorHandler(
       'count',
@@ -171,7 +166,6 @@ export class GoogleMailManager implements MailManager {
       { email: this.config.auth?.email },
     );
   }
-
   public list(params: {
     folder: string;
     query?: string;
@@ -206,7 +200,6 @@ export class GoogleMailManager implements MailManager {
       { folder, q, maxResults, _labelIds, pageToken, email: this.config.auth?.email },
     );
   }
-
   public get(id: string) {
     return this.withErrorHandler(
       'get',
@@ -361,7 +354,6 @@ export class GoogleMailManager implements MailManager {
       { id, email: this.config.auth?.email },
     );
   }
-
   public create(data: IOutgoingMessage) {
     return this.withErrorHandler(
       'create',
@@ -379,7 +371,6 @@ export class GoogleMailManager implements MailManager {
       { data, email: this.config.auth?.email },
     );
   }
-
   public delete(id: string) {
     return this.withErrorHandler(
       'delete',
@@ -390,7 +381,6 @@ export class GoogleMailManager implements MailManager {
       { id },
     );
   }
-
   public normalizeIds(ids: string[]) {
     return this.withSyncErrorHandler(
       'normalizeIds',
@@ -403,7 +393,6 @@ export class GoogleMailManager implements MailManager {
       { ids },
     );
   }
-
   public modifyLabels(
     threadIds: string[],
     options: { addLabels: string[]; removeLabels: string[] },
@@ -419,7 +408,6 @@ export class GoogleMailManager implements MailManager {
       { threadIds, options },
     );
   }
-
   public sendDraft(draftId: string, data: IOutgoingMessage) {
     return this.withErrorHandler(
       'sendDraft',
@@ -671,9 +659,6 @@ export class GoogleMailManager implements MailManager {
       return false;
     }
   }
-
-  // ===============================================
-
   private async modifyThreadLabels(
     threadIds: string[],
     requestBody: gmail_v1.Schema$ModifyThreadRequest,
@@ -992,7 +977,6 @@ export class GoogleMailManager implements MailManager {
       rawMessage: draft.message,
     };
   }
-
   private async withErrorHandler<T>(
     operation: string,
     fn: () => Promise<T> | T,

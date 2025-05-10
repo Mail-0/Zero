@@ -25,10 +25,20 @@ const connectionHandlerHook = async (account: Account, c: HonoContext) => {
     throw new APIError('EXPECTATION_FAILED', { message: 'Missing Access/Refresh Tokens' });
   }
 
-  const driver = createDriver(account.providerId, {
-    auth: { accessToken: account.accessToken, refreshToken: account.refreshToken, email: '' },
+  const driver = createDriver(
+    account.providerId,
+    {
+      auth: {
+        accessToken: account.accessToken,
+        refreshToken: account.refreshToken,
+        email: '',
+        // accountId: account.id,
+        userId: account.userId,
+      },
+      c,
+    },
     c,
-  });
+  );
   const userInfo = await driver.getUserInfo().catch(() => {
     throw new APIError('UNAUTHORIZED', { message: 'Failed to get user info' });
   });

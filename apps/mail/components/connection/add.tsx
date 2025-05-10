@@ -28,7 +28,6 @@ export const AddConnectionDialog = ({
 }) => {
   const { connections, attach } = useBilling();
   const t = useTranslations();
-
   const pathname = usePathname();
   const canCreateConnection = useMemo(() => {
     if (!connections?.remaining && !connections?.unlimited) return false;
@@ -94,33 +93,34 @@ export const AddConnectionDialog = ({
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
-          {emailProviders.map((provider, index) => (
-            <motion.div
-              key={provider.name}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1, duration: 0.3 }}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              <Button
-                disabled={!canCreateConnection}
-                variant="outline"
-                className="h-24 w-full flex-col items-center justify-center gap-2"
-                onClick={async () =>
-                  await authClient.linkSocial({
-                    provider: provider.providerId,
-                    callbackURL: `${process.env.NEXT_PUBLIC_APP_URL}/${pathname}`,
-                  })
-                }
+          {emailProviders.map((provider, index) => {
+            const Icon = provider.icon;
+            return (
+              <motion.div
+                key={provider.name}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1, duration: 0.3 }}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
               >
-                <svg viewBox="0 0 24 24" className="h-12 w-12">
-                  <path fill="currentColor" d={provider.icon} />
-                </svg>
-                <span className="text-xs">{provider.name}</span>
-              </Button>
-            </motion.div>
-          ))}
+                <Button
+                  disabled={!canCreateConnection}
+                  variant="outline"
+                  className="h-24 w-full flex-col items-center justify-center gap-2"
+                  onClick={async () =>
+                    await authClient.linkSocial({
+                      provider: provider.providerId,
+                      callbackURL: `${process.env.NEXT_PUBLIC_APP_URL}/${pathname}`,
+                    })
+                  }
+                >
+                  <Icon className="!size-6" />
+                  <span className="text-xs">{provider.name}</span>
+                </Button>
+              </motion.div>
+            );
+          })}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

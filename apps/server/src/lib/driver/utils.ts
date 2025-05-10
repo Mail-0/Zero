@@ -38,10 +38,12 @@ export const getActiveDriver = async (c: HonoContext) => {
         accessToken: activeConnection.accessToken,
         refreshToken: activeConnection.refreshToken,
         email: activeConnection.email,
+        // accountId: activeConnection.id,
+        userId: activeConnection.userId,
       },
       c,
     },
-    c.env,
+    c,
   );
 };
 
