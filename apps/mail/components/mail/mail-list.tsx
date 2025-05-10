@@ -868,7 +868,7 @@ export const MailList = memo(({ isCompact }: MailListProps) => {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2" id="mail-list-scroll">
               {items
                 .filter((data) => data.id)
                 .map((data, index) => {

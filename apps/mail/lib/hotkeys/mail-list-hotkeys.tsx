@@ -146,6 +146,28 @@ export function MailListHotkeys() {
     }));
   }, []);
 
+  // const scrollDown = useCallback(() => {
+  //   const scrollContainer = document.getElementById('mail-list-scroll');
+  //   console.log(scrollContainer);
+  //   if (scrollContainer) {
+  //     scrollContainer.scrollBy({
+  //       top: 100,
+  //       behavior: 'smooth',
+  //     });
+  //   }
+  // }, []);
+
+  // const scrollUp = useCallback(() => {
+  //   const scrollContainer = document.getElementById('mail-list-scroll');
+  //   console.log(scrollContainer);
+  //   if (scrollContainer) {
+  //     scrollContainer.scrollBy({
+  //       top: -100,
+  //       behavior: 'smooth',
+  //     });
+  //   }
+  // }, []);
+
   const handlers = {
     markAsRead,
     markAsUnread,
@@ -153,6 +175,8 @@ export function MailListHotkeys() {
     archiveEmail,
     exitSelectionMode,
     // muteThread,
+    // scrollDown,
+    // scrollUp,
   };
 
   const mailListShortcuts = keyboardShortcuts.filter((shortcut) => shortcut.scope === scope);

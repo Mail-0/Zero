@@ -57,8 +57,59 @@ const threadDisplayShortcuts: Shortcut[] = [
   },
 ];
 
+const navigation: Shortcut[] = [
+  {
+    keys: ['g', 'd'],
+    action: 'goToDrafts',
+    type: 'combination',
+    description: 'Go to drafts',
+    scope: 'navigation',
+  },
+  {
+    keys: ['g', 'i'],
+    action: 'inbox',
+    type: 'combination',
+    description: 'Go to inbox',
+    scope: 'navigation',
+  },
+  {
+    keys: ['g', 't'],
+    action: 'sentMail',
+    type: 'combination',
+    description: 'Go to sent mail',
+    scope: 'navigation',
+  },
+  {
+    keys: ['g', 's'],
+    action: 'goToSpam',
+    type: 'combination',
+    description: 'Go to spam',
+    scope: 'navigation',
+  },
+  {
+    keys: ['g', 'a'],
+    action: 'goToArchive',
+    type: 'combination',
+    description: 'Go to archive',
+    scope: 'navigation',
+  },
+  {
+    keys: ['g', 'b'],
+    action: 'goToBin',
+    type: 'combination',
+    description: 'Go to bin',
+    scope: 'navigation',
+  },
+];
+
 const globalShortcuts: Shortcut[] = [
-  // { keys: ['/'], action: 'search', type: 'single', description: 'Search', scope: 'global' },
+  {
+    keys: ['mod', '/'],
+    action: 'search',
+    type: 'combination',
+    description: 'Search',
+    scope: 'global',
+  },
   // {
   //   keys: ['?'],
   //   action: 'helpWithShortcuts',
@@ -82,27 +133,6 @@ const globalShortcuts: Shortcut[] = [
     preventDefault: true,
   },
   {
-    keys: ['g', 'd'],
-    action: 'goToDrafts',
-    type: 'combination',
-    description: 'Go to drafts',
-    scope: 'global',
-  },
-  {
-    keys: ['g', 'i'],
-    action: 'inbox',
-    type: 'combination',
-    description: 'Go to inbox',
-    scope: 'global',
-  },
-  {
-    keys: ['g', 't'],
-    action: 'sentMail',
-    type: 'combination',
-    description: 'Go to sent mail',
-    scope: 'global',
-  },
-  {
     keys: ['mod', 'k'],
     action: 'commandPalette',
     type: 'combination',
@@ -112,20 +142,20 @@ const globalShortcuts: Shortcut[] = [
 ];
 
 const mailListShortcuts: Shortcut[] = [
-  // {
-  //   keys: ['r'],
-  //   action: 'markAsRead',
-  //   type: 'single',
-  //   description: 'Mark as read',
-  //   scope: 'mail-list',
-  // },
-  // {
-  //   keys: ['u'],
-  //   action: 'markAsUnread',
-  //   type: 'single',
-  //   description: 'Mark as unread',
-  //   scope: 'mail-list',
-  // },
+  {
+    keys: ['r'],
+    action: 'markAsRead',
+    type: 'single',
+    description: 'Mark as read',
+    scope: 'mail-list',
+  },
+  {
+    keys: ['u'],
+    action: 'markAsUnread',
+    type: 'single',
+    description: 'Mark as unread',
+    scope: 'mail-list',
+  },
   // {
   //   keys: ['m'],
   //   action: 'muteThread',
@@ -133,13 +163,13 @@ const mailListShortcuts: Shortcut[] = [
   //   description: 'Mute thread',
   //   scope: 'mail-list',
   // },
-  // {
-  //   keys: ['e'],
-  //   action: 'archiveEmail',
-  //   type: 'single',
-  //   description: 'Archive email',
-  //   scope: 'mail-list',
-  // },
+  {
+    keys: ['e'],
+    action: 'archiveEmail',
+    type: 'single',
+    description: 'Archive email',
+    scope: 'mail-list',
+  },
   {
     keys: ['escape'],
     action: 'exitSelectionMode',
@@ -184,6 +214,20 @@ const mailListShortcuts: Shortcut[] = [
   //   scope: 'mail-list',
   //   preventDefault: true,
   // },
+  // {
+  //   keys: ['j'],
+  //   action: 'scrollDown',
+  //   type: 'single',
+  //   description: 'Scroll down',
+  //   scope: 'mail-list',
+  // },
+  // {
+  //   keys: ['k'],
+  //   action: 'scrollUp',
+  //   type: 'single',
+  //   description: 'Scroll up',
+  //   scope: 'mail-list',
+  // },
 ];
 
 const composeShortcuts: Shortcut[] = [
@@ -204,6 +248,7 @@ const composeShortcuts: Shortcut[] = [
 ];
 
 export const keyboardShortcuts: Shortcut[] = [
+  ...navigation,
   ...threadDisplayShortcuts,
   ...globalShortcuts,
   ...mailListShortcuts,

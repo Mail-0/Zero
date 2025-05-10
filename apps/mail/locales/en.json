@@ -415,13 +415,13 @@
           "reply": "Reply",
           "replyAll": "Reply All",
           "forward": "Forward",
-          "drafts": "Drafts",
-          "inbox": "Inbox",
-          "sentMail": "Sent Mail",
+          "drafts": "Go to drafts",
+          "inbox": "Go to inbox",
+          "sentMail": "Go to sent mail",
           "delete": "Delete",
           "search": "Search",
-          "markAsUnread": "Mark as Unread",
-          "muteThread": "Mute Thread",
+          "markAsUnread": "Mark as unread",
+          "muteThread": "Mute thread",
           "printEmail": "Print Email",
           "archiveEmail": "Archive Thread",
           "markAsSpam": "Mark as Spam",
@@ -438,7 +438,12 @@
           "commandPalette": "Command Palette",
           "markAsRead": "Mark as Read",
           "exitSelectionMode": "Exit Selection Mode",
-          "closeCompose": "Close Compose"
+          "closeCompose": "Close compose",
+          "goToSpam": "Go to Spam",
+          "goToArchive": "Go to Archive",
+          "goToBin": "Go to Bin",
+          "scrollDown": "Scroll down in mail list",
+          "scrollUp": "Scroll up in mail list"
         }
       },
       "labels": {

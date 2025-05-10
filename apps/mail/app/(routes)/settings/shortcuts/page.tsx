@@ -45,7 +45,7 @@ export default function ShortcutsPage() {
         //   </div>
         // }
       >
-        <div className="grid gap-6">
+        <div className="grid max-w-xl gap-6">
           {Object.entries(
             shortcuts.reduce<Record<string, Shortcut[]>>((acc, shortcut) => {
               const scope = shortcut.scope;
@@ -58,7 +58,7 @@ export default function ShortcutsPage() {
               <h3 className="mb-4 text-lg font-semibold capitalize">
                 {scope.split('-').join(' ')}
               </h3>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
+              <div className="grid grid-cols-1 gap-2">
                 {scopedShortcuts.map((shortcut, index) => (
                   <Shortcut key={`${scope}-${index}`} keys={shortcut.keys} action={shortcut.action}>
                     {t(`pages.settings.shortcuts.actions.${shortcut.action}` as MessageKey)}
