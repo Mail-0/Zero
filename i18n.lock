@@ -376,6 +376,7 @@ checksums:
     pages/settings/shortcuts/actions/commandPalette: 27374fec801ecad6a2a5c58d98c7f531
     pages/settings/shortcuts/actions/markAsRead: 6904117ae35e7c7148a3304092762b08
     pages/settings/shortcuts/actions/exitSelectionMode: e56b61e67b948e0bb727b640f4a61cf2
+    pages/settings/shortcuts/actions/closeCompose: 409fc58c9e5843177c3bae98986e23ac
     pages/settings/labels/title: 6f15627a90002323eac018274b6922d6
     pages/settings/labels/description: 0418ef2ed4c3ca5082fddd6686b8596d
     pages/settings/dangerZone/title: ab5417cabdfa70b0a7c9d407ec69b450

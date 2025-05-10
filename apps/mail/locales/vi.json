@@ -437,7 +437,8 @@
           "selectAll": "Chọn tất cả",
           "commandPalette": "Bảng lệnh",
           "markAsRead": "Đánh dấu là đã đọc",
-          "exitSelectionMode": "Thoát chế độ chọn"
+          "exitSelectionMode": "Thoát chế độ chọn",
+          "closeCompose": "Đóng soạn thư"
         }
       },
       "labels": {

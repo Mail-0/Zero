@@ -437,7 +437,8 @@
           "selectAll": "すべて選択",
           "commandPalette": "コマンド パレット",
           "markAsRead": "既読にする",
-          "exitSelectionMode": "選択モードを終了"
+          "exitSelectionMode": "選択モードを終了",
+          "closeCompose": "作成を閉じる"
         }
       },
       "labels": {

@@ -437,7 +437,8 @@
           "selectAll": "Выбрать все",
           "commandPalette": "Командная палитра",
           "markAsRead": "Отметить как прочитанное",
-          "exitSelectionMode": "Выйти из режима выбора"
+          "exitSelectionMode": "Выйти из режима выбора",
+          "closeCompose": "Закрыть окно создания"
         }
       },
       "labels": {

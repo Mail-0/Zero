@@ -437,7 +437,8 @@
           "selectAll": "Atlasīt visu",
           "commandPalette": "Komandu palete",
           "markAsRead": "Atzīmēt kā lasītu",
-          "exitSelectionMode": "Iziet no atlases režīma"
+          "exitSelectionMode": "Iziet no atlases režīma",
+          "closeCompose": "Aizvērt rakstīšanu"
         }
       },
       "labels": {

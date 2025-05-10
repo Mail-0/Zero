@@ -437,7 +437,8 @@
           "selectAll": "Összes kijelölése",
           "commandPalette": "Parancspaletta",
           "markAsRead": "Megjelölés olvasottként",
-          "exitSelectionMode": "Kilépés a kijelölési módból"
+          "exitSelectionMode": "Kilépés a kijelölési módból",
+          "closeCompose": "Szerkesztés bezárása"
         }
       },
       "labels": {

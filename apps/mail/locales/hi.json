@@ -437,7 +437,8 @@
           "selectAll": "सभी चुनें",
           "commandPalette": "कमांड पैलेट",
           "markAsRead": "पठित के रूप में चिह्नित करें",
-          "exitSelectionMode": "चयन मोड से बाहर निकलें"
+          "exitSelectionMode": "चयन मोड से बाहर निकलें",
+          "closeCompose": "कंपोज़ बंद करें"
         }
       },
       "labels": {

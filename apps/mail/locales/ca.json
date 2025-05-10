@@ -437,7 +437,8 @@
           "selectAll": "Selecciona-ho tot",
           "commandPalette": "Paleta de comandes",
           "markAsRead": "Marcar com a llegit",
-          "exitSelectionMode": "Sortir del mode de selecció"
+          "exitSelectionMode": "Sortir del mode de selecció",
+          "closeCompose": "Tancar composició"
         }
       },
       "labels": {

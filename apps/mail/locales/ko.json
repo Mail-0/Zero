@@ -437,7 +437,8 @@
           "selectAll": "모두 선택",
           "commandPalette": "명령 팔레트",
           "markAsRead": "읽음으로 표시",
-          "exitSelectionMode": "선택 모드 종료"
+          "exitSelectionMode": "선택 모드 종료",
+          "closeCompose": "작성 창 닫기"
         }
       },
       "labels": {

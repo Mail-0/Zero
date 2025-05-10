@@ -437,7 +437,8 @@
           "selectAll": "Tümünü Seç",
           "commandPalette": "Komut Paleti",
           "markAsRead": "Okundu Olarak İşaretle",
-          "exitSelectionMode": "Seçim Modundan Çık"
+          "exitSelectionMode": "Seçim Modundan Çık",
+          "closeCompose": "Oluşturmayı Kapat"
         }
       },
       "labels": {

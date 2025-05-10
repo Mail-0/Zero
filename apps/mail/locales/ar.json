@@ -437,7 +437,8 @@
           "selectAll": "تحديد الكل",
           "commandPalette": "لوحة الأوامر",
           "markAsRead": "تحديد كمقروء",
-          "exitSelectionMode": "الخروج من وضع التحديد"
+          "exitSelectionMode": "الخروج من وضع التحديد",
+          "closeCompose": "إغلاق الإنشاء"
         }
       },
       "labels": {

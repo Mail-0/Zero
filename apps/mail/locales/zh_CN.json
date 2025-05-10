@@ -437,7 +437,8 @@
           "selectAll": "全选",
           "commandPalette": "命令面板",
           "markAsRead": "标记为已读",
-          "exitSelectionMode": "退出选择模式"
+          "exitSelectionMode": "退出选择模式",
+          "closeCompose": "关闭撰写"
         }
       },
       "labels": {

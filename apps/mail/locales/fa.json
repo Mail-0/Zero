@@ -437,7 +437,8 @@
           "selectAll": "انتخاب همه",
           "commandPalette": "پالت فرمان",
           "markAsRead": "علامت‌گذاری به‌عنوان خوانده‌شده",
-          "exitSelectionMode": "خروج از حالت انتخاب"
+          "exitSelectionMode": "خروج از حالت انتخاب",
+          "closeCompose": "بستن نگارش"
         }
       },
       "labels": {

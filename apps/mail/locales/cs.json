@@ -437,7 +437,8 @@
           "selectAll": "Vybrat vše",
           "commandPalette": "Paleta příkazů",
           "markAsRead": "Označit jako přečtené",
-          "exitSelectionMode": "Ukončit režim výběru"
+          "exitSelectionMode": "Ukončit režim výběru",
+          "closeCompose": "Zavřít psaní"
         }
       },
       "labels": {
