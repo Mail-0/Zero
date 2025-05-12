@@ -1035,7 +1035,7 @@ function getLabelIcon(label: string) {
     case 'notes':
       return <StickyNote className="h-3.5 w-3.5" />;
     case 'starred':
-      return <Star className="h-3.5 w-3.5" />;
+      return <Star className="h-3.5 w-3.5 fill-yellow-400 stroke-yellow-400" />;
     default:
       return null;
   }
