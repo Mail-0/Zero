@@ -221,12 +221,12 @@ export default function PricingPage() {
       <div className="container mx-auto mt-12 h-screen px-4 py-16 md:mt-24">
         <div className="mb-12 text-center">
           <h1 className="mb-2 text-4xl font-bold text-white md:text-6xl">Pricing</h1>
-          <p className="text-white/50 text-lg">Choose the plan that's right for you</p>
+          <p className="text-lg text-white/50">Choose the plan that's right for you</p>
         </div>
 
-        <div className="mx-auto max-w-5xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {/* Free Plan */}
-          <div className="relative flex flex-col rounded-xl border bg-[#121212] px-8 pt-8 pb-4 h-full">
+          <div className="relative flex h-full flex-col rounded-xl border bg-[#121212] px-8 pb-4 pt-8">
             <h1 className="mb-4 text-center text-lg font-normal text-white/50">Free</h1>
             <div className="mb-4 text-center text-3xl font-bold dark:text-white">
               $0 <span className="text-lg font-medium">/ mo</span>
@@ -237,18 +237,22 @@ export default function PricingPage() {
               </li>
 
               <li className="flex items-center gap-2">
-                <CircleCheck className="h-4 w-4 fill-[#2FAD71]" /> AI chat <span className="text-white/50 text-xs">(25 per day)</span>
+                <CircleCheck className="h-4 w-4 fill-[#2FAD71]" /> AI chat{' '}
+                <span className="text-xs text-white/50">(25 per day)</span>
               </li>
 
               <li className="flex items-center gap-2">
                 <CircleCheck className="h-4 w-4 fill-[#2FAD71]" /> AI writing assistant
               </li>
               <li className="flex items-center gap-2">
-                <CircleCheck className="h-4 w-4 fill-[#2FAD71]" /> Auto labeling<span className="text-white/50 text-xs">(25 per day)</span>
+                <CircleCheck className="h-4 w-4 fill-[#2FAD71]" /> Auto labeling
+                <span className="text-xs text-white/50">(25 per day)</span>
               </li>
               <li className="flex items-center gap-2">
                 <CircleCheck className="h-4 w-4 fill-[#2FAD71]" />
-                <span>AI thread summaries <span className="text-white/50 text-xs">(25 per day)</span></span>
+                <span>
+                  AI thread summaries <span className="text-xs text-white/50">(25 per day)</span>
+                </span>
               </li>
               {/* <li className="flex items-center gap-2">
                 <CircleX className="h-4 w-4 fill-white opacity-50" /> Instant thread AI-generated
@@ -263,14 +267,12 @@ export default function PricingPage() {
               </li> */}
             </ul>
             <Link href="/login">
-              <Button className="h-8 w-full" onClick={handleUpgrade}>
-                Get Started
-              </Button>
+              <Button className="h-8 w-full">Get Started</Button>
             </Link>
           </div>
 
           {/* Pro Plan */}
-          <div className="relative flex flex-col rounded-xl border bg-[#121212] px-8 pt-8 pb-4 h-full">
+          <div className="relative flex h-full flex-col rounded-xl border bg-[#121212] px-8 pb-4 pt-8">
             <h1 className="mb-4 text-center text-lg font-normal text-white/50">Pro</h1>
 
             <div className="mb-4 text-center text-3xl font-bold dark:text-white">
@@ -298,7 +300,6 @@ export default function PricingPage() {
               <li className="flex items-center gap-2">
                 <CircleCheck className="h-4 w-4 fill-[#2FAD71]" /> Verified checkmark
               </li>
-              
             </ul>
             <Button className="h-8 w-full" onClick={handleUpgrade}>
               Get Started
@@ -306,7 +307,7 @@ export default function PricingPage() {
           </div>
 
           {/* Enterprise Plan */}
-          <div className="relative flex flex-col rounded-xl border bg-[#121212] px-8 pt-8 pb-4 h-full">
+          <div className="relative flex h-full flex-col rounded-xl border bg-[#121212] px-8 pb-4 pt-8">
             <h1 className="mb-4 text-center text-lg font-normal text-white/50">Enterprise</h1>
 
             <div className="mb-4 text-center text-3xl font-bold dark:text-white">Contact us</div>

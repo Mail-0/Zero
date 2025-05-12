@@ -6,7 +6,7 @@
     "dev": "wrangler dev --show-interactive-dev-session=false --env staging",
     "build": "wrangler deploy --minify --dry-run",
     "deploy": "wrangler deploy --minify",
-    "types": "wrangler types --e staging"
+    "types": "wrangler types --env staging"
   },
   "exports": {
     "./trpc": "./src/trpc/index.ts",

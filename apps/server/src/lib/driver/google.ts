@@ -293,45 +293,34 @@ export class GoogleMailManager implements MailManager {
               });
             }
 
+            const attachmentParts = message.payload?.parts 
+              ? this.findAttachments(message.payload.parts) 
+              : [];
+            
             const attachments = await Promise.all(
-              message.payload?.parts
-                ?.filter((part) => {
-                  if (!part.filename || part.filename.length === 0) return false;
+              attachmentParts.map(async (part) => {
+                const attachmentId = part.body?.attachmentId;
+                if (!attachmentId) {
+                  return null;
+                }
 
-                  const contentDisposition =
-                    part.headers?.find((h) => h.name?.toLowerCase() === 'content-disposition')
-                      ?.value || '';
-                  const isInline = contentDisposition.toLowerCase().includes('inline');
-
-                  const hasContentId = part.headers?.some(
-                    (h) => h.name?.toLowerCase() === 'content-id',
-                  );
-
-                  return !isInline || (isInline && !hasContentId);
-                })
-                ?.map(async (part) => {
-                  const attachmentId = part.body?.attachmentId;
-                  if (!attachmentId) {
+                try {
+                  if (!message.id) {
                     return null;
                   }
-
-                  try {
-                    if (!message.id) {
-                      return null;
-                    }
-                    const attachmentData = await this.getAttachment(message.id, attachmentId);
-                    return {
-                      filename: part.filename || '',
-                      mimeType: part.mimeType || '',
-                      size: Number(part.body?.size || 0),
-                      attachmentId: attachmentId,
-                      headers: part.headers || [],
-                      body: attachmentData ?? '',
-                    };
-                  } catch {
-                    return null;
-                  }
-                }) || [],
+                  const attachmentData = await this.getAttachment(message.id, attachmentId);
+                  return {
+                    filename: part.filename || '',
+                    mimeType: part.mimeType || '',
+                    size: Number(part.body?.size || 0),
+                    attachmentId: attachmentId,
+                    headers: part.headers || [],
+                    body: attachmentData ?? '',
+                  };
+                } catch {
+                  return null;
+                }
+              })
             ).then((attachments) =>
               attachments.filter((a): a is NonNullable<typeof a> => a !== null),
             );
@@ -1043,5 +1032,37 @@ export class GoogleMailManager implements MailManager {
       if (isFatal && this.config.c) void deleteActiveConnection(this.config.c);
       throw new StandardizedError(error, operation, context);
     }
+  }
+
+  private findAttachments(parts: any[]): any[] {
+    let results: any[] = [];
+    
+    for (const part of parts) {
+      if (part.filename && part.filename.length > 0) {
+        const contentDisposition =
+          part.headers?.find((h: any) => h.name?.toLowerCase() === 'content-disposition')
+            ?.value || '';
+        const isInline = contentDisposition.toLowerCase().includes('inline');
+        const hasContentId = part.headers?.some(
+          (h: any) => h.name?.toLowerCase() === 'content-id',
+        );
+
+        if (!isInline || (isInline && !hasContentId)) {
+          results.push(part);
+        }
+      }
+      
+      if (part.parts && Array.isArray(part.parts)) {
+        results = results.concat(this.findAttachments(part.parts));
+      }
+      
+      if (part.body?.attachmentId && part.mimeType === 'message/rfc822') {
+        if (part.filename && part.filename.length > 0) {
+          results.push(part);
+        }
+      }
+    }
+    
+    return results;
   }
 }

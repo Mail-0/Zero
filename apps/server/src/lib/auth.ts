@@ -6,11 +6,11 @@ import {
   session,
   userHotkeys,
 } from '@zero/db/schema';
+import { type Account, betterAuth, type BetterAuthOptions } from 'better-auth';
 import { createAuthMiddleware, customSession } from 'better-auth/plugins';
 import { defaultUserSettings } from '@zero/db/user_settings_default';
 import { getBrowserTimezone, isValidTimezone } from './timezones';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { type Account, betterAuth } from 'better-auth';
 import { getSocialProviders } from './auth-providers';
 import { getActiveDriver } from './driver/utils';
 import { APIError } from 'better-auth/api';
@@ -205,6 +205,7 @@ const createAuthConfig = () => {
       ipAddress: {
         disableIpTracking: true,
       },
+      cookiePrefix: env.NODE_ENV === 'development' ? 'better-auth-dev' : 'better-auth',
       crossSubDomainCookies: {
         enabled: true,
         domain: env.COOKIE_DOMAIN,
@@ -320,7 +321,7 @@ const createAuthConfig = () => {
         };
       }),
     ],
-  };
+  } satisfies BetterAuthOptions;
 };
 
 export const createSimpleAuth = () => {

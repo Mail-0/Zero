@@ -1,11 +1,11 @@
 import { env, WorkerEntrypoint } from 'cloudflare:workers';
 import { mailtoHandler } from './routes/mailto-handler';
-import type { HonoContext, HonoVariables } from './ctx';
 import { routePartykitRequest } from 'partyserver';
 import { partyserverMiddleware } from 'hono-party';
 import { trpcServer } from '@hono/trpc-server';
 import { DurableMailbox } from './lib/party';
 import { chatHandler } from './routes/chat';
+import type { HonoVariables } from './ctx';
 import { createAuth } from './lib/auth';
 import { createDb } from '@zero/db';
 import { appRouter } from './trpc';
@@ -18,7 +18,7 @@ const api = new Hono<{ Variables: HonoVariables; Bindings: Env }>()
   .use(
     '*',
     cors({
-      origin: (_, c: HonoContext) => env.NEXT_PUBLIC_APP_URL,
+      origin: () => env.NEXT_PUBLIC_APP_URL,
       credentials: true,
       allowHeaders: ['Content-Type', 'Authorization'],
     }),
@@ -76,21 +76,38 @@ const app = new Hono<{ Variables: HonoVariables; Bindings: Env }>()
     }),
   );
 
-export default class extends WorkerEntrypoint {
+export default class extends WorkerEntrypoint<typeof env> {
   fetch(request: Request): Response | Promise<Response> {
     if (request.url.includes('/zero/durable-mailbox')) {
-      return routePartykitRequest(request, env as any, {
+      return routePartykitRequest(request, env as unknown as Record<string, unknown>, {
         prefix: 'zero',
       }) as Promise<Response>;
     }
-    return app.fetch(request);
+    return app.fetch(request, this.env, this.ctx);
   }
 
-  public notifyUser({ email }: { email: string }) {
-    const durableObject = env.DURABLE_MAILBOX.idFromString(`${email}:general`);
+  public async notifyUser({
+    connectionId,
+    threadId,
+    type,
+  }: {
+    connectionId: string;
+    threadId: string;
+    type: 'start' | 'end';
+  }) {
+    console.log(`Notifying user ${connectionId} for thread ${threadId} with type ${type}`);
+    const durableObject = env.DURABLE_MAILBOX.idFromName(`${connectionId}`);
     if (env.DURABLE_MAILBOX.get(durableObject)) {
       const stub = env.DURABLE_MAILBOX.get(durableObject);
-      if (stub) stub.broadcast(`HELLO ${email}`);
+      if (stub) {
+        console.log(`Broadcasting message for thread ${threadId} with type ${type}`);
+        await stub.broadcast(threadId + ':' + type);
+        console.log(`Successfully broadcasted message for thread ${threadId}`);
+      } else {
+        console.log(`No stub found for connection ${connectionId}`);
+      }
+    } else {
+      console.log(`No durable object found for connection ${connectionId}`);
     }
   }
 }

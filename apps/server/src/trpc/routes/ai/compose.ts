@@ -105,6 +105,28 @@ export const compose = activeConnectionProcedure
     };
   });
 
+export const generateEmailSubject = activeConnectionProcedure
+  .input(
+    z.object({
+      message: z.string(),
+    }),
+  )
+  .mutation(async ({ ctx, input }) => {
+    const { activeConnection } = ctx;
+    const { message } = input;
+
+    const writingStyleMatrix = await getWritingStyleMatrixForConnectionId({
+      connectionId: activeConnection.id,
+      c: ctx.c,
+    });
+
+    const subject = await generateSubject(message, writingStyleMatrix?.style as WritingStyleMatrix);
+
+    return {
+      subject,
+    };
+  });
+
 const MessagePrompt = ({
   from,
   to,
@@ -195,4 +217,45 @@ const EmailAssistantPrompt = ({
   );
 
   return parts.join('\n\n');
+};
+
+const generateSubject = async (message: string, styleProfile?: WritingStyleMatrix | null) => {
+  const parts: string[] = [];
+
+  parts.push('# Email Subject Generation Task');
+  if (styleProfile) {
+    parts.push('## Style Profile');
+    parts.push(`\`\`\`json
+  ${JSON.stringify(styleProfile, null, 2)}
+  \`\`\``);
+  }
+
+  parts.push('## Email Content');
+  parts.push(escapeXml(message));
+  parts.push('');
+  parts.push(
+    'Generate a concise, clear subject line that summarizes the main point of the email. The subject should be professional and under 100 characters.',
+  );
+
+  const { text } = await generateText({
+    model: openai('gpt-4o'),
+    messages: [
+      {
+        role: 'system',
+        content:
+          'You are an email subject line generator. Generate a concise, clear subject line that summarizes the main point of the email. The subject should be professional and under 100 characters.',
+      },
+      {
+        role: 'user',
+        content: parts.join('\n\n'),
+      },
+    ],
+    maxTokens: 50,
+    temperature: 0.3,
+    frequencyPenalty: 0.1,
+    presencePenalty: 0.1,
+    maxRetries: 1,
+  });
+
+  return text.trim();
 };
