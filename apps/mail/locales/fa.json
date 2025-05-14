@@ -15,6 +15,7 @@
       "loading": "در حال بارگذاری...",
       "featureNotImplemented": "این قابلیت هنوز پیاده‌سازی نشده است",
       "moving": "در حال انتقال...",
+      "moved": "منتقل شد",
       "movedToInbox": "به صندوق ورودی منتقل شد",
       "movingToInbox": "در حال انتقال به صندوق ورودی...",
       "movedToSpam": "به هرزنامه منتقل شد",
@@ -34,6 +35,7 @@
       "failedToModifyFavorites": "تغییر علاقه‌مندی‌ها ناموفق بود",
       "movingToBin": "در حال انتقال به سطل زباله...",
       "movedToBin": "به سطل زباله منتقل شد",
+      "Bin": "سطل زباله",
       "failedToMoveToBin": "انتقال به سطل زباله ناموفق بود",
       "markingAsRead": "در حال علامت‌گذاری به عنوان خوانده شده...",
       "markingAsUnread": "در حال علامت‌گذاری به عنوان خوانده نشده...",
@@ -44,7 +46,8 @@
       "cancel": "لغو",
       "save": "ذخیره",
       "remove": "حذف",
-      "settings": "تنظیمات"
+      "settings": "تنظیمات",
+      "exitSelectionModeEsc": "برای خروج از حالت انتخاب، کلیک کنید یا دکمه ESC را فشار دهید"
     },
     "themes": {
       "dark": "تیره",
@@ -72,12 +75,13 @@
         "goToBin": "رفتن به سطل زباله",
         "goToSettings": "رفتن به تنظیمات",
         "newEmail": "ایمیل جدید",
-        "composeMessage": "نوشتن پیام",
+        "composeMessage": "ایمیل جدید",
         "searchEmails": "جستجوی ایمیل‌ها",
         "toggleTheme": "تغییر پوسته",
         "backToMail": "بازگشت به ایمیل",
         "goToDocs": "رفتن به مستندات",
-        "helpWithShortcuts": "راهنمای میانبرها"
+        "helpWithShortcuts": "راهنمای میانبرها",
+        "commandPalette": "پالت فرمان"
       }
     },
     "searchBar": {
@@ -112,7 +116,8 @@
       "documentation": "مستندات",
       "appTheme": "تم برنامه",
       "accounts": "حساب‌ها",
-      "signIn": "ورود"
+      "signIn": "ورود",
+      "otherAccounts": "حساب‌های دیگر"
     },
     "mailCategories": {
       "primary": "اصلی",
@@ -170,7 +175,9 @@
       "muteThread": "بی‌صدا کردن مکالمه",
       "favourites": "موارد مورد علاقه",
       "disableImages": "پنهان کردن تصاویر",
-      "enableImages": "نمایش تصاویر"
+      "enableImages": "نمایش تصاویر",
+      "star": "ستاره‌دار کردن",
+      "unstar": "حذف ستاره"
     },
     "notes": {
       "title": "یادداشت‌ها",
@@ -249,7 +256,6 @@
       "failedToMarkAsUnread": "علامت‌گذاری به عنوان خوانده نشده ناموفق بود",
       "selected": "{count} انتخاب شده",
       "clearSelection": "پاک کردن انتخاب",
-      "mute": "بی‌صدا کردن",
       "moveToSpam": "انتقال به هرزنامه",
       "moveToInbox": "انتقال به صندوق ورودی",
       "deleteFromBin": "حذف از سطل زباله",
@@ -276,10 +282,28 @@
       "showImages": "نمایش تصاویر",
       "noEmails": "هیچ ایمیلی موجود نیست",
       "noSearchResults": "نتیجه‌ای برای جستجو یافت نشد",
-      "clearSearch": "پاک کردن جستجو"
+      "clearSearch": "پاک کردن جستجو",
+      "markAsImportant": "علامت‌گذاری به عنوان مهم",
+      "unSubscribeFromAll": "لغو اشتراک از همه",
+      "starAll": "ستاره‌دار کردن همه",
+      "mute": "بی‌صدا کردن",
+      "unmute": "فعال کردن صدا",
+      "muted": "بی‌صدا شده",
+      "failedToMute": "بی‌صدا کردن ناموفق بود",
+      "failedToUnmute": "فعال کردن صدا ناموفق بود",
+      "archived": "بایگانی شد",
+      "failedToArchive": "بایگانی کردن ناموفق بود"
     },
     "units": {
       "mb": "{amount} مگابایت"
+    },
+    "labels": {
+      "deleteLabel": "حذف برچسب",
+      "deleteLabelConfirm": "آیا مطمئن هستید که می‌خواهید این برچسب را حذف کنید؟",
+      "deleteLabelConfirmDescription": "این عملیات غیرقابل بازگشت است.",
+      "deleteLabelConfirmCancel": "لغو",
+      "deleteLabelConfirmDelete": "حذف",
+      "deleteLabelSuccess": "برچسب با موفقیت حذف شد"
     }
   },
   "navigation": {
@@ -301,7 +325,9 @@
       "signatures": "امضاها",
       "shortcuts": "میانبرها",
       "labels": "برچسب‌ها",
-      "danger-zone": "منطقه خطر"
+      "dangerZone": "منطقه خطر",
+      "deleteAccount": "حذف حساب کاربری",
+      "privacy": "حریم خصوصی"
     }
   },
   "pages": {
@@ -323,10 +349,6 @@
         "selectTimezone": "یک منطقه زمانی انتخاب کنید",
         "dynamicContent": "محتوای پویا",
         "dynamicContentDescription": "به ایمیل‌ها اجازه دهید محتوای پویا را نمایش دهند.",
-        "externalImages": "نمایش تصاویر خارجی",
-        "externalImagesDescription": "به ایمیل‌ها اجازه دهید تصاویر از منابع خارجی را نمایش دهند.",
-        "trustedSenders": "فرستنده‌های مورد اعتماد",
-        "trustedSendersDescription": "همیشه تصاویر را برای این فرستنده‌ها نمایش بده.",
         "languageChangedTo": "زبان به {locale} تغییر کرد",
         "customPrompt": "پرامپت سفارشی هوش مصنوعی",
         "customPromptPlaceholder": "پرامپت سفارشی خود را برای هوش مصنوعی وارد کنید...",
@@ -345,7 +367,9 @@
         "addEmail": "افزودن اتصال",
         "connectEmail": "اتصال ایمیل",
         "connectEmailDescription": "یک سرویس‌دهنده ایمیل برای اتصال انتخاب کنید",
-        "moreComingSoon": "به زودی موارد بیشتری اضافه می‌شود"
+        "moreComingSoon": "به زودی موارد بیشتری اضافه می‌شود",
+        "reconnect": "اتصال مجدد",
+        "disconnected": "قطع شده"
       },
       "security": {
         "title": "امنیت",
@@ -401,7 +425,7 @@
           "markAsUnread": "علامت‌گذاری به‌عنوان خوانده‌نشده",
           "muteThread": "بی‌صدا کردن مکالمه",
           "printEmail": "چاپ ایمیل",
-          "archiveEmail": "بایگانی ایمیل",
+          "archiveEmail": "بایگانی مکالمه",
           "markAsSpam": "علامت‌گذاری به‌عنوان هرزنامه",
           "moveToFolder": "انتقال به پوشه",
           "undoLastAction": "لغو آخرین عملیات",
@@ -412,20 +436,34 @@
           "recordHotkey": "ثبت کلید میانبر",
           "pressKeys": "فشردن کلیدها",
           "releaseKeys": "رها کردن کلیدها",
-          "selectAll": "انتخاب همه"
+          "selectAll": "انتخاب همه",
+          "commandPalette": "پالت فرمان",
+          "markAsRead": "علامت‌گذاری به‌عنوان خوانده‌شده",
+          "exitSelectionMode": "خروج از حالت انتخاب",
+          "closeCompose": "بستن نگارش"
         }
       },
       "labels": {
         "title": "برچسب‌ها",
         "description": "برچسب‌های خود را برای سازماندهی بهتر ایمیل‌هایتان مدیریت کنید."
       },
-      "danger-zone": {
-        "title": "منطقه خطر",
+      "dangerZone": {
+        "title": "Danger Zone",
         "description": "حساب کاربری خود و تمام داده‌های مرتبط با آن را به طور دائمی حذف کنید.",
-        "warning": "این عملیات غیرقابل بازگشت است.",
+        "warning": "این عمل قابل بازگشت نیست.",
         "confirmation": "لطفاً برای تأیید حذف حساب کاربری، عبارت DELETE را تایپ کنید",
         "deleteAccount": "حذف حساب کاربری",
-        "deleting": "در حال حذف..."
+        "deleting": "در حال حذف...",
+        "deleted": "حساب کاربری با موفقیت حذف شد",
+        "error": "حذف حساب کاربری ناموفق بود"
+      },
+      "privacy": {
+        "title": "حریم خصوصی",
+        "description": "تنظیمات حریم خصوصی و امنیتی خود را برای محتوای ایمیل مدیریت کنید.",
+        "externalImages": "نمایش تصاویر خارجی",
+        "externalImagesDescription": "به ایمیل‌ها اجازه دهید تصاویر از منابع خارجی را نمایش دهند.",
+        "trustedSenders": "فرستنده‌های مورد اعتماد",
+        "trustedSendersDescription": "همیشه تصاویر را برای این فرستنده‌ها نمایش بده."
       }
     },
     "createEmail": {
@@ -436,6 +474,7 @@
       "addMore": "افزودن بیشتر",
       "dropFilesToAttach": "فایل‌ها را برای پیوست کردن اینجا رها کنید",
       "writeYourMessageHere": "پیام خود را اینجا بنویسید...",
+      "emailSent": "ایمیل ارسال شد",
       "emailSentSuccessfully": "ایمیل با موفقیت ارسال شد",
       "failedToSendEmail": "ارسال ایمیل ناموفق بود. لطفاً دوباره تلاش کنید.",
       "signature": {
@@ -465,5 +504,10 @@
         }
       }
     }
+  },
+  "errorMessages": {
+    "required_scopes_missing": "دسترسی‌های لازم برای ارائه تجربه کامل به شما وجود ندارد. لطفاً دوباره وارد شوید و دسترسی‌های درخواست شده را تأیید کنید.",
+    "early_access_required": "برای ورود به سیستم، دسترسی زودهنگام لازم است",
+    "unauthorized": "Zero نتوانست داده‌های شما را از ارائه‌دهنده شخص ثالث بارگیری کند. لطفاً دوباره تلاش کنید."
   }
 }

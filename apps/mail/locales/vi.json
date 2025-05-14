@@ -15,6 +15,7 @@
       "loading": "Đang tải...",
       "featureNotImplemented": "Tính năng này chưa được triển khai",
       "moving": "Đang di chuyển...",
+      "moved": "Đã di chuyển",
       "movedToInbox": "Đã chuyển đến hộp thư đến",
       "movingToInbox": "Đang chuyển đến hộp thư đến...",
       "movedToSpam": "Đã chuyển đến thư rác",
@@ -34,6 +35,7 @@
       "failedToModifyFavorites": "Không thể chỉnh sửa mục yêu thích",
       "movingToBin": "Đang chuyển vào thùng rác...",
       "movedToBin": "Đã chuyển vào thùng rác",
+      "Bin": "Thùng rác",
       "failedToMoveToBin": "Không thể chuyển vào thùng rác",
       "markingAsRead": "Đang đánh dấu là đã đọc...",
       "markingAsUnread": "Đang đánh dấu là chưa đọc...",
@@ -44,7 +46,8 @@
       "cancel": "Hủy",
       "save": "Lưu",
       "remove": "Xóa",
-      "settings": "Cài đặt"
+      "settings": "Cài đặt",
+      "exitSelectionModeEsc": "Nhấp chuột hoặc nhấn ESC để thoát chế độ chọn"
     },
     "themes": {
       "dark": "Tối",
@@ -72,12 +75,13 @@
         "goToBin": "Đi đến Thùng rác",
         "goToSettings": "Đi đến Cài đặt",
         "newEmail": "Thư mới",
-        "composeMessage": "Soạn thư",
+        "composeMessage": "Thư mới",
         "searchEmails": "Tìm kiếm thư",
         "toggleTheme": "Chuyển đổi giao diện",
         "backToMail": "Quay lại Thư",
         "goToDocs": "Đi đến tài liệu",
-        "helpWithShortcuts": "Trợ giúp về phím tắt"
+        "helpWithShortcuts": "Trợ giúp về phím tắt",
+        "commandPalette": "Bảng lệnh"
       }
     },
     "searchBar": {
@@ -112,7 +116,8 @@
       "documentation": "Tài liệu",
       "appTheme": "Giao diện ứng dụng",
       "accounts": "Tài khoản",
-      "signIn": "Đăng nhập"
+      "signIn": "Đăng nhập",
+      "otherAccounts": "Tài khoản khác"
     },
     "mailCategories": {
       "primary": "Chính",
@@ -170,7 +175,9 @@
       "muteThread": "Tắt tiếng cuộc trò chuyện",
       "favourites": "Yêu thích",
       "disableImages": "Ẩn hình ảnh",
-      "enableImages": "Hiển thị hình ảnh"
+      "enableImages": "Hiển thị hình ảnh",
+      "star": "Đánh dấu sao",
+      "unstar": "Bỏ đánh dấu sao"
     },
     "notes": {
       "title": "Ghi chú",
@@ -249,7 +256,6 @@
       "failedToMarkAsUnread": "Không thể đánh dấu là chưa đọc",
       "selected": "Đã chọn {count}",
       "clearSelection": "Xóa lựa chọn",
-      "mute": "Tắt tiếng",
       "moveToSpam": "Chuyển đến Thư rác",
       "moveToInbox": "Chuyển đến Hộp thư đến",
       "deleteFromBin": "Xóa khỏi Thùng rác",
@@ -276,10 +282,28 @@
       "showImages": "Hiển thị hình ảnh",
       "noEmails": "Không có email nào",
       "noSearchResults": "Không tìm thấy kết quả nào",
-      "clearSearch": "Xóa tìm kiếm"
+      "clearSearch": "Xóa tìm kiếm",
+      "markAsImportant": "Đánh dấu là quan trọng",
+      "unSubscribeFromAll": "Hủy đăng ký tất cả",
+      "starAll": "Đánh dấu sao tất cả",
+      "mute": "Tắt tiếng",
+      "unmute": "Bật tiếng",
+      "muted": "Đã tắt tiếng",
+      "failedToMute": "Không thể tắt tiếng",
+      "failedToUnmute": "Không thể bật tiếng",
+      "archived": "Đã lưu trữ",
+      "failedToArchive": "Không thể lưu trữ"
     },
     "units": {
       "mb": "{amount} MB"
+    },
+    "labels": {
+      "deleteLabel": "Xóa nhãn",
+      "deleteLabelConfirm": "Bạn có chắc chắn muốn xóa nhãn này không?",
+      "deleteLabelConfirmDescription": "Hành động này không thể hoàn tác.",
+      "deleteLabelConfirmCancel": "Hủy",
+      "deleteLabelConfirmDelete": "Xóa",
+      "deleteLabelSuccess": "Đã xóa nhãn thành công"
     }
   },
   "navigation": {
@@ -301,7 +325,9 @@
       "signatures": "Chữ ký",
       "shortcuts": "Phím tắt",
       "labels": "Nhãn",
-      "danger-zone": "Khu vực nguy hiểm"
+      "dangerZone": "Khu vực nguy hiểm",
+      "deleteAccount": "Xóa tài khoản",
+      "privacy": "Quyền riêng tư"
     }
   },
   "pages": {
@@ -323,10 +349,6 @@
         "selectTimezone": "Chọn múi giờ",
         "dynamicContent": "Nội dung động",
         "dynamicContentDescription": "Cho phép email hiển thị nội dung động.",
-        "externalImages": "Hiển thị hình ảnh từ bên ngoài",
-        "externalImagesDescription": "Cho phép email hiển thị hình ảnh từ nguồn bên ngoài.",
-        "trustedSenders": "Người gửi tin cậy",
-        "trustedSendersDescription": "Luôn hiển thị hình ảnh từ những người gửi này.",
         "languageChangedTo": "Đã chuyển ngôn ngữ sang {locale}",
         "customPrompt": "Lệnh AI tùy chỉnh",
         "customPromptPlaceholder": "Nhập lệnh tùy chỉnh của bạn cho AI...",
@@ -345,7 +367,9 @@
         "addEmail": "Thêm kết nối",
         "connectEmail": "Kết nối email",
         "connectEmailDescription": "Chọn nhà cung cấp email để kết nối",
-        "moreComingSoon": "Sẽ có thêm tùy chọn sớm"
+        "moreComingSoon": "Sẽ có thêm tùy chọn sớm",
+        "reconnect": "Kết nối lại",
+        "disconnected": "Đã ngắt kết nối"
       },
       "security": {
         "title": "Bảo mật",
@@ -401,7 +425,7 @@
           "markAsUnread": "Đánh dấu chưa đọc",
           "muteThread": "Tắt tiếng cuộc trò chuyện",
           "printEmail": "In email",
-          "archiveEmail": "Lưu trữ email",
+          "archiveEmail": "Lưu trữ chuỗi thư",
           "markAsSpam": "Đánh dấu là spam",
           "moveToFolder": "Chuyển đến thư mục",
           "undoLastAction": "Hoàn tác thao tác cuối",
@@ -412,20 +436,34 @@
           "recordHotkey": "Ghi phím tắt",
           "pressKeys": "Nhấn phím",
           "releaseKeys": "Nhả phím",
-          "selectAll": "Chọn tất cả"
+          "selectAll": "Chọn tất cả",
+          "commandPalette": "Bảng lệnh",
+          "markAsRead": "Đánh dấu là đã đọc",
+          "exitSelectionMode": "Thoát chế độ chọn",
+          "closeCompose": "Đóng soạn thư"
         }
       },
       "labels": {
         "title": "Nhãn",
         "description": "Quản lý nhãn của bạn để tổ chức email tốt hơn."
       },
-      "danger-zone": {
-        "title": "Vùng nguy hiểm",
+      "dangerZone": {
+        "title": "Danger Zone",
         "description": "Xóa vĩnh viễn tài khoản của bạn và tất cả dữ liệu liên quan.",
         "warning": "Hành động này không thể hoàn tác.",
         "confirmation": "Vui lòng nhập DELETE để xác nhận xóa tài khoản",
         "deleteAccount": "Xóa tài khoản",
-        "deleting": "Đang xóa..."
+        "deleting": "Đang xóa...",
+        "deleted": "Đã xóa tài khoản thành công",
+        "error": "Không thể xóa tài khoản"
+      },
+      "privacy": {
+        "title": "Quyền riêng tư",
+        "description": "Quản lý tùy chọn quyền riêng tư và bảo mật cho nội dung email.",
+        "externalImages": "Hiển thị hình ảnh từ bên ngoài",
+        "externalImagesDescription": "Cho phép email hiển thị hình ảnh từ nguồn bên ngoài.",
+        "trustedSenders": "Người gửi tin cậy",
+        "trustedSendersDescription": "Luôn hiển thị hình ảnh từ những người gửi này."
       }
     },
     "createEmail": {
@@ -436,6 +474,7 @@
       "addMore": "Thêm nữa",
       "dropFilesToAttach": "Kéo thả tệp để đính kèm",
       "writeYourMessageHere": "Viết tin nhắn của bạn tại đây...",
+      "emailSent": "Đã gửi email",
       "emailSentSuccessfully": "Email đã được gửi thành công",
       "failedToSendEmail": "Không thể gửi email. Vui lòng thử lại.",
       "signature": {
@@ -465,5 +504,10 @@
         }
       }
     }
+  },
+  "errorMessages": {
+    "required_scopes_missing": "Chúng tôi thiếu các quyền cần thiết để tạo trải nghiệm đầy đủ cho bạn. Vui lòng đăng nhập lại và cho phép quyền truy cập được yêu cầu.",
+    "early_access_required": "Cần có quyền truy cập sớm để đăng nhập",
+    "unauthorized": "Zero không thể tải dữ liệu của bạn từ nhà cung cấp bên thứ 3. Vui lòng thử lại."
   }
 }

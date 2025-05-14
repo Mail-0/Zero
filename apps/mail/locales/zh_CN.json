@@ -15,6 +15,7 @@
       "loading": "加载中...",
       "featureNotImplemented": "此功能尚未实现",
       "moving": "正在移动...",
+      "moved": "已移动",
       "movedToInbox": "已移至收件箱",
       "movingToInbox": "正在移至收件箱...",
       "movedToSpam": "已移至垃圾邮件",
@@ -34,6 +35,7 @@
       "failedToModifyFavorites": "修改收藏夹失败",
       "movingToBin": "正在移至回收站...",
       "movedToBin": "已移至回收站",
+      "Bin": "回收站",
       "failedToMoveToBin": "移至回收站失败",
       "markingAsRead": "正在标记为已读...",
       "markingAsUnread": "正在标记为未读...",
@@ -44,7 +46,8 @@
       "cancel": "取消",
       "save": "保存",
       "remove": "移除",
-      "settings": "设置"
+      "settings": "设置",
+      "exitSelectionModeEsc": "点击或按 ESC 键退出选择模式"
     },
     "themes": {
       "dark": "深色",
@@ -72,12 +75,13 @@
         "goToBin": "前往回收站",
         "goToSettings": "前往设置",
         "newEmail": "新建邮件",
-        "composeMessage": "撰写邮件",
+        "composeMessage": "新邮件",
         "searchEmails": "搜索邮件",
         "toggleTheme": "切换主题",
         "backToMail": "返回邮件",
         "goToDocs": "前往文档",
-        "helpWithShortcuts": "快捷键帮助"
+        "helpWithShortcuts": "快捷键帮助",
+        "commandPalette": "命令面板"
       }
     },
     "searchBar": {
@@ -112,7 +116,8 @@
       "documentation": "文档",
       "appTheme": "应用主题",
       "accounts": "账户",
-      "signIn": "登录"
+      "signIn": "登录",
+      "otherAccounts": "其他账户"
     },
     "mailCategories": {
       "primary": "主要",
@@ -170,7 +175,9 @@
       "muteThread": "静音会话",
       "favourites": "收藏",
       "disableImages": "隐藏图片",
-      "enableImages": "显示图片"
+      "enableImages": "显示图片",
+      "star": "标记为星标",
+      "unstar": "取消星标"
     },
     "notes": {
       "title": "笔记",
@@ -249,7 +256,6 @@
       "failedToMarkAsUnread": "标记为未读失败",
       "selected": "已选择 {count} 项",
       "clearSelection": "清除选择",
-      "mute": "静音",
       "moveToSpam": "移至垃圾邮件",
       "moveToInbox": "移至收件箱",
       "deleteFromBin": "从回收站删除",
@@ -276,10 +282,28 @@
       "showImages": "显示图片",
       "noEmails": "没有可用邮件",
       "noSearchResults": "未找到搜索结果",
-      "clearSearch": "清除搜索"
+      "clearSearch": "清除搜索",
+      "markAsImportant": "标记为重要",
+      "unSubscribeFromAll": "取消订阅所有",
+      "starAll": "全部标记为星标",
+      "mute": "静音",
+      "unmute": "取消静音",
+      "muted": "已静音",
+      "failedToMute": "静音失败",
+      "failedToUnmute": "取消静音失败",
+      "archived": "已归档",
+      "failedToArchive": "归档失败"
     },
     "units": {
       "mb": "{amount} MB"
+    },
+    "labels": {
+      "deleteLabel": "删除标签",
+      "deleteLabelConfirm": "确定要删除此标签吗？",
+      "deleteLabelConfirmDescription": "此操作无法撤销。",
+      "deleteLabelConfirmCancel": "取消",
+      "deleteLabelConfirmDelete": "删除",
+      "deleteLabelSuccess": "标签已成功删除"
     }
   },
   "navigation": {
@@ -301,7 +325,9 @@
       "signatures": "签名",
       "shortcuts": "快捷键",
       "labels": "标签",
-      "danger-zone": "危险区域"
+      "dangerZone": "危险区域",
+      "deleteAccount": "删除账户",
+      "privacy": "隐私"
     }
   },
   "pages": {
@@ -323,10 +349,6 @@
         "selectTimezone": "选择时区",
         "dynamicContent": "动态内容",
         "dynamicContentDescription": "允许邮件显示动态内容。",
-        "externalImages": "显示外部图片",
-        "externalImagesDescription": "允许邮件显示来自外部来源的图片。",
-        "trustedSenders": "信任发件人",
-        "trustedSendersDescription": "始终显示这些发件人的图片。",
         "languageChangedTo": "语言已更改为{locale}",
         "customPrompt": "自定义AI提示",
         "customPromptPlaceholder": "输入您的自定义AI提示...",
@@ -345,7 +367,9 @@
         "addEmail": "添加连接",
         "connectEmail": "连接邮箱",
         "connectEmailDescription": "选择要连接的邮箱提供商",
-        "moreComingSoon": "更多即将推出"
+        "moreComingSoon": "更多即将推出",
+        "reconnect": "重新连接",
+        "disconnected": "已断开连接"
       },
       "security": {
         "title": "安全",
@@ -401,7 +425,7 @@
           "markAsUnread": "标记为未读",
           "muteThread": "静音会话",
           "printEmail": "打印邮件",
-          "archiveEmail": "归档邮件",
+          "archiveEmail": "归档邮件线程",
           "markAsSpam": "标记为垃圾邮件",
           "moveToFolder": "移动到文件夹",
           "undoLastAction": "撤销上一操作",
@@ -412,20 +436,34 @@
           "recordHotkey": "记录热键",
           "pressKeys": "按键",
           "releaseKeys": "释放按键",
-          "selectAll": "全选"
+          "selectAll": "全选",
+          "commandPalette": "命令面板",
+          "markAsRead": "标记为已读",
+          "exitSelectionMode": "退出选择模式",
+          "closeCompose": "关闭撰写"
         }
       },
       "labels": {
         "title": "标签",
         "description": "管理您的标签，以便更好地组织您的邮件。"
       },
-      "danger-zone": {
-        "title": "危险区域",
+      "dangerZone": {
+        "title": "Danger Zone",
         "description": "永久删除您的账户和所有相关数据。",
         "warning": "此操作无法撤销。",
         "confirmation": "请输入DELETE以确认账户删除",
         "deleteAccount": "删除账户",
-        "deleting": "正在删除..."
+        "deleting": "正在删除...",
+        "deleted": "账户已成功删除",
+        "error": "删除账户失败"
+      },
+      "privacy": {
+        "title": "隐私",
+        "description": "管理您的电子邮件内容隐私和安全偏好。",
+        "externalImages": "显示外部图片",
+        "externalImagesDescription": "允许邮件显示来自外部来源的图片。",
+        "trustedSenders": "信任发件人",
+        "trustedSendersDescription": "始终显示这些发件人的图片。"
       }
     },
     "createEmail": {
@@ -436,6 +474,7 @@
       "addMore": "添加更多",
       "dropFilesToAttach": "拖放文件以附加",
       "writeYourMessageHere": "在此处撰写您的消息...",
+      "emailSent": "邮件已发送",
       "emailSentSuccessfully": "邮件发送成功",
       "failedToSendEmail": "邮件发送失败。请重试。",
       "signature": {
@@ -465,5 +504,10 @@
         }
       }
     }
+  },
+  "errorMessages": {
+    "required_scopes_missing": "我们缺少为您提供完整体验所需的权限。请重新登录并允许请求的访问权限。",
+    "early_access_required": "需要提前访问权限才能登录",
+    "unauthorized": "Zero 无法从第三方提供商加载您的数据。请重试。"
   }
 }

@@ -15,6 +15,7 @@
       "loading": "Načítání...",
       "featureNotImplemented": "Tato funkce ještě není implementována",
       "moving": "Přesouvání...",
+      "moved": "Přesunuto",
       "movedToInbox": "Přesunuto do doručené pošty",
       "movingToInbox": "Přesouvání do doručené pošty...",
       "movedToSpam": "Přesunuto do spamu",
@@ -34,6 +35,7 @@
       "failedToModifyFavorites": "Nepodařilo se upravit oblíbené",
       "movingToBin": "Přesouvání do koše...",
       "movedToBin": "Přesunuto do koše",
+      "Bin": "Koš",
       "failedToMoveToBin": "Nepodařilo se přesunout do koše",
       "markingAsRead": "Označování jako přečtené...",
       "markingAsUnread": "Označování jako nepřečtené...",
@@ -44,7 +46,8 @@
       "cancel": "Zrušit",
       "save": "Uložit",
       "remove": "Odstranit",
-      "settings": "Nastavení"
+      "settings": "Nastavení",
+      "exitSelectionModeEsc": "Klikněte nebo stiskněte ESC pro ukončení režimu výběru"
     },
     "themes": {
       "dark": "Tmavé",
@@ -72,12 +75,13 @@
         "goToBin": "Přejít do Odstraněné pošty",
         "goToSettings": "Přejít do Nastavení",
         "newEmail": "Nový email",
-        "composeMessage": "Poslat zprávu",
+        "composeMessage": "Nový email",
         "searchEmails": "Prohledat emaily",
         "toggleTheme": "Přepnout motiv",
         "backToMail": "Zpět na Email",
         "goToDocs": "Přejít do dokumentace",
-        "helpWithShortcuts": "Nápověda se zkratkami"
+        "helpWithShortcuts": "Nápověda se zkratkami",
+        "commandPalette": "Paleta příkazů"
       }
     },
     "searchBar": {
@@ -112,7 +116,8 @@
       "documentation": "Dokumentace",
       "appTheme": "Vzhled aplikace",
       "accounts": "Účty",
-      "signIn": "Přihlásit se"
+      "signIn": "Přihlásit se",
+      "otherAccounts": "Další účty"
     },
     "mailCategories": {
       "primary": "Hlavní",
@@ -170,7 +175,9 @@
       "muteThread": "Ztlumit vlákno",
       "favourites": "Oblíbené",
       "disableImages": "Skrýt obrázky",
-      "enableImages": "Zobrazit obrázky"
+      "enableImages": "Zobrazit obrázky",
+      "star": "Označit hvězdičkou",
+      "unstar": "Odebrat hvězdičku"
     },
     "notes": {
       "title": "Poznámky",
@@ -249,7 +256,6 @@
       "failedToMarkAsUnread": "Nepodařilo se označit jako nepřečtené",
       "selected": "{count} zvoleno",
       "clearSelection": "Smazat výběr",
-      "mute": "Ztlumit",
       "moveToSpam": "Přesunout do šložky Spam",
       "moveToInbox": "Přesunout do složky Doporučená pošta",
       "deleteFromBin": "Smazat z koše",
@@ -276,10 +282,28 @@
       "showImages": "Zobrazit obrázky",
       "noEmails": "Žádné e-maily k dispozici",
       "noSearchResults": "Nenalezeny žádné výsledky vyhledávání",
-      "clearSearch": "Vymazat vyhledávání"
+      "clearSearch": "Vymazat vyhledávání",
+      "markAsImportant": "Označit jako důležité",
+      "unSubscribeFromAll": "Odhlásit odběr všech",
+      "starAll": "Označit vše hvězdičkou",
+      "mute": "Ztlumit",
+      "unmute": "Zrušit ztlumení",
+      "muted": "Ztlumeno",
+      "failedToMute": "Ztlumení se nezdařilo",
+      "failedToUnmute": "Zrušení ztlumení se nezdařilo",
+      "archived": "Archivováno",
+      "failedToArchive": "Archivace se nezdařila"
     },
     "units": {
       "mb": "{amount} MB"
+    },
+    "labels": {
+      "deleteLabel": "Smazat štítek",
+      "deleteLabelConfirm": "Opravdu chcete tento štítek smazat?",
+      "deleteLabelConfirmDescription": "Tuto akci nelze vrátit zpět.",
+      "deleteLabelConfirmCancel": "Zrušit",
+      "deleteLabelConfirmDelete": "Smazat",
+      "deleteLabelSuccess": "Štítek byl úspěšně smazán"
     }
   },
   "navigation": {
@@ -301,7 +325,9 @@
       "signatures": "Podpisy",
       "shortcuts": "Zástupci",
       "labels": "Štítky",
-      "danger-zone": "Nebezpečná zóna"
+      "dangerZone": "Nebezpečná zóna",
+      "deleteAccount": "Smazat účet",
+      "privacy": "Soukromí"
     }
   },
   "pages": {
@@ -323,10 +349,6 @@
         "selectTimezone": "Vybrat časové pásmo",
         "dynamicContent": "Dynamický obsah",
         "dynamicContentDescription": "Povolit emailům zobrazení dynamického obsahu.",
-        "externalImages": "Zobrazit externí obrázky",
-        "externalImagesDescription": "Povolit zobrazení emailů z externích zdrojů.",
-        "trustedSenders": "Důvěryhodní odesílatelé",
-        "trustedSendersDescription": "Vždy zobrazovat obrázky od těchto odesílatelů.",
         "languageChangedTo": "Jazyk změněn na {locale}",
         "customPrompt": "Vlastní AI pokyn",
         "customPromptPlaceholder": "Zadejte vlastní pokyn pro AI...",
@@ -345,7 +367,9 @@
         "addEmail": "Přidat propojení",
         "connectEmail": "Připojit email",
         "connectEmailDescription": "Vyberte poskytovatele emailu, kterýho chcete připojit",
-        "moreComingSoon": "Více již brzy"
+        "moreComingSoon": "Více již brzy",
+        "reconnect": "Znovu připojit",
+        "disconnected": "Odpojeno"
       },
       "security": {
         "title": "Zabezpečení",
@@ -401,7 +425,7 @@
           "markAsUnread": "Označit jako nepřečtené",
           "muteThread": "Ztlumit vlákno",
           "printEmail": "Vytisknout email",
-          "archiveEmail": "Archvivoat email",
+          "archiveEmail": "Archivovat vlákno",
           "markAsSpam": "Označit jako spam",
           "moveToFolder": "Přesunout do šložky",
           "undoLastAction": "Zrušit poslední akci",
@@ -412,20 +436,34 @@
           "recordHotkey": "Nahrát klávesovou zkratku",
           "pressKeys": "Stiskněte klávesy",
           "releaseKeys": "Uvolněte klávesy",
-          "selectAll": "Vybrat vše"
+          "selectAll": "Vybrat vše",
+          "commandPalette": "Paleta příkazů",
+          "markAsRead": "Označit jako přečtené",
+          "exitSelectionMode": "Ukončit režim výběru",
+          "closeCompose": "Zavřít psaní"
         }
       },
       "labels": {
         "title": "Štítky",
         "description": "Spravujte své štítky pro lepší organizaci vašich e-mailů."
       },
-      "danger-zone": {
-        "title": "Nebezpečná zóna",
+      "dangerZone": {
+        "title": "Danger Zone",
         "description": "Trvale smažte svůj účet a všechna související data.",
         "warning": "Tuto akci nelze vrátit zpět.",
         "confirmation": "Pro potvrzení smazání účtu napište DELETE",
         "deleteAccount": "Smazat účet",
-        "deleting": "Mazání..."
+        "deleting": "Mazání...",
+        "deleted": "Účet byl úspěšně smazán",
+        "error": "Smazání účtu se nezdařilo"
+      },
+      "privacy": {
+        "title": "Soukromí",
+        "description": "Spravujte své preference soukromí a zabezpečení pro obsah e-mailů.",
+        "externalImages": "Zobrazit externí obrázky",
+        "externalImagesDescription": "Povolit zobrazení emailů z externích zdrojů.",
+        "trustedSenders": "Důvěryhodní odesílatelé",
+        "trustedSendersDescription": "Vždy zobrazovat obrázky od těchto odesílatelů."
       }
     },
     "createEmail": {
@@ -436,6 +474,7 @@
       "addMore": "Přidat další",
       "dropFilesToAttach": "Přetáhněte sem soubory",
       "writeYourMessageHere": "Sem napište svojí zprávu...",
+      "emailSent": "E-mail odeslán",
       "emailSentSuccessfully": "Email úspěšně odeslán",
       "failedToSendEmail": "Odeslání emailu se nazdrařilo. Zkuste to prosím znovu.",
       "signature": {
@@ -465,5 +504,10 @@
         }
       }
     }
+  },
+  "errorMessages": {
+    "required_scopes_missing": "Chybí nám oprávnění potřebná k vytvoření plnohodnotného zážitku. Přihlaste se prosím znovu a povolte požadovaný přístup.",
+    "early_access_required": "Pro přihlášení je vyžadován předběžný přístup",
+    "unauthorized": "Zero nemohl načíst vaše data od poskytovatele třetí strany. Zkuste to prosím znovu."
   }
 }

@@ -15,6 +15,7 @@
       "loading": "Wird geladen...",
       "featureNotImplemented": "Diese Funktion ist noch nicht implementiert",
       "moving": "Wird verschoben...",
+      "moved": "Verschoben",
       "movedToInbox": "In Posteingang verschoben",
       "movingToInbox": "Wird in Posteingang verschoben...",
       "movedToSpam": "In Spam verschoben",
@@ -34,6 +35,7 @@
       "failedToModifyFavorites": "Favoriten konnten nicht geändert werden",
       "movingToBin": "Wird in den Papierkorb verschoben...",
       "movedToBin": "In den Papierkorb verschoben",
+      "Bin": "Papierkorb",
       "failedToMoveToBin": "Konnte nicht in den Papierkorb verschoben werden",
       "markingAsRead": "Wird als gelesen markiert...",
       "markingAsUnread": "Wird als ungelesen markiert...",
@@ -44,7 +46,8 @@
       "cancel": "Abbrechen",
       "save": "Speichern",
       "remove": "Entfernen",
-      "settings": "Einstellungen"
+      "settings": "Einstellungen",
+      "exitSelectionModeEsc": "Klicken oder ESC drücken, um den Auswahlmodus zu verlassen"
     },
     "themes": {
       "dark": "Dunkel",
@@ -72,12 +75,13 @@
         "goToBin": "Zum Papierkorb",
         "goToSettings": "Zu den Einstellungen",
         "newEmail": "Neue E-Mail verfassen",
-        "composeMessage": "Nachricht verfassen",
+        "composeMessage": "Neue E-Mail verfassen",
         "searchEmails": "E-Mails suchen",
         "toggleTheme": "Theme wechseln",
         "backToMail": "Zurück zu den Mails",
         "goToDocs": "Zur Dokumentation",
-        "helpWithShortcuts": "Hilfe für Tastenkürzel"
+        "helpWithShortcuts": "Hilfe für Tastenkürzel",
+        "commandPalette": "Befehlspalette"
       }
     },
     "searchBar": {
@@ -112,7 +116,8 @@
       "documentation": "Dokumentation",
       "appTheme": "App Theme",
       "accounts": "Benutzerkonten",
-      "signIn": "Anmelden"
+      "signIn": "Anmelden",
+      "otherAccounts": "Andere Konten"
     },
     "mailCategories": {
       "primary": "Primär",
@@ -170,7 +175,9 @@
       "muteThread": "Thread stummschalten",
       "favourites": "Favoriten",
       "disableImages": "Bilder ausblenden",
-      "enableImages": "Bilder anzeigen"
+      "enableImages": "Bilder anzeigen",
+      "star": "Mit Stern markieren",
+      "unstar": "Stern entfernen"
     },
     "notes": {
       "title": "Notizen",
@@ -249,7 +256,6 @@
       "failedToMarkAsUnread": "Markieren als ungelesen fehlgeschlagen",
       "selected": "{count} ausgewählt",
       "clearSelection": "Auswahl aufheben",
-      "mute": "Stummschalten",
       "moveToSpam": "In Spam verschieben",
       "moveToInbox": "In Posteingang verschieben",
       "deleteFromBin": "Aus Papierkorb löschen",
@@ -276,10 +282,28 @@
       "showImages": "Bilder anzeigen",
       "noEmails": "Keine E-Mails verfügbar",
       "noSearchResults": "Keine Suchergebnisse gefunden",
-      "clearSearch": "Suche leeren"
+      "clearSearch": "Suche leeren",
+      "markAsImportant": "Als wichtig markieren",
+      "unSubscribeFromAll": "Von allen abmelden",
+      "starAll": "Alle mit Stern markieren",
+      "mute": "Stummschalten",
+      "unmute": "Stummschaltung aufheben",
+      "muted": "Stummgeschaltet",
+      "failedToMute": "Stummschaltung fehlgeschlagen",
+      "failedToUnmute": "Aufhebung der Stummschaltung fehlgeschlagen",
+      "archived": "Archiviert",
+      "failedToArchive": "Archivierung fehlgeschlagen"
     },
     "units": {
       "mb": "{amount} MB"
+    },
+    "labels": {
+      "deleteLabel": "Label löschen",
+      "deleteLabelConfirm": "Sind Sie sicher, dass Sie dieses Label löschen möchten?",
+      "deleteLabelConfirmDescription": "Diese Aktion kann nicht rückgängig gemacht werden.",
+      "deleteLabelConfirmCancel": "Abbrechen",
+      "deleteLabelConfirmDelete": "Löschen",
+      "deleteLabelSuccess": "Label erfolgreich gelöscht"
     }
   },
   "navigation": {
@@ -301,7 +325,9 @@
       "signatures": "Signaturen",
       "shortcuts": "Shortcuts",
       "labels": "Labels",
-      "danger-zone": "Gefahrenbereich"
+      "dangerZone": "Gefahrenbereich",
+      "deleteAccount": "Konto löschen",
+      "privacy": "Datenschutz"
     }
   },
   "pages": {
@@ -323,10 +349,6 @@
         "selectTimezone": "Wähle eine Zeitzone aus",
         "dynamicContent": "Dynamischer Inhalt",
         "dynamicContentDescription": "Dynamischen Inhalt erlauben",
-        "externalImages": "Externe Bilder anzeigen",
-        "externalImagesDescription": "Das Anzeigen externer Bilder erlauben.",
-        "trustedSenders": "Vertrauenswürdige Absender",
-        "trustedSendersDescription": "Bilder von diesen Absendern immer anzeigen.",
         "languageChangedTo": "Sprache zu {locale} geändert",
         "customPrompt": "Benutzerdefinierte KI-Aufforderung",
         "customPromptPlaceholder": "Geben Sie Ihre benutzerdefinierte Eingabeaufforderung für die KI ein...",
@@ -345,7 +367,9 @@
         "addEmail": "Verbindung hinzufügen",
         "connectEmail": "E-Mail verbinden",
         "connectEmailDescription": "Wähle einen E-Mail Anbieter zum Verbinden",
-        "moreComingSoon": "Mehr kommt bald"
+        "moreComingSoon": "Mehr kommt bald",
+        "reconnect": "Erneut verbinden",
+        "disconnected": "Getrennt"
       },
       "security": {
         "title": "Sicherheit",
@@ -401,7 +425,7 @@
           "markAsUnread": "Als ungelesen markieren",
           "muteThread": "Thread stummschalten",
           "printEmail": "E-Mail drucken",
-          "archiveEmail": "E-Mail archivieren",
+          "archiveEmail": "Konversation archivieren",
           "markAsSpam": "Als Spam markieren",
           "moveToFolder": "In Ordner verschieben",
           "undoLastAction": "Letzte Aktion rückgängig machen",
@@ -412,20 +436,34 @@
           "recordHotkey": "Tastenkombination aufnehmen",
           "pressKeys": "Tasten drücken",
           "releaseKeys": "Tasten loslassen",
-          "selectAll": "Alle auswählen"
+          "selectAll": "Alle auswählen",
+          "commandPalette": "Befehlspalette",
+          "markAsRead": "Als gelesen markieren",
+          "exitSelectionMode": "Auswahlmodus verlassen",
+          "closeCompose": "Verfassen schließen"
         }
       },
       "labels": {
         "title": "Labels",
         "description": "Verwalte deine Labels für eine bessere Organisation deiner E-Mails."
       },
-      "danger-zone": {
-        "title": "Gefahrenbereich",
+      "dangerZone": {
+        "title": "Danger Zone",
         "description": "Lösche dein Konto und alle zugehörigen Daten dauerhaft.",
         "warning": "Diese Aktion kann nicht rückgängig gemacht werden.",
         "confirmation": "Bitte gib DELETE ein, um die Kontolöschung zu bestätigen",
         "deleteAccount": "Konto löschen",
-        "deleting": "Wird gelöscht..."
+        "deleting": "Wird gelöscht...",
+        "deleted": "Konto erfolgreich gelöscht",
+        "error": "Konto konnte nicht gelöscht werden"
+      },
+      "privacy": {
+        "title": "Datenschutz",
+        "description": "Verwalte deine Datenschutz- und Sicherheitseinstellungen für E-Mail-Inhalte.",
+        "externalImages": "Externe Bilder anzeigen",
+        "externalImagesDescription": "Das Anzeigen externer Bilder erlauben.",
+        "trustedSenders": "Vertrauenswürdige Absender",
+        "trustedSendersDescription": "Bilder von diesen Absendern immer anzeigen."
       }
     },
     "createEmail": {
@@ -436,6 +474,7 @@
       "addMore": "Mehr hinzufügen",
       "dropFilesToAttach": "Dateien hier ablegen, um sie anzuhängen",
       "writeYourMessageHere": "Schreiben Sie hier Ihre Nachricht...",
+      "emailSent": "E-Mail gesendet",
       "emailSentSuccessfully": "E-Mail wurde erfolgreich Versendet",
       "failedToSendEmail": "Senden der E-Mail fehlgeschlagen. Bitte versuchen Sie es erneut.",
       "signature": {
@@ -465,5 +504,10 @@
         }
       }
     }
+  },
+  "errorMessages": {
+    "required_scopes_missing": "Uns fehlen die Berechtigungen, die für dein vollständiges Erlebnis erforderlich sind. Bitte melde dich erneut an und erlaube den angeforderten Zugriff.",
+    "early_access_required": "Für die Anmeldung ist ein Early-Access erforderlich",
+    "unauthorized": "Zero konnte deine Daten nicht vom Drittanbieter laden. Bitte versuche es erneut."
   }
 }

@@ -15,6 +15,7 @@
       "loading": "جارٍ التحميل...",
       "featureNotImplemented": "هذه الميزة غير متوفرة بعد",
       "moving": "جارٍ النقل...",
+      "moved": "تم النقل",
       "movedToInbox": "تم النقل إلى صندوق الوارد",
       "movingToInbox": "جارٍ النقل إلى صندوق الوارد...",
       "movedToSpam": "تم النقل إلى البريد المزعج",
@@ -34,6 +35,7 @@
       "failedToModifyFavorites": "فشل تعديل المفضلة",
       "movingToBin": "جارٍ النقل إلى سلة المهملات...",
       "movedToBin": "تم النقل إلى سلة المهملات",
+      "Bin": "سلة المحذوفات",
       "failedToMoveToBin": "فشل النقل إلى سلة المهملات",
       "markingAsRead": "جارٍ التعليم كمقروءة...",
       "markingAsUnread": "جارٍ التعليم كغير مقروءة...",
@@ -44,7 +46,8 @@
       "cancel": "إلغاء",
       "save": "حفظ",
       "remove": "إزالة",
-      "settings": "الإعدادات"
+      "settings": "الإعدادات",
+      "exitSelectionModeEsc": "انقر أو اضغط على ESC للخروج من وضع التحديد"
     },
     "themes": {
       "dark": "داكن",
@@ -72,12 +75,13 @@
         "goToBin": "الذهاب إلى سلة المهملات",
         "goToSettings": "الذهاب إلى الإعدادات",
         "newEmail": "بريد إلكتروني جديد",
-        "composeMessage": "إنشاء رسالة",
+        "composeMessage": "بريد إلكتروني جديد",
         "searchEmails": "البحث في الرسائل",
         "toggleTheme": "تبديل السمة",
         "backToMail": "العودة إلى البريد",
         "goToDocs": "الذهاب إلى المستندات",
-        "helpWithShortcuts": "المساعدة في الاختصارات"
+        "helpWithShortcuts": "المساعدة في الاختصارات",
+        "commandPalette": "لوحة الأوامر"
       }
     },
     "searchBar": {
@@ -112,7 +116,8 @@
       "documentation": "الوثائق",
       "appTheme": "مظهر التطبيق",
       "accounts": "الحسابات",
-      "signIn": "تسجيل الدخول"
+      "signIn": "تسجيل الدخول",
+      "otherAccounts": "حسابات أخرى"
     },
     "mailCategories": {
       "primary": "الرئيسية",
@@ -170,7 +175,9 @@
       "muteThread": "كتم المحادثة",
       "favourites": "المفضلة",
       "disableImages": "إخفاء الصور",
-      "enableImages": "عرض الصور"
+      "enableImages": "عرض الصور",
+      "star": "تمييز بنجمة",
+      "unstar": "إلغاء التمييز بنجمة"
     },
     "notes": {
       "title": "الملاحظات",
@@ -249,7 +256,6 @@
       "failedToMarkAsUnread": "فشل في التحديد كغير مقروءة",
       "selected": "تم تحديد {count}",
       "clearSelection": "مسح التحديد",
-      "mute": "كتم",
       "moveToSpam": "نقل إلى البريد المزعج",
       "moveToInbox": "نقل إلى صندوق الوارد",
       "deleteFromBin": "حذف من سلة المهملات",
@@ -276,10 +282,28 @@
       "showImages": "عرض الصور",
       "noEmails": "لا توجد رسائل بريد متاحة",
       "noSearchResults": "لم يتم العثور على نتائج بحث",
-      "clearSearch": "مسح البحث"
+      "clearSearch": "مسح البحث",
+      "markAsImportant": "تمييز كمهم",
+      "unSubscribeFromAll": "إلغاء الاشتراك من الكل",
+      "starAll": "تمييز الكل بنجمة",
+      "mute": "كتم",
+      "unmute": "إلغاء الكتم",
+      "muted": "تم الكتم",
+      "failedToMute": "فشل الكتم",
+      "failedToUnmute": "فشل إلغاء الكتم",
+      "archived": "تمت الأرشفة",
+      "failedToArchive": "فشلت الأرشفة"
     },
     "units": {
       "mb": "{amount} ميجابايت"
+    },
+    "labels": {
+      "deleteLabel": "حذف التصنيف",
+      "deleteLabelConfirm": "هل أنت متأكد من رغبتك في حذف هذا التصنيف؟",
+      "deleteLabelConfirmDescription": "لا يمكن التراجع عن هذا الإجراء.",
+      "deleteLabelConfirmCancel": "إلغاء",
+      "deleteLabelConfirmDelete": "حذف",
+      "deleteLabelSuccess": "تم حذف التصنيف بنجاح"
     }
   },
   "navigation": {
@@ -301,7 +325,9 @@
       "signatures": "التوقيعات",
       "shortcuts": "الاختصارات",
       "labels": "التصنيفات",
-      "danger-zone": "منطقة الخطر"
+      "dangerZone": "منطقة الخطر",
+      "deleteAccount": "حذف الحساب",
+      "privacy": "الخصوصية"
     }
   },
   "pages": {
@@ -323,10 +349,6 @@
         "selectTimezone": "اختر منطقة زمنية",
         "dynamicContent": "المحتوى الديناميكي",
         "dynamicContentDescription": "السماح للرسائل بعرض محتوى ديناميكي.",
-        "externalImages": "عرض الصور الخارجية",
-        "externalImagesDescription": "السماح للرسائل بعرض صور من مصادر خارجية.",
-        "trustedSenders": "المرسلون الموثوقون",
-        "trustedSendersDescription": "عرض الصور دائماً لهؤلاء المرسلين.",
         "languageChangedTo": "تم تغيير اللغة إلى {locale}",
         "customPrompt": "توجيه الذكاء الاصطناعي المخصص",
         "customPromptPlaceholder": "أدخل توجيهك المخصص للذكاء الاصطناعي...",
@@ -345,7 +367,9 @@
         "addEmail": "إضافة اتصال",
         "connectEmail": "ربط البريد الإلكتروني",
         "connectEmailDescription": "اختر مزود بريد إلكتروني للاتصال",
-        "moreComingSoon": "المزيد قريبًا"
+        "moreComingSoon": "المزيد قريبًا",
+        "reconnect": "إعادة الاتصال",
+        "disconnected": "تم قطع الاتصال"
       },
       "security": {
         "title": "الأمان",
@@ -401,7 +425,7 @@
           "markAsUnread": "تحديد كغير مقروء",
           "muteThread": "كتم المحادثة",
           "printEmail": "طباعة البريد الإلكتروني",
-          "archiveEmail": "أرشفة البريد الإلكتروني",
+          "archiveEmail": "أرشفة المحادثة",
           "markAsSpam": "تحديد كبريد مزعج",
           "moveToFolder": "نقل إلى مجلد",
           "undoLastAction": "التراجع عن آخر إجراء",
@@ -412,20 +436,34 @@
           "recordHotkey": "تسجيل اختصار",
           "pressKeys": "اضغط على المفاتيح",
           "releaseKeys": "حرر المفاتيح",
-          "selectAll": "تحديد الكل"
+          "selectAll": "تحديد الكل",
+          "commandPalette": "لوحة الأوامر",
+          "markAsRead": "تحديد كمقروء",
+          "exitSelectionMode": "الخروج من وضع التحديد",
+          "closeCompose": "إغلاق الإنشاء"
         }
       },
       "labels": {
         "title": "التصنيفات",
         "description": "إدارة التصنيفات لتنظيم رسائل البريد الإلكتروني بشكل أفضل."
       },
-      "danger-zone": {
-        "title": "منطقة الخطر",
+      "dangerZone": {
+        "title": "Danger Zone",
         "description": "حذف حسابك وجميع البيانات المرتبطة به بشكل دائم.",
         "warning": "لا يمكن التراجع عن هذا الإجراء.",
         "confirmation": "يرجى كتابة DELETE لتأكيد حذف الحساب",
         "deleteAccount": "حذف الحساب",
-        "deleting": "جارٍ الحذف..."
+        "deleting": "جارٍ الحذف...",
+        "deleted": "تم حذف الحساب بنجاح",
+        "error": "فشل في حذف الحساب"
+      },
+      "privacy": {
+        "title": "الخصوصية",
+        "description": "إدارة تفضيلات الخصوصية والأمان لمحتوى البريد الإلكتروني.",
+        "externalImages": "عرض الصور الخارجية",
+        "externalImagesDescription": "السماح للرسائل بعرض صور من مصادر خارجية.",
+        "trustedSenders": "المرسلون الموثوقون",
+        "trustedSendersDescription": "عرض الصور دائماً لهؤلاء المرسلين."
       }
     },
     "createEmail": {
@@ -436,6 +474,7 @@
       "addMore": "إضافة المزيد",
       "dropFilesToAttach": "أسقط الملفات لإرفاقها",
       "writeYourMessageHere": "اكتب رسالتك هنا...",
+      "emailSent": "تم إرسال البريد الإلكتروني",
       "emailSentSuccessfully": "تم إرسال البريد الإلكتروني بنجاح",
       "failedToSendEmail": "فشل في إرسال البريد الإلكتروني. يرجى المحاولة مرة أخرى.",
       "signature": {
@@ -465,5 +504,10 @@
         }
       }
     }
+  },
+  "errorMessages": {
+    "required_scopes_missing": "تنقصنا الأذونات اللازمة لإنشاء تجربتك الكاملة. يرجى تسجيل الدخول مرة أخرى والسماح بالوصول المطلوب.",
+    "early_access_required": "الوصول المبكر مطلوب لتسجيل الدخول",
+    "unauthorized": "لم يتمكن Zero من تحميل بياناتك من مزود الطرف الثالث. يرجى المحاولة مرة أخرى."
   }
 }

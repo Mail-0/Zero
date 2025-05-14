@@ -15,6 +15,7 @@
       "loading": "載入中...",
       "featureNotImplemented": "此功能尚未實作",
       "moving": "移動中...",
+      "moved": "已移動",
       "movedToInbox": "已移至收件匣",
       "movingToInbox": "正在移至收件匣...",
       "movedToSpam": "已移至垃圾郵件",
@@ -34,6 +35,7 @@
       "failedToModifyFavorites": "無法修改收藏",
       "movingToBin": "正在移至垃圾桶...",
       "movedToBin": "已移至垃圾桶",
+      "Bin": "垃圾桶",
       "failedToMoveToBin": "無法移至垃圾桶",
       "markingAsRead": "正在標記為已讀...",
       "markingAsUnread": "正在標記為未讀...",
@@ -44,7 +46,8 @@
       "cancel": "取消",
       "save": "儲存",
       "remove": "移除",
-      "settings": "設定"
+      "settings": "設定",
+      "exitSelectionModeEsc": "點擊或按 ESC 鍵退出選擇模式"
     },
     "themes": {
       "dark": "深色",
@@ -72,12 +75,13 @@
         "goToBin": "前往垃圾桶",
         "goToSettings": "前往設定",
         "newEmail": "新郵件",
-        "composeMessage": "撰寫訊息",
+        "composeMessage": "新郵件",
         "searchEmails": "搜尋郵件",
         "toggleTheme": "切換主題",
         "backToMail": "返回郵件",
         "goToDocs": "前往文件",
-        "helpWithShortcuts": "快捷鍵幫助"
+        "helpWithShortcuts": "快捷鍵幫助",
+        "commandPalette": "指令面板"
       }
     },
     "searchBar": {
@@ -112,7 +116,8 @@
       "documentation": "文件",
       "appTheme": "應用程式主題",
       "accounts": "帳戶",
-      "signIn": "登入"
+      "signIn": "登入",
+      "otherAccounts": "其他帳戶"
     },
     "mailCategories": {
       "primary": "主要",
@@ -170,7 +175,9 @@
       "muteThread": "靜音對話",
       "favourites": "我的最愛",
       "disableImages": "隱藏圖片",
-      "enableImages": "顯示圖片"
+      "enableImages": "顯示圖片",
+      "star": "加星標記",
+      "unstar": "取消星標記"
     },
     "notes": {
       "title": "筆記",
@@ -249,7 +256,6 @@
       "failedToMarkAsUnread": "標記為未讀失敗",
       "selected": "已選取 {count} 封",
       "clearSelection": "清除選取",
-      "mute": "靜音",
       "moveToSpam": "移至垃圾郵件",
       "moveToInbox": "移至收件匣",
       "deleteFromBin": "從垃圾桶刪除",
@@ -276,10 +282,28 @@
       "showImages": "顯示圖片",
       "noEmails": "沒有可用的郵件",
       "noSearchResults": "找不到搜尋結果",
-      "clearSearch": "清除搜尋"
+      "clearSearch": "清除搜尋",
+      "markAsImportant": "標記為重要",
+      "unSubscribeFromAll": "取消訂閱所有",
+      "starAll": "全部加星標記",
+      "mute": "靜音",
+      "unmute": "取消靜音",
+      "muted": "已靜音",
+      "failedToMute": "靜音失敗",
+      "failedToUnmute": "取消靜音失敗",
+      "archived": "已封存",
+      "failedToArchive": "封存失敗"
     },
     "units": {
       "mb": "{amount} MB"
+    },
+    "labels": {
+      "deleteLabel": "刪除標籤",
+      "deleteLabelConfirm": "確定要刪除此標籤嗎？",
+      "deleteLabelConfirmDescription": "此操作無法撤銷。",
+      "deleteLabelConfirmCancel": "取消",
+      "deleteLabelConfirmDelete": "刪除",
+      "deleteLabelSuccess": "標籤已成功刪除"
     }
   },
   "navigation": {
@@ -301,7 +325,9 @@
       "signatures": "簽名檔",
       "shortcuts": "快捷鍵",
       "labels": "標籤",
-      "danger-zone": "危險區域"
+      "dangerZone": "危險區域",
+      "deleteAccount": "刪除帳戶",
+      "privacy": "隱私"
     }
   },
   "pages": {
@@ -323,10 +349,6 @@
         "selectTimezone": "選擇時區",
         "dynamicContent": "動態內容",
         "dynamicContentDescription": "允許電子郵件顯示動態內容。",
-        "externalImages": "顯示外部圖片",
-        "externalImagesDescription": "允許電子郵件顯示來自外部來源的圖片。",
-        "trustedSenders": "信任的寄件者",
-        "trustedSendersDescription": "自動顯示這些寄件者的圖片。",
         "languageChangedTo": "語言已變更為 {locale}",
         "customPrompt": "自訂 AI 提示",
         "customPromptPlaceholder": "輸入您的自訂 AI 提示...",
@@ -345,7 +367,9 @@
         "addEmail": "新增連接",
         "connectEmail": "連接電子郵件",
         "connectEmailDescription": "選擇要連接的電子郵件提供者",
-        "moreComingSoon": "更多即將推出"
+        "moreComingSoon": "更多即將推出",
+        "reconnect": "重新連線",
+        "disconnected": "已中斷連線"
       },
       "security": {
         "title": "安全性",
@@ -401,7 +425,7 @@
           "markAsUnread": "標記為未讀",
           "muteThread": "靜音對話",
           "printEmail": "列印郵件",
-          "archiveEmail": "封存郵件",
+          "archiveEmail": "封存郵件串",
           "markAsSpam": "標記為垃圾郵件",
           "moveToFolder": "移至資料夾",
           "undoLastAction": "復原上一個動作",
@@ -412,20 +436,34 @@
           "recordHotkey": "記錄快捷鍵",
           "pressKeys": "按下按鍵",
           "releaseKeys": "釋放按鍵",
-          "selectAll": "全選"
+          "selectAll": "全選",
+          "commandPalette": "指令面板",
+          "markAsRead": "標記為已讀",
+          "exitSelectionMode": "退出選擇模式",
+          "closeCompose": "關閉撰寫"
         }
       },
       "labels": {
         "title": "標籤",
         "description": "管理您的標籤，以更好地組織您的電子郵件。"
       },
-      "danger-zone": {
-        "title": "危險區域",
+      "dangerZone": {
+        "title": "Danger Zone",
         "description": "永久刪除您的帳戶和所有相關資料。",
         "warning": "此操作無法撤銷。",
         "confirmation": "請輸入 DELETE 以確認刪除帳戶",
         "deleteAccount": "刪除帳戶",
-        "deleting": "刪除中..."
+        "deleting": "刪除中...",
+        "deleted": "帳戶已成功刪除",
+        "error": "刪除帳戶失敗"
+      },
+      "privacy": {
+        "title": "隱私",
+        "description": "管理您的電子郵件內容隱私和安全偏好。",
+        "externalImages": "顯示外部圖片",
+        "externalImagesDescription": "允許電子郵件顯示來自外部來源的圖片。",
+        "trustedSenders": "信任的寄件者",
+        "trustedSendersDescription": "自動顯示這些寄件者的圖片。"
       }
     },
     "createEmail": {
@@ -436,6 +474,7 @@
       "addMore": "新增更多",
       "dropFilesToAttach": "拖放檔案以附加",
       "writeYourMessageHere": "在此撰寫您的訊息...",
+      "emailSent": "電子郵件已發送",
       "emailSentSuccessfully": "電子郵件發送成功",
       "failedToSendEmail": "發送電子郵件失敗。請再試一次。",
       "signature": {
@@ -465,5 +504,10 @@
         }
       }
     }
+  },
+  "errorMessages": {
+    "required_scopes_missing": "我們缺少打造完整體驗所需的權限。請重新登入並允許請求的存取權限。",
+    "early_access_required": "需要搶先體驗權限才能登入",
+    "unauthorized": "Zero 無法從第三方提供者載入您的數據。請再試一次。"
   }
 }

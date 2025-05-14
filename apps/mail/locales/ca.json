@@ -15,6 +15,7 @@
       "loading": "Carregant...",
       "featureNotImplemented": "Aquesta funció encara no està implementada",
       "moving": "Movent...",
+      "moved": "Mogut",
       "movedToInbox": "Mogut a la safata d'entrada",
       "movingToInbox": "Movent a la safata d'entrada...",
       "movedToSpam": "Mogut a spam",
@@ -34,6 +35,7 @@
       "failedToModifyFavorites": "No s'han pogut modificar els preferits",
       "movingToBin": "Movent a la paperera...",
       "movedToBin": "Mogut a la paperera",
+      "Bin": "Paperera",
       "failedToMoveToBin": "No s'ha pogut moure a la paperera",
       "markingAsRead": "Marcant com a llegit...",
       "markingAsUnread": "Marcant com a no llegit...",
@@ -44,7 +46,8 @@
       "cancel": "Cancel·lar",
       "save": "Desar",
       "remove": "Eliminar",
-      "settings": "Configuració"
+      "settings": "Configuració",
+      "exitSelectionModeEsc": "Fes clic o prem ESC per sortir del mode de selecció"
     },
     "themes": {
       "dark": "Fosc",
@@ -72,12 +75,13 @@
         "goToBin": "Anar a la paperera",
         "goToSettings": "Anar a les configuracions",
         "newEmail": "Nou correu",
-        "composeMessage": "Escriviu un missatge",
+        "composeMessage": "Nou correu",
         "searchEmails": "Buscar correus",
         "toggleTheme": "Canvia el tema",
         "backToMail": "Tornar al correu",
         "goToDocs": "Anar a la documentació",
-        "helpWithShortcuts": "Ajuda amb les dreceres"
+        "helpWithShortcuts": "Ajuda amb les dreceres",
+        "commandPalette": "Paleta de comandes"
       }
     },
     "searchBar": {
@@ -112,7 +116,8 @@
       "documentation": "Documentació",
       "appTheme": "Tema de l'aplicació",
       "accounts": "Comptes",
-      "signIn": "Iniciar la sessió"
+      "signIn": "Iniciar la sessió",
+      "otherAccounts": "Altres comptes"
     },
     "mailCategories": {
       "primary": "Primari",
@@ -170,7 +175,9 @@
       "muteThread": "Silenciar el fil",
       "favourites": "Preferits",
       "disableImages": "Amaga les imatges",
-      "enableImages": "Mostra les imatges"
+      "enableImages": "Mostra les imatges",
+      "star": "Destacar",
+      "unstar": "Treure destacat"
     },
     "notes": {
       "title": "Notes",
@@ -249,7 +256,6 @@
       "failedToMarkAsUnread": "No s'ha pogut marcar com a no llegit",
       "selected": "{count} seleccionats",
       "clearSelection": "Esborrar selecció",
-      "mute": "Silenciar",
       "moveToSpam": "Moure a spam",
       "moveToInbox": "Moure a safata d'entrada",
       "deleteFromBin": "Eliminar de la paperera",
@@ -276,10 +282,28 @@
       "showImages": "Mostrar imatges",
       "noEmails": "No hi ha correus disponibles",
       "noSearchResults": "No s'han trobat resultats de cerca",
-      "clearSearch": "Esborra la cerca"
+      "clearSearch": "Esborra la cerca",
+      "markAsImportant": "Marcar com a important",
+      "unSubscribeFromAll": "Cancel·lar totes les subscripcions",
+      "starAll": "Destacar tot",
+      "mute": "Silenciar",
+      "unmute": "Activar so",
+      "muted": "Silenciat",
+      "failedToMute": "No s'ha pogut silenciar",
+      "failedToUnmute": "No s'ha pogut activar el so",
+      "archived": "Arxivat",
+      "failedToArchive": "No s'ha pogut arxivar"
     },
     "units": {
       "mb": "{amount} MB"
+    },
+    "labels": {
+      "deleteLabel": "Eliminar etiqueta",
+      "deleteLabelConfirm": "Estàs segur que vols eliminar aquesta etiqueta?",
+      "deleteLabelConfirmDescription": "Aquesta acció no es pot desfer.",
+      "deleteLabelConfirmCancel": "Cancel·lar",
+      "deleteLabelConfirmDelete": "Eliminar",
+      "deleteLabelSuccess": "Etiqueta eliminada correctament"
     }
   },
   "navigation": {
@@ -301,7 +325,9 @@
       "signatures": "Signatures",
       "shortcuts": "Dreceres",
       "labels": "Etiquetes",
-      "danger-zone": "Zona perillosa"
+      "dangerZone": "Zona perillosa",
+      "deleteAccount": "Elimina el compte",
+      "privacy": "Privacitat"
     }
   },
   "pages": {
@@ -323,10 +349,6 @@
         "selectTimezone": "Selecciona una zona horària",
         "dynamicContent": "Contingut dinàmic",
         "dynamicContentDescription": "Permet que els correus mostrin contingut dinàmic.",
-        "externalImages": "Mostrar imatges externes",
-        "externalImagesDescription": "Permet que els correus mostrin imatges des de fonts externes.",
-        "trustedSenders": "Remitents de confiança",
-        "trustedSendersDescription": "Mostra sempre les imatges d'aquests remitents.",
         "languageChangedTo": "Idioma canviat a {locale}",
         "customPrompt": "Instrucció personalitzada per a la IA",
         "customPromptPlaceholder": "Introdueix la teva instrucció personalitzada per a la IA...",
@@ -345,7 +367,9 @@
         "addEmail": "Afegeix una connexió",
         "connectEmail": "Connecta el correu electrònic\n\n\n\n\n\n\n\n",
         "connectEmailDescription": "Selecciona un proveïdor de correu per connectar",
-        "moreComingSoon": "Pròximament més"
+        "moreComingSoon": "Pròximament més",
+        "reconnect": "Reconnecta",
+        "disconnected": "Desconnectat"
       },
       "security": {
         "title": "Seguretat",
@@ -401,7 +425,7 @@
           "markAsUnread": "Marcar com a no llegit",
           "muteThread": "Silenciar el fil",
           "printEmail": "Imprimir correu electrónic",
-          "archiveEmail": "Arxivar Correu",
+          "archiveEmail": "Arxivar fil",
           "markAsSpam": "Marcar com a correu brossa",
           "moveToFolder": "Traslladar a la carpeta",
           "undoLastAction": "Desfer l'última acció",
@@ -412,20 +436,34 @@
           "recordHotkey": "Enregistra drecera",
           "pressKeys": "Prem les tecles",
           "releaseKeys": "Deixa anar les tecles",
-          "selectAll": "Selecciona-ho tot"
+          "selectAll": "Selecciona-ho tot",
+          "commandPalette": "Paleta de comandes",
+          "markAsRead": "Marcar com a llegit",
+          "exitSelectionMode": "Sortir del mode de selecció",
+          "closeCompose": "Tancar composició"
         }
       },
       "labels": {
         "title": "Etiquetes",
         "description": "Gestiona les teves etiquetes per organitzar millor els teus correus."
       },
-      "danger-zone": {
-        "title": "Zona perillosa",
+      "dangerZone": {
+        "title": "Danger Zone",
         "description": "Elimina permanentment el teu compte i totes les dades associades.",
         "warning": "Aquesta acció no es pot desfer.",
         "confirmation": "Si us plau, escriu DELETE per confirmar l'eliminació del compte",
         "deleteAccount": "Elimina el compte",
-        "deleting": "Eliminant..."
+        "deleting": "Eliminant...",
+        "deleted": "Compte eliminat correctament",
+        "error": "No s'ha pogut eliminar el compte"
+      },
+      "privacy": {
+        "title": "Privacitat",
+        "description": "Gestiona les teves preferències de privacitat i seguretat per al contingut del correu electrònic.",
+        "externalImages": "Mostrar imatges externes",
+        "externalImagesDescription": "Permet que els correus mostrin imatges des de fonts externes.",
+        "trustedSenders": "Remitents de confiança",
+        "trustedSendersDescription": "Mostra sempre les imatges d'aquests remitents."
       }
     },
     "createEmail": {
@@ -436,6 +474,7 @@
       "addMore": "Afegir més",
       "dropFilesToAttach": "Arrossega arxius per adjuntar",
       "writeYourMessageHere": "Escriu aquí el teu missatge...",
+      "emailSent": "Correu electrònic enviat",
       "emailSentSuccessfully": "Correu electrònic enviat amb èxit",
       "failedToSendEmail": "No s'ha pogut enviar el correu. Si us plau, intenta-ho de nou.",
       "signature": {
@@ -465,5 +504,10 @@
         }
       }
     }
+  },
+  "errorMessages": {
+    "required_scopes_missing": "Ens falten els permisos necessaris per crear la teva experiència completa. Si us plau, inicia sessió de nou i permet l'accés sol·licitat.",
+    "early_access_required": "Es requereix accés anticipat per iniciar sessió",
+    "unauthorized": "Zero no ha pogut carregar les teves dades del proveïdor extern. Si us plau, torna-ho a provar."
   }
 }

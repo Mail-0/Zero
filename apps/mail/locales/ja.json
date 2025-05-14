@@ -15,6 +15,7 @@
       "loading": "読み込み中...",
       "featureNotImplemented": "この機能はまだ実装されていません",
       "moving": "移動中...",
+      "moved": "移動しました",
       "movedToInbox": "受信箱に移動しました",
       "movingToInbox": "受信箱に移動中...",
       "movedToSpam": "迷惑メールに移動しました",
@@ -34,6 +35,7 @@
       "failedToModifyFavorites": "お気に入りの変更に失敗しました",
       "movingToBin": "ゴミ箱に移動中...",
       "movedToBin": "ゴミ箱に移動しました",
+      "Bin": "ごみ箱",
       "failedToMoveToBin": "ゴミ箱への移動に失敗しました",
       "markingAsRead": "既読にしています...",
       "markingAsUnread": "未読にしています...",
@@ -44,7 +46,8 @@
       "cancel": "キャンセル",
       "save": "保存",
       "remove": "削除",
-      "settings": "設定"
+      "settings": "設定",
+      "exitSelectionModeEsc": "クリックまたはESCキーを押して選択モードを終了"
     },
     "themes": {
       "dark": "ダーク",
@@ -72,12 +75,13 @@
         "goToBin": "ゴミ箱に移動",
         "goToSettings": "設定を開く",
         "newEmail": "新規メール",
-        "composeMessage": "メッセージを作成",
+        "composeMessage": "新規メール",
         "searchEmails": "メールを検索",
         "toggleTheme": "テーマを切り替え",
         "backToMail": "メールに戻る",
         "goToDocs": "ドキュメントに移動",
-        "helpWithShortcuts": "ショートカットのヘルプ"
+        "helpWithShortcuts": "ショートカットのヘルプ",
+        "commandPalette": "コマンド パレット"
       }
     },
     "searchBar": {
@@ -112,7 +116,8 @@
       "documentation": "ドキュメント",
       "appTheme": "テーマ",
       "accounts": "アカウント",
-      "signIn": "サインイン"
+      "signIn": "サインイン",
+      "otherAccounts": "その他のアカウント"
     },
     "mailCategories": {
       "primary": "プライマリ",
@@ -170,7 +175,9 @@
       "muteThread": "スレッドをミュート",
       "favourites": "お気に入り",
       "disableImages": "画像を非表示",
-      "enableImages": "画像を表示"
+      "enableImages": "画像を表示",
+      "star": "スターを付ける",
+      "unstar": "スターを外す"
     },
     "notes": {
       "title": "メモ",
@@ -249,7 +256,6 @@
       "failedToMarkAsUnread": "未読にできませんでした",
       "selected": "{count} 件を選択",
       "clearSelection": "選択を解除",
-      "mute": "ミュート",
       "moveToSpam": "迷惑メールに移動",
       "moveToInbox": "受信箱に移動",
       "deleteFromBin": "ゴミ箱から削除",
@@ -276,10 +282,28 @@
       "showImages": "画像を表示",
       "noEmails": "メールがありません",
       "noSearchResults": "検索結果が見つかりませんでした",
-      "clearSearch": "検索をクリア"
+      "clearSearch": "検索をクリア",
+      "markAsImportant": "重要としてマーク",
+      "unSubscribeFromAll": "すべての購読を解除",
+      "starAll": "すべてにスターを付ける",
+      "mute": "ミュート",
+      "unmute": "ミュート解除",
+      "muted": "ミュートしました",
+      "failedToMute": "ミュートに失敗しました",
+      "failedToUnmute": "ミュート解除に失敗しました",
+      "archived": "アーカイブしました",
+      "failedToArchive": "アーカイブに失敗しました"
     },
     "units": {
       "mb": "{amount} MB"
+    },
+    "labels": {
+      "deleteLabel": "ラベルを削除",
+      "deleteLabelConfirm": "このラベルを削除してもよろしいですか？",
+      "deleteLabelConfirmDescription": "この操作は元に戻せません。",
+      "deleteLabelConfirmCancel": "キャンセル",
+      "deleteLabelConfirmDelete": "削除",
+      "deleteLabelSuccess": "ラベルが正常に削除されました"
     }
   },
   "navigation": {
@@ -301,7 +325,9 @@
       "signatures": "署名",
       "shortcuts": "ショートカット",
       "labels": "ラベル",
-      "danger-zone": "危険ゾーン"
+      "dangerZone": "危険ゾーン",
+      "deleteAccount": "アカウントを削除",
+      "privacy": "プライバシー"
     }
   },
   "pages": {
@@ -323,10 +349,6 @@
         "selectTimezone": "タイムゾーンを選択",
         "dynamicContent": "動的コンテンツ",
         "dynamicContentDescription": "電子メールの動的なコンテンツの表示を許可します。",
-        "externalImages": "外部画像を表示する",
-        "externalImagesDescription": "電子メールによる外部ソースからの画像の表示を許可します。",
-        "trustedSenders": "信頼できる送信者",
-        "trustedSendersDescription": "これらの送信者からの画像を常に表示します。",
         "languageChangedTo": "言語を {locale}に変更しました",
         "customPrompt": "カスタムAIプロンプト",
         "customPromptPlaceholder": "AIのカスタムプロンプトを入力...",
@@ -345,7 +367,9 @@
         "addEmail": "接続を追加",
         "connectEmail": "メールアドレスの接続",
         "connectEmailDescription": "接続するメールプロバイダを選択してください",
-        "moreComingSoon": "近日追加予定"
+        "moreComingSoon": "近日追加予定",
+        "reconnect": "再接続",
+        "disconnected": "切断済み"
       },
       "security": {
         "title": "セキュリティ",
@@ -401,7 +425,7 @@
           "markAsUnread": "未読にする",
           "muteThread": "スレッドをミュート",
           "printEmail": "メールを印刷",
-          "archiveEmail": "メールをアーカイブ",
+          "archiveEmail": "スレッドをアーカイブ",
           "markAsSpam": "迷惑メールとしてマーク",
           "moveToFolder": "フォルダーに移動",
           "undoLastAction": "最後の操作を元に戻す",
@@ -412,20 +436,34 @@
           "recordHotkey": "ホットキーを記録",
           "pressKeys": "キーを押す",
           "releaseKeys": "キーを離す",
-          "selectAll": "すべて選択"
+          "selectAll": "すべて選択",
+          "commandPalette": "コマンド パレット",
+          "markAsRead": "既読にする",
+          "exitSelectionMode": "選択モードを終了",
+          "closeCompose": "作成を閉じる"
         }
       },
       "labels": {
         "title": "ラベル",
         "description": "メールをより良く整理するためのラベルを管理します。"
       },
-      "danger-zone": {
-        "title": "危険ゾーン",
+      "dangerZone": {
+        "title": "Danger Zone",
         "description": "アカウントと関連するすべてのデータを完全に削除します。",
         "warning": "この操作は元に戻せません。",
         "confirmation": "アカウント削除を確認するために「DELETE」と入力してください",
         "deleteAccount": "アカウントを削除",
-        "deleting": "削除中..."
+        "deleting": "削除中...",
+        "deleted": "アカウントが正常に削除されました",
+        "error": "アカウントの削除に失敗しました"
+      },
+      "privacy": {
+        "title": "プライバシー",
+        "description": "メールコンテンツのプライバシーとセキュリティ設定を管理します。",
+        "externalImages": "外部画像を表示する",
+        "externalImagesDescription": "電子メールによる外部ソースからの画像の表示を許可します。",
+        "trustedSenders": "信頼できる送信者",
+        "trustedSendersDescription": "これらの送信者からの画像を常に表示します。"
       }
     },
     "createEmail": {
@@ -436,6 +474,7 @@
       "addMore": "さらに追加",
       "dropFilesToAttach": "添付するファイルをドロップ",
       "writeYourMessageHere": "ここにメッセージを書いてください",
+      "emailSent": "メールを送信しました",
       "emailSentSuccessfully": "メールを送信しました",
       "failedToSendEmail": "メールを送信できませんでした。もう一度やり直してください。",
       "signature": {
@@ -465,5 +504,10 @@
         }
       }
     }
+  },
+  "errorMessages": {
+    "required_scopes_missing": "完全な体験を提供するために必要な権限が不足しています。もう一度サインインして、リクエストされたアクセスを許可してください。",
+    "early_access_required": "ログインするにはアーリーアクセスが必要です",
+    "unauthorized": "Zeroは第三者プロバイダーからデータを読み込めませんでした。もう一度お試しください。"
   }
 }

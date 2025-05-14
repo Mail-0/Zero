@@ -15,6 +15,7 @@
       "loading": "Ładowanie...",
       "featureNotImplemented": "Ta funkcja nie jest jeszcze zaimplementowana",
       "moving": "Przenoszenie...",
+      "moved": "Przeniesiono",
       "movedToInbox": "Przeniesiono do skrzynki odbiorczej",
       "movingToInbox": "Przenoszenie do skrzynki odbiorczej...",
       "movedToSpam": "Przeniesiono do spamu",
@@ -34,6 +35,7 @@
       "failedToModifyFavorites": "Nie udało się zmodyfikować ulubionych",
       "movingToBin": "Przenoszenie do kosza...",
       "movedToBin": "Przeniesiono do kosza",
+      "Bin": "Kosz",
       "failedToMoveToBin": "Nie udało się przenieść do kosza",
       "markingAsRead": "Oznaczanie jako przeczytane...",
       "markingAsUnread": "Oznaczanie jako nieprzeczytane...",
@@ -44,7 +46,8 @@
       "cancel": "Anuluj",
       "save": "Zapisz",
       "remove": "Usuń",
-      "settings": "Ustawienia"
+      "settings": "Ustawienia",
+      "exitSelectionModeEsc": "Kliknij lub naciśnij ESC, aby wyjść z trybu zaznaczania"
     },
     "themes": {
       "dark": "Ciemny",
@@ -72,12 +75,13 @@
         "goToBin": "Przejdź do kosza",
         "goToSettings": "Przejdź do ustawień",
         "newEmail": "Nowy e-mail",
-        "composeMessage": "Utwórz wiadomość",
+        "composeMessage": "Nowy e-mail",
         "searchEmails": "Szukaj e-maili",
         "toggleTheme": "Przełącz motyw",
         "backToMail": "Powrót do poczty",
         "goToDocs": "Przejdź do dokumentacji",
-        "helpWithShortcuts": "Pomoc ze skrótami"
+        "helpWithShortcuts": "Pomoc ze skrótami",
+        "commandPalette": "Paleta poleceń"
       }
     },
     "searchBar": {
@@ -112,7 +116,8 @@
       "documentation": "Dokumentacja",
       "appTheme": "Motyw aplikacji",
       "accounts": "Konta",
-      "signIn": "Zaloguj się"
+      "signIn": "Zaloguj się",
+      "otherAccounts": "Inne konta"
     },
     "mailCategories": {
       "primary": "Główne",
@@ -170,7 +175,9 @@
       "muteThread": "Wycisz wątek",
       "favourites": "Ulubione",
       "disableImages": "Ukryj obrazy",
-      "enableImages": "Pokaż obrazy"
+      "enableImages": "Pokaż obrazy",
+      "star": "Oznacz gwiazdką",
+      "unstar": "Usuń oznaczenie gwiazdką"
     },
     "notes": {
       "title": "Notatki",
@@ -249,7 +256,6 @@
       "failedToMarkAsUnread": "Nie udało się oznaczyć jako nieprzeczytane",
       "selected": "Wybrano: {count}",
       "clearSelection": "Wyczyść zaznaczenie",
-      "mute": "Wycisz",
       "moveToSpam": "Przenieś do spamu",
       "moveToInbox": "Przenieś do skrzynki odbiorczej",
       "deleteFromBin": "Usuń z kosza",
@@ -276,10 +282,28 @@
       "showImages": "Pokaż obrazy",
       "noEmails": "Brak dostępnych wiadomości",
       "noSearchResults": "Nie znaleziono wyników wyszukiwania",
-      "clearSearch": "Wyczyść wyszukiwanie"
+      "clearSearch": "Wyczyść wyszukiwanie",
+      "markAsImportant": "Oznacz jako ważne",
+      "unSubscribeFromAll": "Wypisz się ze wszystkich",
+      "starAll": "Oznacz wszystkie gwiazdką",
+      "mute": "Wycisz",
+      "unmute": "Wyłącz wyciszenie",
+      "muted": "Wyciszono",
+      "failedToMute": "Nie udało się wyciszyć",
+      "failedToUnmute": "Nie udało się wyłączyć wyciszenia",
+      "archived": "Zarchiwizowano",
+      "failedToArchive": "Nie udało się zarchiwizować"
     },
     "units": {
       "mb": "{amount} MB"
+    },
+    "labels": {
+      "deleteLabel": "Usuń etykietę",
+      "deleteLabelConfirm": "Czy na pewno chcesz usunąć tę etykietę?",
+      "deleteLabelConfirmDescription": "Tej operacji nie można cofnąć.",
+      "deleteLabelConfirmCancel": "Anuluj",
+      "deleteLabelConfirmDelete": "Usuń",
+      "deleteLabelSuccess": "Etykieta została pomyślnie usunięta"
     }
   },
   "navigation": {
@@ -301,7 +325,9 @@
       "signatures": "Podpisy",
       "shortcuts": "Skróty",
       "labels": "Etykiety",
-      "danger-zone": "Strefa zagrożenia"
+      "dangerZone": "Strefa zagrożenia",
+      "deleteAccount": "Usuń konto",
+      "privacy": "Prywatność"
     }
   },
   "pages": {
@@ -323,10 +349,6 @@
         "selectTimezone": "Wybierz strefę czasową",
         "dynamicContent": "Dynamiczna zawartość",
         "dynamicContentDescription": "Zezwalaj na wyświetlanie dynamicznej zawartości w e-mailach.",
-        "externalImages": "Wyświetlaj obrazy zewnętrzne",
-        "externalImagesDescription": "Zezwalaj na wyświetlanie obrazów z zewnętrznych źródeł w e-mailach.",
-        "trustedSenders": "Zaufani nadawcy",
-        "trustedSendersDescription": "Zawsze wyświetlaj obrazy od tych nadawców.",
         "languageChangedTo": "Język zmieniony na {locale}",
         "customPrompt": "Niestandardowe polecenie dla AI",
         "customPromptPlaceholder": "Wprowadź własne polecenie dla AI...",
@@ -345,7 +367,9 @@
         "addEmail": "Dodaj połączenie",
         "connectEmail": "Połącz e-mail",
         "connectEmailDescription": "Wybierz dostawcę e-mail, aby się połączyć",
-        "moreComingSoon": "Więcej wkrótce"
+        "moreComingSoon": "Więcej wkrótce",
+        "reconnect": "Połącz ponownie",
+        "disconnected": "Odłączono"
       },
       "security": {
         "title": "Bezpieczeństwo",
@@ -401,7 +425,7 @@
           "markAsUnread": "Oznacz jako nieprzeczytane",
           "muteThread": "Wycisz wątek",
           "printEmail": "Drukuj e-mail",
-          "archiveEmail": "Archiwizuj e-mail",
+          "archiveEmail": "Archiwizuj wątek",
           "markAsSpam": "Oznacz jako spam",
           "moveToFolder": "Przenieś do folderu",
           "undoLastAction": "Cofnij ostatnią akcję",
@@ -412,20 +436,34 @@
           "recordHotkey": "Nagraj skrót klawiszowy",
           "pressKeys": "Naciśnij klawisze",
           "releaseKeys": "Zwolnij klawisze",
-          "selectAll": "Zaznacz wszystko"
+          "selectAll": "Zaznacz wszystko",
+          "commandPalette": "Paleta poleceń",
+          "markAsRead": "Oznacz jako przeczytane",
+          "exitSelectionMode": "Zakończ tryb wyboru",
+          "closeCompose": "Zamknij okno tworzenia"
         }
       },
       "labels": {
         "title": "Etykiety",
         "description": "Zarządzaj swoimi etykietami, aby lepiej organizować wiadomości e-mail."
       },
-      "danger-zone": {
-        "title": "Strefa zagrożenia",
+      "dangerZone": {
+        "title": "Danger Zone",
         "description": "Trwale usuń swoje konto i wszystkie powiązane dane.",
         "warning": "Tej operacji nie można cofnąć.",
         "confirmation": "Wpisz USUŃ, aby potwierdzić usunięcie konta",
         "deleteAccount": "Usuń konto",
-        "deleting": "Usuwanie..."
+        "deleting": "Usuwanie...",
+        "deleted": "Konto zostało pomyślnie usunięte",
+        "error": "Nie udało się usunąć konta"
+      },
+      "privacy": {
+        "title": "Prywatność",
+        "description": "Zarządzaj swoimi preferencjami dotyczącymi prywatności i bezpieczeństwa treści e-mail.",
+        "externalImages": "Wyświetlaj obrazy zewnętrzne",
+        "externalImagesDescription": "Zezwalaj na wyświetlanie obrazów z zewnętrznych źródeł w e-mailach.",
+        "trustedSenders": "Zaufani nadawcy",
+        "trustedSendersDescription": "Zawsze wyświetlaj obrazy od tych nadawców."
       }
     },
     "createEmail": {
@@ -436,6 +474,7 @@
       "addMore": "Dodaj więcej",
       "dropFilesToAttach": "Upuść pliki, aby załączyć",
       "writeYourMessageHere": "Napisz swoją wiadomość tutaj...",
+      "emailSent": "E-mail wysłany",
       "emailSentSuccessfully": "E-mail wysłany pomyślnie",
       "failedToSendEmail": "Nie udało się wysłać e-maila. Spróbuj ponownie.",
       "signature": {
@@ -465,5 +504,10 @@
         }
       }
     }
+  },
+  "errorMessages": {
+    "required_scopes_missing": "Brakuje nam uprawnień potrzebnych do zapewnienia pełnego doświadczenia. Zaloguj się ponownie i zaakceptuj wymagane uprawnienia.",
+    "early_access_required": "Wymagany jest wczesny dostęp, aby się zalogować",
+    "unauthorized": "Zero nie mógł załadować Twoich danych od zewnętrznego dostawcy. Spróbuj ponownie."
   }
 }

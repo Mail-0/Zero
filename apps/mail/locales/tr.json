@@ -15,6 +15,7 @@
       "loading": "Yükleniyor...",
       "featureNotImplemented": "Bu özellik henüz uygulanmadı",
       "moving": "Taşınıyor...",
+      "moved": "Taşındı",
       "movedToInbox": "Gelen kutusuna taşındı",
       "movingToInbox": "Gelen kutusuna taşınıyor...",
       "movedToSpam": "İstenmeyen kutusuna taşındı",
@@ -34,6 +35,7 @@
       "failedToModifyFavorites": "Favoriler değiştirilemedi",
       "movingToBin": "Çöp kutusuna taşınıyor...",
       "movedToBin": "Çöp kutusuna taşındı",
+      "Bin": "Çöp",
       "failedToMoveToBin": "Çöp kutusuna taşınamadı",
       "markingAsRead": "Okundu olarak işaretleniyor...",
       "markingAsUnread": "Okunmadı olarak işaretleniyor...",
@@ -44,7 +46,8 @@
       "cancel": "İptal",
       "save": "Kaydet",
       "remove": "Kaldır",
-      "settings": "Ayarlar"
+      "settings": "Ayarlar",
+      "exitSelectionModeEsc": "Seçim modundan çıkmak için tıklayın veya ESC tuşuna basın"
     },
     "themes": {
       "dark": "Koyu",
@@ -72,12 +75,13 @@
         "goToBin": "Çöp Kutusuna Git",
         "goToSettings": "Ayarlara Git",
         "newEmail": "Yeni E-posta",
-        "composeMessage": "Mesaj oluştur",
+        "composeMessage": "Yeni E-posta",
         "searchEmails": "E-postaları Ara",
         "toggleTheme": "Temayı Değiştir",
         "backToMail": "E-postaya Geri Dön",
         "goToDocs": "Dokümanlara Git",
-        "helpWithShortcuts": "Kısayollar Hakkında Yardım"
+        "helpWithShortcuts": "Kısayollar Hakkında Yardım",
+        "commandPalette": "Komut Paleti"
       }
     },
     "searchBar": {
@@ -112,7 +116,8 @@
       "documentation": "Dokümantasyon",
       "appTheme": "Uygulama Teması",
       "accounts": "Hesaplar",
-      "signIn": "Giriş Yap"
+      "signIn": "Giriş Yap",
+      "otherAccounts": "Diğer Hesaplar"
     },
     "mailCategories": {
       "primary": "Birincil",
@@ -170,7 +175,9 @@
       "muteThread": "Konuyu sessize al",
       "favourites": "Favoriler",
       "disableImages": "Görselleri Gizle",
-      "enableImages": "Görselleri Göster"
+      "enableImages": "Görselleri Göster",
+      "star": "Yıldızla",
+      "unstar": "Yıldızı kaldır"
     },
     "notes": {
       "title": "Notlar",
@@ -249,7 +256,6 @@
       "failedToMarkAsUnread": "Okunmamış olarak işaretlenemedi",
       "selected": "{count} adet seçildi",
       "clearSelection": "Seçimi Temizle",
-      "mute": "Sustur",
       "moveToSpam": "İstenmeyen Kutusuna Taşı",
       "moveToInbox": "Gelen Kutusuna Taşı",
       "deleteFromBin": "Çöp Kutusundan Sil",
@@ -276,10 +282,28 @@
       "showImages": "Görselleri Göster",
       "noEmails": "Hiç e-posta yok",
       "noSearchResults": "Arama sonucu bulunamadı",
-      "clearSearch": "Aramayı temizle"
+      "clearSearch": "Aramayı temizle",
+      "markAsImportant": "Önemli olarak işaretle",
+      "unSubscribeFromAll": "Tümünden aboneliği iptal et",
+      "starAll": "Tümünü yıldızla",
+      "mute": "Sustur",
+      "unmute": "Sesi aç",
+      "muted": "Sessize alındı",
+      "failedToMute": "Sessize alınamadı",
+      "failedToUnmute": "Ses açılamadı",
+      "archived": "Arşivlendi",
+      "failedToArchive": "Arşivlenemedi"
     },
     "units": {
       "mb": "{amount} MB"
+    },
+    "labels": {
+      "deleteLabel": "Etiketi sil",
+      "deleteLabelConfirm": "Bu etiketi silmek istediğinizden emin misiniz?",
+      "deleteLabelConfirmDescription": "Bu eylem geri alınamaz.",
+      "deleteLabelConfirmCancel": "İptal",
+      "deleteLabelConfirmDelete": "Sil",
+      "deleteLabelSuccess": "Etiket başarıyla silindi"
     }
   },
   "navigation": {
@@ -301,7 +325,9 @@
       "signatures": "İmzalar",
       "shortcuts": "Kısayollar",
       "labels": "Etiketler",
-      "danger-zone": "Tehlikeli Bölge"
+      "dangerZone": "Tehlikeli Bölge",
+      "deleteAccount": "Hesabı Sil",
+      "privacy": "Gizlilik"
     }
   },
   "pages": {
@@ -323,10 +349,6 @@
         "selectTimezone": "Bir saat dilimi seçin",
         "dynamicContent": "Dinamik İçerik",
         "dynamicContentDescription": "E-postaların dinamik içerik göstermesine izin verin.",
-        "externalImages": "Harici Görselleri Göster",
-        "externalImagesDescription": "E-postaların harici kaynaklardan görselleri göstermesine izin verin.",
-        "trustedSenders": "Güvenilir Göndericiler",
-        "trustedSendersDescription": "Bu göndericilerin görsellerini her zaman göster.",
         "languageChangedTo": "Dil {locale} olarak değiştirildi",
         "customPrompt": "Özel Yapay Zeka Yönergesi",
         "customPromptPlaceholder": "Yapay zeka için özel yönergenizi girin...",
@@ -345,7 +367,9 @@
         "addEmail": "E-posta Bağlantısı Ekle",
         "connectEmail": "E-posta Bağlantısı",
         "connectEmailDescription": "E-posta sağlayıcısını seçin",
-        "moreComingSoon": "Yakında daha fazlası geliyor"
+        "moreComingSoon": "Yakında daha fazlası geliyor",
+        "reconnect": "Yeniden bağlan",
+        "disconnected": "Bağlantı kesildi"
       },
       "security": {
         "title": "Güvenlik",
@@ -401,7 +425,7 @@
           "markAsUnread": "Okunmadı Olarak İşaretle",
           "muteThread": "Konuyu Sessize Al",
           "printEmail": "E-postayı Yazdır",
-          "archiveEmail": "E-postayı Arşivle",
+          "archiveEmail": "Konuyu arşivle",
           "markAsSpam": "Spam Olarak İşaretle",
           "moveToFolder": "Klasöre Taşı",
           "undoLastAction": "Son İşlemi Geri Al",
@@ -412,20 +436,34 @@
           "recordHotkey": "Kısayol Tuşu Kaydet",
           "pressKeys": "Tuşlara bas",
           "releaseKeys": "Tuşları bırak",
-          "selectAll": "Tümünü Seç"
+          "selectAll": "Tümünü Seç",
+          "commandPalette": "Komut Paleti",
+          "markAsRead": "Okundu Olarak İşaretle",
+          "exitSelectionMode": "Seçim Modundan Çık",
+          "closeCompose": "Oluşturmayı Kapat"
         }
       },
       "labels": {
         "title": "Etiketler",
         "description": "E-postalarınızı daha iyi düzenlemek için etiketlerinizi yönetin."
       },
-      "danger-zone": {
-        "title": "Tehlikeli Bölge",
+      "dangerZone": {
+        "title": "Danger Zone",
         "description": "Hesabınızı ve ilişkili tüm verileri kalıcı olarak silin.",
         "warning": "Bu eylem geri alınamaz.",
         "confirmation": "Hesap silme işlemini onaylamak için lütfen DELETE yazın",
         "deleteAccount": "Hesabı Sil",
-        "deleting": "Siliniyor..."
+        "deleting": "Siliniyor...",
+        "deleted": "Hesap başarıyla silindi",
+        "error": "Hesap silinemedi"
+      },
+      "privacy": {
+        "title": "Gizlilik",
+        "description": "E-posta içeriği için gizlilik ve güvenlik tercihlerinizi yönetin.",
+        "externalImages": "Harici Görselleri Göster",
+        "externalImagesDescription": "E-postaların harici kaynaklardan görselleri göstermesine izin verin.",
+        "trustedSenders": "Güvenilir Göndericiler",
+        "trustedSendersDescription": "Bu göndericilerin görsellerini her zaman göster."
       }
     },
     "createEmail": {
@@ -436,6 +474,7 @@
       "addMore": "Daha fazla ekle",
       "dropFilesToAttach": "Eklemek için dosyaları bırakın",
       "writeYourMessageHere": "Mesajınızı buraya yazın...",
+      "emailSent": "E-posta gönderildi",
       "emailSentSuccessfully": "E-posta başarıyla gönderildi",
       "failedToSendEmail": "E-posta gönderilemedi. Lütfen tekrar deneyin.",
       "signature": {
@@ -465,5 +504,10 @@
         }
       }
     }
+  },
+  "errorMessages": {
+    "required_scopes_missing": "Tam deneyiminizi oluşturmak için gereken izinler eksik. Lütfen tekrar giriş yapın ve istenen erişime izin verin.",
+    "early_access_required": "Giriş yapmak için erken erişim gereklidir",
+    "unauthorized": "Zero, verilerinizi 3. taraf sağlayıcıdan yükleyemedi. Lütfen tekrar deneyin."
   }
 }

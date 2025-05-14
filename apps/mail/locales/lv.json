@@ -15,6 +15,7 @@
       "loading": "Ielādē...",
       "featureNotImplemented": "Šī funkcija vēl nav ieviesta",
       "moving": "Pārvieto...",
+      "moved": "Pārvietots",
       "movedToInbox": "Pārvietots uz iesūtni",
       "movingToInbox": "Pārvieto uz iesūtni...",
       "movedToSpam": "Pārvietots uz mēstulēm",
@@ -34,6 +35,7 @@
       "failedToModifyFavorites": "Neizdevās modificēt izlasi",
       "movingToBin": "Pārvieto uz atkritni...",
       "movedToBin": "Pārvietots uz atkritni",
+      "Bin": "Miskaste",
       "failedToMoveToBin": "Neizdevās pārvietot uz atkritni",
       "markingAsRead": "Atzīmē kā lasītu...",
       "markingAsUnread": "Atzīmē kā nelasītu...",
@@ -44,7 +46,8 @@
       "cancel": "Atcelt",
       "save": "Saglabāt",
       "remove": "Noņemt",
-      "settings": "Iestatījumi"
+      "settings": "Iestatījumi",
+      "exitSelectionModeEsc": "Noklikšķiniet vai nospiediet ESC, lai izietu no atlases režīma"
     },
     "themes": {
       "dark": "Tumšs",
@@ -72,12 +75,13 @@
         "goToBin": "Doties uz Miskasti",
         "goToSettings": "Doties uz Iestatījumiem",
         "newEmail": "Rakstīt jaunu e-pastu",
-        "composeMessage": "Rakstīt ziņu",
+        "composeMessage": "Rakstīt jaunu e-pastu",
         "searchEmails": "Meklēt e-pastus",
         "toggleTheme": "Pārslēgt krāsu tēmu",
         "backToMail": "Atpakaļ uz e-pastu",
         "goToDocs": "Doties uz dokumentāciju",
-        "helpWithShortcuts": "Tastatūras īsceļu palīdzība"
+        "helpWithShortcuts": "Tastatūras īsceļu palīdzība",
+        "commandPalette": "Komandu palete"
       }
     },
     "searchBar": {
@@ -112,7 +116,8 @@
       "documentation": "Dokumentācija",
       "appTheme": "Aplikācijas motīvs",
       "accounts": "Konti",
-      "signIn": "Pierakstīties"
+      "signIn": "Pierakstīties",
+      "otherAccounts": "Citi konti"
     },
     "mailCategories": {
       "primary": "Galvenā",
@@ -170,7 +175,9 @@
       "muteThread": "Apklusināt pavedienu",
       "favourites": "Izlase",
       "disableImages": "Slēpt attēlus",
-      "enableImages": "Rādīt attēlus"
+      "enableImages": "Rādīt attēlus",
+      "star": "Pievienot zvaigznīti",
+      "unstar": "Noņemt zvaigznīti"
     },
     "notes": {
       "title": "Piezīmes",
@@ -249,7 +256,6 @@
       "failedToMarkAsUnread": "Neizdevās atzīmēt kā neizlasītu",
       "selected": "{count} izvēlēti",
       "clearSelection": "Notīrīt izvēli",
-      "mute": "Apklusināt",
       "moveToSpam": "Pārvietot uz Mēstulēm",
       "moveToInbox": "Pārvietot uz Iesūtni",
       "deleteFromBin": "Dzēst no atkritnes",
@@ -276,10 +282,28 @@
       "showImages": "Rādīt attēlus",
       "noEmails": "Nav pieejamu e-pastu",
       "noSearchResults": "Meklēšanas rezultāti nav atrasti",
-      "clearSearch": "Notīrīt meklēšanu"
+      "clearSearch": "Notīrīt meklēšanu",
+      "markAsImportant": "Atzīmēt kā svarīgu",
+      "unSubscribeFromAll": "Atrakstīties no visiem",
+      "starAll": "Pievienot zvaigznīti visiem",
+      "mute": "Apklusināt",
+      "unmute": "Atjaunot skaņu",
+      "muted": "Apklusināts",
+      "failedToMute": "Neizdevās apklusināt",
+      "failedToUnmute": "Neizdevās atjaunot skaņu",
+      "archived": "Arhivēts",
+      "failedToArchive": "Neizdevās arhivēt"
     },
     "units": {
       "mb": "{amount} MB"
+    },
+    "labels": {
+      "deleteLabel": "Dzēst atzīmi",
+      "deleteLabelConfirm": "Vai tiešām vēlaties dzēst šo atzīmi?",
+      "deleteLabelConfirmDescription": "Šo darbību nevar atsaukt.",
+      "deleteLabelConfirmCancel": "Atcelt",
+      "deleteLabelConfirmDelete": "Dzēst",
+      "deleteLabelSuccess": "Atzīme veiksmīgi dzēsta"
     }
   },
   "navigation": {
@@ -301,7 +325,9 @@
       "signatures": "Paraksti",
       "shortcuts": "Īsceļi",
       "labels": "Iezīmes",
-      "danger-zone": "Bīstamā zona"
+      "dangerZone": "Bīstamā zona",
+      "deleteAccount": "Dzēst kontu",
+      "privacy": "Privātums"
     }
   },
   "pages": {
@@ -323,10 +349,6 @@
         "selectTimezone": "Izvēlieties laika joslu",
         "dynamicContent": "Dinamisks Saturs",
         "dynamicContentDescription": "Atļaut e-pastiem rādīt dinamisku saturu.",
-        "externalImages": "Rādīt ārējos attēlus",
-        "externalImagesDescription": "Atļaut e-pastiem rādīt attēlus no ārējiem avotiem.",
-        "trustedSenders": "Uzticami sūtītāji",
-        "trustedSendersDescription": "Vienmēr rādīt attēlus no šiem sūtītājiem.",
         "languageChangedTo": "Valoda nomainīta uz {locale}",
         "customPrompt": "Pielāgota AI instrukcija",
         "customPromptPlaceholder": "Ievadi savu pielāgoto norādījumu AI...",
@@ -345,7 +367,9 @@
         "addEmail": "Pievienot savienojumu",
         "connectEmail": "Savienot e-pastu",
         "connectEmailDescription": "Izvēlēties e-pasta pakalpojumu sniedzēju, lai izveidotu savienojumu",
-        "moreComingSoon": "Drīzumā būs pieejams vairāk"
+        "moreComingSoon": "Drīzumā būs pieejams vairāk",
+        "reconnect": "Savienoties atkārtoti",
+        "disconnected": "Atvienots"
       },
       "security": {
         "title": "Drošība",
@@ -401,7 +425,7 @@
           "markAsUnread": "Atzīmēt kā nelasītu",
           "muteThread": "Apklusināt pavedienu",
           "printEmail": "Drukāt e-pastu",
-          "archiveEmail": "Arhivēt e-pastu",
+          "archiveEmail": "Arhivēt saraksti",
           "markAsSpam": "Atzīmēt kā mēstuli",
           "moveToFolder": "Pārvietot uz mapi",
           "undoLastAction": "Atsaukt pēdējo darbību",
@@ -412,20 +436,34 @@
           "recordHotkey": "Ierakstīt karstumtaustiņu",
           "pressKeys": "Nospiediet taustiņus",
           "releaseKeys": "Atlaidiet taustiņus",
-          "selectAll": "Atlasīt visu"
+          "selectAll": "Atlasīt visu",
+          "commandPalette": "Komandu palete",
+          "markAsRead": "Atzīmēt kā lasītu",
+          "exitSelectionMode": "Iziet no atlases režīma",
+          "closeCompose": "Aizvērt rakstīšanu"
         }
       },
       "labels": {
         "title": "Iezīmes",
         "description": "Pārvaldiet savas iezīmes, lai labāk organizētu e-pastus."
       },
-      "danger-zone": {
-        "title": "Bīstamā zona",
+      "dangerZone": {
+        "title": "Danger Zone",
         "description": "Neatgriezeniski dzēst jūsu kontu un visus ar to saistītos datus.",
         "warning": "Šo darbību nevar atsaukt.",
         "confirmation": "Lūdzu, ierakstiet DELETE, lai apstiprinātu konta dzēšanu",
         "deleteAccount": "Dzēst kontu",
-        "deleting": "Dzēš..."
+        "deleting": "Dzēš...",
+        "deleted": "Konts veiksmīgi dzēsts",
+        "error": "Neizdevās dzēst kontu"
+      },
+      "privacy": {
+        "title": "Privātums",
+        "description": "Pārvaldiet savas privātuma un drošības preferences e-pasta saturam.",
+        "externalImages": "Rādīt ārējos attēlus",
+        "externalImagesDescription": "Atļaut e-pastiem rādīt attēlus no ārējiem avotiem.",
+        "trustedSenders": "Uzticami sūtītāji",
+        "trustedSendersDescription": "Vienmēr rādīt attēlus no šiem sūtītājiem."
       }
     },
     "createEmail": {
@@ -436,6 +474,7 @@
       "addMore": "Pievienot vēl",
       "dropFilesToAttach": "Ievelciet failus, lai pievienotu",
       "writeYourMessageHere": "Raksti savu ziņu šeit...",
+      "emailSent": "E-pasts nosūtīts",
       "emailSentSuccessfully": "E-pasts veiksmīgi nosūtīts",
       "failedToSendEmail": "Neizdevās nosūtīt e-pastu. Lūdzu, mēģiniet vēlreiz.",
       "signature": {
@@ -465,5 +504,10 @@
         }
       }
     }
+  },
+  "errorMessages": {
+    "required_scopes_missing": "Mums trūkst nepieciešamo atļauju, lai nodrošinātu pilnvērtīgu pieredzi. Lūdzu, piesakieties vēlreiz un atļaujiet pieprasīto piekļuvi.",
+    "early_access_required": "Lai pieteiktos, nepieciešama agrīnā piekļuve",
+    "unauthorized": "Zero nevarēja ielādēt jūsu datus no trešās puses pakalpojuma sniedzēja. Lūdzu, mēģiniet vēlreiz."
   }
 }
