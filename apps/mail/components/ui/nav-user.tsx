@@ -11,6 +11,7 @@ import {
   CopyCheckIcon,
   BadgeCheck,
   BanknoteIcon,
+  ClipboardCopy,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -87,6 +88,11 @@ export function NavUser() {
   const handleCopyConnectionId = useCallback(async () => {
     await navigator.clipboard.writeText(session?.connectionId || '');
     toast.success('Connection ID copied to clipboard');
+  }, [session]);
+
+  const handleCopyEmail = useCallback(async () => {
+    await navigator.clipboard.writeText(session?.user.email || '');
+    toast.success('Email copied to clipboard');
   }, [session]);
 
   const activeAccount = useMemo(() => {
@@ -534,8 +540,14 @@ export function NavUser() {
                 <BadgeCheck className="h-4 w-4 text-white dark:text-[#141414]" fill="#1D9BF0" />
               )}
             </div>
-            <div className="max-w-[200px] select-text overflow-hidden truncate text-xs font-normal leading-none text-[#898989]">
+            <div className="group/copyEmail flex max-w-[200px] select-text items-center justify-between gap-1 overflow-hidden truncate text-xs font-normal leading-none text-[#898989] hover:pr-4">
               {activeAccount?.email || session.user.email}
+
+              <ClipboardCopy
+                size={16}
+                className="visible cursor-pointer opacity-60 transition-all duration-75 ease-in-out active:opacity-100 active:duration-75 md:invisible md:opacity-0 md:group-hover/copyEmail:visible md:group-hover/copyEmail:opacity-100"
+                onClick={handleCopyEmail}
+              />
             </div>
           </div>
 
