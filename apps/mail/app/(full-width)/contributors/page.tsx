@@ -379,7 +379,7 @@ export default function OpenPage() {
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Link href="/">
+                <a href="/">
                   <div className="relative h-8 w-8">
                     <Image
                       src="/black-icon.svg"
@@ -394,7 +394,7 @@ export default function OpenPage() {
                       className="hidden object-contain dark:block"
                     />
                   </div>
-                </Link>
+                </a>
               </div>
               <p className="text-sm text-neutral-500 dark:text-neutral-400">
                 An open source email app built with modern technologies
@@ -407,10 +407,10 @@ export default function OpenPage() {
                 size="sm"
                 className="gap-2 border-neutral-200 bg-white/50 text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900/50 dark:text-neutral-200 dark:hover:bg-neutral-800 dark:hover:text-white"
               >
-                <Link href={`https://github.com/${REPOSITORY}`} target="_blank">
+                <a href={`https://github.com/${REPOSITORY}`} target="_blank">
                   <Github className="h-4 w-4" />
                   View on GitHub
-                </Link>
+                </a>
               </Button>
             </div>
           </div>
@@ -955,10 +955,10 @@ export default function OpenPage() {
                       variant="outline"
                       className="gap-2 border-neutral-200 bg-white/80 text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900/50 dark:text-neutral-200 dark:hover:bg-neutral-800 dark:hover:text-white"
                     >
-                      <Link href={`https://github.com/${REPOSITORY}/issues`} target="_blank">
+                      <a href={`https://github.com/${REPOSITORY}/issues`} target="_blank">
                         <MessageCircle className="h-4 w-4" />
                         Open Issues
-                      </Link>
+                      </a>
                     </Button>
                   </div>
                 </div>

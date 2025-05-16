@@ -250,7 +250,7 @@ const AiSummary = () => {
   };
 
   if (isLoading) return null;
-  if (!summary?.short?.length) return null;
+  if (!summary?.data.short?.length) return null;
 
   return (
     <div
@@ -267,7 +267,7 @@ const AiSummary = () => {
         )}
       </div>
       {showSummary && (
-        <Markdown markdownContainerStyles={{ fontSize: 12 }}>{summary?.short || ''}</Markdown>
+        <Markdown markdownContainerStyles={{ fontSize: 12 }}>{summary?.data.short || ''}</Markdown>
       )}
     </div>
   );

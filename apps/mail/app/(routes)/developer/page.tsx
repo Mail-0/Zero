@@ -116,12 +116,12 @@ export default function DeveloperPage() {
                     variant="outline"
                     className="hover:bg-secondary w-full justify-between"
                   >
-                    <Link href={resource.href}>
+                    <a href={resource.href}>
                       <span className="flex items-center justify-between">
                         {resource.linkText}
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </span>
-                    </Link>
+                    </a>
                   </Button>
                 </CardContent>
               </Card>
@@ -138,7 +138,7 @@ export default function DeveloperPage() {
                 </p>
               </div>
               <Button asChild variant="default" className="w-full sm:w-auto">
-                <Link href="/support">Contact Support</Link>
+                <a href="/support">Contact Support</a>
               </Button>
             </div>
           </div>

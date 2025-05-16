@@ -367,7 +367,9 @@
         "addEmail": "接続を追加",
         "connectEmail": "メールアドレスの接続",
         "connectEmailDescription": "接続するメールプロバイダを選択してください",
-        "moreComingSoon": "近日追加予定"
+        "moreComingSoon": "近日追加予定",
+        "reconnect": "再接続",
+        "disconnected": "切断済み"
       },
       "security": {
         "title": "セキュリティ",
@@ -415,9 +417,9 @@
           "reply": "返信",
           "replyAll": "全員に返信",
           "forward": "転送",
-          "drafts": "下書き",
-          "inbox": "受信箱",
-          "sentMail": "送信済みメール",
+          "drafts": "下書きに移動",
+          "inbox": "受信箱に移動",
+          "sentMail": "送信済みメールに移動",
           "delete": "削除",
           "search": "検索",
           "markAsUnread": "未読にする",
@@ -438,7 +440,12 @@
           "commandPalette": "コマンド パレット",
           "markAsRead": "既読にする",
           "exitSelectionMode": "選択モードを終了",
-          "closeCompose": "作成を閉じる"
+          "closeCompose": "作成を閉じる",
+          "goToSpam": "迷惑メールに移動",
+          "goToArchive": "アーカイブに移動",
+          "goToBin": "ゴミ箱に移動",
+          "scrollDown": "メールリストを下にスクロール",
+          "scrollUp": "メールリストを上にスクロール"
         }
       },
       "labels": {

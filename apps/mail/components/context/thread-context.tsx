@@ -26,12 +26,12 @@ import {
   MailOpen,
 } from 'lucide-react';
 import { moveThreadsTo, type ThreadDestination } from '@/lib/thread-actions';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { backgroundQueueAtom } from '@/store/backgroundQueue';
 import { useThread, useThreads } from '@/hooks/use-threads';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useParams, useRouter } from 'next/navigation';
 import { useTRPC } from '@/providers/query-provider';
-import { useMutation } from '@tanstack/react-query';
 import { useLabels } from '@/hooks/use-labels';
 import { LABELS, FOLDERS } from '@/lib/utils';
 import { useStats } from '@/hooks/use-stats';
@@ -132,8 +132,15 @@ export function ThreadContextMenu({
   const [, setBackgroundQueue] = useAtom(backgroundQueueAtom);
   const { refetch: refetchThread, data: threadData } = useThread(threadId);
   const trpc = useTRPC();
-  const { mutateAsync: markAsRead } = useMutation(trpc.mail.markAsRead.mutationOptions());
-  const { mutateAsync: markAsUnread } = useMutation(trpc.mail.markAsUnread.mutationOptions());
+  const queryClient = useQueryClient();
+  const invalidateCount = () =>
+    queryClient.invalidateQueries({ queryKey: trpc.mail.count.queryKey() });
+  const { mutateAsync: markAsRead } = useMutation(
+    trpc.mail.markAsRead.mutationOptions({ onSuccess: () => invalidateCount() }),
+  );
+  const { mutateAsync: markAsUnread } = useMutation(
+    trpc.mail.markAsUnread.mutationOptions({ onSuccess: () => invalidateCount() }),
+  );
   const { mutateAsync: toggleStar } = useMutation(trpc.mail.toggleStar.mutationOptions());
   const { mutateAsync: deleteThread } = useMutation(trpc.mail.delete.mutationOptions());
 

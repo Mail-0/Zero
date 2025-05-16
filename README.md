@@ -80,6 +80,7 @@ You can set up Zero in two ways:
      cp .env.example .env
      ```
    - Configure your environment variables (see below)
+   - Setup cloudflare with `bun run cf-install`, you will need to run this everytime there is a `.env` change
    - Start the database with the provided docker compose setup: `bun docker:up`
    - Initialize the database: `bun db:push`
 
@@ -148,7 +149,7 @@ bun install
    - Create OAuth 2.0 credentials (Web application type)
    - Add authorized redirect URIs:
      - Development:
-       - `http://localhost:3000/api/auth/callback/google`
+       - `http://localhost:8787/api/auth/callback/google`
      - Production:
        - `https://your-production-url/api/auth/callback/google`
    - Add to `.env`:
@@ -166,6 +167,18 @@ bun install
 
 > [!WARNING]
 > The authorized redirect URIs in Google Cloud Console must match **exactly** what you configure in the `.env`, including the protocol (http/https), domain, and path - these are provided above.
+
+3. **Autumn Setup** (Required for some encryption)
+
+   -Go to [Autumn](https://useautumn.com/)
+   -For Local Use, click [onboarding](https://app.useautumn.com/sandbox/onboarding) button and generate an Autumn Secret Key
+   -For production, select the production mode from upper left corner and generate an fill the other fields. After that, generate an Autumn Secret Key
+
+   - Add to `.env`:
+
+   ```env
+   AUTUMN_SECRET_KEY=your_autumn_secret
+   ```
 
 ### Environment Variables
 
@@ -210,7 +223,7 @@ Zero uses PostgreSQL for storing data. Here's how to set it up:
 
 2. **Set Up Database Connection**
 
-   Make sure your database connection string is in `.env` file.
+   Make sure your database connection string is in `.env` file. And you have ran `bun run cf-install` to sync the latest env.
 
    For local development use:
 

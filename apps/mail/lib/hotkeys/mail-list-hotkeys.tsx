@@ -19,9 +19,16 @@ export function MailListHotkeys() {
   const t = useTranslations();
   const hoveredEmailId = useRef<string | null>(null);
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const invalidateCount = () =>
+    queryClient.invalidateQueries({ queryKey: trpc.mail.count.queryKey() });
   const { mutateAsync: bulkArchive } = useMutation(trpc.mail.bulkArchive.mutationOptions());
-  const { mutateAsync: markAsUnreadAction } = useMutation(trpc.mail.markAsUnread.mutationOptions());
-  const { mutateAsync: markAsReadAction } = useMutation(trpc.mail.markAsRead.mutationOptions());
+  const { mutateAsync: markAsReadAction } = useMutation(
+    trpc.mail.markAsRead.mutationOptions({ onSuccess: () => invalidateCount() }),
+  );
+  const { mutateAsync: markAsUnreadAction } = useMutation(
+    trpc.mail.markAsUnread.mutationOptions({ onSuccess: () => invalidateCount() }),
+  );
 
   useEffect(() => {
     const handleEmailHover = (event: CustomEvent<{ id: string | null }>) => {
@@ -146,6 +153,28 @@ export function MailListHotkeys() {
     }));
   }, []);
 
+  // const scrollDown = useCallback(() => {
+  //   const scrollContainer = document.getElementById('mail-list-scroll');
+  //   console.log(scrollContainer);
+  //   if (scrollContainer) {
+  //     scrollContainer.scrollBy({
+  //       top: 100,
+  //       behavior: 'smooth',
+  //     });
+  //   }
+  // }, []);
+
+  // const scrollUp = useCallback(() => {
+  //   const scrollContainer = document.getElementById('mail-list-scroll');
+  //   console.log(scrollContainer);
+  //   if (scrollContainer) {
+  //     scrollContainer.scrollBy({
+  //       top: -100,
+  //       behavior: 'smooth',
+  //     });
+  //   }
+  // }, []);
+
   const handlers = {
     markAsRead,
     markAsUnread,
@@ -153,6 +182,8 @@ export function MailListHotkeys() {
     archiveEmail,
     exitSelectionMode,
     // muteThread,
+    // scrollDown,
+    // scrollUp,
   };
 
   const mailListShortcuts = keyboardShortcuts.filter((shortcut) => shortcut.scope === scope);

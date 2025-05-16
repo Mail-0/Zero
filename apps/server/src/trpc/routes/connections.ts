@@ -22,11 +22,30 @@ export const connectionsRouter = router({
           name: connection.name,
           picture: connection.picture,
           createdAt: connection.createdAt,
+          providerId: connection.providerId,
+          accessToken: connection.accessToken,
+          refreshToken: connection.refreshToken,
         })
         .from(connection)
         .where(eq(connection.userId, session.user.id));
 
-      return { connections };
+      const disconnectedIds = connections
+        .filter((c) => !c.accessToken || !c.refreshToken)
+        .map((c) => c.id);
+
+      return {
+        connections: connections.map((connection) => {
+          return {
+            id: connection.id,
+            email: connection.email,
+            name: connection.name,
+            picture: connection.picture,
+            createdAt: connection.createdAt,
+            providerId: connection.providerId,
+          };
+        }),
+        disconnectedIds,
+      };
     }),
   setDefault: privateProcedure
     .input(z.object({ connectionId: z.string() }))

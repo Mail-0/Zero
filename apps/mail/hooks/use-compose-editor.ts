@@ -255,7 +255,7 @@ const useComposeEditor = ({
     editorProps: {
       attributes: {
         class: cn(
-          'prose dark:prose-invert prose-headings:font-title focus:outline-none max-w-full min-h-[200px]',
+          'prose dark:prose-invert prose-headings:font-title focus:outline-none max-w-full',
           isReadOnly && 'pointer-events-none select-text',
         ),
       },

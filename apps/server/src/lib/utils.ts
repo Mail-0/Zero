@@ -1,7 +1,6 @@
 import { isToday, isThisMonth, differenceInCalendarMonths } from 'date-fns';
 import { getBrowserTimezone } from './timezones';
 import { formatInTimeZone } from 'date-fns-tz';
-import { filterSuggestions } from './filter';
 import type { JSONContent } from 'novel';
 import type { Sender } from '../types';
 
@@ -468,19 +467,22 @@ export function parseNaturalLanguageDate(query: string): { from?: Date; to?: Dat
   return null;
 }
 
+// Duplicated on server & client
+export const categorySearchValues = [
+  'is:important NOT is:sent NOT is:draft',
+  'NOT is:draft (is:inbox OR (is:sent AND to:me))',
+  'is:personal NOT is:sent NOT is:draft',
+  'is:updates NOT is:sent NOT is:draft',
+  'is:promotions NOT is:sent NOT is:draft',
+  'is:unread NOT is:sent NOT is:draft',
+];
+
 export const cleanSearchValue = (q: string): string => {
-  if (!q) return '';
-
-  const filterRegex = new RegExp(
-    filterSuggestions
-      .map((s) => s.filter)
-      .filter(Boolean) // Remove any empty strings
-      .join('|'),
-    'gi', // Case insensitive
+  const escapedValues = categorySearchValues.map((value) =>
+    value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
   );
-
   return q
-    .replace(filterRegex, '')
-    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+    .replace(new RegExp(escapedValues.join('|'), 'g'), '')
+    .replace(/\s+/g, ' ')
     .trim();
 };

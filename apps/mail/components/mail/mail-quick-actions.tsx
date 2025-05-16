@@ -1,10 +1,10 @@
 'use client';
 
 import { moveThreadsTo, type ThreadDestination } from '@/lib/thread-actions';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useThread, useThreads } from '@/hooks/use-threads';
 import { useParams, useRouter } from 'next/navigation';
 import { useTRPC } from '@/providers/query-provider';
-import { useMutation } from '@tanstack/react-query';
 import { Archive, Mail, Inbox } from 'lucide-react';
 import { useCallback, memo, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -32,9 +32,17 @@ export const MailQuickActions = memo(
     selectedQuickActionIndex = 0,
     resetNavigation,
   }: MailQuickActionsProps) => {
+    const queryClient = useQueryClient();
+    const invalidateCount = () =>
+      queryClient.invalidateQueries({ queryKey: trpc.mail.count.queryKey() });
+
     const trpc = useTRPC();
-    const { mutateAsync: markAsRead } = useMutation(trpc.mail.markAsRead.mutationOptions());
-    const { mutateAsync: markAsUnread } = useMutation(trpc.mail.markAsUnread.mutationOptions());
+    const { mutateAsync: markAsRead } = useMutation(
+      trpc.mail.markAsRead.mutationOptions({ onSuccess: () => invalidateCount() }),
+    );
+    const { mutateAsync: markAsUnread } = useMutation(
+      trpc.mail.markAsUnread.mutationOptions({ onSuccess: () => invalidateCount() }),
+    );
 
     const { data: threadData, refetch: refetchThread } = useThread(id);
     const latestMessage = threadData?.latest;

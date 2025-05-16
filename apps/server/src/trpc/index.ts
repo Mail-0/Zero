@@ -3,6 +3,7 @@ import { cookiePreferencesRouter } from './routes/cookies';
 import { connectionsRouter } from './routes/connections';
 import { shortcutRouter } from './routes/shortcut';
 import { settingsRouter } from './routes/settings';
+import { getContext } from 'hono/context-storage';
 import { draftsRouter } from './routes/drafts';
 import { labelsRouter } from './routes/label';
 import { brainRouter } from './routes/brain';
@@ -32,5 +33,7 @@ export type AppRouter = typeof appRouter;
 export type Inputs = inferRouterInputs<AppRouter>;
 export type Outputs = inferRouterOutputs<AppRouter>;
 
-export const serverTrpc = (c: HonoContext) =>
-  appRouter.createCaller({ c, session: c.var.session, db: c.var.db, auth: c.var.auth });
+export const serverTrpc = () => {
+  const c = getContext<HonoContext>();
+  return appRouter.createCaller({ c, session: c.var.session, db: c.var.db, auth: c.var.auth });
+};

@@ -80,6 +80,11 @@ export const filterSuggestions: FilterSuggestion[] = [
     filter: 'before:date',
     description: 'Emails before a specific date',
   },
+  {
+    prefix: 'draft',
+    filter: '',
+    description: 'Emails in the draft folder',
+  },
 ];
 
 export const getFilterSuggestionGridColumns = (count: number, isMobile: boolean): string => {

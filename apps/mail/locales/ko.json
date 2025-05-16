@@ -367,7 +367,9 @@
         "addEmail": "연결 추가",
         "connectEmail": "이메일 연결",
         "connectEmailDescription": "연결할 이메일 제공자를 선택하세요",
-        "moreComingSoon": "곧 추가됩니다"
+        "moreComingSoon": "곧 추가됩니다",
+        "reconnect": "다시 연결",
+        "disconnected": "연결 해제됨"
       },
       "security": {
         "title": "보안",
@@ -415,9 +417,9 @@
           "reply": "답장",
           "replyAll": "전체 답장",
           "forward": "전달",
-          "drafts": "임시 보관함",
-          "inbox": "받은 편지함",
-          "sentMail": "보낸 편지함",
+          "drafts": "임시 보관함으로 이동",
+          "inbox": "받은 편지함으로 이동",
+          "sentMail": "보낸 편지함으로 이동",
           "delete": "삭제",
           "search": "검색",
           "markAsUnread": "읽지 않음으로 표시",
@@ -438,7 +440,12 @@
           "commandPalette": "명령 팔레트",
           "markAsRead": "읽음으로 표시",
           "exitSelectionMode": "선택 모드 종료",
-          "closeCompose": "작성 창 닫기"
+          "closeCompose": "작성 창 닫기",
+          "goToSpam": "스팸 편지함으로 이동",
+          "goToArchive": "보관함으로 이동",
+          "goToBin": "휴지통으로 이동",
+          "scrollDown": "메일 목록에서 아래로 스크롤",
+          "scrollUp": "메일 목록에서 위로 스크롤"
         }
       },
       "labels": {

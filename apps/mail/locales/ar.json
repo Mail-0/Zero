@@ -367,7 +367,9 @@
         "addEmail": "إضافة اتصال",
         "connectEmail": "ربط البريد الإلكتروني",
         "connectEmailDescription": "اختر مزود بريد إلكتروني للاتصال",
-        "moreComingSoon": "المزيد قريبًا"
+        "moreComingSoon": "المزيد قريبًا",
+        "reconnect": "إعادة الاتصال",
+        "disconnected": "تم قطع الاتصال"
       },
       "security": {
         "title": "الأمان",
@@ -415,9 +417,9 @@
           "reply": "الرد",
           "replyAll": "الرد على الكل",
           "forward": "إعادة توجيه",
-          "drafts": "المسودات",
-          "inbox": "صندوق الوارد",
-          "sentMail": "البريد المرسل",
+          "drafts": "الذهاب إلى المسودات",
+          "inbox": "الذهاب إلى صندوق الوارد",
+          "sentMail": "الذهاب إلى البريد المرسل",
           "delete": "حذف",
           "search": "بحث",
           "markAsUnread": "تحديد كغير مقروء",
@@ -438,7 +440,12 @@
           "commandPalette": "لوحة الأوامر",
           "markAsRead": "تحديد كمقروء",
           "exitSelectionMode": "الخروج من وضع التحديد",
-          "closeCompose": "إغلاق الإنشاء"
+          "closeCompose": "إغلاق نافذة الإنشاء",
+          "goToSpam": "الذهاب إلى البريد المزعج",
+          "goToArchive": "الذهاب إلى الأرشيف",
+          "goToBin": "الذهاب إلى سلة المهملات",
+          "scrollDown": "التمرير لأسفل في قائمة البريد",
+          "scrollUp": "التمرير لأعلى في قائمة البريد"
         }
       },
       "labels": {

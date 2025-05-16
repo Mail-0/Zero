@@ -8,7 +8,7 @@ export const SIDEBAR_WIDTH_ICON = '3rem';
 export const SIDEBAR_KEYBOARD_SHORTCUT = 'b';
 export const BASE_URL = process.env.NEXT_PUBLIC_APP_URL;
 export const MAX_URL_LENGTH = 2000;
-export const CACHE_BURST_KEY = 'cache-burst:v0.0.1';
+export const CACHE_BURST_KEY = 'cache-burst:v0.0.2';
 
 export const emailProviders = [
   {

@@ -16,7 +16,7 @@
     "@types/node": "22.13.8",
     "@zero/tsconfig": "workspace:*",
     "dotenv": "16.4.7",
-    "drizzle-kit": "0.30.5",
+    "drizzle-kit": "0.31.1",
     "typescript": "5.8.2"
   },
   "exports": {

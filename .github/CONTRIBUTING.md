@@ -32,6 +32,7 @@ Thank you for your interest in contributing to 0.email! We're excited to have yo
    - Clone the repository and install dependencies: `bun install`
    - Start the database locally: `bun docker:up`
    - Copy `.env.example` to `.env` in project root
+   - Setup cloudflare with `bun run cf-install`, you will need to run this everytime there is a `.env` change
    - Set up your Google OAuth credentials (see [README.md](../README.md))
    - Initialize the database: `bun db:push`
 

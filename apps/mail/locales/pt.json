@@ -367,7 +367,9 @@
         "addEmail": "Adicionar Conexão",
         "connectEmail": "Conectar E-mail",
         "connectEmailDescription": "Selecione um provedor de e-mail para se conectar",
-        "moreComingSoon": "Mais em breve"
+        "moreComingSoon": "Mais em breve",
+        "reconnect": "Reconectar",
+        "disconnected": "Desconectado"
       },
       "security": {
         "title": "Segurança",
@@ -415,13 +417,13 @@
           "reply": "Responder",
           "replyAll": "Responder a todos",
           "forward": "Encaminhar",
-          "drafts": "Rascunhos",
-          "inbox": "Caixa de Entrada",
-          "sentMail": "Emails enviados",
+          "drafts": "Ir para rascunhos",
+          "inbox": "Ir para caixa de entrada",
+          "sentMail": "Ir para e-mails enviados",
           "delete": "Apagar",
           "search": "Pesquisar",
           "markAsUnread": "Marcar como não lido",
-          "muteThread": "Silenciar esta conversa",
+          "muteThread": "Silenciar conversa",
           "printEmail": "Imprimir e-mail",
           "archiveEmail": "Arquivar conversa",
           "markAsSpam": "Marcar como Spam",
@@ -438,7 +440,12 @@
           "commandPalette": "Paleta de Comandos",
           "markAsRead": "Marcar como lido",
           "exitSelectionMode": "Sair do modo de seleção",
-          "closeCompose": "Fechar composição"
+          "closeCompose": "Fechar composição",
+          "goToSpam": "Ir para spam",
+          "goToArchive": "Ir para arquivo",
+          "goToBin": "Ir para lixeira",
+          "scrollDown": "Rolar para baixo na lista de e-mails",
+          "scrollUp": "Rolar para cima na lista de e-mails"
         }
       },
       "labels": {

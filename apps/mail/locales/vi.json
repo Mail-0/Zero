@@ -367,7 +367,9 @@
         "addEmail": "Thêm kết nối",
         "connectEmail": "Kết nối email",
         "connectEmailDescription": "Chọn nhà cung cấp email để kết nối",
-        "moreComingSoon": "Sẽ có thêm tùy chọn sớm"
+        "moreComingSoon": "Sẽ có thêm tùy chọn sớm",
+        "reconnect": "Kết nối lại",
+        "disconnected": "Đã ngắt kết nối"
       },
       "security": {
         "title": "Bảo mật",
@@ -415,12 +417,12 @@
           "reply": "Trả lời",
           "replyAll": "Trả lời tất cả",
           "forward": "Chuyển tiếp",
-          "drafts": "Bản nháp",
-          "inbox": "Hộp thư đến",
-          "sentMail": "Thư đã gửi",
+          "drafts": "Đi đến thư nháp",
+          "inbox": "Đi đến hộp thư đến",
+          "sentMail": "Đi đến thư đã gửi",
           "delete": "Xóa",
           "search": "Tìm kiếm",
-          "markAsUnread": "Đánh dấu chưa đọc",
+          "markAsUnread": "Đánh dấu là chưa đọc",
           "muteThread": "Tắt tiếng cuộc trò chuyện",
           "printEmail": "In email",
           "archiveEmail": "Lưu trữ chuỗi thư",
@@ -438,7 +440,12 @@
           "commandPalette": "Bảng lệnh",
           "markAsRead": "Đánh dấu là đã đọc",
           "exitSelectionMode": "Thoát chế độ chọn",
-          "closeCompose": "Đóng soạn thư"
+          "closeCompose": "Đóng soạn thư",
+          "goToSpam": "Đi đến thư rác",
+          "goToArchive": "Đi đến lưu trữ",
+          "goToBin": "Đi đến thùng rác",
+          "scrollDown": "Cuộn xuống trong danh sách thư",
+          "scrollUp": "Cuộn lên trong danh sách thư"
         }
       },
       "labels": {

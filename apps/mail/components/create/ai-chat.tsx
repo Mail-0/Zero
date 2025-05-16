@@ -7,6 +7,7 @@ import { useRef, useCallback, useEffect } from 'react';
 import { useTRPC } from '@/providers/query-provider';
 import { Markdown } from '@react-email/components';
 import { CurvedArrow, Stop } from '../icons/icons';
+import { Tools } from '../../../server/src/types';
 import { useBilling } from '@/hooks/use-billing';
 import { TextShimmer } from '../ui/text-shimmer';
 import { useThread } from '@/hooks/use-threads';
@@ -23,6 +24,7 @@ import { Input } from '../ui/input';
 import { useState } from 'react';
 import VoiceChat from './voice';
 import Image from 'next/image';
+import { toast } from 'sonner';
 
 const renderThread = (thread: { id: string; title: string; snippet: string }) => {
   const [, setThreadId] = useQueryState('threadId');
@@ -137,35 +139,58 @@ export function AIChat() {
   const { refetch: refetchThread } = useThread(threadId);
   const { folder } = useParams<{ folder: string }>();
   const [searchValue] = useSearchValue();
-  const { attach } = useBilling();
+  const { attach, track, refetch: refetchBilling } = useBilling();
 
   const { messages, input, setInput, error, handleSubmit, status, stop } = useChat({
     api: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/chat`,
-    fetch: (url, options) => fetch(url, { ...options, method: 'POST', credentials: 'include' }),
+    fetch: (url, options) => fetch(url, { ...options, credentials: 'include' }),
     maxSteps: 5,
     body: {
       threadId: threadId ?? undefined,
       currentFolder: folder ?? undefined,
       currentFilter: searchValue.value ?? undefined,
     },
+    onError(error) {
+      console.error('Error in useChat', error);
+      toast.error('Error, please try again later');
+    },
+    onResponse: (response) => {
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
+    },
+    onFinish: () => {},
+    async onToolCall({ toolCall }) {
+      console.warn('toolCall', toolCall);
+      switch (toolCall.toolName) {
+        case Tools.CreateLabel:
+        case Tools.DeleteLabel:
+          await refetchLabels();
+          break;
+        case Tools.SendEmail:
+          await queryClient.invalidateQueries({
+            queryKey: trpc.mail.listThreads.queryKey({ folder: 'sent' }),
+          });
+          break;
+        case Tools.MarkThreadsRead:
+        case Tools.MarkThreadsUnread:
+        case Tools.ModifyLabels:
+        case Tools.BulkDelete:
+          console.log('modifyLabels', toolCall.args);
+          await refetchLabels();
+          await Promise.all(
+            (toolCall.args as { threadIds: string[] }).threadIds.map((id) =>
+              queryClient.invalidateQueries({
+                queryKey: trpc.mail.get.queryKey({ id }),
+              }),
+            ),
+          );
+          break;
+      }
+      await track({ featureId: 'chat-messages', value: 1 });
+      await refetchBilling();
+    },
   });
-
-  const prevStatusRef = useRef(status);
-
-  const refetchAll = useCallback(() => {
-    refetchLabels();
-    refetchStats();
-    if (threadId) refetchThread();
-    queryClient.invalidateQueries({ queryKey: trpc.mail.get.queryKey() });
-    refetch();
-  }, [threadId, queryClient, trpc.mail.get.queryKey]);
-
-  useEffect(() => {
-    if (prevStatusRef.current === 'streaming' && status === 'ready') {
-      refetchAll();
-    }
-    prevStatusRef.current = status;
-  }, [status, refetchAll]);
 
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
@@ -252,7 +277,7 @@ export function AIChat() {
                         'flex w-fit flex-col gap-2 rounded-xl text-sm shadow',
                         message.role === 'user'
                           ? 'overflow-wrap-anywhere text-subtleWhite dark:text-offsetDark ml-auto break-words bg-[#313131] p-2 dark:bg-[#f0f0f0]'
-                          : 'overflow-wrap-anywhere mr-auto break-words bg-[#f0f0f0] p-2 dark:bg-[#313131]',
+                          : 'overflow-wrap-anywhere dark:bg-sidebar mr-auto break-words border bg-[#f0f0f0] p-2',
                       )}
                     >
                       {textParts.map((part) => (

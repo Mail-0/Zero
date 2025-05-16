@@ -367,7 +367,9 @@
         "addEmail": "Afegeix una connexió",
         "connectEmail": "Connecta el correu electrònic\n\n\n\n\n\n\n\n",
         "connectEmailDescription": "Selecciona un proveïdor de correu per connectar",
-        "moreComingSoon": "Pròximament més"
+        "moreComingSoon": "Pròximament més",
+        "reconnect": "Reconnecta",
+        "disconnected": "Desconnectat"
       },
       "security": {
         "title": "Seguretat",
@@ -415,9 +417,9 @@
           "reply": "Respondre",
           "replyAll": "Respon a tothom",
           "forward": "Reenviar",
-          "drafts": "Esborranys",
-          "inbox": "Safata d'entrada",
-          "sentMail": "Correu enviat",
+          "drafts": "Anar a esborranys",
+          "inbox": "Anar a la safata d'entrada",
+          "sentMail": "Anar a correu enviat",
           "delete": "Eliminar",
           "search": "Cercar",
           "markAsUnread": "Marcar com a no llegit",
@@ -438,7 +440,12 @@
           "commandPalette": "Paleta de comandes",
           "markAsRead": "Marcar com a llegit",
           "exitSelectionMode": "Sortir del mode de selecció",
-          "closeCompose": "Tancar composició"
+          "closeCompose": "Tancar la redacció",
+          "goToSpam": "Anar al correu brossa",
+          "goToArchive": "Anar a l'arxiu",
+          "goToBin": "Anar a la paperera",
+          "scrollDown": "Desplaçar avall a la llista de correus",
+          "scrollUp": "Desplaçar amunt a la llista de correus"
         }
       },
       "labels": {

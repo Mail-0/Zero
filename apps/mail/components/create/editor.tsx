@@ -357,46 +357,43 @@ export default function Editor({
     openAI: false,
   });
 
-  // Remove context usage
   const contentRef = useRef<string>('');
-  const editorRef = useRef<TiptapEditor>(null);
-  const t = useTranslations();
-
+  const [editor, setEditor] = useState<TiptapEditor | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const { openNode, openColor, openLink, openAI } = state;
 
   // Function to focus the editor
-  const focusEditor = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (editorRef.current?.commands) {
-      editorRef.current.commands.focus('end');
+  const focusEditor = () => {
+    if (editor && !readOnly) {
+      editor.commands.focus('end');
     }
   };
 
   // Function to clear editor content
   const clearEditorContent = React.useCallback(() => {
-    if (editorRef.current) {
-      editorRef.current.commands.clearContent(true);
+    if (editor) {
+      editor.commands.clearContent(true);
       // Also update our reference and notify parent
       contentRef.current = '';
       onChange('');
     }
-  }, [onChange]);
+  }, [editor, onChange]);
 
   // Reset editor content when initialValue changes
   React.useEffect(() => {
     // We need to make sure both the editor reference exists AND initialValue is provided
-    if (editorRef.current && initialValue) {
+    if (editor && initialValue) {
       try {
         // Make sure the editor is ready before setting content
         setTimeout(() => {
           // Double-check that the editor still exists in case of unmounting
-          if (editorRef.current?.commands?.setContent) {
-            editorRef.current.commands.setContent(initialValue);
+          if (editor?.commands?.setContent) {
+            editor.commands.setContent(initialValue);
 
             // Important: after setting content, manually trigger an update
             // to ensure the parent component gets the latest content
-            const html = editorRef.current.getHTML();
+            const html = editor.getHTML();
             contentRef.current = html;
             onChange(html);
           }
@@ -405,20 +402,7 @@ export default function Editor({
         console.error('Error setting editor content:', error);
       }
     }
-  }, [initialValue, onChange]);
-
-  // Fix useImperativeHandle type errors
-  React.useImperativeHandle(editorRef, () => {
-    // Only extend the current editor if it exists
-    if (!editorRef.current) {
-      return {} as TiptapEditor;
-    }
-    // Otherwise return the editor with our additional methods
-    return {
-      ...editorRef.current,
-      clearContent: clearEditorContent,
-    } as TiptapEditor & { clearContent: () => void };
-  }, [clearEditorContent]);
+  }, [initialValue, editor, onChange]);
 
   // Handle command+enter or ctrl+enter
   const handleCommandEnter = React.useCallback(() => {
@@ -427,11 +411,11 @@ export default function Editor({
 
     // Clear the editor content after sending
     setTimeout(() => {
-      if (editorRef.current?.commands?.clearContent) {
+      if (editor?.commands?.clearContent) {
         clearEditorContent();
       }
     }, 200);
-  }, [onCommandEnter, clearEditorContent]);
+  }, [onCommandEnter, clearEditorContent, editor]);
 
   return (
     <div
@@ -503,6 +487,7 @@ export default function Editor({
             handleDOMEvents: {
               mousedown: (view, event) => {
                 if (readOnly) return false;
+                focusEditor();
                 const coords = view.posAtCoords({
                   left: event.clientX,
                   top: event.clientY,
@@ -514,7 +499,6 @@ export default function Editor({
                   const selection = TextSelection.create(view.state.doc, pos);
                   tr.setSelection(selection);
                   view.dispatch(tr);
-                  view.focus();
                 }
 
                 // Let the default handler also run
@@ -560,15 +544,17 @@ export default function Editor({
               'data-placeholder': placeholder,
             },
           }}
-          onCreate={({ editor }) => {
-            editorRef.current = editor;
+          onCreate={({ editor: ed }) => {
+            setEditor(ed);
           }}
-          onDestroy={() => {}}
-          onUpdate={({ editor }) => {
+          onDestroy={() => {
+            setEditor(null);
+          }}
+          onUpdate={({ editor: ed }) => {
             if (readOnly) return;
             // Store the content in the ref to prevent losing it
-            contentRef.current = editor.getHTML();
-            onChange(editor.getHTML());
+            contentRef.current = ed.getHTML();
+            onChange(ed.getHTML());
           }}
           slotAfter={null}
         >

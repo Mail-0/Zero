@@ -367,7 +367,9 @@
         "addEmail": "कनेक्शन जोड़ें",
         "connectEmail": "ईमेल जोड़ें",
         "connectEmailDescription": "कनेक्ट करने के लिए एक ईमेल प्रोवाइडर चुनें",
-        "moreComingSoon": "अधिक जल्द ही आ रहा"
+        "moreComingSoon": "अधिक जल्द ही आ रहा",
+        "reconnect": "पुनः कनेक्ट करें",
+        "disconnected": "डिस्कनेक्ट किया गया"
       },
       "security": {
         "title": "सुरक्षा",
@@ -415,12 +417,12 @@
           "reply": "जवाब दें",
           "replyAll": "सभी का जवाब दें",
           "forward": "फारवर्ड",
-          "drafts": "ड्राफ़्ट",
-          "inbox": "इनबॉक्स",
-          "sentMail": "भेजी गई मेल",
+          "drafts": "ड्राफ्ट पर जाएं",
+          "inbox": "इनबॉक्स में जाएं",
+          "sentMail": "भेजे गए मेल पर जाएं",
           "delete": "डिलीट करें",
           "search": "खोजें",
-          "markAsUnread": "'नहीं पढ़ा गया' के रूप में निशान लगाए",
+          "markAsUnread": "अपठित के रूप में चिह्नित करें",
           "muteThread": "थ्रेड म्यूट करें",
           "printEmail": "ईमेल प्रिंट करें",
           "archiveEmail": "थ्रेड आर्काइव करें",
@@ -438,7 +440,12 @@
           "commandPalette": "कमांड पैलेट",
           "markAsRead": "पठित के रूप में चिह्नित करें",
           "exitSelectionMode": "चयन मोड से बाहर निकलें",
-          "closeCompose": "कंपोज़ बंद करें"
+          "closeCompose": "कंपोज़ बंद करें",
+          "goToSpam": "स्पैम पर जाएं",
+          "goToArchive": "संग्रह पर जाएं",
+          "goToBin": "बिन पर जाएँ",
+          "scrollDown": "मेल सूची में नीचे स्क्रॉल करें",
+          "scrollUp": "मेल सूची में ऊपर स्क्रॉल करें"
         }
       },
       "labels": {

@@ -66,8 +66,6 @@ export function NavUser() {
     trpc.connections.setDefault.mutationOptions(),
   );
   const { openBillingPortal, customer: billingCustomer } = useBilling();
-  const { mutateAsync: EnableBrain } = useMutation(trpc.brain.enableBrain.mutationOptions());
-  const { mutateAsync: DisableBrain } = useMutation(trpc.brain.disableBrain.mutationOptions());
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
@@ -84,29 +82,12 @@ export function NavUser() {
     queryClient.clear();
     await idbClear();
     toast.success('Cache cleared successfully');
-    // Reload the page after clearing the cache
-    setTimeout(() => window.location.reload(), 500);
   }, []);
 
-  const { customer } = useCustomer();
   const handleCopyConnectionId = useCallback(async () => {
     await navigator.clipboard.writeText(session?.connectionId || '');
     toast.success('Connection ID copied to clipboard');
   }, [session]);
-
-  const handleEnableBrain = useCallback(async () => {
-    // This takes too long, not waiting
-    const enabled = await EnableBrain({});
-    await refetchBrainState();
-    if (enabled) toast.success('Brain enabled successfully');
-  }, []);
-
-  const handleDisableBrain = useCallback(async () => {
-    // This takes too long, not waiting
-    const enabled = await DisableBrain({});
-    await refetchBrainState();
-    if (enabled) toast.success('Brain disabled');
-  }, []);
 
   const activeAccount = useMemo(() => {
     if (!session || !data) return null;
@@ -115,6 +96,10 @@ export function NavUser() {
 
   useEffect(() => setIsRendered(true), []);
 
+  const refetchBrainLabels = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: trpc.brain.getLabels.queryKey() });
+  }, [queryClient]);
+
   const handleAccountSwitch = (connectionId: string) => async () => {
     await setDefaultConnection({ connectionId });
     refetch();
@@ -122,6 +107,8 @@ export function NavUser() {
     refetchThreads();
     refetchLabels();
     refetchStats();
+    refetchBrainState();
+    refetchBrainLabels();
   };
 
   const handleLogout = async () => {
@@ -129,9 +116,9 @@ export function NavUser() {
       loading: 'Signing out...',
       success: () => 'Signed out successfully!',
       error: 'Error signing out',
-      finally() {
-        handleClearCache();
-        router.push('/login');
+      async finally() {
+        await handleClearCache();
+        window.location.href = '/login';
       },
     });
   };
@@ -149,14 +136,14 @@ export function NavUser() {
 
   const isPro = useMemo(() => {
     return (
-      customer &&
-      Array.isArray(customer.products) &&
-      customer.products.some(
+      billingCustomer &&
+      Array.isArray(billingCustomer.products) &&
+      billingCustomer.products.some(
         (product: any) =>
           product.id.includes('pro-example') || product.name.includes('pro-example'),
       )
     );
-  }, [customer]);
+  }, [billingCustomer]);
 
   if (!isRendered) return null;
   if (!session) return null;
@@ -284,12 +271,12 @@ export function NavUser() {
                       </div>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href={getSettingsHref()} className="cursor-pointer">
+                      <a href={getSettingsHref()} className="cursor-pointer">
                         <div className="flex items-center gap-2">
                           <Settings size={16} className="opacity-60" />
                           <p className="text-[13px] opacity-60">{t('common.actions.settings')}</p>
                         </div>
-                      </Link>
+                      </a>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
                       <a href="https://discord.gg/0email" target="_blank" className="w-full">
@@ -531,22 +518,6 @@ export function NavUser() {
                       <p className="text-[13px] opacity-60">Clear Local Cache</p>
                     </div>
                   </DropdownMenuItem>
-                  {!brainState?.enabled ? (
-                    <DropdownMenuItem onClick={handleEnableBrain}>
-                      <div className="flex items-center gap-2">
-                        <BrainIcon size={16} className="opacity-60" />
-                        <p className="text-[13px] opacity-60">Enable Auto Labeling</p>
-                      </div>
-                    </DropdownMenuItem>
-                  ) : null}
-                  {brainState?.enabled ? (
-                    <DropdownMenuItem onClick={handleDisableBrain}>
-                      <div className="flex items-center gap-2">
-                        <BrainIcon size={16} className="opacity-60" />
-                        <p className="text-[13px] opacity-60">Disable Auto Labeling</p>
-                      </div>
-                    </DropdownMenuItem>
-                  ) : null}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -563,7 +534,7 @@ export function NavUser() {
                 <BadgeCheck className="h-4 w-4 text-white dark:text-[#141414]" fill="#1D9BF0" />
               )}
             </div>
-            <div className="max-w-[150px] select-text overflow-hidden truncate text-xs font-normal leading-none text-[#898989]">
+            <div className="max-w-[200px] select-text overflow-hidden truncate text-xs font-normal leading-none text-[#898989]">
               {activeAccount?.email || session.user.email}
             </div>
           </div>

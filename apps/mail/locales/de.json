@@ -367,7 +367,9 @@
         "addEmail": "Verbindung hinzufügen",
         "connectEmail": "E-Mail verbinden",
         "connectEmailDescription": "Wähle einen E-Mail Anbieter zum Verbinden",
-        "moreComingSoon": "Mehr kommt bald"
+        "moreComingSoon": "Mehr kommt bald",
+        "reconnect": "Erneut verbinden",
+        "disconnected": "Getrennt"
       },
       "security": {
         "title": "Sicherheit",
@@ -415,9 +417,9 @@
           "reply": "Antworten",
           "replyAll": "Allen antworten",
           "forward": "Weiterleiten",
-          "drafts": "Entwürfe",
-          "inbox": "Posteingang",
-          "sentMail": "Sent Mail",
+          "drafts": "Zu Entwürfen gehen",
+          "inbox": "Zum Posteingang gehen",
+          "sentMail": "Zu gesendeten E-Mails gehen",
           "delete": "Löschen",
           "search": "Suche",
           "markAsUnread": "Als ungelesen markieren",
@@ -438,7 +440,12 @@
           "commandPalette": "Befehlspalette",
           "markAsRead": "Als gelesen markieren",
           "exitSelectionMode": "Auswahlmodus verlassen",
-          "closeCompose": "Verfassen schließen"
+          "closeCompose": "Verfassen schließen",
+          "goToSpam": "Zum Spam-Ordner gehen",
+          "goToArchive": "Zum Archiv gehen",
+          "goToBin": "Zum Papierkorb gehen",
+          "scrollDown": "In der Mail-Liste nach unten scrollen",
+          "scrollUp": "In der Mail-Liste nach oben scrollen"
         }
       },
       "labels": {

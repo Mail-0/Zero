@@ -1,11 +1,9 @@
 import { ClientProviders } from '@/providers/client-providers';
 import { ServerProviders } from '@/providers/server-providers';
 import { SpeedInsights } from '@vercel/speed-insights/next';
-import { headers as nextHeaders } from 'next/headers';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { siteConfig } from '@/lib/site-config';
 import type { PropsWithChildren } from 'react';
-import { getLocale } from 'next-intl/server';
 import type { Viewport } from 'next';
 import { cn } from '@/lib/utils';
 import Script from 'next/script';
@@ -31,15 +29,10 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: PropsWithChildren) {
-  const headers = await nextHeaders();
-  const locale = await getLocale();
-
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html suppressHydrationWarning>
       <head>
         <Script src="https://unpkg.com/web-streams-polyfill/dist/polyfill.js" />
-        <meta name="x-user-country" content={headers.get('x-user-country') || ''} />
-        <meta name="x-user-eu-region" content={headers.get('x-user-eu-region') || 'false'} />
       </head>
       <body className={cn(geistSans.variable, geistMono.variable, 'antialiased')}>
         <ServerProviders>

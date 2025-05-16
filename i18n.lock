@@ -315,6 +315,8 @@ checksums:
     pages/settings/connections/connectEmail: dea62d12c923908e9bee484c0b720b33
     pages/settings/connections/connectEmailDescription: b5383f2bb1c90ffdfec05601a5d56e2c
     pages/settings/connections/moreComingSoon: 86b93377c3ac8b265cb42333db3abeab
+    pages/settings/connections/reconnect: 8992a0f250278c116cb26be448b68ba2
+    pages/settings/connections/disconnected: d9d377835b64c098c5ac32efcebc093d
     pages/settings/security/title: 4b34923fef858a2b9a4a914c3e822889
     pages/settings/security/description: e54112d11a6dea5459db28e83b119c38
     pages/settings/security/twoFactorAuth: 8bc1572b5995cc2b222f381d0f75d873
@@ -353,13 +355,13 @@ checksums:
     pages/settings/shortcuts/actions/reply: 37a07e1dbda9841da3feb16c9e1e63b5
     pages/settings/shortcuts/actions/replyAll: c8e4a876f387c8d979e0492a65907005
     pages/settings/shortcuts/actions/forward: aa6a7c8cb8116039de946d324e803acc
-    pages/settings/shortcuts/actions/drafts: 76dab0f0b2e6c4933b80f69e388070d0
-    pages/settings/shortcuts/actions/inbox: 57e9db873911bf848c79e2ed546ecf45
-    pages/settings/shortcuts/actions/sentMail: 235718c0ed6cc35cedd6dd94252ca601
+    pages/settings/shortcuts/actions/drafts: 5dfad5cd57dfdab77419bca7aba5b6af
+    pages/settings/shortcuts/actions/inbox: 0f901e088f9bdd0e9d4e1993d76ae12c
+    pages/settings/shortcuts/actions/sentMail: c9d28a171a72c12c94e6109056258628
     pages/settings/shortcuts/actions/delete: 8bcf303dd10a645b5baacb02b47d72c9
     pages/settings/shortcuts/actions/search: 49dd6c21604b5e8d4153ff1aff2177e1
-    pages/settings/shortcuts/actions/markAsUnread: 69a6c98a45e6fec5028ffff79baffeee
-    pages/settings/shortcuts/actions/muteThread: b024210dfdfb4a2f9875102da5128586
+    pages/settings/shortcuts/actions/markAsUnread: 7642b29738b56bea533b3f0bc2dd2aac
+    pages/settings/shortcuts/actions/muteThread: e0740aefc87f17dfc48a152250be87d5
     pages/settings/shortcuts/actions/printEmail: 0d1f68c48e2416691460ccaaf3a68c0c
     pages/settings/shortcuts/actions/archiveEmail: 6d289090d05f69922e2714b872427041
     pages/settings/shortcuts/actions/markAsSpam: 79d13311fa6529ed0604af101f71eb7b
@@ -376,7 +378,12 @@ checksums:
     pages/settings/shortcuts/actions/commandPalette: 27374fec801ecad6a2a5c58d98c7f531
     pages/settings/shortcuts/actions/markAsRead: 6904117ae35e7c7148a3304092762b08
     pages/settings/shortcuts/actions/exitSelectionMode: e56b61e67b948e0bb727b640f4a61cf2
-    pages/settings/shortcuts/actions/closeCompose: 409fc58c9e5843177c3bae98986e23ac
+    pages/settings/shortcuts/actions/closeCompose: af734639ca1ea59dbf252f45c872c88d
+    pages/settings/shortcuts/actions/goToSpam: d96fe088ed4fd92ef98be24951de7b3a
+    pages/settings/shortcuts/actions/goToArchive: 0c717740df71d4ddc42b1e90d5a97676
+    pages/settings/shortcuts/actions/goToBin: 5b567f48c63b3352fc37cd807f6117bf
+    pages/settings/shortcuts/actions/scrollDown: 2c9203d844e88e8c4854e79b5e3ad673
+    pages/settings/shortcuts/actions/scrollUp: d498a56c18503f03c3f864191175c3a1
     pages/settings/labels/title: 6f15627a90002323eac018274b6922d6
     pages/settings/labels/description: 0418ef2ed4c3ca5082fddd6686b8596d
     pages/settings/dangerZone/title: ab5417cabdfa70b0a7c9d407ec69b450

@@ -138,4 +138,20 @@ export interface IOutgoingMessage {
   fromEmail?: string;
 }
 
+export enum Tools {
+  GetThread = 'getThread',
+  ComposeEmail = 'composeEmail',
+  ListThreads = 'listThreads',
+  DeleteEmail = 'deleteEmail',
+  MarkThreadsRead = 'markThreadsRead',
+  MarkThreadsUnread = 'markThreadsUnread',
+  ModifyLabels = 'modifyLabels',
+  GetUserLabels = 'getUserLabels',
+  SendEmail = 'sendEmail',
+  CreateLabel = 'createLabel',
+  BulkDelete = 'bulkDelete',
+  BulkArchive = 'bulkArchive',
+  DeleteLabel = 'deleteLabel',
+}
+
 export type AppContext = Context<{ Bindings: Env }>;

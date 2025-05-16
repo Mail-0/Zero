@@ -21,7 +21,8 @@
     "db:migrate": "dotenv -- turbo run db:migrate",
     "db:push": "dotenv -- turbo run db:push",
     "db:studio": "dotenv -- turbo run db:studio",
-    "scripts": "dotenv -- bun run --cwd apps/mail --silent --elide-lines=0 scripts"
+    "scripts": "dotenv -- bun run --cwd apps/mail --silent --elide-lines=0 scripts",
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org zero-7y --project nextjs ./apps/mail/.next && sentry-cli sourcemaps upload --org zero-7y --project nextjs ./apps/mail/.next"
   },
   "devDependencies": {
     "@types/node": "22.13.8",

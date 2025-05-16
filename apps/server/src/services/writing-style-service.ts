@@ -1,5 +1,6 @@
 import { mapToObj, pipe, entries, sortBy, take, fromEntries } from 'remeda';
 import { writingStyleMatrix } from '@zero/db/schema';
+import { getContext } from 'hono/context-storage';
 import type { HonoContext } from '../ctx';
 import { google } from '@ai-sdk/google';
 import { jsonrepair } from 'jsonrepair';
@@ -157,12 +158,12 @@ const schema = z.object({
 export const getWritingStyleMatrixForConnectionId = async ({
   connectionId,
   backupContent,
-  c,
 }: {
   connectionId: string;
   backupContent?: string;
-  c: HonoContext;
 }) => {
+  const c = getContext<HonoContext>();
+
   const matrix = await c.var.db.query.writingStyleMatrix.findFirst({
     where: (table, ops) => {
       return ops.eq(table.connectionId, connectionId);
@@ -190,11 +191,9 @@ export const getWritingStyleMatrixForConnectionId = async ({
   return matrix;
 };
 
-export const updateWritingStyleMatrix = async (
-  connectionId: string,
-  emailBody: string,
-  c: HonoContext,
-) => {
+export const updateWritingStyleMatrix = async (connectionId: string, emailBody: string) => {
+  const c = getContext<HonoContext>();
+
   const emailStyleMatrix = await extractStyleMatrix(emailBody);
 
   await pRetry(

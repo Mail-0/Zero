@@ -28,6 +28,7 @@ import {
 import { CircleAlertIcon, Inbox, ShieldAlertIcon, StopCircleIcon } from 'lucide-react';
 import { moveThreadsTo, type ThreadDestination } from '@/lib/thread-actions';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMailNavigation } from '@/hooks/use-mail-navigation';
 import { focusedIndexAtom } from '@/hooks/use-mail-navigation';
 import { backgroundQueueAtom } from '@/store/backgroundQueue';
@@ -37,7 +38,6 @@ import { useAISidebar } from '@/components/ui/ai-sidebar';
 import { useHotkeysContext } from 'react-hotkeys-hook';
 import { MailDisplaySkeleton } from './mail-skeleton';
 import { useTRPC } from '@/providers/query-provider';
-import { useMutation } from '@tanstack/react-query';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { useStats } from '@/hooks/use-stats';
@@ -154,10 +154,9 @@ export function ThreadDisplay() {
   const params = useParams<{ folder: string }>();
   const folder = params?.folder ?? 'inbox';
   const [id, setThreadId] = useQueryState('threadId');
-  const { data: emailData, isLoading, refetch: refetchThreads } = useThread(id ?? null);
+  const { data: emailData, isLoading, refetch: refetchThread } = useThread(id ?? null);
   const [{ refetch: mutateThreads }, items] = useThreads();
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [mail, setMail] = useMail();
   const [isStarred, setIsStarred] = useState(false);
   const t = useTranslations();
   const { refetch: refetchStats } = useStats();
@@ -168,7 +167,14 @@ export function ThreadDisplay() {
   const { resolvedTheme } = useTheme();
   const [focusedIndex, setFocusedIndex] = useAtom(focusedIndexAtom);
   const trpc = useTRPC();
-  const { mutateAsync: markAsRead } = useMutation(trpc.mail.markAsRead.mutationOptions());
+  const queryClient = useQueryClient();
+  const { mutateAsync: toggleStar } = useMutation(trpc.mail.toggleStar.mutationOptions());
+  const invalidateCount = () =>
+    queryClient.invalidateQueries({ queryKey: trpc.mail.count.queryKey() });
+  const { mutateAsync: markAsRead } = useMutation(
+    trpc.mail.markAsRead.mutationOptions({ onSuccess: () => invalidateCount() }),
+  );
+  const [, setIsComposeOpen] = useQueryState('isComposeOpen');
 
   const handlePrevious = useCallback(() => {
     if (!id || !items.length || focusedIndex === null) return;
@@ -227,7 +233,7 @@ export function ThreadDisplay() {
           console.error('Failed to mark email as read:', error);
           toast.error(t('common.mail.failedToMarkAsRead'));
         })
-        .then(() => Promise.allSettled([refetchThreads(), refetchStats()]));
+        .then(() => Promise.allSettled([refetchThread(), refetchStats()]));
     }
   }, [emailData, id]);
 
@@ -272,7 +278,7 @@ export function ThreadDisplay() {
       toast.promise(promise, {
         error: t('common.actions.failedToMove'),
         finally: async () => {
-          await Promise.all([refetchStats(), refetchThreads()]);
+          await Promise.all([refetchStats(), refetchThread()]);
           //   setBackgroundQueue({ type: 'delete', threadId: `thread:${threadId}` });
         },
       });
@@ -291,8 +297,9 @@ export function ThreadDisplay() {
     } else {
       toast.success(t('common.actions.removedFromFavorites'));
     }
-    mutateThreads();
-  }, [emailData, id, isStarred, mutateThreads, t]);
+    await toggleStar({ ids: [id] });
+    await refetchThread();
+  }, [emailData, id, isStarred]);
 
   // Set initial star state based on email data
   useEffect(() => {
@@ -348,7 +355,6 @@ export function ThreadDisplay() {
           isFullscreen ? 'fixed inset-0 z-50' : '',
         )}
       >
-        <div></div>
         {!id ? (
           <div className="flex h-full items-center justify-center">
             <div className="flex flex-col items-center justify-center gap-2 text-center">
@@ -361,8 +367,24 @@ export function ThreadDisplay() {
               <div className="mt-5">
                 <p className="text-lg">It's empty here</p>
                 <p className="text-md text-[#6D6D6D] dark:text-white/50">
-                  Choose an email to view details
+                  Choose an email to view details or
                 </p>
+                <div className="mt-4 flex gap-2">
+                  <Button onClick={toggleAISidebar} variant="outline">
+                    Chat with Zero AI
+                  </Button>
+                  <Button onClick={() => setIsComposeOpen('true')} variant="outline">
+                    Send an email
+                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button className="opacity-50" variant="outline">
+                        Label last 50 emails
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Coming soon</TooltipContent>
+                  </Tooltip>
+                </div>
               </div>
             </div>
             {!isSidebarOpen && (

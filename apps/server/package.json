@@ -6,7 +6,7 @@
     "dev": "wrangler dev --show-interactive-dev-session=false --env staging",
     "build": "wrangler deploy --minify --dry-run",
     "deploy": "wrangler deploy --minify",
-    "types": "wrangler types --e staging"
+    "types": "wrangler types --env staging"
   },
   "exports": {
     "./trpc": "./src/trpc/index.ts",
@@ -27,13 +27,14 @@
     "better-auth": "1.2.8-beta.7",
     "date-fns": "^4.1.0",
     "dedent": "^1.6.0",
-    "drizzle-orm": "^0.43.1",
+    "drizzle-orm": "0.43.1",
     "email-addresses": "^5.0.0",
     "googleapis": "^148.0.0",
     "he": "^1.2.0",
     "hono": "^4.7.8",
     "jsonrepair": "^3.12.0",
     "mimetext": "^3.0.27",
+    "partyserver": "^0.0.71",
     "react": "^19.1.0",
     "resend": "^4.5.1",
     "sanitize-html": "^2.16.0",

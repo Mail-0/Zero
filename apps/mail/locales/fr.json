@@ -367,7 +367,9 @@
         "addEmail": "Ajouter une connexion",
         "connectEmail": "Connecter une adresse courriel",
         "connectEmailDescription": "Sélectionnez un fournisseur de courriel pour vous connecter",
-        "moreComingSoon": "Plus à venir"
+        "moreComingSoon": "Plus à venir",
+        "reconnect": "Reconnecter",
+        "disconnected": "Déconnecté"
       },
       "security": {
         "title": "Sécurité",
@@ -415,9 +417,9 @@
           "reply": "Répondre",
           "replyAll": "Répondre à tous",
           "forward": "Transférer",
-          "drafts": "Brouillons",
-          "inbox": "Boîte de réception",
-          "sentMail": "Emails envoyés",
+          "drafts": "Aller aux brouillons",
+          "inbox": "Aller à la boîte de réception",
+          "sentMail": "Aller aux messages envoyés",
           "delete": "Supprimer",
           "search": "Rechercher",
           "markAsUnread": "Marquer comme non lu",
@@ -438,7 +440,12 @@
           "commandPalette": "Palette de commandes",
           "markAsRead": "Marquer comme lu",
           "exitSelectionMode": "Quitter le mode de sélection",
-          "closeCompose": "Fermer la composition"
+          "closeCompose": "Fermer la composition",
+          "goToSpam": "Aller aux pourriels",
+          "goToArchive": "Aller aux archives",
+          "goToBin": "Aller à la corbeille",
+          "scrollDown": "Défiler vers le bas dans la liste des messages",
+          "scrollUp": "Défiler vers le haut dans la liste des messages"
         }
       },
       "labels": {

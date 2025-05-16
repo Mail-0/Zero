@@ -177,9 +177,9 @@ export default function HomeContent() {
       <header className="fixed z-50 hidden w-full items-center justify-center px-4 pt-6 md:flex">
         <nav className="border-input/50 bg-popover flex w-full max-w-3xl items-center justify-between gap-2 rounded-xl border-t p-2 px-4">
           <div className="flex items-center gap-6">
-            <Link href="/" className="relative cursor-pointer">
+            <a href="/" className="relative cursor-pointer">
               <Image src="white-icon.svg" alt="Zero Email" width={22} height={22} />
-            </Link>
+            </a>
             <NavigationMenu>
               <NavigationMenuList className="gap-1">
                 <NavigationMenuItem>
@@ -212,24 +212,24 @@ export default function HomeContent() {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                <Link href="/pricing">
-              <Button variant="ghost" className="h-9">
-                Pricing
-              </Button>
-            </Link>
+                  <a href="/pricing">
+                    <Button variant="ghost" className="h-9">
+                      Pricing
+                    </Button>
+                  </a>
                 </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
           </div>
           <div className="flex gap-2">
-            <Link href="/login">
+            <a href="/login">
               <Button variant="ghost" className="h-8">
                 Sign in
               </Button>
-            </Link>
-            <Link target="_blank" href="https://cal.com/team/0">
+            </a>
+            <a target="_blank" href="https://cal.com/team/0">
               <Button className="h-8 font-medium">Contact Us</Button>
-            </Link>
+            </a>
           </div>
         </nav>
       </header>
@@ -247,22 +247,22 @@ export default function HomeContent() {
               <SheetTitle>
                 <Image src="white-icon.svg" alt="Zero Email" width={22} height={22} />
               </SheetTitle>
-              <Link href="/login">
+              <a href="/login">
                 <Button className="w-full">Sign in</Button>
-              </Link>
+              </a>
             </SheetHeader>
             <div className="mt-8 flex flex-col space-y-3">
               <div className="space-y-3">
                 <h4 className="text-muted-foreground text-sm font-medium">Company</h4>
                 {aboutLinks.map((link) => (
-                  <Link key={link.title} href={link.href} className="block font-medium">
+                  <a key={link.title} href={link.href} className="block font-medium">
                     {link.title}
-                  </Link>
+                  </a>
                 ))}
               </div>
-              <Link target="_blank" href="https://cal.com/team/0" className="font-medium">
+              <a target="_blank" href="https://cal.com/team/0" className="font-medium">
                 Contact Us
-              </Link>
+              </a>
             </div>
             <Separator className="mt-8" />
             <div className="mt-8 flex flex-row items-center justify-center gap-4">
@@ -334,7 +334,7 @@ export default function HomeContent() {
           transition={{ duration: 0.5, delay: 0.6 }}
         >
           <Button className="h-8">
-            <Link href="/login">Get Started</Link>
+            <a href="/login">Get Started</a>
           </Button>
         </motion.div>
       </section>

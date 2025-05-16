@@ -367,7 +367,9 @@
         "addEmail": "Dodaj połączenie",
         "connectEmail": "Połącz e-mail",
         "connectEmailDescription": "Wybierz dostawcę e-mail, aby się połączyć",
-        "moreComingSoon": "Więcej wkrótce"
+        "moreComingSoon": "Więcej wkrótce",
+        "reconnect": "Połącz ponownie",
+        "disconnected": "Odłączono"
       },
       "security": {
         "title": "Bezpieczeństwo",
@@ -415,9 +417,9 @@
           "reply": "Odpowiedz",
           "replyAll": "Odpowiedz wszystkim",
           "forward": "Przekaż dalej",
-          "drafts": "Wersje robocze",
-          "inbox": "Skrzynka odbiorcza",
-          "sentMail": "Wysłane",
+          "drafts": "Przejdź do wersji roboczych",
+          "inbox": "Przejdź do skrzynki odbiorczej",
+          "sentMail": "Przejdź do wysłanych wiadomości",
           "delete": "Usuń",
           "search": "Szukaj",
           "markAsUnread": "Oznacz jako nieprzeczytane",
@@ -438,7 +440,12 @@
           "commandPalette": "Paleta poleceń",
           "markAsRead": "Oznacz jako przeczytane",
           "exitSelectionMode": "Zakończ tryb wyboru",
-          "closeCompose": "Zamknij okno tworzenia"
+          "closeCompose": "Zamknij okno tworzenia wiadomości",
+          "goToSpam": "Przejdź do spamu",
+          "goToArchive": "Przejdź do archiwum",
+          "goToBin": "Przejdź do kosza",
+          "scrollDown": "Przewiń w dół listę wiadomości",
+          "scrollUp": "Przewiń w górę listę wiadomości"
         }
       },
       "labels": {

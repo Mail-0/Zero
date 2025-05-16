@@ -367,7 +367,9 @@
         "addEmail": "Přidat propojení",
         "connectEmail": "Připojit email",
         "connectEmailDescription": "Vyberte poskytovatele emailu, kterýho chcete připojit",
-        "moreComingSoon": "Více již brzy"
+        "moreComingSoon": "Více již brzy",
+        "reconnect": "Znovu připojit",
+        "disconnected": "Odpojeno"
       },
       "security": {
         "title": "Zabezpečení",
@@ -415,9 +417,9 @@
           "reply": "Odpovědět",
           "replyAll": "Odpovědět všem",
           "forward": "Přeposlat",
-          "drafts": "Koncepty",
-          "inbox": "Doporučená pošta",
-          "sentMail": "Odeslaná pošta",
+          "drafts": "Přejít do konceptů",
+          "inbox": "Přejít do doručené pošty",
+          "sentMail": "Přejít do odeslané pošty",
           "delete": "Smazat",
           "search": "Hledat",
           "markAsUnread": "Označit jako nepřečtené",
@@ -438,7 +440,12 @@
           "commandPalette": "Paleta příkazů",
           "markAsRead": "Označit jako přečtené",
           "exitSelectionMode": "Ukončit režim výběru",
-          "closeCompose": "Zavřít psaní"
+          "closeCompose": "Zavřít psaní",
+          "goToSpam": "Přejít do nevyžádané pošty",
+          "goToArchive": "Přejít do archivu",
+          "goToBin": "Přejít do koše",
+          "scrollDown": "Posunout dolů v seznamu e-mailů",
+          "scrollUp": "Posunout nahoru v seznamu e-mailů"
         }
       },
       "labels": {

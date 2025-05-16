@@ -367,7 +367,9 @@
         "addEmail": "E-posta Bağlantısı Ekle",
         "connectEmail": "E-posta Bağlantısı",
         "connectEmailDescription": "E-posta sağlayıcısını seçin",
-        "moreComingSoon": "Yakında daha fazlası geliyor"
+        "moreComingSoon": "Yakında daha fazlası geliyor",
+        "reconnect": "Yeniden bağlan",
+        "disconnected": "Bağlantı kesildi"
       },
       "security": {
         "title": "Güvenlik",
@@ -415,13 +417,13 @@
           "reply": "Yanıtla",
           "replyAll": "Tümünü Yanıtla",
           "forward": "İlet",
-          "drafts": "Taslaklar",
-          "inbox": "Gelen Kutusu",
-          "sentMail": "Gönderilen Postalar",
+          "drafts": "Taslaklara git",
+          "inbox": "Gelen kutusuna git",
+          "sentMail": "Gönderilmiş postalara git",
           "delete": "Sil",
           "search": "Ara",
-          "markAsUnread": "Okunmadı Olarak İşaretle",
-          "muteThread": "Konuyu Sessize Al",
+          "markAsUnread": "Okunmadı olarak işaretle",
+          "muteThread": "Konuyu sessize al",
           "printEmail": "E-postayı Yazdır",
           "archiveEmail": "Konuyu arşivle",
           "markAsSpam": "Spam Olarak İşaretle",
@@ -438,7 +440,12 @@
           "commandPalette": "Komut Paleti",
           "markAsRead": "Okundu Olarak İşaretle",
           "exitSelectionMode": "Seçim Modundan Çık",
-          "closeCompose": "Oluşturmayı Kapat"
+          "closeCompose": "Oluşturmayı kapat",
+          "goToSpam": "İstenmeyen e-posta kutusuna git",
+          "goToArchive": "Arşive git",
+          "goToBin": "Çöp kutusuna git",
+          "scrollDown": "E-posta listesinde aşağı kaydır",
+          "scrollUp": "E-posta listesinde yukarı kaydır"
         }
       },
       "labels": {

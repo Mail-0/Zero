@@ -5,6 +5,7 @@ import { authClient } from '@/lib/auth-client';
 import { getMessages } from 'next-intl/server';
 import type { PropsWithChildren } from 'react';
 import { headers } from 'next/headers';
+
 export async function ServerProviders({ children }: PropsWithChildren) {
   const messages = await getMessages();
   const session = await authClient.getSession({

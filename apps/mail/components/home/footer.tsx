@@ -66,9 +66,9 @@ export default function Footer() {
                 transition={{ duration: 0.5, delay: 0.4 }}
                 className="flex w-fit flex-col items-center justify-center pt-4"
               >
-                <Link href="/login">
+                <a href="/login">
                   <Button className="h-8">Get Started</Button>
-                </Link>
+                </a>
               </motion.div>
             </div>
           </div>
@@ -78,9 +78,9 @@ export default function Footer() {
         <div className="flex w-full items-start justify-between lg:w-[900px]">
           <div className="inline-flex flex-col items-start justify-between self-stretch">
             <div className="inline-flex w-8 items-center justify-start gap-3">
-              <Link href="/">
+              <a href="/">
                 <Image src="/white-icon.svg" alt="logo" width={100} height={100} />
-              </Link>
+              </a>
             </div>
             <div className="inline-flex items-center justify-start gap-4">
               {socialLinks.map((social) => (
@@ -101,7 +101,7 @@ export default function Footer() {
               <div className="justify-start text-base font-normal leading-none text-white opacity-80">
                 Backed by
               </div>
-              <Link href="https://www.ycombinator.com" target="_blank" rel="noopener noreferrer">
+              <a href="https://www.ycombinator.com" target="_blank" rel="noopener noreferrer">
                 <div className="relative w-36 overflow-hidden">
                   <Image
                     src="/yc.svg"
@@ -111,7 +111,7 @@ export default function Footer() {
                     height={100}
                   />
                 </div>
-              </Link>
+              </a>
             </div>
           </div>
           <div className="flex flex-1 items-start justify-end gap-10">
@@ -154,21 +154,21 @@ export default function Footer() {
                 Company
               </div>
               <div className="flex flex-col items-start justify-start gap-4 self-stretch">
-                <Link target="_blank" href="/about" className="w-full">
+                <a target="_blank" href="/about" className="w-full">
                   <div className="justify-start self-stretch text-base font-normal leading-none text-white opacity-80 transition-opacity hover:opacity-100">
                     About
                   </div>
-                </Link>
-                <Link target="_blank" href="https://github.com/Mail-0/Zero" className="w-full">
+                </a>
+                <a target="_blank" href="https://github.com/Mail-0/Zero" className="w-full">
                   <div className="justify-start self-stretch text-base font-normal leading-none text-white opacity-80 transition-opacity hover:opacity-100">
                     Github
                   </div>
-                </Link>
-                <Link target="_blank" href="https://x.com/nizzyabi" className="w-full">
+                </a>
+                <a target="_blank" href="https://x.com/nizzyabi" className="w-full">
                   <div className="justify-start self-stretch text-base font-normal leading-none text-white opacity-80 transition-opacity hover:opacity-100">
                     Content
                   </div>
-                </Link>
+                </a>
               </div>
             </div>
           </div>

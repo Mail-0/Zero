@@ -22,11 +22,11 @@ import { Button } from '@/components/ui/button';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Gauge } from '@/components/ui/gauge';
 import { usePathname } from 'next/navigation';
+import { useCustomer } from 'autumn-js/next';
 import { getCookie } from '@/lib/utils';
 import { Textarea } from './textarea';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
-import { useCustomer } from 'autumn-js/next';
 
 interface AISidebarProps {
   className?: string;
@@ -78,8 +78,7 @@ export function AISidebar({ children, className }: AISidebarProps & { children: 
   const { open, setOpen } = useAISidebar();
   const [resetKey, setResetKey] = useState(0);
   const pathname = usePathname();
-  const { chatMessages, attach } = useBilling();
-  const { customer } = useCustomer();
+  const { chatMessages, attach, customer } = useBilling();
 
   const isPro = useMemo(() => {
     return (

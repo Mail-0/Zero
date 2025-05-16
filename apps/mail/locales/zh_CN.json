@@ -367,7 +367,9 @@
         "addEmail": "添加连接",
         "connectEmail": "连接邮箱",
         "connectEmailDescription": "选择要连接的邮箱提供商",
-        "moreComingSoon": "更多即将推出"
+        "moreComingSoon": "更多即将推出",
+        "reconnect": "重新连接",
+        "disconnected": "已断开连接"
       },
       "security": {
         "title": "安全",
@@ -415,13 +417,13 @@
           "reply": "回复",
           "replyAll": "全部回复",
           "forward": "转发",
-          "drafts": "草稿",
-          "inbox": "收件箱",
-          "sentMail": "已发送邮件",
+          "drafts": "前往草稿箱",
+          "inbox": "前往收件箱",
+          "sentMail": "前往已发送邮件",
           "delete": "删除",
           "search": "搜索",
           "markAsUnread": "标记为未读",
-          "muteThread": "静音会话",
+          "muteThread": "静音线程",
           "printEmail": "打印邮件",
           "archiveEmail": "归档邮件线程",
           "markAsSpam": "标记为垃圾邮件",
@@ -438,7 +440,12 @@
           "commandPalette": "命令面板",
           "markAsRead": "标记为已读",
           "exitSelectionMode": "退出选择模式",
-          "closeCompose": "关闭撰写"
+          "closeCompose": "关闭撰写窗口",
+          "goToSpam": "前往垃圾邮件",
+          "goToArchive": "前往归档",
+          "goToBin": "前往回收站",
+          "scrollDown": "在邮件列表中向下滚动",
+          "scrollUp": "在邮件列表中向上滚动"
         }
       },
       "labels": {

@@ -367,7 +367,9 @@
         "addEmail": "新增連接",
         "connectEmail": "連接電子郵件",
         "connectEmailDescription": "選擇要連接的電子郵件提供者",
-        "moreComingSoon": "更多即將推出"
+        "moreComingSoon": "更多即將推出",
+        "reconnect": "重新連線",
+        "disconnected": "已中斷連線"
       },
       "security": {
         "title": "安全性",
@@ -415,13 +417,13 @@
           "reply": "回覆",
           "replyAll": "全部回覆",
           "forward": "轉發",
-          "drafts": "草稿",
-          "inbox": "收件匣",
-          "sentMail": "已發送郵件",
+          "drafts": "前往草稿",
+          "inbox": "前往收件匣",
+          "sentMail": "前往寄件備份",
           "delete": "刪除",
           "search": "搜尋",
           "markAsUnread": "標記為未讀",
-          "muteThread": "靜音對話",
+          "muteThread": "靜音討論串",
           "printEmail": "列印郵件",
           "archiveEmail": "封存郵件串",
           "markAsSpam": "標記為垃圾郵件",
@@ -438,7 +440,12 @@
           "commandPalette": "指令面板",
           "markAsRead": "標記為已讀",
           "exitSelectionMode": "退出選擇模式",
-          "closeCompose": "關閉撰寫"
+          "closeCompose": "關閉撰寫視窗",
+          "goToSpam": "前往垃圾郵件",
+          "goToArchive": "前往封存",
+          "goToBin": "前往垃圾桶",
+          "scrollDown": "在郵件列表中向下滾動",
+          "scrollUp": "在郵件列表中向上滾動"
         }
       },
       "labels": {

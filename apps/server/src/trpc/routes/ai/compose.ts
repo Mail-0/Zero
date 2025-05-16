@@ -9,6 +9,89 @@ import { openai } from '@ai-sdk/openai';
 import { generateText } from 'ai';
 import { z } from 'zod';
 
+type ComposeEmailInput = {
+  prompt: string;
+  emailSubject?: string;
+  to?: string[];
+  cc?: string[];
+  threadMessages?: Array<{
+    from: string;
+    to: string[];
+    cc?: string[];
+    subject: string;
+    body: string;
+  }>;
+  username: string;
+  connectionId: string;
+};
+
+export async function composeEmail(input: ComposeEmailInput) {
+  const { prompt, threadMessages = [], cc, emailSubject, to, username, connectionId } = input;
+
+  const writingStyleMatrix = await getWritingStyleMatrixForConnectionId({
+    connectionId,
+  });
+
+  const systemPrompt = StyledEmailAssistantSystemPrompt();
+  const userPrompt = EmailAssistantPrompt({
+    currentSubject: emailSubject,
+    recipients: [...(to ?? []), ...(cc ?? [])],
+    prompt,
+    username,
+    styleProfile: writingStyleMatrix?.style as WritingStyleMatrix,
+  });
+
+  const threadUserMessages = threadMessages.map((message) => ({
+    role: 'user' as const,
+    content: MessagePrompt({
+      ...message,
+      body: stripHtml(message.body).result,
+    }),
+  }));
+
+  const { text } = await generateText({
+    model: openai('gpt-4o'),
+    messages: [
+      {
+        role: 'system',
+        content: systemPrompt,
+      },
+      ...(threadMessages.length > 0
+        ? [
+            {
+              role: 'user',
+              content: "I'm going to give you the current email thread replies one by one.",
+            } as const,
+            {
+              role: 'assistant',
+              content: 'Got it. Please proceed with the thread replies.',
+            } as const,
+            ...threadUserMessages,
+            {
+              role: 'user',
+              content: 'Now, I will give you the prompt to write the email.',
+            } as const,
+          ]
+        : []),
+      {
+        role: 'user',
+        content: 'Now, I will give you the prompt to write the email.',
+      },
+      {
+        role: 'user',
+        content: userPrompt,
+      },
+    ],
+    maxTokens: 1_000,
+    temperature: 0.35,
+    frequencyPenalty: 0.2,
+    presencePenalty: 0.1,
+    maxRetries: 1,
+  });
+
+  return text;
+}
+
 export const compose = activeConnectionProcedure
   .input(
     z.object({
@@ -32,76 +115,34 @@ export const compose = activeConnectionProcedure
   )
   .mutation(async ({ ctx, input }) => {
     const { session, activeConnection } = ctx;
-    const { prompt, threadMessages, cc, emailSubject, to } = input;
+
+    const newBody = await composeEmail({
+      ...input,
+      username: session.user.name,
+      connectionId: activeConnection.id,
+    });
+
+    return { newBody };
+  });
+
+export const generateEmailSubject = activeConnectionProcedure
+  .input(
+    z.object({
+      message: z.string(),
+    }),
+  )
+  .mutation(async ({ ctx, input }) => {
+    const { activeConnection } = ctx;
+    const { message } = input;
+
     const writingStyleMatrix = await getWritingStyleMatrixForConnectionId({
       connectionId: activeConnection.id,
-      c: ctx.c,
     });
 
-    console.log('writing', writingStyleMatrix);
-
-    const systemPrompt = StyledEmailAssistantSystemPrompt();
-
-    const userPrompt = EmailAssistantPrompt({
-      currentSubject: emailSubject,
-      recipients: [...(to ?? []), ...(cc ?? [])],
-      prompt,
-      username: session.user.name,
-      styleProfile: writingStyleMatrix?.style as WritingStyleMatrix,
-    });
-
-    const threadUserMessages = threadMessages.map((message) => {
-      return {
-        role: 'user',
-        content: MessagePrompt({
-          ...message,
-          body: stripHtml(message.body).result,
-        }),
-      } as const;
-    });
-
-    const { text } = await generateText({
-      model: openai('gpt-4o'),
-      messages: [
-        {
-          role: 'system',
-          content: systemPrompt,
-        },
-        ...(threadMessages.length > 0
-          ? [
-              {
-                role: 'user',
-                content: "I'm going to give you the current email thread replies one by one.",
-              } as const,
-              {
-                role: 'assistant',
-                content: 'Got it. Please proceed with the thread replies.',
-              } as const,
-              ...threadUserMessages,
-              {
-                role: 'user',
-                content: 'Now, I will give you the prompt to write the email.',
-              } as const,
-            ]
-          : []),
-        {
-          role: 'user',
-          content: 'Now, I will give you the prompt to write the email.',
-        },
-        {
-          role: 'user',
-          content: userPrompt,
-        },
-      ],
-      maxTokens: 1_000,
-      temperature: 0.35, // controlled creativity
-      frequencyPenalty: 0.2, // dampen phrase repetition
-      presencePenalty: 0.1, // nudge the model to add fresh info
-      maxRetries: 1,
-    });
+    const subject = await generateSubject(message, writingStyleMatrix?.style as WritingStyleMatrix);
 
     return {
-      newBody: text,
+      subject,
     };
   });
 
@@ -195,4 +236,45 @@ const EmailAssistantPrompt = ({
   );
 
   return parts.join('\n\n');
+};
+
+const generateSubject = async (message: string, styleProfile?: WritingStyleMatrix | null) => {
+  const parts: string[] = [];
+
+  parts.push('# Email Subject Generation Task');
+  if (styleProfile) {
+    parts.push('## Style Profile');
+    parts.push(`\`\`\`json
+  ${JSON.stringify(styleProfile, null, 2)}
+  \`\`\``);
+  }
+
+  parts.push('## Email Content');
+  parts.push(escapeXml(message));
+  parts.push('');
+  parts.push(
+    'Generate a concise, clear subject line that summarizes the main point of the email. The subject should be professional and under 100 characters.',
+  );
+
+  const { text } = await generateText({
+    model: openai('gpt-4o'),
+    messages: [
+      {
+        role: 'system',
+        content:
+          'You are an email subject line generator. Generate a concise, clear subject line that summarizes the main point of the email. The subject should be professional and under 100 characters.',
+      },
+      {
+        role: 'user',
+        content: parts.join('\n\n'),
+      },
+    ],
+    maxTokens: 50,
+    temperature: 0.3,
+    frequencyPenalty: 0.1,
+    presencePenalty: 0.1,
+    maxRetries: 1,
+  });
+
+  return text.trim();
 };

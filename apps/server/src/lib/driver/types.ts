@@ -1,6 +1,5 @@
 import { type IOutgoingMessage, type ParsedMessage, type Label } from '../../types';
 import { type CreateDraftData } from '../schemas';
-import { type HonoContext } from '../../ctx';
 
 export interface IGetThreadResponse {
   messages: ParsedMessage[];
@@ -32,7 +31,6 @@ export type ManagerConfig = {
     refreshToken: string;
     email: string;
   };
-  c?: HonoContext;
 };
 
 export interface MailManager {
