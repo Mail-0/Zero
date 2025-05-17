@@ -37,6 +37,7 @@ export function useOptimisticActions() {
   const [{ refetch: refetchThreads }] = useThreads();
   const { refetch: refetchStats } = useStats();
   const { mutateAsync: markAsRead } = useMutation(trpc.mail.markAsRead.mutationOptions());
+  const { mutateAsync: markAsUnread } = useMutation(trpc.mail.markAsUnread.mutationOptions());
   const { mutateAsync: markAsImportant } = useMutation(trpc.mail.markAsImportant.mutationOptions());
   const { mutateAsync: toggleStar } = useMutation(trpc.mail.toggleStar.mutationOptions());
   const { mutateAsync: toggleImportant } = useMutation(trpc.mail.toggleImportant.mutationOptions());
@@ -126,16 +127,12 @@ export function useOptimisticActions() {
             pendingActionsRef.current.delete(pendingActionId);
 
             const undoMessage =
-              itemCount > 1 ? `Action undone (${itemCount} items)` : 'Action undone';
+              itemCount > 1
+                ? `Undone ${toastMessage.toLowerCase()} (${itemCount} items)`
+                : `Undone ${toastMessage.toLowerCase()}`;
             toast.success(undoMessage);
           },
         },
-        className: 'group relative',
-        position: 'bottom-center',
-        style: {
-          '--toast-progress-color': 'var(--primary)',
-          '--toast-progress-height': '4px',
-        } as React.CSSProperties,
       });
 
       return pendingActionId;
@@ -172,6 +169,37 @@ export function useOptimisticActions() {
       });
     },
     [addOptimisticAction, removeOptimisticAction, markAsRead, createPendingAction, mail, setMail],
+  );
+
+  const optimisticMarkAsUnread = useCallback(
+    (threadIds: string[]) => {
+      if (!threadIds.length) return;
+
+      const optimisticId = addOptimisticAction({
+        type: 'READ',
+        threadIds,
+        read: false,
+      });
+
+      createPendingAction({
+        type: 'READ',
+        threadIds,
+        params: { read: false },
+        optimisticId,
+        execute: async () => {
+          await markAsUnread({ ids: threadIds });
+
+          if (mail.bulkSelected.length > 0) {
+            setMail({ ...mail, bulkSelected: [] });
+          }
+        },
+        undo: () => {
+          removeOptimisticAction(optimisticId);
+        },
+        toastMessage: 'Marked as unread',
+      });
+    },
+    [addOptimisticAction, removeOptimisticAction, markAsUnread, createPendingAction, mail, setMail],
   );
 
   const optimisticToggleStar = useCallback(
@@ -361,6 +389,7 @@ export function useOptimisticActions() {
 
   return {
     optimisticMarkAsRead,
+    optimisticMarkAsUnread,
     optimisticToggleStar,
     optimisticMoveThreadsTo,
     optimisticDeleteThreads,

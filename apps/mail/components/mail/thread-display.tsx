@@ -1,28 +1,18 @@
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useParams, useNavigate, useSearchParams } from 'react-router';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useTheme } from 'next-themes';
-import { format } from 'date-fns';
-
 import {
+  Archive,
+  ArchiveX,
   ChevronLeft,
   ChevronRight,
-  X,
-  Reply,
-  Archive,
-  ThreeDots,
-  Trash,
-  Expand,
-  ArchiveX,
-  Forward,
-  ReplyAll,
-  Star,
-  ExclamationCircle,
-  Lightning,
   Folders,
-  Sparkles,
+  Lightning,
   Mail,
   Printer,
+  Reply,
+  Sparkles,
+  Star,
+  ThreeDots,
+  Trash,
+  X,
 } from '../icons/icons';
 import {
   DropdownMenu,
@@ -31,44 +21,37 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-import {
-  CircleAlertIcon,
-  Inbox,
-  ShieldAlertIcon,
-  SidebarOpen,
-  StopCircleIcon,
-  Zap,
-} from 'lucide-react';
-import { moveThreadsTo, type ThreadDestination } from '@/lib/thread-actions';
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useMailNavigation } from '@/hooks/use-mail-navigation';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { focusedIndexAtom } from '@/hooks/use-mail-navigation';
 import { backgroundQueueAtom } from '@/store/backgroundQueue';
+import { type ThreadDestination } from '@/lib/thread-actions';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
 import { useThread, useThreads } from '@/hooks/use-threads';
 import { useAISidebar } from '@/components/ui/ai-sidebar';
-import { useHotkeysContext } from 'react-hotkeys-hook';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { MailDisplaySkeleton } from './mail-skeleton';
 import { useTRPC } from '@/providers/query-provider';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { useStats } from '@/hooks/use-stats';
-import ThreadSubject from './thread-subject';
 import type { ParsedMessage } from '@/types';
 import ReplyCompose from './reply-composer';
-import { Separator } from '../ui/separator';
-import { useMail } from '../mail/use-mail';
 import { useTranslations } from 'use-intl';
 import { NotesPanel } from './note-panel';
 import { cn, FOLDERS } from '@/lib/utils';
 import MailDisplay from './mail-display';
+import { Inbox } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { useQueryState } from 'nuqs';
+import { format } from 'date-fns';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
 
-// Utility functions
 const formatFileSize = (size: number) => {
   const sizeInMB = (size / (1024 * 1024)).toFixed(2);
   return sizeInMB === '0.00' ? '' : `${sizeInMB} MB`;
@@ -212,6 +195,9 @@ export function ThreadDisplay() {
   const [, setIsComposeOpen] = useQueryState('isComposeOpen');
   const markAsReadRef = useRef<Promise<void> | null>(null);
 
+  // Get optimistic state for this thread
+  const optimisticState = useOptimisticThreadState(id ?? '');
+
   const handlePrevious = useCallback(() => {
     if (!id || !items.length || focusedIndex === null) return;
     if (focusedIndex > 0) {
@@ -323,7 +309,7 @@ export function ThreadDisplay() {
               padding: 0;
               box-sizing: border-box;
             }
-            
+
             body {
               font-family: Arial, sans-serif;
               line-height: 1.5;
@@ -332,17 +318,17 @@ export function ThreadDisplay() {
               padding: 20px;
               font-size: 12px;
             }
-            
+
             .email-container {
               max-width: 100%;
               margin: 0 auto;
               background: white;
             }
-            
+
             .email-header {
               margin-bottom: 25px;
             }
-            
+
             .email-title {
               font-size: 18px;
               font-weight: bold;
@@ -350,105 +336,105 @@ export function ThreadDisplay() {
               margin-bottom: 15px;
               word-wrap: break-word;
             }
-            
+
             .email-meta {
               margin-bottom: 20px;
             }
-            
+
             .meta-row {
               margin-bottom: 5px;
               display: flex;
               align-items: flex-start;
             }
-            
+
             .meta-label {
               font-weight: bold;
               min-width: 60px;
               color: #333;
               margin-right: 10px;
             }
-            
+
             .meta-value {
               flex: 1;
               word-wrap: break-word;
               color: #333;
             }
-            
+
             .separator {
               width: 100%;
               height: 1px;
               background: #ddd;
               margin: 20px 0;
             }
-            
+
             .email-body {
               margin: 20px 0;
               background: white;
             }
-            
+
             .email-content {
               word-wrap: break-word;
               overflow-wrap: break-word;
               font-size: 12px;
               line-height: 1.6;
             }
-            
+
             .email-content img {
               max-width: 100% !important;
               height: auto !important;
               display: block;
               margin: 10px 0;
             }
-            
+
             .email-content table {
               width: 100%;
               border-collapse: collapse;
               margin: 10px 0;
             }
-            
+
             .email-content td, .email-content th {
               padding: 6px;
               text-align: left;
               font-size: 11px;
             }
-            
+
             .email-content a {
               color: #0066cc;
               text-decoration: underline;
             }
-            
+
             .attachments-section {
               margin-top: 25px;
               background: white;
             }
-            
+
             .attachments-title {
               font-size: 14px;
               font-weight: bold;
               color: #000;
               margin-bottom: 10px;
             }
-            
+
             .attachment-item {
               margin-bottom: 5px;
               font-size: 11px;
               padding: 3px 0;
             }
-            
+
             .attachment-name {
               font-weight: 500;
               color: #333;
             }
-            
+
             .attachment-size {
               color: #666;
               font-size: 10px;
             }
-            
+
             .labels-section {
               margin: 10px 0;
             }
-            
+
             .label-badge {
               display: inline-block;
               padding: 2px 6px;
@@ -458,7 +444,7 @@ export function ThreadDisplay() {
               margin-right: 5px;
               margin-bottom: 3px;
             }
-            
+
             @media print {
               body {
                 margin: 0;
@@ -467,43 +453,43 @@ export function ThreadDisplay() {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
               }
-              
+
               .email-container {
                 max-width: none;
                 width: 100%;
               }
-              
+
               .separator {
                 background: #000 !important;
               }
-              
+
               .email-content a {
                 color: #000 !important;
               }
-              
+
               .label-badge {
                 background: #f0f0f0 !important;
                 border: 1px solid #ccc;
               }
-              
+
               .no-print {
                 display: none !important;
               }
-              
+
               * {
                 border: none !important;
                 box-shadow: none !important;
               }
-              
+
               .email-header {
                 page-break-after: avoid;
               }
-              
+
               .attachments-section {
                 page-break-inside: avoid;
               }
             }
-            
+
             @page {
               margin: 0.5in;
               size: A4;
@@ -517,7 +503,8 @@ export function ThreadDisplay() {
             <div class="email-container">
               <div class="email-header">
                 ${index === 0 ? `<h1 class="email-title">${message.subject || 'No Subject'}</h1>` : ''}
-                
+
+
                 ${
                   message?.tags && message.tags.length > 0
                     ? `
@@ -529,16 +516,18 @@ export function ThreadDisplay() {
                 `
                     : ''
                 }
-                
+
+
                 <div class="email-meta">
                   <div class="meta-row">
                     <span class="meta-label">From:</span>
                     <span class="meta-value">
-                      ${cleanNameDisplay(message.sender?.name)} 
+                      ${cleanNameDisplay(message.sender?.name)}
                       ${message.sender?.email ? `<${message.sender.email}>` : ''}
                     </span>
                   </div>
-                  
+
+
                   ${
                     message.to && message.to.length > 0
                       ? `
@@ -556,7 +545,8 @@ export function ThreadDisplay() {
                   `
                       : ''
                   }
-                  
+
+
                   ${
                     message.cc && message.cc.length > 0
                       ? `
@@ -574,7 +564,8 @@ export function ThreadDisplay() {
                   `
                       : ''
                   }
-                  
+
+
                   ${
                     message.bcc && message.bcc.length > 0
                       ? `
@@ -592,22 +583,24 @@ export function ThreadDisplay() {
                   `
                       : ''
                   }
-                  
+
+
                   <div class="meta-row">
                     <span class="meta-label">Date:</span>
                     <span class="meta-value">${format(new Date(message.receivedOn), 'PPpp')}</span>
                   </div>
                 </div>
               </div>
-              
+
               <div class="separator"></div>
-              
+
               <div class="email-body">
                 <div class="email-content">
                   ${message.decodedBody || '<p><em>No email content available</em></p>'}
                 </div>
               </div>
-              
+
+
               ${
                 message.attachments && message.attachments.length > 0
                   ? `
@@ -693,6 +686,12 @@ export function ThreadDisplay() {
       setIsImportant(emailData.latest.tags.some((tag) => tag.name === 'IMPORTANT'));
     }
   }, [emailData?.latest?.tags]);
+
+  useEffect(() => {
+    if (optimisticState.optimisticStarred !== null) {
+      setIsStarred(optimisticState.optimisticStarred);
+    }
+  }, [optimisticState.optimisticStarred]);
 
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {

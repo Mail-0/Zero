@@ -22,11 +22,11 @@ import {
   Tag,
   Trash,
 } from 'lucide-react';
+import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { type ThreadDestination } from '@/lib/thread-actions';
 import { useThread, useThreads } from '@/hooks/use-threads';
 import { ExclamationCircle, Mail } from '../icons/icons';
-import { useNavigate, useParams } from 'react-router';
 import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
 import { useMemo, type ReactNode } from 'react';
@@ -35,6 +35,7 @@ import { FOLDERS, LABELS } from '@/lib/utils';
 import { useMail } from '../mail/use-mail';
 import { useTranslations } from 'use-intl';
 import { Checkbox } from '../ui/checkbox';
+import { useParams } from 'react-router';
 import { useQueryState } from 'nuqs';
 import { toast } from 'sonner';
 
@@ -127,16 +128,20 @@ export function ThreadContextMenu({
   const [, setMode] = useQueryState('mode');
   const [, setThreadId] = useQueryState('threadId');
   const { data: threadData } = useThread(threadId);
+  const optimisticState = useOptimisticThreadState(threadId);
 
   const isUnread = useMemo(() => {
     return threadData?.hasUnread ?? false;
   }, [threadData]);
 
   const isStarred = useMemo(() => {
+    if (optimisticState.optimisticStarred !== null) {
+      return optimisticState.optimisticStarred;
+    }
     return threadData?.messages.some((message) =>
       message.tags?.some((tag) => tag.name.toLowerCase() === 'starred'),
     );
-  }, [threadData]);
+  }, [threadData, optimisticState.optimisticStarred]);
 
   const isImportant = useMemo(() => {
     return threadData?.messages.some((message) =>

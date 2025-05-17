@@ -16,7 +16,6 @@ import {
   type ComponentProps,
 } from 'react';
 import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
-import { useIsFetching, useMutation, useQueryClient } from '@tanstack/react-query';
 import { focusedIndexAtom, useMailNavigation } from '@/hooks/use-mail-navigation';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { MailSelectMode, ParsedMessage, ThreadProps } from '@/types';
@@ -25,14 +24,13 @@ import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { Archive2, GroupPeople, Star2, Trash } from '../icons/icons';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useMail, type Config } from '@/components/mail/use-mail';
-import { Briefcase, Check, Star, StickyNote } from 'lucide-react';
-import { backgroundQueueAtom } from '@/store/backgroundQueue';
 import { type ThreadDestination } from '@/lib/thread-actions';
 import { useThread, useThreads } from '@/hooks/use-threads';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { highlightText } from '@/lib/email-utils.client';
 import { useHotkeysContext } from 'react-hotkeys-hook';
 import { AnimatePresence, motion } from 'motion/react';
+import { useIsFetching } from '@tanstack/react-query';
 import { useTRPC } from '@/providers/query-provider';
 import { useThreadLabels } from '@/hooks/use-labels';
 import { useKeyState } from '@/hooks/use-hot-key';
@@ -40,7 +38,7 @@ import { VList, type VListHandle } from 'virtua';
 import { RenderLabels } from './render-labels';
 import { Badge } from '@/components/ui/badge';
 import { useDraft } from '@/hooks/use-drafts';
-import { useStats } from '@/hooks/use-stats';
+import { Check, Star } from 'lucide-react';
 import { useTranslations } from 'use-intl';
 import { useParams } from 'react-router';
 import { useTheme } from 'next-themes';
@@ -73,52 +71,6 @@ const Thread = memo(
       }
     }, [getThreadData?.latest?.tags]);
 
-    // Import the optimistic actions hook
-    const { optimisticToggleStar } = useOptimisticActions();
-
-    const handleToggleStar = useCallback(
-      async (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (!getThreadData || !message.id) return;
-
-        const newStarredState = !isStarred;
-        setIsStarred(newStarredState);
-        await optimisticToggleStar([message.id], newStarredState);
-      },
-      [getThreadData, message.id, isStarred, optimisticToggleStar],
-    );
-
-    const handleNext = useCallback(
-      (id: string) => {
-        if (!id || !threads.length || focusedIndex === null) return setThreadId(null);
-        if (focusedIndex < threads.length - 1) {
-          const nextThread = threads[focusedIndex];
-          if (nextThread) {
-            setThreadId(nextThread.id);
-            setActiveReplyId(null);
-            setFocusedIndex(focusedIndex);
-          }
-        }
-      },
-      [threads, id, focusedIndex],
-    );
-
-    // Use the optimistic move function
-    const { optimisticMoveThreadsTo } = useOptimisticActions();
-
-    const moveThreadTo = useCallback(
-      async (destination: ThreadDestination) => {
-        if (!message.id) return;
-        handleNext(message.id);
-        optimisticMoveThreadsTo([message.id], folder ?? '', destination);
-      },
-      [message.id, folder, optimisticMoveThreadsTo, handleNext],
-    );
-
-    const latestMessage = getThreadData?.latest;
-    const emailContent = getThreadData?.latest?.body;
-
-    // Get optimistic state for this thread - only if we have a valid message ID
     const optimisticState = message.id
       ? useOptimisticThreadState(message.id)
       : useMemo(
@@ -136,6 +88,69 @@ const Thread = memo(
           }),
           [],
         );
+
+    const displayStarred =
+      optimisticState.optimisticStarred !== null ? optimisticState.optimisticStarred : isStarred;
+
+    const optimisticLabels = useMemo(() => {
+      if (!getThreadData?.labels) return [];
+
+      const labels = [...getThreadData.labels];
+      const hasStarredLabel = labels.some((label) => label.name === 'STARRED');
+
+      if (optimisticState.optimisticStarred !== null) {
+        if (optimisticState.optimisticStarred && !hasStarredLabel) {
+          labels.push({ id: 'starred-optimistic', name: 'STARRED' });
+        } else if (!optimisticState.optimisticStarred && hasStarredLabel) {
+          return labels.filter((label) => label.name !== 'STARRED');
+        }
+      }
+
+      return labels;
+    }, [getThreadData?.labels, optimisticState.optimisticStarred]);
+
+    const { optimisticToggleStar } = useOptimisticActions();
+
+    const handleToggleStar = useCallback(
+      async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!getThreadData || !message.id) return;
+
+        const newStarredState = !displayStarred;
+        setIsStarred(newStarredState);
+        await optimisticToggleStar([message.id], newStarredState);
+      },
+      [getThreadData, message.id, displayStarred, optimisticToggleStar],
+    );
+
+    const handleNext = useCallback(
+      (id: string) => {
+        if (!id || !threads.length || focusedIndex === null) return setThreadId(null);
+        if (focusedIndex < threads.length - 1) {
+          const nextThread = threads[focusedIndex];
+          if (nextThread) {
+            setThreadId(nextThread.id);
+            setActiveReplyId(null);
+            setFocusedIndex(focusedIndex);
+          }
+        }
+      },
+      [threads, id, focusedIndex],
+    );
+
+    const { optimisticMoveThreadsTo } = useOptimisticActions();
+
+    const moveThreadTo = useCallback(
+      async (destination: ThreadDestination) => {
+        if (!message.id) return;
+        handleNext(message.id);
+        optimisticMoveThreadsTo([message.id], folder ?? '', destination);
+      },
+      [message.id, folder, optimisticMoveThreadsTo, handleNext],
+    );
+
+    const latestMessage = getThreadData?.latest;
+    const emailContent = getThreadData?.latest?.body;
 
     const { labels: threadLabels } = useThreadLabels(
       getThreadData?.labels ? getThreadData.labels.map((l) => l.id) : [],
@@ -228,15 +243,17 @@ const Thread = memo(
                     <Star2
                       className={cn(
                         'h-4 w-4',
-                        isStarred
+                        displayStarred
                           ? 'fill-yellow-400 stroke-yellow-400'
                           : 'fill-transparent stroke-[#9D9D9D] dark:stroke-[#9D9D9D]',
                       )}
                     />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent className="dark:bg-panelDark mb-1 bg-white">
-                  {isStarred ? t('common.threadDisplay.unstar') : t('common.threadDisplay.star')}
+                <TooltipContent className="mb-1 bg-white dark:bg-[#1A1A1A]">
+                  {displayStarred
+                    ? t('common.threadDisplay.unstar')
+                    : t('common.threadDisplay.star')}
                 </TooltipContent>
               </Tooltip>
               {/* <Tooltip>
@@ -382,7 +399,7 @@ const Thread = memo(
                           </TooltipContent>
                         </Tooltip>
                       ) : null}
-                      <MailLabels labels={getThreadData.labels} />
+                      <MailLabels labels={optimisticLabels} />
                     </div>
                     {latestMessage.receivedOn ? (
                       <p
