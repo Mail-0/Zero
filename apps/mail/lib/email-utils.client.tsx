@@ -5,6 +5,7 @@ import { getListUnsubscribeAction } from '@/lib/email-utils';
 import { trpcClient } from '@/providers/query-provider';
 import type { ParsedMessage } from '@/types';
 import { track } from '@vercel/analytics';
+import { env } from '@/lib/env';
 
 export const handleUnsubscribe = async ({ emailData }: { emailData: ParsedMessage }) => {
   try {
@@ -109,10 +110,10 @@ const forceExternalLinks = (html: string): string => {
 
 const getProxiedUrl = (url: string) => {
   if (url.startsWith('data:') || url.startsWith('blob:')) return url;
-  
-  const proxyUrl = process.env.NEXT_PUBLIC_IMAGE_PROXY?.trim();
+
+  const proxyUrl = env.NEXT_PUBLIC_IMAGE_PROXY?.trim();
   if (!proxyUrl) return url;
-  
+
   return proxyUrl + encodeURIComponent(url);
 };
 
@@ -123,12 +124,15 @@ const proxyImageUrls = (html: string): string => {
   doc.querySelectorAll('img').forEach((img) => {
     const src = img.getAttribute('src');
     if (!src) return;
-    
+
     const proxiedUrl = getProxiedUrl(src);
     if (proxiedUrl !== src) {
       img.setAttribute('data-original-src', src);
       img.setAttribute('src', proxiedUrl);
-      img.setAttribute('onerror', `this.onerror=null; this.src=this.getAttribute('data-original-src');`);
+      img.setAttribute(
+        'onerror',
+        `this.onerror=null; this.src=this.getAttribute('data-original-src');`,
+      );
     }
   });
 
@@ -256,7 +260,7 @@ export const template = async (html: string, imagesEnabled: boolean = false) => 
   if (typeof DOMParser === 'undefined') return html;
   const nonce = generateNonce();
   let processedHtml = forceExternalLinks(html);
-  
+
   if (imagesEnabled) {
     processedHtml = proxyImageUrls(processedHtml);
   }

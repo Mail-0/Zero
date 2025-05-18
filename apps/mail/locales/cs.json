@@ -445,7 +445,15 @@
           "goToArchive": "Přejít do archivu",
           "goToBin": "Přejít do koše",
           "scrollDown": "Posunout dolů v seznamu e-mailů",
-          "scrollUp": "Posunout nahoru v seznamu e-mailů"
+          "scrollUp": "Posunout nahoru v seznamu e-mailů",
+          "goToSettings": "Přejít do Nastavení",
+          "showImportant": "Zobrazit důležité",
+          "showAllMail": "Zobrazit všechny e-maily",
+          "showPersonal": "Zobrazit osobní",
+          "showUpdates": "Zobrazit aktualizace",
+          "showPromotions": "Zobrazit propagace",
+          "showUnread": "Zobrazit nepřečtené",
+          "selectUnderCursor": "Vybrat pod kurzorem"
         }
       },
       "labels": {

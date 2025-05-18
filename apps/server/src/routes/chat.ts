@@ -11,14 +11,16 @@ import { z } from 'zod';
 const buildGmailSearchQuery = tool({
   description: 'Build a Gmail search query',
   parameters: z.object({
-    query: z.string().describe('The search query to build'),
+    query: z.string().describe('The search query to build, provided in natural language'),
   }),
   execute: async ({ query }) => {
     const result = await generateObject({
       model: openai('gpt-4o'),
       system: GmailSearchAssistantSystemPrompt(),
       prompt: query,
-      schema: z.string(),
+      schema: z.object({
+        query: z.string(),
+      }),
     });
     return result.object;
   },

@@ -14,7 +14,7 @@ export function NavigationHotkeys() {
     sentMail: () => router.push('/mail/sent'),
     goToArchive: () => router.push('/mail/archive'),
     goToBin: () => router.push('/mail/bin'),
-    goToSpam: () => router.push('/mail/spam'),
+    goToSettings: () => router.push('/settings'),
   };
 
   const globalShortcuts = keyboardShortcuts.filter((shortcut) => shortcut.scope === scope);

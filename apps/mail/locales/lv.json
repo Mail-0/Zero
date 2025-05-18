@@ -445,7 +445,15 @@
           "goToArchive": "Doties uz arhīvu",
           "goToBin": "Doties uz miskasti",
           "scrollDown": "Ritināt uz leju vēstuļu sarakstā",
-          "scrollUp": "Ritināt uz augšu vēstuļu sarakstā"
+          "scrollUp": "Ritināt uz augšu vēstuļu sarakstā",
+          "goToSettings": "Doties uz iestatījumiem",
+          "showImportant": "Rādīt svarīgos",
+          "showAllMail": "Rādīt visu pastu",
+          "showPersonal": "Rādīt personīgos",
+          "showUpdates": "Rādīt atjauninājumus",
+          "showPromotions": "Rādīt akcijas",
+          "showUnread": "Rādīt nelasītos",
+          "selectUnderCursor": "Atlasīt zem kursora"
         }
       },
       "labels": {

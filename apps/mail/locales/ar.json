@@ -445,7 +445,15 @@
           "goToArchive": "الذهاب إلى الأرشيف",
           "goToBin": "الذهاب إلى سلة المهملات",
           "scrollDown": "التمرير لأسفل في قائمة البريد",
-          "scrollUp": "التمرير لأعلى في قائمة البريد"
+          "scrollUp": "التمرير لأعلى في قائمة البريد",
+          "goToSettings": "الذهاب إلى الإعدادات",
+          "showImportant": "عرض المهم",
+          "showAllMail": "عرض كل البريد",
+          "showPersonal": "عرض الشخصي",
+          "showUpdates": "عرض التحديثات",
+          "showPromotions": "عرض العروض",
+          "showUnread": "عرض غير المقروء",
+          "selectUnderCursor": "تحديد ما تحت المؤشر"
         }
       },
       "labels": {

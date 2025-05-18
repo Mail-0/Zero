@@ -29,16 +29,16 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
+import { ChevronLeft, Command, RefreshCcw, Settings2Icon } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ThreadDemo, ThreadDisplay } from '@/components/mail/thread-display';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MailList, MailListDemo } from '@/components/mail/mail-list';
-import { Command, RefreshCcw, Settings2Icon } from 'lucide-react';
+import AISidebar, { useAISidebar } from '@/components/ui/ai-sidebar';
 import { trpcClient, useTRPC } from '@/providers/query-provider';
 import { backgroundQueueAtom } from '@/store/backgroundQueue';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
 import { useMediaQuery } from '../../hooks/use-media-query';
-import { useAISidebar } from '@/components/ui/ai-sidebar';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useHotkeysContext } from 'react-hotkeys-hook';
 import { useParams, useRouter } from 'next/navigation';
@@ -59,6 +59,7 @@ import { useQueryState } from 'nuqs';
 import { TagInput } from 'emblor';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
+import AIToggleButton from '../ai-toggle-button';
 
 interface Tag {
   id: string;
@@ -289,9 +290,12 @@ export function MailLayout() {
             defaultSize={40}
             minSize={40}
             maxSize={50}
-            className={`bg-panelLight dark:bg-panelDark w-fit rounded-2xl border border-[#E7E7E7] shadow-sm lg:flex lg:shadow-sm dark:border-[#252525]`}
+            className={cn(
+              `bg-panelLight dark:bg-panelDark w-fit border border-[#E7E7E7] shadow-sm md:rounded-2xl lg:flex lg:shadow-sm dark:border-[#252525] mb-1`,
+              isDesktop && threadId && 'hidden lg:block',
+            )}
           >
-            <div className="w-full md:h-[calc(100dvh-0.5rem)]">
+            <div className="w-full md:h-[calc(100dvh-10px)]">
               <div
                 className={cn(
                   'sticky top-0 z-[15] flex items-center justify-between gap-1.5 border-b border-[#E7E7E7] p-2 px-[20px] transition-colors md:min-h-14 dark:border-[#252525]',
@@ -373,39 +377,38 @@ export function MailLayout() {
               </div>
             </div>
           </ResizablePanel>
-          <ResizableHandle className="mr-0.5 opacity-0" />
+
+          <ResizableHandle className="mr-0.5 hidden opacity-0 md:block" />
+
           {isDesktop && (
             <ResizablePanel
-              className={`bg-panelLight dark:bg-panelDark mr-0.5 w-fit rounded-2xl border border-[#E7E7E7] shadow-sm lg:flex lg:shadow-sm dark:border-[#252525]`}
+              className={cn(
+                'bg-panelLight dark:bg-panelDark mr-0.5 mb-1 w-fit rounded-2xl border border-[#E7E7E7] shadow-sm dark:border-[#252525]',
+                // Only show on md screens and larger when there is a threadId
+                !threadId && 'hidden lg:block',
+              )}
               defaultSize={30}
               minSize={30}
             >
-              <div className="relative h-[calc(100vh-(10px))] flex-1 lg:h-[calc(100vh-(12px+14px))]">
+              <div className="relative h-[calc(100vh-(10px))] flex-1 lg:h-[calc(100vh-(10px)]">
                 <ThreadDisplay />
               </div>
             </ResizablePanel>
           )}
 
-          {/* Mobile Drawer */}
-          {isMobile && (
-            <Drawer
-              open={!!threadId}
-              onOpenChange={(isOpen) => {
-                if (!isOpen) handleClose();
-              }}
-            >
-              <DrawerContent className="bg-panelLight dark:bg-panelDark h-[calc(100dvh-3rem)] p-0">
-                <DrawerHeader className="sr-only">
-                  <DrawerTitle>Email Details</DrawerTitle>
-                </DrawerHeader>
-                <div className="flex h-full flex-col">
-                  <div className="h-full overflow-y-auto outline-none">
-                    {threadId ? <ThreadDisplay /> : null}
-                  </div>
+          {/* Mobile Thread View */}
+          {isMobile && threadId && (
+            <div className="bg-panelLight dark:bg-panelDark fixed inset-0 z-50">
+              <div className="flex h-full flex-col">
+                <div className="h-full overflow-y-auto outline-none">
+                  <ThreadDisplay />
                 </div>
-              </DrawerContent>
-            </Drawer>
+              </div>
+            </div>
           )}
+
+          <AISidebar />
+          <AIToggleButton />
         </ResizablePanelGroup>
       </div>
     </TooltipProvider>
@@ -810,7 +813,15 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
         </TooltipTrigger>
         {!isSelected && (
           <TooltipContent side="top" className={`${idx === 0 ? 'ml-4' : ''}`}>
-            <span>{cat.name}</span>
+            <span className="mr-2">{cat.name}</span>
+            <kbd
+              className={cn(
+                'border-muted-foreground/10 bg-accent h-6 rounded-[6px] border px-1.5 font-mono text-xs leading-6',
+                '-me-1 ms-auto inline-flex max-h-full items-center',
+              )}
+            >
+              {idx ? idx + 1 : ''}
+            </kbd>
           </TooltipContent>
         )}
       </Tooltip>

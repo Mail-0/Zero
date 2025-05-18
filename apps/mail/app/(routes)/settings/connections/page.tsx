@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { env } from '@/lib/env';
 import Image from 'next/image';
 import { toast } from 'sonner';
 
@@ -147,7 +148,7 @@ export default function ConnectionsPage() {
                           onClick={async () => {
                             await authClient.linkSocial({
                               provider: connection.providerId,
-                              callbackURL: `${process.env.NEXT_PUBLIC_APP_URL}/settings/connections`,
+                              callbackURL: `${env.NEXT_PUBLIC_APP_URL}/settings/connections`,
                             });
                           }}
                         >

@@ -1,4 +1,5 @@
 import { type Metadata } from 'next';
+import { env } from '@/lib/env';
 
 const TITLE = 'Zero';
 const DESCRIPTION =
@@ -17,7 +18,7 @@ export const siteConfig: Metadata = {
     description: DESCRIPTION,
     images: [
       {
-        url: `${process.env.NEXT_PUBLIC_APP_URL}/og-api/home`,
+        url: `${env.NEXT_PUBLIC_APP_URL}/og-api/home`,
         width: 1200,
         height: 630,
         alt: TITLE,
@@ -26,7 +27,7 @@ export const siteConfig: Metadata = {
   },
   category: 'Email Client',
   alternates: {
-    canonical: process.env.NEXT_PUBLIC_APP_URL,
+    canonical: env.NEXT_PUBLIC_APP_URL,
   },
   keywords: [
     'Mail',
@@ -50,5 +51,5 @@ export const siteConfig: Metadata = {
     'Email Service',
     'Web Application',
   ],
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL!),
+  metadataBase: new URL(env.NEXT_PUBLIC_APP_URL!),
 };

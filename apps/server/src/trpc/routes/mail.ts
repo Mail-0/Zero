@@ -159,6 +159,47 @@ export const mailRouter = router({
 
       return { success: true };
     }),
+  toggleImportant: activeDriverProcedure
+    .input(
+      z.object({
+        ids: z.string().array(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { driver } = ctx;
+      const { threadIds } = driver.normalizeIds(input.ids);
+
+      if (!threadIds.length) {
+        return { success: false, error: 'No thread IDs provided' };
+      }
+
+      const threadResults = await Promise.allSettled(threadIds.map((id) => driver.get(id)));
+
+      let anyImportant = false;
+      let processedThreads = 0;
+
+      for (const result of threadResults) {
+        if (result.status === 'fulfilled' && result.value && result.value.messages.length > 0) {
+          processedThreads++;
+          const isThreadImportant = result.value.messages.some((message) =>
+            message.tags?.some((tag) => tag.name.toLowerCase().startsWith('important')),
+          );
+          if (isThreadImportant) {
+            anyImportant = true;
+            break;
+          }
+        }
+      }
+
+      const shouldMarkImportant = processedThreads > 0 && !anyImportant;
+
+      await driver.modifyLabels(threadIds, {
+        addLabels: shouldMarkImportant ? ['IMPORTANT'] : [],
+        removeLabels: shouldMarkImportant ? [] : ['IMPORTANT'],
+      });
+
+      return { success: true };
+    }),
   bulkStar: activeDriverProcedure
     .input(
       z.object({
@@ -169,6 +210,16 @@ export const mailRouter = router({
       const { driver } = ctx;
       return driver.modifyLabels(input.ids, { addLabels: ['STARRED'], removeLabels: [] });
     }),
+  bulkMarkImportant: activeDriverProcedure
+    .input(
+      z.object({
+        ids: z.string().array(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { driver } = ctx;
+      return driver.modifyLabels(input.ids, { addLabels: ['IMPORTANT'], removeLabels: [] });
+    }),
   bulkUnstar: activeDriverProcedure
     .input(
       z.object({
@@ -178,6 +229,16 @@ export const mailRouter = router({
     .mutation(async ({ input, ctx }) => {
       const { driver } = ctx;
       return driver.modifyLabels(input.ids, { addLabels: [], removeLabels: ['STARRED'] });
+    }),
+  bulkUnmarkImportant: activeDriverProcedure
+    .input(
+      z.object({
+        ids: z.string().array(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { driver } = ctx;
+      return driver.modifyLabels(input.ids, { addLabels: [], removeLabels: ['IMPORTANT'] });
     }),
   send: activeDriverProcedure
     .input(

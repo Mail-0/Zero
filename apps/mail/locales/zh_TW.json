@@ -445,7 +445,15 @@
           "goToArchive": "前往封存",
           "goToBin": "前往垃圾桶",
           "scrollDown": "在郵件列表中向下滾動",
-          "scrollUp": "在郵件列表中向上滾動"
+          "scrollUp": "在郵件列表中向上滾動",
+          "goToSettings": "前往設定",
+          "showImportant": "顯示重要郵件",
+          "showAllMail": "顯示所有郵件",
+          "showPersonal": "顯示個人郵件",
+          "showUpdates": "顯示更新郵件",
+          "showPromotions": "顯示促銷郵件",
+          "showUnread": "顯示未讀郵件",
+          "selectUnderCursor": "選取游標下的內容"
         }
       },
       "labels": {

@@ -31,6 +31,7 @@ export interface NavItem {
   isSettingsButton?: boolean;
   disabled?: boolean;
   target?: string;
+  shortcut?: string;
 }
 export type MessageKey = MessageKeys<IntlMessages, NestedKeyOf<IntlMessages>>;
 
@@ -57,18 +58,21 @@ export const navigationConfig: Record<string, NavConfig> = {
             title: 'navigation.sidebar.inbox',
             url: '/mail/inbox',
             icon: Inbox,
+            shortcut: 'g + i',
           },
           {
             id: 'drafts',
             title: 'navigation.sidebar.drafts',
             url: '/mail/draft',
             icon: Folder,
+            shortcut: 'g + d',
           },
           {
             id: 'sent',
             title: 'navigation.sidebar.sent',
             url: '/mail/sent',
             icon: Plane2,
+            shortcut: 'g + t',
           },
         ],
       },
@@ -80,6 +84,7 @@ export const navigationConfig: Record<string, NavConfig> = {
             title: 'navigation.sidebar.archive',
             url: '/mail/archive',
             icon: Archive,
+            shortcut: 'g + a',
           },
           {
             id: 'spam',
@@ -143,6 +148,7 @@ export const navigationConfig: Record<string, NavConfig> = {
             title: 'navigation.settings.general',
             url: '/settings/general',
             icon: SettingsGear,
+            shortcut: 'g + s',
           },
           {
             title: 'navigation.settings.connections',
@@ -174,6 +180,7 @@ export const navigationConfig: Record<string, NavConfig> = {
             title: 'navigation.settings.shortcuts',
             url: '/settings/shortcuts',
             icon: Tabs,
+            shortcut: '?',
           },
           // {
           //   title: 'navigation.settings.signatures',

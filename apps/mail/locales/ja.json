@@ -445,7 +445,15 @@
           "goToArchive": "アーカイブに移動",
           "goToBin": "ゴミ箱に移動",
           "scrollDown": "メールリストを下にスクロール",
-          "scrollUp": "メールリストを上にスクロール"
+          "scrollUp": "メールリストを上にスクロール",
+          "goToSettings": "設定を開く",
+          "showImportant": "重要を表示",
+          "showAllMail": "すべてのメールを表示",
+          "showPersonal": "個人を表示",
+          "showUpdates": "更新を表示",
+          "showPromotions": "プロモーションを表示",
+          "showUnread": "未読を表示",
+          "selectUnderCursor": "カーソル下を選択"
         }
       },
       "labels": {

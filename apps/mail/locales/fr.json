@@ -445,7 +445,15 @@
           "goToArchive": "Aller aux archives",
           "goToBin": "Aller à la corbeille",
           "scrollDown": "Défiler vers le bas dans la liste des messages",
-          "scrollUp": "Défiler vers le haut dans la liste des messages"
+          "scrollUp": "Défiler vers le haut dans la liste des messages",
+          "goToSettings": "Aller aux paramètres",
+          "showImportant": "Afficher les importants",
+          "showAllMail": "Afficher tous les e-mails",
+          "showPersonal": "Afficher les personnels",
+          "showUpdates": "Afficher les mises à jour",
+          "showPromotions": "Afficher les promotions",
+          "showUnread": "Afficher les non lus",
+          "selectUnderCursor": "Sélectionner sous le curseur"
         }
       },
       "labels": {

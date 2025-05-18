@@ -445,7 +445,15 @@
           "goToArchive": "보관함으로 이동",
           "goToBin": "휴지통으로 이동",
           "scrollDown": "메일 목록에서 아래로 스크롤",
-          "scrollUp": "메일 목록에서 위로 스크롤"
+          "scrollUp": "메일 목록에서 위로 스크롤",
+          "goToSettings": "설정으로 이동",
+          "showImportant": "중요 메일 표시",
+          "showAllMail": "모든 메일 표시",
+          "showPersonal": "개인 메일 표시",
+          "showUpdates": "업데이트 표시",
+          "showPromotions": "프로모션 표시",
+          "showUnread": "읽지 않은 메일 표시",
+          "selectUnderCursor": "커서 아래 항목 선택"
         }
       },
       "labels": {

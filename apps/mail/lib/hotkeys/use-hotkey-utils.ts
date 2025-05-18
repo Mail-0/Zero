@@ -104,6 +104,8 @@ export const formatDisplayKeys = (keys: string[]): string[] => {
         return '⌦';
       case 'space':
         return 'Space';
+      case 'click':
+        return 'Click';
       default:
         return key.length === 1 ? key.toUpperCase() : key;
     }
@@ -191,6 +193,9 @@ export function useShortcuts(
   useHotkeys(
     shortcutString,
     (event: KeyboardEvent, hotkeysEvent) => {
+      if (hotkeysEvent.keys?.includes('click')) {
+        return;
+      }
       const getModifierString = (e: typeof hotkeysEvent) => {
         const modifiers = [];
         if (e.meta) modifiers.push('meta');

@@ -46,15 +46,18 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { use, useCallback, useEffect, useRef, useState } from 'react';
-import { useInView, motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Command, Menu } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import Balancer from 'react-wrap-balancer';
+import { signIn } from '@/lib/auth-client';
 import { useForm } from 'react-hook-form';
+import { useInView } from 'motion/react';
+import { motion } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
+import { env } from '@/lib/env';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import Footer from './footer';
@@ -177,8 +180,11 @@ export default function HomeContent() {
       <header className="fixed z-50 hidden w-full items-center justify-center px-4 pt-6 md:flex">
         <nav className="border-input/50 bg-popover flex w-full max-w-3xl items-center justify-between gap-2 rounded-xl border-t p-2 px-4">
           <div className="flex items-center gap-6">
-            <a href="/" className="relative cursor-pointer">
+            <a href="/" className="relative bottom-1 cursor-pointer">
               <Image src="white-icon.svg" alt="Zero Email" width={22} height={22} />
+              <span className="text-muted-foreground absolute -right-[-0.5px] text-[10px]">
+                beta
+              </span>
             </a>
             <NavigationMenu>
               <NavigationMenuList className="gap-1">
@@ -222,11 +228,24 @@ export default function HomeContent() {
             </NavigationMenu>
           </div>
           <div className="flex gap-2">
-            <a href="/login">
-              <Button variant="ghost" className="h-8">
-                Sign in
-              </Button>
-            </a>
+            <Button
+              variant="ghost"
+              className="h-8"
+              onClick={() => {
+                toast.promise(
+                  signIn.social({
+                    provider: 'google',
+                    callbackURL: `${env.NEXT_PUBLIC_APP_URL}/mail`,
+                  }),
+                  {
+                    error: 'Login redirect failed',
+                  },
+                );
+              }}
+            >
+              Sign in
+            </Button>
+
             <a target="_blank" href="https://cal.com/team/0">
               <Button className="h-8 font-medium">Contact Us</Button>
             </a>
@@ -333,8 +352,21 @@ export default function HomeContent() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.6 }}
         >
-          <Button className="h-8">
-            <a href="/login">Get Started</a>
+          <Button
+            onClick={() => {
+              toast.promise(
+                signIn.social({
+                  provider: 'google',
+                  callbackURL: `${env.NEXT_PUBLIC_APP_URL}/mail`,
+                }),
+                {
+                  error: 'Login redirect failed',
+                },
+              );
+            }}
+            className="h-8"
+          >
+            Get Started
           </Button>
         </motion.div>
       </section>

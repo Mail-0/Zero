@@ -8,6 +8,7 @@ import { twMerge } from 'tailwind-merge';
 import type { JSONContent } from 'novel';
 import type { Sender } from '@/types';
 import LZString from 'lz-string';
+import { env } from '@/lib/env';
 
 export const FOLDERS = {
   SPAM: 'spam',
@@ -357,8 +358,8 @@ export const createAIJsonContent = (text: string): JSONContent => {
 };
 
 export const getEmailLogo = (email: string) => {
-  if (!process.env.NEXT_PUBLIC_IMAGE_API_URL) return '';
-  return process.env.NEXT_PUBLIC_IMAGE_API_URL + email;
+  if (!env.NEXT_PUBLIC_IMAGE_API_URL) return '';
+  return env.NEXT_PUBLIC_IMAGE_API_URL + email;
 };
 
 export const generateConversationId = (): string => {

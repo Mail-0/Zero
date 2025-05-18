@@ -2,6 +2,7 @@ import { ClientProviders } from '@/providers/client-providers';
 import { ServerProviders } from '@/providers/server-providers';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { PublicEnvScript } from 'next-runtime-env';
 import { siteConfig } from '@/lib/site-config';
 import type { PropsWithChildren } from 'react';
 import type { Viewport } from 'next';
@@ -33,6 +34,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     <html suppressHydrationWarning>
       <head>
         <Script src="https://unpkg.com/web-streams-polyfill/dist/polyfill.js" />
+        <PublicEnvScript />
       </head>
       <body className={cn(geistSans.variable, geistMono.variable, 'antialiased')}>
         <ServerProviders>

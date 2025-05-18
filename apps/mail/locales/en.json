@@ -29,7 +29,9 @@
       "addingToFavorites": "Adding to favorites...",
       "removingFromFavorites": "Removing from favorites...",
       "addedToFavorites": "Added to favorites",
+      "addedToImportant": "Added to important",
       "removedFromFavorites": "Removed from favorites",
+      "removedFromImportant": "Removed from important",
       "failedToAddToFavorites": "Failed to add to favorites",
       "failedToRemoveFromFavorites": "Failed to remove from favorites",
       "failedToModifyFavorites": "Failed to modify favorites",
@@ -284,6 +286,10 @@
       "noSearchResults": "No search results found",
       "clearSearch": "Clear search",
       "markAsImportant": "Mark as Important",
+      "removeFromImportant": "Remove from Important",
+      "markedAsImportant": "Marked as Important",
+      "markedAsUnimportant": "Unmarked as Unimportant",
+      "toggleImportant": "Toggle important",
       "unSubscribeFromAll": "Unsubscribe from all",
       "starAll": "Star all",
       "mute": "Mute",
@@ -445,7 +451,15 @@
           "goToArchive": "Go to Archive",
           "goToBin": "Go to Bin",
           "scrollDown": "Scroll down in mail list",
-          "scrollUp": "Scroll up in mail list"
+          "scrollUp": "Scroll up in mail list",
+          "goToSettings": "Go to Settings",
+          "showImportant": "Show important",
+          "showAllMail": "Show all mail",
+          "showPersonal": "Show personal",
+          "showUpdates": "Show updates",
+          "showPromotions": "Show promotions",
+          "showUnread": "Show unread",
+          "selectUnderCursor": "Select under cursor"
         }
       },
       "labels": {

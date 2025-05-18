@@ -755,14 +755,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
             <div className="h-fit w-full p-0">
               {emailData?.decodedBody ? (
                 <MailIframe html={emailData?.decodedBody} senderEmail={emailData.sender.email} />
-              ) : (
-                <div
-                  className="flex h-[500px] w-full items-center justify-center"
-                  style={{ minHeight: '500px' }}
-                >
-                  <div className="bg-secondary h-32 w-32 animate-pulse rounded-full" />
-                </div>
-              )}
+              ) : null}
               {emailData?.attachments && emailData?.attachments.length > 0 ? (
                 <div className="mb-4 flex flex-wrap items-center gap-2 px-4 pt-4">
                   {emailData?.attachments.map((attachment, index) => (
@@ -818,9 +811,17 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                   <Reply className="fill-[#6D6D6D] dark:fill-[#9B9B9B]" />
                   <div className="flex items-center justify-center gap-2.5 pl-0.5 pr-1">
                     <div className="justify-start text-sm leading-none text-black dark:text-white">
-                      Reply
+                      {t('common.mail.reply')}
                     </div>
                   </div>
+                  <kbd
+                    className={cn(
+                      'border-muted-foreground/10 bg-accent h-6 rounded-[6px] border px-1.5 font-mono text-xs leading-6',
+                      '-me-1 ms-auto hidden md:inline-flex max-h-full items-center',
+                    )}
+                  >
+                    r
+                  </kbd>
                 </button>
                 <button
                   onClick={(e) => {
@@ -833,9 +834,17 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                   <ReplyAll className="fill-[#6D6D6D] dark:fill-[#9B9B9B]" />
                   <div className="flex items-center justify-center gap-2.5 pl-0.5 pr-1">
                     <div className="justify-start text-sm leading-none text-black dark:text-white">
-                      Reply All
+                      {t('common.mail.replyAll')}
                     </div>
                   </div>
+                  <kbd
+                    className={cn(
+                      'border-muted-foreground/10 bg-accent h-6 rounded-[6px] border px-1.5 font-mono text-xs leading-6',
+                      '-me-1 ms-auto md:inline-flex max-h-full items-center hidden',
+                    )}
+                  >
+                    a
+                  </kbd>
                 </button>
                 <button
                   onClick={(e) => {
@@ -848,9 +857,17 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                   <Forward className="fill-[#6D6D6D] dark:fill-[#9B9B9B]" />
                   <div className="flex items-center justify-center gap-2.5 pl-0.5 pr-1">
                     <div className="justify-start text-sm leading-none text-black dark:text-white">
-                      Forward
+                      {t('common.mail.forward')}
                     </div>
                   </div>
+                  <kbd
+                    className={cn(
+                      'border-muted-foreground/10 bg-accent h-6 rounded-[6px] border px-1.5 font-mono text-xs leading-6',
+                      '-me-1 ms-auto hidden md:inline-flex max-h-full items-center',
+                    )}
+                  >
+                    f
+                  </kbd>
                 </button>
               </div>
             </div>

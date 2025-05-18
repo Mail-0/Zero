@@ -1,4 +1,6 @@
 import { ImageResponse } from 'next/og';
+import { env } from '@/lib/env';
+
 export const runtime = 'edge';
 
 export async function GET() {
@@ -18,7 +20,7 @@ export async function GET() {
   }
 
   try {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    const appUrl = env.NEXT_PUBLIC_APP_URL;
     if (!appUrl) {
       throw new Error('NEXT_PUBLIC_APP_URL is not defined');
     }
@@ -27,7 +29,7 @@ export async function GET() {
     if (!mailResponse.ok) {
       throw new Error('Failed to fetch SVG');
     }
-    
+
     const mailBuffer = await mailResponse.arrayBuffer();
     const mailBase64 = btoa(String.fromCharCode(...new Uint8Array(mailBuffer)));
     const mail = `data:image/svg+xml;base64,${mailBase64}`;
@@ -52,7 +54,10 @@ export async function GET() {
               <span tw="text-[#A1A1A1]">is here</span>
             </div>
 
-            <div tw="text-[36px] text-center text-neutral-400 mt-10" style={{ fontFamily: 'light' }}>
+            <div
+              tw="text-[36px] text-center text-neutral-400 mt-10"
+              style={{ fontFamily: 'light' }}
+            >
               Experience email the way you want with 0 - the first open source email app that puts
               your privacy and safety first.
             </div>

@@ -15,6 +15,7 @@ import { useTranslations } from 'next-intl';
 import { Button } from '../ui/button';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
+import { env } from '@/lib/env';
 import { useMemo } from 'react';
 
 export const AddConnectionDialog = ({
@@ -110,7 +111,7 @@ export const AddConnectionDialog = ({
                 onClick={async () =>
                   await authClient.linkSocial({
                     provider: provider.providerId,
-                    callbackURL: `${process.env.NEXT_PUBLIC_APP_URL}/${pathname}`,
+                    callbackURL: `${env.NEXT_PUBLIC_APP_URL}/${pathname}`,
                   })
                 }
               >

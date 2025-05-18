@@ -445,7 +445,15 @@
           "goToArchive": "Đi đến lưu trữ",
           "goToBin": "Đi đến thùng rác",
           "scrollDown": "Cuộn xuống trong danh sách thư",
-          "scrollUp": "Cuộn lên trong danh sách thư"
+          "scrollUp": "Cuộn lên trong danh sách thư",
+          "goToSettings": "Đi đến Cài đặt",
+          "showImportant": "Hiển thị quan trọng",
+          "showAllMail": "Hiển thị tất cả thư",
+          "showPersonal": "Hiển thị cá nhân",
+          "showUpdates": "Hiển thị cập nhật",
+          "showPromotions": "Hiển thị khuyến mãi",
+          "showUnread": "Hiển thị chưa đọc",
+          "selectUnderCursor": "Chọn mục dưới con trỏ"
         }
       },
       "labels": {

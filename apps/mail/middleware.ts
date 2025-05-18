@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { navigationConfig } from '@/config/navigation';
 import { geolocation } from '@vercel/functions';
 import { EU_COUNTRIES } from './lib/countries';
+import { env } from '@/lib/env';
 
 const disabledRoutes = Object.values(navigationConfig)
   .flatMap((section) => section.sections)
@@ -19,7 +20,7 @@ export function middleware(request: NextRequest) {
   const isEuRegion = EU_COUNTRIES.includes(country);
   response.headers.set('x-user-eu-region', String(isEuRegion));
 
-  if (process.env.NODE_ENV === 'development') {
+  if (env.NODE_ENV === 'development') {
     response.headers.set('x-user-eu-region', 'true');
   }
 

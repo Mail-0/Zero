@@ -445,7 +445,15 @@
           "goToArchive": "Ir para arquivo",
           "goToBin": "Ir para lixeira",
           "scrollDown": "Rolar para baixo na lista de e-mails",
-          "scrollUp": "Rolar para cima na lista de e-mails"
+          "scrollUp": "Rolar para cima na lista de e-mails",
+          "goToSettings": "Ir para Configurações",
+          "showImportant": "Mostrar importantes",
+          "showAllMail": "Mostrar todos os emails",
+          "showPersonal": "Mostrar pessoais",
+          "showUpdates": "Mostrar atualizações",
+          "showPromotions": "Mostrar promoções",
+          "showUnread": "Mostrar não lidos",
+          "selectUnderCursor": "Selecionar sob o cursor"
         }
       },
       "labels": {

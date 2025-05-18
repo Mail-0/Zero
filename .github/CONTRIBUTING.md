@@ -87,8 +87,10 @@ Thank you for your interest in contributing to 0.email! We're excited to have yo
 
    ```bash
    git fetch upstream
-   git merge upstream/main
+   git merge upstream/staging
    ```
+>[!IMPORTANT]
+>Remember to make `staging` branch as your base branch.
 
 7. **Push to Your Fork**
 
@@ -101,6 +103,10 @@ Thank you for your interest in contributing to 0.email! We're excited to have yo
    - Fill out the PR template completely
    - Link any relevant issues
    - Add screenshots for UI changes
+  
+>[!IMPORTANT]
+>Remember to make your pull request into the `staging` branch
+  
 
 ## Database Management
 

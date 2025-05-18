@@ -445,7 +445,15 @@
           "goToArchive": "Przejdź do archiwum",
           "goToBin": "Przejdź do kosza",
           "scrollDown": "Przewiń w dół listę wiadomości",
-          "scrollUp": "Przewiń w górę listę wiadomości"
+          "scrollUp": "Przewiń w górę listę wiadomości",
+          "goToSettings": "Przejdź do ustawień",
+          "showImportant": "Pokaż ważne",
+          "showAllMail": "Pokaż całą pocztę",
+          "showPersonal": "Pokaż osobiste",
+          "showUpdates": "Pokaż aktualizacje",
+          "showPromotions": "Pokaż promocje",
+          "showUnread": "Pokaż nieprzeczytane",
+          "selectUnderCursor": "Zaznacz pod kursorem"
         }
       },
       "labels": {

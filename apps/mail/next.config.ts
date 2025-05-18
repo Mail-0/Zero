@@ -1,12 +1,14 @@
 import createNextIntlPlugin from 'next-intl/plugin';
 import { withSentryConfig } from '@sentry/nextjs';
 import type { NextConfig } from 'next';
+import { env } from '@/lib/env';
 
 const nextConfig: NextConfig = {
   // devIndicators: false,
+  output: env.DOCKER_BUILD ? 'standalone' : undefined,
   compiler: {
     removeConsole:
-      process.env.NODE_ENV === 'production'
+      env.NODE_ENV === 'production'
         ? {
             exclude: ['warn', 'error'],
           }
@@ -52,7 +54,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/mailto-handler',
-        destination: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/mailto-handler`,
+        destination: `${env.NEXT_PUBLIC_BACKEND_URL}/api/mailto-handler`,
       },
     ];
   },
@@ -68,7 +70,7 @@ export default withSentryConfig(withNextIntl(nextConfig), {
   project: 'nextjs',
 
   // Only print logs for uploading source maps in CI
-  silent: !process.env.CI,
+  silent: !env.CI,
 
   // For all available options, see:
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/

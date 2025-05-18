@@ -445,7 +445,15 @@
           "goToArchive": "Arşive git",
           "goToBin": "Çöp kutusuna git",
           "scrollDown": "E-posta listesinde aşağı kaydır",
-          "scrollUp": "E-posta listesinde yukarı kaydır"
+          "scrollUp": "E-posta listesinde yukarı kaydır",
+          "goToSettings": "Ayarlara git",
+          "showImportant": "Önemlileri göster",
+          "showAllMail": "Tüm e-postaları göster",
+          "showPersonal": "Kişiselleri göster",
+          "showUpdates": "Güncellemeleri göster",
+          "showPromotions": "Promosyonları göster",
+          "showUnread": "Okunmamışları göster",
+          "selectUnderCursor": "İmleç altındakini seç"
         }
       },
       "labels": {

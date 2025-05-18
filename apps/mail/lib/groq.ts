@@ -1,3 +1,4 @@
+import { env } from '@/lib/env';
 import { z } from 'zod';
 
 export const groqChatCompletionSchema = z.object({
@@ -106,7 +107,7 @@ export async function generateCompletions({
   embeddings,
   userName,
 }: CompletionsParams) {
-  if (!process.env.GROQ_API_KEY) throw new Error('Groq API Key is missing');
+  if (!env.GROQ_API_KEY) throw new Error('Groq API Key is missing');
 
   // Map OpenAI model names to Groq equivalents if needed
   const groqModel = MODEL_MAPPING[model] || model;
@@ -134,7 +135,7 @@ export async function generateCompletions({
   // Enhance the system prompt for email generation to improve formatting
   if (enhancedSystemPrompt.toLowerCase().includes('email')) {
     enhancedSystemPrompt =
-      process.env.AI_SYSTEM_PROMPT ||
+      env.AI_SYSTEM_PROMPT ||
       `You are an email assistant helping ${userName} write professional and concise email replies.
   
   Important instructions:
@@ -188,7 +189,7 @@ export async function generateCompletions({
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+        Authorization: `Bearer ${env.GROQ_API_KEY}`,
       },
       body: JSON.stringify(requestBody),
     });

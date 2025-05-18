@@ -5,6 +5,7 @@ import { usePartySocket } from 'partysocket/react';
 import { useThreads } from '@/hooks/use-threads';
 import { useLabels } from '@/hooks/use-labels';
 import { useSession } from '@/lib/auth-client';
+import { env } from '@/lib/env';
 import { funnel } from 'remeda';
 
 const DEBOUNCE_DELAY = 10_000; // 10 seconds is appropriate for real-time notifications
@@ -36,7 +37,7 @@ export const NotificationProvider = ({ headers }: { headers: Record<string, stri
     query: {
       token: headers['cookie'],
     },
-    host: process.env.NEXT_PUBLIC_BACKEND_URL!,
+    host: env.NEXT_PUBLIC_BACKEND_URL,
     onMessage: async (message: MessageEvent<string>) => {
       console.warn('party message', message);
       const [threadId, type] = message.data.split(':');

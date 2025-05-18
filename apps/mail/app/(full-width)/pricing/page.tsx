@@ -96,8 +96,9 @@ export default function PricingPage() {
       <header className="fixed z-50 hidden w-full items-center justify-center px-4 pt-6 md:flex">
         <nav className="border-input/50 flex w-full max-w-3xl items-center justify-between gap-2 rounded-xl border-t bg-[#1E1E1E] p-2 px-4">
           <div className="flex items-center gap-6">
-            <a href="/" className="relative cursor-pointer">
+            <a href="/" className="relative bottom-1 cursor-pointer">
               <Image src="white-icon.svg" alt="Zero Email" width={22} height={22} />
+              <span className="text-muted-foreground absolute -right-[-0.5px] text-[10px]">beta</span>
             </a>
             <NavigationMenu>
               <NavigationMenuList className="gap-1">

@@ -19,17 +19,21 @@ export const fixNonReadableColors = (rootElement: HTMLElement, minContrast = 3.5
       continue;
     }
 
-    const textColor = Color(style.color);
-    const effectiveBg = getEffectiveBackgroundColor(el);
+    try {
+      const textColor = Color(style.color);
+      const effectiveBg = getEffectiveBackgroundColor(el);
 
-    const blendedText =
-      textColor.alpha() < 1 ? effectiveBg.mix(textColor, effectiveBg.alpha()) : textColor;
-    const contrast = blendedText.contrast(effectiveBg);
+      const blendedText =
+        textColor.alpha() < 1 ? effectiveBg.mix(textColor, effectiveBg.alpha()) : textColor;
+      const contrast = blendedText.contrast(effectiveBg);
 
-    if (contrast < minContrast) {
-      const blackContrast = Color('#000000').contrast(effectiveBg);
-      const whiteContrast = Color('#ffffff').contrast(effectiveBg);
-      el.style.color = blackContrast >= whiteContrast ? '#000000' : '#ffffff';
+      if (contrast < minContrast) {
+        const blackContrast = Color('#000000').contrast(effectiveBg);
+        const whiteContrast = Color('#ffffff').contrast(effectiveBg);
+        el.style.color = blackContrast >= whiteContrast ? '#000000' : '#ffffff';
+      }
+    } catch (error) {
+      console.error('Error fixing non-readable colors:', error);
     }
   }
 };
@@ -157,7 +161,7 @@ export const cleanEmailAddresses = (emails: string | undefined) => {
   // Split by commas and clean each address individually
   return emails
     .split(',')
-    .map(email => email.trim().replace(/^<|>$/g, ''))
+    .map((email) => email.trim().replace(/^<|>$/g, ''))
     .filter(Boolean); // Remove any empty entries
 };
 
@@ -173,9 +177,9 @@ export const formatRecipients = (recipients: string[] | undefined) => {
  */
 export const formatMimeRecipients = (recipients: string | string[]) => {
   if (Array.isArray(recipients)) {
-    return recipients.map(recipient => ({ addr: recipient }));
+    return recipients.map((recipient) => ({ addr: recipient }));
   } else if (typeof recipients === 'string' && recipients.trim() !== '') {
-    return recipients.split(',').map(recipient => ({ addr: recipient.trim() }));
+    return recipients.split(',').map((recipient) => ({ addr: recipient.trim() }));
   }
   return null;
 };

@@ -445,7 +445,15 @@
           "goToArchive": "رفتن به آرشیو",
           "goToBin": "رفتن به سطل زباله",
           "scrollDown": "پیمایش به پایین در فهرست ایمیل‌ها",
-          "scrollUp": "پیمایش به بالا در فهرست ایمیل‌ها"
+          "scrollUp": "پیمایش به بالا در فهرست ایمیل‌ها",
+          "goToSettings": "رفتن به تنظیمات",
+          "showImportant": "نمایش مهم",
+          "showAllMail": "نمایش همه ایمیل‌ها",
+          "showPersonal": "نمایش شخصی",
+          "showUpdates": "نمایش به‌روزرسانی‌ها",
+          "showPromotions": "نمایش تبلیغات",
+          "showUnread": "نمایش خوانده‌نشده‌ها",
+          "selectUnderCursor": "انتخاب زیر نشانگر"
         }
       },
       "labels": {

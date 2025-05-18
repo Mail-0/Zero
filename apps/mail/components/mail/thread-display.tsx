@@ -17,6 +17,9 @@ import {
   Forward,
   ReplyAll,
   Star,
+  ExclamationCircle,
+  Lightning,
+  Folders,
 } from '../icons/icons';
 import {
   DropdownMenu,
@@ -25,7 +28,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-import { CircleAlertIcon, Inbox, ShieldAlertIcon, StopCircleIcon } from 'lucide-react';
+import { CircleAlertIcon, Inbox, ShieldAlertIcon, SidebarOpen, StopCircleIcon, Zap } from 'lucide-react';
 import { moveThreadsTo, type ThreadDestination } from '@/lib/thread-actions';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -158,6 +161,7 @@ export function ThreadDisplay() {
   const [{ refetch: mutateThreads }, items] = useThreads();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isStarred, setIsStarred] = useState(false);
+  const [isImportant, setIsImportant] = useState(false);
   const t = useTranslations();
   const { refetch: refetchStats } = useStats();
   const [mode, setMode] = useQueryState('mode');
@@ -169,6 +173,7 @@ export function ThreadDisplay() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { mutateAsync: toggleStar } = useMutation(trpc.mail.toggleStar.mutationOptions());
+  const { mutateAsync: toggleImportant } = useMutation(trpc.mail.toggleImportant.mutationOptions());
   const invalidateCount = () =>
     queryClient.invalidateQueries({ queryKey: trpc.mail.count.queryKey() });
   const { mutateAsync: markAsRead } = useMutation(
@@ -301,11 +306,23 @@ export function ThreadDisplay() {
     await refetchThread();
   }, [emailData, id, isStarred]);
 
+  const handleToggleImportant = useCallback(async () => {
+    if (!emailData || !id) return;
+    await toggleImportant({ ids: [id] });
+    await refetchThread();
+    if (isImportant) {
+      toast.success(t('common.mail.markedAsImportant'));
+    } else {
+      toast.error("Failed to mark as important");
+    }
+  }, [emailData, id]);
+
   // Set initial star state based on email data
   useEffect(() => {
     if (emailData?.latest?.tags) {
       // Check if any tag has the name 'STARRED'
       setIsStarred(emailData.latest.tags.some((tag) => tag.name === 'STARRED'));
+      setIsImportant(emailData.latest.tags.some((tag) => tag.name === 'IMPORTANT'));
     }
   }, [emailData?.latest?.tags]);
 
@@ -369,7 +386,7 @@ export function ThreadDisplay() {
                 <p className="text-md text-[#6D6D6D] dark:text-white/50">
                   Choose an email to view details or
                 </p>
-                <div className="mt-4 flex gap-2">
+                <div className="mt-4 grid grid-cols-1 gap-2 xl:grid-cols-3">
                   <Button onClick={toggleAISidebar} variant="outline">
                     Chat with Zero AI
                   </Button>
@@ -387,35 +404,6 @@ export function ThreadDisplay() {
                 </div>
               </div>
             </div>
-            {!isSidebarOpen && (
-              <div className="fixed bottom-4 right-4 hidden md:block">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="h-10 w-10 rounded-md p-0"
-                      onClick={toggleAISidebar}
-                    >
-                      <Image
-                        src="/black-icon.svg"
-                        alt="AI Assistant"
-                        width={20}
-                        height={20}
-                        className="block dark:hidden"
-                      />
-                      <Image
-                        src="/white-icon.svg"
-                        alt="AI Assistant"
-                        width={20}
-                        height={20}
-                        className="hidden dark:block"
-                      />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Toggle AI Assistant</TooltipContent>
-                </Tooltip>
-              </div>
-            )}
           </div>
         ) : !emailData || isLoading ? (
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -503,6 +491,21 @@ export function ThreadDisplay() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMode('replyAll');
+                    setActiveReplyId(emailData?.latest?.id ?? '');
+                  }}
+                  className="inline-flex h-7 items-center justify-center gap-1 overflow-hidden rounded-md border bg-white px-1.5 dark:border-none dark:bg-[#313131]"
+                >
+                  <Reply className="fill-[#6D6D6D] dark:fill-[#9B9B9B]" />
+                  <div className="flex items-center justify-center gap-2.5 pl-0.5 pr-1">
+                    <div className="justify-start text-sm leading-none text-black dark:text-white">
+                      Reply
+                    </div>
+                  </div>
+                </button>
                 <NotesPanel threadId={id} />
                 <TooltipProvider delayDuration={0}>
                   <Tooltip>
@@ -528,6 +531,7 @@ export function ThreadDisplay() {
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
+               
                 <TooltipProvider delayDuration={0}>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -592,11 +596,17 @@ export function ThreadDisplay() {
                         {emailData.latest?.listUnsubscribe ||
                         emailData.latest?.listUnsubscribePost ? (
                           <DropdownMenuItem onClick={handleUnsubscribeProcess}>
-                            <ShieldAlertIcon className="fill-iconLight dark:fill-iconDark mr-2" />
+                            <Folders className="fill-iconLight dark:fill-iconDark mr-2" />
                             <span>Unsubscribe</span>
                           </DropdownMenuItem>
                         ) : null}
                       </>
+                    )}
+                   {!isImportant && (
+                      <DropdownMenuItem onClick={handleToggleImportant}>
+                        <Lightning className="fill-iconLight dark:fill-iconDark mr-2" />
+                        {t('common.mail.markAsImportant')}
+                      </DropdownMenuItem>
                     )}
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -634,35 +644,6 @@ export function ThreadDisplay() {
                   ))}
                 </div>
               </ScrollArea>
-              {!isSidebarOpen && (
-                <div className="fixed bottom-4 right-4 hidden md:block">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="h-10 w-10 rounded-md p-0"
-                        onClick={toggleAISidebar}
-                      >
-                        <Image
-                          src="/black-icon.svg"
-                          alt="AI Assistant"
-                          width={20}
-                          height={20}
-                          className="block dark:hidden"
-                        />
-                        <Image
-                          src="/white-icon.svg"
-                          alt="AI Assistant"
-                          width={20}
-                          height={20}
-                          className="hidden dark:block"
-                        />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Toggle AI Assistant</TooltipContent>
-                  </Tooltip>
-                </div>
-              )}
             </div>
           </>
         )}

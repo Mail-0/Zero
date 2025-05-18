@@ -445,7 +445,15 @@
           "goToArchive": "Naar archief gaan",
           "goToBin": "Naar prullenbak gaan",
           "scrollDown": "Omlaag scrollen in maillijst",
-          "scrollUp": "Omhoog scrollen in maillijst"
+          "scrollUp": "Omhoog scrollen in maillijst",
+          "goToSettings": "Ga naar instellingen",
+          "showImportant": "Toon belangrijk",
+          "showAllMail": "Toon alle e-mail",
+          "showPersonal": "Toon persoonlijk",
+          "showUpdates": "Toon updates",
+          "showPromotions": "Toon promoties",
+          "showUnread": "Toon ongelezen",
+          "selectUnderCursor": "Selecteer onder cursor"
         }
       },
       "labels": {

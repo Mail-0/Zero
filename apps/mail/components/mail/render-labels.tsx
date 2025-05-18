@@ -53,7 +53,7 @@ export const RenderLabels = ({ count = 1, labels }: { count?: number; labels: La
       {hiddenLabels.length > 0 && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <button className="text-muted-foreground dark:bg-subtleBlack bg-subtleWhite inline-block truncate rounded border px-1.5 py-0.5 text-xs font-medium">
+            <button className="text-muted-foreground dark:bg-subtleBlack bg-subtleWhite inline-block truncate rounded border px-1.5 py-0.5 text-xs font-medium overflow-hidden">
               +{hiddenLabels.length}
             </button>
           </TooltipTrigger>
@@ -63,7 +63,7 @@ export const RenderLabels = ({ count = 1, labels }: { count?: number; labels: La
                 key={label.id}
                 onClick={handleFilterByLabel(label)}
                 className={cn(
-                  'dark:bg-subtleBlack bg-subtleWhite inline-block truncate rounded border px-1.5 py-0.5 text-xs font-medium',
+                  'dark:bg-subtleBlack bg-subtleWhite inline-block truncate rounded border px-1.5 py-0.5 text-xs font-medium overflow-hidden',
                   searchValue.value.includes(`label:${label.name}`) &&
                     'border-neutral-800 dark:border-white',
                 )}

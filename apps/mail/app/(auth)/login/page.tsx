@@ -1,24 +1,36 @@
 import { authProviders, customProviders, isProviderEnabled } from '@zero/server/auth-providers';
+import { authProxy } from '@/lib/auth-proxy';
 import { LoginClient } from './login-client';
+import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
+import { env } from '@/lib/env';
 
-export default function LoginPage() {
-  const envNodeEnv = process.env.NODE_ENV;
+export default async function LoginPage() {
+  const headersList = new Headers(Object.fromEntries(await (await headers()).entries()));
+  const session = await authProxy.api.getSession({ headers: headersList });
+  if (session?.connectionId) {
+    redirect('/mail/inbox');
+  }
+  const envNodeEnv = env.NODE_ENV;
   const isProd = envNodeEnv === 'production';
 
-  const authProviderStatus = authProviders(process.env as Record<string, string>).map(
+  const authProviderStatus = authProviders(env as unknown as Record<string, string>).map(
     (provider) => {
       const envVarStatus =
-        provider.envVarInfo?.map((envVar) => ({
-          name: envVar.name,
-          set: !!process.env[envVar.name],
-          source: envVar.source,
-          defaultValue: envVar.defaultValue,
-        })) || [];
+        provider.envVarInfo?.map((envVar) => {
+          const envVarName = envVar.name as keyof typeof env;
+          return {
+            name: envVar.name,
+            set: !!env[envVarName],
+            source: envVar.source,
+            defaultValue: envVar.defaultValue,
+          };
+        }) || [];
 
       return {
         id: provider.id,
         name: provider.name,
-        enabled: isProviderEnabled(provider, process.env as Record<string, string>),
+        enabled: isProviderEnabled(provider, env as unknown as Record<string, string>),
         required: provider.required,
         envVarInfo: provider.envVarInfo,
         envVarStatus,

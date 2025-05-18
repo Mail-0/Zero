@@ -123,7 +123,6 @@ export function NavUser() {
       success: () => 'Signed out successfully!',
       error: 'Error signing out',
       async finally() {
-        await handleClearCache();
         window.location.href = '/login';
       },
     });
@@ -212,8 +211,11 @@ export function NavUser() {
                         </AvatarFallback>
                       </Avatar>
                       <div className="w-full">
-                        <div className="text-sm font-medium">
+                        <div className="text-sm font-medium flex items-center justify-center gap-0.5">
                           {activeAccount.name || session.user.name || 'User'}
+                          {isPro && (
+                            <BadgeCheck className="h-4 w-4 text-white dark:text-[#141414]" fill="#1D9BF0" />
+                          )}
                         </div>
                         <div className="text-muted-foreground text-xs">{activeAccount.email}</div>
                       </div>
@@ -352,7 +354,11 @@ export function NavUser() {
                   </div>
                 </div>
               ) : (
-                <Danger />
+                <div className="flex cursor-pointer items-center">
+                  <div className="relative">
+                    <div className="bg-muted size-7 animate-pulse rounded-[5px]" />
+                  </div>
+                </div>
               )}
               {otherConnections.slice(0, 2).map((connection) => (
                 <Tooltip key={connection.id}>

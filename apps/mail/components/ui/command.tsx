@@ -126,7 +126,8 @@ const CommandShortcut = ({ className, ...props }: React.HTMLAttributes<HTMLSpanE
   return (
     <kbd
       className={cn(
-        'border-border bg-background text-muted-foreground/70 -me-1 ms-auto inline-flex h-5 max-h-full items-center rounded border px-1 font-[inherit] text-[0.625rem] font-medium',
+        "border-muted-foreground/10 bg-accent h-6 rounded-[6px] border px-1.5 font-mono text-xs leading-6",
+        '-me-1 ms-auto inline-flex max-h-full items-center',
         className,
       )}
       {...props}

@@ -26,7 +26,7 @@ export default async function ComposePage({ searchParams }: ComposePageProps) {
   const headersList = new Headers(Object.fromEntries(await (await headers()).entries()));
   const session = await authProxy.api.getSession({ headers: headersList });
 
-  if (!session) {
+  if (!session.user.id) {
     redirect('/login');
   }
 

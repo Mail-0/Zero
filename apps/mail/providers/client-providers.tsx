@@ -1,6 +1,5 @@
 'use client';
 
-import { AISidebarProvider } from '@/components/ui/ai-sidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { PostHogProvider } from '@/lib/posthog-provider';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
@@ -18,24 +17,22 @@ export function ClientProviders({ children }: PropsWithChildren) {
 
   return (
     <NuqsAdapter>
-      <AISidebarProvider>
-        <JotaiProvider>
-          <ThemeProvider
-            attribute="class"
-            enableSystem
-            disableTransitionOnChange
-            defaultTheme={theme}
-          >
-            <SidebarProvider>
-              <PostHogProvider>
-                {children}
-                <CustomToaster />
-                <Analytics />
-              </PostHogProvider>
-            </SidebarProvider>
-          </ThemeProvider>
-        </JotaiProvider>
-      </AISidebarProvider>
+      <JotaiProvider>
+        <ThemeProvider
+          attribute="class"
+          enableSystem
+          disableTransitionOnChange
+          defaultTheme={theme}
+        >
+          <SidebarProvider>
+            <PostHogProvider>
+              {children}
+              <CustomToaster />
+              <Analytics />
+            </PostHogProvider>
+          </SidebarProvider>
+        </ThemeProvider>
+      </JotaiProvider>
     </NuqsAdapter>
   );
 }

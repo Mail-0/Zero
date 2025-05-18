@@ -309,7 +309,8 @@ export const AiChatPrompt = (threadId: string, currentFolder: string, currentFil
       <tools>
         <tool name="${Tools.ListThreads}">
           <description>Search for and retrieve up to 5 threads matching a query.</description>
-          <note>Use the buildGmailSearchQuery tool to build a Gmail search query then use listThreads to search for threads.</note>
+          <note>Use the buildGmailSearchQuery tool to build a Gmail search query by calling it: buildGmailSearchQuery(userQuestion) then use listThreads to search for threads.</note>
+          <note>If the user asks for "emails sent to {person}", use the buildGmailSearchQuery tool to build a Gmail search query by calling it: buildGmailSearchQuery("emails sent to {person}") then use listThreads to search for threads in "sent" folder.</note>
           ${currentFolder ? `<note>If the user does not specify a folder, use the current folder: ${currentFolder}</note>` : '<note>Default to using folder: "inbox" if the user doesnt specify.</note>'}
           ${currentFilter ? `<note>Use this base filter unless the user overrides it: ${currentFilter}</note>` : ''}
           <note>Do not repeat thread content in user replies. Assume the user can view matched threads.</note>

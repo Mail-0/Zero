@@ -445,7 +445,15 @@
           "goToArchive": "前往归档",
           "goToBin": "前往回收站",
           "scrollDown": "在邮件列表中向下滚动",
-          "scrollUp": "在邮件列表中向上滚动"
+          "scrollUp": "在邮件列表中向上滚动",
+          "goToSettings": "前往设置",
+          "showImportant": "显示重要邮件",
+          "showAllMail": "显示所有邮件",
+          "showPersonal": "显示个人邮件",
+          "showUpdates": "显示更新",
+          "showPromotions": "显示促销邮件",
+          "showUnread": "显示未读邮件",
+          "selectUnderCursor": "选择光标下的内容"
         }
       },
       "labels": {

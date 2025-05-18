@@ -445,7 +445,15 @@
           "goToArchive": "Zum Archiv gehen",
           "goToBin": "Zum Papierkorb gehen",
           "scrollDown": "In der Mail-Liste nach unten scrollen",
-          "scrollUp": "In der Mail-Liste nach oben scrollen"
+          "scrollUp": "In der Mail-Liste nach oben scrollen",
+          "goToSettings": "Zu den Einstellungen",
+          "showImportant": "Wichtige anzeigen",
+          "showAllMail": "Alle E-Mails anzeigen",
+          "showPersonal": "Persönliche anzeigen",
+          "showUpdates": "Updates anzeigen",
+          "showPromotions": "Werbeaktionen anzeigen",
+          "showUnread": "Ungelesene anzeigen",
+          "selectUnderCursor": "Unter Cursor auswählen"
         }
       },
       "labels": {

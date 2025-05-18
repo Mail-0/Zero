@@ -445,7 +445,15 @@
           "goToArchive": "Anar a l'arxiu",
           "goToBin": "Anar a la paperera",
           "scrollDown": "Desplaçar avall a la llista de correus",
-          "scrollUp": "Desplaçar amunt a la llista de correus"
+          "scrollUp": "Desplaçar amunt a la llista de correus",
+          "goToSettings": "Anar a les configuracions",
+          "showImportant": "Mostrar important",
+          "showAllMail": "Mostrar tot el correu",
+          "showPersonal": "Mostrar personal",
+          "showUpdates": "Mostrar actualitzacions",
+          "showPromotions": "Mostrar promocions",
+          "showUnread": "Mostrar no llegits",
+          "selectUnderCursor": "Seleccionar sota el cursor"
         }
       },
       "labels": {

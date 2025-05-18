@@ -384,6 +384,14 @@ checksums:
     pages/settings/shortcuts/actions/goToBin: 5b567f48c63b3352fc37cd807f6117bf
     pages/settings/shortcuts/actions/scrollDown: 2c9203d844e88e8c4854e79b5e3ad673
     pages/settings/shortcuts/actions/scrollUp: d498a56c18503f03c3f864191175c3a1
+    pages/settings/shortcuts/actions/goToSettings: 6ace3a9c8e0d0bcef02e8835a8e0ac08
+    pages/settings/shortcuts/actions/showImportant: 957efba1aa3ba2e58b08b17d134e226a
+    pages/settings/shortcuts/actions/showAllMail: d4f1d7ebc25c8d1d726a357e4217302a
+    pages/settings/shortcuts/actions/showPersonal: 81793e4936105946728187b27d8bbb46
+    pages/settings/shortcuts/actions/showUpdates: 4831c672f270ed9f2bea9ff2e30b9d83
+    pages/settings/shortcuts/actions/showPromotions: 0adf7973051c25739500c0a74f556d68
+    pages/settings/shortcuts/actions/showUnread: e53cd61d7e4fe6f1695d02c864909a39
+    pages/settings/shortcuts/actions/selectUnderCursor: d4642d66eb27aea7513af1fbb1bd3bb2
     pages/settings/labels/title: 6f15627a90002323eac018274b6922d6
     pages/settings/labels/description: 0418ef2ed4c3ca5082fddd6686b8596d
     pages/settings/dangerZone/title: ab5417cabdfa70b0a7c9d407ec69b450

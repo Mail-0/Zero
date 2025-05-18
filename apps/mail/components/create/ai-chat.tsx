@@ -22,6 +22,7 @@ import { format } from 'date-fns-tz';
 import { useQueryState } from 'nuqs';
 import { Input } from '../ui/input';
 import { useState } from 'react';
+import { env } from '@/lib/env';
 import VoiceChat from './voice';
 import Image from 'next/image';
 import { toast } from 'sonner';
@@ -29,9 +30,16 @@ import { toast } from 'sonner';
 const renderThread = (thread: { id: string; title: string; snippet: string }) => {
   const [, setThreadId] = useQueryState('threadId');
   const { data: getThread } = useThread(thread.id);
+  const [, setAiSidebarOpen] = useQueryState('aiSidebar');
+
+  const handleClick = () => {
+    setThreadId(thread.id);
+    setAiSidebarOpen(null);
+  };
+
   return getThread?.latest ? (
     <div
-      onClick={() => setThreadId(thread.id)}
+      onClick={handleClick}
       key={thread.id}
       className="hover:bg-offsetLight/30 dark:hover:bg-offsetDark/30 cursor-pointer rounded-lg"
     >
@@ -125,72 +133,46 @@ const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => voi
   );
 };
 
-export function AIChat() {
+interface Message {
+  id: string;
+  role: 'user' | 'assistant' | 'data' | 'system';
+  parts: Array<{
+    type: string;
+    text?: string;
+    toolInvocation?: {
+      toolName: string;
+      result?: {
+        threads?: Array<{ id: string; title: string; snippet: string }>;
+      };
+    };
+  }>;
+}
+
+export interface AIChatProps {
+  messages: Message[];
+  input: string;
+  setInput: (input: string) => void;
+  error?: Error;
+  handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  status: string;
+  stop: () => void;
+}
+
+export function AIChat({
+  messages,
+  input,
+  setInput,
+  error,
+  handleSubmit,
+  status,
+  stop,
+}: AIChatProps): React.ReactElement {
   const [showVoiceChat, setShowVoiceChat] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { refetch, chatMessages } = useBilling();
   const [threadId] = useQueryState('threadId');
-  const { refetch: refetchLabels } = useLabels();
-  const { refetch: refetchStats } = useStats();
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const { refetch: refetchThread } = useThread(threadId);
-  const { folder } = useParams<{ folder: string }>();
-  const [searchValue] = useSearchValue();
-  const { attach, track, refetch: refetchBilling } = useBilling();
-
-  const { messages, input, setInput, error, handleSubmit, status, stop } = useChat({
-    api: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/chat`,
-    fetch: (url, options) => fetch(url, { ...options, credentials: 'include' }),
-    maxSteps: 5,
-    body: {
-      threadId: threadId ?? undefined,
-      currentFolder: folder ?? undefined,
-      currentFilter: searchValue.value ?? undefined,
-    },
-    onError(error) {
-      console.error('Error in useChat', error);
-      toast.error('Error, please try again later');
-    },
-    onResponse: (response) => {
-      if (!response.ok) {
-        throw new Error('Failed to send message');
-      }
-    },
-    onFinish: () => {},
-    async onToolCall({ toolCall }) {
-      console.warn('toolCall', toolCall);
-      switch (toolCall.toolName) {
-        case Tools.CreateLabel:
-        case Tools.DeleteLabel:
-          await refetchLabels();
-          break;
-        case Tools.SendEmail:
-          await queryClient.invalidateQueries({
-            queryKey: trpc.mail.listThreads.queryKey({ folder: 'sent' }),
-          });
-          break;
-        case Tools.MarkThreadsRead:
-        case Tools.MarkThreadsUnread:
-        case Tools.ModifyLabels:
-        case Tools.BulkDelete:
-          console.log('modifyLabels', toolCall.args);
-          await refetchLabels();
-          await Promise.all(
-            (toolCall.args as { threadIds: string[] }).threadIds.map((id) =>
-              queryClient.invalidateQueries({
-                queryKey: trpc.mail.get.queryKey({ id }),
-              }),
-            ),
-          );
-          break;
-      }
-      await track({ featureId: 'chat-messages', value: 1 });
-      await refetchBilling();
-    },
-  });
+  const { attach, chatMessages } = useBilling();
 
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
@@ -216,6 +198,8 @@ export function AIChat() {
         });
     }
   };
+
+  // Already defined above
 
   return (
     <div className="flex h-full flex-col">
@@ -262,10 +246,13 @@ export function AIChat() {
 
                   {/* Threads below the bubble */}
                   {toolParts.map((part, idx) =>
-                    'result' in part.toolInvocation && 'threads' in part.toolInvocation.result ? (
-                      <RenderThreads threads={part.toolInvocation.result.threads} key={idx} />
-                    ) : 'result' in part.toolInvocation ? (
-                      <span className="text-muted-foreground flex gap-1 text-xs">
+                    part.toolInvocation &&
+                    'result' in part.toolInvocation &&
+                    part.toolInvocation.result &&
+                    'threads' in part.toolInvocation.result ? (
+                      <RenderThreads threads={part.toolInvocation.result.threads ?? []} key={idx} />
+                    ) : part.toolInvocation && 'result' in part.toolInvocation ? (
+                      <span key={idx} className="text-muted-foreground flex gap-1 text-xs">
                         <CheckCircle2 className="h-4 w-4" />
                         Used tool: {part.toolInvocation.toolName}
                       </span>
@@ -280,9 +267,10 @@ export function AIChat() {
                           : 'overflow-wrap-anywhere dark:bg-sidebar mr-auto break-words border bg-[#f0f0f0] p-2',
                       )}
                     >
-                      {textParts.map((part) => (
-                        <Markdown key={part.text}>{part.text}</Markdown>
-                      ))}
+                      {textParts.map(
+                        (part) =>
+                          part.text && <Markdown key={part.text}>{part.text || ' '}</Markdown>,
+                      )}
                     </div>
                   )}
                 </div>

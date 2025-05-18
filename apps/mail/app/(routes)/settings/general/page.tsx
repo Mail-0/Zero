@@ -230,6 +230,7 @@ export default function GeneralPage() {
                     <Textarea
                       placeholder={t('pages.settings.general.customPromptPlaceholder')}
                       className="min-h-[150px]"
+                      maxLength={3000}
                       {...field}
                     />
                   </FormControl>

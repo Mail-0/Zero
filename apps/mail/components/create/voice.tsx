@@ -17,6 +17,9 @@ import { useSession } from '@/lib/auth-client';
 import type { Sender } from '@/types';
 import dedent from 'dedent';
 
+// Utils
+import { env } from '@/lib/env';
+
 interface EmailContent {
   metadata: {
     isUnread: boolean;
@@ -129,7 +132,7 @@ const VoiceChat = ({ onClose }: VoiceChatProps) => {
       const emailContext = emailContent.join('\n\n');
 
       const conversationId = await conversation.startSession({
-        agentId: process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID!,
+        agentId: env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID,
         dynamicVariables: {
           user_name: userName,
           email_context: emailContext,

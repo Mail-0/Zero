@@ -445,7 +445,15 @@
           "goToArchive": "संग्रह पर जाएं",
           "goToBin": "बिन पर जाएँ",
           "scrollDown": "मेल सूची में नीचे स्क्रॉल करें",
-          "scrollUp": "मेल सूची में ऊपर स्क्रॉल करें"
+          "scrollUp": "मेल सूची में ऊपर स्क्रॉल करें",
+          "goToSettings": "सेटिंग्स पर जाएँ",
+          "showImportant": "महत्वपूर्ण दिखाएँ",
+          "showAllMail": "सभी मेल दिखाएँ",
+          "showPersonal": "व्यक्तिगत दिखाएँ",
+          "showUpdates": "अपडेट दिखाएँ",
+          "showPromotions": "प्रमोशन दिखाएँ",
+          "showUnread": "अपठित दिखाएँ",
+          "selectUnderCursor": "कर्सर के नीचे चुनें"
         }
       },
       "labels": {

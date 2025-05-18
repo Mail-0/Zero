@@ -445,7 +445,15 @@
           "goToArchive": "Ugrás az archívumhoz",
           "goToBin": "Ugrás a lomtárhoz",
           "scrollDown": "Görgetés lefelé a levéllistában",
-          "scrollUp": "Görgetés felfelé a levéllistában"
+          "scrollUp": "Görgetés felfelé a levéllistában",
+          "goToSettings": "Ugrás a Beállításokhoz",
+          "showImportant": "Fontos üzenetek megjelenítése",
+          "showAllMail": "Összes levél megjelenítése",
+          "showPersonal": "Személyes üzenetek megjelenítése",
+          "showUpdates": "Frissítések megjelenítése",
+          "showPromotions": "Promóciók megjelenítése",
+          "showUnread": "Olvasatlan üzenetek megjelenítése",
+          "selectUnderCursor": "Kurzor alatti elem kiválasztása"
         }
       },
       "labels": {

@@ -32,6 +32,7 @@ import { useThread, useThreads } from '@/hooks/use-threads';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useParams, useRouter } from 'next/navigation';
 import { useTRPC } from '@/providers/query-provider';
+import { ExclamationCircle } from '../icons/icons';
 import { useLabels } from '@/hooks/use-labels';
 import { LABELS, FOLDERS } from '@/lib/utils';
 import { useStats } from '@/hooks/use-stats';
@@ -142,6 +143,7 @@ export function ThreadContextMenu({
     trpc.mail.markAsUnread.mutationOptions({ onSuccess: () => invalidateCount() }),
   );
   const { mutateAsync: toggleStar } = useMutation(trpc.mail.toggleStar.mutationOptions());
+  const { mutateAsync: toggleImportant } = useMutation(trpc.mail.toggleImportant.mutationOptions());
   const { mutateAsync: deleteThread } = useMutation(trpc.mail.delete.mutationOptions());
 
   const selectedThreads = useMemo(() => {
@@ -159,6 +161,12 @@ export function ThreadContextMenu({
     // TODO support bulk select
     return threadData?.messages.some((message) =>
       message.tags?.some((tag) => tag.name.toLowerCase() === 'starred'),
+    );
+  }, [threadData]);
+
+  const isImportant = useMemo(() => {
+    return threadData?.messages.some((message) =>
+      message.tags?.some((tag) => tag.name.toLowerCase() === 'important'),
     );
   }, [threadData]);
 
@@ -208,6 +216,13 @@ export function ThreadContextMenu({
       toast.success(t('common.actions.removedFromFavorites'));
     }
     await toggleStar({ ids: targets });
+    setMail((prev) => ({ ...prev, bulkSelected: [] }));
+    return await Promise.allSettled([refetchThread(), refetch()]);
+  };
+
+  const handleToggleImportant = async () => {
+    const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
+    await toggleImportant({ ids: targets });
     setMail((prev) => ({ ...prev, bulkSelected: [] }));
     return await Promise.allSettled([refetchThread(), refetch()]);
   };
@@ -398,6 +413,12 @@ export function ThreadContextMenu({
       ),
       action: handleReadUnread,
       disabled: false,
+    },
+    {
+      id: 'toggle-important',
+      label: isImportant ? t('common.mail.removeFromImportant') : t('common.mail.markAsImportant'),
+      icon: <ExclamationCircle className={'mr-2.5 h-4 w-4'} />,
+      action: handleToggleImportant,
     },
     {
       id: 'favorite',
