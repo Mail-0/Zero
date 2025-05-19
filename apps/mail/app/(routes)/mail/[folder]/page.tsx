@@ -26,7 +26,7 @@ export default async function MailPage({ params }: MailPageProps) {
   const { folder } = await params;
 
   if (!ALLOWED_FOLDERS.includes(folder)) {
-    return <NotFound />
+    return <NotFound />;
   }
 
   return <MailLayout />;
