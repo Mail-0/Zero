@@ -62,7 +62,7 @@ export function NavUser() {
   const { mutateAsync: setDefaultConnection } = useMutation(
     trpc.connections.setDefault.mutationOptions(),
   );
-  const { openBillingPortal, customer: billingCustomer, attach } = useBilling();
+  const { openBillingPortal, customer: billingCustomer, isPro } = useBilling();
   const [showPricingDialog, setShowPricingDialog] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -124,17 +124,6 @@ export function NavUser() {
   const handleThemeToggle = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
-
-  const isPro = useMemo(() => {
-    return (
-      billingCustomer &&
-      Array.isArray(billingCustomer.products) &&
-      billingCustomer.products.some(
-        (product: any) =>
-          product.id.includes('pro-example') || product.name.includes('pro-example'),
-      )
-    );
-  }, [billingCustomer]);
 
   if (!isRendered) return null;
   if (!session) return null;
@@ -446,16 +435,13 @@ export function NavUser() {
                 </AddConnectionDialog>
               ) : (
                 <>
-                  <button 
+                  <button
                     onClick={() => setShowPricingDialog(true)}
                     className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-[5px] border border-dashed dark:bg-[#262626] dark:text-[#929292]"
                   >
                     <Plus className="size-4" />
                   </button>
-                  <PricingDialog 
-                    open={showPricingDialog} 
-                    onOpenChange={setShowPricingDialog} 
-                  />
+                  <PricingDialog open={showPricingDialog} onOpenChange={setShowPricingDialog} />
                 </>
               )}
             </div>

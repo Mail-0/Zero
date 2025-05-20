@@ -383,7 +383,7 @@ function AISidebar({ className }: AISidebarProps) {
   const [resetKey, setResetKey] = useState(0);
   const [showPricing, setShowPricing] = useState(false);
   const pathname = usePathname();
-  const { attach, customer, chatMessages, track, refetch: refetchBilling } = useBilling();
+  const { isPro, chatMessages, track, refetch: refetchBilling } = useBilling();
   const queryClient = useQueryClient();
   const trpc = useTRPC();
   const [threadId, setThreadId] = useQueryState('threadId');
@@ -443,17 +443,6 @@ function AISidebar({ className }: AISidebarProps) {
       await refetchBilling();
     },
   });
-
-  const isPro = useMemo(() => {
-    return (
-      customer &&
-      Array.isArray(customer.products) &&
-      customer.products.some(
-        (product: any) =>
-          product.id.includes('pro-example') || product.name.includes('pro-example'),
-      )
-    );
-  }, [customer]);
 
   const handleUpgrade = () => {
     setShowPricing(true);

@@ -42,9 +42,9 @@
       "vars": {
         "NODE_ENV": "development",
         "FORCE_GMAIL_CONSENT": "true",
-        "COOKIE_DOMAIN": "localhost",
-        "NEXT_PUBLIC_BACKEND_URL": "http://localhost:8787",
-        "NEXT_PUBLIC_APP_URL": "http://localhost:3000",
+        "COOKIE_DOMAIN": "0.email",
+        "NEXT_PUBLIC_BACKEND_URL": "https://sapi.0.email",
+        "NEXT_PUBLIC_APP_URL": "https://staging.0.email",
       },
       "kv_namespaces": [
         {
@@ -72,30 +72,53 @@
       "hyperdrive": [
         {
           "binding": "HYPERDRIVE",
-          "id": "",
+          "id": "27171042364248898fc8672c0fc532a0",
           "localConnectionString": "postgresql://postgres:postgres@localhost:5432/zerodotemail",
+        },
+      ],
+      "durable_objects": {
+        "bindings": [
+          {
+            "class_name": "DurableMailbox",
+            "name": "DURABLE_MAILBOX",
+          },
+        ],
+      },
+      "migrations": [
+        {
+          "tag": "v1",
+          "new_classes": ["DurableMailbox"],
+        },
+      ],
+      "services": [
+        {
+          "binding": "zero",
+          "service": "zero-worker",
         },
       ],
       "vars": {
         "NODE_ENV": "production",
         "FORCE_GMAIL_CONSENT": "true",
+        "COOKIE_DOMAIN": "0.email",
+        "NEXT_PUBLIC_BACKEND_URL": "https://api.0.email",
+        "NEXT_PUBLIC_APP_URL": "https://0.email",
       },
       "kv_namespaces": [
         {
           "binding": "subscribed_accounts",
-          "id": "",
+          "id": "f9be403a33354338b05474151fec8215",
         },
         {
           "binding": "connection_labels",
-          "id": "",
+          "id": "26c5a521b1294ef88d36b96e5617c428",
         },
         {
           "binding": "prompts_storage",
-          "id": "",
+          "id": "1caf4e863e2149519cef97f2ba3c9851",
         },
         {
           "binding": "connection_limits",
-          "id": "",
+          "id": "19d415777f554b7c8fbe6eca7dc87918",
         },
       ],
     },
