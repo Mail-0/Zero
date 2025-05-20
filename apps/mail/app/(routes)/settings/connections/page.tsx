@@ -38,7 +38,7 @@ export default function ConnectionsPage() {
   const { mutateAsync: deleteConnection } = useMutation(trpc.connections.delete.mutationOptions());
   const [{ refetch: refetchThreads }] = useThreads();
 
-  const { customer: billingCustomer } = useBilling();
+  const { isPro } = useBilling();
   const [showPricingDialog, setShowPricingDialog] = useState(false);
 
   const disconnectAccount = async (connectionId: string) => {
@@ -56,17 +56,6 @@ export default function ConnectionsPage() {
     refetch();
     void refetchThreads();
   };
-
-  const isPro = useMemo(() => {
-    return (
-      billingCustomer &&
-      Array.isArray(billingCustomer.products) &&
-      billingCustomer.products.some(
-        (product: any) =>
-          product.id.includes('pro-example') || product.name.includes('pro-example'),
-      )
-    );
-  }, [billingCustomer]);
 
   return (
     <div className="grid gap-6">
