@@ -11,12 +11,11 @@ import { parseAddressList, parseFrom, wasSentWithTLS } from '../email-utils';
 import type { IOutgoingMessage, Label, ParsedMessage } from '../../types';
 import { sanitizeTipTapHtml } from '../sanitize-tip-tap-html';
 import type { MailManager, ManagerConfig } from './types';
-import { type gmail_v1, gmail } from '@googleapis/gmail';
-import { OAuth2Client } from 'google-auth-library';
+import { type gmail_v1, google } from 'googleapis';
 import type { CreateDraftData } from '../schemas';
+import { setTimeout } from 'timers/promises';
 import { createMimeMessage } from 'mimetext';
 import { cleanSearchValue } from '../utils';
-import { people } from '@googleapis/people';
 import { env } from 'cloudflare:workers';
 import * as he from 'he';
 
@@ -25,7 +24,7 @@ export class GoogleMailManager implements MailManager {
   private gmail;
 
   constructor(public config: ManagerConfig) {
-    this.auth = new OAuth2Client(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET);
+    this.auth = new google.auth.OAuth2(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET);
 
     if (config.auth)
       this.auth.setCredentials({
@@ -33,7 +32,7 @@ export class GoogleMailManager implements MailManager {
         scope: this.getScope(),
       });
 
-    this.gmail = gmail({ version: 'v1', auth: this.auth });
+    this.gmail = google.gmail({ version: 'v1', auth: this.auth });
   }
   public getScope(): string {
     return [
@@ -115,10 +114,9 @@ export class GoogleMailManager implements MailManager {
     return this.withErrorHandler(
       'getUserInfo',
       async () => {
-        const res = await people({ version: 'v1', auth: this.auth }).people.get({
-          resourceName: 'people/me',
-          personFields: 'names,photos,emailAddresses',
-        });
+        const res = await google
+          .people({ version: 'v1', auth: this.auth })
+          .people.get({ resourceName: 'people/me', personFields: 'names,photos,emailAddresses' });
         return {
           address: res.data.emailAddresses?.[0]?.value ?? '',
           name: res.data.names?.[0]?.displayName ?? '',
@@ -155,13 +153,9 @@ export class GoogleMailManager implements MailManager {
               userId: 'me',
               id: label.id ?? undefined,
             });
-            const count =
-              label.name === 'TRASH'
-                ? Number(res.data.threadsTotal)
-                : Number(res.data.threadsUnread);
             return {
               label: res.data.name ?? res.data.id ?? '',
-              count: count ?? undefined,
+              count: Number(res.data.threadsUnread) ?? undefined,
             };
           }),
         );
@@ -685,7 +679,7 @@ export class GoogleMailManager implements MailManager {
       allResults.push(...chunkResults);
 
       if (i + chunkSize < threadIds.length) {
-        await new Promise((resolve) => setTimeout(resolve, delayBetweenChunks));
+        await setTimeout(delayBetweenChunks);
       }
     }
 
