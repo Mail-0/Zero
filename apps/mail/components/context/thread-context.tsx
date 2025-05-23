@@ -14,7 +14,6 @@ import {
   ArchiveX,
   Forward,
   Inbox,
-  Mail,
   MailOpen,
   Reply,
   ReplyAll,
@@ -25,23 +24,21 @@ import {
 } from 'lucide-react';
 import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
-import { backgroundQueueAtom } from '@/store/backgroundQueue';
 import { type ThreadDestination } from '@/lib/thread-actions';
 import { useThread, useThreads } from '@/hooks/use-threads';
+import { ExclamationCircle, Mail } from '../icons/icons';
+import { useNavigate, useParams } from 'react-router';
 import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
-import { ExclamationCircle } from '../icons/icons';
 import { useMemo, type ReactNode } from 'react';
 import { useLabels } from '@/hooks/use-labels';
 import { FOLDERS, LABELS } from '@/lib/utils';
-import { useStats } from '@/hooks/use-stats';
 import { useMail } from '../mail/use-mail';
-import { useNavigate } from 'react-router';
+
 import { useTranslations } from 'use-intl';
 import { Checkbox } from '../ui/checkbox';
-import { useParams } from 'react-router';
+
 import { useQueryState } from 'nuqs';
-import { useAtom } from 'jotai';
 import { toast } from 'sonner';
 
 interface EmailAction {
