@@ -1,5 +1,3 @@
-import { isToday, isThisMonth, differenceInCalendarMonths } from 'date-fns';
-import type { JSONContent } from 'novel';
 import type { Sender } from '../types';
 
 export const FOLDERS = {
@@ -41,13 +39,6 @@ export const FOLDER_TAGS: Record<string, string[]> = {
 
 export const getFolderTags = (folder: string): string[] => {
   return FOLDER_TAGS[folder] || [];
-};
-
-export const getCookie = (key: string): string | null => {
-  const cookies = Object.fromEntries(
-    document.cookie.split('; ').map((v) => v.split(/=(.*)/s).map(decodeURIComponent)),
-  );
-  return cookies?.[key] ?? null;
 };
 
 export const cleanEmailAddress = (email: string = '') => {
@@ -99,112 +90,6 @@ export const getFileIcon = (mimeType: string): string => {
     return '📝';
   if (mimeType.includes('image')) return ''; // Empty for images as they're handled separately
   return '📎'; // Default icon
-};
-
-export const createAIJsonContent = (text: string): JSONContent => {
-  // Try to identify common sign-off patterns with a more comprehensive regex
-  const signOffPatterns = [
-    /\b((?:Best regards|Regards|Sincerely|Thanks|Thank you|Cheers|Best|All the best|Yours truly|Yours sincerely|Kind regards|Cordially)(?:,)?)\s*\n+\s*([A-Za-z][A-Za-z\s.]*)$/i,
-  ];
-
-  let mainContent = text;
-  let signatureLines: string[] = [];
-
-  // Extract sign-off if found
-  for (const pattern of signOffPatterns) {
-    const match = text.match(pattern);
-    if (match) {
-      // Find the index where the sign-off starts
-      const signOffIndex = text.lastIndexOf(match[0]);
-      if (signOffIndex > 0) {
-        // Split the content
-        mainContent = text.substring(0, signOffIndex).trim();
-
-        // Split the signature part into separate lines
-        const signature = text.substring(signOffIndex).trim();
-        signatureLines = signature
-          .split(/\n+/)
-          .map((line) => line.trim())
-          .filter(Boolean);
-        break;
-      }
-    }
-  }
-
-  // If no signature was found with regex but there are newlines at the end,
-  // check if the last lines could be a signature
-  if (signatureLines.length === 0) {
-    const allLines = text.split(/\n+/);
-    if (allLines.length > 1) {
-      // Check if last 1-3 lines might be a signature (short lines at the end)
-      const potentialSigLines = allLines
-        .slice(-3)
-        .filter(
-          (line) =>
-            line.trim().length < 60 && !line.trim().endsWith('?') && !line.trim().endsWith('.'),
-        );
-
-      if (potentialSigLines.length > 0) {
-        signatureLines = potentialSigLines;
-        mainContent = allLines
-          .slice(0, allLines.length - potentialSigLines.length)
-          .join('\n')
-          .trim();
-      }
-    }
-  }
-
-  // Split the main content into paragraphs
-  const paragraphs = mainContent
-    .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter(Boolean);
-
-  if (paragraphs.length === 0 && signatureLines.length === 0) {
-    // If no paragraphs and no signature were found, treat the whole text as one paragraph
-    paragraphs.push(text);
-  }
-
-  // Create a content array with appropriate spacing between paragraphs
-  const content = [];
-
-  paragraphs.forEach((paragraph, index) => {
-    // Add the content paragraph
-    content.push({
-      type: 'paragraph',
-      content: [{ type: 'text', text: paragraph }],
-    });
-
-    // Add an empty paragraph between main paragraphs
-    if (index < paragraphs.length - 1) {
-      content.push({
-        type: 'paragraph',
-      });
-    }
-  });
-
-  // If we found a signature, add it with proper spacing
-  if (signatureLines.length > 0) {
-    // Add spacing before the signature if there was content
-    if (paragraphs.length > 0) {
-      content.push({
-        type: 'paragraph',
-      });
-    }
-
-    // Add each line of the signature as a separate paragraph
-    signatureLines.forEach((line) => {
-      content.push({
-        type: 'paragraph',
-        content: [{ type: 'text', text: line }],
-      });
-    });
-  }
-
-  return {
-    type: 'doc',
-    content: content,
-  };
 };
 
 export const generateConversationId = (): string => {

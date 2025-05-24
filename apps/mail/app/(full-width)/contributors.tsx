@@ -166,22 +166,23 @@ export default function OpenPage() {
   }, [initialContributors, additionalContributors]);
 
   const { data: repoData, error: repoError } = useQuery({
-    queryFn: () => fetch(`https://api.github.com/repos/${REPOSITORY}`).then((res) => res.json()),
+    queryFn: () =>
+      fetch(`https://api.github.com/repos/${REPOSITORY}`).then((res) => res.json() as any),
     queryKey: ['repo-data', REPOSITORY],
   });
 
   const { data: commitsData, error: commitsError } = useQuery({
     queryFn: () =>
-      fetch(`https://api.github.com/repos/${REPOSITORY}/commits?per_page=100`).then((res) =>
-        res.json(),
+      fetch(`https://api.github.com/repos/${REPOSITORY}/commits?per_page=100`).then(
+        (res) => res.json() as any,
       ),
     queryKey: ['commits-data', REPOSITORY],
   });
 
   const { data: prsData, error: prsError } = useQuery({
     queryFn: () =>
-      fetch(`https://api.github.com/repos/${REPOSITORY}/pulls?state=open`).then((res) =>
-        res.json(),
+      fetch(`https://api.github.com/repos/${REPOSITORY}/pulls?state=open`).then(
+        (res) => res.json() as any,
       ),
     queryKey: ['prs-data', REPOSITORY],
   });
@@ -745,19 +746,6 @@ export default function OpenPage() {
               <span>Thank you to all the contributors who have helped make 0.email possible</span>
             </div>
           </div>
-
-          <style jsx global>{`
-            @keyframes fadeInUp {
-              from {
-                opacity: 0;
-                transform: translateY(10px);
-              }
-              to {
-                opacity: 1;
-                transform: translateY(0);
-              }
-            }
-          `}</style>
 
           <div>
             <Tabs defaultValue="grid" className="w-full">

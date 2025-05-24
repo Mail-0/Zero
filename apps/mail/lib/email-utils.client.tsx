@@ -1,7 +1,7 @@
 import { Html, Head, Body, Container, Section, Column, Row } from '@react-email/components';
 import { getListUnsubscribeAction } from '@/lib/email-utils';
 import { trpcClient } from '@/providers/query-provider';
-import { render } from '@react-email/render';
+import { renderToString } from 'react-dom/server';
 import type { ParsedMessage } from '@/types';
 
 export const handleUnsubscribe = async ({ emailData }: { emailData: ParsedMessage }) => {
@@ -262,7 +262,7 @@ export const template = async (html: string, imagesEnabled: boolean = false) => 
     processedHtml = proxyImageUrls(processedHtml);
   }
 
-  const emailHtml = await render(
+  const emailHtml = renderToString(
     <EmailTemplate content={processedHtml} imagesEnabled={imagesEnabled} nonce={nonce} />,
   );
   return emailHtml;

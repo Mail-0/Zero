@@ -425,9 +425,15 @@ const Thread = memo(
                         {highlightText(latestMessage.subject, searchValue.highlight)}
                       </p>
                     )}
-                    <div className="hidden md:flex">
+                    {/* <div className="hidden md:flex">
                       {getThreadData.labels ? <MailLabels labels={getThreadData.labels} /> : null}
-                    </div>
+                    </div> */}
+                    {threadLabels && (
+                      <div className="mr-0 flex w-full items-center justify-end gap-1">
+                        {!isFolderSent ? <RenderLabels labels={threadLabels} /> : null}
+                        {/* {getThreadData.labels ? <MailLabels labels={getThreadData.labels} /> : null} */}
+                      </div>
+                    )}
                   </div>
                   {emailContent && (
                     <div className="text-muted-foreground mt-2 line-clamp-2 text-xs">
@@ -444,16 +450,6 @@ const Thread = memo(
                 </div>
               </div>
             </div>
-            {threadLabels && (
-              <div className="ml-[47px] flex w-full items-center justify-between gap-1 px-4">
-                {!isFolderSent ? (
-                  <span className="mt-0.5 items-center space-x-2">
-                    <RenderLabels labels={threadLabels} />
-                  </span>
-                ) : null}
-                {/* {getThreadData.labels ? <MailLabels labels={getThreadData.labels} /> : null} */}
-              </div>
-            )}
           </div>
         </div>
       ) : null;

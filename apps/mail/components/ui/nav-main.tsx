@@ -13,17 +13,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  SidebarGroup,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from './sidebar';
+import { SidebarGroup, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from './sidebar';
 import { Collapsible, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useActiveConnection, useConnections } from '@/hooks/use-connections';
 import { type MessageKey, type NavItem } from '@/config/navigation';
+import { LabelDialog } from '@/components/labels/label-dialog';
 import { useSearchValue } from '@/hooks/use-search-value';
+import { useSidebar } from '../context/sidebar-context';
 import { useTRPC } from '@/providers/query-provider';
 import { RecursiveFolder } from './recursive-folder';
 import { useMutation } from '@tanstack/react-query';
@@ -35,6 +31,7 @@ import { useSession } from '@/lib/auth-client';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useStats } from '@/hooks/use-stats';
+import SidebarLabels from './sidebar-labels';
 import { CurvedArrow } from '../icons/icons';
 import { Command, Plus } from 'lucide-react';
 import { Tree } from '../magicui/file-tree';
@@ -42,6 +39,7 @@ import { useCallback, useRef } from 'react';
 import { BASE_URL } from '@/lib/constants';
 import { useTranslations } from 'use-intl';
 import { useForm } from 'react-hook-form';
+import type { Label } from '@/types';
 import { useQueryState } from 'nuqs';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -78,23 +76,16 @@ export function NavMain({ items }: NavMainProps) {
   const pathname = location.pathname;
   const searchParams = new URLSearchParams();
   const [category] = useQueryState('category');
-  const [searchValue, setSearchValue] = useSearchValue();
+
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const { data: session } = useSession();
   const { data: connections } = useConnections();
   const { data: stats } = useStats();
   const { data: activeConnection } = useActiveConnection();
-  const form = useForm<LabelType>({
-    defaultValues: {
-      name: '',
-      color: { backgroundColor: '', textColor: '#ffffff' },
-    },
-  });
 
   const trpc = useTRPC();
 
   const { mutateAsync: createLabel } = useMutation(trpc.labels.create.mutationOptions());
-  const formColor = form.watch('color');
 
   const { data, refetch } = useLabels();
 
@@ -172,11 +163,6 @@ export function NavMain({ items }: NavMainProps) {
     [pathname, category, searchParams, isValidInternalUrl],
   );
 
-  const getLabelCount = useCallback((labelName: string | undefined): number => {
-    if (!stats || !labelName) return 0;
-    return stats.find((stat) => stat.label?.toLowerCase() === labelName.toLowerCase())?.count ?? 0;
-  }, [stats]);
-
   const activeAccount = React.useMemo(() => {
     if (!activeConnection?.id || !connections?.connections) return null;
     return connections.connections.find((connection) => connection.id === activeConnection?.id);
@@ -204,54 +190,11 @@ export function NavMain({ items }: NavMainProps) {
     [pathname, searchParams],
   );
 
-  const handleFilterByLabel = (label: LabelType) => () => {
-    const existingValue = searchValue.value;
-    if (existingValue.includes(`label:${label.name}`)) {
-      setSearchValue({
-        value: existingValue.replace(`label:${label.name}`, ''),
-        highlight: '',
-        folder: '',
-      });
-      return;
-    }
-    const newValue = existingValue ? `${existingValue} label:${label.name}` : `label:${label.name}`;
-    setSearchValue({
-      value: newValue,
-      highlight: '',
-      folder: '',
-    });
-  };
-
   const onSubmit = async (data: LabelType) => {
-    if (!data.color?.backgroundColor) {
-      form.setError('color', {
-        type: 'required',
-        message: 'Please select a color',
-      });
-      return;
-    }
-
-    try {
-      toast.promise(createLabel(data), {
-        loading: 'Creating label...',
-        success: 'Label created successfully',
-        error: 'Failed to create label',
-        finally: () => {
-          refetch();
-        },
-      });
-    } catch (error) {
-      console.error('Error creating label:', error);
-    } finally {
-      handleClose();
-    }
-  };
-
-  const handleClose = () => {
-    setIsDialogOpen(false);
-    form.reset({
-      name: '',
-      color: { backgroundColor: '', textColor: '#ffffff' },
+    await toast.promise(createLabel(data), {
+      loading: 'Creating label...',
+      success: 'Label created successfully',
+      error: 'Failed to create label',
     });
   };
 
@@ -297,8 +240,8 @@ export function NavMain({ items }: NavMainProps) {
                   {activeAccount?.providerId === 'google' ? 'Labels' : 'Folders'}
                 </span>
                 {activeAccount?.providerId === 'google' ? (
-                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogTrigger asChild>
+                  <LabelDialog
+                    trigger={
                       <Button
                         variant="ghost"
                         size="icon"
@@ -306,236 +249,18 @@ export function NavMain({ items }: NavMainProps) {
                       >
                         <Plus className="h-3 w-3 text-[#6D6D6D] dark:text-[#898989]" />
                       </Button>
-                    </DialogTrigger>
-                    <DialogContent showOverlay={true}>
-                      <DialogHeader>
-                        <DialogTitle>Create New Label</DialogTitle>
-                      </DialogHeader>
-                      <Form {...form}>
-                        <form
-                          onSubmit={form.handleSubmit(onSubmit)}
-                          className="space-y-4"
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                              e.preventDefault();
-                              form.handleSubmit(onSubmit)();
-                            }
-                          }}
-                        >
-                          <div className="space-y-4 py-4">
-                            <div className="space-y-2">
-                              <FormField
-                                control={form.control}
-                                name="name"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Label Name</FormLabel>
-                                    <FormControl>
-                                      <Input placeholder="Enter label name" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                            <div className="space-y-4">
-                              <FormField
-                                control={form.control}
-                                name="color"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Color</FormLabel>
-                                    <FormControl>
-                                      <div className="w-full">
-                                        <div className="bg-panelLight dark:bg-panelDark grid grid-cols-7 gap-4">
-                                          {[
-                                            // Row 1 - Grayscale
-                                            '#000000',
-                                            '#434343',
-                                            '#666666',
-                                            '#999999',
-                                            '#cccccc',
-                                            '#ffffff',
-                                            // Row 2 - Warm colors
-                                            '#fb4c2f',
-                                            '#ffad47',
-                                            '#fad165',
-                                            '#ff7537',
-                                            '#cc3a21',
-                                            '#8a1c0a',
-                                            // Row 3 - Cool colors
-                                            '#16a766',
-                                            '#43d692',
-                                            '#4a86e8',
-                                            '#285bac',
-                                            '#3c78d8',
-                                            '#0d3472',
-                                            // Row 4 - Purple tones
-                                            '#a479e2',
-                                            '#b99aff',
-                                            '#653e9b',
-                                            '#3d188e',
-                                            '#f691b3',
-                                            '#994a64',
-                                            // Row 5 - Pastels
-                                            '#f6c5be',
-                                            '#ffe6c7',
-                                            '#c6f3de',
-                                            '#c9daf8',
-                                          ].map((color) => (
-                                            <button
-                                              key={color}
-                                              type="button"
-                                              className={`h-10 w-10 rounded-[4px] border-[0.5px] border-white/10 ${
-                                                field.value?.backgroundColor === color
-                                                  ? 'ring-2 ring-blue-500'
-                                                  : ''
-                                              }`}
-                                              style={{ backgroundColor: color }}
-                                              onClick={() =>
-                                                form.setValue('color', {
-                                                  backgroundColor: color,
-                                                  textColor: '#ffffff',
-                                                })
-                                              }
-                                            />
-                                          ))}
-                                        </div>
-                                      </div>
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                          </div>
-                          <div className="flex justify-end space-x-2">
-                            <Button
-                              className="h-8"
-                              type="button"
-                              variant="outline"
-                              onClick={handleClose}
-                            >
-                              Cancel
-                            </Button>
-                            <Button className="h-8" type="submit">
-                              Create Label
-                              <div className="gap- flex h-5 items-center justify-center rounded-sm bg-white/10 px-1 dark:bg-black/10">
-                                <Command className="h-2 w-2 text-white dark:text-[#929292]" />
-                                <CurvedArrow className="mt-1.5 h-3 w-3 fill-white dark:fill-[#929292]" />
-                              </div>
-                            </Button>
-                          </div>
-                        </form>
-                      </Form>
-                    </DialogContent>
-                  </Dialog>
+                    }
+                    onSubmit={onSubmit}
+                    onSuccess={refetch}
+                  />
                 ) : activeAccount?.providerId === 'microsoft' ? null : null}
               </div>
 
-              <div className="mr-0 flex-1 pr-0">
-                <div className="bg-background no-scrollbar relative -m-2 max-h-48 flex-1 overflow-auto">
-                  <Tree className="bg-background rounded-md">
-                    {(() => {
-                      if (!data) return null;
-                      const isMicrosoftAccount = activeAccount?.providerId === 'microsoft';
-                      if (isMicrosoftAccount) {
-                        return data?.map((label) => (
-                          <RecursiveFolder
-                            key={label.id}
-                            label={label}
-                            activeAccount={activeAccount}
-                            count={getLabelCount(label.name)}
-                          />
-                        ));
-                      }
-
-                      const groups = {
-                        brackets: [] as typeof data,
-                        other: [] as typeof data,
-                        folders: {} as Record<string, typeof data>,
-                      };
-
-                      data.forEach((label) => {
-                        if (/\[.*\]/.test(label.name)) {
-                          groups.brackets.push(label);
-                        } else if (/[^/]+\/[^/]+/.test(label.name)) {
-                          const [groupName] = label.name.split('/') as [string];
-                          if (!groups.folders[groupName]) {
-                            groups.folders[groupName] = [];
-                          }
-                          groups.folders[groupName].push(label);
-                        } else {
-                          groups.other.push(label);
-                        }
-                      });
-
-                      const components = [];
-
-                      Object.entries(groups.folders)
-                        .sort(([a], [b]) => a.localeCompare(b))
-                        .forEach(([groupName, labels]) => {
-                          const groupFolder = {
-                            id: `group-${groupName}`,
-                            name: groupName,
-                            labels: labels.map((label) => ({
-                              id: label.id,
-                              name: label.name.split('/').slice(1).join('/'),
-                              originalLabel: label,
-                            })),
-                          };
-                          components.push(
-                            <RecursiveFolder
-                              key={groupFolder.id}
-                              label={groupFolder}
-                              activeAccount={activeAccount}
-                              count={getLabelCount(groupFolder.name)}
-                            />,
-                          );
-                        });
-
-                      if (groups.other.length > 0) {
-                        groups.other.forEach((label) => {
-                          components.push(
-                            <RecursiveFolder
-                              key={label.id}
-                              label={{
-                                id: label.id,
-                                name: label.name,
-                                originalLabel: label,
-                              }}
-                              count={getLabelCount(label.name)}
-                              activeAccount={activeAccount}
-                            />,
-                          );
-                        });
-                      }
-
-                      if (groups.brackets.length > 0) {
-                        const bracketsFolder = {
-                          id: 'group-other',
-                          name: 'Other',
-                          labels: groups.brackets.map((label) => ({
-                            id: label.id,
-                            name: label.name.replace(/\[|\]/g, ''),
-                            originalLabel: label,
-                          })),
-                        };
-                        components.push(
-                          <RecursiveFolder
-                            key={bracketsFolder.id}
-                            label={bracketsFolder}
-                            activeAccount={activeAccount}
-                            count={stats ? stats.find((stat) => stat.label?.toLowerCase() === bracketsFolder.name?.toLowerCase())?.count : 0}
-                          />,
-                        );
-                      }
-
-                      return components;
-                    })()}
-                  </Tree>
-                </div>
-              </div>
+              <SidebarLabels
+                data={data ?? []}
+                activeAccount={activeAccount ?? null}
+                stats={stats}
+              />
             </SidebarMenuItem>
           </Collapsible>
         )}

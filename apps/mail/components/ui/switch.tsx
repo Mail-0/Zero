@@ -1,5 +1,3 @@
-'use client';
-
 import { Switch as SwitchPrimitives } from 'radix-ui';
 import * as React from 'react';
 

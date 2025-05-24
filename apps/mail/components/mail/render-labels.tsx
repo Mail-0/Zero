@@ -38,11 +38,15 @@ export const RenderLabels = ({ count = 1, labels }: { count?: number; labels: La
           key={label.id}
           onClick={handleFilterByLabel(label)}
           className={cn(
-            'dark:bg-subtleBlack bg-subtleWhite text-primary inline-block overflow-hidden truncate rounded border px-1.5 py-0.5 text-xs font-medium',
+            'dark:bg-subtleBlack bg-subtleWhite text-primary inline-block overflow-hidden truncate rounded bg-opacity-10 px-1.5 py-0.5 text-xs font-medium',
             searchValue.value.includes(`label:${label.name}`) &&
               'border-neutral-800 dark:border-white',
           )}
-          style={{ backgroundColor: label.color?.backgroundColor, color: label.color?.textColor }}
+          style={{
+            background: label.color?.backgroundColor + '1a',
+            color: label.color?.backgroundColor,
+            // borderColor: label.color?.backgroundColor,
+          }}
         >
           {label.name}
         </button>
@@ -50,7 +54,7 @@ export const RenderLabels = ({ count = 1, labels }: { count?: number; labels: La
       {hiddenLabels.length > 0 && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <button className="text-muted-foreground dark:bg-subtleBlack bg-subtleWhite inline-block truncate rounded border px-1.5 py-0.5 text-xs font-medium overflow-hidden">
+            <button className="text-muted-foreground dark:bg-subtleBlack bg-subtleWhite inline-block overflow-hidden truncate rounded px-1.5 py-0.5 text-xs font-medium">
               +{hiddenLabels.length}
             </button>
           </TooltipTrigger>
@@ -60,13 +64,14 @@ export const RenderLabels = ({ count = 1, labels }: { count?: number; labels: La
                 key={label.id}
                 onClick={handleFilterByLabel(label)}
                 className={cn(
-                  'dark:bg-subtleBlack bg-subtleWhite inline-block truncate rounded border px-1.5 py-0.5 text-xs font-medium overflow-hidden',
+                  'dark:bg-subtleBlack bg-subtleWhite inline-block overflow-hidden truncate rounded border px-1.5 py-0.5 text-xs font-medium',
                   searchValue.value.includes(`label:${label.name}`) &&
                     'border-neutral-800 dark:border-white',
                 )}
                 style={{
                   backgroundColor: label.color?.backgroundColor,
                   color: label.color?.textColor,
+                  borderColor: label.color?.backgroundColor,
                 }}
               >
                 {label.name}

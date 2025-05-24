@@ -3,9 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "dependencies": {
-    "drizzle-orm": "0.43.1",
+    "drizzle-orm": "catalog:",
     "postgres": "3.4.5",
-    "zod": "3.24.4"
+    "zod": "catalog:"
   },
   "scripts": {
     "db:generate": "drizzle-kit generate",
@@ -14,11 +14,11 @@
     "db:studio": "drizzle-kit studio"
   },
   "devDependencies": {
-    "@types/node": "22.13.8",
+    "@types/node": "catalog:",
     "@zero/tsconfig": "workspace:*",
     "dotenv": "16.4.7",
-    "drizzle-kit": "0.31.1",
-    "typescript": "5.8.2"
+    "drizzle-kit": "catalog:",
+    "typescript": "catalog:"
   },
   "exports": {
     ".": "./src/index.ts",

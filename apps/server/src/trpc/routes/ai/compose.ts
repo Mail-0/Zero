@@ -3,6 +3,7 @@ import {
   type WritingStyleMatrix,
 } from '../../../services/writing-style-service';
 import { StyledEmailAssistantSystemPrompt } from '../../../lib/prompts';
+import { webSearch } from '../../../routes/agent/tools';
 import { activeConnectionProcedure } from '../../trpc';
 import { stripHtml } from 'string-strip-html';
 import { openai } from '@ai-sdk/openai';
@@ -49,44 +50,56 @@ export async function composeEmail(input: ComposeEmailInput) {
     }),
   }));
 
+  const messages =
+    threadMessages.length > 0
+      ? [
+          {
+            role: 'user' as const,
+            content: "I'm going to give you the current email thread replies one by one.",
+          } as const,
+          {
+            role: 'assistant' as const,
+            content: 'Got it. Please proceed with the thread replies.',
+          } as const,
+          ...threadUserMessages,
+          {
+            role: 'assistant' as const,
+            content: 'Got it. Please proceed with the email composition prompt.',
+          },
+        ]
+      : [
+          {
+            role: 'user' as const,
+            content: 'Now, I will give you the prompt to write the email.',
+          },
+          {
+            role: 'assistant' as const,
+            content: 'Ok, please continue with the email composition prompt.',
+          },
+        ];
+
   const { text } = await generateText({
-    model: openai('gpt-4o'),
+    model: openai('gpt-4o-mini'),
     messages: [
       {
         role: 'system',
         content: systemPrompt,
       },
-      ...(threadMessages.length > 0
-        ? [
-            {
-              role: 'user',
-              content: "I'm going to give you the current email thread replies one by one.",
-            } as const,
-            {
-              role: 'assistant',
-              content: 'Got it. Please proceed with the thread replies.',
-            } as const,
-            ...threadUserMessages,
-            {
-              role: 'user',
-              content: 'Now, I will give you the prompt to write the email.',
-            } as const,
-          ]
-        : []),
-      {
-        role: 'user',
-        content: 'Now, I will give you the prompt to write the email.',
-      },
+      ...messages,
       {
         role: 'user',
         content: userPrompt,
       },
     ],
-    maxTokens: 1_000,
+    maxSteps: 10,
+    maxTokens: 2_000,
     temperature: 0.35,
     frequencyPenalty: 0.2,
     presencePenalty: 0.1,
     maxRetries: 1,
+    tools: {
+      webSearch,
+    },
   });
 
   return text;
@@ -226,8 +239,6 @@ const EmailAssistantPrompt = ({
   parts.push("##This is the user's name:");
   parts.push(escapeXml(username));
   parts.push('');
-
-  console.log('parts', parts);
 
   parts.push(
     'Please write an email using this context and instruction. If there are previous messages in the thread use those for more context.',

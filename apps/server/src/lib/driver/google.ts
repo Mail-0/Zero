@@ -8,6 +8,7 @@ import {
   sanitizeContext,
   StandardizedError,
 } from './utils';
+import { mapGoogleLabelColor, mapToGoogleLabelColor } from './google-label-color-map';
 import { parseAddressList, parseFrom, wasSentWithTLS } from '../email-utils';
 import type { IOutgoingMessage, Label, ParsedMessage } from '../../types';
 import { sanitizeTipTapHtml } from '../sanitize-tip-tap-html';
@@ -16,8 +17,8 @@ import { type gmail_v1, gmail } from '@googleapis/gmail';
 import { OAuth2Client } from 'google-auth-library';
 import type { CreateDraftData } from '../schemas';
 import { createMimeMessage } from 'mimetext';
-import { cleanSearchValue } from '../utils';
 import { people } from '@googleapis/people';
+import { cleanSearchValue } from '../utils';
 import { env } from 'cloudflare:workers';
 import * as he from 'he';
 
@@ -574,10 +575,10 @@ export class GoogleMailManager implements MailManager {
         id: label.id ?? '',
         name: label.name ?? '',
         type: label.type ?? '',
-        color: {
+        color: mapGoogleLabelColor({
           backgroundColor: label.color?.backgroundColor ?? '',
           textColor: label.color?.textColor ?? '',
-        },
+        }),
       })) ?? []
     );
   }
@@ -589,10 +590,10 @@ export class GoogleMailManager implements MailManager {
     return {
       id: labelId,
       name: res.data.name ?? '',
-      color: {
+      color: mapGoogleLabelColor({
         backgroundColor: res.data.color?.backgroundColor ?? '',
         textColor: res.data.color?.textColor ?? '',
-      },
+      }),
       type: res.data.type ?? 'user',
     };
   }
@@ -607,10 +608,10 @@ export class GoogleMailManager implements MailManager {
         labelListVisibility: 'labelShow',
         messageListVisibility: 'show',
         color: label.color
-          ? {
+          ? mapToGoogleLabelColor({
               backgroundColor: label.color.backgroundColor,
               textColor: label.color.textColor,
-            }
+            })
           : undefined,
       },
     });
@@ -622,10 +623,10 @@ export class GoogleMailManager implements MailManager {
       requestBody: {
         name: label.name,
         color: label.color
-          ? {
+          ? mapToGoogleLabelColor({
               backgroundColor: label.color.backgroundColor,
               textColor: label.color.textColor,
-            }
+            })
           : undefined,
       },
     });

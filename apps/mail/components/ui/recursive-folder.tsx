@@ -1,20 +1,26 @@
 import { useActiveConnection, useConnections } from '@/hooks/use-connections';
 import { LabelSidebarContextMenu } from '../context/label-sidebar-context';
 import { useSearchValue } from '@/hooks/use-search-value';
+import type { Label, Label as LabelType } from '@/types';
 import { useSidebar } from '../context/sidebar-context';
-import type { Label as LabelType } from '@/types';
 import { Folder } from '../magicui/file-tree';
 import { useNavigate } from 'react-router';
 import { useCallback } from 'react';
 import * as React from 'react';
 
-export const RecursiveFolder = ({ label, activeAccount, count }: { label: any; activeAccount?: any; count?: number }) => {
+export const RecursiveFolder = ({
+  label,
+  activeAccount,
+  count,
+}: {
+  label: Label & { originalLabel?: Label };
+  activeAccount?: any;
+  count?: number;
+}) => {
   const [searchValue, setSearchValue] = useSearchValue();
   const isActive = searchValue.value.includes(`label:${label.name}`);
   const isFolderActive = isActive || window.location.pathname.includes(`/mail/label/${label.id}`);
   const navigate = useNavigate();
-  const { data: connections } = useConnections();
-  const { data: activeConnection } = useActiveConnection();
   const { setOpenMobile, isMobile } = useSidebar();
 
   const handleFilterByLabel = useCallback(
@@ -48,7 +54,7 @@ export const RecursiveFolder = ({ label, activeAccount, count }: { label: any; a
         return;
       }
 
-      const labelToUse = label.originalLabel || label;
+      const labelToUse = label;
 
       if (activeAccount.providerId === 'microsoft') {
         navigate(`/mail/${id}`);
@@ -78,10 +84,16 @@ export const RecursiveFolder = ({ label, activeAccount, count }: { label: any; a
         hasChildren={hasChildren}
         onFolderClick={handleFolderClick}
         isSelect={isFolderActive}
-        count={count}
+        count={count || 0}
+        className="max-w-[192px]"
       >
         {label.labels?.map((childLabel: any) => (
-          <RecursiveFolder key={childLabel.id} label={childLabel} count={count} />
+          <RecursiveFolder
+            key={childLabel.id}
+            label={childLabel}
+            activeAccount={activeAccount}
+            count={count}
+          />
         ))}
       </Folder>
     </LabelSidebarContextMenu>

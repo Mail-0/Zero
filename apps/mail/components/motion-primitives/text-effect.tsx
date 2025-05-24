@@ -170,7 +170,6 @@ const createVariantsWithTransition = (
     visible: {
       ...baseVariants.visible,
       transition: {
-        // @ts-expect-error, fix later if needed
         ...(hasTransition(baseVariants.visible) ? baseVariants.visible.transition : {}),
         ...mainTransition,
       },
@@ -178,7 +177,6 @@ const createVariantsWithTransition = (
     exit: {
       ...baseVariants.exit,
       transition: {
-        // @ts-expect-error, fix later if needed
         ...(hasTransition(baseVariants.exit) ? baseVariants.exit.transition : {}),
         ...mainTransition,
         staggerDirection: -1,
