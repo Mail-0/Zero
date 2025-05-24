@@ -195,7 +195,7 @@ export default function GeneralPage() {
                     <FormLabel>{t('pages.settings.general.language')}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger className="w-36">
+                        <SelectTrigger className="w-36 justify-start">
                           <Globe className="mr-2 h-4 w-4" />
                           <SelectValue placeholder={t('pages.settings.general.selectLanguage')} />
                         </SelectTrigger>
