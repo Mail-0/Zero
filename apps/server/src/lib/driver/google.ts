@@ -190,11 +190,18 @@ export class GoogleMailManager implements MailManager {
           pageToken: pageToken ? pageToken : undefined,
           quotaUser: this.config.auth?.email,
         });
+
+        const threads = res.data.threads ?? [];
+
         return {
-          threads: (res.data.threads ?? [])
+          threads: threads
             .filter((thread) => typeof thread.id === 'string')
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            .map((thread) => ({ id: thread.id!, $raw: thread })),
+            .map((thread) => ({
+              id: thread.id!,
+              historyId: thread.historyId ?? null,
+              $raw: thread,
+            })),
           nextPageToken: res.data.nextPageToken ?? null,
         };
       },
@@ -493,6 +500,7 @@ export class GoogleMailManager implements MailManager {
         return {
           threads: sortedDrafts.map((draft) => ({
             id: draft.id,
+            historyId: draft.threadId ?? null,
             $raw: draft,
           })),
           nextPageToken: res.data.nextPageToken ?? null,

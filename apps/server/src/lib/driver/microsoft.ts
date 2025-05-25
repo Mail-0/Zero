@@ -305,6 +305,7 @@ export class OutlookMailManager implements MailManager {
         return {
           threads: messages.map((msg, index) => ({
             id: msg.id || msg.internetMessageId || '',
+            historyId: msg.lastModifiedDateTime ?? null,
             $raw: {
               ...msg,
               ...fullMessages[index],
@@ -619,6 +620,7 @@ export class OutlookMailManager implements MailManager {
         return {
           threads: sortedDrafts.map((draft) => ({
             id: draft.id,
+            historyId: null,
             $raw: draft,
           })),
           nextPageToken: nextPageLink || null,

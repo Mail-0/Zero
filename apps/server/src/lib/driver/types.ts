@@ -45,7 +45,7 @@ export interface MailManager {
   ): Promise<{ id?: string | null; success?: boolean; error?: string }>;
   getDraft(id: string): Promise<ParsedDraft>;
   listDrafts(params: { q?: string; maxResults?: number; pageToken?: string }): Promise<{
-    threads: { id: string; $raw: unknown }[];
+    threads: { id: string; historyId: string | null; $raw: unknown }[];
     nextPageToken: string | null;
   }>;
   delete(id: string): Promise<void>;
@@ -55,7 +55,10 @@ export interface MailManager {
     maxResults?: number;
     labelIds?: string[];
     pageToken?: string | number;
-  }): Promise<{ threads: { id: string; $raw?: unknown }[]; nextPageToken: string | null }>;
+  }): Promise<{
+    threads: { id: string; historyId: string | null; $raw?: unknown }[];
+    nextPageToken: string | null;
+  }>;
   count(): Promise<{ count?: number; label?: string }[]>;
   getTokens(
     code: string,

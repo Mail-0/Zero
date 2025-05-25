@@ -72,7 +72,11 @@ const Thread = memo(
     const [threadId] = useQueryState('threadId');
     const [, setBackgroundQueue] = useAtom(backgroundQueueAtom);
     const { refetch: refetchStats } = useStats();
-    const { data: getThreadData, isGroupThread, refetch: refetchThread } = useThread(message.id);
+    const {
+      data: getThreadData,
+      isGroupThread,
+      refetch: refetchThread,
+    } = useThread(message.id, message.historyId);
     const [isStarred, setIsStarred] = useState(false);
     const trpc = useTRPC();
     const queryClient = useQueryClient();
