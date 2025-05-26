@@ -91,7 +91,19 @@
         "goToDocs": "Go to docs",
         "helpWithShortcuts": "Help with shortcuts",
         "commandPalette": "Command Palette"
-      }
+      },
+      "quickResults": "Quick Results",
+      "searchPlaceholder": "Search...",
+      "noSearchResults": "No search results",
+      "actions": "Actions",
+      "addFilters": "Add filters",
+      "searchForEmails": "Search for emails",
+      "filterPlaceholder": "Filter...",
+      "noFilterResults": "No filter results",
+      "availableFilters": "Available filters",
+      "examples": "Examples",
+      "exampleDate": "Example date",
+      "exampleSender": "Example sender"
     },
     "searchBar": {
       "pickDateRange": "Pick a date or a range",
