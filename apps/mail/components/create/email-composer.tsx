@@ -21,6 +21,7 @@ import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
 import { useRef, useState, useEffect } from 'react';
 import { cn, formatFileSize } from '@/lib/utils';
+import { transformYouTubeIframesToLinks } from '@/lib/email-utils';
 import { useThread } from '@/hooks/use-threads';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useSession } from '@/lib/auth-client';
@@ -294,13 +295,7 @@ export function EmailComposer({
       setIsLoading(true);
       setAiGeneratedMessage(null);
       const values = getValues();
-
-      let messageHtml = editor.getHTML();
-      const youtubeIframeRegex = /<iframe[^>]*src="https:\/\/www\.youtube\.com\/embed\/([^"\/?]+)[^>]*><\/iframe>/g;
-      messageHtml = messageHtml.replace(youtubeIframeRegex, (match, videoId) => {
-        const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-        return `<a href="${videoUrl}">${videoUrl}</a>`;
-      });
+      const messageHtml = transformYouTubeIframesToLinks(editor.getHTML());
 
       await onSendEmail({
         to: values.to,
@@ -370,14 +365,7 @@ export function EmailComposer({
 
     if (!hasUnsavedChanges) return;
     console.log('DRAFT HTML', editor.getHTML());
-
-    let messageHtml = editor.getHTML();
-    const youtubeIframeRegex = /<iframe[^>]*src="https:\/\/www\.youtube\.com\/embed\/([^"\/?]+)[^>]*><\/iframe>/g;
-    messageHtml = messageHtml.replace(youtubeIframeRegex, (match, videoId) => {
-      const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-      return `<a href="${videoUrl}">${videoUrl}</a>`;
-    });
-
+    const messageHtml = transformYouTubeIframesToLinks(editor.getHTML());
     const messageText = editor.getText();
     console.log(values, messageText);
     if (!values.to.length || !values.subject.length || !messageText.length) return;
