@@ -49,7 +49,14 @@
       "save": "保存",
       "remove": "削除",
       "settings": "設定",
-      "exitSelectionModeEsc": "クリックまたはESCキーを押して選択モードを終了"
+      "exitSelectionModeEsc": "クリックまたはESCキーを押して選択モードを終了",
+      "deleteAllSpam": "すべてのスパムを削除",
+      "deletingAllSpam": "すべてのスパムを削除中...",
+      "deletedAllSpam": "{count}件のスパムメールを削除しました",
+      "errorDeletingSpam": "スパムメールの削除に失敗しました",
+      "confirmDeleteSpam": "すべてのスパムを削除",
+      "confirmDeleteSpamDescription": "すべてのスパムメールを削除してもよろしいですか？この操作は元に戻せません。",
+      "confirmDelete": "削除"
     },
     "themes": {
       "dark": "ダーク",

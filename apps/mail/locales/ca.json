@@ -49,7 +49,14 @@
       "save": "Desar",
       "remove": "Eliminar",
       "settings": "Configuració",
-      "exitSelectionModeEsc": "Fes clic o prem ESC per sortir del mode de selecció"
+      "exitSelectionModeEsc": "Fes clic o prem ESC per sortir del mode de selecció",
+      "deleteAllSpam": "Eliminar tot el correu brossa",
+      "deletingAllSpam": "Eliminant tot el correu brossa...",
+      "deletedAllSpam": "S'han eliminat {count} correus brossa",
+      "errorDeletingSpam": "No s'han pogut eliminar els correus brossa",
+      "confirmDeleteSpam": "Eliminar tot el correu brossa",
+      "confirmDeleteSpamDescription": "Esteu segur que voleu eliminar tots els correus brossa? Aquesta acció no es pot desfer.",
+      "confirmDelete": "Eliminar"
     },
     "themes": {
       "dark": "Fosc",

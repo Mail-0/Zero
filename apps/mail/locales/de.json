@@ -49,7 +49,14 @@
       "save": "Speichern",
       "remove": "Entfernen",
       "settings": "Einstellungen",
-      "exitSelectionModeEsc": "Klicken oder ESC drücken, um den Auswahlmodus zu verlassen"
+      "exitSelectionModeEsc": "Klicken oder ESC drücken, um den Auswahlmodus zu verlassen",
+      "deleteAllSpam": "Alle Spam-Nachrichten löschen",
+      "deletingAllSpam": "Alle Spam-Nachrichten werden gelöscht...",
+      "deletedAllSpam": "{count} Spam-E-Mails gelöscht",
+      "errorDeletingSpam": "Spam-E-Mails konnten nicht gelöscht werden",
+      "confirmDeleteSpam": "Alle Spam-Nachrichten löschen",
+      "confirmDeleteSpamDescription": "Sind Sie sicher, dass Sie alle Spam-E-Mails löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "confirmDelete": "Löschen"
     },
     "themes": {
       "dark": "Dunkel",

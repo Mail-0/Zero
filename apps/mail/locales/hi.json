@@ -49,7 +49,14 @@
       "save": "सेव करें",
       "remove": "हटाएँ",
       "settings": "सेटिंग्स",
-      "exitSelectionModeEsc": "चयन मोड से बाहर निकलने के लिए क्लिक करें या ESC दबाएं"
+      "exitSelectionModeEsc": "चयन मोड से बाहर निकलने के लिए क्लिक करें या ESC दबाएं",
+      "deleteAllSpam": "सभी स्पैम डिलीट करें",
+      "deletingAllSpam": "सभी स्पैम डिलीट हो रहा है...",
+      "deletedAllSpam": "{count} स्पैम ईमेल डिलीट किए गए",
+      "errorDeletingSpam": "स्पैम ईमेल डिलीट करने में विफल",
+      "confirmDeleteSpam": "सभी स्पैम डिलीट करें",
+      "confirmDeleteSpamDescription": "क्या आप वाकई सभी स्पैम ईमेल डिलीट करना चाहते हैं? यह क्रिया वापस नहीं ली जा सकती।",
+      "confirmDelete": "डिलीट करें"
     },
     "themes": {
       "dark": "काला",

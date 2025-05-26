@@ -49,7 +49,14 @@
       "save": "Uložit",
       "remove": "Odstranit",
       "settings": "Nastavení",
-      "exitSelectionModeEsc": "Klikněte nebo stiskněte ESC pro ukončení režimu výběru"
+      "exitSelectionModeEsc": "Klikněte nebo stiskněte ESC pro ukončení režimu výběru",
+      "deleteAllSpam": "Smazat všechny spamy",
+      "deletingAllSpam": "Mazání všech spamů...",
+      "deletedAllSpam": "Smazáno {count} spamových e-mailů",
+      "errorDeletingSpam": "Nepodařilo se smazat spamové e-maily",
+      "confirmDeleteSpam": "Smazat všechny spamy",
+      "confirmDeleteSpamDescription": "Opravdu chcete smazat všechny spamové e-maily? Tuto akci nelze vrátit zpět.",
+      "confirmDelete": "Smazat"
     },
     "themes": {
       "dark": "Tmavé",

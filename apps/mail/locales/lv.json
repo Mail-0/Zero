@@ -49,7 +49,14 @@
       "save": "Saglabāt",
       "remove": "Noņemt",
       "settings": "Iestatījumi",
-      "exitSelectionModeEsc": "Noklikšķiniet vai nospiediet ESC, lai izietu no atlases režīma"
+      "exitSelectionModeEsc": "Noklikšķiniet vai nospiediet ESC, lai izietu no atlases režīma",
+      "deleteAllSpam": "Dzēst visas mēstules",
+      "deletingAllSpam": "Dzēš visas mēstules...",
+      "deletedAllSpam": "Dzēstas {count} mēstules",
+      "errorDeletingSpam": "Neizdevās dzēst mēstules",
+      "confirmDeleteSpam": "Dzēst visas mēstules",
+      "confirmDeleteSpamDescription": "Vai tiešām vēlaties dzēst visas mēstules? Šo darbību nevar atsaukt.",
+      "confirmDelete": "Dzēst"
     },
     "themes": {
       "dark": "Tumšs",

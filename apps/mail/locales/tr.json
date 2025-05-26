@@ -49,7 +49,14 @@
       "save": "Kaydet",
       "remove": "Kaldır",
       "settings": "Ayarlar",
-      "exitSelectionModeEsc": "Seçim modundan çıkmak için tıklayın veya ESC tuşuna basın"
+      "exitSelectionModeEsc": "Seçim modundan çıkmak için tıklayın veya ESC tuşuna basın",
+      "deleteAllSpam": "Tüm Spam'ı Sil",
+      "deletingAllSpam": "Tüm spam siliniyor...",
+      "deletedAllSpam": "{count} spam e-posta silindi",
+      "errorDeletingSpam": "Spam e-postalar silinemedi",
+      "confirmDeleteSpam": "Tüm Spam'ı Sil",
+      "confirmDeleteSpamDescription": "Tüm spam e-postaları silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+      "confirmDelete": "Sil"
     },
     "themes": {
       "dark": "Koyu",
