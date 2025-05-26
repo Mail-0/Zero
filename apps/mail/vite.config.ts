@@ -30,10 +30,18 @@ export default defineConfig({
   ],
   server: {
     port: 3000,
+    warmup: {
+      ssrFiles: ['./app/**/*', './components/**/*'],
+    },
   },
   css: {
     postcss: {
       plugins: [tailwindcss()],
+    },
+  },
+  ssr: {
+    optimizeDeps: {
+      include: ['novel', '@tiptap/extension-placeholder'],
     },
   },
   build: {

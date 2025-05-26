@@ -1,7 +1,6 @@
 import {
   AIHighlight,
   CharacterCount,
-  CodeBlockLowlight,
   Color,
   CustomKeymap,
   GlobalDragHandle,
@@ -16,12 +15,9 @@ import {
   TiptapLink,
   TiptapUnderline,
   UpdatedImage,
-  Youtube,
-  Mathematics,
+  UploadImagesPlugin,
 } from 'novel';
-import { UploadImagesPlugin } from 'novel';
 
-import { common, createLowlight } from 'lowlight';
 import { cx } from 'class-variance-authority';
 
 //TODO I am using cx here to get tailwind autocomplete working, idk if someone else can write a regex to just capture the class key in objects
@@ -145,35 +141,6 @@ const starterKit = StarterKit.configure({
   gapcursor: false,
 });
 
-const codeBlockLowlight = CodeBlockLowlight.configure({
-  // configure lowlight: common /  all / use highlightJS in case there is a need to specify certain language grammars only
-  // common: covers 37 language grammars which should be good enough in most cases
-  lowlight: createLowlight(common),
-});
-
-const youtube = Youtube.configure({
-  HTMLAttributes: {
-    class: cx('rounded-lg border border-muted'),
-  },
-  inline: false,
-});
-
-// const twitter = Twitter.configure({
-//   HTMLAttributes: {
-//     class: cx('not-prose')
-//   },
-//   inline: false
-// })
-
-const mathematics = Mathematics.configure({
-  HTMLAttributes: {
-    class: cx('text-foreground rounded p-1 hover:bg-accent cursor-pointer'),
-  },
-  katexOptions: {
-    throwOnError: false,
-  },
-});
-
 const characterCount = CharacterCount.configure();
 
 export const defaultExtensions = [
@@ -187,9 +154,6 @@ export const defaultExtensions = [
   taskItem,
   horizontalRule,
   aiHighlight,
-  codeBlockLowlight,
-  youtube,
-  mathematics,
   characterCount,
   TiptapUnderline,
   HighlightExtension,
