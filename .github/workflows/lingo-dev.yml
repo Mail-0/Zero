@@ -1,9 +1,9 @@
-name: main
+name: lingo-dev
 
 on:
   push:
     branches:
-      - main
+      - staging
   workflow_dispatch:
     inputs:
       skip_localization:
