@@ -49,7 +49,14 @@
       "save": "Zapisz",
       "remove": "Usuń",
       "settings": "Ustawienia",
-      "exitSelectionModeEsc": "Kliknij lub naciśnij ESC, aby wyjść z trybu zaznaczania"
+      "exitSelectionModeEsc": "Kliknij lub naciśnij ESC, aby wyjść z trybu zaznaczania",
+      "deleteAllSpam": "Usuń cały spam",
+      "deletingAllSpam": "Usuwanie całego spamu...",
+      "deletedAllSpam": "Usunięto {count} wiadomości spam",
+      "errorDeletingSpam": "Nie udało się usunąć wiadomości spam",
+      "confirmDeleteSpam": "Usuń cały spam",
+      "confirmDeleteSpamDescription": "Czy na pewno chcesz usunąć wszystkie wiadomości spam? Tej akcji nie można cofnąć.",
+      "confirmDelete": "Usuń"
     },
     "themes": {
       "dark": "Ciemny",

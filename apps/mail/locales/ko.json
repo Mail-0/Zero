@@ -49,7 +49,14 @@
       "save": "저장",
       "remove": "삭제",
       "settings": "설정",
-      "exitSelectionModeEsc": "선택 모드를 종료하려면 클릭하거나 ESC를 누르세요"
+      "exitSelectionModeEsc": "선택 모드를 종료하려면 클릭하거나 ESC를 누르세요",
+      "deleteAllSpam": "모든 스팸 삭제",
+      "deletingAllSpam": "모든 스팸 삭제 중...",
+      "deletedAllSpam": "{count}개의 스팸 이메일 삭제됨",
+      "errorDeletingSpam": "스팸 이메일 삭제 실패",
+      "confirmDeleteSpam": "모든 스팸 삭제",
+      "confirmDeleteSpamDescription": "모든 스팸 이메일을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
+      "confirmDelete": "삭제"
     },
     "themes": {
       "dark": "다크 모드",

@@ -49,7 +49,14 @@
       "save": "Salvar",
       "remove": "Remover",
       "settings": "Configurações",
-      "exitSelectionModeEsc": "Clique ou pressione ESC para sair do modo de seleção"
+      "exitSelectionModeEsc": "Clique ou pressione ESC para sair do modo de seleção",
+      "deleteAllSpam": "Excluir todo spam",
+      "deletingAllSpam": "Excluindo todo spam...",
+      "deletedAllSpam": "Excluídos {count} emails de spam",
+      "errorDeletingSpam": "Falha ao excluir emails de spam",
+      "confirmDeleteSpam": "Excluir todo spam",
+      "confirmDeleteSpamDescription": "Tem certeza que deseja excluir todos os emails de spam? Esta ação não pode ser desfeita.",
+      "confirmDelete": "Excluir"
     },
     "themes": {
       "dark": "Escuro",

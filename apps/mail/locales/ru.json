@@ -49,7 +49,14 @@
       "save": "Сохранить",
       "remove": "Удалить",
       "settings": "Настройки",
-      "exitSelectionModeEsc": "Нажмите или нажмите ESC, чтобы выйти из режима выбора"
+      "exitSelectionModeEsc": "Нажмите или нажмите ESC, чтобы выйти из режима выбора",
+      "deleteAllSpam": "Удалить весь спам",
+      "deletingAllSpam": "Удаление всего спама...",
+      "deletedAllSpam": "Удалено {count} спам-писем",
+      "errorDeletingSpam": "Не удалось удалить спам-письма",
+      "confirmDeleteSpam": "Удалить весь спам",
+      "confirmDeleteSpamDescription": "Вы уверены, что хотите удалить все спам-письма? Это действие нельзя будет отменить.",
+      "confirmDelete": "Удалить"
     },
     "themes": {
       "dark": "Тёмный",

@@ -50,6 +50,13 @@ checksums:
     common/actions/remove: dba2fe5fe9f83f8078c687f28cba4b52
     common/actions/settings: 8df6777277469c1fd88cc18dde2f1cc3
     common/actions/exitSelectionModeEsc: d03f3886b2796834547610e6ecc4ec42
+    common/actions/deleteAllSpam: 5d147ef6181f7739fbcedd80ce7e112c
+    common/actions/deletingAllSpam: 36af7ca0879a4ad146085a9abfc5bc2d
+    common/actions/deletedAllSpam: fb236045e03760a32081e9e32a5e1e02
+    common/actions/errorDeletingSpam: 72f576d7e4f375b33e208862e4b7d747
+    common/actions/confirmDeleteSpam: 5d147ef6181f7739fbcedd80ce7e112c
+    common/actions/confirmDeleteSpamDescription: 6eb967be0fbd59ef7e2371361f936a04
+    common/actions/confirmDelete: 8bcf303dd10a645b5baacb02b47d72c9
     common/themes/dark: 73e6e208ba628b26e90fcf6dce15e1b2
     common/themes/light: bb78ea2c6edd8662676c81a8a13ecb93
     common/themes/system: 803281c327a02a2feba182f4a2b38311

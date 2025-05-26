@@ -49,7 +49,14 @@
       "save": "حفظ",
       "remove": "إزالة",
       "settings": "الإعدادات",
-      "exitSelectionModeEsc": "انقر أو اضغط على ESC للخروج من وضع التحديد"
+      "exitSelectionModeEsc": "انقر أو اضغط على ESC للخروج من وضع التحديد",
+      "deleteAllSpam": "حذف كل الرسائل المزعجة",
+      "deletingAllSpam": "جارٍ حذف كل الرسائل المزعجة...",
+      "deletedAllSpam": "تم حذف {count} من رسائل البريد المزعجة",
+      "errorDeletingSpam": "فشل في حذف رسائل البريد المزعجة",
+      "confirmDeleteSpam": "حذف كل الرسائل المزعجة",
+      "confirmDeleteSpamDescription": "هل أنت متأكد أنك تريد حذف جميع رسائل البريد المزعجة؟ لا يمكن التراجع عن هذا الإجراء.",
+      "confirmDelete": "حذف"
     },
     "themes": {
       "dark": "داكن",

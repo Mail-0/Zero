@@ -49,7 +49,14 @@
       "save": "Opslaan",
       "remove": "Verwijderen",
       "settings": "Instellingen",
-      "exitSelectionModeEsc": "Klik of druk op ESC om de selectiemodus te verlaten"
+      "exitSelectionModeEsc": "Klik of druk op ESC om de selectiemodus te verlaten",
+      "deleteAllSpam": "Alle spam verwijderen",
+      "deletingAllSpam": "Alle spam wordt verwijderd...",
+      "deletedAllSpam": "{count} spamberichten verwijderd",
+      "errorDeletingSpam": "Spamberichten verwijderen mislukt",
+      "confirmDeleteSpam": "Alle spam verwijderen",
+      "confirmDeleteSpamDescription": "Weet je zeker dat je alle spamberichten wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+      "confirmDelete": "Verwijderen"
     },
     "themes": {
       "dark": "Donker",

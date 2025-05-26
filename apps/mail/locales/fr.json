@@ -49,7 +49,14 @@
       "save": "Enregistrer",
       "remove": "Supprimer",
       "settings": "Paramètres",
-      "exitSelectionModeEsc": "Cliquez ou appuyez sur ÉCHAP pour quitter le mode de sélection"
+      "exitSelectionModeEsc": "Cliquez ou appuyez sur ÉCHAP pour quitter le mode de sélection",
+      "deleteAllSpam": "Supprimer tous les spams",
+      "deletingAllSpam": "Suppression de tous les spams...",
+      "deletedAllSpam": "Suppression de {count} emails indésirables",
+      "errorDeletingSpam": "Échec de la suppression des emails indésirables",
+      "confirmDeleteSpam": "Supprimer tous les spams",
+      "confirmDeleteSpamDescription": "Êtes-vous sûr de vouloir supprimer tous les emails indésirables ? Cette action est irréversible.",
+      "confirmDelete": "Supprimer"
     },
     "themes": {
       "dark": "Sombre",
