@@ -8,7 +8,6 @@
       "outputs": ["build/**", "!.react-router/**", "dist/**"]
     },
     "dev": {
-      "dependsOn": ["db:studio"],
       "persistent": true,
       "cache": false
     },
