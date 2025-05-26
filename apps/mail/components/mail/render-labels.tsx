@@ -42,8 +42,8 @@ export const RenderLabels = ({ count = 1, labels }: { count?: number; labels: La
             searchValue.value.includes(`label:${label.name}`) && 'border-white',
           )}
           style={{
-            background: label.color?.backgroundColor + '1a',
-            color: label.color?.backgroundColor,
+            background: label.color?.backgroundColor,
+            color: label.color?.textColor,
           }}
         >
           {label.name}
@@ -66,8 +66,8 @@ export const RenderLabels = ({ count = 1, labels }: { count?: number; labels: La
                   searchValue.value.includes(`label:${label.name}`) && 'border-white',
                 )}
                 style={{
-                  backgroundColor: label.color?.backgroundColor + '1a',
-                  color: label.color?.backgroundColor,
+                  backgroundColor: label.color?.backgroundColor,
+                  color: label.color?.textColor,
                 }}
               >
                 {label.name}
