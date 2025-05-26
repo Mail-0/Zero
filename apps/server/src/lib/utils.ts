@@ -1,5 +1,11 @@
 import type { Sender } from '../types';
 
+export const parseHeaders = (token: string) => {
+  const headers = new Headers();
+  headers.set('Cookie', token);
+  return headers;
+};
+
 export const FOLDERS = {
   SPAM: 'spam',
   INBOX: 'inbox',

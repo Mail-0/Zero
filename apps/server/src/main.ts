@@ -1,10 +1,11 @@
 import { env, WorkerEntrypoint } from 'cloudflare:workers';
 import { contextStorage } from 'hono/context-storage';
+import { ZeroAgent, ZeroMCP } from './routes/chat';
 import { routePartykitRequest } from 'partyserver';
 import { trpcServer } from '@hono/trpc-server';
+import { agentsMiddleware } from 'hono-agents';
 import { DurableMailbox } from './lib/party';
 import { autumnApi } from './routes/autumn';
-import { chatHandler } from './routes/chat';
 import type { HonoContext } from './ctx';
 import { createAuth } from './lib/auth';
 import { createDb } from '@zero/db';
@@ -27,8 +28,6 @@ const api = new Hono<HonoContext>()
     await next();
   })
   .route('/autumn', autumnApi)
-  .post('/chat', chatHandler)
-  //   .post('/public-chat', publicChatHandler) // ssshhhh
   .on(['GET', 'POST'], '/auth/*', (c) => c.var.auth.handler(c.req.raw))
   .use(
     trpcServer({
@@ -69,7 +68,47 @@ const app = new Hono<HonoContext>()
       exposeHeaders: ['X-Zero-Redirect'],
     }),
   )
+  .mount(
+    '/sse',
+    async (request, env, ctx) => {
+      const authBearer = request.headers.get('Authorization');
+      if (!authBearer) {
+        return new Response('Unauthorized', { status: 401 });
+      }
+      ctx.props = {
+        cookie: authBearer,
+      };
+      return ZeroMCP.serveSSE('/sse', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
+    },
+    { replaceRequest: false },
+  )
+  .mount(
+    '/mcp',
+    async (request, env, ctx) => {
+      const authBearer = request.headers.get('Authorization');
+      if (!authBearer) {
+        return new Response('Unauthorized', { status: 401 });
+      }
+      ctx.props = {
+        cookie: authBearer,
+      };
+      return ZeroMCP.serve('/mcp', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
+    },
+    { replaceRequest: false },
+  )
   .route('/api', api)
+  .use(
+    '*',
+    agentsMiddleware({
+      options: {
+        onBeforeConnect: (c) => {
+          if (!c.headers.get('Cookie')) {
+            return new Response('Unauthorized', { status: 401 });
+          }
+        },
+      },
+    }),
+  )
   .get('/health', (c) => c.json({ message: 'Zero Server is Up!' }))
   .get('/', (c) => c.redirect(`${env.VITE_PUBLIC_APP_URL}`));
 
@@ -110,4 +149,4 @@ export default class extends WorkerEntrypoint<typeof env> {
   }
 }
 
-export { DurableMailbox };
+export { DurableMailbox, ZeroAgent, ZeroMCP };

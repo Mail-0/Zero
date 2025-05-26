@@ -49,7 +49,14 @@
       "save": "Save",
       "remove": "Remove",
       "settings": "Settings",
-      "exitSelectionModeEsc": "Click or press ESC to exit selection mode"
+      "exitSelectionModeEsc": "Click or press ESC to exit selection mode",
+      "deleteAllSpam": "Delete All Spam",
+      "deletingAllSpam": "Deleting all spam...",
+      "deletedAllSpam": "Deleted {count} spam emails",
+      "errorDeletingSpam": "Failed to delete spam emails",
+      "confirmDeleteSpam": "Delete All Spam",
+      "confirmDeleteSpamDescription": "Are you sure you want to delete all spam emails? This action cannot be undone.",
+      "confirmDelete": "Delete"
     },
     "themes": {
       "dark": "Dark",

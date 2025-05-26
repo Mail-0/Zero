@@ -1,14 +1,8 @@
 import {
-  cn,
-  FOLDERS,
-  formatDate,
-  getEmailLogo,
-  getMainSearchTerm,
-  parseNaturalLanguageSearch,
-} from '@/lib/utils';
-import {
   Archive2,
   Bell,
+  ChevronDown,
+  ExclamationCircle,
   GroupPeople,
   Lightning,
   People,
@@ -18,6 +12,22 @@ import {
   User,
 } from '../icons/icons';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  cn,
+  FOLDERS,
+  formatDate,
+  getEmailLogo,
+  getMainSearchTerm,
+  parseNaturalLanguageSearch,
+} from '@/lib/utils';
+import {
   type ComponentProps,
   memo,
   useCallback,
@@ -26,11 +36,11 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useIsFetching, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { moveThreadsTo, type ThreadDestination } from '@/lib/thread-actions';
 import type { MailSelectMode, ParsedMessage, ThreadProps } from '@/types';
 import { ThreadContextMenu } from '@/components/context/thread-context';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useMail, type Config } from '@/components/mail/use-mail';
 import { Briefcase, Check, Star, StickyNote } from 'lucide-react';
@@ -43,7 +53,10 @@ import { highlightText } from '@/lib/email-utils.client';
 import { useHotkeysContext } from 'react-hotkeys-hook';
 import { useTRPC } from '@/providers/query-provider';
 import { useThreadLabels } from '@/hooks/use-labels';
+import { Progress } from '@/components/ui/progress';
+import { Spinner } from '@/components/ui/spinner';
 import { useKeyState } from '@/hooks/use-hot-key';
+import { VList, type VListHandle } from 'virtua';
 import { RenderLabels } from './render-labels';
 import { Badge } from '@/components/ui/badge';
 import { useDraft } from '@/hooks/use-drafts';
@@ -56,7 +69,6 @@ import { useQueryState } from 'nuqs';
 import { Categories } from './mail';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
-import { VList } from 'virtua';
 
 const Thread = memo(
   function Thread({
@@ -72,7 +84,11 @@ const Thread = memo(
     const [threadId] = useQueryState('threadId');
     const [, setBackgroundQueue] = useAtom(backgroundQueueAtom);
     const { refetch: refetchStats } = useStats();
-    const { data: getThreadData, isGroupThread, refetch: refetchThread } = useThread(message.id);
+    const {
+      data: getThreadData,
+      isGroupThread,
+      refetch: refetchThread,
+    } = useThread(message.id, message.historyId);
     const [isStarred, setIsStarred] = useState(false);
     const trpc = useTRPC();
     const queryClient = useQueryClient();
@@ -545,6 +561,8 @@ export const MailList = memo(
     const { enableScope, disableScope } = useHotkeysContext();
     const [{ refetch, isLoading, isFetching, isFetchingNextPage, hasNextPage }, items, , loadMore] =
       useThreads();
+    const trpc = useTRPC();
+    const isFetchingMail = useIsFetching({ queryKey: trpc.mail.get.queryKey() }) > 0;
 
     const allCategories = Categories();
 
@@ -579,6 +597,7 @@ export const MailList = memo(
     }, [refetch]);
 
     const parentRef = useRef<HTMLDivElement>(null);
+    const vListRef = useRef<VListHandle>(null);
 
     const handleNavigateToThread = useCallback(
       (threadId: string) => {
@@ -594,12 +613,6 @@ export const MailList = memo(
       containerRef: parentRef,
       onNavigate: handleNavigateToThread,
     });
-
-    const handleLoadMore = useCallback(() => {
-      if (isLoading || isFetching || isFetchingNextPage || !hasNextPage) return;
-      console.log('Loading more items...');
-      void loadMore();
-    }, [isLoading, isFetchingNextPage, loadMore, hasNextPage]);
 
     const isKeyPressed = useKeyState();
 
@@ -730,29 +743,17 @@ export const MailList = memo(
         return (
           <>
             <Comp
-              onClick={handleMailClick}
-              message={item}
               key={item.id}
+              message={item}
               isKeyboardFocused={focusedIndex === index && keyboardActive}
               index={index}
+              onClick={handleMailClick}
             />
-            {index === filteredItems.length - 1 && (
-              <Button
-                variant={'ghost'}
-                className="w-full rounded-none"
-                onMouseDown={handleLoadMore}
-                disabled={isLoading || items.length <= 9 || !hasNextPage || isFetchingNextPage}
-              >
-                {isFetchingNextPage ? (
-                  <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
-                    {t('common.actions.loading')}
-                  </div>
-                ) : (
-                  <span>{t('common.mail.loadMore')}</span>
-                )}
-              </Button>
-            )}
+            {index === filteredItems.length - 1 && (isFetchingNextPage || isFetchingMail) ? (
+              <div className="flex w-full justify-center py-4">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
+              </div>
+            ) : null}
           </>
         );
       },
@@ -761,7 +762,6 @@ export const MailList = memo(
         focusedIndex,
         keyboardActive,
         handleMailClick,
-        handleLoadMore,
         isLoading,
         isFetching,
         hasNextPage,
@@ -813,10 +813,25 @@ export const MailList = memo(
             ) : (
               <div className="flex flex-1 flex-col" id="mail-list-scroll">
                 <VList
+                  ref={vListRef}
                   count={filteredItems.length}
                   overscan={5}
                   className="style-scrollbar flex-1 overflow-x-hidden"
                   children={vListRenderer}
+                  onScroll={() => {
+                    if (!vListRef.current) return;
+                    const endIndex = vListRef.current.findEndIndex();
+                    if (
+                      // if the shown items are last 2 items, load more
+                      Math.abs(filteredItems.length - 1 - endIndex) < 1 &&
+                      !isLoading &&
+                      !isFetchingNextPage &&
+                      !isFetchingMail &&
+                      hasNextPage
+                    ) {
+                      void loadMore();
+                    }
+                  }}
                 />
               </div>
             )}

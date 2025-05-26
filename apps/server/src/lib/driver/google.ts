@@ -10,7 +10,7 @@ import {
 } from './utils';
 import { mapGoogleLabelColor, mapToGoogleLabelColor } from './google-label-color-map';
 import { parseAddressList, parseFrom, wasSentWithTLS } from '../email-utils';
-import type { IOutgoingMessage, Label, ParsedMessage } from '../../types';
+import type { IOutgoingMessage, Label, ParsedMessage, DeleteAllSpamResponse } from '../../types';
 import { sanitizeTipTapHtml } from '../sanitize-tip-tap-html';
 import type { MailManager, ManagerConfig } from './types';
 import { type gmail_v1, gmail } from '@googleapis/gmail';
@@ -190,11 +190,18 @@ export class GoogleMailManager implements MailManager {
           pageToken: pageToken ? pageToken : undefined,
           quotaUser: this.config.auth?.email,
         });
+
+        const threads = res.data.threads ?? [];
+
         return {
-          threads: (res.data.threads ?? [])
+          threads: threads
             .filter((thread) => typeof thread.id === 'string')
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            .map((thread) => ({ id: thread.id!, $raw: thread })),
+            .map((thread) => ({
+              id: thread.id!,
+              historyId: thread.historyId ?? null,
+              $raw: thread,
+            })),
           nextPageToken: res.data.nextPageToken ?? null,
         };
       },
@@ -493,6 +500,7 @@ export class GoogleMailManager implements MailManager {
         return {
           threads: sortedDrafts.map((draft) => ({
             id: draft.id,
+            historyId: draft.threadId ?? null,
             $raw: draft,
           })),
           nextPageToken: res.data.nextPageToken ?? null,
@@ -649,6 +657,52 @@ export class GoogleMailManager implements MailManager {
       return false;
     }
   }
+
+  public deleteAllSpam() {
+    return this.withErrorHandler(
+      'deleteAllSpam',
+      async () => {
+        let totalDeleted = 0;
+        let hasMoreSpam = true;
+        let pageToken: string | number | null | undefined = undefined;
+        
+        while (hasMoreSpam) {
+          const spamThreads = await this.list({
+            folder: 'spam',
+            maxResults: 500,
+            pageToken: pageToken as string | undefined,
+          });
+
+          if (!spamThreads.threads || spamThreads.threads.length === 0) {
+            hasMoreSpam = false;
+            break;
+          }
+          
+          const threadIds = spamThreads.threads.map(thread => thread.id);
+          await this.modifyLabels(threadIds, { 
+            addLabels: ['TRASH'], 
+            removeLabels: ['SPAM', 'INBOX'] 
+          });
+          
+          totalDeleted += threadIds.length;
+          pageToken = spamThreads.nextPageToken;
+          
+          if (!pageToken) {
+            hasMoreSpam = false;
+          }
+        }
+        
+        return { 
+          success: true, 
+          message: `Deleted ${totalDeleted} spam emails`, 
+          count: totalDeleted 
+        };
+      },
+      { email: this.config.auth?.email }
+    );
+  }
+
+
   private async modifyThreadLabels(
     threadIds: string[],
     requestBody: gmail_v1.Schema$ModifyThreadRequest,

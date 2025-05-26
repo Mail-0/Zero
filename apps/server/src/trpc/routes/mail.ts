@@ -1,9 +1,10 @@
 import { activeDriverProcedure, createRateLimiterMiddleware, router } from '../trpc';
 import { updateWritingStyleMatrix } from '../../services/writing-style-service';
 import { deserializeFiles, serializedFileSchema } from '../../lib/schemas';
-import { defaultPageSize, FOLDERS } from '../../lib/utils';
+import { defaultPageSize, FOLDERS, LABELS } from '../../lib/utils';
 import { Ratelimit } from '@upstash/ratelimit';
 import { z } from 'zod';
+import type { DeleteAllSpamResponse } from '../../types';
 
 const senderSchema = z.object({
   name: z.string().optional(),
@@ -230,6 +231,20 @@ export const mailRouter = router({
       const { driver } = ctx;
       return driver.modifyLabels(input.ids, { addLabels: [], removeLabels: ['STARRED'] });
     }),
+    deleteAllSpam: activeDriverProcedure
+    .mutation(async ({ ctx }) : Promise<DeleteAllSpamResponse> => {
+      const { driver } = ctx;
+      try {
+        return await driver.deleteAllSpam();
+      } catch (error) {
+        console.error('Error deleting spam emails:', error);
+        return { 
+          success: false, 
+          message: 'Failed to delete spam emails',
+          error: String(error),
+          count: 0
+        };
+      }}),
   bulkUnmarkImportant: activeDriverProcedure
     .input(
       z.object({
@@ -240,6 +255,7 @@ export const mailRouter = router({
       const { driver } = ctx;
       return driver.modifyLabels(input.ids, { addLabels: [], removeLabels: ['IMPORTANT'] });
     }),
+
   send: activeDriverProcedure
     .input(
       z.object({

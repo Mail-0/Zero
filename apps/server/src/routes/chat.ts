@@ -1,13 +1,456 @@
-import { AiChatPrompt, GmailSearchAssistantSystemPrompt } from '../lib/prompts';
-import { connectionToDriver, getActiveConnection } from '../lib/server-utils';
-import { streamText, generateObject, tool, generateText } from 'ai';
-import { publicTools, tools } from './agent/tools';
-import { getContext } from 'hono/context-storage';
+import {
+  streamText,
+  generateObject,
+  tool,
+  type StreamTextOnFinishCallback,
+  createDataStreamResponse,
+  generateText,
+} from 'ai';
+import {
+  AiChatPrompt,
+  getCurrentDateContext,
+  GmailSearchAssistantSystemPrompt,
+} from '../lib/prompts';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type Connection, type ConnectionContext } from 'agents';
+import { createSimpleAuth, type SimpleAuth } from '../lib/auth';
+import { connectionToDriver } from '../lib/server-utils';
+import type { MailManager } from '../lib/driver/types';
+import { FOLDERS, parseHeaders } from '../lib/utils';
+import { AIChatAgent } from 'agents/ai-chat-agent';
+import { tools as authTools } from './agent/tools';
+import { processToolCalls } from './agent/utils';
 import { connection } from '@zero/db/schema';
-import type { HonoContext } from '../ctx';
+import { env } from 'cloudflare:workers';
 import { openai } from '@ai-sdk/openai';
+import { McpAgent } from 'agents/mcp';
+import { createDb } from '@zero/db';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
+
+export class ZeroAgent extends AIChatAgent<typeof env> {
+  auth: SimpleAuth;
+  driver: MailManager | null = null;
+  constructor(ctx: DurableObjectState, env: Env) {
+    super(ctx, env);
+    this.auth = createSimpleAuth();
+  }
+
+  private getDataStreamResponse(onFinish: StreamTextOnFinishCallback<{}>) {
+    const dataStreamResponse = createDataStreamResponse({
+      execute: async (dataStream) => {
+        const connectionId = (await this.ctx.storage.get('connectionId')) as string;
+        if (!connectionId || !this.driver) {
+          throw new Error('Unauthorized');
+        }
+        const tools = { ...authTools(this.driver, connectionId), buildGmailSearchQuery };
+        const processedMessages = await processToolCalls(
+          {
+            messages: this.messages,
+            dataStream,
+            tools,
+          },
+          {},
+        );
+
+        const result = streamText({
+          model: openai('gpt-4o'),
+          messages: processedMessages,
+          tools,
+          onFinish,
+          system: AiChatPrompt('', '', ''),
+        });
+
+        result.mergeIntoDataStream(dataStream);
+      },
+    });
+
+    return dataStreamResponse;
+  }
+
+  //   async onRequest(request: Request): Promise<Response> {
+  //     const token = request.headers.get('cookie');
+  //     if (!token) {
+  //       return new Response('Unauthorized', { status: 401 });
+  //     }
+  //     await this.setupAuth(token);
+  //     return this.getDataStreamResponse(() => {});
+  //   }
+
+  private async getSession(token: string) {
+    const session = await this.auth.api.getSession({ headers: parseHeaders(token) });
+    return session;
+  }
+
+  private async setupAuth(token: string) {
+    if (token) {
+      const session = await this.getSession(token);
+      if (session) {
+        const db = createDb(env.HYPERDRIVE.connectionString);
+        const _connection = await db.query.connection.findFirst({
+          where: eq(connection.email, session.user.email),
+        });
+        if (_connection) {
+          await this.ctx.storage.put('connectionId', _connection.id);
+          this.driver = connectionToDriver(_connection);
+        }
+        console.log('session exists', session.user.email);
+      } else {
+        console.log('No session', token);
+      }
+    }
+  }
+
+  async onConnect(_: Connection, ctx: ConnectionContext) {
+    const token = ctx.request.headers.get('Cookie');
+    if (!token) {
+      throw new Error('Unauthorized');
+    }
+    await this.setupAuth(token);
+  }
+
+  async onChatMessage(onFinish: StreamTextOnFinishCallback<{}>) {
+    if (!this.driver) {
+      return new Response('Unauthorized', { status: 401 });
+    }
+    return this.getDataStreamResponse(onFinish);
+  }
+}
+
+export class ZeroMCP extends McpAgent<typeof env, {}, { cookie: string }> {
+  auth: SimpleAuth;
+  server = new McpServer({
+    name: 'zero-mcp',
+    version: '1.0.0',
+    description: 'Zero MCP',
+  });
+
+  constructor(ctx: DurableObjectState, env: Env) {
+    super(ctx, env);
+    this.auth = createSimpleAuth();
+  }
+
+  async init(): Promise<void> {
+    const session = await this.auth.api.getSession({ headers: parseHeaders(this.props.cookie) });
+    if (!session) {
+      throw new Error('Unauthorized');
+    }
+    const db = createDb(env.HYPERDRIVE.connectionString);
+    const _connection = await db.query.connection.findFirst({
+      where: eq(connection.email, session.user.email),
+    });
+    if (!_connection) {
+      throw new Error('Unauthorized');
+    }
+    const driver = connectionToDriver(_connection);
+
+    this.server.tool(
+      'buildGmailSearchQuery',
+      {
+        query: z.string(),
+      },
+      async (s) => {
+        const result = await generateText({
+          model: openai('gpt-4o'),
+          system: GmailSearchAssistantSystemPrompt(),
+          prompt: s.query,
+        });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: result.text,
+            },
+          ],
+        };
+      },
+    );
+
+    this.server.tool(
+      'listThreads',
+      {
+        folder: z.string().default(FOLDERS.INBOX),
+        query: z.string().optional(),
+        maxResults: z.number().optional().default(5),
+        labelIds: z.array(z.string()).optional(),
+        pageToken: z.string().optional(),
+      },
+      async (s) => {
+        const result = await driver.list({
+          folder: s.folder,
+          query: s.query,
+          maxResults: s.maxResults,
+          labelIds: s.labelIds,
+          pageToken: s.pageToken,
+        });
+        const content = await Promise.all(
+          result.threads.map(async (thread) => {
+            const loadedThread = await driver.get(thread.id);
+            return [
+              {
+                type: 'text' as const,
+                text: loadedThread.latest?.subject ?? '',
+              },
+              {
+                type: 'text' as const,
+                text: `ThreadId: ${thread.id}`,
+              },
+            ];
+          }),
+        );
+        return {
+          content: content.flat(),
+        };
+      },
+    );
+
+    this.server.tool(
+      'getThread',
+      {
+        threadId: z.string(),
+      },
+      async (s) => {
+        const thread = await driver.get(s.threadId);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(thread),
+            },
+            {
+              type: 'text',
+              text: `Subject: ${thread.latest?.subject}`,
+            },
+            {
+              type: 'text',
+              text: `Total Messages: ${thread.totalReplies}`,
+            },
+            {
+              type: 'text',
+              text: `ThreadId: ${s.threadId}`,
+            },
+          ],
+        };
+      },
+    );
+
+    this.server.tool(
+      'markThreadsRead',
+      {
+        threadIds: z.array(z.string()),
+      },
+      async (s) => {
+        await driver.modifyLabels(s.threadIds, {
+          addLabels: [],
+          removeLabels: ['UNREAD'],
+        });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: 'Threads marked as read',
+            },
+          ],
+        };
+      },
+    );
+
+    this.server.tool(
+      'markThreadsUnread',
+      {
+        threadIds: z.array(z.string()),
+      },
+      async (s) => {
+        await driver.modifyLabels(s.threadIds, {
+          addLabels: ['UNREAD'],
+          removeLabels: [],
+        });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: 'Threads marked as unread',
+            },
+          ],
+        };
+      },
+    );
+
+    this.server.tool(
+      'modifyLabels',
+      {
+        threadIds: z.array(z.string()),
+        addLabelIds: z.array(z.string()),
+        removeLabelIds: z.array(z.string()),
+      },
+      async (s) => {
+        await driver.modifyLabels(s.threadIds, {
+          addLabels: s.addLabelIds,
+          removeLabels: s.removeLabelIds,
+        });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Successfully modified ${s.threadIds.length} thread(s)`,
+            },
+          ],
+        };
+      },
+    );
+
+    this.server.tool('getCurrentDate', async () => {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: getCurrentDateContext(),
+          },
+        ],
+      };
+    });
+
+    this.server.tool('getUserLabels', async () => {
+      const labels = await driver.getUserLabels();
+      return {
+        content: [
+          {
+            type: 'text',
+            text: labels
+              .map((label) => `Name: ${label.name} ID: ${label.id} Color: ${label.color}`)
+              .join('\n'),
+          },
+        ],
+      };
+    });
+
+    this.server.tool(
+      'getLabel',
+      {
+        id: z.string(),
+      },
+      async (s) => {
+        const label = await driver.getLabel(s.id);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Name: ${label.name}`,
+            },
+            {
+              type: 'text',
+              text: `ID: ${label.id}`,
+            },
+          ],
+        };
+      },
+    );
+
+    this.server.tool(
+      'createLabel',
+      {
+        name: z.string(),
+        backgroundColor: z.string().optional(),
+        textColor: z.string().optional(),
+      },
+      async (s) => {
+        try {
+          await driver.createLabel({
+            name: s.name,
+            color:
+              s.backgroundColor && s.textColor
+                ? {
+                    backgroundColor: s.backgroundColor,
+                    textColor: s.textColor,
+                  }
+                : undefined,
+          });
+          return {
+            content: [
+              {
+                type: 'text',
+                text: 'Label has been created',
+              },
+            ],
+          };
+        } catch (e) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: 'Failed to create label',
+              },
+            ],
+          };
+        }
+      },
+    );
+
+    this.server.tool(
+      'bulkDelete',
+      {
+        threadIds: z.array(z.string()),
+      },
+      async (s) => {
+        try {
+          await driver.modifyLabels(s.threadIds, {
+            addLabels: ['TRASH'],
+            removeLabels: ['INBOX'],
+          });
+          return {
+            content: [
+              {
+                type: 'text',
+                text: 'Threads moved to trash',
+              },
+            ],
+          };
+        } catch (e) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: 'Failed to move threads to trash',
+              },
+            ],
+          };
+        }
+      },
+    );
+
+    this.server.tool(
+      'bulkArchive',
+      {
+        threadIds: z.array(z.string()),
+      },
+      async (s) => {
+        try {
+          await driver.modifyLabels(s.threadIds, {
+            addLabels: [],
+            removeLabels: ['INBOX'],
+          });
+          return {
+            content: [
+              {
+                type: 'text',
+                text: 'Threads archived',
+              },
+            ],
+          };
+        } catch (e) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: 'Failed to archive threads',
+              },
+            ],
+          };
+        }
+      },
+    );
+  }
+}
 
 const buildGmailSearchQuery = tool({
   description: 'Build a Gmail search query',
@@ -26,87 +469,3 @@ const buildGmailSearchQuery = tool({
     return result.object;
   },
 });
-
-export const chatHandler = async () => {
-  const c = getContext<HonoContext>();
-
-  const { session, autumn } = c.var;
-  if (!session) return c.json({ error: 'Unauthorized' }, 401);
-
-  console.log('Checking chat permissions for user:', session.user.id);
-  const canSendMessages = await autumn.check({
-    feature_id: 'chat-messages',
-    customer_id: session.user.id,
-  });
-  console.log('Autumn check result:', JSON.stringify(canSendMessages, null, 2));
-
-  if (!canSendMessages.data) {
-    console.log('No data returned from Autumn check');
-    return c.json({ error: 'Insufficient permissions' }, 403);
-  }
-
-  if (canSendMessages.data.unlimited) {
-    console.log('User has unlimited access');
-  } else if (!canSendMessages.data.balance) {
-    console.log('No balance and not unlimited');
-    return c.json({ error: 'Insufficient plan quota' }, 403);
-  } else if (canSendMessages.data.balance <= 0) {
-    console.log('Balance is 0 or less');
-    return c.json({ error: 'Insufficient plan balance' }, 403);
-  }
-
-  const _conn = await getActiveConnection().catch((err) => {
-    console.error('Error in getActiveConnection:', err);
-    throw c.json({ error: 'Failed to get active connection' }, 500);
-  });
-
-  const driver = connectionToDriver(_conn);
-
-  const { messages, threadId, currentFolder, currentFilter } = await c.req
-    .json()
-    .catch((err: Error) => {
-      console.error('Error parsing JSON:', err);
-      throw c.json({ error: 'Failed to parse request body' }, 400);
-    });
-
-  const result = streamText({
-    model: openai('gpt-4o'),
-    system: AiChatPrompt(threadId, currentFolder, currentFilter),
-    messages,
-    tools: {
-      ...tools(driver, _conn.id),
-      buildGmailSearchQuery,
-    },
-    onError: (error) => {
-      console.error('Error in streamText:', error);
-      //   throw c.json({ error: 'Failed to stream text' }, 500);
-    },
-  });
-
-  return result.toDataStreamResponse();
-};
-
-export const publicChatHandler = async () => {
-  const c = getContext<HonoContext>();
-  const { message } = await c.req.json<{ message: string; query: string }>();
-  const _connection = await c.var.db.query.connection.findFirst({
-    where: eq(connection.email, 'test@test.com'),
-  });
-  if (!_connection) {
-    return c.json({ error: 'Connection not found' }, 404);
-  }
-  const driver = connectionToDriver(_connection);
-  const result = await generateText({
-    model: openai('gpt-4o'),
-    system: AiChatPrompt('', '', ''),
-    messages: [
-      {
-        role: 'user',
-        content: message,
-      },
-    ],
-    tools: { ...publicTools(driver, _connection.id), buildGmailSearchQuery },
-  });
-
-  return c.json({ response: result.text, toolResults: result.toolResults.map((r) => r.result) });
-};

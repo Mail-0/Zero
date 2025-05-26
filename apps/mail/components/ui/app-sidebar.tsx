@@ -3,6 +3,7 @@ import {
   DialogClose,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogOverlay,
   DialogTitle,
   DialogTrigger,
@@ -15,26 +16,189 @@ import {
   SidebarHeader,
   SidebarMenu,
 } from '@/components/ui/sidebar';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { SquarePenIcon, type SquarePenIconHandle } from '../icons/animated/square-pen';
+import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from './input-otp';
 import { navigationConfig, bottomNavItems } from '@/config/navigation';
-import React, { useState, useMemo, useRef } from 'react';
+import { useSession, authClient } from '@/lib/auth-client';
+import React, { useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useSidebar } from '@/components/ui/sidebar';
 import { CreateEmail } from '../create/create-email';
 import { PencilCompose, X } from '../icons/icons';
+import { useBilling } from '@/hooks/use-billing';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useSession } from '@/lib/auth-client';
+import { Button } from '@/components/ui/button';
+import { useAIFullScreen } from './ai-sidebar';
 import { useStats } from '@/hooks/use-stats';
 import { useLocation } from 'react-router';
 import { useTranslations } from 'use-intl';
+import { useForm } from 'react-hook-form';
 import { FOLDERS } from '@/lib/utils';
 import { NavMain } from './nav-main';
 import { NavUser } from './nav-user';
 import { useQueryState } from 'nuqs';
+import { Input } from './input';
+import { toast } from 'sonner';
+import { z } from 'zod';
 
-import { useBilling } from '@/hooks/use-billing';
-import { Button } from '@/components/ui/button';
-import { useAIFullScreen } from './ai-sidebar';
+const verificationSchema = z.object({
+  phoneNumber: z.string().regex(/^\+[1-9]\d{1,14}$/, {
+    message: 'Please enter a valid phone number with country code (e.g. +1234567890)',
+  }),
+  otp: z.string().optional(),
+});
+
+const CallInboxDialog = () => {
+  const { refetch, data: session } = useSession();
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [showOtpInput, setShowOtpInput] = useState(false);
+
+  const maskPhoneNumber = (phone: string) => {
+    if (!phone) return '';
+    if (phone.length < 4) return phone;
+    try {
+      const lastFour = phone.slice(-4);
+      const maskedPart = '*'.repeat(Math.max(0, phone.length - 4));
+      return `${maskedPart}${lastFour}`;
+    } catch (error) {
+      console.error('Error masking phone number:', error);
+      return phone;
+    }
+  };
+
+  const form = useForm<z.infer<typeof verificationSchema>>({
+    resolver: zodResolver(verificationSchema),
+    defaultValues: {
+      phoneNumber: '',
+      otp: '',
+    },
+  });
+
+  const onSubmit = async (data: z.infer<typeof verificationSchema>) => {
+    try {
+      setIsVerifying(true);
+
+      if (!showOtpInput) {
+        await authClient.phoneNumber.sendOtp({
+          phoneNumber: data.phoneNumber,
+        });
+        setShowOtpInput(true);
+        toast.success('Verification code sent to your phone');
+      } else if (data.otp) {
+        const isVerified = await authClient.phoneNumber.verify({
+          phoneNumber: data.phoneNumber,
+          code: data.otp,
+        });
+        console.log('isVerified', isVerified);
+
+        if (isVerified.error) {
+          toast.error('Invalid verification code');
+        } else {
+          refetch();
+          toast.success('Phone number verified successfully');
+        }
+      } else {
+        toast.error('Please enter a valid OTP');
+      }
+    } catch (error) {
+      toast.error(
+        showOtpInput ? 'Failed to verify phone number' : 'Failed to send verification code',
+      );
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  return (
+    <Dialog defaultOpen>
+      <DialogContent showOverlay>
+        <DialogTitle>Call your Inbox</DialogTitle>
+        <DialogDescription>
+          <span className={showOtpInput ? 'hidden' : 'block'}>
+            What phone number would you be calling in from?
+          </span>
+          <span className={showOtpInput ? 'block' : 'hidden'}>
+            Enter the verification code sent to your phone
+          </span>
+        </DialogDescription>
+        <div className="relative">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="phoneNumber"
+                render={({ field }) => (
+                  <FormItem className={showOtpInput ? 'hidden' : 'block'}>
+                    <FormControl>
+                      <Input className="mt-2" type="tel" placeholder="Phone number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="otp"
+                render={({ field }) => (
+                  <FormItem className={showOtpInput ? 'block' : 'hidden'}>
+                    <FormControl>
+                      <div className="my-4 flex justify-center bg-transparent">
+                        <InputOTP maxLength={6} {...field}>
+                          <InputOTPGroup>
+                            <InputOTPSlot index={0} />
+                            <InputOTPSlot index={1} />
+                            <InputOTPSlot index={2} />
+                          </InputOTPGroup>
+                          <InputOTPSeparator />
+                          <InputOTPGroup>
+                            <InputOTPSlot index={3} />
+                            <InputOTPSlot index={4} />
+                            <InputOTPSlot index={5} />
+                          </InputOTPGroup>
+                        </InputOTP>
+                      </div>
+                    </FormControl>
+                    <FormDescription>
+                      Please enter the one-time password sent to your phone number{' '}
+                      <span className="font-bold">
+                        {maskPhoneNumber(form.getValues('phoneNumber'))}
+                      </span>
+                      .
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <DialogFooter>
+                <Button type="submit" disabled={isVerifying}>
+                  {isVerifying
+                    ? showOtpInput
+                      ? 'Verifying...'
+                      : 'Sending...'
+                    : showOtpInput
+                      ? 'Verify'
+                      : 'Send Code'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { isPro, isLoading } = useBilling();
@@ -51,7 +215,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: stats } = useStats();
 
   const location = useLocation();
-  const { data: session } = useSession();
+  const { data: session, isPending: isSessionPending } = useSession();
   const { currentSection, navItems } = useMemo(() => {
     // Find which section we're in based on the pathname
     const section = Object.entries(navigationConfig).find(([, config]) =>
@@ -110,7 +274,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               )}
             </AnimatePresence>
           </SidebarHeader>
-
+          {/* {!session?.user.phoneNumberVerified && !isSessionPending ? <CallInboxDialog /> : null} */}
           <SidebarContent
             className={`scrollbar scrollbar-w-1 scrollbar-thumb-accent/40 scrollbar-track-transparent hover:scrollbar-thumb-accent scrollbar-thumb-rounded-full overflow-x-hidden py-0 pt-0 ${state !== 'collapsed' ? 'mt-5 md:px-4' : 'px-2'}`}
           >

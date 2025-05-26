@@ -1,11 +1,6 @@
 import { Server, type Connection, type ConnectionContext } from 'partyserver';
 import { createSimpleAuth, type SimpleAuth } from './auth';
-
-const parseHeaders = (token: string) => {
-  const headers = new Headers();
-  headers.set('Cookie', token);
-  return headers;
-};
+import { parseHeaders } from './utils';
 
 export class DurableMailbox extends Server<Env> {
   auth: SimpleAuth;

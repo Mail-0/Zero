@@ -11,9 +11,9 @@ const DEBOUNCE_DELAY = 10_000; // 10 seconds is appropriate for real-time notifi
 
 export const NotificationProvider = ({ headers }: { headers: Record<string, string> }) => {
   const trpc = useTRPC();
-  const { refetch: refetchLabels } = useLabels();
+  //   const { refetch: refetchLabels } = useLabels();
   const queryClient = useQueryClient();
-  const [{ refetch: refetchThreads }] = useThreads();
+  //   const [{ refetch: refetchThreads }] = useThreads();
   const { data: activeConnection } = useActiveConnection();
 
   //   const handleRefetchLabels = useCallback(async () => {

@@ -1,49 +1,22 @@
-import {
-  X,
-  FileText,
-  Expand,
-  Plus,
-  Maximize2 as LucideMaximize2,
-  Minimize2 as LucideMinimize2,
-} from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from './dialog';
-import {
-  useState,
-  useEffect,
-  useContext,
-  createContext,
-  useCallback,
-  useMemo,
-  useRef,
-} from 'react';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { ArrowsPointingIn, ArrowsPointingOut, PanelLeftOpen, Phone } from '../icons/icons';
-import { AI_SIDEBAR_COOKIE_NAME, SIDEBAR_COOKIE_MAX_AGE } from '@/lib/constants';
-import { StyledEmailAssistantSystemPrompt, AiChatPrompt } from '@/lib/prompts';
-import { Link, useLocation, useParams } from 'react-router';
+import { ArrowsPointingIn, PanelLeftOpen, Phone } from '../icons/icons';
+import { ResizablePanel } from '@/components/ui/resizable';
 import { useSearchValue } from '@/hooks/use-search-value';
+import { useState, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { AIChat } from '@/components/create/ai-chat';
 import { useTRPC } from '@/providers/query-provider';
 import { Tools } from '../../../server/src/types';
 import { useBilling } from '@/hooks/use-billing';
-import { PricingDialog } from './pricing-dialog';
 import { PromptsDialog } from './prompts-dialog';
 import { Button } from '@/components/ui/button';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useLabels } from '@/hooks/use-labels';
+import { useAgentChat } from 'agents/ai-react';
+import { X, Expand, Plus } from 'lucide-react';
 import { Gauge } from '@/components/ui/gauge';
-import { useChat } from '@ai-sdk/react';
-import { getCookie } from '@/lib/utils';
-import { Textarea } from './textarea';
+import { useParams } from 'react-router';
+import { useAgent } from 'agents/react';
 import { useQueryState } from 'nuqs';
 import { cn } from '@/lib/utils';
 import posthog from 'posthog-js';
@@ -401,11 +374,14 @@ function AISidebar({ className }: AISidebarProps) {
   const { refetch: refetchLabels } = useLabels();
   const [searchValue] = useSearchValue();
 
-  // Initialize shared chat state that will be used by both desktop and mobile views
-  // This ensures conversation continuity when switching between viewport sizes
-  const chatState = useChat({
-    api: `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/chat`,
-    fetch: (url, options) => fetch(url, { ...options, credentials: 'include' }),
+  const agent = useAgent({
+    agent: 'ZeroAgent',
+    host: `${import.meta.env.VITE_PUBLIC_BACKEND_URL}`,
+  });
+
+  const chatState = useAgentChat({
+    agent,
+    initialMessages: [],
     maxSteps: 5,
     body: {
       threadId: threadId ?? undefined,

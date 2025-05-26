@@ -1,12 +1,13 @@
 import { backgroundQueueAtom, isThreadInBackgroundQueueAtom } from '@/store/backgroundQueue';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useTRPC } from '@/providers/query-provider';
 import { useSession } from '@/lib/auth-client';
 import { useAtom, useAtomValue } from 'jotai';
+import { usePrevious } from './use-previous';
+import { useEffect, useMemo } from 'react';
 import { useParams } from 'react-router';
 import { useQueryState } from 'nuqs';
-import { useMemo } from 'react';
 
 export const useThreads = () => {
   const { folder } = useParams<{ folder: string }>();
@@ -58,11 +59,19 @@ export const useThreads = () => {
   return [threadsQuery, threads, isReachingEnd, loadMore] as const;
 };
 
-export const useThread = (threadId: string | null) => {
+export const useThread = (threadId: string | null, historyId?: string | null) => {
   const { data: session } = useSession();
   const [_threadId] = useQueryState('threadId');
   const id = threadId ? threadId : _threadId;
   const trpc = useTRPC();
+
+  const previousHistoryId = usePrevious(historyId ?? null);
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!historyId || !previousHistoryId || historyId === previousHistoryId) return;
+    queryClient.invalidateQueries({ queryKey: trpc.mail.get.queryKey({ id: id! }) });
+  }, [historyId, previousHistoryId, id]);
 
   const threadQuery = useQuery(
     trpc.mail.get.queryOptions(

@@ -16,7 +16,7 @@ import {
 import { memo, useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
-import { Briefcase, Star, StickyNote, Users, Lock } from 'lucide-react';
+import { Briefcase, Star, StickyNote, Users, Lock, Download, Printer } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
@@ -310,9 +310,9 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
     () =>
       emailData.listUnsubscribe
         ? getListUnsubscribeAction({
-            listUnsubscribe: emailData.listUnsubscribe,
-            listUnsubscribePost: emailData.listUnsubscribePost,
-          })
+          listUnsubscribe: emailData.listUnsubscribe,
+          listUnsubscribePost: emailData.listUnsubscribePost,
+        })
         : undefined,
     [emailData.listUnsubscribe, emailData.listUnsubscribePost],
   );
@@ -369,6 +369,347 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
       setIsCollapsed(!isCollapsed);
     }
   }, [isCollapsed, preventCollapse, openDetailsPopover]);
+
+  // email printing
+  const printMail = () => {
+    try {
+      // Create a hidden iframe for printing
+      const printFrame = document.createElement('iframe');
+      printFrame.style.position = 'absolute';
+      printFrame.style.top = '-9999px';
+      printFrame.style.left = '-9999px';
+      printFrame.style.width = '0px';
+      printFrame.style.height = '0px';
+      printFrame.style.border = 'none';
+
+      document.body.appendChild(printFrame);
+
+      // Generate clean, simple HTML content for printing
+      const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Print Email - ${emailData.subject || 'No Subject'}</title>
+          <style>
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            
+            body {
+              font-family: Arial, sans-serif;
+              line-height: 1.5;
+              color: #333;
+              background: white;
+              padding: 20px;
+              font-size: 12px;
+            }
+            
+            .email-container {
+              max-width: 100%;
+              margin: 0 auto;
+              background: white;
+            }
+            
+            .email-header {
+              margin-bottom: 25px;
+            }
+            
+            .email-title {
+              font-size: 18px;
+              font-weight: bold;
+              color: #000;
+              margin-bottom: 15px;
+              word-wrap: break-word;
+            }
+            
+            .email-meta {
+              margin-bottom: 20px;
+            }
+            
+            .meta-row {
+              margin-bottom: 5px;
+              display: flex;
+              align-items: flex-start;
+            }
+            
+            .meta-label {
+              font-weight: bold;
+              min-width: 60px;
+              color: #333;
+              margin-right: 10px;
+            }
+            
+            .meta-value {
+              flex: 1;
+              word-wrap: break-word;
+              color: #333;
+            }
+            
+            .separator {
+              width: 100%;
+              height: 1px;
+              background: #ddd;
+              margin: 20px 0;
+            }
+            
+            .email-body {
+              margin: 20px 0;
+              background: white;
+            }
+            
+            .email-content {
+              word-wrap: break-word;
+              overflow-wrap: break-word;
+              font-size: 12px;
+              line-height: 1.6;
+            }
+            
+            .email-content img {
+              max-width: 100% !important;
+              height: auto !important;
+              display: block;
+              margin: 10px 0;
+            }
+            
+            .email-content table {
+              width: 100%;
+              border-collapse: collapse;
+              margin: 10px 0;
+            }
+            
+            .email-content td, .email-content th {
+              padding: 6px;
+              text-align: left;
+              font-size: 11px;
+            }
+            
+            .email-content a {
+              color: #0066cc;
+              text-decoration: underline;
+            }
+            
+            .attachments-section {
+              margin-top: 25px;
+              background: white;
+            }
+            
+            .attachments-title {
+              font-size: 14px;
+              font-weight: bold;
+              color: #000;
+              margin-bottom: 10px;
+            }
+            
+            .attachment-item {
+              margin-bottom: 5px;
+              font-size: 11px;
+              padding: 3px 0;
+            }
+            
+            .attachment-name {
+              font-weight: 500;
+              color: #333;
+            }
+            
+            .attachment-size {
+              color: #666;
+              font-size: 10px;
+            }
+            
+            .labels-section {
+              margin: 10px 0;
+            }
+            
+            .label-badge {
+              display: inline-block;
+              padding: 2px 6px;
+              background: #f5f5f5;
+              color: #333;
+              font-size: 10px;
+              margin-right: 5px;
+              margin-bottom: 3px;
+            }
+            
+            @media print {
+              body {
+                margin: 0;
+                padding: 15px;
+                font-size: 11px;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              
+              .email-container {
+                max-width: none;
+                width: 100%;
+              }
+              
+              .separator {
+                background: #000 !important;
+              }
+              
+              .email-content a {
+                color: #000 !important;
+              }
+              
+              .label-badge {
+                background: #f0f0f0 !important;
+                border: 1px solid #ccc;
+              }
+              
+              .no-print {
+                display: none !important;
+              }
+              
+              /* Remove any default borders */
+              * {
+                border: none !important;
+                box-shadow: none !important;
+              }
+              
+              /* Ensure clean page breaks */
+              .email-header {
+                page-break-after: avoid;
+              }
+              
+              .attachments-section {
+                page-break-inside: avoid;
+              }
+            }
+            
+            @page {
+              margin: 0.5in;
+              size: A4;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="email-container">
+            <!-- Email Header -->
+            <div class="email-header">
+              <h1 class="email-title">${emailData.subject || 'No Subject'}</h1>
+              
+              ${emailData?.tags && emailData.tags.length > 0 ? `
+                <div class="labels-section">
+                  ${emailData.tags.map(tag =>
+        `<span class="label-badge">${tag.name}</span>`
+      ).join('')}
+                </div>
+              ` : ''}
+              
+              <div class="email-meta">
+                <div class="meta-row">
+                  <span class="meta-label">From:</span>
+                  <span class="meta-value">
+                    ${cleanNameDisplay(emailData.sender?.name)} 
+                    ${emailData.sender?.email ? `&lt;${emailData.sender.email}&gt;` : ''}
+                  </span>
+                </div>
+                
+                ${emailData.to && emailData.to.length > 0 ? `
+                  <div class="meta-row">
+                    <span class="meta-label">To:</span>
+                    <span class="meta-value">
+                      ${emailData.to.map(recipient =>
+        `${cleanNameDisplay(recipient.name)} &lt;${recipient.email}&gt;`
+      ).join(', ')}
+                    </span>
+                  </div>
+                ` : ''}
+                
+                ${emailData.cc && emailData.cc.length > 0 ? `
+                  <div class="meta-row">
+                    <span class="meta-label">CC:</span>
+                    <span class="meta-value">
+                      ${emailData.cc.map(recipient =>
+        `${cleanNameDisplay(recipient.name)} &lt;${recipient.email}&gt;`
+      ).join(', ')}
+                    </span>
+                  </div>
+                ` : ''}
+                
+                ${emailData.bcc && emailData.bcc.length > 0 ? `
+                  <div class="meta-row">
+                    <span class="meta-label">BCC:</span>
+                    <span class="meta-value">
+                      ${emailData.bcc.map(recipient =>
+        `${cleanNameDisplay(recipient.name)} &lt;${recipient.email}&gt;`
+      ).join(', ')}
+                    </span>
+                  </div>
+                ` : ''}
+                
+                <div class="meta-row">
+                  <span class="meta-label">Date:</span>
+                  <span class="meta-value">${format(new Date(emailData.receivedOn), 'PPpp')}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="separator"></div>
+            
+            <!-- Email Body -->
+            <div class="email-body">
+              <div class="email-content">
+                ${emailData.decodedBody || '<p><em>No email content available</em></p>'}
+              </div>
+            </div>
+            
+            <!-- Attachments -->
+            ${emailData.attachments && emailData.attachments.length > 0 ? `
+              <div class="attachments-section">
+                <h2 class="attachments-title">Attachments (${emailData.attachments.length})</h2>
+                ${emailData.attachments.map((attachment, index) => `
+                  <div class="attachment-item">
+                    <span class="attachment-name">${attachment.filename}</span>
+                    ${formatFileSize(attachment.size) ? ` - <span class="attachment-size">${formatFileSize(attachment.size)}</span>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+          </div>
+        </body>
+      </html>
+    `;
+
+      // Write content to the iframe
+      const iframeDoc = printFrame.contentDocument || printFrame.contentWindow.document;
+      iframeDoc.open();
+      iframeDoc.write(printContent);
+      iframeDoc.close();
+
+      // Wait for content to load, then print
+      printFrame.onload = function () {
+        setTimeout(() => {
+          try {
+            // Focus the iframe and print
+            printFrame.contentWindow.focus();
+            printFrame.contentWindow.print();
+
+            // Clean up - remove the iframe after a delay
+            setTimeout(() => {
+              if (printFrame && printFrame.parentNode) {
+                document.body.removeChild(printFrame);
+              }
+            }, 1000);
+          } catch (error) {
+            console.error('Error during print:', error);
+            // Clean up on error
+            if (printFrame && printFrame.parentNode) {
+              document.body.removeChild(printFrame);
+            }
+          }
+        }, 500);
+      };
+
+    } catch (error) {
+      console.error('Error printing email:', error);
+      alert('Failed to print email. Please try again.');
+    }
+  };
 
   const renderPerson = useCallback(
     (person: Sender) => (
@@ -621,9 +962,29 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                         </Popover>
                       </div>
 
-                      <time className="text-sm font-medium text-[#6D6D6D] dark:text-[#8C8C8C]">
-                        {formatDate(emailData?.receivedOn)}
-                      </time>
+                      <div className='flex items-center justify-center' >
+
+                        <time className="text-sm font-medium text-[#6D6D6D] dark:text-[#8C8C8C]">
+                          {formatDate(emailData?.receivedOn)}
+                        </time>
+
+                        {/* print button */}
+                        <button onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          printMail()
+                        }} className='ml-4 z-50' >
+
+                          <kbd
+                            className={cn(
+                              'border-muted-foreground/10 bg-accent hover:bg-primary/25 h-6 rounded-[6px] border px-1.5 font-mono text-xs leading-6',
+                              '-me-1 ms-auto hidden max-h-full items-center md:inline-flex',
+                            )}
+                          >
+                            <Printer className="h-3.5 w-3.5" />
+                          </kbd>
+                        </button>
+                      </div>
                     </div>
                     <div className="flex items-center gap-1 pb-2">
                       <p className="text-sm font-medium text-[#6D6D6D] dark:text-[#8C8C8C]">
@@ -744,9 +1105,11 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
         >
           <div className="min-h-0 overflow-hidden">
             <div className="h-fit w-full p-0">
+              {/* mail main body */}
               {emailData?.decodedBody ? (
                 <MailIframe html={emailData?.decodedBody} senderEmail={emailData.sender.email} />
               ) : null}
+              {/* mail attachments */}
               {emailData?.attachments && emailData?.attachments.length > 0 ? (
                 <div className="mb-4 flex flex-wrap items-center gap-2 px-4 pt-4">
                   {emailData?.attachments.map((attachment, index) => (
@@ -860,6 +1223,18 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                     f
                   </kbd>
                 </button>
+                {/* <button onClick={printMail} className="inline-flex h-7 items-center justify-center gap-1 overflow-hidden rounded-md border bg-white px-1.5 dark:border-none dark:bg-[#313131]"
+                >
+                  Print
+                  <kbd
+                    className={cn(
+                      'border-muted-foreground/10 bg-accent h-6 rounded-[6px] border px-1.5 font-mono text-xs leading-6',
+                      '-me-1 ms-auto hidden max-h-full items-center md:inline-flex',
+                    )}
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                  </kbd>
+                </button> */}
               </div>
             </div>
           </div>

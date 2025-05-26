@@ -46,14 +46,14 @@ export async function loader({ request }: Route.LoaderArgs) {
     .catch(() => null);
 
   return {
-    locale,
+    locale: locale ?? 'en',
     messages: await getMessages(locale),
     connectionId,
   };
 }
 
 export function Layout({ children }: PropsWithChildren) {
-  const { locale, messages, connectionId } = useLoaderData<typeof loader>();
+  const { locale = 'en', messages, connectionId } = useLoaderData<typeof loader>();
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>

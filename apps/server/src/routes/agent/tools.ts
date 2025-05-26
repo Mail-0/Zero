@@ -551,23 +551,25 @@ export const webSearch = tool({
   },
 });
 
-export const tools = (driver: MailManager, connectionId: string) => ({
-  [Tools.GetThread]: getEmail(driver),
-  [Tools.ComposeEmail]: composeEmailTool(connectionId),
-  [Tools.ListThreads]: listEmails(driver),
-  [Tools.MarkThreadsRead]: markAsRead(driver),
-  [Tools.MarkThreadsUnread]: markAsUnread(driver),
-  [Tools.ModifyLabels]: modifyLabels(driver),
-  [Tools.GetUserLabels]: getUserLabels(driver),
-  [Tools.SendEmail]: sendEmail(driver),
-  [Tools.CreateLabel]: createLabel(driver),
-  [Tools.BulkDelete]: bulkDelete(driver),
-  [Tools.BulkArchive]: bulkArchive(driver),
-  [Tools.DeleteLabel]: deleteLabel(driver),
-  [Tools.AskZeroMailbox]: askZeroMailbox(connectionId),
-  [Tools.AskZeroThread]: askZeroThread(connectionId),
-  [Tools.WebSearch]: webSearch,
-});
+export const tools = (driver: MailManager, connectionId: string) => {
+  return {
+    [Tools.GetThread]: getEmail(driver),
+    [Tools.ComposeEmail]: composeEmailTool(connectionId),
+    [Tools.ListThreads]: listEmails(driver),
+    [Tools.MarkThreadsRead]: markAsRead(driver),
+    [Tools.MarkThreadsUnread]: markAsUnread(driver),
+    [Tools.ModifyLabels]: modifyLabels(driver),
+    [Tools.GetUserLabels]: getUserLabels(driver),
+    [Tools.SendEmail]: sendEmail(driver),
+    [Tools.CreateLabel]: createLabel(driver),
+    [Tools.BulkDelete]: bulkDelete(driver),
+    [Tools.BulkArchive]: bulkArchive(driver),
+    [Tools.DeleteLabel]: deleteLabel(driver),
+    [Tools.AskZeroMailbox]: askZeroMailbox(connectionId),
+    [Tools.AskZeroThread]: askZeroThread(connectionId),
+    [Tools.WebSearch]: webSearch,
+  };
+};
 
 export const publicTools = (driver: MailManager, connectionId: string) => ({
   //   [Tools.GetThread]: getEmail(driver),

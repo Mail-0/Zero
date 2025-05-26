@@ -7,7 +7,7 @@ import {
   userHotkeys,
 } from '@zero/db/schema';
 import { type Account, betterAuth, type BetterAuthOptions } from 'better-auth';
-import { createAuthMiddleware, customSession } from 'better-auth/plugins';
+import { createAuthMiddleware, phoneNumber } from 'better-auth/plugins';
 import { defaultUserSettings } from '@zero/db/user_settings_default';
 import { getBrowserTimezone, isValidTimezone } from './timezones';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
@@ -81,6 +81,40 @@ export const createAuth = () => {
   const c = getContext<HonoContext>();
 
   return betterAuth({
+    plugins: [
+      phoneNumber({
+        sendOTP: async (data) => {
+          if (!env.TWILIO_ACCOUNT_SID || !env.TWILIO_AUTH_TOKEN || !env.TWILIO_PHONE_NUMBER) {
+            throw new APIError('INTERNAL_SERVER_ERROR', {
+              message: 'Twilio configuration missing',
+            });
+          }
+
+          const response = await fetch(
+            `https://api.twilio.com/2010-04-01/Accounts/${env.TWILIO_ACCOUNT_SID}/Messages.json`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                Authorization: `Basic ${btoa(`${env.TWILIO_ACCOUNT_SID}:${env.TWILIO_AUTH_TOKEN}`)}`,
+              },
+              body: new URLSearchParams({
+                To: data.phoneNumber,
+                From: env.TWILIO_PHONE_NUMBER,
+                Body: `Your verification code is: ${data.code}, do not share it with anyone.`,
+              }),
+            },
+          );
+
+          if (!response.ok) {
+            const error = await response.text();
+            throw new APIError('INTERNAL_SERVER_ERROR', {
+              message: `Failed to send OTP: ${error}`,
+            });
+          }
+        },
+      }),
+    ],
     user: {
       deleteUser: {
         enabled: true,

@@ -1,5 +1,3 @@
-// via https://github.com/vercel/ai/blob/main/examples/next-openai/app/api/use-chat-human-in-the-loop/utils.ts
-
 import {
   convertToCoreMessages,
   type DataStreamWriter,
@@ -7,8 +5,13 @@ import {
   type ToolSet,
 } from 'ai';
 import { formatDataStreamPart, type Message } from '@ai-sdk/ui-utils';
-import { APPROVAL } from './shared';
 import type { z } from 'zod';
+
+// Approval string to be shared across frontend and backend
+export const APPROVAL = {
+  YES: 'Yes, confirmed.',
+  NO: 'No, denied.',
+} as const;
 
 function isValidToolName<K extends PropertyKey, T extends object>(
   key: K,
@@ -30,26 +33,28 @@ function isValidToolName<K extends PropertyKey, T extends object>(
 export async function processToolCalls<
   Tools extends ToolSet,
   ExecutableTools extends {
-    // biome-ignore lint/complexity/noBannedTypes: it's fine
     [Tool in keyof Tools as Tools[Tool] extends { execute: Function } ? never : Tool]: Tools[Tool];
   },
->({
-  dataStream,
-  messages,
-  executions,
-}: {
-  tools: Tools; // used for type inference
-  dataStream: DataStreamWriter;
-  messages: Message[];
-  executions: {
+>(
+  {
+    dataStream,
+    messages,
+  }: {
+    tools: Tools; // used for type inference
+    dataStream: DataStreamWriter;
+    messages: Message[];
+  },
+  executeFunctions: {
     [K in keyof Tools & keyof ExecutableTools]?: (
       args: z.infer<ExecutableTools[K]['parameters']>,
       context: ToolExecutionOptions,
-    ) => Promise<unknown>;
-  };
-}): Promise<Message[]> {
+      // biome-ignore lint/suspicious/noExplicitAny: vibes
+    ) => Promise<any>;
+  },
+): Promise<Message[]> {
   const lastMessage = messages[messages.length - 1];
-  const parts = lastMessage?.parts;
+  if (!lastMessage) return messages;
+  const parts = lastMessage.parts;
   if (!parts) return messages;
 
   const processedParts = await Promise.all(
@@ -61,17 +66,18 @@ export async function processToolCalls<
       const toolName = toolInvocation.toolName;
 
       // Only continue if we have an execute function for the tool (meaning it requires confirmation) and it's in a 'result' state
-      if (!(toolName in executions) || toolInvocation.state !== 'result') return part;
+      if (!(toolName in executeFunctions) || toolInvocation.state !== 'result') return part;
 
-      let result: unknown;
+      // biome-ignore lint/suspicious/noExplicitAny: vibes
+      let result: any;
 
       if (toolInvocation.result === APPROVAL.YES) {
         // Get the tool and check if the tool has an execute function.
-        if (!isValidToolName(toolName, executions) || toolInvocation.state !== 'result') {
+        if (!isValidToolName(toolName, executeFunctions) || toolInvocation.state !== 'result') {
           return part;
         }
 
-        const toolInstance = executions[toolName];
+        const toolInstance = executeFunctions[toolName];
         if (toolInstance) {
           result = await toolInstance(toolInvocation.args, {
             messages: convertToCoreMessages(messages),
@@ -110,14 +116,14 @@ export async function processToolCalls<
   return [...messages.slice(0, -1), { ...lastMessage, parts: processedParts }];
 }
 
-// export function getToolsRequiringConfirmation<
-//   T extends ToolSet
-//   // E extends {
-//   //   [K in keyof T as T[K] extends { execute: Function } ? never : K]: T[K];
-//   // },
-// >(tools: T): string[] {
-//   return (Object.keys(tools) as (keyof T)[]).filter((key) => {
-//     const maybeTool = tools[key];
-//     return typeof maybeTool.execute !== "function";
-//   }) as string[];
-// }
+export function getToolsRequiringConfirmation<
+  T extends ToolSet,
+  // E extends {
+  //   [K in keyof T as T[K] extends { execute: Function } ? never : K]: T[K];
+  // },
+>(tools: T): string[] {
+  return (Object.keys(tools) as (keyof T)[]).filter((key) => {
+    const maybeTool = tools[key];
+    return typeof maybeTool?.execute !== 'function';
+  }) as string[];
+}

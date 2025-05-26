@@ -1,5 +1,6 @@
-import { type IOutgoingMessage, type ParsedMessage, type Label } from '../../types';
-import { type CreateDraftData } from '../schemas';
+import type { IOutgoingMessage, ParsedMessage, Label, DeleteAllSpamResponse } from '../../types';
+import type { CreateDraftData } from '../schemas';
+import type { HonoContext } from '../../ctx';
 
 export interface IGetThreadResponse {
   messages: ParsedMessage[];
@@ -45,7 +46,7 @@ export interface MailManager {
   ): Promise<{ id?: string | null; success?: boolean; error?: string }>;
   getDraft(id: string): Promise<ParsedDraft>;
   listDrafts(params: { q?: string; maxResults?: number; pageToken?: string }): Promise<{
-    threads: { id: string; $raw: unknown }[];
+    threads: { id: string; historyId: string | null; $raw: unknown }[];
     nextPageToken: string | null;
   }>;
   delete(id: string): Promise<void>;
@@ -55,7 +56,10 @@ export interface MailManager {
     maxResults?: number;
     labelIds?: string[];
     pageToken?: string | number;
-  }): Promise<{ threads: { id: string; $raw?: unknown }[]; nextPageToken: string | null }>;
+  }): Promise<{
+    threads: { id: string; historyId: string | null; $raw?: unknown }[];
+    nextPageToken: string | null;
+  }>;
   count(): Promise<{ count?: number; label?: string }[]>;
   getTokens(
     code: string,
@@ -85,4 +89,5 @@ export interface MailManager {
   deleteLabel(id: string): Promise<void>;
   getEmailAliases(): Promise<{ email: string; name?: string; primary?: boolean }[]>;
   revokeRefreshToken(refreshToken: string): Promise<boolean>;
+  deleteAllSpam(): Promise<DeleteAllSpamResponse>;
 }

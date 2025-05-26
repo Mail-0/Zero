@@ -137,6 +137,12 @@ export interface IOutgoingMessage {
   threadId?: string;
   fromEmail?: string;
 }
+export interface DeleteAllSpamResponse {
+  success: boolean;
+  message: string;
+  count?: number;
+  error?: string;
+}
 
 export enum Tools {
   GetThread = 'getThread',
