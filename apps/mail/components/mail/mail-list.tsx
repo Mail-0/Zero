@@ -435,7 +435,7 @@ const Thread = memo(
                     ) : (
                       <p
                         className={cn(
-                          'mt-1 line-clamp-1 w-full min-w-0 overflow-hidden text-sm text-[#8C8C8C]',
+                          'mt-1 line-clamp-1 w-[80%] min-w-0 overflow-hidden text-sm text-[#8C8C8C]',
                         )}
                       >
                         {highlightText(latestMessage.subject, searchValue.highlight)}
@@ -445,7 +445,7 @@ const Thread = memo(
                       {getThreadData.labels ? <MailLabels labels={getThreadData.labels} /> : null}
                     </div> */}
                     {threadLabels && (
-                      <div className="mr-0 flex w-full items-center justify-end gap-1">
+                      <div className="mr-0 flex w-fit items-center justify-end gap-1">
                         {!isFolderSent ? <RenderLabels labels={threadLabels} /> : null}
                         {/* {getThreadData.labels ? <MailLabels labels={getThreadData.labels} /> : null} */}
                       </div>
