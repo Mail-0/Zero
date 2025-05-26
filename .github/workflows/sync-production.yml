@@ -1,0 +1,35 @@
+name: Sync Production
+
+on:
+  push:
+    branches:
+      - staging
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  sync-branches:
+    runs-on: ubuntu-latest
+    name: Syncing branches
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Opening pull request
+        id: pull
+        uses: JDTX0/branch-sync@v1.5.1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FROM_BRANCH: 'staging'
+          TO_BRANCH: 'main'
+          PULL_REQUEST_TITLE: 'Deploy to production (Automated)'
+          CONTENT_COMPARISON: true
+          PULL_REQUEST_IS_DRAFT: true
