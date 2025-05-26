@@ -294,12 +294,20 @@ export function EmailComposer({
       setIsLoading(true);
       setAiGeneratedMessage(null);
       const values = getValues();
+
+      let messageHtml = editor.getHTML();
+      const youtubeIframeRegex = /<iframe[^>]*src="https:\/\/www\.youtube\.com\/embed\/([^"\/?]+)[^>]*><\/iframe>/g;
+      messageHtml = messageHtml.replace(youtubeIframeRegex, (match, videoId) => {
+        const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+        return `<a href="${videoUrl}">${videoUrl}</a>`;
+      });
+
       await onSendEmail({
         to: values.to,
         cc: showCc ? values.cc : undefined,
         bcc: showBcc ? values.bcc : undefined,
         subject: values.subject,
-        message: editor.getHTML(),
+        message: messageHtml,
         attachments: values.attachments || [],
       });
       setHasUnsavedChanges(false);
@@ -362,6 +370,14 @@ export function EmailComposer({
 
     if (!hasUnsavedChanges) return;
     console.log('DRAFT HTML', editor.getHTML());
+
+    let messageHtml = editor.getHTML();
+    const youtubeIframeRegex = /<iframe[^>]*src="https:\/\/www\.youtube\.com\/embed\/([^"\/?]+)[^>]*><\/iframe>/g;
+    messageHtml = messageHtml.replace(youtubeIframeRegex, (match, videoId) => {
+      const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+      return `<a href="${videoUrl}">${videoUrl}</a>`;
+    });
+
     const messageText = editor.getText();
     console.log(values, messageText);
     if (!values.to.length || !values.subject.length || !messageText.length) return;
@@ -373,7 +389,7 @@ export function EmailComposer({
         cc: values.cc?.join(', '),
         bcc: values.bcc?.join(', '),
         subject: values.subject,
-        message: editor.getHTML(),
+        message: messageHtml,
         attachments: await serializeFiles(values.attachments ?? []),
         id: draftId,
       };
