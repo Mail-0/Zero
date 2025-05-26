@@ -21,6 +21,7 @@ import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
 import { useRef, useState, useEffect } from 'react';
 import { cn, formatFileSize } from '@/lib/utils';
+import { transformYouTubeIframesToLinks } from '@/lib/email-utils';
 import { useThread } from '@/hooks/use-threads';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useSession } from '@/lib/auth-client';
@@ -294,12 +295,14 @@ export function EmailComposer({
       setIsLoading(true);
       setAiGeneratedMessage(null);
       const values = getValues();
+      const messageHtml = transformYouTubeIframesToLinks(editor.getHTML());
+
       await onSendEmail({
         to: values.to,
         cc: showCc ? values.cc : undefined,
         bcc: showBcc ? values.bcc : undefined,
         subject: values.subject,
-        message: editor.getHTML(),
+        message: messageHtml,
         attachments: values.attachments || [],
       });
       setHasUnsavedChanges(false);
@@ -362,6 +365,7 @@ export function EmailComposer({
 
     if (!hasUnsavedChanges) return;
     console.log('DRAFT HTML', editor.getHTML());
+    const messageHtml = transformYouTubeIframesToLinks(editor.getHTML());
     const messageText = editor.getText();
     console.log(values, messageText);
     if (!values.to.length || !values.subject.length || !messageText.length) return;
@@ -373,7 +377,7 @@ export function EmailComposer({
         cc: values.cc?.join(', '),
         bcc: values.bcc?.join(', '),
         subject: values.subject,
-        message: editor.getHTML(),
+        message: messageHtml,
         attachments: await serializeFiles(values.attachments ?? []),
         id: draftId,
       };

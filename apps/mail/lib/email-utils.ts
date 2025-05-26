@@ -203,3 +203,22 @@ export const wasSentWithTLS = (receivedHeaders: string[]) => {
 
   return false;
 };
+
+export const transformYouTubeIframesToLinks = (html: string): string => {
+  const youtubeIframeRegex = /<iframe[^>]*\ssrc\s*=\s*["']https:\/\/www\.youtube\.com\/embed\/([^"'\/?\s]+)(?:\?[^"']*)?["'][^>]*>(?:.*?<\/iframe>)?/gi;
+  
+  return html.replace(youtubeIframeRegex, (match, videoId) => {
+    if (!/^[\w-]+$/.test(videoId)) {
+      return match;
+    }
+    
+    // Encode the video ID for safety
+    const encodedVideoId = encodeURIComponent(videoId);
+    const videoUrl = `https://www.youtube.com/watch?v=${encodedVideoId}`;
+    
+    // Escape the URL for HTML context
+    const escapedUrl = videoUrl.replace(/"/g, '&quot;');
+    
+    return `<a href="${escapedUrl}" target="_blank" rel="noopener noreferrer">${escapedUrl}</a>`;
+  });
+};
