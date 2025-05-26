@@ -1540,10 +1540,10 @@ export default function HomeContent() {
       >
         <div className="mx-auto max-w-[920px] text-center text-4xl font-normal leading-[48px] text-white">
           <span className="text-[#B7B7B7]">Work smarter, not harder.</span>{' '}
-          <span className="pr-8 text-white">Automate repetitive</span>{' '}
+          <span className="pr-12 text-white">Automate repetitive</span>{' '}
           <span className="text-[#B7B7B7]">email</span>
           <span className="text-[#B7B7B7]"> tasks with</span>{' '}
-          <span className="pr-8 text-white">smart templates, </span>{' '}
+          <span className="pr-14 text-white">smart templates, </span>{' '}
           <span className="text-white">scheduled sends</span>
           <span className="text-[#B7B7B7]">
             , follow-up reminders, and batch processing capabilities that
@@ -1560,14 +1560,14 @@ export default function HomeContent() {
             height={50}
           />
           <img
-            className="relative bottom-[150px] right-[-25px]"
+            className="relative bottom-[145px] right-[47px]"
             src="/snooze-home.png"
             alt="tasks"
             width={50}
             height={50}
           />
           <img
-            className="relative bottom-[195px] left-[278px]"
+            className="relative bottom-[195px] left-[210px]"
             src="/star-home.png"
             alt="tasks"
             width={50}
