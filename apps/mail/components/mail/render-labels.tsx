@@ -52,7 +52,7 @@ export const RenderLabels = ({ count = 1, labels }: { count?: number; labels: La
       {hiddenLabels.length > 0 && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <button className="inline-block overflow-hidden truncate rounded bg-[#E8DEFD] px-1.5 py-0.5 text-xs font-medium text-[#2C2241] dark:bg-[#2C2241] dark:text-[#E8DEFD]">
+            <button className="text-foreground dark:bg-subtleBlack bg-subtleWhite inline-block overflow-hidden truncate rounded px-1.5 py-0.5 text-xs font-medium">
               +{hiddenLabels.length}
             </button>
           </TooltipTrigger>
