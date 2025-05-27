@@ -1,11 +1,11 @@
+import { createRateLimiterMiddleware, privateProcedure, publicProcedure, router } from '../trpc';
 import { defaultUserSettings, userSettingsSchema, type UserSettings } from '../../lib/schemas';
-import { createRateLimiterMiddleware, privateProcedure, router } from '../trpc';
 import { Ratelimit } from '@upstash/ratelimit';
 import { userSettings } from '../../db/schema';
 import { eq } from 'drizzle-orm';
 
 export const settingsRouter = router({
-  get: privateProcedure
+  get: publicProcedure
     .use(
       createRateLimiterMiddleware({
         limiter: Ratelimit.slidingWindow(60, '1m'),
@@ -13,6 +13,8 @@ export const settingsRouter = router({
       }),
     )
     .query(async ({ ctx }) => {
+      if (!ctx.session) return { settings: defaultUserSettings };
+
       const { db, session } = ctx;
       const [result] = await db
         .select()

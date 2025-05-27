@@ -42,7 +42,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   const connectionId = await trpc.connections.getDefault
     .query()
-    .then((res) => res?.id)
+    .then((res) => res?.id ?? null)
     .catch(() => null);
 
   return {
