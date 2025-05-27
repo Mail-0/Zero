@@ -8,9 +8,9 @@ import {
   sanitizeContext,
   StandardizedError,
 } from './utils';
+import type { IOutgoingMessage, Label, ParsedMessage, DeleteAllSpamResponse } from '../../types';
 import { mapGoogleLabelColor, mapToGoogleLabelColor } from './google-label-color-map';
 import { parseAddressList, parseFrom, wasSentWithTLS } from '../email-utils';
-import type { IOutgoingMessage, Label, ParsedMessage, DeleteAllSpamResponse } from '../../types';
 import { sanitizeTipTapHtml } from '../sanitize-tip-tap-html';
 import type { MailManager, ManagerConfig } from './types';
 import { type gmail_v1, gmail } from '@googleapis/gmail';
@@ -645,12 +645,10 @@ export class GoogleMailManager implements MailManager {
       id: id,
     });
   }
-  public async revokeRefreshToken(refreshToken: string) {
-    if (!refreshToken) {
-      return false;
-    }
+  public async revokeToken(token: string) {
+    if (!token) return false;
     try {
-      await this.auth.revokeToken(refreshToken);
+      await this.auth.revokeToken(token);
       return true;
     } catch (error: unknown) {
       console.error('Failed to revoke Google token:', (error as Error).message);
@@ -665,7 +663,7 @@ export class GoogleMailManager implements MailManager {
         let totalDeleted = 0;
         let hasMoreSpam = true;
         let pageToken: string | number | null | undefined = undefined;
-        
+
         while (hasMoreSpam) {
           const spamThreads = await this.list({
             folder: 'spam',
@@ -677,31 +675,30 @@ export class GoogleMailManager implements MailManager {
             hasMoreSpam = false;
             break;
           }
-          
-          const threadIds = spamThreads.threads.map(thread => thread.id);
-          await this.modifyLabels(threadIds, { 
-            addLabels: ['TRASH'], 
-            removeLabels: ['SPAM', 'INBOX'] 
+
+          const threadIds = spamThreads.threads.map((thread) => thread.id);
+          await this.modifyLabels(threadIds, {
+            addLabels: ['TRASH'],
+            removeLabels: ['SPAM', 'INBOX'],
           });
-          
+
           totalDeleted += threadIds.length;
           pageToken = spamThreads.nextPageToken;
-          
+
           if (!pageToken) {
             hasMoreSpam = false;
           }
         }
-        
-        return { 
-          success: true, 
-          message: `Deleted ${totalDeleted} spam emails`, 
-          count: totalDeleted 
+
+        return {
+          success: true,
+          message: `Deleted ${totalDeleted} spam emails`,
+          count: totalDeleted,
         };
       },
-      { email: this.config.auth?.email }
+      { email: this.config.auth?.email },
     );
   }
-
 
   private async modifyThreadLabels(
     threadIds: string[],

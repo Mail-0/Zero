@@ -6,17 +6,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-} from '@/components/ui/form';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Form, FormControl, FormDescription, FormField, FormItem } from '@/components/ui/form';
 import { SettingsCard } from '@/components/settings/settings-card';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
 import { useTRPC } from '@/providers/query-provider';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/lib/auth-client';
@@ -26,6 +19,7 @@ import { useNavigate } from 'react-router';
 import { useTranslations } from 'use-intl';
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
+import { clear } from 'idb-keyval';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
@@ -60,9 +54,9 @@ function DeleteAccountDialog() {
       onSuccess: ({ success, message }) => {
         if (!success) return toast.error(message);
         refetch();
+        clear();
         toast.success('Account deleted successfully');
-        navigate('/');
-        setIsOpen(false);
+        window.location.href = '/';
       },
       onError: (error) => {
         console.error('Failed to delete account:', error);

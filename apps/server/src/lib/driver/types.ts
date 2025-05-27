@@ -88,6 +88,6 @@ export interface MailManager {
   ): Promise<void>;
   deleteLabel(id: string): Promise<void>;
   getEmailAliases(): Promise<{ email: string; name?: string; primary?: boolean }[]>;
-  revokeRefreshToken(refreshToken: string): Promise<boolean>;
+  revokeToken(token: string): Promise<boolean>;
   deleteAllSpam(): Promise<DeleteAllSpamResponse>;
 }

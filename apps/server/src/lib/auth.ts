@@ -101,14 +101,35 @@ export const createAuth = () => {
         enabled: true,
         beforeDelete: async (user, request) => {
           if (!request) throw new APIError('BAD_REQUEST', { message: 'Request object is missing' });
-          const driver = await getActiveDriver();
-          const refreshToken = (
-            await c.var.db.select().from(connection).where(eq(connection.userId, user.id)).limit(1)
-          )[0]?.refreshToken;
-          const revoked = await driver.revokeRefreshToken(refreshToken || '');
-          if (!revoked) {
-            console.error('Failed to revoke refresh token');
-            return;
+          const connections = await c.var.db.query.connection.findMany({
+            where: eq(connection.userId, user.id),
+          });
+
+          const revokedAccounts = (
+            await Promise.allSettled(
+              connections.map(async (connection) => {
+                if (!connection.accessToken || !connection.refreshToken) return false;
+                const driver = createDriver(connection.providerId, {
+                  auth: {
+                    accessToken: connection.accessToken,
+                    refreshToken: connection.refreshToken,
+                    userId: user.id,
+                    email: connection.email,
+                  },
+                });
+                const token = connection.refreshToken;
+                return await driver.revokeToken(token || '');
+              }),
+            )
+          ).map((result) => {
+            if (result.status === 'fulfilled') {
+              return result.value;
+            }
+            return false;
+          });
+
+          if (revokedAccounts.every((value) => !!value)) {
+            console.log('Failed to revoke some accounts');
           }
 
           await c.var.db.transaction(async (tx) => {
