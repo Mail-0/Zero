@@ -197,17 +197,57 @@ const EmailTemplate = ({ content, imagesEnabled, nonce }: EmailTemplateProps) =>
   );
 };
 
+export const doesContainStyleTags = (html: string) => {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  return doc.querySelectorAll('style').length > 0;
+};
+
+export const addStyleTags = (html: string) => {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  const style = doc.createElement('style');
+  style.textContent = `
+    :root {
+      --background: #FFFFFF;
+      --text: #1A1A1A;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background: #1A1A1A;
+        --text: #FFFFFF;
+      }
+    }
+
+    body {
+      font-family: 'Geist', sans-serif !important;
+      background-color: var(--background) !important;
+      color: var(--text) !important;
+    }
+  `;
+
+  doc.head.appendChild(style);
+  return doc.documentElement.outerHTML;
+};
+
 export const template = async (html: string, imagesEnabled: boolean = false) => {
+  console.time('[template] template');
   if (typeof DOMParser === 'undefined') return html;
   const nonce = generateNonce();
   let processedHtml = forceExternalLinks(html);
 
   if (imagesEnabled) {
+    console.time('[template] proxyImageUrls');
     processedHtml = proxyImageUrls(processedHtml);
+    console.timeEnd('[template] proxyImageUrls');
   }
 
+  console.time('[template] renderToString');
   const emailHtml = renderToString(
     <EmailTemplate content={processedHtml} imagesEnabled={imagesEnabled} nonce={nonce} />,
   );
+  console.timeEnd('[template] renderToString');
+  console.timeEnd('[template] template');
   return emailHtml;
 };
