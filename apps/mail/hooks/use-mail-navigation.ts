@@ -222,6 +222,8 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
 
   useHotkeys('ArrowUp', handleArrowUp);
   useHotkeys('ArrowDown', handleArrowDown);
+  useHotkeys('J', handleArrowUp);
+  useHotkeys('K', handleArrowDown);
   useHotkeys('Enter', handleEnter);
   //   useHotkeys('Tab', handleTab);
   //   useHotkeys('ArrowRight', handleArrowRight);
