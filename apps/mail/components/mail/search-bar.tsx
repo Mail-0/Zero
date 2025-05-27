@@ -5,7 +5,8 @@ import { type DateRange } from 'react-day-picker';
 import { Input } from '@/components/ui/input';
 import { useLocation } from 'react-router';
 import { useForm } from 'react-hook-form';
-import { Search, X } from 'lucide-react';
+import { Search } from '@/components/icons/icons';
+import { X } from 'lucide-react';
 import { format } from 'date-fns';
 import React from 'react';
 
@@ -201,15 +202,15 @@ export function SearchBar() {
   return (
     <div className="relative flex-1">
       <form className="relative flex items-center" onSubmit={form.handleSubmit(submitSearch)}>
-        <Search
-          className="absolute left-2.5 z-10 h-4 w-4 text-[#6D6D6D] dark:text-[#727272]"
+      <Search
+          className="absolute left-2.5 top-[10px] z-10 h-3.5 w-3.5 fill-[#6D6D6D] dark:fill-[#727272]"
           aria-hidden="true"
         />
 
         <div className="relative w-full">
           <Input
-            placeholder={'Search...'}
-            className="text-muted-foreground placeholder:text-muted-foreground/70 h-[32px] w-full select-none rounded-md border bg-white pl-9 pr-14 shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-none dark:bg-[#141414]"
+            placeholder={'Search'}
+            className="text-muted-foreground placeholder:text-muted-foreground/70 h-[32px] w-full select-none rounded-md border bg-white pl-8 pr-14 shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-none dark:bg-[#141414]"
             {...form.register('q')}
             value={q}
             disabled={isSearching}

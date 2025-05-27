@@ -9,34 +9,17 @@ import {
   PDF,
   Reply,
   ReplyAll,
+  ThreeDots,
   Tag,
   User,
   ChevronDown,
   Check,
+  Printer
 } from '../icons/icons';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '../ui/dialog';
-import {
-  Briefcase,
-  Star,
-  StickyNote,
-  Users,
-  Lock,
-  Download,
-  Printer,
-  LoaderCircleIcon,
-} from 'lucide-react';
 import { memo, useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import { Briefcase, Star, StickyNote, Users, Lock, Download, MoreVertical } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
@@ -63,6 +46,12 @@ import { format, set } from 'date-fns';
 import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Badge } from '../ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
 
 // Add formatFileSize utility function
 const formatFileSize = (size: number) => {
@@ -1045,30 +1034,39 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                             </div>
                           </PopoverContent>
                         </Popover>
-                        {/* print button */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            printMail();
-                          }}
-                        >
-                          <kbd
-                            className={cn(
-                              'hover:bg-iconLight/10 dark:hover:bg-iconDark/20 rounded-[6px] p-2 text-xs text-[#6D6D6D] dark:text-[#8C8C8C]',
-                              '-me-1 ms-auto hidden max-h-full items-center md:inline-flex',
-                            )}
-                          >
-                            <Printer className="h-3.5 w-3.5" />
-                          </kbd>
-                        </button>
                       </div>
 
-                      <div className="flex items-center justify-center">
-                        <time className="text-sm font-medium text-[#6D6D6D] dark:text-[#8C8C8C]">
+                      <div className='flex items-center justify-center' >
+
+                        <time className="text-sm font-medium text-[#6D6D6D] dark:text-[#8C8C8C] mr-2">
                           {formatDate(emailData?.receivedOn)}
                         </time>
+
+                        {/* options menu */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                              }}
+                              className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md bg-white dark:bg-[#313131] focus:ring-0 focus:outline-none"
+                            >
+                              <ThreeDots className="fill-iconLight dark:fill-iconDark" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className='bg-white dark:bg-[#313131]'>
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation();
+                              printMail();
+                            }}>
+                              <Printer className="mr-2 h-4 w-4 fill-iconLight dark:fill-iconDark" />
+                              Print
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
+
                     </div>
                     <div className="flex justify-between">
                       <div className="flex gap-1">

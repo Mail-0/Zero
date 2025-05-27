@@ -459,26 +459,26 @@ export function ThreadContextMenu({
       <ContextMenuTrigger disabled={isLoading || isFetching} className="w-full">
         {children}
       </ContextMenuTrigger>
-      <ContextMenuContent className="w-56" onContextMenu={(e) => e.preventDefault()}>
+      <ContextMenuContent className="w-56 bg-white dark:bg-[#1A1A1A]" onContextMenu={(e) => e.preventDefault()}>
         {primaryActions.map(renderAction)}
 
-        <ContextMenuSeparator />
+        <ContextMenuSeparator className="dark:bg-[#252525] bg-[#252525]"/>
 
         <ContextMenuSub>
           <ContextMenuSubTrigger className="font-normal">
             <Tag className="mr-2.5 h-4 w-4" />
             {t('common.mail.labels')}
           </ContextMenuSubTrigger>
-          <ContextMenuSubContent className="w-48">
+          <ContextMenuSubContent className="w-48 bg-white dark:bg-[#1A1A1A]">
             <LabelsList threadId={threadId} />
           </ContextMenuSubContent>
         </ContextMenuSub>
 
-        <ContextMenuSeparator />
+        <ContextMenuSeparator className="dark:bg-[#252525] bg-[#252525]"/>
 
         {getActions().map(renderAction as any)}
 
-        <ContextMenuSeparator />
+        <ContextMenuSeparator className="dark:bg-[#252525] bg-[#252525]"/>
 
         {otherActions.map(renderAction)}
       </ContextMenuContent>

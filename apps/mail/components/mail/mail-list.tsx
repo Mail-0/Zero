@@ -456,13 +456,13 @@ const Thread = memo(
                       {highlightText(emailContent, searchValue.highlight)}
                     </div>
                   )}
-                  {mainSearchTerm && (
+                  {/* {mainSearchTerm && (
                     <div className="text-muted-foreground mt-1 flex items-center gap-1 text-xs">
                       <span className="bg-primary/10 text-primary rounded px-1.5 py-0.5">
                         {mainSearchTerm}
                       </span>
                     </div>
-                  )}
+                  )} */}
                 </div>
               </div>
             </div>
