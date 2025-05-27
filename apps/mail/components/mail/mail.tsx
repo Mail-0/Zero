@@ -46,6 +46,7 @@ import AISidebar from '@/components/ui/ai-sidebar';
 import { cleanSearchValue, cn } from '@/lib/utils';
 import { useThreads } from '@/hooks/use-threads';
 import AIToggleButton from '../ai-toggle-button';
+import { useBilling } from '@/hooks/use-billing';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
@@ -105,6 +106,7 @@ const AutoLabelingSettings = () => {
   const { mutateAsync: updateLabels, isPending } = useMutation(
     trpc.brain.updateLabels.mutationOptions(),
   );
+  const [, setPricingDialog] = useQueryState('pricingDialog');
   const [labels, setLabels] = useState<ITag[]>([]);
   const [newLabel, setNewLabel] = useState({ name: '', usecase: '' });
   const { mutateAsync: EnableBrain, isPending: isEnablingBrain } = useMutation(
@@ -114,6 +116,7 @@ const AutoLabelingSettings = () => {
     trpc.brain.disableBrain.mutationOptions(),
   );
   const { data: brainState, refetch: refetchBrainState } = useBrainState();
+  const { isLoading, isPro } = useBilling();
 
   useEffect(() => {
     if (storedLabels) {
@@ -207,7 +210,16 @@ const AutoLabelingSettings = () => {
   }, [brainState?.enabled]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(state) => {
+        if (!isPro) {
+          setPricingDialog('true');
+        } else {
+          setOpen(state);
+        }
+      }}
+    >
       <DialogTrigger asChild>
         <div className="flex items-center gap-2">
           {/* <div
@@ -218,7 +230,7 @@ const AutoLabelingSettings = () => {
           /> */}
 
           <Switch
-            disabled={isEnablingBrain || isDisablingBrain}
+            disabled={isEnablingBrain || isDisablingBrain || isLoading}
             checked={brainState?.enabled ?? false}
           />
           <span className="text-muted-foreground cursor-pointer text-xs">Auto label</span>
@@ -397,7 +409,7 @@ export function MailLayout() {
   return (
     <TooltipProvider delayDuration={0}>
       <PricingDialog />
-      <div className="rounded-inherit relative z-[5] flex p-0 md:mt-1 ">
+      <div className="rounded-inherit relative z-[5] flex p-0 md:mt-1">
         <ResizablePanelGroup
           direction="horizontal"
           autoSaveId="mail-panel-layout"
