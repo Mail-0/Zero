@@ -103,12 +103,11 @@ export function NavUser() {
       success: () => 'Signed out successfully!',
       error: 'Error signing out',
       async finally() {
+        await handleClearCache();
         window.location.href = '/login';
       },
     });
   };
-
-  const { data: brainState, refetch: refetchBrainState } = useBrainState();
 
   const otherConnections = useMemo(() => {
     if (!data || !activeAccount) return [];
@@ -524,7 +523,7 @@ export function NavUser() {
         <div className="flex items-center justify-between gap-2">
           <div className="my-2 flex flex-col items-start gap-1 space-y-1">
             <div className="flex items-center gap-1 text-[13px] leading-none text-black dark:text-white">
-              <p className="max-w-[8.5ch] truncate text-[13px]">
+              <p className={cn('truncate text-[13px]', isPro ? 'max-w-[14.5ch]' : 'max-w-[8.5ch]')}>
                 {activeAccount?.name || session.user.name || 'User'}
               </p>
               {isPro ? (
