@@ -181,7 +181,7 @@ export function PricingDialog() {
           >
             <div className="flex items-center justify-center gap-2.5 px-1">
               <div className="justify-start text-center font-semibold leading-none text-black">
-                {isLoading ? 'Processing...' : 'Start free trial'}
+                {isLoading ? 'Processing...' : 'Start 7 day free trial'}
               </div>
             </div>
           </button>

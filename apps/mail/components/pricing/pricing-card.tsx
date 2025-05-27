@@ -4,9 +4,9 @@ import { PricingSwitch } from '../ui/pricing-switch';
 import { useBilling } from '@/hooks/use-billing';
 import { useNavigate } from 'react-router';
 import { Badge } from '../ui/badge';
+import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 
 const PRICING_CONSTANTS = {
   FREE_FEATURES: [
@@ -107,7 +107,7 @@ export default function PricingCard() {
     }
   };
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
       <div className="relative z-20 mb-8 flex items-center justify-center gap-2">
         <PricingSwitch onCheckedChange={(checked) => setIsAnnual(checked)} />
         <p className="text-sm text-white/70">Billed Annually</p>
@@ -119,7 +119,12 @@ export default function PricingCard() {
 
           <div className="relative z-10 flex flex-col items-start justify-start gap-5 self-stretch">
             <div className="flex flex-col items-start justify-start gap-4 self-stretch">
-              <div className={cn(PRICING_CONSTANTS.CARD_STYLES.header, PRICING_CONSTANTS.CARD_STYLES.headerFree)}>
+              <div
+                className={cn(
+                  PRICING_CONSTANTS.CARD_STYLES.header,
+                  PRICING_CONSTANTS.CARD_STYLES.headerFree,
+                )}
+              >
                 <div className="relative h-6 w-6">
                   <img
                     src="lock.svg"
@@ -163,7 +168,7 @@ export default function PricingCard() {
                 });
               }
             }}
-            className="mt-auto z-30  inline-flex h-10 items-center justify-center gap-2.5 self-stretch overflow-hidden rounded-lg bg-[#2D2D2D] p-3 shadow shadow-black/30 outline outline-1 outline-offset-[-1px] outline-[#434343]"
+            className="z-30 mt-auto inline-flex h-10 items-center justify-center gap-2.5 self-stretch overflow-hidden rounded-lg bg-[#2D2D2D] p-3 shadow shadow-black/30 outline outline-1 outline-offset-[-1px] outline-[#434343]"
           >
             <div className="flex items-center justify-center gap-2.5 px-1">
               <div className="justify-start text-center font-semibold leading-none text-[#D5D5D5]">
@@ -172,7 +177,7 @@ export default function PricingCard() {
             </div>
           </button>
         </div>
-        
+
         <div className={cn(PRICING_CONSTANTS.CARD_STYLES.base, PRICING_CONSTANTS.CARD_STYLES.pro)}>
           <div className="absolute inset-0 z-0 h-full w-full overflow-hidden">
             <img
@@ -195,7 +200,12 @@ export default function PricingCard() {
           </div>
           <div className="relative z-10 flex flex-col items-start justify-start gap-5 self-stretch">
             <div className="flex flex-col items-start justify-start gap-4 self-stretch">
-              <div className={cn(PRICING_CONSTANTS.CARD_STYLES.header, PRICING_CONSTANTS.CARD_STYLES.headerPro)}>
+              <div
+                className={cn(
+                  PRICING_CONSTANTS.CARD_STYLES.header,
+                  PRICING_CONSTANTS.CARD_STYLES.headerPro,
+                )}
+              >
                 <div className="relative h-6 w-6">
                   <img height={24} width={24} src="zap.svg" alt="hi" />
                 </div>
@@ -228,12 +238,12 @@ export default function PricingCard() {
             </div>
           </div>
           <button
-            className="mt-auto z-30 inline-flex h-10 cursor-pointer items-center justify-center gap-2.5 self-stretch overflow-hidden rounded-lg bg-white p-3 outline outline-1 outline-offset-[-1px]"
+            className="z-30 mt-auto inline-flex h-10 cursor-pointer items-center justify-center gap-2.5 self-stretch overflow-hidden rounded-lg bg-white p-3 outline outline-1 outline-offset-[-1px]"
             onClick={handleUpgrade}
           >
             <div className="flex items-center justify-center gap-2.5 px-1">
               <div className="justify-start text-center font-semibold leading-none text-black">
-                Start free trial
+                Start 7 day free trial
               </div>
             </div>
           </button>
@@ -243,7 +253,13 @@ export default function PricingCard() {
           <div className="absolute inset-0 z-0 h-full w-full overflow-hidden"></div>
           <div className="relative z-10 flex flex-col items-start justify-start gap-5 self-stretch">
             <div className="flex flex-col items-start justify-start gap-4 self-stretch">
-              <div className={cn(PRICING_CONSTANTS.CARD_STYLES.header, PRICING_CONSTANTS.CARD_STYLES.headerFree, "bg-[#B183FF]/60")}>
+              <div
+                className={cn(
+                  PRICING_CONSTANTS.CARD_STYLES.header,
+                  PRICING_CONSTANTS.CARD_STYLES.headerFree,
+                  'bg-[#B183FF]/60',
+                )}
+              >
                 <div className="relative h-6 w-6">
                   <img height={40} width={40} src="mail-pixel.svg" alt="enterprise" />
                 </div>
@@ -270,7 +286,7 @@ export default function PricingCard() {
             </div>
           </div>
           <button
-            className="mt-auto z-30 inline-flex h-10 items-center justify-center gap-2.5 self-stretch overflow-hidden rounded-lg bg-[#2D2D2D] p-3 shadow shadow-black/30 outline outline-1 outline-offset-[-1px] outline-[#434343]"
+            className="z-30 mt-auto inline-flex h-10 items-center justify-center gap-2.5 self-stretch overflow-hidden rounded-lg bg-[#2D2D2D] p-3 shadow shadow-black/30 outline outline-1 outline-offset-[-1px] outline-[#434343]"
             onClick={() => window.open('https://cal.com/team/0/chat', '_blank')}
           >
             <div className="flex items-center justify-center gap-2.5 px-1">

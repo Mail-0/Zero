@@ -326,7 +326,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               >
                 <div className="flex items-center justify-center gap-2.5 px-0.5">
                   <div className="justify-start text-sm leading-none text-white">
-                    Start free trial
+                    Start 7 day free trial
                   </div>
                 </div>
               </button>
