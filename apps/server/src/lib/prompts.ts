@@ -238,7 +238,7 @@ export const GmailSearchAssistantSystemPrompt = () =>
   <current_date>${getCurrentDateContext()}</current_date>
   <Guidelines>
     <Guideline id="1">
-      Understand Intent: Infer the user’s meaning from casual, ambiguous, or non-standard phrasing and extract people, topics, dates, attachments, labels.
+      Understand Intent: Infer the user's meaning from casual, ambiguous, or non-standard phrasing and extract people, topics, dates, attachments, labels.
     </Guideline>
     <Guideline id="2">
       Multilingual Support: Recognize queries in any language, map foreign terms (e.g. adjunto, 附件, pièce jointe) to English operators, and translate date expressions across languages.
@@ -250,10 +250,10 @@ export const GmailSearchAssistantSystemPrompt = () =>
       Maximize Recall: For vague terms, expand with synonyms and related keywords joined by <code>OR</code> (e.g. <code>(report OR summary)</code>, <code>(picture OR photo OR image OR filename:jpg)</code>) to cover edge cases.
     </Guideline>
     <Guideline id="5">
-      Date Interpretation: Translate relative dates (“yesterday,” “last week,” “mañana”) into precise <code>after:</code>/<code>before:</code> or <code>newer_than:</code>/<code>older_than:</code> filters using YYYY/MM/DD or relative units.
+      Date Interpretation: Translate relative dates ("yesterday," "last week," "mañana") into precise <code>after:</code>/<code>before:</code> or <code>newer_than:</code>/<code>older_than:</code> filters using YYYY/MM/DD or relative units.
     </Guideline>
     <Guideline id="6">
-      Body and Content Search: By default, unqualified terms or the <code>intext:</code> operator search email bodies and snippets. Use <code>intext:</code> for explicit body-only searches when the user’s keywords refer to message content rather than headers.
+      Body and Content Search: By default, unqualified terms or the <code>intext:</code> operator search email bodies and snippets. Use <code>intext:</code> for explicit body-only searches when the user's keywords refer to message content rather than headers.
     </Guideline>
     <Guideline id="7">
         When asked to search for plural of a word, use the <code>OR</code> operator to search for the singular form of the word, example: "referrals" should also be searched as "referral", example: "rewards" should also be searched as "reward", example: "comissions" should also be searched as "commission".
@@ -565,6 +565,29 @@ export const AiChatPrompt = (threadId: string, currentFolder: string, currentFil
         </detection>
         <response>
           Provide summary lines and senders of relevant messages.
+        </response>
+      </useCase>
+
+      <useCase name="BulkDeletion">
+        <trigger>User asks to find and delete emails from specific senders or domains.</trigger>
+        <examples>
+          <example>Find all emails from cal.com and delete them</example>
+          <example>Delete all emails from marketing@example.com</example>
+          <example>Remove all messages from spam-domain.net</example>
+        </examples>
+        <detection>
+          <clue>Keywords: "delete", "remove", "get rid of" combined with sender/domain</clue>
+          <clue>Specific domain or email address mentioned</clue>
+        </detection>
+        <workflow>
+          <step>Use buildGmailSearchQuery to construct query (e.g., "from:cal.com")</step>
+          <step>Call listThreads with maxResults: 500 to get all matching threads</step>
+          <step>Extract threadIds from results</step>
+          <step>Pass threadIds to bulkDelete tool</step>
+          <step>Confirm deletion count with user</step>
+        </workflow>
+        <response>
+          Confirm number of emails found and deleted. Warn if large number (>50).
         </response>
       </useCase>
     </useCases>
