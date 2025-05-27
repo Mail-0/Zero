@@ -17,12 +17,21 @@ import {
   Printer,
 } from '../icons/icons';
 import {
+  Briefcase,
+  Star,
+  StickyNote,
+  Users,
+  Lock,
+  Download,
+  MoreVertical,
+  HardDriveDownload,
+} from 'lucide-react';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
-import { Briefcase, Star, StickyNote, Users, Lock, Download, MoreVertical } from 'lucide-react';
 import { memo, useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
@@ -52,6 +61,7 @@ import { format, set } from 'date-fns';
 import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Badge } from '../ui/badge';
+import JSZip from 'jszip';
 
 // Add formatFileSize utility function
 const formatFileSize = (size: number) => {
@@ -301,6 +311,113 @@ const ActionButton = ({ onClick, icon, text, shortcut }: ActionButtonProps) => {
       )}
     </button>
   );
+};
+
+const downloadAttachment = (attachment: { body: string; mimeType: string; filename: string }) => {
+  try {
+    const byteCharacters = atob(attachment.body);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: attachment.mimeType });
+
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = attachment.filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Error downloading attachment:', error);
+  }
+};
+
+const handleDownloadAllAttachments =
+  (subject: string, attachments: { body: string; mimeType: string; filename: string }[]) => () => {
+    if (!attachments.length) return;
+
+    const zip = new JSZip();
+
+    console.log('attachments', attachments);
+    attachments.forEach((attachment) => {
+      try {
+        const byteCharacters = atob(attachment.body);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+
+        zip.file(attachment.filename, byteArray, {
+          binary: true,
+          date: new Date(),
+          unixPermissions: 0o644,
+        });
+      } catch (error) {
+        console.error(`Error adding ${attachment.filename} to zip:`, error);
+      }
+    });
+
+    // Generate and download the zip file
+    zip
+      .generateAsync({
+        type: 'blob',
+        compression: 'DEFLATE',
+        compressionOptions: {
+          level: 9,
+        },
+      })
+      .then((content) => {
+        const url = window.URL.createObjectURL(content);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `attachments-${subject || 'email'}.zip`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      })
+      .catch((error) => {
+        console.error('Error generating zip file:', error);
+      });
+
+    console.log('downloaded', subject, attachments);
+  };
+
+const openAttachment = (attachment: { body: string; mimeType: string; filename: string }) => {
+  try {
+    const byteCharacters = atob(attachment.body);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: attachment.mimeType });
+    const url = window.URL.createObjectURL(blob);
+
+    const width = 800;
+    const height = 600;
+    const left = (window.screen.width - width) / 2;
+    const top = (window.screen.height - height) / 2;
+
+    const popup = window.open(
+      url,
+      'attachment-viewer',
+      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes,status=no,location=no,menubar=no`,
+    );
+
+    if (popup) {
+      popup.focus();
+      // Clean up the URL after a short delay to ensure the browser has time to load it
+      setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+    }
+  } catch (error) {
+    console.error('Error opening attachment:', error);
+  }
 };
 
 const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
@@ -1063,12 +1180,27 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                           <DropdownMenuContent align="end" className="bg-white dark:bg-[#313131]">
                             <DropdownMenuItem
                               onClick={(e) => {
+                                e.preventDefault();
                                 e.stopPropagation();
                                 printMail();
                               }}
                             >
                               <Printer className="fill-iconLight dark:fill-iconDark mr-2 h-4 w-4" />
                               Print
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              disabled={!emailData.attachments?.length}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                handleDownloadAllAttachments(
+                                  emailData.subject || 'email',
+                                  emailData.attachments || [],
+                                )();
+                              }}
+                            >
+                              <HardDriveDownload className="fill-iconLight dark:text-iconDark dark:fill-iconLight mr-2 h-4 w-4" />
+                              Download All Attachments
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -1199,33 +1331,10 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
               {emailData?.attachments && emailData?.attachments.length > 0 ? (
                 <div className="mb-4 flex flex-wrap items-center gap-2 px-4 pt-4">
                   {emailData?.attachments.map((attachment, index) => (
-                    <div key={index}>
+                    <div key={index} className="flex">
                       <button
-                        className="dark: flex h-7 items-center gap-1 rounded-[5px] border bg-[#FAFAFA] px-4 text-sm font-medium hover:bg-[#F0F0F0] dark:bg-[#262626] dark:hover:bg-[#303030]"
-                        onClick={() => {
-                          try {
-                            // Convert base64 to blob
-                            const byteCharacters = atob(attachment.body);
-                            const byteNumbers = new Array(byteCharacters.length);
-                            for (let i = 0; i < byteCharacters.length; i++) {
-                              byteNumbers[i] = byteCharacters.charCodeAt(i);
-                            }
-                            const byteArray = new Uint8Array(byteNumbers);
-                            const blob = new Blob([byteArray], { type: attachment.mimeType });
-
-                            // Create object URL and trigger download
-                            const url = window.URL.createObjectURL(blob);
-                            const link = document.createElement('a');
-                            link.href = url;
-                            link.download = attachment.filename;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            window.URL.revokeObjectURL(url);
-                          } catch (error) {
-                            console.error('Error downloading attachment:', error);
-                          }
-                        }}
+                        className="flex cursor-pointer items-center gap-1 rounded-[5px] border bg-[#FAFAFA] px-1.5 py-1 text-sm font-medium hover:bg-[#F0F0F0] dark:bg-[#262626] dark:hover:bg-[#303030]"
+                        onClick={() => openAttachment(attachment)}
                       >
                         {getFileIcon(attachment.filename)}
                         <span className="max-w-[15ch] truncate text-sm text-black dark:text-white">
@@ -1235,6 +1344,15 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                           {formatFileSize(attachment.size)}
                         </span>
                       </button>
+                      <button
+                        onClick={() => downloadAttachment(attachment)}
+                        className="flex cursor-pointer items-center gap-1 rounded-[5px] px-1.5 py-1 text-sm"
+                      >
+                        <HardDriveDownload className="h-4 w-4 fill-[#FAFAFA] text-[#6D6D6D] dark:fill-[#262626] dark:text-[#6D6D6D]" />
+                      </button>
+                      {index < (emailData?.attachments?.length || 0) - 1 && (
+                        <div className="m-auto h-2 w-[1px] bg-[#E0E0E0] dark:bg-[#424242]" />
+                      )}
                     </div>
                   ))}
                 </div>
