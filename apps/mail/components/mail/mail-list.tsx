@@ -190,6 +190,14 @@ const Thread = memo(
         <div
           className={'select-none border-b md:my-2 md:border-none'}
           onClick={onClick ? onClick(latestMessage) : undefined}
+          onMouseEnter={() => {
+            window.dispatchEvent(
+              new CustomEvent('emailHover', { detail: { id: latestMessage.id } }),
+            );
+          }}
+          onMouseLeave={() => {
+            window.dispatchEvent(new CustomEvent('emailHover', { detail: { id: null } }));
+          }}
         >
           <div
             data-thread-id={latestMessage.threadId ?? latestMessage.id}
