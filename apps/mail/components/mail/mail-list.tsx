@@ -411,6 +411,7 @@ const Thread = memo(
                           </TooltipContent>
                         </Tooltip>
                       ) : null}
+                      <MailLabels labels={getThreadData.labels} />
                     </div>
                     {latestMessage.receivedOn ? (
                       <p
@@ -885,41 +886,13 @@ export const MailLabels = memo(
 
           // Skip rendering if style is "secondary" (default case)
           if (style === 'secondary') return null;
+          const content = getLabelIcon(label.name);
 
-          const normalizedLabel = getNormalizedLabelKey(label.name);
-
-          let labelContent;
-          switch (normalizedLabel) {
-            case 'primary':
-              labelContent = t('common.mailCategories.primary');
-              break;
-            case 'important':
-              labelContent = t('common.mailCategories.important');
-              break;
-            case 'personal':
-              labelContent = t('common.mailCategories.personal');
-              break;
-            case 'updates':
-              labelContent = t('common.mailCategories.updates');
-              break;
-            case 'promotions':
-              labelContent = t('common.mailCategories.promotions');
-              break;
-            case 'social':
-              labelContent = t('common.mailCategories.social');
-              break;
-            case 'starred':
-              labelContent = 'Starred';
-              break;
-            default:
-              labelContent = capitalize(normalizedLabel);
-          }
-
-          return (
+          return content ? (
             <Badge key={label.id} className="rounded-md p-1" variant={style}>
-              {getLabelIcon(label.name)}
+              {content}
             </Badge>
-          );
+          ) : null;
         })}
       </div>
     );
@@ -941,20 +914,6 @@ function getLabelIcon(label: string) {
   const normalizedLabel = label.toLowerCase().replace(/^category_/i, '');
 
   switch (normalizedLabel) {
-    case 'important':
-      return <Lightning className="h-3.5 w-3.5 fill-[#F59E0D]" />;
-    case 'promotions':
-      return <Tag className="h-3.5 w-3.5 fill-[#F43F5E]" />;
-    case 'personal':
-      return <User className="h-3.5 w-3.5 fill-[#39AE4A]" />;
-    case 'updates':
-      return <Bell className="h-3.5 w-3.5 fill-[#8B5CF6]" />;
-    case 'work':
-      return <Briefcase className="h-3.5 w-3.5" />;
-    case 'forums':
-      return <People className="h-3.5 w-3.5 fill-blue-500" />;
-    case 'notes':
-      return <StickyNote className="h-3.5 w-3.5" />;
     case 'starred':
       return <Star className="h-3.5 w-3.5 fill-yellow-400 stroke-yellow-400" />;
     default:
