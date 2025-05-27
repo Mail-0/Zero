@@ -140,7 +140,7 @@ function ChatHeader({
                     }}
                     className="h-8 w-full"
                   >
-                    Start free trial
+                    Start 7 day free trial
                   </Button>
                 </TooltipContent>
               </Tooltip>

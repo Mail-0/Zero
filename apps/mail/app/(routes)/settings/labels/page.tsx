@@ -117,7 +117,7 @@ export default function LabelsPage() {
                   No labels created yet. Click the button above to create one.
                 </p>
               ) : (
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-6">
                   {labels?.map((label) => {
                     return (
                       <div
@@ -129,11 +129,10 @@ export default function LabelsPage() {
                             className="px-2 py-1"
                             style={{
                               backgroundColor: label.color?.backgroundColor,
+                              color: label.color?.textColor,
                             }}
                           >
-                            <span className="dark:text-whitemix-blend-difference darK:text-black">
-                              {label.name}
-                            </span>
+                            <span>{label.name}</span>
                           </Badge>
                         </div>
                         <div className="absolute right-2 z-[25] flex items-center gap-1 rounded-xl border bg-white p-1 opacity-0 shadow-sm transition-opacity group-hover:opacity-100 dark:bg-[#1A1A1A]">
