@@ -14,12 +14,18 @@ import {
   User,
   ChevronDown,
   Check,
-  Printer
+  Printer,
 } from '../icons/icons';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
+import { Briefcase, Star, StickyNote, Users, Lock, Download, MoreVertical } from 'lucide-react';
 import { memo, useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
-import { Briefcase, Star, StickyNote, Users, Lock, Download, MoreVertical } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
@@ -46,12 +52,6 @@ import { format, set } from 'date-fns';
 import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Badge } from '../ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
 
 // Add formatFileSize utility function
 const formatFileSize = (size: number) => {
@@ -750,35 +750,41 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
       </html>
     `;
 
-      // Write content to the iframe
-      const iframeDoc = printFrame.contentDocument || printFrame.contentWindow.document;
-      iframeDoc.open();
-      iframeDoc.write(printContent);
-      iframeDoc.close();
+      if (printFrame.contentWindow) {
+        // Write content to the iframe
+        const iframeDoc = printFrame.contentDocument || printFrame.contentWindow.document;
+        iframeDoc.open();
+        iframeDoc.write(printContent);
+        iframeDoc.close();
 
-      // Wait for content to load, then print
-      printFrame.onload = function () {
-        setTimeout(() => {
-          try {
-            // Focus the iframe and print
-            printFrame.contentWindow.focus();
-            printFrame.contentWindow.print();
+        // Wait for content to load, then print
+        printFrame.onload = function () {
+          setTimeout(() => {
+            try {
+              if (!printFrame.contentWindow) {
+                console.error('Failed to get iframe window');
+                return;
+              }
+              // Focus the iframe and print
+              printFrame.contentWindow.focus();
+              printFrame.contentWindow.print();
 
-            // Clean up - remove the iframe after a delay
-            setTimeout(() => {
+              // Clean up - remove the iframe after a delay
+              setTimeout(() => {
+                if (printFrame && printFrame.parentNode) {
+                  document.body.removeChild(printFrame);
+                }
+              }, 1000);
+            } catch (error) {
+              console.error('Error during print:', error);
+              // Clean up on error
               if (printFrame && printFrame.parentNode) {
                 document.body.removeChild(printFrame);
               }
-            }, 1000);
-          } catch (error) {
-            console.error('Error during print:', error);
-            // Clean up on error
-            if (printFrame && printFrame.parentNode) {
-              document.body.removeChild(printFrame);
             }
-          }
-        }, 500);
-      };
+          }, 500);
+        };
+      }
     } catch (error) {
       console.error('Error printing email:', error);
       alert('Failed to print email. Please try again.');
@@ -1036,9 +1042,8 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                         </Popover>
                       </div>
 
-                      <div className='flex items-center justify-center' >
-
-                        <time className="text-sm font-medium text-[#6D6D6D] dark:text-[#8C8C8C] mr-2">
+                      <div className="flex items-center justify-center">
+                        <time className="mr-2 text-sm font-medium text-[#6D6D6D] dark:text-[#8C8C8C]">
                           {formatDate(emailData?.receivedOn)}
                         </time>
 
@@ -1050,23 +1055,24 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                                 e.stopPropagation();
                                 e.preventDefault();
                               }}
-                              className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md bg-white dark:bg-[#313131] focus:ring-0 focus:outline-none"
+                              className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md bg-white focus:outline-none focus:ring-0 dark:bg-[#313131]"
                             >
                               <ThreeDots className="fill-iconLight dark:fill-iconDark" />
                             </button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className='bg-white dark:bg-[#313131]'>
-                            <DropdownMenuItem onClick={(e) => {
-                              e.stopPropagation();
-                              printMail();
-                            }}>
-                              <Printer className="mr-2 h-4 w-4 fill-iconLight dark:fill-iconDark" />
+                          <DropdownMenuContent align="end" className="bg-white dark:bg-[#313131]">
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                printMail();
+                              }}
+                            >
+                              <Printer className="fill-iconLight dark:fill-iconDark mr-2 h-4 w-4" />
                               Print
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
-
                     </div>
                     <div className="flex justify-between">
                       <div className="flex gap-1">

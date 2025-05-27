@@ -90,81 +90,77 @@ export function LabelDialog({
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <div className="container mx-auto max-w-[750px]">
-        <DialogContent showOverlay={true}>
-          <DialogHeader>
-            <DialogTitle>{editingLabel ? 'Edit Label' : 'Create New Label'}</DialogTitle>
-          </DialogHeader>
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(handleSubmit)}
-              className="space-y-4"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                  e.preventDefault();
-                  form.handleSubmit(handleSubmit)();
-                }
-              }}
-            >
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Label Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter label name" {...field} autoFocus />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="space-y-4">
-                  <Label>Color</Label>
-                  <div className="w-full">
-                    <div className="grid grid-cols-7 gap-4">
-                      {LABEL_COLORS.map((color, index) => (
-                        <button
-                          key={index}
-                          type="button"
-                          className={`h-10 w-10 rounded-[4px] border-[0.5px] border-white/10 transition-all ${
-                            formColor?.backgroundColor === color.backgroundColor &&
-                            formColor?.textColor === color.textColor
-                              ? 'scale-110 ring-2 ring-blue-500'
-                              : 'hover:scale-105'
-                          }`}
-                          style={{ backgroundColor: color.backgroundColor }}
-                          onClick={() =>
-                            form.setValue('color', {
-                              backgroundColor: color.backgroundColor,
-                              textColor: color.textColor,
-                            })
-                          }
-                        />
-                      ))}
-                    </div>
+      <DialogContent showOverlay={true}>
+        <DialogHeader>
+          <DialogTitle>{editingLabel ? 'Edit Label' : 'Create New Label'}</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="mt-4 space-y-4"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                e.preventDefault();
+                form.handleSubmit(handleSubmit)();
+              }
+            }}
+          >
+            <div className="space-y-2">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Label Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter label name" {...field} autoFocus />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="space-y-2">
+                <Label>Color</Label>
+                <div className="w-full">
+                  <div className="flex flex-wrap gap-2">
+                    {LABEL_COLORS.map((color, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        className={`h-10 w-10 rounded-[4px] border-[0.5px] border-white/10 transition-all ${
+                          formColor?.backgroundColor === color.backgroundColor &&
+                          formColor?.textColor === color.textColor
+                            ? 'scale-110 ring-2 ring-blue-500'
+                            : 'hover:scale-105'
+                        }`}
+                        style={{ backgroundColor: color.backgroundColor }}
+                        onClick={() =>
+                          form.setValue('color', {
+                            backgroundColor: color.backgroundColor,
+                            textColor: color.textColor,
+                          })
+                        }
+                      />
+                    ))}
                   </div>
                 </div>
               </div>
-              <div className="flex justify-end space-x-2">
-                <Button className="h-8" type="button" variant="outline" onClick={handleClose}>
-                  Cancel
-                </Button>
-                <Button className="h-8 [&_svg]:size-4" type="submit">
-                  {editingLabel ? 'Save Changes' : 'Create Label'}
-                  <div className="flex h-5 items-center justify-center gap-1 rounded-sm bg-white/10 px-1 dark:bg-black/10">
-                    <Command className="h-3 w-3 text-white dark:text-[#929292]" />
-                    <CurvedArrow className="mt-1.5 h-3.5 w-3.5 fill-white dark:fill-[#929292]" />
-                  </div>
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button className="h-8" type="button" variant="outline" onClick={handleClose}>
+                Cancel
+              </Button>
+              <Button className="h-8 [&_svg]:size-4" type="submit">
+                {editingLabel ? 'Save Changes' : 'Create Label'}
+                <div className="flex h-5 items-center justify-center gap-1 rounded-sm bg-white/10 px-1 dark:bg-black/10">
+                  <Command className="h-3 w-3 text-white dark:text-[#929292]" />
+                  <CurvedArrow className="mt-1.5 h-3.5 w-3.5 fill-white dark:fill-[#929292]" />
+                </div>
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
     </Dialog>
   );
 }
