@@ -222,12 +222,9 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
 
   useHotkeys('ArrowUp', handleArrowUp);
   useHotkeys('ArrowDown', handleArrowDown);
-  useHotkeys('J', handleArrowUp);
-  useHotkeys('K', handleArrowDown);
+  useHotkeys('J', handleArrowDown);
+  useHotkeys('K', handleArrowUp);
   useHotkeys('Enter', handleEnter);
-  //   useHotkeys('Tab', handleTab);
-  //   useHotkeys('ArrowRight', handleArrowRight);
-  //   useHotkeys('ArrowLeft', handleArrowLeft);
   useHotkeys('Escape', handleEscape);
 
   const handleMouseEnter = useCallback((threadId: string) => {
