@@ -40,6 +40,7 @@ import { useParams, useNavigate } from 'react-router';
 import { useMail } from '@/components/mail/use-mail';
 import { SidebarToggle } from '../ui/sidebar-toggle';
 import { PricingDialog } from '../ui/pricing-dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { useBrainState } from '@/hooks/use-summary';
 import { clearBulkSelectionAtom } from './use-mail';
 import AISidebar from '@/components/ui/ai-sidebar';
@@ -52,9 +53,12 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/lib/auth-client';
 import { ScrollArea } from '../ui/scroll-area';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useStats } from '@/hooks/use-stats';
 import { useTranslations } from 'use-intl';
 import { SearchBar } from './search-bar';
+import { RotateCcw } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
@@ -238,85 +242,134 @@ const AutoLabelingSettings = () => {
       </DialogTrigger>
       <DialogContent showOverlay className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Autolabeling Settings</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle>Label Settings</DialogTitle>
+            <button
+              onClick={handleToggleAutolabeling}
+              className="bg-offsetLight dark:bg-offsetDark flex items-center gap-2 rounded-lg border px-1.5 py-1"
+            >
+              <span className="text-muted-foreground text-sm">
+                {isEnablingBrain || isDisablingBrain
+                  ? 'Updating...'
+                  : brainState?.enabled
+                    ? 'Disable autolabeling'
+                    : 'Enable autolabeling'}
+              </span>
+              <Switch checked={brainState?.enabled} />
+            </button>
+          </div>
+          <DialogDescription className="mt-2">
+            Configure the labels that Zero uses to automatically organize your emails.
+          </DialogDescription>
         </DialogHeader>
-        <DialogDescription className="mb-4 mt-2">
-          These are the labels Zero uses to autolabel your incoming emails. Feel free to modify them
-          however you like. Zero will create a new label in your account for each label you add - if
-          it does not exist already.
-        </DialogDescription>
+
         <ScrollArea className="h-[400px]">
-          <div className="space-y-2">
-            {labels.map((label) => (
-              <div key={label.id} className="flex items-start gap-2 rounded-lg border p-3">
-                <div className="flex-1 space-y-2">
-                  <input
-                    type="text"
-                    value={label.name}
-                    onChange={(e) => handleUpdateLabel(label.id, 'name', e.target.value)}
-                    className="w-full rounded-md border px-2 py-1 text-sm"
-                    placeholder="Label name"
-                  />
-                  <textarea
+          <div className="space-y-3">
+            {labels.map((label, index) => (
+              <div
+                key={label.id}
+                className="bg-card group relative space-y-2 rounded-lg border p-4 shadow-sm transition-shadow hover:shadow-md"
+              >
+                <div className="flex items-center justify-between">
+                  <Label
+                    htmlFor={`label-name-${index}`}
+                    className="text-muted-foreground text-xs font-medium"
+                  >
+                    Label Name
+                  </Label>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 transition-opacity group-hover:opacity-100"
+                    onClick={() => handleDeleteLabel(label.id)}
+                  >
+                    <Trash className="h-3 w-3 fill-[#F43F5E]" />
+                  </Button>
+                </div>
+                <Input
+                  id={`label-name-${index}`}
+                  type="text"
+                  value={label.name}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    handleUpdateLabel(label.id, 'name', e.target.value)
+                  }
+                  className="h-8"
+                  placeholder="e.g., Important, Follow-up, Archive"
+                />
+                <div className="space-y-2">
+                  <Label
+                    htmlFor={`label-usecase-${index}`}
+                    className="text-muted-foreground text-xs font-medium"
+                  >
+                    Use Case Description
+                  </Label>
+                  <Textarea
+                    id={`label-usecase-${index}`}
                     value={label.usecase}
-                    onChange={(e) => handleUpdateLabel(label.id, 'usecase', e.target.value)}
-                    className="w-full rounded-md border px-2 py-1 text-sm"
-                    placeholder="Label use case"
-                    rows={2}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                      handleUpdateLabel(label.id, 'usecase', e.target.value)
+                    }
+                    className="min-h-[60px] resize-none"
+                    placeholder="Describe when this label should be applied..."
                   />
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => handleDeleteLabel(label.id)}
-                >
-                  <Trash className="h-4 w-4 fill-[#F43F5E]" />
-                </Button>
               </div>
             ))}
-            <div className="flex items-start gap-2 rounded-lg border p-3">
-              <div className="flex-1 space-y-2">
-                <input
+
+            <div className="bg-muted/50 mt-3 space-y-2 rounded-lg border border-dashed p-4">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="new-label-name"
+                  className="text-muted-foreground text-xs font-medium"
+                >
+                  New Label Name
+                </Label>
+                <Input
+                  id="new-label-name"
                   type="text"
                   value={newLabel.name}
-                  onChange={(e) => setNewLabel({ ...newLabel, name: e.target.value })}
-                  className="w-full rounded-md border px-2 py-1 text-sm"
-                  placeholder="New label name"
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setNewLabel({ ...newLabel, name: e.target.value })
+                  }
+                  className="h-8 dark:bg-[#141414]"
+                  placeholder="Enter a new label name"
                 />
-                <textarea
+              </div>
+              <div className="space-y-2">
+                <Label
+                  htmlFor="new-label-usecase"
+                  className="text-muted-foreground text-xs font-medium"
+                >
+                  Use Case Description
+                </Label>
+                <Textarea
+                  id="new-label-usecase"
                   value={newLabel.usecase}
-                  onChange={(e) => setNewLabel({ ...newLabel, usecase: e.target.value })}
-                  className="w-full rounded-md border px-2 py-1 text-sm"
-                  placeholder="New label use case"
-                  rows={2}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                    setNewLabel({ ...newLabel, usecase: e.target.value })
+                  }
+                  className="min-h-[60px] resize-none dark:bg-[#141414]"
+                  placeholder="Describe when this label should be applied..."
                 />
               </div>
               <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
+                className="mt-2 h-8 w-full"
                 onClick={handleAddLabel}
                 disabled={!newLabel.name || !newLabel.usecase}
               >
-                <Plus className="h-4 w-4 fill-white" />
+                Add New Label
               </Button>
             </div>
           </div>
         </ScrollArea>
         <DialogFooter className="mt-4">
-          <div className="flex w-full justify-between">
-            <Button onClick={handleToggleAutolabeling} variant="outline" size="sm">
-              {brainState?.enabled ? 'Disable' : 'Enable'}
+          <div className="flex w-full justify-end gap-2">
+            <Button size="xs" variant="outline" onClick={handleResetToDefault}>
+              Default Labels
             </Button>
-            <div className="flex gap-2">
-              <Button onClick={handleResetToDefault} variant="outline" size="sm">
-                Use default labels
-              </Button>
-              <Button disabled={isPending} onClick={handleSubmit} size="sm">
-                Save
-              </Button>
-            </div>
+            <Button size="xs" onClick={handleSubmit} disabled={isPending}>
+              Save Changes
+            </Button>
           </div>
         </DialogFooter>
       </DialogContent>
@@ -731,7 +784,7 @@ function BulkSelectActions() {
               disabled={isLoading}
               onClick={handleMassUnsubscribe}
             >
-              {<span>Unsubscribe</span>}{' '}
+              <span>Unsubscribe</span>
               <div className="flex h-5 items-center justify-center gap-1 rounded-sm bg-white/10 px-1 dark:bg-black/10">
                 <Command className="h-2 w-3 text-white dark:text-[#929292]" />
                 <CurvedArrow className="mt-1.5 h-5 w-3.5 fill-white dark:fill-[#929292]" />
