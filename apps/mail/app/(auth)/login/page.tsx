@@ -51,7 +51,7 @@ export function loader() {
 
 export default function LoginPage() {
   const { allProviders, isProd } = useLoaderData<typeof loader>();
-
+  console.log(allProviders);
   return (
     <div className="flex min-h-screen w-full flex-col bg-white dark:bg-black">
       <LoginClient providers={allProviders} isProd={isProd} />

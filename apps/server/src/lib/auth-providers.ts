@@ -17,13 +17,13 @@ export interface ProviderConfig {
 
 export const customProviders: ProviderConfig[] = [
   // {
-  //   id: "zero",
-  //   name: "Zero",
+  //   id: 'zero',
+  //   name: 'Zero',
   //   requiredEnvVars: [],
   //   config: {},
   //   isCustom: true,
-  //   customRedirectPath: "/zero/signup"
-  // }
+  //   customRedirectPath: '/zero/signup',
+  // },
 ];
 
 export const authProviders = (env: Record<string, string>): ProviderConfig[] => [

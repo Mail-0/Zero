@@ -66,6 +66,12 @@ export function Layout({ children }: PropsWithChildren) {
           <script crossOrigin="anonymous" src="//unpkg.com/react-scan/dist/auto.global.js" />
         )}
         <Links />
+
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Sora:wght@600&display=swap');
+          @import
+          url('https://fonts.googleapis.com/css2?family=Mona+Sans:ital,wght@0,500;1,500&display=swap');
+        </style>
       </head>
       <body className="antialiased">
         <ServerProviders messages={messages} locale={locale} connectionId={connectionId}>

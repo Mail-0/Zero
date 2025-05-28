@@ -2,10 +2,11 @@ import { useEffect, type ReactNode, useState, Suspense } from 'react';
 import type { EnvVarInfo } from '@zero/server/auth-providers';
 import { Google, Microsoft } from '@/components/icons/icons';
 import ErrorMessage from '@/app/(auth)/login/error-message';
+import { ArrowLeft, TriangleAlert } from 'lucide-react';
 import { signIn, useSession } from '@/lib/auth-client';
+import { Link, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
-import { TriangleAlert } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { motion } from 'motion/react';
 import { toast } from 'sonner';
 
 interface EnvVarStatus {
@@ -132,11 +133,36 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-between bg-gradient-to-b from-[#111111] to-[#101828]">
       <div className="animate-in slide-in-from-bottom-4 mx-auto flex max-w-[600px] flex-grow items-center justify-center space-y-8 px-4 duration-500 sm:px-12 md:px-0">
-        <div className="w-full space-y-4 rounded-2xl bg-[#161821] p-12">
-          <p className="font-sora text-center text-4xl font-bold text-white md:text-5xl">
-            Welcome to <span className="text-blue-500">Zero</span>
-          </p>
+        <motion.div
+          className="w-full space-y-12 rounded-2xl border border-zinc-800 bg-[#161821] p-4 md:p-8"
+          initial={{
+            y: -100,
+            opacity: 0,
+            filter: 'blure(20px)',
+          }}
+          animate={{
+            y: 0,
+            opacity: 1,
+            filter: 'blur(0px)',
+          }}
+          transition={{
+            duration: 1,
 
+            delay: 0.5,
+            type: 'spring',
+          }}
+        >
+          <div className="space-y-4">
+            <Link to={'/'}>
+              <ArrowLeft className="cursor-pointer text-gray-400" />
+            </Link>
+
+            <img src="white-icon.svg" alt="Zero Email" className="mx-auto w-12" />
+
+            <p className="font-sora text-center text-3xl font-bold text-white md:text-5xl">
+              Welcome to <span className="text-blue-500">Zero</span>
+            </p>
+          </div>
           {shouldShowDetailedConfig && (
             <div className="rounded-lg border border-black/10 bg-black/5 p-5 dark:border-white/10 dark:bg-white/5">
               <div className="flex flex-col space-y-4">
@@ -284,7 +310,7 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
                     <Button
                       key={provider.id}
                       onClick={() => handleProviderClick(provider)}
-                      className="border-input bg-background text-primary hover:bg-accent hover:text-accent-foreground h-12 w-full rounded-lg border-2"
+                      className="border-input text-primary hover:bg-accent hover:text-accent-foreground font-mona h-12 w-full rounded-2xl border-2 bg-gradient-to-b from-blue-400 to-blue-600"
                     >
                       {getProviderIcon(provider.id)}
                       Continue with {provider.name}
@@ -293,26 +319,22 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
               )}
             </div>
           )}
-        </div>
-      </div>
-      <a href={'/'}>Return home</a>
 
-      <footer className="w-full px-6 py-4">
-        <div className="mx-auto flex max-w-6xl items-center justify-center gap-6">
-          <a
-            href="/terms"
-            className="text-[10px] text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
-          >
-            Terms of Service
-          </a>
-          <a
-            href="/privacy"
-            className="text-[10px] text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
-          >
-            Privacy Policy
-          </a>
-        </div>
-      </footer>
+          <footer className="mx-auto mt-12 w-full text-center md:w-3/4">
+            <p className="mt-12 text-xs text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200">
+              You acknowledge that you read, and agree, to our{' '}
+              <Link to={'/terms'} className="cursor-pointer text-blue-400 hover:underline">
+                Terms of Service
+              </Link>{' '}
+              and our{' '}
+              <Link to={'/privacy'} className="cursor-pointer text-blue-400 hover:underline">
+                Privacy Policy
+              </Link>
+              .
+            </p>
+          </footer>
+        </motion.div>
+      </div>
     </div>
   );
 }
