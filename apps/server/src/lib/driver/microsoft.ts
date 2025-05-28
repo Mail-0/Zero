@@ -896,10 +896,9 @@ export class OutlookMailManager implements MailManager {
   public async deleteLabel(id: string) {
     await this.graphClient.api(`/me/mailfolders/${id}`).delete();
   }
-  public async revokeRefreshToken(refreshToken: string) {
-    if (!refreshToken) {
-      return false;
-    }
+  public async revokeToken(token: string) {
+    if (!token) return false;
+
     try {
       console.warn(
         'Revoking Microsoft refresh tokens requires MSAL or specific Azure AD endpoints, not a direct Graph API call. This method is a placeholder.',
@@ -927,6 +926,16 @@ export class OutlookMailManager implements MailManager {
     // Placeholder
     return Promise.resolve();
   }
+
+  public deleteAllSpam() {
+    console.warn('deleteAllSpam is not implemented for Microsoft');
+    return Promise.resolve({
+      success: false,
+      message: 'Not implemented',
+      count: 0,
+    });
+  }
+
   private normalizeSearch(folder: string, q: string) {
     // This normalization logic is based on Gmail's search syntax and folder mapping.
     // For Outlook/Graph, you need to translate to OData $filter or $search syntax

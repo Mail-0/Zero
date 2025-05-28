@@ -5,6 +5,7 @@ import type { Label, Label as LabelType } from '@/types';
 import { useSidebar } from '../context/sidebar-context';
 import { Folder } from '../magicui/file-tree';
 import { useNavigate } from 'react-router';
+import { useQueryState } from 'nuqs';
 import { useCallback } from 'react';
 import * as React from 'react';
 
@@ -22,10 +23,14 @@ export const RecursiveFolder = ({
   const isFolderActive = isActive || window.location.pathname.includes(`/mail/label/${label.id}`);
   const navigate = useNavigate();
   const { setOpenMobile, isMobile } = useSidebar();
+  const [category, setCategory] = useQueryState('category');
 
   const handleFilterByLabel = useCallback(
     (labelToFilter: LabelType) => {
       const existingValue = searchValue.value;
+      if (!category || category !== 'All Mail') {
+        setCategory('All Mail');
+      }
       if (existingValue.includes(`label:${labelToFilter.name}`)) {
         setSearchValue({
           value: existingValue.replace(`label:${labelToFilter.name}`, '').trim(),
@@ -43,7 +48,7 @@ export const RecursiveFolder = ({
         folder: '',
       });
     },
-    [searchValue, setSearchValue],
+    [searchValue, setSearchValue, category],
   );
 
   const handleFolderClick = useCallback(

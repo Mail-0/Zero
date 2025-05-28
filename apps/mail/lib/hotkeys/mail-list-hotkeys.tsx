@@ -29,12 +29,56 @@ export function MailListHotkeys() {
   const pathname = useLocation().pathname;
   const invalidateCount = () =>
     queryClient.invalidateQueries({ queryKey: trpc.mail.count.queryKey() });
-  const { mutateAsync: bulkArchive } = useMutation(trpc.mail.bulkArchive.mutationOptions());
+  const invalidateThread = (id: string) =>
+    queryClient.invalidateQueries({
+      queryKey: trpc.mail.get.queryKey({ id }),
+    });
+  const { mutateAsync: bulkArchive } = useMutation(
+    trpc.mail.bulkArchive.mutationOptions({
+      onSuccess: () => {
+        if (mail.bulkSelected.length) {
+          return Promise.all([
+            refetch(),
+            invalidateCount(),
+            ...mail.bulkSelected.map((id) => invalidateThread(id)),
+          ]);
+        }
+        if (hoveredEmailId.current)
+          return Promise.all([
+            refetch(),
+            invalidateCount(),
+            invalidateThread(hoveredEmailId.current),
+          ]);
+      },
+    }),
+  );
   const { mutateAsync: markAsReadAction } = useMutation(
-    trpc.mail.markAsRead.mutationOptions({ onSuccess: () => invalidateCount() }),
+    trpc.mail.markAsRead.mutationOptions({
+      onSuccess: () => {
+        if (mail.bulkSelected.length) {
+          return Promise.all([
+            invalidateCount(),
+            ...mail.bulkSelected.map((id) => invalidateThread(id)),
+          ]);
+        }
+        if (hoveredEmailId.current)
+          return Promise.all([invalidateCount(), invalidateThread(hoveredEmailId.current)]);
+      },
+    }),
   );
   const { mutateAsync: markAsUnreadAction } = useMutation(
-    trpc.mail.markAsUnread.mutationOptions({ onSuccess: () => invalidateCount() }),
+    trpc.mail.markAsUnread.mutationOptions({
+      onSuccess: () => {
+        if (mail.bulkSelected.length) {
+          return Promise.all([
+            invalidateCount(),
+            ...mail.bulkSelected.map((id) => invalidateThread(id)),
+          ]);
+        }
+        if (hoveredEmailId.current)
+          return Promise.all([invalidateCount(), invalidateThread(hoveredEmailId.current)]);
+      },
+    }),
   );
 
   useEffect(() => {
@@ -69,11 +113,6 @@ export function MailListHotkeys() {
   const markAsRead = useCallback(() => {
     if (hoveredEmailId.current) {
       toast.promise(markAsReadAction({ ids: [hoveredEmailId.current] }), {
-        loading: t('common.actions.loading'),
-        success: async () => {
-          await Promise.all([refetch(), mutateStats()]);
-          return t('common.mail.markedAsRead');
-        },
         error: t('common.mail.failedToMarkAsRead'),
       });
       return;
@@ -86,11 +125,6 @@ export function MailListHotkeys() {
     }
 
     toast.promise(markAsReadAction({ ids: idsToMark }), {
-      loading: t('common.actions.loading'),
-      success: async () => {
-        await Promise.all([refetch(), mutateStats()]);
-        return t('common.mail.markedAsRead');
-      },
       error: t('common.mail.failedToMarkAsRead'),
     });
   }, [mail.bulkSelected, refetch, mutateStats, t]);
@@ -98,11 +132,6 @@ export function MailListHotkeys() {
   const markAsUnread = useCallback(() => {
     if (hoveredEmailId.current) {
       toast.promise(markAsUnreadAction({ ids: [hoveredEmailId.current] }), {
-        loading: t('common.actions.loading'),
-        success: async () => {
-          await Promise.all([refetch(), mutateStats()]);
-          return t('common.mail.markedAsUnread');
-        },
         error: t('common.mail.failedToMarkAsUnread'),
       });
       return;
@@ -115,11 +144,6 @@ export function MailListHotkeys() {
     }
 
     toast.promise(markAsUnreadAction({ ids: idsToMark }), {
-      loading: t('common.actions.loading'),
-      success: async () => {
-        await Promise.all([refetch(), mutateStats()]);
-        return t('common.mail.markedAsUnread');
-      },
       error: t('common.mail.failedToMarkAsUnread'),
     });
   }, [mail.bulkSelected, refetch, mutateStats, t]);
@@ -127,11 +151,6 @@ export function MailListHotkeys() {
   const archiveEmail = useCallback(async () => {
     if (hoveredEmailId.current) {
       toast.promise(bulkArchive({ ids: [hoveredEmailId.current] }), {
-        loading: t('common.actions.loading'),
-        success: async () => {
-          await Promise.all([refetch(), mutateStats()]);
-          return t('common.mail.archived');
-        },
         error: t('common.mail.failedToArchive'),
       });
       return;
@@ -143,12 +162,7 @@ export function MailListHotkeys() {
       return;
     }
 
-    toast.promise(markAsUnreadAction({ ids: idsToMark }), {
-      loading: t('common.actions.loading'),
-      success: async () => {
-        await Promise.all([refetch(), mutateStats()]);
-        return t('common.mail.archived');
-      },
+    toast.promise(bulkArchive({ ids: idsToMark }), {
       error: t('common.mail.failedToArchive'),
     });
   }, [mail]);
@@ -159,28 +173,6 @@ export function MailListHotkeys() {
       bulkSelected: [],
     }));
   }, []);
-
-  // const scrollDown = useCallback(() => {
-  //   const scrollContainer = document.getElementById('mail-list-scroll');
-  //   console.log(scrollContainer);
-  //   if (scrollContainer) {
-  //     scrollContainer.scrollBy({
-  //       top: 100,
-  //       behavior: 'smooth',
-  //     });
-  //   }
-  // }, []);
-
-  // const scrollUp = useCallback(() => {
-  //   const scrollContainer = document.getElementById('mail-list-scroll');
-  //   console.log(scrollContainer);
-  //   if (scrollContainer) {
-  //     scrollContainer.scrollBy({
-  //       top: -100,
-  //       behavior: 'smooth',
-  //     });
-  //   }
-  // }, []);
 
   const switchMailListCategory = useCallback(
     (category: string | null) => {
@@ -213,9 +205,6 @@ export function MailListHotkeys() {
       selectAll,
       archiveEmail,
       exitSelectionMode,
-      // muteThread,
-      // scrollDown,
-      // scrollUp,
       showImportant: () => {
         switchMailListCategory(null);
       },

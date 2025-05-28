@@ -274,6 +274,7 @@ export const AiChatPrompt = (threadId: string, currentFolder: string, currentFil
       </description>
 
       <current_date>${getCurrentDateContext()}</current_date>
+      <note>Do not include markdown, XML tags or code formatting in the final response.</note>
   
       <capabilities>
         <searchAnalysis>

@@ -41,6 +41,7 @@ import {
 } from 'lucide-react';
 import { moveThreadsTo, type ThreadDestination } from '@/lib/thread-actions';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMailNavigation } from '@/hooks/use-mail-navigation';
 import { focusedIndexAtom } from '@/hooks/use-mail-navigation';
@@ -274,51 +275,27 @@ export function ThreadDisplay() {
     setDraftId(null);
   }, [setThreadId, setMode]);
 
+  const { optimisticMoveThreadsTo } = useOptimisticActions();
+
   const moveThreadTo = useCallback(
     async (destination: ThreadDestination) => {
       if (!id) return;
-      const promise = moveThreadsTo({
-        threadIds: [id],
-        currentFolder: folder,
-        destination,
-      });
-      setBackgroundQueue({ type: 'add', threadId: `thread:${id}` });
-      handleNext();
 
-      toast.success(
-        destination === 'inbox'
-          ? t('common.actions.movedToInbox')
-          : destination === 'spam'
-            ? t('common.actions.movedToSpam')
-            : destination === 'bin'
-              ? t('common.actions.movedToBin')
-              : t('common.actions.archived'),
-      );
-      toast.promise(promise, {
-        error: t('common.actions.failedToMove'),
-        finally: async () => {
-          await Promise.all([refetchStats(), refetchThread()]);
-          //   setBackgroundQueue({ type: 'delete', threadId: `thread:${threadId}` });
-        },
-      });
+      optimisticMoveThreadsTo([id], folder, destination);
+      handleNext();
     },
-    [id, folder, t],
+    [id, folder, optimisticMoveThreadsTo, handleNext],
   );
 
-  // Add handleToggleStar function
+  const { optimisticToggleStar } = useOptimisticActions();
+
   const handleToggleStar = useCallback(async () => {
     if (!emailData || !id) return;
 
     const newStarredState = !isStarred;
+    optimisticToggleStar([id], newStarredState);
     setIsStarred(newStarredState);
-    if (newStarredState) {
-      toast.success(t('common.actions.addedToFavorites'));
-    } else {
-      toast.success(t('common.actions.removedFromFavorites'));
-    }
-    await toggleStar({ ids: [id] });
-    await refetchThread();
-  }, [emailData, id, isStarred]);
+  }, [emailData, id, isStarred, optimisticToggleStar]);
 
   const printThread = () => {
     try {

@@ -195,6 +195,7 @@ export function useShortcuts(
         return;
       }
       const getModifierString = (e: typeof hotkeysEvent) => {
+        console.log(e);
         const modifiers = [];
         if (e.meta) modifiers.push('meta');
         if (e.ctrl) modifiers.push('control');

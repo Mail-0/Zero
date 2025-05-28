@@ -258,7 +258,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <Sidebar
           collapsible="icon"
           {...props}
-          className={`bg-lightBackground dark:bg-darkBackground flex h-screen select-none flex-col items-center ${state === 'collapsed' ? '' : ''} pb-2`}
+          className={`bg-sidebar dark:bg-sidebar flex h-screen select-none flex-col items-center ${state === 'collapsed' ? '' : ''} pb-2`}
         >
           <SidebarHeader
             className={`relative top-2.5 flex flex-col gap-2 ${state === 'collapsed' ? 'px-2' : 'md:px-4'}`}

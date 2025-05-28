@@ -6,25 +6,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-} from '@/components/ui/form';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Form, FormControl, FormDescription, FormField, FormItem } from '@/components/ui/form';
 import { SettingsCard } from '@/components/settings/settings-card';
+import { useSession, signOut } from '@/lib/auth-client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTRPC } from '@/providers/query-provider';
+import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { useSession } from '@/lib/auth-client';
 import { Input } from '@/components/ui/input';
 import { AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useTranslations } from 'use-intl';
 import { useForm } from 'react-hook-form';
+import { clear } from 'idb-keyval';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import * as z from 'zod';
@@ -57,12 +51,18 @@ function DeleteAccountDialog() {
       return toast.error(`Please type ${CONFIRMATION_TEXT} to confirm`);
 
     await deleteAccount(void 0, {
-      onSuccess: ({ success, message }) => {
+      onSuccess: async ({ success, message }) => {
         if (!success) return toast.error(message);
-        refetch();
+        try {
+          await signOut();
+          refetch();
+          await clear();
+        } catch (error) {
+          console.error('Failed to delete account:', error);
+          toast.error('Failed to delete account');
+        }
         toast.success('Account deleted successfully');
-        navigate('/');
-        setIsOpen(false);
+        window.location.href = '/';
       },
       onError: (error) => {
         console.error('Failed to delete account:', error);

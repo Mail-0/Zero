@@ -13,6 +13,7 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'use-intl';
 import type { Sender } from '@/types';
 import { useQueryState } from 'nuqs';
+import posthog from 'posthog-js';
 import { toast } from 'sonner';
 
 interface ReplyComposeProps {
@@ -159,6 +160,8 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
         },
         threadId: replyToMessage?.threadId,
       });
+
+      posthog.capture('Reply Email Sent');
 
       // Reset states
       setMode(null);

@@ -1,10 +1,10 @@
+import { addStyleTags, doesContainStyleTags, template } from '@/lib/email-utils.client';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { defaultUserSettings } from '@zero/server/schemas';
 import { fixNonReadableColors } from '@/lib/email-utils';
 import { useTRPC } from '@/providers/query-provider';
 import { getBrowserTimezone } from '@/lib/timezones';
-import { template } from '@/lib/email-utils.client';
-import { useMutation } from '@tanstack/react-query';
 import { useSettings } from '@/hooks/use-settings';
 import { useTranslations } from 'use-intl';
 import { useTheme } from 'next-themes';
@@ -13,22 +13,27 @@ import { toast } from 'sonner';
 
 export function MailIframe({ html, senderEmail }: { html: string; senderEmail: string }) {
   const { data, refetch } = useSettings();
+  const queryClient = useQueryClient();
   const isTrustedSender = useMemo(
     () => data?.settings?.externalImages || data?.settings?.trustedSenders?.includes(senderEmail),
     [data?.settings, senderEmail],
   );
   const [cspViolation, setCspViolation] = useState(false);
-  const [imagesEnabled, setImagesEnabled] = useState(false);
+  const [temporaryImagesEnabled, setTemporaryImagesEnabled] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [height, setHeight] = useState(0);
   const { resolvedTheme } = useTheme();
   const trpc = useTRPC();
-  const { mutateAsync: saveUserSettings } = useMutation(trpc.settings.save.mutationOptions());
 
-  const onTrustSender = useCallback(
-    async (senderEmail: string) => {
-      setImagesEnabled(true);
+  const { mutateAsync: saveUserSettings } = useMutation({
+    ...trpc.settings.save.mutationOptions(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['settings'] });
+    },
+  });
 
+  const { mutateAsync: trustSender } = useMutation({
+    mutationFn: async () => {
       const existingSettings = data?.settings ?? {
         ...defaultUserSettings,
         timezone: getBrowserTimezone(),
@@ -42,19 +47,22 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
       });
 
       if (!success) {
-        toast.error('Failed to trust sender');
-      } else {
-        refetch();
+        throw new Error('Failed to trust sender');
       }
     },
-    [data?.settings, refetch],
-  );
+    onSuccess: () => {
+      refetch();
+    },
+    onError: () => {
+      toast.error('Failed to trust sender');
+    },
+  });
 
-  useEffect(() => {
-    if (isTrustedSender) {
-      setImagesEnabled(true);
-    }
-  }, [isTrustedSender]);
+  const { data: processedHtml } = useQuery({
+    queryKey: ['email-template', html, isTrustedSender || temporaryImagesEnabled],
+    queryFn: () => template(html, isTrustedSender || temporaryImagesEnabled),
+    staleTime: 5 * 60 * 1000,
+  });
 
   const t = useTranslations();
 
@@ -73,28 +81,31 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
   }, [iframeRef, setHeight]);
 
   useEffect(() => {
-    if (!iframeRef.current) return;
-    template(html, imagesEnabled).then((htmlDoc) => {
-      if (!iframeRef.current) return;
-      const url = URL.createObjectURL(new Blob([htmlDoc], { type: 'text/html' }));
-      iframeRef.current.src = url;
+    if (!iframeRef.current || !processedHtml) return;
 
-      const handler = () => {
-        if (iframeRef.current?.contentWindow?.document.body) {
-          calculateAndSetHeight();
-          fixNonReadableColors(iframeRef.current.contentWindow.document.body);
-        }
-        // setLoaded(true);
-        // Recalculate after a slight delay to catch any late-loading content
-        setTimeout(calculateAndSetHeight, 500);
-      };
-      iframeRef.current.onload = handler;
-    });
+    let finalHtml = processedHtml;
+    const containsStyleTags = doesContainStyleTags(processedHtml);
+    if (!containsStyleTags) {
+      finalHtml = addStyleTags(processedHtml);
+    }
+
+    const url = URL.createObjectURL(new Blob([finalHtml], { type: 'text/html' }));
+    iframeRef.current.src = url;
+
+    const handler = () => {
+      if (iframeRef.current?.contentWindow?.document.body) {
+        calculateAndSetHeight();
+        fixNonReadableColors(iframeRef.current.contentWindow.document.body);
+      }
+      setTimeout(calculateAndSetHeight, 500);
+    };
+
+    iframeRef.current.onload = handler;
 
     return () => {
-      //   URL.revokeObjectURL(url);
+      URL.revokeObjectURL(url);
     };
-  }, [calculateAndSetHeight, html, imagesEnabled]);
+  }, [processedHtml, calculateAndSetHeight]);
 
   useEffect(() => {
     if (iframeRef.current?.contentWindow?.document.body) {
@@ -124,19 +135,18 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
 
   return (
     <>
-      {cspViolation && !imagesEnabled && !data?.settings?.externalImages && (
+      {cspViolation && !isTrustedSender && !data?.settings?.externalImages && (
         <div className="flex items-center justify-start bg-amber-600/20 px-2 py-1 text-sm text-amber-600">
           <p>{t('common.actions.hiddenImagesWarning')}</p>
           <button
-            onClick={() => setImagesEnabled(!imagesEnabled)}
+            onClick={() => setTemporaryImagesEnabled(!temporaryImagesEnabled)}
             className="ml-2 cursor-pointer underline"
           >
-            {imagesEnabled ? t('common.actions.disableImages') : t('common.actions.showImages')}
+            {temporaryImagesEnabled
+              ? t('common.actions.disableImages')
+              : t('common.actions.showImages')}
           </button>
-          <button
-            onClick={() => void onTrustSender(senderEmail)}
-            className="ml-2 cursor-pointer underline"
-          >
+          <button onClick={() => void trustSender()} className="ml-2 cursor-pointer underline">
             {t('common.actions.trustSender')}
           </button>
         </div>
@@ -148,7 +158,6 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
           '!min-h-0 w-full flex-1 overflow-hidden px-4 transition-opacity duration-200',
         )}
         title="Email Content"
-        // allow-scripts is safe, because the CSP will prevent scripts from running that don't have our unique nonce.
         sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-scripts"
         style={{
           width: '100%',

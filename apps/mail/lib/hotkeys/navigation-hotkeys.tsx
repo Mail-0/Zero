@@ -13,6 +13,7 @@ export function NavigationHotkeys() {
     goToArchive: () => navigate('/mail/archive'),
     goToBin: () => navigate('/mail/bin'),
     goToSettings: () => navigate('/settings'),
+    helpWithShortcuts: () => navigate('/settings/shortcuts'),
   };
 
   const globalShortcuts = keyboardShortcuts.filter((shortcut) => shortcut.scope === scope);

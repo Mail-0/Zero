@@ -12,37 +12,30 @@ import {
 import {
   Archive,
   ArchiveX,
-  BellOff,
   Forward,
   Inbox,
-  MailPlus,
+  MailOpen,
   Reply,
   ReplyAll,
-  Tag,
-  Mail,
   Star,
   StarOff,
+  Tag,
   Trash,
-  MailOpen,
 } from 'lucide-react';
-import { moveThreadsTo, type ThreadDestination } from '@/lib/thread-actions';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { backgroundQueueAtom } from '@/store/backgroundQueue';
+import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
+import { type ThreadDestination } from '@/lib/thread-actions';
 import { useThread, useThreads } from '@/hooks/use-threads';
-import { useSearchValue } from '@/hooks/use-search-value';
-import { useParams, useNavigate } from 'react-router';
+import { ExclamationCircle, Mail } from '../icons/icons';
+import { useNavigate, useParams } from 'react-router';
 import { useTRPC } from '@/providers/query-provider';
-import { ExclamationCircle } from '../icons/icons';
+import { useMutation } from '@tanstack/react-query';
+import { useMemo, type ReactNode } from 'react';
 import { useLabels } from '@/hooks/use-labels';
-import { LABELS, FOLDERS } from '@/lib/utils';
-import { useStats } from '@/hooks/use-stats';
+import { FOLDERS, LABELS } from '@/lib/utils';
 import { useMail } from '../mail/use-mail';
 import { useTranslations } from 'use-intl';
 import { Checkbox } from '../ui/checkbox';
-import { type ReactNode } from 'react';
 import { useQueryState } from 'nuqs';
-import { useMemo } from 'react';
-import { useAtom } from 'jotai';
 import { toast } from 'sonner';
 
 interface EmailAction {
@@ -84,7 +77,7 @@ const LabelsList = ({ threadId }: { threadId: string }) => {
       removeLabels: hasLabel ? [labelId] : [],
     });
     toast.promise(promise, {
-      error:  hasLabel ? "Failed to remove label" : "Failed to add label",
+      error: hasLabel ? 'Failed to remove label' : 'Failed to add label',
       finally: async () => {
         await refetch();
       },
@@ -127,42 +120,19 @@ export function ThreadContextMenu({
 }: EmailContextMenuProps) {
   const { folder } = useParams<{ folder: string }>();
   const [mail, setMail] = useMail();
-  const [{ refetch, isLoading, isFetching }, threads] = useThreads();
+  const [{ isLoading, isFetching }] = useThreads();
   const currentFolder = folder ?? '';
   const isArchiveFolder = currentFolder === FOLDERS.ARCHIVE;
-  const { refetch: refetchStats } = useStats();
   const t = useTranslations();
   const [, setMode] = useQueryState('mode');
   const [, setThreadId] = useQueryState('threadId');
-  const [, setBackgroundQueue] = useAtom(backgroundQueueAtom);
-  const { refetch: refetchThread, data: threadData } = useThread(threadId);
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const invalidateCount = () =>
-    queryClient.invalidateQueries({ queryKey: trpc.mail.count.queryKey() });
-  const { mutateAsync: markAsRead } = useMutation(
-    trpc.mail.markAsRead.mutationOptions({ onSuccess: () => invalidateCount() }),
-  );
-  const { mutateAsync: markAsUnread } = useMutation(
-    trpc.mail.markAsUnread.mutationOptions({ onSuccess: () => invalidateCount() }),
-  );
-  const { mutateAsync: toggleStar } = useMutation(trpc.mail.toggleStar.mutationOptions());
-  const { mutateAsync: toggleImportant } = useMutation(trpc.mail.toggleImportant.mutationOptions());
-  const { mutateAsync: deleteThread } = useMutation(trpc.mail.delete.mutationOptions());
-
-  const selectedThreads = useMemo(() => {
-    if (mail.bulkSelected.length) {
-      return threads.filter((thread) => mail.bulkSelected.includes(thread.id));
-    }
-    return threads.filter((thread) => thread.id === threadId);
-  }, [mail.bulkSelected, threadId, threads]);
+  const { data: threadData } = useThread(threadId);
 
   const isUnread = useMemo(() => {
     return threadData?.hasUnread ?? false;
   }, [threadData]);
 
   const isStarred = useMemo(() => {
-    // TODO support bulk select
     return threadData?.messages.some((message) =>
       message.tags?.some((tag) => tag.name.toLowerCase() === 'starred'),
     );
@@ -178,13 +148,15 @@ export function ThreadContextMenu({
     toast.info(t('common.actions.featureNotImplemented'));
   };
 
-  const handleMove = (from: string, to: string) => async () => {
+  const { optimisticMoveThreadsTo } = useOptimisticActions();
+
+  const handleMove = (from: string, to: string) => () => {
     try {
       let targets = [];
       if (mail.bulkSelected.length) {
-        targets = mail.bulkSelected.map((id) => `thread:${id}`);
+        targets = mail.bulkSelected;
       } else {
-        targets = [threadId ? `thread:${threadId}` : emailId];
+        targets = [threadId];
       }
 
       let destination: ThreadDestination = null;
@@ -193,57 +165,59 @@ export function ThreadContextMenu({
       else if (to === LABELS.TRASH) destination = FOLDERS.BIN;
       else if (from && !to) destination = FOLDERS.ARCHIVE;
 
-      const promise = moveThreadsTo({
-        threadIds: targets,
-        currentFolder: currentFolder,
-        destination,
-      });
-      targets.forEach((threadId) => setBackgroundQueue({ type: 'add', threadId }));
-      toast.promise(promise, {
-        finally: async () => {
-          await Promise.all([refetch(), refetchStats()]);
-          setMail({ ...mail, bulkSelected: [] });
-          targets.forEach((threadId) => setBackgroundQueue({ type: 'delete', threadId }));
-        },
-        error: t('common.actions.failedToMove'),
-      });
+      optimisticMoveThreadsTo(targets, currentFolder, destination);
+
+      if (mail.bulkSelected.length) {
+        setMail({ ...mail, bulkSelected: [] });
+      }
     } catch (error) {
       console.error(`Error moving ${threadId ? 'email' : 'thread'}:`, error);
+      toast.error(t('common.actions.failedToMove'));
     }
   };
 
-  const handleFavorites = async () => {
+  const { optimisticToggleStar } = useOptimisticActions();
+
+  const handleFavorites = () => {
     const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
-    const promise = toggleStar({ ids: targets });
-    toast.promise(promise, {
-      error:  isStarred ? t('common.actions.failedToRemoveFromFavorites') : t('common.actions.failedToAddToFavorites'),
-      finally: async () => {
-        setMail((prev) => ({ ...prev, bulkSelected: [] }));
-        await Promise.allSettled([refetchThread(), refetch()]);
-      },
-    });
+
+    const newStarredState = !isStarred;
+
+    optimisticToggleStar(targets, newStarredState);
+
+    if (mail.bulkSelected.length) {
+      setMail((prev) => ({ ...prev, bulkSelected: [] }));
+    }
   };
 
-  const handleToggleImportant = async () => {
+  const { optimisticToggleImportant } = useOptimisticActions();
+
+  const handleToggleImportant = () => {
     const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
-    await toggleImportant({ ids: targets });
-    setMail((prev) => ({ ...prev, bulkSelected: [] }));
-    return await Promise.allSettled([refetchThread(), refetch()]);
+    const newImportantState = !isImportant;
+
+    // Use optimistic update with undo functionality
+    optimisticToggleImportant(targets, newImportantState);
+
+    // Clear bulk selection after action
+    if (mail.bulkSelected.length) {
+      setMail((prev) => ({ ...prev, bulkSelected: [] }));
+    }
   };
+
+  const { optimisticMarkAsRead } = useOptimisticActions();
 
   const handleReadUnread = () => {
     const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
-    const action = isUnread ? markAsRead : markAsUnread;
+    const newReadState = isUnread; // If currently unread, mark as read (true)
 
-    const promise = action({ ids: targets });
+    // Use optimistic update with undo functionality
+    optimisticMarkAsRead(targets);
 
-    toast.promise(promise, {
-      error: t(isUnread ? 'common.mail.failedToMarkAsRead' : 'common.mail.failedToMarkAsUnread'),
-      async finally() {
-        setMail((prev) => ({ ...prev, bulkSelected: [] }));
-        await Promise.allSettled([refetchThread(), refetch()]);
-      },
-    });
+    // Clear bulk selection after action
+    if (mail.bulkSelected.length) {
+      setMail((prev) => ({ ...prev, bulkSelected: [] }));
+    }
   };
   const [, setActiveReplyId] = useQueryState('activeReplyId');
 
@@ -288,16 +262,23 @@ export function ThreadContextMenu({
       disabled: false,
     },
   ];
-  const handleDelete = () => async () => {
-    toast.promise(deleteThread({ id: threadId }), {
-      loading: t('common.actions.deletingMail'),
-      success: t('common.actions.deletedMail'),
-      error: t('common.actions.failedToDeleteMail'),
-      finally: async () => {
-        setMail((prev) => ({ ...prev, bulkSelected: [] }));
-        await Promise.allSettled([refetchThread(), refetch()]);
-      },
-    });
+  const { optimisticDeleteThreads } = useOptimisticActions();
+
+  const handleDelete = () => () => {
+    const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
+
+    // Use optimistic update with undo functionality
+    optimisticDeleteThreads(targets, currentFolder);
+
+    // Clear bulk selection after action
+    if (mail.bulkSelected.length) {
+      setMail((prev) => ({ ...prev, bulkSelected: [] }));
+    }
+
+    // Navigation removed to prevent route change on current thread action
+    // if (!mail.bulkSelected.length && threadId) {
+    //   navigate(`/mail/${currentFolder}`);
+    // }
   };
 
   const getActions = () => {
@@ -430,13 +411,6 @@ export function ThreadContextMenu({
       ),
       action: handleFavorites,
     },
-    // {
-    //   id: 'mute',
-    //   label: t('common.mail.muteThread'),
-    //   icon: <BellOff className="mr-2.5 h-4 w-4" />,
-    //   action: noopAction,
-    //   disabled: true, // TODO: Mute thread functionality to be implemented
-    // },
   ];
 
   const renderAction = (action: EmailAction) => {
@@ -459,10 +433,13 @@ export function ThreadContextMenu({
       <ContextMenuTrigger disabled={isLoading || isFetching} className="w-full">
         {children}
       </ContextMenuTrigger>
-      <ContextMenuContent className="w-56 bg-white dark:bg-[#1A1A1A]" onContextMenu={(e) => e.preventDefault()}>
+      <ContextMenuContent
+        className="w-56 bg-white dark:bg-[#1A1A1A]"
+        onContextMenu={(e) => e.preventDefault()}
+      >
         {primaryActions.map(renderAction)}
 
-        <ContextMenuSeparator className="dark:bg-[#252525] bg-[#252525]"/>
+        <ContextMenuSeparator className="bg-[#252525] dark:bg-[#252525]" />
 
         <ContextMenuSub>
           <ContextMenuSubTrigger className="font-normal">
@@ -474,11 +451,11 @@ export function ThreadContextMenu({
           </ContextMenuSubContent>
         </ContextMenuSub>
 
-        <ContextMenuSeparator className="dark:bg-[#252525] bg-[#252525]"/>
+        <ContextMenuSeparator className="bg-[#252525] dark:bg-[#252525]" />
 
         {getActions().map(renderAction as any)}
 
-        <ContextMenuSeparator className="dark:bg-[#252525] bg-[#252525]"/>
+        <ContextMenuSeparator className="bg-[#252525] dark:bg-[#252525]" />
 
         {otherActions.map(renderAction)}
       </ContextMenuContent>
