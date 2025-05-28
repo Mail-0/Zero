@@ -12,10 +12,12 @@ import { PromptsDialog } from './prompts-dialog';
 import { Button } from '@/components/ui/button';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useLabels } from '@/hooks/use-labels';
+import { useSession } from '@/lib/auth-client';
 import { useAgentChat } from 'agents/ai-react';
 import { X, Expand, Plus } from 'lucide-react';
 import { Gauge } from '@/components/ui/gauge';
 import { useParams } from 'react-router';
+import { useChat } from '@ai-sdk/react';
 import { useAgent } from 'agents/react';
 import { useQueryState } from 'nuqs';
 import { cn } from '@/lib/utils';
@@ -373,9 +375,11 @@ function AISidebar({ className }: AISidebarProps) {
   const { folder } = useParams<{ folder: string }>();
   const { refetch: refetchLabels } = useLabels();
   const [searchValue] = useSearchValue();
+  const { data: session } = useSession();
 
   const agent = useAgent({
     agent: 'ZeroAgent',
+    name: session?.user.email ?? 'general',
     host: `${import.meta.env.VITE_PUBLIC_BACKEND_URL}`,
   });
 

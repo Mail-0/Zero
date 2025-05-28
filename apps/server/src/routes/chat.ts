@@ -93,6 +93,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
         if (_connection) {
           await this.ctx.storage.put('connectionId', _connection.id);
           this.driver = connectionToDriver(_connection);
+          this.setName(session.user.email);
         }
         console.log('session exists', session.user.email);
       } else {
