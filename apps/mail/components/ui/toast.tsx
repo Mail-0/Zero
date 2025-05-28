@@ -22,16 +22,17 @@ const CustomToaster = (props: Props) => {
       toastOptions={{
         classNames: {
           title: 'title flex-1 justify-center text-black dark:text-white text-sm leading-none',
-          description: 'description',
-          actionButton: 'action-button',
-          cancelButton: 'cancel-button',
-          closeButton: 'close-button',
-          loading: 'px-4',
-          loader: 'px-4',
-          icon: 'px-4',
-          content: 'px py-3',
+          description: 'text-black dark:text-white text-xs',
+          toast: 'px-3',
+          actionButton: 'bg-[#DBDBDB] text-lg',
+          cancelButton: 'bg-[#DBDBDB] text-lg',
+          closeButton: 'bg-[#DBDBDB] text-lg',
+          loading: 'pl-3 pr-2',
+          loader: 'pl-3 pr-2',
+          icon: 'pl-3 pr-2',
+          content: 'pl-2',
           default:
-            'w-96 px-1.5 py-1.5 bg-white dark:bg-[#2C2C2C] rounded-xl inline-flex items-center gap-2 overflow-visible border dark:border-none',
+            'w-96 px-1.5 bg-white dark:bg-[#2C2C2C] rounded-xl inline-flex items-center gap-2 overflow-visible border dark:border-none',
         },
       }}
     />

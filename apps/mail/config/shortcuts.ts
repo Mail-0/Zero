@@ -101,13 +101,20 @@ const navigation: Shortcut[] = [
     description: 'Go to bin',
     scope: 'navigation',
   },
+  {
+    keys: ['?', 'shift'],
+    action: 'helpWithShortcuts',
+    type: 'combination',
+    description: 'Show keyboard shortcuts',
+    scope: 'navigation',
+  },
 ];
 
 const globalShortcuts: Shortcut[] = [
   {
-    keys: ['mod', '/'],
+    keys: ['/'],
     action: 'search',
-    type: 'combination',
+    type: 'single',
     description: 'Search',
     scope: 'global',
   },
