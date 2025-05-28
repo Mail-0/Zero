@@ -409,7 +409,7 @@ export default function HomeContent() {
 
       <motion.section
         className="relative mt-10 hidden flex-col justify-center md:mt-32 md:flex"
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.6 }}
         viewport={{ once: true }}
@@ -476,7 +476,13 @@ export default function HomeContent() {
         </Tabs>
       </motion.section>
 
-      <div className="flex items-center justify-center px-4 md:hidden">
+      <motion.div
+        className="flex items-center justify-center px-4 md:hidden"
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.6 }}
+        viewport={{ once: true }}
+      >
         <img
           src="/new-email-preview-2.png"
           alt="Zero Email Preview"
@@ -485,7 +491,7 @@ export default function HomeContent() {
           className="mt-10 h-fit w-full rounded-xl border"
           loading="eager"
         />
-      </div>
+      </motion.div>
 
       <div className="relative -top-3.5 hidden h-[1px] w-full bg-[#313135] md:block" />
 
@@ -496,15 +502,19 @@ export default function HomeContent() {
           transition={{ duration: 0.5 }}
           className="flex items-center justify-center"
         >
-          <h1 className="text-lg font-light text-white/40 md:text-xl">
+          <h1 className="font-sora text-lg font-light text-white/40 md:text-xl">
             Designed for power users who value time
           </h1>
         </motion.div>
+
+        {/* 2nd section  */}
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="mt-2 flex flex-col items-center justify-center md:mt-8"
+          viewport={{ once: true }}
+          className="font-mona mt-2 flex flex-col items-center justify-center md:mt-8"
         >
           <h1 className="text-center text-4xl font-medium text-white md:text-6xl">
             Speed Is Everything
@@ -513,10 +523,12 @@ export default function HomeContent() {
             Reply in seconds
           </h1>
         </motion.div>
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
+          viewport={{ once: true }}
           className="relative bottom-3 mx-12 flex items-center justify-center bg-[#0F0F0F] md:mx-0"
         >
           <div className="mx-auto inline-flex max-w-[600px] flex-col items-center justify-center overflow-hidden rounded-2xl bg-[#1A1A1A] shadow-md">
