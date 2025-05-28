@@ -397,7 +397,7 @@ export default function HomeContent() {
         <a
           href="https://www.producthunt.com/posts/zero-8?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-zero&#0045;8"
           target="_blank"
-          className="fixed bottom-12 right-4 md:right-12"
+          className="mt-6 md:mt-12"
         >
           <img
             src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=970417&theme=light&t=1748371877825"
