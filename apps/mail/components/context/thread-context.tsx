@@ -440,6 +440,7 @@ export function ThreadContextMenu({
         {primaryActions.map(renderAction)}
 
         <ContextMenuSeparator className="bg-[#252525] dark:bg-[#252525]" />
+        <ContextMenuSeparator className="bg-[#252525] dark:bg-[#252525]" />
 
         <ContextMenuSub>
           <ContextMenuSubTrigger className="font-normal">
