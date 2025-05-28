@@ -123,7 +123,8 @@ function ChatHeader({
                 <TooltipTrigger asChild className="md:h-fit md:px-2">
                   <div>
                     <Gauge
-                      value={chatMessages.included_usage - chatMessages.remaining!}
+                      max={chatMessages.included_usage}
+                      value={chatMessages.usage}
                       size="small"
                       showValue={true}
                     />
@@ -131,8 +132,8 @@ function ChatHeader({
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>
-                    You've used {chatMessages.included_usage - chatMessages.remaining!} out of{' '}
-                    {chatMessages.included_usage} chat messages.
+                    You've used {chatMessages.usage} out of {chatMessages.included_usage} chat
+                    messages.
                   </p>
                   <p className="mb-2">Upgrade for unlimited messages!</p>
                   <Button
@@ -323,16 +324,6 @@ export function useAISidebar() {
     setOpen(newState);
   }, [open, setOpen]);
 
-  // Initialize from localStorage on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined' && !open) {
-      const savedOpen = localStorage.getItem('ai-sidebar-open');
-      if (savedOpen === 'true') {
-        setOpenQuery('true');
-      }
-    }
-  }, [open, setOpenQuery]);
-
   // Sync with query parameters on mount or when they change
   useEffect(() => {
     if (viewModeQuery && viewModeQuery !== viewMode) {
@@ -367,7 +358,6 @@ function AISidebar({ className }: AISidebarProps) {
     isSidebar,
     isPopup,
   } = useAISidebar();
-  const [resetKey, setResetKey] = useState(0);
   const { isPro, track, refetch: refetchBilling } = useBilling();
   const queryClient = useQueryClient();
   const trpc = useTRPC();
@@ -463,13 +453,8 @@ function AISidebar({ className }: AISidebarProps) {
   });
 
   const handleNewChat = useCallback(() => {
-    // Reset threadId query parameter
-    setThreadId(null);
-    // Reset chat state by forcing a remount of AIChat component
-    setResetKey((prev) => prev + 1);
-    // Reset chat messages by setting them to empty
     chatState.setMessages([]);
-  }, [setThreadId, chatState]);
+  }, [chatState]);
 
   return (
     <>
@@ -500,7 +485,7 @@ function AISidebar({ className }: AISidebarProps) {
                       onNewChat={handleNewChat}
                     />
                     <div className="relative flex-1 overflow-hidden">
-                      <AIChat key={resetKey} {...chatState} />
+                      <AIChat {...chatState} />
                     </div>
                   </div>
                 </div>
@@ -546,7 +531,7 @@ function AISidebar({ className }: AISidebarProps) {
                   onNewChat={handleNewChat}
                 />
                 <div className="relative flex-1 overflow-hidden">
-                  <AIChat key={resetKey} {...chatState} />
+                  <AIChat {...chatState} />
                 </div>
               </div>
             </div>

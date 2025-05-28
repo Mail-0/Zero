@@ -135,7 +135,7 @@ export default function LabelsPage() {
                             <span>{label.name}</span>
                           </Badge>
                         </div>
-                        <div className="absolute right-2 z-[25] flex items-center gap-1 rounded-xl border bg-white p-1 opacity-0 shadow-sm transition-opacity group-hover:opacity-100 dark:bg-[#1A1A1A]">
+                        <div className="dark:bg-panelDark absolute right-2 z-[25] flex items-center gap-1 rounded-xl border bg-white p-1 opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
@@ -147,7 +147,7 @@ export default function LabelsPage() {
                                 <Pencil className="text-[#898989]" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent className="mb-1 bg-white dark:bg-[#1A1A1A]">
+                            <TooltipContent className="dark:bg-panelDark mb-1 bg-white">
                               Edit Label
                             </TooltipContent>
                           </Tooltip>
@@ -162,7 +162,7 @@ export default function LabelsPage() {
                                 <Bin className="fill-[#F43F5E]" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent className="mb-1 bg-white dark:bg-[#1A1A1A]">
+                            <TooltipContent className="dark:bg-panelDark mb-1 bg-white">
                               Delete Label
                             </TooltipContent>
                           </Tooltip>

@@ -26,7 +26,7 @@ export default function Footer() {
   const ref = useRef(null);
 
   return (
-    <div className="m-4 hidden flex-col items-center justify-center rounded-xl bg-[#1A1A1A] md:flex">
+    <div className="bg-panelDark m-4 hidden flex-col items-center justify-center rounded-xl md:flex">
       <div>
         {/* <div className="h-[527px] w-screen bg-gradient-to-b from-violet-600 via-orange-400 to-slate-950 blur-2xl" /> */}
         <div>
@@ -49,7 +49,7 @@ export default function Footer() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="inline-block text-center text-2xl font-bold text-white sm:text-4xl md:text-5xl lg:bg-gradient-to-b lg:from-[#84878D] lg:via-[#84878D] lg:to-[#1A1A1A] lg:bg-clip-text lg:text-8xl lg:text-transparent"
+                  className="lg:to-panelDark inline-block text-center text-2xl font-bold text-white sm:text-4xl md:text-5xl lg:bg-gradient-to-b lg:from-[#84878D] lg:via-[#84878D] lg:bg-clip-text lg:text-8xl lg:text-transparent"
                 >
                   <span>Experience the Future of </span> <br />
                   Email Today

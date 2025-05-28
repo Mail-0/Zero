@@ -210,12 +210,12 @@ export function NavMain({ items }: NavMainProps) {
             <SidebarMenuItem>
               {state !== 'collapsed' ? (
                 section.title ? (
-                  <p className="mx-2 mb-2 text-[13px] text-[#6D6D6D] dark:text-[#898989]">
+                  <p className="text-muted-foreground mx-2 mb-2 text-[13px] dark:text-[#898989]">
                     {section.title}
                   </p>
                 ) : null
               ) : (
-                <div className="mx-2 mb-4 mt-2 h-[0.5px] bg-[#6D6D6D]/50 dark:bg-[#262626]" />
+                <div className="bg-muted-foreground/50 mx-2 mb-4 mt-2 h-[0.5px] dark:bg-[#262626]" />
               )}
               <div className="z-20 space-y-1 pb-2">
                 {section.items.map((item) => (
@@ -236,7 +236,7 @@ export function NavMain({ items }: NavMainProps) {
           <Collapsible defaultOpen={true} className="group/collapsible flex-col">
             <SidebarMenuItem className="mb-4" style={{ height: 'auto' }}>
               <div className="mx-2 mb-4 flex items-center justify-between">
-                <span className="text-[13px] text-[#6D6D6D] dark:text-[#898989]">
+                <span className="text-muted-foreground text-[13px] dark:text-[#898989]">
                   {activeAccount?.providerId === 'google' ? 'Labels' : 'Folders'}
                 </span>
                 {activeAccount?.providerId === 'google' ? (
@@ -247,7 +247,7 @@ export function NavMain({ items }: NavMainProps) {
                         size="icon"
                         className="mr-1 h-4 w-4 p-0 hover:bg-transparent"
                       >
-                        <Plus className="h-3 w-3 text-[#6D6D6D] dark:text-[#898989]" />
+                        <Plus className="text-muted-foreground h-3 w-3 dark:text-[#898989]" />
                       </Button>
                     }
                     onSubmit={onSubmit}

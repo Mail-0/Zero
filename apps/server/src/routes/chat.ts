@@ -11,8 +11,8 @@ import {
   getCurrentDateContext,
   GmailSearchAssistantSystemPrompt,
 } from '../lib/prompts';
+import { type Connection, type ConnectionContext, type WSMessage } from 'agents';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { type Connection, type ConnectionContext } from 'agents';
 import { createSimpleAuth, type SimpleAuth } from '../lib/auth';
 import { connectionToDriver } from '../lib/server-utils';
 import type { MailManager } from '../lib/driver/types';

@@ -1,6 +1,9 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { CurvedArrow, Puzzle, Stop } from '../icons/icons';
+import useComposeEditor from '@/hooks/use-compose-editor';
+import { InfoIcon, Mic, Mic2Icon } from 'lucide-react';
 import { useRef, useCallback, useEffect } from 'react';
 import { PricingDialog } from '../ui/pricing-dialog';
 import { Markdown } from '@react-email/components';
@@ -8,8 +11,11 @@ import { useAIFullScreen } from '../ui/ai-sidebar';
 import { useBilling } from '@/hooks/use-billing';
 import { TextShimmer } from '../ui/text-shimmer';
 import { useThread } from '@/hooks/use-threads';
+import { useConversation } from '@11labs/react';
 import { MailLabels } from '../mail/mail-list';
 import { cn, getEmailLogo } from '@/lib/utils';
+import { EditorContent } from '@tiptap/react';
+import { Tools } from '../../types/tools';
 import { Button } from '../ui/button';
 import { format } from 'date-fns-tz';
 import { useQueryState } from 'nuqs';
@@ -26,7 +32,6 @@ const renderThread = (thread: { id: string; title: string; snippet: string }) =>
   const handleClick = () => {
     setThreadId(thread.id);
     setAiSidebarOpen(null);
-    // Reset fullscreen state when clicking on a thread
     setIsFullScreen(null);
   };
 
@@ -49,7 +54,7 @@ const renderThread = (thread: { id: string; title: string; snippet: string }) =>
           </Avatar>
           <div className="flex w-full flex-col gap-1.5">
             <div className="flex w-full items-center justify-between gap-2">
-              <p className="text-sm font-medium text-black dark:text-white">
+              <p className="max-w-[20ch] truncate text-sm font-medium text-black dark:text-white">
                 {getThread.latest?.sender?.name}
               </p>
               <span className="max-w-[180px] truncate text-xs text-[#8C8C8C] dark:text-[#8C8C8C]">
@@ -140,6 +145,7 @@ interface Message {
       result?: {
         threads?: Array<{ id: string; title: string; snippet: string }>;
       };
+      args?: any;
     };
   }>;
 }
@@ -155,6 +161,92 @@ export interface AIChatProps {
   className?: string;
   onModelChange?: (model: string) => void;
 }
+
+const ToolResponse = ({ toolName, result, args }: { toolName: string; result: any; args: any }) => {
+  const renderContent = () => {
+    switch (toolName) {
+      case Tools.ListThreads:
+      case Tools.AskZeroMailbox:
+        return result?.threads ? <RenderThreads threads={result.threads} /> : null;
+
+      case Tools.GetThread:
+        return result?.thread ? (
+          <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+            <div className="mb-2 flex items-center gap-2">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={getEmailLogo(result.thread.sender?.email)} />
+                <AvatarFallback>{result.thread.sender?.name?.[0]?.toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="font-medium">{result.thread.sender?.name}</p>
+                <p className="text-sm text-gray-500">{result.thread.subject}</p>
+              </div>
+            </div>
+            <div className="prose dark:prose-invert max-w-none">
+              <Markdown>{result.thread.body}</Markdown>
+            </div>
+          </div>
+        ) : null;
+
+      case Tools.GetUserLabels:
+        return result?.labels ? (
+          <div className="flex flex-wrap gap-2">
+            {result.labels.map((label: any) => (
+              <MailLabels key={label.id} labels={[label]} />
+            ))}
+          </div>
+        ) : null;
+
+      case Tools.WebSearch:
+        return (
+          <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+            <div className="prose dark:prose-invert max-w-none">
+              <Markdown>{result}</Markdown>
+            </div>
+          </div>
+        );
+
+      case Tools.ComposeEmail:
+        return result?.newBody ? (
+          <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+            <div className="prose dark:prose-invert max-w-none">
+              <Markdown>{result.newBody}</Markdown>
+            </div>
+          </div>
+        ) : null;
+
+      default:
+        if (result?.success) {
+          return (
+            <div className="text-sm text-green-600 dark:text-green-400">
+              Operation completed successfully
+            </div>
+          );
+        }
+        return null;
+    }
+  };
+
+  const content = renderContent();
+  if (!content) return null;
+
+  return (
+    <div className="group relative">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <InfoIcon className="fill-subtleWhite text-subtleBlack dark:fill-subtleBlack h-4 w-4 dark:text-[#373737]" />
+        </TooltipTrigger>
+        <TooltipContent>
+          <div className="text-xs">
+            <p className="mb-1 font-medium">Tool Arguments:</p>
+            <pre className="whitespace-pre-wrap break-words">{JSON.stringify(args, null, 2)}</pre>
+          </div>
+        </TooltipContent>
+      </Tooltip>
+      {content}
+    </div>
+  );
+};
 
 export function AIChat({
   messages,
@@ -177,6 +269,24 @@ export function AIChat({
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, []);
+
+  const editor = useComposeEditor({
+    placeholder: 'Ask Zero to do anything...',
+    onLengthChange: () => setInput(editor.getText()),
+    onKeydown(event) {
+      if (event.key === 'Enter' && !event.metaKey && !event.shiftKey) {
+        event.preventDefault();
+        handleSubmit(event as unknown as React.FormEvent<HTMLFormElement>);
+        editor.commands.clearContent(true);
+      }
+    },
+  });
+
+  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    handleSubmit(e);
+    editor.commands.clearContent(true);
+  };
 
   useEffect(() => {
     scrollToBottom();
@@ -219,21 +329,22 @@ export function AIChat({
             </div>
           ) : (
             messages.map((message, index) => {
-              // Separate text and tool-invocation parts
               const textParts = message.parts.filter((part) => part.type === 'text');
               const toolParts = message.parts.filter((part) => part.type === 'tool-invocation');
               return (
                 <div key={`${message.id}-${index}`} className="flex flex-col gap-2">
                   {toolParts.map((part, idx) =>
-                    part.toolInvocation &&
-                    'result' in part.toolInvocation &&
-                    part.toolInvocation.result &&
-                    'threads' in part.toolInvocation.result ? (
-                      <RenderThreads threads={part.toolInvocation.result.threads ?? []} key={idx} />
+                    part.toolInvocation && part.toolInvocation.result ? (
+                      <ToolResponse
+                        key={idx}
+                        toolName={part.toolInvocation.toolName}
+                        result={part.toolInvocation.result}
+                        args={part.toolInvocation.args}
+                      />
                     ) : null,
                   )}
                   {textParts.length > 0 && (
-                    <div
+                    <p
                       className={cn(
                         'flex w-fit flex-col gap-2 rounded-lg text-sm',
                         message.role === 'user'
@@ -242,10 +353,9 @@ export function AIChat({
                       )}
                     >
                       {textParts.map(
-                        (part) =>
-                          part.text && <Markdown key={part.text}>{part.text || ' '}</Markdown>,
+                        (part) => part.text && <span key={part.text}>{part.text || ' '}</span>,
                       )}
-                    </div>
+                    </p>
                   )}
                 </div>
               );
@@ -270,44 +380,38 @@ export function AIChat({
 
       {/* Fixed input at bottom */}
       <div className={cn('mb-4 flex-shrink-0 px-4', isFullScreen ? 'px-0' : '')}>
-        <div className="bg-offsetLight relative rounded-lg dark:bg-[#141414]">
+        <div className="bg-offsetLight relative rounded-lg p-2 dark:bg-[#202020]">
           {showVoiceChat ? (
             <VoiceChat onClose={() => setShowVoiceChat(false)} />
           ) : (
             <div className="flex flex-col">
               <div className="w-full">
-                <form id="ai-chat-form" onSubmit={handleSubmit} className="relative">
-                  <Input
-                    ref={inputRef}
-                    readOnly={!chatMessages.enabled}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="Ask Zero to do anything..."
-                    className="placeholder:text-muted-foreground h-8 w-full resize-none rounded-lg border-none bg-white px-3 py-2 pr-10 text-sm ring-0 focus:ring-0 focus-visible:outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#141414]"
-                  />
-                  {status === 'ready' ? (
-                    <button
-                      form="ai-chat-form"
-                      type="submit"
-                      className="absolute right-1 top-1/2 inline-flex h-6 -translate-y-1/2 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-lg"
-                      disabled={!input.trim() || !chatMessages.enabled}
+                <form id="ai-chat-form" onSubmit={onSubmit} className="relative">
+                  <div className="grow self-stretch overflow-y-auto  outline-white/5 dark:bg-[#202020]">
+                    <div
+                      onClick={() => {
+                        editor.commands.focus();
+                      }}
+                      className={cn('max-h-[100px] w-full')}
                     >
-                      <div className="dark:bg[#141414] flex h-5 items-center justify-center gap-1 rounded-sm bg-[#262626] px-1 pr-0.5">
-                        <CurvedArrow className="mt-1.5 h-4 w-4 fill-white dark:fill-[#929292]" />
-                      </div>
-                    </button>
-                  ) : (
-                    <button
-                      onClick={stop}
-                      type="button"
-                      className="absolute right-1 top-1/2 inline-flex h-6 -translate-y-1/2 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-lg"
-                    >
-                      <div className="flex h-5 items-center justify-center gap-1 rounded-sm px-1">
-                        <Stop className="h-4 w-4 fill-[#DE5555]" />
-                      </div>
-                    </button>
-                  )}
+                      <EditorContent editor={editor} className="h-full w-full " />
+                    </div>
+                  </div>
                 </form>
+              </div>
+              <div className="grid">
+                <div className="flex justify-end">
+                  <button
+                    form="ai-chat-form"
+                    type="submit"
+                    className="inline-flex cursor-pointer gap-1.5 rounded-lg"
+                    disabled={!chatMessages.enabled}
+                  >
+                    <div className="dark:bg[#141414] flex h-5 items-center justify-center gap-1 rounded-sm bg-[#262626] px-2 pr-1">
+                      <CurvedArrow className="mt-1.5 h-4 w-4 fill-white dark:fill-[#929292]" />
+                    </div>
+                  </button>
+                </div>
               </div>
             </div>
           )}
