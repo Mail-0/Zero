@@ -249,6 +249,13 @@ export const convertJSONToHTML = (json: any): string => {
 };
 
 export const getEmailLogo = (email: string) => {
+  // Check if this is an Apple Sign-in email
+  if (email.includes('@privaterelay.apple.com')) {
+    // For Apple Sign-in emails, return null to indicate we should show the first letter
+    // instead of trying to fetch a logo
+    return null;
+  }
+  
   if (!import.meta.env.VITE_PUBLIC_IMAGE_API_URL) return '';
   return import.meta.env.VITE_PUBLIC_IMAGE_API_URL + email;
 };
@@ -264,8 +271,7 @@ export const contentToHTML = (content: string) => `
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 </head>
-<body style="margin: 0; padding: 0;">
-${content}
+<body style="margin: 0; padding: 0;">${content}
 </body></html>`;
 
 export const constructReplyBody = (
@@ -339,7 +345,7 @@ export const getMainSearchTerm = (searchQuery: string): string => {
       '',
     )
     .replace(/\b\d{4}\b/g, '') // Remove 4-digit years
-    .replace(/["']/g, '')
+    .replace(/['"]/g, '')
     .trim();
 
   // Split by spaces and get the first meaningful term
