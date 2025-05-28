@@ -11,8 +11,8 @@ import {
   getCurrentDateContext,
   GmailSearchAssistantSystemPrompt,
 } from '../lib/prompts';
-import { type Connection, type ConnectionContext, type WSMessage } from 'agents';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type Connection, type ConnectionContext } from 'agents';
 import { createSimpleAuth, type SimpleAuth } from '../lib/auth';
 import { connectionToDriver } from '../lib/server-utils';
 import type { MailManager } from '../lib/driver/types';
@@ -41,7 +41,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
       execute: async (dataStream) => {
         const connectionId = (await this.ctx.storage.get('connectionId')) as string;
         if (!connectionId || !this.driver) {
-          throw new Error('Unauthorized');
+          throw new Error('Unauthorized no driver or connectionId');
         }
         const tools = { ...authTools(this.driver, connectionId), buildGmailSearchQuery };
         const processedMessages = await processToolCalls(
@@ -105,15 +105,12 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
   async onConnect(_: Connection, ctx: ConnectionContext) {
     const token = ctx.request.headers.get('Cookie');
     if (!token) {
-      throw new Error('Unauthorized');
+      throw new Error('Unauthorized no token');
     }
     await this.setupAuth(token);
   }
 
   async onChatMessage(onFinish: StreamTextOnFinishCallback<{}>) {
-    if (!this.driver) {
-      return new Response('Unauthorized', { status: 401 });
-    }
     return this.getDataStreamResponse(onFinish);
   }
 }
