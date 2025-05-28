@@ -1,8 +1,8 @@
 import { useEffect, type ReactNode, useState, Suspense } from 'react';
 import type { EnvVarInfo } from '@zero/server/auth-providers';
+import { Google, Microsoft } from '@/components/icons/icons';
 import ErrorMessage from '@/app/(auth)/login/error-message';
 import { signIn, useSession } from '@/lib/auth-client';
-import { Google, Microsoft } from '@/components/icons/icons';
 import { Button } from '@/components/ui/button';
 import { TriangleAlert } from 'lucide-react';
 import { useNavigate } from 'react-router';
@@ -130,10 +130,12 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
   });
 
   return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-between bg-[#111111]">
+    <div className="flex min-h-screen w-full flex-col items-center justify-between bg-gradient-to-b from-[#111111] to-[#101828]">
       <div className="animate-in slide-in-from-bottom-4 mx-auto flex max-w-[600px] flex-grow items-center justify-center space-y-8 px-4 duration-500 sm:px-12 md:px-0">
-        <div className="w-full space-y-4">
-          <p className="text-center text-4xl font-bold text-white md:text-5xl">Login to Zero</p>
+        <div className="w-full space-y-4 rounded-2xl bg-[#161821] p-12">
+          <p className="font-sora text-center text-4xl font-bold text-white md:text-5xl">
+            Welcome to <span className="text-blue-500">Zero</span>
+          </p>
 
           {shouldShowDetailedConfig && (
             <div className="rounded-lg border border-black/10 bg-black/5 p-5 dark:border-white/10 dark:bg-white/5">
