@@ -26,7 +26,7 @@ import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-st
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { focusedIndexAtom } from '@/hooks/use-mail-navigation';
 import { backgroundQueueAtom } from '@/store/backgroundQueue';
 import { type ThreadDestination } from '@/lib/thread-actions';
@@ -39,7 +39,8 @@ import { useTRPC } from '@/providers/query-provider';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { useStats } from '@/hooks/use-stats';
-import type { ParsedMessage } from '@/types';
+import ThreadSubject from './thread-subject';
+import type { ParsedMessage, Attachment } from '@/types';
 import ReplyCompose from './reply-composer';
 import { useTranslations } from 'use-intl';
 import { NotesPanel } from './note-panel';
@@ -169,6 +170,17 @@ export function ThreadDisplay() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isStarred, setIsStarred] = useState(false);
   const [isImportant, setIsImportant] = useState(false);
+
+  // Collect all attachments from all messages in the thread
+  const allThreadAttachments = useMemo(() => {
+    if (!emailData?.messages) return [];
+    return emailData.messages.reduce<Attachment[]>((acc, message) => {
+      if (message.attachments && message.attachments.length > 0) {
+        return [...acc, ...message.attachments];
+      }
+      return acc;
+    }, []);
+  }, [emailData?.messages]);
   const t = useTranslations();
   const { refetch: refetchStats } = useStats();
   const [mode, setMode] = useQueryState('mode');
@@ -1018,6 +1030,7 @@ export function ThreadDisplay() {
                         isLoading={false}
                         index={index}
                         totalEmails={emailData?.totalReplies}
+                        threadAttachments={index === 0 ? allThreadAttachments : undefined}
                       />
                       {mode && activeReplyId === message.id && (
                         <div className="px-4 py-2" id={`reply-composer-${message.id}`}>

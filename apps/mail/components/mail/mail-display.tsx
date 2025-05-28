@@ -25,6 +25,7 @@ import {
   Download,
   MoreVertical,
   HardDriveDownload,
+  Paperclip,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -43,7 +44,7 @@ import AttachmentsAccordion from './attachments-accordion';
 import { cn, getEmailLogo, formatDate } from '@/lib/utils';
 import { useBrainState } from '../../hooks/use-summary';
 import { useThreadLabels } from '@/hooks/use-labels';
-import type { Sender, ParsedMessage } from '@/types';
+import type { Sender, ParsedMessage, Attachment } from '@/types';
 import { Markdown } from '@react-email/components';
 import AttachmentDialog from './attachment-dialog';
 import { useSummary } from '@/hooks/use-summary';
@@ -161,6 +162,7 @@ type Props = {
   onReply?: () => void;
   onReplyAll?: () => void;
   onForward?: () => void;
+  threadAttachments?: Attachment[];
 };
 
 const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
@@ -224,6 +226,7 @@ const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
               >
                 {icon}
               </Badge>
+              <AiSummary />
             </TooltipTrigger>
             <TooltipContent>
               <p className="text-xs text-white">{label}</p>
@@ -253,6 +256,58 @@ const cleanEmailDisplay = (email?: string) => {
 const cleanNameDisplay = (name?: string) => {
   if (!name) return '';
   return name.trim();
+};
+
+const ThreadAttachments = ({ attachments }: { attachments: Attachment[] }) => {
+  if (!attachments || attachments.length === 0) return null;
+
+  const handleDownload = async (attachment: Attachment) => {
+    try {
+      // Convert base64 to blob
+      const byteCharacters = atob(attachment.body);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: attachment.mimeType });
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = attachment.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading attachment:', error);
+    }
+  };
+
+  return (
+    <div className="mt-2 w-full">
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium ">Thread Attachments <span className='text-[#8D8D8D]'>[{attachments.length}]</span></span>
+      </div>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {attachments.map((attachment) => (
+          <button
+            key={attachment.attachmentId}
+            onClick={() => handleDownload(attachment)}
+            className="flex items-center gap-2 rounded-md  px-2 py-1 text-sm hover:bg-[#F0F0F0] dark:bg-[#262626] dark:hover:bg-[#303030] cursor-pointer"
+          >
+            <span className="text-muted-foreground">{getFileIcon(attachment.filename)}</span>
+            <span className="max-w-[200px] truncate" title={attachment.filename}>
+              {attachment.filename}
+            </span>
+            <span className="text-muted-foreground">{formatFileSize(attachment.size)}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 };
 
 const AiSummary = () => {
@@ -427,7 +482,7 @@ const openAttachment = (attachment: { body: string; mimeType: string; filename: 
   }
 };
 
-const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
+const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }: Props) => {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   //   const [unsubscribed, setUnsubscribed] = useState(false);
   //   const [isUnsubscribing, setIsUnsubscribing] = useState(false);
@@ -982,6 +1037,8 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                   </span>
                 </span>
               </span>
+              <AiSummary />
+              
               <div className="mt-2 flex items-center gap-2">
                 {emailData?.tags?.length ? (
                   <MailDisplayLabels labels={emailData?.tags.map((t) => t.name) || []} />
@@ -1029,6 +1086,9 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                 </div>
               </div>
               {brainState?.enabled && <AiSummary />}
+              {threadAttachments && threadAttachments.length > 0 && (
+                <ThreadAttachments attachments={threadAttachments} />
+              )}
             </>
           )}
         </div>
@@ -1343,7 +1403,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo }: Props) => {
                   {emailData?.attachments.map((attachment, index) => (
                     <div key={index} className="flex">
                       <button
-                        className="flex cursor-pointer items-center gap-1 rounded-[5px] border bg-[#FAFAFA] px-1.5 py-1 text-sm font-medium hover:bg-[#F0F0F0] dark:bg-[#262626] dark:hover:bg-[#303030]"
+                        className="flex cursor-pointer items-center gap-1 rounded-[5px]  bg-[#FAFAFA] px-1.5 py-1 text-sm font-medium hover:bg-[#F0F0F0] dark:bg-[#262626] dark:hover:bg-[#303030]"
                         onClick={() => openAttachment(attachment)}
                       >
                         {getFileIcon(attachment.filename)}
