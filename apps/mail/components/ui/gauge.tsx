@@ -4,15 +4,17 @@ export const Gauge = ({
   showValue = true,
   color = 'text-[hsla(131,41%,46%,1)]',
   bgcolor = 'text-[#d1d1d1] dark:text-[#333]',
+  max = 50,
 }: {
   value: number;
   size: 'small' | 'medium' | 'large';
   showValue: boolean;
   color?: String;
   bgcolor?: String;
+  max?: number;
 }) => {
   const circumference = 332; //2 * Math.PI * 53; // 2 * pi * radius
-  const valueInCircumference = (value / 50) * circumference;
+  const valueInCircumference = (value / max) * circumference;
   const strokeDasharray = `${circumference} ${circumference}`;
   const initialOffset = circumference;
   const strokeDashoffset = initialOffset - valueInCircumference;

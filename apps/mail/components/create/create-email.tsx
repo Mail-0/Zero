@@ -92,7 +92,7 @@ export function CreateEmail({
 
   const userEmail = activeAccount?.email || activeConnection?.email || session?.user?.email || '';
   const userName = activeAccount?.name || activeConnection?.name || session?.user?.name || '';
-  
+
   const handleSendEmail = async (data: {
     to: string[];
     cc?: string[];
@@ -111,9 +111,7 @@ export function CreateEmail({
       subject: data.subject,
       message: data.message,
       attachments: await serializeFiles(data.attachments),
-      fromEmail: userName.trim() 
-      ? `${userName.replace(/[<>]/g, '')} <${fromEmail}>` 
-      : fromEmail,
+      fromEmail: userName.trim() ? `${userName.replace(/[<>]/g, '')} <${fromEmail}>` : fromEmail,
       draftId: draftId ?? undefined,
     });
 
@@ -160,9 +158,11 @@ export function CreateEmail({
         <div className="flex min-h-screen flex-col items-center justify-center gap-1">
           <div className="flex w-[750px] justify-start">
             <DialogClose asChild className="flex">
-              <button className="flex items-center gap-1 rounded-lg bg-[#F0F0F0] px-2 py-1.5 dark:bg-[#1A1A1A]">
-                <X className="mt-0.5 h-3.5 w-3.5 fill-[#6D6D6D] dark:fill-[#929292]" />
-                <span className="text-sm font-medium text-[#6D6D6D] dark:text-white">esc</span>
+              <button className="dark:bg-panelDark flex items-center gap-1 rounded-lg bg-[#F0F0F0] px-2 py-1.5">
+                <X className="fill-muted-foreground mt-0.5 h-3.5 w-3.5 dark:fill-[#929292]" />
+                <span className="text-muted-foreground text-sm font-medium dark:text-white">
+                  esc
+                </span>
               </button>
             </DialogClose>
           </div>

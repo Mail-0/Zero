@@ -136,30 +136,10 @@ function SortableNote({
             {note.content}
           </p>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="mt-2 flex cursor-default items-center text-xs text-[#8C8C8C]">
-                <Clock className="mr-1 h-3 w-3" />
-                <span>{formatRelativeTime(note.createdAt, format)}</span>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">
-              {note.updatedAt > note.createdAt ? (
-                <>
-                  <p>
-                    {t('common.notes.created')}: {formatDate(note.createdAt, format)}
-                  </p>
-                  <p>
-                    {t('common.notes.updated')}: {formatDate(note.updatedAt, format)}
-                  </p>
-                </>
-              ) : (
-                <p>
-                  {t('common.notes.created')}: {formatDate(note.createdAt, format)}
-                </p>
-              )}
-            </TooltipContent>
-          </Tooltip>
+          <div className="mt-2 flex cursor-default items-center text-xs text-[#8C8C8C]">
+            <Clock className="mr-1 h-3 w-3" />
+            <span>{formatRelativeTime(note.createdAt, format)}</span>
+          </div>
         </div>
 
         <div className="flex items-center">
@@ -181,7 +161,7 @@ function SortableNote({
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="border-[#E7E7E7] bg-[#FAFAFA] dark:border-[#252525] dark:bg-[#1A1A1A]"
+              className="dark:bg-panelDark border-[#E7E7E7] bg-[#FAFAFA] dark:border-[#252525]"
             >
               <DropdownMenuItem
                 onClick={onEdit}
@@ -219,7 +199,7 @@ function SortableNote({
                   <span>{t('common.notes.actions.changeColor')}</span>
                 </DropdownMenuSubTrigger>
                 <DropdownMenuPortal>
-                  <DropdownMenuSubContent className="w-48 border-[#E7E7E7] bg-[#FAFAFA] dark:border-[#252525] dark:bg-[#1A1A1A]">
+                  <DropdownMenuSubContent className="dark:bg-panelDark w-48 border-[#E7E7E7] bg-[#FAFAFA] dark:border-[#252525]">
                     <DropdownMenuRadioGroup value={note.color} onValueChange={onColorChange}>
                       {NOTE_COLORS.map((color) => {
                         return (
@@ -561,7 +541,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
 
       {isOpen && (
         <div
-          className="animate-in fade-in-20 zoom-in-95 fixed right-0 top-[5rem] z-50 h-[calc(100dvh-5rem)] max-h-[calc(100dvh-5rem)] w-full max-w-[100vw] overflow-hidden rounded-t-lg border border-t bg-[#FAFAFA] shadow-lg duration-100 sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:h-auto sm:max-h-[80vh] sm:w-[400px] sm:max-w-[90vw] sm:rounded-xl sm:border dark:border-[#252525] dark:bg-[#1A1A1A]"
+          className="animate-in fade-in-20 zoom-in-95 dark:bg-panelDark fixed top-[5rem] z-50 h-[calc(100dvh-5rem)] max-h-[calc(100dvh-5rem)] w-full max-w-[100vw] overflow-hidden rounded-t-lg border border-t bg-[#FAFAFA] shadow-lg duration-100 sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:h-auto sm:max-h-[80vh] sm:w-[350px] sm:max-w-[90vw] sm:rounded-xl sm:border lg:left-[-200px] xl:left-[-300px] dark:border-[#252525]"
           onClick={handlePanelClick}
         >
           <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E7E7E7] p-3 dark:border-[#252525]">
@@ -619,11 +599,11 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                       </p>
                       <Button
                         variant="default"
-                        size="sm"
-                        className="mt-1 bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
+                        size="xs"
+                        className="mt-1"
                         onClick={() => setIsAddingNewNote(true)}
                       >
-                        <PlusCircle className="mr-2 h-4 w-4" />
+                        <PlusCircle className="mr-1 h-4 w-4" />
                         {t('common.notes.addNote')}
                       </Button>
                     </div>
@@ -706,7 +686,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                       )}
 
                       {isAddingNewNote && (
-                        <div className="relative mb-3 overflow-hidden rounded-md border border-[#E7E7E7] bg-[#FFFFFF] p-3 dark:border-[#252525] dark:bg-[#202020]">
+                        <div className="relative mb-3 overflow-hidden rounded-md border-[#E7E7E7] bg-[#FFFFFF] dark:border-[#252525] dark:bg-[#202020]">
                           <div
                             className={cn(
                               'absolute bottom-0 left-0 top-0 w-1.5 border-l-4',
@@ -719,17 +699,17 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                             }
                           />
 
-                          <div className="pl-1.5">
+                          <div className="">
                             <Textarea
                               ref={textareaRef}
                               value={newNoteContent}
                               onChange={(e) => setNewNoteContent(e.target.value)}
                               onKeyDown={(e) => handleKeyDown(e, 'add')}
-                              className="min-h-[120px] resize-none border-none bg-transparent text-black focus:outline-none dark:text-white/90"
+                              className="min-h-[20px] resize-none border-none bg-transparent text-black focus:outline-none dark:text-white/90"
                               placeholder={t('common.notes.addYourNote')}
                             />
 
-                            <div className="mt-2 flex flex-wrap items-center justify-between gap-y-2">
+                            <div className="mt-2 flex flex-wrap items-center justify-between gap-y-2 px-3 py-2">
                               <div className="flex items-center gap-2">
                                 <span className="text-xs text-[#8C8C8C]">
                                   {t('common.notes.label')}
@@ -768,19 +748,12 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                                   ))}
                                 </div>
                               </div>
-
-                              <div className="text-muted-foreground flex items-center text-xs">
-                                <kbd className="bg-muted inline-flex items-center rounded border px-1.5 py-0.5 font-mono text-[10px]">
-                                  {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+Enter
-                                </kbd>
-                                <span className="ml-1">{t('common.notes.toSave')}</span>
-                              </div>
                             </div>
 
-                            <div className="mt-3 flex justify-between">
+                            <div className="mx-1 my-2 flex justify-between">
                               <Button
                                 variant="ghost"
-                                size="sm"
+                                size="xs"
                                 className="text-[#8C8C8C] hover:bg-white/10 hover:text-[#a0a0a0]"
                                 onClick={() => {
                                   setIsAddingNewNote(false);
@@ -791,8 +764,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                               </Button>
                               <Button
                                 variant="default"
-                                size="sm"
-                                className="bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
+                                size="xs"
                                 onClick={() => void handleAddNote()}
                                 disabled={!newNoteContent.trim()}
                               >
@@ -806,7 +778,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                       {!isAddingNewNote && (
                         <Button
                           variant="outline"
-                          size="sm"
+                          size="xs"
                           className="mt-1 w-full border-[#E7E7E7] bg-white/5 hover:bg-white/10 dark:border-[#252525] dark:text-white/90"
                           onClick={() => setIsAddingNewNote(true)}
                         >
@@ -833,7 +805,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
             </DndContext>
 
             {editingNoteId && (
-              <div className="border-t border-[#E7E7E7] bg-[#FAFAFA] p-3 dark:border-[#252525] dark:bg-[#1A1A1A]">
+              <div className="dark:bg-panelDark border-t border-[#E7E7E7] bg-[#FAFAFA] p-3 dark:border-[#252525]">
                 <div className="space-y-2">
                   <div className="mb-1 text-xs font-medium text-[#8C8C8C]">
                     {t('common.notes.editNote')}:
@@ -850,7 +822,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                   <div className="flex justify-end gap-2">
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="xs"
                       className="text-[#8C8C8C] hover:bg-white/10 hover:text-[#a0a0a0]"
                       onClick={() => {
                         setEditingNoteId(null);
@@ -859,12 +831,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                     >
                       {t('common.notes.cancel')}
                     </Button>
-                    <Button
-                      variant="default"
-                      size="sm"
-                      className="bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
-                      onClick={() => void handleEditNote()}
-                    >
+                    <Button variant="default" size="xs" onClick={() => void handleEditNote()}>
                       {t('common.actions.saveChanges')}
                     </Button>
                   </div>

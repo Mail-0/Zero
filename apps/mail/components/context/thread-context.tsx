@@ -446,7 +446,7 @@ export function ThreadContextMenu({
             <Tag className="mr-2.5 h-4 w-4" />
             {t('common.mail.labels')}
           </ContextMenuSubTrigger>
-          <ContextMenuSubContent className="w-48 bg-white dark:bg-[#1A1A1A]">
+          <ContextMenuSubContent className="dark:bg-panelDark w-48 bg-white">
             <LabelsList threadId={threadId} />
           </ContextMenuSubContent>
         </ContextMenuSub>

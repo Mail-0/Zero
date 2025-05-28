@@ -1,13 +1,13 @@
 import { parseNaturalLanguageSearch, parseNaturalLanguageDate } from '@/lib/utils';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useState, useEffect, useCallback } from 'react';
+import { Search } from '@/components/icons/icons';
 import { type DateRange } from 'react-day-picker';
 import { Input } from '@/components/ui/input';
 import { useLocation } from 'react-router';
 import { useForm } from 'react-hook-form';
-import { Search } from '@/components/icons/icons';
-import { X } from 'lucide-react';
 import { format } from 'date-fns';
+import { X } from 'lucide-react';
 import React from 'react';
 
 type SearchForm = {
@@ -202,8 +202,8 @@ export function SearchBar() {
   return (
     <div className="relative flex-1">
       <form className="relative flex items-center" onSubmit={form.handleSubmit(submitSearch)}>
-      <Search
-          className="absolute left-2.5 top-[10px] z-10 h-3.5 w-3.5 fill-[#6D6D6D] dark:fill-[#727272]"
+        <Search
+          className="fill-muted-foreground absolute left-2.5 top-[10px] z-10 h-3.5 w-3.5 dark:fill-[#727272]"
           aria-hidden="true"
         />
 

@@ -32,7 +32,7 @@ const CommandDialog = ({ children, ...props }: DialogProps) => {
       <DialogDescription className="sr-only">Command</DialogDescription>
       <DialogContent
         showOverlay={true}
-        className="w-full overflow-hidden rounded-xl border bg-white p-0 sm:max-w-lg dark:bg-[#1A1A1A] [&>button:last-child]:hidden"
+        className="dark:bg-panelDark w-full overflow-hidden rounded-xl border bg-white p-0 sm:max-w-lg [&>button:last-child]:hidden"
       >
         <Command className="[&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]]:px-2 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-3 [&_[cmdk-item]]:py-2">
           {children}
@@ -131,7 +131,7 @@ const CommandShortcut = ({ className, ...props }: React.HTMLAttributes<HTMLSpanE
   return (
     <kbd
       className={cn(
-        "border-muted-foreground/10 bg-accent h-6 rounded-[6px] border px-1.5 font-mono text-xs leading-6",
+        'border-muted-foreground/10 bg-accent h-6 rounded-[6px] border px-1.5 font-mono text-xs leading-6',
         '-me-1 ms-auto inline-flex max-h-full items-center',
         className,
       )}
