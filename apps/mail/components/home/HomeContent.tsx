@@ -314,14 +314,14 @@ export default function HomeContent() {
           className="border-input/50 mb-6 inline-flex items-center gap-4 rounded-full border border-[#2A2A2A] bg-[#1E1E1E] px-4 py-1"
         >
           <span className="flex items-center gap-2 text-sm">
+            Backed by Y Combinator
             <img
               src="/yc-small.svg"
               alt="Y Combinator"
               className="rounded-[2px]"
               width={18}
               height={18}
-            />{' '}
-            Backed by Y Combinator
+            />
           </span>
           {/* <Link
             href="https://x.com/zerodotemail"
@@ -423,7 +423,7 @@ export default function HomeContent() {
               {tabs.map((tab) => (
                 <TabsContent key={tab.value} value={tab.value}>
                   <img
-                    src="/email-preview.png"
+                    src="/new-email-preview-2.png"
                     alt="Zero Email Preview"
                     width={1920}
                     height={1080}
@@ -439,7 +439,7 @@ export default function HomeContent() {
 
       <div className="flex items-center justify-center px-4 md:hidden">
         <img
-          src="/email-preview.png"
+          src="/new-email-preview-2.png"
           alt="Zero Email Preview"
           width={1920}
           height={1080}
