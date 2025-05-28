@@ -306,22 +306,26 @@ export default function HomeContent() {
         </Sheet>
       </div>
 
-      <section className="z-10 mt-32 flex flex-col items-center px-4">
+      <section className="z-10 mt-32 flex flex-col items-center px-4 md:mt-44">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="border-input/50 mb-6 inline-flex items-center gap-4 rounded-full border border-[#2A2A2A] bg-[#1E1E1E] px-4 py-1"
         >
-          <span className="flex items-center gap-2 text-sm">
-            Backed by Y Combinator
-            <img
-              src="/yc-small.svg"
-              alt="Y Combinator"
-              className="rounded-[2px]"
-              width={18}
-              height={18}
-            />
+          <span className="font-sora flex items-center gap-2 text-sm">
+            Backed by{' '}
+            <span>
+              {' '}
+              <img
+                src="/yc-small.svg"
+                alt="Y Combinator"
+                className="rounded-[2px]"
+                width={18}
+                height={18}
+              />
+            </span>{' '}
+            Combinator
           </span>
           {/* <Link
             href="https://x.com/zerodotemail"
@@ -336,7 +340,7 @@ export default function HomeContent() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-center text-4xl font-medium md:text-6xl"
+          className="font-sora text-center text-4xl font-medium md:text-6xl"
         >
           <Balancer className="mb-3 max-w-[1130px]">
             AI Powered Email, Built to Save You Time
@@ -346,51 +350,72 @@ export default function HomeContent() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="mx-auto mb-4 max-w-2xl text-center text-base font-medium text-[#B7B7B7] md:text-lg"
+          className="font-mona mx-auto mb-4 max-w-2xl text-center text-base font-medium text-[#B7B7B7] md:text-lg"
         >
           Zero is an AI-native email client that manages your inbox, so you don't have to.
         </motion.p>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-        >
-          <Button
-            onClick={() => {
-              toast.promise(
-                signIn.social({
-                  provider: 'google',
-                  callbackURL: `${window.location.origin}/mail`,
-                }),
-                {
-                  error: 'Login redirect failed',
-                },
-              );
-            }}
-            className="h-8"
+        <div className="mt-12 flex flex-row gap-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
           >
-            Get Started
-          </Button>
-        </motion.div>
-        <p className="ml-0.5 mt-2 text-xs text-[#B7B7B7]/60">No credit card required. </p>
+            <Button
+              className="font-mona w-full bg-transparent text-xs text-[#B7B7B7]/60 sm:w-fit"
+              variant={'outline'}
+            >
+              No credit card required.
+            </Button>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+          >
+            <Button
+              onClick={() => {
+                toast.promise(
+                  signIn.social({
+                    provider: 'google',
+                    callbackURL: `${window.location.origin}/mail`,
+                  }),
+                  {
+                    error: 'Login redirect failed',
+                  },
+                );
+              }}
+              className="font-mona w-full items-center sm:w-fit"
+            >
+              <p>Get Started</p>
+              <ArrowRight className="invert" />
+            </Button>
+          </motion.div>
+        </div>
+
         <a
           href="https://www.producthunt.com/posts/zero-8?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-zero&#0045;8"
           target="_blank"
+          className="fixed bottom-12 right-4 md:right-12"
         >
           <img
             src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=970417&theme=light&t=1748371877825"
             alt="Zero - AI&#0032;Native&#0032;Email&#0032;Client | Product Hunt"
-            style={{ width: '250px', height: '54px' }}
-            width="250"
-            height="54"
-            className="mt-2"
+            className="mt-2 h-[44px] w-[200px] md:h-[54px] md:w-[250px]"
           />
         </a>
       </section>
 
-      <section className="relative mt-10 hidden flex-col justify-center md:flex">
+      <motion.section
+        className="relative mt-10 hidden flex-col justify-center md:mt-32 md:flex"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.6 }}
+        viewport={{ once: true }}
+      >
         <div className="bg-border absolute left-1/2 top-0 h-px w-full -translate-x-1/2 md:container xl:max-w-7xl" />
+
         <Tabs
           defaultValue="smart-categorization"
           onValueChange={handleTabChange}
@@ -431,8 +456,9 @@ export default function HomeContent() {
                 className="absolute right-0 top-0 -z-10 hidden h-full w-auto translate-x-full opacity-50 md:block"
                 style={{ mixBlendMode: 'screen' }}
               />
-              {/* <div className="bg-border absolute -left-px -top-4 hidden h-4 w-px md:block" />
-              <div className="bg-border absolute -right-px -top-4 hidden h-4 w-px md:block" /> */}
+              <div className="bg-border absolute -left-px -top-4 hidden h-4 w-px md:block" />
+              <div className="bg-border absolute -right-px -top-4 hidden h-4 w-px md:block" />
+
               {tabs.map((tab) => (
                 <TabsContent key={tab.value} value={tab.value}>
                   <img
@@ -448,7 +474,7 @@ export default function HomeContent() {
             </div>
           </div>
         </Tabs>
-      </section>
+      </motion.section>
 
       <div className="flex items-center justify-center px-4 md:hidden">
         <img

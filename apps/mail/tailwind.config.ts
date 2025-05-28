@@ -90,6 +90,8 @@ export default {
       fontFamily: {
         sans: ['Geist', ...defaultTheme.fontFamily.sans],
         mono: ['Geist_Mono', ...defaultTheme.fontFamily.mono],
+        sora: ['Sora', 'sans-serif'],
+        mona: ['Mona Sans', ' sans-serif'],
       },
       keyframes: {
         'fade-up': {
