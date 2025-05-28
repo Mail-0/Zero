@@ -456,7 +456,7 @@ export function EmailComposer({
         className,
       )}
     >
-      <div className="no-scrollbar max-h-[500px] grow overflow-y-auto dark:bg-[#1A1A1A]">
+      <div className="no-scrollbar dark:bg-panelDark max-h-[500px] grow overflow-y-auto">
         {/* To, Cc, Bcc */}
         <div className="shrink-0 overflow-y-auto border-b border-[#E7E7E7] pb-2 dark:border-[#252525]">
           <div className="flex justify-between px-3 pt-3">
@@ -477,11 +477,11 @@ export function EmailComposer({
                   {toEmails.map((email, index) => (
                     <div
                       key={index}
-                      className="flex items-center gap-1 rounded-full border border-[#DBDBDB] px-1 py-0.5 pr-2 dark:border-[#2B2B2B]"
+                      className="flex items-center gap-1 rounded-full border px-1 py-0.5 pr-2"
                     >
                       <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
                         <Avatar className="h-5 w-5">
-                          <AvatarFallback className="rounded-full bg-[#F5F5F5] text-xs font-bold text-[#6D6D6D] dark:bg-[#373737] dark:text-[#9B9B9B]">
+                          <AvatarFallback className="bg-offsetLight text-muted-foreground dark:bg-muted rounded-full text-xs font-bold dark:text-[#9B9B9B]">
                             {email.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
@@ -571,11 +571,11 @@ export function EmailComposer({
                       {toEmails.slice(0, 3).map((email, index) => (
                         <div
                           key={index}
-                          className="flex items-center gap-1 rounded-full border border-[#DBDBDB] px-1 py-0.5 pr-2 dark:border-[#2B2B2B]"
+                          className="flex items-center gap-1 rounded-full border px-1 py-0.5 pr-2"
                         >
                           <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
                             <Avatar className="h-5 w-5">
-                              <AvatarFallback className="rounded-full bg-[#F5F5F5] text-xs font-bold text-[#6D6D6D] dark:bg-[#373737] dark:text-[#9B9B9B]">
+                              <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
                                 {email.charAt(0).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
@@ -653,11 +653,11 @@ export function EmailComposer({
                     {ccEmails?.map((email, index) => (
                       <div
                         key={index}
-                        className="flex items-center gap-1 rounded-full border border-[#DBDBDB] px-2 py-0.5 dark:border-[#2B2B2B]"
+                        className="flex items-center gap-1 rounded-full border px-2 py-0.5"
                       >
                         <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
                           <Avatar className="h-5 w-5">
-                            <AvatarFallback className="rounded-full bg-[#F5F5F5] text-xs font-bold text-[#6D6D6D] dark:bg-[#373737] dark:text-[#9B9B9B]">
+                            <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
                               {email.charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
@@ -744,11 +744,11 @@ export function EmailComposer({
                         {ccEmails.slice(0, 3).map((email, index) => (
                           <div
                             key={index}
-                            className="flex items-center gap-1 rounded-full border border-[#DBDBDB] px-1 py-0.5 pr-2 dark:border-[#2B2B2B]"
+                            className="flex items-center gap-1 rounded-full border px-1 py-0.5 pr-2"
                           >
                             <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
                               <Avatar className="h-5 w-5">
-                                <AvatarFallback className="rounded-full bg-[#F5F5F5] text-xs font-bold text-[#6D6D6D] dark:bg-[#373737] dark:text-[#9B9B9B]">
+                                <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
                                   {email.charAt(0).toUpperCase()}
                                 </AvatarFallback>
                               </Avatar>
@@ -799,11 +799,11 @@ export function EmailComposer({
                     {bccEmails?.map((email, index) => (
                       <div
                         key={index}
-                        className="flex items-center gap-1 rounded-full border border-[#DBDBDB] px-2 py-0.5 dark:border-[#2B2B2B]"
+                        className="flex items-center gap-1 rounded-full border px-2 py-0.5"
                       >
                         <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
                           <Avatar className="h-5 w-5">
-                            <AvatarFallback className="rounded-full bg-[#F5F5F5] text-xs font-bold text-[#6D6D6D] dark:bg-[#373737] dark:text-[#9B9B9B]">
+                            <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
                               {email.charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
@@ -890,11 +890,11 @@ export function EmailComposer({
                         {bccEmails.slice(0, 3).map((email, index) => (
                           <div
                             key={index}
-                            className="flex items-center gap-1 rounded-full border border-[#DBDBDB] px-1 py-0.5 pr-2 dark:border-[#2B2B2B]"
+                            className="flex items-center gap-1 rounded-full border px-1 py-0.5 pr-2"
                           >
                             <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
                               <Avatar className="h-5 w-5">
-                                <AvatarFallback className="rounded-full bg-[#F5F5F5] text-xs font-bold text-[#6D6D6D] dark:bg-[#373737] dark:text-[#9B9B9B]">
+                                <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
                                   {email.charAt(0).toUpperCase()}
                                 </AvatarFallback>
                               </Avatar>
@@ -956,6 +956,9 @@ export function EmailComposer({
         {/* Message Content */}
         <div className="grow self-stretch overflow-y-auto border-t bg-[#FFFFFF] px-3 py-3 outline-white/5 dark:bg-[#202020]">
           <div
+            onClick={() => {
+              editor.commands.focus();
+            }}
             className={cn(
               'max-h-[300px] min-h-[200px] w-full',
               aiGeneratedMessage !== null ? 'blur-sm' : '',
@@ -1028,7 +1031,7 @@ export function EmailComposer({
                       <h4 className="text-sm font-semibold text-black dark:text-white/90">
                         Attachments
                       </h4>
-                      <p className="text-xs text-[#6D6D6D] dark:text-[#9B9B9B]">
+                      <p className="text-muted-foreground text-xs dark:text-[#9B9B9B]">
                         {pluralize('file', attachments.length, true)}
                       </p>
                     </div>
@@ -1082,7 +1085,7 @@ export function EmailComposer({
                                     </span>
                                   )}
                                 </p>
-                                <p className="text-xs text-[#6D6D6D] dark:text-[#9B9B9B]">
+                                <p className="text-muted-foreground text-xs dark:text-[#9B9B9B]">
                                   {formatFileSize(file.size)}
                                 </p>
                               </div>
@@ -1103,7 +1106,7 @@ export function EmailComposer({
                               className="focus-visible:ring-ring ml-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-transparent hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2"
                               aria-label={`Remove ${file.name}`}
                             >
-                              <XIcon className="h-3.5 w-3.5 text-[#6D6D6D] hover:text-black dark:text-[#9B9B9B] dark:hover:text-white" />
+                              <XIcon className="text-muted-foreground h-3.5 w-3.5 hover:text-black dark:text-[#9B9B9B] dark:hover:text-white" />
                             </button>
                           </div>
                         );

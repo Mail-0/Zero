@@ -84,7 +84,7 @@ const LabelsList = ({ threadId }: { threadId: string }) => {
       removeLabels: hasLabel ? [labelId] : [],
     });
     toast.promise(promise, {
-      error:  hasLabel ? "Failed to remove label" : "Failed to add label",
+      error: hasLabel ? 'Failed to remove label' : 'Failed to add label',
       finally: async () => {
         await refetch();
       },
@@ -216,7 +216,9 @@ export function ThreadContextMenu({
     const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
     const promise = toggleStar({ ids: targets });
     toast.promise(promise, {
-      error:  isStarred ? t('common.actions.failedToRemoveFromFavorites') : t('common.actions.failedToAddToFavorites'),
+      error: isStarred
+        ? t('common.actions.failedToRemoveFromFavorites')
+        : t('common.actions.failedToAddToFavorites'),
       finally: async () => {
         setMail((prev) => ({ ...prev, bulkSelected: [] }));
         await Promise.allSettled([refetchThread(), refetch()]);
@@ -459,26 +461,29 @@ export function ThreadContextMenu({
       <ContextMenuTrigger disabled={isLoading || isFetching} className="w-full">
         {children}
       </ContextMenuTrigger>
-      <ContextMenuContent className="w-56 bg-white dark:bg-[#1A1A1A]" onContextMenu={(e) => e.preventDefault()}>
+      <ContextMenuContent
+        className="dark:bg-panelDark w-56 bg-white"
+        onContextMenu={(e) => e.preventDefault()}
+      >
         {primaryActions.map(renderAction)}
 
-        <ContextMenuSeparator className="dark:bg-[#252525] bg-[#252525]"/>
+        <ContextMenuSeparator className="bg-[#252525] dark:bg-[#252525]" />
 
         <ContextMenuSub>
           <ContextMenuSubTrigger className="font-normal">
             <Tag className="mr-2.5 h-4 w-4" />
             {t('common.mail.labels')}
           </ContextMenuSubTrigger>
-          <ContextMenuSubContent className="w-48 bg-white dark:bg-[#1A1A1A]">
+          <ContextMenuSubContent className="dark:bg-panelDark w-48 bg-white">
             <LabelsList threadId={threadId} />
           </ContextMenuSubContent>
         </ContextMenuSub>
 
-        <ContextMenuSeparator className="dark:bg-[#252525] bg-[#252525]"/>
+        <ContextMenuSeparator className="bg-[#252525] dark:bg-[#252525]" />
 
         {getActions().map(renderAction as any)}
 
-        <ContextMenuSeparator className="dark:bg-[#252525] bg-[#252525]"/>
+        <ContextMenuSeparator className="bg-[#252525] dark:bg-[#252525]" />
 
         {otherActions.map(renderAction)}
       </ContextMenuContent>

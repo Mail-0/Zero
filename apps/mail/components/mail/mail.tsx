@@ -837,7 +837,10 @@ export const Categories = () => {
       searchValue: 'is:important NOT is:sent NOT is:draft',
       icon: (
         <Lightning
-          className={cn('fill-[#6D6D6D] dark:fill-white', category === 'Important' && 'fill-white')}
+          className={cn(
+            'fill-muted-foreground dark:fill-white',
+            category === 'Important' && 'fill-white',
+          )}
         />
       ),
     },
@@ -847,7 +850,10 @@ export const Categories = () => {
       searchValue: 'NOT is:draft (is:inbox OR (is:sent AND to:me))',
       icon: (
         <Mail
-          className={cn('fill-[#6D6D6D] dark:fill-white', category === 'All Mail' && 'fill-white')}
+          className={cn(
+            'fill-muted-foreground dark:fill-white',
+            category === 'All Mail' && 'fill-white',
+          )}
         />
       ),
       colors:
@@ -859,7 +865,10 @@ export const Categories = () => {
       searchValue: 'is:personal NOT is:sent NOT is:draft',
       icon: (
         <User
-          className={cn('fill-[#6D6D6D] dark:fill-white', category === 'Personal' && 'fill-white')}
+          className={cn(
+            'fill-muted-foreground dark:fill-white',
+            category === 'Personal' && 'fill-white',
+          )}
         />
       ),
     },
@@ -869,7 +878,10 @@ export const Categories = () => {
       searchValue: 'is:updates NOT is:sent NOT is:draft',
       icon: (
         <Bell
-          className={cn('fill-[#6D6D6D] dark:fill-white', category === 'Updates' && 'fill-white')}
+          className={cn(
+            'fill-muted-foreground dark:fill-white',
+            category === 'Updates' && 'fill-white',
+          )}
         />
       ),
     },
@@ -880,7 +892,7 @@ export const Categories = () => {
       icon: (
         <Tag
           className={cn(
-            'fill-[#6D6D6D] dark:fill-white',
+            'fill-muted-foreground dark:fill-white',
             category === 'Promotions' && 'fill-white',
           )}
         />
@@ -893,7 +905,7 @@ export const Categories = () => {
       icon: (
         <ScanEye
           className={cn(
-            'h-4 w-4 fill-[#6D6D6D] dark:fill-white',
+            'fill-muted-foreground h-4 w-4 dark:fill-white',
             category === 'Unread' && 'fill-white',
           )}
         />

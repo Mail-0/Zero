@@ -181,7 +181,7 @@ function SortableNote({
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="border-[#E7E7E7] bg-[#FAFAFA] dark:border-[#252525] dark:bg-[#1A1A1A]"
+              className="dark:bg-panelDark border-[#E7E7E7] bg-[#FAFAFA] dark:border-[#252525]"
             >
               <DropdownMenuItem
                 onClick={onEdit}
@@ -219,7 +219,7 @@ function SortableNote({
                   <span>{t('common.notes.actions.changeColor')}</span>
                 </DropdownMenuSubTrigger>
                 <DropdownMenuPortal>
-                  <DropdownMenuSubContent className="w-48 border-[#E7E7E7] bg-[#FAFAFA] dark:border-[#252525] dark:bg-[#1A1A1A]">
+                  <DropdownMenuSubContent className="dark:bg-panelDark w-48 border-[#E7E7E7] bg-[#FAFAFA] dark:border-[#252525]">
                     <DropdownMenuRadioGroup value={note.color} onValueChange={onColorChange}>
                       {NOTE_COLORS.map((color) => {
                         return (
@@ -561,7 +561,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
 
       {isOpen && (
         <div
-          className="animate-in fade-in-20 zoom-in-95 fixed right-0 top-[5rem] z-50 h-[calc(100dvh-5rem)] max-h-[calc(100dvh-5rem)] w-full max-w-[100vw] overflow-hidden rounded-t-lg border border-t bg-[#FAFAFA] shadow-lg duration-100 sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:h-auto sm:max-h-[80vh] sm:w-[400px] sm:max-w-[90vw] sm:rounded-xl sm:border dark:border-[#252525] dark:bg-[#1A1A1A]"
+          className="animate-in fade-in-20 zoom-in-95 dark:bg-panelDark fixed right-0 top-[5rem] z-50 h-[calc(100dvh-5rem)] max-h-[calc(100dvh-5rem)] w-full max-w-[100vw] overflow-hidden rounded-t-lg border border-t bg-[#FAFAFA] shadow-lg duration-100 sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:h-auto sm:max-h-[80vh] sm:w-[400px] sm:max-w-[90vw] sm:rounded-xl sm:border dark:border-[#252525]"
           onClick={handlePanelClick}
         >
           <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E7E7E7] p-3 dark:border-[#252525]">
@@ -833,7 +833,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
             </DndContext>
 
             {editingNoteId && (
-              <div className="border-t border-[#E7E7E7] bg-[#FAFAFA] p-3 dark:border-[#252525] dark:bg-[#1A1A1A]">
+              <div className="dark:bg-panelDark border-t border-[#E7E7E7] bg-[#FAFAFA] p-3 dark:border-[#252525]">
                 <div className="space-y-2">
                   <div className="mb-1 text-xs font-medium text-[#8C8C8C]">
                     {t('common.notes.editNote')}:

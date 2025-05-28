@@ -493,7 +493,7 @@ export default function HomeContent() {
           transition={{ duration: 0.5, delay: 0.4 }}
           className="relative bottom-3 mx-12 flex items-center justify-center bg-[#0F0F0F] md:mx-0"
         >
-          <div className="mx-auto inline-flex max-w-[600px] flex-col items-center justify-center overflow-hidden rounded-2xl bg-[#1A1A1A] shadow-md">
+          <div className="bg-panelDark mx-auto inline-flex max-w-[600px] flex-col items-center justify-center overflow-hidden rounded-2xl shadow-md">
             <div className="inline-flex h-12 items-center justify-start gap-2 self-stretch border-b-[0.50px] p-4">
               <div className="text-base-gray-500/50 justify-start text-sm leading-none">To:</div>
               <div className="flex flex-1 items-center justify-start gap-1">
@@ -650,7 +650,7 @@ export default function HomeContent() {
           >
             <div className="relative h-96 w-full overflow-hidden rounded-2xl">
               <div className="absolute left-0 top-0 h-96 w-96 rounded-2xl border border-[#252525] bg-neutral-800" />
-              <div className="outline-tokens-stroke-light/5 absolute left-[39px] top-[34px] inline-flex h-[771px] w-72 flex-col items-start justify-start overflow-hidden rounded-lg bg-[#1A1A1A]">
+              <div className="outline-tokens-stroke-light/5 bg-panelDark absolute left-[39px] top-[34px] inline-flex h-[771px] w-72 flex-col items-start justify-start overflow-hidden rounded-lg">
                 <div className="inline-flex h-10 items-center justify-start gap-3 self-stretch overflow-hidden border-b-[0.38px] border-[#252525] px-4 py-5">
                   <div className="flex flex-1 items-center justify-start gap-2">
                     <div className="flex flex-1 items-center justify-start gap-1.5">
@@ -1029,7 +1029,7 @@ export default function HomeContent() {
           >
             <div className="relative h-96 w-96 overflow-hidden rounded-2xl">
               <div className="absolute left-0 top-0 h-96 w-96 rounded-2xl bg-[#2B2B2B]" />
-              <div className="absolute left-[34px] top-[34px] inline-flex w-[600px] flex-col items-start justify-start overflow-hidden rounded-xl bg-[#1A1A1A]">
+              <div className="bg-panelDark absolute left-[34px] top-[34px] inline-flex w-[600px] flex-col items-start justify-start overflow-hidden rounded-xl">
                 <div className="bg-tokens-surface-secondary border-tokens-stroke-light/5 inline-flex h-12 items-center justify-center gap-3 self-stretch overflow-hidden border-b-[0.50px] px-4 py-3">
                   <div className="flex h-6 items-center justify-center overflow-hidden rounded bg-[#262626] pl-1 pr-1.5">
                     <X className="relative h-3.5 w-3.5 overflow-hidden fill-[#767676]" />

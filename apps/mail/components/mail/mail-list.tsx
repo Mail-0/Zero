@@ -242,7 +242,7 @@ const Thread = memo(
           >
             <div
               className={cn(
-                'absolute right-2 z-[25] flex -translate-y-1/2 items-center gap-1 rounded-xl border bg-white p-1 opacity-0 shadow-sm group-hover:opacity-100 dark:bg-[#1A1A1A]',
+                'dark:bg-panelDark absolute right-2 z-[25] flex -translate-y-1/2 items-center gap-1 rounded-xl border bg-white p-1 opacity-0 shadow-sm group-hover:opacity-100',
                 index === 0 ? 'top-4' : 'top-[-1]',
               )}
             >
@@ -264,7 +264,7 @@ const Thread = memo(
                     />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent className="mb-1 bg-white dark:bg-[#1A1A1A]">
+                <TooltipContent className="dark:bg-panelDark mb-1 bg-white">
                   {isStarred ? t('common.threadDisplay.unstar') : t('common.threadDisplay.star')}
                 </TooltipContent>
               </Tooltip>
@@ -279,7 +279,7 @@ const Thread = memo(
                     <ExclamationCircle className={cn(isImportant ? '' : 'opacity-50')} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent className="mb-1 bg-white dark:bg-[#1A1A1A]">
+                <TooltipContent className="mb-1 bg-white dark:bg-panelDark">
                   {t('common.mail.toggleImportant')}
                 </TooltipContent>
               </Tooltip> */}
@@ -297,7 +297,7 @@ const Thread = memo(
                     <Archive2 className="fill-[#9D9D9D]" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent className="mb-1 bg-white dark:bg-[#1A1A1A]">
+                <TooltipContent className="dark:bg-panelDark mb-1 bg-white">
                   {t('common.threadDisplay.archive')}
                 </TooltipContent>
               </Tooltip>
@@ -316,7 +316,7 @@ const Thread = memo(
                       <Trash className="fill-[#F43F5E]" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="mb-1 bg-white dark:bg-[#1A1A1A]">
+                  <TooltipContent className="dark:bg-panelDark mb-1 bg-white">
                     {t('common.actions.Bin')}
                   </TooltipContent>
                 </Tooltip>
@@ -416,7 +416,7 @@ const Thread = memo(
                     {latestMessage.receivedOn ? (
                       <p
                         className={cn(
-                          'text-nowrap text-xs font-normal text-[#6D6D6D] opacity-70 transition-opacity group-hover:opacity-100 dark:text-[#8C8C8C]',
+                          'text-muted-foreground text-nowrap text-xs font-normal opacity-70 transition-opacity group-hover:opacity-100 dark:text-[#8C8C8C]',
                           isMailSelected && 'opacity-100',
                         )}
                       >
@@ -802,7 +802,7 @@ export const MailList = memo(
                   />
                   <div className="mt-5">
                     <p className="text-lg">It's empty here</p>
-                    <p className="text-md text-[#6D6D6D] dark:text-white/50">
+                    <p className="text-md text-muted-foreground dark:text-white/50">
                       Search for another email or{' '}
                       <button className="underline" onClick={clearFilters}>
                         clear filters

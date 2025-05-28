@@ -22,7 +22,7 @@ import {
   Folders,
   Sparkles,
   Mail,
-  Printer
+  Printer,
 } from '../icons/icons';
 import {
   DropdownMenu,
@@ -534,18 +534,24 @@ export function ThreadDisplay() {
           </style>
         </head>
         <body>
-          ${emailData?.messages?.map((message, index) => `
+          ${emailData?.messages
+            ?.map(
+              (message, index) => `
             <div class="email-container">
               <div class="email-header">
                 ${index === 0 ? `<h1 class="email-title">${message.subject || 'No Subject'}</h1>` : ''}
                 
-                ${message?.tags && message.tags.length > 0 ? `
+                ${
+                  message?.tags && message.tags.length > 0
+                    ? `
                   <div class="labels-section">
-                    ${message.tags.map(tag =>
-                      `<span class="label-badge">${tag.name}</span>`
-                    ).join('')}
+                    ${message.tags
+                      .map((tag) => `<span class="label-badge">${tag.name}</span>`)
+                      .join('')}
                   </div>
-                ` : ''}
+                `
+                    : ''
+                }
                 
                 <div class="email-meta">
                   <div class="meta-row">
@@ -556,38 +562,59 @@ export function ThreadDisplay() {
                     </span>
                   </div>
                   
-                  ${message.to && message.to.length > 0 ? `
+                  ${
+                    message.to && message.to.length > 0
+                      ? `
                     <div class="meta-row">
                       <span class="meta-label">To:</span>
                       <span class="meta-value">
-                        ${message.to.map(recipient =>
-                          `${cleanNameDisplay(recipient.name)} <${recipient.email}>`
-                        ).join(', ')}
+                        ${message.to
+                          .map(
+                            (recipient) =>
+                              `${cleanNameDisplay(recipient.name)} <${recipient.email}>`,
+                          )
+                          .join(', ')}
                       </span>
                     </div>
-                  ` : ''}
+                  `
+                      : ''
+                  }
                   
-                  ${message.cc && message.cc.length > 0 ? `
+                  ${
+                    message.cc && message.cc.length > 0
+                      ? `
                     <div class="meta-row">
                       <span class="meta-label">CC:</span>
                       <span class="meta-value">
-                        ${message.cc.map(recipient =>
-                          `${cleanNameDisplay(recipient.name)} <${recipient.email}>`
-                        ).join(', ')}
+                        ${message.cc
+                          .map(
+                            (recipient) =>
+                              `${cleanNameDisplay(recipient.name)} <${recipient.email}>`,
+                          )
+                          .join(', ')}
                       </span>
                     </div>
-                  ` : ''}
+                  `
+                      : ''
+                  }
                   
-                  ${message.bcc && message.bcc.length > 0 ? `
+                  ${
+                    message.bcc && message.bcc.length > 0
+                      ? `
                     <div class="meta-row">
                       <span class="meta-label">BCC:</span>
                       <span class="meta-value">
-                        ${message.bcc.map(recipient =>
-                          `${cleanNameDisplay(recipient.name)} <${recipient.email}>`
-                        ).join(', ')}
+                        ${message.bcc
+                          .map(
+                            (recipient) =>
+                              `${cleanNameDisplay(recipient.name)} <${recipient.email}>`,
+                          )
+                          .join(', ')}
                       </span>
                     </div>
-                  ` : ''}
+                  `
+                      : ''
+                  }
                   
                   <div class="meta-row">
                     <span class="meta-label">Date:</span>
@@ -604,20 +631,30 @@ export function ThreadDisplay() {
                 </div>
               </div>
               
-              ${message.attachments && message.attachments.length > 0 ? `
+              ${
+                message.attachments && message.attachments.length > 0
+                  ? `
                 <div class="attachments-section">
                   <h2 class="attachments-title">Attachments (${message.attachments.length})</h2>
-                  ${message.attachments.map((attachment, index) => `
+                  ${message.attachments
+                    .map(
+                      (attachment, index) => `
                     <div class="attachment-item">
                       <span class="attachment-name">${attachment.filename}</span>
                       ${formatFileSize(attachment.size) ? ` - <span class="attachment-size">${formatFileSize(attachment.size)}</span>` : ''}
                     </div>
-                  `).join('')}
+                  `,
+                    )
+                    .join('')}
                 </div>
-              ` : ''}
+              `
+                  : ''
+              }
             </div>
             ${index < emailData.messages.length - 1 ? '<div class="separator"></div>' : ''}
-          `).join('')}
+          `,
+            )
+            .join('')}
         </body>
       </html>
     `;
@@ -654,7 +691,6 @@ export function ThreadDisplay() {
           }
         }, 500);
       };
-
     } catch (error) {
       console.error('Error printing thread:', error);
       alert('Failed to print thread. Please try again.');
@@ -738,7 +774,7 @@ export function ThreadDisplay() {
               />
               <div className="mt-5">
                 <p className="text-lg">It's empty here</p>
-                <p className="text-md text-[#6D6D6D] dark:text-white/50">
+                <p className="text-md text-muted-foreground dark:text-white/50">
                   Choose an email to view details
                 </p>
                 <div className="mt-4 grid grid-cols-1 gap-2 xl:grid-cols-2">
@@ -862,7 +898,7 @@ export function ThreadDisplay() {
                   }}
                   className="inline-flex h-7 items-center justify-center gap-1 overflow-hidden rounded-md border bg-white px-1.5 dark:border-none dark:bg-[#313131]"
                 >
-                  <Reply className="fill-[#6D6D6D] dark:fill-[#9B9B9B]" />
+                  <Reply className="fill-muted-foreground dark:fill-[#9B9B9B]" />
                   <div className="flex items-center justify-center gap-2.5 pl-0.5 pr-1">
                     <div className="justify-start text-sm leading-none text-black dark:text-white">
                       Reply
@@ -931,7 +967,7 @@ export function ThreadDisplay() {
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md bg-white dark:bg-[#313131] focus:ring-0 focus:outline-none">
+                    <button className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md bg-white focus:outline-none focus:ring-0 dark:bg-[#313131]">
                       <ThreeDots className="fill-iconLight dark:fill-iconDark" />
                     </button>
                   </DropdownMenuTrigger>
@@ -952,14 +988,16 @@ export function ThreadDisplay() {
                       </DropdownMenuItem>
                     ) : (
                       <>
-                        <DropdownMenuItem onClick={(e) => {
-                          e.stopPropagation();
-                          printThread();
-                        }}>
-                        <Printer className="mr-2 h-4 w-4 fill-iconLight dark:fill-iconDark" />
-                        <span>Print thread</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => moveThreadTo('spam')}>
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            printThread();
+                          }}
+                        >
+                          <Printer className="fill-iconLight dark:fill-iconDark mr-2 h-4 w-4" />
+                          <span>Print thread</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => moveThreadTo('spam')}>
                           <ArchiveX className="fill-iconLight dark:fill-iconDark mr-2" />
                           <span>{t('common.threadDisplay.moveToSpam')}</span>
                         </DropdownMenuItem>
