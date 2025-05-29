@@ -37,6 +37,7 @@ import { memo, useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import type { Sender, ParsedMessage, Attachment } from '@/types';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
 import { getListUnsubscribeAction } from '@/lib/email-utils';
@@ -44,7 +45,6 @@ import AttachmentsAccordion from './attachments-accordion';
 import { cn, getEmailLogo, formatDate } from '@/lib/utils';
 import { useBrainState } from '../../hooks/use-summary';
 import { useThreadLabels } from '@/hooks/use-labels';
-import type { Sender, ParsedMessage, Attachment } from '@/types';
 import { Markdown } from '@react-email/components';
 import AttachmentDialog from './attachment-dialog';
 import { useSummary } from '@/hooks/use-summary';
@@ -226,7 +226,6 @@ const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
               >
                 {icon}
               </Badge>
-              <AiSummary />
             </TooltipTrigger>
             <TooltipContent>
               <p className="text-xs text-white">{label}</p>
@@ -289,14 +288,16 @@ const ThreadAttachments = ({ attachments }: { attachments: Attachment[] }) => {
   return (
     <div className="mt-2 w-full">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium ">Thread Attachments <span className='text-[#8D8D8D]'>[{attachments.length}]</span></span>
+        <span className="text-sm font-medium">
+          Thread Attachments <span className="text-[#8D8D8D]">[{attachments.length}]</span>
+        </span>
       </div>
       <div className="mt-2 flex flex-wrap gap-2">
         {attachments.map((attachment) => (
           <button
             key={attachment.attachmentId}
             onClick={() => handleDownload(attachment)}
-            className="flex items-center gap-2 rounded-md  px-2 py-1 text-sm hover:bg-[#F0F0F0] dark:bg-[#262626] dark:hover:bg-[#303030] cursor-pointer"
+            className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-sm hover:bg-[#F0F0F0] dark:bg-[#262626] dark:hover:bg-[#303030]"
           >
             <span className="text-muted-foreground">{getFileIcon(attachment.filename)}</span>
             <span className="max-w-[200px] truncate" title={attachment.filename}>
@@ -1037,8 +1038,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                   </span>
                 </span>
               </span>
-              <AiSummary />
-              
+
               <div className="mt-2 flex items-center gap-2">
                 {emailData?.tags?.length ? (
                   <MailDisplayLabels labels={emailData?.tags.map((t) => t.name) || []} />
@@ -1403,7 +1403,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                   {emailData?.attachments.map((attachment, index) => (
                     <div key={index} className="flex">
                       <button
-                        className="flex cursor-pointer items-center gap-1 rounded-[5px]  bg-[#FAFAFA] px-1.5 py-1 text-sm font-medium hover:bg-[#F0F0F0] dark:bg-[#262626] dark:hover:bg-[#303030]"
+                        className="flex cursor-pointer items-center gap-1 rounded-[5px] bg-[#FAFAFA] px-1.5 py-1 text-sm font-medium hover:bg-[#F0F0F0] dark:bg-[#262626] dark:hover:bg-[#303030]"
                         onClick={() => openAttachment(attachment)}
                       >
                         {getFileIcon(attachment.filename)}
