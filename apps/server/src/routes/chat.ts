@@ -41,7 +41,8 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
       execute: async (dataStream) => {
         const connectionId = (await this.ctx.storage.get('connectionId')) as string;
         if (!connectionId || !this.driver) {
-          throw new Error('Unauthorized no driver or connectionId');
+          console.log('Unauthorized no driver or connectionId');
+          throw new Error('Unauthorized');
         }
         const tools = { ...authTools(this.driver, connectionId), buildGmailSearchQuery };
         const processedMessages = await processToolCalls(
@@ -105,9 +106,15 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
   async onConnect(_: Connection, ctx: ConnectionContext) {
     const token = ctx.request.headers.get('Cookie');
     if (!token) {
-      throw new Error('Unauthorized no token');
+      console.log('no token found, checking driver');
+      if (!this.driver || !this.ctx.storage.get('connectionId')) {
+        console.log('Unauthorized no token and no driver');
+        throw new Error('Unauthorized');
+      }
+    } else {
+      console.log('token found, setting up auth');
+      await this.setupAuth(token);
     }
-    await this.setupAuth(token);
   }
 
   async onChatMessage(onFinish: StreamTextOnFinishCallback<{}>) {
