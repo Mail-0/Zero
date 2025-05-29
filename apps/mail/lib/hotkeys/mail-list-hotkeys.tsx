@@ -1,16 +1,13 @@
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSearchValue } from '@/hooks/use-search-value';
-import { useQueryClient } from '@tanstack/react-query';
 import { keyboardShortcuts } from '@/config/shortcuts';
 import { useLocation, useParams } from 'react-router';
 import { useMail } from '@/components/mail/use-mail';
-import { useTRPC } from '@/providers/query-provider';
 import { Categories } from '@/components/mail/mail';
 import { useShortcuts } from './use-hotkey-utils';
 import { useThreads } from '@/hooks/use-threads';
 import { cleanSearchValue } from '@/lib/utils';
-import { useStats } from '@/hooks/use-stats';
 import { useTranslations } from 'use-intl';
 import { useQueryState } from 'nuqs';
 import { toast } from 'sonner';
@@ -18,24 +15,19 @@ import { toast } from 'sonner';
 export function MailListHotkeys() {
   const scope = 'mail-list';
   const [mail, setMail] = useMail();
-  const [{ refetch }, items] = useThreads();
-  const { refetch: mutateStats } = useStats();
+  const [{}, items] = useThreads();
   const t = useTranslations();
   const hoveredEmailId = useRef<string | null>(null);
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
   const categories = Categories();
   const [, setCategory] = useQueryState('category');
   const [searchValue, setSearchValue] = useSearchValue();
   const pathname = useLocation().pathname;
   const params = useParams<{ folder: string }>();
   const folder = params?.folder ?? 'inbox';
+  const shouldUseHover = mail.bulkSelected.length === 0;
 
   const { optimisticMarkAsRead, optimisticMarkAsUnread, optimisticMoveThreadsTo } =
     useOptimisticActions();
-
-  const invalidateCount = () =>
-    queryClient.invalidateQueries({ queryKey: trpc.mail.count.queryKey() });
 
   useEffect(() => {
     const handleEmailHover = (event: CustomEvent<{ id: string | null }>) => {
@@ -49,7 +41,6 @@ export function MailListHotkeys() {
   }, []);
 
   const selectAll = useCallback(() => {
-    console.log('selectAll');
     if (mail.bulkSelected.length > 0) {
       setMail((prev) => ({
         ...prev,
@@ -67,7 +58,7 @@ export function MailListHotkeys() {
   }, [items, mail]);
 
   const markAsRead = useCallback(() => {
-    if (hoveredEmailId.current) {
+    if (shouldUseHover && hoveredEmailId.current) {
       optimisticMarkAsRead([hoveredEmailId.current]);
       return;
     }
@@ -79,10 +70,10 @@ export function MailListHotkeys() {
     }
 
     optimisticMarkAsRead(idsToMark);
-  }, [mail.bulkSelected, optimisticMarkAsRead, t]);
+  }, [mail.bulkSelected, optimisticMarkAsRead, t, shouldUseHover]);
 
   const markAsUnread = useCallback(() => {
-    if (hoveredEmailId.current) {
+    if (shouldUseHover && hoveredEmailId.current) {
       optimisticMarkAsUnread([hoveredEmailId.current]);
       return;
     }
@@ -94,10 +85,10 @@ export function MailListHotkeys() {
     }
 
     optimisticMarkAsUnread(idsToMark);
-  }, [mail.bulkSelected, optimisticMarkAsUnread, t]);
+  }, [mail.bulkSelected, optimisticMarkAsUnread, t, shouldUseHover]);
 
   const archiveEmail = useCallback(async () => {
-    if (hoveredEmailId.current) {
+    if (shouldUseHover && hoveredEmailId.current) {
       optimisticMoveThreadsTo([hoveredEmailId.current], folder, 'archive');
       return;
     }
@@ -109,14 +100,14 @@ export function MailListHotkeys() {
     }
 
     optimisticMoveThreadsTo(idsToArchive, folder, 'archive');
-  }, [mail.bulkSelected, folder, optimisticMoveThreadsTo, t]);
+  }, [mail.bulkSelected, folder, optimisticMoveThreadsTo, t, shouldUseHover]);
 
   const exitSelectionMode = useCallback(() => {
     setMail((prev) => ({
       ...prev,
       bulkSelected: [],
     }));
-  }, []);
+  }, [shouldUseHover]);
 
   const switchMailListCategory = useCallback(
     (category: string | null) => {
