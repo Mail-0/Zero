@@ -405,7 +405,6 @@ export default function HomeContent() {
             className="mt-2 h-[44px] w-[200px] md:h-[54px] md:w-[250px]"
           />
         </a>
-       
       </section>
 
       <motion.section
@@ -463,7 +462,7 @@ export default function HomeContent() {
               {tabs.map((tab) => (
                 <TabsContent key={tab.value} value={tab.value}>
                   <img
-                    src="/new-email-preview-2.png"
+                    src="/email-preview.png"
                     alt="Zero Email Preview"
                     width={1920}
                     height={1080}
@@ -485,7 +484,7 @@ export default function HomeContent() {
         viewport={{ once: true }}
       >
         <img
-          src="/new-email-preview-2.png"
+          src="/email-preview.png"
           alt="Zero Email Preview"
           width={1920}
           height={1080}
