@@ -34,8 +34,6 @@ export function useOptimisticActions() {
   const [, removeOptimisticAction] = useAtom(removeOptimisticActionAtom);
   const [threadId, setThreadId] = useQueryState('threadId');
   const [mail, setMail] = useMail();
-  const [{ refetch: refetchThreads }] = useThreads();
-  const { refetch: refetchStats } = useStats();
   const { mutateAsync: markAsRead } = useMutation(trpc.mail.markAsRead.mutationOptions());
   const { mutateAsync: markAsUnread } = useMutation(trpc.mail.markAsUnread.mutationOptions());
   const { mutateAsync: markAsImportant } = useMutation(trpc.mail.markAsImportant.mutationOptions());
@@ -53,10 +51,12 @@ export function useOptimisticActions() {
   const UNDO_DELAY = 5000;
 
   const refreshData = useCallback(
-    async (threadIds: string[]) => {
+    async (threadIds: string[], folders?: string[]) => {
       await Promise.all([
-        refetchStats(),
-        refetchThreads(),
+        queryClient.invalidateQueries({ queryKey: trpc.mail.count.queryKey() }),
+        ...(folders?.map((folder) =>
+          queryClient.invalidateQueries({ queryKey: trpc.mail.listThreads.queryKey({ folder }) }),
+        ) ?? []),
         ...threadIds.map((id) =>
           queryClient.invalidateQueries({
             queryKey: trpc.mail.get.queryKey({ id }),
@@ -64,7 +64,7 @@ export function useOptimisticActions() {
         ),
       ]);
     },
-    [refetchStats, refetchThreads, queryClient, trpc.mail.get],
+    [queryClient, trpc.mail.get],
   );
 
   const createPendingAction = useCallback(
@@ -76,6 +76,7 @@ export function useOptimisticActions() {
       execute,
       undo,
       toastMessage,
+      folders,
     }: {
       type: 'MOVE' | 'STAR' | 'READ' | 'LABEL';
       threadIds: string[];
@@ -84,6 +85,7 @@ export function useOptimisticActions() {
       execute: () => Promise<void>;
       undo: () => void;
       toastMessage: string;
+      folders?: string[];
     }) => {
       const pendingActionId = generatePendingActionId();
 
@@ -91,7 +93,7 @@ export function useOptimisticActions() {
         try {
           await execute();
 
-          await refreshData(threadIds);
+          await refreshData(threadIds, folders);
 
           pendingActionsRef.current.delete(pendingActionId);
         } catch (error) {
@@ -126,11 +128,11 @@ export function useOptimisticActions() {
             undo();
             pendingActionsRef.current.delete(pendingActionId);
 
-            const undoMessage =
-              itemCount > 1
-                ? `Undone ${toastMessage.toLowerCase()} (${itemCount} items)`
-                : `Undone ${toastMessage.toLowerCase()}`;
-            toast.success(undoMessage);
+            // const undoMessage =
+            //   itemCount > 1
+            //     ? `Undone ${toastMessage.toLowerCase()} (${itemCount} items)`
+            //     : `Undone ${toastMessage.toLowerCase()}`;
+            // toast.success(undoMessage);
           },
         },
       });
@@ -280,6 +282,7 @@ export function useOptimisticActions() {
           });
         },
         toastMessage: successMessage,
+        folders: [currentFolder, destination],
       });
     },
     [

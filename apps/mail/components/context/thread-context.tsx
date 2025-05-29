@@ -51,8 +51,7 @@ interface EmailAction {
 
 interface EmailContextMenuProps {
   children: ReactNode;
-  emailId: string;
-  threadId?: string;
+  threadId: string;
   isInbox?: boolean;
   isSpam?: boolean;
   isSent?: boolean;
@@ -112,8 +111,7 @@ const LabelsList = ({ threadId }: { threadId: string }) => {
 
 export function ThreadContextMenu({
   children,
-  emailId,
-  threadId = emailId,
+  threadId,
   isInbox = true,
   isSpam = false,
   isSent = false,
@@ -210,14 +208,20 @@ export function ThreadContextMenu({
     }
   };
 
-  const { optimisticMarkAsRead } = useOptimisticActions();
+  const { optimisticMarkAsRead, optimisticMarkAsUnread } = useOptimisticActions();
 
   const handleReadUnread = () => {
     const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
     const newReadState = isUnread; // If currently unread, mark as read (true)
 
     // Use optimistic update with undo functionality
-    optimisticMarkAsRead(targets);
+    if (newReadState) {
+      optimisticMarkAsRead(targets);
+    } else if (!newReadState) {
+      optimisticMarkAsUnread(targets);
+    } else {
+      toast.error('Failed to mark as read');
+    }
 
     // Clear bulk selection after action
     if (mail.bulkSelected.length) {
