@@ -40,7 +40,6 @@ import { useTRPC } from '@/providers/query-provider';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { useStats } from '@/hooks/use-stats';
-import ThreadSubject from './thread-subject';
 import ReplyCompose from './reply-composer';
 import { useTranslations } from 'use-intl';
 import { NotesPanel } from './note-panel';

@@ -99,13 +99,13 @@ export function MailListHotkeys() {
       return;
     }
 
-    const idsToArchive = mail.bulkSelected;
-    if (idsToArchive.length === 0) {
+    const idsToMark = mail.bulkSelected;
+    if (idsToMark.length === 0) {
       toast.info(t('common.mail.noEmailsToSelect'));
       return;
     }
 
-    optimisticToggleImportant(idsToArchive, true);
+    optimisticToggleImportant(idsToMark, true);
   }, [mail.bulkSelected, optimisticToggleImportant, t, shouldUseHover]);
 
   const archiveEmail = useCallback(async () => {
