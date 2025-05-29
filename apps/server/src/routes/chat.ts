@@ -29,11 +29,9 @@ import { createDb } from '../db';
 import { z } from 'zod';
 
 export class ZeroAgent extends AIChatAgent<typeof env> {
-  auth: SimpleAuth;
   driver: MailManager | null = null;
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
-    this.auth = createSimpleAuth();
   }
 
   private getDataStreamResponse(onFinish: StreamTextOnFinishCallback<{}>) {
@@ -41,6 +39,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
       execute: async (dataStream) => {
         const connectionId = (await this.ctx.storage.get('connectionId')) as string;
         if (!connectionId || !this.driver) {
+          console.log('Unauthorized no driver or connectionId', connectionId, this.driver);
           throw new Error('Unauthorized');
         }
         const tools = { ...authTools(this.driver, connectionId), buildGmailSearchQuery };
@@ -68,52 +67,24 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     return dataStreamResponse;
   }
 
-  //   async onRequest(request: Request): Promise<Response> {
-  //     const token = request.headers.get('cookie');
-  //     if (!token) {
-  //       return new Response('Unauthorized', { status: 401 });
-  //     }
-  //     await this.setupAuth(token);
-  //     return this.getDataStreamResponse(() => {});
-  //   }
-
-  private async getSession(token: string) {
-    const session = await this.auth.api.getSession({ headers: parseHeaders(token) });
-    return session;
-  }
-
-  private async setupAuth(token: string) {
-    if (token) {
-      const session = await this.getSession(token);
-      if (session) {
-        const db = createDb(env.HYPERDRIVE.connectionString);
-        const _connection = await db.query.connection.findFirst({
-          where: eq(connection.email, session.user.email),
-        });
-        if (_connection) {
-          await this.ctx.storage.put('connectionId', _connection.id);
-          this.driver = connectionToDriver(_connection);
-          this.setName(session.user.email);
-        }
-        console.log('session exists', session.user.email);
-      } else {
-        console.log('No session', token);
+  private async setupAuth() {
+    if (this.name) {
+      const db = createDb(env.HYPERDRIVE.connectionString);
+      const _connection = await db.query.connection.findFirst({
+        where: eq(connection.userId, this.name),
+      });
+      if (_connection) {
+        await this.ctx.storage.put('connectionId', _connection.id);
+        this.driver = connectionToDriver(_connection);
       }
     }
   }
 
-  async onConnect(_: Connection, ctx: ConnectionContext) {
-    const token = ctx.request.headers.get('Cookie');
-    if (!token) {
-      throw new Error('Unauthorized');
-    }
-    await this.setupAuth(token);
+  async onConnect() {
+    await this.setupAuth();
   }
 
   async onChatMessage(onFinish: StreamTextOnFinishCallback<{}>) {
-    if (!this.driver) {
-      return new Response('Unauthorized', { status: 401 });
-    }
     return this.getDataStreamResponse(onFinish);
   }
 }

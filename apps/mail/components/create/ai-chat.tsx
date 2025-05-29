@@ -387,14 +387,14 @@ export function AIChat({
             <div className="flex flex-col">
               <div className="w-full">
                 <form id="ai-chat-form" onSubmit={onSubmit} className="relative">
-                  <div className="grow self-stretch overflow-y-auto  outline-white/5 dark:bg-[#202020]">
+                  <div className="grow self-stretch overflow-y-auto outline-white/5 dark:bg-[#202020]">
                     <div
                       onClick={() => {
                         editor.commands.focus();
                       }}
                       className={cn('max-h-[100px] w-full')}
                     >
-                      <EditorContent editor={editor} className="h-full w-full " />
+                      <EditorContent editor={editor} className="h-full w-full" />
                     </div>
                   </div>
                 </form>

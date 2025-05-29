@@ -37,7 +37,6 @@ export const NotificationProvider = ({ headers }: { headers: Record<string, stri
     party: 'durable-mailbox',
     room: activeConnection?.id ? `${activeConnection.id}` : 'general',
     prefix: 'zero',
-    debug: true,
     maxRetries: 1,
     query: {
       token: headers['cookie'],

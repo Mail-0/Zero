@@ -369,7 +369,7 @@ function AISidebar({ className }: AISidebarProps) {
 
   const agent = useAgent({
     agent: 'ZeroAgent',
-    name: session?.user.email ?? 'general',
+    name: session?.user.id ?? 'general',
     host: `${import.meta.env.VITE_PUBLIC_BACKEND_URL}`,
   });
 

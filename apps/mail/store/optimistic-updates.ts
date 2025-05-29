@@ -5,7 +5,8 @@ export type OptimisticAction =
   | { type: 'MOVE'; threadIds: string[]; destination: ThreadDestination }
   | { type: 'STAR'; threadIds: string[]; starred: boolean }
   | { type: 'READ'; threadIds: string[]; read: boolean }
-  | { type: 'LABEL'; threadIds: string[]; labelIds: string[]; add: boolean };
+  | { type: 'LABEL'; threadIds: string[]; labelIds: string[]; add: boolean }
+  | { type: 'IMPORTANT'; threadIds: string[]; important: boolean };
 
 export const optimisticActionsAtom = atom<Record<string, OptimisticAction>>({});
 

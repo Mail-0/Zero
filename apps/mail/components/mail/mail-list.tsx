@@ -15,24 +15,22 @@ import {
   useState,
   type ComponentProps,
 } from 'react';
+import { Archive2, ExclamationCircle, GroupPeople, Star2, Trash } from '../icons/icons';
 import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
-import { useIsFetching, useMutation, useQueryClient } from '@tanstack/react-query';
 import { focusedIndexAtom, useMailNavigation } from '@/hooks/use-mail-navigation';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { MailSelectMode, ParsedMessage, ThreadProps } from '@/types';
 import { ThreadContextMenu } from '@/components/context/thread-context';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
-import { Archive2, GroupPeople, Star2, Trash } from '../icons/icons';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useMail, type Config } from '@/components/mail/use-mail';
-import { Briefcase, Check, Star, StickyNote } from 'lucide-react';
-import { backgroundQueueAtom } from '@/store/backgroundQueue';
 import { type ThreadDestination } from '@/lib/thread-actions';
 import { useThread, useThreads } from '@/hooks/use-threads';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { highlightText } from '@/lib/email-utils.client';
 import { useHotkeysContext } from 'react-hotkeys-hook';
 import { AnimatePresence, motion } from 'motion/react';
+import { useIsFetching } from '@tanstack/react-query';
 import { useTRPC } from '@/providers/query-provider';
 import { useThreadLabels } from '@/hooks/use-labels';
 import { useKeyState } from '@/hooks/use-hot-key';
@@ -40,7 +38,7 @@ import { VList, type VListHandle } from 'virtua';
 import { RenderLabels } from './render-labels';
 import { Badge } from '@/components/ui/badge';
 import { useDraft } from '@/hooks/use-drafts';
-import { useStats } from '@/hooks/use-stats';
+import { Check, Star } from 'lucide-react';
 import { useTranslations } from 'use-intl';
 import { useParams } from 'react-router';
 import { useTheme } from 'next-themes';
@@ -62,30 +60,76 @@ const Thread = memo(
     const [{}, threads] = useThreads();
     const [threadId] = useQueryState('threadId');
     const { data: getThreadData, isGroupThread } = useThread(message.id, message.historyId);
-    const [isStarred, setIsStarred] = useState(false);
     const [id, setThreadId] = useQueryState('threadId');
-    const [activeReplyId, setActiveReplyId] = useQueryState('activeReplyId');
+    const [, setActiveReplyId] = useQueryState('activeReplyId');
     const [focusedIndex, setFocusedIndex] = useAtom(focusedIndexAtom);
+    const latestMessage = getThreadData?.latest;
+    const idToUse = useMemo(() => latestMessage?.threadId ?? latestMessage?.id, [latestMessage]);
 
-    useEffect(() => {
-      if (getThreadData?.latest?.tags) {
-        setIsStarred(getThreadData.latest.tags.some((tag) => tag.name === 'STARRED'));
+    const optimisticState = useOptimisticThreadState(idToUse ?? '');
+
+    const displayStarred = useMemo(() => {
+      if (optimisticState.optimisticStarred !== null) {
+        return optimisticState.optimisticStarred;
       }
-    }, [getThreadData?.latest?.tags]);
+      return getThreadData?.latest?.tags?.some((tag) => tag.name === 'STARRED') ?? false;
+    }, [optimisticState.optimisticStarred, getThreadData?.latest?.tags]);
 
-    // Import the optimistic actions hook
+    const displayImportant = useMemo(() => {
+      if (optimisticState.optimisticImportant !== null) {
+        return optimisticState.optimisticImportant;
+      }
+      return getThreadData?.latest?.tags?.some((tag) => tag.name === 'IMPORTANT') ?? false;
+    }, [optimisticState.optimisticImportant, getThreadData?.latest?.tags]);
+
+    const displayUnread = useMemo(() => {
+      if (optimisticState.optimisticRead !== null) {
+        return !optimisticState.optimisticRead;
+      }
+      return getThreadData?.hasUnread ?? false;
+    }, [optimisticState.optimisticRead, getThreadData?.hasUnread]);
+
+    const optimisticLabels = useMemo(() => {
+      if (!getThreadData?.labels) return [];
+
+      const labels = [...getThreadData.labels];
+      const hasStarredLabel = labels.some((label) => label.name === 'STARRED');
+
+      if (optimisticState.optimisticStarred !== null) {
+        if (optimisticState.optimisticStarred && !hasStarredLabel) {
+          labels.push({ id: 'starred-optimistic', name: 'STARRED' });
+        } else if (!optimisticState.optimisticStarred && hasStarredLabel) {
+          return labels.filter((label) => label.name !== 'STARRED');
+        }
+      }
+
+      return labels;
+    }, [getThreadData?.labels, optimisticState.optimisticStarred]);
+
     const { optimisticToggleStar } = useOptimisticActions();
 
     const handleToggleStar = useCallback(
       async (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!getThreadData || !message.id) return;
+        if (!getThreadData || !idToUse) return;
 
-        const newStarredState = !isStarred;
-        setIsStarred(newStarredState);
-        await optimisticToggleStar([message.id], newStarredState);
+        const newStarredState = !displayStarred;
+        optimisticToggleStar([idToUse], newStarredState);
       },
-      [getThreadData, message.id, isStarred, optimisticToggleStar],
+      [getThreadData, idToUse, displayStarred, optimisticToggleStar],
+    );
+
+    const { optimisticToggleImportant } = useOptimisticActions();
+
+    const handleToggleImportant = useCallback(
+      async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!getThreadData || !idToUse) return;
+
+        const newImportantState = !displayImportant;
+        optimisticToggleImportant([idToUse], newImportantState);
+      },
+      [getThreadData, idToUse, displayImportant, optimisticToggleImportant],
     );
 
     const handleNext = useCallback(
@@ -103,39 +147,18 @@ const Thread = memo(
       [threads, id, focusedIndex],
     );
 
-    // Use the optimistic move function
     const { optimisticMoveThreadsTo } = useOptimisticActions();
 
     const moveThreadTo = useCallback(
       async (destination: ThreadDestination) => {
-        if (!message.id) return;
-        handleNext(message.id);
-        optimisticMoveThreadsTo([message.id], folder ?? '', destination);
+        if (!idToUse) return;
+        handleNext(idToUse);
+        optimisticMoveThreadsTo([idToUse], folder ?? '', destination);
       },
-      [message.id, folder, optimisticMoveThreadsTo, handleNext],
+      [idToUse, folder, optimisticMoveThreadsTo, handleNext],
     );
 
-    const latestMessage = getThreadData?.latest;
     const emailContent = getThreadData?.latest?.body;
-
-    // Get optimistic state for this thread - only if we have a valid message ID
-    const optimisticState = message.id
-      ? useOptimisticThreadState(message.id)
-      : useMemo(
-          () => ({
-            isMoving: false,
-            isStarring: false,
-            isMarkingAsRead: false,
-            isAddingLabel: false,
-            isRemoving: false,
-            shouldHide: false,
-            optimisticStarred: null,
-            optimisticRead: null,
-            optimisticDestination: null,
-            hasOptimisticState: false,
-          }),
-          [],
-        );
 
     const { labels: threadLabels } = useThreadLabels(
       getThreadData?.labels ? getThreadData.labels.map((l) => l.id) : [],
@@ -166,14 +189,12 @@ const Thread = memo(
     const [mailState, setMail] = useMail();
 
     const isMailSelected = useMemo(() => {
-      if (!threadId || !latestMessage) return false;
-      const _threadId = latestMessage.threadId ?? message.id;
+      if (!threadId || !idToUse) return false;
+      const _threadId = idToUse;
       return _threadId === threadId || threadId === mailState.selected;
-    }, [threadId, message.id, latestMessage, mailState.selected]);
+    }, [threadId, idToUse, mailState.selected]);
 
-    const isMailBulkSelected = mailState.bulkSelected.includes(
-      latestMessage?.threadId ?? message.id,
-    );
+    const isMailBulkSelected = idToUse ? mailState.bulkSelected.includes(idToUse) : false;
 
     const isFolderInbox = folder === FOLDERS.INBOX || !folder;
     const isFolderSpam = folder === FOLDERS.SPAM;
@@ -191,17 +212,15 @@ const Thread = memo(
           className={'select-none border-b md:my-2 md:border-none'}
           onClick={onClick ? onClick(latestMessage) : undefined}
           onMouseEnter={() => {
-            window.dispatchEvent(
-              new CustomEvent('emailHover', { detail: { id: latestMessage.id } }),
-            );
+            window.dispatchEvent(new CustomEvent('emailHover', { detail: { id: idToUse } }));
           }}
           onMouseLeave={() => {
             window.dispatchEvent(new CustomEvent('emailHover', { detail: { id: null } }));
           }}
         >
           <div
-            data-thread-id={latestMessage.threadId ?? latestMessage.id}
-            key={latestMessage.threadId ?? latestMessage.id}
+            data-thread-id={idToUse}
+            key={idToUse}
             className={cn(
               'hover:bg-offsetLight hover:bg-primary/5 group relative mx-1 flex cursor-pointer flex-col items-start rounded-lg py-2 text-left text-sm transition-all hover:opacity-100',
               (isMailSelected || isMailBulkSelected || isKeyboardFocused) &&
@@ -228,18 +247,20 @@ const Thread = memo(
                     <Star2
                       className={cn(
                         'h-4 w-4',
-                        isStarred
+                        displayStarred
                           ? 'fill-yellow-400 stroke-yellow-400'
                           : 'fill-transparent stroke-[#9D9D9D] dark:stroke-[#9D9D9D]',
                       )}
                     />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent className="dark:bg-panelDark mb-1 bg-white">
-                  {isStarred ? t('common.threadDisplay.unstar') : t('common.threadDisplay.star')}
+                <TooltipContent className="mb-1 bg-white dark:bg-[#1A1A1A]">
+                  {displayStarred
+                    ? t('common.threadDisplay.unstar')
+                    : t('common.threadDisplay.star')}
                 </TooltipContent>
               </Tooltip>
-              {/* <Tooltip>
+              <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
@@ -247,13 +268,13 @@ const Thread = memo(
                     className="h-6 w-6 [&_svg]:size-3.5"
                     onClick={handleToggleImportant}
                   >
-                    <ExclamationCircle className={cn(isImportant ? '' : 'opacity-50')} />
+                    <ExclamationCircle className={cn(displayImportant ? '' : 'opacity-25')} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent className="mb-1 bg-white dark:bg-panelDark">
+                <TooltipContent className="dark:bg-panelDark mb-1 bg-white">
                   {t('common.mail.toggleImportant')}
                 </TooltipContent>
-              </Tooltip> */}
+              </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -306,10 +327,9 @@ const Thread = memo(
                     )}
                     onClick={(e: React.MouseEvent) => {
                       e.stopPropagation();
-                      const threadId = latestMessage.threadId ?? message.id;
                       setMail((prev: Config) => ({
                         ...prev,
-                        bulkSelected: prev.bulkSelected.filter((id: string) => id !== threadId),
+                        bulkSelected: prev.bulkSelected.filter((id: string) => id !== idToUse),
                       }));
                     }}
                   >
@@ -332,7 +352,7 @@ const Thread = memo(
                   )}
                 </Avatar>
                 <div className="z-1 relative">
-                  {getThreadData.hasUnread && !isMailSelected && !isFolderSent ? (
+                  {displayUnread && !isMailSelected && !isFolderSent ? (
                     <span className="absolute -bottom-[1px] right-0.5 size-2 rounded bg-[#006FFE]" />
                   ) : null}
                 </div>
@@ -344,7 +364,7 @@ const Thread = memo(
                     <div className="flex flex-row items-center gap-[4px]">
                       <span
                         className={cn(
-                          getThreadData.hasUnread && !isMailSelected ? 'font-bold' : 'font-medium',
+                          displayUnread && !isMailSelected ? 'font-bold' : 'font-medium',
                           'text-md flex items-baseline gap-1 group-hover:opacity-100',
                         )}
                       >
@@ -382,7 +402,7 @@ const Thread = memo(
                           </TooltipContent>
                         </Tooltip>
                       ) : null}
-                      <MailLabels labels={getThreadData.labels} />
+                      <MailLabels labels={optimisticLabels} />
                     </div>
                     {latestMessage.receivedOn ? (
                       <p
@@ -458,16 +478,17 @@ const Thread = memo(
             }}
             layout
           >
-            <ThreadContextMenu
-              emailId={message.id}
-              threadId={latestMessage.threadId ?? message.id}
-              isInbox={isFolderInbox}
-              isSpam={isFolderSpam}
-              isSent={isFolderSent}
-              isBin={isFolderBin}
-            >
-              {content}
-            </ThreadContextMenu>
+            {idToUse ? (
+              <ThreadContextMenu
+                threadId={idToUse}
+                isInbox={isFolderInbox}
+                isSpam={isFolderSpam}
+                isSent={isFolderSent}
+                isBin={isFolderBin}
+              >
+                {content}
+              </ThreadContextMenu>
+            ) : null}
           </motion.div>
         )}
       </AnimatePresence>

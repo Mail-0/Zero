@@ -47,7 +47,6 @@ export function PixelatedLeft(props: SVGProps<SVGSVGElement>) {
       xmlnsXlink="http://www.w3.org/1999/xlink"
       {...props}
     >
-      <title>Pixelated Left Background</title>
       <g opacity="0.3">
         <mask
           id="mask0_1_696"
@@ -121,7 +120,6 @@ export function PixelatedRight(props: SVGProps<SVGSVGElement>) {
       xmlnsXlink="http://www.w3.org/1999/xlink"
       {...props}
     >
-      <title>Pixelated Right Background</title>
       <g opacity="0.3">
         <mask
           id="mask0_1_699"
