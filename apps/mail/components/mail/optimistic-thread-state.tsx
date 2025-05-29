@@ -26,9 +26,11 @@ export function useOptimisticThreadState(threadId: string) {
       isAddingLabel: false,
       isRemoving: false,
       shouldHide: false,
+      isImportant: false,
       optimisticStarred: null as boolean | null,
       optimisticRead: null as boolean | null,
       optimisticDestination: null as string | null,
+      optimisticImportant: null as boolean | null,
     };
 
     if (!isAffectedByOptimisticAction || !optimisticActions || optimisticActions.length === 0) {
@@ -55,6 +57,11 @@ export function useOptimisticThreadState(threadId: string) {
 
         case 'LABEL':
           states.isAddingLabel = action.add;
+          break;
+
+        case 'IMPORTANT':
+          states.isImportant = true;
+          states.optimisticImportant = action.important;
           break;
       }
     });

@@ -142,6 +142,9 @@ export function ThreadContextMenu({
   }, [threadData, optimisticState.optimisticStarred]);
 
   const isImportant = useMemo(() => {
+    if (optimisticState.optimisticImportant !== null) {
+      return optimisticState.optimisticImportant;
+    }
     return threadData?.messages.some((message) =>
       message.tags?.some((tag) => tag.name.toLowerCase() === 'important'),
     );

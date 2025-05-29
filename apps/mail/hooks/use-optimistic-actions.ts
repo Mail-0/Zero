@@ -16,7 +16,7 @@ import React from 'react';
 
 type PendingAction = {
   id: string;
-  type: 'MOVE' | 'STAR' | 'READ' | 'LABEL';
+  type: 'MOVE' | 'STAR' | 'READ' | 'LABEL' | 'IMPORTANT';
   threadIds: string[];
   params: any;
   optimisticId: string;
@@ -44,6 +44,7 @@ export function useOptimisticActions() {
   const { mutateAsync: bulkDeleteThread } = useMutation(trpc.mail.bulkDelete.mutationOptions());
 
   const pendingActionsRef = useRef<Map<string, PendingAction>>(new Map());
+  const pendingActionsByTypeRef = useRef<Map<string, Set<string>>>(new Map());
 
   const generatePendingActionId = () =>
     `pending_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -67,6 +68,16 @@ export function useOptimisticActions() {
     [queryClient, trpc.mail.get],
   );
 
+  const checkAndRefreshType = useCallback(
+    async (type: string, threadIds: string[], folders?: string[]) => {
+      const typeActions = pendingActionsByTypeRef.current.get(type);
+      if (typeActions && typeActions.size === 0) {
+        await refreshData(threadIds, folders);
+      }
+    },
+    [refreshData],
+  );
+
   const createPendingAction = useCallback(
     ({
       type,
@@ -78,7 +89,7 @@ export function useOptimisticActions() {
       toastMessage,
       folders,
     }: {
-      type: 'MOVE' | 'STAR' | 'READ' | 'LABEL';
+      type: 'MOVE' | 'STAR' | 'READ' | 'LABEL' | 'IMPORTANT';
       threadIds: string[];
       params: any;
       optimisticId: string;
@@ -89,17 +100,23 @@ export function useOptimisticActions() {
     }) => {
       const pendingActionId = generatePendingActionId();
 
+      if (!pendingActionsByTypeRef.current.has(type)) {
+        pendingActionsByTypeRef.current.set(type, new Set());
+      }
+      pendingActionsByTypeRef.current.get(type)?.add(pendingActionId);
+
       const timeoutId = setTimeout(async () => {
         try {
           await execute();
 
-          await refreshData(threadIds, folders);
-
           pendingActionsRef.current.delete(pendingActionId);
+          pendingActionsByTypeRef.current.get(type)?.delete(pendingActionId);
+          await checkAndRefreshType(type, threadIds, folders);
         } catch (error) {
           toast.error('Action failed');
 
           pendingActionsRef.current.delete(pendingActionId);
+          pendingActionsByTypeRef.current.get(type)?.delete(pendingActionId);
         }
       }, UNDO_DELAY);
       const pendingAction: PendingAction = {
@@ -127,19 +144,14 @@ export function useOptimisticActions() {
             clearTimeout(timeoutId);
             undo();
             pendingActionsRef.current.delete(pendingActionId);
-
-            // const undoMessage =
-            //   itemCount > 1
-            //     ? `Undone ${toastMessage.toLowerCase()} (${itemCount} items)`
-            //     : `Undone ${toastMessage.toLowerCase()}`;
-            // toast.success(undoMessage);
+            pendingActionsByTypeRef.current.get(type)?.delete(pendingActionId);
           },
         },
       });
 
       return pendingActionId;
     },
-    [refreshData, UNDO_DELAY],
+    [checkAndRefreshType, UNDO_DELAY],
   );
 
   const optimisticMarkAsRead = useCallback(
@@ -356,14 +368,13 @@ export function useOptimisticActions() {
       if (!threadIds.length) return;
 
       const optimisticId = addOptimisticAction({
-        type: 'LABEL',
+        type: 'IMPORTANT',
         threadIds,
-        labelIds: [],
-        add: isImportant,
+        important: isImportant,
       });
 
       createPendingAction({
-        type: 'LABEL',
+        type: 'IMPORTANT',
         threadIds,
         params: { important: isImportant },
         optimisticId,

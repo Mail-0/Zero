@@ -15,13 +15,13 @@ import {
   useState,
   type ComponentProps,
 } from 'react';
+import { Archive2, ExclamationCircle, GroupPeople, Star2, Trash } from '../icons/icons';
 import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
 import { focusedIndexAtom, useMailNavigation } from '@/hooks/use-mail-navigation';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { MailSelectMode, ParsedMessage, ThreadProps } from '@/types';
 import { ThreadContextMenu } from '@/components/context/thread-context';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
-import { Archive2, GroupPeople, Star2, Trash } from '../icons/icons';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useMail, type Config } from '@/components/mail/use-mail';
 import { type ThreadDestination } from '@/lib/thread-actions';
@@ -61,7 +61,7 @@ const Thread = memo(
     const [threadId] = useQueryState('threadId');
     const { data: getThreadData, isGroupThread } = useThread(message.id, message.historyId);
     const [id, setThreadId] = useQueryState('threadId');
-    const [activeReplyId, setActiveReplyId] = useQueryState('activeReplyId');
+    const [, setActiveReplyId] = useQueryState('activeReplyId');
     const [focusedIndex, setFocusedIndex] = useAtom(focusedIndexAtom);
     const latestMessage = getThreadData?.latest;
     const idToUse = useMemo(() => latestMessage?.threadId ?? latestMessage?.id, [latestMessage]);
@@ -74,6 +74,13 @@ const Thread = memo(
       }
       return getThreadData?.latest?.tags?.some((tag) => tag.name === 'STARRED') ?? false;
     }, [optimisticState.optimisticStarred, getThreadData?.latest?.tags]);
+
+    const displayImportant = useMemo(() => {
+      if (optimisticState.optimisticImportant !== null) {
+        return optimisticState.optimisticImportant;
+      }
+      return getThreadData?.latest?.tags?.some((tag) => tag.name === 'IMPORTANT') ?? false;
+    }, [optimisticState.optimisticImportant, getThreadData?.latest?.tags]);
 
     const displayUnread = useMemo(() => {
       if (optimisticState.optimisticRead !== null) {
@@ -110,6 +117,19 @@ const Thread = memo(
         optimisticToggleStar([idToUse], newStarredState);
       },
       [getThreadData, idToUse, displayStarred, optimisticToggleStar],
+    );
+
+    const { optimisticToggleImportant } = useOptimisticActions();
+
+    const handleToggleImportant = useCallback(
+      async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!getThreadData || !idToUse) return;
+
+        const newImportantState = !displayImportant;
+        optimisticToggleImportant([idToUse], newImportantState);
+      },
+      [getThreadData, idToUse, displayImportant, optimisticToggleImportant],
     );
 
     const handleNext = useCallback(
@@ -240,7 +260,7 @@ const Thread = memo(
                     : t('common.threadDisplay.star')}
                 </TooltipContent>
               </Tooltip>
-              {/* <Tooltip>
+              <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
@@ -248,13 +268,13 @@ const Thread = memo(
                     className="h-6 w-6 [&_svg]:size-3.5"
                     onClick={handleToggleImportant}
                   >
-                    <ExclamationCircle className={cn(isImportant ? '' : 'opacity-50')} />
+                    <ExclamationCircle className={cn(displayImportant ? '' : 'opacity-25')} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent className="mb-1 bg-white dark:bg-panelDark">
+                <TooltipContent className="dark:bg-panelDark mb-1 bg-white">
                   {t('common.mail.toggleImportant')}
                 </TooltipContent>
-              </Tooltip> */}
+              </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
