@@ -28,6 +28,7 @@ import { useActiveConnection, useConnections } from '@/hooks/use-connections';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
+import { CommandPalette } from '../context/command-palette-context';
 import { ThreadDisplay } from '@/components/mail/thread-display';
 import { trpcClient, useTRPC } from '@/providers/query-provider';
 import { backgroundQueueAtom } from '@/store/backgroundQueue';
@@ -527,7 +528,7 @@ export function MailLayout() {
                 </div>
               </div>
               <div className="p-2 px-[22px]">
-                <SearchBar />
+                <CommandPalette />
                 <div className="mt-2">
                   {activeAccount?.providerId === 'google' && folder === 'inbox' && (
                     <CategorySelect isMultiSelectMode={mail.bulkSelected.length > 0} />

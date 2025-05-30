@@ -444,13 +444,25 @@ function AISidebar({ className }: AISidebarProps) {
     },
   });
 
-  useHotkeys('Meta+0', () => {
-    setOpen(!open);
-  });
+  useHotkeys(
+    'Meta+0',
+    () => {
+      setOpen(!open);
+    },
+    {
+      useKey: true,
+    },
+  );
 
-  useHotkeys('Control+0', () => {
-    setOpen(!open);
-  });
+  useHotkeys(
+    'Control+0',
+    () => {
+      setOpen(!open);
+    },
+    {
+      useKey: true,
+    },
+  );
 
   const handleNewChat = useCallback(() => {
     chatState.setMessages([]);

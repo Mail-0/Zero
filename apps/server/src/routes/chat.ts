@@ -165,17 +165,20 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { cookie: string }> {
             return [
               {
                 type: 'text' as const,
-                text: loadedThread.latest?.subject ?? '',
-              },
-              {
-                type: 'text' as const,
-                text: `ThreadId: ${thread.id}`,
+                text: `Subject: ${loadedThread.latest?.subject} | ID: ${thread.id} | Received: ${loadedThread.latest?.receivedOn}`,
               },
             ];
           }),
         );
         return {
-          content: content.flat(),
+          content: content.length
+            ? content.flat()
+            : [
+                {
+                  type: 'text' as const,
+                  text: 'No threads found',
+                },
+              ],
         };
       },
     );
@@ -187,23 +190,26 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { cookie: string }> {
       },
       async (s) => {
         const thread = await driver.get(s.threadId);
+        const response = await env.VECTORIZE.getByIds([s.threadId]);
+        if (response.length && response?.[0]?.metadata?.['content']) {
+          const content = response[0].metadata['content'] as string;
+          const shortResponse = await env.AI.run('@cf/facebook/bart-large-cnn', {
+            input_text: content,
+          });
+          return {
+            content: [
+              {
+                type: 'text',
+                text: shortResponse.summary,
+              },
+            ],
+          };
+        }
         return {
           content: [
             {
               type: 'text',
-              text: JSON.stringify(thread),
-            },
-            {
-              type: 'text',
               text: `Subject: ${thread.latest?.subject}`,
-            },
-            {
-              type: 'text',
-              text: `Total Messages: ${thread.totalReplies}`,
-            },
-            {
-              type: 'text',
-              text: `ThreadId: ${s.threadId}`,
             },
           ],
         };

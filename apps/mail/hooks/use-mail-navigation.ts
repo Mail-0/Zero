@@ -220,12 +220,24 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
     [isQuickActionMode],
   );
 
-  useHotkeys('ArrowUp', handleArrowUp);
-  useHotkeys('ArrowDown', handleArrowDown);
-  useHotkeys('J', handleArrowDown);
-  useHotkeys('K', handleArrowUp);
-  useHotkeys('Enter', handleEnter);
-  useHotkeys('Escape', handleEscape);
+  useHotkeys('ArrowUp', handleArrowUp, {
+    useKey: true,
+  });
+  useHotkeys('ArrowDown', handleArrowDown, {
+    useKey: true,
+  });
+  useHotkeys('J', handleArrowDown, {
+    useKey: true,
+  });
+  useHotkeys('K', handleArrowUp, {
+    useKey: true,
+  });
+  useHotkeys('Enter', handleEnter, {
+    useKey: true,
+  });
+  useHotkeys('Escape', handleEscape, {
+    useKey: true,
+  });
 
   const handleMouseEnter = useCallback((threadId: string) => {
     hoveredMailRef.current = threadId;

@@ -258,6 +258,9 @@ export const GmailSearchAssistantSystemPrompt = () =>
     <Guideline id="7">
         When asked to search for plural of a word, use the <code>OR</code> operator to search for the singular form of the word, example: "referrals" should also be searched as "referral", example: "rewards" should also be searched as "reward", example: "comissions" should also be searched as "commission".
     </Guideline>
+    <Guideline id="8">
+      Exclude promotional emails by default by adding -category:promotions to all search queries unless explicitly requested to include them.
+    </Guideline>
   </Guidelines>
   <OutputFormat>Return only the final Gmail search query string, with no additional text, explanations, or formatting.</OutputFormat>
 </SystemPrompt>

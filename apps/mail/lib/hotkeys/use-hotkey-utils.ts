@@ -157,6 +157,7 @@ export function useShortcut(
       ...restOptions,
       scopes: [scope],
       preventDefault: shortcut.preventDefault || preventDefault,
+      useKey: true,
     },
     [handleKey],
   );
@@ -227,6 +228,7 @@ export function useShortcuts(
       preventDefault: false, // We'll handle preventDefault per-shortcut
       keyup: false,
       keydown: true,
+      useKey: true,
     },
     [shortcutMap, handlers, options],
   );
