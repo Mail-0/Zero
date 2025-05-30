@@ -102,6 +102,18 @@ export const navigationConfig: Record<string, NavConfig> = {
           },
         ],
       },
+      {
+        title: 'AI & Tools',
+        items: [
+          {
+            id: 'voice',
+            title: 'navigation.sidebar.voice',
+            url: '/mail/voice',
+            icon: Sparkles,
+            shortcut: 'g + v',
+          },
+        ],
+      },
       // {
       //   title: "Categories",
       //   items: [

@@ -6,12 +6,12 @@ import useComposeEditor from '@/hooks/use-compose-editor';
 import { InfoIcon, Mic, Mic2Icon } from 'lucide-react';
 import { useRef, useCallback, useEffect } from 'react';
 import { PricingDialog } from '../ui/pricing-dialog';
+import { useConversation } from '@elevenlabs/react';
 import { Markdown } from '@react-email/components';
 import { useAIFullScreen } from '../ui/ai-sidebar';
 import { useBilling } from '@/hooks/use-billing';
 import { TextShimmer } from '../ui/text-shimmer';
 import { useThread } from '@/hooks/use-threads';
-import { useConversation } from '@11labs/react';
 import { MailLabels } from '../mail/mail-list';
 import { cn, getEmailLogo } from '@/lib/utils';
 import { EditorContent } from '@tiptap/react';
@@ -437,13 +437,13 @@ export function AIChat({
         {/* <div className="flex items-center justify-end gap-1">
         <div className="mt-1 flex items-center justify-end relative z-10">
           <Select
-           
+
           >
             <SelectTrigger className="flex h-6 w-fit cursor-pointer items-center justify-between gap-1 border-0 dark:bg-[#141414] px-2 text-xs hover:bg-[#1E1E1E]">
               <div className="flex items-center gap-1.5 w-full">
                 <Puzzle className="h-3.5 w-3.5 fill-white dark:fill-[#929292]" />
               </div>
-              
+
             </SelectTrigger>
             <SelectContent className="w-[190px] rounded-md border-0 bg-[#1E1E1E] p-0.5 shadow-md">
               <SelectItem
@@ -483,7 +483,7 @@ export function AIChat({
                   <img src="/claude.png" alt="Claude" className="h-3.5 w-3.5" />
                 )}
               </div>
-              
+
             </SelectTrigger>
             <SelectContent className="w-[190px] rounded-md border-0 bg-[#1E1E1E] p-0.5 shadow-md">
               <SelectItem
