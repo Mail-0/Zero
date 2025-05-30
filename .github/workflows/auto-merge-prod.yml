@@ -1,0 +1,42 @@
+name: Deploy Production
+
+on:
+  pull_request_review:
+    types:
+      - submitted
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  # if the PR is approved by MrgSub, we auto rebase it on main
+  deploy-to-production:
+    runs-on: ubuntu-latest
+    name: Deploy Production
+    concurrency:
+      group: 'rebase-${{ github.event.pull_request.id }}'
+      cancel-in-progress: false
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.ref == 'staging' && github.event.review.user.login == 'MrgSub' && github.event.review.state == 'approved'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: 'main'
+
+      - name: Rebase the main branch on staging
+        uses: martincostello/rebaser@v1
+        id: rebase
+        with:
+          branch: 'main'
+
+      - name: Error if rebase was not successful
+        if: ${{ steps.rebase.outputs.result != 'success' }}
+        run: |
+          echo "Rebase failed"
+          exit 1
+
+      - name: Push changes if rebase was successful
+        if: ${{ steps.rebase.outputs.result == 'success' }}
+        run: git push --force-with-lease origin main
