@@ -5,7 +5,7 @@ packages:
 catalog:
   zod: ^3.24.4
   better-auth: ^1.2.8
-  autumn-js: ^0.0.36
+  autumn-js: ^0.0.48
   superjson: ^2.2.2
   '@trpc/server': ^11.1.2
   '@trpc/client': ^11.1.2

@@ -24,6 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Discord, Twitter } from '@/components/icons/icons';
 import { Separator } from '@/components/ui/separator';
+import { Navigation } from '@/components/navigation';
 import { useEffect, useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -58,7 +59,14 @@ const excludedUsernames = [
   'zerodotemail',
   'autofix-ci[bot]',
 ];
-const coreTeamMembers = ['nizzyabi', 'ahmetskilinc', 'ripgrim', 'needlexo', 'dakdevs', 'mrgsub'];
+const coreTeamMembers = [
+  'nizzyabi',
+  'ahmetskilinc',
+  'BlankParticle',
+  'needlexo',
+  'dakdevs',
+  'mrgsub',
+];
 const REPOSITORY = 'Mail-0/Zero';
 
 const specialRoles: Record<
@@ -365,6 +373,7 @@ export default function OpenPage() {
 
   return (
     <div className="min-h-screen w-full bg-white text-black dark:bg-neutral-950 dark:text-white">
+      <Navigation />
       <div className="container mx-auto max-w-6xl px-4 py-8">
         {/* Header with theme toggle */}
         <div className="mb-6 flex justify-end">
@@ -704,7 +713,7 @@ export default function OpenPage() {
                         target="_blank"
                         className="rounded-md p-1 text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
                       >
-                        <Twitter className="h-4 w-4" />
+                        <Twitter className="dark:fill-muted-foreground h-4 w-4" />
                       </a>
                     )}
                     {specialRoles[member.login.toLowerCase()]?.website && (
@@ -908,7 +917,7 @@ export default function OpenPage() {
                 <div className="w-full md:w-2/3">
                   <div className="inline-flex items-center rounded-full bg-neutral-900 px-3 py-1 text-xs font-medium text-white dark:bg-white dark:text-neutral-900">
                     <Github className="mr-1.5 h-3.5 w-3.5" />
-                    We are open source
+                    MIT Licensed
                   </div>
                   <h2 className="mt-3 text-2xl font-bold tracking-tight text-neutral-900 dark:text-white">
                     Let&apos;s build the future of email together
@@ -947,12 +956,12 @@ export default function OpenPage() {
 
                 <div className="hidden md:block md:w-1/3">
                   <div className="space-y-4 rounded-xl border border-neutral-200 bg-white/80 p-5 backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/80">
-                    <div className="flex items-center gap-4">
-                      <div className="flex -space-x-2">
+                    <div className="flex items-center gap-1">
+                      <div className="flex -space-x-4">
                         {filteredContributors?.slice(0, 5).map((contributor) => (
                           <Avatar
                             key={contributor.login}
-                            className="h-8 w-8 border-2 border-white dark:border-neutral-900"
+                            className="h-8 w-8 rounded-full border-2 border-white dark:border-neutral-900"
                           >
                             <AvatarImage src={contributor.avatar_url} alt={contributor.login} />
                             <AvatarFallback className="text-xs">
@@ -961,15 +970,12 @@ export default function OpenPage() {
                           </Avatar>
                         ))}
                         {filteredContributors && filteredContributors.length > 5 && (
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-neutral-100 text-xs font-medium text-neutral-800 dark:border-neutral-900 dark:bg-neutral-800 dark:text-neutral-200">
+                          <div className="z-50 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-neutral-100 text-xs font-medium text-neutral-800 dark:border-neutral-900 dark:bg-neutral-800 dark:text-neutral-200">
                             +{filteredContributors.length - 5}
                           </div>
                         )}
                       </div>
                       <div className="text-sm text-neutral-600 dark:text-neutral-300">
-                        <span className="font-semibold text-neutral-900 dark:text-white">
-                          {filteredContributors?.length || 0}
-                        </span>{' '}
                         contributors
                       </div>
                     </div>
@@ -1003,12 +1009,12 @@ export default function OpenPage() {
 
         <div className="mb-6 mt-2 flex items-center justify-center gap-4">
           <a
-            href="https://discord.gg/BCFr6FFt"
+            href="https://discord.gg/0email"
             target="_blank"
             className="text-neutral-500 transition-colors hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
             aria-label="Join our Discord"
           >
-            <Discord className="h-4 w-4" />
+            <Discord className="dark:fill-muted-foreground h-4 w-4" />
           </a>
           <a
             href="https://x.com/zerodotemail"
@@ -1016,7 +1022,7 @@ export default function OpenPage() {
             className="text-neutral-500 transition-colors hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
             aria-label="Follow us on X (Twitter)"
           >
-            <Twitter className="h-4 w-4" />
+            <Twitter className="dark:fill-muted-foreground h-4 w-4" />
           </a>
         </div>
       </div>

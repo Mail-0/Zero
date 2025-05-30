@@ -160,6 +160,11 @@ export default function Footer() {
                 Company
               </div>
               <div className="flex flex-col items-start justify-start gap-4 self-stretch">
+                <a target="_blank" href="/contributors" className="w-full">
+                  <div className="justify-start self-stretch text-base font-normal leading-none text-white opacity-80 transition-opacity hover:opacity-100">
+                    Contributors
+                  </div>
+                </a>
                 <a target="_blank" href="/about" className="w-full">
                   <div className="justify-start self-stretch text-base font-normal leading-none text-white opacity-80 transition-opacity hover:opacity-100">
                     About

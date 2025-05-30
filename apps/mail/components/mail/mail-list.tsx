@@ -254,7 +254,10 @@ const Thread = memo(
                     />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent className="mb-1 bg-white dark:bg-[#1A1A1A]">
+                <TooltipContent
+                  side={index === 0 ? 'bottom' : 'top'}
+                  className="mb-1 bg-white dark:bg-[#1A1A1A]"
+                >
                   {displayStarred
                     ? t('common.threadDisplay.unstar')
                     : t('common.threadDisplay.star')}
@@ -271,7 +274,10 @@ const Thread = memo(
                     <ExclamationCircle className={cn(displayImportant ? '' : 'opacity-25')} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent className="dark:bg-panelDark mb-1 bg-white">
+                <TooltipContent
+                  side={index === 0 ? 'bottom' : 'top'}
+                  className="dark:bg-panelDark mb-1 bg-white"
+                >
                   {t('common.mail.toggleImportant')}
                 </TooltipContent>
               </Tooltip>
@@ -289,7 +295,10 @@ const Thread = memo(
                     <Archive2 className="fill-[#9D9D9D]" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent className="dark:bg-panelDark mb-1 bg-white">
+                <TooltipContent
+                  side={index === 0 ? 'bottom' : 'top'}
+                  className="dark:bg-panelDark mb-1 bg-white"
+                >
                   {t('common.threadDisplay.archive')}
                 </TooltipContent>
               </Tooltip>
@@ -308,7 +317,10 @@ const Thread = memo(
                       <Trash className="fill-[#F43F5E]" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="dark:bg-panelDark mb-1 bg-white">
+                  <TooltipContent
+                    side={index === 0 ? 'bottom' : 'top'}
+                    className="dark:bg-panelDark mb-1 bg-white"
+                  >
                     {t('common.actions.Bin')}
                   </TooltipContent>
                 </Tooltip>

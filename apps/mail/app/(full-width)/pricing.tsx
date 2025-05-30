@@ -13,6 +13,7 @@ import PricingCard from '@/components/pricing/pricing-card';
 import Comparision from '@/components/pricing/comparision';
 import { signIn, useSession } from '@/lib/auth-client';
 import { Separator } from '@/components/ui/separator';
+import { Navigation } from '@/components/navigation';
 import { useBilling } from '@/hooks/use-billing';
 import { Link, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
@@ -80,142 +81,9 @@ export default function PricingPage() {
           maskImage: 'linear-gradient(to bottom, black, transparent)',
         }}
       />
+      <Navigation />
 
-      {/* Desktop Navigation - Hidden on mobile */}
-      <header className="fixed z-50 hidden w-full items-center justify-center px-4 pt-6 md:flex">
-        <nav className="border-input/50 relative z-50 flex w-full max-w-3xl items-center justify-between gap-2 rounded-xl border-t bg-[#1E1E1E] p-2 px-4">
-          <div className="flex items-center gap-6">
-            <Link to="/" className="relative bottom-1 cursor-pointer">
-              <img src="white-icon.svg" alt="Zero Email" width={22} height={22} />
-              <span className="text-muted-foreground absolute -right-[-0.5px] text-[10px]">
-                beta
-              </span>
-            </Link>
-            <NavigationMenu>
-              <NavigationMenuList className="gap-1">
-                <NavigationMenuItem className="hover:bg-popover/20 rounded">
-                  <NavigationMenuTrigger className="text-white bg-transparent hover:bg-popover/20">
-                    Company
-                  </NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-1 lg:w-[600px]">
-                      {aboutLinks.map((link) => (
-                        <ListItem key={link.title} title={link.title} href={link.href}>
-                          {link.description}
-                        </ListItem>
-                      ))}
-                    </ul>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-                <NavigationMenuItem className="hover:bg-popover/20 rounded">
-                  <NavigationMenuTrigger className="text-white bg-transparent hover:bg-popover/20 focus:bg-popover/20">Resources</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                      {resources.map((resource) => (
-                        <ListItem
-                          key={resource.title}
-                          title={resource.title}
-                          href={resource.href}
-                          platform={resource.platform}
-                        >
-                          {resource.description}
-                        </ListItem>
-                      ))}
-                    </ul>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <a href="/pricing">
-                    <Button variant="ghost" className="h-9 hover:bg-accent/10 hover:text-white text-white">
-                      Pricing
-                    </Button>
-                  </a>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              className="h-8 text-black hover:bg-white hover:text-black bg-white"
-              onClick={() => {
-                if (session) {
-                  // User is logged in, redirect to inbox
-                  navigate('/mail/inbox');
-                } else {
-                  // User is not logged in, show sign-in dialog
-                  toast.promise(
-                    signIn.social({
-                      provider: 'google',
-                      callbackURL: `${window.location.origin}/mail`,
-                    }),
-                    {
-                      error: 'Login redirect failed',
-                    },
-                  );
-                }
-              }}
-            >
-             Sign in
-            </Button>
-          </div>
-        </nav>
-      </header>
-
-      {/* Mobile Navigation Sheet */}
-      <div className="md:hidden">
-        <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="fixed left-4 top-6 z-50">
-              <Menu className="h-6 w-6" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-[300px] bg-[#111111] sm:w-[400px]">
-            <SheetHeader className="flex flex-row items-center justify-between">
-              <SheetTitle>
-                <img src="white-icon.svg" alt="Zero Email" width={22} height={22} />
-              </SheetTitle>
-              <a href="/login">
-                <Button className="w-full">Sign in</Button>
-              </a>
-            </SheetHeader>
-            <div className="mt-8 flex flex-col space-y-3">
-              <div className="space-y-3">
-                <h4 className="text-muted-foreground text-sm font-medium">Company</h4>
-                {aboutLinks.map((link) => (
-                  <a key={link.title} href={link.href} className="block font-medium">
-                    {link.title}
-                  </a>
-                ))}
-              </div>
-              <a target="_blank" href="https://cal.com/team/0" className="font-medium">
-                Contact Us
-              </a>
-            </div>
-            <Separator className="mt-8" />
-            <div className="mt-8 flex flex-row items-center justify-center gap-4">
-              {resources.map((resource) => (
-                <Link
-                  key={resource.title}
-                  to={resource.href}
-                  className="flex items-center gap-2 font-medium"
-                >
-                  {resource.platform && (
-                    <img
-                      src={`/${resource.platform}.svg`}
-                      alt={resource.platform}
-                      width={20}
-                      height={20}
-                      
-                    />
-                  )}
-                </Link>
-              ))}
-            </div>
-          </SheetContent>
-        </Sheet>
-      </div>
-
-      <div className="container mx-auto px-4 py-16 mt-12 md:mt-44">
+      <div className="container mx-auto mt-12 px-4 py-16 md:mt-44">
         <div className="mb-12 text-center">
           <h1 className="mb-2 self-stretch text-5xl font-medium leading-[62px] text-white md:text-6xl">
             Simple, Transparent Pricing
@@ -229,7 +97,7 @@ export default function PricingPage() {
           <PricingCard />
         </div>
       </div>
-      <div className="container mx-auto px-4 mb-40">
+      <div className="container mx-auto mb-40 px-4">
         <Comparision />
       </div>
       <div className="mt-auto">

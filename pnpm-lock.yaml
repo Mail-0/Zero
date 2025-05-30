@@ -16,8 +16,8 @@ catalogs:
       specifier: ^11.1.2
       version: 11.1.2
     autumn-js:
-      specifier: ^0.0.36
-      version: 0.0.36
+      specifier: ^0.0.48
+      version: 0.0.48
     better-auth:
       specifier: ^1.2.8
       version: 1.2.8
@@ -189,7 +189,7 @@ importers:
         version: 4.3.16(react@19.0.0)(zod@3.24.4)
       autumn-js:
         specifier: 'catalog:'
-        version: 0.0.36(react@19.0.0)
+        version: 0.0.48(@tanstack/react-query@5.76.2(react@19.0.0))(react@19.0.0)
       better-auth:
         specifier: 'catalog:'
         version: 1.2.8
@@ -499,7 +499,7 @@ importers:
         version: 4.3.16(react@19.0.0)(zod@3.24.4)
       autumn-js:
         specifier: 'catalog:'
-        version: 0.0.36(react@19.0.0)
+        version: 0.0.48(@tanstack/react-query@5.76.2(react@19.0.0))(react@19.0.0)
       base64-js:
         specifier: 1.5.1
         version: 1.5.1
@@ -3762,8 +3762,14 @@ packages:
     resolution: {integrity: sha512-hsU18Ae8CDTR6Kgu9DYf0EbCr/a5iGL0rytQDobUcdpYOKokk8LEjVphnXkDkgpi0wYVsqrXuP0bZxJaTqdgoA==}
     engines: {node: '>= 0.4'}
 
-  autumn-js@0.0.36:
-    resolution: {integrity: sha512-yA6VV/2W+9wmt8/LUh/ue8t6ptXMJQEunKs4i/V9uNvvFl1yG/mWQBpCgtOyL22h6sLINCwLWpm011PY/mkoxg==}
+  autumn-js@0.0.48:
+    resolution: {integrity: sha512-zK5pehachZyN1j6tqj1QWQFwUWhkHvrR67Yv7lFe32MLzH3kpVgdwqiBcou2j1z7qPRfIc/GusraRwEcPf2/Xg==}
+    peerDependencies:
+      '@tanstack/react-query': ^5.76.1
+      react: ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      react:
+        optional: true
 
   available-typed-arrays@1.0.7:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
@@ -10638,12 +10644,12 @@ snapshots:
 
   async-function@1.0.0: {}
 
-  autumn-js@0.0.36(react@19.0.0):
+  autumn-js@0.0.48(@tanstack/react-query@5.76.2(react@19.0.0))(react@19.0.0):
     dependencies:
+      '@tanstack/react-query': 5.76.2(react@19.0.0)
       rou3: 0.6.1
-      swr: 2.3.3(react@19.0.0)
-    transitivePeerDependencies:
-      - react
+    optionalDependencies:
+      react: 19.0.0
 
   available-typed-arrays@1.0.7:
     dependencies:

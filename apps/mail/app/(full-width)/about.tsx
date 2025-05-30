@@ -1,5 +1,6 @@
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Github, Mail, ArrowLeft } from 'lucide-react';
+import { Navigation } from '@/components/navigation';
 import { Button } from '@/components/ui/button';
 import Footer from '@/components/home/footer';
 import React from 'react';
@@ -7,6 +8,7 @@ import React from 'react';
 export default function AboutPage() {
   return (
     <div className="relative flex min-h-screen w-full flex-col overflow-auto bg-white dark:bg-[#111111]">
+      <Navigation />
       <div className="relative z-10 flex flex-grow flex-col">
         <div className="absolute left-4 top-4 md:left-8 md:top-8">
           <a href="/">
