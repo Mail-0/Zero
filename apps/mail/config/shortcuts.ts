@@ -111,13 +111,6 @@ const navigation: Shortcut[] = [
 ];
 
 const globalShortcuts: Shortcut[] = [
-  {
-    keys: ['/'],
-    action: 'search',
-    type: 'single',
-    description: 'Search',
-    scope: 'global',
-  },
   // {
   //   keys: ['?'],
   //   action: 'helpWithShortcuts',
@@ -146,6 +139,14 @@ const globalShortcuts: Shortcut[] = [
     type: 'combination',
     description: 'Open command palette',
     scope: 'global',
+  },
+  {
+    keys: ['mod', 'shift', 'f'],
+    action: 'clearAllFilters',
+    type: 'combination',
+    description: 'Clear all filters',
+    scope: 'global',
+    preventDefault: true,
   },
 ];
 

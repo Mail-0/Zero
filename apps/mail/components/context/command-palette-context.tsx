@@ -9,8 +9,6 @@ import {
   Info,
   Mail,
   Paperclip,
-  Plus,
-  Save,
   Search,
   Star,
   Tag,
@@ -32,6 +30,7 @@ import {
 import {
   createContext,
   Fragment,
+  Suspense,
   useCallback,
   useContext,
   useEffect,
@@ -40,7 +39,6 @@ import {
   type ComponentType,
 } from 'react';
 import {
-  cn,
   getMainSearchTerm,
   parseNaturalLanguageDate,
   parseNaturalLanguageSearch,
@@ -71,6 +69,8 @@ type CommandPaletteContext = {
   open: boolean;
   setOpen: (open: boolean) => void;
   openModal: () => void;
+  activeFilters: ActiveFilter[];
+  clearAllFilters: () => void;
 };
 
 interface CommandItem {
@@ -180,7 +180,7 @@ const deleteSavedSearch = (id: string) => {
   }
 };
 
-export function CommandPalette() {
+export function CommandPalette({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [, setIsComposeOpen] = useQueryState('isComposeOpen');
   const [currentView, setCurrentView] = useState<CommandView>('main');
@@ -799,7 +799,7 @@ export function CommandPalette() {
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 px-2 text-xs"
+              className="text-muted-foreground hover:text-foreground h-6 px-2 text-xs"
               onClick={clearAllFilters}
             >
               Clear All
@@ -1853,25 +1853,17 @@ export function CommandPalette() {
   };
 
   return (
-    <>
-      <Button
-        variant="outline"
-        className={cn(
-          'text-muted-foreground relative h-9 w-full select-none justify-start rounded-[0.5rem] border bg-white text-sm font-normal shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-[#141414]',
-        )}
-        onClick={() => setOpen(true)}
-      >
-        <span className="hidden lg:inline-flex">Search & Filters</span>
-        <span className="inline-flex lg:hidden">Search...</span>
-        {activeFilters.length > 0 && (
-          <Badge variant="secondary" className="ml-2 h-5 px-1">
-            {activeFilters.length}
-          </Badge>
-        )}
-        <kbd className="bg-muted pointer-events-none absolute right-[0.45rem] top-[0.45rem] hidden h-5 select-none items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
-          <span className="text-xs">⌘</span>K
-        </kbd>
-      </Button>
+    <CommandPaletteContext.Provider
+      value={{
+        open,
+        setOpen,
+        openModal: () => {
+          setOpen(true);
+        },
+        activeFilters,
+        clearAllFilters,
+      }}
+    >
       <CommandDialog
         open={open}
         onOpenChange={(isOpen) => {
@@ -1888,21 +1880,15 @@ export function CommandPalette() {
         </VisuallyHidden.VisuallyHidden>
         {renderView()}
       </CommandDialog>
-    </>
+      {children}
+    </CommandPaletteContext.Provider>
   );
 }
 
 export function CommandPaletteProvider({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
-
-  const openModal = useCallback(() => {
-    setOpen(true);
-  }, []);
-
   return (
-    <CommandPaletteContext.Provider value={{ open, setOpen, openModal }}>
-      {children}
-      <CommandPalette />
-    </CommandPaletteContext.Provider>
+    <Suspense>
+      <CommandPalette>{children}</CommandPalette>
+    </Suspense>
   );
 }

@@ -14,53 +14,50 @@ import {
   Eye,
   Lightning,
   Mail,
+  ScanEye,
   Star2,
   Tag,
+  Trash,
   User,
   X,
-  Trash,
-  ScanEye,
-  Plus,
 } from '../icons/icons';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useActiveConnection, useConnections } from '@/hooks/use-connections';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCommandPalette } from '../context/command-palette-context';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
-import { CommandPalette } from '../context/command-palette-context';
 import { ThreadDisplay } from '@/components/mail/thread-display';
 import { trpcClient, useTRPC } from '@/providers/query-provider';
 import { backgroundQueueAtom } from '@/store/backgroundQueue';
-import { Command, RefreshCcw, TrashIcon } from 'lucide-react';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
 import { useMediaQuery } from '../../hooks/use-media-query';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { MailList } from '@/components/mail/mail-list';
 import { useHotkeysContext } from 'react-hotkeys-hook';
-import { useParams, useNavigate } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import { useMail } from '@/components/mail/use-mail';
-import { SidebarToggle } from '../ui/sidebar-toggle';
 import { PricingDialog } from '../ui/pricing-dialog';
+import { SidebarToggle } from '../ui/sidebar-toggle';
 import { Textarea } from '@/components/ui/textarea';
 import { useBrainState } from '@/hooks/use-summary';
 import { clearBulkSelectionAtom } from './use-mail';
 import AISidebar from '@/components/ui/ai-sidebar';
+import { Command, RefreshCcw } from 'lucide-react';
 import { cleanSearchValue, cn } from '@/lib/utils';
+import { useBilling } from '@/hooks/use-billing';
 import { useThreads } from '@/hooks/use-threads';
 import AIToggleButton from '../ai-toggle-button';
-import { useBilling } from '@/hooks/use-billing';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { useSession } from '@/lib/auth-client';
 import { ScrollArea } from '../ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useStats } from '@/hooks/use-stats';
 import { useTranslations } from 'use-intl';
-import { SearchBar } from './search-bar';
-import { RotateCcw } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
@@ -392,6 +389,7 @@ export function MailLayout() {
   const prevFolderRef = useRef(folder);
   const { enableScope, disableScope } = useHotkeysContext();
   const { data: activeConnection } = useActiveConnection();
+  const { open, setOpen, activeFilters, clearAllFilters } = useCommandPalette();
 
   const activeAccount = useMemo(() => {
     if (!activeConnection?.id || !connections?.connections) return null;
@@ -528,7 +526,48 @@ export function MailLayout() {
                 </div>
               </div>
               <div className="p-2 px-[22px]">
-                <CommandPalette />
+                <Button
+                  variant="outline"
+                  className={cn(
+                    'text-muted-foreground relative flex h-9 w-full select-none items-center justify-start overflow-hidden rounded-[0.5rem] border bg-white text-left text-sm font-normal shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-[#141414]',
+                  )}
+                  onClick={() => setOpen(!open)}
+                >
+                  <span className="hidden truncate pr-20 lg:inline-block">
+                    {activeFilters.length > 0
+                      ? activeFilters.map((f) => f.display).join(', ')
+                      : 'Search & Filters'}
+                  </span>
+                  <span className="inline-block truncate pr-20 lg:hidden">
+                    {activeFilters.length > 0
+                      ? `${activeFilters.length} filter${activeFilters.length > 1 ? 's' : ''}`
+                      : 'Search...'}
+                  </span>
+
+                  <span className="absolute right-[0.45rem] top-[0.45rem] flex gap-1">
+                    {/* {activeFilters.length > 0 && (
+                      <Badge variant="secondary" className="ml-2 h-5 rounded px-1">
+                        {activeFilters.length}
+                      </Badge>
+                    )} */}
+                    {activeFilters.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-5 rounded px-1.5 text-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          clearAllFilters();
+                        }}
+                      >
+                        Clear
+                      </Button>
+                    )}
+                    <kbd className="bg-muted pointer-events-none hidden h-5 select-none items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+                      <span className="text-sm">⌘</span> K
+                    </kbd>
+                  </span>
+                </Button>
                 <div className="mt-2">
                   {activeAccount?.providerId === 'google' && folder === 'inbox' && (
                     <CategorySelect isMultiSelectMode={mail.bulkSelected.length > 0} />
