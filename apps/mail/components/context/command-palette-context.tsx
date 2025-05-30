@@ -864,7 +864,7 @@ export function CommandPalette() {
                       />
                     )}
                     <div className="ml-2 flex flex-1 flex-col">
-                      <span>{item.title}</span>
+                      <span>{t(item.title)}</span>
                       {item.description && (
                         <span className="text-muted-foreground text-xs">{item.description}</span>
                       )}
