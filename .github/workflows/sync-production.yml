@@ -32,4 +32,7 @@ jobs:
           TO_BRANCH: 'main'
           PULL_REQUEST_TITLE: 'Deploy to production (Automated)'
           CONTENT_COMPARISON: true
-          PULL_REQUEST_IS_DRAFT: true
+          PULL_REQUEST_BODY: |
+            This is an automated pull request to deploy the staging branch to production.
+            Please review the pull request and comment `/deploy` to merge this PR and deploy to production.
+          LABELS: '["production-deploy"]'
