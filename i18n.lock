@@ -84,6 +84,18 @@ checksums:
     common/commandPalette/commands/goToDocs: 2c12621537998606d003e6b7a555b31f
     common/commandPalette/commands/helpWithShortcuts: f8b89d2e465e3a93ff9c5397a114a094
     common/commandPalette/commands/commandPalette: 27374fec801ecad6a2a5c58d98c7f531
+    common/commandPalette/quickResults: 7edcae7952feb7fbb89ddb6c774fddcd
+    common/commandPalette/searchPlaceholder: fe877a75eac472fc5b188c135c78a558
+    common/commandPalette/noSearchResults: 622e132be46733cb640c78d62c8041ba
+    common/commandPalette/actions: c46571856723b03262fd33f511116298
+    common/commandPalette/addFilters: 54a0a9e1e7e5f5082186da23ca60c647
+    common/commandPalette/searchForEmails: b148c7fb7b9f7617e02a713aa2428fed
+    common/commandPalette/filterPlaceholder: 6848bf67d2a93045600bb4b63433c284
+    common/commandPalette/noFilterResults: 571653cdc49a158cdf20b068a6a034b4
+    common/commandPalette/availableFilters: 75444f884a2178ce6bd27d5f48ae90d4
+    common/commandPalette/examples: 9dacb7c56bc894e4bcad39f41265e3a0
+    common/commandPalette/exampleDate: 4ec0ed39f59a649c1dba0100a4e9d342
+    common/commandPalette/exampleSender: 9293f425cd783abcef876867406ece5b
     common/searchBar/pickDateRange: 580f254a6831994709cba4a82f082a1a
     common/searchBar/search: 49dd6c21604b5e8d4153ff1aff2177e1
     common/searchBar/clearSearch: 0ee4a80abe134b7edd90c74f03638877
