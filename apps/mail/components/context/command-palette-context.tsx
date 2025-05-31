@@ -46,10 +46,10 @@ import {
   parseNaturalLanguageSearch,
 } from '@/lib/utils';
 import { DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { navigationConfig, type MessageKey } from '@/config/navigation';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useLocation, useNavigate } from 'react-router';
-import { navigationConfig } from '@/config/navigation';
 import { Separator } from '@/components/ui/separator';
 import { useTRPC } from '@/providers/query-provider';
 import { Calendar } from '@/components/ui/calendar';
@@ -733,7 +733,7 @@ export function CommandPalette() {
         group.items.forEach((navItem) => {
           if (navItem.disabled) return;
           const item: CommandItem = {
-            title: navItem.title,
+            title: t(navItem.title as MessageKey),
             icon: navItem.icon,
             url: navItem.url,
             shortcut: navItem.shortcut,
@@ -828,7 +828,7 @@ export function CommandPalette() {
           <Fragment key={groupIndex}>
             {group.items.length > 0 && (
               <CommandGroup heading={group.group}>
-                {group.items.map((item: any) => (
+                {group.items.map((item) => (
                   <CommandItem
                     key={item.url || item.title}
                     onSelect={() => {
@@ -864,7 +864,7 @@ export function CommandPalette() {
                       />
                     )}
                     <div className="ml-2 flex flex-1 flex-col">
-                      <span>{t(item.title)}</span>
+                      <span>{item.title}</span>
                       {item.description && (
                         <span className="text-muted-foreground text-xs">{item.description}</span>
                       )}

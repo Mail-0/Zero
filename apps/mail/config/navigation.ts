@@ -22,9 +22,11 @@ import type { NestedKeyOf, MessageKeys } from 'use-intl';
 import type { IntlMessages } from '@/i18n/config';
 import { MessageSquareIcon } from 'lucide-react';
 
+export type MessageKey = MessageKeys<IntlMessages, NestedKeyOf<IntlMessages>>;
+
 export interface NavItem {
   id?: string;
-  title: string;
+  title: MessageKey | (string & {});
   url: string;
   icon: React.ComponentType<any>;
   badge?: number;
@@ -34,7 +36,6 @@ export interface NavItem {
   target?: string;
   shortcut?: string;
 }
-export type MessageKey = MessageKeys<IntlMessages, NestedKeyOf<IntlMessages>>;
 
 interface NavSection {
   title: string;

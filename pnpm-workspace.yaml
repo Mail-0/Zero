@@ -3,18 +3,18 @@ packages:
   - packages/*
   - scripts/*
 catalog:
-  zod: ^3.24.4
+  zod: ^3.25.42
   better-auth: ^1.2.8
   autumn-js: ^0.0.48
   superjson: ^2.2.2
-  '@trpc/server': ^11.1.2
-  '@trpc/client': ^11.1.2
-  '@trpc/tanstack-react-query': ^11.1.2
-  wrangler: ^4.16.0
+  '@trpc/server': ^11.1.4
+  '@trpc/client': ^11.1.4
+  '@trpc/tanstack-react-query': ^11.1.4
+  wrangler: ^4.18.0
   typescript: ^5.8.3
-  drizzle-orm: 0.43.1
-  drizzle-kit: 0.31.1
-  '@types/node': 22.15.21
+  drizzle-orm: ^0.43.1
+  drizzle-kit: ^0.31.1
+  '@types/node': ^22.15.21
 onlyBuiltDependencies:
   - core-js
   - core-js-pure
