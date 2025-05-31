@@ -93,17 +93,18 @@ export const toolExecutors = {
       return { success: false, error: error.message };
     }
   },
-  createLabel: async (params: any) => {
+  createLabel: async (params: { name: string; backgroundColor: string; textColor: string }) => {
     console.log('params:', params);
 
     try {
       await trpcClient.labels.create.mutate({
         name: params.name,
         color: {
-          backgroundColor: params.backgroundColor || '#4285f4',
-          textColor: params.textColor || '#ffffff',
+          backgroundColor: params.backgroundColor || '#1C2A41',
+          textColor: params.textColor || '#D8E6FD',
         },
       });
+
       return { success: true, message: 'Label created' };
     } catch (error: any) {
       return { success: false, error: error.message };
