@@ -140,11 +140,9 @@ export function useOptimisticActions() {
 
       toast(bulkActionMessage, {
         onAutoClose: () => {
-          console.log('auto closed');
           doAction();
         },
         onDismiss: () => {
-          console.log('dismissed');
           doAction();
         },
         action: {
@@ -155,6 +153,7 @@ export function useOptimisticActions() {
             pendingActionsByTypeRef.current.get(type)?.delete(pendingActionId);
           },
         },
+        duration: 5000,
       });
 
       return pendingActionId;
