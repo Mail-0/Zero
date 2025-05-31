@@ -19,7 +19,6 @@ type PendingAction = {
   optimisticId: string;
   execute: () => Promise<void>;
   undo: () => void;
-  timeoutId: NodeJS.Timeout;
 };
 
 export function useOptimisticActions() {
@@ -104,20 +103,6 @@ export function useOptimisticActions() {
       }
       pendingActionsByTypeRef.current.get(type)?.add(pendingActionId);
 
-      const timeoutId = setTimeout(async () => {
-        try {
-          await execute();
-
-          pendingActionsRef.current.delete(pendingActionId);
-          pendingActionsByTypeRef.current.get(type)?.delete(pendingActionId);
-          await checkAndRefreshType(type, threadIds, folders);
-        } catch (error) {
-          toast.error('Action failed');
-
-          pendingActionsRef.current.delete(pendingActionId);
-          pendingActionsByTypeRef.current.get(type)?.delete(pendingActionId);
-        }
-      }, UNDO_DELAY);
       const pendingAction: PendingAction = {
         id: pendingActionId,
         type,
@@ -126,7 +111,6 @@ export function useOptimisticActions() {
         optimisticId,
         execute,
         undo,
-        timeoutId,
       };
 
       pendingActionsRef.current.set(pendingActionId, pendingAction);
@@ -156,9 +140,11 @@ export function useOptimisticActions() {
 
       toast(bulkActionMessage, {
         onAutoClose: () => {
+          console.log('auto closed');
           doAction();
         },
         onDismiss: () => {
+          console.log('dismissed');
           doAction();
         },
         action: {
