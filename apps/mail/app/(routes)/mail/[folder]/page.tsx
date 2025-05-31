@@ -1,4 +1,4 @@
-import { useLoaderData, useNavigate } from 'react-router';
+import { Navigate, useLoaderData, useNavigate } from 'react-router';
 import { useTRPC } from '@/providers/query-provider';
 import { MailLayout } from '@/components/mail/mail';
 import { useQuery } from '@tanstack/react-query';
@@ -10,6 +10,8 @@ import { Loader2 } from 'lucide-react';
 const ALLOWED_FOLDERS = ['inbox', 'draft', 'sent', 'spam', 'bin', 'archive'];
 
 export async function loader({ params, request }: Route.LoaderArgs) {
+  if (!params.folder) return Response.redirect(`${import.meta.env.VITE_PUBLIC_APP_URL}/mail/inbox`);
+
   const session = await authProxy.api.getSession({ headers: request.headers });
   if (!session) return Response.redirect(`${import.meta.env.VITE_PUBLIC_APP_URL}/login`);
 

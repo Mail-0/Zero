@@ -56,7 +56,9 @@ export function useOptimisticActions() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: trpc.mail.count.queryKey() }),
         ...(folders?.map((folder) =>
-          queryClient.invalidateQueries({ queryKey: trpc.mail.listThreads.queryKey({ folder }) }),
+          queryClient.invalidateQueries({
+            queryKey: trpc.mail.listThreads.infiniteQueryKey({ folder }),
+          }),
         ) ?? []),
         ...threadIds.map((id) =>
           queryClient.invalidateQueries({
