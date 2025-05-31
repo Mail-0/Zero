@@ -55,7 +55,7 @@
     "p-retry": "6.2.1",
     "partyserver": "^0.0.71",
     "postgres": "3.4.5",
-    "react": "19.0.0",
+    "react": "19.1.0",
     "remeda": "2.21.3",
     "resend": "^4.5.1",
     "sanitize-html": "^2.16.0",
@@ -67,7 +67,7 @@
   "devDependencies": {
     "@types/he": "1.2.3",
     "@types/node": "^22.9.0",
-    "@types/react": "19.0.10",
+    "@types/react": "19.1.6",
     "@types/sanitize-html": "2.13.0",
     "@zero/eslint-config": "workspace:*",
     "@zero/tsconfig": "workspace:*",
