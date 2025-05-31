@@ -5,14 +5,11 @@ import type { ThreadDestination } from '@/lib/thread-actions';
 import { useMail } from '@/components/mail/use-mail';
 import { useTRPC } from '@/providers/query-provider';
 import { moveThreadsTo } from '@/lib/thread-actions';
-import { useThreads } from '@/hooks/use-threads';
-import { useStats } from '@/hooks/use-stats';
 import { useCallback, useRef } from 'react';
 import { useTranslations } from 'use-intl';
 import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
-import React from 'react';
 
 type PendingAction = {
   id: string;
@@ -138,12 +135,35 @@ export function useOptimisticActions() {
       const bulkActionMessage =
         itemCount > 1 ? `${toastMessage} (${itemCount} items)` : toastMessage;
 
+      function doAction() {
+        execute()
+          .then(() => {
+            removeOptimisticAction(optimisticId);
+            pendingActionsRef.current.delete(pendingActionId);
+            pendingActionsByTypeRef.current.get(type)?.delete(pendingActionId);
+            checkAndRefreshType(type, threadIds, folders);
+          })
+          .catch((error) => {
+            console.error('Action failed:', error);
+            removeOptimisticAction(optimisticId);
+            pendingActionsRef.current.delete(pendingActionId);
+            pendingActionsByTypeRef.current.get(type)?.delete(pendingActionId);
+            showToast.error('Action failed');
+          });
+      }
+
+      const showToast = toast;
+
       toast(bulkActionMessage, {
-        duration: UNDO_DELAY,
+        onAutoClose: () => {
+          doAction();
+        },
+        onDismiss: () => {
+          doAction();
+        },
         action: {
           label: 'Undo',
           onClick: () => {
-            clearTimeout(timeoutId);
             undo();
             pendingActionsRef.current.delete(pendingActionId);
             pendingActionsByTypeRef.current.get(type)?.delete(pendingActionId);
@@ -153,7 +173,7 @@ export function useOptimisticActions() {
 
       return pendingActionId;
     },
-    [checkAndRefreshType, UNDO_DELAY],
+    [checkAndRefreshType, removeOptimisticAction],
   );
 
   const optimisticMarkAsRead = useCallback(
