@@ -294,6 +294,10 @@ export function useOptimisticActions() {
           if (mail.bulkSelected.length > 0) {
             setMail({ ...mail, bulkSelected: [] });
           }
+
+          threadIds.forEach((id) => {
+            setBackgroundQueue({ type: 'delete', threadId: `thread:${id}` });
+          });
         },
         undo: () => {
           removeOptimisticAction(optimisticId);
@@ -346,6 +350,10 @@ export function useOptimisticActions() {
           if (mail.bulkSelected.length > 0) {
             setMail({ ...mail, bulkSelected: [] });
           }
+
+          threadIds.forEach((id) => {
+            setBackgroundQueue({ type: 'delete', threadId: `thread:${id}` });
+          });
         },
         undo: () => {
           removeOptimisticAction(optimisticId);

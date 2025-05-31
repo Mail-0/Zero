@@ -34,16 +34,15 @@ export const useThreads = () => {
   );
 
   // Flatten threads from all pages and sort by receivedOn date (newest first)
-  const threads = useMemo(
-    () =>
-      threadsQuery.data
-        ? threadsQuery.data.pages
-            .flatMap((e) => e.threads)
-            .filter(Boolean)
-            .filter((e) => !isInQueue(`thread:${e.id}`))
-        : [],
-    [threadsQuery.data, session, backgroundQueue, isInQueue],
-  );
+
+  const threads = useMemo(() => {
+    return threadsQuery.data
+      ? threadsQuery.data.pages
+          .flatMap((e) => e.threads)
+          .filter(Boolean)
+          .filter((e) => !isInQueue(`thread:${e.id}`))
+      : [];
+  }, [threadsQuery.data, threadsQuery.dataUpdatedAt, isInQueue, backgroundQueue]);
 
   const isEmpty = useMemo(() => threads.length === 0, [threads]);
   const isReachingEnd =
