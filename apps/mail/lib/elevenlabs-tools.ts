@@ -36,7 +36,12 @@ export const toolExecutors = {
       return { success: false, error: error.message };
     }
   },
-  sendEmail: async (params: any) => {
+  sendEmail: async (params: {
+    to: string[];
+    subject: string;
+    message: string;
+    threadId: string;
+  }) => {
     try {
       await trpcClient.mail.send.mutate({
         to: params.to.map((email: string) => ({ email })),
@@ -45,18 +50,6 @@ export const toolExecutors = {
         threadId: params.threadId,
       });
       return { success: true, message: 'Email sent successfully' };
-    } catch (error: any) {
-      return { success: false, error: error.message };
-    }
-  },
-  composeEmail: async (params: any) => {
-    try {
-      const result = await trpcClient.ai.compose.mutate({
-        prompt: params.prompt,
-        emailSubject: params.emailSubject,
-        to: params.to,
-      });
-      return { success: true, draft: result.newBody };
     } catch (error: any) {
       return { success: false, error: error.message };
     }

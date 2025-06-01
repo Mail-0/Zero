@@ -59,7 +59,7 @@
     "p-retry": "6.2.1",
     "partyserver": "^0.0.71",
     "postgres": "3.4.5",
-    "react": "19.1.0",
+    "react": "catalog:",
     "remeda": "2.21.3",
     "resend": "^4.5.1",
     "sanitize-html": "^2.16.0",

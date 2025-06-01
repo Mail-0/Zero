@@ -27,6 +27,12 @@ catalogs:
     drizzle-orm:
       specifier: ^0.43.1
       version: 0.43.1
+    react:
+      specifier: ^19.1.0
+      version: 19.1.0
+    react-dom:
+      specifier: ^19.1.0
+      version: 19.1.0
     superjson:
       specifier: ^2.2.2
       version: 2.2.2
@@ -296,7 +302,7 @@ importers:
         specifier: 1.4.1
         version: 1.4.1(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react:
-        specifier: 19.1.0
+        specifier: 'catalog:'
         version: 19.1.0
       react-colorful:
         specifier: ^5.6.1
@@ -305,7 +311,7 @@ importers:
         specifier: 8.10.1
         version: 8.10.1(date-fns@4.1.0)(react@19.1.0)
       react-dom:
-        specifier: 19.1.0
+        specifier: 'catalog:'
         version: 19.1.0(react@19.1.0)
       react-hook-form:
         specifier: 7.54.2
@@ -561,7 +567,7 @@ importers:
         specifier: 3.4.5
         version: 3.4.5
       react:
-        specifier: 19.1.0
+        specifier: 'catalog:'
         version: 19.1.0
       remeda:
         specifier: 2.21.3
