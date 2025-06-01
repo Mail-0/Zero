@@ -278,6 +278,7 @@ export const AiChatPrompt = (threadId: string, currentFolder: string, currentFil
 
       <current_date>${getCurrentDateContext()}</current_date>
       <note>NEVER include markdown, XML tags or code formatting in the final response.</note>
+      <note>Do not use markdown formatting in your response.</note>
   
       <capabilities>
         <searchAnalysis>

@@ -340,6 +340,8 @@ export const webSearch = tool({
         model: perplexity('sonar'),
         messages: [
           { role: 'system', content: 'Be precise and concise.' },
+          { role: 'system', content: 'Do not include sources in your response.' },
+          { role: 'system', content: 'Do not use markdown formatting in your response.' },
           { role: 'user', content: query },
         ],
         maxTokens: 1024,
