@@ -328,6 +328,8 @@ checksums:
     pages/settings/general/customPromptPlaceholder: cfc2bb3508913d8f3c0b7d2627cf8ba6
     pages/settings/general/customPromptDescription: cc5fa56cc99ace9ef4bbf669cd9cbd45
     pages/settings/general/noResultsFound: 5518f2865757dc73900aa03ef8be6934
+    pages/settings/general/zeroSignature: 0e94e29f00f4b39838ebed8a774148c3
+    pages/settings/general/zeroSignatureDescription: 296c4c81828361128b071969cde8ad76
     pages/settings/connections/title: d7bc733cc82ab74c649a4816373a2295
     pages/settings/connections/description: f05d355994f9fe0e089ce2c54d0de381
     pages/settings/connections/disconnectTitle: efecc2354d665e68492fe985af575508
