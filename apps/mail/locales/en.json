@@ -378,7 +378,9 @@
         "customPrompt": "Custom AI Prompt",
         "customPromptPlaceholder": "Enter your custom prompt for the AI...",
         "customPromptDescription": "Customize how the AI writes your email replies. This will be added to the base prompt.",
-        "noResultsFound": "No results found"
+        "noResultsFound": "No results found",
+        "zeroSignature": "Zero Signature",
+        "zeroSignatureDescription": "Add a Zero signature to your emails."
       },
       "connections": {
         "title": "Email Connections",
