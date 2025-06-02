@@ -104,12 +104,15 @@ export function CreateEmail({
     // Use the selected from email or the first alias (or default user email)
     const fromEmail = aliases?.[0]?.email ?? userEmail;
 
+    const zeroSignature =
+      '<p style="color: #666; font-size: 12px;">Sent via <a href="https://0.email/" style="color: #0066cc; text-decoration: none;">Zero</a></p>';
+
     await sendEmail({
       to: data.to.map((email) => ({ email, name: email.split('@')[0] || email })),
       cc: data.cc?.map((email) => ({ email, name: email.split('@')[0] || email })),
       bcc: data.bcc?.map((email) => ({ email, name: email.split('@')[0] || email })),
       subject: data.subject,
-      message: data.message,
+      message: data.message + zeroSignature,
       attachments: await serializeFiles(data.attachments),
       fromEmail: userName.trim() ? `${userName.replace(/[<>]/g, '')} <${fromEmail}>` : fromEmail,
       draftId: draftId ?? undefined,
