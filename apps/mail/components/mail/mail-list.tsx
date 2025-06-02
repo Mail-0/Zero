@@ -327,9 +327,16 @@ const Thread = memo(
               ) : null}
             </div>
 
-            <div className="flex w-full items-center justify-between gap-4 px-4">
+            <div className="relative flex w-full items-center justify-between gap-4 px-4">
               <div>
-                <Avatar className="h-8 w-8 rounded-full border dark:border-none">
+                <Avatar
+                  className={cn(
+                    'h-8 w-8 rounded-full',
+                    displayUnread && !isMailSelected && !isFolderSent
+                      ? 'border border-[#006FFE]'
+                      : 'border',
+                  )}
+                >
                   <div
                     className={cn(
                       'flex h-full w-full items-center justify-center rounded-full bg-blue-500 p-2 dark:bg-blue-500',
@@ -363,11 +370,12 @@ const Thread = memo(
                     </>
                   )}
                 </Avatar>
-                <div className="z-1 relative">
-                  {displayUnread && !isMailSelected && !isFolderSent ? (
-                    <span className="absolute -bottom-[1px] right-0.5 size-2 rounded bg-[#006FFE]" />
-                  ) : null}
-                </div>
+                {displayUnread && !isMailSelected && !isFolderSent ? (
+                  <>
+                    <span className="absolute left-2 top-2 size-1.5 rounded bg-[#006FFE]" />
+                    <span className="absolute left-[11px] top-4 size-1 rounded bg-[#006FFE]" />
+                  </>
+                ) : null}
               </div>
 
               <div className="flex w-full justify-between">
