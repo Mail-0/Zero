@@ -133,7 +133,7 @@ export default function GeneralPage() {
       timezone: getBrowserTimezone(),
       dynamicContent: false,
       customPrompt: '',
-      zeroSignature: false,
+      zeroSignature: true,
     },
   });
 
