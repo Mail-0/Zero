@@ -1,28 +1,21 @@
-'use client';
-
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { toolExecutors } from '@/lib/elevenlabs-tools';
 import { useConversation } from '@elevenlabs/react';
 import { useSession } from '@/lib/auth-client';
 import type { ReactNode } from 'react';
 
 interface VoiceContextType {
-  // State
   status: string;
   isInitializing: boolean;
   isSpeaking: boolean;
-  isMuted: boolean;
   hasPermission: boolean;
   errorMessage: string;
   lastToolCall: string | null;
   isOpen: boolean;
 
-  // Actions
   startConversation: (context?: any) => Promise<void>;
   endConversation: () => Promise<void>;
-  toggleMute: () => void;
   requestPermission: () => Promise<void>;
-  setOpen: (open: boolean) => void;
   sendContext: (context: any) => void;
 }
 
@@ -31,7 +24,6 @@ const VoiceContext = createContext<VoiceContextType | undefined>(undefined);
 export function VoiceProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
   const [hasPermission, setHasPermission] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isInitializing, setIsInitializing] = useState(false);
   const [lastToolCall, setLastToolCall] = useState<string | null>(null);
@@ -68,10 +60,16 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
         (acc, [name, executor]) => ({
           ...acc,
           [name]: async (params: any) => {
-            console.log('params', params);
-            console.log('name', name);
+            console.log(`[Voice Tool] ${name} called with params:`, params);
             setLastToolCall(`Executing: ${name}`);
-            const result = await executor(params);
+
+            const paramsWithContext = {
+              ...params,
+              _context: currentContext,
+            };
+
+            const result = await executor(paramsWithContext);
+            console.log(`[Voice Tool] ${name} result:`, result);
             setLastToolCall(null);
             return result;
           },
@@ -113,9 +111,14 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
       await conversation.startSession({
         agentId: agentId,
         dynamicVariables: {
-          user_name: session?.user.name || 'User',
+          user_name: session?.user.name.split(' ')[0] || 'User',
           user_email: session?.user.email || '',
           current_time: new Date().toLocaleString(),
+          has_open_email: context?.hasOpenEmail ? 'yes' : 'no',
+          current_thread_id: context?.currentThreadId || 'none',
+          email_context_info: context?.hasOpenEmail
+            ? `The user currently has an email open (thread ID: ${context.currentThreadId}). When the user refers to "this email" or "the current email", you can use the getEmail or summarizeEmail tools WITHOUT providing a threadId parameter - the tools will automatically use the currently open email.`
+            : 'No email is currently open. If the user asks about an email, you will need to ask them to open it first or provide a specific thread ID.',
           ...(context || {}),
         },
       });
@@ -135,34 +138,21 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const toggleMute = () => {
-    try {
-      conversation.setVolume({ volume: isMuted ? 1 : 0 });
-      setIsMuted(!isMuted);
-    } catch {
-      setErrorMessage('Failed to change volume');
-    }
-  };
-
   const sendContext = (context: any) => {
     setCurrentContext(context);
-    // TODO: Send context to conversation when API supports it
   };
 
   const value: VoiceContextType = {
     status,
     isInitializing,
     isSpeaking,
-    isMuted,
     hasPermission,
     errorMessage,
     lastToolCall,
     isOpen,
     startConversation,
     endConversation,
-    toggleMute,
     requestPermission: requestPermission,
-    setOpen,
     sendContext,
   };
 
@@ -177,5 +167,4 @@ export function useVoice() {
   return context;
 }
 
-// Export VoiceContext for advanced use cases
 export { VoiceContext };

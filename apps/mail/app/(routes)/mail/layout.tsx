@@ -3,7 +3,6 @@ import { OnboardingWrapper } from '@/components/onboarding';
 import { VoiceProvider } from '@/providers/voice-provider';
 import { NotificationProvider } from '@/components/party';
 import { AppSidebar } from '@/components/ui/app-sidebar';
-import { VoiceButton } from '@/components/voice-button';
 import { Outlet, useLoaderData } from 'react-router';
 import type { Route } from './+types/layout';
 
@@ -25,7 +24,6 @@ export default function MailLayout() {
         <OnboardingWrapper />
         <NotificationProvider headers={headers} />
       </HotkeyProviderWrapper>
-      <VoiceButton />
     </VoiceProvider>
   );
 }

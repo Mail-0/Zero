@@ -88,6 +88,9 @@ importers:
 
   apps/mail:
     dependencies:
+      '@ai-sdk/perplexity':
+        specifier: 1.1.9
+        version: 1.1.9(zod@3.25.42)
       '@ai-sdk/react':
         specifier: 1.2.12
         version: 1.2.12(react@19.1.0)(zod@3.25.42)

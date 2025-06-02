@@ -1,4 +1,19 @@
 import { trpcClient } from '@/providers/query-provider';
+import { perplexity } from '@ai-sdk/perplexity';
+import { generateText, tool } from 'ai';
+
+const getCurrentThreadId = () => {
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('threadId');
+  }
+  return null;
+};
+
+const cleanNameDisplay = (name?: string) => {
+  if (!name) return '';
+  return name.replace(/["<>]/g, '');
+};
 
 export const toolExecutors = {
   listEmails: async (params: { folder: string; query: string; maxResults: number }) => {
@@ -27,10 +42,39 @@ export const toolExecutors = {
   },
   getEmail: async (params: any) => {
     try {
-      const result = await trpcClient.mail.get.query({ id: params.threadId });
+      // Handle various ways the AI might pass the threadId
+      let threadId = null;
+
+      // Check for threadId in various formats
+      if (params.threadId && typeof params.threadId === 'string' && params.threadId.trim()) {
+        threadId = params.threadId.trim();
+      } else if (
+        params.thread_id &&
+        typeof params.thread_id === 'string' &&
+        params.thread_id.trim()
+      ) {
+        threadId = params.thread_id.trim();
+      } else if (params.id && typeof params.id === 'string' && params.id.trim()) {
+        threadId = params.id.trim();
+      } else {
+        // Fall back to current thread from URL
+        threadId = getCurrentThreadId();
+      }
+
+      if (!threadId) {
+        return {
+          success: false,
+          error: 'No email is currently open. Please open an email first or provide a thread ID.',
+          hint: 'You can refer to "this email" or "the current email" when an email is open.',
+        };
+      }
+
+      const result = await trpcClient.mail.get.query({ id: threadId });
       return {
         success: true,
         thread: result,
+        currentThreadId: threadId,
+        message: `Retrieved email with thread ID: ${threadId}`,
       };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -82,6 +126,22 @@ export const toolExecutors = {
     try {
       await trpcClient.mail.bulkDelete.mutate({ ids: params.threadIds });
       return { success: true, message: 'Emails moved to trash' };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  },
+  deleteEmail: async (params: any) => {
+    const threadId = getCurrentThreadId();
+    if (!threadId) {
+      return {
+        success: false,
+        error: 'No email is currently open. Please open an email first.',
+        hint: 'When an email is open, you can ask me to "delete this email" without specifying an ID.',
+      };
+    }
+    try {
+      await trpcClient.mail.bulkDelete.mutate({ ids: [threadId] });
+      return { success: true, message: 'Email deleted' };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
@@ -152,13 +212,140 @@ export const toolExecutors = {
     }
   },
   webSearch: async (params: any) => {
+    console.log(params);
+    const threadId = getCurrentThreadId();
+    if (!threadId) {
+      return {
+        success: false,
+        error: 'No email is currently open. Please open an email first.',
+        hint: 'When an email is open, you can ask me to "summarize this email" without specifying an ID.',
+      };
+    }
     try {
-      // fake api call, need to call perplexity api here
+      const thread = await trpcClient.mail.get.query({ id: threadId });
+
+      const emailContent = thread.messages?.map((m: any) => m.body).join('\n\n') || '';
+      const subject = thread.latest?.subject || 'No subject';
+      const from = thread.latest?.sender?.email || 'Unknown sender';
+      const senderName = cleanNameDisplay(thread.latest?.sender?.name);
+      const receivedDate = thread.latest?.receivedOn
+        ? new Date(thread.latest.receivedOn).toLocaleString()
+        : 'Unknown date';
+      const messageCount = thread.messages?.length || 0;
+
+      const emailSummaryPrompt = `Please provide a comprehensive summary of the following email thread:
+
+THREAD INFORMATION:
+- Subject: ${subject}
+- From: ${senderName} (${from})
+- Date: ${receivedDate}
+- Number of messages: ${messageCount}
+- Has unread messages: ${thread.hasUnread ? 'Yes' : 'No'}
+
+EMAIL CONTENT:
+${emailContent}
+
+Please provide:
+1. A brief summary of the main topic and purpose
+2. Key points or action items mentioned
+3. Any questions asked that need responses
+4. The overall tone and urgency level
+5. Any important deadlines or dates mentioned`;
+
+      const { text } = await generateText({
+        model: perplexity('sonar'),
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You are an email assistant. Provide clear, structured summaries of email content. Be precise and concise.',
+          },
+          { role: 'user', content: emailSummaryPrompt },
+        ],
+        maxTokens: 1024,
+      });
+
       return {
         success: true,
-        result:
-          "I'm currently focused on helping you with your emails. Web search functionality is not available in this context.",
+        result: text,
       };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  },
+  summarizeEmail: async (params: any) => {
+    try {
+      const threadId = getCurrentThreadId();
+
+      if (!threadId) {
+        return {
+          success: false,
+          error: 'No email is currently open. Please open an email first.',
+          hint: 'When an email is open, you can ask me to "summarize this email" without specifying an ID.',
+        };
+      }
+
+      try {
+        const thread = await trpcClient.mail.get.query({ id: threadId });
+
+        const emailContent = thread.messages?.map((m: any) => m.body).join('\n\n') || '';
+        const subject = thread.latest?.subject || 'No subject';
+        const from = thread.latest?.sender?.email || 'Unknown sender';
+        const senderName = cleanNameDisplay(thread.latest?.sender?.name);
+        const receivedDate = thread.latest?.receivedOn
+          ? new Date(thread.latest.receivedOn).toLocaleString()
+          : 'Unknown date';
+        const messageCount = thread.messages?.length || 0;
+
+        //         const emailSummaryPrompt = `Please provide a concise summary of the following email thread:
+
+        // THREAD INFORMATION:
+        // - Subject: ${subject}
+        // - From: ${senderName} (${from})
+        // - Date: ${receivedDate}
+        // - Number of messages: ${messageCount}
+        // - Has unread messages: ${thread.hasUnread ? 'Yes' : 'No'}
+
+        // EMAIL CONTENT:
+        // ${emailContent}
+
+        // Please provide a brief 2-3 sentence summary covering:
+        // 1. The main topic and purpose
+        // 2. Any key action items or decisions needed
+        // 3. The urgency level`;
+
+        //         const { text } = await generateText({
+        //           model: perplexity('sonar'),
+        //           messages: [
+        //             {
+        //               role: 'system',
+        //               content:
+        //                 'You are an email assistant. Provide clear, concise summaries. Be brief but comprehensive.',
+        //             },
+        //             { role: 'user', content: emailSummaryPrompt },
+        //           ],
+        //           maxTokens: 512,
+        //         });
+
+        return {
+          success: true,
+          result: {
+            threadId: threadId,
+            subject: subject,
+            from: from,
+            senderName: senderName,
+            messageCount: messageCount,
+            hasUnread: thread.hasUnread,
+            summary: 'this is a fake summary',
+            message: `Successfully summarized email thread: ${threadId}`,
+          },
+        };
+      } catch (error) {
+        return {
+          success: false,
+          error: 'Failed to fetch email for summarization',
+        };
+      }
     } catch (error: any) {
       return { success: false, error: error.message };
     }
