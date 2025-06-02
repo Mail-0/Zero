@@ -70,7 +70,7 @@ export function CreateEmail({
   const { mutateAsync: sendEmail } = useMutation(trpc.mail.send.mutationOptions());
   const [isComposeOpen, setIsComposeOpen] = useQueryState('isComposeOpen');
   const { data: activeConnection } = useActiveConnection();
-  const { data: settings } = useSettings();
+  const { data: settings, isLoading: settingsLoading } = useSettings();
   // If there was an error loading the draft, set the failed state
   useEffect(() => {
     if (draftError) {
@@ -198,6 +198,7 @@ export function CreateEmail({
               }
               initialSubject={typedDraft?.subject || initialSubject}
               autofocus={true}
+              settingsLoading={settingsLoading}
             />
           )}
         </div>

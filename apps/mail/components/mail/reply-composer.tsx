@@ -32,7 +32,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
   const trpc = useTRPC();
   const { mutateAsync: sendEmail } = useMutation(trpc.mail.send.mutationOptions());
   const { data: activeConnection } = useActiveConnection();
-  const { data: settings } = useSettings();
+  const { data: settings, isLoading: settingsLoading } = useSettings();
 
   // Find the specific message to reply to
   const replyToMessage =
@@ -239,6 +239,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
           };
         })}
         autofocus={shouldFocus}
+        settingsLoading={settingsLoading}
       />
     </div>
   );
