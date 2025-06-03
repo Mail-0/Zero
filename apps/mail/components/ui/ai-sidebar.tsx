@@ -290,26 +290,17 @@ export function useAISidebar() {
     [setViewModeQuery],
   );
 
-  // Function to set open state and save to localStorage
   const setOpen = useCallback(
     (openState: boolean) => {
-      // For closing, we need to handle state updates more carefully
       if (!openState) {
-        // First remove from localStorage immediately
         if (typeof window !== 'undefined') {
           localStorage.removeItem('ai-sidebar-open');
         }
-
-        // Use setTimeout to ensure the query update happens in the next tick
-        // This helps prevent the need for double-clicking
         setTimeout(() => {
           setOpenQuery(null).catch(console.error);
         }, 0);
       } else {
-        // For opening, we can use the normal flow
         setOpenQuery('true').catch(console.error);
-
-        // Save to localStorage
         if (typeof window !== 'undefined') {
           localStorage.setItem('ai-sidebar-open', 'true');
         }
@@ -318,13 +309,8 @@ export function useAISidebar() {
     [setOpenQuery],
   );
 
-  // Toggle open state
-  const toggleOpen = useCallback(() => {
-    const newState = !(open === 'true');
-    setOpen(newState);
-  }, [open, setOpen]);
+  const toggleOpen = useCallback(() => setOpen(open !== 'true'), [open, setOpen]);
 
-  // Sync with query parameters on mount or when they change
   useEffect(() => {
     if (viewModeQuery && viewModeQuery !== viewMode) {
       setViewModeState(viewModeQuery as ViewMode);

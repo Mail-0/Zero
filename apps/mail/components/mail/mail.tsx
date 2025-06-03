@@ -433,11 +433,6 @@ export function MailLayout() {
   }, [threadId, enableScope, disableScope]);
   const [, setActiveReplyId] = useQueryState('activeReplyId');
 
-  const handleClose = useCallback(() => {
-    setThreadId(null);
-    setActiveReplyId(null);
-  }, [setThreadId]);
-
   // Add mailto protocol handler registration
   useEffect(() => {
     // Register as a mailto protocol handler if browser supports it
@@ -626,8 +621,6 @@ export function MailLayout() {
 
 function BulkSelectActions() {
   const t = useTranslations();
-  const [errorQty, setErrorQty] = useState(0);
-  const [threadId, setThreadId] = useQueryState('threadId');
   const [isLoading, setIsLoading] = useState(false);
   const [isUnsub, setIsUnsub] = useState(false);
   const [mail, setMail] = useMail();
@@ -635,17 +628,12 @@ function BulkSelectActions() {
   const folder = params?.folder ?? 'inbox';
   const [{ refetch: refetchThreads }] = useThreads();
   const { refetch: refetchStats } = useStats();
-  const trpc = useTRPC();
-  const { mutateAsync: markAsImportant } = useMutation(trpc.mail.markAsImportant.mutationOptions());
-  const { mutateAsync: bulkDeleteThread } = useMutation(trpc.mail.bulkDelete.mutationOptions());
-  const queryClient = useQueryClient();
   const {
     optimisticMarkAsRead,
     optimisticToggleStar,
     optimisticMoveThreadsTo,
     optimisticDeleteThreads,
   } = useOptimisticActions();
-  const [, setBackgroundQueue] = useAtom(backgroundQueueAtom);
 
   const handleMassUnsubscribe = async () => {
     setIsLoading(true);
@@ -659,7 +647,6 @@ function BulkSelectActions() {
             if (firstEmail)
               return handleUnsubscribe({ emailData: firstEmail }).catch((e) => {
                 toast.error(e.message ?? 'Unknown error while unsubscribing');
-                setErrorQty((eq) => eq++);
               });
           }
         }),
@@ -677,18 +664,6 @@ function BulkSelectActions() {
       },
     );
   };
-
-  const onMoveSuccess = useCallback(async () => {
-    if (threadId && mail.bulkSelected.includes(threadId)) setThreadId(null);
-    refetchThreads();
-    refetchStats();
-    await Promise.all(
-      mail.bulkSelected.map((threadId) =>
-        queryClient.invalidateQueries({ queryKey: trpc.mail.get.queryKey({ id: threadId }) }),
-      ),
-    );
-    setMail({ ...mail, bulkSelected: [] });
-  }, [mail, setMail, refetchThreads, refetchStats, threadId, setThreadId]);
 
   return (
     <div className="flex items-center gap-2">
