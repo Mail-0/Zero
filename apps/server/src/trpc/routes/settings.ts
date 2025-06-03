@@ -9,17 +9,17 @@ export const settingsRouter = router({
     .use(
       createRateLimiterMiddleware({
         limiter: Ratelimit.slidingWindow(60, '1m'),
-        generatePrefix: ({ session }) => `ratelimit:get-settings-${session?.user.id}`,
+        generatePrefix: ({ sessionUser }) => `ratelimit:get-settings-${sessionUser?.id}`,
       }),
     )
     .query(async ({ ctx }) => {
-      if (!ctx.session) return { settings: defaultUserSettings };
+      if (!ctx.sessionUser) return { settings: defaultUserSettings };
 
-      const { db, session } = ctx;
+      const { db, sessionUser } = ctx;
       const [result] = await db
         .select()
         .from(userSettings)
-        .where(eq(userSettings.userId, session.user.id))
+        .where(eq(userSettings.userId, sessionUser.id))
         .limit(1);
 
       // Returning null here when there are no settings so we can use the default settings with timezone from the browser
@@ -34,7 +34,7 @@ export const settingsRouter = router({
               settings: defaultUserSettings,
               updatedAt: new Date(),
             })
-            .where(eq(userSettings.userId, session.user.id)),
+            .where(eq(userSettings.userId, sessionUser.id)),
         );
         console.log('returning default settings');
         return { settings: defaultUserSettings };
@@ -44,13 +44,13 @@ export const settingsRouter = router({
     }),
 
   save: privateProcedure.input(userSettingsSchema.partial()).mutation(async ({ ctx, input }) => {
-    const { db, session } = ctx;
+    const { db, sessionUser } = ctx;
     const timestamp = new Date();
 
     const [existingSettings] = await db
       .select()
       .from(userSettings)
-      .where(eq(userSettings.userId, session.user.id))
+      .where(eq(userSettings.userId, sessionUser.id))
       .limit(1);
 
     if (existingSettings) {
@@ -61,11 +61,11 @@ export const settingsRouter = router({
           settings: newSettings,
           updatedAt: timestamp,
         })
-        .where(eq(userSettings.userId, session.user.id));
+        .where(eq(userSettings.userId, sessionUser.id));
     } else {
       await db.insert(userSettings).values({
         id: crypto.randomUUID(),
-        userId: session.user.id,
+        userId: sessionUser.id,
         settings: { ...defaultUserSettings, ...input },
         createdAt: timestamp,
         updatedAt: timestamp,

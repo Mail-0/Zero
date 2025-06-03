@@ -24,16 +24,16 @@ type AutumnContext = {
 
 export const autumnApi = new Hono<AutumnContext>()
   .use('*', async (c, next) => {
-    const { session } = c.var;
+    const { sessionUser } = c.var;
     c.set(
       'customerData',
-      !session
+      !sessionUser
         ? null
         : {
-            customerId: session.user.id,
+            customerId: sessionUser.id,
             customerData: {
-              name: session.user.name,
-              email: session.user.email,
+              name: sessionUser.name,
+              email: sessionUser.email,
             },
           },
     );

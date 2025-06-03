@@ -11,12 +11,12 @@ export const shortcutRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { db, session } = ctx;
+      const { db, sessionUser } = ctx;
       const { shortcuts } = input;
       await db
         .insert(userHotkeys)
         .values({
-          userId: session.user.id,
+          userId: sessionUser.id,
           shortcuts,
           createdAt: new Date(),
           updatedAt: new Date(),
