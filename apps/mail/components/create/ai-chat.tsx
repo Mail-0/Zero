@@ -337,7 +337,7 @@ export function AIChat({
             messages.map((message, index) => {
               const textParts = message.parts.filter((part) => part.type === 'text');
               const toolParts = message.parts.filter((part) => part.type === 'tool-invocation');
-              const toolResultOnlyTools = [Tools.WebSearch, Tools.ListThreads];
+              const toolResultOnlyTools = [Tools.WebSearch];
               const doesIncludeToolResult = toolParts.some((part) =>
                 toolResultOnlyTools.includes(part.toolInvocation?.toolName as Tools),
               );
