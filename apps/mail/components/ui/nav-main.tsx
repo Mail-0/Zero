@@ -217,7 +217,7 @@ export function NavMain({ items }: NavMainProps) {
               className="flex cursor-pointer items-center"
             >
               <MessageSquare className="relative mr-2.5 h-3 w-3.5" />
-              <p className="mt-0.5 truncate text-[13px]">Help</p>
+              <p className="mt-0.5 truncate text-[13px]">Live Support</p>
             </SidebarMenuButton>
             <NavItem
               key={'feedback'}
