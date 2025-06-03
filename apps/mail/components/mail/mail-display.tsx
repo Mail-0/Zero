@@ -101,7 +101,7 @@ function TextSelectionPopover({
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2 + window.scrollX - window.innerWidth / 2;
-      const y = rect.top - 40 + window.scrollY + 10;
+      const y = rect.top + window.scrollY;
 
       setSelectionCoords({ x: centerX, y });
       setSelectedText(selection.toString().trim());
@@ -169,7 +169,9 @@ function TextSelectionPopover({
               }}
             >
               <div className="flex items-center justify-between gap-2 px-2">
-                <p className="text-muted-foreground text-sm">{selectedText}</p>
+                <p className="text-muted-foreground max-w-[200px] truncate text-sm">
+                  {selectedText}
+                </p>
                 <div className="flex">
                   <Button
                     size="icon"
@@ -643,7 +645,7 @@ const MoreAboutPerson = ({
   } = useMutation(trpc.ai.webSearch.mutationOptions());
   const handleSearch = useCallback(() => {
     doSearch({
-      query: `In 100 words or less: What is the background of ${person.name} & ${person.email}, of ${person.email.split('@')[1]}. 
+      query: `In 50 words or less: What is the background of ${person.name} & ${person.email}, of ${person.email.split('@')[1]}. 
       This could be a phishing email address, indicate if the domain is suspicious, example: x.io is not a valid domain for x.com | example: x.com is a valid domain for x.com | example: paypalcom.com is not a valid domain for paypal.com`,
     });
   }, [person.name]);
@@ -682,18 +684,12 @@ const MoreAboutPerson = ({
       <DialogContent showOverlay>
         <DialogHeader>
           <DialogTitle>More about {cleanNameDisplay(person.name)}</DialogTitle>
-          <DialogDescription>
-            <p>Email: {person.email}</p>
-            <p>Name: {person.name}</p>
-          </DialogDescription>
         </DialogHeader>
-        <div className="flex justify-center">
+        <div className="mt-4 flex justify-center">
           {isPending ? (
             <Loader2 className="animate-spin" />
           ) : data ? (
-            <Markdown markdownContainerStyles={{ fontSize: 13 }}>
-              {replaceSourcesInText(data.text)}
-            </Markdown>
+            <StreamingText text={replaceSourcesInText(data.text)} />
           ) : error ? (
             <p>Error: {error.message}</p>
           ) : (
@@ -761,17 +757,12 @@ const MoreAboutQuery = ({
       <DialogContent showOverlay>
         <DialogHeader>
           <DialogTitle>Search Results</DialogTitle>
-          <DialogDescription>
-            <p>Query: {query}</p>
-          </DialogDescription>
         </DialogHeader>
-        <div className="flex justify-center">
+        <div className="mt-4 flex justify-center">
           {isPending ? (
             <Loader2 className="animate-spin" />
           ) : data ? (
-            <Markdown markdownContainerStyles={{ fontSize: 13 }}>
-              {replaceSourcesInText(data.text)}
-            </Markdown>
+            <StreamingText text={replaceSourcesInText(data.text)} />
           ) : error ? (
             <p>Error: {error.message}</p>
           ) : (
