@@ -99,34 +99,34 @@ const app = new Hono<HonoContext>()
       exposeHeaders: ['X-Zero-Redirect'],
     }),
   )
-  // .mount(
-  //   '/sse',
-  //   async (request, env, ctx) => {
-  //     const authBearer = request.headers.get('Authorization');
-  //     if (!authBearer) {
-  //       return new Response('Unauthorized', { status: 401 });
-  //     }
-  //     ctx.props = {
-  //       cookie: authBearer,
-  //     };
-  //     return ZeroMCP.serveSSE('/sse', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
-  //   },
-  //   { replaceRequest: false },
-  // )
-  // .mount(
-  //   '/mcp',
-  //   async (request, env, ctx) => {
-  //     const authBearer = request.headers.get('Authorization');
-  //     if (!authBearer) {
-  //       return new Response('Unauthorized', { status: 401 });
-  //     }
-  //     ctx.props = {
-  //       cookie: authBearer,
-  //     };
-  //     return ZeroMCP.serve('/mcp', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
-  //   },
-  //   { replaceRequest: false },
-  // )
+  .mount(
+    '/sse',
+    async (request, env, ctx) => {
+      const authBearer = request.headers.get('Authorization');
+      if (!authBearer) {
+        return new Response('Unauthorized', { status: 401 });
+      }
+      ctx.props = {
+        cookie: authBearer,
+      };
+      return ZeroMCP.serveSSE('/sse', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
+    },
+    { replaceRequest: false },
+  )
+  .mount(
+    '/mcp',
+    async (request, env, ctx) => {
+      const authBearer = request.headers.get('Authorization');
+      if (!authBearer) {
+        return new Response('Unauthorized', { status: 401 });
+      }
+      ctx.props = {
+        cookie: authBearer,
+      };
+      return ZeroMCP.serve('/mcp', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
+    },
+    { replaceRequest: false },
+  )
   .route('/api', api)
   .use(
     '*',
