@@ -67,13 +67,10 @@ export class CallService {
   private elevenLabsWebSocket: WebSocket | null = null;
   private callWebSocket: WebSocket | null = null;
   private twilio: Twilio;
-  private mailDriver: MailManager | null = null;
-  private tools: Record<string, Tool> | null = null;
   private conversationHistory: {
     role: 'user' | 'assistant';
     content: string;
   }[] = [];
-  // private mcpClient: Client | null = null;
   private mcpClient: Awaited<ReturnType<typeof createMCPClient>> | null = null;
 
   constructor(private callSid: string) {
@@ -89,22 +86,13 @@ export class CallService {
 
     // Initialize the mail driver and tools
     this.callWebSocket = callWebSocket;
-    await this.initializeMailDriver(this.phoneNumber);
 
-    // this.mcpClient = await this.connectToMCP(hostname);
-    this.mcpClient = await this.connectToMCP_AISDK(hostname);
+    this.mcpClient = await this.connectToMCP(hostname);
 
     // Attach event listeners to the call WebSocket
     await this.connectToElevenLabs();
 
     console.log(`[Twilio] WebSocket connected for call ${this.callSid}`);
-  }
-
-  private async initializeMailDriver(phoneNumber: string) {
-    const { driver, connectionId } = await phoneMapping(phoneNumber);
-
-    this.mailDriver = driver;
-    this.tools = tools(driver, connectionId);
   }
 
   public async stopCall() {
@@ -426,12 +414,31 @@ export class CallService {
       console.log('[DEBUG] query', query);
       const mcpTools = await this.mcpClient.tools();
 
+      this.conversationHistory.push({
+        role: 'user',
+        content: query,
+      });
+
       const { text } = await generateText({
         model: openai('gpt-4o-mini'),
-        system: systemPrompt,
-        prompt: query,
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt,
+          },
+          ...this.conversationHistory,
+          {
+            role: 'user',
+            content: query,
+          },
+        ],
         tools: mcpTools,
         maxSteps: 10,
+      });
+
+      this.conversationHistory.push({
+        role: 'assistant',
+        content: text,
       });
 
       console.log('[DEBUG] llm response', text);
@@ -476,30 +483,6 @@ export class CallService {
   // }
 
   private async connectToMCP(hostname: string) {
-    const client = new Client({
-      name: 'zero-agent',
-      version: '1.0.0',
-    });
-
-    if (!this.phoneNumber) {
-      throw new Error('[Twilio] Phone number not set');
-    }
-
-    const mcpUrl = new URL('/api/ai/mcp', `https://${hostname}`);
-    const transport = new StreamableHTTPClientTransport(mcpUrl, {
-      requestInit: {
-        headers: {
-          'X-Phone-Number': this.phoneNumber,
-        },
-      },
-    });
-
-    await client.connect(transport);
-
-    return client;
-  }
-
-  private async connectToMCP_AISDK(hostname: string) {
     if (!this.phoneNumber) {
       throw new Error('[Twilio] Phone number not set');
     }
