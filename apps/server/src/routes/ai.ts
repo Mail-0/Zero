@@ -1,5 +1,6 @@
 import { CallService } from '../services/call-service/call-service';
 import { ZeroMCP } from '../services/mcp-service/mcp';
+import { env } from 'cloudflare:workers';
 import twilio from 'twilio';
 import { Hono } from 'hono';
 
@@ -31,7 +32,7 @@ aiRouter.post('/voice', async (c) => {
 
   console.log(`Incoming call from ${from} with callSid ${callSid}`);
 
-  const hostHeader = c.req.header('host');
+  const hostHeader = env.VITE_PUBLIC_BACKEND_URL;
   const voiceResponse = new twilio.twiml.VoiceResponse();
   voiceResponse.connect().stream({
     url: `wss://${hostHeader}/api/ai/call/${callSid}`,
@@ -42,10 +43,7 @@ aiRouter.post('/voice', async (c) => {
 });
 
 aiRouter.get('/call/:callSid', async (c) => {
-  const hostname = c.req.header('host');
-  if (!hostname) {
-    return new Response('No hostname specified', { status: 500 });
-  }
+  const hostname = env.VITE_PUBLIC_BACKEND_URL;
 
   const callSid = c.req.param('callSid');
 
