@@ -32,7 +32,8 @@ aiRouter.post('/voice', async (c) => {
 
   console.log(`Incoming call from ${from} with callSid ${callSid}`);
 
-  const hostHeader = env.VITE_PUBLIC_BACKEND_URL;
+  const hostHeader = c.req.header('host');
+  console.log('[DEBUG] hostHeader', hostHeader);
   const voiceResponse = new twilio.twiml.VoiceResponse();
   voiceResponse.connect().stream({
     url: `wss://${hostHeader}/api/ai/call/${callSid}`,
@@ -45,6 +46,7 @@ aiRouter.post('/voice', async (c) => {
 aiRouter.get('/call/:callSid', async (c) => {
   const hostname = env.VITE_PUBLIC_BACKEND_URL;
 
+  console.log('[DEBUG] hostname', hostname, c.req.header('host'), c.req.param('callSid'));
   const callSid = c.req.param('callSid');
 
   console.log(`[Twilio] WebSocket connection requested`);
