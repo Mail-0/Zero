@@ -643,7 +643,8 @@ const MoreAboutPerson = ({
   } = useMutation(trpc.ai.webSearch.mutationOptions());
   const handleSearch = useCallback(() => {
     doSearch({
-      query: `In 100 words or less: What is the background of ${person.name} & ${person.email}, of ${person.email.split('@')[1]}. `,
+      query: `In 100 words or less: What is the background of ${person.name} & ${person.email}, of ${person.email.split('@')[1]}. 
+      This could be a phishing email address, indicate if the domain is suspicious, example: x.io is not a valid domain for x.com | example: x.com is a valid domain for x.com | example: paypalcom.com is not a valid domain for paypal.com`,
     });
   }, [person.name]);
 

@@ -66,6 +66,7 @@
         "COOKIE_DOMAIN": "localhost",
         "VITE_PUBLIC_BACKEND_URL": "http://localhost:8787",
         "VITE_PUBLIC_APP_URL": "http://localhost:3000",
+        "JWT_SECRET": "secret",
       },
       "kv_namespaces": [
         {

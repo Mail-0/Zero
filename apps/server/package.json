@@ -34,6 +34,7 @@
     "@react-email/render": "^1.1.0",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
+    "@tsndr/cloudflare-worker-jwt": "3.2.0",
     "@upstash/ratelimit": "^2.0.5",
     "@upstash/redis": "^1.34.9",
     "agents": "0.0.93",
