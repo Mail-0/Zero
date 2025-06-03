@@ -1,13 +1,16 @@
 import { env, WorkerEntrypoint } from 'cloudflare:workers';
 import { contextStorage } from 'hono/context-storage';
-import { ZeroAgent, ZeroMCP } from './routes/chat';
+import { ZeroMCP } from './services/mcp-service/mcp';
+import { createLocalJWKSet, jwtVerify } from 'jose';
 import { routePartykitRequest } from 'partyserver';
 import { trpcServer } from '@hono/trpc-server';
 import { agentsMiddleware } from 'hono-agents';
 import { DurableMailbox } from './lib/party';
 import { autumnApi } from './routes/autumn';
+import { ZeroAgent } from './routes/chat';
 import type { HonoContext } from './ctx';
 import { createAuth } from './lib/auth';
+import { aiRouter } from './routes/ai';
 import { Autumn } from 'autumn-js';
 import { appRouter } from './trpc';
 import { cors } from 'hono/cors';
@@ -22,18 +25,46 @@ const api = new Hono<HonoContext>()
     const auth = createAuth();
     c.set('auth', auth);
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
-    c.set('session', session);
+    c.set('sessionUser', session?.user);
+
+    // Bearer token if no session user yet
+    if (c.req.header('Authorization') && !session?.user) {
+      const token = c.req.header('Authorization')?.split(' ')[1];
+
+      if (token) {
+        const localJwks = await auth.api.getJwks();
+        const jwks = createLocalJWKSet(localJwks);
+
+        const { payload } = await jwtVerify(token, jwks);
+        const userId = payload.sub;
+
+        if (userId) {
+          c.set(
+            'sessionUser',
+            await db.query.user.findFirst({
+              where: (user, ops) => {
+                return ops.eq(user.id, userId);
+              },
+            }),
+          );
+        }
+      }
+    }
+
     const autumn = new Autumn({ secretKey: env.AUTUMN_SECRET_KEY });
     c.set('autumn', autumn);
     await next();
   })
+  .route('/ai', aiRouter)
   .route('/autumn', autumnApi)
   .on(['GET', 'POST'], '/auth/*', (c) => c.var.auth.handler(c.req.raw))
   .use(
     trpcServer({
       endpoint: '/api/trpc',
       router: appRouter,
-      createContext: (_, c) => ({ c, session: c.var['session'], db: c.var['db'] }),
+      createContext: (_, c) => {
+        return { c, sessionUser: c.var['sessionUser'], db: c.var['db'] };
+      },
       allowMethodOverride: true,
       onError: (opts) => {
         console.error('Error in TRPC handler:', opts.error);
@@ -68,34 +99,34 @@ const app = new Hono<HonoContext>()
       exposeHeaders: ['X-Zero-Redirect'],
     }),
   )
-  .mount(
-    '/sse',
-    async (request, env, ctx) => {
-      const authBearer = request.headers.get('Authorization');
-      if (!authBearer) {
-        return new Response('Unauthorized', { status: 401 });
-      }
-      ctx.props = {
-        cookie: authBearer,
-      };
-      return ZeroMCP.serveSSE('/sse', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
-    },
-    { replaceRequest: false },
-  )
-  .mount(
-    '/mcp',
-    async (request, env, ctx) => {
-      const authBearer = request.headers.get('Authorization');
-      if (!authBearer) {
-        return new Response('Unauthorized', { status: 401 });
-      }
-      ctx.props = {
-        cookie: authBearer,
-      };
-      return ZeroMCP.serve('/mcp', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
-    },
-    { replaceRequest: false },
-  )
+  // .mount(
+  //   '/sse',
+  //   async (request, env, ctx) => {
+  //     const authBearer = request.headers.get('Authorization');
+  //     if (!authBearer) {
+  //       return new Response('Unauthorized', { status: 401 });
+  //     }
+  //     ctx.props = {
+  //       cookie: authBearer,
+  //     };
+  //     return ZeroMCP.serveSSE('/sse', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
+  //   },
+  //   { replaceRequest: false },
+  // )
+  // .mount(
+  //   '/mcp',
+  //   async (request, env, ctx) => {
+  //     const authBearer = request.headers.get('Authorization');
+  //     if (!authBearer) {
+  //       return new Response('Unauthorized', { status: 401 });
+  //     }
+  //     ctx.props = {
+  //       cookie: authBearer,
+  //     };
+  //     return ZeroMCP.serve('/mcp', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
+  //   },
+  //   { replaceRequest: false },
+  // )
   .route('/api', api)
   .use(
     '*',

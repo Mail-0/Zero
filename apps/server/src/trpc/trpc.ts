@@ -19,13 +19,13 @@ export const router = t.router;
 export const publicProcedure = t.procedure;
 
 export const privateProcedure = publicProcedure.use(async ({ ctx, next }) => {
-  if (!ctx.session?.user) {
+  if (!ctx.sessionUser) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
     });
   }
 
-  return next({ ctx: { ...ctx, session: ctx.session } });
+  return next({ ctx: { ...ctx, sessionUser: ctx.sessionUser } });
 });
 
 export const activeConnectionProcedure = privateProcedure.use(async ({ ctx, next }) => {

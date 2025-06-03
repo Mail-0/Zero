@@ -9,7 +9,7 @@ import { z } from 'zod';
 
 export const generateSearchQuery = activeDriverProcedure
   .input(z.object({ query: z.string() }))
-  .mutation(async ({ input }) => {
+  .mutation(async ({ input, ctx }) => {
     const result = await generateObject({
       model: openai('gpt-4o'),
       system: GmailSearchAssistantSystemPrompt(),

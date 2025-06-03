@@ -1,5 +1,4 @@
 import { privateProcedure, router } from '../trpc';
-import jwt from '@tsndr/cloudflare-worker-jwt';
 
 export const userRouter = router({
   delete: privateProcedure.mutation(async ({ ctx }) => {
@@ -11,15 +10,5 @@ export const userRouter = router({
       request: ctx.c.req.raw,
     });
     return { success, message };
-  }),
-  getIntercomToken: privateProcedure.query(async ({ ctx }) => {
-    const token = await jwt.sign(
-      {
-        user_id: ctx.session.user.id,
-        email: ctx.session.user.email,
-      },
-      ctx.c.env.JWT_SECRET,
-    );
-    return token;
   }),
 });

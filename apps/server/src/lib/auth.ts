@@ -6,8 +6,8 @@ import {
   session,
   userHotkeys,
 } from '../db/schema';
+import { createAuthMiddleware, phoneNumber, jwt, bearer } from 'better-auth/plugins';
 import { type Account, betterAuth, type BetterAuthOptions } from 'better-auth';
-import { createAuthMiddleware, phoneNumber } from 'better-auth/plugins';
 import { getBrowserTimezone, isValidTimezone } from './timezones';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { getSocialProviders } from './auth-providers';
@@ -83,6 +83,8 @@ export const createAuth = () => {
 
   return betterAuth({
     plugins: [
+      jwt(),
+      bearer(),
       phoneNumber({
         sendOTP: async ({ code, phoneNumber }) => {
           await twilioClient.messages
@@ -290,3 +292,41 @@ export const createSimpleAuth = () => {
 
 export type Auth = ReturnType<typeof createAuth>;
 export type SimpleAuth = ReturnType<typeof createSimpleAuth>;
+
+// Helper -------------------------------------------------------------------
+// This helper returns an existing *session* bearer token (compatible with the
+// `bearer()` plugin) for the provided `userId`, or lazily creates a fresh
+// session when none is found. The generated token can be used to authenticate
+// out-of-band requests (e.g. Server-sent MCP connections) by supplying it in
+// a `Bearer <token>` Authorization header.
+export const getBearerTokenForUser = async (userId: string): Promise<string> => {
+  const db = createDb(env.HYPERDRIVE.connectionString);
+
+  // Try to reuse an active (non-expired) session
+  const existingSession = await db.query.session.findFirst({
+    where: (s, ops) => ops.and(ops.eq(s.userId, userId), ops.gt(s.expiresAt, new Date())),
+    orderBy: (s, ops) => [ops.desc(s.expiresAt)],
+  });
+
+  if (existingSession) {
+    return existingSession.token;
+  }
+
+  // No active session – create a minimal one so the token becomes valid
+  const now = new Date();
+  const newToken = crypto.randomUUID();
+  const expiresAt = new Date(now.getTime() + 1000 * 60 * 60 * 24 * 7); // 7 days
+
+  await db.insert(session).values({
+    id: crypto.randomUUID(),
+    userId,
+    createdAt: now,
+    updatedAt: now,
+    expiresAt,
+    token: newToken,
+    ipAddress: null,
+    userAgent: null,
+  });
+
+  return newToken;
+};
