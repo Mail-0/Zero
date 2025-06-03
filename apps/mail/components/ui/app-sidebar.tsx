@@ -44,8 +44,8 @@ import { useLocation } from 'react-router';
 import { useTranslations } from 'use-intl';
 import { useForm } from 'react-hook-form';
 import { FOLDERS } from '@/lib/utils';
-import { NavMain } from './nav-main';
 import { NavUser } from './nav-user';
+import { NavMain } from './nav-main';
 import { useQueryState } from 'nuqs';
 import { Input } from './input';
 import { toast } from 'sonner';
@@ -277,7 +277,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               )}
             </AnimatePresence>
           </SidebarHeader>
-          {/* {!session?.user.phoneNumberVerified && !isSessionPending ? <CallInboxDialog /> : null} */}
+          {!session?.user.phoneNumberVerified && !isSessionPending ? <CallInboxDialog /> : null}
           <SidebarContent
             className={`scrollbar scrollbar-w-1 scrollbar-thumb-accent/40 scrollbar-track-transparent hover:scrollbar-thumb-accent scrollbar-thumb-rounded-full overflow-x-hidden py-0 pt-0 ${state !== 'collapsed' ? 'mt-5 md:px-4' : 'px-2'}`}
           >
