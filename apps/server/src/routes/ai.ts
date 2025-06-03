@@ -10,13 +10,13 @@ aiRouter.get('/', (c) => c.text('Twilio + ElevenLabs + AI Phone System Ready'));
 aiRouter.mount(
   '/mcp',
   async (request, env, ctx) => {
-    const phoneNumber = request.headers.get('X-Phone-Number');
-    if (!phoneNumber) {
+    const connectionId = request.headers.get('X-Connection-Id');
+    if (!connectionId) {
       return new Response('Unauthorized', { status: 401 });
     }
 
     ctx.props = {
-      phoneNumber,
+      connectionId,
     };
 
     return ZeroMCP.serve('/api/ai/mcp', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);

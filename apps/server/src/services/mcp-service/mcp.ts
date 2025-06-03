@@ -9,50 +9,34 @@ import { createDb } from '../../db';
 import { generateText } from 'ai';
 import { z } from 'zod';
 
-// TODO: Remove this once we have a proper phone mapping
-const mapping: Record<string, { connectionId: string }> = {
-  '+18185176315': {
-    connectionId: '0f2a3874-8106-441c-86d7-ecad65d063f0',
-  },
-};
-
-// TODO: remove this too asap
-const phoneMapping = async (phoneNumber: string) => {
-  console.log('[DEBUG] phoneMapping', phoneNumber);
-
+const getDriverFromConnectionId = async (connectionId: string) => {
   const db = createDb(env.HYPERDRIVE.connectionString);
-
-  const obj = mapping[phoneNumber];
-  const connection = await db.query.connection.findFirst({
-    where: (connection, ops) => {
-      return ops.eq(connection.id, obj.connectionId);
+  const activeConnection = await db.query.connection.findFirst({
+    where: (connection, ops) => ops.eq(connection.id, connectionId),
+    columns: {
+      providerId: true,
+      userId: true,
+      accessToken: true,
+      refreshToken: true,
+      email: true,
     },
   });
 
-  if (!connection) {
-    throw new Error('No connection found.');
+  if (!activeConnection || !activeConnection.accessToken || !activeConnection.refreshToken) {
+    throw new Error('No connection found');
   }
 
-  if (!connection.accessToken || !connection.refreshToken) {
-    throw new Error('Invalid connection');
-  }
-
-  const driver = createDriver(connection.providerId, {
+  return createDriver(activeConnection.providerId, {
     auth: {
-      userId: connection.userId,
-      accessToken: connection.accessToken,
-      refreshToken: connection.refreshToken,
-      email: connection.email,
+      userId: activeConnection.userId,
+      accessToken: activeConnection.accessToken,
+      refreshToken: activeConnection.refreshToken,
+      email: activeConnection.email,
     },
   });
-
-  return {
-    driver,
-    connectionId: connection.id,
-  };
 };
 
-export class ZeroMCP extends McpAgent<typeof env, {}, { phoneNumber: string }> {
+export class ZeroMCP extends McpAgent<typeof env, {}, { connectionId: string }> {
   public server = new McpServer({
     name: 'zero-mcp',
     version: '1.0.0',
@@ -60,13 +44,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { phoneNumber: string }> {
   });
 
   async init(): Promise<void> {
-    const phoneNumber = this.props.phoneNumber;
-    const connectionId = mapping[phoneNumber]?.connectionId;
-    if (!connectionId) {
-      throw new Error('Unauthorized');
-    }
-
-    const { driver } = await phoneMapping(phoneNumber);
+    const driver = await getDriverFromConnectionId(this.props.connectionId);
 
     this.server.tool(
       'buildGmailSearchQuery',

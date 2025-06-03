@@ -4,62 +4,14 @@ import {
 } from './twilio-socket-message-schema';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { elevenLabsIncomingSocketMessageSchema } from './eleven-labs-incoming-message-schema';
-import { generateText, type Tool, experimental_createMCPClient as createMCPClient } from 'ai';
 import type { ElevenLabsOutgoingSocketMessage } from './eleven-labs-outgoing-message-schema';
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import type { MailManager } from '../../lib/driver/types';
-import { tools } from '../../routes/agent/tools';
-import { createDriver } from '../../lib/driver';
+import { generateText, experimental_createMCPClient as createMCPClient } from 'ai';
 import { systemPrompt } from './system-prompt';
 import { ElevenLabsClient } from 'elevenlabs';
 import { env } from 'cloudflare:workers';
 import { openai } from '@ai-sdk/openai';
-import { createDb } from '../../db';
 import z, { ZodError } from 'zod';
 import { Twilio } from 'twilio';
-
-// TODO: Remove this once we have a proper phone mapping
-const mapping: Record<string, { connectionId: string }> = {
-  '+18185176315': {
-    connectionId: '0f2a3874-8106-441c-86d7-ecad65d063f0',
-  },
-};
-
-// TODO: remove this too asap
-const phoneMapping = async (phoneNumber: string) => {
-  console.log('[DEBUG] phoneMapping', phoneNumber);
-
-  const db = createDb(env.HYPERDRIVE.connectionString);
-
-  const obj = mapping[phoneNumber];
-  const connection = await db.query.connection.findFirst({
-    where: (connection, ops) => {
-      return ops.eq(connection.id, obj.connectionId);
-    },
-  });
-
-  if (!connection) {
-    throw new Error('No connection found.');
-  }
-
-  if (!connection.accessToken || !connection.refreshToken) {
-    throw new Error('Invalid connection');
-  }
-
-  const driver = createDriver(connection.providerId, {
-    auth: {
-      userId: connection.userId,
-      accessToken: connection.accessToken,
-      refreshToken: connection.refreshToken,
-      email: connection.email,
-    },
-  });
-
-  return {
-    driver,
-    connectionId: connection.id,
-  };
-};
 
 export class CallService {
   private phoneNumber: string | null = null;
@@ -74,6 +26,10 @@ export class CallService {
   private mcpClient: Awaited<ReturnType<typeof createMCPClient>> | null = null;
 
   constructor(private callSid: string) {
+    if (!env.CALL_INBOX_CONNECTION_ID) {
+      throw new Error('[Twilio] CALL_INBOX_CONNECTION_ID not set');
+    }
+
     this.twilio = new Twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
   }
 
@@ -87,7 +43,7 @@ export class CallService {
     // Initialize the mail driver and tools
     this.callWebSocket = callWebSocket;
 
-    this.mcpClient = await this.connectToMCP(hostname);
+    this.mcpClient = await this.connectToMCP(hostname, env.CALL_INBOX_CONNECTION_ID);
 
     // Attach event listeners to the call WebSocket
     await this.connectToElevenLabs();
@@ -482,7 +438,7 @@ export class CallService {
   //   }, {});
   // }
 
-  private async connectToMCP(hostname: string) {
+  private async connectToMCP(hostname: string, connectionId: string) {
     if (!this.phoneNumber) {
       throw new Error('[Twilio] Phone number not set');
     }
@@ -491,7 +447,7 @@ export class CallService {
     const transport = new StreamableHTTPClientTransport(mcpUrl, {
       requestInit: {
         headers: {
-          'X-Phone-Number': this.phoneNumber,
+          'X-Connection-Id': connectionId,
         },
       },
     });
