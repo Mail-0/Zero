@@ -1,13 +1,4 @@
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
   Archive2,
   Bell,
   CurvedArrow,
@@ -20,7 +11,17 @@ import {
   Trash,
   User,
   X,
+  Search,
 } from '../icons/icons';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useActiveConnection, useConnections } from '@/hooks/use-connections';
@@ -38,24 +39,24 @@ import { MailList } from '@/components/mail/mail-list';
 import { useHotkeysContext } from 'react-hotkeys-hook';
 import { useNavigate, useParams } from 'react-router';
 import { useMail } from '@/components/mail/use-mail';
-import { PricingDialog } from '../ui/pricing-dialog';
 import { SidebarToggle } from '../ui/sidebar-toggle';
+import { PricingDialog } from '../ui/pricing-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useBrainState } from '@/hooks/use-summary';
 import { clearBulkSelectionAtom } from './use-mail';
 import AISidebar from '@/components/ui/ai-sidebar';
 import { Command, RefreshCcw } from 'lucide-react';
 import { cleanSearchValue, cn } from '@/lib/utils';
-import { useBilling } from '@/hooks/use-billing';
 import { useThreads } from '@/hooks/use-threads';
+import { useBilling } from '@/hooks/use-billing';
 import AIToggleButton from '../ai-toggle-button';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
 import { useSession } from '@/lib/auth-client';
 import { ScrollArea } from '../ui/scroll-area';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { useStats } from '@/hooks/use-stats';
 import { useTranslations } from 'use-intl';
 import { useQueryState } from 'nuqs';
@@ -524,14 +525,16 @@ export function MailLayout() {
                 <Button
                   variant="outline"
                   className={cn(
-                    'text-muted-foreground relative flex h-9 w-full select-none items-center justify-start overflow-hidden rounded-[0.5rem] border bg-white text-left text-sm font-normal shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-[#141414]',
+                    'text-muted-foreground relative flex h-8 w-full select-none items-center justify-start overflow-hidden rounded-[0.5rem] rounded-lg border bg-white pl-2 text-left text-sm font-normal shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-none dark:bg-[#141414]',
                   )}
                   onClick={() => setOpen(!open)}
                 >
+                  <Search className="fill-[#71717A] dark:fill-[#6F6F6F]" />
+
                   <span className="hidden truncate pr-20 lg:inline-block">
                     {activeFilters.length > 0
                       ? activeFilters.map((f) => f.display).join(', ')
-                      : 'Search & Filters'}
+                      : 'Search & Filter'}
                   </span>
                   <span className="inline-block truncate pr-20 lg:hidden">
                     {activeFilters.length > 0
@@ -539,7 +542,7 @@ export function MailLayout() {
                       : 'Search...'}
                   </span>
 
-                  <span className="absolute right-[0.45rem] top-[0.45rem] flex gap-1">
+                  <span className="absolute right-[0.18rem] flex gap-1">
                     {/* {activeFilters.length > 0 && (
                       <Badge variant="secondary" className="ml-2 h-5 rounded px-1">
                         {activeFilters.length}
@@ -549,7 +552,7 @@ export function MailLayout() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-5 rounded px-1.5 text-xs"
+                        className="h-5 rounded-xl px-1.5 text-xs"
                         onClick={(e) => {
                           e.stopPropagation();
                           clearAllFilters();
@@ -558,8 +561,8 @@ export function MailLayout() {
                         Clear
                       </Button>
                     )}
-                    <kbd className="bg-muted pointer-events-none hidden h-5 select-none items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
-                      <span className="text-sm">⌘</span> K
+                    <kbd className="bg-muted text-md pointer-events-none hidden h-7 select-none items-center gap-0.5 rounded-md border-none px-2 font-medium opacity-100 sm:flex dark:bg-[#262626] dark:text-[#929292]">
+                      <span className="text-xl">⌘</span> K
                     </kbd>
                   </span>
                 </Button>
