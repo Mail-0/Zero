@@ -26,14 +26,25 @@ import {
   MoreVertical,
   HardDriveDownload,
   Paperclip,
+  Loader2,
+  CopyIcon,
+  SearchIcon,
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogTitle,
+  DialogHeader,
+  DialogContent,
+  DialogTrigger,
+  DialogDescription,
+} from '../ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
-import { memo, useEffect, useMemo, useState, useRef, useCallback } from 'react';
+import { memo, useEffect, useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -44,7 +55,9 @@ import { getListUnsubscribeAction } from '@/lib/email-utils';
 import AttachmentsAccordion from './attachments-accordion';
 import { cn, getEmailLogo, formatDate } from '@/lib/utils';
 import { useBrainState } from '../../hooks/use-summary';
+import { useTRPC } from '@/providers/query-provider';
 import { useThreadLabels } from '@/hooks/use-labels';
+import { useMutation } from '@tanstack/react-query';
 import { Markdown } from '@react-email/components';
 import AttachmentDialog from './attachment-dialog';
 import { useSummary } from '@/hooks/use-summary';
@@ -63,6 +76,135 @@ import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Badge } from '../ui/badge';
 import JSZip from 'jszip';
+
+function TextSelectionPopover({
+  children,
+  onSearch,
+}: {
+  children: React.ReactNode;
+  onSearch: (query: string) => void;
+}) {
+  const [selectionCoords, setSelectionCoords] = useState<{ x: number; y: number } | null>(null);
+  const [selectedText, setSelectedText] = useState('');
+  const popoverTriggerRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  const handleSelectionChange = useCallback(() => {
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed) {
+      setSelectionCoords(null);
+      setSelectedText('');
+      return;
+    }
+
+    try {
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2 + window.scrollX - window.innerWidth / 2;
+      const y = rect.top + window.scrollY;
+
+      setSelectionCoords({ x: centerX, y });
+      setSelectedText(selection.toString().trim());
+    } catch (error) {
+      console.error('Error handling text selection:', error);
+      setSelectionCoords(null);
+      setSelectedText('');
+    }
+  }, []);
+
+  //   const handleClickOutside = useCallback((event: MouseEvent) => {
+  //     if (
+  //       popoverRef.current &&
+  //       !popoverRef.current.contains(event.target as Node) &&
+  //       !popoverTriggerRef.current?.contains(event.target as Node)
+  //     ) {
+  //       setSelectionCoords(null);
+  //       setSelectedText('');
+  //     }
+  //   }, []);
+
+  useEffect(() => {
+    document.addEventListener('mouseup', handleSelectionChange);
+    // document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        setSelectionCoords(null);
+        setSelectedText('');
+      }
+    });
+
+    return () => {
+      document.removeEventListener('mouseup', handleSelectionChange);
+      //   document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [handleSelectionChange]);
+
+  return (
+    <div className="relative" ref={popoverTriggerRef}>
+      {children}
+      {selectionCoords && (
+        <div
+          ref={popoverRef}
+          className="absolute z-50"
+          style={{
+            top: selectionCoords.y,
+            left: selectionCoords.x,
+          }}
+          role="dialog"
+          aria-label="Text selection options"
+        >
+          <Popover
+            open={!!selectedText.trim().length}
+            onOpenChange={(open) => (open ? undefined : setSelectedText(''))}
+          >
+            <PopoverTrigger asChild>
+              <button className="invisible h-0 w-0" aria-label="Text selection options" />
+            </PopoverTrigger>
+            <PopoverContent
+              side="top"
+              className="break-words rounded-lg p-0"
+              onInteractOutside={() => {
+                setSelectionCoords(null);
+                setSelectedText('');
+              }}
+            >
+              <div className="flex items-center justify-between gap-2 px-2">
+                <p className="text-muted-foreground max-w-[200px] truncate text-sm">
+                  {selectedText}
+                </p>
+                <div className="flex">
+                  <Button
+                    size="icon"
+                    className="scale-75 rounded-full"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      onSearch(selectedText);
+                    }}
+                  >
+                    <SearchIcon />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="scale-75 rounded-full"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      navigator.clipboard.writeText(selectedText);
+                    }}
+                  >
+                    <CopyIcon />
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // Add formatFileSize utility function
 const formatFileSize = (size: number) => {
@@ -483,6 +625,155 @@ const openAttachment = (attachment: { body: string; mimeType: string; filename: 
   }
 };
 
+const MoreAboutPerson = ({
+  person,
+  extra,
+  open,
+  onOpenChange,
+}: {
+  person: Sender;
+  extra?: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) => {
+  const trpc = useTRPC();
+  const {
+    mutate: doSearch,
+    isPending,
+    data,
+    error,
+  } = useMutation(trpc.ai.webSearch.mutationOptions());
+  const handleSearch = useCallback(() => {
+    doSearch({
+      query: `In 50 words or less: What is the background of ${person.name} & ${person.email}, of ${person.email.split('@')[1]}. 
+      This could be a phishing email address, indicate if the domain is suspicious, example: x.io is not a valid domain for x.com | example: x.com is a valid domain for x.com | example: paypalcom.com is not a valid domain for paypal.com`,
+    });
+  }, [person.name]);
+
+  useEffect(() => {
+    if (open) {
+      handleSearch();
+    }
+  }, [open]);
+
+  const findSource = useCallback(
+    (id: string) => {
+      const sources = data?.sources;
+      if (!sources) return;
+      return sources.find((source) => source.id === id);
+    },
+    [data],
+  );
+
+  const replaceSourcesInText = useCallback(
+    (text: string) => {
+      const sources = data?.sources;
+      if (!sources) return text;
+      const sourcesRegex = /\[(\d+)\]/g;
+      return text.replaceAll(sourcesRegex, (match, p1) => {
+        console.log('p1', p1);
+        const source = findSource(p1);
+        return source ? `SOURCE HERE` : match;
+      });
+    },
+    [data],
+  );
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent showOverlay>
+        <DialogHeader>
+          <DialogTitle>More about {cleanNameDisplay(person.name)}</DialogTitle>
+        </DialogHeader>
+        <div className="mt-4 flex justify-center">
+          {isPending ? (
+            <Loader2 className="animate-spin" />
+          ) : data ? (
+            <StreamingText text={replaceSourcesInText(data.text)} />
+          ) : error ? (
+            <p>Error: {error.message}</p>
+          ) : (
+            <Loader2 className="animate-spin" />
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const MoreAboutQuery = ({
+  query,
+  open,
+  onOpenChange,
+}: {
+  query: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) => {
+  const trpc = useTRPC();
+  const {
+    mutate: doSearch,
+    isPending,
+    data,
+    error,
+  } = useMutation(trpc.ai.webSearch.mutationOptions());
+
+  const handleSearch = useCallback(() => {
+    doSearch({
+      query: query,
+    });
+  }, [query, doSearch]);
+
+  useEffect(() => {
+    if (open && query) {
+      handleSearch();
+    }
+  }, [open, query, handleSearch]);
+
+  const findSource = useCallback(
+    (id: string) => {
+      const sources = data?.sources;
+      if (!sources) return;
+      return sources.find((source) => source.id === id);
+    },
+    [data],
+  );
+
+  const replaceSourcesInText = useCallback(
+    (text: string) => {
+      const sources = data?.sources;
+      if (!sources) return text;
+      const sourcesRegex = /\[(\d+)\]/g;
+      return text.replaceAll(sourcesRegex, (match, p1) => {
+        const source = findSource(p1);
+        return source ? `SOURCE HERE` : match;
+      });
+    },
+    [data, findSource],
+  );
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent showOverlay>
+        <DialogHeader>
+          <DialogTitle>Search Results</DialogTitle>
+        </DialogHeader>
+        <div className="mt-4 flex justify-center">
+          {isPending ? (
+            <Loader2 className="animate-spin" />
+          ) : data ? (
+            <StreamingText text={replaceSourcesInText(data.text)} />
+          ) : error ? (
+            <p>Error: {error.message}</p>
+          ) : (
+            <Loader2 className="animate-spin" />
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }: Props) => {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   //   const [unsubscribed, setUnsubscribed] = useState(false);
@@ -500,12 +791,13 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
   const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const t = useTranslations();
   const [activeReplyId, setActiveReplyId] = useQueryState('activeReplyId');
-  const { data: session } = useSession();
   const { labels: threadLabels } = useThreadLabels(
     emailData.tags ? emailData.tags.map((l) => l.id) : [],
   );
   const { data: brainState } = useBrainState();
   const { data: activeConnection } = useActiveConnection();
+  const [researchSender, setResearchSender] = useState<Sender | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string | null>(null);
 
   const isLastEmail = totalEmails && index === totalEmails - 1;
 
@@ -769,6 +1061,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                 width: 100%;
               }
               
+              
               .separator {
                 background: #000 !important;
               }
@@ -1026,310 +1319,340 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
         }
       }}
     >
-      <div className="relative h-full overflow-y-auto">
-        <div className={cn('px-4', index === 0 && 'border-b py-4')}>
-          {index === 0 && (
-            <>
-              <span className="inline-flex items-center gap-2 font-medium text-black dark:text-white">
-                <span>
-                  {emailData.subject}{' '}
-                  <span className="text-muted-foreground dark:text-[#8C8C8C]">
-                    {totalEmails && totalEmails > 1 && `[${totalEmails}]`}
+      <TextSelectionPopover onSearch={setSearchQuery}>
+        {searchQuery && (
+          <MoreAboutQuery
+            query={searchQuery}
+            open={!!searchQuery}
+            onOpenChange={(open) => (open ? void 0 : setSearchQuery(null))}
+          />
+        )}
+        {researchSender && (
+          <MoreAboutPerson
+            open={!!researchSender}
+            onOpenChange={(open) => (open ? void 0 : setResearchSender(null))}
+            person={researchSender}
+          />
+        )}
+        <div className="relative h-full overflow-y-auto">
+          <div className={cn('px-4', index === 0 && 'border-b py-4')}>
+            {index === 0 && (
+              <>
+                <span className="inline-flex items-center gap-2 font-medium text-black dark:text-white">
+                  <span>
+                    {emailData.subject}{' '}
+                    <span className="text-muted-foreground dark:text-[#8C8C8C]">
+                      {totalEmails && totalEmails > 1 && `[${totalEmails}]`}
+                    </span>
                   </span>
                 </span>
-              </span>
 
-              <div className="mt-2 flex items-center gap-2">
-                {emailData?.tags?.length ? (
-                  <MailDisplayLabels labels={emailData?.tags.map((t) => t.name) || []} />
-                ) : null}
-                {emailData?.tags?.length ? (
-                  <div className="bg-iconLight dark:bg-iconDark/20 relative h-3 w-0.5 rounded-full" />
-                ) : null}
-                <RenderLabels labels={threadLabels} />
-                {threadLabels.length ? (
-                  <div className="bg-iconLight dark:bg-iconDark/20 relative h-3 w-0.5 rounded-full" />
-                ) : null}
-                <div className="text-muted-foreground flex items-center gap-2 text-sm dark:text-[#8C8C8C]">
-                  {(() => {
-                    if (people.length <= 2) {
-                      return people.map(renderPerson);
-                    }
+                <div className="mt-2 flex items-center gap-2">
+                  {emailData?.tags?.length ? (
+                    <MailDisplayLabels labels={emailData?.tags.map((t) => t.name) || []} />
+                  ) : null}
+                  {emailData?.tags?.length ? (
+                    <div className="bg-iconLight dark:bg-iconDark/20 relative h-3 w-0.5 rounded-full" />
+                  ) : null}
+                  <RenderLabels labels={threadLabels} />
+                  {threadLabels.length ? (
+                    <div className="bg-iconLight dark:bg-iconDark/20 relative h-3 w-0.5 rounded-full" />
+                  ) : null}
+                  <div className="text-muted-foreground flex items-center gap-2 text-sm dark:text-[#8C8C8C]">
+                    {(() => {
+                      if (people.length <= 2) {
+                        return people.map(renderPerson);
+                      }
 
-                    // Only show first two people plus count if we have at least two people
-                    const firstPerson = people[0];
-                    const secondPerson = people[1];
+                      // Only show first two people plus count if we have at least two people
+                      const firstPerson = people[0];
+                      const secondPerson = people[1];
 
-                    if (firstPerson && secondPerson) {
-                      return (
-                        <>
-                          {renderPerson(firstPerson)}
-                          {renderPerson(secondPerson)}
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="text-sm">
-                                +{people.length - 2} {people.length - 2 === 1 ? 'other' : 'others'}
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent className="flex flex-col gap-1">
-                              {people.slice(2).map((person, index) => (
-                                <div key={index}>{renderPerson(person)}</div>
-                              ))}
-                            </TooltipContent>
-                          </Tooltip>
-                        </>
-                      );
-                    }
+                      if (firstPerson && secondPerson) {
+                        return (
+                          <>
+                            {renderPerson(firstPerson)}
+                            {renderPerson(secondPerson)}
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="text-sm">
+                                  +{people.length - 2}{' '}
+                                  {people.length - 2 === 1 ? 'other' : 'others'}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent className="flex flex-col gap-1">
+                                {people.slice(2).map((person, index) => (
+                                  <div key={index}>{renderPerson(person)}</div>
+                                ))}
+                              </TooltipContent>
+                            </Tooltip>
+                          </>
+                        );
+                      }
 
-                    return null;
-                  })()}
+                      return null;
+                    })()}
+                  </div>
                 </div>
-              </div>
-              {brainState?.enabled && <AiSummary />}
-              {threadAttachments && threadAttachments.length > 0 && (
-                <ThreadAttachments attachments={threadAttachments} />
-              )}
-            </>
-          )}
-        </div>
-        <div
-          className="flex cursor-pointer flex-col pb-2 transition-all duration-200"
-          onClick={toggleCollapse}
-        >
-          <div className="mt-3 flex w-full items-start justify-between gap-4 px-4">
-            <div className="flex w-full justify-center gap-4">
-              <Avatar className="mt-3 h-8 w-8 rounded-full border dark:border-none">
-                <AvatarImage
-                  className="rounded-full"
-                  src={getEmailLogo(emailData?.sender?.email)}
-                />
-                <AvatarFallback className="rounded-full bg-[#FFFFFF] font-bold text-[#9F9F9F] dark:bg-[#373737]">
-                  {getFirstLetterCharacter(emailData?.sender?.name)}
-                </AvatarFallback>
-              </Avatar>
+                {brainState?.enabled && <AiSummary />}
+                {threadAttachments && threadAttachments.length > 0 && (
+                  <ThreadAttachments attachments={threadAttachments} />
+                )}
+              </>
+            )}
+          </div>
+          <div
+            className="flex cursor-pointer flex-col pb-2 transition-all duration-200"
+            onClick={toggleCollapse}
+          >
+            <div className="mt-3 flex w-full items-start justify-between gap-4 px-4">
+              <div className="flex w-full justify-center gap-4">
+                <Avatar className="mt-3 h-8 w-8 rounded-full border dark:border-none">
+                  <AvatarImage
+                    className="rounded-full"
+                    src={getEmailLogo(emailData?.sender?.email)}
+                  />
+                  <AvatarFallback className="rounded-full bg-[#FFFFFF] font-bold text-[#9F9F9F] dark:bg-[#373737]">
+                    {getFirstLetterCharacter(emailData?.sender?.name)}
+                  </AvatarFallback>
+                </Avatar>
 
-              <div className="flex w-full items-center justify-between">
-                <div className="flex w-full items-center justify-start">
-                  <div className="flex w-full flex-col">
-                    <div className="flex w-full items-center justify-between">
-                      <div className="flex items-center gap-1">
-                        <span className="font-semibold">
-                          {cleanNameDisplay(emailData?.sender?.name)}
-                        </span>
-                        <Popover open={openDetailsPopover} onOpenChange={handlePopoverChange}>
-                          <PopoverTrigger asChild>
-                            <button
-                              className="hover:bg-iconLight/10 dark:hover:bg-iconDark/20 flex items-center gap-2 rounded-md p-2"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                setOpenDetailsPopover(!openDetailsPopover);
-                              }}
-                              ref={triggerRef}
-                            >
-                              <p className="text-muted-foreground text-xs underline dark:text-[#8C8C8C]">
-                                Details
-                              </p>
-                            </button>
-                          </PopoverTrigger>
-                          <PopoverContent
-                            className="align-items-start dark:bg-panelDark w-[420px] rounded-lg border p-3 text-left shadow-lg"
-                            onBlur={(e) => {
-                              if (!triggerRef.current?.contains(e.relatedTarget)) {
-                                setOpenDetailsPopover(false);
-                              }
+                <div className="flex w-full items-center justify-between">
+                  <div className="flex w-full items-center justify-start">
+                    <div className="flex w-full flex-col">
+                      <div className="flex w-full items-center justify-between">
+                        <div className="flex items-center gap-1">
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              setResearchSender({
+                                name: emailData?.sender?.name || '',
+                                email: emailData?.sender?.email || '',
+                                //   extra: emailData?.sender?.extra || '',
+                              });
                             }}
-                            onClick={(e) => e.stopPropagation()}
+                            className="hover:bg-muted font-semibold"
                           >
-                            <div className="space-y-1 text-sm">
-                              <div className="flex">
-                                <span className="w-24 text-end text-gray-500">
-                                  {t('common.mailDisplay.from')}:
-                                </span>
-                                <div className="ml-3">
-                                  <span className="text-muted-foreground pr-1 font-bold">
-                                    {cleanNameDisplay(emailData?.sender?.name)}
+                            {cleanNameDisplay(emailData?.sender?.name)}
+                          </span>
+
+                          <Popover open={openDetailsPopover} onOpenChange={handlePopoverChange}>
+                            <PopoverTrigger asChild>
+                              <button
+                                className="hover:bg-iconLight/10 dark:hover:bg-iconDark/20 flex items-center gap-2 rounded-md p-2"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                  setOpenDetailsPopover(!openDetailsPopover);
+                                }}
+                                ref={triggerRef}
+                              >
+                                <p className="text-muted-foreground text-xs underline dark:text-[#8C8C8C]">
+                                  Details
+                                </p>
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="align-items-start dark:bg-panelDark w-[420px] rounded-lg border p-3 text-left shadow-lg"
+                              onBlur={(e) => {
+                                if (!triggerRef.current?.contains(e.relatedTarget)) {
+                                  setOpenDetailsPopover(false);
+                                }
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div className="space-y-1 text-sm">
+                                <div className="flex">
+                                  <span className="w-24 text-end text-gray-500">
+                                    {t('common.mailDisplay.from')}:
                                   </span>
-                                  {emailData?.sender?.name !== emailData?.sender?.email && (
-                                    <span className="text-muted-foreground">
-                                      {cleanEmailDisplay(emailData?.sender?.email)}
+                                  <div className="ml-3">
+                                    <span className="text-muted-foreground pr-1 font-bold">
+                                      {cleanNameDisplay(emailData?.sender?.name)}
                                     </span>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex">
-                                <span className="w-24 text-end text-gray-500">
-                                  {t('common.mailDisplay.to')}:
-                                </span>
-                                <span className="text-muted-foreground ml-3">
-                                  {emailData?.to?.map((t) => cleanEmailDisplay(t.email)).join(', ')}
-                                </span>
-                              </div>
-                              {emailData?.cc && emailData.cc.length > 0 && (
-                                <div className="flex">
-                                  <span className="w-24 text-end text-gray-500">
-                                    {t('common.mailDisplay.cc')}:
-                                  </span>
-                                  <span className="text-muted-foreground ml-3">
-                                    {emailData?.cc
-                                      ?.map((t) => cleanEmailDisplay(t.email))
-                                      .join(', ')}
-                                  </span>
-                                </div>
-                              )}
-                              {emailData?.bcc && emailData.bcc.length > 0 && (
-                                <div className="flex">
-                                  <span className="w-24 text-end text-gray-500">
-                                    {t('common.mailDisplay.bcc')}:
-                                  </span>
-                                  <span className="text-muted-foreground ml-3">
-                                    {emailData?.bcc
-                                      ?.map((t) => cleanEmailDisplay(t.email))
-                                      .join(', ')}
-                                  </span>
-                                </div>
-                              )}
-                              <div className="flex">
-                                <span className="w-24 text-end text-gray-500">
-                                  {t('common.mailDisplay.date')}:
-                                </span>
-                                <span className="text-muted-foreground ml-3">
-                                  {format(new Date(emailData?.receivedOn), 'PPpp')}
-                                </span>
-                              </div>
-                              <div className="flex">
-                                <span className="w-24 text-end text-gray-500">
-                                  {t('common.mailDisplay.mailedBy')}:
-                                </span>
-                                <span className="text-muted-foreground ml-3">
-                                  {cleanEmailDisplay(emailData?.sender?.email)}
-                                </span>
-                              </div>
-                              <div className="flex">
-                                <span className="w-24 text-end text-gray-500">
-                                  {t('common.mailDisplay.signedBy')}:
-                                </span>
-                                <span className="text-muted-foreground ml-3">
-                                  {cleanEmailDisplay(emailData?.sender?.email)}
-                                </span>
-                              </div>
-                              {emailData.tls && (
-                                <div className="flex items-center">
-                                  <span className="w-24 text-end text-gray-500">
-                                    {t('common.mailDisplay.security')}:
-                                  </span>
-                                  <div className="text-muted-foreground ml-3 flex items-center gap-1">
-                                    <Lock className="h-4 w-4 text-green-600" />{' '}
-                                    {t('common.mailDisplay.standardEncryption')}
+                                    {emailData?.sender?.name !== emailData?.sender?.email && (
+                                      <span className="text-muted-foreground">
+                                        {cleanEmailDisplay(emailData?.sender?.email)}
+                                      </span>
+                                    )}
                                   </div>
                                 </div>
-                              )}
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-
-                      <div className="flex items-center justify-center">
-                        <time className="text-muted-foreground mr-2 text-sm font-medium dark:text-[#8C8C8C]">
-                          {formatDate(emailData?.receivedOn)}
-                        </time>
-
-                        {/* options menu */}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                              }}
-                              className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md bg-white focus:outline-none focus:ring-0 dark:bg-[#313131]"
-                            >
-                              <ThreeDots className="fill-iconLight dark:fill-iconDark" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="bg-white dark:bg-[#313131]">
-                            <DropdownMenuItem
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                printMail();
-                              }}
-                            >
-                              <Printer className="fill-iconLight dark:fill-iconDark mr-2 h-4 w-4" />
-                              Print
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              disabled={!emailData.attachments?.length}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                handleDownloadAllAttachments(
-                                  emailData.subject || 'email',
-                                  emailData.attachments || [],
-                                )();
-                              }}
-                            >
-                              <HardDriveDownload className="fill-iconLight dark:text-iconDark dark:fill-iconLight mr-2 h-4 w-4" />
-                              Download All Attachments
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </div>
-                    <div className="flex justify-between">
-                      <div className="flex gap-1">
-                        <p className="text-muted-foreground text-sm font-medium dark:text-[#8C8C8C]">
-                          To:{' '}
-                          {(() => {
-                            // Combine to and cc recipients
-                            const allRecipients = [
-                              ...(emailData?.to || []),
-                              ...(emailData?.cc || []),
-                            ];
-
-                            // If you're the only recipient
-                            if (allRecipients.length === 1 && folder !== 'sent') {
-                              return <span key="you">You</span>;
-                            }
-
-                            // Show first 3 recipients + count of others
-                            const visibleRecipients = allRecipients.slice(0, 3);
-                            const remainingCount = allRecipients.length - 3;
-
-                            return (
-                              <>
-                                {visibleRecipients.map((recipient, index) => (
-                                  <span key={recipient.email}>
-                                    {cleanNameDisplay(recipient.name) ||
-                                      cleanEmailDisplay(recipient.email)}
-                                    {index < visibleRecipients.length - 1 ? ', ' : ''}
+                                <div className="flex">
+                                  <span className="w-24 text-end text-gray-500">
+                                    {t('common.mailDisplay.to')}:
                                   </span>
-                                ))}
-                                {remainingCount > 0 && (
-                                  <span key="others">{`, +${remainingCount} others`}</span>
+                                  <span className="text-muted-foreground ml-3">
+                                    {emailData?.to
+                                      ?.map((t) => cleanEmailDisplay(t.email))
+                                      .join(', ')}
+                                  </span>
+                                </div>
+                                {emailData?.cc && emailData.cc.length > 0 && (
+                                  <div className="flex">
+                                    <span className="w-24 text-end text-gray-500">
+                                      {t('common.mailDisplay.cc')}:
+                                    </span>
+                                    <span className="text-muted-foreground ml-3">
+                                      {emailData?.cc
+                                        ?.map((t) => cleanEmailDisplay(t.email))
+                                        .join(', ')}
+                                    </span>
+                                  </div>
                                 )}
-                              </>
-                            );
-                          })()}
-                        </p>
-                        {(emailData?.bcc?.length || 0) > 0 && (
+                                {emailData?.bcc && emailData.bcc.length > 0 && (
+                                  <div className="flex">
+                                    <span className="w-24 text-end text-gray-500">
+                                      {t('common.mailDisplay.bcc')}:
+                                    </span>
+                                    <span className="text-muted-foreground ml-3">
+                                      {emailData?.bcc
+                                        ?.map((t) => cleanEmailDisplay(t.email))
+                                        .join(', ')}
+                                    </span>
+                                  </div>
+                                )}
+                                <div className="flex">
+                                  <span className="w-24 text-end text-gray-500">
+                                    {t('common.mailDisplay.date')}:
+                                  </span>
+                                  <span className="text-muted-foreground ml-3">
+                                    {format(new Date(emailData?.receivedOn), 'PPpp')}
+                                  </span>
+                                </div>
+                                <div className="flex">
+                                  <span className="w-24 text-end text-gray-500">
+                                    {t('common.mailDisplay.mailedBy')}:
+                                  </span>
+                                  <span className="text-muted-foreground ml-3">
+                                    {cleanEmailDisplay(emailData?.sender?.email)}
+                                  </span>
+                                </div>
+                                <div className="flex">
+                                  <span className="w-24 text-end text-gray-500">
+                                    {t('common.mailDisplay.signedBy')}:
+                                  </span>
+                                  <span className="text-muted-foreground ml-3">
+                                    {cleanEmailDisplay(emailData?.sender?.email)}
+                                  </span>
+                                </div>
+                                {emailData.tls && (
+                                  <div className="flex items-center">
+                                    <span className="w-24 text-end text-gray-500">
+                                      {t('common.mailDisplay.security')}:
+                                    </span>
+                                    <div className="text-muted-foreground ml-3 flex items-center gap-1">
+                                      <Lock className="h-4 w-4 text-green-600" />{' '}
+                                      {t('common.mailDisplay.standardEncryption')}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+
+                        <div className="flex items-center justify-center">
+                          <time className="text-muted-foreground mr-2 text-sm font-medium dark:text-[#8C8C8C]">
+                            {formatDate(emailData?.receivedOn)}
+                          </time>
+
+                          {/* options menu */}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                }}
+                                className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md bg-white focus:outline-none focus:ring-0 dark:bg-[#313131]"
+                              >
+                                <ThreeDots className="fill-iconLight dark:fill-iconDark" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="bg-white dark:bg-[#313131]">
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  printMail();
+                                }}
+                              >
+                                <Printer className="fill-iconLight dark:fill-iconDark mr-2 h-4 w-4" />
+                                Print
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                disabled={!emailData.attachments?.length}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                  handleDownloadAllAttachments(
+                                    emailData.subject || 'email',
+                                    emailData.attachments || [],
+                                  )();
+                                }}
+                              >
+                                <HardDriveDownload className="fill-iconLight dark:text-iconDark dark:fill-iconLight mr-2 h-4 w-4" />
+                                Download All Attachments
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                      <div className="flex justify-between">
+                        <div className="flex gap-1">
                           <p className="text-muted-foreground text-sm font-medium dark:text-[#8C8C8C]">
-                            Bcc:{' '}
-                            {emailData?.bcc?.map((recipient, index) => (
-                              <span key={recipient.email}>
-                                {cleanNameDisplay(recipient.name) ||
-                                  cleanEmailDisplay(recipient.email)}
-                                {index < (emailData?.bcc?.length || 0) - 1 ? ', ' : ''}
-                              </span>
-                            ))}
+                            To:{' '}
+                            {(() => {
+                              // Combine to and cc recipients
+                              const allRecipients = [
+                                ...(emailData?.to || []),
+                                ...(emailData?.cc || []),
+                              ];
+
+                              // If you're the only recipient
+                              if (allRecipients.length === 1 && folder !== 'sent') {
+                                return <span key="you">You</span>;
+                              }
+
+                              // Show first 3 recipients + count of others
+                              const visibleRecipients = allRecipients.slice(0, 3);
+                              const remainingCount = allRecipients.length - 3;
+
+                              return (
+                                <>
+                                  {visibleRecipients.map((recipient, index) => (
+                                    <span key={recipient.email}>
+                                      {cleanNameDisplay(recipient.name) ||
+                                        cleanEmailDisplay(recipient.email)}
+                                      {index < visibleRecipients.length - 1 ? ', ' : ''}
+                                    </span>
+                                  ))}
+                                  {remainingCount > 0 && (
+                                    <span key="others">{`, +${remainingCount} others`}</span>
+                                  )}
+                                </>
+                              );
+                            })()}
                           </p>
-                        )}
+                          {(emailData?.bcc?.length || 0) > 0 && (
+                            <p className="text-muted-foreground text-sm font-medium dark:text-[#8C8C8C]">
+                              Bcc:{' '}
+                              {emailData?.bcc?.map((recipient, index) => (
+                                <span key={recipient.email}>
+                                  {cleanNameDisplay(recipient.name) ||
+                                    cleanEmailDisplay(recipient.email)}
+                                  {index < (emailData?.bcc?.length || 0) - 1 ? ', ' : ''}
+                                </span>
+                              ))}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Pending, needs a storage to make the unsubscribe status consitent */}
-                  {/* <span className="text-muted-foreground flex grow-0 items-center gap-2 text-sm">
+                    {/* Pending, needs a storage to make the unsubscribe status consitent */}
+                    {/* <span className="text-muted-foreground flex grow-0 items-center gap-2 text-sm">
                     {listUnsubscribeAction && (
                       <Dialog>
                         <DialogTrigger asChild>
@@ -1371,101 +1694,102 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                       </Dialog>
                     )}
                   </span> */}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            className={cn(
+              'h-0 overflow-hidden transition-all duration-200',
+              !isCollapsed && 'h-[1px]',
+            )}
+          ></div>
+
+          <div
+            className={cn(
+              'grid overflow-hidden transition-all duration-200',
+              isCollapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]',
+            )}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="min-h-0 overflow-hidden">
+              <div className="h-fit w-full p-0">
+                {/* mail main body */}
+                {emailData?.decodedBody ? (
+                  <MailIframe html={emailData?.decodedBody} senderEmail={emailData.sender.email} />
+                ) : null}
+                {/* mail attachments */}
+                {emailData?.attachments && emailData?.attachments.length > 0 ? (
+                  <div className="mb-4 flex flex-wrap items-center gap-2 px-4 pt-4">
+                    {emailData?.attachments.map((attachment, index) => (
+                      <div key={index} className="flex">
+                        <button
+                          className="flex cursor-pointer items-center gap-1 rounded-[5px] bg-[#FAFAFA] px-1.5 py-1 text-sm font-medium hover:bg-[#F0F0F0] dark:bg-[#262626] dark:hover:bg-[#303030]"
+                          onClick={() => openAttachment(attachment)}
+                        >
+                          {getFileIcon(attachment.filename)}
+                          <span className="max-w-[15ch] truncate text-sm text-black dark:text-white">
+                            {attachment.filename}
+                          </span>{' '}
+                          <span className="text-muted-foreground whitespace-nowrap text-sm dark:text-[#929292]">
+                            {formatFileSize(attachment.size)}
+                          </span>
+                        </button>
+                        <button
+                          onClick={() => downloadAttachment(attachment)}
+                          className="flex cursor-pointer items-center gap-1 rounded-[5px] px-1.5 py-1 text-sm"
+                        >
+                          <HardDriveDownload className="text-muted-foreground dark:text-muted-foreground h-4 w-4 fill-[#FAFAFA] dark:fill-[#262626]" />
+                        </button>
+                        {index < (emailData?.attachments?.length || 0) - 1 && (
+                          <div className="m-auto h-2 w-[1px] bg-[#E0E0E0] dark:bg-[#424242]" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+                <div className="mb-2 mt-2 flex gap-2 px-4">
+                  <ActionButton
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsCollapsed(false);
+                      setMode('reply');
+                      setActiveReplyId(emailData.id);
+                    }}
+                    icon={<Reply className="fill-muted-foreground dark:fill-[#9B9B9B]" />}
+                    text={t('common.mail.reply')}
+                    shortcut={isLastEmail ? 'r' : undefined}
+                  />
+                  <ActionButton
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsCollapsed(false);
+                      setMode('replyAll');
+                      setActiveReplyId(emailData.id);
+                    }}
+                    icon={<ReplyAll className="fill-muted-foreground dark:fill-[#9B9B9B]" />}
+                    text={t('common.mail.replyAll')}
+                    shortcut={isLastEmail ? 'a' : undefined}
+                  />
+                  <ActionButton
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsCollapsed(false);
+                      setMode('forward');
+                      setActiveReplyId(emailData.id);
+                    }}
+                    icon={<Forward className="fill-muted-foreground dark:fill-[#9B9B9B]" />}
+                    text={t('common.mail.forward')}
+                    shortcut={isLastEmail ? 'f' : undefined}
+                  />
                 </div>
               </div>
             </div>
           </div>
         </div>
-
-        <div
-          className={cn(
-            'h-0 overflow-hidden transition-all duration-200',
-            !isCollapsed && 'h-[1px]',
-          )}
-        ></div>
-
-        <div
-          className={cn(
-            'grid overflow-hidden transition-all duration-200',
-            isCollapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]',
-          )}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="min-h-0 overflow-hidden">
-            <div className="h-fit w-full p-0">
-              {/* mail main body */}
-              {emailData?.decodedBody ? (
-                <MailIframe html={emailData?.decodedBody} senderEmail={emailData.sender.email} />
-              ) : null}
-              {/* mail attachments */}
-              {emailData?.attachments && emailData?.attachments.length > 0 ? (
-                <div className="mb-4 flex flex-wrap items-center gap-2 px-4 pt-4">
-                  {emailData?.attachments.map((attachment, index) => (
-                    <div key={index} className="flex">
-                      <button
-                        className="flex cursor-pointer items-center gap-1 rounded-[5px] bg-[#FAFAFA] px-1.5 py-1 text-sm font-medium hover:bg-[#F0F0F0] dark:bg-[#262626] dark:hover:bg-[#303030]"
-                        onClick={() => openAttachment(attachment)}
-                      >
-                        {getFileIcon(attachment.filename)}
-                        <span className="max-w-[15ch] truncate text-sm text-black dark:text-white">
-                          {attachment.filename}
-                        </span>{' '}
-                        <span className="text-muted-foreground whitespace-nowrap text-sm dark:text-[#929292]">
-                          {formatFileSize(attachment.size)}
-                        </span>
-                      </button>
-                      <button
-                        onClick={() => downloadAttachment(attachment)}
-                        className="flex cursor-pointer items-center gap-1 rounded-[5px] px-1.5 py-1 text-sm"
-                      >
-                        <HardDriveDownload className="text-muted-foreground dark:text-muted-foreground h-4 w-4 fill-[#FAFAFA] dark:fill-[#262626]" />
-                      </button>
-                      {index < (emailData?.attachments?.length || 0) - 1 && (
-                        <div className="m-auto h-2 w-[1px] bg-[#E0E0E0] dark:bg-[#424242]" />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-              <div className="mb-2 mt-2 flex gap-2 px-4">
-                <ActionButton
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsCollapsed(false);
-                    setMode('reply');
-                    setActiveReplyId(emailData.id);
-                  }}
-                  icon={<Reply className="fill-muted-foreground dark:fill-[#9B9B9B]" />}
-                  text={t('common.mail.reply')}
-                  shortcut={isLastEmail ? 'r' : undefined}
-                />
-                <ActionButton
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsCollapsed(false);
-                    setMode('replyAll');
-                    setActiveReplyId(emailData.id);
-                  }}
-                  icon={<ReplyAll className="fill-muted-foreground dark:fill-[#9B9B9B]" />}
-                  text={t('common.mail.replyAll')}
-                  shortcut={isLastEmail ? 'a' : undefined}
-                />
-                <ActionButton
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsCollapsed(false);
-                    setMode('forward');
-                    setActiveReplyId(emailData.id);
-                  }}
-                  icon={<Forward className="fill-muted-foreground dark:fill-[#9B9B9B]" />}
-                  text={t('common.mail.forward')}
-                  shortcut={isLastEmail ? 'f' : undefined}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      </TextSelectionPopover>
     </div>
   );
 };

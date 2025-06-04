@@ -28,8 +28,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useSettings } from '@/hooks/use-settings';
 import { Globe, Clock, XIcon } from 'lucide-react';
 import { availableLocales } from '@/i18n/config';
-import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
 import { useRevalidator } from 'react-router';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -133,6 +133,7 @@ export default function GeneralPage() {
       timezone: getBrowserTimezone(),
       dynamicContent: false,
       customPrompt: '',
+      zeroSignature: true,
     },
   });
 
@@ -239,6 +240,23 @@ export default function GeneralPage() {
                   <FormDescription>
                     {t('pages.settings.general.customPromptDescription')}
                   </FormDescription>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="zeroSignature"
+              render={({ field }) => (
+                <FormItem className="flex max-w-xl flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <FormLabel>{t('pages.settings.general.zeroSignature')}</FormLabel>
+                    <FormDescription>
+                      {t('pages.settings.general.zeroSignatureDescription')}
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
                 </FormItem>
               )}
             />

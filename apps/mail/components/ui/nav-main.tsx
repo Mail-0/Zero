@@ -18,11 +18,13 @@ import { Collapsible, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useActiveConnection, useConnections } from '@/hooks/use-connections';
 import { type MessageKey, type NavItem } from '@/config/navigation';
 import { LabelDialog } from '@/components/labels/label-dialog';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import Intercom, { show } from '@intercom/messenger-js-sdk';
+import { CurvedArrow, MessageSquare } from '../icons/icons';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useSidebar } from '../context/sidebar-context';
 import { useTRPC } from '@/providers/query-provider';
 import { RecursiveFolder } from './recursive-folder';
-import { useMutation } from '@tanstack/react-query';
 import type { Label as LabelType } from '@/types';
 import { Link, useLocation } from 'react-router';
 import { Button } from '@/components/ui/button';
@@ -32,7 +34,6 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useStats } from '@/hooks/use-stats';
 import SidebarLabels from './sidebar-labels';
-import { CurvedArrow } from '../icons/icons';
 import { Command, Plus } from 'lucide-react';
 import { Tree } from '../magicui/file-tree';
 import { useCallback, useRef } from 'react';
@@ -76,14 +77,20 @@ export function NavMain({ items }: NavMainProps) {
   const pathname = location.pathname;
   const searchParams = new URLSearchParams();
   const [category] = useQueryState('category');
-
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  const { data: session } = useSession();
   const { data: connections } = useConnections();
   const { data: stats } = useStats();
   const { data: activeConnection } = useActiveConnection();
-
   const trpc = useTRPC();
+  const { data: intercomToken } = useQuery(trpc.user.getIntercomToken.queryOptions());
+
+  React.useEffect(() => {
+    if (intercomToken) {
+      Intercom({
+        app_id: 'aavenrba',
+        intercom_user_jwt: intercomToken,
+      });
+    }
+  }, [intercomToken]);
 
   const { mutateAsync: createLabel } = useMutation(trpc.labels.create.mutationOptions());
 
@@ -189,9 +196,10 @@ export function NavMain({ items }: NavMainProps) {
     },
     [pathname, searchParams],
   );
+  const t = useTranslations();
 
   const onSubmit = async (data: LabelType) => {
-    await toast.promise(createLabel(data), {
+    toast.promise(createLabel(data), {
       loading: 'Creating label...',
       success: 'Label created successfully',
       error: 'Failed to create label',
@@ -201,6 +209,27 @@ export function NavMain({ items }: NavMainProps) {
   return (
     <SidebarGroup className={`${state !== 'collapsed' ? '' : 'mt-1'} space-y-2.5 py-0 md:px-0`}>
       <SidebarMenu>
+        {isBottomNav ? (
+          <>
+            <SidebarMenuButton
+              onClick={() => show()}
+              tooltip={state === 'collapsed' ? t('help' as MessageKey) : undefined}
+              className="flex cursor-pointer items-center"
+            >
+              <MessageSquare className="relative mr-2.5 h-3 w-3.5" />
+              <p className="mt-0.5 truncate text-[13px]">Live Support</p>
+            </SidebarMenuButton>
+            <NavItem
+              key={'feedback'}
+              isActive={isUrlActive('https://feedback.0.email')}
+              href={'https://feedback.0.email'}
+              url={'https://feedback.0.email'}
+              icon={MessageSquare}
+              target={'_blank'}
+              title={'navigation.sidebar.feedback'}
+            />
+          </>
+        ) : null}
         {items.map((section) => (
           <Collapsible
             key={section.title}

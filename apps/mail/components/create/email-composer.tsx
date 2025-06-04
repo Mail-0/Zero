@@ -58,6 +58,7 @@ interface EmailComposerProps {
   onClose?: () => void;
   className?: string;
   autofocus?: boolean;
+  settingsLoading?: boolean;
 }
 
 const isValidEmail = (email: string): boolean => {
@@ -89,6 +90,7 @@ export function EmailComposer({
   onClose,
   className,
   autofocus = false,
+  settingsLoading = false,
 }: EmailComposerProps) {
   const [showCc, setShowCc] = useState(initialCc.length > 0);
   const [showBcc, setShowBcc] = useState(initialBcc.length > 0);
@@ -976,7 +978,7 @@ export function EmailComposer({
             <button
               className="flex h-7 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-md bg-black pl-1.5 pr-1 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white"
               onClick={handleSend}
-              disabled={isLoading}
+              disabled={isLoading || settingsLoading}
             >
               <div className="flex items-center justify-center gap-2.5 pl-0.5">
                 <div className="text-center text-sm leading-none text-white dark:text-black">

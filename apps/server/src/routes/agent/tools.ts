@@ -1,4 +1,3 @@
-import { connectionToDriver, getActiveConnection } from '../../lib/server-utils';
 import { composeEmail } from '../../trpc/routes/ai/compose';
 import type { MailManager } from '../../lib/driver/types';
 import { perplexity } from '@ai-sdk/perplexity';
@@ -125,11 +124,11 @@ const composeEmailTool = (connectionId: string) =>
       threadMessages: z
         .array(
           z.object({
-            from: z.string(),
-            to: z.array(z.string()),
-            cc: z.array(z.string()).optional(),
-            subject: z.string(),
-            body: z.string(),
+            from: z.string().describe('The sender of the email'),
+            to: z.array(z.string()).describe('The recipients of the email'),
+            cc: z.array(z.string()).optional().describe('The CC recipients of the email'),
+            subject: z.string().describe('The subject of the email'),
+            body: z.string().describe('The body of the email'),
           }),
         )
         .optional()
@@ -149,11 +148,11 @@ const listEmails = (driver: MailManager) =>
   tool({
     description: 'List emails in a specific folder',
     parameters: z.object({
-      folder: z.string(),
-      query: z.string().optional(),
-      maxResults: z.number().optional(),
-      labelIds: z.array(z.string()).optional(),
-      pageToken: z.string().optional(),
+      folder: z.string().describe('The folder to list emails from'),
+      query: z.string().optional().describe('The query to filter emails'),
+      maxResults: z.number().optional().describe('The maximum number of results to return'),
+      labelIds: z.array(z.string()).optional().describe('The labels to filter emails'),
+      pageToken: z.string().optional().describe('The page token to continue listing emails'),
     }),
     execute: async (params) => {
       return await driver.list(params);
@@ -164,7 +163,7 @@ const markAsRead = (driver: MailManager) =>
   tool({
     description: 'Mark emails as read',
     parameters: z.object({
-      threadIds: z.array(z.string()),
+      threadIds: z.array(z.string()).describe('The IDs of the threads to mark as read'),
     }),
     execute: async ({ threadIds }) => {
       await driver.markAsRead(threadIds);
@@ -176,7 +175,7 @@ const markAsUnread = (driver: MailManager) =>
   tool({
     description: 'Mark emails as unread',
     parameters: z.object({
-      threadIds: z.array(z.string()),
+      threadIds: z.array(z.string()).describe('The IDs of the threads to mark as unread'),
     }),
     execute: async ({ threadIds }) => {
       await driver.markAsUnread(threadIds);
@@ -188,10 +187,10 @@ const modifyLabels = (driver: MailManager) =>
   tool({
     description: 'Modify labels on emails',
     parameters: z.object({
-      threadIds: z.array(z.string()),
+      threadIds: z.array(z.string()).describe('The IDs of the threads to modify'),
       options: z.object({
-        addLabels: z.array(z.string()).default([]),
-        removeLabels: z.array(z.string()).default([]),
+        addLabels: z.array(z.string()).default([]).describe('The labels to add'),
+        removeLabels: z.array(z.string()).default([]).describe('The labels to remove'),
       }),
     }),
     execute: async ({ threadIds, options }) => {
@@ -215,31 +214,31 @@ const sendEmail = (driver: MailManager) =>
     parameters: z.object({
       to: z.array(
         z.object({
-          email: z.string(),
-          name: z.string().optional(),
+          email: z.string().describe('The email address of the recipient'),
+          name: z.string().optional().describe('The name of the recipient'),
         }),
       ),
-      subject: z.string(),
-      message: z.string(),
+      subject: z.string().describe('The subject of the email'),
+      message: z.string().describe('The body of the email'),
       cc: z
         .array(
           z.object({
-            email: z.string(),
-            name: z.string().optional(),
+            email: z.string().describe('The email address of the recipient'),
+            name: z.string().optional().describe('The name of the recipient'),
           }),
         )
         .optional(),
       bcc: z
         .array(
           z.object({
-            email: z.string(),
-            name: z.string().optional(),
+            email: z.string().describe('The email address of the recipient'),
+            name: z.string().optional().describe('The name of the recipient'),
           }),
         )
         .optional(),
-      threadId: z.string().optional(),
+      threadId: z.string().optional().describe('The ID of the thread to send the email from'),
       // fromEmail: z.string().optional(),
-      draftId: z.string().optional(),
+      draftId: z.string().optional().describe('The ID of the draft to send'),
     }),
     execute: async (data) => {
       try {
@@ -340,6 +339,8 @@ export const webSearch = tool({
         model: perplexity('sonar'),
         messages: [
           { role: 'system', content: 'Be precise and concise.' },
+          { role: 'system', content: 'Do not include sources in your response.' },
+          { role: 'system', content: 'Do not use markdown formatting in your response.' },
           { role: 'user', content: query },
         ],
         maxTokens: 1024,

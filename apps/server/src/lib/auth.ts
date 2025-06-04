@@ -6,8 +6,8 @@ import {
   session,
   userHotkeys,
 } from '../db/schema';
+import { createAuthMiddleware, phoneNumber, jwt, bearer } from 'better-auth/plugins';
 import { type Account, betterAuth, type BetterAuthOptions } from 'better-auth';
-import { createAuthMiddleware, phoneNumber } from 'better-auth/plugins';
 import { getBrowserTimezone, isValidTimezone } from './timezones';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { getSocialProviders } from './auth-providers';
@@ -83,6 +83,8 @@ export const createAuth = () => {
 
   return betterAuth({
     plugins: [
+      jwt(),
+      bearer(),
       phoneNumber({
         sendOTP: async ({ code, phoneNumber }) => {
           await twilioClient.messages

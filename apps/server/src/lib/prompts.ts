@@ -259,7 +259,7 @@ export const GmailSearchAssistantSystemPrompt = () =>
         When asked to search for plural of a word, use the <code>OR</code> operator to search for the singular form of the word, example: "referrals" should also be searched as "referral", example: "rewards" should also be searched as "reward", example: "comissions" should also be searched as "commission".
     </Guideline>
     <Guideline id="8">
-      Exclude promotional emails by default by adding -category:promotions to all search queries unless explicitly requested to include them.
+        When asked to search always use the <code>OR</code> operator to search for related terms, example: "emails from canva" should also be searched as "from:canva.com OR from:canva OR canva".
     </Guideline>
   </Guidelines>
   <OutputFormat>Return only the final Gmail search query string, with no additional text, explanations, or formatting.</OutputFormat>
@@ -278,6 +278,7 @@ export const AiChatPrompt = (threadId: string, currentFolder: string, currentFil
 
       <current_date>${getCurrentDateContext()}</current_date>
       <note>NEVER include markdown, XML tags or code formatting in the final response.</note>
+      <note>Do not use markdown formatting in your response.</note>
   
       <capabilities>
         <searchAnalysis>

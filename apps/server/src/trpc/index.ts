@@ -8,6 +8,7 @@ import { draftsRouter } from './routes/drafts';
 import { labelsRouter } from './routes/label';
 import { brainRouter } from './routes/brain';
 import { notesRouter } from './routes/notes';
+import { voiceRouter } from './routes/voice';
 import { mailRouter } from './routes/mail';
 import { userRouter } from './routes/user';
 import type { HonoContext } from '../ctx';
@@ -26,6 +27,7 @@ export const appRouter = router({
   shortcut: shortcutRouter,
   settings: settingsRouter,
   user: userRouter,
+  voice: voiceRouter,
 });
 
 export type AppRouter = typeof appRouter;
@@ -37,7 +39,7 @@ export const serverTrpc = () => {
   const c = getContext<HonoContext>();
   return appRouter.createCaller({
     c,
-    session: c.var.session,
+    sessionUser: c.var.sessionUser,
     db: c.var.db,
     auth: c.var.auth,
     autumn: c.var.autumn,

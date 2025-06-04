@@ -6,17 +6,17 @@ import { and, eq } from 'drizzle-orm';
 
 export const getActiveConnection = async () => {
   const c = getContext<HonoContext>();
-  const { session, db } = c.var;
-  if (!session?.user) throw new Error('Session Not Found');
+  const { sessionUser, db } = c.var;
+  if (!sessionUser) throw new Error('Session Not Found');
 
   const userData = await db.query.user.findFirst({
-    where: eq(user.id, session.user.id),
+    where: eq(user.id, sessionUser.id),
   });
 
   if (userData?.defaultConnectionId) {
     const activeConnection = await db.query.connection.findFirst({
       where: and(
-        eq(connection.userId, session.user.id),
+        eq(connection.userId, sessionUser.id),
         eq(connection.id, userData.defaultConnectionId),
       ),
     });
@@ -24,10 +24,10 @@ export const getActiveConnection = async () => {
   }
 
   const firstConnection = await db.query.connection.findFirst({
-    where: and(eq(connection.userId, session.user.id)),
+    where: and(eq(connection.userId, sessionUser.id)),
   });
   if (!firstConnection) {
-    console.error(`No connections found for user ${session.user.id}`);
+    console.error(`No connections found for user ${sessionUser.id}`);
     throw new Error('No connections found for user');
   }
 

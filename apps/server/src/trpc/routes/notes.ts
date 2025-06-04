@@ -9,7 +9,7 @@ const notesProcedure = privateProcedure.use(async ({ ctx, next }) => {
 
 export const notesRouter = router({
   list: notesProcedure.input(z.object({ threadId: z.string() })).query(async ({ ctx, input }) => {
-    const notes = await ctx.notesManager.getThreadNotes(ctx.session.user.id, input.threadId);
+    const notes = await ctx.notesManager.getThreadNotes(ctx.sessionUser.id, input.threadId);
     return { notes };
   }),
   create: notesProcedure
@@ -24,7 +24,7 @@ export const notesRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { threadId, color, content, isPinned } = input;
       const note = await ctx.notesManager.createNote(
-        ctx.session.user.id,
+        ctx.sessionUser.id,
         threadId,
         content,
         color,
@@ -47,13 +47,13 @@ export const notesRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const note = await ctx.notesManager.updateNote(ctx.session.user.id, input.noteId, input.data);
+      const note = await ctx.notesManager.updateNote(ctx.sessionUser.id, input.noteId, input.data);
       return { note };
     }),
   delete: notesProcedure
     .input(z.object({ noteId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const success = await ctx.notesManager.deleteNote(ctx.session.user.id, input.noteId);
+      const success = await ctx.notesManager.deleteNote(ctx.sessionUser.id, input.noteId);
       return { success };
     }),
   reorder: notesProcedure
@@ -80,7 +80,7 @@ export const notesRouter = router({
         notes.map(({ id, order, isPinned }) => ({ id, order, isPinned })),
       );
 
-      const result = await ctx.notesManager.reorderNotes(ctx.session.user.id, notes);
+      const result = await ctx.notesManager.reorderNotes(ctx.sessionUser.id, notes);
       return { success: result };
     }),
 });

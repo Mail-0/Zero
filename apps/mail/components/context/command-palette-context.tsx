@@ -38,11 +38,7 @@ import {
   useState,
   type ComponentType,
 } from 'react';
-import {
-  getMainSearchTerm,
-  parseNaturalLanguageDate,
-  parseNaturalLanguageSearch,
-} from '@/lib/utils';
+import { getMainSearchTerm, parseNaturalLanguageSearch } from '@/lib/utils';
 import { DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { navigationConfig, type MessageKey } from '@/config/navigation';
 import { useSearchValue } from '@/hooks/use-search-value';
@@ -54,11 +50,11 @@ import { Calendar } from '@/components/ui/calendar';
 import { useMutation } from '@tanstack/react-query';
 import { useThreads } from '@/hooks/use-threads';
 import { useLabels } from '@/hooks/use-labels';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { format, subDays } from 'date-fns';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { useTranslations } from 'use-intl';
+import { format, subDays } from 'date-fns';
 import { VisuallyHidden } from 'radix-ui';
 import { Pencil2 } from '../icons/icons';
 import { Button } from '../ui/button';
@@ -433,6 +429,19 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         finalQuery = semanticQuery || query;
       }
 
+      const isFilterSyntax = /^(from:|to:|subject:|has:|is:|after:|before:|label:)/.test(
+        query.trim(),
+      );
+      if (query.trim() && !isFilterSyntax) {
+        const searchFilter: ActiveFilter = {
+          id: `search-${Date.now()}`,
+          type: 'search',
+          value: query,
+          display: `Search: "${query}"`,
+        };
+        addFilter(searchFilter);
+      }
+
       const filterQuery = activeFilters.map((f) => f.value).join(' ');
       if (filterQuery) {
         finalQuery = `${finalQuery} ${filterQuery}`.trim();
@@ -449,7 +458,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         description: finalQuery,
       });
     },
-    [activeFilters, searchValue.folder, setSearchValue],
+    [activeFilters, searchValue.folder, setSearchValue, addFilter],
   );
 
   const quickFilterOptions = useMemo(
@@ -515,59 +524,6 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     [addFilter, executeSearch],
   );
 
-  const processSearchQuery = useCallback((query: string): string => {
-    let searchTerms = [];
-
-    try {
-      if (query.trim()) {
-        const searchTerm = query.trim();
-
-        const dateRange = parseNaturalLanguageDate(searchTerm);
-        if (dateRange) {
-          if (dateRange.from) {
-            const fromDate = format(dateRange.from, 'yyyy/MM/dd');
-            searchTerms.push(`after:${fromDate}`);
-          }
-          if (dateRange.to) {
-            const toDate = format(dateRange.to, 'yyyy/MM/dd');
-            searchTerms.push(`before:${toDate}`);
-          }
-
-          const cleanedQuery = searchTerm
-            .replace(/emails?\s+from\s+/i, '')
-            .replace(/\b\d{4}\b/g, '')
-            .replace(
-              /\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/gi,
-              '',
-            )
-            .trim();
-
-          if (cleanedQuery) {
-            searchTerms.push(cleanedQuery);
-          }
-        } else {
-          const parsedTerm = parseNaturalLanguageSearch(searchTerm);
-          if (parsedTerm !== searchTerm) {
-            searchTerms.push(parsedTerm);
-          } else {
-            if (searchTerm.includes('@')) {
-              searchTerms.push(`from:${searchTerm}`);
-            } else {
-              searchTerms.push(
-                `(from:${searchTerm} OR from:"${searchTerm}" OR subject:"${searchTerm}" OR "${searchTerm}")`,
-              );
-            }
-          }
-        }
-      }
-
-      return searchTerms.join(' ');
-    } catch (error) {
-      console.error('Search processing error:', error);
-      return query;
-    }
-  }, []);
-
   const handleSearch = useCallback(
     async (query: string, useNaturalLanguage = true) => {
       setIsProcessing(true);
@@ -581,6 +537,15 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           toast.info('Search applied', {
             description: finalQuery,
           });
+
+          const searchFilter: ActiveFilter = {
+            id: `ai-search-${Date.now()}`,
+            type: 'search',
+            value: finalQuery,
+            display: `AI Search: "${query}"`,
+          };
+          addFilter(searchFilter);
+
           return setSearchValue({
             value: finalQuery,
             highlight: getMainSearchTerm(query),
@@ -588,6 +553,19 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             isAISearching: useNaturalLanguage,
             isLoading: true,
           });
+        }
+
+        const isFilterSyntax = /^(from:|to:|subject:|has:|is:|after:|before:|label:)/.test(
+          query.trim(),
+        );
+        if (query.trim() && !isFilterSyntax) {
+          const searchFilter: ActiveFilter = {
+            id: `search-${Date.now()}`,
+            type: 'search',
+            value: query,
+            display: `Search: "${query}"`,
+          };
+          addFilter(searchFilter);
         }
 
         const filterQuery = activeFilters.map((f) => f.value).join(' ');
@@ -620,7 +598,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         setIsProcessing(false);
       }
     },
-    [activeFilters, processSearchQuery, searchValue.folder, setSearchValue, setOpen],
+    [activeFilters, searchValue.folder, setSearchValue, setOpen, generateSearchQuery, addFilter],
   );
 
   const quickSearchResults = useMemo(() => {

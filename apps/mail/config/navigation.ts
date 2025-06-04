@@ -220,13 +220,6 @@ export const bottomNavItems = [
     title: '',
     items: [
       {
-        id: 'feedback',
-        title: 'navigation.sidebar.feedback',
-        url: 'https://feedback.0.email',
-        icon: MessageSquare,
-        target: '_blank',
-      },
-      {
         id: 'settings',
         title: 'navigation.sidebar.settings',
         url: '/settings/general',

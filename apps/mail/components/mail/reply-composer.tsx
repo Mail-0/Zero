@@ -4,9 +4,9 @@ import { EmailComposer } from '../create/email-composer';
 import { useHotkeysContext } from 'react-hotkeys-hook';
 import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
+import { useSettings } from '@/hooks/use-settings';
 import { constructReplyBody } from '@/lib/utils';
 import { useThread } from '@/hooks/use-threads';
-import { useSession } from '@/lib/auth-client';
 import { serializeFiles } from '@/lib/schemas';
 import { useDraft } from '@/hooks/use-drafts';
 import { useEffect, useState } from 'react';
@@ -23,7 +23,6 @@ interface ReplyComposeProps {
 export default function ReplyCompose({ messageId }: ReplyComposeProps) {
   const [threadId] = useQueryState('threadId');
   const { data: emailData, refetch } = useThread(threadId);
-  const { data: session } = useSession();
   const [mode, setMode] = useQueryState('mode');
   const { enableScope, disableScope } = useHotkeysContext();
   const { data: aliases, isLoading: isLoadingAliases } = useEmailAliases();
@@ -33,6 +32,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
   const trpc = useTRPC();
   const { mutateAsync: sendEmail } = useMutation(trpc.mail.send.mutationOptions());
   const { data: activeConnection } = useActiveConnection();
+  const { data: settings, isLoading: settingsLoading } = useSettings();
 
   // Find the specific message to reply to
   const replyToMessage =
@@ -132,8 +132,12 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
           }))
         : undefined;
 
+      const zeroSignature = settings?.settings.zeroSignature
+        ? '<p style="color: #666; font-size: 12px;">Sent via <a href="https://0.email/" style="color: #0066cc; text-decoration: none;">Zero</a></p>'
+        : '';
+
       const replyBody = constructReplyBody(
-        data.message,
+        data.message + zeroSignature,
         new Date(replyToMessage.receivedOn || '').toLocaleString(),
         replyToMessage.sender,
         toRecipients,
@@ -235,6 +239,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
           };
         })}
         autofocus={shouldFocus}
+        settingsLoading={settingsLoading}
       />
     </div>
   );

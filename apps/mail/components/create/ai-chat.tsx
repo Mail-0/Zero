@@ -162,6 +162,10 @@ export interface AIChatProps {
   onModelChange?: (model: string) => void;
 }
 
+declare global {
+  var DEBUG: boolean;
+}
+
 const ToolResponse = ({ toolName, result, args }: { toolName: string; result: any; args: any }) => {
   const renderContent = () => {
     switch (toolName) {
@@ -199,9 +203,9 @@ const ToolResponse = ({ toolName, result, args }: { toolName: string; result: an
 
       case Tools.WebSearch:
         return (
-          <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
-            <div className="prose dark:prose-invert max-w-none">
-              <Markdown>{result}</Markdown>
+          <div className="rounded-lg border border-purple-200/40 p-2 dark:border-purple-800/20">
+            <div className="prose dark:prose-invert max-w-none text-sm">
+              <p className="text-sm">{result}</p>
             </div>
           </div>
         );
@@ -231,18 +235,20 @@ const ToolResponse = ({ toolName, result, args }: { toolName: string; result: an
   if (!content) return null;
 
   return (
-    <div className="group relative">
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <InfoIcon className="fill-subtleWhite text-subtleBlack dark:fill-subtleBlack h-4 w-4 dark:text-[#373737]" />
-        </TooltipTrigger>
-        <TooltipContent>
-          <div className="text-xs">
-            <p className="mb-1 font-medium">Tool Arguments:</p>
-            <pre className="whitespace-pre-wrap break-words">{JSON.stringify(args, null, 2)}</pre>
-          </div>
-        </TooltipContent>
-      </Tooltip>
+    <div className="group relative space-y-2">
+      {globalThis.DEBUG ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <InfoIcon className="fill-subtleWhite text-subtleBlack dark:fill-subtleBlack h-4 w-4 dark:text-[#373737]" />
+          </TooltipTrigger>
+          <TooltipContent>
+            <div className="text-xs">
+              <p className="mb-1 font-medium">Tool Arguments:</p>
+              <pre className="whitespace-pre-wrap break-words">{JSON.stringify(args, null, 2)}</pre>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      ) : null}
       {content}
     </div>
   );
@@ -331,6 +337,10 @@ export function AIChat({
             messages.map((message, index) => {
               const textParts = message.parts.filter((part) => part.type === 'text');
               const toolParts = message.parts.filter((part) => part.type === 'tool-invocation');
+              const toolResultOnlyTools = [Tools.WebSearch];
+              const doesIncludeToolResult = toolParts.some((part) =>
+                toolResultOnlyTools.includes(part.toolInvocation?.toolName as Tools),
+              );
               return (
                 <div key={`${message.id}-${index}`} className="flex flex-col gap-2">
                   {toolParts.map((part, idx) =>
@@ -343,7 +353,7 @@ export function AIChat({
                       />
                     ) : null,
                   )}
-                  {textParts.length > 0 && (
+                  {!doesIncludeToolResult && textParts.length > 0 && (
                     <p
                       className={cn(
                         'flex w-fit flex-col gap-2 rounded-lg text-sm',

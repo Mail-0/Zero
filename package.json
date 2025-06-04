@@ -4,6 +4,7 @@
   "private": true,
   "packageManager": "pnpm@10.11.0",
   "scripts": {
+    "go": "pnpm docker:db:up && pnpm run dev",
     "prepare": "husky",
     "nizzy": "tsx ./packages/cli/src/cli.ts",
     "postinstall": "pnpm nizzy sync",
@@ -19,6 +20,7 @@
     "check:format": "prettier . --check",
     "lint-staged": "prettier --write --ignore-unknown",
     "docker:db:up": "docker compose -f docker-compose.db.yaml up -d",
+    "docker:db:stop": "docker compose -f docker-compose.db.yaml stop",
     "docker:db:down": "docker compose -f docker-compose.db.yaml down",
     "docker:db:clean": "docker compose -f docker-compose.db.yaml down -v",
     "db:generate": "dotenv -- pnpm run -C apps/server db:generate",

@@ -127,11 +127,11 @@ export const compose = activeConnectionProcedure
     }),
   )
   .mutation(async ({ ctx, input }) => {
-    const { session, activeConnection } = ctx;
+    const { sessionUser, activeConnection } = ctx;
 
     const newBody = await composeEmail({
       ...input,
-      username: session.user.name,
+      username: sessionUser.name,
       connectionId: activeConnection.id,
     });
 
