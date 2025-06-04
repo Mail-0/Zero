@@ -384,12 +384,6 @@ export function EmailComposer({
     setIsGeneratingSubject(false);
   };
 
-  // // useEffect(() => {
-  //   if (urlDraftId !== draftId) {
-  //     setDraftId(urlDraftId ?? null);
-  //   }
-  // }, [urlDraftId]);
-
   useEffect(() => {
     if (!hasUnsavedChanges) return;
 
