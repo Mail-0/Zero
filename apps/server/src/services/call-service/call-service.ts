@@ -443,7 +443,7 @@ export class CallService {
       throw new Error('[Twilio] Phone number not set');
     }
 
-    const mcpUrl = new URL('/api/ai/mcp', `https://${hostname}`);
+    const mcpUrl = new URL('/api/ai/mcp', hostname);
     const transport = new StreamableHTTPClientTransport(mcpUrl, {
       requestInit: {
         headers: {
