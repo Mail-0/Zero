@@ -1,19 +1,72 @@
 import { getCurrentDateContext, GmailSearchAssistantSystemPrompt } from '../lib/prompts';
 import { systemPrompt } from '../services/call-service/system-prompt';
 import { connectionToDriver } from '../lib/server-utils';
+import { getDriverFromConnectionId } from '../services/mcp-service/mcp';
 import { env } from 'cloudflare:workers';
+import { Tools } from '../types';
 import { openai } from '@ai-sdk/openai';
 import { FOLDERS } from '../lib/utils';
 import { generateText } from 'ai';
-import { Tools } from '../types';
 import { createDb } from '../db';
 import { Hono } from 'hono';
 import { tool } from 'ai';
 import { z } from 'zod';
+import { composeEmail } from '../trpc/routes/ai/compose';
 
 export const aiRouter = new Hono();
 
 aiRouter.get('/', (c) => c.text('Twilio + ElevenLabs + AI Phone System Ready'));
+
+aiRouter.post('/do/:action', async (c) => {
+  const action = c.req.param('action') as Tools;
+  const body = await c.req.json();
+  console.log('[DEBUG] action', action, body);
+  const connectionId = c.req.header('X-Connection-Id');
+  if (!connectionId) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+  try {
+    const driver = await getDriverFromConnectionId(connectionId);
+    switch (action) {
+      case Tools.ListThreads:
+        const threads = await Promise.all(
+          (await driver.list({ folder: 'inbox', maxResults: 5 })).threads.map((thread) =>
+            driver.get(thread.id).then((thread) => ({
+              id: thread.latest?.id,
+              subject: thread.latest?.subject,
+              sender: thread.latest?.sender,
+              date: thread.latest?.receivedOn,
+            })),
+          ),
+        );
+        return c.json({ success: true, result: threads });
+      case Tools.ComposeEmail:
+        const newBody = await composeEmail({
+          prompt: body.prompt,
+          emailSubject: body.emailSubject,
+          username: 'Nizar Abi Zaher',
+          connectionId,
+        });
+        return c.json({ success: true, result: newBody });
+      case Tools.SendEmail:
+        const result = await driver.create({
+          to: body.to.map((to: any) => ({
+            name: to.name ?? to.email,
+            email: to.email ?? 'founders@0.email',
+          })),
+          subject: body.subject,
+          message: body.message,
+          attachments: [],
+          headers: {},
+        });
+        return c.json({ success: true, result });
+      default:
+        return c.json({ success: false, error: 'Not implemented' }, 400);
+    }
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 400);
+  }
+});
 
 aiRouter.post('/call', async (c) => {
   const connectionId = c.req.header('X-Connection-Id');
@@ -222,7 +275,7 @@ aiRouter.post('/call', async (c) => {
       getCurrentDate: tool({
         description: 'Get the current date',
         parameters: z.object({}).default({}),
-        execute: async (params) => {
+        execute: async () => {
           console.log('[DEBUG] getCurrentDate');
 
           return {
@@ -284,17 +337,17 @@ aiRouter.post('/call', async (c) => {
           backgroundColor: z.string().optional().describe('The background color of the label'),
           textColor: z.string().optional().describe('The text color of the label'),
         }),
-        execute: async (s) => {
-          console.log('[DEBUG] createLabel', s);
+        execute: async (params) => {
+          console.log('[DEBUG] createLabel', params);
 
           try {
             await driver.createLabel({
-              name: s.name,
+              name: params.name,
               color:
-                s.backgroundColor && s.textColor
+                params.backgroundColor && params.textColor
                   ? {
-                      backgroundColor: s.backgroundColor,
-                      textColor: s.textColor,
+                      backgroundColor: params.backgroundColor,
+                      textColor: params.textColor,
                     }
                   : undefined,
             });
@@ -306,7 +359,9 @@ aiRouter.post('/call', async (c) => {
                 },
               ],
             };
-          } catch (e) {
+          } catch (error) {
+            console.error('Failed to create label:', error)
+
             return {
               content: [
                 {
@@ -323,11 +378,11 @@ aiRouter.post('/call', async (c) => {
         parameters: z.object({
           threadIds: z.array(z.string()).describe('The IDs of the threads to delete'),
         }),
-        execute: async (s) => {
-          console.log('[DEBUG] bulkDelete', s);
+        execute: async (params) => {
+          console.log('[DEBUG] bulkDelete', params);
 
           try {
-            await driver.modifyLabels(s.threadIds, {
+            await driver.modifyLabels(params.threadIds, {
               addLabels: ['TRASH'],
               removeLabels: ['INBOX'],
             });
@@ -339,7 +394,9 @@ aiRouter.post('/call', async (c) => {
                 },
               ],
             };
-          } catch (e) {
+          } catch (error) {
+            console.error('Failed to move threads:', error)
+
             return {
               content: [
                 {
@@ -356,11 +413,11 @@ aiRouter.post('/call', async (c) => {
         parameters: z.object({
           threadIds: z.array(z.string()).describe('The IDs of the threads to archive'),
         }),
-        execute: async (s) => {
-          console.log('[DEBUG] bulkArchive', s);
+        execute: async (params) => {
+          console.log('[DEBUG] bulkArchive', params);
 
           try {
-            await driver.modifyLabels(s.threadIds, {
+            await driver.modifyLabels(params.threadIds, {
               addLabels: [],
               removeLabels: ['INBOX'],
             });
@@ -372,7 +429,9 @@ aiRouter.post('/call', async (c) => {
                 },
               ],
             };
-          } catch (e) {
+          } catch (error) {
+            console.error('Failed to archive threads:', error)
+
             return {
               content: [
                 {

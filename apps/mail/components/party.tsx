@@ -34,9 +34,9 @@ export const NotificationProvider = ({ headers }: { headers: Record<string, stri
   );
 
   usePartySocket({
-    party: 'durable-mailbox',
+    party: 'zero-agent',
     room: activeConnection?.id ? `${activeConnection.id}` : 'general',
-    prefix: 'zero',
+    prefix: 'agents',
     maxRetries: 1,
     query: {
       token: headers['cookie'],

@@ -126,6 +126,13 @@ const globalShortcuts: Shortcut[] = [
   //   scope: 'global',
   // },
   {
+    keys: ['v'],
+    action: 'openVoice',
+    type: 'single',
+    description: 'Open voice',
+    scope: 'global',
+  },
+  {
     keys: ['c'],
     action: 'newEmail',
     type: 'single',

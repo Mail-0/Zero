@@ -665,7 +665,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
       onClick: () => {
         setCurrentView('search');
       },
-      description: 'Search across your emails',
+      // description: 'Search across your emails',
     });
 
     searchCommands.push({
@@ -675,7 +675,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
       onClick: () => {
         setCurrentView('filter');
       },
-      description: 'Filter emails by criteria',
+      // description: 'Filter emails by criteria',
     });
 
     // searchCommands.push({
@@ -847,7 +847,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                         <span className="text-muted-foreground text-xs">{item.description}</span>
                       )}
                     </div>
-                    {item.shortcut && (
+                    {/* {item.shortcut && (
                       <CommandShortcut>
                         {item.shortcut === 'arrowUp'
                           ? '↑'
@@ -855,7 +855,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                             ? '↓'
                             : item.shortcut}
                       </CommandShortcut>
-                    )}
+                    )} */}
                   </CommandItem>
                 ))}
               </CommandGroup>
@@ -868,7 +868,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           <CommandItem onSelect={() => setCurrentView('help')}>
             <Info className="h-4 w-4 opacity-60" />
             <span className="ml-2">Filter Syntax Help</span>
-            <CommandShortcut>?</CommandShortcut>
+            {/* <CommandShortcut>?</CommandShortcut> */}
           </CommandItem>
         </CommandGroup>
       </CommandList>
@@ -970,7 +970,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                 onSelect={() => handleSearch(searchQuery, false)}
                 disabled={isProcessing}
               >
-                <Search className="h-4 w-4 opacity-60" />
+                <Search className="h-4 w-4 opacity-60 relative top-2" />
                 <span className="ml-2">Exact match: "{searchQuery}"</span>
               </CommandItem>
 

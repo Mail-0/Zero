@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 
 // ElevenLabs
-import { useConversation } from '@11labs/react';
+import { useConversation } from '@elevenlabs/react';
 
 // UI
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
