@@ -19,6 +19,7 @@ type PendingAction = {
   optimisticId: string;
   execute: () => Promise<void>;
   undo: () => void;
+  toastId?: string | number;
 };
 
 export function useOptimisticActions() {
@@ -41,6 +42,7 @@ export function useOptimisticActions() {
 
   const pendingActionsRef = useRef<Map<string, PendingAction>>(new Map());
   const pendingActionsByTypeRef = useRef<Map<string, Set<string>>>(new Map());
+  const lastActionIdRef = useRef<string | null>(null);
 
   const generatePendingActionId = () =>
     `pending_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -406,6 +408,24 @@ export function useOptimisticActions() {
     ],
   );
 
+  const undoLastAction = useCallback(() => {
+    if (!lastActionIdRef.current) return;
+
+    const lastAction = pendingActionsRef.current.get(lastActionIdRef.current);
+    if (!lastAction) return;
+
+    lastAction.undo();
+
+    pendingActionsRef.current.delete(lastActionIdRef.current);
+    pendingActionsByTypeRef.current.get(lastAction.type)?.delete(lastActionIdRef.current);
+
+    if (lastAction.toastId) {
+      toast.dismiss(lastAction.toastId);
+    }
+
+    lastActionIdRef.current = null;
+  }, []);
+
   return {
     optimisticMarkAsRead,
     optimisticMarkAsUnread,
@@ -413,5 +433,6 @@ export function useOptimisticActions() {
     optimisticMoveThreadsTo,
     optimisticDeleteThreads,
     optimisticToggleImportant,
+    undoLastAction,
   };
 }
