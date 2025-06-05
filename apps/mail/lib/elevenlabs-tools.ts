@@ -233,36 +233,25 @@ export const toolExecutors = {
         : 'Unknown date';
       const messageCount = thread.messages?.length || 0;
 
-      const emailSummaryPrompt = `Please provide a comprehensive summary of the following email thread:
+      const emailContextPrompt = `You are analyzing an email thread to answer a specific question.
 
-THREAD INFORMATION:
-- Subject: ${subject}
-- From: ${senderName} (${from})
-- Date: ${receivedDate}
-- Number of messages: ${messageCount}
-- Has unread messages: ${thread.hasUnread ? 'Yes' : 'No'}
+      EMAIL THREAD CONTEXT:
+      - Subject: ${subject}
+      - From: ${senderName} (${from})
+      - Date: ${receivedDate}
+      - Number of messages: ${messageCount}
+      - Has unread messages: ${thread.hasUnread ? 'Yes' : 'No'}
 
-EMAIL CONTENT:
-${emailContent}
+      EMAIL CONTENT:
+      ${emailContent}
 
-Please provide:
-1. A brief summary of the main topic and purpose
-2. Key points or action items mentioned
-3. Any questions asked that need responses
-4. The overall tone and urgency level
-5. Any important deadlines or dates mentioned`;
+      USER'S QUESTION:
+      ${params.query}
 
-      const { text } = await generateText({
-        model: perplexity('sonar'),
-        messages: [
-          {
-            role: 'system',
-            content:
-              'You are an email assistant. Provide clear, structured summaries of email content. Be precise and concise.',
-          },
-          { role: 'user', content: emailSummaryPrompt },
-        ],
-        maxTokens: 1024,
+      Please provide a focused answer to the user's question based on the email content above. If the question asks for a summary, provide a concise summary. If it asks for specific information, extract and provide just that information. Always base your response on the actual email content provided you can also do web search if needed.`;
+
+      const { text } = await trpcClient.ai.webSearch.mutate({
+        query: emailContextPrompt,
       });
 
       return {
