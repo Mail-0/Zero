@@ -68,6 +68,7 @@
         "VITE_PUBLIC_APP_URL": "http://localhost:3000",
         "JWT_SECRET": "secret",
         "ELEVENLABS_API_KEY": "1234567890",
+        "DISABLE_CALLS": "true",
       },
       "kv_namespaces": [
         {
@@ -152,6 +153,7 @@
         "COOKIE_DOMAIN": "0.email",
         "VITE_PUBLIC_BACKEND_URL": "https://sapi.0.email",
         "VITE_PUBLIC_APP_URL": "https://staging.0.email",
+        "DISABLE_CALLS": "",
       },
       "kv_namespaces": [
         {
@@ -233,6 +235,7 @@
         "COOKIE_DOMAIN": "0.email",
         "VITE_PUBLIC_BACKEND_URL": "https://api.0.email",
         "VITE_PUBLIC_APP_URL": "https://0.email",
+        "DISABLE_CALLS": "true",
       },
       "kv_namespaces": [
         {

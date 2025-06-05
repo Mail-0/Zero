@@ -1,23 +1,25 @@
 import { getCurrentDateContext, GmailSearchAssistantSystemPrompt } from '../lib/prompts';
-import { systemPrompt } from '../services/call-service/system-prompt';
-import { connectionToDriver } from '../lib/server-utils';
 import { getDriverFromConnectionId } from '../services/mcp-service/mcp';
+import { systemPrompt } from '../services/call-service/system-prompt';
+import { composeEmail } from '../trpc/routes/ai/compose';
+import { connectionToDriver } from '../lib/server-utils';
 import { env } from 'cloudflare:workers';
-import { Tools } from '../types';
 import { openai } from '@ai-sdk/openai';
 import { FOLDERS } from '../lib/utils';
+import { groq } from '@ai-sdk/groq';
 import { generateText } from 'ai';
+import { Tools } from '../types';
 import { createDb } from '../db';
 import { Hono } from 'hono';
 import { tool } from 'ai';
 import { z } from 'zod';
-import { composeEmail } from '../trpc/routes/ai/compose';
 
 export const aiRouter = new Hono();
 
 aiRouter.get('/', (c) => c.text('Twilio + ElevenLabs + AI Phone System Ready'));
 
 aiRouter.post('/do/:action', async (c) => {
+  if (env.DISABLE_CALLS) return c.json({ success: false, error: 'Not implemented' }, 400);
   const action = c.req.param('action') as Tools;
   const body = await c.req.json();
   console.log('[DEBUG] action', action, body);
@@ -69,6 +71,8 @@ aiRouter.post('/do/:action', async (c) => {
 });
 
 aiRouter.post('/call', async (c) => {
+  if (env.DISABLE_CALLS === 'true')
+    return c.json({ success: false, error: 'Not implemented' }, 400);
   const connectionId = c.req.header('X-Connection-Id');
 
   if (!connectionId) {
@@ -97,7 +101,7 @@ aiRouter.post('/call', async (c) => {
   const driver = connectionToDriver(activeConnection);
 
   const { text } = await generateText({
-    model: openai('gpt-4o'),
+    model: groq('meta-llama/llama-4-maverick-17b-128e-instruct'),
     system: systemPrompt,
     prompt: data.query,
     tools: {
@@ -110,7 +114,7 @@ aiRouter.post('/call', async (c) => {
           console.log('[DEBUG] buildGmailSearchQuery', params);
 
           const result = await generateText({
-            model: openai('gpt-4o'),
+            model: groq('meta-llama/llama-4-maverick-17b-128e-instruct'),
             system: GmailSearchAssistantSystemPrompt(),
             prompt: params.query,
           });
@@ -360,7 +364,7 @@ aiRouter.post('/call', async (c) => {
               ],
             };
           } catch (error) {
-            console.error('Failed to create label:', error)
+            console.error('Failed to create label:', error);
 
             return {
               content: [
@@ -395,7 +399,7 @@ aiRouter.post('/call', async (c) => {
               ],
             };
           } catch (error) {
-            console.error('Failed to move threads:', error)
+            console.error('Failed to move threads:', error);
 
             return {
               content: [
@@ -430,7 +434,7 @@ aiRouter.post('/call', async (c) => {
               ],
             };
           } catch (error) {
-            console.error('Failed to archive threads:', error)
+            console.error('Failed to archive threads:', error);
 
             return {
               content: [
