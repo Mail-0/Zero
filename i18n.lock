@@ -301,6 +301,7 @@ checksums:
     navigation/sidebar/bin: e95691895f3a89d896838716e48290bd
     navigation/sidebar/feedback: 6fac88806e0c269a30777b283988c61c
     navigation/sidebar/settings: 8df6777277469c1fd88cc18dde2f1cc3
+    navigation/sidebar/voice: 81a94ad8770dca9c3cbb5a88329b6a6f
     navigation/settings/general: b891e8f15579fc5d97bcaf3637f5ae59
     navigation/settings/connections: e03a59f742f7b798488a69760bf8a603
     navigation/settings/security: 4b34923fef858a2b9a4a914c3e822889
@@ -465,6 +466,6 @@ checksums:
     pages/createEmail/editor/menuBar/orderedList: fb2995db78e8fd28b74f8b7e52969c7e
     pages/createEmail/editor/menuBar/viewAttachments: d3750ecafb12686d72305e51a239451c
     pages/createEmail/editor/menuBar/attachFiles: f618d751abb8f97c634df1b19bf52b10
-    errorMessages/required_scopes_missing: 7ea98aac4246a126e266d797bef968e9
+    errorMessages/required_scopes_missing: 5c38faec359df462e422e2178da18852
     errorMessages/early_access_required: 177c31769f58822fd05ac5363b0a560c
     errorMessages/unauthorized: 1fc10fbde54ddc7a8e5989f16f84a86f
