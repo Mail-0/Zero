@@ -121,11 +121,11 @@ export function useOptimisticActions() {
 
       function doAction() {
         execute()
-          .then(() => {
-            removeOptimisticAction(optimisticId);
+          .then(async () => {
             pendingActionsRef.current.delete(pendingActionId);
             pendingActionsByTypeRef.current.get(type)?.delete(pendingActionId);
-            checkAndRefreshType(type, threadIds, folders);
+            await checkAndRefreshType(type, threadIds, folders);
+            removeOptimisticAction(optimisticId);
           })
           .catch((error) => {
             console.error('Action failed:', error);
