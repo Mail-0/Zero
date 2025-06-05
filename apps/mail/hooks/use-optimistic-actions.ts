@@ -122,9 +122,9 @@ export function useOptimisticActions() {
       function doAction() {
         execute()
           .then(async () => {
+            await checkAndRefreshType(type, threadIds, folders);
             pendingActionsRef.current.delete(pendingActionId);
             pendingActionsByTypeRef.current.get(type)?.delete(pendingActionId);
-            await checkAndRefreshType(type, threadIds, folders);
             removeOptimisticAction(optimisticId);
           })
           .catch((error) => {
