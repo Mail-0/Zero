@@ -24,6 +24,7 @@ import { connection } from '../db/schema';
 import { env } from 'cloudflare:workers';
 import { openai } from '@ai-sdk/openai';
 import { McpAgent } from 'agents/mcp';
+import { groq } from '@ai-sdk/groq';
 import { eq } from 'drizzle-orm';
 import { createDb } from '../db';
 import { z } from 'zod';
@@ -57,7 +58,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
         );
 
         const result = streamText({
-          model: openai('gpt-4o'),
+          model: groq('meta-llama/llama-4-maverick-17b-128e-instruct'),
           messages: processedMessages,
           tools,
           onFinish,

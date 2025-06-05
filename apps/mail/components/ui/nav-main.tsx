@@ -20,7 +20,7 @@ import { type MessageKey, type NavItem } from '@/config/navigation';
 import { LabelDialog } from '@/components/labels/label-dialog';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import Intercom, { show } from '@intercom/messenger-js-sdk';
-import { CurvedArrow, MessageSquare } from '../icons/icons';
+import { CurvedArrow, MessageSquare, OldPhone, Phone } from '../icons/icons';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useSidebar } from '../context/sidebar-context';
 import { useTRPC } from '@/providers/query-provider';
@@ -216,7 +216,7 @@ export function NavMain({ items }: NavMainProps) {
               tooltip={state === 'collapsed' ? t('help' as MessageKey) : undefined}
               className="flex cursor-pointer items-center"
             >
-              <MessageSquare className="relative mr-2.5 h-3 w-3.5" />
+              <OldPhone className=" mr-2.5 h-2 w-2 relative top-1 fill-[#8F8F8F]" />
               <p className="mt-0.5 truncate text-[13px]">Live Support</p>
             </SidebarMenuButton>
             <NavItem
