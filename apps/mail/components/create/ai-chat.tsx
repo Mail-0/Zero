@@ -1,37 +1,33 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { CurvedArrow, Puzzle, Stop } from '../icons/icons';
 import useComposeEditor from '@/hooks/use-compose-editor';
-import { InfoIcon, Mic, Mic2Icon } from 'lucide-react';
 import { useRef, useCallback, useEffect } from 'react';
-import { PricingDialog } from '../ui/pricing-dialog';
 import { Markdown } from '@react-email/components';
 import { useAIFullScreen } from '../ui/ai-sidebar';
 import { useBilling } from '@/hooks/use-billing';
 import { TextShimmer } from '../ui/text-shimmer';
 import { useThread } from '@/hooks/use-threads';
-import { useConversation } from '@11labs/react';
 import { MailLabels } from '../mail/mail-list';
 import { cn, getEmailLogo } from '@/lib/utils';
+import { VoiceButton } from '../voice-button';
 import { EditorContent } from '@tiptap/react';
 import { Tools } from '../../types/tools';
+import { InfoIcon } from 'lucide-react';
 import { Button } from '../ui/button';
 import { format } from 'date-fns-tz';
 import { useQueryState } from 'nuqs';
-import { Input } from '../ui/input';
 import { useState } from 'react';
-import VoiceChat from './voice';
 
 const renderThread = (thread: { id: string; title: string; snippet: string }) => {
   const [, setThreadId] = useQueryState('threadId');
   const { data: getThread } = useThread(thread.id);
-  const [, setAiSidebarOpen] = useQueryState('aiSidebar');
+  //   const [, setAiSidebarOpen] = useQueryState('aiSidebar');
   const [, setIsFullScreen] = useQueryState('isFullScreen');
 
   const handleClick = () => {
     setThreadId(thread.id);
-    setAiSidebarOpen(null);
+    // setAiSidebarOpen(null);
     setIsFullScreen(null);
   };
 
@@ -263,7 +259,6 @@ export function AIChat({
   status,
   stop,
 }: AIChatProps): React.ReactElement {
-  const [showVoiceChat, setShowVoiceChat] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -275,6 +270,7 @@ export function AIChat({
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, []);
+  const [aiSidebarOpen] = useQueryState('aiSidebar');
 
   const editor = useComposeEditor({
     placeholder: 'Ask Zero to do anything...',
@@ -297,6 +293,12 @@ export function AIChat({
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
+
+  useEffect(() => {
+    if (aiSidebarOpen === 'true') {
+      editor.commands.focus();
+    }
+  }, [aiSidebarOpen, editor]);
 
   return (
     <div className={cn('flex h-full flex-col', isFullScreen ? 'mx-auto max-w-xl' : '')}>
@@ -391,52 +393,49 @@ export function AIChat({
       {/* Fixed input at bottom */}
       <div className={cn('mb-4 flex-shrink-0 px-4', isFullScreen ? 'px-0' : '')}>
         <div className="bg-offsetLight relative rounded-lg p-2 dark:bg-[#202020]">
-          {showVoiceChat ? (
-            <VoiceChat onClose={() => setShowVoiceChat(false)} />
-          ) : (
-            <div className="flex flex-col">
-              <div className="w-full">
-                <form id="ai-chat-form" onSubmit={onSubmit} className="relative">
-                  <div className="grow self-stretch overflow-y-auto outline-white/5 dark:bg-[#202020]">
-                    <div
-                      onClick={() => {
-                        editor.commands.focus();
-                      }}
-                      className={cn('max-h-[100px] w-full')}
-                    >
-                      <EditorContent editor={editor} className="h-full w-full" />
-                    </div>
-                  </div>
-                </form>
-              </div>
-              <div className="grid">
-                <div className="flex justify-end">
-                  <button
-                    form="ai-chat-form"
-                    type="submit"
-                    className="inline-flex cursor-pointer gap-1.5 rounded-lg"
-                    disabled={!chatMessages.enabled}
+          <div className="flex flex-col">
+            <div className="w-full">
+              <form id="ai-chat-form" onSubmit={onSubmit} className="relative">
+                <div className="grow self-stretch overflow-y-auto outline-white/5 dark:bg-[#202020]">
+                  <div
+                    onClick={() => {
+                      editor.commands.focus();
+                    }}
+                    className={cn('max-h-[100px] w-full')}
                   >
-                    <div className="dark:bg[#141414] flex h-5 items-center justify-center gap-1 rounded-sm bg-[#262626] px-2 pr-1">
-                      <CurvedArrow className="mt-1.5 h-4 w-4 fill-white dark:fill-[#929292]" />
-                    </div>
-                  </button>
+                    <EditorContent editor={editor} className="h-full w-full" />
+                  </div>
                 </div>
+              </form>
+            </div>
+            <div className="grid">
+              <div className="flex justify-end gap-1">
+                {/* <VoiceButton /> */}
+                <button
+                  form="ai-chat-form"
+                  type="submit"
+                  className="inline-flex cursor-pointer gap-1.5 rounded-lg"
+                  disabled={!chatMessages.enabled}
+                >
+                  <div className="dark:bg[#141414] flex h-7 items-center justify-center gap-1 rounded-sm bg-[#262626] px-2 pr-1">
+                    <CurvedArrow className="mt-1.5 h-4 w-4 fill-white dark:fill-[#929292]" />
+                  </div>
+                </button>
               </div>
             </div>
-          )}
+          </div>
         </div>
 
         {/* <div className="flex items-center justify-end gap-1">
         <div className="mt-1 flex items-center justify-end relative z-10">
           <Select
-           
+
           >
             <SelectTrigger className="flex h-6 w-fit cursor-pointer items-center justify-between gap-1 border-0 dark:bg-[#141414] px-2 text-xs hover:bg-[#1E1E1E]">
               <div className="flex items-center gap-1.5 w-full">
                 <Puzzle className="h-3.5 w-3.5 fill-white dark:fill-[#929292]" />
               </div>
-              
+
             </SelectTrigger>
             <SelectContent className="w-[190px] rounded-md border-0 bg-[#1E1E1E] p-0.5 shadow-md">
               <SelectItem
@@ -476,7 +475,7 @@ export function AIChat({
                   <img src="/claude.png" alt="Claude" className="h-3.5 w-3.5" />
                 )}
               </div>
-              
+
             </SelectTrigger>
             <SelectContent className="w-[190px] rounded-md border-0 bg-[#1E1E1E] p-0.5 shadow-md">
               <SelectItem

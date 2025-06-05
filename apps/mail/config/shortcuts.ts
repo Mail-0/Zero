@@ -118,13 +118,21 @@ const globalShortcuts: Shortcut[] = [
   //   description: 'Show keyboard shortcuts',
   //   scope: 'global',
   // },
-  // {
-  //   keys: ['z'],
-  //   action: 'undoLastAction',
-  //   type: 'single',
-  //   description: 'Undo last action',
-  //   scope: 'global',
-  // },
+  {
+    keys: ['mod', 'z'],
+    action: 'undoLastAction',
+    type: 'single',
+    description: 'Undo last action',
+    scope: 'global',
+    preventDefault: true,
+  },
+  {
+    keys: ['v'],
+    action: 'openVoice',
+    type: 'single',
+    description: 'Open voice',
+    scope: 'global',
+  },
   {
     keys: ['c'],
     action: 'newEmail',
