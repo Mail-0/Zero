@@ -165,9 +165,15 @@ export const toolExecutors = {
   },
   applyLabel: async (params: any) => {
     try {
+      const labels = await trpcClient.labels.list.query();
+      const label = labels.find((label: any) => label.name === params.label);
+      if (!label) {
+        return { success: false, error: 'Label not found' };
+      }
+
       await trpcClient.mail.modifyLabels.mutate({
         threadId: params.threadIds,
-        addLabels: [params.labelId],
+        addLabels: [label.id],
         removeLabels: [],
       });
       return { success: true, message: 'Label applied' };
@@ -177,10 +183,26 @@ export const toolExecutors = {
   },
   removeLabel: async (params: any) => {
     try {
+      const threadId = getCurrentThreadId();
+      if (!threadId) {
+        return {
+          success: false,
+          error: 'No email is currently open. Please open an email first.',
+          hint: 'When an email is open, you can ask me to "apply a label" without specifying an ID.',
+        };
+      }
+
+      const thread = await trpcClient.mail.get.query({ id: threadId });
+      const labels = thread.labels;
+      const label = labels.find((label: any) => label.name === params.label);
+      if (!label) {
+        return { success: false, error: 'Label not found' };
+      }
+
       await trpcClient.mail.modifyLabels.mutate({
         threadId: params.threadIds,
         addLabels: [],
-        removeLabels: [params.labelId],
+        removeLabels: [label.id],
       });
       return { success: true, message: 'Label removed' };
     } catch (error: any) {
@@ -262,7 +284,7 @@ export const toolExecutors = {
       return { success: false, error: error.message };
     }
   },
-  summarizeEmail: async (params: any) => {
+  summarizeEmail: async () => {
     try {
       const threadId = getCurrentThreadId();
 
@@ -286,35 +308,26 @@ export const toolExecutors = {
           : 'Unknown date';
         const messageCount = thread.messages?.length || 0;
 
-        //         const emailSummaryPrompt = `Please provide a concise summary of the following email thread:
+        const emailSummaryPrompt = `Please provide a concise summary of the following email thread:
 
-        // THREAD INFORMATION:
-        // - Subject: ${subject}
-        // - From: ${senderName} (${from})
-        // - Date: ${receivedDate}
-        // - Number of messages: ${messageCount}
-        // - Has unread messages: ${thread.hasUnread ? 'Yes' : 'No'}
+        THREAD INFORMATION:
+        - Subject: ${subject}
+        - From: ${senderName} (${from})
+        - Date: ${receivedDate}
+        - Number of messages: ${messageCount}
+        - Has unread messages: ${thread.hasUnread ? 'Yes' : 'No'}
 
-        // EMAIL CONTENT:
-        // ${emailContent}
+        EMAIL CONTENT:
+        ${emailContent}
 
-        // Please provide a brief 2-3 sentence summary covering:
-        // 1. The main topic and purpose
-        // 2. Any key action items or decisions needed
-        // 3. The urgency level`;
+        Please provide a brief 2-3 sentence summary covering:
+        1. The main topic and purpose
+        2. Any key action items or decisions needed
+        3. The urgency level`;
 
-        //         const { text } = await generateText({
-        //           model: perplexity('sonar'),
-        //           messages: [
-        //             {
-        //               role: 'system',
-        //               content:
-        //                 'You are an email assistant. Provide clear, concise summaries. Be brief but comprehensive.',
-        //             },
-        //             { role: 'user', content: emailSummaryPrompt },
-        //           ],
-        //           maxTokens: 512,
-        //         });
+        const { text } = await trpcClient.ai.webSearch.mutate({
+          query: emailSummaryPrompt,
+        });
 
         return {
           success: true,
