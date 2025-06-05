@@ -37,8 +37,8 @@ const SidebarLabels = ({ data, activeAccount, stats }: Props) => {
 
   return (
     <div className="mr-0 flex-1 pr-0">
-      <div className="bg-background no-scrollbar relative -m-2 flex-1 overflow-auto">
-        <Tree className="bg-background rounded-md">
+      <div className="bg-transparent no-scrollbar relative -m-2 flex-1 overflow-auto">
+        <Tree className="bg-transparent rounded-md">
           {(() => {
             if (!data) return null;
             const isMicrosoftAccount = activeAccount?.providerId === 'microsoft';

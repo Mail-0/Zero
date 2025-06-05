@@ -1,12 +1,66 @@
+import { getDriverFromConnectionId, ZeroMCP } from '../services/mcp-service/mcp';
 import { CallService } from '../services/call-service/call-service';
-import { ZeroMCP } from '../services/mcp-service/mcp';
+import { composeEmail } from '../trpc/routes/ai/compose';
 import { env } from 'cloudflare:workers';
+import { tools } from './agent/tools';
+import { Tools } from '../types';
 import twilio from 'twilio';
 import { Hono } from 'hono';
 
 export const aiRouter = new Hono();
 
 aiRouter.get('/', (c) => c.text('Twilio + ElevenLabs + AI Phone System Ready'));
+
+aiRouter.post('/do/:action', async (c) => {
+  const action = c.req.param('action') as Tools;
+  const body = await c.req.json();
+  console.log('[DEBUG] action', action, body);
+  const connectionId = c.req.header('X-Connection-Id');
+  if (!connectionId) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+  try {
+    const driver = await getDriverFromConnectionId(connectionId);
+    switch (action) {
+      case Tools.ListThreads:
+        const threads = await Promise.all(
+          (await driver.list({ folder: 'inbox', maxResults: 5 })).threads.map((thread) =>
+            driver.get(thread.id).then((thread) => ({
+              id: thread.latest?.id,
+              subject: thread.latest?.subject,
+              sender: thread.latest?.sender,
+              date: thread.latest?.receivedOn,
+            })),
+          ),
+        );
+        return c.json({ success: true, result: threads });
+      case Tools.ComposeEmail:
+        const newBody = await composeEmail({
+          prompt: body.prompt,
+          emailSubject: body.emailSubject,
+          username: 'Nizar Abi Zaher',
+          connectionId,
+        });
+        return c.json({ success: true, result: newBody });
+      case Tools.SendEmail:
+        const result = await driver.create({
+          to: body.to.map((to: any) => ({
+            name: to.name ?? to.email,
+            email: to.email ?? 'founders@0.email',
+          })),
+          subject: body.subject,
+          message: body.message,
+          attachments: [],
+          headers: {},
+        });
+        return c.json({ success: true, result });
+      default:
+        return c.json({ success: false, error: 'Not implemented' }, 400);
+    }
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 400);
+  }
+});
 
 aiRouter.mount(
   '/mcp',

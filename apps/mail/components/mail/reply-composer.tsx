@@ -202,11 +202,6 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
 
   if (!mode || !emailData) return null;
 
-  if (draftId && isDraftLoading) {
-    // wait for the draft if requesting one
-    return null;
-  }
-
   return (
     <div className="w-full rounded-xl">
       <EmailComposer

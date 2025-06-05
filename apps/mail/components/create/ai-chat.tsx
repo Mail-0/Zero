@@ -26,12 +26,12 @@ import VoiceChat from './voice';
 const renderThread = (thread: { id: string; title: string; snippet: string }) => {
   const [, setThreadId] = useQueryState('threadId');
   const { data: getThread } = useThread(thread.id);
-  const [, setAiSidebarOpen] = useQueryState('aiSidebar');
+  //   const [, setAiSidebarOpen] = useQueryState('aiSidebar');
   const [, setIsFullScreen] = useQueryState('isFullScreen');
 
   const handleClick = () => {
     setThreadId(thread.id);
-    setAiSidebarOpen(null);
+    // setAiSidebarOpen(null);
     setIsFullScreen(null);
   };
 
@@ -275,6 +275,7 @@ export function AIChat({
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, []);
+  const [aiSidebarOpen] = useQueryState('aiSidebar');
 
   const editor = useComposeEditor({
     placeholder: 'Ask Zero to do anything...',
@@ -297,6 +298,12 @@ export function AIChat({
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
+
+  useEffect(() => {
+    if (aiSidebarOpen === 'true') {
+      editor.commands.focus();
+    }
+  }, [aiSidebarOpen, editor]);
 
   return (
     <div className={cn('flex h-full flex-col', isFullScreen ? 'mx-auto max-w-xl' : '')}>

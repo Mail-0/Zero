@@ -9,7 +9,7 @@ import { createDb } from '../../db';
 import { generateText } from 'ai';
 import { z } from 'zod';
 
-const getDriverFromConnectionId = async (connectionId: string) => {
+export const getDriverFromConnectionId = async (connectionId: string) => {
   const db = createDb(env.HYPERDRIVE.connectionString);
   const activeConnection = await db.query.connection.findFirst({
     where: (connection, ops) => ops.eq(connection.id, connectionId),
