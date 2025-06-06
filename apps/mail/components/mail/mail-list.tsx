@@ -268,7 +268,11 @@ const Thread = memo(
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={cn("h-6 w-6 [&_svg]:size-3.5", displayImportant ? 'hover:bg-orange-200/70 dark:hover:bg-orange-800/40' : '')}
+                    className={cn("h-6 w-6 [&_svg]:size-3.5", 
+                      displayImportant 
+                      ? 'hover:bg-orange-200/70 dark:hover:bg-orange-800/40' 
+                      : ''
+                    )}
                     onClick={handleToggleImportant}
                   >
                     <ExclamationCircle
