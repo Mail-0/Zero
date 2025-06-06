@@ -270,10 +270,10 @@ const createAuthConfig = () => {
     session: {
       cookieCache: {
         enabled: true,
-        maxAge: 60 * 60 * 24 * 7, // 7 days
+        maxAge: 60 * 60 * 24 * 30, // 30 days
       },
-      expiresIn: 60 * 60 * 24 * 7, // 7 days
-      updateAge: 60 * 60 * 24, // 1 day (every 1 day the session expiration is updated)
+      expiresIn: 60 * 60 * 24 * 30, // 30 days
+      updateAge: 60 * 60 * 24 * 3, // 1 day (every 1 day the session expiration is updated)
     },
     socialProviders: getSocialProviders(env as unknown as Record<string, string>),
     account: {

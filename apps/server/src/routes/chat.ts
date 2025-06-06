@@ -140,7 +140,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
         );
 
         const result = streamText({
-          model: groq('meta-llama/llama-4-maverick-17b-128e-instruct'),
+          model: openai('gpt-4o'),
           messages: processedMessages,
           tools,
           onFinish,
