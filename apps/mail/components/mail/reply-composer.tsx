@@ -112,7 +112,29 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
     try {
       const userEmail = activeConnection.email.toLowerCase();
 
-      // Convert email strings to Sender objects
+      let fromEmail = userEmail;
+
+      if (aliases && aliases.length > 0 && replyToMessage) {
+        const allRecipients = [
+          ...(replyToMessage.to || []),
+          ...(replyToMessage.cc || []),
+          ...(replyToMessage.bcc || []),
+        ];
+
+        const matchingAlias = aliases.find((alias) =>
+          allRecipients.some(
+            (recipient) => recipient.email.toLowerCase() === alias.email.toLowerCase(),
+          ),
+        );
+
+        if (matchingAlias) {
+          fromEmail = matchingAlias.email;
+        } else {
+          fromEmail =
+            aliases.find((alias) => alias.primary)?.email || aliases[0]?.email || userEmail;
+        }
+      }
+
       const toRecipients: Sender[] = data.to.map((email) => ({
         email,
         name: email.split('@')[0] || 'User',
@@ -151,7 +173,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
         subject: data.subject,
         message: replyBody,
         attachments: await serializeFiles(data.attachments),
-        fromEmail: aliases?.[0]?.email || userEmail,
+        fromEmail: fromEmail,
         headers: {
           'In-Reply-To': replyToMessage?.messageId ?? '',
           References: [
