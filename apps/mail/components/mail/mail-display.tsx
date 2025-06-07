@@ -308,6 +308,7 @@ type Props = {
 };
 
 const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
+  const t = useTranslations()
   const visibleLabels = labels.filter(
     (label) => !['unread', 'inbox'].includes(label.toLowerCase()),
   );
@@ -327,42 +328,42 @@ const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
           case 'important':
             icon = <Lightning className="h-3.5 w-3.5 fill-white" />;
             bgColor = 'bg-[#F59E0D]';
-            labelText = 'Important';
+            labelText = t('common.mailCategories.important');
             break;
           case 'promotions':
             icon = <Tag className="h-3.5 w-3.5 fill-white" />;
             bgColor = 'bg-[#F43F5E]';
-            labelText = 'Promotions';
+            labelText = t('common.mailCategories.promotions');
             break;
           case 'personal':
             icon = <User className="h-3.5 w-3.5 fill-white" />;
             bgColor = 'bg-[#39AE4A]';
-            labelText: 'Personal';
+            labelText = t('common.mailCategories.personal');
             break;
           case 'updates':
             icon = <Bell className="h-3.5 w-3.5 fill-white" />;
             bgColor = 'bg-[#8B5CF6]';
-            labelText= 'Updates';
+            labelText= t('common.mailCategories.updates');
             break;
           case 'work':
             icon = <Briefcase className="h-3.5 w-3.5 text-white" />;
             bgColor = '';
-            labelText= 'Work';
+            labelText= t('common.mailCategories.work');
             break;
           case 'forums':
             icon = <Users className="h-3.5 w-3.5 text-white" />;
             bgColor = 'bg-blue-600';
-            labelText= 'Forums';
+            labelText= t('common.mailCategories.forums');
             break;
           case 'notes':
             icon = <StickyNote className="h-3.5 w-3.5 text-white" />;
             bgColor = 'bg-amber-500';
-            labelText= 'Notes';
+            labelText= t('common.mailCategories.notes');
             break;
           case 'starred':
             icon = <Star className="h-3.5 w-3.5 fill-white text-white" />;
             bgColor = 'bg-yellow-500';
-            labelText= 'Starred';
+            labelText = t('common.mailCategories.starred');
             break;
           default:
             return null;
