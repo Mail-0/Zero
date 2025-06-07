@@ -399,8 +399,8 @@ export function ThreadContextMenu({
     {
       id: 'toggle-read',
       label: isUnread ? t('common.mail.markAsRead') : t('common.mail.markAsUnread'),
-      icon: isUnread ? (
-        <Mail className="mr-2.5 h-4 w-4" />
+      icon: !isUnread ? (
+        <Mail className="mr-2.5 h-4 w-4 fill-[#9D9D9D] dark:fill-[#9D9D9D]" />
       ) : (
         <MailOpen className="mr-2.5 h-4 w-4" />
       ),
@@ -446,7 +446,7 @@ export function ThreadContextMenu({
         {children}
       </ContextMenuTrigger>
       <ContextMenuContent
-        className="dark:bg-panelDark w-56 bg-white"
+        className="dark:bg-panelDark w-56 overflow-y-auto bg-white"
         onContextMenu={(e) => e.preventDefault()}
       >
         {primaryActions.map(renderAction)}
@@ -458,7 +458,7 @@ export function ThreadContextMenu({
             <Tag className="mr-2.5 h-4 w-4" />
             {t('common.mail.labels')}
           </ContextMenuSubTrigger>
-          <ContextMenuSubContent className="dark:bg-panelDark w-48 bg-white">
+          <ContextMenuSubContent className="dark:bg-panelDark max-h-[520px] w-48 overflow-y-auto bg-white">
             <LabelsList threadId={threadId} />
           </ContextMenuSubContent>
         </ContextMenuSub>

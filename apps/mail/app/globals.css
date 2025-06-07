@@ -13,8 +13,12 @@
 
 @layer base {
   :root {
-    --font-geist-sans: 'Geist Variable', sans-serif;
-    --font-geist-mono: 'Geist Mono Variable', monospace;
+    --font-geist-sans:
+      'Geist Variable', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui,
+      sans-serif;
+    --font-geist-mono:
+      'Geist Mono Variable', 'Geist Mono', ui-monospace, SFMono-Regular, 'SF Mono', Consolas,
+      'Liberation Mono', Menlo, monospace;
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
@@ -92,9 +96,16 @@
   * {
     @apply border-border;
   }
-
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground;
+    font-family:
+      'Geist Variable',
+      'Geist',
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      system-ui,
+      sans-serif;
     overscroll-behavior: none;
     @apply style-scrollbar;
   }

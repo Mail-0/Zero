@@ -800,6 +800,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
       )}
 
       <CommandInput autoFocus placeholder="Type a command or search..." />
+      <Separator />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
         {allCommands.map((group, groupIndex) => (
@@ -860,7 +861,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                 ))}
               </CommandGroup>
             )}
-            {groupIndex < allCommands.length - 1 && group.items.length > 0 && <CommandSeparator />}
+            {groupIndex < allCommands.length - 1 && group.items.length > 0 && <Separator />}
           </Fragment>
         ))}
 
@@ -880,7 +881,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
       <>
         <div className="flex items-center border-b px-3">
           <button
-            className="text-muted-foreground hover:text-foreground mr-2"
+            className="text-muted-foreground hover:text-foreground mr-2 relative top-0.5"
             onClick={() => setCurrentView('main')}
             disabled={isProcessing}
           >
@@ -891,7 +892,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             value={searchQuery}
             onValueChange={setSearchQuery}
             placeholder="Search your emails..."
-            className="border-0"
+            className="border-none w-full"
             disabled={isProcessing}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && searchQuery.trim()) {

@@ -189,22 +189,8 @@ export function ThreadDisplay() {
   const { resolvedTheme } = useTheme();
   const [focusedIndex, setFocusedIndex] = useAtom(focusedIndexAtom);
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const { mutateAsync: toggleStar } = useMutation(trpc.mail.toggleStar.mutationOptions());
   const { mutateAsync: toggleImportant } = useMutation(trpc.mail.toggleImportant.mutationOptions());
-  const invalidateCount = () =>
-    queryClient.invalidateQueries({ queryKey: trpc.mail.count.queryKey() });
-  const invalidateThread = () =>
-    queryClient.invalidateQueries({ queryKey: trpc.mail.get.queryKey({ id: id ?? '' }) });
-  const { mutateAsync: markAsRead } = useMutation(
-    trpc.mail.markAsRead.mutationOptions({
-      onSuccess: () => {
-        return Promise.all([invalidateCount(), invalidateThread()]);
-      },
-    }),
-  );
   const [, setIsComposeOpen] = useQueryState('isComposeOpen');
-  const markAsReadRef = useRef<Promise<void> | null>(null);
 
   // Get optimistic state for this thread
   const optimisticState = useOptimisticThreadState(id ?? '');
@@ -231,28 +217,6 @@ export function ThreadDisplay() {
       }
     }
   }, [items, id, focusedIndex, setThreadId, setActiveReplyId, setFocusedIndex]);
-
-  useEffect(() => {
-    if (!emailData || !id) return;
-
-    const unreadEmails = emailData.messages.filter((e) => e.unread);
-    if (unreadEmails.length === 0) return;
-
-    const ids = [id, ...unreadEmails.map((e) => e.id)];
-
-    const markAsReadPromise = markAsRead({ ids });
-    markAsReadRef.current = markAsReadPromise;
-
-    void markAsReadPromise.finally(() => {
-      if (markAsReadRef.current === markAsReadPromise) {
-        markAsReadRef.current = null;
-      }
-    });
-
-    return () => {
-      markAsReadRef.current = null;
-    };
-  }, [emailData, id]);
 
   const handleUnsubscribeProcess = () => {
     if (!emailData?.latest) return;
@@ -703,16 +667,6 @@ export function ThreadDisplay() {
       setIsStarred(optimisticState.optimisticStarred);
     }
   }, [optimisticState.optimisticStarred]);
-
-  useEffect(() => {
-    const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        handleClose();
-      }
-    };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [handleClose]);
 
   // When mode changes, set the active reply to the latest message
   useEffect(() => {

@@ -99,7 +99,14 @@ export class GoogleMailManager implements MailManager {
     return this.withErrorHandler(
       'markAsRead',
       async () => {
-        await this.modifyThreadLabels(threadIds, { removeLabelIds: ['UNREAD'] });
+        const finalIds = await Promise.all(
+          threadIds.map(async (id) => {
+            const thread = await this.get(id);
+            return thread.messages.filter((e) => e.unread).map((e) => e.id);
+          }),
+        ).then((idArrays) => [...new Set(idArrays.flat())]);
+
+        await this.modifyThreadLabels(finalIds, { removeLabelIds: ['UNREAD'] });
       },
       { threadIds },
     );
@@ -108,7 +115,13 @@ export class GoogleMailManager implements MailManager {
     return this.withErrorHandler(
       'markAsUnread',
       async () => {
-        await this.modifyThreadLabels(threadIds, { addLabelIds: ['UNREAD'] });
+        const finalIds = await Promise.all(
+          threadIds.map(async (id) => {
+            const thread = await this.get(id);
+            return thread.messages.filter((e) => !e.unread).map((e) => e.id);
+          }),
+        ).then((idArrays) => [...new Set(idArrays.flat())]);
+        await this.modifyThreadLabels(finalIds, { addLabelIds: ['UNREAD'] });
       },
       { threadIds },
     );
