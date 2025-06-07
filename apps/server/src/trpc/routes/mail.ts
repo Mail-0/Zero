@@ -2,9 +2,9 @@ import { activeDriverProcedure, createRateLimiterMiddleware, router } from '../t
 import { updateWritingStyleMatrix } from '../../services/writing-style-service';
 import { deserializeFiles, serializedFileSchema } from '../../lib/schemas';
 import { defaultPageSize, FOLDERS, LABELS } from '../../lib/utils';
+import type { DeleteAllSpamResponse } from '../../types';
 import { Ratelimit } from '@upstash/ratelimit';
 import { z } from 'zod';
-import type { DeleteAllSpamResponse } from '../../types';
 
 const senderSchema = z.object({
   name: z.string().optional(),
@@ -37,8 +37,8 @@ export const mailRouter = router({
     )
     .use(
       createRateLimiterMiddleware({
-        generatePrefix: ({ session }, input) =>
-          `ratelimit:list-threads-${input.folder}-${session?.user.id}`,
+        generatePrefix: ({ sessionUser }, input) =>
+          `ratelimit:list-threads-${input.folder}-${sessionUser?.id}`,
         limiter: Ratelimit.slidingWindow(60, '1m'),
       }),
     )
@@ -231,20 +231,20 @@ export const mailRouter = router({
       const { driver } = ctx;
       return driver.modifyLabels(input.ids, { addLabels: [], removeLabels: ['STARRED'] });
     }),
-    deleteAllSpam: activeDriverProcedure
-    .mutation(async ({ ctx }) : Promise<DeleteAllSpamResponse> => {
-      const { driver } = ctx;
-      try {
-        return await driver.deleteAllSpam();
-      } catch (error) {
-        console.error('Error deleting spam emails:', error);
-        return { 
-          success: false, 
-          message: 'Failed to delete spam emails',
-          error: String(error),
-          count: 0
-        };
-      }}),
+  deleteAllSpam: activeDriverProcedure.mutation(async ({ ctx }): Promise<DeleteAllSpamResponse> => {
+    const { driver } = ctx;
+    try {
+      return await driver.deleteAllSpam();
+    } catch (error) {
+      console.error('Error deleting spam emails:', error);
+      return {
+        success: false,
+        message: 'Failed to delete spam emails',
+        error: String(error),
+        count: 0,
+      };
+    }
+  }),
   bulkUnmarkImportant: activeDriverProcedure
     .input(
       z.object({
