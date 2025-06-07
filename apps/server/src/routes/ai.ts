@@ -101,7 +101,7 @@ aiRouter.post('/call', async (c) => {
   const driver = connectionToDriver(activeConnection);
 
   const { text } = await generateText({
-    model: groq('meta-llama/llama-4-maverick-17b-128e-instruct'),
+    model: openai('gpt-4o'),
     system: systemPrompt,
     prompt: data.query,
     tools: {
@@ -114,7 +114,7 @@ aiRouter.post('/call', async (c) => {
           console.log('[DEBUG] buildGmailSearchQuery', params);
 
           const result = await generateText({
-            model: groq('meta-llama/llama-4-maverick-17b-128e-instruct'),
+            model: openai('gpt-4o'),
             system: GmailSearchAssistantSystemPrompt(),
             prompt: params.query,
           });
