@@ -1,5 +1,7 @@
 import { addOptimisticActionAtom, removeOptimisticActionAtom } from '@/store/optimistic-updates';
+import { optimisticActionsManager, type PendingAction } from '@/lib/optimistic-actions-manager';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { focusedIndexAtom } from '@/hooks/use-mail-navigation';
 import { backgroundQueueAtom } from '@/store/backgroundQueue';
 import type { ThreadDestination } from '@/lib/thread-actions';
 import { useTRPC } from '@/providers/query-provider';
@@ -11,17 +13,6 @@ import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
 
-type PendingAction = {
-  id: string;
-  type: 'MOVE' | 'STAR' | 'READ' | 'LABEL' | 'IMPORTANT';
-  threadIds: string[];
-  params: any;
-  optimisticId: string;
-  execute: () => Promise<void>;
-  undo: () => void;
-  toastId?: string | number;
-};
-
 export function useOptimisticActions() {
   const t = useTranslations();
   const trpc = useTRPC();
@@ -30,6 +21,8 @@ export function useOptimisticActions() {
   const [, addOptimisticAction] = useAtom(addOptimisticActionAtom);
   const [, removeOptimisticAction] = useAtom(removeOptimisticActionAtom);
   const [threadId, setThreadId] = useQueryState('threadId');
+  const [, setActiveReplyId] = useQueryState('activeReplyId');
+  const [, setFocusedIndex] = useAtom(focusedIndexAtom);
   const [mail, setMail] = useMail();
   const { mutateAsync: markAsRead } = useMutation(trpc.mail.markAsRead.mutationOptions());
   const { mutateAsync: markAsUnread } = useMutation(trpc.mail.markAsUnread.mutationOptions());
@@ -40,24 +33,20 @@ export function useOptimisticActions() {
   const { mutateAsync: bulkStar } = useMutation(trpc.mail.bulkStar.mutationOptions());
   const { mutateAsync: bulkDeleteThread } = useMutation(trpc.mail.bulkDelete.mutationOptions());
 
-  const pendingActionsRef = useRef<Map<string, PendingAction>>(new Map());
-  const pendingActionsByTypeRef = useRef<Map<string, Set<string>>>(new Map());
-  const lastActionIdRef = useRef<string | null>(null);
-
   const generatePendingActionId = () =>
     `pending_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
   const refreshData = useCallback(
     async (threadIds: string[], folders?: string[]) => {
       return await Promise.all([
-        queryClient.invalidateQueries({ queryKey: trpc.mail.count.queryKey() }),
+        queryClient.refetchQueries({ queryKey: trpc.mail.count.queryKey() }),
         ...(folders?.map((folder) =>
-          queryClient.invalidateQueries({
+          queryClient.refetchQueries({
             queryKey: trpc.mail.listThreads.infiniteQueryKey({ folder }),
           }),
         ) ?? []),
         ...threadIds.map((id) =>
-          queryClient.invalidateQueries({
+          queryClient.refetchQueries({
             queryKey: trpc.mail.get.queryKey({ id }),
           }),
         ),
@@ -65,13 +54,6 @@ export function useOptimisticActions() {
     },
     [queryClient, trpc.mail.get],
   );
-
-  async function checkAndRefreshType(type: string, threadIds: string[], folders?: string[]) {
-    const typeActions = pendingActionsByTypeRef.current.get(type);
-    if (typeActions && typeActions.size === 0) {
-      await refreshData(threadIds, folders);
-    }
-  }
 
   function createPendingAction({
     type,
@@ -93,11 +75,21 @@ export function useOptimisticActions() {
     folders?: string[];
   }) {
     const pendingActionId = generatePendingActionId();
+    optimisticActionsManager.lastActionId = pendingActionId;
+    console.log('here Generated pending action ID:', pendingActionId);
 
-    if (!pendingActionsByTypeRef.current.has(type)) {
-      pendingActionsByTypeRef.current.set(type, new Set());
+    if (!optimisticActionsManager.pendingActionsByType.has(type)) {
+      console.log('here Creating new Set for action type:', type);
+      optimisticActionsManager.pendingActionsByType.set(type, new Set());
     }
-    pendingActionsByTypeRef.current.get(type)?.add(pendingActionId);
+    optimisticActionsManager.pendingActionsByType.get(type)?.add(pendingActionId);
+    console.log(
+      'here',
+      'Added pending action to type:',
+      type,
+      'Current size:',
+      optimisticActionsManager.pendingActionsByType.get(type)?.size,
+    );
 
     const pendingAction: PendingAction = {
       id: pendingActionId,
@@ -109,7 +101,7 @@ export function useOptimisticActions() {
       undo,
     };
 
-    pendingActionsRef.current.set(pendingActionId, pendingAction);
+    optimisticActionsManager.pendingActions.set(pendingActionId, pendingAction);
 
     const itemCount = threadIds.length;
     const bulkActionMessage = itemCount > 1 ? `${toastMessage} (${itemCount} items)` : toastMessage;
@@ -117,314 +109,294 @@ export function useOptimisticActions() {
     async function doAction() {
       try {
         await execute();
-        pendingActionsRef.current.delete(pendingActionId);
-        pendingActionsByTypeRef.current.get(type)?.delete(pendingActionId);
-        await checkAndRefreshType(type, threadIds, folders);
-        removeOptimisticAction(optimisticId);
+        const typeActions = optimisticActionsManager.pendingActionsByType.get(type);
+        console.log('here', {
+          pendingActionsByTypeRef: optimisticActionsManager.pendingActionsByType.get(type)?.size,
+          pendingActionsRef: optimisticActionsManager.pendingActions.size,
+          typeActions: typeActions?.size,
+        });
+        optimisticActionsManager.pendingActions.delete(pendingActionId);
+        optimisticActionsManager.pendingActionsByType.get(type)?.delete(pendingActionId);
+        if (typeActions?.size === 1) {
+          await refreshData(threadIds, folders);
+          removeOptimisticAction(optimisticId);
+        }
       } catch (error) {
         console.error('Action failed:', error);
         removeOptimisticAction(optimisticId);
-        pendingActionsRef.current.delete(pendingActionId);
-        pendingActionsByTypeRef.current.get(type)?.delete(pendingActionId);
+        optimisticActionsManager.pendingActions.delete(pendingActionId);
+        optimisticActionsManager.pendingActionsByType.get(type)?.delete(pendingActionId);
         showToast.error('Action failed');
       }
     }
 
     const showToast = toast;
 
-    toast(bulkActionMessage, {
-      onAutoClose: () => {
-        doAction();
-      },
-      onDismiss: () => {
-        doAction();
-      },
-      action: {
-        label: 'Undo',
-        onClick: () => {
-          undo();
-          pendingActionsRef.current.delete(pendingActionId);
-          pendingActionsByTypeRef.current.get(type)?.delete(pendingActionId);
+    if (toastMessage.trim().length) {
+      toast(bulkActionMessage, {
+        onAutoClose: () => {
+          doAction();
         },
-      },
-      duration: 5000,
-    });
+        onDismiss: () => {
+          doAction();
+        },
+        action: {
+          label: 'Undo',
+          onClick: () => {
+            undo();
+            optimisticActionsManager.pendingActions.delete(pendingActionId);
+            optimisticActionsManager.pendingActionsByType.get(type)?.delete(pendingActionId);
+          },
+        },
+        duration: 5000,
+      });
+    } else {
+      doAction();
+    }
 
     return pendingActionId;
   }
 
-  const optimisticMarkAsRead = useCallback(
-    (threadIds: string[]) => {
-      if (!threadIds.length) return;
+  function optimisticMarkAsRead(threadIds: string[], silent = false) {
+    if (!threadIds.length) return;
 
-      const optimisticId = addOptimisticAction({
-        type: 'READ',
-        threadIds,
-        read: true,
-      });
+    const optimisticId = addOptimisticAction({
+      type: 'READ',
+      threadIds,
+      read: true,
+    });
 
-      createPendingAction({
-        type: 'READ',
-        threadIds,
-        params: { read: true },
-        optimisticId,
-        execute: async () => {
-          await markAsRead({ ids: threadIds });
+    createPendingAction({
+      type: 'READ',
+      threadIds,
+      params: { read: true },
+      optimisticId,
+      execute: async () => {
+        await markAsRead({ ids: threadIds });
 
-          if (mail.bulkSelected.length > 0) {
-            setMail({ ...mail, bulkSelected: [] });
-          }
-        },
-        undo: () => {
-          removeOptimisticAction(optimisticId);
-        },
-        toastMessage: 'Marked as read',
-      });
-    },
-    [addOptimisticAction, removeOptimisticAction, markAsRead, createPendingAction, mail, setMail],
-  );
+        if (mail.bulkSelected.length > 0) {
+          setMail({ ...mail, bulkSelected: [] });
+        }
+      },
+      undo: () => {
+        removeOptimisticAction(optimisticId);
+      },
+      toastMessage: silent ? '' : 'Marked as read',
+    });
+  }
 
-  const optimisticMarkAsUnread = useCallback(
-    (threadIds: string[]) => {
-      if (!threadIds.length) return;
+  function optimisticMarkAsUnread(threadIds: string[]) {
+    if (!threadIds.length) return;
 
-      const optimisticId = addOptimisticAction({
-        type: 'READ',
-        threadIds,
-        read: false,
-      });
+    const optimisticId = addOptimisticAction({
+      type: 'READ',
+      threadIds,
+      read: false,
+    });
 
-      createPendingAction({
-        type: 'READ',
-        threadIds,
-        params: { read: false },
-        optimisticId,
-        execute: async () => {
-          await markAsUnread({ ids: threadIds });
+    createPendingAction({
+      type: 'READ',
+      threadIds,
+      params: { read: false },
+      optimisticId,
+      execute: async () => {
+        await markAsUnread({ ids: threadIds });
 
-          if (mail.bulkSelected.length > 0) {
-            setMail({ ...mail, bulkSelected: [] });
-          }
-        },
-        undo: () => {
-          removeOptimisticAction(optimisticId);
-        },
-        toastMessage: 'Marked as unread',
-      });
-    },
-    [addOptimisticAction, removeOptimisticAction, markAsUnread, createPendingAction, mail, setMail],
-  );
+        if (mail.bulkSelected.length > 0) {
+          setMail({ ...mail, bulkSelected: [] });
+        }
+      },
+      undo: () => {
+        removeOptimisticAction(optimisticId);
+      },
+      toastMessage: 'Marked as unread',
+    });
+  }
 
-  const optimisticToggleStar = useCallback(
-    (threadIds: string[], starred: boolean) => {
-      if (!threadIds.length) return;
+  function optimisticToggleStar(threadIds: string[], starred: boolean) {
+    if (!threadIds.length) return;
 
-      const optimisticId = addOptimisticAction({
-        type: 'STAR',
-        threadIds,
-        starred,
-      });
+    const optimisticId = addOptimisticAction({
+      type: 'STAR',
+      threadIds,
+      starred,
+    });
 
-      createPendingAction({
-        type: 'STAR',
-        threadIds,
-        params: { starred },
-        optimisticId,
-        execute: async () => {
-          await toggleStar({ ids: threadIds });
-        },
-        undo: () => {
-          removeOptimisticAction(optimisticId);
-        },
-        toastMessage: starred
-          ? t('common.actions.addedToFavorites')
-          : t('common.actions.removedFromFavorites'),
-      });
-    },
-    [addOptimisticAction, removeOptimisticAction, toggleStar, createPendingAction, t],
-  );
+    createPendingAction({
+      type: 'STAR',
+      threadIds,
+      params: { starred },
+      optimisticId,
+      execute: async () => {
+        await toggleStar({ ids: threadIds });
+      },
+      undo: () => {
+        removeOptimisticAction(optimisticId);
+      },
+      toastMessage: starred
+        ? t('common.actions.addedToFavorites')
+        : t('common.actions.removedFromFavorites'),
+    });
+  }
 
-  const optimisticMoveThreadsTo = useCallback(
-    (threadIds: string[], currentFolder: string, destination: ThreadDestination) => {
-      if (!threadIds.length || !destination) return;
+  function optimisticMoveThreadsTo(
+    threadIds: string[],
+    currentFolder: string,
+    destination: ThreadDestination,
+  ) {
+    if (!threadIds.length || !destination) return;
 
-      const optimisticId = addOptimisticAction({
-        type: 'MOVE',
-        threadIds,
-        destination,
-      });
+    // setFocusedIndex(null);
 
-      threadIds.forEach((id) => {
-        setBackgroundQueue({ type: 'add', threadId: `thread:${id}` });
-      });
+    const optimisticId = addOptimisticAction({
+      type: 'MOVE',
+      threadIds,
+      destination,
+    });
 
-      if (threadId && threadIds.includes(threadId)) {
-        setThreadId(null);
-      }
-      const successMessage =
-        destination === 'inbox'
-          ? t('common.actions.movedToInbox')
-          : destination === 'spam'
-            ? t('common.actions.movedToSpam')
-            : destination === 'bin'
-              ? t('common.actions.movedToBin')
-              : t('common.actions.archived');
+    threadIds.forEach((id) => {
+      setBackgroundQueue({ type: 'add', threadId: `thread:${id}` });
+    });
 
-      createPendingAction({
-        type: 'MOVE',
-        threadIds,
-        params: { currentFolder, destination },
-        optimisticId,
-        execute: async () => {
-          await moveThreadsTo({
-            threadIds,
-            currentFolder,
-            destination,
-          });
+    if (threadId && threadIds.includes(threadId)) {
+      setThreadId(null);
+      setActiveReplyId(null);
+    }
+    const successMessage =
+      destination === 'inbox'
+        ? t('common.actions.movedToInbox')
+        : destination === 'spam'
+          ? t('common.actions.movedToSpam')
+          : destination === 'bin'
+            ? t('common.actions.movedToBin')
+            : t('common.actions.archived');
 
-          if (mail.bulkSelected.length > 0) {
-            setMail({ ...mail, bulkSelected: [] });
-          }
+    createPendingAction({
+      type: 'MOVE',
+      threadIds,
+      params: { currentFolder, destination },
+      optimisticId,
+      execute: async () => {
+        await moveThreadsTo({
+          threadIds,
+          currentFolder,
+          destination,
+        });
 
-          threadIds.forEach((id) => {
-            setBackgroundQueue({ type: 'delete', threadId: `thread:${id}` });
-          });
-        },
-        undo: () => {
-          removeOptimisticAction(optimisticId);
-          threadIds.forEach((id) => {
-            setBackgroundQueue({ type: 'delete', threadId: `thread:${id}` });
-          });
-        },
-        toastMessage: successMessage,
-        folders: [currentFolder, destination],
-      });
-    },
-    [
-      addOptimisticAction,
-      removeOptimisticAction,
-      setBackgroundQueue,
-      threadId,
-      setThreadId,
-      createPendingAction,
-      t,
-      mail,
-      setMail,
-    ],
-  );
+        if (mail.bulkSelected.length > 0) {
+          setMail({ ...mail, bulkSelected: [] });
+        }
 
-  const optimisticDeleteThreads = useCallback(
-    (threadIds: string[], currentFolder: string) => {
-      if (!threadIds.length) return;
+        threadIds.forEach((id) => {
+          setBackgroundQueue({ type: 'delete', threadId: `thread:${id}` });
+        });
+      },
+      undo: () => {
+        removeOptimisticAction(optimisticId);
+        threadIds.forEach((id) => {
+          setBackgroundQueue({ type: 'delete', threadId: `thread:${id}` });
+        });
+      },
+      toastMessage: successMessage,
+      folders: [currentFolder, destination],
+    });
+  }
 
-      const optimisticId = addOptimisticAction({
-        type: 'MOVE',
-        threadIds,
-        destination: 'bin',
-      });
+  function optimisticDeleteThreads(threadIds: string[], currentFolder: string) {
+    if (!threadIds.length) return;
 
-      threadIds.forEach((id) => {
-        setBackgroundQueue({ type: 'add', threadId: `thread:${id}` });
-      });
+    // setFocusedIndex(null);
 
-      if (threadId && threadIds.includes(threadId)) {
-        setThreadId(null);
-      }
-      createPendingAction({
-        type: 'MOVE',
-        threadIds,
-        params: { currentFolder, destination: 'bin' },
-        optimisticId,
-        execute: async () => {
-          await bulkDeleteThread({ ids: threadIds });
+    const optimisticId = addOptimisticAction({
+      type: 'MOVE',
+      threadIds,
+      destination: 'bin',
+    });
 
-          if (mail.bulkSelected.length > 0) {
-            setMail({ ...mail, bulkSelected: [] });
-          }
+    threadIds.forEach((id) => {
+      setBackgroundQueue({ type: 'add', threadId: `thread:${id}` });
+    });
 
-          threadIds.forEach((id) => {
-            setBackgroundQueue({ type: 'delete', threadId: `thread:${id}` });
-          });
-        },
-        undo: () => {
-          removeOptimisticAction(optimisticId);
+    if (threadId && threadIds.includes(threadId)) {
+      setThreadId(null);
+      setActiveReplyId(null);
+    }
+    createPendingAction({
+      type: 'MOVE',
+      threadIds,
+      params: { currentFolder, destination: 'bin' },
+      optimisticId,
+      execute: async () => {
+        await bulkDeleteThread({ ids: threadIds });
 
-          threadIds.forEach((id) => {
-            setBackgroundQueue({ type: 'delete', threadId: `thread:${id}` });
-          });
-        },
-        toastMessage: t('common.actions.movedToBin'),
-      });
-    },
-    [
-      addOptimisticAction,
-      removeOptimisticAction,
-      setBackgroundQueue,
-      threadId,
-      setThreadId,
-      createPendingAction,
-      bulkDeleteThread,
-      t,
-      mail,
-      setMail,
-    ],
-  );
+        if (mail.bulkSelected.length > 0) {
+          setMail({ ...mail, bulkSelected: [] });
+        }
 
-  const optimisticToggleImportant = useCallback(
-    (threadIds: string[], isImportant: boolean) => {
-      if (!threadIds.length) return;
+        threadIds.forEach((id) => {
+          setBackgroundQueue({ type: 'delete', threadId: `thread:${id}` });
+        });
+      },
+      undo: () => {
+        removeOptimisticAction(optimisticId);
 
-      const optimisticId = addOptimisticAction({
-        type: 'IMPORTANT',
-        threadIds,
-        important: isImportant,
-      });
+        threadIds.forEach((id) => {
+          setBackgroundQueue({ type: 'delete', threadId: `thread:${id}` });
+        });
+      },
+      toastMessage: t('common.actions.movedToBin'),
+    });
+  }
 
-      createPendingAction({
-        type: 'IMPORTANT',
-        threadIds,
-        params: { important: isImportant },
-        optimisticId,
-        execute: async () => {
-          await toggleImportant({ ids: threadIds });
+  function optimisticToggleImportant(threadIds: string[], isImportant: boolean) {
+    if (!threadIds.length) return;
 
-          if (mail.bulkSelected.length > 0) {
-            setMail({ ...mail, bulkSelected: [] });
-          }
-        },
-        undo: () => {
-          removeOptimisticAction(optimisticId);
-        },
-        toastMessage: isImportant ? 'Marked as important' : 'Unmarked as important',
-      });
-    },
-    [
-      addOptimisticAction,
-      createPendingAction,
-      mail,
-      removeOptimisticAction,
-      setMail,
-      toggleImportant,
-    ],
-  );
+    const optimisticId = addOptimisticAction({
+      type: 'IMPORTANT',
+      threadIds,
+      important: isImportant,
+    });
 
-  const undoLastAction = useCallback(() => {
-    if (!lastActionIdRef.current) return;
+    createPendingAction({
+      type: 'IMPORTANT',
+      threadIds,
+      params: { important: isImportant },
+      optimisticId,
+      execute: async () => {
+        await toggleImportant({ ids: threadIds });
 
-    const lastAction = pendingActionsRef.current.get(lastActionIdRef.current);
+        if (mail.bulkSelected.length > 0) {
+          setMail({ ...mail, bulkSelected: [] });
+        }
+      },
+      undo: () => {
+        removeOptimisticAction(optimisticId);
+      },
+      toastMessage: isImportant ? 'Marked as important' : 'Unmarked as important',
+    });
+  }
+
+  function undoLastAction() {
+    if (!optimisticActionsManager.lastActionId) return;
+
+    const lastAction = optimisticActionsManager.pendingActions.get(
+      optimisticActionsManager.lastActionId,
+    );
     if (!lastAction) return;
 
     lastAction.undo();
 
-    pendingActionsRef.current.delete(lastActionIdRef.current);
-    pendingActionsByTypeRef.current.get(lastAction.type)?.delete(lastActionIdRef.current);
+    optimisticActionsManager.pendingActions.delete(optimisticActionsManager.lastActionId);
+    optimisticActionsManager.pendingActionsByType
+      .get(lastAction.type)
+      ?.delete(optimisticActionsManager.lastActionId);
 
     if (lastAction.toastId) {
       toast.dismiss(lastAction.toastId);
     }
 
-    lastActionIdRef.current = null;
-  }, []);
+    optimisticActionsManager.lastActionId = null;
+  }
 
   return {
     optimisticMarkAsRead,

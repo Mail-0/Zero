@@ -9,13 +9,9 @@ export function GlobalHotkeys() {
   const [composeOpen, setComposeOpen] = useQueryState('isComposeOpen');
   const { openModal, clearAllFilters } = useCommandPalette();
   const { undoLastAction } = useOptimisticActions();
-  const { startConversation } = useVoice();
   const scope = 'global';
 
   const handlers = {
-    openVoice: () => {
-      startConversation();
-    },
     newEmail: () => setComposeOpen('true'),
     commandPalette: () => openModal(),
     clearAllFilters: () => clearAllFilters(),
