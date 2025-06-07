@@ -399,8 +399,8 @@ export function ThreadContextMenu({
     {
       id: 'toggle-read',
       label: isUnread ? t('common.mail.markAsRead') : t('common.mail.markAsUnread'),
-      icon: isUnread ? (
-        <Mail className="mr-2.5 h-4 w-4" />
+      icon: !isUnread ? (
+        <Mail className="mr-2.5 h-4 w-4 fill-[#9D9D9D] dark:fill-[#9D9D9D]" />
       ) : (
         <MailOpen className="mr-2.5 h-4 w-4" />
       ),
