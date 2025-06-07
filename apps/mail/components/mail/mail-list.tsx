@@ -485,35 +485,17 @@ const Thread = memo(
       ) : null;
 
     return latestMessage ? (
-      <AnimatePresence mode="sync">
-        {!optimisticState.shouldHide && (
-          <motion.div
-            key={message.id}
-            initial={{ opacity: 1, height: 'auto' }}
-            exit={{
-              opacity: 0,
-              height: 0,
-              marginTop: 0,
-              marginBottom: 0,
-              overflow: 'hidden',
-              transition: { duration: 0.3, ease: 'easeInOut' },
-            }}
-            layout
-          >
-            {idToUse ? (
-              <ThreadContextMenu
-                threadId={idToUse}
-                isInbox={isFolderInbox}
-                isSpam={isFolderSpam}
-                isSent={isFolderSent}
-                isBin={isFolderBin}
-              >
-                {content}
-              </ThreadContextMenu>
-            ) : null}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      !optimisticState.shouldHide && idToUse ? (
+        <ThreadContextMenu
+          threadId={idToUse}
+          isInbox={isFolderInbox}
+          isSpam={isFolderSpam}
+          isSent={isFolderSent}
+          isBin={isFolderBin}
+        >
+          {content}
+        </ThreadContextMenu>
+      ) : null
     ) : null;
   },
   (prev, next) => {
@@ -591,11 +573,15 @@ export const MailList = memo(
     const [, setDraftId] = useQueryState('draftId');
     const [category, setCategory] = useQueryState('category');
     const [searchValue, setSearchValue] = useSearchValue();
-    const { enableScope, disableScope } = useHotkeysContext();
     const [{ refetch, isLoading, isFetching, isFetchingNextPage, hasNextPage }, items, , loadMore] =
       useThreads();
     const trpc = useTRPC();
     const isFetchingMail = useIsFetching({ queryKey: trpc.mail.get.queryKey() }) > 0;
+
+    const itemsRef = useRef(items);
+    useEffect(() => {
+      itemsRef.current = items;
+    }, [items]);
 
     const allCategories = Categories();
 
@@ -672,7 +658,7 @@ export const MailList = memo(
     }, [isKeyPressed]);
 
     const [, setActiveReplyId] = useQueryState('activeReplyId');
-    const [mail, setMail] = useMail();
+    const [, setMail] = useMail();
 
     const handleSelectMail = useCallback(
       (message: ParsedMessage) => {
@@ -680,43 +666,46 @@ export const MailList = memo(
         const currentMode = getSelectMode();
         console.log('Selection mode:', currentMode, 'for item:', itemId);
 
-        switch (currentMode) {
-          case 'mass': {
-            const newSelected = mail.bulkSelected.includes(itemId)
-              ? mail.bulkSelected.filter((id) => id !== itemId)
-              : [...mail.bulkSelected, itemId];
-            console.log('Mass selection mode - selected items:', newSelected.length);
-            return setMail({ ...mail, bulkSelected: newSelected });
-          }
-          case 'selectAllBelow': {
-            const clickedIndex = items.findIndex((item) => item.id === itemId);
-            console.log(
-              'SelectAllBelow - clicked index:',
-              clickedIndex,
-              'total items:',
-              items.length,
-            );
-
-            if (clickedIndex !== -1) {
-              const itemsBelow = items.slice(clickedIndex);
-              const idsBelow = itemsBelow.map((item) => item.id);
-              console.log('Selecting all items below - count:', idsBelow.length);
-              return setMail({ ...mail, bulkSelected: idsBelow });
+        setMail((prevMail) => {
+          const mail = prevMail;
+          switch (currentMode) {
+            case 'mass': {
+              const newSelected = mail.bulkSelected.includes(itemId)
+                ? mail.bulkSelected.filter((id) => id !== itemId)
+                : [...mail.bulkSelected, itemId];
+              console.log('Mass selection mode - selected items:', newSelected.length);
+              return { ...mail, bulkSelected: newSelected };
             }
-            console.log('Item not found in list, selecting just this item');
-            return setMail({ ...mail, bulkSelected: [itemId] });
+            case 'selectAllBelow': {
+              const clickedIndex = itemsRef.current.findIndex((item) => item.id === itemId);
+              console.log(
+                'SelectAllBelow - clicked index:',
+                clickedIndex,
+                'total items:',
+                itemsRef.current.length,
+              );
+
+              if (clickedIndex !== -1) {
+                const itemsBelow = itemsRef.current.slice(clickedIndex);
+                const idsBelow = itemsBelow.map((item) => item.id);
+                console.log('Selecting all items below - count:', idsBelow.length);
+                return { ...mail, bulkSelected: idsBelow };
+              }
+              console.log('Item not found in list, selecting just this item');
+              return { ...mail, bulkSelected: [itemId] };
+            }
+            case 'range': {
+              console.log('Range selection mode - not fully implemented');
+              return { ...mail, bulkSelected: [itemId] };
+            }
+            default: {
+              console.log('Single selection mode');
+              return { ...mail, bulkSelected: [itemId] };
+            }
           }
-          case 'range': {
-            console.log('Range selection mode - not fully implemented');
-            return setMail({ ...mail, bulkSelected: [itemId] });
-          }
-          default: {
-            console.log('Single selection mode');
-            return setMail({ ...mail, bulkSelected: [itemId] });
-          }
-        }
+        });
       },
-      [mail, setMail, getSelectMode, items],
+      [getSelectMode, setMail],
     );
 
     const [, setFocusedIndex] = useAtom(focusedIndexAtom);
@@ -734,14 +723,23 @@ export const MailList = memo(
         handleMouseEnter(message.id);
 
         const messageThreadId = message.threadId ?? message.id;
-        const clickedIndex = items.findIndex((item) => item.id === messageThreadId);
+        const clickedIndex = itemsRef.current.findIndex((item) => item.id === messageThreadId);
         setFocusedIndex(clickedIndex);
         if (message.unread) optimisticMarkAsRead([messageThreadId], true);
         await setThreadId(messageThreadId);
         await setDraftId(null);
         await setActiveReplyId(null);
       },
-      [mail, items, setFocusedIndex, getSelectMode, handleSelectMail],
+      [
+        getSelectMode,
+        handleSelectMail,
+        handleMouseEnter,
+        setFocusedIndex,
+        optimisticMarkAsRead,
+        setThreadId,
+        setDraftId,
+        setActiveReplyId,
+      ],
     );
 
     const isFiltering = searchValue.value.trim().length > 0;
