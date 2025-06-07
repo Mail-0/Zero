@@ -189,22 +189,8 @@ export function ThreadDisplay() {
   const { resolvedTheme } = useTheme();
   const [focusedIndex, setFocusedIndex] = useAtom(focusedIndexAtom);
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const { mutateAsync: toggleStar } = useMutation(trpc.mail.toggleStar.mutationOptions());
   const { mutateAsync: toggleImportant } = useMutation(trpc.mail.toggleImportant.mutationOptions());
-  const invalidateCount = () =>
-    queryClient.invalidateQueries({ queryKey: trpc.mail.count.queryKey() });
-  const invalidateThread = () =>
-    queryClient.invalidateQueries({ queryKey: trpc.mail.get.queryKey({ id: id ?? '' }) });
-  const { mutateAsync: markAsRead } = useMutation(
-    trpc.mail.markAsRead.mutationOptions({
-      onSuccess: () => {
-        return Promise.all([invalidateCount(), invalidateThread()]);
-      },
-    }),
-  );
   const [, setIsComposeOpen] = useQueryState('isComposeOpen');
-  const markAsReadRef = useRef<Promise<void> | null>(null);
 
   // Get optimistic state for this thread
   const optimisticState = useOptimisticThreadState(id ?? '');
@@ -223,36 +209,20 @@ export function ThreadDisplay() {
   const handleNext = useCallback(() => {
     if (!id || !items.length || focusedIndex === null) return setThreadId(null);
     if (focusedIndex < items.length - 1) {
-      const nextThread = items[focusedIndex + 1];
+      const nextIndex = Math.max(1, focusedIndex + 1);
+      //   console.log('nextIndex', nextIndex);
+
+      const nextThread = items[nextIndex];
+      setActiveReplyId(null);
       if (nextThread) {
         setThreadId(nextThread.id);
-        setActiveReplyId(null);
-        setFocusedIndex(focusedIndex + 1);
+        setFocusedIndex(focusedIndex);
+      } else {
+        setThreadId(null);
+        setFocusedIndex(null);
       }
     }
   }, [items, id, focusedIndex, setThreadId, setActiveReplyId, setFocusedIndex]);
-
-  useEffect(() => {
-    if (!emailData || !id) return;
-
-    const unreadEmails = emailData.messages.filter((e) => e.unread);
-    if (unreadEmails.length === 0) return;
-
-    const ids = [id, ...unreadEmails.map((e) => e.id)];
-
-    const markAsReadPromise = markAsRead({ ids });
-    markAsReadRef.current = markAsReadPromise;
-
-    void markAsReadPromise.finally(() => {
-      if (markAsReadRef.current === markAsReadPromise) {
-        markAsReadRef.current = null;
-      }
-    });
-
-    return () => {
-      markAsReadRef.current = null;
-    };
-  }, [emailData, id]);
 
   const handleUnsubscribeProcess = () => {
     if (!emailData?.latest) return;
@@ -704,16 +674,6 @@ export function ThreadDisplay() {
     }
   }, [optimisticState.optimisticStarred]);
 
-  useEffect(() => {
-    const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        handleClose();
-      }
-    };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [handleClose]);
-
   // When mode changes, set the active reply to the latest message
   useEffect(() => {
     // Only clear the active reply when mode is cleared
@@ -940,9 +900,9 @@ export function ThreadDisplay() {
                       <TooltipTrigger asChild>
                         <button
                           onClick={() => moveThreadTo('bin')}
-                          className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md border border-[#FCCDD5] bg-[#FDE4E9] dark:border-[#6E2532] dark:bg-[#411D23]"
+                          className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md bg-white dark:bg-[#313131]"
                         >
-                          <Trash className="fill-[#F43F5E]" />
+                          <Trash className="fill-iconLight dark:fill-iconDark" />
                         </button>
                       </TooltipTrigger>
                       <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">

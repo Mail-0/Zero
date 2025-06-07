@@ -107,7 +107,8 @@ const Thread = memo(
       return labels;
     }, [getThreadData?.labels, optimisticState.optimisticStarred]);
 
-    const { optimisticToggleStar } = useOptimisticActions();
+    const { optimisticToggleStar, optimisticToggleImportant, optimisticMoveThreadsTo } =
+      useOptimisticActions();
 
     const handleToggleStar = useCallback(
       async (e: React.MouseEvent) => {
@@ -119,8 +120,6 @@ const Thread = memo(
       },
       [getThreadData, idToUse, displayStarred, optimisticToggleStar],
     );
-
-    const { optimisticToggleImportant } = useOptimisticActions();
 
     const handleToggleImportant = useCallback(
       async (e: React.MouseEvent) => {
@@ -147,8 +146,6 @@ const Thread = memo(
       },
       [threads, id, focusedIndex],
     );
-
-    const { optimisticMoveThreadsTo } = useOptimisticActions();
 
     const moveThreadTo = useCallback(
       async (destination: ThreadDestination) => {
@@ -269,19 +266,14 @@ const Thread = memo(
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={cn("h-6 w-6 [&_svg]:size-3.5", 
-                      displayImportant 
-                      ? 'hover:bg-orange-200/70 dark:hover:bg-orange-800/40' 
-                      : ''
+                    className={cn(
+                      'h-6 w-6 [&_svg]:size-3.5',
+                      displayImportant ? 'hover:bg-orange-200/70 dark:hover:bg-orange-800/40' : '',
                     )}
                     onClick={handleToggleImportant}
                   >
                     <ExclamationCircle
-                      className={cn(
-                        displayImportant
-                          ? 'fill-orange-400'
-                          : 'fill-[#9D9D9D]',
-                      )}
+                      className={cn(displayImportant ? 'fill-orange-400' : 'fill-[#9D9D9D]')}
                     />
                   </Button>
                 </TooltipTrigger>
@@ -374,9 +366,19 @@ const Thread = memo(
                       <AvatarImage
                         className="rounded-full bg-[#FFFFFF] dark:bg-[#373737]"
                         src={getEmailLogo(latestMessage.sender.email)}
+                        alt={cleanName || latestMessage.sender.email}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
                       />
-                      <AvatarFallback className="rounded-full bg-[#FFFFFF] font-bold text-[#9F9F9F] dark:bg-[#373737]">
-                        {cleanName[0]?.toUpperCase()}
+                      <AvatarFallback
+                        className="rounded-full bg-[#FFFFFF] font-bold text-[#9F9F9F] dark:bg-[#373737]"
+                        delayMs={0}
+                      >
+                        {cleanName
+                          ? cleanName[0]?.toUpperCase()
+                          : latestMessage.sender.email[0]?.toUpperCase()}
                       </AvatarFallback>
                     </>
                   )}
@@ -494,35 +496,17 @@ const Thread = memo(
       ) : null;
 
     return latestMessage ? (
-      <AnimatePresence mode="sync">
-        {!optimisticState.shouldHide && (
-          <motion.div
-            key={message.id}
-            initial={{ opacity: 1, height: 'auto' }}
-            exit={{
-              opacity: 0,
-              height: 0,
-              marginTop: 0,
-              marginBottom: 0,
-              overflow: 'hidden',
-              transition: { duration: 0.3, ease: 'easeInOut' },
-            }}
-            layout
-          >
-            {idToUse ? (
-              <ThreadContextMenu
-                threadId={idToUse}
-                isInbox={isFolderInbox}
-                isSpam={isFolderSpam}
-                isSent={isFolderSent}
-                isBin={isFolderBin}
-              >
-                {content}
-              </ThreadContextMenu>
-            ) : null}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      !optimisticState.shouldHide && idToUse ? (
+        <ThreadContextMenu
+          threadId={idToUse}
+          isInbox={isFolderInbox}
+          isSpam={isFolderSpam}
+          isSent={isFolderSent}
+          isBin={isFolderBin}
+        >
+          {content}
+        </ThreadContextMenu>
+      ) : null
     ) : null;
   },
   (prev, next) => {
@@ -607,11 +591,15 @@ export const MailList = memo(
     const [, setDraftId] = useQueryState('draftId');
     const [category, setCategory] = useQueryState('category');
     const [searchValue, setSearchValue] = useSearchValue();
-    const { enableScope, disableScope } = useHotkeysContext();
     const [{ refetch, isLoading, isFetching, isFetchingNextPage, hasNextPage }, items, , loadMore] =
       useThreads();
     const trpc = useTRPC();
     const isFetchingMail = useIsFetching({ queryKey: trpc.mail.get.queryKey() }) > 0;
+
+    const itemsRef = useRef(items);
+    useEffect(() => {
+      itemsRef.current = items;
+    }, [items]);
 
     const allCategories = Categories();
 
@@ -649,10 +637,9 @@ export const MailList = memo(
     const vListRef = useRef<VListHandle>(null);
 
     const handleNavigateToThread = useCallback(
-      (threadId: string) => {
+      (threadId: string | null) => {
         setThreadId(threadId);
-        // Prevent default navigation
-        return false;
+        return;
       },
       [setThreadId],
     );
@@ -689,7 +676,7 @@ export const MailList = memo(
     }, [isKeyPressed]);
 
     const [, setActiveReplyId] = useQueryState('activeReplyId');
-    const [mail, setMail] = useMail();
+    const [, setMail] = useMail();
 
     const handleSelectMail = useCallback(
       (message: ParsedMessage) => {
@@ -697,49 +684,53 @@ export const MailList = memo(
         const currentMode = getSelectMode();
         console.log('Selection mode:', currentMode, 'for item:', itemId);
 
-        switch (currentMode) {
-          case 'mass': {
-            const newSelected = mail.bulkSelected.includes(itemId)
-              ? mail.bulkSelected.filter((id) => id !== itemId)
-              : [...mail.bulkSelected, itemId];
-            console.log('Mass selection mode - selected items:', newSelected.length);
-            return setMail({ ...mail, bulkSelected: newSelected });
-          }
-          case 'selectAllBelow': {
-            const clickedIndex = items.findIndex((item) => item.id === itemId);
-            console.log(
-              'SelectAllBelow - clicked index:',
-              clickedIndex,
-              'total items:',
-              items.length,
-            );
-
-            if (clickedIndex !== -1) {
-              const itemsBelow = items.slice(clickedIndex);
-              const idsBelow = itemsBelow.map((item) => item.id);
-              console.log('Selecting all items below - count:', idsBelow.length);
-              return setMail({ ...mail, bulkSelected: idsBelow });
+        setMail((prevMail) => {
+          const mail = prevMail;
+          switch (currentMode) {
+            case 'mass': {
+              const newSelected = mail.bulkSelected.includes(itemId)
+                ? mail.bulkSelected.filter((id) => id !== itemId)
+                : [...mail.bulkSelected, itemId];
+              console.log('Mass selection mode - selected items:', newSelected.length);
+              return { ...mail, bulkSelected: newSelected };
             }
-            console.log('Item not found in list, selecting just this item');
-            return setMail({ ...mail, bulkSelected: [itemId] });
+            case 'selectAllBelow': {
+              const clickedIndex = itemsRef.current.findIndex((item) => item.id === itemId);
+              console.log(
+                'SelectAllBelow - clicked index:',
+                clickedIndex,
+                'total items:',
+                itemsRef.current.length,
+              );
+
+              if (clickedIndex !== -1) {
+                const itemsBelow = itemsRef.current.slice(clickedIndex);
+                const idsBelow = itemsBelow.map((item) => item.id);
+                console.log('Selecting all items below - count:', idsBelow.length);
+                return { ...mail, bulkSelected: idsBelow };
+              }
+              console.log('Item not found in list, selecting just this item');
+              return { ...mail, bulkSelected: [itemId] };
+            }
+            case 'range': {
+              console.log('Range selection mode - not fully implemented');
+              return { ...mail, bulkSelected: [itemId] };
+            }
+            default: {
+              console.log('Single selection mode');
+              return { ...mail, bulkSelected: [itemId] };
+            }
           }
-          case 'range': {
-            console.log('Range selection mode - not fully implemented');
-            return setMail({ ...mail, bulkSelected: [itemId] });
-          }
-          default: {
-            console.log('Single selection mode');
-            return setMail({ ...mail, bulkSelected: [itemId] });
-          }
-        }
+        });
       },
-      [mail, setMail, getSelectMode, items],
+      [getSelectMode, setMail],
     );
 
     const [, setFocusedIndex] = useAtom(focusedIndexAtom);
 
+    const { optimisticMarkAsRead } = useOptimisticActions();
     const handleMailClick = useCallback(
-      (message: ParsedMessage) => () => {
+      (message: ParsedMessage) => async () => {
         const mode = getSelectMode();
         console.log('Mail click with mode:', mode);
 
@@ -750,14 +741,23 @@ export const MailList = memo(
         handleMouseEnter(message.id);
 
         const messageThreadId = message.threadId ?? message.id;
-        const clickedIndex = items.findIndex((item) => item.id === messageThreadId);
+        const clickedIndex = itemsRef.current.findIndex((item) => item.id === messageThreadId);
         setFocusedIndex(clickedIndex);
-
-        void setThreadId(messageThreadId);
-        void setDraftId(null);
-        void setActiveReplyId(null);
+        if (message.unread) optimisticMarkAsRead([messageThreadId], true);
+        await setThreadId(messageThreadId);
+        await setDraftId(null);
+        await setActiveReplyId(null);
       },
-      [mail, items, setFocusedIndex, getSelectMode, handleSelectMail],
+      [
+        getSelectMode,
+        handleSelectMail,
+        handleMouseEnter,
+        setFocusedIndex,
+        optimisticMarkAsRead,
+        setThreadId,
+        setDraftId,
+        setActiveReplyId,
+      ],
     );
 
     const isFiltering = searchValue.value.trim().length > 0;
@@ -789,7 +789,7 @@ export const MailList = memo(
     const vListRenderer = useCallback(
       (index: number) => {
         const item = filteredItems[index];
-        return (
+        return item ? (
           <>
             <Comp
               key={item.id}
@@ -804,12 +804,16 @@ export const MailList = memo(
               </div>
             ) : null}
           </>
+        ) : (
+          <></>
         );
       },
       [
         filteredItems,
         focusedIndex,
         keyboardActive,
+        isFetchingMail,
+        isFetchingNextPage,
         handleMailClick,
         isLoading,
         isFetching,
@@ -858,7 +862,8 @@ export const MailList = memo(
                 <VList
                   ref={vListRef}
                   count={filteredItems.length}
-                  overscan={5}
+                  overscan={20}
+                  keepMounted={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
                   className="style-scrollbar flex-1 overflow-x-hidden"
                   children={vListRenderer}
                   onScroll={() => {

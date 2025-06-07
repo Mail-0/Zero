@@ -110,10 +110,10 @@ importers:
         specifier: 0.1.5
         version: 0.1.5(react@19.1.0)
       '@fontsource-variable/geist':
-        specifier: ^5.2.6
+        specifier: 5.2.6
         version: 5.2.6
       '@fontsource-variable/geist-mono':
-        specifier: ^5.2.6
+        specifier: 5.2.6
         version: 5.2.6
       '@hookform/resolvers':
         specifier: 4.1.2

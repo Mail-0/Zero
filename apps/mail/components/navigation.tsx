@@ -82,7 +82,7 @@ export function Navigation() {
   return (
     <>
       {/* Desktop Navigation - Hidden on mobile */}
-      <header className="fixed z-50 hidden w-full items-center justify-center px-4 pt-6 md:flex">
+      <header className="fixed z-50 hidden w-full items-center justify-center px-4 pt-6 md:flex max-w-3xl translate-x-[-50%] left-[50%]">
         <nav className="border-input/50 flex w-full max-w-3xl items-center justify-between gap-2 rounded-xl border-t bg-[#1E1E1E] p-2 px-4">
           <div className="flex items-center gap-6">
             <Link to="/" className="relative bottom-1 cursor-pointer">

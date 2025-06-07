@@ -25,7 +25,7 @@ export default function TermsOfService() {
       <Navigation />
       <div className="relative z-10 flex flex-grow flex-col">
         {/* Back Button */}
-        <div className="absolute left-4 top-4 md:left-8 md:top-8">
+        <div className="absolute right-4 top-6 md:left-8 md:top-8 md:right-auto">
           <a href="/">
             <Button
               variant="ghost"

@@ -45,8 +45,8 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { memo, useEffect, useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import type { Sender, ParsedMessage, Attachment } from '@/types';
 import { useActiveConnection } from '@/hooks/use-connections';
@@ -75,7 +75,6 @@ import { format, set } from 'date-fns';
 import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Badge } from '../ui/badge';
-import JSZip from 'jszip';
 
 function TextSelectionPopover({
   children,
@@ -542,9 +541,11 @@ const downloadAttachment = (attachment: { body: string; mimeType: string; filena
 };
 
 const handleDownloadAllAttachments =
-  (subject: string, attachments: { body: string; mimeType: string; filename: string }[]) => () => {
+  (subject: string, attachments: { body: string; mimeType: string; filename: string }[]) =>
+  async () => {
     if (!attachments.length) return;
 
+    const JSZip = (await import('jszip')).default;
     const zip = new JSZip();
 
     console.log('attachments', attachments);
