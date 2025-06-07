@@ -1,5 +1,6 @@
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { ArrowsPointingIn, PanelLeftOpen, Phone } from '../icons/icons';
+import { useActiveConnection } from '@/hooks/use-connections';
 import { ResizablePanel } from '@/components/ui/resizable';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useState, useEffect, useCallback } from 'react';
@@ -352,10 +353,11 @@ function AISidebar({ className }: AISidebarProps) {
   const { refetch: refetchLabels } = useLabels();
   const [searchValue] = useSearchValue();
   const { data: session } = useSession();
+  const { data: activeConnection } = useActiveConnection();
 
   const agent = useAgent({
     agent: 'ZeroAgent',
-    name: session?.user.id ?? 'general',
+    name: activeConnection?.id ?? 'general',
     host: `${import.meta.env.VITE_PUBLIC_BACKEND_URL}`,
   });
 

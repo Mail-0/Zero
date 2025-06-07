@@ -27,6 +27,12 @@ catalogs:
     drizzle-orm:
       specifier: ^0.43.1
       version: 0.43.1
+    react:
+      specifier: ^19.1.0
+      version: 19.1.0
+    react-dom:
+      specifier: ^19.1.0
+      version: 19.1.0
     superjson:
       specifier: ^2.2.2
       version: 2.2.2
@@ -82,9 +88,9 @@ importers:
 
   apps/mail:
     dependencies:
-      '@11labs/react':
-        specifier: ^0.1.3
-        version: 0.1.4(react@19.1.0)
+      '@ai-sdk/perplexity':
+        specifier: 1.1.9
+        version: 1.1.9(zod@3.25.42)
       '@ai-sdk/react':
         specifier: 1.2.12
         version: 1.2.12(react@19.1.0)(zod@3.25.42)
@@ -100,6 +106,9 @@ importers:
       '@dnd-kit/utilities':
         specifier: 3.2.2
         version: 3.2.2(react@19.1.0)
+      '@elevenlabs/react':
+        specifier: 0.1.5
+        version: 0.1.5(react@19.1.0)
       '@fontsource-variable/geist':
         specifier: ^5.2.6
         version: 5.2.6
@@ -296,7 +305,7 @@ importers:
         specifier: 1.4.1
         version: 1.4.1(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react:
-        specifier: 19.1.0
+        specifier: 'catalog:'
         version: 19.1.0
       react-colorful:
         specifier: ^5.6.1
@@ -305,7 +314,7 @@ importers:
         specifier: 8.10.1
         version: 8.10.1(date-fns@4.1.0)(react@19.1.0)
       react-dom:
-        specifier: 19.1.0
+        specifier: 'catalog:'
         version: 19.1.0(react@19.1.0)
       react-hook-form:
         specifier: 7.54.2
@@ -561,7 +570,7 @@ importers:
         specifier: 3.4.5
         version: 3.4.5
       react:
-        specifier: 19.1.0
+        specifier: 'catalog:'
         version: 19.1.0
       remeda:
         specifier: 2.21.3
@@ -661,15 +670,6 @@ importers:
   packages/tsconfig: {}
 
 packages:
-
-  '@11labs/client@0.1.4':
-    resolution: {integrity: sha512-XxNl4GpNW9NYOD1P5apzZBpcNOP0Zu4goZu8Lud1iTIVkjv3fDp+hyurZoSTUdsik/TIeuxMgbd392M/EQgoKw==}
-
-  '@11labs/react@0.1.4':
-    resolution: {integrity: sha512-iJ+cRfoj6WNQ9U48Umvhf4yw+LhmLYtkPXiU85Nj74paPQbSNBDTq6kwi7BTu2DtfgqP65T5BEjWhheV2IxogA==}
-    deprecated: This package has moved to @elevenlabs/react
-    peerDependencies:
-      react: '>=16.8.0'
 
   '@ai-sdk/google@1.2.18':
     resolution: {integrity: sha512-8B70+i+uB12Ae6Sn6B9Oc6W0W/XorGgc88Nx0pyUrcxFOdytHBaAVhTPqYsO3LLClfjYN8pQ9GMxd5cpGEnUcA==}
@@ -987,6 +987,14 @@ packages:
 
   '@egjs/list-differ@1.0.1':
     resolution: {integrity: sha512-OTFTDQcWS+1ZREOdCWuk5hCBgYO4OsD30lXcOCyVOAjXMhgL5rBRDnt/otb6Nz8CzU0L/igdcaQBDLWc4t9gvg==}
+
+  '@elevenlabs/client@0.1.5':
+    resolution: {integrity: sha512-XPgXeqF6ZCR2TIRMYbHiqy++Ry3b7XCJKjm7BGIxgXtWT+oMhYMedeM8mKYgKyy6tabC6VJ2WO9uzG0Gp5SlBg==}
+
+  '@elevenlabs/react@0.1.5':
+    resolution: {integrity: sha512-mqijWUjLhzPcOhvkpWq2Txqh7vJdT3aA8YzT6HPL99esp+Xx/wGLL/601GVvcBRaXZcFbZKiBNwwDUk32GkNiA==}
+    peerDependencies:
+      react: '>=16.8.0'
 
   '@emnapi/runtime@1.4.3':
     resolution: {integrity: sha512-pBPWdu6MLKROBX05wSNKcNb++m5Er+KQ9QkB+WVM+pW2Kx9hoSrVTnu3BdkI5eBLZoKu/J6mW/B6i6bJB2ytXQ==}
@@ -7490,13 +7498,6 @@ packages:
 
 snapshots:
 
-  '@11labs/client@0.1.4': {}
-
-  '@11labs/react@0.1.4(react@19.1.0)':
-    dependencies:
-      '@11labs/client': 0.1.4
-      react: 19.1.0
-
   '@ai-sdk/google@1.2.18(zod@3.25.42)':
     dependencies:
       '@ai-sdk/provider': 1.1.3
@@ -7872,6 +7873,13 @@ snapshots:
   '@egjs/component@3.0.5': {}
 
   '@egjs/list-differ@1.0.1': {}
+
+  '@elevenlabs/client@0.1.5': {}
+
+  '@elevenlabs/react@0.1.5(react@19.1.0)':
+    dependencies:
+      '@elevenlabs/client': 0.1.5
+      react: 19.1.0
 
   '@emnapi/runtime@1.4.3':
     dependencies:

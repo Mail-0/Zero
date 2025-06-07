@@ -268,10 +268,20 @@ const Thread = memo(
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 [&_svg]:size-3.5"
+                    className={cn("h-6 w-6 [&_svg]:size-3.5", 
+                      displayImportant 
+                      ? 'hover:bg-orange-200/70 dark:hover:bg-orange-800/40' 
+                      : ''
+                    )}
                     onClick={handleToggleImportant}
                   >
-                    <ExclamationCircle className={cn(displayImportant ? '' : 'opacity-25')} />
+                    <ExclamationCircle
+                      className={cn(
+                        displayImportant
+                          ? 'fill-orange-400'
+                          : 'fill-[#9D9D9D]',
+                      )}
+                    />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent
@@ -808,12 +818,6 @@ export const MailList = memo(
             'hide-link-indicator flex h-full w-full',
             getSelectMode() === 'range' && 'select-none',
           )}
-          onMouseEnter={() => {
-            enableScope('mail-list');
-          }}
-          onMouseLeave={() => {
-            disableScope('mail-list');
-          }}
         >
           <>
             {isLoading ? (
@@ -945,7 +949,7 @@ function getLabelIcon(label: string) {
 
   switch (normalizedLabel) {
     case 'starred':
-      return <Star className="h-3.5 w-3.5 fill-yellow-400 stroke-yellow-400" />;
+      return <Star className="h-[12px] w-[12px] fill-yellow-400 stroke-yellow-400" />;
     default:
       return null;
   }

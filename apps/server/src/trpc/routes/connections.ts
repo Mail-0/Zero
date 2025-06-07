@@ -80,6 +80,13 @@ export const connectionsRouter = router({
   getDefault: publicProcedure.query(async ({ ctx }) => {
     if (!ctx.sessionUser) return null;
     const connection = await getActiveConnection();
-    return connection;
+    return {
+      id: connection.id,
+      email: connection.email,
+      name: connection.name,
+      picture: connection.picture,
+      createdAt: connection.createdAt,
+      providerId: connection.providerId,
+    };
   }),
 });

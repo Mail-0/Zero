@@ -5,14 +5,15 @@ import {
   type StreamTextOnFinishCallback,
   createDataStreamResponse,
   generateText,
+  appendResponseMessages,
 } from 'ai';
 import {
   AiChatPrompt,
   getCurrentDateContext,
   GmailSearchAssistantSystemPrompt,
 } from '../lib/prompts';
+import { type Connection, type ConnectionContext, type WSMessage } from 'agents';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { type Connection, type ConnectionContext } from 'agents';
 import { createSimpleAuth, type SimpleAuth } from '../lib/auth';
 import { connectionToDriver } from '../lib/server-utils';
 import type { MailManager } from '../lib/driver/types';
@@ -20,6 +21,7 @@ import { FOLDERS, parseHeaders } from '../lib/utils';
 import { AIChatAgent } from 'agents/ai-chat-agent';
 import { tools as authTools } from './agent/tools';
 import { processToolCalls } from './agent/utils';
+import type { Message as ChatMessage } from 'ai';
 import { connection } from '../db/schema';
 import { env } from 'cloudflare:workers';
 import { openai } from '@ai-sdk/openai';
@@ -29,13 +31,93 @@ import { eq } from 'drizzle-orm';
 import { createDb } from '../db';
 import { z } from 'zod';
 
+const decoder = new TextDecoder();
+
+export enum IncomingMessageType {
+  UseChatRequest = 'cf_agent_use_chat_request',
+  ChatClear = 'cf_agent_chat_clear',
+  ChatMessages = 'cf_agent_chat_messages',
+  ChatRequestCancel = 'cf_agent_chat_request_cancel',
+  Mail_List = 'zero_mail_list_threads',
+  Mail_Get = 'zero_mail_get_thread',
+}
+
+export enum OutgoingMessageType {
+  ChatMessages = 'cf_agent_chat_messages',
+  UseChatResponse = 'cf_agent_use_chat_response',
+  ChatClear = 'cf_agent_chat_clear',
+  Mail_List = 'zero_mail_list_threads',
+  Mail_Get = 'zero_mail_get_thread',
+}
+
+export type IncomingMessage =
+  | {
+      type: IncomingMessageType.UseChatRequest;
+      id: string;
+      init: Pick<RequestInit, 'method' | 'headers' | 'body'>;
+    }
+  | {
+      type: IncomingMessageType.ChatClear;
+    }
+  | {
+      type: IncomingMessageType.ChatMessages;
+      messages: ChatMessage[];
+    }
+  | {
+      type: IncomingMessageType.ChatRequestCancel;
+      id: string;
+    }
+  | {
+      type: IncomingMessageType.Mail_List;
+      folder: string;
+      query: string;
+      maxResults: number;
+      labelIds: string[];
+      pageToken: string;
+    }
+  | {
+      type: IncomingMessageType.Mail_Get;
+      id: string;
+    };
+
+export type OutgoingMessage =
+  | {
+      type: OutgoingMessageType.ChatMessages;
+      messages: ChatMessage[];
+    }
+  | {
+      type: OutgoingMessageType.UseChatResponse;
+      id: string;
+      body: string;
+      done: boolean;
+    }
+  | {
+      type: OutgoingMessageType.ChatClear;
+    }
+  | {
+      type: OutgoingMessageType.Mail_List;
+      result: {
+        threads: {
+          id: string;
+          historyId: string | null;
+        }[];
+        nextPageToken: string | null;
+      };
+    };
+
 export class ZeroAgent extends AIChatAgent<typeof env> {
+  private chatMessageAbortControllers: Map<string, AbortController> = new Map();
   driver: MailManager | null = null;
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
   }
 
-  private getDataStreamResponse(onFinish: StreamTextOnFinishCallback<{}>) {
+  private getDataStreamResponse(
+    onFinish: StreamTextOnFinishCallback<{}>,
+    options?: {
+      abortSignal: AbortSignal | undefined;
+    },
+  ) {
     const dataStreamResponse = createDataStreamResponse({
       execute: async (dataStream) => {
         const connectionId = (await this.ctx.storage.get('connectionId')) as string;
@@ -58,7 +140,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
         );
 
         const result = streamText({
-          model: groq('meta-llama/llama-4-maverick-17b-128e-instruct'),
+          model: openai('gpt-4o'),
           messages: processedMessages,
           tools,
           onFinish,
@@ -76,7 +158,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     if (this.name) {
       const db = createDb(env.HYPERDRIVE.connectionString);
       const _connection = await db.query.connection.findFirst({
-        where: eq(connection.userId, this.name),
+        where: eq(connection.id, this.name),
       });
       if (_connection) {
         await this.ctx.storage.put('connectionId', _connection.id);
@@ -85,12 +167,187 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     }
   }
 
+  private async tryCatchChat<T>(fn: () => T | Promise<T>) {
+    try {
+      return await fn();
+    } catch (e) {
+      throw this.onError(e);
+    }
+  }
+
+  private getAbortSignal(id: string): AbortSignal | undefined {
+    // Defensive check, since we're coercing message types at the moment
+    if (typeof id !== 'string') {
+      return undefined;
+    }
+
+    if (!this.chatMessageAbortControllers.has(id)) {
+      this.chatMessageAbortControllers.set(id, new AbortController());
+    }
+
+    return this.chatMessageAbortControllers.get(id)?.signal;
+  }
+
+  /**
+   * Remove an abort controller from the cache of pending message responses
+   */
+  private removeAbortController(id: string) {
+    this.chatMessageAbortControllers.delete(id);
+  }
+
+  private broadcastChatMessage(message: OutgoingMessage, exclude?: string[]) {
+    this.broadcast(JSON.stringify(message), exclude);
+  }
+
+  private cancelChatRequest(id: string) {
+    if (this.chatMessageAbortControllers.has(id)) {
+      const abortController = this.chatMessageAbortControllers.get(id);
+      abortController?.abort();
+    }
+  }
+
+  async onMessage(connection: Connection, message: WSMessage) {
+    if (typeof message === 'string') {
+      let data: IncomingMessage;
+      try {
+        data = JSON.parse(message) as IncomingMessage;
+      } catch (error) {
+        // silently ignore invalid messages for now
+        // TODO: log errors with log levels
+        return;
+      }
+      switch (data.type) {
+        case IncomingMessageType.UseChatRequest: {
+          if (data.init.method !== 'POST') break;
+
+          const { body } = data.init;
+
+          const { messages } = JSON.parse(body as string);
+          this.broadcastChatMessage(
+            {
+              type: OutgoingMessageType.ChatMessages,
+              messages,
+            },
+            [connection.id],
+          );
+          await this.persistMessages(messages, [connection.id]);
+
+          const chatMessageId = data.id;
+          const abortSignal = this.getAbortSignal(chatMessageId);
+
+          return this.tryCatchChat(async () => {
+            const response = await this.onChatMessage(
+              async ({ response }) => {
+                const finalMessages = appendResponseMessages({
+                  messages,
+                  responseMessages: response.messages,
+                });
+
+                await this.persistMessages(finalMessages, [connection.id]);
+                this.removeAbortController(chatMessageId);
+              },
+              abortSignal ? { abortSignal } : undefined,
+            );
+
+            if (response) {
+              await this.reply(data.id, response);
+            } else {
+              console.warn(
+                `[AIChatAgent] onChatMessage returned no response for chatMessageId: ${chatMessageId}`,
+              );
+              this.broadcastChatMessage(
+                {
+                  id: data.id,
+                  type: OutgoingMessageType.UseChatResponse,
+                  body: 'No response was generated by the agent.',
+                  done: true,
+                },
+                [connection.id],
+              );
+            }
+          });
+        }
+        case IncomingMessageType.ChatClear: {
+          this.destroyAbortControllers();
+          this.sql`delete from cf_ai_chat_agent_messages`;
+          this.messages = [];
+          this.broadcastChatMessage(
+            {
+              type: OutgoingMessageType.ChatClear,
+            },
+            [connection.id],
+          );
+          break;
+        }
+        case IncomingMessageType.ChatMessages: {
+          await this.persistMessages(data.messages, [connection.id]);
+          break;
+        }
+        case IncomingMessageType.ChatRequestCancel: {
+          this.cancelChatRequest(data.id);
+          break;
+        }
+        case IncomingMessageType.Mail_List: {
+          if (!this.driver) {
+            throw new Error('Unauthorized no driver');
+          }
+          const result = await this.driver.list({
+            folder: data.folder,
+            query: data.query,
+            maxResults: data.maxResults,
+          });
+          connection.send(
+            JSON.stringify({
+              type: OutgoingMessageType.Mail_List,
+              result,
+            }),
+          );
+        }
+      }
+    }
+  }
+
+  private async reply(id: string, response: Response) {
+    // now take chunks out from dataStreamResponse and send them to the client
+    return this.tryCatchChat(async () => {
+      for await (const chunk of response.body!) {
+        const body = decoder.decode(chunk);
+
+        this.broadcastChatMessage({
+          id,
+          type: OutgoingMessageType.UseChatResponse,
+          body,
+          done: false,
+        });
+      }
+
+      this.broadcastChatMessage({
+        id,
+        type: OutgoingMessageType.UseChatResponse,
+        body: '',
+        done: true,
+      });
+    });
+  }
+
   async onConnect() {
     await this.setupAuth();
   }
 
-  async onChatMessage(onFinish: StreamTextOnFinishCallback<{}>) {
-    return this.getDataStreamResponse(onFinish);
+  private destroyAbortControllers() {
+    for (const controller of this.chatMessageAbortControllers.values()) {
+      controller?.abort();
+    }
+    this.chatMessageAbortControllers.clear();
+  }
+
+  async onChatMessage(
+    onFinish: StreamTextOnFinishCallback<{}>,
+    options?: {
+      abortSignal: AbortSignal | undefined;
+    },
+  ) {
+    return this.getDataStreamResponse(onFinish, options);
   }
 }
 
