@@ -365,9 +365,19 @@ const Thread = memo(
                       <AvatarImage
                         className="rounded-full bg-[#FFFFFF] dark:bg-[#373737]"
                         src={getEmailLogo(latestMessage.sender.email)}
+                        alt={cleanName || latestMessage.sender.email}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
                       />
-                      <AvatarFallback className="rounded-full bg-[#FFFFFF] font-bold text-[#9F9F9F] dark:bg-[#373737]">
-                        {cleanName[0]?.toUpperCase()}
+                      <AvatarFallback
+                        className="rounded-full bg-[#FFFFFF] font-bold text-[#9F9F9F] dark:bg-[#373737]"
+                        delayMs={0}
+                      >
+                        {cleanName
+                          ? cleanName[0]?.toUpperCase()
+                          : latestMessage.sender.email[0]?.toUpperCase()}
                       </AvatarFallback>
                     </>
                   )}

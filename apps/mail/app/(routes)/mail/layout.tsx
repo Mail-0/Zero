@@ -15,15 +15,15 @@ export async function loader({ request }: Route.LoaderArgs) {
 export default function MailLayout() {
   const { headers } = useLoaderData<typeof loader>();
   return (
-    <VoiceProvider>
-      <HotkeyProviderWrapper>
-        <AppSidebar />
-        <div className="bg-sidebar dark:bg-sidebar w-full">
-          <Outlet />
-        </div>
-        <OnboardingWrapper />
-        <NotificationProvider headers={headers} />
-      </HotkeyProviderWrapper>
-    </VoiceProvider>
+    // <VoiceProvider>
+    <HotkeyProviderWrapper>
+      <AppSidebar />
+      <div className="bg-sidebar dark:bg-sidebar w-full">
+        <Outlet />
+      </div>
+      <OnboardingWrapper />
+      <NotificationProvider headers={headers} />
+    </HotkeyProviderWrapper>
+    // </VoiceProvider>
   );
 }
