@@ -481,7 +481,17 @@
           "showUpdates": "Show updates",
           "showPromotions": "Show promotions",
           "showUnread": "Show unread",
-          "selectUnderCursor": "Select under cursor"
+          "selectUnderCursor": "Select under cursor",
+          "openVoice": "Open Voice Assistant",
+          "clearAllFilters": "Clear all filters",
+          "markAsImportant": "Mark as important",
+          "markAsUnimportant": "Mark as unimportant",
+          "bulkDelete": "Bulk delete",
+          "bulkSelect": "Bulk select",
+          "bulkArchive": "Bulk archive",
+          "bulkStar": "Bulk star"
+
+          
         }
       },
       "labels": {

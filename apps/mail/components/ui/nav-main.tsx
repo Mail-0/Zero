@@ -214,10 +214,10 @@ export function NavMain({ items }: NavMainProps) {
             <SidebarMenuButton
               onClick={() => show()}
               tooltip={state === 'collapsed' ? t('help' as MessageKey) : undefined}
-              className="flex cursor-pointer items-center"
+              className="flex cursor-pointer items-center hover:bg-subtleWhite dark:hover:bg-[#202020]"
             >
-              <OldPhone className=" mr-2.5 h-2 w-2 relative top-1 fill-[#8F8F8F]" />
-              <p className="mt-0.5 truncate text-[13px]">Live Support</p>
+              <OldPhone className=" mr-2.5 h-2 w-2 relative fill-[#8F8F8F]" />
+              <p className="mt-0.5 truncate text-[13px] relative bottom-0.5">Live Support</p>
             </SidebarMenuButton>
             <NavItem
               key={'feedback'}
@@ -311,7 +311,7 @@ function NavItem(item: NavItemProps & { href: string }) {
         className="flex cursor-not-allowed items-center opacity-50"
       >
         {item.icon && <item.icon ref={iconRef} className="relative mr-2.5 h-3 w-3.5" />}
-        <p className="mt-0.5 truncate text-[13px]">{t(item.title as MessageKey)}</p>
+        <p className="mt-0.5 truncate text-[13px] relative bottom-[1px]">{t(item.title as MessageKey)}</p>
       </SidebarMenuButton>
     );
   }
@@ -328,7 +328,7 @@ function NavItem(item: NavItemProps & { href: string }) {
       onClick={() => setOpenMobile(false)}
     >
       {item.icon && <item.icon ref={iconRef} className="mr-2 shrink-0" />}
-      <p className="mt-0.5 min-w-0 flex-1 truncate text-[13px]">{t(item.title as MessageKey)}</p>
+      <p className="mt-0.5 min-w-0 flex-1 truncate text-[13px] relative bottom-[1px]">{t(item.title as MessageKey)}</p>
       {stats &&
         item.id?.toLowerCase() !== 'sent' &&
         stats.some((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase()) && (
