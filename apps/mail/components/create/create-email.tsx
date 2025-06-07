@@ -155,7 +155,9 @@ export function CreateEmail({
 
   const handleDialogClose = (open: boolean) => {
     setIsComposeOpen(open ? 'true' : null);
-    setDraftId(null)
+    if(!open){
+      setDraftId(null)
+    }
   };
 
   return (
