@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 
 type PendingAction = {
   id: string;
-  type: 'MOVE' | 'STAR' | 'READ' | 'LABEL' | 'IMPORTANT';
+  type: 'MOVE' | 'STAR' | 'READ' | 'LABEL' | 'IMPORTANT' | 'DELETE';
   threadIds: string[];
   params: any;
   optimisticId: string;
@@ -39,6 +39,7 @@ export function useOptimisticActions() {
   const { mutateAsync: bulkArchive } = useMutation(trpc.mail.bulkArchive.mutationOptions());
   const { mutateAsync: bulkStar } = useMutation(trpc.mail.bulkStar.mutationOptions());
   const { mutateAsync: bulkDeleteThread } = useMutation(trpc.mail.bulkDelete.mutationOptions());
+  const { mutateAsync: bulkDeleteDraft } = useMutation(trpc.mail.bulkDeleteDraft.mutationOptions());
 
   const pendingActionsRef = useRef<Map<string, PendingAction>>(new Map());
   const pendingActionsByTypeRef = useRef<Map<string, Set<string>>>(new Map());
@@ -83,7 +84,7 @@ export function useOptimisticActions() {
     toastMessage,
     folders,
   }: {
-    type: 'MOVE' | 'STAR' | 'READ' | 'LABEL' | 'IMPORTANT';
+    type: 'MOVE' | 'STAR' | 'READ' | 'LABEL' | 'IMPORTANT' | 'DELETE';
     threadIds: string[];
     params: any;
     optimisticId: string;
@@ -408,6 +409,69 @@ export function useOptimisticActions() {
     ],
   );
 
+  const optimisticDeleteDrafts = useCallback(
+    (draftIds: string[]) => {
+      if (!draftIds.length) return;
+
+      const optimisticId = addOptimisticAction({
+        type: 'DELETE',
+        threadIds: draftIds
+      });
+
+      draftIds.forEach((id) => {
+        setBackgroundQueue({ type: 'add', threadId: `draft:${id}` });
+      });
+
+      createPendingAction({
+        type: 'DELETE',
+        threadIds: draftIds,
+        params: { isDraft: true },
+        optimisticId,
+        execute: async () => {
+          console.log("DELETING DRAFT FROM OPTIMISTIC", draftIds )
+          await bulkDeleteDraft({ ids: draftIds });
+
+          // Invalidate queries related to drafts
+          await queryClient.invalidateQueries({ queryKey: trpc.mail.listDrafts.queryKey() });
+          await Promise.all(
+            draftIds.map((id) =>
+              queryClient.invalidateQueries({ queryKey: trpc.mail.getDraft.queryKey({ id }) }),
+            ),
+          );
+
+          if (mail.bulkSelected.length > 0) {
+            setMail({ ...mail, bulkSelected: [] });
+          }
+
+          draftIds.forEach((id) => {
+            setBackgroundQueue({ type: 'delete', threadId: `draft:${id}` });
+          });
+        },
+        undo: () => {
+          removeOptimisticAction(optimisticId);
+          draftIds.forEach((id) => {
+            setBackgroundQueue({ type: 'delete', threadId: `draft:${id}` });
+          });
+        },
+        toastMessage: "Draft deleted",
+        folders: [ 'draft' ]
+      });
+    },
+    [
+      addOptimisticAction,
+      removeOptimisticAction,
+      setBackgroundQueue,
+      threadId,
+      setThreadId,
+      createPendingAction,
+      bulkDeleteDraft,
+      t,
+      mail,
+      setMail,
+      queryClient
+    ],
+  );
+
   const undoLastAction = useCallback(() => {
     if (!lastActionIdRef.current) return;
 
@@ -433,6 +497,7 @@ export function useOptimisticActions() {
     optimisticMoveThreadsTo,
     optimisticDeleteThreads,
     optimisticToggleImportant,
+    optimisticDeleteDrafts,
     undoLastAction,
   };
 }

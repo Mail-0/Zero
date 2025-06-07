@@ -318,6 +318,25 @@ export const mailRouter = router({
       const { driver } = ctx;
       return driver.modifyLabels(input.ids, { addLabels: ['TRASH'], removeLabels: [] });
     }),
+  bulkDeleteDraft: activeDriverProcedure
+    .input(
+      z.object({
+        ids: z.string().array(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { driver } = ctx;
+      const { ids } = input;
+      if (!ids.length) {
+        return { success: false, error: 'No draft IDs provided' };
+      }
+      const results = await Promise.allSettled(ids.map((id) => driver.deleteDraft(id)));
+      const errors = results.filter((result) => result.status === 'rejected');
+      if (errors.length > 0) {
+        return { success: false, error: 'Failed to delete some drafts', details: errors };
+      }
+      return { success: true };
+    }),
   bulkArchive: activeDriverProcedure
     .input(
       z.object({

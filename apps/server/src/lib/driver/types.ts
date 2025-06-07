@@ -49,6 +49,7 @@ export interface MailManager {
     threads: { id: string; historyId: string | null; $raw: unknown }[];
     nextPageToken: string | null;
   }>;
+  deleteDraft(id: string): Promise<void>;
   delete(id: string): Promise<void>;
   list(params: {
     folder: string;

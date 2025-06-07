@@ -63,6 +63,10 @@ export function useOptimisticThreadState(threadId: string) {
           states.isImportant = true;
           states.optimisticImportant = action.important;
           break;
+        case 'DELETE':
+          states.isRemoving = true;
+          states.shouldHide = true;
+          break;
       }
     });
 

@@ -459,6 +459,7 @@
           "undoLastAction": "Undo Last Action",
           "viewEmailDetails": "View Email Details",
           "goToDrafts": "Go to Drafts",
+          "deleteDraft": "Delete",
           "expandEmailView": "Expand Email View",
           "helpWithShortcuts": "Help with shortcuts",
           "recordHotkey": "Record Hotkey",

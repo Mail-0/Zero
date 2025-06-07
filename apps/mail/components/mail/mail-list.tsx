@@ -21,6 +21,7 @@ import { focusedIndexAtom, useMailNavigation } from '@/hooks/use-mail-navigation
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { MailSelectMode, ParsedMessage, ThreadProps } from '@/types';
 import { ThreadContextMenu } from '@/components/context/thread-context';
+import { DraftContextMenu } from '@/components/context/draft-context';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useMail, type Config } from '@/components/mail/use-mail';
@@ -538,6 +539,7 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
   const { data: draft } = useDraft(message.id);
   const [, setComposeOpen] = useQueryState('isComposeOpen');
   const [, setDraftId] = useQueryState('draftId');
+  const optimisticState = useOptimisticThreadState(message.id ?? '');
   const handleMailClick = useCallback(() => {
     setComposeOpen('true');
     setDraftId(message.id);
@@ -545,49 +547,55 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
   }, [message.id]);
 
   return (
-    <div className="select-none py-1" onClick={handleMailClick}>
-      <div
-        key={message.id}
-        className={cn(
-          'hover:bg-offsetLight hover:bg-primary/5 group relative mx-[8px] flex cursor-pointer flex-col items-start overflow-clip rounded-[10px] border-transparent py-3 text-left text-sm transition-all hover:opacity-100',
-        )}
-      >
-        <div
-          className={cn(
-            'bg-primary absolute inset-y-0 left-0 w-1 -translate-x-2 transition-transform ease-out',
-          )}
-        />
-        <div className="flex w-full items-center justify-between gap-4 px-4">
-          <div className="flex w-full justify-between">
-            <div className="w-full">
-              <div className="flex w-full flex-row items-center justify-between">
-                <div className="flex flex-row items-center gap-[4px]">
-                  <span
-                    className={cn(
-                      'font-medium',
-                      'text-md flex items-baseline gap-1 group-hover:opacity-100',
-                    )}
-                  >
-                    <span className={cn('max-w-[25ch] truncate text-sm')}>
-                      {cleanNameDisplay(draft?.to?.[0] || 'noname') || ''}
-                    </span>
-                  </span>
+    draft ? (
+      <AnimatePresence mode="sync">
+        {!optimisticState.shouldHide && (<DraftContextMenu draftId={message.id}>
+          <div className="select-none py-1" onClick={handleMailClick}>
+            <div
+              key={message.id}
+              className={cn(
+                'hover:bg-offsetLight hover:bg-primary/5 group relative mx-[8px] flex cursor-pointer flex-col items-start overflow-clip rounded-[10px] border-transparent py-3 text-left text-sm transition-all hover:opacity-100',
+              )}
+            >
+              <div
+                className={cn(
+                  'bg-primary absolute inset-y-0 left-0 w-1 -translate-x-2 transition-transform ease-out',
+                )}
+              />
+              <div className="flex w-full items-center justify-between gap-4 px-4">
+                <div className="flex w-full justify-between">
+                  <div className="w-full">
+                    <div className="flex w-full flex-row items-center justify-between">
+                      <div className="flex flex-row items-center gap-[4px]">
+                        <span
+                          className={cn(
+                            'font-medium',
+                            'text-md flex items-baseline gap-1 group-hover:opacity-100',
+                          )}
+                        >
+                          <span className={cn('max-w-[25ch] truncate text-sm')}>
+                            {cleanNameDisplay(draft?.to?.[0] || 'noname') || ''}
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between">
+                      <p
+                        className={cn(
+                          'mt-1 line-clamp-1 max-w-[50ch] text-sm text-[#8C8C8C] md:max-w-[30ch]',
+                        )}
+                      >
+                        {draft?.subject}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="flex justify-between">
-                <p
-                  className={cn(
-                    'mt-1 line-clamp-1 max-w-[50ch] text-sm text-[#8C8C8C] md:max-w-[30ch]',
-                  )}
-                >
-                  {draft?.subject}
-                </p>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
+        </DraftContextMenu> )}
+      </AnimatePresence>
+    ): null
   );
 });
 
