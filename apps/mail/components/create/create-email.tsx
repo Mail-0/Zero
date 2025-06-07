@@ -182,6 +182,24 @@ export function CreateEmail({
             <EmailComposer
               key={typedDraft?.id || 'composer'}
               className="mb-12 rounded-2xl border"
+              aliases={[
+                {
+                  email: 'test@test.com',
+                  name: 'Test',
+                  primary: true,
+                },
+                {
+                  email: 'test2@test.com',
+                  name: 'Test 2',
+                  primary: false,
+                },
+                {
+                  email: 'test3@test.com',
+                  name: 'Test 3',
+                  primary: false,
+                },
+              ]}
+              // aliases={aliases}
               onSendEmail={handleSendEmail}
               initialMessage={typedDraft?.content || initialBody}
               initialTo={

@@ -235,6 +235,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
         })}
         autofocus={shouldFocus}
         settingsLoading={settingsLoading}
+        replyingTo={replyToMessage?.sender.email}
       />
     </div>
   );
