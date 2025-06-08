@@ -55,6 +55,7 @@
       "deletedAllSpam": "Deleted {count} spam emails",
       "errorDeletingSpam": "Failed to delete spam emails",
       "confirmDeleteSpam": "Delete All Spam",
+      "deleteDraft": "Delete",
       "confirmDeleteSpamDescription": "Are you sure you want to delete all spam emails? This action cannot be undone.",
       "confirmDelete": "Delete"
     },
@@ -459,7 +460,6 @@
           "undoLastAction": "Undo Last Action",
           "viewEmailDetails": "View Email Details",
           "goToDrafts": "Go to Drafts",
-          "deleteDraft": "Delete",
           "expandEmailView": "Expand Email View",
           "helpWithShortcuts": "Help with shortcuts",
           "recordHotkey": "Record Hotkey",
