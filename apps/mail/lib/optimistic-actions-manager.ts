@@ -1,6 +1,6 @@
 export type PendingAction = {
   id: string;
-  type: 'MOVE' | 'STAR' | 'READ' | 'LABEL' | 'IMPORTANT';
+  type: 'MOVE' | 'STAR' | 'READ' | 'LABEL' | 'IMPORTANT' | 'DELETE';
   threadIds: string[];
   params: any;
   optimisticId: string;

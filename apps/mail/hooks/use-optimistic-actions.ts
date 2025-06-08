@@ -13,16 +13,6 @@ import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
 
-type PendingAction = {
-  id: string;
-  type: 'MOVE' | 'STAR' | 'READ' | 'LABEL' | 'IMPORTANT' | 'DELETE';
-  threadIds: string[];
-  params: any;
-  optimisticId: string;
-  execute: () => Promise<void>;
-  undo: () => void;
-  toastId?: string | number;
-};
 
 export function useOptimisticActions() {
   const t = useTranslations();
@@ -45,8 +35,7 @@ export function useOptimisticActions() {
   const { mutateAsync: bulkDeleteThread } = useMutation(trpc.mail.bulkDelete.mutationOptions());
   const { mutateAsync: bulkDeleteDraft } = useMutation(trpc.mail.bulkDeleteDraft.mutationOptions());
 
-  const pendingActionsRef = useRef<Map<string, PendingAction>>(new Map());
-  const pendingActionsByTypeRef = useRef<Map<string, Set<string>>>(new Map());
+
   const lastActionIdRef = useRef<string | null>(null);
 
   const generatePendingActionId = () =>
@@ -390,16 +379,7 @@ export function useOptimisticActions() {
         },
         toastMessage: isImportant ? 'Marked as important' : 'Unmarked as important',
       });
-    },
-    [
-      addOptimisticAction,
-      createPendingAction,
-      mail,
-      removeOptimisticAction,
-      setMail,
-      toggleImportant,
-    ],
-  );
+    };
 
   const optimisticDeleteDrafts = useCallback(
     (draftIds: string[]) => {
@@ -422,14 +402,6 @@ export function useOptimisticActions() {
         execute: async () => {
           console.log("DELETING DRAFT FROM OPTIMISTIC", draftIds )
           await bulkDeleteDraft({ ids: draftIds });
-
-          // Invalidate queries related to drafts
-          await queryClient.invalidateQueries({ queryKey: trpc.mail.listDrafts.queryKey() });
-          await Promise.all(
-            draftIds.map((id) =>
-              queryClient.invalidateQueries({ queryKey: trpc.mail.getDraft.queryKey({ id }) }),
-            ),
-          );
 
           if (mail.bulkSelected.length > 0) {
             setMail({ ...mail, bulkSelected: [] });
@@ -467,6 +439,7 @@ export function useOptimisticActions() {
   const undoLastAction = useCallback(() => {
     if (!lastActionIdRef.current) return;
 
+    if (!optimisticActionsManager.lastActionId) return;
     const lastAction = optimisticActionsManager.pendingActions.get(
       optimisticActionsManager.lastActionId,
     );
@@ -484,7 +457,7 @@ export function useOptimisticActions() {
     }
 
     optimisticActionsManager.lastActionId = null;
-  }
+  }, []);
 
   return {
     optimisticMarkAsRead,
