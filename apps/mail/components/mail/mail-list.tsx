@@ -781,7 +781,7 @@ export const MailList = memo(
     const vListRenderer = useCallback(
       (index: number) => {
         const item = filteredItems[index];
-        return (
+        return item ? (
           <>
             <Comp
               key={item.id}
@@ -796,6 +796,8 @@ export const MailList = memo(
               </div>
             ) : null}
           </>
+        ) : (
+          <></>
         );
       },
       [
