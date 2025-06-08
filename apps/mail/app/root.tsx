@@ -32,6 +32,7 @@ export const meta: MetaFunction = () => {
     { property: 'og:description', content: siteConfig.description },
     { property: 'og:image', content: siteConfig.openGraph.images[0].url },
     { property: 'og:url', content: siteConfig.alternates.canonical },
+    { property: 'og:type', content: 'website' },
     { rel: 'manifest', href: '/manifest.webmanifest' },
   ];
 };
