@@ -397,7 +397,7 @@ export function useOptimisticActions() {
       createPendingAction({
         type: 'DELETE',
         threadIds: draftIds,
-        params: { isDraft: true },
+        params: { currentFoler: 'draft', isDraft: true },
         optimisticId,
         execute: async () => {
           console.log("DELETING DRAFT FROM OPTIMISTIC", draftIds )
