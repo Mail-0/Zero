@@ -22,6 +22,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import type { MailSelectMode, ParsedMessage, ThreadProps } from '@/types';
 import { ThreadContextMenu } from '@/components/context/thread-context';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
+import { useIsFetching, useQueryClient } from '@tanstack/react-query';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useMail, type Config } from '@/components/mail/use-mail';
 import { type ThreadDestination } from '@/lib/thread-actions';
@@ -30,9 +31,10 @@ import { useSearchValue } from '@/hooks/use-search-value';
 import { highlightText } from '@/lib/email-utils.client';
 import { useHotkeysContext } from 'react-hotkeys-hook';
 import { AnimatePresence, motion } from 'motion/react';
-import { useIsFetching } from '@tanstack/react-query';
 import { useTRPC } from '@/providers/query-provider';
 import { useThreadLabels } from '@/hooks/use-labels';
+import { template } from '@/lib/email-utils.client';
+import { useSettings } from '@/hooks/use-settings';
 import { useKeyState } from '@/hooks/use-hot-key';
 import { VList, type VListHandle } from 'virtua';
 import { RenderLabels } from './render-labels';
@@ -65,6 +67,8 @@ const Thread = memo(
     const [focusedIndex, setFocusedIndex] = useAtom(focusedIndexAtom);
     const latestMessage = getThreadData?.latest;
     const idToUse = useMemo(() => latestMessage?.threadId ?? latestMessage?.id, [latestMessage]);
+    const { data: settingsData } = useSettings();
+    const queryClient = useQueryClient();
 
     const optimisticState = useOptimisticThreadState(idToUse ?? '');
 
@@ -156,6 +160,32 @@ const Thread = memo(
     );
 
     const emailContent = getThreadData?.latest?.body;
+
+    // Prefetch email template processing for better performance
+    useEffect(() => {
+      if (!latestMessage?.body || !latestMessage?.sender?.email) return;
+
+      const senderEmail = latestMessage.sender.email;
+      const isTrustedSender =
+        settingsData?.settings?.externalImages ||
+        settingsData?.settings?.trustedSenders?.includes(senderEmail);
+
+      // Prefetch with both trusted and untrusted states for instant switching
+      queryClient.prefetchQuery({
+        queryKey: ['email-template', latestMessage.body, isTrustedSender],
+        queryFn: () => template(latestMessage.body, isTrustedSender),
+        staleTime: 30 * 60 * 1000,
+        gcTime: 60 * 60 * 1000,
+      });
+
+      // Also prefetch the opposite state for instant image toggle
+      queryClient.prefetchQuery({
+        queryKey: ['email-template', latestMessage.body, !isTrustedSender],
+        queryFn: () => template(latestMessage.body, !isTrustedSender),
+        staleTime: 30 * 60 * 1000,
+        gcTime: 60 * 60 * 1000,
+      });
+    }, [latestMessage?.body, latestMessage?.sender?.email, settingsData?.settings, queryClient]);
 
     const { labels: threadLabels } = useThreadLabels(
       getThreadData?.labels ? getThreadData.labels.map((l) => l.id) : [],
