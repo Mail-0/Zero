@@ -287,9 +287,6 @@ export const constructReplyBody = (
         <div style="font-size: 12px;">
           On ${originalDate}, ${senderName} ${recipientEmails ? `&lt;${recipientEmails}&gt;` : ''} wrote:
         </div>
-        <div style="">
-          ${quotedMessage || ''}
-        </div>
       </div>
     </div>
   `;

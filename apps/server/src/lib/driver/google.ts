@@ -992,7 +992,7 @@ export class GoogleMailManager implements MailManager {
 
     msg.setSubject(subject);
 
-    if (isForward && originalMessage) {
+    if (originalMessage) {
       msg.addMessage({
         contentType: 'text/html',
         data: `${await sanitizeTipTapHtml(message.trim())}${originalMessage}`,

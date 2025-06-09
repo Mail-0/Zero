@@ -172,7 +172,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
         },
         threadId: replyToMessage?.threadId,
         isForward: mode === 'forward',
-        originalMessage: mode === 'forward' ? replyToMessage.decodedBody : undefined,
+        originalMessage: replyToMessage.decodedBody,
       });
 
       posthog.capture('Reply Email Sent');
