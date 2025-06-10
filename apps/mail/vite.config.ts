@@ -12,7 +12,7 @@ const ReactCompilerConfig = {
 
 export default defineConfig({
   plugins: [
-    cloudflare({ viteEnvironment: { name: 'ssr' } }),
+    cloudflare(),
     reactRouter(),
     babel({
       filter: /\.[jt]sx?$/,
