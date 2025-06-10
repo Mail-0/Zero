@@ -22,6 +22,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import type { MailSelectMode, ParsedMessage, ThreadProps } from '@/types';
 import { ThreadContextMenu } from '@/components/context/thread-context';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
+import { useIsFetching, useQueryClient } from '@tanstack/react-query';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useMail, type Config } from '@/components/mail/use-mail';
 import { type ThreadDestination } from '@/lib/thread-actions';
@@ -30,9 +31,10 @@ import { useSearchValue } from '@/hooks/use-search-value';
 import { highlightText } from '@/lib/email-utils.client';
 import { useHotkeysContext } from 'react-hotkeys-hook';
 import { AnimatePresence, motion } from 'motion/react';
-import { useIsFetching } from '@tanstack/react-query';
 import { useTRPC } from '@/providers/query-provider';
 import { useThreadLabels } from '@/hooks/use-labels';
+import { template } from '@/lib/email-utils.client';
+import { useSettings } from '@/hooks/use-settings';
 import { useKeyState } from '@/hooks/use-hot-key';
 import { VList, type VListHandle } from 'virtua';
 import { RenderLabels } from './render-labels';
@@ -65,6 +67,8 @@ const Thread = memo(
     const [focusedIndex, setFocusedIndex] = useAtom(focusedIndexAtom);
     const latestMessage = getThreadData?.latest;
     const idToUse = useMemo(() => latestMessage?.threadId ?? latestMessage?.id, [latestMessage]);
+    const { data: settingsData } = useSettings();
+    const queryClient = useQueryClient();
 
     const optimisticState = useOptimisticThreadState(idToUse ?? '');
 
@@ -156,6 +160,32 @@ const Thread = memo(
     );
 
     const emailContent = getThreadData?.latest?.body;
+
+    // Prefetch email template processing for better performance
+    useEffect(() => {
+      if (!latestMessage?.body || !latestMessage?.sender?.email) return;
+
+      const senderEmail = latestMessage.sender.email;
+      const isTrustedSender =
+        settingsData?.settings?.externalImages ||
+        settingsData?.settings?.trustedSenders?.includes(senderEmail);
+
+      // Prefetch with both trusted and untrusted states for instant switching
+      queryClient.prefetchQuery({
+        queryKey: ['email-template', latestMessage.body, isTrustedSender],
+        queryFn: () => template(latestMessage.body, isTrustedSender),
+        staleTime: 30 * 60 * 1000,
+        gcTime: 60 * 60 * 1000,
+      });
+
+      // Also prefetch the opposite state for instant image toggle
+      queryClient.prefetchQuery({
+        queryKey: ['email-template', latestMessage.body, !isTrustedSender],
+        queryFn: () => template(latestMessage.body, !isTrustedSender),
+        staleTime: 30 * 60 * 1000,
+        gcTime: 60 * 60 * 1000,
+      });
+    }, [latestMessage?.body, latestMessage?.sender?.email, settingsData?.settings, queryClient]);
 
     const { labels: threadLabels } = useThreadLabels(
       getThreadData?.labels ? getThreadData.labels.map((l) => l.id) : [],
@@ -363,9 +393,19 @@ const Thread = memo(
                       <AvatarImage
                         className="rounded-full bg-[#FFFFFF] dark:bg-[#373737]"
                         src={getEmailLogo(latestMessage.sender.email)}
+                        alt={cleanName || latestMessage.sender.email}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
                       />
-                      <AvatarFallback className="rounded-full bg-[#FFFFFF] font-bold text-[#9F9F9F] dark:bg-[#373737]">
-                        {cleanName[0]?.toUpperCase()}
+                      <AvatarFallback
+                        className="rounded-full bg-[#FFFFFF] font-bold text-[#9F9F9F] dark:bg-[#373737]"
+                        delayMs={0}
+                      >
+                        {cleanName
+                          ? cleanName[0]?.toUpperCase()
+                          : latestMessage.sender.email[0]?.toUpperCase()}
                       </AvatarFallback>
                     </>
                   )}
@@ -780,7 +820,7 @@ export const MailList = memo(
     const vListRenderer = useCallback(
       (index: number) => {
         const item = filteredItems[index];
-        return (
+        return item ? (
           <>
             <Comp
               key={item.id}
@@ -795,6 +835,8 @@ export const MailList = memo(
               </div>
             ) : null}
           </>
+        ) : (
+          <></>
         );
       },
       [
@@ -859,8 +901,8 @@ export const MailList = memo(
                     if (!vListRef.current) return;
                     const endIndex = vListRef.current.findEndIndex();
                     if (
-                      // if the shown items are last 2 items, load more
-                      Math.abs(filteredItems.length - 1 - endIndex) < 1 &&
+                      // if the shown items are last 5 items, load more
+                      Math.abs(filteredItems.length - 1 - endIndex) < 5 &&
                       !isLoading &&
                       !isFetchingNextPage &&
                       !isFetchingMail &&

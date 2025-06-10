@@ -91,7 +91,19 @@
         "goToDocs": "Dokümanlara Git",
         "helpWithShortcuts": "Kısayollar Hakkında Yardım",
         "commandPalette": "Komut Paleti"
-      }
+      },
+      "quickResults": "Hızlı Sonuçlar",
+      "searchPlaceholder": "Ara...",
+      "noSearchResults": "Arama sonucu bulunamadı",
+      "actions": "İşlemler",
+      "addFilters": "Filtre ekle",
+      "searchForEmails": "E-posta ara",
+      "filterPlaceholder": "Filtrele...",
+      "noFilterResults": "Filtre sonucu bulunamadı",
+      "availableFilters": "Kullanılabilir filtreler",
+      "examples": "Örnekler",
+      "exampleDate": "Örnek tarih",
+      "exampleSender": "Örnek gönderen"
     },
     "searchBar": {
       "pickDateRange": "Tarih seçin veya aralık seçin",
@@ -328,7 +340,8 @@
       "archive": "Arşiv",
       "bin": "Çöp",
       "feedback": "Geribildirim",
-      "settings": "Ayarlar"
+      "settings": "Ayarlar",
+      "voice": "Sesli Asistan"
     },
     "settings": {
       "general": "Genel",
@@ -366,7 +379,9 @@
         "customPrompt": "Özel Yapay Zeka Yönergesi",
         "customPromptPlaceholder": "Yapay zeka için özel yönergenizi girin...",
         "customPromptDescription": "Yapay zekanın e-posta yanıtlarınızı nasıl yazacağını özelleştirin. Bu, temel yönergeye eklenecektir.",
-        "noResultsFound": "Sonuç bulunamadı"
+        "noResultsFound": "Sonuç bulunamadı",
+        "zeroSignature": "Zero İmzası",
+        "zeroSignatureDescription": "E-postalarınıza Zero imzası ekleyin."
       },
       "connections": {
         "title": "E-posta Bağlantıları",
@@ -466,7 +481,15 @@
           "showUpdates": "Güncellemeleri göster",
           "showPromotions": "Promosyonları göster",
           "showUnread": "Okunmamışları göster",
-          "selectUnderCursor": "İmleç altındakini seç"
+          "selectUnderCursor": "İmleç altındakini seç",
+          "openVoice": "Sesli Asistanı Aç",
+          "clearAllFilters": "Tüm filtreleri temizle",
+          "markAsImportant": "Önemli olarak işaretle",
+          "markAsUnimportant": "Önemsiz olarak işaretle",
+          "bulkDelete": "Toplu sil",
+          "bulkSelect": "Toplu seç",
+          "bulkArchive": "Toplu arşivle",
+          "bulkStar": "Toplu yıldızla"
         }
       },
       "labels": {

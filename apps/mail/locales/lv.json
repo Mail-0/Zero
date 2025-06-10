@@ -91,7 +91,19 @@
         "goToDocs": "Doties uz dokumentāciju",
         "helpWithShortcuts": "Tastatūras īsceļu palīdzība",
         "commandPalette": "Komandu palete"
-      }
+      },
+      "quickResults": "Ātrie rezultāti",
+      "searchPlaceholder": "Meklēt...",
+      "noSearchResults": "Nav meklēšanas rezultātu",
+      "actions": "Darbības",
+      "addFilters": "Pievienot filtrus",
+      "searchForEmails": "Meklēt e-pastus",
+      "filterPlaceholder": "Filtrēt...",
+      "noFilterResults": "Nav filtrēšanas rezultātu",
+      "availableFilters": "Pieejamie filtri",
+      "examples": "Piemēri",
+      "exampleDate": "Datuma piemērs",
+      "exampleSender": "Sūtītāja piemērs"
     },
     "searchBar": {
       "pickDateRange": "Izvēlēties datumu vai diapazonu",
@@ -328,7 +340,8 @@
       "archive": "Arhīvs",
       "bin": "Miskaste",
       "feedback": "Atsauksmes",
-      "settings": "Iestatījumi"
+      "settings": "Iestatījumi",
+      "voice": "Balss asistents"
     },
     "settings": {
       "general": "Vispārīgi",
@@ -366,7 +379,9 @@
         "customPrompt": "Pielāgota AI instrukcija",
         "customPromptPlaceholder": "Ievadi savu pielāgoto norādījumu AI...",
         "customPromptDescription": "Pielāgot, kā AI raksta jūsu e-pasta atbildes. Jūsu norādījumi tiks pievienoti AI noklusējuma instrukcijām.",
-        "noResultsFound": "Netika atrasts neviens rezultāts"
+        "noResultsFound": "Netika atrasts neviens rezultāts",
+        "zeroSignature": "Zero paraksts",
+        "zeroSignatureDescription": "Pievienot Zero parakstu saviem e-pastiem."
       },
       "connections": {
         "title": "E-pasta savienojumi",
@@ -466,7 +481,15 @@
           "showUpdates": "Rādīt atjauninājumus",
           "showPromotions": "Rādīt akcijas",
           "showUnread": "Rādīt nelasītos",
-          "selectUnderCursor": "Atlasīt zem kursora"
+          "selectUnderCursor": "Atlasīt zem kursora",
+          "openVoice": "Atvērt balss asistentu",
+          "clearAllFilters": "Notīrīt visus filtrus",
+          "markAsImportant": "Atzīmēt kā svarīgu",
+          "markAsUnimportant": "Atzīmēt kā nesvarīgu",
+          "bulkDelete": "Masveida dzēšana",
+          "bulkSelect": "Masveida atlase",
+          "bulkArchive": "Masveida arhivēšana",
+          "bulkStar": "Masveida atzīmēšana ar zvaigznīti"
         }
       },
       "labels": {

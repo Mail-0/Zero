@@ -209,7 +209,11 @@ export function ThreadDisplay() {
   const handleNext = useCallback(() => {
     if (!id || !items.length || focusedIndex === null) return setThreadId(null);
     if (focusedIndex < items.length - 1) {
-      const nextThread = items[focusedIndex + 1];
+      const nextIndex = Math.max(1, focusedIndex + 1);
+      //   console.log('nextIndex', nextIndex);
+
+      const nextThread = items[nextIndex];
+      setActiveReplyId(null);
       if (nextThread) {
         setThreadId(nextThread.id);
         // Don't clear activeReplyId - let the auto-open effect handle it
@@ -902,7 +906,7 @@ export function ThreadDisplay() {
                           onClick={() => moveThreadTo('bin')}
                           className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-lg border border-[#FCCDD5] bg-[#FDE4E9] dark:border-[#6E2532] dark:bg-[#411D23]"
                         >
-                          <Trash className="fill-[#F43F5E]" />
+                          <Trash className="fill-iconLight dark:fill-iconDark" />
                         </button>
                       </TooltipTrigger>
                       <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">

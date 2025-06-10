@@ -10,7 +10,6 @@ import { TextShimmer } from '../ui/text-shimmer';
 import { useThread } from '@/hooks/use-threads';
 import { MailLabels } from '../mail/mail-list';
 import { cn, getEmailLogo } from '@/lib/utils';
-import { VoiceButton } from '../voice-button';
 import { EditorContent } from '@tiptap/react';
 import { Tools } from '../../types/tools';
 import { InfoIcon } from 'lucide-react';

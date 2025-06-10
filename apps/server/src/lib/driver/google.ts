@@ -101,8 +101,12 @@ export class GoogleMailManager implements MailManager {
       async () => {
         const finalIds = await Promise.all(
           threadIds.map(async (id) => {
-            const thread = await this.get(id);
-            return thread.messages.filter((e) => e.unread).map((e) => e.id);
+            // Use the new method to get only metadata
+            const threadMetadata = await this.getThreadMetadata(id);
+            // Filter messages based on labelIds from metadata
+            return threadMetadata.messages
+              .filter((msg) => msg.labelIds && msg.labelIds.includes('UNREAD'))
+              .map((msg) => msg.id);
           }),
         ).then((idArrays) => [...new Set(idArrays.flat())]);
 
@@ -117,8 +121,12 @@ export class GoogleMailManager implements MailManager {
       async () => {
         const finalIds = await Promise.all(
           threadIds.map(async (id) => {
-            const thread = await this.get(id);
-            return thread.messages.filter((e) => !e.unread).map((e) => e.id);
+            // Use the new method to get only metadata
+            const threadMetadata = await this.getThreadMetadata(id);
+            // Filter messages based on labelIds from metadata
+            return threadMetadata.messages
+              .filter((msg) => msg.labelIds && !msg.labelIds.includes('UNREAD'))
+              .map((msg) => msg.id);
           }),
         ).then((idArrays) => [...new Set(idArrays.flat())]);
         await this.modifyThreadLabels(finalIds, { addLabelIds: ['UNREAD'] });
@@ -713,6 +721,27 @@ export class GoogleMailManager implements MailManager {
     );
   }
 
+  private async getThreadMetadata(threadId: string) {
+    return this.withErrorHandler(
+      'getThreadMetadata',
+      async () => {
+        const res = await this.gmail.users.threads.get({
+          userId: 'me',
+          id: threadId,
+          format: 'metadata', // Fetch only metadata
+        });
+        // Process res.data.messages to extract id and labelIds
+        return {
+          messages: res.data.messages?.map(msg => ({
+            id: msg.id,
+            labelIds: msg.labelIds
+          })) || []
+        };
+      },
+      { threadId, email: this.config.auth?.email }
+    );
+  }
+
   private async modifyThreadLabels(
     threadIds: string[],
     requestBody: gmail_v1.Schema$ModifyThreadRequest,
@@ -869,6 +898,8 @@ export class GoogleMailManager implements MailManager {
     cc,
     bcc,
     fromEmail,
+    isForward = false,
+    originalMessage = null,
   }: IOutgoingMessage) {
     const msg = createMimeMessage();
 
@@ -961,10 +992,17 @@ export class GoogleMailManager implements MailManager {
 
     msg.setSubject(subject);
 
-    msg.addMessage({
-      contentType: 'text/html',
-      data: await sanitizeTipTapHtml(message.trim()),
-    });
+    if (originalMessage) {
+      msg.addMessage({
+        contentType: 'text/html',
+        data: `${await sanitizeTipTapHtml(message.trim())}${originalMessage}`,
+      });
+    } else {
+      msg.addMessage({
+        contentType: 'text/html',
+        data: await sanitizeTipTapHtml(message.trim()),
+      });
+    }
 
     if (headers) {
       Object.entries(headers).forEach(([key, value]) => {
