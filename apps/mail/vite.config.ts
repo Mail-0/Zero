@@ -52,12 +52,6 @@ export default defineConfig({
       plugins: [tailwindcss()],
     },
   },
-  ssr: {
-    noExternal: [/react-tweet.*/, 'novel'],
-    optimizeDeps: {
-      include: ['novel', '@tiptap/extension-placeholder'],
-    },
-  },
   build: {
     sourcemap: true,
   },
