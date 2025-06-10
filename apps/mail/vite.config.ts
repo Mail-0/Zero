@@ -53,6 +53,7 @@ export default defineConfig({
     },
   },
   ssr: {
+    noExternal: [/react-tweet.*/, 'novel'],
     optimizeDeps: {
       include: ['novel', '@tiptap/extension-placeholder'],
     },
