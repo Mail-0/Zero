@@ -299,7 +299,7 @@ export const OutlookSearchAssistantSystemPrompt = () =>
             When asked to search always use the <code>OR</code> operator to search for related terms, example: "emails from canva" should also be searched as "from:canva.com OR from:canva OR canva".
         </Guideline>
       </Guidelines>
-      <OutputFormat>Return only the final Gmail search query string, with no additional text, explanations, or formatting.</OutputFormat>
+      <OutputFormat>Return only the final Outlook search query string, with no additional text, explanations, or formatting.</OutputFormat>
     </SystemPrompt>
 
         `;
