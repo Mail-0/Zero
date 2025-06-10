@@ -819,7 +819,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
         }
       }
     }
-  }, [demo, emailData.id, isLastEmail]);
+  }, [demo, emailData.id, isLastEmail, activeReplyId]);
 
   //   const listUnsubscribeAction = useMemo(
   //     () =>
@@ -1751,7 +1751,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                     ))}
                   </div>
                 ) : null}
-                <div className="mb-2 mt-2 flex gap-2 px-4">
+                <div className="my-2.5 flex gap-2 px-4">
                   <ActionButton
                     onClick={(e) => {
                       e.stopPropagation();

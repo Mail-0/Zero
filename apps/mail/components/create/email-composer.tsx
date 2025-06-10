@@ -59,6 +59,7 @@ interface EmailComposerProps {
   className?: string;
   autofocus?: boolean;
   settingsLoading?: boolean;
+  editorClassName?: string;
 }
 
 const isValidEmail = (email: string): boolean => {
@@ -91,6 +92,7 @@ export function EmailComposer({
   className,
   autofocus = false,
   settingsLoading = false,
+  editorClassName,
 }: EmailComposerProps) {
   const [showCc, setShowCc] = useState(initialCc.length > 0);
   const [showBcc, setShowBcc] = useState(initialBcc.length > 0);
@@ -937,7 +939,7 @@ export function EmailComposer({
               editor.commands.focus();
             }}
             className={cn(
-              'max-h-[300px] min-h-[200px] w-full',
+              `max-h-[300px] min-h-[200px] w-full ${editorClassName}`,
               aiGeneratedMessage !== null ? 'blur-sm' : '',
             )}
           >

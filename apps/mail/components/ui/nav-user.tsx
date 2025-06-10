@@ -24,7 +24,7 @@ import { useLocation, useRevalidator, useSearchParams } from 'react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CircleCheck, Danger, ThreeDots } from '../icons/icons';
+import { CircleCheck, Danger, OldPhone, ThreeDots } from '../icons/icons';
 import { signOut, useSession } from '@/lib/auth-client';
 import { AddConnectionDialog } from '../connection/add';
 import { useTRPC } from '@/providers/query-provider';
@@ -130,7 +130,7 @@ export function NavUser() {
               <DropdownMenuTrigger asChild>
                 <div className="flex cursor-pointer items-center">
                   <div className="relative">
-                    <Avatar className="size-8 rounded-[5px]">
+                    <Avatar className="size-7 rounded-[5px] relative left-0.5">
                       <AvatarImage
                         className="rounded-[5px]"
                         src={activeAccount?.picture || undefined}
@@ -304,7 +304,7 @@ export function NavUser() {
                   }`}
                 >
                   <div className="relative">
-                    <Avatar className="size-7 rounded-[5px]">
+                    <Avatar className="size-6 rounded-[5px]">
                       <AvatarImage
                         className="rounded-[5px]"
                         src={activeAccount.picture || undefined}
@@ -327,7 +327,7 @@ export function NavUser() {
               ) : (
                 <div className="flex cursor-pointer items-center">
                   <div className="relative">
-                    <div className="bg-muted size-7 animate-pulse rounded-[5px]" />
+                    <div className="bg-muted size-6 animate-pulse rounded-[5px]" />
                   </div>
                 </div>
               )}
@@ -422,7 +422,7 @@ export function NavUser() {
 
               {isPro ? (
                 <AddConnectionDialog>
-                  <button className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-[5px] border border-dashed dark:bg-[#262626] dark:text-[#929292]">
+                  <button className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-[5px] border border-dashed dark:bg-[#262626] dark:text-[#929292]">
                     <Plus className="size-4" />
                   </button>
                 </AddConnectionDialog>
@@ -438,8 +438,7 @@ export function NavUser() {
               )}
             </div>
 
-            <div>
-              <DropdownMenu>
+            <div className="flex items-center justify-center gap-2">              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className={cn('md:h-fit md:px-2')}>
                     <ThreeDots className="fill-iconLight dark:fill-iconDark" />
@@ -521,7 +520,7 @@ export function NavUser() {
 
       {state !== 'collapsed' && (
         <div className="flex items-center justify-between gap-2">
-          <div className="my-2 flex flex-col items-start gap-1 space-y-1">
+          <div className="mt-[2px] flex flex-col items-start gap-1 space-y-1">
             <div className="flex items-center gap-1 text-[13px] leading-none text-black dark:text-white">
               <p className={cn('truncate text-[13px]', isPro ? 'max-w-[14.5ch]' : 'max-w-[8.5ch]')}>
                 {activeAccount?.name || session.user.name || 'User'}

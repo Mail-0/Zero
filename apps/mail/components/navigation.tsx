@@ -8,14 +8,17 @@ import {
   ListItem,
 } from '@/components/ui/navigation-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { GitHub, Twitter, Discord, LinkedIn } from './icons/icons';
+import { GitHub, Twitter, Discord, LinkedIn, Star } from './icons/icons';
+import { AnimatedNumber } from '@/components/ui/animated-number';
 import { signIn, useSession } from '@/lib/auth-client';
 import { Separator } from '@/components/ui/separator';
 import { Link, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 const resources = [
   {
@@ -74,10 +77,36 @@ const IconComponent = {
   linkedin: LinkedIn,
 };
 
+interface GitHubApiResponse {
+  stargazers_count: number;
+}
+
 export function Navigation() {
   const [open, setOpen] = useState(false);
+  const [stars, setStars] = useState(0); // Default fallback value
   const { data: session } = useSession();
   const navigate = useNavigate();
+
+  const { data: githubData } = useQuery({
+    queryKey: ['githubStars'],
+    queryFn: async () => {
+      const response = await fetch('https://api.github.com/repos/Mail-0/Zero', {
+        headers: {
+          'Accept': 'application/vnd.github.v3+json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch GitHub stars');
+      }
+      return response.json() as Promise<GitHubApiResponse>;
+    },
+  });
+
+  useEffect(() => {
+    if (githubData) {
+      setStars(githubData.stargazers_count || 0);
+    }
+  }, [githubData]);
 
   return (
     <>
@@ -133,6 +162,27 @@ export function Navigation() {
             </NavigationMenu>
           </div>
           <div className="flex gap-2">
+            <a
+              href="https://github.com/Mail-0/Zero"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(
+                "h-8 inline-flex items-center gap-2 rounded-lg  bg-black px-3 text-sm text-white hover:bg-black/90  transition-colors group"
+              )}
+            >
+              <div className="flex items-center text-white">
+                <GitHub className="size-4 fill-white mr-1" />
+                <span className="ml-1 lg:hidden">Star</span>
+                <span className="ml-1 hidden lg:inline">Stars on GitHub</span>
+              </div>
+              <div className="flex items-center gap-1 text-sm">
+                <Star className="size-4 fill-gray-400 transition-all duration-300 group-hover:fill-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.6)] relative top-[1px]" />
+                <AnimatedNumber
+                  value={stars}
+                  className="font-medium text-white"
+                />
+              </div>
+            </a>
             <Button
               className="h-8 bg-white text-black hover:bg-white hover:text-black"
               onClick={() => {
