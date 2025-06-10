@@ -27,14 +27,11 @@ jobs:
       - name: Checkout Code 🛎
         uses: actions/checkout@v4
 
-      - name: Setup pnpm 🌟
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node 📦
-        uses: actions/setup-node@v4
+      - name: Setup Bun 🌟
+        uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies 📦
-        run: pnpm install
+        run: bun install
 
       - name: Run Lingo.dev Localization 🌐
         if: ${{ !inputs.skip_localization }}

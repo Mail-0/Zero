@@ -43,7 +43,7 @@ Zero is built with modern and reliable technologies:
 **Required Versions:**
 
 - [Node.js](https://nodejs.org/en/download) (v18 or higher)
-- [pnpm](https://pnpm.io) (v10 or higher)
+- [Bun](https://bun.sh) (v1.1 or higher)
 - [Docker](https://docs.docker.com/engine/install/) (v20 or higher)
 
 Before running the application, you'll need to set up services and configure environment variables. For more details on environment variables, see the [Environment Variables](#environment-variables) section.
@@ -65,23 +65,23 @@ You can set up Zero in two ways:
    cd Zero
 
    # Install dependencies
-   pnpm install
+   bun install
 
    # Start database locally
-   pnpm docker:db:up
+   bun docker:db:up
    ```
 
 2. **Set Up Environment**
 
-   - Run `pnpm nizzy env` to setup your environment variables
-   - Run `pnpm nizzy sync` to sync your environment variables and types
-   - Start the database with the provided docker compose setup: `pnpm docker:db:up`
-   - Initialize the database: `pnpm db:push`
+   - Run `bun nizzy env` to setup your environment variables
+   - Run `bun nizzy sync` to sync your environment variables and types
+   - Start the database with the provided docker compose setup: `bun docker:db:up`
+   - Initialize the database: `bun db:push`
 
 3. **Start the App**
 
    ```bash
-   pnpm dev
+   bun dev
    ```
 
 4. **Open in Browser**
@@ -105,22 +105,22 @@ You can set up Zero in two ways:
    Then open the code in devcontainer and install the dependencies:
 
    ```
-   pnpm install
+   bun install
 
    # Start the database locally
-   pnpm docker:db:up
+   bun docker:db:up
    ```
 
 2. **Set Up Environment**
 
-   - Run `pnpm nizzy env` to setup your environment variables
-   - Run `pnpm nizzy sync` to sync your environment variables and types
-   - Start the database with the provided docker compose setup: `pnpm docker:db:up`
-   - Initialize the database: `pnpm db:push`
+   - Run `bun nizzy env` to setup your environment variables
+   - Run `bun nizzy sync` to sync your environment variables and types
+   - Start the database with the provided docker compose setup: `bun docker:db:up`
+   - Initialize the database: `bun db:push`
 
 3. **Start The App**
    ```bash
-   pnpm dev
+   bun dev
    ```
    Visit [http://localhost:3000](http://localhost:3000)
      </details>
@@ -180,7 +180,7 @@ You can set up Zero in two ways:
 
 ### Environment Variables
 
-Run `pnpm nizzy env` to setup your environment variables. It will copy the `.env.example` file to `.env` and fill in the variables for you.
+Run `bun nizzy env` to setup your environment variables. It will copy the `.env.example` file to `.env` and fill in the variables for you.
 For local development a connection string example is provided in the `.env.example` file located in the same folder as the database.
 
 ### Database Setup
@@ -192,7 +192,7 @@ Zero uses PostgreSQL for storing data. Here's how to set it up:
    Run this command to start a local PostgreSQL instance:
 
    ```bash
-   pnpm docker:db:up
+   bun docker:db:up
    ```
 
    This creates a database with:
@@ -204,7 +204,7 @@ Zero uses PostgreSQL for storing data. Here's how to set it up:
 
 2. **Set Up Database Connection**
 
-   Make sure your database connection string is in `.env` file. And you have ran `pnpm nizzy sync` to sync the latest env.
+   Make sure your database connection string is in `.env` file. And you have ran `bun nizzy sync` to sync the latest env.
 
    For local development use:
 
@@ -217,26 +217,26 @@ Zero uses PostgreSQL for storing data. Here's how to set it up:
    - **Set up database tables**:
 
      ```bash
-     pnpm db:push
+     bun db:push
      ```
 
    - **Create migration files** (after schema changes):
 
      ```bash
-     pnpm db:generate
+     bun db:generate
      ```
 
    - **Apply migrations**:
 
      ```bash
-     pnpm db:migrate
+     bun db:migrate
      ```
 
    - **View database content**:
      ```bash
-     pnpm db:studio
+     bun db:studio
      ```
-     > If you run `pnpm dev` in your terminal, the studio command should be automatically running with the app.
+     > If you run `bun dev` in your terminal, the studio command should be automatically running with the app.
 
 ## Contribute
 

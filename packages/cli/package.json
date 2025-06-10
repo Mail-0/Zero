@@ -3,7 +3,7 @@
   "type": "module",
   "private": true,
   "author": "BlankParticle",
-  "packageManager": "pnpm@10.11.0",
+  "packageManager": "bun@1.2.15",
   "devDependencies": {
     "@clack/prompts": "0.10.1",
     "@zero/tsconfig": "workspace:*",

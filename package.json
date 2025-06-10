@@ -2,36 +2,59 @@
   "name": "zero",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@10.11.0",
+  "packageManager": "bun@1.2.15",
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*",
+      "scripts/*"
+    ],
+    "catalog": {
+      "zod": "^3.25.42",
+      "better-auth": "^1.2.8",
+      "autumn-js": "^0.0.48",
+      "superjson": "^2.2.2",
+      "@trpc/server": "^11.1.4",
+      "@trpc/client": "^11.1.4",
+      "@trpc/tanstack-react-query": "^11.1.4",
+      "wrangler": "^4.18.0",
+      "typescript": "^5.8.3",
+      "drizzle-orm": "^0.43.1",
+      "drizzle-kit": "^0.31.1",
+      "@types/node": "^22.15.21",
+      "react": "^19.1.0",
+      "react-dom": "^19.1.0"
+    }
+  },
   "scripts": {
-    "go": "pnpm docker:db:up && pnpm run dev",
+    "go": "bun docker:db:up && bun run dev",
     "prepare": "husky",
-    "nizzy": "tsx ./packages/cli/src/cli.ts",
-    "postinstall": "pnpm nizzy sync",
+    "nizzy": "bunx tsx ./packages/cli/src/cli.ts",
+    "postinstall": "bun nizzy sync",
     "dev": "turbo run dev",
     "build": "turbo run build",
-    "build:frontend": "pnpm run --filter=@zero/mail build",
-    "deploy:frontend": "pnpm run --filter=@zero/mail deploy",
-    "deploy:backend": "pnpm run --filter=@zero/server deploy",
+    "build:frontend": "bun run --filter=@zero/mail build",
+    "deploy:frontend": "bun run --filter=@zero/mail deploy",
+    "deploy:backend": "bun run --filter=@zero/server deploy",
     "start": "turbo run start",
     "lint": "turbo run lint",
     "format": "prettier --write apps/**/*.{ts,tsx} --log-level silent",
-    "check": "pnpm run check:format && pnpm run lint",
+    "check": "bun run check:format && bun run lint",
     "check:format": "prettier . --check",
     "lint-staged": "prettier --write --ignore-unknown",
     "docker:db:up": "docker compose -f docker-compose.db.yaml up -d",
     "docker:db:stop": "docker compose -f docker-compose.db.yaml stop",
     "docker:db:down": "docker compose -f docker-compose.db.yaml down",
     "docker:db:clean": "docker compose -f docker-compose.db.yaml down -v",
-    "db:generate": "dotenv -- pnpm run -C apps/server db:generate",
-    "db:migrate": "dotenv -- pnpm run -C apps/server db:migrate",
-    "db:push": "dotenv -- pnpm run -C apps/server db:push",
-    "db:studio": "dotenv -- pnpm run -C apps/server db:studio",
+    "db:generate": "dotenv -- bun run -C apps/server db:generate",
+    "db:migrate": "dotenv -- bun run -C apps/server db:migrate",
+    "db:push": "dotenv -- bun run -C apps/server db:push",
+    "db:studio": "dotenv -- bun run -C apps/server db:studio",
     "sentry:sourcemaps": "sentry-cli sourcemaps inject --org zero-7y --project nextjs ./apps/mail/.next && sentry-cli sourcemaps upload --org zero-7y --project nextjs ./apps/mail/.next",
-    "scripts": "dotenv -- pnpx tsx ./scripts/run.ts"
+    "scripts": "dotenv -- bunx tsx ./scripts/run.ts"
   },
   "devDependencies": {
-    "@types/node": "22.15.29",
+    "@types/node": "catalog:",
     "@zero/tsconfig": "workspace:*",
     "dotenv-cli": "^8.0.0",
     "husky": "9.1.7",
@@ -41,5 +64,13 @@
     "tsx": "4.19.4",
     "turbo": "^2.5.4",
     "typescript": "catalog:"
-  }
+  },
+  "trustedDependencies": [
+    "core-js",
+    "core-js-pure",
+    "esbuild",
+    "sharp",
+    "unrs-resolver",
+    "workerd"
+  ]
 }
