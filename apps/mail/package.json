@@ -3,9 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "patchedDependencies": {
-    "novel": "patches/novel.patch"
-  },
   "scripts": {
     "dev": "react-router dev",
     "build": "react-router build",
@@ -98,7 +95,6 @@
     "react-markdown": "^10.1.0",
     "react-resizable-panels": "2.1.7",
     "react-router": "^7.6.1",
-    "react-tweet": "^3.2.2",
     "react-use": "^17.6.0",
     "react-wrap-balancer": "^1.1.1",
     "recharts": "^2.15.1",
