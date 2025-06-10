@@ -54,7 +54,7 @@ export default defineConfig({
   },
   ssr: {
     optimizeDeps: {
-      include: ['novel', '@tiptap/extension-placeholder'],
+      include: ['@tiptap/extension-placeholder'],
     },
   },
   resolve: {
