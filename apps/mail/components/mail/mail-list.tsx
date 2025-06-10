@@ -892,8 +892,8 @@ export const MailList = memo(
                     if (!vListRef.current) return;
                     const endIndex = vListRef.current.findEndIndex();
                     if (
-                      // if the shown items are last 2 items, load more
-                      Math.abs(filteredItems.length - 1 - endIndex) < 1 &&
+                      // if the shown items are last 5 items, load more
+                      Math.abs(filteredItems.length - 1 - endIndex) < 5 &&
                       !isLoading &&
                       !isFetchingNextPage &&
                       !isFetchingMail &&
