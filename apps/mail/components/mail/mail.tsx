@@ -226,14 +226,14 @@ const AutoLabelingSettings = () => {
       }}
     >
       <DialogTrigger asChild>
-       
         <div className="flex items-center gap-2">
-         
           <Switch
             disabled={isEnablingBrain || isDisablingBrain || isLoading}
             checked={brainState?.enabled ?? false}
           />
-          <span className="text-muted-foreground cursor-pointer text-xs font-medium">Auto label</span>
+          <span className="text-muted-foreground cursor-pointer text-xs font-medium">
+            Auto label
+          </span>
         </div>
       </DialogTrigger>
       <DialogContent showOverlay className="max-w-2xl">
@@ -839,7 +839,7 @@ export const Categories = () => {
     },
     {
       id: 'All Mail',
-      name:  t('common.mailCategories.allMail'),
+      name: t('common.mailCategories.allMail'),
       searchValue: 'NOT is:draft (is:inbox OR (is:sent AND to:me))',
       icon: (
         <Mail
@@ -937,7 +937,7 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
   const params = useParams<{ folder: string }>();
   const folder = params?.folder ?? 'inbox';
   const [category, setCategory] = useQueryState('category', {
-    defaultValue: 'Important',
+    defaultValue: 'All Mail',
   });
   const containerRef = useRef<HTMLDivElement>(null);
   const activeTabElementRef = useRef<HTMLButtonElement>(null);
