@@ -12,18 +12,16 @@ const ReactCompilerConfig = {
 
 export default defineConfig({
   plugins: [
-    cloudflare(),
+    cloudflare({ viteEnvironment: { name: 'ssr' } }),
     reactRouter(),
     babel({
       filter: /\.[jt]sx?$/,
       babelConfig: {
         presets: ['@babel/preset-typescript'], // if you use TypeScript
-        plugins: [['babel-plugin-react-compiler', ReactCompilerConfig]],
+        plugins: ['babel-plugin-react-compiler', ReactCompilerConfig],
       },
     }),
-    tsconfigPaths({
-      loose: true,
-    }),
+    tsconfigPaths(),
     {
       name: 'add-headers',
       applyToEnvironment: (env) => env.name === 'client',
@@ -55,13 +53,9 @@ export default defineConfig({
     },
   },
   ssr: {
-    noExternal: [/react-tweet.*/],
     optimizeDeps: {
       include: ['novel', '@tiptap/extension-placeholder'],
     },
-  },
-  build: {
-    sourcemap: true,
   },
   resolve: {
     alias: {

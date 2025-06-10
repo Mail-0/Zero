@@ -4,6 +4,6 @@ export default {
   ssr: true,
   buildDirectory: 'build',
   future: {
-    unstable_viteEnvironmentApi: false,
+    unstable_viteEnvironmentApi: true,
   },
 } satisfies Config;
