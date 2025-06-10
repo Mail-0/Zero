@@ -23,6 +23,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useLocation, useRevalidator, useSearchParams } from 'react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
+import { CallInboxDialog, SetupInboxDialog } from '../setup-phone';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CircleCheck, Danger, ThreeDots } from '../icons/icons';
 import { signOut, useSession } from '@/lib/auth-client';
@@ -42,7 +43,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export function NavUser() {
-  const { data: session, refetch: refetchSession } = useSession();
+  const { data: session, refetch: refetchSession, isPending: isSessionPending } = useSession();
   const { data, refetch: refetchConnections } = useConnections();
   const [isRendered, setIsRendered] = useState(false);
   const { theme, setTheme } = useTheme();
@@ -438,7 +439,8 @@ export function NavUser() {
               )}
             </div>
 
-            <div>
+            <div className="flex gap-1">
+              {isSessionPending ? null : false ? <SetupInboxDialog /> : <CallInboxDialog />}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className={cn('md:h-fit md:px-2')}>
