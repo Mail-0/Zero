@@ -1,7 +1,7 @@
 # ========================================
 # Base Stage: Alpine Linux with Bun
 # ========================================
-FROM oven/bun:alpine AS base
+FROM node:22-alpine AS base
 
 # ========================================
 # Dependencies Stage: Install Dependencies
@@ -11,15 +11,16 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install turbo globally
-RUN bun install -g turbo
+RUN npm install -g pnpm
+RUN pnpm install -g turbo
 
-COPY package.json bun.lock turbo.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 RUN mkdir -p apps packages
 COPY apps/*/package.json ./apps/
-COPY packages/*/package.json ./packages/
-COPY packages/tsconfig/ ./packages/tsconfig/
+COPY packages/ ./packages/
 
-RUN bun install --omit dev --ignore-scripts
+RUN pnpm install --prod --ignore-scripts
+
 
 # ========================================
 # Builder Stage: Build the Application
@@ -27,23 +28,24 @@ RUN bun install --omit dev --ignore-scripts
 FROM base AS builder
 WORKDIR /app
 
-COPY --from=deps /app/node_modules ./node_modules
+RUN npm install -g pnpm wrangler
+
+# Copy workspace configuration and source code
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY . .
 
-# Installing with full context to prevent missing dependencies error
-RUN bun install --omit dev --ignore-scripts
+ENV CI=true
 
-# Required for standalone nextjs build
-WORKDIR /app/apps/mail
-RUN bun install sharp
+# Install all dependencies (including devDependencies for build)
+RUN pnpm install --frozen-lockfile
 
 # Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1 \
     NODE_ENV=production \
     DOCKER_BUILD=true
 
-WORKDIR /app
-RUN cd apps/mail && bun run build
+# Build the application
+RUN cd apps/mail && pnpm run build
 
 # ========================================
 # Runner Stage: Production Environment
@@ -51,8 +53,10 @@ RUN cd apps/mail && bun run build
 FROM base AS runner
 WORKDIR /app
 
-RUN addgroup -S -g 1001 bunjs && \
-    adduser -S -u 1001 nextjs -G bunjs
+RUN npm install -g wrangler
+
+RUN addgroup -S -g 1001 pnpm && \
+    adduser -S -u 1001 nextjs -G pnpm
 
 # Set environment variables for build
 ENV NODE_ENV=production \
@@ -64,12 +68,8 @@ ENV NODE_ENV=production \
 COPY scripts/docker/ /app/scripts
 RUN chmod -R +x /app/scripts/*
 
-# Copy public assets
-COPY --from=builder --chown=nextjs:bunjs /app/apps/mail/public ./apps/mail/public
-
-# Leverage output traces to reduce image size (standalone output)
-COPY --from=builder --chown=nextjs:bunjs /app/apps/mail/.next/standalone ./
-COPY --from=builder --chown=nextjs:bunjs /app/apps/mail/.next/static ./apps/mail/.next/static
+# Copy the entire built application
+COPY --from=builder --chown=nextjs:pnpm /app ./
 
 # Switch to non-root user
 USER nextjs

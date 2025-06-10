@@ -35,6 +35,7 @@ import { backgroundQueueAtom } from '@/store/backgroundQueue';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
 import { useMediaQuery } from '../../hooks/use-media-query';
 import { useSearchValue } from '@/hooks/use-search-value';
+import { isMac } from '@/lib/hotkeys/use-hotkey-utils';
 import { MailList } from '@/components/mail/mail-list';
 import { useHotkeysContext } from 'react-hotkeys-hook';
 import { useNavigate, useParams } from 'react-router';
@@ -225,19 +226,14 @@ const AutoLabelingSettings = () => {
       }}
     >
       <DialogTrigger asChild>
+       
         <div className="flex items-center gap-2">
-          {/* <div
-            className={cn(
-              'h-2 w-2 animate-pulse rounded-full',
-              brainState?.enabled ? 'bg-green-400' : 'bg-red-400',
-            )}
-          /> */}
-
+         
           <Switch
             disabled={isEnablingBrain || isDisablingBrain || isLoading}
             checked={brainState?.enabled ?? false}
           />
-          <span className="text-muted-foreground cursor-pointer text-xs">Auto label</span>
+          <span className="text-muted-foreground cursor-pointer text-xs font-medium">Auto label</span>
         </div>
       </DialogTrigger>
       <DialogContent showOverlay className="max-w-2xl">
@@ -467,18 +463,18 @@ export function MailLayout() {
   return (
     <TooltipProvider delayDuration={0}>
       <PricingDialog />
-      <div className="rounded-inherit relative z-[5] flex p-0 md:mt-1">
+      <div className="rounded-inherit relative z-[5] flex p-0 md:mr-0.5 md:mt-1">
         <ResizablePanelGroup
           direction="horizontal"
           autoSaveId="mail-panel-layout"
           className="rounded-inherit overflow-hidden"
         >
           <ResizablePanel
-            defaultSize={35}
-            minSize={35}
-            maxSize={40}
+            defaultSize={30}
+            minSize={30}
+            maxSize={30}
             className={cn(
-              `bg-panelLight dark:bg-panelDark mb-1 w-fit shadow-sm md:rounded-2xl md:border md:border-[#E7E7E7] lg:flex lg:shadow-sm dark:border-[#252525]`,
+              `bg-panelLight dark:bg-panelDark mb-1 mr-[3px] w-fit shadow-sm md:rounded-2xl lg:flex lg:h-[calc(100dvh-8px)] lg:shadow-sm`,
               isDesktop && threadId && 'hidden lg:block',
             )}
             onMouseEnter={handleMailListMouseEnter}
@@ -487,7 +483,7 @@ export function MailLayout() {
             <div className="w-full md:h-[calc(100dvh-10px)]">
               <div
                 className={cn(
-                  'sticky top-0 z-[15] flex items-center justify-between gap-1.5 border-b border-[#E7E7E7] p-2 px-[20px] transition-colors md:min-h-14 dark:border-[#252525]',
+                  'sticky top-0 z-[15] flex items-center justify-between gap-1.5 p-2 px-[20px] transition-colors md:min-h-14',
                 )}
               >
                 <div className="flex w-full items-center justify-between gap-2">
@@ -536,7 +532,7 @@ export function MailLayout() {
                 <Button
                   variant="outline"
                   className={cn(
-                    'text-muted-foreground relative flex h-8 w-full select-none items-center justify-start overflow-hidden rounded-[0.5rem] rounded-lg border bg-white pl-2 text-left text-sm font-normal shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-none dark:bg-[#141414]',
+                    'text-muted-foreground relative flex h-8 w-full select-none items-center justify-start overflow-hidden rounded-lg border bg-white pl-2 text-left text-sm font-normal shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-none dark:bg-[#141414]',
                   )}
                   onClick={() => setOpen(!open)}
                 >
@@ -553,7 +549,7 @@ export function MailLayout() {
                       : 'Search...'}
                   </span>
 
-                  <span className="absolute right-[0.18rem] flex gap-1">
+                  <span className="absolute right-[0.1rem] flex gap-1">
                     {/* {activeFilters.length > 0 && (
                       <Badge variant="secondary" className="ml-2 h-5 rounded px-1">
                         {activeFilters.length}
@@ -572,8 +568,16 @@ export function MailLayout() {
                         Clear
                       </Button>
                     )}
-                    <kbd className="bg-muted text-md pointer-events-none hidden h-7 select-none items-center gap-0.5 rounded-md border-none px-2 font-medium opacity-100 sm:flex dark:bg-[#262626] dark:text-[#929292]">
-                      <span className="text-xl">⌘</span> K
+                    <kbd className="bg-muted text-md pointer-events-none hidden h-7 select-none flex-row items-center gap-1 rounded-md border-none px-2 font-medium !leading-[0] opacity-100 sm:flex dark:bg-[#262626] dark:text-[#929292]">
+                      <span
+                        className={cn(
+                          'h-min !leading-[0.2]',
+                          isMac ? 'mt-[1px] text-lg' : 'text-sm',
+                        )}
+                      >
+                        {isMac ? '⌘' : 'Ctrl'}{' '}
+                      </span>
+                      <span className="h-min text-sm !leading-[0.2]"> K</span>
                     </kbd>
                   </span>
                 </Button>
@@ -596,19 +600,19 @@ export function MailLayout() {
             </div>
           </ResizablePanel>
 
-          <ResizableHandle className="mr-0.5 hidden opacity-0 md:block" />
+          {/* <ResizableHandle className="mr-0.5 hidden opacity-0 md:block" /> */}
 
           {isDesktop && (
             <ResizablePanel
               className={cn(
-                'bg-panelLight dark:bg-panelDark mb-1 mr-0.5 w-fit rounded-2xl border border-[#E7E7E7] shadow-sm dark:border-[#252525]',
+                'bg-panelLight dark:bg-panelDark mb-1 mr-0.5 w-fit rounded-2xl shadow-sm lg:h-[calc(100dvh-8px)]',
                 // Only show on md screens and larger when there is a threadId
                 !threadId && 'hidden lg:block',
               )}
               defaultSize={30}
               minSize={30}
             >
-              <div className="lg:h-[calc(100dvh-(10px)] relative h-[calc(100dvh-(10px))] flex-1">
+              <div className="relative flex-1">
                 <ThreadDisplay />
               </div>
             </ResizablePanel>

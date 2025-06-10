@@ -1,30 +1,36 @@
 # ========================================
 # Dependencies Stage: Install Dependencies
 # ========================================
-FROM oven/bun:alpine AS deps
+FROM node:22-alpine AS deps
 WORKDIR /app
 
-# Copy only package files needed for migrations
-COPY package.json bun.lock turbo.json ./
-COPY packages/db/package.json ./packages/db/
-COPY packages/tsconfig/base.json ./packages/tsconfig/base.json
-COPY packages/tsconfig/package.json ./packages/tsconfig/
+RUN npm install -g pnpm
 
-# Install minimal dependencies in one layer
-RUN bun install --omit dev --ignore-scripts && \
-    bun install --omit dev --ignore-scripts drizzle-kit drizzle-orm postgres
+# Copy workspace configuration and package files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY apps/server/package.json ./apps/server/
+COPY packages/ ./packages/
+COPY patches/ ./patches/
+
+# Install dependencies needed for migrations
+RUN pnpm install --frozen-lockfile
 
 # ========================================
 # Runner Stage: Production Environment
 # ========================================
-FROM oven/bun:alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
-# Copy only the necessary files from deps
-COPY --from=deps /app/node_modules ./node_modules
-COPY packages/db/drizzle.config.ts ./packages/db/drizzle.config.ts
-COPY packages/db/src ./packages/db/src
-COPY packages/db/migrations ./packages/db/migrations
-COPY packages/db/package.json ./packages/db/package.json
+RUN npm install -g pnpm
 
-WORKDIR /app/packages/db
+# Copy workspace configuration and dependencies
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/package.json ./package.json
+COPY --from=deps /app/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=deps /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+
+# Copy server app with database configuration
+COPY apps/server/ ./apps/server/
+COPY packages/ ./packages/
+
+WORKDIR /app/apps/server

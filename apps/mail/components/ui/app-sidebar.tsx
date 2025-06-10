@@ -51,158 +51,6 @@ import { Input } from './input';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
-const verificationSchema = z.object({
-  phoneNumber: z.string().regex(/^\+[1-9]\d{1,14}$/, {
-    message: 'Please enter a valid phone number with country code (e.g. +1234567890)',
-  }),
-  otp: z.string().optional(),
-});
-
-const CallInboxDialog = () => {
-  const { refetch, data: session } = useSession();
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [showOtpInput, setShowOtpInput] = useState(false);
-
-  const maskPhoneNumber = (phone: string) => {
-    if (!phone) return '';
-    if (phone.length < 4) return phone;
-    try {
-      const lastFour = phone.slice(-4);
-      const maskedPart = '*'.repeat(Math.max(0, phone.length - 4));
-      return `${maskedPart}${lastFour}`;
-    } catch (error) {
-      console.error('Error masking phone number:', error);
-      return phone;
-    }
-  };
-
-  const form = useForm<z.infer<typeof verificationSchema>>({
-    resolver: zodResolver(verificationSchema),
-    defaultValues: {
-      phoneNumber: '',
-      otp: '',
-    },
-  });
-
-  const onSubmit = async (data: z.infer<typeof verificationSchema>) => {
-    try {
-      setIsVerifying(true);
-
-      if (!showOtpInput) {
-        await authClient.updateUser({
-          phoneNumber: data.phoneNumber,
-        });
-        await authClient.phoneNumber.sendOtp({
-          phoneNumber: data.phoneNumber,
-        });
-        setShowOtpInput(true);
-        toast.success('Verification code sent to your phone');
-      } else if (data.otp) {
-        const isVerified = await authClient.phoneNumber.verify({
-          phoneNumber: data.phoneNumber,
-          code: data.otp,
-        });
-        console.log('isVerified', isVerified);
-
-        if (isVerified.error) {
-          toast.error('Invalid verification code');
-        } else {
-          refetch();
-          toast.success('Phone number verified successfully');
-        }
-      } else {
-        toast.error('Please enter a valid OTP');
-      }
-    } catch (error) {
-      toast.error(
-        showOtpInput ? 'Failed to verify phone number' : 'Failed to send verification code',
-      );
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
-  return (
-    <Dialog defaultOpen>
-      <DialogContent showOverlay>
-        <DialogTitle>Call your Inbox</DialogTitle>
-        <DialogDescription>
-          <span className={showOtpInput ? 'hidden' : 'block'}>
-            What phone number would you be calling in from?
-          </span>
-          <span className={showOtpInput ? 'block' : 'hidden'}>
-            Enter the verification code sent to your phone
-          </span>
-        </DialogDescription>
-        <div className="relative">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="phoneNumber"
-                render={({ field }) => (
-                  <FormItem className={showOtpInput ? 'hidden' : 'block'}>
-                    <FormControl>
-                      <Input className="mt-2" type="tel" placeholder="Phone number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="otp"
-                render={({ field }) => (
-                  <FormItem className={showOtpInput ? 'block' : 'hidden'}>
-                    <FormControl>
-                      <div className="my-4 flex justify-center bg-transparent">
-                        <InputOTP maxLength={6} {...field}>
-                          <InputOTPGroup>
-                            <InputOTPSlot index={0} />
-                            <InputOTPSlot index={1} />
-                            <InputOTPSlot index={2} />
-                          </InputOTPGroup>
-                          <InputOTPSeparator />
-                          <InputOTPGroup>
-                            <InputOTPSlot index={3} />
-                            <InputOTPSlot index={4} />
-                            <InputOTPSlot index={5} />
-                          </InputOTPGroup>
-                        </InputOTP>
-                      </div>
-                    </FormControl>
-                    <FormDescription>
-                      Please enter the one-time password sent to your phone number{' '}
-                      <span className="font-bold">
-                        {maskPhoneNumber(form.getValues('phoneNumber'))}
-                      </span>
-                      .
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <DialogFooter>
-                <Button type="submit" disabled={isVerifying}>
-                  {isVerifying
-                    ? showOtpInput
-                      ? 'Verifying...'
-                      : 'Sending...'
-                    : showOtpInput
-                      ? 'Verify'
-                      : 'Send Code'}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { isPro, isLoading } = useBilling();
   const [showUpgrade, setShowUpgrade] = useState(() => {
@@ -277,7 +125,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               )}
             </AnimatePresence>
           </SidebarHeader>
-          {/* {!session?.user.phoneNumberVerified && !isSessionPending ? <CallInboxDialog /> : null} */}
           <SidebarContent
             className={`scrollbar scrollbar-w-1 scrollbar-thumb-accent/40 scrollbar-track-transparent hover:scrollbar-thumb-accent scrollbar-thumb-rounded-full overflow-x-hidden py-0 pt-0 ${state !== 'collapsed' ? 'mt-5 md:px-4' : 'px-2'}`}
           >
@@ -373,7 +220,7 @@ function ComposeButton() {
       <DialogDescription></DialogDescription>
 
       <DialogTrigger asChild>
-        <button className="inline-flex h-8 w-full items-center justify-center gap-1 self-stretch overflow-hidden rounded-md border border-gray-200 bg-transparent text-black dark:border-none dark:bg-gradient-to-b dark:from-white/20 dark:to-white/10 dark:text-white dark:outline dark:outline-1 dark:outline-offset-[-1px] dark:outline-white/5">
+        <button className="inline-flex h-8 w-full items-center justify-center gap-1 self-stretch overflow-hidden rounded-lg border border-gray-200 bg-white text-black dark:border-none dark:bg-[#2C2C2C] dark:text-white relative mb-1.5">
           {state === 'collapsed' && !isMobile ? (
             <PencilCompose className="fill-iconLight dark:fill-iconDark mt-0.5 text-black" />
           ) : (

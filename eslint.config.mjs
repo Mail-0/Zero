@@ -1,10 +1,12 @@
-import config from "./packages/eslint-config/eslint.config.mjs";
+import config from "@zero/tsconfig/base";
 import { fileURLToPath } from "url";
 import { resolve } from "path";
 
+// @ts-ignore
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 export default [
+  // @ts-ignore
   ...config,
   {
     files: ["**/*.ts", "**/*.tsx"],
