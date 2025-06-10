@@ -18,7 +18,7 @@ export const command: Command = {
     );
     removePackagesSpinner.stop('Removed node_modules');
     log.step('Reinstalling node_modules');
-    await runCommand('pnpm', ['install']);
+    await runCommand('bun', ['install']);
     log.step('Reinstalled node_modules');
   },
 };

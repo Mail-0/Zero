@@ -12,7 +12,7 @@ export const command: Command = {
     const envFile = await readFile(join(root, '.env'), 'utf8').catch(() => null);
 
     if (!envFile) {
-      log.step('No .env file exists, creating one using `pnpm nizzy env`');
+      log.step('No .env file exists, creating one using `bun nizzy env`');
       process.exit(0);
     }
 
@@ -22,9 +22,9 @@ export const command: Command = {
     cp(join(root, '.env'), join(root, 'apps/server/.dev.vars'));
 
     log.step('Syncing frontend types');
-    await runCommand('pnpm', ['run', 'types'], { cwd: join(root, 'apps/mail') });
+    await runCommand('bun', ['run', 'types'], { cwd: join(root, 'apps/mail') });
     log.step('Syncing backend types');
-    await runCommand('pnpm', ['run', 'types'], { cwd: join(root, 'apps/server') });
+    await runCommand('bun', ['run', 'types'], { cwd: join(root, 'apps/server') });
     log.success('Synced environment variables and types');
   },
 };

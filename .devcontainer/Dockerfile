@@ -28,9 +28,8 @@ RUN apt-get update && apt-get install -y zsh
 #  install Oh My Zsh
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 
-# Bun and pnpm installation
+# Bun installation
 RUN curl -fsSL https://bun.sh/install | bash
-RUN wget -qO- https://get.pnpm.io/install.sh | ENV="$HOME/.bashrc" SHELL="$(which bash)" bash -
 
 # Register Bun in bashrc and zshrc
 RUN echo 'export PATH="$HOME/.bun/bin:$PATH"' >> ~/.bashrc

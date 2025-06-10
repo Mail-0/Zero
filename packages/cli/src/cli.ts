@@ -32,7 +32,7 @@ if (['help', '-h', '--help'].includes(args[0])) {
       .map((command) => ` ${command.id.padStart(15)}    ${command.description}`)
       .join('\n'),
   );
-  outro('Run `pnpm nizzy` for an interactive experience\n');
+  outro('Run `bun nizzy` for an interactive experience\n');
   process.exit(0);
 }
 

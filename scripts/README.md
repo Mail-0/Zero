@@ -12,16 +12,16 @@ Scripts can be run using the `scripts` command from the project root:
 
 ```bash
 # Run a script from the project root
-pnpm scripts <script-name> [options]
+bun scripts <script-name> [options]
 
 # Example: Run the seed-style script
-pnpm scripts seed-style
+bun scripts seed-style
 ```
 
 This command is defined in the root `package.json` and executes the script runner in the mail app:
 
 ```json
-"scripts": "dotenv -- pnpm run --cwd apps/mail --silent --elide-lines=0 scripts"
+"scripts": "dotenv -- bunx tsx ./scripts/run.ts"
 ```
 
 ## Available Scripts
@@ -34,12 +34,12 @@ Seeds the writing style matrix for a given connection with sample emails of diff
 
 ```bash
 # Interactive mode (will prompt for options)
-pnpm scripts seed-style
+bun scripts seed-style
 
 # With command-line options
-pnpm scripts seed-style seed --connection-id <id> --style <style> --size <number> [--reset]
+bun scripts seed-style seed --connection-id <id> --style <style> --size <number> [--reset]
 # Or reset the style matrix
-pnpm scripts seed-style reset --connection-id <id>
+bun scripts seed-style reset --connection-id <id>
 ```
 
 **Options:**
@@ -115,7 +115,7 @@ process.exit(0);
 You can now run your script using:
 
 ```bash
-pnpm scripts my-script --param1 value
+bun scripts my-script --param1 value
 ```
 
 ## Best Practices
