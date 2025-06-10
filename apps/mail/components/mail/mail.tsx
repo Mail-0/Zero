@@ -554,7 +554,7 @@ export function MailLayout() {
                       : 'Search...'}
                   </span>
 
-                  <span className="absolute right-[0.18rem] flex gap-1">
+                  <span className="absolute right-[0.1rem] flex gap-1">
                     {/* {activeFilters.length > 0 && (
                       <Badge variant="secondary" className="ml-2 h-5 rounded px-1">
                         {activeFilters.length}
@@ -573,8 +573,16 @@ export function MailLayout() {
                         Clear
                       </Button>
                     )}
-                    <kbd className="bg-muted text-md pointer-events-none hidden h-7 select-none items-center gap-0.5 rounded-md border-none px-2 font-medium opacity-100 sm:flex dark:bg-[#262626] dark:text-[#929292]">
-                      <span className="text-lg">{isMac ? '⌘' : 'Ctrl'}</span> K
+                    <kbd className="bg-muted text-md pointer-events-none hidden h-7 select-none flex-row items-center gap-1 rounded-md border-none px-2 font-medium !leading-[0] opacity-100 sm:flex dark:bg-[#262626] dark:text-[#929292]">
+                      <span
+                        className={cn(
+                          'h-min !leading-[0.2]',
+                          isMac ? 'mt-[1px] text-lg' : 'text-sm',
+                        )}
+                      >
+                        {isMac ? '⌘' : 'Ctrl'}{' '}
+                      </span>
+                      <span className="h-min text-sm !leading-[0.2]"> K</span>
                     </kbd>
                   </span>
                 </Button>
