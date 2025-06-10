@@ -6,6 +6,16 @@
   "patchedDependencies": {
     "novel": "patches/novel.patch"
   },
+  "pnpm": {
+    "patchedDependencies": {
+      "novel": "patches/novel.patch"
+    }
+  },
+  "bun": {
+    "patchedDependencies": {
+      "novel": "patches/novel.patch"
+    }
+  },
   "workspaces": {
     "packages": [
       "apps/*",
