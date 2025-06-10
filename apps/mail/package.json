@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "patchedDependencies": {
+    "novel": "patches/novel.patch"
+  },
   "scripts": {
     "dev": "react-router dev",
     "build": "react-router build",
