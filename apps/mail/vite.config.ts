@@ -21,7 +21,9 @@ export default defineConfig({
         plugins: [['babel-plugin-react-compiler', ReactCompilerConfig]],
       },
     }),
-    tsconfigPaths(),
+    tsconfigPaths({
+      loose: true,
+    }),
     {
       name: 'add-headers',
       applyToEnvironment: (env) => env.name === 'client',
