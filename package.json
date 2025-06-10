@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "packageManager": "bun@1.2.15",
+  "patchedDependencies": {
+    "novel": "patches/novel.patch"
+  },
   "workspaces": {
     "packages": [
       "apps/*",
