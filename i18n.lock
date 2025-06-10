@@ -76,7 +76,7 @@ checksums:
     common/commandPalette/commands/goToArchive: 0c717740df71d4ddc42b1e90d5a97676
     common/commandPalette/commands/goToBin: 5b567f48c63b3352fc37cd807f6117bf
     common/commandPalette/commands/goToSettings: 6ace3a9c8e0d0bcef02e8835a8e0ac08
-    common/commandPalette/commands/newEmail: 45b7a175e9f4aaf32558ae59dbfa9541
+    common/commandPalette/commands/newEmail: a27757376ab05ff223433ab520a3f489
     common/commandPalette/commands/composeMessage: 45b7a175e9f4aaf32558ae59dbfa9541
     common/commandPalette/commands/searchEmails: cbe4e19fa34208326dd5a5fcc1e7d02e
     common/commandPalette/commands/toggleTheme: 0a3e19fea2f7b1045f53ebf0ccff6bd5
