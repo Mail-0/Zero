@@ -148,7 +148,11 @@
       "updates": "更新",
       "promotions": "プロモーション",
       "social": "ソーシャル",
-      "unread": "未読"
+      "unread": "未読",
+      "starred": "スター付き",
+      "notes": "メモ",
+      "forums": "フォーラム",
+      "work": "仕事"
     },
     "replyCompose": {
       "replyTo": "次に返信",

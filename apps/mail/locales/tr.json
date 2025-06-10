@@ -148,7 +148,11 @@
       "updates": "Güncellemeler",
       "promotions": "Tanıtımlar",
       "social": "Sosyal Medya",
-      "unread": "Okunmamış"
+      "unread": "Okunmamış",
+      "starred": "Yıldızlı",
+      "notes": "Notlar",
+      "forums": "Forumlar",
+      "work": "İş"
     },
     "replyCompose": {
       "replyTo": "Yanıtla",

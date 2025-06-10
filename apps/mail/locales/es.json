@@ -148,7 +148,11 @@
       "updates": "Actualizaciones",
       "promotions": "Promociones",
       "social": "Social",
-      "unread": "Sin leer"
+      "unread": "Sin leer",
+      "starred": "Destacados",
+      "notes": "Notas",
+      "forums": "Foros",
+      "work": "Trabajo"
     },
     "replyCompose": {
       "replyTo": "Responder a",

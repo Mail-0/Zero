@@ -148,7 +148,11 @@
       "updates": "Actualitzacions",
       "promotions": "Promocions",
       "social": "Social",
-      "unread": "No llegits"
+      "unread": "No llegits",
+      "starred": "Destacats",
+      "notes": "Notes",
+      "forums": "Fòrums",
+      "work": "Feina"
     },
     "replyCompose": {
       "replyTo": "Respon a",

@@ -148,7 +148,11 @@
       "updates": "업데이트",
       "promotions": "프로모션",
       "social": "소셜",
-      "unread": "읽지 않음"
+      "unread": "읽지 않음",
+      "starred": "별표 처리됨",
+      "notes": "노트",
+      "forums": "포럼",
+      "work": "업무"
     },
     "replyCompose": {
       "replyTo": "회신",

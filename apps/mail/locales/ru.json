@@ -148,7 +148,11 @@
       "updates": "Обновления",
       "promotions": "Промо",
       "social": "Социальные",
-      "unread": "Непрочитанные"
+      "unread": "Непрочитанные",
+      "starred": "Отмеченные",
+      "notes": "Заметки",
+      "forums": "Форумы",
+      "work": "Работа"
     },
     "replyCompose": {
       "replyTo": "Ответить",

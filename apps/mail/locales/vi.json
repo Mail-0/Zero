@@ -148,7 +148,11 @@
       "updates": "Cập nhật",
       "promotions": "Khuyến mãi",
       "social": "Mạng xã hội",
-      "unread": "Chưa đọc"
+      "unread": "Chưa đọc",
+      "starred": "Đánh dấu sao",
+      "notes": "Ghi chú",
+      "forums": "Diễn đàn",
+      "work": "Công việc"
     },
     "replyCompose": {
       "replyTo": "Trả lời",

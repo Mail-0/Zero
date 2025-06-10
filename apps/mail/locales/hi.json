@@ -148,7 +148,11 @@
       "updates": "अपडेट",
       "promotions": "प्रोमोशन",
       "social": "सोशल",
-      "unread": "अपठित"
+      "unread": "अपठित",
+      "starred": "स्टार किए गए",
+      "notes": "नोट्स",
+      "forums": "फोरम",
+      "work": "कार्य"
     },
     "replyCompose": {
       "replyTo": "जवाब दें",

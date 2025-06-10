@@ -148,7 +148,11 @@
       "updates": "Aktualizace",
       "promotions": "Promoakce",
       "social": "Sociální sítě",
-      "unread": "Nepřečtené"
+      "unread": "Nepřečtené",
+      "starred": "Označené hvězdičkou",
+      "notes": "Poznámky",
+      "forums": "Fóra",
+      "work": "Práce"
     },
     "replyCompose": {
       "replyTo": "Odpovědět",

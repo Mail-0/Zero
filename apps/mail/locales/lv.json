@@ -148,7 +148,11 @@
       "updates": "Atjauninājumi",
       "promotions": "Reklāmas",
       "social": "Sociālie tīkli",
-      "unread": "Nelasītie"
+      "unread": "Nelasītie",
+      "starred": "Ar zvaigznīti",
+      "notes": "Piezīmes",
+      "forums": "Forumi",
+      "work": "Darbs"
     },
     "replyCompose": {
       "replyTo": "Atbildēt",

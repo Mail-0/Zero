@@ -148,7 +148,11 @@
       "updates": "Frissítések",
       "promotions": "Promóciók",
       "social": "Közösségi",
-      "unread": "Olvasatlan"
+      "unread": "Olvasatlan",
+      "starred": "Csillagozott",
+      "notes": "Jegyzetek",
+      "forums": "Fórumok",
+      "work": "Munka"
     },
     "replyCompose": {
       "replyTo": "Válasz erre",

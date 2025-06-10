@@ -135,6 +135,10 @@ checksums:
     common/mailCategories/promotions: 046d70330572dc2b24522e3296ebddd6
     common/mailCategories/social: ff80c74b36f0511287404d286ec7976e
     common/mailCategories/unread: 3cc4336d27b43274c0f38350dae2421d
+    common/mailCategories/starred: ffe2e6d743353191e792c494336777f6
+    common/mailCategories/notes: 93c7ef9bc767f51fbe360afcf6b1fecb
+    common/mailCategories/forums: 028ba63a4c8ee444d870c99ae4721f4b
+    common/mailCategories/work: 8511de4788623b09e595581433c410bd
     common/replyCompose/replyTo: e7f83bcc57c1e4248e6835477cd8e28a
     common/replyCompose/thisEmail: 74ce60ea90c3119d506bc9a9f1893a5c
     common/replyCompose/dropFiles: e24aa4f8bf0eb75c7622ee8d5427840f
