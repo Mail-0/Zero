@@ -470,9 +470,9 @@ export function MailLayout() {
           className="rounded-inherit overflow-hidden"
         >
           <ResizablePanel
-            defaultSize={30}
-            minSize={30}
-            maxSize={30}
+            defaultSize={35}
+            minSize={35}
+            maxSize={35}
             className={cn(
               `bg-panelLight dark:bg-panelDark mb-1 mr-[3px] w-fit shadow-sm md:rounded-2xl lg:flex lg:h-[calc(100dvh-8px)] lg:shadow-sm`,
               isDesktop && threadId && 'hidden lg:block',
