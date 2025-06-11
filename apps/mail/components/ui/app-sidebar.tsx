@@ -112,34 +112,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             className={`relative top-2.5 flex flex-col gap-2 ${state === 'collapsed' ? 'px-2' : 'md:px-4'}`}
           >
             {session && <NavUser />}
-            <AnimatePresence mode="wait">
-              {showComposeButton && (
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <ComposeButton />
-                </motion.div>
-              )}
-            </AnimatePresence>
+
+            {showComposeButton && (
+              <div>
+                <ComposeButton />
+              </div>
+            )}
           </SidebarHeader>
           <SidebarContent
             className={`scrollbar scrollbar-w-1 scrollbar-thumb-accent/40 scrollbar-track-transparent hover:scrollbar-thumb-accent scrollbar-thumb-rounded-full overflow-x-hidden py-0 pt-0 ${state !== 'collapsed' ? 'mt-5 md:px-4' : 'px-2'}`}
           >
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentSection}
-                initial={{ opacity: 0, x: currentSection === 'mail' ? -20 : 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: currentSection === 'mail' ? 20 : -20 }}
-                transition={{ duration: 0.2 }}
-                className="flex-1 py-0"
-              >
-                <NavMain items={navItems} />
-              </motion.div>
-            </AnimatePresence>
+            <div className="flex-1 py-0">
+              <NavMain items={navItems} />
+            </div>
           </SidebarContent>
 
           {!isLoading && !isPro && showUpgrade && state !== 'collapsed' && (
@@ -220,7 +205,7 @@ function ComposeButton() {
       <DialogDescription></DialogDescription>
 
       <DialogTrigger asChild>
-        <button className="inline-flex h-8 w-full items-center justify-center gap-1 self-stretch overflow-hidden rounded-lg border border-gray-200 bg-white text-black dark:border-none dark:bg-[#2C2C2C] dark:text-white relative mb-1.5">
+        <button className="relative mb-1.5 inline-flex h-8 w-full items-center justify-center gap-1 self-stretch overflow-hidden rounded-lg border border-gray-200 bg-white text-black dark:border-none dark:bg-[#2C2C2C] dark:text-white">
           {state === 'collapsed' && !isMobile ? (
             <PencilCompose className="fill-iconLight dark:fill-iconDark mt-0.5 text-black" />
           ) : (

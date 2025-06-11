@@ -1067,7 +1067,7 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
             {isSelected && showText && (
               <div className="flex items-center justify-center gap-2.5 px-0.5">
                 <div className={cn(
-                  "animate-in fade-in-0 slide-in-from-right-4 justify-start leading-none text-white duration-300 truncate",
+                  " justify-start leading-none text-white  truncate",
                   getTextClasses()
                 )}>
                   {cat.name}
