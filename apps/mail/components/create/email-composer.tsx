@@ -512,6 +512,43 @@ export function EmailComposer({
                     ref={toInputRef}
                     className="h-6 flex-1 bg-transparent text-sm font-normal leading-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white"
                     placeholder="Enter email"
+                    onPaste={(e) => {
+                      e.preventDefault();
+                      const pastedText = e.clipboardData.getData('text');
+                      const emails = pastedText
+                        .split(/[,;\s]+/)
+                        .map((email) => email.trim())
+                        .filter((email) => email.length > 0);
+
+                      const validEmails: string[] = [];
+                      const invalidEmails: string[] = [];
+
+                      emails.forEach((email) => {
+                        if (isValidEmail(email)) {
+                          if (!toEmails.includes(email)) {
+                            validEmails.push(email);
+                          }
+                        } else {
+                          invalidEmails.push(email);
+                        }
+                      });
+
+                      if (validEmails.length > 0) {
+                        setValue('to', [...toEmails, ...validEmails]);
+                        setHasUnsavedChanges(true);
+                        if (validEmails.length === 1) {
+                          toast.success('Email address added');
+                        } else {
+                          toast.success(`${validEmails.length} email addresses added`);
+                        }
+                      }
+
+                      if (invalidEmails.length > 0) {
+                        toast.error(
+                          `Invalid email ${invalidEmails.length === 1 ? 'address' : 'addresses'}: ${invalidEmails.join(', ')}`,
+                        );
+                      }
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && e.currentTarget.value.trim()) {
                         e.preventDefault();
