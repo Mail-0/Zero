@@ -440,11 +440,11 @@ export function NavUser() {
             </div>
 
             <div className="flex items-center justify-center gap-1">
-              {isSessionPending ? null : !session.user.phoneNumberVerified ? (
+              {/* {isSessionPending ? null : !session.user.phoneNumberVerified ? (
                 <SetupInboxDialog />
               ) : (
                 <CallInboxDialog />
-              )}
+              )} */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className={cn('md:h-fit md:px-2')}>
