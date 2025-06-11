@@ -49,7 +49,14 @@
       "save": "保存",
       "remove": "移除",
       "settings": "设置",
-      "exitSelectionModeEsc": "点击或按 ESC 键退出选择模式"
+      "exitSelectionModeEsc": "点击或按 ESC 键退出选择模式",
+      "deleteAllSpam": "删除所有垃圾邮件",
+      "deletingAllSpam": "正在删除所有垃圾邮件...",
+      "deletedAllSpam": "已删除 {count} 封垃圾邮件",
+      "errorDeletingSpam": "删除垃圾邮件失败",
+      "confirmDeleteSpam": "删除所有垃圾邮件",
+      "confirmDeleteSpamDescription": "您确定要删除所有垃圾邮件吗？此操作无法撤销。",
+      "confirmDelete": "删除"
     },
     "themes": {
       "dark": "深色",
@@ -84,7 +91,19 @@
         "goToDocs": "前往文档",
         "helpWithShortcuts": "快捷键帮助",
         "commandPalette": "命令面板"
-      }
+      },
+      "quickResults": "快速结果",
+      "searchPlaceholder": "搜索...",
+      "noSearchResults": "没有搜索结果",
+      "actions": "操作",
+      "addFilters": "添加筛选器",
+      "searchForEmails": "搜索邮件",
+      "filterPlaceholder": "筛选...",
+      "noFilterResults": "没有筛选结果",
+      "availableFilters": "可用筛选器",
+      "examples": "示例",
+      "exampleDate": "示例日期",
+      "exampleSender": "示例发件人"
     },
     "searchBar": {
       "pickDateRange": "选择日期或日期范围",
@@ -129,7 +148,11 @@
       "updates": "更新",
       "promotions": "促销",
       "social": "社交",
-      "unread": "未读"
+      "unread": "未读",
+      "starred": "已加星标",
+      "notes": "笔记",
+      "forums": "论坛",
+      "work": "工作"
     },
     "replyCompose": {
       "replyTo": "回复",
@@ -321,7 +344,8 @@
       "archive": "存档",
       "bin": "回收站",
       "feedback": "反馈",
-      "settings": "设置"
+      "settings": "设置",
+      "voice": "语音助手"
     },
     "settings": {
       "general": "常规",
@@ -359,7 +383,9 @@
         "customPrompt": "自定义AI提示",
         "customPromptPlaceholder": "输入您的自定义AI提示...",
         "customPromptDescription": "自定义AI如何撰写您的邮件回复。这将添加到基础提示中。",
-        "noResultsFound": "未找到结果"
+        "noResultsFound": "未找到结果",
+        "zeroSignature": "Zero 签名",
+        "zeroSignatureDescription": "在您的邮件中添加 Zero 签名。"
       },
       "connections": {
         "title": "邮箱连接",
@@ -459,7 +485,15 @@
           "showUpdates": "显示更新",
           "showPromotions": "显示促销邮件",
           "showUnread": "显示未读邮件",
-          "selectUnderCursor": "选择光标下的内容"
+          "selectUnderCursor": "选择光标下的内容",
+          "openVoice": "打开语音助手",
+          "clearAllFilters": "清除所有筛选器",
+          "markAsImportant": "标记为重要",
+          "markAsUnimportant": "标记为不重要",
+          "bulkDelete": "批量删除",
+          "bulkSelect": "批量选择",
+          "bulkArchive": "批量归档",
+          "bulkStar": "批量加星标"
         }
       },
       "labels": {

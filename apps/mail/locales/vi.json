@@ -49,7 +49,14 @@
       "save": "Lưu",
       "remove": "Xóa",
       "settings": "Cài đặt",
-      "exitSelectionModeEsc": "Nhấp chuột hoặc nhấn ESC để thoát chế độ chọn"
+      "exitSelectionModeEsc": "Nhấp chuột hoặc nhấn ESC để thoát chế độ chọn",
+      "deleteAllSpam": "Xóa tất cả thư rác",
+      "deletingAllSpam": "Đang xóa tất cả thư rác...",
+      "deletedAllSpam": "Đã xóa {count} thư rác",
+      "errorDeletingSpam": "Không thể xóa thư rác",
+      "confirmDeleteSpam": "Xóa tất cả thư rác",
+      "confirmDeleteSpamDescription": "Bạn có chắc chắn muốn xóa tất cả thư rác không? Hành động này không thể hoàn tác.",
+      "confirmDelete": "Xóa"
     },
     "themes": {
       "dark": "Tối",
@@ -84,7 +91,19 @@
         "goToDocs": "Đi đến tài liệu",
         "helpWithShortcuts": "Trợ giúp về phím tắt",
         "commandPalette": "Bảng lệnh"
-      }
+      },
+      "quickResults": "Kết quả nhanh",
+      "searchPlaceholder": "Tìm kiếm...",
+      "noSearchResults": "Không có kết quả tìm kiếm",
+      "actions": "Hành động",
+      "addFilters": "Thêm bộ lọc",
+      "searchForEmails": "Tìm kiếm thư",
+      "filterPlaceholder": "Lọc...",
+      "noFilterResults": "Không có kết quả lọc",
+      "availableFilters": "Bộ lọc khả dụng",
+      "examples": "Ví dụ",
+      "exampleDate": "Ví dụ về ngày",
+      "exampleSender": "Ví dụ về người gửi"
     },
     "searchBar": {
       "pickDateRange": "Chọn ngày hoặc khoảng thời gian",
@@ -129,7 +148,11 @@
       "updates": "Cập nhật",
       "promotions": "Khuyến mãi",
       "social": "Mạng xã hội",
-      "unread": "Chưa đọc"
+      "unread": "Chưa đọc",
+      "starred": "Đánh dấu sao",
+      "notes": "Ghi chú",
+      "forums": "Diễn đàn",
+      "work": "Công việc"
     },
     "replyCompose": {
       "replyTo": "Trả lời",
@@ -321,7 +344,8 @@
       "archive": "Lưu trữ",
       "bin": "Thùng rác",
       "feedback": "Phản hồi",
-      "settings": "Cài đặt"
+      "settings": "Cài đặt",
+      "voice": "Trợ lý giọng nói"
     },
     "settings": {
       "general": "Chung",
@@ -359,7 +383,9 @@
         "customPrompt": "Lệnh AI tùy chỉnh",
         "customPromptPlaceholder": "Nhập lệnh tùy chỉnh của bạn cho AI...",
         "customPromptDescription": "Tùy chỉnh cách AI viết các trả lời email của bạn. Điều này sẽ được thêm vào lệnh cơ bản.",
-        "noResultsFound": "Không tìm thấy kết quả nào"
+        "noResultsFound": "Không tìm thấy kết quả nào",
+        "zeroSignature": "Chữ ký Zero",
+        "zeroSignatureDescription": "Thêm chữ ký Zero vào email của bạn."
       },
       "connections": {
         "title": "Kết nối email",
@@ -459,7 +485,15 @@
           "showUpdates": "Hiển thị cập nhật",
           "showPromotions": "Hiển thị khuyến mãi",
           "showUnread": "Hiển thị chưa đọc",
-          "selectUnderCursor": "Chọn mục dưới con trỏ"
+          "selectUnderCursor": "Chọn mục dưới con trỏ",
+          "openVoice": "Mở trợ lý giọng nói",
+          "clearAllFilters": "Xóa tất cả bộ lọc",
+          "markAsImportant": "Đánh dấu là quan trọng",
+          "markAsUnimportant": "Đánh dấu là không quan trọng",
+          "bulkDelete": "Xóa hàng loạt",
+          "bulkSelect": "Chọn hàng loạt",
+          "bulkArchive": "Lưu trữ hàng loạt",
+          "bulkStar": "Gắn sao hàng loạt"
         }
       },
       "labels": {

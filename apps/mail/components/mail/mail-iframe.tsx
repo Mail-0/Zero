@@ -58,10 +58,13 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
     },
   });
 
-  const { data: processedHtml } = useQuery({
+  const { data: processedHtml, isLoading: isProcessingHtml } = useQuery({
     queryKey: ['email-template', html, isTrustedSender || temporaryImagesEnabled],
     queryFn: () => template(html, isTrustedSender || temporaryImagesEnabled),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 60 * 1000, // Increase cache time to 30 minutes
+    gcTime: 60 * 60 * 1000, // Keep in cache for 1 hour
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    refetchOnMount: false, // Don't refetch on mount if data exists
   });
 
   const t = useTranslations();
@@ -132,6 +135,15 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
 
     return () => ctrl.abort();
   }, []);
+
+  // Show loading fallback while processing HTML (similar to HydrateFallback pattern)
+  if (isProcessingHtml) {
+    return (
+      <div className="flex h-32 items-center justify-center">
+        <div className="text-muted-foreground text-sm">Processing email content...</div>
+      </div>
+    );
+  }
 
   return (
     <>

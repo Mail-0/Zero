@@ -6,7 +6,6 @@ import { connectionToDriver } from '../lib/server-utils';
 import { env } from 'cloudflare:workers';
 import { openai } from '@ai-sdk/openai';
 import { FOLDERS } from '../lib/utils';
-import { groq } from '@ai-sdk/groq';
 import { generateText } from 'ai';
 import { Tools } from '../types';
 import { createDb } from '../db';
@@ -20,19 +19,33 @@ aiRouter.get('/', (c) => c.text('Twilio + ElevenLabs + AI Phone System Ready'));
 
 aiRouter.post('/do/:action', async (c) => {
   if (env.DISABLE_CALLS) return c.json({ success: false, error: 'Not implemented' }, 400);
-  const action = c.req.param('action') as Tools;
-  const body = await c.req.json();
-  console.log('[DEBUG] action', action, body);
-  const connectionId = c.req.header('X-Connection-Id');
-  if (!connectionId) {
-    return new Response('Unauthorized', { status: 401 });
-  }
+  if (env.VOICE_SECRET !== c.req.header('X-Voice-Secret'))
+    return c.json({ success: false, error: 'Unauthorized' }, 401);
+  if (!c.req.header('X-Caller')) return c.json({ success: false, error: 'Unauthorized' }, 401);
+  const db = createDb(env.HYPERDRIVE.connectionString);
+  const user = await db.query.user.findFirst({
+    where: (user, { eq, and }) =>
+      and(eq(user.phoneNumber, c.req.header('X-Caller')!), eq(user.phoneNumberVerified, true)),
+  });
+  if (!user) return c.json({ success: false, error: 'Unauthorized' }, 401);
+
+  const connection = await db.query.connection.findFirst({
+    where: (connection, { eq, or }) =>
+      or(eq(connection.id, user.defaultConnectionId!), eq(connection.userId, user.id)),
+  });
+  if (!connection) return c.json({ success: false, error: 'Unauthorized' }, 401);
+
   try {
-    const driver = await getDriverFromConnectionId(connectionId);
+    const action = c.req.param('action') as Tools;
+    const body = await c.req.json();
+    console.log('[DEBUG] action', action, body);
+    const driver = await getDriverFromConnectionId(connection.id);
     switch (action) {
       case Tools.ListThreads:
         const threads = await Promise.all(
-          (await driver.list({ folder: 'inbox', maxResults: 5 })).threads.map((thread) =>
+          (
+            await driver.list({ folder: body.folder ?? 'inbox', maxResults: body.maxResults ?? 5 })
+          ).threads.map((thread) =>
             driver.get(thread.id).then((thread) => ({
               id: thread.latest?.id,
               subject: thread.latest?.subject,
@@ -47,7 +60,7 @@ aiRouter.post('/do/:action', async (c) => {
           prompt: body.prompt,
           emailSubject: body.emailSubject,
           username: 'Nizar Abi Zaher',
-          connectionId,
+          connectionId: connection.id,
         });
         return c.json({ success: true, result: newBody });
       case Tools.SendEmail:
@@ -71,14 +84,24 @@ aiRouter.post('/do/:action', async (c) => {
 });
 
 aiRouter.post('/call', async (c) => {
-  if (env.DISABLE_CALLS === 'true')
-    return c.json({ success: false, error: 'Not implemented' }, 400);
-  const connectionId = c.req.header('X-Connection-Id');
+  console.log('[DEBUG] Received call request');
 
-  if (!connectionId) {
-    return c.text('Missing connectionId', 400);
+  if (env.DISABLE_CALLS) {
+    console.log('[DEBUG] Calls are disabled');
+    return c.json({ success: false, error: 'Not implemented' }, 400);
   }
 
+  if (env.VOICE_SECRET !== c.req.header('X-Voice-Secret')) {
+    console.log('[DEBUG] Invalid voice secret');
+    return c.json({ success: false, error: 'Unauthorized' }, 401);
+  }
+
+  if (!c.req.header('X-Caller')) {
+    console.log('[DEBUG] Missing caller header');
+    return c.json({ success: false, error: 'Unauthorized' }, 401);
+  }
+
+  console.log('[DEBUG] Parsing request body');
   const { success, data } = await z
     .object({
       query: z.string(),
@@ -86,19 +109,37 @@ aiRouter.post('/call', async (c) => {
     .safeParseAsync(await c.req.json());
 
   if (!success) {
-    return c.text('Invalid request', 400);
+    console.log('[DEBUG] Invalid request body');
+    return c.json({ success: false, error: 'Invalid request' }, 400);
   }
 
+  console.log('[DEBUG] Connecting to database');
   const db = createDb(env.HYPERDRIVE.connectionString);
-  const activeConnection = await db.query.connection.findFirst({
-    where: (connection, { eq }) => eq(connection.id, connectionId),
+
+  console.log('[DEBUG] Finding user by phone number:', c.req.header('X-Caller'));
+  const user = await db.query.user.findFirst({
+    where: (user, { eq, and }) =>
+      and(eq(user.phoneNumber, c.req.header('X-Caller')!), eq(user.phoneNumberVerified, true)),
   });
 
-  if (!activeConnection) {
-    return c.text('Unauthorized', 401);
+  if (!user) {
+    console.log('[DEBUG] User not found or not verified');
+    return c.json({ success: false, error: 'Unauthorized' }, 401);
   }
 
-  const driver = connectionToDriver(activeConnection);
+  console.log('[DEBUG] Finding connection for user:', user.id);
+  const connection = await db.query.connection.findFirst({
+    where: (connection, { eq, or }) =>
+      or(eq(connection.id, user.defaultConnectionId!), eq(connection.userId, user.id)),
+  });
+
+  if (!connection) {
+    console.log('[DEBUG] No connection found for user');
+    return c.json({ success: false, error: 'Unauthorized' }, 401);
+  }
+
+  console.log('[DEBUG] Creating driver for connection:', connection.id);
+  const driver = connectionToDriver(connection);
 
   const { text } = await generateText({
     model: openai('gpt-4o'),

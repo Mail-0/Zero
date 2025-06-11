@@ -9,8 +9,8 @@ import {
   useNavigate,
   type MetaFunction,
 } from 'react-router';
-import { ClientProviders } from '@/providers/client-providers';
 import { ServerProviders } from '@/providers/server-providers';
+import { ClientProviders } from '@/providers/client-providers';
 import { useEffect, type PropsWithChildren } from 'react';
 import { getServerTrpc } from '@/lib/trpc.server';
 import { Button } from '@/components/ui/button';

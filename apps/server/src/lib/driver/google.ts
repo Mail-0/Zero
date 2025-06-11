@@ -898,6 +898,8 @@ export class GoogleMailManager implements MailManager {
     cc,
     bcc,
     fromEmail,
+    isForward = false,
+    originalMessage = null,
   }: IOutgoingMessage) {
     const msg = createMimeMessage();
 
@@ -990,10 +992,17 @@ export class GoogleMailManager implements MailManager {
 
     msg.setSubject(subject);
 
-    msg.addMessage({
-      contentType: 'text/html',
-      data: await sanitizeTipTapHtml(message.trim()),
-    });
+    if (originalMessage) {
+      msg.addMessage({
+        contentType: 'text/html',
+        data: `${await sanitizeTipTapHtml(message.trim())}${originalMessage}`,
+      });
+    } else {
+      msg.addMessage({
+        contentType: 'text/html',
+        data: await sanitizeTipTapHtml(message.trim()),
+      });
+    }
 
     if (headers) {
       Object.entries(headers).forEach(([key, value]) => {

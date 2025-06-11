@@ -136,6 +136,8 @@ export interface IOutgoingMessage {
   headers: Record<string, string>;
   threadId?: string;
   fromEmail?: string;
+  isForward?: boolean;
+  originalMessage?: string | null;
 }
 export interface DeleteAllSpamResponse {
   success: boolean;

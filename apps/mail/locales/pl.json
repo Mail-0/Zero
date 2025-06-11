@@ -91,7 +91,19 @@
         "goToDocs": "Przejdź do dokumentacji",
         "helpWithShortcuts": "Pomoc ze skrótami",
         "commandPalette": "Paleta poleceń"
-      }
+      },
+      "quickResults": "Szybkie wyniki",
+      "searchPlaceholder": "Szukaj...",
+      "noSearchResults": "Brak wyników wyszukiwania",
+      "actions": "Akcje",
+      "addFilters": "Dodaj filtry",
+      "searchForEmails": "Szukaj e-maili",
+      "filterPlaceholder": "Filtruj...",
+      "noFilterResults": "Brak wyników filtrowania",
+      "availableFilters": "Dostępne filtry",
+      "examples": "Przykłady",
+      "exampleDate": "Przykładowa data",
+      "exampleSender": "Przykładowy nadawca"
     },
     "searchBar": {
       "pickDateRange": "Wybierz datę lub zakres",
@@ -136,7 +148,11 @@
       "updates": "Aktualizacje",
       "promotions": "Promocje",
       "social": "Społecznościowe",
-      "unread": "Nieprzeczytane"
+      "unread": "Nieprzeczytane",
+      "starred": "Oznaczone gwiazdką",
+      "notes": "Notatki",
+      "forums": "Fora",
+      "work": "Praca"
     },
     "replyCompose": {
       "replyTo": "Odpowiedz do",
@@ -328,7 +344,8 @@
       "archive": "Archiwum",
       "bin": "Kosz",
       "feedback": "Opinie",
-      "settings": "Ustawienia"
+      "settings": "Ustawienia",
+      "voice": "Asystent głosowy"
     },
     "settings": {
       "general": "Ogólne",
@@ -366,7 +383,9 @@
         "customPrompt": "Niestandardowe polecenie dla AI",
         "customPromptPlaceholder": "Wprowadź własne polecenie dla AI...",
         "customPromptDescription": "Dostosuj sposób, w jaki AI pisze odpowiedzi na Twoje e-maile. Zostanie to dodane do podstawowego polecenia.",
-        "noResultsFound": "Nie znaleziono wyników"
+        "noResultsFound": "Nie znaleziono wyników",
+        "zeroSignature": "Podpis Zero",
+        "zeroSignatureDescription": "Dodaj podpis Zero do swoich e-maili."
       },
       "connections": {
         "title": "Połączenia e-mail",
@@ -466,7 +485,15 @@
           "showUpdates": "Pokaż aktualizacje",
           "showPromotions": "Pokaż promocje",
           "showUnread": "Pokaż nieprzeczytane",
-          "selectUnderCursor": "Zaznacz pod kursorem"
+          "selectUnderCursor": "Zaznacz pod kursorem",
+          "openVoice": "Otwórz Asystenta Głosowego",
+          "clearAllFilters": "Wyczyść wszystkie filtry",
+          "markAsImportant": "Oznacz jako ważne",
+          "markAsUnimportant": "Oznacz jako nieważne",
+          "bulkDelete": "Usuń zbiorczo",
+          "bulkSelect": "Zaznacz zbiorczo",
+          "bulkArchive": "Archiwizuj zbiorczo",
+          "bulkStar": "Oznacz gwiazdką zbiorczo"
         }
       },
       "labels": {

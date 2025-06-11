@@ -148,7 +148,7 @@ export class OutlookMailManager implements MailManager {
           name: user.displayName || '',
           photo: photoUrl,
         };
-        console.log({ info });
+
         return info;
       },
       {},
