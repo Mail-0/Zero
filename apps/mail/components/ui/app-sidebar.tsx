@@ -187,17 +187,11 @@ function ComposeButton() {
 
   const handleOpenChange = async (open: boolean) => {
     if (!open) {
-      // Clear all query params at once for faster closing
-      await Promise.all([
-        setDialogOpen(null),
-        setDraftId(null),
-        setTo(null),
-        setActiveReplyId(null),
-        setMode(null),
-      ]);
+      await setDialogOpen(null);
     } else {
       setDialogOpen('true');
     }
+    await Promise.all([setDraftId(null), setTo(null), setActiveReplyId(null), setMode(null)]);
   };
   return (
     <Dialog open={!!dialogOpen} onOpenChange={handleOpenChange}>
