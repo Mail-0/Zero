@@ -83,7 +83,7 @@
         "goToArchive": "Перейти в Архив",
         "goToBin": "Перейти в Корзину",
         "goToSettings": "Перейти в Настройки",
-        "newEmail": "Новое Письмо",
+        "newEmail": "Новое письмо",
         "composeMessage": "Новое письмо",
         "searchEmails": "Поиск",
         "toggleTheme": "Переключить тему",
@@ -91,7 +91,19 @@
         "goToDocs": "Перейти в Документацию",
         "helpWithShortcuts": "Помощь с горячими клавишами",
         "commandPalette": "Командная палитра"
-      }
+      },
+      "quickResults": "Быстрые результаты",
+      "searchPlaceholder": "Поиск...",
+      "noSearchResults": "Результаты не найдены",
+      "actions": "Действия",
+      "addFilters": "Добавить фильтры",
+      "searchForEmails": "Поиск писем",
+      "filterPlaceholder": "Фильтр...",
+      "noFilterResults": "Фильтры не найдены",
+      "availableFilters": "Доступные фильтры",
+      "examples": "Примеры",
+      "exampleDate": "Пример даты",
+      "exampleSender": "Пример отправителя"
     },
     "searchBar": {
       "pickDateRange": "Выбрать дату или диапазон",
@@ -136,7 +148,11 @@
       "updates": "Обновления",
       "promotions": "Промо",
       "social": "Социальные",
-      "unread": "Непрочитанные"
+      "unread": "Непрочитанные",
+      "starred": "Отмеченные",
+      "notes": "Заметки",
+      "forums": "Форумы",
+      "work": "Работа"
     },
     "replyCompose": {
       "replyTo": "Ответить",
@@ -328,7 +344,8 @@
       "archive": "Архив",
       "bin": "Корзина",
       "feedback": "Отзывы",
-      "settings": "Настройки"
+      "settings": "Настройки",
+      "voice": "Голосовой помощник"
     },
     "settings": {
       "general": "Общие",
@@ -366,7 +383,9 @@
         "customPrompt": "Пользовательский ИИ Запрос",
         "customPromptPlaceholder": "Введите ваш запрос для ИИ...",
         "customPromptDescription": "Настройте, как ИИ будет писать ваши ответы на письма. Этот текст будет добавлен к основному запросу.",
-        "noResultsFound": "Результаты не найдены"
+        "noResultsFound": "Результаты не найдены",
+        "zeroSignature": "Подпись Zero",
+        "zeroSignatureDescription": "Добавьте подпись Zero к вашим письмам."
       },
       "connections": {
         "title": "Подключения",
@@ -466,7 +485,15 @@
           "showUpdates": "Показать обновления",
           "showPromotions": "Показать промоакции",
           "showUnread": "Показать непрочитанное",
-          "selectUnderCursor": "Выбрать под курсором"
+          "selectUnderCursor": "Выбрать под курсором",
+          "openVoice": "Открыть голосовой помощник",
+          "clearAllFilters": "Очистить все фильтры",
+          "markAsImportant": "Отметить как важное",
+          "markAsUnimportant": "Отметить как неважное",
+          "bulkDelete": "Массовое удаление",
+          "bulkSelect": "Массовый выбор",
+          "bulkArchive": "Массовый архив",
+          "bulkStar": "Массовое добавление в избранное"
         }
       },
       "labels": {

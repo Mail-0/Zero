@@ -91,7 +91,19 @@
         "goToDocs": "Přejít do dokumentace",
         "helpWithShortcuts": "Nápověda se zkratkami",
         "commandPalette": "Paleta příkazů"
-      }
+      },
+      "quickResults": "Rychlé výsledky",
+      "searchPlaceholder": "Hledat...",
+      "noSearchResults": "Žádné výsledky vyhledávání",
+      "actions": "Akce",
+      "addFilters": "Přidat filtry",
+      "searchForEmails": "Hledat emaily",
+      "filterPlaceholder": "Filtrovat...",
+      "noFilterResults": "Žádné výsledky filtru",
+      "availableFilters": "Dostupné filtry",
+      "examples": "Příklady",
+      "exampleDate": "Příklad data",
+      "exampleSender": "Příklad odesílatele"
     },
     "searchBar": {
       "pickDateRange": "Vyberte datum nebo rozsah",
@@ -136,7 +148,11 @@
       "updates": "Aktualizace",
       "promotions": "Promoakce",
       "social": "Sociální sítě",
-      "unread": "Nepřečtené"
+      "unread": "Nepřečtené",
+      "starred": "Označené hvězdičkou",
+      "notes": "Poznámky",
+      "forums": "Fóra",
+      "work": "Práce"
     },
     "replyCompose": {
       "replyTo": "Odpovědět",
@@ -328,7 +344,8 @@
       "archive": "Archiv",
       "bin": "Odstraněná pošta",
       "feedback": "Zpětná vazba",
-      "settings": "Nastavení"
+      "settings": "Nastavení",
+      "voice": "Hlasový asistent"
     },
     "settings": {
       "general": "Obecné",
@@ -366,7 +383,9 @@
         "customPrompt": "Vlastní AI pokyn",
         "customPromptPlaceholder": "Zadejte vlastní pokyn pro AI...",
         "customPromptDescription": "Přizpůsobte, jak AI píše vaše e-mailové odpovědi. Toto bude přidáno k základnímu pokynu.",
-        "noResultsFound": "Nebyly nalezeny žádné výsledky"
+        "noResultsFound": "Nebyly nalezeny žádné výsledky",
+        "zeroSignature": "Zero podpis",
+        "zeroSignatureDescription": "Přidat Zero podpis k vašim emailům."
       },
       "connections": {
         "title": "Propojení emailu",
@@ -466,7 +485,15 @@
           "showUpdates": "Zobrazit aktualizace",
           "showPromotions": "Zobrazit propagace",
           "showUnread": "Zobrazit nepřečtené",
-          "selectUnderCursor": "Vybrat pod kurzorem"
+          "selectUnderCursor": "Vybrat pod kurzorem",
+          "openVoice": "Otevřít hlasového asistenta",
+          "clearAllFilters": "Vymazat všechny filtry",
+          "markAsImportant": "Označit jako důležité",
+          "markAsUnimportant": "Označit jako nedůležité",
+          "bulkDelete": "Hromadné mazání",
+          "bulkSelect": "Hromadný výběr",
+          "bulkArchive": "Hromadná archivace",
+          "bulkStar": "Hromadné označení hvězdičkou"
         }
       },
       "labels": {

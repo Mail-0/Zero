@@ -283,6 +283,13 @@ const createAuthConfig = () => {
         trustedProviders: ['google', 'microsoft'],
       },
     },
+    onAPIError: {
+      onError: (error, ctx) => {
+        console.error('API Error', error);
+      },
+      errorURL: `${env.VITE_PUBLIC_APP_URL}/login`,
+      throw: true,
+    },
   } satisfies BetterAuthOptions;
 };
 

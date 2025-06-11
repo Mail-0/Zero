@@ -19,8 +19,8 @@ catalogs:
       specifier: ^0.0.48
       version: 0.0.48
     better-auth:
-      specifier: ^1.2.8
-      version: 1.2.8
+      specifier: ^1.2.9
+      version: 1.2.9
     drizzle-kit:
       specifier: ^0.31.1
       version: 0.31.1
@@ -207,7 +207,7 @@ importers:
         version: 19.1.0-rc.2
       better-auth:
         specifier: 'catalog:'
-        version: 1.2.8
+        version: 1.2.9
       canvas-confetti:
         specifier: 1.9.3
         version: 1.9.3
@@ -529,7 +529,7 @@ importers:
         version: 1.5.1
       better-auth:
         specifier: 'catalog:'
-        version: 1.2.8
+        version: 1.2.9
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -3840,8 +3840,8 @@ packages:
   base64-js@1.5.1:
     resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
 
-  better-auth@1.2.8:
-    resolution: {integrity: sha512-y8ry7ZW3/3ZIr82Eo1zUDtMzdoQlFnwNuZ0+b0RxoNZgqmvgTIc/0tCDC7NDJerqSu4UCzer0dvYxBsv3WMIGg==}
+  better-auth@1.2.9:
+    resolution: {integrity: sha512-WLqBXDzuaCQetQctLGC5oTfGmL32zUvxnM4Y+LZkhwseMaZWq5EKI+c/ZATgz2YkFt7726q659PF8CfB9P1VuA==}
 
   better-call@1.0.9:
     resolution: {integrity: sha512-Qfm0gjk0XQz0oI7qvTK1hbqTsBY4xV2hsHAxF8LZfUYl3RaECCIifXuVqtPpZJWvlCCMlQSvkvhhyuApGUba6g==}
@@ -10727,7 +10727,7 @@ snapshots:
 
   base64-js@1.5.1: {}
 
-  better-auth@1.2.8:
+  better-auth@1.2.9:
     dependencies:
       '@better-auth/utils': 0.2.5
       '@better-fetch/fetch': 1.1.18

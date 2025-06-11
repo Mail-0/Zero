@@ -101,9 +101,9 @@ export function CreateEmail({
     subject: string;
     message: string;
     attachments: File[];
+    fromEmail?: string;
   }) => {
-    // Use the selected from email or the first alias (or default user email)
-    const fromEmail = aliases?.[0]?.email ?? userEmail;
+    const fromEmail = data.fromEmail || aliases?.[0]?.email || userEmail;
 
     const zeroSignature = settings?.settings.zeroSignature
       ? '<p style="color: #666; font-size: 12px;">Sent via <a href="https://0.email/" style="color: #0066cc; text-decoration: none;">Zero</a></p>'
@@ -185,6 +185,7 @@ export function CreateEmail({
             <EmailComposer
               key={typedDraft?.id || 'composer'}
               className="mb-12 rounded-2xl border"
+              aliases={aliases}
               onSendEmail={handleSendEmail}
               initialMessage={typedDraft?.content || initialBody}
               initialTo={

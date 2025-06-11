@@ -1,11 +1,13 @@
-import { useEffect, type ReactNode, useState, Suspense } from 'react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Suspense, useEffect, useState, type ReactNode } from 'react';
 import type { EnvVarInfo } from '@zero/server/auth-providers';
-import ErrorMessage from '@/app/(auth)/login/error-message';
-import { signIn, useSession } from '@/lib/auth-client';
 import { Google, Microsoft } from '@/components/icons/icons';
+import ErrorMessage from '@/app/(auth)/login/error-message';
 import { Button } from '@/components/ui/button';
 import { TriangleAlert } from 'lucide-react';
+import { signIn } from '@/lib/auth-client';
 import { useNavigate } from 'react-router';
+import { useQueryState } from 'nuqs';
 import { toast } from 'sonner';
 
 interface EnvVarStatus {
@@ -68,6 +70,7 @@ const getProviderIcon = (providerId: string, className?: string): ReactNode => {
 function LoginClientContent({ providers, isProd }: LoginClientProps) {
   const navigate = useNavigate();
   const [expandedProviders, setExpandedProviders] = useState<Record<string, boolean>>({});
+  const [error, _] = useQueryState('error');
 
   useEffect(() => {
     const missing = providers.find((p) => p.required && !p.enabled);
@@ -134,6 +137,13 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
       <div className="animate-in slide-in-from-bottom-4 mx-auto flex max-w-[600px] flex-grow items-center justify-center space-y-8 px-4 duration-500 sm:px-12 md:px-0">
         <div className="w-full space-y-4">
           <p className="text-center text-4xl font-bold text-white md:text-5xl">Login to Zero</p>
+
+          {error && (
+            <Alert variant="default" className="border-orange-500/40 bg-orange-500/10">
+              <AlertTitle className="text-orange-400">Error</AlertTitle>
+              <AlertDescription>Failed to log you in. Please try again.</AlertDescription>
+            </Alert>
+          )}
 
           {shouldShowDetailedConfig && (
             <div className="rounded-lg border border-black/10 bg-black/5 p-5 dark:border-white/10 dark:bg-white/5">

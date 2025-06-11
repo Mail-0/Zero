@@ -91,7 +91,19 @@
         "goToDocs": "الذهاب إلى المستندات",
         "helpWithShortcuts": "المساعدة في الاختصارات",
         "commandPalette": "لوحة الأوامر"
-      }
+      },
+      "quickResults": "نتائج سريعة",
+      "searchPlaceholder": "بحث...",
+      "noSearchResults": "لا توجد نتائج بحث",
+      "actions": "الإجراءات",
+      "addFilters": "إضافة عوامل تصفية",
+      "searchForEmails": "البحث عن رسائل البريد الإلكتروني",
+      "filterPlaceholder": "تصفية...",
+      "noFilterResults": "لا توجد نتائج للتصفية",
+      "availableFilters": "عوامل التصفية المتاحة",
+      "examples": "أمثلة",
+      "exampleDate": "مثال على التاريخ",
+      "exampleSender": "مثال على المرسل"
     },
     "searchBar": {
       "pickDateRange": "اختر تاريخًا أو نطاقًا",
@@ -136,7 +148,11 @@
       "updates": "تحديثات",
       "promotions": "عروض",
       "social": "اجتماعي",
-      "unread": "غير مقروءة"
+      "unread": "غير مقروءة",
+      "starred": "المميزة بنجمة",
+      "notes": "الملاحظات",
+      "forums": "المنتديات",
+      "work": "العمل"
     },
     "replyCompose": {
       "replyTo": "الرد على",
@@ -328,7 +344,8 @@
       "archive": "الأرشيف",
       "bin": "سلة المحذوفات",
       "feedback": "الملاحظات",
-      "settings": "الإعدادات"
+      "settings": "الإعدادات",
+      "voice": "المساعد الصوتي"
     },
     "settings": {
       "general": "عام",
@@ -366,7 +383,9 @@
         "customPrompt": "توجيه الذكاء الاصطناعي المخصص",
         "customPromptPlaceholder": "أدخل توجيهك المخصص للذكاء الاصطناعي...",
         "customPromptDescription": "خصص كيفية كتابة الذكاء الاصطناعي لردود بريدك الإلكتروني. سيتم إضافة هذا إلى التوجيه الأساسي.",
-        "noResultsFound": "لم يتم العثور على نتائج"
+        "noResultsFound": "لم يتم العثور على نتائج",
+        "zeroSignature": "توقيع Zero",
+        "zeroSignatureDescription": "إضافة توقيع Zero إلى رسائل البريد الإلكتروني الخاصة بك."
       },
       "connections": {
         "title": "اتصالات البريد الإلكتروني",
@@ -466,7 +485,15 @@
           "showUpdates": "عرض التحديثات",
           "showPromotions": "عرض العروض",
           "showUnread": "عرض غير المقروء",
-          "selectUnderCursor": "تحديد ما تحت المؤشر"
+          "selectUnderCursor": "تحديد ما تحت المؤشر",
+          "openVoice": "فتح المساعد الصوتي",
+          "clearAllFilters": "مسح جميع عوامل التصفية",
+          "markAsImportant": "تمييز كمهم",
+          "markAsUnimportant": "إلغاء تمييز الأهمية",
+          "bulkDelete": "حذف متعدد",
+          "bulkSelect": "تحديد متعدد",
+          "bulkArchive": "أرشفة متعددة",
+          "bulkStar": "تمييز بنجمة متعدد"
         }
       },
       "labels": {

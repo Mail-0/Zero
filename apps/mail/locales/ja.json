@@ -91,7 +91,19 @@
         "goToDocs": "ドキュメントに移動",
         "helpWithShortcuts": "ショートカットのヘルプ",
         "commandPalette": "コマンド パレット"
-      }
+      },
+      "quickResults": "クイック結果",
+      "searchPlaceholder": "検索...",
+      "noSearchResults": "検索結果がありません",
+      "actions": "アクション",
+      "addFilters": "フィルターを追加",
+      "searchForEmails": "メールを検索",
+      "filterPlaceholder": "フィルター...",
+      "noFilterResults": "フィルター結果がありません",
+      "availableFilters": "利用可能なフィルター",
+      "examples": "例",
+      "exampleDate": "日付の例",
+      "exampleSender": "送信者の例"
     },
     "searchBar": {
       "pickDateRange": "日付または範囲を選択",
@@ -136,7 +148,11 @@
       "updates": "更新",
       "promotions": "プロモーション",
       "social": "ソーシャル",
-      "unread": "未読"
+      "unread": "未読",
+      "starred": "スター付き",
+      "notes": "メモ",
+      "forums": "フォーラム",
+      "work": "仕事"
     },
     "replyCompose": {
       "replyTo": "次に返信",
@@ -328,7 +344,8 @@
       "archive": "アーカイブ",
       "bin": "ごみ箱",
       "feedback": "フィードバック",
-      "settings": "設定"
+      "settings": "設定",
+      "voice": "音声アシスタント"
     },
     "settings": {
       "general": "一般",
@@ -366,7 +383,9 @@
         "customPrompt": "カスタムAIプロンプト",
         "customPromptPlaceholder": "AIのカスタムプロンプトを入力...",
         "customPromptDescription": "AIがメールの返信を書く方法をカスタマイズします。これはベースプロンプトに追加されます。",
-        "noResultsFound": "結果が見つかりませんでした"
+        "noResultsFound": "結果が見つかりませんでした",
+        "zeroSignature": "Zero署名",
+        "zeroSignatureDescription": "メールにZero署名を追加します。"
       },
       "connections": {
         "title": "メールの接続",
@@ -466,7 +485,15 @@
           "showUpdates": "更新を表示",
           "showPromotions": "プロモーションを表示",
           "showUnread": "未読を表示",
-          "selectUnderCursor": "カーソル下を選択"
+          "selectUnderCursor": "カーソル下を選択",
+          "openVoice": "音声アシスタントを開く",
+          "clearAllFilters": "すべてのフィルターをクリア",
+          "markAsImportant": "重要としてマーク",
+          "markAsUnimportant": "重要でないとしてマーク",
+          "bulkDelete": "一括削除",
+          "bulkSelect": "一括選択",
+          "bulkArchive": "一括アーカイブ",
+          "bulkStar": "一括スター付け"
         }
       },
       "labels": {

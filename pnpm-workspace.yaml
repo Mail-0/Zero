@@ -4,7 +4,7 @@ packages:
   - scripts/*
 catalog:
   zod: ^3.25.42
-  better-auth: ^1.2.8
+  better-auth: ^1.2.9
   autumn-js: ^0.0.48
   superjson: ^2.2.2
   '@trpc/server': ^11.1.4

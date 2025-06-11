@@ -91,7 +91,19 @@
         "goToDocs": "Anar a la documentació",
         "helpWithShortcuts": "Ajuda amb les dreceres",
         "commandPalette": "Paleta de comandes"
-      }
+      },
+      "quickResults": "Resultats ràpids",
+      "searchPlaceholder": "Cerca...",
+      "noSearchResults": "Sense resultats de cerca",
+      "actions": "Accions",
+      "addFilters": "Afegir filtres",
+      "searchForEmails": "Cercar correus",
+      "filterPlaceholder": "Filtre...",
+      "noFilterResults": "Sense resultats de filtre",
+      "availableFilters": "Filtres disponibles",
+      "examples": "Exemples",
+      "exampleDate": "Data d'exemple",
+      "exampleSender": "Remitent d'exemple"
     },
     "searchBar": {
       "pickDateRange": "Selecciona una data o un interval",
@@ -136,7 +148,11 @@
       "updates": "Actualitzacions",
       "promotions": "Promocions",
       "social": "Social",
-      "unread": "No llegits"
+      "unread": "No llegits",
+      "starred": "Destacats",
+      "notes": "Notes",
+      "forums": "Fòrums",
+      "work": "Feina"
     },
     "replyCompose": {
       "replyTo": "Respon a",
@@ -328,7 +344,8 @@
       "archive": "Arxivats",
       "bin": "Paperera",
       "feedback": "Feedback",
-      "settings": "Configuració"
+      "settings": "Configuració",
+      "voice": "Assistent de veu"
     },
     "settings": {
       "general": "General",
@@ -366,7 +383,9 @@
         "customPrompt": "Instrucció personalitzada per a la IA",
         "customPromptPlaceholder": "Introdueix la teva instrucció personalitzada per a la IA...",
         "customPromptDescription": "Personalitza com la IA escriu les teves respostes de correu. Això s'afegirà a la instrucció base.",
-        "noResultsFound": "No s'han trobat resultats"
+        "noResultsFound": "No s'han trobat resultats",
+        "zeroSignature": "Signatura Zero",
+        "zeroSignatureDescription": "Afegeix una signatura Zero als teus correus."
       },
       "connections": {
         "title": "Connexions Correu",
@@ -466,7 +485,15 @@
           "showUpdates": "Mostrar actualitzacions",
           "showPromotions": "Mostrar promocions",
           "showUnread": "Mostrar no llegits",
-          "selectUnderCursor": "Seleccionar sota el cursor"
+          "selectUnderCursor": "Seleccionar sota el cursor",
+          "openVoice": "Obrir l'assistent de veu",
+          "clearAllFilters": "Esborrar tots els filtres",
+          "markAsImportant": "Marcar com a important",
+          "markAsUnimportant": "Marcar com a no important",
+          "bulkDelete": "Eliminació massiva",
+          "bulkSelect": "Selecció massiva",
+          "bulkArchive": "Arxivat massiu",
+          "bulkStar": "Destacar massivament"
         }
       },
       "labels": {

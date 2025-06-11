@@ -359,5 +359,5 @@
 
 /* Add scrollbar styling */
 .style-scrollbar {
-  @apply scrollbar scrollbar-w-1 scrollbar-thumb-accent/40 scrollbar-track-transparent hover:scrollbar-thumb-accent scrollbar-thumb-rounded-full;
+  @apply scrollbar scrollbar-w-0 scrollbar-thumb-accent/40 scrollbar-track-transparent hover:scrollbar-thumb-accent scrollbar-thumb-rounded-full;
 }

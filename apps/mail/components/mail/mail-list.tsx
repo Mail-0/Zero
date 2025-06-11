@@ -143,7 +143,7 @@ const Thread = memo(
           const nextThread = threads[focusedIndex];
           if (nextThread) {
             setThreadId(nextThread.id);
-            setActiveReplyId(null);
+            // Don't clear activeReplyId - let ThreadDisplay handle Reply All auto-opening
             setFocusedIndex(focusedIndex);
           }
         }
@@ -365,14 +365,12 @@ const Thread = memo(
                 <Avatar
                   className={cn(
                     'h-8 w-8 rounded-full',
-                    displayUnread && !isMailSelected && !isFolderSent
-                      ? 'border border-[#006FFE]'
-                      : 'border',
+                    displayUnread && !isMailSelected && !isFolderSent ? '' : 'border',
                   )}
                 >
                   <div
                     className={cn(
-                      'flex h-full w-full items-center justify-center rounded-full bg-blue-500 p-2 dark:bg-blue-500',
+                      'flex h-full w-full items-center justify-center rounded-full bg-[#006FFE] p-2 dark:bg-[#006FFE]',
                       {
                         hidden: !isMailBulkSelected,
                       },
@@ -413,12 +411,12 @@ const Thread = memo(
                     </>
                   )}
                 </Avatar>
-                {displayUnread && !isMailSelected && !isFolderSent ? (
+                {/* {displayUnread && !isMailSelected && !isFolderSent ? (
                   <>
                     <span className="absolute left-2 top-2 size-1.5 rounded bg-[#006FFE]" />
                     <span className="absolute left-[11px] top-4 size-1 rounded bg-[#006FFE]" />
                   </>
-                ) : null}
+                ) : null} */}
               </div>
 
               <div className="flex w-full justify-between">
@@ -440,12 +438,23 @@ const Thread = memo(
                             {highlightText(latestMessage.subject, searchValue.highlight)}
                           </span>
                         ) : (
-                          <span className={cn('line-clamp-1 overflow-hidden text-sm')}>
-                            {highlightText(
-                              cleanNameDisplay(latestMessage.sender.name) || '',
-                              searchValue.highlight,
-                            )}
-                          </span>
+                          <div className="flex items-center gap-1">
+                            <span
+                              className={cn(
+                                'line-clamp-1 overflow-hidden text-sm',
+                              )}
+                            >
+                              {highlightText(
+                                cleanNameDisplay(latestMessage.sender.name) || '',
+                                searchValue.highlight,
+                              )}
+                            </span>
+                            {displayUnread && !isMailSelected && !isFolderSent ? (
+                              <>
+                                <span className="ml-0.5 size-2 rounded-full bg-[#006FFE]" />
+                              </>
+                            ) : null}
+                          </div>
                         )}{' '}
                         {/* {!isFolderSent ? (
                           <span className="hidden items-center space-x-2 md:flex">
@@ -776,7 +785,7 @@ export const MailList = memo(
         if (message.unread) optimisticMarkAsRead([messageThreadId], true);
         await setThreadId(messageThreadId);
         await setDraftId(null);
-        await setActiveReplyId(null);
+        // Don't clear activeReplyId - let ThreadDisplay handle Reply All auto-opening
       },
       [
         getSelectMode,
@@ -894,14 +903,14 @@ export const MailList = memo(
                   count={filteredItems.length}
                   overscan={20}
                   keepMounted={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
-                  className="style-scrollbar flex-1 overflow-x-hidden"
+                  className="scrollbar-none flex-1 overflow-x-hidden"
                   children={vListRenderer}
                   onScroll={() => {
                     if (!vListRef.current) return;
                     const endIndex = vListRef.current.findEndIndex();
                     if (
-                      // if the shown items are last 2 items, load more
-                      Math.abs(filteredItems.length - 1 - endIndex) < 1 &&
+                      // if the shown items are last 5 items, load more
+                      Math.abs(filteredItems.length - 1 - endIndex) < 5 &&
                       !isLoading &&
                       !isFetchingNextPage &&
                       !isFetchingMail &&
