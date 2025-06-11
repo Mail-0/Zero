@@ -84,31 +84,61 @@ aiRouter.post('/do/:action', async (c) => {
 });
 
 aiRouter.post('/call', async (c) => {
-  if (env.DISABLE_CALLS) return c.json({ success: false, error: 'Not implemented' }, 400);
-  if (env.VOICE_SECRET !== c.req.header('X-Voice-Secret'))
+  console.log('[DEBUG] Received call request');
+
+  if (env.DISABLE_CALLS) {
+    console.log('[DEBUG] Calls are disabled');
+    return c.json({ success: false, error: 'Not implemented' }, 400);
+  }
+
+  if (env.VOICE_SECRET !== c.req.header('X-Voice-Secret')) {
+    console.log('[DEBUG] Invalid voice secret');
     return c.json({ success: false, error: 'Unauthorized' }, 401);
-  if (!c.req.header('X-Caller')) return c.json({ success: false, error: 'Unauthorized' }, 401);
+  }
+
+  if (!c.req.header('X-Caller')) {
+    console.log('[DEBUG] Missing caller header');
+    return c.json({ success: false, error: 'Unauthorized' }, 401);
+  }
+
+  console.log('[DEBUG] Parsing request body');
   const { success, data } = await z
     .object({
       query: z.string(),
     })
     .safeParseAsync(await c.req.json());
+
   if (!success) {
+    console.log('[DEBUG] Invalid request body');
     return c.json({ success: false, error: 'Invalid request' }, 400);
   }
+
+  console.log('[DEBUG] Connecting to database');
   const db = createDb(env.HYPERDRIVE.connectionString);
+
+  console.log('[DEBUG] Finding user by phone number:', c.req.header('X-Caller'));
   const user = await db.query.user.findFirst({
     where: (user, { eq, and }) =>
       and(eq(user.phoneNumber, c.req.header('X-Caller')!), eq(user.phoneNumberVerified, true)),
   });
-  if (!user) return c.json({ success: false, error: 'Unauthorized' }, 401);
 
+  if (!user) {
+    console.log('[DEBUG] User not found or not verified');
+    return c.json({ success: false, error: 'Unauthorized' }, 401);
+  }
+
+  console.log('[DEBUG] Finding connection for user:', user.id);
   const connection = await db.query.connection.findFirst({
     where: (connection, { eq, or }) =>
       or(eq(connection.id, user.defaultConnectionId!), eq(connection.userId, user.id)),
   });
-  if (!connection) return c.json({ success: false, error: 'Unauthorized' }, 401);
 
+  if (!connection) {
+    console.log('[DEBUG] No connection found for user');
+    return c.json({ success: false, error: 'Unauthorized' }, 401);
+  }
+
+  console.log('[DEBUG] Creating driver for connection:', connection.id);
   const driver = connectionToDriver(connection);
 
   const { text } = await generateText({
