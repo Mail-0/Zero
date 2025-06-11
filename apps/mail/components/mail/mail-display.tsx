@@ -812,12 +812,18 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
 
   const isLastEmail = totalEmails && index === totalEmails - 1;
 
+  const [, setMode] = useQueryState('mode');
+
   useEffect(() => {
     if (!demo) {
       if (activeReplyId === emailData.id) {
+        // Always expand the email being replied to
         setIsCollapsed(false);
       } else {
-        setIsCollapsed(activeReplyId ? true : isLastEmail ? false : true);
+        // For emails not being replied to, use the default behavior:
+        // - Last email should be expanded
+        // - All other emails should be collapsed
+        setIsCollapsed(!isLastEmail);
       }
       // Set all emails to collapsed by default except the last one
       if (totalEmails && index === totalEmails - 1) {
@@ -855,8 +861,6 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
   //       setUnsubscribed(false);
   //     }
   //   };
-
-  const [, setMode] = useQueryState('mode');
 
   // Clear any pending timeouts when component unmounts
   useEffect(() => {

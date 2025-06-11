@@ -941,6 +941,8 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
   });
   const containerRef = useRef<HTMLDivElement>(null);
   const activeTabElementRef = useRef<HTMLButtonElement>(null);
+  const overlayContainerRef = useRef<HTMLDivElement>(null);
+  const [textSize, setTextSize] = useState<'normal' | 'small' | 'xs' | 'hidden'>('normal');
 
   // Only show category selection for inbox folder
   if (folder !== 'inbox') return <div className="h-8"></div>;
@@ -949,9 +951,96 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
   const primaryCategory = categories[0];
   if (!primaryCategory) return null;
 
+  // Check text size based on available space
+  useEffect(() => {
+    const checkTextSize = () => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const containerWidth = container.offsetWidth;
+      const selectedCategory = categories.find(cat => cat.id === category);
+      
+      // Calculate approximate widths needed for different text sizes
+      const baseIconWidth = (categories.length - 1) * 40; // unselected icons + gaps
+      const selectedTextLength = selectedCategory ? selectedCategory.name.length : 10;
+      
+      // Estimate width needed for different text sizes
+      const normalTextWidth = selectedTextLength * 8 + 60; // normal text
+      const smallTextWidth = selectedTextLength * 7 + 50;  // smaller text
+      const xsTextWidth = selectedTextLength * 6 + 40;     // extra small text
+      const minIconWidth = 40; // minimum width for icon-only selected button
+      
+      const totalNormal = baseIconWidth + normalTextWidth;
+      const totalSmall = baseIconWidth + smallTextWidth;
+      const totalXs = baseIconWidth + xsTextWidth;
+      const totalIconOnly = baseIconWidth + minIconWidth;
+
+      if (containerWidth >= totalNormal) {
+        setTextSize('normal');
+      } else if (containerWidth >= totalSmall) {
+        setTextSize('small');
+      } else if (containerWidth >= totalXs) {
+        setTextSize('xs');
+      } else if (containerWidth >= totalIconOnly) {
+        setTextSize('hidden'); // Hide text but keep button wide
+      } else {
+        setTextSize('hidden'); // Hide text in very tight spaces
+      }
+    };
+
+    checkTextSize();
+
+    // Use ResizeObserver to handle container size changes
+    const resizeObserver = new ResizeObserver(() => {
+      checkTextSize();
+    });
+
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [category, categories]);
+
   const renderCategoryButton = (cat: CategoryType, isOverlay = false, idx: number) => {
     const isSelected = cat.id === (category || 'Primary');
     const bgColor = getCategoryColor(cat.id);
+
+    // Determine text classes based on current text size
+    const getTextClasses = () => {
+      switch (textSize) {
+        case 'normal':
+          return 'text-sm';
+        case 'small':
+          return 'text-xs';
+        case 'xs':
+          return 'text-[10px]';
+        case 'hidden':
+          return 'text-sm'; // Doesn't matter since text is hidden
+        default:
+          return 'text-sm';
+      }
+    };
+
+    // Determine padding based on text size
+    const getPaddingClasses = () => {
+      switch (textSize) {
+        case 'normal':
+          return 'px-3';
+        case 'small':
+          return 'px-2.5';
+        case 'xs':
+          return 'px-2';
+        case 'hidden':
+          return 'px-2'; // Just enough padding for the icon
+        default:
+          return 'px-3';
+      }
+    };
+
+    const showText = textSize !== 'hidden';
 
     return (
       <Tooltip key={cat.id}>
@@ -969,41 +1058,42 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
             className={cn(
               'flex h-8 items-center justify-center gap-1 overflow-hidden rounded-lg border transition-all duration-300 ease-out dark:border-none',
               isSelected
-                ? cn('flex-1 border-none px-3 text-white', bgColor)
+                ? cn('flex-1 border-none text-white', getPaddingClasses(), bgColor)
                 : 'w-8 bg-white hover:bg-gray-100 dark:bg-[#313131] dark:hover:bg-[#313131]/80',
             )}
             tabIndex={isOverlay ? -1 : undefined}
           >
             <div className="relative overflow-visible">{cat.icon}</div>
-            {isSelected && (
+            {isSelected && showText && (
               <div className="flex items-center justify-center gap-2.5 px-0.5">
-                <div className="animate-in fade-in-0 slide-in-from-right-4 justify-start text-sm leading-none text-white duration-300">
+                <div className={cn(
+                  "animate-in fade-in-0 slide-in-from-right-4 justify-start leading-none text-white duration-300 truncate",
+                  getTextClasses()
+                )}>
                   {cat.name}
                 </div>
               </div>
             )}
           </button>
         </TooltipTrigger>
-        {!isSelected && (
-          <TooltipContent side="top" className={`${idx === 0 ? 'ml-4' : ''}`}>
-            <span className="mr-2">{cat.name}</span>
-            <kbd
-              className={cn(
-                'border-muted-foreground/10 bg-accent h-6 rounded-[6px] border px-1.5 font-mono text-xs leading-6',
-                '-me-1 ms-auto inline-flex max-h-full items-center',
-              )}
-            >
-              {idx + 1}
-            </kbd>
-          </TooltipContent>
-        )}
+        <TooltipContent side="top" className={`${idx === 0 ? 'ml-4' : ''}`}>
+          <span className="mr-2">{cat.name}</span>
+          <kbd
+            className={cn(
+              'border-muted-foreground/10 bg-accent h-6 rounded-[6px] border px-1.5 font-mono text-xs leading-6',
+              '-me-1 ms-auto inline-flex max-h-full items-center',
+            )}
+          >
+            {idx + 1}
+          </kbd>
+        </TooltipContent>
       </Tooltip>
     );
   };
 
   // Update clip path when category changes
   useEffect(() => {
-    const container = containerRef.current;
+    const container = overlayContainerRef.current;
     const activeTabElement = activeTabElementRef.current;
 
     if (category && container && activeTabElement) {
@@ -1017,14 +1107,14 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
         container.style.clipPath = `inset(0 ${Number(100 - (clipRight / containerWidth) * 100).toFixed(2)}% 0 ${Number((clipLeft / containerWidth) * 100).toFixed(2)}%)`;
       }
     }
-  }, [category]);
+  }, [category, textSize]); // Changed from showText to textSize
 
   if (isMultiSelectMode) {
     return <BulkSelectActions />;
   }
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full" ref={containerRef}>
       <div className="flex w-full items-start justify-start gap-2">
         {categories.map((cat, idx) => renderCategoryButton(cat, false, idx))}
       </div>
@@ -1032,7 +1122,7 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 z-10 overflow-hidden transition-[clip-path] duration-300 ease-in-out"
-        ref={containerRef}
+        ref={overlayContainerRef}
       >
         <div className="flex w-full items-start justify-start gap-2">
           {categories.map((cat, idx) => renderCategoryButton(cat, true, idx))}

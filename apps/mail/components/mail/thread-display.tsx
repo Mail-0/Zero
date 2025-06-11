@@ -906,7 +906,7 @@ export function ThreadDisplay() {
                           onClick={() => moveThreadTo('bin')}
                           className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-lg border border-[#FCCDD5] bg-[#FDE4E9] dark:border-[#6E2532] dark:bg-[#411D23]"
                         >
-                          <Trash className="fill-iconLight dark:fill-iconDark" />
+                          <Trash className="fill-[#F43F5E]" />
                         </button>
                       </TooltipTrigger>
                       <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">
@@ -977,33 +977,45 @@ export function ThreadDisplay() {
                 type="auto"
               >
                 <div className="pb-4">
-                  {(emailData.messages || []).map((message, index) => (
-                    <div
-                      key={message.id}
-                      className={cn(
-                        'transition-all duration-200',
-                        index > 0 && 'border-border border-t',
-                        mode && activeReplyId === message.id && '',
-                      )}
-                    >
-                      <MailDisplay
-                        emailData={message}
-                        isFullscreen={isFullscreen}
-                        isMuted={false}
-                        isLoading={false}
-                        index={index}
-                        totalEmails={emailData?.totalReplies}
-                        threadAttachments={index === 0 ? allThreadAttachments : undefined}
-                      />
-                      {mode && activeReplyId === message.id && (
-                        <div className="px-4 py-2" id={`reply-composer-${message.id}`}>
-                          <ReplyCompose messageId={message.id} />
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                  {(emailData.messages || []).map((message, index) => {
+                    const isLastMessage = index === emailData.messages.length - 1;
+                    const isReplyingToThisMessage = mode && activeReplyId === message.id;
+                    
+                    return (
+                      <div
+                        key={message.id}
+                        className={cn(
+                          'transition-all duration-200',
+                          index > 0 && 'border-border border-t',
+                        )}
+                      >
+                        <MailDisplay
+                          emailData={message}
+                          isFullscreen={isFullscreen}
+                          isMuted={false}
+                          isLoading={false}
+                          index={index}
+                          totalEmails={emailData?.totalReplies}
+                          threadAttachments={index === 0 ? allThreadAttachments : undefined}
+                        />
+                        {/* Inline Reply Compose for non-last messages */}
+                        {isReplyingToThisMessage && !isLastMessage && (
+                          <div className="px-4 py-2" id={`reply-composer-${message.id}`}>
+                            <ReplyCompose messageId={message.id} />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </ScrollArea>
+              
+              {/* Sticky Reply Compose at Bottom - Only for last message */}
+              {mode && activeReplyId && activeReplyId === emailData.messages[emailData.messages.length - 1]?.id && (
+                <div className="sticky bottom-0 z-10 border-t border-border bg-panelLight dark:bg-panelDark px-4 py-2" id={`reply-composer-${activeReplyId}`}>
+                  <ReplyCompose messageId={activeReplyId} />
+                </div>
+              )}
             </div>
           </>
         )}
