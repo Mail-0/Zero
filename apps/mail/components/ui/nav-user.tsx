@@ -21,11 +21,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useActiveConnection, useConnections } from '@/hooks/use-connections';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useLocation, useRevalidator, useSearchParams } from 'react-router';
+import { CircleCheck, Danger, OldPhone, ThreeDots } from '../icons/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 import { CallInboxDialog, SetupInboxDialog } from '../setup-phone';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CircleCheck, Danger, OldPhone, ThreeDots } from '../icons/icons';
 import { signOut, useSession } from '@/lib/auth-client';
 import { AddConnectionDialog } from '../connection/add';
 import { useTRPC } from '@/providers/query-provider';
@@ -131,7 +131,7 @@ export function NavUser() {
               <DropdownMenuTrigger asChild>
                 <div className="flex cursor-pointer items-center">
                   <div className="relative">
-                    <Avatar className="size-7 rounded-[5px] relative left-0.5">
+                    <Avatar className="relative left-0.5 size-7 rounded-[5px]">
                       <AvatarImage
                         className="rounded-[5px]"
                         src={activeAccount?.picture || undefined}
@@ -440,7 +440,11 @@ export function NavUser() {
             </div>
 
             <div className="flex items-center justify-center gap-1">
-              {isSessionPending ? null : false ? <SetupInboxDialog /> : <CallInboxDialog />}
+              {isSessionPending ? null : session.user.phoneNumberVerified ? (
+                <SetupInboxDialog />
+              ) : (
+                <CallInboxDialog />
+              )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className={cn('md:h-fit md:px-2')}>
