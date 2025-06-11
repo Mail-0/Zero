@@ -312,18 +312,18 @@ export function EmailComposer({
   const handleSend = async () => {
     try {
       if (isLoading || isSavingDraft) return;
-      
+
       const values = getValues();
-      
+
       // Validate recipient field
       if (!values.to || values.to.length === 0) {
         toast.error('Recipient is required');
         return;
       }
-      
+
       setIsLoading(true);
       setAiGeneratedMessage(null);
-      
+
       await onSendEmail({
         to: values.to,
         cc: showCc ? values.cc : undefined,
@@ -525,7 +525,8 @@ export function EmailComposer({
 
                       emails.forEach((email) => {
                         if (isValidEmail(email)) {
-                          if (!toEmails.includes(email)) {
+                          const emailLower = email.toLowerCase();
+                          if (!toEmails.some((e) => e.toLowerCase() === emailLower)) {
                             validEmails.push(email);
                           }
                         } else {
