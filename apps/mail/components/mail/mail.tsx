@@ -821,7 +821,7 @@ function BulkSelectActions() {
 export const Categories = () => {
   const t = useTranslations();
   const [category] = useQueryState('category', {
-    defaultValue: 'Important',
+    defaultValue: 'All Mail',
   });
   return [
     {
