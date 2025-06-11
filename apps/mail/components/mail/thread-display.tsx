@@ -62,6 +62,14 @@ const cleanNameDisplay = (name?: string) => {
   return name.replace(/["<>]/g, '');
 };
 
+// HTML escaping function to prevent XSS attacks
+const escapeHtml = (text: string): string => {
+  if (!text) return text;
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+};
+
 interface ThreadDisplayProps {
   threadParam?: any;
   onClose?: () => void;
@@ -575,7 +583,7 @@ export function ThreadDisplay() {
 
               <div class="email-body">
                 <div class="email-content">
-                  ${message.decodedBody || '<p><em>No email content available</em></p>'}
+                  ${escapeHtml(message.decodedBody) || '<p><em>No email content available</em></p>'}
                 </div>
               </div>
 

@@ -76,6 +76,14 @@ import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Badge } from '../ui/badge';
 
+// HTML escaping function to prevent XSS attacks
+function escapeHtml(text: string): string {
+  if (!text) return text;
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
 function TextSelectionPopover({
   children,
   onSearch,
@@ -1205,7 +1213,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             <!-- Email Body -->
             <div class="email-body">
               <div class="email-content">
-                ${emailData.decodedBody || '<p><em>No email content available</em></p>'}
+                ${escapeHtml(emailData.decodedBody) || '<p><em>No email content available</em></p>'}
               </div>
             </div>
             
