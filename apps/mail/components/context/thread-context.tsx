@@ -255,21 +255,21 @@ export function ThreadContextMenu({
     {
       id: 'reply',
       label: t('common.mail.reply'),
-      icon: <Reply className="mr-2.5 h-4 w-4" />,
+      icon: <Reply className="mr-2.5 h-4 w-4 opacity-60" />,
       action: handleThreadReply,
       disabled: false,
     },
     {
       id: 'reply-all',
       label: t('common.mail.replyAll'),
-      icon: <ReplyAll className="mr-2.5 h-4 w-4" />,
+      icon: <ReplyAll className="mr-2.5 h-4 w-4 opacity-60" />,
       action: handleThreadReplyAll,
       disabled: false,
     },
     {
       id: 'forward',
       label: t('common.mail.forward'),
-      icon: <Forward className="mr-2.5 h-4 w-4" />,
+      icon: <Forward className="mr-2.5 h-4 w-4 opacity-60" />,
       action: handleThreadForward,
       disabled: false,
     },
@@ -299,14 +299,14 @@ export function ThreadContextMenu({
         {
           id: 'move-to-inbox',
           label: t('common.mail.moveToInbox'),
-          icon: <Inbox className="mr-2.5 h-4 w-4" />,
+          icon: <Inbox className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleMove(LABELS.SPAM, LABELS.INBOX),
           disabled: false,
         },
         {
           id: 'move-to-bin',
           label: t('common.mail.moveToBin'),
-          icon: <Trash className="mr-2.5 h-4 w-4" />,
+          icon: <Trash className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleMove(LABELS.SPAM, LABELS.TRASH),
           disabled: false,
         },
@@ -318,14 +318,14 @@ export function ThreadContextMenu({
         {
           id: 'restore-from-bin',
           label: t('common.mail.restoreFromBin'),
-          icon: <Inbox className="mr-2.5 h-4 w-4" />,
+          icon: <Inbox className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleMove(LABELS.TRASH, LABELS.INBOX),
           disabled: false,
         },
         {
           id: 'delete-from-bin',
           label: t('common.mail.deleteFromBin'),
-          icon: <Trash className="mr-2.5 h-4 w-4" />,
+          icon: <Trash className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleDelete(),
           disabled: true,
         },
@@ -337,14 +337,14 @@ export function ThreadContextMenu({
         {
           id: 'move-to-inbox',
           label: t('common.mail.unarchive'),
-          icon: <Inbox className="mr-2.5 h-4 w-4" />,
+          icon: <Inbox className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleMove('', LABELS.INBOX),
           disabled: false,
         },
         {
           id: 'move-to-bin',
           label: t('common.mail.moveToBin'),
-          icon: <Trash className="mr-2.5 h-4 w-4" />,
+          icon: <Trash className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleMove('', LABELS.TRASH),
           disabled: false,
         },
@@ -356,14 +356,14 @@ export function ThreadContextMenu({
         {
           id: 'archive',
           label: t('common.mail.archive'),
-          icon: <Archive className="mr-2.5 h-4 w-4" />,
+          icon: <Archive className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleMove(LABELS.SENT, ''),
           disabled: false,
         },
         {
           id: 'move-to-bin',
           label: t('common.mail.moveToBin'),
-          icon: <Trash className="mr-2.5 h-4 w-4" />,
+          icon: <Trash className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleMove(LABELS.SENT, LABELS.TRASH),
           disabled: false,
         },
@@ -374,21 +374,21 @@ export function ThreadContextMenu({
       {
         id: 'archive',
         label: t('common.mail.archive'),
-        icon: <Archive className="mr-2.5 h-4 w-4" />,
+        icon: <Archive className="mr-2.5 h-4 w-4 opacity-60" />,
         action: handleMove(LABELS.INBOX, ''),
         disabled: false,
       },
       {
         id: 'move-to-spam',
         label: t('common.mail.moveToSpam'),
-        icon: <ArchiveX className="mr-2.5 h-4 w-4" />,
+        icon: <ArchiveX className="mr-2.5 h-4 w-4 opacity-60" />,
         action: handleMove(LABELS.INBOX, LABELS.SPAM),
         disabled: !isInbox,
       },
       {
         id: 'move-to-bin',
         label: t('common.mail.moveToBin'),
-        icon: <Trash className="mr-2.5 h-4 w-4" />,
+        icon: <Trash className="mr-2.5 h-4 w-4 opacity-60" />,
         action: handleMove(LABELS.INBOX, LABELS.TRASH),
         disabled: false,
       },
@@ -402,7 +402,7 @@ export function ThreadContextMenu({
       icon: !isUnread ? (
         <Mail className="mr-2.5 h-4 w-4 fill-[#9D9D9D] dark:fill-[#9D9D9D]" />
       ) : (
-        <MailOpen className="mr-2.5 h-4 w-4" />
+        <MailOpen className="mr-2.5 h-4 w-4 opacity-60" />
       ),
       action: handleReadUnread,
       disabled: false,
@@ -410,16 +410,16 @@ export function ThreadContextMenu({
     {
       id: 'toggle-important',
       label: isImportant ? t('common.mail.removeFromImportant') : t('common.mail.markAsImportant'),
-      icon: <ExclamationCircle className={'mr-2.5 h-4 w-4'} />,
+      icon: <ExclamationCircle className='mr-2.5 h-4 w-4 opacity-60' />,
       action: handleToggleImportant,
     },
     {
       id: 'favorite',
       label: isStarred ? t('common.mail.removeFavorite') : t('common.mail.addFavorite'),
       icon: isStarred ? (
-        <StarOff className="mr-2.5 h-4 w-4" />
+        <StarOff className="mr-2.5 h-4 w-4 opacity-60" />
       ) : (
-        <Star className="mr-2.5 h-4 w-4" />
+        <Star className="mr-2.5 h-4 w-4 opacity-60" />
       ),
       action: handleFavorites,
     },
@@ -446,16 +446,16 @@ export function ThreadContextMenu({
         {children}
       </ContextMenuTrigger>
       <ContextMenuContent
-        className="dark:bg-panelDark w-56 overflow-y-auto bg-white"
+        className="dark:bg-panelDark w-56 overflow-y-auto bg-white "
         onContextMenu={(e) => e.preventDefault()}
       >
         {primaryActions.map(renderAction)}
 
-        <ContextMenuSeparator className="bg-[#252525] dark:bg-[#252525]" />
+        <ContextMenuSeparator className="bg-[#E7E7E7] dark:bg-[#252525]" />
 
         <ContextMenuSub>
           <ContextMenuSubTrigger className="font-normal">
-            <Tag className="mr-2.5 h-4 w-4" />
+            <Tag className="mr-2.5 h-4 w-4 opacity-60" />
             {t('common.mail.labels')}
           </ContextMenuSubTrigger>
           <ContextMenuSubContent className="dark:bg-panelDark max-h-[520px] w-48 overflow-y-auto bg-white">
@@ -463,11 +463,11 @@ export function ThreadContextMenu({
           </ContextMenuSubContent>
         </ContextMenuSub>
 
-        <ContextMenuSeparator className="bg-[#252525] dark:bg-[#252525]" />
+        <ContextMenuSeparator className="bg-[#E7E7E7] dark:bg-[#252525]" />
 
         {getActions().map(renderAction as any)}
 
-        <ContextMenuSeparator className="bg-[#252525] dark:bg-[#252525]" />
+        <ContextMenuSeparator className="bg-[#E7E7E7] dark:bg-[#252525]" />
 
         {otherActions.map(renderAction)}
       </ContextMenuContent>
