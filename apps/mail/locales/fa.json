@@ -49,7 +49,14 @@
       "save": "ذخیره",
       "remove": "حذف",
       "settings": "تنظیمات",
-      "exitSelectionModeEsc": "برای خروج از حالت انتخاب، کلیک کنید یا دکمه ESC را فشار دهید"
+      "exitSelectionModeEsc": "برای خروج از حالت انتخاب، کلیک کنید یا دکمه ESC را فشار دهید",
+      "deleteAllSpam": "حذف تمام هرزنامه‌ها",
+      "deletingAllSpam": "در حال حذف تمام هرزنامه‌ها...",
+      "deletedAllSpam": "{count} ایمیل هرزنامه حذف شد",
+      "errorDeletingSpam": "حذف ایمیل‌های هرزنامه با خطا مواجه شد",
+      "confirmDeleteSpam": "حذف تمام هرزنامه‌ها",
+      "confirmDeleteSpamDescription": "آیا مطمئن هستید که می‌خواهید تمام ایمیل‌های هرزنامه را حذف کنید؟ این عمل قابل بازگشت نیست.",
+      "confirmDelete": "حذف"
     },
     "themes": {
       "dark": "تیره",
@@ -84,7 +91,19 @@
         "goToDocs": "رفتن به مستندات",
         "helpWithShortcuts": "راهنمای میانبرها",
         "commandPalette": "پالت فرمان"
-      }
+      },
+      "quickResults": "نتایج سریع",
+      "searchPlaceholder": "جستجو...",
+      "noSearchResults": "نتیجه‌ای یافت نشد",
+      "actions": "اقدامات",
+      "addFilters": "افزودن فیلترها",
+      "searchForEmails": "جستجوی ایمیل‌ها",
+      "filterPlaceholder": "فیلتر...",
+      "noFilterResults": "نتیجه‌ای برای فیلتر یافت نشد",
+      "availableFilters": "فیلترهای موجود",
+      "examples": "مثال‌ها",
+      "exampleDate": "مثال تاریخ",
+      "exampleSender": "مثال فرستنده"
     },
     "searchBar": {
       "pickDateRange": "انتخاب تاریخ یا بازه زمانی",
@@ -129,7 +148,11 @@
       "updates": "به‌روزرسانی‌ها",
       "promotions": "تبلیغات",
       "social": "اجتماعی",
-      "unread": "خوانده نشده"
+      "unread": "خوانده نشده",
+      "starred": "ستاره‌دار",
+      "notes": "یادداشت‌ها",
+      "forums": "انجمن‌ها",
+      "work": "کاری"
     },
     "replyCompose": {
       "replyTo": "پاسخ به",
@@ -321,7 +344,8 @@
       "archive": "آرشیو",
       "bin": "سطل زباله",
       "feedback": "بازخورد",
-      "settings": "تنظیمات"
+      "settings": "تنظیمات",
+      "voice": "دستیار صوتی"
     },
     "settings": {
       "general": "عمومی",
@@ -359,7 +383,9 @@
         "customPrompt": "پرامپت سفارشی هوش مصنوعی",
         "customPromptPlaceholder": "پرامپت سفارشی خود را برای هوش مصنوعی وارد کنید...",
         "customPromptDescription": "نحوه نگارش پاسخ‌های ایمیل توسط هوش مصنوعی را سفارشی کنید. این به پرامپت پایه اضافه خواهد شد.",
-        "noResultsFound": "نتیجه‌ای یافت نشد"
+        "noResultsFound": "نتیجه‌ای یافت نشد",
+        "zeroSignature": "امضای Zero",
+        "zeroSignatureDescription": "افزودن امضای Zero به ایمیل‌های شما."
       },
       "connections": {
         "title": "اتصالات ایمیل",
@@ -459,7 +485,15 @@
           "showUpdates": "نمایش به‌روزرسانی‌ها",
           "showPromotions": "نمایش تبلیغات",
           "showUnread": "نمایش خوانده‌نشده‌ها",
-          "selectUnderCursor": "انتخاب زیر نشانگر"
+          "selectUnderCursor": "انتخاب زیر نشانگر",
+          "openVoice": "باز کردن دستیار صوتی",
+          "clearAllFilters": "پاک کردن همه فیلترها",
+          "markAsImportant": "علامت‌گذاری به عنوان مهم",
+          "markAsUnimportant": "علامت‌گذاری به عنوان غیرمهم",
+          "bulkDelete": "حذف دسته‌جمعی",
+          "bulkSelect": "انتخاب دسته‌جمعی",
+          "bulkArchive": "بایگانی دسته‌جمعی",
+          "bulkStar": "ستاره‌دار کردن دسته‌جمعی"
         }
       },
       "labels": {

@@ -48,32 +48,32 @@ export const authProviders = (env: Record<string, string>): ProviderConfig[] => 
     },
     required: true,
   },
-  // {
-  //   id: 'microsoft',
-  //   name: 'Microsoft',
-  //   requiredEnvVars: ['MICROSOFT_CLIENT_ID', 'MICROSOFT_CLIENT_SECRET'],
-  //   envVarInfo: [
-  //     { name: 'MICROSOFT_CLIENT_ID', source: 'Microsoft Azure App ID' },
-  //     { name: 'MICROSOFT_CLIENT_SECRET', source: 'Microsoft Azure App Password' },
-  //   ],
-  //   config: {
-  //     clientId: env.MICROSOFT_CLIENT_ID,
-  //     clientSecret: env.MICROSOFT_CLIENT_SECRET,
-  //     redirectUri: env.MICROSOFT_REDIRECT_URI,
-  //     scope: [
-  //       'https://graph.microsoft.com/User.Read',
-  //       'https://graph.microsoft.com/Mail.ReadWrite',
-  //       'https://graph.microsoft.com/Mail.Send',
-  //       'offline_access',
+  //   {
+  //     id: 'microsoft',
+  //     name: 'Microsoft',
+  //     requiredEnvVars: ['MICROSOFT_CLIENT_ID', 'MICROSOFT_CLIENT_SECRET'],
+  //     envVarInfo: [
+  //       { name: 'MICROSOFT_CLIENT_ID', source: 'Microsoft Azure App ID' },
+  //       { name: 'MICROSOFT_CLIENT_SECRET', source: 'Microsoft Azure App Password' },
   //     ],
-  //     authority: 'https://login.microsoftonline.com/common',
-  //     responseType: 'code',
-  //     prompt: 'consent',
-  //     loginHint: 'email',
-  //     disableProfilePhoto: true,
+  //     config: {
+  //       clientId: env.MICROSOFT_CLIENT_ID,
+  //       clientSecret: env.MICROSOFT_CLIENT_SECRET,
+  //       redirectUri: env.MICROSOFT_REDIRECT_URI,
+  //       scope: [
+  //         'https://graph.microsoft.com/User.Read',
+  //         'https://graph.microsoft.com/Mail.ReadWrite',
+  //         'https://graph.microsoft.com/Mail.Send',
+  //         'offline_access',
+  //       ],
+  //       authority: 'https://login.microsoftonline.com/common',
+  //       responseType: 'code',
+  //       prompt: 'consent',
+  //       loginHint: 'email',
+  //       disableProfilePhoto: true,
+  //     },
+  //     required: false,
   //   },
-  //   required: true,
-  // },
 ];
 
 export function isProviderEnabled(provider: ProviderConfig, env: Record<string, string>): boolean {

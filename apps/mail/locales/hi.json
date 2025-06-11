@@ -91,7 +91,19 @@
         "goToDocs": "डॉक्स पर जाएं",
         "helpWithShortcuts": "शॉर्टकट से मदद करें",
         "commandPalette": "कमांड पैलेट"
-      }
+      },
+      "quickResults": "त्वरित परिणाम",
+      "searchPlaceholder": "खोजें...",
+      "noSearchResults": "कोई खोज परिणाम नहीं",
+      "actions": "एक्शन",
+      "addFilters": "फ़िल्टर जोड़ें",
+      "searchForEmails": "ईमेल खोजें",
+      "filterPlaceholder": "फ़िल्टर...",
+      "noFilterResults": "कोई फ़िल्टर परिणाम नहीं",
+      "availableFilters": "उपलब्ध फ़िल्टर",
+      "examples": "उदाहरण",
+      "exampleDate": "उदाहरण तिथि",
+      "exampleSender": "उदाहरण प्रेषक"
     },
     "searchBar": {
       "pickDateRange": "कोई तिथि या सीमा चुनें",
@@ -136,7 +148,11 @@
       "updates": "अपडेट",
       "promotions": "प्रोमोशन",
       "social": "सोशल",
-      "unread": "अपठित"
+      "unread": "अपठित",
+      "starred": "स्टार किए गए",
+      "notes": "नोट्स",
+      "forums": "फोरम",
+      "work": "कार्य"
     },
     "replyCompose": {
       "replyTo": "जवाब दें",
@@ -328,7 +344,8 @@
       "archive": "आर्काइव",
       "bin": "बिन",
       "feedback": "Feedback",
-      "settings": "सेटिंग्स"
+      "settings": "सेटिंग्स",
+      "voice": "वॉइस असिस्टेंट"
     },
     "settings": {
       "general": "सामान्य",
@@ -366,7 +383,9 @@
         "customPrompt": "कस्टम AI प्रॉम्प्ट",
         "customPromptPlaceholder": "AI के लिए अपना कस्टम प्रॉम्प्ट दर्ज करें...",
         "customPromptDescription": "AI आपके ईमेल जवाब कैसे लिखता है, इसे अनुकूलित करें। यह आधार प्रॉम्प्ट में जोड़ा जाएगा।",
-        "noResultsFound": "कोई परिणाम नहीं मिला"
+        "noResultsFound": "कोई परिणाम नहीं मिला",
+        "zeroSignature": "ज़ीरो सिग्नेचर",
+        "zeroSignatureDescription": "अपने ईमेल में ज़ीरो सिग्नेचर जोड़ें।"
       },
       "connections": {
         "title": "ईमेल कनेक्शन्स",
@@ -466,7 +485,15 @@
           "showUpdates": "अपडेट दिखाएँ",
           "showPromotions": "प्रमोशन दिखाएँ",
           "showUnread": "अपठित दिखाएँ",
-          "selectUnderCursor": "कर्सर के नीचे चुनें"
+          "selectUnderCursor": "कर्सर के नीचे चुनें",
+          "openVoice": "वॉइस असिस्टेंट खोलें",
+          "clearAllFilters": "सभी फ़िल्टर हटाएं",
+          "markAsImportant": "महत्वपूर्ण के रूप में चिह्नित करें",
+          "markAsUnimportant": "अमहत्वपूर्ण के रूप में चिह्नित करें",
+          "bulkDelete": "सामूहिक हटाएं",
+          "bulkSelect": "सामूहिक चयन",
+          "bulkArchive": "सामूहिक आर्काइव",
+          "bulkStar": "सामूहिक स्टार"
         }
       },
       "labels": {

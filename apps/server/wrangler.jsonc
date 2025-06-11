@@ -69,6 +69,7 @@
         "JWT_SECRET": "secret",
         "ELEVENLABS_API_KEY": "1234567890",
         "DISABLE_CALLS": "true",
+        "VOICE_SECRET": "1234567890",
       },
       "kv_namespaces": [
         {

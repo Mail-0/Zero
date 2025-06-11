@@ -91,7 +91,19 @@
         "goToDocs": "문서로 이동",
         "helpWithShortcuts": "단축키 도움말",
         "commandPalette": "명령 팔레트"
-      }
+      },
+      "quickResults": "빠른 결과",
+      "searchPlaceholder": "검색...",
+      "noSearchResults": "검색 결과 없음",
+      "actions": "동작",
+      "addFilters": "필터 추가",
+      "searchForEmails": "이메일 검색",
+      "filterPlaceholder": "필터...",
+      "noFilterResults": "필터 결과 없음",
+      "availableFilters": "사용 가능한 필터",
+      "examples": "예시",
+      "exampleDate": "날짜 예시",
+      "exampleSender": "발신자 예시"
     },
     "searchBar": {
       "pickDateRange": "날짜 또는 범위 선택",
@@ -136,7 +148,11 @@
       "updates": "업데이트",
       "promotions": "프로모션",
       "social": "소셜",
-      "unread": "읽지 않음"
+      "unread": "읽지 않음",
+      "starred": "별표 처리됨",
+      "notes": "노트",
+      "forums": "포럼",
+      "work": "업무"
     },
     "replyCompose": {
       "replyTo": "회신",
@@ -328,7 +344,8 @@
       "archive": "보관함",
       "bin": "휴지통",
       "feedback": "피드백",
-      "settings": "설정"
+      "settings": "설정",
+      "voice": "음성 비서"
     },
     "settings": {
       "general": "일반",
@@ -366,7 +383,9 @@
         "customPrompt": "맞춤 AI 프롬프트",
         "customPromptPlaceholder": "AI를 위한 맞춤 프롬프트를 입력하세요...",
         "customPromptDescription": "AI가 이메일 답장을 작성하는 방식을 맞춤설정하세요. 이것은 기본 프롬프트에 추가됩니다.",
-        "noResultsFound": "검색 결과 없음"
+        "noResultsFound": "검색 결과 없음",
+        "zeroSignature": "Zero 서명",
+        "zeroSignatureDescription": "이메일에 Zero 서명을 추가합니다."
       },
       "connections": {
         "title": "이메일 연결",
@@ -466,7 +485,15 @@
           "showUpdates": "업데이트 표시",
           "showPromotions": "프로모션 표시",
           "showUnread": "읽지 않은 메일 표시",
-          "selectUnderCursor": "커서 아래 항목 선택"
+          "selectUnderCursor": "커서 아래 항목 선택",
+          "openVoice": "음성 비서 열기",
+          "clearAllFilters": "모든 필터 지우기",
+          "markAsImportant": "중요로 표시",
+          "markAsUnimportant": "중요하지 않음으로 표시",
+          "bulkDelete": "일괄 삭제",
+          "bulkSelect": "일괄 선택",
+          "bulkArchive": "일괄 보관",
+          "bulkStar": "일괄 별표 표시"
         }
       },
       "labels": {

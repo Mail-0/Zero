@@ -91,7 +91,19 @@
         "goToDocs": "Ir a documentos",
         "helpWithShortcuts": "Ayuda con accesos directos",
         "commandPalette": "Paleta de comandos"
-      }
+      },
+      "quickResults": "Resultados rápidos",
+      "searchPlaceholder": "Buscar...",
+      "noSearchResults": "Sin resultados de búsqueda",
+      "actions": "Acciones",
+      "addFilters": "Añadir filtros",
+      "searchForEmails": "Buscar correos",
+      "filterPlaceholder": "Filtrar...",
+      "noFilterResults": "Sin resultados de filtro",
+      "availableFilters": "Filtros disponibles",
+      "examples": "Ejemplos",
+      "exampleDate": "Ejemplo de fecha",
+      "exampleSender": "Ejemplo de remitente"
     },
     "searchBar": {
       "pickDateRange": "Elige una fecha o rango",
@@ -136,7 +148,11 @@
       "updates": "Actualizaciones",
       "promotions": "Promociones",
       "social": "Social",
-      "unread": "Sin leer"
+      "unread": "Sin leer",
+      "starred": "Destacados",
+      "notes": "Notas",
+      "forums": "Foros",
+      "work": "Trabajo"
     },
     "replyCompose": {
       "replyTo": "Responder a",
@@ -328,7 +344,8 @@
       "archive": "Archivados",
       "bin": "Papelera de reciclaje",
       "feedback": "Sugerencias",
-      "settings": "Configuración"
+      "settings": "Configuración",
+      "voice": "Asistente de voz"
     },
     "settings": {
       "general": "General",
@@ -366,7 +383,9 @@
         "customPrompt": "Prompt de IA personalizado",
         "customPromptPlaceholder": "Introduzca su prompt personalizado para la IA...",
         "customPromptDescription": "Personaliza cómo la IA escribe tus respuestas de correo electrónico. Esto se añadirá al prompt base.",
-        "noResultsFound": "No se han encontrado resultados"
+        "noResultsFound": "No se han encontrado resultados",
+        "zeroSignature": "Firma Zero",
+        "zeroSignatureDescription": "Añade una firma Zero a tus correos."
       },
       "connections": {
         "title": "Conexiones de correo",
@@ -466,7 +485,15 @@
           "showUpdates": "Mostrar actualizaciones",
           "showPromotions": "Mostrar promociones",
           "showUnread": "Mostrar no leídos",
-          "selectUnderCursor": "Seleccionar bajo el cursor"
+          "selectUnderCursor": "Seleccionar bajo el cursor",
+          "openVoice": "Abrir asistente de voz",
+          "clearAllFilters": "Borrar todos los filtros",
+          "markAsImportant": "Marcar como importante",
+          "markAsUnimportant": "Marcar como no importante",
+          "bulkDelete": "Eliminar en lote",
+          "bulkSelect": "Seleccionar en lote",
+          "bulkArchive": "Archivar en lote",
+          "bulkStar": "Destacar en lote"
         }
       },
       "labels": {

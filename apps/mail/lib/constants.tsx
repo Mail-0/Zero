@@ -18,11 +18,11 @@ export const emailProviders = [
     icon: GmailColor,
     providerId: 'google',
   },
-  // {
-  //   name: 'Outlook',
-  //   icon: OutlookColor,
-  //   providerId: 'microsoft',
-  // },
+  //   {
+  //     name: 'Outlook',
+  //     icon: OutlookColor,
+  //     providerId: 'microsoft',
+  //   },
 ] as const;
 
 interface GmailColor {

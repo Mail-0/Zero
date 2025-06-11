@@ -14,7 +14,7 @@ const AIToggleButton = () => {
             <Button
               variant="outline"
               size="icon"
-              className="dark:bg-sidebar h-12 w-12 rounded-full"
+              className="dark:bg-sidebar border h-12 w-12 rounded-lg"
               onClick={(e) => {
                 if (!isSidebarOpen) {
                   e.stopPropagation();

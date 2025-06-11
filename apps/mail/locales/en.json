@@ -83,7 +83,7 @@
         "goToArchive": "Go to Archive",
         "goToBin": "Go to Bin",
         "goToSettings": "Go to Settings",
-        "newEmail": "New Email",
+        "newEmail": "New email",
         "composeMessage": "New Email",
         "searchEmails": "Search Emails",
         "toggleTheme": "Toggle Theme",
@@ -148,7 +148,11 @@
       "updates": "Updates",
       "promotions": "Promotions",
       "social": "Social",
-      "unread": "Unread"
+      "unread": "Unread",
+      "starred": "Starred",
+      "notes": "Notes",
+      "forums": "Forums",
+      "work": "Work"
     },
     "replyCompose": {
       "replyTo": "Reply to",

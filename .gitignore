@@ -58,3 +58,5 @@ worker-configuration.d.ts
 # devcontainer
 .pnpm-store
 tsx-0/
+
+tools.json

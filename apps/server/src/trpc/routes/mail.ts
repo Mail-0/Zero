@@ -273,6 +273,8 @@ export const mailRouter = router({
         threadId: z.string().optional(),
         fromEmail: z.string().optional(),
         draftId: z.string().optional(),
+        isForward: z.boolean().optional(),
+        originalMessage: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
