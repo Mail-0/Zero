@@ -1,47 +1,25 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
 import { SidebarGroup, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from './sidebar';
 import { Collapsible, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useActiveConnection, useConnections } from '@/hooks/use-connections';
-import { CurvedArrow, MessageSquare, OldPhone, Phone } from '../icons/icons';
 import { type MessageKey, type NavItem } from '@/config/navigation';
 import { LabelDialog } from '@/components/labels/label-dialog';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Link, useLocation, useNavigate } from 'react-router';
 import Intercom, { show } from '@intercom/messenger-js-sdk';
-import { useSearchValue } from '@/hooks/use-search-value';
+import { MessageSquare, OldPhone } from '../icons/icons';
 import { useSidebar } from '../context/sidebar-context';
+import { useLocation, useNavigate } from 'react-router';
 import { useTRPC } from '@/providers/query-provider';
-import { RecursiveFolder } from './recursive-folder';
 import type { Label as LabelType } from '@/types';
 import { Button } from '@/components/ui/button';
 import { useLabels } from '@/hooks/use-labels';
-import { useSession } from '@/lib/auth-client';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useStats } from '@/hooks/use-stats';
 import SidebarLabels from './sidebar-labels';
-import { Command, Plus } from 'lucide-react';
-import { Tree } from '../magicui/file-tree';
 import { useCallback, useRef } from 'react';
 import { BASE_URL } from '@/lib/constants';
 import { useTranslations } from 'use-intl';
-import { useForm } from 'react-hook-form';
-import type { Label } from '@/types';
 import { useQueryState } from 'nuqs';
+import { Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import * as React from 'react';
