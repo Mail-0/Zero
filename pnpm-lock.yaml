@@ -349,12 +349,18 @@ importers:
       resend:
         specifier: 4.1.2
         version: 4.1.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      sanitize-html:
+        specifier: ^2.17.0
+        version: 2.17.0
       sonner:
         specifier: 1.7.4
         version: 1.7.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       superjson:
         specifier: ^2.2.2
         version: 2.2.2
+      swr:
+        specifier: 2.3.3
+        version: 2.3.3(react@19.1.0)
       tailwind-merge:
         specifier: 3.0.2
         version: 3.0.2
@@ -680,6 +686,19 @@ importers:
 
 packages:
 
+<<<<<<< HEAD
+=======
+  '@11labs/client@0.1.4':
+    resolution: {integrity: sha512-XxNl4GpNW9NYOD1P5apzZBpcNOP0Zu4goZu8Lud1iTIVkjv3fDp+hyurZoSTUdsik/TIeuxMgbd392M/EQgoKw==}
+    deprecated: This package has moved to @elevenlabs/client
+
+  '@11labs/react@0.1.4':
+    resolution: {integrity: sha512-iJ+cRfoj6WNQ9U48Umvhf4yw+LhmLYtkPXiU85Nj74paPQbSNBDTq6kwi7BTu2DtfgqP65T5BEjWhheV2IxogA==}
+    deprecated: This package has moved to @elevenlabs/react
+    peerDependencies:
+      react: '>=16.8.0'
+
+>>>>>>> staging
   '@ai-sdk/google@1.2.18':
     resolution: {integrity: sha512-8B70+i+uB12Ae6Sn6B9Oc6W0W/XorGgc88Nx0pyUrcxFOdytHBaAVhTPqYsO3LLClfjYN8pQ9GMxd5cpGEnUcA==}
     engines: {node: '>=18'}
@@ -6957,8 +6976,8 @@ packages:
   tailwind-merge@3.0.2:
     resolution: {integrity: sha512-l7z+OYZ7mu3DTqrL88RiKrKIqO3NcpEO8V/Od04bNpvk0kiIFndGEoqfuzvj4yuhRkHKjRkII2z+KS2HfPcSxw==}
 
-  tailwind-merge@3.3.0:
-    resolution: {integrity: sha512-fyW/pEfcQSiigd5SNn0nApUOxx0zB/dm6UDU/rEwc2c3sX2smWUNbapHv+QRqLGVp9GWX3THIa7MUGPo+YkDzQ==}
+  tailwind-merge@3.3.1:
+    resolution: {integrity: sha512-gBXpgUm/3rp1lMZZrM/w7D8GKqshif0zAymAhbCyIt8KMe+0v9DQ7cdYLR4FHH/cKpdTXb+A/tKKU3eolfsI+g==}
 
   tailwind-scrollbar@3.1.0:
     resolution: {integrity: sha512-pmrtDIZeHyu2idTejfV59SbaJyvp1VRjYxAjZBH0jnyrPRo6HL1kD5Glz8VPagasqr6oAx6M05+Tuw429Z8jxg==}
@@ -11279,7 +11298,7 @@ snapshots:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
       react-easy-sort: 1.6.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      tailwind-merge: 3.3.0
+      tailwind-merge: 3.3.1
     transitivePeerDependencies:
       - '@types/react'
       - '@types/react-dom'
@@ -14365,7 +14384,7 @@ snapshots:
 
   tailwind-merge@3.0.2: {}
 
-  tailwind-merge@3.3.0: {}
+  tailwind-merge@3.3.1: {}
 
   tailwind-scrollbar@3.1.0(tailwindcss@3.4.17):
     dependencies:

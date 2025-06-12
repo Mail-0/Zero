@@ -1,3 +1,4 @@
+// mail-iframe.tsx
 import { addStyleTags, doesContainStyleTags, template } from '@/lib/email-utils.client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
@@ -10,6 +11,7 @@ import { useTranslations } from 'use-intl';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { cleanEmailHtml, stripTablePadding } from '../ui/cleanEmailHtml';
 
 export function MailIframe({ html, senderEmail }: { html: string; senderEmail: string }) {
   const { data, refetch } = useSettings();
@@ -71,28 +73,90 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
 
   const calculateAndSetHeight = useCallback(() => {
     if (!iframeRef.current?.contentWindow?.document.body) return;
-
     const body = iframeRef.current.contentWindow.document.body;
     const boundingRectHeight = body.getBoundingClientRect().height;
     const scrollHeight = body.scrollHeight;
-
-    // Use the larger of the two values to ensure all content is visible
     setHeight(Math.max(boundingRectHeight, scrollHeight));
     if (body.innerText.trim() === '') {
       setHeight(0);
     }
-  }, [iframeRef, setHeight]);
+  }, []);
 
   useEffect(() => {
     if (!iframeRef.current || !processedHtml) return;
 
-    let finalHtml = processedHtml;
-    const containsStyleTags = doesContainStyleTags(processedHtml);
-    if (!containsStyleTags) {
-      finalHtml = addStyleTags(processedHtml);
-    }
+    const injectedStyle = [
+      '<style>',
+      // base body reset
+      'html, body {',
+      '  margin: 0;',
+      '  padding: 0;',
+      '  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;',
+      '  font-size: 14px;',
+      '  font-weight: 400;',
+      '  line-height: 1.6;',
+      '  color: #1a1a1a;',
+      '  background-color: white;',
+      '  -webkit-font-smoothing: antialiased;',
+      '}',
+      // enforce text styling on all elements likely to contain text
+      'body, table, td, tr, div, span, p, a, strong {',
+      '  font-family: inherit !important;',
+      '  font-size: inherit !important;',
+      '  font-weight: inherit !important;',
+      '  line-height: inherit !important;',
+      '  color: inherit !important;',
+      '}',
+      'p {',
+      '  margin: 0 0 14px;',
+      '}',
+      'a {',
+      '  color: #4f46e5;',
+      '  text-decoration: underline;',
+      '}',
+      'strong {',
+      '  font-weight: 600;',
+      '}',
+      // collapse layout spacing
+      'table, tbody, tr, td {',
+      '  padding: 0 !important;',
+      '  margin: 0 !important;',
+      '  border: none !important;',
+      '  height: auto !important;',
+      '}',
+      'tr[height="32"], td[width="8"] {',
+      '  display: none !important;',
+      '}',
+      '</style>',
+    ].join('\n');
+    
+    
+    
+    
 
-    const url = URL.createObjectURL(new Blob([finalHtml], { type: 'text/html' }));
+    // ✅ Determine if sanitization is safe
+const isSanitizationSafe = !html.includes('accounts.google.com') && !html.includes('gstatic.com');
+
+// ✅ Conditionally sanitize or pass through original HTML
+const sanitizedHtml = isSanitizationSafe ? cleanEmailHtml(processedHtml) : processedHtml;
+const cleanedHtml = isSanitizationSafe ? stripTablePadding(sanitizedHtml) : sanitizedHtml;
+
+console.log('[Sanitization skipped]', !isSanitizationSafe);
+console.log('[CLEANED HTML]', cleanedHtml);
+
+
+    console.log('[SANITIZED HTML]', sanitizedHtml);
+    console.log('[CLEANED HTML]', cleanedHtml);
+
+    const htmlToInject = `
+      <html>
+        <head>${injectedStyle}</head>
+        <body>${cleanedHtml}</body>
+      </html>
+    `;
+
+    const blob = new Blob([htmlToInject], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
     iframeRef.current.src = url;
 
     const handler = () => {
@@ -104,10 +168,7 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
     };
 
     iframeRef.current.onload = handler;
-
-    return () => {
-      URL.revokeObjectURL(url);
-    };
+    return () => URL.revokeObjectURL(url);
   }, [processedHtml, calculateAndSetHeight]);
 
   useEffect(() => {
@@ -132,7 +193,6 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
       },
       { signal: ctrl.signal },
     );
-
     return () => ctrl.abort();
   }, []);
 
@@ -166,15 +226,10 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
       <iframe
         height={height}
         ref={iframeRef}
-        className={cn(
-          '!min-h-0 w-full flex-1 overflow-hidden px-4 transition-opacity duration-200',
-        )}
+        className={cn('!min-h-0 w-full flex-1 overflow-hidden px-4 transition-opacity duration-200')}
         title="Email Content"
         sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-scripts"
-        style={{
-          width: '100%',
-          overflow: 'hidden',
-        }}
+        style={{ width: '100%', overflow: 'hidden' }}
       />
     </>
   );

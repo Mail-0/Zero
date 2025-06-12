@@ -36,18 +36,21 @@ export const authProviders = (env: Record<string, string>): ProviderConfig[] => 
       { name: 'GOOGLE_CLIENT_SECRET', source: 'Google Cloud Console' },
     ],
     config: {
-      prompt: env.FORCE_GOOGLE_AUTH ? 'consent' : undefined,
-      accessType: 'offline',
+      prompt: 'consent', // <-- force re-consent
+      accessType: 'offline', // <-- request refresh token
       scope: [
         'https://www.googleapis.com/auth/gmail.modify',
         'https://www.googleapis.com/auth/userinfo.profile',
         'https://www.googleapis.com/auth/userinfo.email',
+        'openid',
       ],
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,
     },
+    
     required: true,
-  },
+  }
+  
   // {
   //   id: 'microsoft',
   //   name: 'Microsoft',

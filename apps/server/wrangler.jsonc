@@ -54,13 +54,6 @@
       "observability": {
         "enabled": true,
       },
-      "hyperdrive": [
-        {
-          "binding": "HYPERDRIVE",
-          "id": "57834ddb6716440496c8836f6d99bc9a",
-          "localConnectionString": "postgresql://postgres:postgres@localhost:5432/zerodotemail",
-        },
-      ],
       "vars": {
         "NODE_ENV": "development",
         "COOKIE_DOMAIN": "localhost",
@@ -141,13 +134,6 @@
       "observability": {
         "enabled": true,
       },
-      "hyperdrive": [
-        {
-          "binding": "HYPERDRIVE",
-          "id": "57834ddb6716440496c8836f6d99bc9a",
-          "localConnectionString": "postgresql://postgres:postgres@localhost:5432/zerodotemail",
-        },
-      ],
       "vars": {
         "NODE_ENV": "development",
         "COOKIE_DOMAIN": "0.email",
@@ -191,13 +177,6 @@
       "observability": {
         "enabled": true,
       },
-      "hyperdrive": [
-        {
-          "binding": "HYPERDRIVE",
-          "id": "27171042364248898fc8672c0fc532a0",
-          "localConnectionString": "postgresql://postgres:postgres@localhost:5432/zerodotemail",
-        },
-      ],
       "durable_objects": {
         "bindings": [
           {

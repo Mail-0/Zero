@@ -21,6 +21,8 @@ import { env } from 'cloudflare:workers';
 import { createDriver } from './driver';
 import { eq } from 'drizzle-orm';
 import { createDb } from '../db';
+import { sql } from 'drizzle-orm';
+
 
 const connectionHandlerHook = async (account: Account) => {
   const c = getContext<HonoContext>();
@@ -234,7 +236,19 @@ export const createAuth = () => {
 
 const createAuthConfig = () => {
   const cache = redis();
-  const db = createDb(env.HYPERDRIVE.connectionString);
+  const db = createDb(env.DATABASE_URL)
+  console.log('🐛 drizzleAdapter DB connection initialized ✅');
+  if (!db) {
+    throw new Error('❌ DB not initialized!');
+  }
+  (async () => {
+    try {
+      const result = await db.execute(sql`SELECT * FROM mail0_verification LIMIT 1`);
+      console.log('✅ DB test result:', result);
+    } catch (err) {
+      console.error('❌ Raw test query failed:', err);
+    }
+  })();
   return {
     database: drizzleAdapter(db, { provider: 'pg' }),
     secondaryStorage: {

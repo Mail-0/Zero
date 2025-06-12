@@ -51,6 +51,8 @@ import { useQueryState } from 'nuqs';
 import { format } from 'date-fns';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
+import { ContextHeader } from '@/components/mail/context-header';
+
 
 const formatFileSize = (size: number) => {
   const sizeInMB = (size / (1024 * 1024)).toFixed(2);
@@ -973,6 +975,7 @@ export function ThreadDisplay() {
                 type="auto"
               >
                 <div className="pb-4">
+                  <ContextHeader email={emailData.latest?.sender?.email} />
                   {(emailData.messages || []).map((message, index) => (
                     <div
                       key={message.id}

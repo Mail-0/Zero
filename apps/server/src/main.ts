@@ -16,11 +16,17 @@ import { appRouter } from './trpc';
 import { cors } from 'hono/cors';
 import { createDb } from './db';
 import { Hono } from 'hono';
+import { contextApi } from './routes/context';
+
 
 const api = new Hono<HonoContext>()
   .use(contextStorage())
   .use('*', async (c, next) => {
-    const db = createDb(env.HYPERDRIVE.connectionString);
+    console.log('✅ DATABASE_URL:', process.env.DATABASE_URL);
+    console.log('✅ HYPERDRIVE_CONNECTION_STRING:', process.env.HYPERDRIVE_CONNECTION_STRING);
+
+    const db = createDb(process.env.DATABASE_URL);
+    console.log("XXXXXXXXXXXXXXXXXXXX", process.env.HYPERDRIVE_CONNECTION_STRING)
     c.set('db', db);
     const auth = createAuth();
     c.set('auth', auth);
@@ -57,6 +63,7 @@ const api = new Hono<HonoContext>()
   })
   .route('/ai', aiRouter)
   .route('/autumn', autumnApi)
+  .route('/context', contextApi)
   .on(['GET', 'POST'], '/auth/*', (c) => c.var.auth.handler(c.req.raw))
   .use(
     trpcServer({
