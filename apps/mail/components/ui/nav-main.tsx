@@ -280,9 +280,8 @@ function NavItem(item: NavItemProps & { href: string }) {
   const iconRef = useRef<IconRefType>(null);
   const { data: stats } = useStats();
   const t = useTranslations();
-  const { state } = useSidebar();
+  const { state, setOpenMobile } = useSidebar();
   const navigate = useNavigate();
-  const { setOpenMobile } = useSidebar();
 
   if (item.disabled) {
     return (
