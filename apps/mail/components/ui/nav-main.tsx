@@ -307,7 +307,7 @@ function NavItem(item: NavItemProps & { href: string }) {
     // Handle navigation
     if (!e.defaultPrevented) {
       if (item.target === '_blank') {
-        window.open(item.href, '_blank');
+        window.open(item.href, '_blank', 'noopener,noreferrer');
       } else {
         navigate(item.href);
       }
