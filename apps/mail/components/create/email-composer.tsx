@@ -18,6 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { TextEffect } from '@/components/motion-primitives/text-effect';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { useActiveConnection } from '@/hooks/use-connections';
+import { useEmailAliases } from '@/hooks/use-email-aliases';
 import useComposeEditor from '@/hooks/use-compose-editor';
 import { Loader, Check, X as XIcon } from 'lucide-react';
 import { Command, Paperclip, Plus } from 'lucide-react';
@@ -55,11 +56,6 @@ interface EmailComposerProps {
   initialMessage?: string;
   initialAttachments?: File[];
   replyingTo?: string;
-  aliases?: {
-    email: string;
-    name?: string;
-    primary?: boolean;
-  }[];
   onSendEmail: (data: {
     to: string[];
     cc?: string[];
@@ -107,9 +103,9 @@ export function EmailComposer({
   autofocus = false,
   settingsLoading = false,
   replyingTo,
-  aliases = [],
   editorClassName,
 }: EmailComposerProps) {
+  const { data: aliases } = useEmailAliases();
   const [showCc, setShowCc] = useState(initialCc.length > 0);
   const [showBcc, setShowBcc] = useState(initialBcc.length > 0);
   const [isLoading, setIsLoading] = useState(false);
@@ -312,18 +308,18 @@ export function EmailComposer({
   const handleSend = async () => {
     try {
       if (isLoading || isSavingDraft) return;
-      
+
       const values = getValues();
-      
+
       // Validate recipient field
       if (!values.to || values.to.length === 0) {
         toast.error('Recipient is required');
         return;
       }
-      
+
       setIsLoading(true);
       setAiGeneratedMessage(null);
-      
+
       await onSendEmail({
         to: values.to,
         cc: showCc ? values.cc : undefined,
@@ -999,7 +995,7 @@ export function EmailComposer({
         </div>
 
         {/* From */}
-        {aliases.length > 0 && !replyingTo && (
+        {aliases.length > 0 && (
           <div className="flex items-center gap-2 border-b p-3">
             <p className="text-sm font-medium text-[#8C8C8C]">From:</p>
             <Select
@@ -1012,7 +1008,7 @@ export function EmailComposer({
               <SelectTrigger className="h-6 flex-1 border-0 bg-transparent p-0 text-sm font-normal text-black placeholder:text-[#797979] focus:outline-none focus:ring-0 dark:text-white/90">
                 <SelectValue placeholder="Select an email address" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[99999]">
                 {aliases.map((alias) => (
                   <SelectItem key={alias.email} value={alias.email}>
                     <div className="flex flex-row items-center gap-1">

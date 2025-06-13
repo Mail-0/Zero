@@ -958,18 +958,18 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
       if (!container) return;
 
       const containerWidth = container.offsetWidth;
-      const selectedCategory = categories.find(cat => cat.id === category);
-      
+      const selectedCategory = categories.find((cat) => cat.id === category);
+
       // Calculate approximate widths needed for different text sizes
       const baseIconWidth = (categories.length - 1) * 40; // unselected icons + gaps
       const selectedTextLength = selectedCategory ? selectedCategory.name.length : 10;
-      
+
       // Estimate width needed for different text sizes
       const normalTextWidth = selectedTextLength * 8 + 60; // normal text
-      const smallTextWidth = selectedTextLength * 7 + 50;  // smaller text
-      const xsTextWidth = selectedTextLength * 6 + 40;     // extra small text
+      const smallTextWidth = selectedTextLength * 7 + 50; // smaller text
+      const xsTextWidth = selectedTextLength * 6 + 40; // extra small text
       const minIconWidth = 40; // minimum width for icon-only selected button
-      
+
       const totalNormal = baseIconWidth + normalTextWidth;
       const totalSmall = baseIconWidth + smallTextWidth;
       const totalXs = baseIconWidth + xsTextWidth;
@@ -1066,10 +1066,9 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
             <div className="relative overflow-visible">{cat.icon}</div>
             {isSelected && showText && (
               <div className="flex items-center justify-center gap-2.5 px-0.5">
-                <div className={cn(
-                  " justify-start leading-none text-white  truncate",
-                  getTextClasses()
-                )}>
+                <div
+                  className={cn('justify-start truncate leading-none text-white', getTextClasses())}
+                >
                   {cat.name}
                 </div>
               </div>
