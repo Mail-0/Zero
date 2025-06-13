@@ -189,7 +189,7 @@ function ComposeButton() {
     if (!open) {
       await setDialogOpen(null);
     } else {
-      setDialogOpen('true');
+      await setDialogOpen('true');
     }
     await Promise.all([setDraftId(null), setTo(null), setActiveReplyId(null), setMode(null)]);
   };
