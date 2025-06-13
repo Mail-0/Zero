@@ -458,7 +458,7 @@ export function MailLayout() {
     }
   }, []);
 
-  const category = useQueryState('category');
+  const category = useQueryState('category', { defaultValue: 'All Mail' });
 
   return (
     <TooltipProvider delayDuration={0}>

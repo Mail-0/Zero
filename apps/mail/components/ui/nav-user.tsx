@@ -61,14 +61,14 @@ export function NavUser() {
   const { data: activeConnection, refetch: refetchActiveConnection } = useActiveConnection();
   const { revalidate } = useRevalidator();
   const [, setPricingDialog] = useQueryState('pricingDialog');
+  const [category] = useQueryState('category', { defaultValue: 'All Mail' });
 
   const getSettingsHref = useCallback(() => {
-    const category = searchParams.get('category');
     const currentPath = category
       ? `${pathname}?category=${encodeURIComponent(category)}`
       : pathname;
     return `/settings/general?from=${encodeURIComponent(currentPath)}`;
-  }, [pathname, searchParams]);
+  }, [pathname, category]);
 
   const handleClearCache = useCallback(async () => {
     queryClient.clear();
