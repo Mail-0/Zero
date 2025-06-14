@@ -35,13 +35,13 @@ export const mailRouter = router({
         cursor: z.string().optional().default(''),
       }),
     )
-    .use(
-      createRateLimiterMiddleware({
-        generatePrefix: ({ sessionUser }, input) =>
-          `ratelimit:list-threads-${input.folder}-${sessionUser?.id}`,
-        limiter: Ratelimit.slidingWindow(60, '1m'),
-      }),
-    )
+    // .use(
+    //   createRateLimiterMiddleware({
+    //     generatePrefix: ({ sessionUser }, input) =>
+    //       `ratelimit:list-threads-${input.folder}-${sessionUser?.id}`,
+    //     limiter: Ratelimit.slidingWindow(60, '1m'),
+    //   }),
+    // )
     .query(async ({ ctx, input }) => {
       const { folder, max, cursor, q } = input;
       const { driver } = ctx;
