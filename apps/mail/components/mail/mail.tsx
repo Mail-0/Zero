@@ -458,7 +458,7 @@ export function MailLayout() {
     }
   }, []);
 
-  const category = useQueryState('category');
+  const category = useQueryState('category', { defaultValue: 'All Mail' });
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -821,7 +821,7 @@ function BulkSelectActions() {
 export const Categories = () => {
   const t = useTranslations();
   const [category] = useQueryState('category', {
-    defaultValue: 'Important',
+    defaultValue: 'All Mail',
   });
   return [
     {
