@@ -155,8 +155,8 @@ export function CreateEmail({
 
   const handleDialogClose = (open: boolean) => {
     setIsComposeOpen(open ? 'true' : null);
-    if(!open){
-      setDraftId(null)
+    if (!open) {
+      setDraftId(null);
     }
   };
 
@@ -185,7 +185,6 @@ export function CreateEmail({
             <EmailComposer
               key={typedDraft?.id || 'composer'}
               className="mb-12 rounded-2xl border"
-              aliases={aliases}
               onSendEmail={handleSendEmail}
               initialMessage={typedDraft?.content || initialBody}
               initialTo={

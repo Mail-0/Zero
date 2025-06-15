@@ -6,7 +6,7 @@ export const labelsRouter = router({
   list: activeDriverProcedure
     .use(
       createRateLimiterMiddleware({
-        generatePrefix: ({ session }) => `ratelimit:get-labels-${session?.user.id}`,
+        generatePrefix: ({ sessionUser }) => `ratelimit:get-labels-${sessionUser?.id}`,
         limiter: Ratelimit.slidingWindow(60, '1m'),
       }),
     )
@@ -17,7 +17,7 @@ export const labelsRouter = router({
   create: activeDriverProcedure
     .use(
       createRateLimiterMiddleware({
-        generatePrefix: ({ session }) => `ratelimit:labels-post-${session?.user.id}`,
+        generatePrefix: ({ sessionUser }) => `ratelimit:labels-post-${sessionUser?.id}`,
         limiter: Ratelimit.slidingWindow(60, '1m'),
       }),
     )
@@ -46,7 +46,7 @@ export const labelsRouter = router({
   update: activeDriverProcedure
     .use(
       createRateLimiterMiddleware({
-        generatePrefix: ({ session }) => `ratelimit:labels-patch-${session?.user.id}`,
+        generatePrefix: ({ sessionUser }) => `ratelimit:labels-patch-${sessionUser?.id}`,
         limiter: Ratelimit.slidingWindow(60, '1m'),
       }),
     )
@@ -71,7 +71,7 @@ export const labelsRouter = router({
   delete: activeDriverProcedure
     .use(
       createRateLimiterMiddleware({
-        generatePrefix: ({ session }) => `ratelimit:labels-delete-${session?.user.id}`,
+        generatePrefix: ({ sessionUser }) => `ratelimit:labels-delete-${sessionUser?.id}`,
         limiter: Ratelimit.slidingWindow(60, '1m'),
       }),
     )

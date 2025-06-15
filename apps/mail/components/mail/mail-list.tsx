@@ -42,6 +42,7 @@ import { Badge } from '@/components/ui/badge';
 import { useDraft } from '@/hooks/use-drafts';
 import { Check, Star } from 'lucide-react';
 import { useTranslations } from 'use-intl';
+import { Skeleton } from '../ui/skeleton';
 import { useParams } from 'react-router';
 import { useTheme } from 'next-themes';
 import { Button } from '../ui/button';
@@ -438,11 +439,7 @@ const Thread = memo(
                           </span>
                         ) : (
                           <div className="flex items-center gap-1">
-                            <span
-                              className={cn(
-                                'line-clamp-1 overflow-hidden text-sm',
-                              )}
-                            >
+                            <span className={cn('line-clamp-1 overflow-hidden text-sm')}>
                               {highlightText(
                                 cleanNameDisplay(latestMessage.sender.name) || '',
                                 searchValue.highlight,
@@ -566,6 +563,39 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
     setDraftId(message.id);
     return;
   }, [message.id]);
+
+  if (!draft) {
+    return (
+      <div className="select-none py-1">
+        <div
+          key={message.id}
+          className={cn(
+            'group relative mx-[8px] flex cursor-pointer flex-col items-start overflow-clip rounded-[10px] border-transparent py-3 text-left text-sm transition-all',
+          )}
+        >
+          <div
+            className={cn(
+              'bg-primary absolute inset-y-0 left-0 w-1 -translate-x-2 transition-transform ease-out',
+            )}
+          />
+          <div className="flex w-full items-center justify-between gap-4 px-4">
+            <div className="flex w-full justify-between">
+              <div className="w-full">
+                <div className="flex w-full flex-row items-center justify-between">
+                  <div className="flex flex-row items-center gap-[4px]">
+                    <Skeleton className="bg-muted h-4 w-32 rounded" />
+                  </div>
+                </div>
+                <div className="flex justify-between">
+                  <Skeleton className="bg-muted mt-1 h-4 w-48 rounded" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="select-none py-1" onClick={handleMailClick}>

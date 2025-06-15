@@ -65,22 +65,30 @@ export class GoogleMailManager implements MailManager {
   }
   public getEmailAliases() {
     return this.withErrorHandler('getEmailAliases', async () => {
+      console.log('Fetching email aliases...');
+
       const profile = await this.gmail.users.getProfile({
         userId: 'me',
       });
+      console.log('Retrieved user profile:', { email: profile.data.emailAddress });
 
       const primaryEmail = profile.data.emailAddress || '';
       const aliases: { email: string; name?: string; primary?: boolean }[] = [
         { email: primaryEmail, primary: true },
       ];
+      console.log('Added primary email to aliases:', { primaryEmail });
 
       const settings = await this.gmail.users.settings.sendAs.list({
         userId: 'me',
+      });
+      console.log('Retrieved sendAs settings:', {
+        sendAsCount: settings.data.sendAs?.length || 0,
       });
 
       if (settings.data.sendAs) {
         settings.data.sendAs.forEach((alias) => {
           if (alias.isPrimary && alias.sendAsEmail === primaryEmail) {
+            console.log('Skipping duplicate primary email:', { email: alias.sendAsEmail });
             return;
           }
 
@@ -89,9 +97,15 @@ export class GoogleMailManager implements MailManager {
             name: alias.displayName || undefined,
             primary: alias.isPrimary || false,
           });
+          console.log('Added alias:', {
+            email: alias.sendAsEmail,
+            name: alias.displayName,
+            primary: alias.isPrimary,
+          });
         });
       }
 
+      console.log('Returning aliases:', { aliasCount: aliases.length });
       return aliases;
     });
   }
@@ -732,13 +746,14 @@ export class GoogleMailManager implements MailManager {
         });
         // Process res.data.messages to extract id and labelIds
         return {
-          messages: res.data.messages?.map(msg => ({
-            id: msg.id,
-            labelIds: msg.labelIds
-          })) || []
+          messages:
+            res.data.messages?.map((msg) => ({
+              id: msg.id,
+              labelIds: msg.labelIds,
+            })) || [],
         };
       },
-      { threadId, email: this.config.auth?.email }
+      { threadId, email: this.config.auth?.email },
     );
   }
 
