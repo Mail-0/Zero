@@ -3,7 +3,7 @@ import { getActiveConnection } from '../../lib/server-utils';
 import { connection, user as user_ } from '../../db/schema';
 import { Ratelimit } from '@upstash/ratelimit';
 import { TRPCError } from '@trpc/server';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 export const connectionsRouter = router({
@@ -121,9 +121,16 @@ export const connectionsRouter = router({
           message: `Invalid connection IDs: ${invalidIds.join(', ')}` 
         });
       }
-      
-      // Update order for each connection atomically using a transaction
-      await db.transaction(async (tx) => {        const updatePromises = connectionIds.map((connectionId, index) =>
+        // Update order for each connection atomically using a transaction
+      await db.transaction(async (tx) => {
+        // First, shift all existing connections up by the number of reordered IDs to avoid collisions
+        await tx
+          .update(connection)
+          .set({ orderIndex: sql`order_index + ${connectionIds.length}` })
+          .where(eq(connection.userId, user.id));
+
+        // Then apply the desired ordering for the specified connections
+        const updatePromises = connectionIds.map((connectionId, index) =>
           tx
             .update(connection)
             .set({ orderIndex: index })

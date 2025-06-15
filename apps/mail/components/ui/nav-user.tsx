@@ -191,11 +191,11 @@ export function NavUser() {
                           )}
                         </div>
                         <div className="text-muted-foreground text-xs">{activeAccount.email}</div>
-                      </div>
-                    </div>
+                      </div>                    </div>
                     <DropdownMenuSeparator />
                   </>
-                )}                <div className="space-y-1">
+                )}
+                <div className="space-y-1">
                     <p className="text-muted-foreground px-2 py-1 text-[11px] font-medium">
                       {t('common.navUser.accounts')}
                     </p>
@@ -236,9 +236,12 @@ export function NavUser() {
                           <p className="text-[13px] opacity-60">
                             {t('common.navUser.customerSupport')}
                           </p>
-                        </div>
-                      </a>
-                    </DropdownMenuItem>                    <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
+                        </div>                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={handleLogout}
+                    >
                       <div className="flex items-center gap-2">
                         <LogOut size={16} className="opacity-60" />
                         <p className="text-[13px] opacity-60">{t('common.actions.logout')}</p>

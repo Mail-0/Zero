@@ -7,7 +7,7 @@ Implemented a comprehensive account reordering feature for Zero that allows user
 
 ### 1. Database Schema Update
 **File**: `apps/server/src/db/schema.ts`
-- Added `order: integer('order').notNull().default(0)` field to the `connection` table
+- Added `orderIndex: integer('order_index').notNull().default(0)` field to the `connection` table
 - This field stores the display order for each user's connections
 
 ### 2. Backend API Enhancement
@@ -79,7 +79,7 @@ Created comprehensive test cases that validate:
 
 ## Next Steps
 1. Run database migrations to add the `order` field
-2. Test the feature end-to-end in development environment
+2. Test the feature end-to-end in the development environment
 3. Ensure proper error handling and edge cases
 4. Consider adding keyboard shortcuts for reordering
 5. Add user documentation for the new feature
