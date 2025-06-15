@@ -83,7 +83,7 @@
         "goToArchive": "Перейти в Архив",
         "goToBin": "Перейти в Корзину",
         "goToSettings": "Перейти в Настройки",
-        "newEmail": "Новое Письмо",
+        "newEmail": "Новое письмо",
         "composeMessage": "Новое письмо",
         "searchEmails": "Поиск",
         "toggleTheme": "Переключить тему",
@@ -148,7 +148,11 @@
       "updates": "Обновления",
       "promotions": "Промо",
       "social": "Социальные",
-      "unread": "Непрочитанные"
+      "unread": "Непрочитанные",
+      "starred": "Отмеченные",
+      "notes": "Заметки",
+      "forums": "Форумы",
+      "work": "Работа"
     },
     "replyCompose": {
       "replyTo": "Ответить",

@@ -148,7 +148,11 @@
       "updates": "Updates",
       "promotions": "Promoties",
       "social": "Sociaal",
-      "unread": "Ongelezen"
+      "unread": "Ongelezen",
+      "starred": "Met ster",
+      "notes": "Notities",
+      "forums": "Forums",
+      "work": "Werk"
     },
     "replyCompose": {
       "replyTo": "Antwoorden op",

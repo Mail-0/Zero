@@ -83,7 +83,7 @@
         "goToArchive": "Ir para os Arquivados",
         "goToBin": "Ir para Lixeira",
         "goToSettings": "Ir para Configurações",
-        "newEmail": "Novo E-mail",
+        "newEmail": "Novo e-mail",
         "composeMessage": "Novo E-mail",
         "searchEmails": "Pesquisar E-mails",
         "toggleTheme": "Alternar o Tema",
@@ -148,7 +148,11 @@
       "updates": "Atualizações",
       "promotions": "Promoções",
       "social": "Social",
-      "unread": "Não lidos"
+      "unread": "Não lidos",
+      "starred": "Favoritos",
+      "notes": "Notas",
+      "forums": "Fóruns",
+      "work": "Trabalho"
     },
     "replyCompose": {
       "replyTo": "Responder para",

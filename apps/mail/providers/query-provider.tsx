@@ -33,7 +33,7 @@ export const makeQueryClient = (connectionId: string | null) =>
     queryCache: new QueryCache({
       onError: (err, { meta }) => {
         if (meta && meta.noGlobalError === true) return;
-        if (meta && typeof meta.customError === 'string') toast.error(meta.customError);
+        if (meta && typeof meta.customError === 'string') console.error(meta.customError);
         else if (err.message === 'Required scopes missing') {
           signOut({
             fetchOptions: {
@@ -43,7 +43,7 @@ export const makeQueryClient = (connectionId: string | null) =>
               },
             },
           });
-        } else toast.error(err.message || 'Something went wrong');
+        } else console.error(err.message || 'Something went wrong');
       },
     }),
     defaultOptions: {
@@ -54,7 +54,7 @@ export const makeQueryClient = (connectionId: string | null) =>
         gcTime: 1000 * 60 * 60 * 24,
       },
       mutations: {
-        onError: (err) => toast.error(err.message),
+        onError: (err) => console.error(err.message),
       },
     },
   });
@@ -90,7 +90,7 @@ export const trpcClient = createTRPCClient<AppRouter>({
       transformer: superjson,
       url: getUrl(),
       methodOverride: 'POST',
-      maxItems: 2,
+      maxItems: 1,
       fetch: (url, options) =>
         fetch(url, { ...options, credentials: 'include' }).then((res) => {
           const currentPath = new URL(window.location.href).pathname;

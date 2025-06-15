@@ -35,13 +35,13 @@ export const mailRouter = router({
         cursor: z.string().optional().default(''),
       }),
     )
-    .use(
-      createRateLimiterMiddleware({
-        generatePrefix: ({ sessionUser }, input) =>
-          `ratelimit:list-threads-${input.folder}-${sessionUser?.id}`,
-        limiter: Ratelimit.slidingWindow(60, '1m'),
-      }),
-    )
+    // .use(
+    //   createRateLimiterMiddleware({
+    //     generatePrefix: ({ sessionUser }, input) =>
+    //       `ratelimit:list-threads-${input.folder}-${sessionUser?.id}`,
+    //     limiter: Ratelimit.slidingWindow(60, '1m'),
+    //   }),
+    // )
     .query(async ({ ctx, input }) => {
       const { folder, max, cursor, q } = input;
       const { driver } = ctx;
@@ -273,6 +273,8 @@ export const mailRouter = router({
         threadId: z.string().optional(),
         fromEmail: z.string().optional(),
         draftId: z.string().optional(),
+        isForward: z.boolean().optional(),
+        originalMessage: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

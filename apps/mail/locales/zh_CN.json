@@ -148,7 +148,11 @@
       "updates": "更新",
       "promotions": "促销",
       "social": "社交",
-      "unread": "未读"
+      "unread": "未读",
+      "starred": "已加星标",
+      "notes": "笔记",
+      "forums": "论坛",
+      "work": "工作"
     },
     "replyCompose": {
       "replyTo": "回复",

@@ -59,7 +59,7 @@ export function Layout({ children }: PropsWithChildren) {
     <html lang={locale} suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
-
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#141414" media="(prefers-color-scheme: dark)" />
         <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
         <Meta />

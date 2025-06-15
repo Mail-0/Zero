@@ -148,7 +148,11 @@
       "updates": "به‌روزرسانی‌ها",
       "promotions": "تبلیغات",
       "social": "اجتماعی",
-      "unread": "خوانده نشده"
+      "unread": "خوانده نشده",
+      "starred": "ستاره‌دار",
+      "notes": "یادداشت‌ها",
+      "forums": "انجمن‌ها",
+      "work": "کاری"
     },
     "replyCompose": {
       "replyTo": "پاسخ به",

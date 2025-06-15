@@ -148,7 +148,11 @@
       "updates": "تحديثات",
       "promotions": "عروض",
       "social": "اجتماعي",
-      "unread": "غير مقروءة"
+      "unread": "غير مقروءة",
+      "starred": "المميزة بنجمة",
+      "notes": "الملاحظات",
+      "forums": "المنتديات",
+      "work": "العمل"
     },
     "replyCompose": {
       "replyTo": "الرد على",

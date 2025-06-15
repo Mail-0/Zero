@@ -49,8 +49,7 @@ export const authProviders = (env: Record<string, string>): ProviderConfig[] => 
     },
     
     required: true,
-  }
-  
+  },
   // {
   //   id: 'microsoft',
   //   name: 'Microsoft',

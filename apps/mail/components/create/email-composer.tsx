@@ -7,10 +7,18 @@ import {
   X,
   Sparkles,
 } from '../icons/icons';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TextEffect } from '@/components/motion-primitives/text-effect';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { useActiveConnection } from '@/hooks/use-connections';
+import { useEmailAliases } from '@/hooks/use-email-aliases';
 import useComposeEditor from '@/hooks/use-compose-editor';
 import { Loader, Check, X as XIcon } from 'lucide-react';
 import { Command, Paperclip, Plus } from 'lucide-react';
@@ -47,6 +55,7 @@ interface EmailComposerProps {
   initialSubject?: string;
   initialMessage?: string;
   initialAttachments?: File[];
+  replyingTo?: string;
   onSendEmail: (data: {
     to: string[];
     cc?: string[];
@@ -54,15 +63,17 @@ interface EmailComposerProps {
     subject: string;
     message: string;
     attachments: File[];
+    fromEmail?: string;
   }) => Promise<void>;
   onClose?: () => void;
   className?: string;
   autofocus?: boolean;
   settingsLoading?: boolean;
+  editorClassName?: string;
 }
 
 const isValidEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   return emailRegex.test(email);
 };
 
@@ -91,7 +102,10 @@ export function EmailComposer({
   className,
   autofocus = false,
   settingsLoading = false,
+  replyingTo,
+  editorClassName,
 }: EmailComposerProps) {
+  const { data: aliases } = useEmailAliases();
   const [showCc, setShowCc] = useState(initialCc.length > 0);
   const [showBcc, setShowBcc] = useState(initialBcc.length > 0);
   const [isLoading, setIsLoading] = useState(false);
@@ -162,6 +176,7 @@ export function EmailComposer({
       subject: initialSubject,
       message: initialMessage,
       attachments: initialAttachments,
+      fromEmail: aliases?.find((alias) => alias.primary)?.email || aliases?.[0]?.email || '',
     },
   });
 
@@ -245,6 +260,7 @@ export function EmailComposer({
   const bccEmails = watch('bcc');
   const subjectInput = watch('subject');
   const attachments = watch('attachments');
+  const fromEmail = watch('fromEmail');
 
   const handleAttachment = (files: File[]) => {
     if (files && files.length > 0) {
@@ -292,9 +308,18 @@ export function EmailComposer({
   const handleSend = async () => {
     try {
       if (isLoading || isSavingDraft) return;
+
+      const values = getValues();
+
+      // Validate recipient field
+      if (!values.to || values.to.length === 0) {
+        toast.error('Recipient is required');
+        return;
+      }
+
       setIsLoading(true);
       setAiGeneratedMessage(null);
-      const values = getValues();
+
       await onSendEmail({
         to: values.to,
         cc: showCc ? values.cc : undefined,
@@ -302,6 +327,7 @@ export function EmailComposer({
         subject: values.subject,
         message: editor.getHTML(),
         attachments: values.attachments || [],
+        fromEmail: values.fromEmail,
       });
       setHasUnsavedChanges(false);
       editor.commands.clearContent(true);
@@ -482,6 +508,44 @@ export function EmailComposer({
                     ref={toInputRef}
                     className="h-6 flex-1 bg-transparent text-sm font-normal leading-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white"
                     placeholder="Enter email"
+                    onPaste={(e) => {
+                      e.preventDefault();
+                      const pastedText = e.clipboardData.getData('text');
+                      const emails = pastedText
+                        .split(/[,;\s]+/)
+                        .map((email) => email.trim())
+                        .filter((email) => email.length > 0);
+
+                      const validEmails: string[] = [];
+                      const invalidEmails: string[] = [];
+
+                      emails.forEach((email) => {
+                        if (isValidEmail(email)) {
+                          const emailLower = email.toLowerCase();
+                          if (!toEmails.some((e) => e.toLowerCase() === emailLower)) {
+                            validEmails.push(email);
+                          }
+                        } else {
+                          invalidEmails.push(email);
+                        }
+                      });
+
+                      if (validEmails.length > 0) {
+                        setValue('to', [...toEmails, ...validEmails]);
+                        setHasUnsavedChanges(true);
+                        if (validEmails.length === 1) {
+                          toast.success('Email address added');
+                        } else {
+                          toast.success(`${validEmails.length} email addresses added`);
+                        }
+                      }
+
+                      if (invalidEmails.length > 0) {
+                        toast.error(
+                          `Invalid email ${invalidEmails.length === 1 ? 'address' : 'addresses'}: ${invalidEmails.join(', ')}`,
+                        );
+                      }
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && e.currentTarget.value.trim()) {
                         e.preventDefault();
@@ -906,7 +970,7 @@ export function EmailComposer({
         </div>
 
         {/* Subject */}
-        <div className="flex items-center gap-2 p-3">
+        <div className="flex items-center gap-2 border-b p-3">
           <p className="text-sm font-medium text-[#8C8C8C]">Subject:</p>
           <input
             className="h-4 w-full bg-transparent text-sm font-normal leading-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white/90"
@@ -930,6 +994,36 @@ export function EmailComposer({
           </button>
         </div>
 
+        {/* From */}
+        {aliases.length > 0 && (
+          <div className="flex items-center gap-2 border-b p-3">
+            <p className="text-sm font-medium text-[#8C8C8C]">From:</p>
+            <Select
+              value={fromEmail || ''}
+              onValueChange={(value) => {
+                setValue('fromEmail', value);
+                setHasUnsavedChanges(true);
+              }}
+            >
+              <SelectTrigger className="h-6 flex-1 border-0 bg-transparent p-0 text-sm font-normal text-black placeholder:text-[#797979] focus:outline-none focus:ring-0 dark:text-white/90">
+                <SelectValue placeholder="Select an email address" />
+              </SelectTrigger>
+              <SelectContent className="z-[99999]">
+                {aliases.map((alias) => (
+                  <SelectItem key={alias.email} value={alias.email}>
+                    <div className="flex flex-row items-center gap-1">
+                      <span className="text-sm">
+                        {alias.name ? `${alias.name} <${alias.email}>` : alias.email}
+                      </span>
+                      {alias.primary && <span className="text-xs text-[#8C8C8C]">Primary</span>}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         {/* Message Content */}
         <div className="grow self-stretch overflow-y-auto border-t bg-[#FFFFFF] px-3 py-3 outline-white/5 dark:bg-[#202020]">
           <div
@@ -937,7 +1031,8 @@ export function EmailComposer({
               editor.commands.focus();
             }}
             className={cn(
-              'max-h-[300px] min-h-[200px] w-full',
+              `max-h-[300px] min-h-[200px] w-full`,
+              editorClassName,
               aiGeneratedMessage !== null ? 'blur-sm' : '',
             )}
           >
