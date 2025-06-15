@@ -104,8 +104,7 @@ export const connectionsRouter = router({
           code: 'BAD_REQUEST', 
           message: 'Duplicate connection IDs supplied' 
         });
-      }
-        // Verify all connections belong to the user
+      }      // Verify all connections belong to the user
       const userConnections = await db
         .select({ id: connection.id })
         .from(connection)
@@ -120,33 +119,37 @@ export const connectionsRouter = router({
           message: `Invalid connection IDs: ${invalidIds.join(', ')}` 
         });
       }
-        // Update order for each connection atomically using a transaction
-      await db.transaction(async (tx) => {
-        // First, shift all existing connections up by the number of reordered IDs to avoid collisions
-        await tx
-          .update(connection)
-          .set({ orderIndex: sql`order_index + ${connectionIds.length}` })
-          .where(eq(connection.userId, user.id));        // Then apply the desired ordering for the specified connections
-        const updatePromises = connectionIds.map((connectionId, index) =>
-          tx
-            .update(connection)
-            .set({ orderIndex: index })
-            .where(and(eq(connection.id, connectionId), eq(connection.userId, user.id)))
-        );
-        
-        await Promise.all(updatePromises);
 
-        // Normalise remaining rows so orderIndex becomes dense again
+      // Get the default connection to ensure it stays at index 0
+      const [{ defaultConnectionId }] = await db
+        .select({ defaultConnectionId: user_.defaultConnectionId })
+        .from(user_)
+        .where(eq(user_.id, user.id));
+
+      // Verify payload includes all connections with default connection first
+      const totalConnections = userConnections.length;
+      if (connectionIds.length !== totalConnections) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Reorder payload must include all connection IDs',
+        });
+      }
+
+      if (defaultConnectionId && connectionIds[0] !== defaultConnectionId) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Default connection must be first in the reorder list',
+        });
+      }      // Update order for each connection atomically using a transaction
+      await db.transaction(async (tx) => {
+        // Since we validate that the default connection is first in the payload,
+        // we can safely update all connections without shifting since the 
+        // default connection will retain its position at index 0
         await tx.execute(sql`
-          WITH ordered AS (
-            SELECT id, ROW_NUMBER() OVER (ORDER BY order_index) - 1 AS rn
-            FROM ${connection}
-            WHERE ${connection.userId} = ${user.id}
-          )
-          UPDATE ${connection}
-          SET ${connection.orderIndex} = ordered.rn
-          FROM ordered
-          WHERE ${connection}.id = ordered.id
+          UPDATE ${connection} AS c
+          SET ${connection.orderIndex} = v.rn
+          FROM (VALUES ${sql.join(connectionIds.map((id, i) => sql`(${id}, ${i})`))} ) AS v(id, rn)
+          WHERE c.id = v.id AND c.user_id = ${user.id}
         `);
       });
     }),

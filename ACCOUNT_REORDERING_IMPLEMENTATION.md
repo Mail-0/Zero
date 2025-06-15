@@ -78,7 +78,7 @@ Created comprehensive test cases that validate:
 5. `apps/mail/hooks/use-connections.ts` - Frontend hooks
 
 ## Next Steps
-1. Run database migrations to add the `order` field
+1. Run database migrations to add the `orderIndex` field
 2. Test the feature end-to-end in the development environment
 3. Ensure proper error handling and edge cases
 4. Consider adding keyboard shortcuts for reordering

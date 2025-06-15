@@ -88,8 +88,7 @@ export function NavUser() {
   }, [activeConnection, data]);
 
   useEffect(() => setIsRendered(true), []);
-
-  const handleAccountSwitch = (connectionId: string) => async () => {
+  const handleAccountSwitch = async (connectionId: string) => {
     if (connectionId === activeConnection?.id) return;
     setThreadId(null);
     await setDefaultConnection({ connectionId });
@@ -264,7 +263,7 @@ export function NavUser() {
               {data && activeAccount ? (
                 <div
                   key={activeAccount.id}
-                  onClick={handleAccountSwitch(activeAccount.id)}
+                  onClick={() => handleAccountSwitch(activeAccount.id)}
                   className={`flex cursor-pointer items-center ${
                     activeAccount.id === activeConnection?.id && data.connections.length > 1
                       ? 'outline-mainBlue rounded-[5px] outline outline-2'
@@ -301,9 +300,8 @@ export function NavUser() {
               )}
               {otherConnections.slice(0, 2).map((connection) => (
                 <Tooltip key={connection.id}>
-                  <TooltipTrigger asChild>
-                    <div
-                      onClick={handleAccountSwitch(connection.id)}
+                  <TooltipTrigger asChild>                    <div
+                      onClick={() => handleAccountSwitch(connection.id)}
                       className={`flex cursor-pointer items-center ${
                         connection.id === activeConnection?.id && otherConnections.length > 1
                           ? 'outline-mainBlue rounded-[5px] outline outline-2'
@@ -351,10 +349,9 @@ export function NavUser() {
                     side={'bottom'}
                     sideOffset={8}
                   >
-                    {otherConnections.slice(3).map((connection) => (
-                      <DropdownMenuItem
+                    {otherConnections.slice(3).map((connection) => (                      <DropdownMenuItem
                         key={connection.id}
-                        onClick={handleAccountSwitch(connection.id)}
+                        onClick={() => handleAccountSwitch(connection.id)}
                         className="flex cursor-pointer items-center gap-3 py-1"
                       >
                         <Avatar className="size-7 rounded-lg">

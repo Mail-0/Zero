@@ -186,7 +186,6 @@ export function ReorderableConnections({
   const handleDragStart = (event: DragStartEvent) => {
     // Could be used for visual feedback during drag
   };
-
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
@@ -195,14 +194,14 @@ export function ReorderableConnections({
       const newIndex = draggableConnections.findIndex((c) => c.id === over.id);
       
       if (oldIndex !== -1 && newIndex !== -1) {
-        const reorderedConnections = arrayMove(draggableConnections, oldIndex, newIndex);
+        const reorderedDraggableConnections = arrayMove(draggableConnections, oldIndex, newIndex);
         
-        // Create the final order including the active connection at the top
-        let finalConnectionIds: string[] = [];
+        // Create the final order with ALL connections (active first, then reordered draggable ones)
+        const finalConnectionIds: string[] = [];
         if (activeConnectionId) {
           finalConnectionIds.push(activeConnectionId);
         }
-        finalConnectionIds.push(...reorderedConnections.map(c => c.id));
+        finalConnectionIds.push(...reorderedDraggableConnections.map(c => c.id));
         
         try {
           await reorderConnections({ connectionIds: finalConnectionIds });
