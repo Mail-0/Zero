@@ -28,7 +28,7 @@ interface Connection {
   email: string;
   name?: string;
   picture?: string;
-  order: number;
+  orderIndex: number;
 }
 
 interface SortableConnectionItemProps {
@@ -147,8 +147,7 @@ export function ReorderableConnections({
   activeConnectionId,
   onAccountSwitch,
 }: ReorderableConnectionsProps) {
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const { reorderConnections, isPending } = useReorderConnections();
+  const { reorderConnections } = useReorderConnections();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -160,10 +159,9 @@ export function ReorderableConnections({
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
-
   // Sort connections by order, with active connection first
   const sortedConnections = useMemo(() => {
-    const sorted = [...connections].sort((a, b) => a.order - b.order);
+    const sorted = [...connections].sort((a, b) => a.orderIndex - b.orderIndex);
     
     // Move active connection to the top
     if (activeConnectionId) {
@@ -185,9 +183,8 @@ export function ReorderableConnections({
   const connectionIds = useMemo(() => {
     return draggableConnections.map(c => c.id);
   }, [draggableConnections]);
-
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
+    // Could be used for visual feedback during drag
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -214,8 +211,6 @@ export function ReorderableConnections({
         }
       }
     }
-
-    setActiveId(null);
   };
 
   return (

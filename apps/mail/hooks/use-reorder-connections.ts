@@ -6,7 +6,7 @@ export const useReorderConnections = () => {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const { mutateAsync: reorderConnections, isPending } = useMutation({
+  const { mutateAsync: reorderConnections } = useMutation({
     ...trpc.connections.reorder.mutationOptions(),
     onSuccess: () => {
       // Invalidate connections queries to refetch updated order
@@ -22,6 +22,5 @@ export const useReorderConnections = () => {
 
   return {
     reorderConnections,
-    isPending,
   };
 };

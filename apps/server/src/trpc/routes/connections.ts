@@ -16,8 +16,7 @@ export const connectionsRouter = router({
     )
     .query(async ({ ctx }) => {
       const { db, sessionUser } = ctx;
-      const connections = await db
-        .select({
+      const connections = await db        .select({
           id: connection.id,
           email: connection.email,
           name: connection.name,
@@ -26,11 +25,11 @@ export const connectionsRouter = router({
           providerId: connection.providerId,
           accessToken: connection.accessToken,
           refreshToken: connection.refreshToken,
-          order: connection.order,
+          orderIndex: connection.orderIndex,
         })
         .from(connection)
         .where(eq(connection.userId, sessionUser.id))
-        .orderBy(connection.order);
+        .orderBy(connection.orderIndex);
 
       const disconnectedIds = connections
         .filter((c) => !c.accessToken || !c.refreshToken)
@@ -39,13 +38,12 @@ export const connectionsRouter = router({
       return {
         connections: connections.map((connection) => {
           return {
-            id: connection.id,
-            email: connection.email,
+            id: connection.id,            email: connection.email,
             name: connection.name,
             picture: connection.picture,
             createdAt: connection.createdAt,
             providerId: connection.providerId,
-            order: connection.order,
+            orderIndex: connection.orderIndex,
           };
         }),
         disconnectedIds,
@@ -91,8 +89,7 @@ export const connectionsRouter = router({
       createdAt: connection.createdAt,
       providerId: connection.providerId,
     };
-  }),
-  reorder: privateProcedure
+  }),  reorder: privateProcedure
     .input(z.object({ 
       connectionIds: z.array(z.string()).min(1, 'At least one connection ID is required')
     }))
@@ -100,6 +97,14 @@ export const connectionsRouter = router({
       const { connectionIds } = input;
       const { db } = ctx;
       const user = ctx.sessionUser;
+      
+      // Check for duplicate connection IDs
+      if (new Set(connectionIds).size !== connectionIds.length) {
+        throw new TRPCError({ 
+          code: 'BAD_REQUEST', 
+          message: 'Duplicate connection IDs supplied' 
+        });
+      }
       
       // Verify all connections belong to the user
       const userConnections = await db
@@ -117,14 +122,15 @@ export const connectionsRouter = router({
         });
       }
       
-      // Update order for each connection
-      const updatePromises = connectionIds.map((connectionId, index) =>
-        db
-          .update(connection)
-          .set({ order: index })
-          .where(and(eq(connection.id, connectionId), eq(connection.userId, user.id)))
-      );
-      
-      await Promise.all(updatePromises);
+      // Update order for each connection atomically using a transaction
+      await db.transaction(async (tx) => {        const updatePromises = connectionIds.map((connectionId, index) =>
+          tx
+            .update(connection)
+            .set({ orderIndex: index })
+            .where(and(eq(connection.id, connectionId), eq(connection.userId, user.id)))
+        );
+        
+        await Promise.all(updatePromises);
+      });
     }),
 });
