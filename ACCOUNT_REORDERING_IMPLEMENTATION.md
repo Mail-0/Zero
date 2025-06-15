@@ -18,7 +18,7 @@ Implemented a comprehensive account reordering feature for Zero that allows user
 - Added new `reorder` mutation that:
   - Accepts an array of connection IDs in the desired order
   - Validates that all connection IDs belong to the authenticated user
-  - Updates the `order` field for each connection atomically
+  - Updates the `orderIndex` field for each connection atomically
   - Uses proper error handling for invalid connection IDs
 
 ### 3. Frontend Drag-and-Drop Component

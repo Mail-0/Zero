@@ -185,10 +185,10 @@ export function NavUser() {
                           {activeAccount.name || session.user.name || 'User'}
                           {isPro && (
                             <BadgeCheck
-                              className="h-4 w-4 text-white dark:text-[#141414]"
-                              fill="#1D9BF0"
+                              className="h-4 w-4 text-white dark:text-[#141414]"                              fill="#1D9BF0"
                             />
-                          )}                        </div>
+                          )}
+                        </div>
                         <div className="text-muted-foreground text-xs">{activeAccount.email}</div>
                       </div>
                     </div>
@@ -200,10 +200,9 @@ export function NavUser() {
                       {t('common.navUser.accounts')}
                     </p>
 
-                    {data?.connections && (
-                      <ReorderableConnections
+                    {data?.connections && (                      <ReorderableConnections
                         connections={data.connections}
-                        activeConnectionId={activeConnection?.id}
+                        activeConnectionId={activeConnection?.id ?? ''}
                         onAccountSwitch={handleAccountSwitch}
                       />
                     )}
@@ -244,10 +243,8 @@ export function NavUser() {
                     >
                       <div className="flex items-center gap-2">
                         <LogOut size={16} className="opacity-60" />
-                        <p className="text-[13px] opacity-60">{t('common.actions.logout')}</p>
-                      </div>
+                        <p className="text-[13px] opacity-60">{t('common.actions.logout')}</p>                      </div>
                     </DropdownMenuItem>
-                  </>
                 </div>
                 <DropdownMenuSeparator className="mt-1" />
                   <div className="text-muted-foreground/60 flex items-center justify-center gap-1 px-2 pb-2 pt-1 text-[10px]">

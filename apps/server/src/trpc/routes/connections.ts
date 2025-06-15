@@ -105,15 +105,14 @@ export const connectionsRouter = router({
           message: 'Duplicate connection IDs supplied' 
         });
       }
-      
-      // Verify all connections belong to the user
+        // Verify all connections belong to the user
       const userConnections = await db
         .select({ id: connection.id })
         .from(connection)
         .where(eq(connection.userId, user.id));
       
-      const userConnectionIds = userConnections.map(c => c.id);
-      const invalidIds = connectionIds.filter(id => !userConnectionIds.includes(id));
+      const userConnectionSet = new Set(userConnections.map((c) => c.id));
+      const invalidIds = connectionIds.filter((id) => !userConnectionSet.has(id));
       
       if (invalidIds.length > 0) {
         throw new TRPCError({ 
