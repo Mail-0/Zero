@@ -13,8 +13,8 @@ Implemented a comprehensive account reordering feature for Zero that allows user
 ### 2. Backend API Enhancement
 **File**: `apps/server/src/trpc/routes/connections.ts`
 - Updated `list` query to:
-  - Include the `order` field in the response
-  - Order results by the `order` field using `.orderBy(connection.order)`
+  - Include the `orderIndex` field in the response
+  - Order results by the `orderIndex` field using `.orderBy(connection.orderIndex)`
 - Added new `reorder` mutation that:
   - Accepts an array of connection IDs in the desired order
   - Validates that all connection IDs belong to the authenticated user

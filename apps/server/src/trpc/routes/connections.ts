@@ -127,9 +127,7 @@ export const connectionsRouter = router({
         await tx
           .update(connection)
           .set({ orderIndex: sql`order_index + ${connectionIds.length}` })
-          .where(eq(connection.userId, user.id));
-
-        // Then apply the desired ordering for the specified connections
+          .where(eq(connection.userId, user.id));        // Then apply the desired ordering for the specified connections
         const updatePromises = connectionIds.map((connectionId, index) =>
           tx
             .update(connection)
@@ -138,6 +136,19 @@ export const connectionsRouter = router({
         );
         
         await Promise.all(updatePromises);
+
+        // Normalise remaining rows so orderIndex becomes dense again
+        await tx.execute(sql`
+          WITH ordered AS (
+            SELECT id, ROW_NUMBER() OVER (ORDER BY order_index) - 1 AS rn
+            FROM ${connection}
+            WHERE ${connection.userId} = ${user.id}
+          )
+          UPDATE ${connection}
+          SET ${connection.orderIndex} = ordered.rn
+          FROM ordered
+          WHERE ${connection}.id = ordered.id
+        `);
       });
     }),
 });

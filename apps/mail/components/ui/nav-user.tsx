@@ -188,10 +188,10 @@ export function NavUser() {
                               className="h-4 w-4 text-white dark:text-[#141414]"
                               fill="#1D9BF0"
                             />
-                          )}
-                        </div>
+                          )}                        </div>
                         <div className="text-muted-foreground text-xs">{activeAccount.email}</div>
-                      </div>                    </div>
+                      </div>
+                    </div>
                     <DropdownMenuSeparator />
                   </>
                 )}
@@ -234,9 +234,9 @@ export function NavUser() {
                         <div className="flex items-center gap-2">
                           <HelpCircle size={16} className="opacity-60" />
                           <p className="text-[13px] opacity-60">
-                            {t('common.navUser.customerSupport')}
-                          </p>
-                        </div>                      </a>
+                            {t('common.navUser.customerSupport')}                          </p>
+                        </div>
+                      </a>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       className="cursor-pointer"
