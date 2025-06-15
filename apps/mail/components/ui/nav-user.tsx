@@ -41,6 +41,7 @@ import { useQueryState } from 'nuqs';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { ReorderableConnections } from './reorderable-connections';
 
 export function NavUser() {
   const { data: session, refetch: refetchSession, isPending: isSessionPending } = useSession();
@@ -196,46 +197,17 @@ export function NavUser() {
                   </>
                 )}
                 <div className="space-y-1">
-                  <>
-                    <p className="text-muted-foreground px-2 py-1 text-[11px] font-medium">
+                  <>                    <p className="text-muted-foreground px-2 py-1 text-[11px] font-medium">
                       {t('common.navUser.accounts')}
                     </p>
 
-                    {data?.connections
-                      ?.filter((connection) => connection.id !== activeConnection?.id)
-                      .map((connection) => (
-                        <DropdownMenuItem
-                          key={connection.id}
-                          onClick={handleAccountSwitch(connection.id)}
-                          className="flex cursor-pointer items-center gap-3 py-1"
-                        >
-                          <Avatar className="size-7 rounded-lg">
-                            <AvatarImage
-                              className="rounded-lg"
-                              src={connection.picture || undefined}
-                              alt={connection.name || connection.email}
-                            />
-                            <AvatarFallback className="rounded-lg text-[10px]">
-                              {(connection.name || connection.email)
-                                .split(' ')
-                                .map((n) => n[0])
-                                .join('')
-                                .toUpperCase()
-                                .slice(0, 2)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="-space-y-0.5">
-                            <p className="text-[12px]">{connection.name || connection.email}</p>
-                            {connection.name && (
-                              <p className="text-muted-foreground text-[11px]">
-                                {connection.email.length > 25
-                                  ? `${connection.email.slice(0, 25)}...`
-                                  : connection.email}
-                              </p>
-                            )}
-                          </div>
-                        </DropdownMenuItem>
-                      ))}
+                    {data?.connections && (
+                      <ReorderableConnections
+                        connections={data.connections}
+                        activeConnectionId={activeConnection?.id}
+                        onAccountSwitch={(connectionId) => handleAccountSwitch(connectionId)()}
+                      />
+                    )}
                     <AddConnectionDialog />
 
                     <DropdownMenuSeparator className="my-1" />

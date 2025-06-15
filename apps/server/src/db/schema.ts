@@ -99,6 +99,7 @@ export const connection = createTable(
     scope: text('scope').notNull(),
     providerId: text('provider_id').$type<'google' | 'microsoft'>().notNull(),
     expiresAt: timestamp('expires_at').notNull(),
+    order: integer('order').notNull().default(0),
     createdAt: timestamp('created_at').notNull(),
     updatedAt: timestamp('updated_at').notNull(),
   },

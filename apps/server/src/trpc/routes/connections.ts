@@ -26,9 +26,11 @@ export const connectionsRouter = router({
           providerId: connection.providerId,
           accessToken: connection.accessToken,
           refreshToken: connection.refreshToken,
+          order: connection.order,
         })
         .from(connection)
-        .where(eq(connection.userId, sessionUser.id));
+        .where(eq(connection.userId, sessionUser.id))
+        .orderBy(connection.order);
 
       const disconnectedIds = connections
         .filter((c) => !c.accessToken || !c.refreshToken)
@@ -43,6 +45,7 @@ export const connectionsRouter = router({
             picture: connection.picture,
             createdAt: connection.createdAt,
             providerId: connection.providerId,
+            order: connection.order,
           };
         }),
         disconnectedIds,
@@ -89,4 +92,39 @@ export const connectionsRouter = router({
       providerId: connection.providerId,
     };
   }),
+  reorder: privateProcedure
+    .input(z.object({ 
+      connectionIds: z.array(z.string()).min(1, 'At least one connection ID is required')
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const { connectionIds } = input;
+      const { db } = ctx;
+      const user = ctx.sessionUser;
+      
+      // Verify all connections belong to the user
+      const userConnections = await db
+        .select({ id: connection.id })
+        .from(connection)
+        .where(eq(connection.userId, user.id));
+      
+      const userConnectionIds = userConnections.map(c => c.id);
+      const invalidIds = connectionIds.filter(id => !userConnectionIds.includes(id));
+      
+      if (invalidIds.length > 0) {
+        throw new TRPCError({ 
+          code: 'BAD_REQUEST', 
+          message: `Invalid connection IDs: ${invalidIds.join(', ')}` 
+        });
+      }
+      
+      // Update order for each connection
+      const updatePromises = connectionIds.map((connectionId, index) =>
+        db
+          .update(connection)
+          .set({ order: index })
+          .where(and(eq(connection.id, connectionId), eq(connection.userId, user.id)))
+      );
+      
+      await Promise.all(updatePromises);
+    }),
 });
