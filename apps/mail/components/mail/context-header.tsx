@@ -1,28 +1,58 @@
-import { useContextTags } from '@/hooks/use-context-tags.ts';
+import { useContextData } from '@/hooks/use-context-data';
+import {
+  Briefcase,
+  Handshake,
+  DollarSign,
+  Workflow,
+} from 'lucide-react';
+import { formatStageLabel } from '@/lib/utils';
 
 export function ContextHeader({ email }: { email?: string }) {
-  const { tags, isLoading } = useContextTags(email);
+  const { data, isLoading } = useContextData(email);
+  if (!email || isLoading || !data?.contact) return null;
 
-  if (!email || isLoading || !tags.length) return null;
+  const account = data.contact.companyName;
+  const deal = data.deals?.[0];
+
+  const tags = [
+    account && {
+      label: 'Account',
+      value: account,
+      icon: Briefcase,
+    },
+    deal?.name && {
+      label: 'Opportunity',
+      value: deal.name,
+      icon: Handshake,
+    },
+    deal?.amount && {
+      value: Number(deal.amount).toLocaleString(),
+      icon: DollarSign,
+    },
+    deal?.stage && {
+      label: 'Stage',
+      value: formatStageLabel(deal.stage),
+      icon: Workflow,
+    },
+  ].filter(Boolean) as {
+    label: string;
+    value: string;
+    icon: React.ElementType;
+  }[];
 
   return (
-    <div className="mb-4 px-4">
-      <div className="rounded-xl border border-border bg-muted/30 p-4 shadow-sm">
-        <div className="mb-1 text-xs text-muted-foreground font-medium">Customer Context</div>
-        <div className="flex flex-wrap gap-2">
-          {tags.map((tag, i) => (
-            <span
-              key={i}
-              className={`rounded-full px-2 py-1 text-xs font-semibold ${
-                i === 0
-                  ? 'bg-blue-100 text-blue-700'   // Account
-                  : 'bg-green-100 text-green-700' // Deal(s)
-              }`}
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
+    <div className="px-4 pt-3 pb-4">
+      <div className="flex flex-wrap items-center gap-3">
+        {tags.map((tag, i) => (
+          <span
+            key={i}
+            className="inline-flex items-center gap-1.5 rounded-md bg-zinc-100 px-3 py-1 text-sm shadow-sm ring-1 ring-inset ring-zinc-200 dark:bg-zinc-800 dark:text-zinc-100 dark:ring-zinc-700"
+          >
+            <tag.icon className="h-3.5 w-3.5 opacity-70 relative top-[0.5px]" />
+            <span className="font-semibold">{tag.label}:</span>{' '}
+            <span className="font-normal text-zinc-500 dark:text-zinc-400">{tag.value}</span>
+          </span>
+        ))}
       </div>
     </div>
   );

@@ -521,4 +521,29 @@ export const withExponentialBackoff = async <T>(
       retries++;
     }
   }
+}
+
+export function formatStageLabel(stage?: string) {
+  if (!stage) return '';
+
+  // handle known edge cases
+  const manualMap: Record<string, string> = {
+    presentationscheduled: 'Presentation Scheduled',
+    awaitingdemo: 'Awaiting Demo',
+    closedwon: 'Closed Won',
+    contractsent: 'Contract Sent',
+  };
+
+  const normalized = stage.toLowerCase().replace(/[^a-z]/g, '');
+
+  if (manualMap[normalized]) return manualMap[normalized];
+
+  // fallback: split words by number or uppercase boundaries, snake, kebab
+  return stage
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/[_\-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+    .replace(/\b\w/g, (l) => l.toUpperCase());
 };
+

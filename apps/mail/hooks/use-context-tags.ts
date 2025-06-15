@@ -20,7 +20,8 @@ export type ContactContext = {
 };
 
 const fetcher = async (url: string): Promise<ContactContext> => {
-  const apiBase = 'http://localhost:8787'; // TODO: move to .env later
+  const apiBase = import.meta.env.VITE_PUBLIC_BACKEND_URL || 'http://localhost:8787';
+  console.log('📨 Tag fetch →', `${apiBase}${url}`);
   const res = await fetch(`${apiBase}${url}`);
   if (!res.ok) throw new Error('Failed to fetch context');
   return res.json();

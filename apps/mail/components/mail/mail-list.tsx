@@ -69,7 +69,37 @@ const Thread = memo(
     const [, setActiveReplyId] = useQueryState('activeReplyId');
     const [focusedIndex, setFocusedIndex] = useAtom(focusedIndexAtom);
     const latestMessage = getThreadData?.latest;
-    const { tags } = useContextTags(latestMessage?.sender?.email);
+    useEffect(() => {
+      const fetchCRMContext = async () => {
+        if (!getThreadData?.messages?.length) return;
+    
+        const uniqueSenderEmails = Array.from(
+          new Set(getThreadData.messages.map((m) => m.sender?.email).filter(Boolean))
+        );
+    
+        for (const email of uniqueSenderEmails) {
+          try {
+            const res = await fetch(
+              `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/context?email=${encodeURIComponent(email)}`
+            );
+            const json = (await res.json()) as { contact: { id: string } | null };
+            if (json?.contact) {
+              setContextEmail(email);
+              return;
+            }
+          } catch (err) {
+            console.error(`❌ Failed to fetch context for ${email}`, err);
+          }
+        }
+    
+        setContextEmail(null);
+      };
+    
+      fetchCRMContext();
+    }, [getThreadData?.messages]);
+    
+    const [contextEmail, setContextEmail] = useState<string | null>(null);
+    const { tags, isLoading: tagsLoading } = useContextTags(contextEmail ?? undefined);
     console.log('✅ tags for', latestMessage?.sender?.email, tags);
     const idToUse = useMemo(() => latestMessage?.threadId ?? latestMessage?.id, [latestMessage]);
     const { data: settingsData } = useSettings();
@@ -501,8 +531,8 @@ const Thread = memo(
                       </p>
                       
                     )}
-                    {latestMessage?.sender?.email && (
-                    <MailContextTags tags={useContextTags(latestMessage.sender.email).tags} />
+                    {tags?.length > 0 && !tagsLoading && (
+                      <MailContextTags tags={tags} />
                     )}
 
                     {/* <div className="hidden md:flex">

@@ -95,8 +95,8 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
       '  font-size: 14px;',
       '  font-weight: 400;',
       '  line-height: 1.6;',
-      '  color: #1a1a1a;',
-      '  background-color: white;',
+      `  color: ${resolvedTheme === 'dark' ? '#f4f4f5' : '#1a1a1a'};`,
+`  background-color: ${resolvedTheme === 'dark' ? '#1a1a1a' : '#ffffff'};`,
       '  -webkit-font-smoothing: antialiased;',
       '}',
       // enforce text styling on all elements likely to contain text
