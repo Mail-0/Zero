@@ -131,7 +131,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
         );
 
         if (matchingAlias) {
-          fromEmail = userName.trim() ? `${userName.replace(/[<>]/g, '')} <${fromEmail}>` : fromEmail;
+          fromEmail = userName.trim() ? `${userName.replace(/[<>]/g, '')} <${matchingAlias.email}>` : matchingAlias.email;
 
         } else {
           const primaryEmail =  aliases.find((alias) => alias.primary)?.email || aliases[0]?.email || userEmail;
