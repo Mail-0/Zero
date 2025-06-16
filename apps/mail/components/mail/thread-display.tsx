@@ -62,6 +62,14 @@ const cleanNameDisplay = (name?: string) => {
   return name.replace(/["<>]/g, '');
 };
 
+// HTML escaping function to prevent XSS attacks
+const escapeHtml = (text: string): string => {
+  if (!text) return text;
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+};
+
 interface ThreadDisplayProps {
   threadParam?: any;
   onClose?: () => void;
@@ -189,22 +197,8 @@ export function ThreadDisplay() {
   const { resolvedTheme } = useTheme();
   const [focusedIndex, setFocusedIndex] = useAtom(focusedIndexAtom);
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const { mutateAsync: toggleStar } = useMutation(trpc.mail.toggleStar.mutationOptions());
   const { mutateAsync: toggleImportant } = useMutation(trpc.mail.toggleImportant.mutationOptions());
-  const invalidateCount = () =>
-    queryClient.invalidateQueries({ queryKey: trpc.mail.count.queryKey() });
-  const invalidateThread = () =>
-    queryClient.invalidateQueries({ queryKey: trpc.mail.get.queryKey({ id: id ?? '' }) });
-  const { mutateAsync: markAsRead } = useMutation(
-    trpc.mail.markAsRead.mutationOptions({
-      onSuccess: () => {
-        return Promise.all([invalidateCount(), invalidateThread()]);
-      },
-    }),
-  );
   const [, setIsComposeOpen] = useQueryState('isComposeOpen');
-  const markAsReadRef = useRef<Promise<void> | null>(null);
 
   // Get optimistic state for this thread
   const optimisticState = useOptimisticThreadState(id ?? '');
@@ -223,36 +217,18 @@ export function ThreadDisplay() {
   const handleNext = useCallback(() => {
     if (!id || !items.length || focusedIndex === null) return setThreadId(null);
     if (focusedIndex < items.length - 1) {
-      const nextThread = items[focusedIndex + 1];
+      const nextIndex = Math.max(1, focusedIndex + 1);
+      //   console.log('nextIndex', nextIndex);
+
+      const nextThread = items[nextIndex];
+      setActiveReplyId(null);
       if (nextThread) {
         setThreadId(nextThread.id);
-        setActiveReplyId(null);
+        // Don't clear activeReplyId - let the auto-open effect handle it
         setFocusedIndex(focusedIndex + 1);
       }
     }
-  }, [items, id, focusedIndex, setThreadId, setActiveReplyId, setFocusedIndex]);
-
-  useEffect(() => {
-    if (!emailData || !id) return;
-
-    const unreadEmails = emailData.messages.filter((e) => e.unread);
-    if (unreadEmails.length === 0) return;
-
-    const ids = [id, ...unreadEmails.map((e) => e.id)];
-
-    const markAsReadPromise = markAsRead({ ids });
-    markAsReadRef.current = markAsReadPromise;
-
-    void markAsReadPromise.finally(() => {
-      if (markAsReadRef.current === markAsReadPromise) {
-        markAsReadRef.current = null;
-      }
-    });
-
-    return () => {
-      markAsReadRef.current = null;
-    };
-  }, [emailData, id]);
+  }, [items, id, focusedIndex, setThreadId, setFocusedIndex]);
 
   const handleUnsubscribeProcess = () => {
     if (!emailData?.latest) return;
@@ -607,7 +583,7 @@ export function ThreadDisplay() {
 
               <div class="email-body">
                 <div class="email-content">
-                  ${message.decodedBody || '<p><em>No email content available</em></p>'}
+                  ${escapeHtml(message.decodedBody) || '<p><em>No email content available</em></p>'}
                 </div>
               </div>
 
@@ -704,24 +680,20 @@ export function ThreadDisplay() {
     }
   }, [optimisticState.optimisticStarred]);
 
+  // Automatically open Reply All composer when email thread is loaded
   useEffect(() => {
-    const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        handleClose();
-      }
-    };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [handleClose]);
-
-  // When mode changes, set the active reply to the latest message
-  useEffect(() => {
-    // Only clear the active reply when mode is cleared
-    // This prevents overriding the specifically selected message
-    if (!mode) {
-      setActiveReplyId(null);
+    if (emailData?.latest?.id) {
+      // Small delay to ensure other effects have completed
+      const timer = setTimeout(() => {
+        setMode('replyAll');
+        setActiveReplyId(emailData.latest!.id);
+      }, 50);
+      
+      return () => clearTimeout(timer);
     }
-  }, [mode]);
+  }, [emailData?.latest?.id, setMode, setActiveReplyId]);
+
+  // Removed conflicting useEffect that was clearing activeReplyId
 
   // Scroll to the active reply composer when it's opened
   useEffect(() => {
@@ -803,7 +775,7 @@ export function ThreadDisplay() {
           <>
             <div
               className={cn(
-                'flex flex-shrink-0 items-center border-b border-[#E7E7E7] px-1 pb-1 md:px-3 md:pb-[11px] md:pt-[12px] dark:border-[#252525]',
+                'flex flex-shrink-0 items-center px-1 pb-1 md:px-3 md:pb-[11px] md:pt-[12px] ',
                 isMobile && 'bg-panelLight dark:bg-panelDark sticky top-0 z-10 mt-2',
               )}
             >
@@ -883,12 +855,12 @@ export function ThreadDisplay() {
                     setMode('replyAll');
                     setActiveReplyId(emailData?.latest?.id ?? '');
                   }}
-                  className="inline-flex h-7 items-center justify-center gap-1 overflow-hidden rounded-md border bg-white px-1.5 dark:border-none dark:bg-[#313131]"
+                  className="inline-flex h-7 items-center justify-center gap-1 overflow-hidden rounded-lg border bg-white px-1.5 dark:border-none dark:bg-[#313131]"
                 >
                   <Reply className="fill-muted-foreground dark:fill-[#9B9B9B]" />
                   <div className="flex items-center justify-center gap-2.5 pl-0.5 pr-1">
                     <div className="justify-start text-sm leading-none text-black dark:text-white">
-                      Reply
+                      Reply All
                     </div>
                   </div>
                 </button>
@@ -898,7 +870,7 @@ export function ThreadDisplay() {
                     <TooltipTrigger asChild>
                       <button
                         onClick={handleToggleStar}
-                        className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md bg-white dark:bg-[#313131]"
+                        className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-lg bg-white dark:bg-[#313131]"
                       >
                         <Star
                           className={cn(
@@ -923,7 +895,7 @@ export function ThreadDisplay() {
                     <TooltipTrigger asChild>
                       <button
                         onClick={() => moveThreadTo('archive')}
-                        className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md bg-white dark:bg-[#313131]"
+                        className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-lg bg-white dark:bg-[#313131]"
                       >
                         <Archive className="fill-iconLight dark:fill-iconDark" />
                       </button>
@@ -940,7 +912,7 @@ export function ThreadDisplay() {
                       <TooltipTrigger asChild>
                         <button
                           onClick={() => moveThreadTo('bin')}
-                          className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md border border-[#FCCDD5] bg-[#FDE4E9] dark:border-[#6E2532] dark:bg-[#411D23]"
+                          className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-lg border border-[#FCCDD5] bg-[#FDE4E9] dark:border-[#6E2532] dark:bg-[#411D23]"
                         >
                           <Trash className="fill-[#F43F5E]" />
                         </button>
@@ -954,7 +926,7 @@ export function ThreadDisplay() {
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md bg-white focus:outline-none focus:ring-0 dark:bg-[#313131]">
+                    <button className="inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-lg bg-white focus:outline-none focus:ring-0 dark:bg-[#313131]">
                       <ThreeDots className="fill-iconLight dark:fill-iconDark" />
                     </button>
                   </DropdownMenuTrigger>
@@ -1013,33 +985,45 @@ export function ThreadDisplay() {
                 type="auto"
               >
                 <div className="pb-4">
-                  {(emailData.messages || []).map((message, index) => (
-                    <div
-                      key={message.id}
-                      className={cn(
-                        'transition-all duration-200',
-                        index > 0 && 'border-border border-t',
-                        mode && activeReplyId === message.id && '',
-                      )}
-                    >
-                      <MailDisplay
-                        emailData={message}
-                        isFullscreen={isFullscreen}
-                        isMuted={false}
-                        isLoading={false}
-                        index={index}
-                        totalEmails={emailData?.totalReplies}
-                        threadAttachments={index === 0 ? allThreadAttachments : undefined}
-                      />
-                      {mode && activeReplyId === message.id && (
-                        <div className="px-4 py-2" id={`reply-composer-${message.id}`}>
-                          <ReplyCompose messageId={message.id} />
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                  {(emailData.messages || []).map((message, index) => {
+                    const isLastMessage = index === emailData.messages.length - 1;
+                    const isReplyingToThisMessage = mode && activeReplyId === message.id;
+                    
+                    return (
+                      <div
+                        key={message.id}
+                        className={cn(
+                          'transition-all duration-200',
+                          index > 0 && 'border-border border-t',
+                        )}
+                      >
+                        <MailDisplay
+                          emailData={message}
+                          isFullscreen={isFullscreen}
+                          isMuted={false}
+                          isLoading={false}
+                          index={index}
+                          totalEmails={emailData?.totalReplies}
+                          threadAttachments={index === 0 ? allThreadAttachments : undefined}
+                        />
+                        {/* Inline Reply Compose for non-last messages */}
+                        {isReplyingToThisMessage && !isLastMessage && (
+                          <div className="px-4 py-2" id={`reply-composer-${message.id}`}>
+                            <ReplyCompose messageId={message.id} />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </ScrollArea>
+              
+              {/* Sticky Reply Compose at Bottom - Only for last message */}
+              {mode && activeReplyId && activeReplyId === emailData.messages[emailData.messages.length - 1]?.id && (
+                <div className="sticky bottom-0 z-10 border-t border-border bg-panelLight dark:bg-panelDark px-4 py-2" id={`reply-composer-${activeReplyId}`}>
+                  <ReplyCompose messageId={activeReplyId} />
+                </div>
+              )}
             </div>
           </>
         )}

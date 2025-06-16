@@ -4,7 +4,12 @@ import { readFile, writeFile } from 'fs/promises';
 import type { Command } from '.';
 import { join } from 'path';
 
-const requiredManualVariables = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'];
+const requiredManualVariables = [
+  'GOOGLE_CLIENT_ID',
+  'GOOGLE_CLIENT_SECRET',
+  'MICROSOFT_CLIENT_ID',
+  'MICROSOFT_CLIENT_SECRET',
+];
 
 export const command: Command = {
   id: 'env',

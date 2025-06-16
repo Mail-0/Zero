@@ -74,7 +74,7 @@ export function OnboardingDialog({
       <DialogTitle></DialogTitle>
       <DialogContent
         showOverlay
-        className="bg-panelLight w-full max-w-[90%] mx-auto rounded-xl border p-4 sm:max-w-[690px] dark:bg-[#111111]"
+        className="bg-panelLight mx-auto w-full max-w-[90%] rounded-xl border p-4 sm:max-w-[690px] dark:bg-[#111111]"
       >
         <div className="flex flex-col gap-6 p-6">
           <div className="flex items-center justify-center">
@@ -82,7 +82,7 @@ export function OnboardingDialog({
               {steps.map((_, index) => (
                 <div
                   key={index}
-                  className={`h-1 w-7 md:w-16 rounded-full ${
+                  className={`h-1 w-7 rounded-full md:w-16 ${
                     index === currentStep ? 'bg-primary' : 'bg-muted'
                   }`}
                 />
@@ -144,21 +144,16 @@ export function OnboardingDialog({
 
 export function OnboardingWrapper() {
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const ONBOARDING_KEY = 'hasCompletedOnboarding';
 
   useEffect(() => {
-    // Check if the user has already gone through onboarding
-    const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding') === 'true';
-    
-    // Only show onboarding if the user hasn't completed it yet
-    if (!hasCompletedOnboarding) {
-      setShowOnboarding(true);
-    }
+    const hasCompletedOnboarding = localStorage.getItem(ONBOARDING_KEY) === 'true';
+    setShowOnboarding(!hasCompletedOnboarding);
   }, []);
 
   const handleOpenChange = (open: boolean) => {
-    // If the dialog is being closed, mark onboarding as completed
     if (!open) {
-      localStorage.setItem('hasCompletedOnboarding', 'true');
+      localStorage.setItem(ONBOARDING_KEY, 'true');
     }
     setShowOnboarding(open);
   };

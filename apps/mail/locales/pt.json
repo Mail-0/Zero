@@ -83,7 +83,7 @@
         "goToArchive": "Ir para os Arquivados",
         "goToBin": "Ir para Lixeira",
         "goToSettings": "Ir para Configurações",
-        "newEmail": "Novo E-mail",
+        "newEmail": "Novo e-mail",
         "composeMessage": "Novo E-mail",
         "searchEmails": "Pesquisar E-mails",
         "toggleTheme": "Alternar o Tema",
@@ -91,7 +91,19 @@
         "goToDocs": "Ir para documentos",
         "helpWithShortcuts": "Ajuda com atalhos",
         "commandPalette": "Paleta de Comandos"
-      }
+      },
+      "quickResults": "Resultados rápidos",
+      "searchPlaceholder": "Pesquisar...",
+      "noSearchResults": "Sem resultados de pesquisa",
+      "actions": "Ações",
+      "addFilters": "Adicionar filtros",
+      "searchForEmails": "Pesquisar e-mails",
+      "filterPlaceholder": "Filtrar...",
+      "noFilterResults": "Sem resultados de filtro",
+      "availableFilters": "Filtros disponíveis",
+      "examples": "Exemplos",
+      "exampleDate": "Exemplo de data",
+      "exampleSender": "Exemplo de remetente"
     },
     "searchBar": {
       "pickDateRange": "Escolha uma data ou um intervalo",
@@ -136,7 +148,11 @@
       "updates": "Atualizações",
       "promotions": "Promoções",
       "social": "Social",
-      "unread": "Não lidos"
+      "unread": "Não lidos",
+      "starred": "Favoritos",
+      "notes": "Notas",
+      "forums": "Fóruns",
+      "work": "Trabalho"
     },
     "replyCompose": {
       "replyTo": "Responder para",
@@ -328,7 +344,8 @@
       "archive": "Arquivados",
       "bin": "Lixeira",
       "feedback": "Feedback",
-      "settings": "Configurações"
+      "settings": "Configurações",
+      "voice": "Assistente de voz"
     },
     "settings": {
       "general": "Geral",
@@ -366,7 +383,9 @@
         "customPrompt": "Prompt personalizado de IA",
         "customPromptPlaceholder": "Digite seu prompt personalizado para a IA...",
         "customPromptDescription": "Personalize como a IA escreve suas respostas de email. Isto será adicionado ao prompt base.",
-        "noResultsFound": "Nenhum resultado encontrado"
+        "noResultsFound": "Nenhum resultado encontrado",
+        "zeroSignature": "Assinatura Zero",
+        "zeroSignatureDescription": "Adicionar uma assinatura Zero aos seus e-mails."
       },
       "connections": {
         "title": "Conexões de E-mail",
@@ -466,7 +485,15 @@
           "showUpdates": "Mostrar atualizações",
           "showPromotions": "Mostrar promoções",
           "showUnread": "Mostrar não lidos",
-          "selectUnderCursor": "Selecionar sob o cursor"
+          "selectUnderCursor": "Selecionar sob o cursor",
+          "openVoice": "Abrir assistente de voz",
+          "clearAllFilters": "Limpar todos os filtros",
+          "markAsImportant": "Marcar como importante",
+          "markAsUnimportant": "Marcar como não importante",
+          "bulkDelete": "Exclusão em massa",
+          "bulkSelect": "Seleção em massa",
+          "bulkArchive": "Arquivamento em massa",
+          "bulkStar": "Marcar com estrela em massa"
         }
       },
       "labels": {

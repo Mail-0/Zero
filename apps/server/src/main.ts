@@ -1,6 +1,5 @@
 import { env, WorkerEntrypoint } from 'cloudflare:workers';
 import { contextStorage } from 'hono/context-storage';
-import { ZeroMCP } from './services/mcp-service/mcp';
 import { createLocalJWKSet, jwtVerify } from 'jose';
 import { routePartykitRequest } from 'partyserver';
 import { trpcServer } from '@hono/trpc-server';
@@ -9,6 +8,7 @@ import { DurableMailbox } from './lib/party';
 import { autumnApi } from './routes/autumn';
 import { ZeroAgent } from './routes/chat';
 import type { HonoContext } from './ctx';
+import { ZeroMCP } from './routes/chat';
 import { createAuth } from './lib/auth';
 import { aiRouter } from './routes/ai';
 import { Autumn } from 'autumn-js';

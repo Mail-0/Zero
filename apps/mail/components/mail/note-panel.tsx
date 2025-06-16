@@ -514,7 +514,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
             variant="ghost"
             size="sm"
             className={cn(
-              'inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-md bg-white dark:bg-[#313131]',
+              'inline-flex h-7 w-7 items-center justify-center gap-1 overflow-hidden rounded-lg bg-white dark:bg-[#313131]',
               notes.length > 0 && 'text-amber-500',
               isOpen && 'bg-white/80 dark:bg-[#313131]/80',
             )}

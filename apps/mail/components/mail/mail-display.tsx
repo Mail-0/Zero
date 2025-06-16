@@ -45,8 +45,8 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { memo, useEffect, useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import type { Sender, ParsedMessage, Attachment } from '@/types';
 import { useActiveConnection } from '@/hooks/use-connections';
@@ -75,7 +75,14 @@ import { format, set } from 'date-fns';
 import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Badge } from '../ui/badge';
-import JSZip from 'jszip';
+
+// HTML escaping function to prevent XSS attacks
+function escapeHtml(text: string): string {
+  if (!text) return text;
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
 
 function TextSelectionPopover({
   children,
@@ -308,6 +315,7 @@ type Props = {
 };
 
 const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
+  const t = useTranslations()
   const visibleLabels = labels.filter(
     (label) => !['unread', 'inbox'].includes(label.toLowerCase()),
   );
@@ -321,39 +329,48 @@ const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
 
         let icon = null;
         let bgColor = '';
+        let labelText= '';
 
         switch (normalizedLabel) {
           case 'important':
             icon = <Lightning className="h-3.5 w-3.5 fill-white" />;
             bgColor = 'bg-[#F59E0D]';
+            labelText = t('common.mailCategories.important');
             break;
           case 'promotions':
             icon = <Tag className="h-3.5 w-3.5 fill-white" />;
             bgColor = 'bg-[#F43F5E]';
+            labelText = t('common.mailCategories.promotions');
             break;
           case 'personal':
             icon = <User className="h-3.5 w-3.5 fill-white" />;
             bgColor = 'bg-[#39AE4A]';
+            labelText = t('common.mailCategories.personal');
             break;
           case 'updates':
             icon = <Bell className="h-3.5 w-3.5 fill-white" />;
             bgColor = 'bg-[#8B5CF6]';
+            labelText= t('common.mailCategories.updates');
             break;
           case 'work':
             icon = <Briefcase className="h-3.5 w-3.5 text-white" />;
             bgColor = '';
+            labelText= t('common.mailCategories.work');
             break;
           case 'forums':
             icon = <Users className="h-3.5 w-3.5 text-white" />;
             bgColor = 'bg-blue-600';
+            labelText= t('common.mailCategories.forums');
             break;
           case 'notes':
             icon = <StickyNote className="h-3.5 w-3.5 text-white" />;
             bgColor = 'bg-amber-500';
+            labelText= t('common.mailCategories.notes');
             break;
           case 'starred':
             icon = <Star className="h-3.5 w-3.5 fill-white text-white" />;
             bgColor = 'bg-yellow-500';
+            labelText = t('common.mailCategories.starred');
             break;
           default:
             return null;
@@ -370,7 +387,7 @@ const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
               </Badge>
             </TooltipTrigger>
             <TooltipContent>
-              <p className="text-xs text-white">{label}</p>
+              <p className="text-xs">{labelText}</p>
             </TooltipContent>
           </Tooltip>
         );
@@ -542,9 +559,11 @@ const downloadAttachment = (attachment: { body: string; mimeType: string; filena
 };
 
 const handleDownloadAllAttachments =
-  (subject: string, attachments: { body: string; mimeType: string; filename: string }[]) => () => {
+  (subject: string, attachments: { body: string; mimeType: string; filename: string }[]) =>
+  async () => {
     if (!attachments.length) return;
 
+    const JSZip = (await import('jszip')).default;
     const zip = new JSZip();
 
     console.log('attachments', attachments);
@@ -801,12 +820,18 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
 
   const isLastEmail = totalEmails && index === totalEmails - 1;
 
+  const [, setMode] = useQueryState('mode');
+
   useEffect(() => {
     if (!demo) {
       if (activeReplyId === emailData.id) {
+        // Always expand the email being replied to
         setIsCollapsed(false);
       } else {
-        setIsCollapsed(activeReplyId ? true : isLastEmail ? false : true);
+        // For emails not being replied to, use the default behavior:
+        // - Last email should be expanded
+        // - All other emails should be collapsed
+        setIsCollapsed(!isLastEmail);
       }
       // Set all emails to collapsed by default except the last one
       if (totalEmails && index === totalEmails - 1) {
@@ -818,7 +843,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
         }
       }
     }
-  }, [demo, emailData.id, isLastEmail]);
+  }, [demo, emailData.id, isLastEmail, activeReplyId]);
 
   //   const listUnsubscribeAction = useMemo(
   //     () =>
@@ -844,8 +869,6 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
   //       setUnsubscribed(false);
   //     }
   //   };
-
-  const [, setMode] = useQueryState('mode');
 
   // Clear any pending timeouts when component unmounts
   useEffect(() => {
@@ -1184,7 +1207,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                 
                 <div class="meta-row">
                   <span class="meta-label">Date:</span>
-                  <span class="meta-value">${format(new Date(emailData.receivedOn), 'PPpp')}</span>
+                  <span class="meta-value">${formatDate(emailData.receivedOn)}</span>
                 </div>
               </div>
             </div>
@@ -1194,7 +1217,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             <!-- Email Body -->
             <div class="email-body">
               <div class="email-content">
-                ${emailData.decodedBody || '<p><em>No email content available</em></p>'}
+                ${escapeHtml(emailData.decodedBody) || '<p><em>No email content available</em></p>'}
               </div>
             </div>
             
@@ -1517,7 +1540,10 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                     {t('common.mailDisplay.date')}:
                                   </span>
                                   <span className="text-muted-foreground ml-3">
-                                    {format(new Date(emailData?.receivedOn), 'PPpp')}
+                                    {emailData?.receivedOn &&
+                                    !isNaN(new Date(emailData.receivedOn).getTime())
+                                      ? format(new Date(emailData.receivedOn), 'PPpp')
+                                      : ''}
                                   </span>
                                 </div>
                                 <div className="flex">
@@ -1750,7 +1776,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                     ))}
                   </div>
                 ) : null}
-                <div className="mb-2 mt-2 flex gap-2 px-4">
+                <div className="my-2.5 flex gap-2 px-4">
                   <ActionButton
                     onClick={(e) => {
                       e.stopPropagation();

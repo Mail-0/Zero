@@ -1,15 +1,28 @@
-import { GmailSearchAssistantSystemPrompt } from '../../../lib/prompts';
+import {
+  GmailSearchAssistantSystemPrompt,
+  OutlookSearchAssistantSystemPrompt,
+} from '../../../lib/prompts';
 import { activeDriverProcedure } from '../../trpc';
-import { groq } from '@ai-sdk/groq';
+import { openai } from '@ai-sdk/openai';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 
 export const generateSearchQuery = activeDriverProcedure
   .input(z.object({ query: z.string() }))
-  .mutation(async ({ input }) => {
+  .mutation(async ({ input, ctx }) => {
+    const {
+      activeConnection: { providerId },
+    } = ctx;
+    const systemPrompt =
+      providerId === 'google'
+        ? GmailSearchAssistantSystemPrompt()
+        : providerId === 'microsoft'
+          ? OutlookSearchAssistantSystemPrompt()
+          : '';
+
     const result = await generateObject({
-      model: groq('meta-llama/llama-4-maverick-17b-128e-instruct'),
-      system: GmailSearchAssistantSystemPrompt(),
+      model: openai('gpt-4o'),
+      system: systemPrompt,
       prompt: input.query,
       schema: z.object({
         query: z.string(),

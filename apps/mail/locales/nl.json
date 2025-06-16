@@ -91,7 +91,19 @@
         "goToDocs": "Ga naar documentatie",
         "helpWithShortcuts": "Help met sneltoetsen",
         "commandPalette": "Opdrachtenpalet"
-      }
+      },
+      "quickResults": "Snelle resultaten",
+      "searchPlaceholder": "Zoeken...",
+      "noSearchResults": "Geen zoekresultaten",
+      "actions": "Acties",
+      "addFilters": "Filters toevoegen",
+      "searchForEmails": "Zoeken naar e-mails",
+      "filterPlaceholder": "Filter...",
+      "noFilterResults": "Geen filterresultaten",
+      "availableFilters": "Beschikbare filters",
+      "examples": "Voorbeelden",
+      "exampleDate": "Voorbeelddatum",
+      "exampleSender": "Voorbeeldafzender"
     },
     "searchBar": {
       "pickDateRange": "Kies een datum of een periode",
@@ -136,7 +148,11 @@
       "updates": "Updates",
       "promotions": "Promoties",
       "social": "Sociaal",
-      "unread": "Ongelezen"
+      "unread": "Ongelezen",
+      "starred": "Met ster",
+      "notes": "Notities",
+      "forums": "Forums",
+      "work": "Werk"
     },
     "replyCompose": {
       "replyTo": "Antwoorden op",
@@ -328,7 +344,8 @@
       "archive": "Archief",
       "bin": "Prullenbak",
       "feedback": "Feedback",
-      "settings": "Instellingen"
+      "settings": "Instellingen",
+      "voice": "Spraakassistent"
     },
     "settings": {
       "general": "Algemeen",
@@ -366,7 +383,9 @@
         "customPrompt": "Aangepaste AI-prompt",
         "customPromptPlaceholder": "Voer je aangepaste prompt in voor de AI...",
         "customPromptDescription": "Pas aan hoe de AI je e-mailantwoorden schrijft. Dit wordt toegevoegd aan de basisprompt.",
-        "noResultsFound": "Geen resultaten gevonden"
+        "noResultsFound": "Geen resultaten gevonden",
+        "zeroSignature": "Zero-handtekening",
+        "zeroSignatureDescription": "Voeg een Zero-handtekening toe aan je e-mails."
       },
       "connections": {
         "title": "E-mailverbindingen",
@@ -466,7 +485,15 @@
           "showUpdates": "Toon updates",
           "showPromotions": "Toon promoties",
           "showUnread": "Toon ongelezen",
-          "selectUnderCursor": "Selecteer onder cursor"
+          "selectUnderCursor": "Selecteer onder cursor",
+          "openVoice": "Spraakassistent openen",
+          "clearAllFilters": "Alle filters wissen",
+          "markAsImportant": "Markeren als belangrijk",
+          "markAsUnimportant": "Markeren als onbelangrijk",
+          "bulkDelete": "Bulk verwijderen",
+          "bulkSelect": "Bulk selecteren",
+          "bulkArchive": "Bulk archiveren",
+          "bulkStar": "Bulk markeren met ster"
         }
       },
       "labels": {

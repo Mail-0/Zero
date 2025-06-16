@@ -91,7 +91,19 @@
         "goToDocs": "Voir la documentation",
         "helpWithShortcuts": "Aide sur les raccourcis",
         "commandPalette": "Palette de commandes"
-      }
+      },
+      "quickResults": "Résultats rapides",
+      "searchPlaceholder": "Rechercher...",
+      "noSearchResults": "Aucun résultat de recherche",
+      "actions": "Actions",
+      "addFilters": "Ajouter des filtres",
+      "searchForEmails": "Rechercher des courriels",
+      "filterPlaceholder": "Filtrer...",
+      "noFilterResults": "Aucun résultat de filtre",
+      "availableFilters": "Filtres disponibles",
+      "examples": "Exemples",
+      "exampleDate": "Exemple de date",
+      "exampleSender": "Exemple d'expéditeur"
     },
     "searchBar": {
       "pickDateRange": "Choisir une date ou une plage",
@@ -136,7 +148,11 @@
       "updates": "Mises à jour",
       "promotions": "Promotions",
       "social": "Social",
-      "unread": "Non lu"
+      "unread": "Non lu",
+      "starred": "Favoris",
+      "notes": "Notes",
+      "forums": "Forums",
+      "work": "Travail"
     },
     "replyCompose": {
       "replyTo": "Répondre à",
@@ -328,7 +344,8 @@
       "archive": "Archives",
       "bin": "Corbeille",
       "feedback": "Vos commentaires",
-      "settings": "Paramètres"
+      "settings": "Paramètres",
+      "voice": "Assistant vocal"
     },
     "settings": {
       "general": "Général",
@@ -366,7 +383,9 @@
         "customPrompt": "Requêtes IA personnalisées",
         "customPromptPlaceholder": "Entrez votre requête personnalisée pour l'IA...",
         "customPromptDescription": "Personnalisez la façon dont l'IA écrit vos réponses. Cela sera ajouté à la requête par défaut.",
-        "noResultsFound": "Aucun résultat trouvé"
+        "noResultsFound": "Aucun résultat trouvé",
+        "zeroSignature": "Signature Zero",
+        "zeroSignatureDescription": "Ajouter une signature Zero à vos courriels."
       },
       "connections": {
         "title": "Connexions de courriels",
@@ -466,7 +485,15 @@
           "showUpdates": "Afficher les mises à jour",
           "showPromotions": "Afficher les promotions",
           "showUnread": "Afficher les non lus",
-          "selectUnderCursor": "Sélectionner sous le curseur"
+          "selectUnderCursor": "Sélectionner sous le curseur",
+          "openVoice": "Ouvrir l'assistant vocal",
+          "clearAllFilters": "Effacer tous les filtres",
+          "markAsImportant": "Marquer comme important",
+          "markAsUnimportant": "Marquer comme non important",
+          "bulkDelete": "Suppression en masse",
+          "bulkSelect": "Sélection en masse",
+          "bulkArchive": "Archivage en masse",
+          "bulkStar": "Marquage en masse avec étoile"
         }
       },
       "labels": {

@@ -49,7 +49,14 @@
       "save": "Mentés",
       "remove": "Eltávolítás",
       "settings": "Beállítások",
-      "exitSelectionModeEsc": "Kattintson vagy nyomja meg az ESC billentyűt a kijelölési módból való kilépéshez"
+      "exitSelectionModeEsc": "Kattintson vagy nyomja meg az ESC billentyűt a kijelölési módból való kilépéshez",
+      "deleteAllSpam": "Összes spam törlése",
+      "deletingAllSpam": "Összes spam törlése...",
+      "deletedAllSpam": "{count} spam e-mail törölve",
+      "errorDeletingSpam": "Nem sikerült törölni a spam e-maileket",
+      "confirmDeleteSpam": "Összes spam törlése",
+      "confirmDeleteSpamDescription": "Biztosan törölni szeretné az összes spam e-mailt? Ez a művelet nem vonható vissza.",
+      "confirmDelete": "Törlés"
     },
     "themes": {
       "dark": "Sötét",
@@ -84,7 +91,19 @@
         "goToDocs": "Ugrás a dokumentációhoz",
         "helpWithShortcuts": "Segítség a gyorsbillentyűkhöz",
         "commandPalette": "Parancspaletta"
-      }
+      },
+      "quickResults": "Gyors eredmények",
+      "searchPlaceholder": "Keresés...",
+      "noSearchResults": "Nincs találat",
+      "actions": "Műveletek",
+      "addFilters": "Szűrők hozzáadása",
+      "searchForEmails": "E-mailek keresése",
+      "filterPlaceholder": "Szűrés...",
+      "noFilterResults": "Nincs szűrési eredmény",
+      "availableFilters": "Elérhető szűrők",
+      "examples": "Példák",
+      "exampleDate": "Példa dátum",
+      "exampleSender": "Példa feladó"
     },
     "searchBar": {
       "pickDateRange": "Válassz dátumot vagy időtartományt",
@@ -129,7 +148,11 @@
       "updates": "Frissítések",
       "promotions": "Promóciók",
       "social": "Közösségi",
-      "unread": "Olvasatlan"
+      "unread": "Olvasatlan",
+      "starred": "Csillagozott",
+      "notes": "Jegyzetek",
+      "forums": "Fórumok",
+      "work": "Munka"
     },
     "replyCompose": {
       "replyTo": "Válasz erre",
@@ -321,7 +344,8 @@
       "archive": "Archívum",
       "bin": "Lomtár",
       "feedback": "Visszajelzés",
-      "settings": "Beállítások"
+      "settings": "Beállítások",
+      "voice": "Hangasszisztens"
     },
     "settings": {
       "general": "Általános",
@@ -359,7 +383,9 @@
         "customPrompt": "Egyéni AI utasítás",
         "customPromptPlaceholder": "Írd be az egyéni utasításodat az AI számára...",
         "customPromptDescription": "Szabd testre, hogyan írja az AI az e-mail válaszaidat. Ez hozzáadódik az alap utasításhoz.",
-        "noResultsFound": "Nincs találat"
+        "noResultsFound": "Nincs találat",
+        "zeroSignature": "Zero aláírás",
+        "zeroSignatureDescription": "Zero aláírás hozzáadása az e-mailjeihez."
       },
       "connections": {
         "title": "E-mail kapcsolatok",
@@ -459,7 +485,15 @@
           "showUpdates": "Frissítések megjelenítése",
           "showPromotions": "Promóciók megjelenítése",
           "showUnread": "Olvasatlan üzenetek megjelenítése",
-          "selectUnderCursor": "Kurzor alatti elem kiválasztása"
+          "selectUnderCursor": "Kurzor alatti elem kiválasztása",
+          "openVoice": "Hangasszisztens megnyitása",
+          "clearAllFilters": "Összes szűrő törlése",
+          "markAsImportant": "Megjelölés fontosként",
+          "markAsUnimportant": "Megjelölés nem fontosként",
+          "bulkDelete": "Tömeges törlés",
+          "bulkSelect": "Tömeges kijelölés",
+          "bulkArchive": "Tömeges archiválás",
+          "bulkStar": "Tömeges csillagozás"
         }
       },
       "labels": {

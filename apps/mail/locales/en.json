@@ -88,7 +88,7 @@
         "goToArchive": "Go to Archive",
         "goToBin": "Go to Bin",
         "goToSettings": "Go to Settings",
-        "newEmail": "New Email",
+        "newEmail": "New email",
         "composeMessage": "New Email",
         "searchEmails": "Search Emails",
         "toggleTheme": "Toggle Theme",
@@ -153,7 +153,11 @@
       "updates": "Updates",
       "promotions": "Promotions",
       "social": "Social",
-      "unread": "Unread"
+      "unread": "Unread",
+      "starred": "Starred",
+      "notes": "Notes",
+      "forums": "Forums",
+      "work": "Work"
     },
     "replyCompose": {
       "replyTo": "Reply to",
@@ -488,7 +492,17 @@
           "showUpdates": "Show updates",
           "showPromotions": "Show promotions",
           "showUnread": "Show unread",
-          "selectUnderCursor": "Select under cursor"
+          "selectUnderCursor": "Select under cursor",
+          "openVoice": "Open Voice Assistant",
+          "clearAllFilters": "Clear all filters",
+          "markAsImportant": "Mark as important",
+          "markAsUnimportant": "Mark as unimportant",
+          "bulkDelete": "Bulk delete",
+          "bulkSelect": "Bulk select",
+          "bulkArchive": "Bulk archive",
+          "bulkStar": "Bulk star"
+
+          
         }
       },
       "labels": {

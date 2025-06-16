@@ -76,7 +76,7 @@ checksums:
     common/commandPalette/commands/goToArchive: 0c717740df71d4ddc42b1e90d5a97676
     common/commandPalette/commands/goToBin: 5b567f48c63b3352fc37cd807f6117bf
     common/commandPalette/commands/goToSettings: 6ace3a9c8e0d0bcef02e8835a8e0ac08
-    common/commandPalette/commands/newEmail: 45b7a175e9f4aaf32558ae59dbfa9541
+    common/commandPalette/commands/newEmail: a27757376ab05ff223433ab520a3f489
     common/commandPalette/commands/composeMessage: 45b7a175e9f4aaf32558ae59dbfa9541
     common/commandPalette/commands/searchEmails: cbe4e19fa34208326dd5a5fcc1e7d02e
     common/commandPalette/commands/toggleTheme: 0a3e19fea2f7b1045f53ebf0ccff6bd5
@@ -135,6 +135,10 @@ checksums:
     common/mailCategories/promotions: 046d70330572dc2b24522e3296ebddd6
     common/mailCategories/social: ff80c74b36f0511287404d286ec7976e
     common/mailCategories/unread: 3cc4336d27b43274c0f38350dae2421d
+    common/mailCategories/starred: ffe2e6d743353191e792c494336777f6
+    common/mailCategories/notes: 93c7ef9bc767f51fbe360afcf6b1fecb
+    common/mailCategories/forums: 028ba63a4c8ee444d870c99ae4721f4b
+    common/mailCategories/work: 8511de4788623b09e595581433c410bd
     common/replyCompose/replyTo: e7f83bcc57c1e4248e6835477cd8e28a
     common/replyCompose/thisEmail: 74ce60ea90c3119d506bc9a9f1893a5c
     common/replyCompose/dropFiles: e24aa4f8bf0eb75c7622ee8d5427840f
@@ -420,6 +424,14 @@ checksums:
     pages/settings/shortcuts/actions/showPromotions: 0adf7973051c25739500c0a74f556d68
     pages/settings/shortcuts/actions/showUnread: e53cd61d7e4fe6f1695d02c864909a39
     pages/settings/shortcuts/actions/selectUnderCursor: d4642d66eb27aea7513af1fbb1bd3bb2
+    pages/settings/shortcuts/actions/openVoice: 2714834f0421b991f34a5691b64e3e7f
+    pages/settings/shortcuts/actions/clearAllFilters: 0bc64da95ec15d9bc7fb12cb77f2838a
+    pages/settings/shortcuts/actions/markAsImportant: 769bc967a0b821770be68d7f0bd8fe10
+    pages/settings/shortcuts/actions/markAsUnimportant: cbd2aecd8cfb3abef02f6751af998812
+    pages/settings/shortcuts/actions/bulkDelete: 031d6c108a5e54ede0a8633310d2aff7
+    pages/settings/shortcuts/actions/bulkSelect: 0ea2ec60fc2c2b3ac674ee25dbb9877f
+    pages/settings/shortcuts/actions/bulkArchive: 52af7732715466e200a08108339e1283
+    pages/settings/shortcuts/actions/bulkStar: 07aa74bbf7f2637eb35202c2793745c3
     pages/settings/labels/title: 6f15627a90002323eac018274b6922d6
     pages/settings/labels/description: 0418ef2ed4c3ca5082fddd6686b8596d
     pages/settings/dangerZone/title: ab5417cabdfa70b0a7c9d407ec69b450
