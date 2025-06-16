@@ -20,15 +20,17 @@ export const runCommand = async (command: string, args: string[], options: Spawn
   const finalCommand = isWindows ? 'cmd.exe' : command;
   const finalArgs = isWindows ? ['/c', command, ...args] : args;
   
-  const child = spawn(finalCommand, finalArgs, { 
-    stdio: 'inherit', 
-    shell: true,
-    ...options 
-  });
+  const spawnOptions: SpawnOptions = {
+    stdio: 'inherit',
+    ...options,
+    ...(isWindows && options.shell === undefined ? { shell: true } : {})
+  };
+  
+  const child = spawn(finalCommand, finalArgs, spawnOptions);
 
-  await new Promise((resolve, reject) => {
-    child.once('close', resolve);
-    child.once('error', reject);
+  await new Promise<void>((resolve, reject) => {
+    child.once('close', () => resolve());
+    child.once('error', (err) => reject(err));
   });
 };
 
