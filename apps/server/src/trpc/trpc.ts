@@ -8,9 +8,14 @@ import { redis } from '../lib/services';
 import { eq, and } from 'drizzle-orm';
 import type { Context } from 'hono';
 import superjson from 'superjson';
+import type { InferSelectModel } from 'drizzle-orm'; // Import for type inference
+
+// Define type for connection based on schema
+type Connection = InferSelectModel<typeof connection>;
 
 type TrpcContext = {
   c: Context<HonoContext>;
+  activeConnection?: Connection; // Add activeConnection
 } & HonoVariables;
 
 const t = initTRPC.context<TrpcContext>().create({ transformer: superjson });

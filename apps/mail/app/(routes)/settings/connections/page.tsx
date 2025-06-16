@@ -13,10 +13,10 @@ import { AddConnectionDialog } from '@/components/connection/add';
 import { PricingDialog } from '@/components/ui/pricing-dialog';
 import { useSession, authClient } from '@/lib/auth-client';
 import { useConnections } from '@/hooks/use-connections';
-import { useTRPC } from '@/providers/query-provider';
+import { useTRPC, trpcClient } from '@/providers/query-provider';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useMutation } from '@tanstack/react-query';
-import { Trash, Plus, Unplug } from 'lucide-react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { Trash, Plus, Unplug, Palette } from 'lucide-react';
 import { useThreads } from '@/hooks/use-threads';
 import { useBilling } from '@/hooks/use-billing';
 import { emailProviders } from '@/lib/constants';
@@ -26,6 +26,16 @@ import { useTranslations } from 'use-intl';
 import { useQueryState } from 'nuqs';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
+import type { ServerTheme } from '@/types/theme';
+import { Link } from 'react-router';
 
 export default function ConnectionsPage() {
   const { data, isLoading, refetch: refetchConnections } = useConnections();
@@ -37,6 +47,35 @@ export default function ConnectionsPage() {
   const [{ refetch: refetchThreads }] = useThreads();
   const { isPro } = useBilling();
   const [, setPricingDialog] = useQueryState('pricingDialog');
+  
+  // Fetch available themes
+  const { data: themes = [] } = useQuery<ServerTheme[]>({
+    queryKey: ['themes'],
+    queryFn: async () => {
+      return await trpcClient.theme.getThemes.query();
+    },
+  });
+  
+  // Set theme for connection mutation
+  const { mutate: setConnectionTheme } = useMutation({
+    mutationFn: async ({ connectionId, themeId }: { connectionId: string; themeId?: string | null }) => {
+      return await fetch(`/api/v1/connections/${connectionId}/theme`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ themeId }),
+      }).then(res => res.json());
+    },
+    onSuccess: () => {
+      toast.success('Theme updated successfully');
+      refetchConnections();
+    },
+    onError: () => {
+      toast.error('Failed to update theme');
+    },
+  });
+  
   const disconnectAccount = async (connectionId: string) => {
     await deleteConnection(
       { connectionId },
@@ -51,6 +90,10 @@ export default function ConnectionsPage() {
     void refetchConnections();
     refetch();
     void refetchThreads();
+  };
+  
+  const handleThemeChange = (connectionId: string, themeId: string | null) => {
+    setConnectionTheme({ connectionId, themeId });
   };
 
   return (
@@ -137,6 +180,41 @@ export default function ConnectionsPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
+                      {/* Theme Dropdown */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
+                            <Palette className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Theme</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleThemeChange(connection.id, null)}>
+                            Default
+                          </DropdownMenuItem>
+                          {themes.map((theme) => (
+                            <DropdownMenuItem 
+                              key={theme.id} 
+                              onClick={() => handleThemeChange(connection.id, theme.id)}
+                              className="flex items-center gap-2"
+                            >
+                              <div 
+                                className="h-3 w-3 rounded-full" 
+                                style={{ backgroundColor: theme.colors.primary }}
+                              />
+                              {theme.name}
+                            </DropdownMenuItem>
+                          ))}
+                          <DropdownMenuSeparator />
+                          <Link to="/settings/themes">
+                            <DropdownMenuItem>
+                              Manage Themes
+                            </DropdownMenuItem>
+                          </Link>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      
                       {data.disconnectedIds?.includes(connection.id) ? (
                         <>
                           <div>

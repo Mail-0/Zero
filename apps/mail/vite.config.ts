@@ -43,7 +43,10 @@ export default defineConfig({
   ssr: {
     optimizeDeps: {
       include: ['novel', '@tiptap/extension-placeholder'],
-    },
+    }
+  },
+  define: {
+    __dirname: JSON.stringify('/'), // Fallback for __dirname
   },
   build: {
     sourcemap: true,
@@ -53,4 +56,5 @@ export default defineConfig({
       tslib: 'tslib/tslib.es6.js',
     },
   },
+  
 });

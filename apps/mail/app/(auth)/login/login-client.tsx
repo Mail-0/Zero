@@ -1,13 +1,23 @@
 import { useEffect, type ReactNode, useState, Suspense } from 'react';
+import type { Dispatch, SetStateAction } from 'react'; // Use type-only import for Dispatch and SetStateAction
 import type { EnvVarInfo } from '@zero/server/auth-providers';
 import ErrorMessage from '@/app/(auth)/login/error-message';
-import { signIn, useSession } from '@/lib/auth-client';
+import { signIn } from '@/lib/auth-client';
 import { Google, Microsoft } from '@/components/icons/icons';
 import { Button } from '@/components/ui/button';
 import { TriangleAlert } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
+import { trpcClient } from '@/providers/query-provider';
 
+// Define Theme interface
+interface Theme {
+  id: string;
+  name: string;
+}
+
+// Define EnvVarStatus interface
 interface EnvVarStatus {
   name: string;
   set: boolean;
@@ -15,6 +25,7 @@ interface EnvVarStatus {
   defaultValue?: string;
 }
 
+// Define Provider interface
 interface Provider {
   id: string;
   name: string;
@@ -26,21 +37,51 @@ interface Provider {
   customRedirectPath?: string;
 }
 
+// Define SelectOption interface for the Select component
+interface SelectOption {
+  value: string;
+  label: string;
+}
+
+// Define props for the Select component
+interface SelectProps {
+  defaultValue?: string;
+  onValueChange: Dispatch<SetStateAction<string>>;
+  options: SelectOption[];
+}
+
+// Define LoginClientProps interface
 interface LoginClientProps {
   providers: Provider[];
   isProd: boolean;
 }
 
+// Mock Select component (replace with your actual Select component)
+function Select({ defaultValue, onValueChange, options }: SelectProps) {
+  return (
+    <select
+      value={defaultValue}
+      onChange={(e) => onValueChange(e.target.value)}
+      className="border rounded p-2"
+    >
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+// Helper function to get provider icon
 const getProviderIcon = (providerId: string, className?: string): ReactNode => {
   const defaultClass = className || 'w-5 h-5 mr-2';
 
   switch (providerId) {
     case 'google':
       return <Google className={defaultClass} />;
-
     case 'microsoft':
       return <Microsoft className={defaultClass} />;
-
     case 'zero':
       return (
         <>
@@ -67,22 +108,30 @@ const getProviderIcon = (providerId: string, className?: string): ReactNode => {
 
 function LoginClientContent({ providers, isProd }: LoginClientProps) {
   const navigate = useNavigate();
+  const [selectedTheme, setSelectedTheme] = useState<string>('');
   const [expandedProviders, setExpandedProviders] = useState<Record<string, boolean>>({});
 
+  
+  
+  const { data: themes = [] } = useQuery<Theme[]>({  
+    queryKey: ['themes', { public: true }],
+    queryFn: () => trpcClient.theme.getThemes.query({ publicOnly: true }),
+  });
+
   useEffect(() => {
-    const missing = providers.find((p) => p.required && !p.enabled);
+    const missing = providers.find((p: Provider) => p.required && !p.enabled);
     if (missing?.id) {
       setExpandedProviders({ [missing.id]: true });
     }
   }, [providers]);
 
   const missingRequiredProviders = providers
-    .filter((p) => p.required && !p.enabled)
-    .map((p) => p.name);
+    .filter((p: Provider) => p.required && !p.enabled)
+    .map((p: Provider) => p.name);
 
   const missingProviders = providers
-    .filter((p) => p.required && !p.enabled && p.envVarInfo)
-    .map((p) => ({
+    .filter((p: Provider) => p.required && !p.enabled && p.envVarInfo)
+    .map((p: Provider) => ({
       id: p.id,
       name: p.name,
       envVarInfo: p.envVarInfo || [],
@@ -96,7 +145,9 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
     }));
   };
 
-  const displayProviders = isProd ? providers.filter((p) => p.enabled || p.isCustom) : providers;
+  const displayProviders = isProd
+    ? providers.filter((p: Provider) => p.enabled || p.isCustom)
+    : providers;
 
   const hasMissingRequiredProviders = missingRequiredProviders.length > 0;
 
@@ -120,10 +171,9 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
     }
   };
 
-  const sortedProviders = [...displayProviders].sort((a, b) => {
+  const sortedProviders = [...displayProviders].sort((a: Provider, b: Provider) => {
     if (a.id === 'zero') return -1;
     if (b.id === 'zero') return 1;
-
     if (a.required && !b.required) return -1;
     if (!a.required && b.required) return 1;
     return 0;
@@ -134,7 +184,6 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
       <div className="animate-in slide-in-from-bottom-4 mx-auto flex max-w-[600px] flex-grow items-center justify-center space-y-8 px-4 duration-500 sm:px-12 md:px-0">
         <div className="w-full space-y-4">
           <p className="text-center text-4xl font-bold text-white md:text-5xl">Login to Zero</p>
-
           {shouldShowDetailedConfig && (
             <div className="rounded-lg border border-black/10 bg-black/5 p-5 dark:border-white/10 dark:bg-white/5">
               <div className="flex flex-col space-y-4">
@@ -276,18 +325,17 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
 
           {!hasMissingRequiredProviders && (
             <div className="relative z-10 mx-auto flex w-full flex-col items-center justify-center gap-2">
-              {sortedProviders.map(
-                (provider) =>
-                  (provider.enabled || provider.isCustom) && (
-                    <Button
-                      key={provider.id}
-                      onClick={() => handleProviderClick(provider)}
-                      className="border-input bg-background text-primary hover:bg-accent hover:text-accent-foreground h-12 w-full rounded-lg border-2"
-                    >
-                      {getProviderIcon(provider.id)}
-                      Continue with {provider.name}
-                    </Button>
-                  ),
+              {sortedProviders.map((provider: Provider) =>
+                (provider.enabled || provider.isCustom) && (
+                  <Button
+                    key={provider.id}
+                    onClick={() => handleProviderClick(provider)}
+                    className="border-input bg-background text-primary hover:bg-accent hover:text-accent-foreground h-12 w-full rounded-lg border-2"
+                  >
+                    {getProviderIcon(provider.id)}
+                    Continue with {provider.name}
+                  </Button>
+                ),
               )}
             </div>
           )}

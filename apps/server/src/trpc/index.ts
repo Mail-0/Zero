@@ -11,6 +11,7 @@ import { notesRouter } from './routes/notes';
 import { voiceRouter } from './routes/voice';
 import { mailRouter } from './routes/mail';
 import { userRouter } from './routes/user';
+import { themeRouter } from './routes/themeRouter';
 import type { HonoContext } from '../ctx';
 import { aiRouter } from './routes/ai';
 import { router } from './trpc';
@@ -28,6 +29,7 @@ export const appRouter = router({
   settings: settingsRouter,
   user: userRouter,
   voice: voiceRouter,
+  theme: themeRouter,
 });
 
 export type AppRouter = typeof appRouter;

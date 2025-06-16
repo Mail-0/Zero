@@ -7,11 +7,11 @@ export default function Layout() {
   return (
     <CommandPaletteProvider>
       <VoiceProvider>
-        <HotkeyProviderWrapper>
-          <div className="relative flex max-h-screen w-full overflow-hidden">
-            <Outlet />
-          </div>
-        </HotkeyProviderWrapper>
+      <HotkeyProviderWrapper>
+        <div className="relative flex max-h-screen w-full overflow-hidden">
+          <Outlet />
+        </div>
+      </HotkeyProviderWrapper>
       </VoiceProvider>
     </CommandPaletteProvider>
   );

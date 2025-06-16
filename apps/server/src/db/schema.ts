@@ -84,6 +84,62 @@ export const earlyAccess = createTable('early_access', {
   hasUsedTicket: text('has_used_ticket').default(''),
 });
 
+export const theme = createTable('theme', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  // Color settings
+  colors: jsonb('colors').notNull().$type<{
+    primary: string;
+    primaryForeground: string;
+    background: string;
+    foreground: string;
+    card: string;
+    cardForeground: string;
+    popover: string;
+    popoverForeground: string;
+    border: string;
+    input: string;
+    ring: string;
+    success?: string;
+    warning?: string;
+    error?: string;
+  }>(),
+  // Font settings
+  fonts: jsonb('fonts').notNull().$type<{
+    body: string;
+    heading: string;
+    mono: string;
+  }>(),
+  // Spacing system
+  spacing: jsonb('spacing').notNull().$type<{
+    base: string;
+    section: string;
+    card: string;
+    button: string;
+  }>(),
+  // Shadow system
+  shadows: jsonb('shadows').notNull().$type<{
+    base: string;
+    card: string;
+    button: string;
+  }>(),
+  // Border radius system
+  radius: jsonb('radius').notNull().$type<{
+    base: string;
+    button: string;
+    card: string;
+    input: string;
+  }>(),
+  // Additional theme settings
+  isPublic: boolean('is_public').notNull().default(false),
+  isDefault: boolean('is_default').notNull().default(false),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().$onUpdate(() => new Date()),
+});
+
 export const connection = createTable(
   'connection',
   {
@@ -101,8 +157,25 @@ export const connection = createTable(
     expiresAt: timestamp('expires_at').notNull(),
     createdAt: timestamp('created_at').notNull(),
     updatedAt: timestamp('updated_at').notNull(),
+    themeId: text('theme_id').references(() => theme.id, { onDelete: 'set null' }),
   },
   (t) => [unique().on(t.userId, t.email)],
+);
+
+export const userFavoriteThemes = createTable(
+  'user_favorite_themes',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    themeId: text('theme_id')
+      .notNull()
+      .references(() => theme.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.userId, t.themeId] }),
+  })
 );
 
 export const summary = createTable('summary', {

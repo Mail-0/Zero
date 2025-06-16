@@ -1,4 +1,8 @@
 import type { Sender } from '../types';
+import { NextRequest } from 'next/server';
+import { connection } from '../db/schema';
+import { eq } from 'drizzle-orm';
+import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 export const parseHeaders = (token: string) => {
   const headers = new Headers();
@@ -331,3 +335,42 @@ export const cleanSearchValue = (q: string): string => {
     .replace(/\s+/g, ' ')
     .trim();
 };
+
+export const getAuthenticatedUserId = async (req: NextRequest): Promise<string | null> => {
+  // Your authentication logic here
+  // Return userId if authenticated, null otherwise
+  return 'user-id'; // Replace with actual implementation
+};
+
+export async function getActiveConnection(db: PostgresJsDatabase, userId: string) {
+  const activeConnection = await db
+    .select({
+      id: connection.id,
+      userId: connection.userId,
+      email: connection.email,
+      name: connection.name,
+      picture: connection.picture,
+      accessToken: connection.accessToken,
+      refreshToken: connection.refreshToken,
+      scope: connection.scope,
+      providerId: connection.providerId,
+      expiresAt: connection.expiresAt,
+      createdAt: connection.createdAt,
+      updatedAt: connection.updatedAt,
+      themeId: connection.themeId,
+    })
+    .from(connection)
+    .where(eq(connection.userId, userId))
+    .limit(1)
+    .execute();
+  if (!activeConnection[0]) {
+    throw new Error('No active connection found');
+  }
+  return activeConnection[0];
+}
+
+// Example usage in middleware
+export async function connectionToDriver(connection: any) {
+  // Your existing logic
+  return { /* driver object */ };
+}
