@@ -825,7 +825,6 @@ export const Categories = () => {
   const categorySettings = useCategorySettings();
   const [activeCategory] = useQueryState('category');
 
-  // Build category array, merging dynamic settings with icon/translation fallbacks
   const categories = categorySettings.map((cat) => {
     const base = {
       id: cat.id,
@@ -875,7 +874,6 @@ export const Categories = () => {
     }
   });
 
-  // Ensure order follows settings
   return categories;
 };
 

@@ -9,13 +9,9 @@ export interface CategorySetting {
   isDefault?: boolean;
 }
 
-/**
- * Returns the user customised category settings if present, falling back to sensible defaults.
- */
 export function useCategorySettings(): CategorySetting[] {
   const { data } = useSettings();
 
-  // Fallback defaults – must stay in sync with server defaults
   const defaultCategories: CategorySetting[] = [
     {
       id: 'Important',
@@ -74,7 +70,6 @@ export function useCategorySettings(): CategorySetting[] {
         : cat;
     });
 
-    // Ensure every override id present – ignore unknown ids for safety
     const sorted = overridden.sort((a, b) => a.order - b.order);
     return sorted;
   }, [data?.settings.categories]);
@@ -82,9 +77,8 @@ export function useCategorySettings(): CategorySetting[] {
   return merged;
 }
 
-// Added util to easily get default category id
 export function useDefaultCategoryId(): string {
   const categories = useCategorySettings();
   const defaultCat = categories.find((c) => c.isDefault) ?? categories[0];
   return defaultCat?.id ?? 'All Mail';
-} 
+}
