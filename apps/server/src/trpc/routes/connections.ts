@@ -2,8 +2,8 @@ import { createRateLimiterMiddleware, privateProcedure, publicProcedure, router 
 import { getActiveConnection } from '../../lib/server-utils';
 import { connection, user as user_ } from '../../db/schema';
 import { Ratelimit } from '@upstash/ratelimit';
-import { TRPCError } from '@trpc/server';
 import { and, eq, sql } from 'drizzle-orm';
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
 export const connectionsRouter = router({
@@ -16,7 +16,8 @@ export const connectionsRouter = router({
     )
     .query(async ({ ctx }) => {
       const { db, sessionUser } = ctx;
-      const connections = await db        .select({
+      const connections = await db
+        .select({
           id: connection.id,
           email: connection.email,
           name: connection.name,
@@ -38,7 +39,8 @@ export const connectionsRouter = router({
       return {
         connections: connections.map((connection) => {
           return {
-            id: connection.id,            email: connection.email,
+            id: connection.id,
+            email: connection.email,
             name: connection.name,
             picture: connection.picture,
             createdAt: connection.createdAt,
@@ -89,42 +91,41 @@ export const connectionsRouter = router({
       createdAt: connection.createdAt,
       providerId: connection.providerId,
     };
-  }),  reorder: privateProcedure
-    .input(z.object({ 
-      connectionIds: z.array(z.string()).min(1, 'At least one connection ID is required')
-    }))
+  }),
+  reorder: privateProcedure
+    .input(
+      z.object({
+        connectionIds: z.array(z.string().uuid()).min(1, 'At least one connection ID is required'),
+      }),
+    )
     .mutation(async ({ input, ctx }) => {
       const { connectionIds } = input;
       const { db } = ctx;
       const user = ctx.sessionUser;
-      
+
       // Check for duplicate connection IDs
       if (new Set(connectionIds).size !== connectionIds.length) {
-        throw new TRPCError({ 
-          code: 'BAD_REQUEST', 
-          message: 'Duplicate connection IDs supplied' 
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Duplicate connection IDs supplied',
         });
-      }      // Verify all connections belong to the user
+      } // Verify all connections belong to the user
       const userConnections = await db
         .select({ id: connection.id })
         .from(connection)
         .where(eq(connection.userId, user.id));
-      
+
       const userConnectionSet = new Set(userConnections.map((c) => c.id));
       const invalidIds = connectionIds.filter((id) => !userConnectionSet.has(id));
-      
-      if (invalidIds.length > 0) {
-        throw new TRPCError({ 
-          code: 'BAD_REQUEST', 
-          message: `Invalid connection IDs: ${invalidIds.join(', ')}` 
-        });
-      }
 
-      // Get the default connection to ensure it stays at index 0
-      const [{ defaultConnectionId }] = await db
-        .select({ defaultConnectionId: user_.defaultConnectionId })
-        .from(user_)
-        .where(eq(user_.id, user.id));
+      if (invalidIds.length > 0) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Invalid connection IDs: ${invalidIds.join(', ')}`,
+        });
+      } // Get the default connection to ensure it stays at index 0
+      const activeConnection = await getActiveConnection();
+      const defaultConnectionId = activeConnection?.id;
 
       // Verify payload includes all connections with default connection first
       const totalConnections = userConnections.length;
@@ -140,10 +141,10 @@ export const connectionsRouter = router({
           code: 'BAD_REQUEST',
           message: 'Default connection must be first in the reorder list',
         });
-      }      // Update order for each connection atomically using a transaction
+      } // Update order for each connection atomically using a transaction
       await db.transaction(async (tx) => {
         // Since we validate that the default connection is first in the payload,
-        // we can safely update all connections without shifting since the 
+        // we can safely update all connections without shifting since the
         // default connection will retain its position at index 0
         await tx.execute(sql`
           UPDATE ${connection} AS c
