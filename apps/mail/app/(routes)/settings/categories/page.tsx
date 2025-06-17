@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import { useTRPC } from '@/providers/query-provider';
 import { toast } from 'sonner';
 import type { CategorySetting } from '@/hooks/use-categories';
+import { defaultMailCategories } from '../../../../../server/src/lib/schemas';
 
 export default function CategoriesSettingsPage() {
   const { data } = useSettings();
@@ -20,55 +21,10 @@ export default function CategoriesSettingsPage() {
 
   const [categories, setCategories] = useState<CategorySetting[]>([]);
 
-  const defaultCategories: CategorySetting[] = [
-    {
-      id: 'Important',
-      name: 'Important',
-      searchValue: 'is:important NOT is:sent NOT is:draft',
-      order: 0,
-      isDefault: false,
-    },
-    {
-      id: 'All Mail',
-      name: 'All Mail',
-      searchValue: 'NOT is:draft (is:inbox OR (is:sent AND to:me))',
-      order: 1,
-      isDefault: true,
-    },
-    {
-      id: 'Personal',
-      name: 'Personal',
-      searchValue: 'is:personal NOT is:sent NOT is:draft',
-      order: 2,
-      isDefault: false,
-    },
-    {
-      id: 'Promotions',
-      name: 'Promotions',
-      searchValue: 'is:promotions NOT is:sent NOT is:draft',
-      order: 3,
-      isDefault: false,
-    },
-    {
-      id: 'Updates',
-      name: 'Updates',
-      searchValue: 'is:updates NOT is:sent NOT is:draft',
-      order: 4,
-      isDefault: false,
-    },
-    {
-      id: 'Unread',
-      name: 'Unread',
-      searchValue: 'is:unread NOT is:sent NOT is:draft',
-      order: 5,
-      isDefault: false,
-    },
-  ];
-
   useEffect(() => {
     const stored = data?.settings?.categories ?? [];
 
-    const merged = defaultCategories.map((def) => {
+    const merged = defaultMailCategories.map((def) => {
       const override = stored.find((c: { id: string; }) => c.id === def.id);
       return override ? { ...def, ...override } : def;
     });
