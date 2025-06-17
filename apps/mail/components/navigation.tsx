@@ -218,14 +218,13 @@ export function Navigation() {
           <SheetContent side="left" className="w-[300px] dark:bg-[#111111] sm:w-[400px]">
             <SheetHeader className="flex flex-row items-center justify-between">
               <SheetTitle>
-                <a href="/">
-                  <img src="white-icon.svg" alt="Zero Email" className='hidden object-contain dark:block' width={22} height={22} />
-                  <img
-                    src="/black-icon.svg"
-                    alt="0.email Logo"
-                    className="object-contain dark:hidden"
-                    width={22} height={22}
-                  /></a>
+                <img src="white-icon.svg" alt="Zero Email" className='hidden object-contain dark:block' width={22} height={22} />
+                <img
+                  src="/black-icon.svg"
+                  alt="0.email Logo"
+                  className="object-contain dark:hidden"
+                  width={22} height={22}
+                />
               </SheetTitle>
               <a href="/login">
                 <Button className="w-full">Sign in</Button>
@@ -233,9 +232,6 @@ export function Navigation() {
             </SheetHeader>
             <div className="mt-8 flex flex-col space-y-3">
               <div className="space-y-3 flex flex-col">
-                <Link to="/" className="mt-2">
-                  Home
-                </Link>
                 <Link to="/pricing" className="mt-2">
                   Pricing
                 </Link>
