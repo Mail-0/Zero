@@ -75,6 +75,7 @@ import { format, set } from 'date-fns';
 import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Badge } from '../ui/badge';
+import { toast } from 'sonner';
 
 // HTML escaping function to prevent XSS attacks
 function escapeHtml(text: string): string {
@@ -907,9 +908,25 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
     }
   }, [isCollapsed, preventCollapse, openDetailsPopover]);
 
-    // Handle email copy of senders
+  // Handle email copy of senders
   const handleCopySenderEmail = useCallback(async (personEmail: string) => {
-      await navigator.clipboard.writeText(personEmail|| '');
+
+      if(!personEmail) return ;
+    
+      try {
+        await navigator.clipboard.writeText(personEmail || '');
+        toast.success('Email copied to clipboard');
+      } catch (error) {
+        const textarea = document.createElement('textarea');
+        textarea.value = personEmail;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      
   }, []);
 
   // email printing
