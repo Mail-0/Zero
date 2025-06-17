@@ -2,9 +2,9 @@ import { NuqsAdapter } from 'nuqs/adapters/react-router/v7';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { PostHogProvider } from '@/lib/posthog-provider';
 import { useSettings } from '@/hooks/use-settings';
-import CustomToaster from '@/components/ui/toast';
 import { Provider as JotaiProvider } from 'jotai';
 import type { PropsWithChildren } from 'react';
+import Toaster from '@/components/ui/toast';
 import { ThemeProvider } from 'next-themes';
 
 export function ClientProviders({ children }: PropsWithChildren) {
@@ -24,7 +24,7 @@ export function ClientProviders({ children }: PropsWithChildren) {
           <SidebarProvider>
             <PostHogProvider>
               {children}
-              <CustomToaster />
+              <Toaster />
             </PostHogProvider>
           </SidebarProvider>
         </ThemeProvider>
