@@ -1,4 +1,10 @@
 import {
+  createUpdatedMatrixFromNewEmail,
+  initializeStyleMatrixFromEmail,
+  type EmailMatrix,
+  type WritingStyleMatrix,
+} from './services/writing-style-service';
+import {
   account,
   connection,
   session,
@@ -9,13 +15,13 @@ import {
 } from './db/schema';
 import { env, WorkerEntrypoint, DurableObject } from 'cloudflare:workers';
 import { MainWorkflow, ThreadWorkflow, ZeroWorkflow } from './pipelines';
+import { getZeroDB, verifyToken } from './lib/server-utils';
 import { EProviders, type ISubscribeBatch } from './types';
 import { contextStorage } from 'hono/context-storage';
 import { defaultUserSettings } from './lib/schemas';
 import { createLocalJWKSet, jwtVerify } from 'jose';
 import { routePartykitRequest } from 'partyserver';
 import { enableBrainFunction } from './lib/brain';
-import { verifyToken } from './lib/server-utils';
 import { trpcServer } from '@hono/trpc-server';
 import { agentsMiddleware } from 'hono-agents';
 import { DurableMailbox } from './lib/party';
@@ -50,6 +56,16 @@ class ZeroDB extends DurableObject {
     });
   }
 
+  async updateUser(userId: string, data: Partial<typeof user.$inferInsert>) {
+    return await this.db.update(user).set(data).where(eq(user.id, userId));
+  }
+
+  async deleteConnection(connectionId: string, userId: string) {
+    return await this.db
+      .delete(connection)
+      .where(and(eq(connection.id, connectionId), eq(connection.userId, userId)));
+  }
+
   async findFirstConnection(userId: string): Promise<typeof connection.$inferSelect | undefined> {
     return await this.db.query.connection.findFirst({
       where: eq(connection.userId, userId),
@@ -79,6 +95,30 @@ class ZeroDB extends DurableObject {
     });
   }
 
+  async findUserHotkeys(userId: string): Promise<(typeof userHotkeys.$inferSelect)[]> {
+    return await this.db.query.userHotkeys.findMany({
+      where: eq(userHotkeys.userId, userId),
+    });
+  }
+
+  async insertUserHotkeys(userId: string, shortcuts: (typeof userHotkeys.$inferInsert)[]) {
+    return await this.db
+      .insert(userHotkeys)
+      .values({
+        userId,
+        shortcuts,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: userHotkeys.userId,
+        set: {
+          shortcuts,
+          updatedAt: new Date(),
+        },
+      });
+  }
+
   async insertUserSettings(userId: string, settings: typeof defaultUserSettings) {
     return await this.db.insert(userSettings).values({
       id: crypto.randomUUID(),
@@ -87,6 +127,16 @@ class ZeroDB extends DurableObject {
       createdAt: new Date(),
       updatedAt: new Date(),
     });
+  }
+
+  async updateUserSettings(userId: string, settings: typeof defaultUserSettings) {
+    return await this.db
+      .update(userSettings)
+      .set({
+        settings,
+        updatedAt: new Date(),
+      })
+      .where(eq(userSettings.userId, userId));
   }
 
   async createConnection(
@@ -119,11 +169,52 @@ class ZeroDB extends DurableObject {
       .returning({ id: connection.id });
   }
 
+  /**
+   * @param connectionId Dangerous, use findUserConnection instead
+   * @returns
+   */
   async findConnectionById(
     connectionId: string,
   ): Promise<typeof connection.$inferSelect | undefined> {
     return await this.db.query.connection.findFirst({
       where: eq(connection.id, connectionId),
+    });
+  }
+
+  async syncUserMatrix(connectionId: string, emailStyleMatrix: EmailMatrix) {
+    await this.db.transaction(async (tx) => {
+      const [existingMatrix] = await tx
+        .select({
+          numMessages: writingStyleMatrix.numMessages,
+          style: writingStyleMatrix.style,
+        })
+        .from(writingStyleMatrix)
+        .where(eq(writingStyleMatrix.connectionId, connectionId))
+        .for('update');
+
+      if (!existingMatrix) {
+        const newStyle = initializeStyleMatrixFromEmail(emailStyleMatrix);
+
+        await tx.insert(writingStyleMatrix).values({
+          connectionId,
+          numMessages: 1,
+          style: newStyle,
+        });
+      } else {
+        const newStyle = createUpdatedMatrixFromNewEmail(
+          existingMatrix.numMessages,
+          existingMatrix.style as WritingStyleMatrix,
+          emailStyleMatrix,
+        );
+
+        await tx
+          .update(writingStyleMatrix)
+          .set({
+            numMessages: existingMatrix.numMessages + 1,
+            style: newStyle,
+          })
+          .where(eq(writingStyleMatrix.connectionId, connectionId));
+      }
     });
   }
 
@@ -179,7 +270,7 @@ export default class extends WorkerEntrypoint<typeof env> {
           const userId = payload.sub;
 
           if (userId) {
-            const db = env.ZERO_DB.get(env.ZERO_DB.idFromName('global-db'));
+            const db = getZeroDB(userId);
             c.set('sessionUser', await db.findUser(userId));
           }
         }

@@ -223,6 +223,11 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
     const accessToken = credentials.access_token || auth.credentials.access_token;
     const serviceAccount = this.getServiceAccount();
 
+    console.log(
+      `[SUBSCRIPTION] Setting up Gmail watch for connection: ${connectionData.id} ${topicName} projects/${serviceAccount.project_id}/topics/${topicName}`,
+    );
+    console.log(`[SUBSCRIPTION] Service Account: ${serviceAccount.client_email}`, serviceAccount);
+
     const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/watch', {
       method: 'POST',
       headers: {

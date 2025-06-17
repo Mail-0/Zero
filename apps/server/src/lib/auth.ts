@@ -16,6 +16,7 @@ import { getContext } from 'hono/context-storage';
 import { defaultUserSettings } from './schemas';
 import { disableBrainFunction } from './brain';
 import { APIError } from 'better-auth/api';
+import { getZeroDB } from './server-utils';
 import type { EProviders } from '../types';
 import type { HonoContext } from '../ctx';
 import { env } from 'cloudflare:workers';
@@ -56,7 +57,7 @@ const connectionHandlerHook = async (account: Account) => {
     expiresAt: new Date(Date.now() + (account.accessTokenExpiresAt?.getTime() || 3600000)),
   };
 
-  const db = env.ZERO_DB.get(env.ZERO_DB.idFromName('global-db'));
+  const db = getZeroDB(account.userId);
   const [result] = await db.createConnection(
     account.providerId as EProviders,
     userInfo.address,
@@ -74,7 +75,6 @@ const connectionHandlerHook = async (account: Account) => {
 
 export const createAuth = () => {
   const twilioClient = twilio();
-  const db = env.ZERO_DB.get(env.ZERO_DB.idFromName('global-db'));
 
   return betterAuth({
     plugins: [
@@ -98,6 +98,7 @@ export const createAuth = () => {
         enabled: true,
         beforeDelete: async (user, request) => {
           if (!request) throw new APIError('BAD_REQUEST', { message: 'Request object is missing' });
+          const db = getZeroDB(user.id);
           const connections = await db.findManyConnections(user.id);
 
           const revokedAccounts = (
@@ -188,6 +189,7 @@ export const createAuth = () => {
           const newSession = ctx.context.newSession;
           if (newSession) {
             // Check if user already has settings
+            const db = getZeroDB(newSession.user.id);
             const existingSettings = await db.findUserSettings(newSession.user.id);
 
             if (!existingSettings) {
