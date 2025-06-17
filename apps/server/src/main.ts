@@ -1,7 +1,11 @@
+import { MainWorkflow, ThreadWorkflow, ZeroWorkflow } from './pipelines';
 import { env, WorkerEntrypoint } from 'cloudflare:workers';
+import { EProviders, type ISubscribeBatch } from './types';
 import { contextStorage } from 'hono/context-storage';
 import { createLocalJWKSet, jwtVerify } from 'jose';
 import { routePartykitRequest } from 'partyserver';
+import { enableBrainFunction } from './lib/brain';
+import { verifyToken } from './lib/server-utils';
 import { trpcServer } from '@hono/trpc-server';
 import { agentsMiddleware } from 'hono-agents';
 import { DurableMailbox } from './lib/party';
@@ -141,7 +145,29 @@ const app = new Hono<HonoContext>()
     }),
   )
   .get('/health', (c) => c.json({ message: 'Zero Server is Up!' }))
-  .get('/', (c) => c.redirect(`${env.VITE_PUBLIC_APP_URL}`));
+  .get('/', (c) => c.redirect(`${env.VITE_PUBLIC_APP_URL}`))
+  .post('/a8n/notify/:providerId', async (c) => {
+    if (!c.req.header('Authorization')) return c.json({ error: 'Unauthorized' }, { status: 401 });
+    const providerId = c.req.param('providerId');
+    if (providerId === EProviders.google) {
+      const body = await c.req.json<{ historyId: string }>();
+      const subHeader = c.req.header('x-goog-pubsub-subscription-name');
+      const isValid = await verifyToken(c.req.header('Authorization')!.split(' ')[1]);
+      if (!isValid) {
+        console.log('[GOOGLE] invalid request', body);
+        return c.json({}, { status: 200 });
+      }
+      const instance = await env.MAIN_WORKFLOW.create({
+        params: {
+          providerId,
+          historyId: body.historyId,
+          subscriptionName: subHeader,
+        },
+      });
+      console.log('[GOOGLE] created instance', instance.id, instance.status);
+      return c.json({ message: 'OK' }, { status: 200 });
+    }
+  });
 
 export default class extends WorkerEntrypoint<typeof env> {
   async fetch(request: Request): Promise<Response> {
@@ -152,6 +178,72 @@ export default class extends WorkerEntrypoint<typeof env> {
       if (res) return res;
     }
     return app.fetch(request, this.env, this.ctx);
+  }
+
+  async queue(batch: MessageBatch<ISubscribeBatch>) {
+    switch (batch.queue) {
+      case 'subscribe-queue': {
+        console.log('batch', batch);
+        try {
+          await Promise.all(
+            batch.messages.map(async (msg) => {
+              const connectionId = msg.body.connectionId;
+              const providerId = msg.body.providerId;
+              console.log('connectionId', connectionId);
+              console.log('providerId', providerId);
+              try {
+                await enableBrainFunction({ id: connectionId, providerId });
+              } catch (error) {
+                console.error(`Failed to enable brain function for connection ${connectionId}:`, error);
+              }
+            }),
+          );
+          console.log('batch done');
+        } finally {
+          batch.ackAll();
+        }
+        return;
+      }
+    }
+  }
+
+  async scheduled() {
+    console.log('Checking for expired subscriptions...');
+    const allAccounts = await env.subscribed_accounts.list();
+    console.log('allAccounts', allAccounts.keys);
+    const now = new Date();
+    const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
+
+    const expiredSubscriptions: Array<{ connectionId: string; providerId: EProviders }> = [];
+
+    await Promise.all(
+      allAccounts.keys.map(async (key) => {
+        const [connectionId, providerId] = key.name.split('__');
+        const lastSubscribed = await env.gmail_sub_age.get(key.name);
+
+        if (lastSubscribed) {
+          const subscriptionDate = new Date(lastSubscribed);
+          if (subscriptionDate < fiveDaysAgo) {
+            console.log(`Found expired Google subscription for connection: ${connectionId}`);
+            expiredSubscriptions.push({ connectionId, providerId: providerId as EProviders });
+          }
+        }
+      }),
+    );
+
+    // Send expired subscriptions to queue for renewal
+    if (expiredSubscriptions.length > 0) {
+      console.log(`Sending ${expiredSubscriptions.length} expired subscriptions to renewal queue`);
+      await Promise.all(
+        expiredSubscriptions.map(async ({ connectionId, providerId }) => {
+          await env.subscribe_queue.send({ connectionId, providerId });
+        }),
+      );
+    }
+
+    console.log(
+      `Processed ${allAccounts.keys.length} accounts, found ${expiredSubscriptions.length} expired subscriptions`,
+    );
   }
 
   public async notifyUser({
@@ -180,4 +272,4 @@ export default class extends WorkerEntrypoint<typeof env> {
   }
 }
 
-export { DurableMailbox, ZeroAgent, ZeroMCP };
+export { DurableMailbox, ZeroAgent, ZeroMCP, MainWorkflow, ZeroWorkflow, ThreadWorkflow };

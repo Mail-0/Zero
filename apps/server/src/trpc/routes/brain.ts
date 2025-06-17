@@ -1,22 +1,9 @@
-import { disableBrainFunction, enableBrainFunction, getPrompts } from '../../lib/brain';
+import { disableBrainFunction, getPrompts } from '../../lib/brain';
+import { EProviders, type ISubscribeBatch } from '../../types';
 import { activeConnectionProcedure, router } from '../trpc';
+import { setSubscribedState } from '../../lib/utils';
 import { env } from 'cloudflare:workers';
 import { z } from 'zod';
-
-/**
- * Gets the current connection limit for a given connection ID
- * @param connectionId The connection ID to check
- * @returns Promise<number> The current limit
- */
-export const getConnectionLimit = async (connectionId: string): Promise<number> => {
-  try {
-    const limit = await env.connection_limits.get(connectionId);
-    return limit ? Number(limit) : Number(env.DEFAULT_BRAIN_LIMIT);
-  } catch (error) {
-    console.error(`[GET_CONNECTION_LIMIT] Error getting limit for ${connectionId}:`, error);
-    throw error;
-  }
-};
 
 const labelSchema = z.object({
   name: z.string(),
@@ -26,38 +13,20 @@ const labelSchema = z.object({
 const labelsSchema = z.array(labelSchema);
 
 export const brainRouter = router({
-  enableBrain: activeConnectionProcedure
-    .input(
-      z.object({
-        connection: z
-          .object({
-            id: z.string(),
-            providerId: z.string(),
-          })
-          .optional(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      let { connection } = input;
-      if (!connection) connection = ctx.activeConnection;
-      return await enableBrainFunction(connection);
-    }),
-  disableBrain: activeConnectionProcedure
-    .input(
-      z.object({
-        connection: z
-          .object({
-            id: z.string(),
-            providerId: z.string(),
-          })
-          .optional(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      let { connection } = input;
-      if (!connection) connection = ctx.activeConnection;
-      return await disableBrainFunction(connection);
-    }),
+  enableBrain: activeConnectionProcedure.mutation(async ({ ctx }) => {
+    const connection = ctx.activeConnection as { id: string; providerId: EProviders };
+    await setSubscribedState(connection.id, connection.providerId);
+    await env.subscribe_queue.send({
+      connectionId: connection.id,
+      providerId: connection.providerId,
+    } as ISubscribeBatch);
+    return true;
+    // return await enableBrainFunction(connection);
+  }),
+  disableBrain: activeConnectionProcedure.mutation(async ({ ctx }) => {
+    const connection = ctx.activeConnection as { id: string; providerId: EProviders };
+    return await disableBrainFunction(connection);
+  }),
 
   generateSummary: activeConnectionProcedure
     .input(
@@ -65,13 +34,14 @@ export const brainRouter = router({
         threadId: z.string(),
       }),
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const { threadId } = input;
       const response = await env.VECTORIZE.getByIds([threadId]);
       if (response.length && response?.[0]?.metadata?.['content']) {
-        const content = response[0].metadata['content'] as string;
+        const result = response[0].metadata as { content: string; connection: string };
+        if (result.connection !== ctx.activeConnection.id) return null;
         const shortResponse = await env.AI.run('@cf/facebook/bart-large-cnn', {
-          input_text: content,
+          input_text: result.content,
         });
         return {
           data: {
@@ -83,10 +53,9 @@ export const brainRouter = router({
     }),
   getState: activeConnectionProcedure.query(async ({ ctx }) => {
     const connection = ctx.activeConnection;
-    const state = await env.subscribed_accounts.get(connection.id);
+    const state = await env.subscribed_accounts.get(`${connection.id}__${connection.providerId}`);
     if (!state || state === 'pending') return { enabled: false };
-    const limit = await getConnectionLimit(connection.id);
-    return { limit, enabled: true };
+    return { enabled: true };
   }),
   getLabels: activeConnectionProcedure
     .output(
