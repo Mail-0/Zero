@@ -369,6 +369,9 @@ export class GoogleMailManager implements MailManager {
                     attachmentId: attachmentId,
                     headers: part.headers || [],
                     body: attachmentData ?? '',
+                    replyTo: message.payload?.headers?.find(
+                      (h) => h.name?.toLowerCase() === 'reply-to',
+                    )?.value,
                   };
                 } catch {
                   return null;
@@ -602,6 +605,7 @@ export class GoogleMailManager implements MailManager {
         const requestBody = {
           message: {
             raw: encodedMessage,
+            threadId: data.threadId,
           },
         };
 
