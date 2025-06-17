@@ -215,10 +215,16 @@ export function Navigation() {
               <Menu className="h-6 w-6" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-[300px] bg-[#111111] sm:w-[400px]">
+          <SheetContent side="left" className="w-[300px] dark:bg-[#111111] sm:w-[400px]">
             <SheetHeader className="flex flex-row items-center justify-between">
               <SheetTitle>
-                <img src="white-icon.svg" alt="Zero Email" width={22} height={22} />
+                <img src="white-icon.svg" alt="Zero Email" className='hidden object-contain dark:block' width={22} height={22} />
+                <img
+                  src="/black-icon.svg"
+                  alt="0.email Logo"
+                  className="object-contain dark:hidden"
+                    width={22} height={22} 
+                />
               </SheetTitle>
               <a href="/login">
                 <Button className="w-full">Sign in</Button>

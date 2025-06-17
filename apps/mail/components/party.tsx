@@ -35,7 +35,7 @@ export const NotificationProvider = ({ headers }: { headers: Record<string, stri
 
   usePartySocket({
     party: 'zero-agent',
-    room: activeConnection?.id ? `${activeConnection.id}` : 'general',
+    room: activeConnection?.id ? String(activeConnection.id) : 'general',
     prefix: 'agents',
     maxRetries: 1,
     query: {
