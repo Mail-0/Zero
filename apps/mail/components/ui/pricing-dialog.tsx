@@ -51,7 +51,7 @@ export function PricingDialog() {
       >
         <DialogTitle className="text-center text-2xl"></DialogTitle>
 
-        <div className="relative inline-flex h-[535px] w-96 flex-col items-center justify-center overflow-hidden rounded-2xl border border-[#2D2D2D] bg-zinc-900/50 p-5 outline outline-2 outline-offset-[3.5px] outline-[#2D2D2D]">
+        <div className="relative inline-flex h-[535px] w-96 flex-col items-center justify-center overflow-hidden rounded-2xl border border-gray-400 bg-zinc-900/50 p-5 outline outline-2 outline-offset-[4px] outline-gray-400 dark:border-[#2D2D2D] dark:outline-[#2D2D2D]">
           <div className="absolute inset-0 z-0 h-full w-full overflow-hidden">
             <img
               src="/pricing-gradient.png"
@@ -175,7 +175,7 @@ export function PricingDialog() {
             </div>
           </div>
           <button
-            className="z-50 inline-flex h-24 cursor-pointer items-center justify-center gap-2.5 self-stretch overflow-hidden rounded-lg bg-white p-3 outline outline-1 outline-offset-[-1px] disabled:cursor-not-allowed disabled:opacity-50"
+            className="z-50 inline-flex h-24 cursor-pointer items-center justify-center gap-2.5 self-stretch overflow-hidden rounded-lg bg-white p-3 outline outline-1 outline-offset-[-1px] outline-gray-400 disabled:cursor-not-allowed disabled:opacity-50 dark:outline-[#2D2D2D]"
             onClick={handleUpgrade}
             disabled={isLoading}
           >
