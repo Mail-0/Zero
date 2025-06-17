@@ -120,7 +120,7 @@ export function QueryProvider({
       persistOptions={{
         persister,
         buster: CACHE_BURST_KEY,
-        maxAge: 1000 * 60 * 60 * 24, // 24 hours
+        maxAge: 1000 * 60 * 60 * 24 * 3, // 3 days
       }}
       onSuccess={() => {
         const threadQueryKey = [['mail', 'listThreads'], { type: 'infinite' }];

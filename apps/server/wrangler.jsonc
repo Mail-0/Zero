@@ -131,6 +131,9 @@
       ],
     },
     "staging": {
+      "triggers": {
+        "crons": ["0 0 * * *"],
+      },
       "ai": {
         "binding": "AI",
       },
@@ -256,6 +259,9 @@
       ],
     },
     "production": {
+      "triggers": {
+        "crons": ["0 0 * * *"],
+      },
       "ai": {
         "binding": "AI",
       },
