@@ -16,14 +16,14 @@ export const getProjectRoot = async () => {
 };
 
 export const runCommand = async (command: string, args: string[], options: SpawnOptions = {}) => {
-  const isWindows = process.platform === 'win32';
-  const finalCommand = isWindows ? 'cmd.exe' : command;
-  const finalArgs = isWindows ? ['/c', command, ...args] : args;
+  const useShell = process.platform === 'win32';
+  const finalCommand = command;
+  const finalArgs = args;
   
   const spawnOptions: SpawnOptions = {
     stdio: 'inherit',
     ...options,
-    ...(isWindows && options.shell === undefined ? { shell: true } : {})
+    ...(useShell && options.shell === undefined ? { shell: true } : {})
   };
   
   const child = spawn(finalCommand, finalArgs, spawnOptions);
