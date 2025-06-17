@@ -219,7 +219,6 @@ export function Navigation() {
           <SheetContent side="left" className="w-[300px] sm:w-[400px] dark:bg-[#111111]">
             <SheetHeader className="flex flex-row items-center justify-between">
               <SheetTitle>
-
                 <Link to="/" onClick={() => setOpen(false)}>
                   <img
                     src="white-icon.svg"
@@ -236,29 +235,16 @@ export function Navigation() {
                     height={22}
                   />
                 </Link>
-
-                <img src="white-icon.svg" alt="Zero Email" className='hidden object-contain dark:block' width={22} height={22} />
-                <img
-                  src="/black-icon.svg"
-                  alt="0.email Logo"
-                  className="object-contain dark:hidden"
-                  width={22} height={22}
-                />
-
               </SheetTitle>
               <a href="/login">
                 <Button className="w-full">Sign in</Button>
               </a>
             </SheetHeader>
             <div className="mt-8 flex flex-col space-y-3">
-
               <div className="flex flex-col space-y-3">
                 <Link to="/" className="mt-2" onClick={() => setOpen(false)}>
                   Home
                 </Link>
-
-              <div className="space-y-3 flex flex-col">
-
                 <Link to="/pricing" className="mt-2">
                   Pricing
                 </Link>
