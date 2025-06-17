@@ -34,17 +34,60 @@ export const createDraftData = z.object({
 
 export type CreateDraftData = z.infer<typeof createDraftData>;
 
-export const defaultUserSettings = {
-  language: 'en',
-  timezone: 'UTC',
-  dynamicContent: false,
-  externalImages: true,
-  customPrompt: '',
-  trustedSenders: [],
-  isOnboarded: false,
-  colorTheme: 'system',
-  zeroSignature: true,
-} satisfies UserSettings;
+export const mailCategorySchema = z.object({
+  id: z.enum(['Important', 'All Mail', 'Personal', 'Promotions', 'Updates', 'Unread']),
+  name: z.string(),
+  searchValue: z.string(),
+  order: z.number().int(),
+  isDefault: z.boolean().optional().default(false),
+});
+
+export type MailCategory = z.infer<typeof mailCategorySchema>;
+
+export const defaultMailCategories: MailCategory[] = [
+  {
+    id: 'Important',
+    name: 'Important',
+    searchValue: 'is:important NOT is:sent NOT is:draft',
+    order: 0,
+    isDefault: false,
+  },
+  {
+    id: 'All Mail',
+    name: 'All Mail',
+    searchValue: 'NOT is:draft (is:inbox OR (is:sent AND to:me))',
+    order: 1,
+    isDefault: true,
+  },
+  {
+    id: 'Personal',
+    name: 'Personal',
+    searchValue: 'is:personal NOT is:sent NOT is:draft',
+    order: 2,
+    isDefault: false,
+  },
+  {
+    id: 'Promotions',
+    name: 'Promotions',
+    searchValue: 'is:promotions NOT is:sent NOT is:draft',
+    order: 3,
+    isDefault: false,
+  },
+  {
+    id: 'Updates',
+    name: 'Updates',
+    searchValue: 'is:updates NOT is:sent NOT is:draft',
+    order: 4,
+    isDefault: false,
+  },
+  {
+    id: 'Unread',
+    name: 'Unread',
+    searchValue: 'is:unread NOT is:sent NOT is:draft',
+    order: 5,
+    isDefault: false,
+  },
+];
 
 export const userSettingsSchema = z.object({
   language: z.string(),
@@ -56,6 +99,20 @@ export const userSettingsSchema = z.object({
   trustedSenders: z.string().array().optional(),
   colorTheme: z.enum(['light', 'dark', 'system']).default('system'),
   zeroSignature: z.boolean().default(true),
+  categories: z.array(mailCategorySchema).optional(),
 });
 
 export type UserSettings = z.infer<typeof userSettingsSchema>;
+
+export const defaultUserSettings: UserSettings = {
+  language: 'en',
+  timezone: 'UTC',
+  dynamicContent: false,
+  externalImages: true,
+  customPrompt: '',
+  trustedSenders: [],
+  isOnboarded: false,
+  colorTheme: 'system',
+  zeroSignature: true,
+  categories: defaultMailCategories,
+};
