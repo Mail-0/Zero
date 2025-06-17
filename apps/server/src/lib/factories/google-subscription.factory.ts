@@ -26,7 +26,6 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
   private accessToken: string | null = null;
   private tokenExpiry: number = 0;
   private serviceAccount: GoogleServiceAccount | null = null;
-  private pubsubServiceAccount: string = 'serviceAccount:gmail-api-push@system.gserviceaccount.com';
 
   private getServiceAccount(): GoogleServiceAccount {
     if (!this.serviceAccount) {
@@ -151,7 +150,7 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
     policy.bindings = policy.bindings || [];
     policy.bindings.push({
       role: 'roles/pubsub.publisher',
-      members: [this.pubsubServiceAccount],
+      members: [serviceAccount.client_email],
     });
 
     // Update policy
@@ -267,7 +266,9 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
         console.log(`[SUBSCRIPTION] Creating PubSub subscription for endpoint: ${pushEndpoint}`);
         await this.createPubSubSubscription(pubSubName, pushEndpoint);
 
-        console.log(`[SUBSCRIPTION] Setting up Gmail watch for connection: ${connectionData.id}`);
+        console.log(
+          `[SUBSCRIPTION] Setting up Gmail watch for connection: ${connectionData.id} ${pubSubName}`,
+        );
         await this.setupGmailWatch(connectionData, pubSubName);
 
         await env.gmail_sub_age.put(
