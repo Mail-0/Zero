@@ -549,7 +549,7 @@ export function MailLayout() {
                       : 'Search...'}
                   </span>
 
-                  <span className="absolute right-[0.1rem] flex gap-1">
+                  <span className="absolute right-[0.1rem] flex gap-1  items-center">
                     {/* {activeFilters.length > 0 && (
                       <Badge variant="secondary" className="ml-2 h-5 rounded px-1">
                         {activeFilters.length}
