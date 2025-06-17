@@ -169,6 +169,7 @@
       "details": "Details",
       "from": "Von",
       "to": "An",
+      "replyTo": "Antwort an",
       "cc": "Cc",
       "bcc": "Bcc",
       "date": "Datum",

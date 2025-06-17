@@ -30,6 +30,10 @@
             "class_name": "ZeroMCP",
           },
           {
+            "name": "ZERO_DB",
+            "class_name": "ZeroDB",
+          },
+          {
             "class_name": "DurableMailbox",
             "name": "DURABLE_MAILBOX",
           },
@@ -63,6 +67,10 @@
         {
           "tag": "v2",
           "new_sqlite_classes": ["ZeroAgent", "ZeroMCP"],
+        },
+        {
+          "tag": "v3",
+          "new_classes": ["ZeroDB"],
         },
       ],
       "workflows": [
@@ -131,6 +139,9 @@
       ],
     },
     "staging": {
+      "triggers": {
+        "crons": ["0 0 * * *"],
+      },
       "ai": {
         "binding": "AI",
       },
@@ -156,6 +167,10 @@
           {
             "name": "ZERO_MCP",
             "class_name": "ZeroMCP",
+          },
+          {
+            "name": "ZERO_DB",
+            "class_name": "ZeroDB",
           },
           {
             "class_name": "DurableMailbox",
@@ -191,6 +206,10 @@
         {
           "tag": "v2",
           "new_sqlite_classes": ["ZeroAgent", "ZeroMCP"],
+        },
+        {
+          "tag": "v3",
+          "new_classes": ["ZeroDB"],
         },
       ],
       "workflows": [
@@ -256,6 +275,9 @@
       ],
     },
     "production": {
+      "triggers": {
+        "crons": ["0 0 * * *"],
+      },
       "ai": {
         "binding": "AI",
       },
@@ -307,6 +329,10 @@
             "class_name": "ZeroMCP",
           },
           {
+            "name": "ZERO_DB",
+            "class_name": "ZeroDB",
+          },
+          {
             "class_name": "DurableMailbox",
             "name": "DURABLE_MAILBOX",
           },
@@ -340,6 +366,10 @@
         {
           "tag": "v2",
           "new_sqlite_classes": ["ZeroAgent", "ZeroMCP"],
+        },
+        {
+          "tag": "v3",
+          "new_classes": ["ZeroDB"],
         },
       ],
       "vars": {

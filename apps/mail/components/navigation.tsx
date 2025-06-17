@@ -223,7 +223,7 @@ export function Navigation() {
                   src="/black-icon.svg"
                   alt="0.email Logo"
                   className="object-contain dark:hidden"
-                    width={22} height={22} 
+                  width={22} height={22}
                 />
               </SheetTitle>
               <a href="/login">
@@ -231,7 +231,7 @@ export function Navigation() {
               </a>
             </SheetHeader>
             <div className="mt-8 flex flex-col space-y-3">
-              <div className="space-y-3">
+              <div className="space-y-3 flex flex-col">
                 <Link to="/pricing" className="mt-2">
                   Pricing
                 </Link>

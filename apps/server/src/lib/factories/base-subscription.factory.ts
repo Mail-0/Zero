@@ -1,7 +1,8 @@
 import { defaultLabels, EProviders, type AppContext } from '../../types';
+import { getContext } from 'hono/context-storage';
 import { connection } from '../../db/schema';
+import type { HonoContext } from '../../ctx';
 import { env } from 'cloudflare:workers';
-import { createDb } from '../../db';
 
 export interface SubscriptionData {
   connectionId?: string;
@@ -23,15 +24,9 @@ export abstract class BaseSubscriptionFactory {
 
   abstract verifyToken(token: string): Promise<boolean>;
 
-  protected async getConnectionFromDb(connectionId: string): Promise<any> {
-    const db = createDb(env.HYPERDRIVE.connectionString);
-    const { eq } = await import('drizzle-orm');
-
-    const [connectionData] = await db
-      .select()
-      .from(connection)
-      .where(eq(connection.id, connectionId));
-
+  protected async getConnectionFromDb(connectionId: string) {
+    const db = env.ZERO_DB.get(env.ZERO_DB.idFromName('global-db'));
+    const connectionData = await db.findConnectionById(connectionId);
     return connectionData;
   }
 

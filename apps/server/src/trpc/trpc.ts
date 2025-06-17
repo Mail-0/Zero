@@ -3,9 +3,8 @@ import { Ratelimit, type RatelimitConfig } from '@upstash/ratelimit';
 import type { HonoContext, HonoVariables } from '../ctx';
 import { getConnInfo } from 'hono/cloudflare-workers';
 import { initTRPC, TRPCError } from '@trpc/server';
-import { connection } from '../db/schema';
+import { env } from 'cloudflare:workers';
 import { redis } from '../lib/services';
-import { eq, and } from 'drizzle-orm';
 import type { Context } from 'hono';
 import superjson from 'superjson';
 
@@ -57,10 +56,11 @@ export const activeDriverProcedure = activeConnectionProcedure.use(async ({ ctx,
 
   if (!res.ok && res.error.message === 'invalid_grant') {
     // Remove the access token and refresh token
-    await ctx.c.var.db
-      .update(connection)
-      .set({ accessToken: null, refreshToken: null })
-      .where(and(eq(connection.id, activeConnection.id)));
+    const db = env.ZERO_DB.get(env.ZERO_DB.idFromName('global-db'));
+    await db.updateConnection(activeConnection.id, {
+      accessToken: null,
+      refreshToken: null,
+    });
 
     ctx.c.header(
       'X-Zero-Redirect',

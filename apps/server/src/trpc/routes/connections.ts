@@ -2,6 +2,7 @@ import { createRateLimiterMiddleware, privateProcedure, publicProcedure, router 
 import { getActiveConnection } from '../../lib/server-utils';
 import { connection, user as user_ } from '../../db/schema';
 import { Ratelimit } from '@upstash/ratelimit';
+import { env } from 'cloudflare:workers';
 import { TRPCError } from '@trpc/server';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
@@ -15,20 +16,9 @@ export const connectionsRouter = router({
       }),
     )
     .query(async ({ ctx }) => {
-      const { db, sessionUser } = ctx;
-      const connections = await db
-        .select({
-          id: connection.id,
-          email: connection.email,
-          name: connection.name,
-          picture: connection.picture,
-          createdAt: connection.createdAt,
-          providerId: connection.providerId,
-          accessToken: connection.accessToken,
-          refreshToken: connection.refreshToken,
-        })
-        .from(connection)
-        .where(eq(connection.userId, sessionUser.id));
+      const { sessionUser } = ctx;
+      const db = env.ZERO_DB.get(env.ZERO_DB.idFromName('global-db'));
+      const connections = await db.findManyConnections(sessionUser.id);
 
       const disconnectedIds = connections
         .filter((c) => !c.accessToken || !c.refreshToken)
