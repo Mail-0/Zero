@@ -1,10 +1,44 @@
-import type { Sender } from '../types';
+import type { AppContext, EProviders, Sender } from '../types';
+import { env } from 'cloudflare:workers';
 
 export const parseHeaders = (token: string) => {
   const headers = new Headers();
   headers.set('Cookie', token);
   return headers;
 };
+
+/**
+ * Mock context for testing
+ */
+export const c = {
+  env,
+  json: (data: any, status: number) => ({
+    data,
+    status,
+  }),
+  text: (data: any, status: number) => ({
+    data,
+    status,
+  }),
+} as unknown as AppContext;
+
+export const getNotificationsUrl = (provider: EProviders) => {
+  return env.VITE_PUBLIC_BACKEND_URL + '/a8n/notify/' + provider;
+};
+
+export async function setSubscribedState(
+  connectionId: string,
+  providerId: EProviders,
+): Promise<void> {
+  return await env.subscribed_accounts.put(
+    `${connectionId}__${providerId}`,
+    new Date().toISOString(),
+  );
+}
+
+export async function cleanupOnFailure(connectionId: string): Promise<void> {
+  return await env.subscribed_accounts.delete(connectionId);
+}
 
 export const FOLDERS = {
   SPAM: 'spam',

@@ -1,5 +1,48 @@
 import type { Context } from 'hono';
 
+export enum EProviders {
+  'google' = 'google',
+  'microsoft' = 'microsoft',
+}
+
+export interface ISubscribeBatch {
+  connectionId: string;
+  providerId: EProviders;
+}
+
+export const defaultLabels = [
+  {
+    name: 'to respond',
+    usecase: 'emails you need to respond to. NOT sales, marketing, or promotions.',
+  },
+  {
+    name: 'FYI',
+    usecase:
+      'emails that are not important, but you should know about. NOT sales, marketing, or promotions.',
+  },
+  {
+    name: 'comment',
+    usecase:
+      'Team chats in tools like Google Docs, Slack, etc. NOT marketing, sales, or promotions.',
+  },
+  {
+    name: 'notification',
+    usecase: 'Automated updates from services you use. NOT sales, marketing, or promotions.',
+  },
+  {
+    name: 'promotion',
+    usecase: 'Sales, marketing, cold emails, special offers or promotions. NOT to respond to.',
+  },
+  {
+    name: 'meeting',
+    usecase: 'Calendar events, invites, etc. NOT sales, marketing, or promotions.',
+  },
+  {
+    name: 'billing',
+    usecase: 'Billing notifications. NOT sales, marketing, or promotions.',
+  },
+];
+
 export type Label = {
   id: string;
   name: string;
