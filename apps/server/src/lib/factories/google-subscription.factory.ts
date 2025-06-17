@@ -26,6 +26,7 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
   private accessToken: string | null = null;
   private tokenExpiry: number = 0;
   private serviceAccount: GoogleServiceAccount | null = null;
+  private pubsubServiceAccount: string = 'serviceAccount:gmail-api-push@system.gserviceaccount.com';
 
   private getServiceAccount(): GoogleServiceAccount {
     if (!this.serviceAccount) {
@@ -150,7 +151,7 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
     policy.bindings = policy.bindings || [];
     policy.bindings.push({
       role: 'roles/pubsub.publisher',
-      members: [serviceAccount.client_email],
+      members: [this.pubsubServiceAccount],
     });
 
     // Update policy
