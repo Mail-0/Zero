@@ -109,7 +109,6 @@
         "ELEVENLABS_API_KEY": "1234567890",
         "DISABLE_CALLS": "true",
         "VOICE_SECRET": "1234567890",
-        "GOOGLE_S_ACCOUNT": "{}",
       },
       "kv_namespaces": [
         {
@@ -245,7 +244,6 @@
         "VITE_PUBLIC_BACKEND_URL": "https://sapi.0.email",
         "VITE_PUBLIC_APP_URL": "https://staging.0.email",
         "DISABLE_CALLS": "",
-        "GOOGLE_S_ACCOUNT": "{}",
       },
       "kv_namespaces": [
         {
@@ -378,7 +376,6 @@
         "VITE_PUBLIC_BACKEND_URL": "https://api.0.email",
         "VITE_PUBLIC_APP_URL": "https://0.email",
         "DISABLE_CALLS": "true",
-        "GOOGLE_S_ACCOUNT": "{}",
       },
       "kv_namespaces": [
         {
