@@ -80,10 +80,12 @@ const connectionHandlerHook = async (account: Account) => {
     })
     .returning({ id: connection.id });
 
-  await env.subscribe_queue.send({
-    connectionId: result.id,
-    providerId: account.providerId,
-  });
+  if (env.GOOGLE_S_ACCOUNT && env.GOOGLE_S_ACCOUNT !== '{}') {
+    await env.subscribe_queue.send({
+      connectionId: result.id,
+      providerId: account.providerId,
+    });
+  }
 };
 
 export const createAuth = () => {
