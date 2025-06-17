@@ -2,6 +2,7 @@ import { mapToObj, pipe, entries, sortBy, take, fromEntries } from 'remeda';
 import { getContext } from 'hono/context-storage';
 import { writingStyleMatrix } from '../db/schema';
 import type { HonoContext } from '../ctx';
+import { env } from 'cloudflare:workers';
 import { google } from '@ai-sdk/google';
 import { jsonrepair } from 'jsonrepair';
 import { generateObject } from 'ai';
@@ -162,17 +163,9 @@ export const getWritingStyleMatrixForConnectionId = async ({
   connectionId: string;
   backupContent?: string;
 }) => {
-  const c = getContext<HonoContext>();
+  const db = env.ZERO_DB.get(env.ZERO_DB.idFromName('global-db'));
 
-  const matrix = await c.var.db.query.writingStyleMatrix.findFirst({
-    where: (table, ops) => {
-      return ops.eq(table.connectionId, connectionId);
-    },
-    columns: {
-      numMessages: true,
-      style: true,
-    },
-  });
+  const matrix = await db.findWritingStyleMatrix(connectionId);
 
   if (!matrix && backupContent) {
     if (!backupContent.trim()) {
