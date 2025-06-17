@@ -13,9 +13,10 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { getSocialProviders } from './auth-providers';
 import { redis, resend, twilio } from './services';
 import { getContext } from 'hono/context-storage';
-import { getActiveDriver } from './driver/utils';
 import { defaultUserSettings } from './schemas';
+import { disableBrainFunction } from './brain';
 import { APIError } from 'better-auth/api';
+import type { EProviders } from '../types';
 import type { HonoContext } from '../ctx';
 import { env } from 'cloudflare:workers';
 import { createDriver } from './driver';
@@ -57,11 +58,13 @@ const connectionHandlerHook = async (account: Account) => {
     expiresAt: new Date(Date.now() + (account.accessTokenExpiresAt?.getTime() || 3600000)),
   };
 
-  await c.var.db
+  const connectionId = crypto.randomUUID();
+
+  const [result] = await c.var.db
     .insert(connection)
     .values({
       providerId: account.providerId as 'google' | 'microsoft',
-      id: crypto.randomUUID(),
+      id: connectionId,
       email: userInfo.address,
       userId: account.userId,
       createdAt: new Date(),
@@ -74,7 +77,15 @@ const connectionHandlerHook = async (account: Account) => {
         ...updatingInfo,
         updatedAt: new Date(),
       },
+    })
+    .returning({ id: connection.id });
+
+  if (env.GOOGLE_S_ACCOUNT && env.GOOGLE_S_ACCOUNT !== '{}') {
+    await env.subscribe_queue.send({
+      connectionId: result.id,
+      providerId: account.providerId,
     });
+  }
 };
 
 export const createAuth = () => {
@@ -111,6 +122,10 @@ export const createAuth = () => {
             await Promise.allSettled(
               connections.map(async (connection) => {
                 if (!connection.accessToken || !connection.refreshToken) return false;
+                await disableBrainFunction({
+                  id: connection.id,
+                  providerId: connection.providerId as EProviders,
+                });
                 const driver = createDriver(connection.providerId, {
                   auth: {
                     accessToken: connection.accessToken,

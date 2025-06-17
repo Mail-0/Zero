@@ -1,3 +1,4 @@
+import { Reply } from '@/components/icons/icons';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import React from 'react';
@@ -82,7 +83,12 @@ const ToastTest = (props: Props) => {
             toast('Persistent Toast', {
               duration: 99999999999999, // 10 seconds
               action: {
-                label: 'Undo',
+                label: (
+                  <span className="flex items-center gap-1">
+                    <Reply className="fill-muted-foreground dark:fill-[#9B9B9B]" />
+                    Undo
+                  </span>
+                ),
                 onClick: () => console.log('Undo action clicked'),
               },
             });

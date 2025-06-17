@@ -68,6 +68,7 @@ export interface MailManager {
     tokens?: ManagerConfig['auth'],
   ): Promise<{ address: string; name: string; photo: string }>;
   getScope(): string;
+  listHistory<T>(historyId: string): Promise<{ history: T[]; historyId: string }>;
   markAsRead(threadIds: string[]): Promise<void>;
   markAsUnread(threadIds: string[]): Promise<void>;
   normalizeIds(id: string[]): { threadIds: string[] };

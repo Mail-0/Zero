@@ -559,7 +559,7 @@ export function MailLayout() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-5 rounded-xl px-1.5 text-xs"
+                        className="h-5 rounded-xl px-1.5 text-xs my-auto"
                         onClick={(e) => {
                           e.stopPropagation();
                           clearAllFilters();

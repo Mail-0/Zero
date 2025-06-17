@@ -15,6 +15,7 @@ import type { Sender } from '@/types';
 import { useQueryState } from 'nuqs';
 import posthog from 'posthog-js';
 import { toast } from 'sonner';
+import { useSession } from '@/lib/auth-client';
 
 interface ReplyComposeProps {
   messageId?: string;
@@ -33,6 +34,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
   const { mutateAsync: sendEmail } = useMutation(trpc.mail.send.mutationOptions());
   const { data: activeConnection } = useActiveConnection();
   const { data: settings, isLoading: settingsLoading } = useSettings();
+  const { data: session } = useSession();
 
   // Find the specific message to reply to
   const replyToMessage =
@@ -111,16 +113,17 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
 
     try {
       const userEmail = activeConnection.email.toLowerCase();
+      const userName = activeConnection.name || session?.user?.name || '';
 
       let fromEmail = userEmail;
 
       if (aliases && aliases.length > 0 && replyToMessage) {
+
         const allRecipients = [
           ...(replyToMessage.to || []),
           ...(replyToMessage.cc || []),
           ...(replyToMessage.bcc || []),
         ];
-
         const matchingAlias = aliases.find((alias) =>
           allRecipients.some(
             (recipient) => recipient.email.toLowerCase() === alias.email.toLowerCase(),
@@ -128,10 +131,11 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
         );
 
         if (matchingAlias) {
-          fromEmail = matchingAlias.email;
+          fromEmail = userName.trim() ? `${userName.replace(/[<>]/g, '')} <${matchingAlias.email}>` : matchingAlias.email;
+
         } else {
-          fromEmail =
-            aliases.find((alias) => alias.primary)?.email || aliases[0]?.email || userEmail;
+          const primaryEmail =  aliases.find((alias) => alias.primary)?.email || aliases[0]?.email || userEmail;
+          fromEmail = userName.trim() ? `${userName.replace(/[<>]/g, '')} <${primaryEmail}>` : primaryEmail;
         }
       }
 

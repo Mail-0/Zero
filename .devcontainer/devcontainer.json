@@ -31,5 +31,5 @@
   },
 
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "zsh"
+  "postCreateCommand": "apt update && apt install -y zsh && zsh"
 }
