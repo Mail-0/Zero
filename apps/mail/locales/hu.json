@@ -169,6 +169,7 @@
       "details": "Részletek",
       "from": "Feladó",
       "to": "Címzett",
+      "replyTo": "Válaszcím",
       "cc": "Másolat",
       "bcc": "Titkos másolat",
       "date": "Dátum",
