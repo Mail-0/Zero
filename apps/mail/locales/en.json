@@ -169,6 +169,7 @@
       "details": "Details",
       "from": "From",
       "to": "To",
+      "replyTo": "Reply To",
       "cc": "Cc",
       "bcc": "Bcc",
       "date": "Date",
@@ -494,8 +495,6 @@
           "bulkSelect": "Bulk select",
           "bulkArchive": "Bulk archive",
           "bulkStar": "Bulk star"
-
-          
         }
       },
       "labels": {

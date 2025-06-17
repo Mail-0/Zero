@@ -188,7 +188,7 @@ export function EmailComposer({
 
     const userEmail = activeConnection.email.toLowerCase();
     const latestEmail = emailData.latest;
-    const senderEmail = latestEmail.sender.email.toLowerCase();
+    const senderEmail = latestEmail.replyTo;
 
     // Reset states
     form.reset();
@@ -213,7 +213,7 @@ export function EmailComposer({
 
       // Add original sender if not current user
       if (senderEmail !== userEmail) {
-        to.push(latestEmail.sender.email);
+        to.push(latestEmail.replyTo || latestEmail.sender.email);
       }
 
       // Add original recipients from To field
@@ -385,6 +385,8 @@ export function EmailComposer({
         message: editor.getHTML(),
         attachments: await serializeFiles(values.attachments ?? []),
         id: draftId,
+        threadId: threadId ? threadId : null,
+        fromEmail: values.fromEmail ? values.fromEmail : null,
       };
 
       const response = await createDraft(draftData);
