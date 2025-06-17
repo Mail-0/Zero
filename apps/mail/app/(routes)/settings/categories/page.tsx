@@ -101,7 +101,15 @@ export default function CategoriesSettingsPage() {
                     type="number"
                     value={cat.order}
                     min={0}
-                    onChange={(e) => handleFieldChange(cat.id, 'order', Number(e.target.value))}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const parsed = val === '' ? undefined : Number(val);
+                      handleFieldChange(
+                        cat.id,
+                        'order',
+                        parsed === undefined || Number.isNaN(parsed) ? cat.order : parsed,
+                      );
+                    }}
                   />
                 </div>
                 <div className="flex items-center gap-2 mt-6">
