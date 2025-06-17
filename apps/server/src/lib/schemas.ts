@@ -89,6 +89,24 @@ export const defaultMailCategories: MailCategory[] = [
   },
 ];
 
+const categoriesSchema = z.array(mailCategorySchema).superRefine((cats, ctx) => {
+  const orders = cats.map((c) => c.order);
+  if (new Set(orders).size !== orders.length) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Each mail category must have a unique order number',
+    });
+  }
+
+  const defaultCount = cats.filter((c) => c.isDefault).length;
+  if (defaultCount !== 1) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Exactly one mail category must be set as default',
+    });
+  }
+});
+
 export const userSettingsSchema = z.object({
   language: z.string(),
   timezone: z.string(),
@@ -99,7 +117,7 @@ export const userSettingsSchema = z.object({
   trustedSenders: z.string().array().optional(),
   colorTheme: z.enum(['light', 'dark', 'system']).default('system'),
   zeroSignature: z.boolean().default(true),
-  categories: z.array(mailCategorySchema).optional(),
+  categories: categoriesSchema.optional(),
 });
 
 export type UserSettings = z.infer<typeof userSettingsSchema>;

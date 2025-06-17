@@ -44,14 +44,24 @@ export default function CategoriesSettingsPage() {
       return;
     }
 
+    const orderValues = categories.map((c) => c.order);
+    const hasDuplicateOrders = new Set(orderValues).size !== orderValues.length;
+    if (hasDuplicateOrders) {
+      toast.error('Each category must have a unique order number');
+      return;
+    }
+
+    const sortedCategories = [...categories].sort((a, b) => a.order - b.order);
+
     try {
-      await saveUserSettings({ categories });
+      await saveUserSettings({ categories: sortedCategories });
       queryClient.setQueryData(trpc.settings.get.queryKey(), (updater: any) => {
         if (!updater) return;
         return {
-          settings: { ...updater.settings, categories },
+          settings: { ...updater.settings, categories: sortedCategories },
         };
       });
+      setCategories(sortedCategories);
       toast.success('Categories saved');
     } catch (e) {
       console.error(e);
