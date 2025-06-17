@@ -63,6 +63,7 @@ import { useTranslations } from 'use-intl';
 import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
+import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
 
 interface ITag {
   id: string;
@@ -185,7 +186,7 @@ const AutoLabelingSettings = () => {
   };
 
   const handleEnableBrain = useCallback(async () => {
-    toast.promise(EnableBrain({}), {
+    toast.promise(EnableBrain(), {
       loading: 'Enabling autolabeling...',
       success: 'Autolabeling enabled successfully',
       error: 'Failed to enable autolabeling',
@@ -196,7 +197,7 @@ const AutoLabelingSettings = () => {
   }, []);
 
   const handleDisableBrain = useCallback(async () => {
-    toast.promise(DisableBrain({}), {
+    toast.promise(DisableBrain(), {
       loading: 'Disabling autolabeling...',
       success: 'Autolabeling disabled successfully',
       error: 'Failed to disable autolabeling',
@@ -458,7 +459,8 @@ export function MailLayout() {
     }
   }, []);
 
-  const category = useQueryState('category', { defaultValue: 'All Mail' });
+  const defaultCategoryId = useDefaultCategoryId();
+  const category = useQueryState('category', { defaultValue: defaultCategoryId });
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -820,91 +822,61 @@ function BulkSelectActions() {
 
 export const Categories = () => {
   const t = useTranslations();
-  const [category] = useQueryState('category', {
-    defaultValue: 'All Mail',
+  const categorySettings = useCategorySettings();
+  const [activeCategory] = useQueryState('category');
+
+  // Build category array, merging dynamic settings with icon/translation fallbacks
+  const categories = categorySettings.map((cat) => {
+    const base = {
+      id: cat.id,
+      name:
+        cat.name ||
+        t(`common.mailCategories.${cat.id.toLowerCase().replace(' ', '')}` as any),
+      searchValue: cat.searchValue,
+    } as const;
+
+    // Helper to decide fill colour depending on selection
+    const isSelected = activeCategory === cat.id;
+
+    switch (cat.id) {
+      case 'Important':
+        return {
+          ...base,
+          icon: <Lightning className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')} />,
+        };
+      case 'All Mail':
+        return {
+          ...base,
+          icon: <Mail className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')} />,
+          colors: 'border-0 bg-[#006FFE] text-white dark:bg-[#006FFE] dark:text-white dark:hover:bg-[#006FFE]/90',
+        };
+      case 'Personal':
+        return {
+          ...base,
+          icon: <User className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')} />,
+        };
+      case 'Promotions':
+        return {
+          ...base,
+          icon: <Tag className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')} />,
+        };
+      case 'Updates':
+        return {
+          ...base,
+          icon: <Bell className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')} />,
+        };
+      case 'Unread':
+        return {
+          ...base,
+          icon: <ScanEye className={cn('fill-muted-foreground h-4 w-4 dark:fill-white', isSelected && 'fill-white')} />,
+        };
+      default:
+        return base as any;
+    }
   });
-  return [
-    {
-      id: 'Important',
-      name: t('common.mailCategories.important'),
-      searchValue: 'is:important NOT is:sent NOT is:draft',
-      icon: (
-        <Lightning
-          className={cn(
-            'fill-muted-foreground dark:fill-white',
-            category === 'Important' && 'fill-white',
-          )}
-        />
-      ),
-    },
-    {
-      id: 'All Mail',
-      name: t('common.mailCategories.allMail'),
-      searchValue: 'NOT is:draft (is:inbox OR (is:sent AND to:me))',
-      icon: (
-        <Mail
-          className={cn(
-            'fill-muted-foreground dark:fill-white',
-            category === 'All Mail' && 'fill-white',
-          )}
-        />
-      ),
-      colors:
-        'border-0 bg-[#006FFE] text-white dark:bg-[#006FFE] dark:text-white dark:hover:bg-[#006FFE]/90',
-    },
-    {
-      id: 'Personal',
-      name: t('common.mailCategories.personal'),
-      searchValue: 'is:personal NOT is:sent NOT is:draft',
-      icon: (
-        <User
-          className={cn(
-            'fill-muted-foreground dark:fill-white',
-            category === 'Personal' && 'fill-white',
-          )}
-        />
-      ),
-    },
-    {
-      id: 'Updates',
-      name: t('common.mailCategories.updates'),
-      searchValue: 'is:updates NOT is:sent NOT is:draft',
-      icon: (
-        <Bell
-          className={cn(
-            'fill-muted-foreground dark:fill-white',
-            category === 'Updates' && 'fill-white',
-          )}
-        />
-      ),
-    },
-    {
-      id: 'Promotions',
-      name: t('common.mailCategories.promotions'),
-      searchValue: 'is:promotions NOT is:sent NOT is:draft',
-      icon: (
-        <Tag
-          className={cn(
-            'fill-muted-foreground dark:fill-white',
-            category === 'Promotions' && 'fill-white',
-          )}
-        />
-      ),
-    },
-    {
-      id: 'Unread',
-      name: t('common.mailCategories.unread'),
-      searchValue: 'is:unread NOT is:sent NOT is:draft',
-      icon: (
-        <ScanEye
-          className={cn(
-            'fill-muted-foreground h-4 w-4 dark:fill-white',
-            category === 'Unread' && 'fill-white',
-          )}
-        />
-      ),
-    },
-  ];
+
+  // Ensure order follows settings
+  return categories;
 };
 
 type CategoryType = ReturnType<typeof Categories>[0];
@@ -936,8 +908,9 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
   const categories = Categories();
   const params = useParams<{ folder: string }>();
   const folder = params?.folder ?? 'inbox';
+  const defaultCategoryIdInner = useDefaultCategoryId();
   const [category, setCategory] = useQueryState('category', {
-    defaultValue: 'All Mail',
+    defaultValue: defaultCategoryIdInner,
   });
   const containerRef = useRef<HTMLDivElement>(null);
   const activeTabElementRef = useRef<HTMLButtonElement>(null);
