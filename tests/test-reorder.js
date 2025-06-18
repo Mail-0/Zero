@@ -17,6 +17,9 @@ function reorderConnections(connectionIds) {
   // Simulate updating orderIndex in database
   const reorderedConnections = connectionIds.map((id, index) => {
     const connection = mockConnections.find(c => c.id === id);
+    if (!connection) {
+      throw new Error(`Connection with id ${id} not found`);
+    }
     return {
       ...connection,
       orderIndex: index
@@ -47,6 +50,13 @@ console.log('✓ reorderConnections passes');
 // Test case 2: Verify array move logic (simulating @dnd-kit/sortable arrayMove)
 console.log('\n=== Test Case 2: Array Move Logic ===');
 function arrayMove(array, from, to) {
+  if (!Array.isArray(array)) {
+    throw new Error('First argument must be an array');
+  }
+  if (from < 0 || from >= array.length || to < 0 || to >= array.length) {
+    throw new Error('Invalid from or to index');
+  }
+  
   const newArray = [...array];
   const item = newArray.splice(from, 1)[0];
   newArray.splice(to, 0, item);
