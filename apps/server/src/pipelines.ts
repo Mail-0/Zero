@@ -35,11 +35,11 @@ export class MainWorkflow extends WorkflowEntrypoint<Env, Params> {
     log('[MAIN_WORKFLOW] Starting workflow with payload:', event.payload);
     try {
       const { providerId, historyId, subscriptionName } = event.payload;
+      const serviceAccount = JSON.parse(env.GOOGLE_S_ACCOUNT);
       const connectionId = await step.do(
         `[ZERO] Validate Arguments ${providerId} ${subscriptionName} ${historyId}`,
         async () => {
           log('[MAIN_WORKFLOW] Validating arguments');
-          const serviceAccount = JSON.parse(env.GOOGLE_S_ACCOUNT);
           const regex = new RegExp(
             `projects/${serviceAccount.project_id}/subscriptions/notifications__([a-z0-9-]+)`,
           );
@@ -50,25 +50,22 @@ export class MainWorkflow extends WorkflowEntrypoint<Env, Params> {
           }
           const [, connectionId] = match;
           log('[MAIN_WORKFLOW] Extracted connectionId:', connectionId);
-          const status = await env.subscribed_accounts.get(`${connectionId}__${providerId}`);
-          log('[MAIN_WORKFLOW] Connection status:', status);
-          if (!status) throw new Error('Connection not found');
-          if (status === 'pending') throw new Error('Connection is pending');
           return connectionId;
         },
       );
-      if (!connectionId) {
-        log('[MAIN_WORKFLOW] Connection id is missing');
-        throw new Error('Connection id is required');
+      const status = await env.subscribed_accounts.get(`${connectionId}__${providerId}`);
+      if (!status || status === 'pending') {
+        log('[MAIN_WORKFLOW] Connection id is missing or not enabled %s', connectionId);
+        throw new Error('Connection is not enabled');
       }
       if (!isValidUUID(connectionId)) {
         log('[MAIN_WORKFLOW] Invalid connection id format:', connectionId);
         throw new Error('Invalid connection id');
       }
+      const previousHistoryId = await env.gmail_history_id.get(connectionId);
       if (providerId === EProviders.google) {
         log('[MAIN_WORKFLOW] Processing Google provider workflow');
         await step.do(`[ZERO] Send to Zero Workflow ${connectionId} ${historyId}`, async () => {
-          const previousHistoryId = await env.gmail_history_id.get(connectionId);
           log('[MAIN_WORKFLOW] Previous history ID:', previousHistoryId);
           if (previousHistoryId) {
             log('[MAIN_WORKFLOW] Creating workflow instance with previous history');
@@ -85,7 +82,13 @@ export class MainWorkflow extends WorkflowEntrypoint<Env, Params> {
             });
           } else {
             log('[MAIN_WORKFLOW] Creating workflow instance with current history');
+            const existingInstance = await env.ZERO_WORKFLOW.get(`${connectionId}__${historyId}`);
+            if (existingInstance) {
+              log('[MAIN_WORKFLOW] History already processing:', existingInstance.id);
+              return;
+            }
             const instance = await env.ZERO_WORKFLOW.create({
+              id: `${connectionId}__${historyId}`,
               params: {
                 connectionId,
                 historyId: historyId,
@@ -270,7 +273,15 @@ export class ZeroWorkflow extends WorkflowEntrypoint<Env, Params> {
                 continue;
               }
               await env.gmail_processing_threads.put(threadId.toString(), 'true');
+              const existingInstance = await env.THREAD_WORKFLOW.get(
+                `${threadId.toString()}__${connectionId.toString()}`,
+              );
+              if (existingInstance) {
+                log('[ZERO_WORKFLOW] Thread already processing:', isProcessing, threadId);
+                continue;
+              }
               const instance = await env.THREAD_WORKFLOW.create({
+                id: `${threadId.toString()}__${connectionId.toString()}`,
                 params: { connectionId, threadId, providerId: foundConnection.providerId },
               });
               log('[ZERO_WORKFLOW] Created instance:', {
