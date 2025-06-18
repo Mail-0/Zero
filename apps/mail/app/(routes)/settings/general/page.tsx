@@ -116,6 +116,7 @@ TimezoneSelect.displayName = 'TimezoneSelect';
 
 export default function GeneralPage() {
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | undefined>();
   const locale = useLocale();
   const t = useTranslations();
   const { data } = useSettings();
@@ -264,18 +265,20 @@ export default function GeneralPage() {
 
             <div className="space-y-4 pt-4">
               <FormItem>
-                <FormLabel>Prompt Template</FormLabel>
+                <FormLabel>{t('pages.settings.general.promptTemplate')}</FormLabel>
                 <Select
+                  value={selectedTemplateId}
                   onValueChange={(value: string) => {
+                    setSelectedTemplateId(value);
                     const tmpl = promptTemplates.find((p: PromptTemplate) => p.id === value);
                     if (tmpl) {
-                      form.setValue('customPrompt', tmpl.content);
+                      form.setValue('customPrompt', tmpl.content, { shouldDirty: true });
                     }
                   }}
                 >
                   <FormControl>
                     <SelectTrigger className="w-72">
-                      <SelectValue placeholder="Choose a template" />
+                      <SelectValue placeholder={t('pages.settings.general.chooseTemplate')} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -287,7 +290,7 @@ export default function GeneralPage() {
                   </SelectContent>
                 </Select>
                 <FormDescription>
-                  Selecting a template will populate the custom prompt field. Edit it as needed.
+                  {t('pages.settings.general.promptTemplateDescription')}
                 </FormDescription>
               </FormItem>
             </div>
