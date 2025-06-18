@@ -10,6 +10,10 @@ import { useTRPC } from '@/providers/query-provider';
 import { toast } from 'sonner';
 import type { CategorySetting } from '@/hooks/use-categories';
 import { defaultMailCategories } from '../../../../../server/src/lib/schemas';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Sparkles } from '@/components/icons/icons';
+import { Loader } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 export default function CategoriesSettingsPage() {
   const { data } = useSettings();
@@ -19,7 +23,13 @@ export default function CategoriesSettingsPage() {
     trpc.settings.save.mutationOptions(),
   );
 
+  const { mutateAsync: generateSearchQuery, isPending: isGeneratingQuery } = useMutation(
+    trpc.ai.generateSearchQuery.mutationOptions(),
+  );
+
   const [categories, setCategories] = useState<CategorySetting[]>([]);
+  const [activeAiCat, setActiveAiCat] = useState<string | null>(null);
+  const [promptValues, setPromptValues] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const stored = data?.settings?.categories ?? [];
@@ -74,41 +84,142 @@ export default function CategoriesSettingsPage() {
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-6 max-w-[900px] mx-auto">
       <SettingsCard
         title="Mail Categories"
         description="Customise how Zero shows the category tabs in your inbox."
         footer={
-          <Button type="button" disabled={isPending} onClick={handleSave}>
-            {isPending ? 'Saving…' : 'Save Changes'}
-          </Button>
+          <div className="px-6">
+            <Button type="button" disabled={isPending} onClick={handleSave}>
+              {isPending ? 'Saving…' : 'Save Changes'}
+            </Button>
+          </div>
         }
       >
-        <div className="space-y-4">
+        <div className="space-y-4 px-6">
           {categories.map((cat) => (
-            <div key={cat.id} className="space-y-2 rounded-md border p-4">
-              <Label className="text-xs font-medium text-muted-foreground">
-                System Id: {cat.id}
-              </Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <Label>Name</Label>
+            <div key={cat.id} className="rounded-lg border border-border bg-card p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-xs font-normal bg-background">
+                    {cat.id}
+                  </Badge>
+                  {cat.isDefault && (
+                    <Badge className="bg-blue-500/10 text-blue-500 border-blue-200 text-xs">
+                      Default
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id={`default-${cat.id}`}
+                    checked={!!cat.isDefault}
+                    onCheckedChange={(val) => {
+                      const newCats = categories.map((c) => ({
+                        ...c,
+                        isDefault: c.id === cat.id ? val : false,
+                      }));
+                      setCategories(newCats);
+                    }}
+                  />
+                  <Label htmlFor={`default-${cat.id}`} className="text-xs font-normal cursor-pointer">
+                    Set as Default
+                  </Label>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-12 gap-4 items-start">
+                <div className="col-span-12 sm:col-span-5">
+                  <Label className="text-xs mb-1.5 block">Display Name</Label>
                   <Input
+                    className="h-8 text-sm"
                     value={cat.name}
                     onChange={(e) => handleFieldChange(cat.id, 'name', e.target.value)}
                   />
                 </div>
-                <div>
-                  <Label>Search Query</Label>
-                  <Input
-                    value={cat.searchValue}
-                    onChange={(e) => handleFieldChange(cat.id, 'searchValue', e.target.value)}
-                  />
+                
+                <div className="col-span-12 sm:col-span-5">
+                  <Label className="text-xs mb-1.5 block">Search Query</Label>
+                  <div className="relative">
+                    <Input
+                      className="pr-8 h-8 text-sm font-mono"
+                      value={cat.searchValue}
+                      onChange={(e) => handleFieldChange(cat.id, 'searchValue', e.target.value)}
+                    />
+
+                    <Popover
+                      open={activeAiCat === cat.id}
+                      onOpenChange={(open) => {
+                        if (open) {
+                          setActiveAiCat(cat.id);
+                        } else {
+                          setActiveAiCat(null);
+                        }
+                      }}
+                    >
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 bg-background hover:bg-secondary rounded-full p-1"
+                          aria-label="Generate search query with AI"
+                        >
+                          {isGeneratingQuery && activeAiCat === cat.id ? (
+                            <Loader className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Sparkles className="h-3 w-3 fill-[#8B5CF6]" />
+                          )}
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80 p-3 space-y-3" sideOffset={4} align="end">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Natural Language Query</Label>
+                          <Input
+                            className="h-8 text-sm"
+                            placeholder="Describe the emails to include…"
+                            value={promptValues[cat.id] ?? ''}
+                            onChange={(e) =>
+                              setPromptValues((prev) => ({ ...prev, [cat.id]: e.target.value }))
+                            }
+                          />
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Example: "emails from my boss about quarterly reports"
+                        </div>
+                        <Button
+                          size="sm"
+                          className="w-full"
+                          disabled={!(promptValues[cat.id]?.trim()) || isGeneratingQuery}
+                          onClick={async () => {
+                            const prompt = promptValues[cat.id]?.trim();
+                            if (!prompt) return;
+                            try {
+                              const res = await generateSearchQuery({ query: prompt });
+                              handleFieldChange(cat.id, 'searchValue', res.query);
+                              toast.success('Search query generated');
+                              setActiveAiCat(null);
+                            } catch (err) {
+                              console.error(err);
+                              toast.error('Failed to generate query');
+                            }
+                          }}
+                        >
+                          {isGeneratingQuery && activeAiCat === cat.id ? (
+                            <Loader className="h-3 w-3 animate-spin mr-1" />
+                          ) : (
+                            <Sparkles className="h-3 w-3 fill-white mr-1" />
+                          )}
+                          Generate Query
+                        </Button>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                 </div>
-                <div>
-                  <Label>Order</Label>
+                
+                <div className="col-span-12 sm:col-span-2">
+                  <Label className="text-xs mb-1.5 block">Order</Label>
                   <Input
                     type="number"
+                    className="h-8 text-sm"
                     value={cat.order}
                     min={0}
                     onChange={(e) => {
@@ -122,19 +233,6 @@ export default function CategoriesSettingsPage() {
                     }}
                   />
                 </div>
-                <div className="flex items-center gap-2 mt-6">
-                  <Switch
-                    checked={!!cat.isDefault}
-                    onCheckedChange={(val) => {
-                      const newCats = categories.map((c) => ({
-                        ...c,
-                        isDefault: c.id === cat.id ? val : false,
-                      }));
-                      setCategories(newCats);
-                    }}
-                  />
-                  <span>Default</span>
-                </div>
               </div>
             </div>
           ))}
@@ -142,4 +240,4 @@ export default function CategoriesSettingsPage() {
       </SettingsCard>
     </div>
   );
-} 
+}
