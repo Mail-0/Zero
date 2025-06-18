@@ -4,23 +4,23 @@ import { EPrompts, EProviders } from '../types';
 import { env } from 'cloudflare:workers';
 
 export const enableBrainFunction = async (connection: { id: string; providerId: EProviders }) => {
-  const subscriptionFactory = getSubscriptionFactory(connection.providerId);
-  const response = await subscriptionFactory.subscribe({ body: { connectionId: connection.id } });
-  if (!response.ok) {
-    throw new Error(`Failed to enable brain function: ${response.status} ${response.statusText}`);
+  try {
+    const subscriptionFactory = getSubscriptionFactory(connection.providerId);
+    await subscriptionFactory.subscribe({ body: { connectionId: connection.id } });
+  } catch (error) {
+    console.error(`Failed to enable brain function: ${error}`);
   }
-  return response;
 };
 
 export const disableBrainFunction = async (connection: { id: string; providerId: EProviders }) => {
-  const subscriptionFactory = getSubscriptionFactory(connection.providerId);
-  const response = await subscriptionFactory.unsubscribe({
-    body: { connectionId: connection.id, providerId: connection.providerId },
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to disable brain function: ${response.status} ${response.statusText}`);
+  try {
+    const subscriptionFactory = getSubscriptionFactory(connection.providerId);
+    await subscriptionFactory.unsubscribe({
+      body: { connectionId: connection.id, providerId: connection.providerId },
+    });
+  } catch (error) {
+    console.error(`Failed to disable brain function: ${error}`);
   }
-  return response;
 };
 
 const getPromptName = (connectionId: string, prompt: EPrompts) => {
