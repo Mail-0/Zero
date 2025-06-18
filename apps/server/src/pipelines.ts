@@ -83,7 +83,7 @@ export class MainWorkflow extends WorkflowEntrypoint<Env, Params> {
           } else {
             log('[MAIN_WORKFLOW] Creating workflow instance with current history');
             const existingInstance = await env.ZERO_WORKFLOW.get(`${connectionId}__${historyId}`);
-            if (existingInstance) {
+            if (existingInstance && (await existingInstance.status()).status === 'running') {
               log('[MAIN_WORKFLOW] History already processing:', existingInstance.id);
               return;
             }
@@ -276,7 +276,7 @@ export class ZeroWorkflow extends WorkflowEntrypoint<Env, Params> {
               const existingInstance = await env.THREAD_WORKFLOW.get(
                 `${threadId.toString()}__${connectionId.toString()}`,
               );
-              if (existingInstance) {
+              if (existingInstance && (await existingInstance.status()).status === 'running') {
                 log('[ZERO_WORKFLOW] Thread already processing:', isProcessing, threadId);
                 continue;
               }
