@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
 import { useActiveConnection, useConnections } from '@/hooks/use-connections';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -63,7 +64,6 @@ import { useTranslations } from 'use-intl';
 import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
-import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
 
 interface ITag {
   id: string;
@@ -551,7 +551,7 @@ export function MailLayout() {
                       : 'Search...'}
                   </span>
 
-                  <span className="absolute right-[0.1rem] flex gap-1  items-center">
+                  <span className="absolute right-[0.1rem] flex items-center gap-1">
                     {/* {activeFilters.length > 0 && (
                       <Badge variant="secondary" className="ml-2 h-5 rounded px-1">
                         {activeFilters.length}
@@ -561,7 +561,7 @@ export function MailLayout() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-5 rounded-xl px-1.5 text-xs my-auto"
+                        className="my-auto h-5 rounded-xl px-1.5 text-xs"
                         onClick={(e) => {
                           e.stopPropagation();
                           clearAllFilters();
@@ -828,9 +828,7 @@ export const Categories = () => {
   const categories = categorySettings.map((cat) => {
     const base = {
       id: cat.id,
-      name:
-        cat.name ||
-        t(`common.mailCategories.${cat.id.toLowerCase().replace(' ', '')}` as any),
+      name: cat.name || t(`common.mailCategories.${cat.id.toLowerCase().replace(' ', '')}` as any),
       searchValue: cat.searchValue,
     } as const;
 
@@ -841,33 +839,61 @@ export const Categories = () => {
       case 'Important':
         return {
           ...base,
-          icon: <Lightning className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')} />,
+          icon: (
+            <Lightning
+              className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')}
+            />
+          ),
         };
       case 'All Mail':
         return {
           ...base,
-          icon: <Mail className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')} />,
-          colors: 'border-0 bg-[#006FFE] text-white dark:bg-[#006FFE] dark:text-white dark:hover:bg-[#006FFE]/90',
+          icon: (
+            <Mail
+              className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')}
+            />
+          ),
+          colors:
+            'border-0 bg-[#006FFE] text-white dark:bg-[#006FFE] dark:text-white dark:hover:bg-[#006FFE]/90',
         };
       case 'Personal':
         return {
           ...base,
-          icon: <User className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')} />,
+          icon: (
+            <User
+              className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')}
+            />
+          ),
         };
       case 'Promotions':
         return {
           ...base,
-          icon: <Tag className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')} />,
+          icon: (
+            <Tag
+              className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')}
+            />
+          ),
         };
       case 'Updates':
         return {
           ...base,
-          icon: <Bell className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')} />,
+          icon: (
+            <Bell
+              className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')}
+            />
+          ),
         };
       case 'Unread':
         return {
           ...base,
-          icon: <ScanEye className={cn('fill-muted-foreground h-4 w-4 dark:fill-white', isSelected && 'fill-white')} />,
+          icon: (
+            <ScanEye
+              className={cn(
+                'fill-muted-foreground h-4 w-4 dark:fill-white',
+                isSelected && 'fill-white',
+              )}
+            />
+          ),
         };
       default:
         return base as any;
@@ -915,14 +941,8 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
   const overlayContainerRef = useRef<HTMLDivElement>(null);
   const [textSize, setTextSize] = useState<'normal' | 'small' | 'xs' | 'hidden'>('normal');
 
-  // Only show category selection for inbox folder
   if (folder !== 'inbox') return <div className="h-8"></div>;
 
-  // Primary category is always the first one
-  const primaryCategory = categories[0];
-  if (!primaryCategory) return null;
-
-  // Check text size based on available space
   useEffect(() => {
     const checkTextSize = () => {
       const container = containerRef.current;

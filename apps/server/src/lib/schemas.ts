@@ -30,6 +30,7 @@ export const createDraftData = z.object({
   message: z.string(),
   attachments: z.array(serializedFileSchema).transform(deserializeFiles).optional(),
   id: z.string().nullable(),
+  threadId: z.string().nullable(),
 });
 
 export type CreateDraftData = z.infer<typeof createDraftData>;
