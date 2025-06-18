@@ -616,7 +616,7 @@ export class ThreadWorkflow extends WorkflowEntrypoint<Env, Params> {
                   '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
                   {
                     messages: [
-                      { role: 'system', content: ThreadLabels(userLabels) },
+                      { role: 'system', content: ThreadLabels(userLabels, thread.labels) },
                       { role: 'user', content: finalSummary },
                     ],
                   },
