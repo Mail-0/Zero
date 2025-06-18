@@ -81,7 +81,7 @@ export class MainWorkflow extends WorkflowEntrypoint<Env, Params> {
             });
             log('[MAIN_WORKFLOW] Created instance:', {
               id: instance.id,
-              status: instance.status,
+              status: await instance.status(),
             });
           } else {
             log('[MAIN_WORKFLOW] Creating workflow instance with current history');
@@ -94,7 +94,7 @@ export class MainWorkflow extends WorkflowEntrypoint<Env, Params> {
             });
             log('[MAIN_WORKFLOW] Created instance:', {
               id: instance.id,
-              status: instance.status,
+              status: await instance.status(),
             });
           }
         });
@@ -270,8 +270,12 @@ export class ZeroWorkflow extends WorkflowEntrypoint<Env, Params> {
                 continue;
               }
               await env.gmail_processing_threads.put(threadId.toString(), 'true');
-              await env.THREAD_WORKFLOW.create({
+              const instance = await env.THREAD_WORKFLOW.create({
                 params: { connectionId, threadId, providerId: foundConnection.providerId },
+              });
+              log('[ZERO_WORKFLOW] Created instance:', {
+                id: instance.id,
+                status: await instance.status(),
               });
               log('[ZERO_WORKFLOW] Sleeping for 4 seconds:', threadId);
               await step.sleep('[ZERO_WORKFLOW]', 4000);

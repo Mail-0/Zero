@@ -7,6 +7,7 @@ import {
 import {
   account,
   connection,
+  note,
   session,
   user,
   userHotkeys,
@@ -17,6 +18,7 @@ import { env, WorkerEntrypoint, DurableObject } from 'cloudflare:workers';
 import { MainWorkflow, ThreadWorkflow, ZeroWorkflow } from './pipelines';
 import { getZeroDB, verifyToken } from './lib/server-utils';
 import { EProviders, type ISubscribeBatch } from './types';
+import { eq, and, desc, asc, inArray } from 'drizzle-orm';
 import { contextStorage } from 'hono/context-storage';
 import { defaultUserSettings } from './lib/schemas';
 import { createLocalJWKSet, jwtVerify } from 'jose';
@@ -32,7 +34,6 @@ import { createDb, type DB } from './db';
 import { ZeroMCP } from './routes/chat';
 import { createAuth } from './lib/auth';
 import { aiRouter } from './routes/ai';
-import { eq, and } from 'drizzle-orm';
 import { Autumn } from 'autumn-js';
 import { appRouter } from './trpc';
 import { cors } from 'hono/cors';
@@ -75,6 +76,89 @@ class ZeroDB extends DurableObject {
   async findManyConnections(userId: string): Promise<(typeof connection.$inferSelect)[]> {
     return await this.db.query.connection.findMany({
       where: eq(connection.userId, userId),
+    });
+  }
+
+  async findManyNotesByThreadId(
+    userId: string,
+    threadId: string,
+  ): Promise<(typeof note.$inferSelect)[]> {
+    return await this.db.query.note.findMany({
+      where: and(eq(note.userId, userId), eq(note.threadId, threadId)),
+      orderBy: [desc(note.isPinned), asc(note.order), desc(note.createdAt)],
+    });
+  }
+
+  async createNote(userId: string, payload: typeof note.$inferInsert) {
+    return await this.db.insert(note).values({
+      ...payload,
+      userId,
+    });
+  }
+
+  async updateNote(
+    userId: string,
+    noteId: string,
+    payload: Partial<typeof note.$inferInsert>,
+  ): Promise<typeof note.$inferSelect | undefined> {
+    const [updated] = await this.db
+      .update(note)
+      .set(payload)
+      .where(and(eq(note.id, noteId), eq(note.userId, userId)))
+      .returning();
+    return updated;
+  }
+
+  async updateManyNotes(
+    userId: string,
+    notes: { id: string; order: number; isPinned?: boolean | null }[],
+  ): Promise<boolean> {
+    return await this.db.transaction(async (tx) => {
+      for (const n of notes) {
+        const updateData: Record<string, unknown> = {
+          order: n.order,
+          updatedAt: new Date(),
+        };
+
+        if (n.isPinned !== undefined) {
+          updateData.isPinned = n.isPinned;
+        }
+        await tx
+          .update(note)
+          .set(updateData)
+          .where(and(eq(note.id, n.id), eq(note.userId, userId)));
+      }
+      return true;
+    });
+  }
+
+  async findManyNotesByIds(
+    userId: string,
+    noteIds: string[],
+  ): Promise<(typeof note.$inferSelect)[]> {
+    return await this.db.query.note.findMany({
+      where: and(eq(note.userId, userId), inArray(note.id, noteIds)),
+    });
+  }
+
+  async deleteNote(userId: string, noteId: string) {
+    return await this.db.delete(note).where(and(eq(note.id, noteId), eq(note.userId, userId)));
+  }
+
+  async findNoteById(
+    userId: string,
+    noteId: string,
+  ): Promise<typeof note.$inferSelect | undefined> {
+    return await this.db.query.note.findFirst({
+      where: and(eq(note.id, noteId), eq(note.userId, userId)),
+    });
+  }
+
+  async findHighestNoteOrder(userId: string): Promise<{ order: number } | undefined> {
+    return await this.db.query.note.findFirst({
+      where: eq(note.userId, userId),
+      orderBy: desc(note.order),
+      columns: { order: true },
     });
   }
 
