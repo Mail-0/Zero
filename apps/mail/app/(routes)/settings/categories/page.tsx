@@ -188,7 +188,7 @@ export default function CategoriesSettingsPage() {
                           />
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          Example: "emails from my boss about quarterly reports"
+                          Example: "emails that mention quarterly reports"
                         </div>
                         <Button
                           size="sm"
