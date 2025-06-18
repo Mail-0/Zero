@@ -32,15 +32,15 @@ export class MainWorkflow extends WorkflowEntrypoint<Env, Params> {
     event: Readonly<WorkflowEvent<Params<'providerId' | 'historyId' | 'subscriptionName'>>>,
     step: WorkflowStep,
   ) {
-    await step.do('[MAIN_WORKFLOW] Delete all processing threads', async () => {
-      log('[MAIN_WORKFLOW] Deleting all processing threads');
-      const processingThreads = await env.gmail_processing_threads.list();
-      log('[MAIN_WORKFLOW] Found processing threads:', processingThreads.keys.length);
-      for (const threadId of processingThreads.keys) {
-        await env.gmail_processing_threads.delete(threadId.name.toString());
-      }
-      log('[MAIN_WORKFLOW] Deleted all processing threads');
-    });
+    // await step.do('[MAIN_WORKFLOW] Delete all processing threads', async () => {
+    //   log('[MAIN_WORKFLOW] Deleting all processing threads');
+    //   const processingThreads = await env.gmail_processing_threads.list();
+    //   log('[MAIN_WORKFLOW] Found processing threads:', processingThreads.keys.length);
+    //   for (const threadId of processingThreads.keys) {
+    //     await env.gmail_processing_threads.delete(threadId.name.toString());
+    //   }
+    //   log('[MAIN_WORKFLOW] Deleted all processing threads');
+    // });
     log('[MAIN_WORKFLOW] Starting workflow with payload:', event.payload);
     const { providerId, historyId, subscriptionName } = event.payload;
     const connectionId = await step.do(

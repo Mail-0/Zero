@@ -131,12 +131,21 @@ class ZeroDB extends DurableObject {
 
   async updateUserSettings(userId: string, settings: typeof defaultUserSettings) {
     return await this.db
-      .update(userSettings)
-      .set({
+      .insert(userSettings)
+      .values({
+        id: crypto.randomUUID(),
+        userId,
         settings,
+        createdAt: new Date(),
         updatedAt: new Date(),
       })
-      .where(eq(userSettings.userId, userId));
+      .onConflictDoUpdate({
+        target: userSettings.userId,
+        set: {
+          settings,
+          updatedAt: new Date(),
+        },
+      });
   }
 
   async createConnection(
@@ -189,18 +198,9 @@ class ZeroDB extends DurableObject {
           style: writingStyleMatrix.style,
         })
         .from(writingStyleMatrix)
-        .where(eq(writingStyleMatrix.connectionId, connectionId))
-        .for('update');
+        .where(eq(writingStyleMatrix.connectionId, connectionId));
 
-      if (!existingMatrix) {
-        const newStyle = initializeStyleMatrixFromEmail(emailStyleMatrix);
-
-        await tx.insert(writingStyleMatrix).values({
-          connectionId,
-          numMessages: 1,
-          style: newStyle,
-        });
-      } else {
+      if (existingMatrix) {
         const newStyle = createUpdatedMatrixFromNewEmail(
           existingMatrix.numMessages,
           existingMatrix.style as WritingStyleMatrix,
@@ -214,6 +214,17 @@ class ZeroDB extends DurableObject {
             style: newStyle,
           })
           .where(eq(writingStyleMatrix.connectionId, connectionId));
+      } else {
+        const newStyle = initializeStyleMatrixFromEmail(emailStyleMatrix);
+
+        await tx
+          .insert(writingStyleMatrix)
+          .values({
+            connectionId,
+            numMessages: 1,
+            style: newStyle,
+          })
+          .onConflictDoNothing();
       }
     });
   }

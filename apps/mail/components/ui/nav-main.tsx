@@ -4,10 +4,10 @@ import { useActiveConnection, useConnections } from '@/hooks/use-connections';
 import { type MessageKey, type NavItem } from '@/config/navigation';
 import { LabelDialog } from '@/components/labels/label-dialog';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { Link, useLocation, useNavigate } from 'react-router';
 import Intercom, { show } from '@intercom/messenger-js-sdk';
 import { MessageSquare, OldPhone } from '../icons/icons';
 import { useSidebar } from '../context/sidebar-context';
-import { useLocation, useNavigate } from 'react-router';
 import { useTRPC } from '@/providers/query-provider';
 import type { Label as LabelType } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -281,7 +281,6 @@ function NavItem(item: NavItemProps & { href: string }) {
   const { data: stats } = useStats();
   const t = useTranslations();
   const { state, setOpenMobile } = useSidebar();
-  const navigate = useNavigate();
 
   if (item.disabled) {
     return (
@@ -301,23 +300,14 @@ function NavItem(item: NavItemProps & { href: string }) {
     if (item.onClick) {
       item.onClick(e as React.MouseEvent<HTMLAnchorElement>);
     }
-
     setOpenMobile(false);
-
-    // Handle navigation
-    if (!e.defaultPrevented) {
-      if (item.target === '_blank') {
-        window.open(item.href, '_blank', 'noopener,noreferrer');
-      } else {
-        navigate(item.href);
-      }
-    }
   };
 
   return (
     <Collapsible defaultOpen={item.isActive}>
       <CollapsibleTrigger asChild>
         <SidebarMenuButton
+          asChild
           tooltip={state === 'collapsed' ? t(item.title as MessageKey) : undefined}
           className={cn(
             'hover:bg-subtleWhite flex items-center dark:hover:bg-[#202020]',
@@ -325,19 +315,21 @@ function NavItem(item: NavItemProps & { href: string }) {
           )}
           onClick={handleClick}
         >
-          {item.icon && <item.icon ref={iconRef} className="mr-2 shrink-0" />}
-          <p className="relative bottom-[1px] mt-0.5 min-w-0 flex-1 truncate text-[13px]">
-            {t(item.title as MessageKey)}
-          </p>
-          {stats &&
-            item.id?.toLowerCase() !== 'sent' &&
-            stats.some((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase()) && (
-              <Badge className="text-muted-foreground ml-auto shrink-0 rounded-full border-none bg-transparent">
-                {stats
-                  .find((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase())
-                  ?.count?.toLocaleString() || '0'}
-              </Badge>
-            )}
+          <Link target={item.target} to={item.href} prefetch="intent">
+            {item.icon && <item.icon ref={iconRef} className="mr-2 shrink-0" />}
+            <p className="relative bottom-[1px] mt-0.5 min-w-0 flex-1 truncate text-[13px]">
+              {t(item.title as MessageKey)}
+            </p>
+            {stats &&
+              item.id?.toLowerCase() !== 'sent' &&
+              stats.some((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase()) && (
+                <Badge className="text-muted-foreground ml-auto shrink-0 rounded-full border-none bg-transparent">
+                  {stats
+                    .find((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase())
+                    ?.count?.toLocaleString() || '0'}
+                </Badge>
+              )}
+          </Link>
         </SidebarMenuButton>
       </CollapsibleTrigger>
     </Collapsible>
