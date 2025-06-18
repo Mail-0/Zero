@@ -411,17 +411,18 @@ export class ThreadWorkflow extends WorkflowEntrypoint<Env, Params> {
                   const prompt = await messageToXML(message);
                   if (!prompt) throw new Error('Message has no prompt');
                   log('[THREAD_WORKFLOW] Got XML prompt for message:', message.id);
+                  log('[THREAD_WORKFLOW] Message:', message);
 
                   const SummarizeMessagePrompt = await step.do(
                     `[ZERO] Get Summarize Message Prompt ${message.id}`,
                     async () => {
-                      if (!message.connectionId) throw new Error('Message has no connection id');
                       log(
                         '[THREAD_WORKFLOW] Getting summarize prompt for connection:',
-                        message.connectionId,
+                        message.connectionId ?? '',
+                        message,
                       );
                       return await getPrompt(
-                        getPromptName(message.connectionId, EPrompts.SummarizeMessage),
+                        getPromptName(message.connectionId ?? '', EPrompts.SummarizeMessage),
                         SummarizeMessage,
                       );
                     },
