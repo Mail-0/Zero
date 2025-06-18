@@ -34,6 +34,7 @@ import { useRevalidator } from 'react-router';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import * as z from 'zod';
+import { promptTemplates, type PromptTemplate } from '@/config/promptTemplates';
 
 const TimezoneSelect = memo(
   ({
@@ -260,6 +261,36 @@ export default function GeneralPage() {
                 </FormItem>
               )}
             />
+
+            <div className="space-y-4 pt-4">
+              <FormItem>
+                <FormLabel>Prompt Template</FormLabel>
+                <Select
+                  onValueChange={(value: string) => {
+                    const tmpl = promptTemplates.find((p: PromptTemplate) => p.id === value);
+                    if (tmpl) {
+                      form.setValue('customPrompt', tmpl.content);
+                    }
+                  }}
+                >
+                  <FormControl>
+                    <SelectTrigger className="w-72">
+                      <SelectValue placeholder="Choose a template" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {promptTemplates.map((template: PromptTemplate) => (
+                      <SelectItem key={template.id} value={template.id}>
+                        {template.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Selecting a template will populate the custom prompt field. Edit it as needed.
+                </FormDescription>
+              </FormItem>
+            </div>
           </form>
         </Form>
       </SettingsCard>
