@@ -1,5 +1,5 @@
 import { useSettings } from '@/hooks/use-settings';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { SettingsCard } from '@/components/settings/settings-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,6 @@ import { useState, useEffect } from 'react';
 import { useTRPC } from '@/providers/query-provider';
 import { toast } from 'sonner';
 import type { CategorySetting } from '@/hooks/use-categories';
-import { defaultMailCategories } from '../../../../../server/src/lib/schemas';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Sparkles } from '@/components/icons/icons';
 import { Loader } from 'lucide-react';
@@ -27,20 +26,26 @@ export default function CategoriesSettingsPage() {
     trpc.ai.generateSearchQuery.mutationOptions(),
   );
 
+  const { data: defaultMailCategories = [] } = useQuery(
+    trpc.categories.defaults.queryOptions(void 0, { staleTime: Infinity }),
+  );
+
   const [categories, setCategories] = useState<CategorySetting[]>([]);
   const [activeAiCat, setActiveAiCat] = useState<string | null>(null);
   const [promptValues, setPromptValues] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    if (!defaultMailCategories.length) return;
+
     const stored = data?.settings?.categories ?? [];
 
     const merged = defaultMailCategories.map((def) => {
-      const override = stored.find((c: { id: string; }) => c.id === def.id);
+      const override = stored.find((c: { id: string }) => c.id === def.id);
       return override ? { ...def, ...override } : def;
     });
 
     setCategories(merged.sort((a, b) => a.order - b.order));
-  }, [data]);
+  }, [data, defaultMailCategories]);
 
   const handleFieldChange = (id: string, field: keyof CategorySetting, value: any) => {
     setCategories((prev) =>

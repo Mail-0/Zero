@@ -1,4 +1,6 @@
 import { useSettings } from '@/hooks/use-settings';
+import { useTRPC } from '@/providers/query-provider';
+import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 export interface CategorySetting {
@@ -12,50 +14,12 @@ export interface CategorySetting {
 export function useCategorySettings(): CategorySetting[] {
   const { data } = useSettings();
 
-  const defaultCategories: CategorySetting[] = [
-    {
-      id: 'Important',
-      name: 'Important',
-      searchValue: 'is:important NOT is:sent NOT is:draft',
-      order: 0,
-      isDefault: false,
-    },
-    {
-      id: 'All Mail',
-      name: 'All Mail',
-      searchValue: 'NOT is:draft (is:inbox OR (is:sent AND to:me))',
-      order: 1,
-      isDefault: true,
-    },
-    {
-      id: 'Personal',
-      name: 'Personal',
-      searchValue: 'is:personal NOT is:sent NOT is:draft',
-      order: 2,
-      isDefault: false,
-    },
-    {
-      id: 'Promotions',
-      name: 'Promotions',
-      searchValue: 'is:promotions NOT is:sent NOT is:draft',
-      order: 3,
-      isDefault: false,
-    },
-    {
-      id: 'Updates',
-      name: 'Updates',
-      searchValue: 'is:updates NOT is:sent NOT is:draft',
-      order: 4,
-      isDefault: false,
-    },
-    {
-      id: 'Unread',
-      name: 'Unread',
-      searchValue: 'is:unread NOT is:sent NOT is:draft',
-      order: 5,
-      isDefault: false,
-    },
-  ];
+  const trpc = useTRPC();
+  const { data: defaultCategories = [] } = useQuery(
+    trpc.categories.defaults.queryOptions(void 0, { staleTime: Infinity }),
+  );
+
+  if (!defaultCategories.length) return [];
 
   const merged = useMemo(() => {
     const overrides = (data?.settings.categories as CategorySetting[] | undefined) ?? [];
@@ -72,7 +36,7 @@ export function useCategorySettings(): CategorySetting[] {
 
     const sorted = overridden.sort((a, b) => a.order - b.order);
     return sorted;
-  }, [data?.settings.categories]);
+  }, [data?.settings.categories, defaultCategories]);
 
   return merged;
 }
