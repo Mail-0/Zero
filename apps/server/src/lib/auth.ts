@@ -96,6 +96,20 @@ export const createAuth = () => {
     user: {
       deleteUser: {
         enabled: true,
+        async sendDeleteAccountVerification(data) {
+          const verificationUrl = data.url;
+
+          await resend().emails.send({
+            from: '0.email <no-reply@0.email>',
+            to: data.user.email,
+            subject: 'Delete your 0.email account',
+            html: `
+            <h2>Delete Your 0.email Account</h2>
+            <p>Click the link below to delete your account:</p>
+            <a href="${verificationUrl}">${verificationUrl}</a>
+          `,
+          });
+        },
         beforeDelete: async (user, request) => {
           if (!request) throw new APIError('BAD_REQUEST', { message: 'Request object is missing' });
           const db = getZeroDB(user.id);
