@@ -315,7 +315,7 @@ type Props = {
 };
 
 const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
-  const t = useTranslations()
+  const t = useTranslations();
   const visibleLabels = labels.filter(
     (label) => !['unread', 'inbox'].includes(label.toLowerCase()),
   );
@@ -329,7 +329,7 @@ const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
 
         let icon = null;
         let bgColor = '';
-        let labelText= '';
+        let labelText = '';
 
         switch (normalizedLabel) {
           case 'important':
@@ -350,22 +350,22 @@ const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
           case 'updates':
             icon = <Bell className="h-3.5 w-3.5 fill-white" />;
             bgColor = 'bg-[#8B5CF6]';
-            labelText= t('common.mailCategories.updates');
+            labelText = t('common.mailCategories.updates');
             break;
           case 'work':
             icon = <Briefcase className="h-3.5 w-3.5 text-white" />;
             bgColor = '';
-            labelText= t('common.mailCategories.work');
+            labelText = t('common.mailCategories.work');
             break;
           case 'forums':
             icon = <Users className="h-3.5 w-3.5 text-white" />;
             bgColor = 'bg-blue-600';
-            labelText= t('common.mailCategories.forums');
+            labelText = t('common.mailCategories.forums');
             break;
           case 'notes':
             icon = <StickyNote className="h-3.5 w-3.5 text-white" />;
             bgColor = 'bg-amber-500';
-            labelText= t('common.mailCategories.notes');
+            labelText = t('common.mailCategories.notes');
             break;
           case 'starred':
             icon = <Star className="h-3.5 w-3.5 fill-white text-white" />;

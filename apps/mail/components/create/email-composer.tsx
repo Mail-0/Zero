@@ -36,6 +36,7 @@ import { serializeFiles } from '@/lib/schemas';
 import { Input } from '@/components/ui/input';
 import { EditorContent } from '@tiptap/react';
 import { useForm } from 'react-hook-form';
+import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import pluralize from 'pluralize';
 import { toast } from 'sonner';
@@ -1047,12 +1048,8 @@ export function EmailComposer({
       <div className="inline-flex w-full items-center justify-between self-stretch rounded-b-2xl bg-[#FFFFFF] px-3 py-3 outline-white/5 dark:bg-[#202020]">
         <div className="flex items-center justify-start gap-2">
           <div className="flex items-center justify-start gap-2">
-            <button
-              className="flex h-7 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-md bg-black pl-1.5 pr-1 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white"
-              onClick={handleSend}
-              disabled={isLoading || settingsLoading}
-            >
-              <div className="flex items-center justify-center gap-2.5 pl-0.5">
+            <Button size={'xs'} onClick={handleSend} disabled={isLoading || settingsLoading}>
+              <div className="flex items-center justify-center">
                 <div className="text-center text-sm leading-none text-white dark:text-black">
                   <span>Send </span>
                 </div>
@@ -1061,14 +1058,11 @@ export function EmailComposer({
                 <Command className="h-3.5 w-3.5 text-white dark:text-black" />
                 <CurvedArrow className="mt-1.5 h-4 w-4 fill-white dark:fill-black" />
               </div>
-            </button>
-            <button
-              className="flex h-7 items-center gap-0.5 overflow-hidden rounded-md border bg-white/5 px-1.5 shadow-sm hover:bg-white/10 dark:border-none"
-              onClick={() => fileInputRef.current?.click()}
-            >
+            </Button>
+            <Button variant={'secondary'} size={'xs'} onClick={() => fileInputRef.current?.click()}>
               <Plus className="h-3 w-3 fill-[#9A9A9A]" />
               <span className="hidden px-0.5 text-sm md:block">Add</span>
-            </button>
+            </Button>
             <Input
               type="file"
               id="attachment-input"
@@ -1216,8 +1210,10 @@ export function EmailComposer({
                 />
               ) : null}
             </AnimatePresence>
-            <button
-              className="flex h-7 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-md border border-[#8B5CF6] pl-1.5 pr-2 dark:bg-[#252525]"
+            <Button
+              size={'xs'}
+              variant={'ghost'}
+              className="border border-[#8B5CF6]"
               onClick={async () => {
                 if (!subjectInput.trim()) {
                   await handleGenerateSubject();
@@ -1239,7 +1235,7 @@ export function EmailComposer({
                   Generate
                 </div>
               </div>
-            </button>
+            </Button>
           </div>
           {/* <Tooltip>
               <TooltipTrigger asChild>
