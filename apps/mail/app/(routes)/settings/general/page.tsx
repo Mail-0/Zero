@@ -17,16 +17,17 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useForm, type ControllerRenderProps } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { SettingsCard } from '@/components/settings/settings-card';
+import { useEmailAliases } from '@/hooks/use-email-aliases';
 import { useState, useEffect, useMemo, memo } from 'react';
 import { userSettingsSchema } from '@zero/server/schemas';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Globe, Clock, XIcon, Mail } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations, useLocale } from 'use-intl';
 import { useTRPC } from '@/providers/query-provider';
 import { getBrowserTimezone } from '@/lib/timezones';
 import { Textarea } from '@/components/ui/textarea';
 import { useSettings } from '@/hooks/use-settings';
-import { Globe, Clock, XIcon } from 'lucide-react';
 import { availableLocales } from '@/i18n/config';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
@@ -118,9 +119,13 @@ export default function GeneralPage() {
   const locale = useLocale();
   const t = useTranslations();
   const { data } = useSettings();
+  const { data: aliases } = useEmailAliases();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { mutateAsync: saveUserSettings } = useMutation(trpc.settings.save.mutationOptions());
+  // const { mutateAsync: updatePrimaryAlias } = useMutation(
+  //   trpc.mail.updatePrimaryEmailAlias.mutationOptions(),
+  // );
   const { mutateAsync: setLocaleCookie } = useMutation(
     trpc.cookiePreferences.setLocaleCookie.mutationOptions(),
   );
@@ -134,6 +139,7 @@ export default function GeneralPage() {
       dynamicContent: false,
       customPrompt: '',
       zeroSignature: true,
+      defaultEmailAlias: '',
     },
   });
 
@@ -143,28 +149,53 @@ export default function GeneralPage() {
     }
   }, [form, data?.settings]);
 
+  useEffect(() => {
+    if (aliases && !data?.settings?.defaultEmailAlias) {
+      const primaryAlias = aliases.find((alias) => alias.primary);
+      if (primaryAlias) {
+        form.setValue('defaultEmailAlias', primaryAlias.email);
+      }
+    }
+  }, [aliases, data?.settings?.defaultEmailAlias, form]);
+
   async function onSubmit(values: z.infer<typeof userSettingsSchema>) {
     setIsSaving(true);
     const saved = data?.settings ? { ...data.settings } : undefined;
     try {
+      // const emailAliasChanged =
+      //   saved?.defaultEmailAlias !== values.defaultEmailAlias && values.defaultEmailAlias;
+
       await saveUserSettings(values);
       queryClient.setQueryData(trpc.settings.get.queryKey(), (updater) => {
         if (!updater) return;
         return { settings: { ...updater.settings, ...values } };
       });
 
-      await setLocaleCookie({ locale: values.language });
-      const localeName = new Intl.DisplayNames([values.language], { type: 'language' }).of(
-        values.language,
-      );
-      toast.success(t('common.settings.languageChanged', { locale: localeName! }));
-      await revalidate();
+      // if (emailAliasChanged) {
+      //   try {
+      //     await updatePrimaryAlias({ email: values.defaultEmailAlias! });
+      //     toast.success(t('common.settings.defaultEmailUpdated'));
+
+      //     queryClient.invalidateQueries({ queryKey: trpc.mail.getEmailAliases.queryKey() });
+      //   } catch (error) {
+      //     console.error('Failed to update Gmail primary alias:', error);
+      //     toast.error(t('common.settings.failedToUpdateGmailAlias'));
+      //   }
+      // }
+
+      if (saved?.language !== values.language) {
+        await setLocaleCookie({ locale: values.language });
+        const localeName = new Intl.DisplayNames([values.language], { type: 'language' }).of(
+          values.language,
+        );
+        toast.success(t('common.settings.languageChanged', { locale: localeName! }));
+        await revalidate();
+      }
 
       toast.success(t('common.settings.saved'));
     } catch (error) {
       console.error('Failed to save settings:', error);
       toast.error(t('common.settings.failedToSave'));
-      // Revert the optimistic update
       queryClient.setQueryData(trpc.settings.get.queryKey(), (updater) => {
         if (!updater) return;
         return saved ? { settings: { ...updater.settings, ...saved } } : updater;
@@ -223,6 +254,44 @@ export default function GeneralPage() {
                 )}
               />
             </div>
+            {aliases && aliases.length > 0 && (
+              <FormField
+                control={form.control}
+                name="defaultEmailAlias"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('pages.settings.general.defaultEmailAlias')}</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                      <FormControl>
+                        <SelectTrigger className="w-[300px] justify-start">
+                          <Mail className="mr-2 h-4 w-4" />
+                          <SelectValue
+                            placeholder={t('pages.settings.general.selectDefaultEmail')}
+                          />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {aliases.map((alias) => (
+                          <SelectItem key={alias.email} value={alias.email}>
+                            <div className="flex flex-row items-center gap-1">
+                              <span className="text-sm">
+                                {alias.name ? `${alias.name} <${alias.email}>` : alias.email}
+                              </span>
+                              {alias.primary && (
+                                <span className="text-muted-foreground text-xs">(Primary)</span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      {t('pages.settings.general.defaultEmailDescription')}
+                    </FormDescription>
+                  </FormItem>
+                )}
+              />
+            )}
             <FormField
               control={form.control}
               name="customPrompt"

@@ -7,39 +7,28 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  CurvedArrow,
-  MediumStack,
-  ShortStack,
-  LongStack,
-  Smile,
-  X,
-  Sparkles,
-} from '../icons/icons';
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Check, Command, Loader, Paperclip, Plus, X as XIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TextEffect } from '@/components/motion-primitives/text-effect';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import { CurvedArrow, Sparkles, X } from '../icons/icons';
 import { useActiveConnection } from '@/hooks/use-connections';
-import { useRef, useState, useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
 import useComposeEditor from '@/hooks/use-compose-editor';
-import { Loader, Check, X as XIcon } from 'lucide-react';
-import { Command, Paperclip, Plus } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
+import { useSettings } from '@/hooks/use-settings';
 import { cn, formatFileSize } from '@/lib/utils';
 import { useThread } from '@/hooks/use-threads';
-import { useHotkeys } from 'react-hotkeys-hook';
-import { useSession } from '@/lib/auth-client';
 import { serializeFiles } from '@/lib/schemas';
 import { Input } from '@/components/ui/input';
 import { EditorContent } from '@tiptap/react';
@@ -115,6 +104,7 @@ export function EmailComposer({
   editorClassName,
 }: EmailComposerProps) {
   const { data: aliases } = useEmailAliases();
+  const { data: settings } = useSettings();
   const [showCc, setShowCc] = useState(initialCc.length > 0);
   const [showBcc, setShowBcc] = useState(initialBcc.length > 0);
   const [isLoading, setIsLoading] = useState(false);
@@ -185,7 +175,11 @@ export function EmailComposer({
       subject: initialSubject,
       message: initialMessage,
       attachments: initialAttachments,
-      fromEmail: aliases?.find((alias) => alias.primary)?.email || aliases?.[0]?.email || '',
+      fromEmail:
+        settings?.settings?.defaultEmailAlias ||
+        aliases?.find((alias) => alias.primary)?.email ||
+        aliases?.[0]?.email ||
+        '',
     },
   });
 
@@ -262,6 +256,18 @@ export function EmailComposer({
     }
     // For forward, we start with empty recipients
   }, [mode, emailData?.latest, activeConnection?.email]);
+
+  // keep fromEmail in sync when settings or aliases load afterwards
+  useEffect(() => {
+    const preferred =
+      settings?.settings?.defaultEmailAlias ??
+      aliases?.find((a) => a.primary)?.email ??
+      aliases?.[0]?.email;
+
+    if (preferred && form.getValues('fromEmail') !== preferred) {
+      form.setValue('fromEmail', preferred, { shouldDirty: false });
+    }
+  }, [settings?.settings?.defaultEmailAlias, aliases]);
 
   const { watch, setValue, getValues } = form;
   const toEmails = watch('to');

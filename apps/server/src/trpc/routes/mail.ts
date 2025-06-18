@@ -344,4 +344,11 @@ export const mailRouter = router({
     const { driver } = ctx;
     return driver.getEmailAliases();
   }),
+  // updatePrimaryEmailAlias: activeDriverProcedure
+  //   .input(z.object({ email: z.string().email() }))
+  //   .mutation(async ({ ctx, input }) => {
+  //     const { driver } = ctx;
+  //     await driver.updatePrimaryEmailAlias(input.email);
+  //     return { success: true };
+  //   }),
 });
