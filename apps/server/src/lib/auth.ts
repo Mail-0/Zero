@@ -16,6 +16,7 @@ import { getContext } from 'hono/context-storage';
 import { defaultUserSettings } from './schemas';
 import { disableBrainFunction } from './brain';
 import { APIError } from 'better-auth/api';
+import { getZeroDB } from './server-utils';
 import type { EProviders } from '../types';
 import type { HonoContext } from '../ctx';
 import { env } from 'cloudflare:workers';
@@ -24,8 +25,6 @@ import { eq } from 'drizzle-orm';
 import { createDb } from '../db';
 
 const connectionHandlerHook = async (account: Account) => {
-  const c = getContext<HonoContext>();
-
   if (!account.accessToken || !account.refreshToken) {
     console.error('Missing Access/Refresh Tokens', { account });
     throw new APIError('EXPECTATION_FAILED', { message: 'Missing Access/Refresh Tokens' });
@@ -58,36 +57,23 @@ const connectionHandlerHook = async (account: Account) => {
     expiresAt: new Date(Date.now() + (account.accessTokenExpiresAt?.getTime() || 3600000)),
   };
 
-  const connectionId = crypto.randomUUID();
+  const db = getZeroDB(account.userId);
+  const [result] = await db.createConnection(
+    account.providerId as EProviders,
+    userInfo.address,
+    account.userId,
+    updatingInfo,
+  );
 
-  const [result] = await c.var.db
-    .insert(connection)
-    .values({
-      providerId: account.providerId as 'google' | 'microsoft',
-      id: connectionId,
-      email: userInfo.address,
-      userId: account.userId,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      ...updatingInfo,
-    })
-    .onConflictDoUpdate({
-      target: [connection.email, connection.userId],
-      set: {
-        ...updatingInfo,
-        updatedAt: new Date(),
-      },
-    })
-    .returning({ id: connection.id });
-
-  await env.subscribe_queue.send({
-    connectionId: result.id,
-    providerId: account.providerId,
-  });
+  if (env.GOOGLE_S_ACCOUNT && env.GOOGLE_S_ACCOUNT !== '{}') {
+    await env.subscribe_queue.send({
+      connectionId: result.id,
+      providerId: account.providerId,
+    });
+  }
 };
 
 export const createAuth = () => {
-  const c = getContext<HonoContext>();
   const twilioClient = twilio();
 
   return betterAuth({
@@ -112,9 +98,8 @@ export const createAuth = () => {
         enabled: true,
         beforeDelete: async (user, request) => {
           if (!request) throw new APIError('BAD_REQUEST', { message: 'Request object is missing' });
-          const connections = await c.var.db.query.connection.findMany({
-            where: eq(connection.userId, user.id),
-          });
+          const db = getZeroDB(user.id);
+          const connections = await db.findManyConnections(user.id);
 
           const revokedAccounts = (
             await Promise.allSettled(
@@ -147,14 +132,7 @@ export const createAuth = () => {
             console.log('Failed to revoke some accounts');
           }
 
-          await c.var.db.transaction(async (tx) => {
-            await tx.delete(connection).where(eq(connection.userId, user.id));
-            await tx.delete(account).where(eq(account.userId, user.id));
-            await tx.delete(session).where(eq(session.userId, user.id));
-            await tx.delete(userSettings).where(eq(userSettings.userId, user.id));
-            await tx.delete(_user).where(eq(_user.id, user.id));
-            await tx.delete(userHotkeys).where(eq(userHotkeys.userId, user.id));
-          });
+          await db.deleteUser(user.id);
         },
       },
     },
@@ -189,7 +167,7 @@ export const createAuth = () => {
       sendOnSignUp: false,
       autoSignInAfterVerification: true,
       sendVerificationEmail: async ({ user, token }) => {
-        const verificationUrl = `${c.env.VITE_PUBLIC_APP_URL}/api/auth/verify-email?token=${token}&callbackURL=/settings/connections`;
+        const verificationUrl = `${env.VITE_PUBLIC_APP_URL}/api/auth/verify-email?token=${token}&callbackURL=/settings/connections`;
 
         await resend().emails.send({
           from: '0.email <onboarding@0.email>',
@@ -211,11 +189,8 @@ export const createAuth = () => {
           const newSession = ctx.context.newSession;
           if (newSession) {
             // Check if user already has settings
-            const [existingSettings] = await c.var.db
-              .select()
-              .from(userSettings)
-              .where(eq(userSettings.userId, newSession.user.id))
-              .limit(1);
+            const db = getZeroDB(newSession.user.id);
+            const existingSettings = await db.findUserSettings(newSession.user.id);
 
             if (!existingSettings) {
               // get timezone from vercel's header
@@ -226,15 +201,9 @@ export const createAuth = () => {
                   ? headerTimezone
                   : getBrowserTimezone();
               // write default settings against the user
-              await c.var.db.insert(userSettings).values({
-                id: crypto.randomUUID(),
-                userId: newSession.user.id,
-                settings: {
-                  ...defaultUserSettings,
-                  timezone,
-                },
-                createdAt: new Date(),
-                updatedAt: new Date(),
+              await db.insertUserSettings(newSession.user.id, {
+                ...defaultUserSettings,
+                timezone,
               });
             }
           }

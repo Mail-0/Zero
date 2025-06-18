@@ -3,7 +3,7 @@ import { privateProcedure, router } from '../trpc';
 import { z } from 'zod';
 
 const notesProcedure = privateProcedure.use(async ({ ctx, next }) => {
-  const notesManager = new NotesManager(ctx.db);
+  const notesManager = new NotesManager();
   return next({ ctx: { ...ctx, notesManager } });
 });
 

@@ -315,7 +315,7 @@ type Props = {
 };
 
 const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
-  const t = useTranslations()
+  const t = useTranslations();
   const visibleLabels = labels.filter(
     (label) => !['unread', 'inbox'].includes(label.toLowerCase()),
   );
@@ -329,7 +329,7 @@ const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
 
         let icon = null;
         let bgColor = '';
-        let labelText= '';
+        let labelText = '';
 
         switch (normalizedLabel) {
           case 'important':
@@ -350,22 +350,22 @@ const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
           case 'updates':
             icon = <Bell className="h-3.5 w-3.5 fill-white" />;
             bgColor = 'bg-[#8B5CF6]';
-            labelText= t('common.mailCategories.updates');
+            labelText = t('common.mailCategories.updates');
             break;
           case 'work':
             icon = <Briefcase className="h-3.5 w-3.5 text-white" />;
             bgColor = '';
-            labelText= t('common.mailCategories.work');
+            labelText = t('common.mailCategories.work');
             break;
           case 'forums':
             icon = <Users className="h-3.5 w-3.5 text-white" />;
             bgColor = 'bg-blue-600';
-            labelText= t('common.mailCategories.forums');
+            labelText = t('common.mailCategories.forums');
             break;
           case 'notes':
             icon = <StickyNote className="h-3.5 w-3.5 text-white" />;
             bgColor = 'bg-amber-500';
-            labelText= t('common.mailCategories.notes');
+            labelText = t('common.mailCategories.notes');
             break;
           case 'starred':
             icon = <Star className="h-3.5 w-3.5 fill-white text-white" />;
@@ -1491,32 +1491,42 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                     {t('common.mailDisplay.from')}:
                                   </span>
                                   <div className="ml-3">
-                                    <span className="text-muted-foreground pr-1 font-bold">
+                                    <span className="text-muted-foreground text-nowrap pr-1 font-bold">
                                       {cleanNameDisplay(emailData?.sender?.name)}
                                     </span>
                                     {emailData?.sender?.name !== emailData?.sender?.email && (
-                                      <span className="text-muted-foreground">
+                                      <span className="text-muted-foreground text-nowrap">
                                         {cleanEmailDisplay(emailData?.sender?.email)}
                                       </span>
                                     )}
                                   </div>
                                 </div>
                                 <div className="flex">
-                                  <span className="w-24 text-end text-gray-500">
+                                  <span className="w-24 text-nowrap text-end text-gray-500">
                                     {t('common.mailDisplay.to')}:
                                   </span>
-                                  <span className="text-muted-foreground ml-3">
+                                  <span className="text-muted-foreground ml-3 text-nowrap">
                                     {emailData?.to
                                       ?.map((t) => cleanEmailDisplay(t.email))
                                       .join(', ')}
                                   </span>
                                 </div>
+                                {emailData?.replyTo && emailData.replyTo.length > 0 && (
+                                  <div className="flex">
+                                    <span className="w-24 text-nowrap text-end text-gray-500">
+                                      {t('common.mailDisplay.replyTo')}:
+                                    </span>
+                                    <span className="text-muted-foreground ml-3 text-nowrap">
+                                      {cleanEmailDisplay(emailData?.replyTo)}
+                                    </span>
+                                  </div>
+                                )}
                                 {emailData?.cc && emailData.cc.length > 0 && (
                                   <div className="flex">
-                                    <span className="w-24 text-end text-gray-500">
+                                    <span className="shrink-0text-nowrap w-24 text-end text-gray-500">
                                       {t('common.mailDisplay.cc')}:
                                     </span>
-                                    <span className="text-muted-foreground ml-3">
+                                    <span className="text-muted-foreground ml-3 text-nowrap">
                                       {emailData?.cc
                                         ?.map((t) => cleanEmailDisplay(t.email))
                                         .join(', ')}
@@ -1528,7 +1538,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                     <span className="w-24 text-end text-gray-500">
                                       {t('common.mailDisplay.bcc')}:
                                     </span>
-                                    <span className="text-muted-foreground ml-3">
+                                    <span className="text-muted-foreground ml-3 text-nowrap">
                                       {emailData?.bcc
                                         ?.map((t) => cleanEmailDisplay(t.email))
                                         .join(', ')}
@@ -1539,7 +1549,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                   <span className="w-24 text-end text-gray-500">
                                     {t('common.mailDisplay.date')}:
                                   </span>
-                                  <span className="text-muted-foreground ml-3">
+                                  <span className="text-muted-foreground ml-3 text-nowrap">
                                     {emailData?.receivedOn &&
                                     !isNaN(new Date(emailData.receivedOn).getTime())
                                       ? format(new Date(emailData.receivedOn), 'PPpp')
@@ -1550,7 +1560,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                   <span className="w-24 text-end text-gray-500">
                                     {t('common.mailDisplay.mailedBy')}:
                                   </span>
-                                  <span className="text-muted-foreground ml-3">
+                                  <span className="text-muted-foreground ml-3 text-nowrap">
                                     {cleanEmailDisplay(emailData?.sender?.email)}
                                   </span>
                                 </div>
@@ -1558,7 +1568,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                   <span className="w-24 text-end text-gray-500">
                                     {t('common.mailDisplay.signedBy')}:
                                   </span>
-                                  <span className="text-muted-foreground ml-3">
+                                  <span className="text-muted-foreground ml-3 text-nowrap">
                                     {cleanEmailDisplay(emailData?.sender?.email)}
                                   </span>
                                 </div>
