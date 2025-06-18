@@ -31,19 +31,19 @@ const resources = [
   },
   {
     title: 'Twitter',
-    href: 'https://x.com/zerodotemail',
+    href: 'https://x.com/mail0dotcom',
     description: 'Follow us for the latest updates and announcements.',
     platform: 'twitter' as const,
   },
   {
     title: 'LinkedIn',
-    href: 'https://www.linkedin.com/company/zerodotemail/',
+    href: 'https://www.linkedin.com/company/mail0/',
     description: 'Connect with us professionally and stay updated.',
     platform: 'linkedin' as const,
   },
   {
     title: 'Discord',
-    href: 'https://discord.gg/0email',
+    href: 'https://discord.gg/mail0',
     description: 'Join our community and chat with the team.',
     platform: 'discord' as const,
   },
