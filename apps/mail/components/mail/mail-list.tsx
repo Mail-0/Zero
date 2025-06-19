@@ -673,7 +673,7 @@ export const MailList = memo(
 
       const currentCategory = category
         ? allCategories.find((cat) => cat.id === category)
-        : allCategories.find((cat) => cat.id === 'Important');
+        : allCategories.find((cat) => cat.id === 'All Mail');
 
       if (currentCategory && searchValue.value === '') {
         setSearchValue({
