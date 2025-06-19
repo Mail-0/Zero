@@ -141,7 +141,7 @@ export function EmailComposer({
   const bccWrapperRef = useRef<HTMLDivElement>(null);
   const { data: activeConnection } = useActiveConnection();
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
-
+  const [IsEditorEmpty,setIsEditorEmpty]=useState(false)
   // Add this function to handle clicks outside the input fields
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -303,6 +303,18 @@ export function EmailComposer({
     placeholder: 'Start your email here',
     autofocus,
   });
+
+  useEffect(() => {
+  if (!editor) return;
+  setIsEditorEmpty(editor.isEmpty); // checking in case editor already has content
+  const handleUpdate = () => {
+    setIsEditorEmpty(editor.isEmpty);
+  };
+  editor.on('update', handleUpdate);
+  return () => {
+    editor.off('update', handleUpdate);
+  };
+}, [editor]);
 
   // Add effect to focus editor when component mounts
   useEffect(() => {
@@ -1325,7 +1337,7 @@ export function EmailComposer({
                 setAiGeneratedMessage(null);
                 await handleAiGenerate();
               }}
-              disabled={isLoading || aiIsLoading}
+              disabled={isLoading || aiIsLoading || IsEditorEmpty}
             >
               <div className="flex items-center justify-center gap-2.5 pl-0.5">
                 <div className="flex h-5 items-center justify-center gap-1 rounded-sm">
