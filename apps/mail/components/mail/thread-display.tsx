@@ -680,18 +680,18 @@ export function ThreadDisplay() {
     }
   }, [optimisticState.optimisticStarred]);
 
-  // Automatically open Reply All composer when email thread is loaded
-  useEffect(() => {
-    if (emailData?.latest?.id) {
-      // Small delay to ensure other effects have completed
-      const timer = setTimeout(() => {
-        setMode('replyAll');
-        setActiveReplyId(emailData.latest!.id);
-      }, 50);
+  //   // Automatically open Reply All composer when email thread is loaded
+  //   useEffect(() => {
+  //     if (emailData?.latest?.id) {
+  //       // Small delay to ensure other effects have completed
+  //       const timer = setTimeout(() => {
+  //         setMode('replyAll');
+  //         setActiveReplyId(emailData.latest!.id);
+  //       }, 50);
 
-      return () => clearTimeout(timer);
-    }
-  }, [emailData?.latest?.id, setMode, setActiveReplyId]);
+  //       return () => clearTimeout(timer);
+  //     }
+  //   }, [emailData?.latest?.id, setMode, setActiveReplyId]);
 
   // Removed conflicting useEffect that was clearing activeReplyId
 

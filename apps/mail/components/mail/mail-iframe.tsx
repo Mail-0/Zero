@@ -8,6 +8,7 @@ import { getBrowserTimezone } from '@/lib/timezones';
 import { useSettings } from '@/hooks/use-settings';
 import { useTranslations } from 'use-intl';
 import { useTheme } from 'next-themes';
+import DOMPurify from 'dompurify';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -104,7 +105,7 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
       const dangerousElements = doc.querySelectorAll('script, object, embed, form, input, button');
       dangerousElements.forEach((el) => el.remove());
 
-      html = doc.documentElement.outerHTML;
+      html = DOMPurify.sanitize(doc.documentElement.outerHTML);
       setCspViolation(hasViolations);
     }
 
