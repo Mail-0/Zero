@@ -23,10 +23,10 @@ import {
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { focusedIndexAtom } from '@/hooks/use-mail-navigation';
 import { backgroundQueueAtom } from '@/store/backgroundQueue';
 import { type ThreadDestination } from '@/lib/thread-actions';
@@ -583,7 +583,7 @@ export function ThreadDisplay() {
 
               <div class="email-body">
                 <div class="email-content">
-                  ${escapeHtml(message.decodedBody) || '<p><em>No email content available</em></p>'}
+                  ${escapeHtml(message.decodedBody ?? '') || '<p><em>No email content available</em></p>'}
                 </div>
               </div>
 
@@ -688,7 +688,7 @@ export function ThreadDisplay() {
         setMode('replyAll');
         setActiveReplyId(emailData.latest!.id);
       }, 50);
-      
+
       return () => clearTimeout(timer);
     }
   }, [emailData?.latest?.id, setMode, setActiveReplyId]);
@@ -775,7 +775,7 @@ export function ThreadDisplay() {
           <>
             <div
               className={cn(
-                'flex flex-shrink-0 items-center px-1 pb-1 md:px-3 md:pb-[11px] md:pt-[12px] ',
+                'flex flex-shrink-0 items-center px-1 pb-1 md:px-3 md:pb-[11px] md:pt-[12px]',
                 isMobile && 'bg-panelLight dark:bg-panelDark sticky top-0 z-10 mt-2',
               )}
             >
@@ -988,7 +988,7 @@ export function ThreadDisplay() {
                   {(emailData.messages || []).map((message, index) => {
                     const isLastMessage = index === emailData.messages.length - 1;
                     const isReplyingToThisMessage = mode && activeReplyId === message.id;
-                    
+
                     return (
                       <div
                         key={message.id}
@@ -1017,13 +1017,18 @@ export function ThreadDisplay() {
                   })}
                 </div>
               </ScrollArea>
-              
+
               {/* Sticky Reply Compose at Bottom - Only for last message */}
-              {mode && activeReplyId && activeReplyId === emailData.messages[emailData.messages.length - 1]?.id && (
-                <div className="sticky bottom-0 z-10 border-t border-border bg-panelLight dark:bg-panelDark px-4 py-2" id={`reply-composer-${activeReplyId}`}>
-                  <ReplyCompose messageId={activeReplyId} />
-                </div>
-              )}
+              {mode &&
+                activeReplyId &&
+                activeReplyId === emailData.messages[emailData.messages.length - 1]?.id && (
+                  <div
+                    className="border-border bg-panelLight dark:bg-panelDark sticky bottom-0 z-10 border-t px-4 py-2"
+                    id={`reply-composer-${activeReplyId}`}
+                  >
+                    <ReplyCompose messageId={activeReplyId} />
+                  </div>
+                )}
             </div>
           </>
         )}

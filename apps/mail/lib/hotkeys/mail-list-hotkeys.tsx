@@ -199,6 +199,15 @@ export function MailListHotkeys() {
     [categories, pathname, searchValue, setCategory, setSearchValue],
   );
 
+  const switchCategoryByIndex = useCallback(
+    (idx: number) => {
+      const cat = categories[idx];
+      if (!cat) return;
+      switchMailListCategory(cat.id);
+    },
+    [categories, switchMailListCategory],
+  );
+
   const handlers = useMemo(
     () => ({
       markAsRead,
@@ -210,27 +219,15 @@ export function MailListHotkeys() {
       bulkDelete,
       bulkStar,
       exitSelectionMode,
-      showImportant: () => {
-        switchMailListCategory(null);
-      },
-      showAllMail: () => {
-        switchMailListCategory('All Mail');
-      },
-      showPersonal: () => {
-        switchMailListCategory('Personal');
-      },
-      showUpdates: () => {
-        switchMailListCategory('Updates');
-      },
-      showPromotions: () => {
-        switchMailListCategory('Promotions');
-      },
-      showUnread: () => {
-        switchMailListCategory('Unread');
-      },
+      showImportant: () => switchCategoryByIndex(0),
+      showAllMail: () => switchCategoryByIndex(1),
+      showPersonal: () => switchCategoryByIndex(2),
+      showUpdates: () => switchCategoryByIndex(3),
+      showPromotions: () => switchCategoryByIndex(4),
+      showUnread: () => switchCategoryByIndex(5),
     }),
     [
-      switchMailListCategory,
+      switchCategoryByIndex,
       markAsRead,
       markAsUnread,
       markAsImportant,

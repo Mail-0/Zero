@@ -30,6 +30,10 @@
             "class_name": "ZeroMCP",
           },
           {
+            "name": "ZERO_DB",
+            "class_name": "ZeroDB",
+          },
+          {
             "class_name": "DurableMailbox",
             "name": "DURABLE_MAILBOX",
           },
@@ -63,6 +67,10 @@
         {
           "tag": "v2",
           "new_sqlite_classes": ["ZeroAgent", "ZeroMCP"],
+        },
+        {
+          "tag": "v3",
+          "new_classes": ["ZeroDB"],
         },
       ],
       "workflows": [
@@ -161,6 +169,10 @@
             "class_name": "ZeroMCP",
           },
           {
+            "name": "ZERO_DB",
+            "class_name": "ZeroDB",
+          },
+          {
             "class_name": "DurableMailbox",
             "name": "DURABLE_MAILBOX",
           },
@@ -194,6 +206,10 @@
         {
           "tag": "v2",
           "new_sqlite_classes": ["ZeroAgent", "ZeroMCP"],
+        },
+        {
+          "tag": "v3",
+          "new_classes": ["ZeroDB"],
         },
       ],
       "workflows": [
@@ -229,7 +245,6 @@
         "VITE_PUBLIC_BACKEND_URL": "https://sapi.0.email",
         "VITE_PUBLIC_APP_URL": "https://staging.0.email",
         "DISABLE_CALLS": "",
-        "GOOGLE_S_ACCOUNT": "{}",
       },
       "kv_namespaces": [
         {
@@ -313,6 +328,10 @@
             "class_name": "ZeroMCP",
           },
           {
+            "name": "ZERO_DB",
+            "class_name": "ZeroDB",
+          },
+          {
             "class_name": "DurableMailbox",
             "name": "DURABLE_MAILBOX",
           },
@@ -347,6 +366,10 @@
           "tag": "v2",
           "new_sqlite_classes": ["ZeroAgent", "ZeroMCP"],
         },
+        {
+          "tag": "v3",
+          "new_classes": ["ZeroDB"],
+        },
       ],
       "vars": {
         "NODE_ENV": "production",
@@ -354,7 +377,6 @@
         "VITE_PUBLIC_BACKEND_URL": "https://api.0.email",
         "VITE_PUBLIC_APP_URL": "https://0.email",
         "DISABLE_CALLS": "true",
-        "GOOGLE_S_ACCOUNT": "{}",
       },
       "kv_namespaces": [
         {

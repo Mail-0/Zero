@@ -82,6 +82,7 @@ export interface ParsedMessage {
   replyTo?: string;
   messageId?: string;
   threadId?: string;
+  isDraft?: boolean;
   attachments?: Attachment[];
 }
 
@@ -137,4 +138,3 @@ export interface Note {
   createdAt: Date;
   updatedAt: Date;
 }
-
