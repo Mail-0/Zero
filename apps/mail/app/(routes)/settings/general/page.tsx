@@ -123,9 +123,6 @@ export default function GeneralPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { mutateAsync: saveUserSettings } = useMutation(trpc.settings.save.mutationOptions());
-  // const { mutateAsync: updatePrimaryAlias } = useMutation(
-  //   trpc.mail.updatePrimaryEmailAlias.mutationOptions(),
-  // );
   const { mutateAsync: setLocaleCookie } = useMutation(
     trpc.cookiePreferences.setLocaleCookie.mutationOptions(),
   );
@@ -162,26 +159,11 @@ export default function GeneralPage() {
     setIsSaving(true);
     const saved = data?.settings ? { ...data.settings } : undefined;
     try {
-      // const emailAliasChanged =
-      //   saved?.defaultEmailAlias !== values.defaultEmailAlias && values.defaultEmailAlias;
-
       await saveUserSettings(values);
       queryClient.setQueryData(trpc.settings.get.queryKey(), (updater) => {
         if (!updater) return;
         return { settings: { ...updater.settings, ...values } };
       });
-
-      // if (emailAliasChanged) {
-      //   try {
-      //     await updatePrimaryAlias({ email: values.defaultEmailAlias! });
-      //     toast.success(t('common.settings.defaultEmailUpdated'));
-
-      //     queryClient.invalidateQueries({ queryKey: trpc.mail.getEmailAliases.queryKey() });
-      //   } catch (error) {
-      //     console.error('Failed to update Gmail primary alias:', error);
-      //     toast.error(t('common.settings.failedToUpdateGmailAlias'));
-      //   }
-      // }
 
       if (saved?.language !== values.language) {
         await setLocaleCookie({ locale: values.language });

@@ -42,8 +42,6 @@ export class GoogleMailManager implements MailManager {
       'https://www.googleapis.com/auth/gmail.modify',
       'https://www.googleapis.com/auth/userinfo.profile',
       'https://www.googleapis.com/auth/userinfo.email',
-      // 'https://www.googleapis.com/auth/gmail.settings.basic',
-      // 'https://www.googleapis.com/auth/gmail.settings.sharing',
     ].join(' ');
   }
   public async listHistory<T>(historyId: string): Promise<{ history: T[]; historyId: string }> {
@@ -1189,29 +1187,5 @@ export class GoogleMailManager implements MailManager {
     }
 
     return results;
-  }
-
-  public async updatePrimaryEmailAlias(email: string) {
-    return this.withErrorHandler('updatePrimaryEmailAlias', async () => {
-      // TODO: implement this for google
-      // const settings = await this.gmail.users.settings.sendAs.list({
-      //   userId: 'me',
-      // });
-      // if (!settings.data.sendAs) {
-      //   throw new Error('No sendAs settings found');
-      // }
-      // const targetSendAs = settings.data.sendAs.find((sendAs) => sendAs.sendAsEmail === email);
-      // if (!targetSendAs || !targetSendAs.sendAsEmail) {
-      //   throw new Error(`SendAs setting not found for email: ${email}`);
-      // }
-      // await this.gmail.users.settings.sendAs.update({
-      //   userId: 'me',
-      //   sendAsEmail: email,
-      //   requestBody: {
-      //     isPrimary: true,
-      //   },
-      // });
-      throw new Error('updatePrimaryEmailAlias is not implemented for GoogleMailManager yet');
-    });
   }
 }

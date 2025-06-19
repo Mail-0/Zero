@@ -42,8 +42,6 @@ export const authProviders = (env: Record<string, string>): ProviderConfig[] => 
         'https://www.googleapis.com/auth/gmail.modify',
         'https://www.googleapis.com/auth/userinfo.profile',
         'https://www.googleapis.com/auth/userinfo.email',
-        // 'https://www.googleapis.com/auth/gmail.settings.basic',
-        // 'https://www.googleapis.com/auth/gmail.settings.sharing',
       ],
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,
