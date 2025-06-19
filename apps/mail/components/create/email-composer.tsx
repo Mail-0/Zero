@@ -1088,7 +1088,11 @@ export function EmailComposer({
               setHasUnsavedChanges(true);
             }}
           />
-          <button onClick={handleGenerateSubject} disabled={isLoading || isGeneratingSubject}>
+          <button
+            onClick={handleGenerateSubject}
+            disabled={isLoading || isGeneratingSubject || subjectInput.trim().length < 3}
+            className="disabled:opacity-50"
+          >
             <div className="flex items-center justify-center gap-2.5 pl-0.5">
               <div className="flex h-5 items-center justify-center gap-1 rounded-sm">
                 {isGeneratingSubject ? (
