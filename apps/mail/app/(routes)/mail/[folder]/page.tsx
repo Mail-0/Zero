@@ -9,7 +9,7 @@ import { Loader2 } from 'lucide-react';
 
 const ALLOWED_FOLDERS = ['inbox', 'draft', 'sent', 'spam', 'bin', 'archive'];
 
-export async function loader({ params, request }: Route.LoaderArgs) {
+export async function clientLoader({ params, request }: Route.ClientLoaderArgs) {
   if (!params.folder) return Response.redirect(`${import.meta.env.VITE_PUBLIC_APP_URL}/mail/inbox`);
 
   const session = await authProxy.api.getSession({ headers: request.headers });
@@ -21,7 +21,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 }
 
 export default function MailPage() {
-  const { folder } = useLoaderData<typeof loader>();
+  const { folder } = useLoaderData<typeof clientLoader>();
   const navigate = useNavigate();
   const trpc = useTRPC();
   const [isLabelValid, setIsLabelValid] = useState<boolean | null>(null);

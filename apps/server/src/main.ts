@@ -26,6 +26,7 @@ import { routePartykitRequest } from 'partyserver';
 import { enableBrainFunction } from './lib/brain';
 import { trpcServer } from '@hono/trpc-server';
 import { agentsMiddleware } from 'hono-agents';
+import { publicRouter } from './routes/auth';
 import { DurableMailbox } from './lib/party';
 import { autumnApi } from './routes/autumn';
 import { ZeroAgent } from './routes/chat';
@@ -377,6 +378,7 @@ export default class extends WorkerEntrypoint<typeof env> {
     })
     .route('/ai', aiRouter)
     .route('/autumn', autumnApi)
+    .route('/public', publicRouter)
     .on(['GET', 'POST'], '/auth/*', (c) => c.var.auth.handler(c.req.raw))
     .use(
       trpcServer({

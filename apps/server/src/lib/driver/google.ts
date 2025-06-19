@@ -401,7 +401,7 @@ export class GoogleMailManager implements MailManager {
           messages,
           latest: messages.findLast((e) => !e.isDraft),
           hasUnread,
-          totalReplies: messages.length,
+          totalReplies: messages.filter((e) => !e.isDraft).length,
         };
       },
       { id, email: this.config.auth?.email },

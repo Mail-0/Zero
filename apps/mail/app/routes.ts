@@ -5,14 +5,6 @@ export default [
   route('/home', 'home/page.tsx'),
 
   route('/manifest.webmanifest', 'meta-files/manifest.ts'),
-  route(
-    '/.well-known/microsoft-identity-association',
-    'meta-files/microsoft-identity-association.ts',
-  ),
-  route(
-    '/.well-known/microsoft-identity-association.json',
-    'meta-files/microsoft-identity-association.json.ts',
-  ),
   route('/api/mailto-handler', 'mailto-handler.ts'),
   route('/og-api/home', 'og-api/home.tsx'),
   route('/og-api/create', 'og-api/create.tsx'),
@@ -61,8 +53,6 @@ export default [
         route('/*', '(routes)/settings/[...settings]/page.tsx'),
       ]),
     ),
+    route('/*', 'meta-files/not-found.ts'),
   ]),
-
-  // 404 page
-  route('/*', 'meta-files/not-found.ts'),
 ] satisfies RouteConfig;
