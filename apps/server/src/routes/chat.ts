@@ -8,10 +8,12 @@ import {
   appendResponseMessages,
 } from 'ai';
 import {
-  AiChatPrompt,
   getCurrentDateContext,
   GmailSearchAssistantSystemPrompt,
+  AiChatPrompt,
 } from '../lib/prompts';
+import { getPrompt } from '../lib/brain';
+import { EPrompts } from '../types';
 import { type Connection, type ConnectionContext, type WSMessage } from 'agents';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createSimpleAuth, type SimpleAuth } from '../lib/auth';
@@ -144,7 +146,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
           messages: processedMessages,
           tools,
           onFinish,
-          system: AiChatPrompt('', '', ''),
+          system: await getPrompt(`${connectionId}-${EPrompts.Chat}`, AiChatPrompt('', '', '')),
         });
 
         result.mergeIntoDataStream(dataStream);

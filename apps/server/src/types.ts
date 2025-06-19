@@ -214,6 +214,7 @@ export enum EPrompts {
   SummarizeMessage = 'SummarizeMessage',
   ReSummarizeThread = 'ReSummarizeThread',
   SummarizeThread = 'SummarizeThread',
-  //   ThreadLabels = 'ThreadLabels',
-  //   Chat = 'Chat',
+  Chat = 'Chat',
+  Compose = 'Compose',
+  //   ThreadLabels = 'ThreadLabels'
 }

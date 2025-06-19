@@ -14,18 +14,57 @@ import {
   SendIcon,
 } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
-import { AiChatPrompt, StyledEmailAssistantSystemPrompt } from '@/lib/prompts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTRPC } from '@/providers/query-provider';
 import { Button } from '@/components/ui/button';
-import { Paper } from '../icons/icons';
+import { Paper } from '../icons/icons'; 
 import { Textarea } from './textarea';
 import { Link } from 'react-router';
+import { useState, useEffect } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { AiChatPrompt, StyledEmailAssistantSystemPrompt } from '@/lib/prompts';
+import { EPrompts } from '../../../server/src/types';
+
 
 export function PromptsDialog() {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const { data: prompts } = useQuery(trpc.brain.getPrompts.queryOptions());
+  
+  const { mutateAsync: updatePrompt, isPending: isSavingPrompt } = useMutation(
+    trpc.brain.updatePrompt.mutationOptions({
+      onSuccess: () => {
+        toast.success('Prompt updated');
+        queryClient.invalidateQueries({ queryKey: trpc.brain.getPrompts.queryKey() });
+      },
+      onError: (error) => {
+        toast.error(error.message ?? 'Failed to update prompt');
+      },
+    }),
+  );
+
+  const [chatPrompt, setChatPrompt] = useState('');
+  const [composePrompt, setComposePrompt] = useState('');
+  const [summarizeThread, setSummarizeThread] = useState('');
+  const [reSummarizeThread, setReSummarizeThread] = useState('');
+  const [summarizeMessage, setSummarizeMessage] = useState('');
+
+  useEffect(() => {
+    if (prompts) {
+      const rawChat = prompts.Chat ?? '';
+      const chatValid = rawChat.trim() !== '' && rawChat.trim().toLowerCase() !== 'undefined';
+      setChatPrompt(chatValid ? rawChat : AiChatPrompt('', '', ''));
+      const rawCompose = prompts.Compose ?? '';
+      const composeValid = rawCompose.trim() !== '' && rawCompose.trim().toLowerCase() !== 'undefined';
+      setComposePrompt(composeValid ? rawCompose : StyledEmailAssistantSystemPrompt().trim());
+      setSummarizeThread(prompts.SummarizeThread);
+      setReSummarizeThread(prompts.ReSummarizeThread);
+      setSummarizeMessage(prompts.SummarizeMessage);
+    }
+  }, [prompts]);
+  
   return (
     <TooltipProvider delayDuration={0}>
       <Dialog>
@@ -75,48 +114,128 @@ export function PromptsDialog() {
                 <BookDashedIcon className="mr-2 h-4 w-4" /> Summarize Message
               </TabsTrigger>
             </TabsList>
-            <TabsContent value="chat">
-              <span className="text-muted-foreground mb-2 flex gap-2 text-sm">
-                This system prompt is used in the chat sidebar agent. The agent has multiple tools
-                available.
-              </span>
-              <Textarea className="min-h-60" readOnly value={AiChatPrompt('', '', '')} />
-            </TabsContent>
-            <TabsContent value="compose">
-              <span className="text-muted-foreground mb-2 flex gap-2 text-sm">
-                This system prompt is used to compose emails that sound like you.
-              </span>
-              <Textarea
-                className="min-h-60"
-                readOnly
-                value={StyledEmailAssistantSystemPrompt().trim()}
-              />
-            </TabsContent>
             {prompts ? (
-              <TabsContent value="summarizeThread">
+              <TabsContent value="chat" className="space-y-2">
+                <span className="text-muted-foreground mb-2 flex gap-2 text-sm">
+                  This system prompt is used in the chat sidebar agent. The agent has multiple tools
+                  available.
+                </span>
+                <Textarea 
+                  className="min-h-60" 
+                  value={chatPrompt} 
+                  onChange={(e) => setChatPrompt(e.target.value)}
+                />
+                <Button
+                  size="sm"
+                  onClick={() =>
+                    updatePrompt({
+                      promptType: EPrompts.Chat,
+                      content: chatPrompt,
+                    })
+                  }
+                  disabled={isSavingPrompt}
+                >
+                  Save
+                </Button>
+              </TabsContent>
+            ) : null}
+            {prompts ? (
+              <TabsContent value="compose" className="space-y-2">
+                <span className="text-muted-foreground mb-2 flex gap-2 text-sm">
+                  This system prompt is used to compose emails that sound like you.
+                </span>
+                <Textarea
+                  className="min-h-60"
+                  value={composePrompt}
+                  onChange={(e) => setComposePrompt(e.target.value)}
+                />
+                <Button
+                  size="sm"
+                  onClick={() =>
+                    updatePrompt({
+                      promptType: EPrompts.Compose,
+                      content: composePrompt,
+                    })
+                  }
+                  disabled={isSavingPrompt}
+                >
+                  Save
+                </Button>
+              </TabsContent>
+            ) : null}
+            {prompts ? (
+              <TabsContent value="summarizeThread" className="space-y-2">
                 <span className="text-muted-foreground mb-2 flex gap-2 text-sm">
                   This system prompt is used to summarize threads. It takes the entire thread and
                   key information and summarizes them.
                 </span>
-                <Textarea className="min-h-60" readOnly value={prompts?.SummarizeThread} />
+                <Textarea
+                  className="min-h-60"
+                  value={summarizeThread}
+                  onChange={(e) => setSummarizeThread(e.target.value)}
+                />
+                <Button
+                  size="sm"
+                  onClick={() =>
+                    updatePrompt({
+                      promptType: EPrompts.SummarizeThread,
+                      content: summarizeThread,
+                    })
+                  }
+                  disabled={isSavingPrompt}
+                >
+                  Save
+                </Button>
               </TabsContent>
             ) : null}
             {prompts ? (
-              <TabsContent value="reSummarizeThread">
+              <TabsContent value="reSummarizeThread" className="space-y-2">
                 <span className="text-muted-foreground mb-2 flex gap-2 text-sm">
                   This system prompt is used to re-summarize threads. It's used when the thread
                   messages change and a new context is needed.
                 </span>
-                <Textarea className="min-h-60" readOnly value={prompts?.ReSummarizeThread} />
+                <Textarea
+                  className="min-h-60"
+                  value={reSummarizeThread}
+                  onChange={(e) => setReSummarizeThread(e.target.value)}
+                />
+                <Button
+                  size="sm"
+                  onClick={() =>
+                    updatePrompt({
+                      promptType: EPrompts.ReSummarizeThread,
+                      content: reSummarizeThread,
+                    })
+                  }
+                  disabled={isSavingPrompt}
+                >
+                  Save
+                </Button>
               </TabsContent>
             ) : null}
             {prompts ? (
-              <TabsContent value="summarizeMessage">
+              <TabsContent value="summarizeMessage" className="space-y-2">
                 <span className="text-muted-foreground mb-2 flex gap-2 text-sm">
                   This system prompt is used to summarize messages. It takes a single message and
                   summarizes it.
                 </span>
-                <Textarea className="min-h-60" readOnly value={prompts?.SummarizeMessage} />
+                <Textarea
+                  className="min-h-60"
+                  value={summarizeMessage}
+                  onChange={(e) => setSummarizeMessage(e.target.value)}
+                />
+                <Button
+                  size="sm"
+                  onClick={() =>
+                    updatePrompt({
+                      promptType: EPrompts.SummarizeMessage,
+                      content: summarizeMessage,
+                    })
+                  }
+                  disabled={isSavingPrompt}
+                >
+                  Save
+                </Button>
               </TabsContent>
             ) : null}
           </Tabs>
