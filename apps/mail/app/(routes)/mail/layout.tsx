@@ -6,14 +6,7 @@ import { AppSidebar } from '@/components/ui/app-sidebar';
 import { Outlet, useLoaderData } from 'react-router';
 import type { Route } from './+types/layout';
 
-export async function loader({ request }: Route.LoaderArgs) {
-  return {
-    headers: Object.fromEntries(request.headers.entries()),
-  };
-}
-
 export default function MailLayout() {
-  const { headers } = useLoaderData<typeof loader>();
   return (
     // <VoiceProvider>
     <HotkeyProviderWrapper>
@@ -22,7 +15,7 @@ export default function MailLayout() {
         <Outlet />
       </div>
       <OnboardingWrapper />
-      <NotificationProvider headers={headers} />
+      <NotificationProvider />
     </HotkeyProviderWrapper>
     // </VoiceProvider>
   );

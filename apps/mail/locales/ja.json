@@ -169,6 +169,7 @@
       "details": "詳細",
       "from": "差出人",
       "to": "宛先",
+      "replyTo": "返信先",
       "cc": "Cc",
       "bcc": "Bcc",
       "date": "日付",

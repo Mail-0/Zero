@@ -28,7 +28,7 @@ const resources = [
   },
   {
     title: 'LinkedIn',
-    href: 'https://www.linkedin.com/company/zerodotemail/',
+    href: 'https://www.linkedin.com/company/mail0/',
     description: 'Connect with us professionally and stay updated.',
     platform: 'linkedin' as const,
   },

@@ -23,9 +23,19 @@ export const resolveLocale = (request: Request) => {
 
 const allLocales = import.meta.glob('../locales/*.json');
 
-export const getMessages = async (locale: string) => {
-  const messages = (await allLocales[`../locales/${locale}.json`]?.()) ?? null;
-  if (!messages) throw new Error(`Messages not found for locale: ${locale}`);
+const getDefaultMessages = async () => {
   const defaultMessages = (await allLocales['../locales/en.json']()) as IntlMessages;
-  return deepmerge(defaultMessages, messages);
+  return defaultMessages;
+};
+
+export const getMessages: (locale: string) => Promise<IntlMessages> = async (locale: string) => {
+  if (locale !== 'en') {
+    const messages = (await allLocales[`../locales/${locale}.json`]?.()) ?? null;
+    if (!messages) {
+      const defaultMessages = await getDefaultMessages();
+      return defaultMessages;
+    }
+    return messages as IntlMessages;
+  }
+  return await getDefaultMessages();
 };

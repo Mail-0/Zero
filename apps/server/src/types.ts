@@ -126,6 +126,7 @@ export interface ParsedMessage {
   messageId?: string;
   threadId?: string;
   attachments?: Attachment[];
+  isDraft?: boolean;
 }
 
 export interface IConnection {

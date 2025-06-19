@@ -223,6 +223,11 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
     const accessToken = credentials.access_token || auth.credentials.access_token;
     const serviceAccount = this.getServiceAccount();
 
+    console.log(
+      `[SUBSCRIPTION] Setting up Gmail watch for connection: ${connectionData.id} ${topicName} projects/${serviceAccount.project_id}/topics/${topicName}`,
+    );
+    console.log(`[SUBSCRIPTION] Service Account: ${serviceAccount.client_email}`, serviceAccount);
+
     const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/watch', {
       method: 'POST',
       headers: {
@@ -267,7 +272,9 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
         console.log(`[SUBSCRIPTION] Creating PubSub subscription for endpoint: ${pushEndpoint}`);
         await this.createPubSubSubscription(pubSubName, pushEndpoint);
 
-        console.log(`[SUBSCRIPTION] Setting up Gmail watch for connection: ${connectionData.id}`);
+        console.log(
+          `[SUBSCRIPTION] Setting up Gmail watch for connection: ${connectionData.id} ${pubSubName}`,
+        );
         await this.setupGmailWatch(connectionData, pubSubName);
 
         await env.gmail_sub_age.put(

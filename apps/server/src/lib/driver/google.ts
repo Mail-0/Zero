@@ -130,16 +130,16 @@ export class GoogleMailManager implements MailManager {
     return this.withErrorHandler(
       'markAsRead',
       async () => {
-        const finalIds = await Promise.all(
-          threadIds.map(async (id) => {
-            // Use the new method to get only metadata
-            const threadMetadata = await this.getThreadMetadata(id);
-            // Filter messages based on labelIds from metadata
-            return threadMetadata.messages
-              .filter((msg) => msg.labelIds && msg.labelIds.includes('UNREAD'))
-              .map((msg) => msg.id);
-          }),
-        ).then((idArrays) => [...new Set(idArrays.flat())]);
+        const finalIds = (
+          await Promise.all(
+            threadIds.map(async (id) => {
+              const threadMetadata = await this.getThreadMetadata(id);
+              return threadMetadata.messages
+                .filter((msg) => msg.labelIds && msg.labelIds.includes('UNREAD'))
+                .map((msg) => msg.id);
+            }),
+          ).then((idArrays) => [...new Set(idArrays.flat())])
+        ).filter((id): id is string => id !== undefined);
 
         await this.modifyThreadLabels(finalIds, { removeLabelIds: ['UNREAD'] });
       },
@@ -150,16 +150,16 @@ export class GoogleMailManager implements MailManager {
     return this.withErrorHandler(
       'markAsUnread',
       async () => {
-        const finalIds = await Promise.all(
-          threadIds.map(async (id) => {
-            // Use the new method to get only metadata
-            const threadMetadata = await this.getThreadMetadata(id);
-            // Filter messages based on labelIds from metadata
-            return threadMetadata.messages
-              .filter((msg) => msg.labelIds && !msg.labelIds.includes('UNREAD'))
-              .map((msg) => msg.id);
-          }),
-        ).then((idArrays) => [...new Set(idArrays.flat())]);
+        const finalIds = (
+          await Promise.all(
+            threadIds.map(async (id) => {
+              const threadMetadata = await this.getThreadMetadata(id);
+              return threadMetadata.messages
+                .filter((msg) => msg.labelIds && !msg.labelIds.includes('UNREAD'))
+                .map((msg) => msg.id);
+            }),
+          ).then((idArrays) => [...new Set(idArrays.flat())])
+        ).filter((id): id is string => id !== undefined);
         await this.modifyThreadLabels(finalIds, { addLabelIds: ['UNREAD'] });
       },
       { threadIds },
@@ -369,6 +369,9 @@ export class GoogleMailManager implements MailManager {
                     attachmentId: attachmentId,
                     headers: part.headers || [],
                     body: attachmentData ?? '',
+                    replyTo: message.payload?.headers?.find(
+                      (h) => h.name?.toLowerCase() === 'reply-to',
+                    )?.value,
                   };
                 } catch {
                   return null;
@@ -392,12 +395,13 @@ export class GoogleMailManager implements MailManager {
             return fullEmailData;
           }),
         );
+
         return {
           labels: Array.from(labels).map((id) => ({ id, name: id })),
           messages,
-          latest: messages[messages.length - 1],
+          latest: messages.findLast((e) => !e.isDraft),
           hasUnread,
-          totalReplies: messages.length,
+          totalReplies: messages.filter((e) => !e.isDraft).length,
         };
       },
       { id, email: this.config.auth?.email },
@@ -602,6 +606,7 @@ export class GoogleMailManager implements MailManager {
         const requestBody = {
           message: {
             raw: encodedMessage,
+            threadId: data.threadId,
           },
         };
 
@@ -919,6 +924,7 @@ export class GoogleMailManager implements MailManager {
       receivedOn,
       subject: subject ? subject.replace(/"/g, '').trim() : '(no subject)',
       messageId,
+      isDraft: labelIds ? labelIds.includes('DRAFT') : false,
     };
   }
   private async parseOutgoing({

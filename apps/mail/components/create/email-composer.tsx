@@ -1,4 +1,12 @@
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   CurvedArrow,
   MediumStack,
   ShortStack,
@@ -18,6 +26,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { TextEffect } from '@/components/motion-primitives/text-effect';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { useActiveConnection } from '@/hooks/use-connections';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
 import useComposeEditor from '@/hooks/use-compose-editor';
 import { Loader, Check, X as XIcon } from 'lucide-react';
@@ -27,7 +36,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
-import { useRef, useState, useEffect } from 'react';
 import { cn, formatFileSize } from '@/lib/utils';
 import { useThread } from '@/hooks/use-threads';
 import { useHotkeys } from 'react-hotkeys-hook';
@@ -36,19 +44,21 @@ import { serializeFiles } from '@/lib/schemas';
 import { Input } from '@/components/ui/input';
 import { EditorContent } from '@tiptap/react';
 import { useForm } from 'react-hook-form';
+import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import pluralize from 'pluralize';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
+type ThreadContent = {
+  from: string;
+  to: string[];
+  body: string;
+  cc?: string[];
+  subject: string;
+}[];
+
 interface EmailComposerProps {
-  threadContent?: {
-    from: string;
-    to: string[];
-    body: string;
-    cc?: string[];
-    subject: string;
-  }[];
   initialTo?: string[];
   initialCc?: string[];
   initialBcc?: string[];
@@ -90,7 +100,6 @@ const schema = z.object({
 });
 
 export function EmailComposer({
-  threadContent = [],
   initialTo = [],
   initialCc = [],
   initialBcc = [],
@@ -120,7 +129,6 @@ export function EmailComposer({
   const [mode] = useQueryState('mode');
   const [isComposeOpen, setIsComposeOpen] = useQueryState('isComposeOpen');
   const { data: emailData } = useThread(threadId ?? null);
-  const { data: session } = useSession();
   const [draftId, setDraftId] = useQueryState('draftId');
   const [aiGeneratedMessage, setAiGeneratedMessage] = useState<string | null>(null);
   const [aiIsLoading, setAiIsLoading] = useState(false);
@@ -132,6 +140,7 @@ export function EmailComposer({
   const ccWrapperRef = useRef<HTMLDivElement>(null);
   const bccWrapperRef = useRef<HTMLDivElement>(null);
   const { data: activeConnection } = useActiveConnection();
+  const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
 
   // Add this function to handle clicks outside the input fields
   useEffect(() => {
@@ -188,7 +197,7 @@ export function EmailComposer({
 
     const userEmail = activeConnection.email.toLowerCase();
     const latestEmail = emailData.latest;
-    const senderEmail = latestEmail.sender.email.toLowerCase();
+    const senderEmail = latestEmail.replyTo;
 
     // Reset states
     form.reset();
@@ -213,7 +222,7 @@ export function EmailComposer({
 
       // Add original sender if not current user
       if (senderEmail !== userEmail) {
-        to.push(latestEmail.sender.email);
+        to.push(latestEmail.replyTo || latestEmail.sender.email);
       }
 
       // Add original recipients from To field
@@ -305,6 +314,41 @@ export function EmailComposer({
     }
   }, [editor, autofocus]);
 
+  // Prevent browser navigation/refresh when there's unsaved content
+  useEffect(() => {
+    if (!editor) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      const hasContent = editor?.getText()?.trim().length > 0;
+      if (hasContent) {
+        e.preventDefault();
+        e.returnValue = ''; // Required for Chrome
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [editor]);
+
+  // Perhaps add `hasUnsavedChanges` to the condition
+  useEffect(() => {
+    if (!editor) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        const hasContent = editor?.getText()?.trim().length > 0;
+        if (hasContent && !draftId) {
+          e.preventDefault();
+          e.stopPropagation();
+          setShowLeaveConfirmation(true);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown, true); // Use capture phase
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
+  }, [editor, draftId]);
+
   const handleSend = async () => {
     try {
       if (isLoading || isSavingDraft) return;
@@ -341,6 +385,29 @@ export function EmailComposer({
     }
   };
 
+  const threadContent: ThreadContent = useMemo(() => {
+    if (!emailData) return [];
+    return emailData.messages.map((message) => {
+      return {
+        body: message.decodedBody ?? '',
+        from: message.sender.name ?? message.sender.email,
+        to: message.to.reduce<string[]>((to, recipient) => {
+          if (recipient.name) {
+            to.push(recipient.name);
+          }
+          return to;
+        }, []),
+        cc: message.cc?.reduce<string[]>((cc, recipient) => {
+          if (recipient.name) {
+            cc.push(recipient.name);
+          }
+          return cc;
+        }, []),
+        subject: message.subject,
+      };
+    });
+  }, [emailData]);
+
   const handleAiGenerate = async () => {
     try {
       setIsLoading(true);
@@ -370,9 +437,16 @@ export function EmailComposer({
     const values = getValues();
 
     if (!hasUnsavedChanges) return;
-    console.log('DRAFT HTML', editor.getHTML());
     const messageText = editor.getText();
-    console.log(values, messageText);
+    console.log({
+      messageText,
+      editorText: editor.getText(),
+      initialMessage,
+      editorHTML: editor.getHTML(),
+    });
+
+    if (messageText.trim() === initialMessage.trim()) return;
+    if (editor.getHTML() === initialMessage.trim()) return;
     if (!values.to.length || !values.subject.length || !messageText.length) return;
 
     try {
@@ -385,6 +459,8 @@ export function EmailComposer({
         message: editor.getHTML(),
         attachments: await serializeFiles(values.attachments ?? []),
         id: draftId,
+        threadId: threadId ? threadId : null,
+        fromEmail: values.fromEmail ? values.fromEmail : null,
       };
 
       const response = await createDraft(draftData);
@@ -409,6 +485,37 @@ export function EmailComposer({
     setValue('subject', subject);
     setIsGeneratingSubject(false);
   };
+
+  const handleClose = () => {
+    const hasContent = editor?.getText()?.trim().length > 0;
+    if (hasContent) {
+      setShowLeaveConfirmation(true);
+    } else {
+      onClose?.();
+    }
+  };
+
+  const confirmLeave = () => {
+    setShowLeaveConfirmation(false);
+    onClose?.();
+  };
+
+  const cancelLeave = () => {
+    setShowLeaveConfirmation(false);
+  };
+
+  // Component unmount protection
+  useEffect(() => {
+    return () => {
+      // This cleanup runs when component is about to unmount
+      const hasContent = editor?.getText()?.trim().length > 0;
+      if (hasContent && !showLeaveConfirmation) {
+        // If we have content and haven't shown confirmation, it means
+        // the component is being unmounted unexpectedly
+        console.warn('Email composer unmounting with unsaved content');
+      }
+    };
+  }, [editor, showLeaveConfirmation]);
 
   useEffect(() => {
     if (!hasUnsavedChanges) return;
@@ -666,7 +773,7 @@ export function EmailComposer({
                 <button
                   tabIndex={-1}
                   className="flex h-full items-center gap-2 text-sm font-medium text-[#8C8C8C] hover:text-[#A8A8A8]"
-                  onClick={onClose}
+                  onClick={handleClose}
                 >
                   <X className="h-3.5 w-3.5 fill-[#9A9A9A]" />
                 </button>
@@ -1045,12 +1152,8 @@ export function EmailComposer({
       <div className="inline-flex w-full items-center justify-between self-stretch rounded-b-2xl bg-[#FFFFFF] px-3 py-3 outline-white/5 dark:bg-[#202020]">
         <div className="flex items-center justify-start gap-2">
           <div className="flex items-center justify-start gap-2">
-            <button
-              className="flex h-7 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-md bg-black pl-1.5 pr-1 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white"
-              onClick={handleSend}
-              disabled={isLoading || settingsLoading}
-            >
-              <div className="flex items-center justify-center gap-2.5 pl-0.5">
+            <Button size={'xs'} onClick={handleSend} disabled={isLoading || settingsLoading}>
+              <div className="flex items-center justify-center">
                 <div className="text-center text-sm leading-none text-white dark:text-black">
                   <span>Send </span>
                 </div>
@@ -1059,14 +1162,11 @@ export function EmailComposer({
                 <Command className="h-3.5 w-3.5 text-white dark:text-black" />
                 <CurvedArrow className="mt-1.5 h-4 w-4 fill-white dark:fill-black" />
               </div>
-            </button>
-            <button
-              className="flex h-7 items-center gap-0.5 overflow-hidden rounded-md border bg-white/5 px-1.5 shadow-sm hover:bg-white/10 dark:border-none"
-              onClick={() => fileInputRef.current?.click()}
-            >
+            </Button>
+            <Button variant={'secondary'} size={'xs'} onClick={() => fileInputRef.current?.click()}>
               <Plus className="h-3 w-3 fill-[#9A9A9A]" />
               <span className="hidden px-0.5 text-sm md:block">Add</span>
-            </button>
+            </Button>
             <Input
               type="file"
               id="attachment-input"
@@ -1214,8 +1314,10 @@ export function EmailComposer({
                 />
               ) : null}
             </AnimatePresence>
-            <button
-              className="flex h-7 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-md border border-[#8B5CF6] pl-1.5 pr-2 dark:bg-[#252525]"
+            <Button
+              size={'xs'}
+              variant={'ghost'}
+              className="border border-[#8B5CF6]"
               onClick={async () => {
                 if (!subjectInput.trim()) {
                   await handleGenerateSubject();
@@ -1237,7 +1339,7 @@ export function EmailComposer({
                   Generate
                 </div>
               </div>
-            </button>
+            </Button>
           </div>
           {/* <Tooltip>
               <TooltipTrigger asChild>
@@ -1272,6 +1374,26 @@ export function EmailComposer({
             </Tooltip> */}
         </div>
       </div>
+
+      <Dialog open={showLeaveConfirmation} onOpenChange={setShowLeaveConfirmation}>
+        <DialogContent showOverlay className="z-[99999] sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Discard message?</DialogTitle>
+            <DialogDescription>
+              You have unsaved changes in your email. Are you sure you want to leave? Your changes
+              will be lost.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-2">
+            <Button variant="outline" onClick={cancelLeave}>
+              Stay
+            </Button>
+            <Button variant="destructive" onClick={confirmLeave}>
+              Leave
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

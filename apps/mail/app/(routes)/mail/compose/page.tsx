@@ -10,7 +10,7 @@ import { authProxy } from '@/lib/auth-proxy';
 import { useLoaderData } from 'react-router';
 import type { Route } from './+types/page';
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function clientLoader({ request }: Route.ClientLoaderArgs) {
   const session = await authProxy.api.getSession({ headers: request.headers });
   if (!session) return Response.redirect(`${import.meta.env.VITE_PUBLIC_APP_URL}/login`);
   const url = new URL(request.url);
@@ -31,7 +31,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function ComposePage() {
-  const params = useLoaderData<typeof loader>();
+  const params = useLoaderData<typeof clientLoader>();
 
   return (
     <Dialog open={true}>

@@ -12,6 +12,7 @@ import {
 import { ServerProviders } from '@/providers/server-providers';
 import { ClientProviders } from '@/providers/client-providers';
 import { useEffect, type PropsWithChildren } from 'react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { getServerTrpc } from '@/lib/trpc.server';
 import { Button } from '@/components/ui/button';
 import { siteConfig } from '@/lib/site-config';
@@ -19,7 +20,6 @@ import { resolveLocale } from '@/i18n/request';
 import { getMessages } from '@/i18n/request';
 import { signOut } from '@/lib/auth-client';
 import type { Route } from './+types/root';
-import { AlertCircle } from 'lucide-react';
 import { useTranslations } from 'use-intl';
 import { ArrowLeft } from 'lucide-react';
 import './globals.css';
@@ -37,7 +37,7 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request }: Route.ClientLoaderArgs) {
   const locale = resolveLocale(request);
   const trpc = getServerTrpc(request);
 
@@ -62,6 +62,7 @@ export function Layout({ children }: PropsWithChildren) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#141414" media="(prefers-color-scheme: dark)" />
         <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+        <link rel="manifest" href="/manifest.json" />
         <Meta />
         {import.meta.env.REACT_SCAN && (
           <script crossOrigin="anonymous" src="//unpkg.com/react-scan/dist/auto.global.js" />
@@ -76,6 +77,14 @@ export function Layout({ children }: PropsWithChildren) {
         <Scripts />
       </body>
     </html>
+  );
+}
+
+export function HydrateFallback() {
+  return (
+    <div className="flex h-screen w-full items-center justify-center">
+      <Loader2 className="h-10 w-10 animate-spin" />
+    </div>
   );
 }
 
@@ -162,7 +171,7 @@ function NotFound() {
         </div>
 
         {/* Buttons */}
-        <div className="mt-2 flex gap-2">
+        <div className="mt-2 flex justify-center gap-2">
           <Button
             variant="outline"
             onClick={() => navigate(-1)}

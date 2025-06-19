@@ -29,19 +29,19 @@ const resources = [
   },
   {
     title: 'Twitter',
-    href: 'https://x.com/zerodotemail',
+    href: 'https://x.com/mail0dotcom',
     description: 'Follow us for the latest updates and announcements.',
     platform: 'twitter' as const,
   },
   {
     title: 'LinkedIn',
-    href: 'https://www.linkedin.com/company/zerodotemail/',
+    href: 'https://www.linkedin.com/company/mail0/',
     description: 'Connect with us professionally and stay updated.',
     platform: 'linkedin' as const,
   },
   {
     title: 'Discord',
-    href: 'https://discord.gg/0email',
+    href: 'https://discord.gg/mail0',
     description: 'Join our community and chat with the team.',
     platform: 'discord' as const,
   },
@@ -223,7 +223,7 @@ export function Navigation() {
                   src="/black-icon.svg"
                   alt="0.email Logo"
                   className="object-contain dark:hidden"
-                    width={22} height={22} 
+                  width={22} height={22}
                 />
               </SheetTitle>
               <a href="/login">
@@ -231,7 +231,7 @@ export function Navigation() {
               </a>
             </SheetHeader>
             <div className="mt-8 flex flex-col space-y-3">
-              <div className="space-y-3">
+              <div className="space-y-3 flex flex-col">
                 <Link to="/pricing" className="mt-2">
                   Pricing
                 </Link>

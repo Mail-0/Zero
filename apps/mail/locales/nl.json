@@ -169,6 +169,7 @@
       "details": "Details",
       "from": "Van",
       "to": "Aan",
+      "replyTo": "Antwoorden aan",
       "cc": "Cc",
       "bcc": "Bcc",
       "date": "Datum",

@@ -1,6 +1,6 @@
 import { addStyleTags, doesContainStyleTags, template } from '@/lib/email-utils.client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { defaultUserSettings } from '@zero/server/schemas';
 import { fixNonReadableColors } from '@/lib/email-utils';
 import { useTRPC } from '@/providers/query-provider';
@@ -20,8 +20,7 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
   );
   const [cspViolation, setCspViolation] = useState(false);
   const [temporaryImagesEnabled, setTemporaryImagesEnabled] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [height, setHeight] = useState(0);
+  const contentRef = useRef<HTMLDivElement>(null);
   const { resolvedTheme } = useTheme();
   const trpc = useTRPC();
 
@@ -69,72 +68,70 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
 
   const t = useTranslations();
 
-  const calculateAndSetHeight = useCallback(() => {
-    if (!iframeRef.current?.contentWindow?.document.body) return;
+  const finalHtml = useMemo(() => {
+    if (!processedHtml) return '';
 
-    const body = iframeRef.current.contentWindow.document.body;
-    const boundingRectHeight = body.getBoundingClientRect().height;
-    const scrollHeight = body.scrollHeight;
-
-    // Use the larger of the two values to ensure all content is visible
-    setHeight(Math.max(boundingRectHeight, scrollHeight));
-    if (body.innerText.trim() === '') {
-      setHeight(0);
-    }
-  }, [iframeRef, setHeight]);
-
-  useEffect(() => {
-    if (!iframeRef.current || !processedHtml) return;
-
-    let finalHtml = processedHtml;
+    let html = processedHtml;
     const containsStyleTags = doesContainStyleTags(processedHtml);
     if (!containsStyleTags) {
-      finalHtml = addStyleTags(processedHtml);
+      html = addStyleTags(processedHtml);
     }
 
-    const url = URL.createObjectURL(new Blob([finalHtml], { type: 'text/html' }));
-    iframeRef.current.src = url;
+    if (!isTrustedSender && !temporaryImagesEnabled) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const images = doc.querySelectorAll('img');
+      let hasViolations = false;
 
-    const handler = () => {
-      if (iframeRef.current?.contentWindow?.document.body) {
-        calculateAndSetHeight();
-        fixNonReadableColors(iframeRef.current.contentWindow.document.body);
-      }
-      setTimeout(calculateAndSetHeight, 500);
-    };
+      images.forEach((img) => {
+        const src = img.getAttribute('src');
+        if (src && !src.startsWith('data:') && !src.startsWith('blob:')) {
+          hasViolations = true;
+          img.removeAttribute('src');
+          img.setAttribute('data-blocked-src', src);
+          img.style.display = 'none';
+        }
+      });
 
-    iframeRef.current.onload = handler;
+      const backgrounds = doc.querySelectorAll('[style*="background"]');
+      backgrounds.forEach((el) => {
+        const style = el.getAttribute('style') || '';
+        if (style.includes('url(') && !style.includes('data:')) {
+          hasViolations = true;
+          el.setAttribute('style', style.replace(/background[^;]*url\([^)]*\)[^;]*/gi, ''));
+        }
+      });
+      const dangerousElements = doc.querySelectorAll('script, object, embed, form, input, button');
+      dangerousElements.forEach((el) => el.remove());
 
-    return () => {
-      URL.revokeObjectURL(url);
-    };
-  }, [processedHtml, calculateAndSetHeight]);
+      html = doc.documentElement.outerHTML;
+      setCspViolation(hasViolations);
+    }
+
+    return html;
+  }, [processedHtml, isTrustedSender, temporaryImagesEnabled]);
 
   useEffect(() => {
-    if (iframeRef.current?.contentWindow?.document.body) {
-      const body = iframeRef.current.contentWindow.document.body;
-      body.style.backgroundColor =
+    if (!contentRef.current) return;
+
+    requestAnimationFrame(() => {
+      if (contentRef.current) {
+        fixNonReadableColors(contentRef.current);
+      }
+    });
+  }, [finalHtml]);
+
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.style.backgroundColor =
         resolvedTheme === 'dark' ? 'rgb(10, 10, 10)' : 'rgb(245, 245, 245)';
       requestAnimationFrame(() => {
-        fixNonReadableColors(body);
+        if (contentRef.current) {
+          fixNonReadableColors(contentRef.current);
+        }
       });
     }
   }, [resolvedTheme]);
-
-  useEffect(() => {
-    const ctrl = new AbortController();
-    window.addEventListener(
-      'message',
-      (event) => {
-        if (event.data.type === 'csp-violation') {
-          setCspViolation(true);
-        }
-      },
-      { signal: ctrl.signal },
-    );
-
-    return () => ctrl.abort();
-  }, []);
 
   // Show loading fallback while processing HTML (similar to HydrateFallback pattern)
   if (isProcessingHtml) {
@@ -163,14 +160,10 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
           </button>
         </div>
       )}
-      <iframe
-        height={height}
-        ref={iframeRef}
-        className={cn(
-          '!min-h-0 w-full flex-1 overflow-hidden px-4 transition-opacity duration-200',
-        )}
-        title="Email Content"
-        sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-scripts"
+      <div
+        ref={contentRef}
+        className={cn('w-full flex-1 overflow-hidden px-4 transition-opacity duration-200')}
+        dangerouslySetInnerHTML={{ __html: finalHtml }}
         style={{
           width: '100%',
           overflow: 'hidden',
