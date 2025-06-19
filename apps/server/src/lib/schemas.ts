@@ -108,20 +108,6 @@ const categoriesSchema = z.array(mailCategorySchema).superRefine((cats, ctx) => 
   }
 });
 
-export const defaultUserSettings: UserSettings = {
-  language: 'en',
-  timezone: 'UTC',
-  dynamicContent: false,
-  externalImages: true,
-  customPrompt: '',
-  trustedSenders: [],
-  isOnboarded: false,
-  colorTheme: 'system',
-  zeroSignature: true,
-  defaultEmailAlias: '',
-  categories: defaultMailCategories,
-};
-
 export const userSettingsSchema = z.object({
   language: z.string(),
   timezone: z.string(),
@@ -137,3 +123,17 @@ export const userSettingsSchema = z.object({
 });
 
 export type UserSettings = z.infer<typeof userSettingsSchema>;
+
+export const defaultUserSettings: UserSettings = {
+  language: 'en',
+  timezone: 'UTC',
+  dynamicContent: false,
+  externalImages: true,
+  customPrompt: '',
+  trustedSenders: [],
+  isOnboarded: false,
+  colorTheme: 'system',
+  zeroSignature: true,
+  defaultEmailAlias: '',
+  categories: defaultMailCategories,
+};
