@@ -9,19 +9,21 @@ import {
   useNavigate,
   type MetaFunction,
 } from 'react-router';
+import { TranslationPreloader } from '@/components/i18n/translation-preloader';
 import { ServerProviders } from '@/providers/server-providers';
 import { ClientProviders } from '@/providers/client-providers';
 import { useEffect, type PropsWithChildren } from 'react';
+import { resolveLocale } from '@/i18n/enhanced-request';
+import { getMessages } from '@/i18n/enhanced-request';
 import { getServerTrpc } from '@/lib/trpc.server';
 import { Button } from '@/components/ui/button';
 import { siteConfig } from '@/lib/site-config';
-import { resolveLocale } from '@/i18n/request';
-import { getMessages } from '@/i18n/request';
 import { signOut } from '@/lib/auth-client';
 import type { Route } from './+types/root';
 import { AlertCircle } from 'lucide-react';
 import { useTranslations } from 'use-intl';
 import { ArrowLeft } from 'lucide-react';
+import { i18nCache } from '@/i18n/cache';
 import './globals.css';
 
 export const meta: MetaFunction = () => {
@@ -37,18 +39,29 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
   const locale = resolveLocale(request);
   const trpc = getServerTrpc(request);
+
+  // Check for conditional loading based on If-None-Match header
+  const ifNoneMatch = request.headers.get('If-None-Match');
+  const etag = i18nCache.getETag(locale);
+
+  if (ifNoneMatch && etag && ifNoneMatch === etag) {
+    return new Response(null, { status: 304 });
+  }
 
   const connectionId = await trpc.connections.getDefault
     .query()
     .then((res) => res?.id ?? null)
     .catch(() => null);
 
+  // Load critical translations only for initial render
+  const messages = await getMessages(locale, context?.cloudflare.env.translations_cache);
+
   return {
     locale: locale ?? 'en',
-    messages: await getMessages(locale),
+    messages,
     connectionId,
   };
 }
@@ -70,7 +83,10 @@ export function Layout({ children }: PropsWithChildren) {
       </head>
       <body className="antialiased">
         <ServerProviders messages={messages} locale={locale} connectionId={connectionId}>
-          <ClientProviders>{children}</ClientProviders>
+          <ClientProviders>
+            <TranslationPreloader debug={import.meta.env.DEV} />
+            {children}
+          </ClientProviders>
         </ServerProviders>
         <ScrollRestoration />
         <Scripts />

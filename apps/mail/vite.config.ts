@@ -5,6 +5,8 @@ import babel from 'vite-plugin-babel';
 import tailwindcss from 'tailwindcss';
 import { defineConfig } from 'vite';
 import dedent from 'dedent';
+import { i18nOptimizerPlugin } from './plugins/vite-i18n-optimizer';
+import { i18nPrecompile } from './vite-plugins/i18n-precompile';
 
 const ReactCompilerConfig = {
   /* ... */
@@ -12,6 +14,7 @@ const ReactCompilerConfig = {
 
 export default defineConfig({
   plugins: [
+    i18nPrecompile(),
     cloudflare({ viteEnvironment: { name: 'ssr' } }),
     reactRouter(),
     babel({
@@ -22,6 +25,7 @@ export default defineConfig({
       },
     }),
     tsconfigPaths(),
+    i18nOptimizerPlugin(),
     {
       name: 'add-headers',
       applyToEnvironment: (env) => env.name === 'client',

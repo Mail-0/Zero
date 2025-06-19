@@ -14,6 +14,7 @@ export default [
     'meta-files/microsoft-identity-association.json.ts',
   ),
   route('/api/mailto-handler', 'mailto-handler.ts'),
+  route('/api/i18n/chunks/:locale/:chunk', 'routes/api.i18n.chunks.$locale.$chunk.ts'),
   route('/og-api/home', 'og-api/home.tsx'),
   route('/og-api/create', 'og-api/create.tsx'),
 

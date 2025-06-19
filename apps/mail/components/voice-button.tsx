@@ -1,5 +1,3 @@
-'use client';
-
 import { Mic, MicOff, Volume2, VolumeX, X, Loader2, WavesIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { AnimatePresence, motion } from 'motion/react';

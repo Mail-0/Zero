@@ -18,6 +18,7 @@ node_modules
 out
 
 # production
+apps/mail/build/
 build
 dist
 

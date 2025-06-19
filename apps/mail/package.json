@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "react-router dev",
-    "build": "react-router build",
+    "build": "pnpm run build:i18n && react-router build",
+    "build:i18n": "tsx scripts/build-i18n.ts",
     "start": "wrangler dev --port 3000 --show-interactive-dev-session=false",
     "types": "wrangler types",
     "deploy": "wrangler deploy",

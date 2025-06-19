@@ -6,17 +6,12 @@ import {
   FormItem,
   FormLabel,
 } from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useForm, type ControllerRenderProps } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { SettingsCard } from '@/components/settings/settings-card';
+import { LocaleSwitcher } from '@/components/i18n/locale-switcher';
 import { useState, useEffect, useMemo, memo } from 'react';
 import { userSettingsSchema } from '@zero/server/schemas';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -194,21 +189,12 @@ export default function GeneralPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t('pages.settings.general.language')}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="w-36 justify-start">
-                          <Globe className="mr-2 h-4 w-4" />
-                          <SelectValue placeholder={t('pages.settings.general.selectLanguage')} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {availableLocales.map((locale) => (
-                          <SelectItem key={locale.code} value={locale.code}>
-                            {locale.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <LocaleSwitcher
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      showBadge={true}
+                      size="default"
+                    />
                   </FormItem>
                 )}
               />

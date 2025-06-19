@@ -113,6 +113,10 @@
       },
       "kv_namespaces": [
         {
+          "binding": "translations_cache",
+          "id": "c4e336a79fb54b219a7ebcbb52948a65",
+        },
+        {
           "binding": "gmail_history_id",
           "id": "4e814c70e35d413d99c923029928efae",
         },
@@ -248,6 +252,10 @@
       },
       "kv_namespaces": [
         {
+          "binding": "translations_cache",
+          "id": "c4e336a79fb54b219a7ebcbb52948a65",
+        },
+        {
           "binding": "gmail_history_id",
           "id": "4e814c70e35d413d99c923029928efae",
         },
@@ -379,6 +387,10 @@
         "DISABLE_CALLS": "true",
       },
       "kv_namespaces": [
+        {
+          "binding": "translations_cache",
+          "id": "c4e336a79fb54b219a7ebcbb52948a65",
+        },
         {
           "binding": "gmail_history_id",
           "id": "10005d74e84f4f18a17c9618d9e9cecf",
