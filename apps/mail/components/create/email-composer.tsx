@@ -480,10 +480,24 @@ export function EmailComposer({
   };
 
   const handleGenerateSubject = async () => {
-    setIsGeneratingSubject(true);
-    const { subject } = await generateEmailSubject({ message: editor.getText() });
-    setValue('subject', subject);
-    setIsGeneratingSubject(false);
+    try {
+      setIsGeneratingSubject(true);
+      const messageText = editor.getText().trim();
+
+      if (!messageText) {
+        toast.error('Please enter some message content first');
+        return;
+      }
+
+      const { subject } = await generateEmailSubject({ message: messageText });
+      setValue('subject', subject);
+      setHasUnsavedChanges(true);
+    } catch (error) {
+      console.error('Error generating subject:', error);
+      toast.error('Failed to generate subject');
+    } finally {
+      setIsGeneratingSubject(false);
+    }
   };
 
   const handleClose = () => {
@@ -1088,7 +1102,10 @@ export function EmailComposer({
               setHasUnsavedChanges(true);
             }}
           />
-          <button onClick={handleGenerateSubject} disabled={isLoading || isGeneratingSubject}>
+          <button
+            onClick={handleGenerateSubject}
+            disabled={isLoading || isGeneratingSubject || messageLength < 1}
+          >
             <div className="flex items-center justify-center gap-2.5 pl-0.5">
               <div className="flex h-5 items-center justify-center gap-1 rounded-sm">
                 {isGeneratingSubject ? (
@@ -1325,7 +1342,7 @@ export function EmailComposer({
                 setAiGeneratedMessage(null);
                 await handleAiGenerate();
               }}
-              disabled={isLoading || aiIsLoading}
+              disabled={isLoading || aiIsLoading || messageLength < 1}
             >
               <div className="flex items-center justify-center gap-2.5 pl-0.5">
                 <div className="flex h-5 items-center justify-center gap-1 rounded-sm">
