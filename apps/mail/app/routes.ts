@@ -4,18 +4,7 @@ export default [
   index('page.tsx'),
   route('/home', 'home/page.tsx'),
 
-  route('/manifest.webmanifest', 'meta-files/manifest.ts'),
-  route(
-    '/.well-known/microsoft-identity-association',
-    'meta-files/microsoft-identity-association.ts',
-  ),
-  route(
-    '/.well-known/microsoft-identity-association.json',
-    'meta-files/microsoft-identity-association.json.ts',
-  ),
   route('/api/mailto-handler', 'mailto-handler.ts'),
-  route('/og-api/home', 'og-api/home.tsx'),
-  route('/og-api/create', 'og-api/create.tsx'),
 
   layout('(full-width)/layout.tsx', [
     route('/about', '(full-width)/about.tsx'),
@@ -53,6 +42,7 @@ export default [
         route('/danger-zone', '(routes)/settings/danger-zone/page.tsx'),
         route('/general', '(routes)/settings/general/page.tsx'),
         route('/labels', '(routes)/settings/labels/page.tsx'),
+        route('/categories', '(routes)/settings/categories/page.tsx'),
         route('/notifications', '(routes)/settings/notifications/page.tsx'),
         route('/privacy', '(routes)/settings/privacy/page.tsx'),
         route('/security', '(routes)/settings/security/page.tsx'),
@@ -60,8 +50,6 @@ export default [
         route('/*', '(routes)/settings/[...settings]/page.tsx'),
       ]),
     ),
+    route('/*', 'meta-files/not-found.ts'),
   ]),
-
-  // 404 page
-  route('/*', 'meta-files/not-found.ts'),
 ] satisfies RouteConfig;

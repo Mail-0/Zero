@@ -3,14 +3,15 @@ import { connection, user } from '../db/schema';
 import type { HonoContext } from '../ctx';
 import { env } from 'cloudflare:workers';
 import { createDriver } from './driver';
-import { and, eq } from 'drizzle-orm';
+
+export const getZeroDB = (userId: string) => env.ZERO_DB.get(env.ZERO_DB.idFromName(userId));
 
 export const getActiveConnection = async () => {
   const c = getContext<HonoContext>();
   const { sessionUser } = c.var;
   if (!sessionUser) throw new Error('Session Not Found');
 
-  const db = env.ZERO_DB.get(env.ZERO_DB.idFromName('global-db'));
+  const db = getZeroDB(sessionUser.id);
 
   const userData = await db.findUser(sessionUser.id);
 

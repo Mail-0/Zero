@@ -26,6 +26,7 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
   private accessToken: string | null = null;
   private tokenExpiry: number = 0;
   private serviceAccount: GoogleServiceAccount | null = null;
+  private pubsubServiceAccount: string = 'serviceAccount:gmail-api-push@system.gserviceaccount.com';
 
   private getServiceAccount(): GoogleServiceAccount {
     if (!this.serviceAccount) {
@@ -150,7 +151,7 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
     policy.bindings = policy.bindings || [];
     policy.bindings.push({
       role: 'roles/pubsub.publisher',
-      members: [serviceAccount.client_email],
+      members: [this.pubsubServiceAccount],
     });
 
     // Update policy
@@ -221,6 +222,11 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
     // Setup Gmail watch using direct API call instead of heavy googleapis package
     const accessToken = credentials.access_token || auth.credentials.access_token;
     const serviceAccount = this.getServiceAccount();
+
+    console.log(
+      `[SUBSCRIPTION] Setting up Gmail watch for connection: ${connectionData.id} ${topicName} projects/${serviceAccount.project_id}/topics/${topicName}`,
+    );
+    console.log(`[SUBSCRIPTION] Service Account: ${serviceAccount.client_email}`, serviceAccount);
 
     const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/watch', {
       method: 'POST',

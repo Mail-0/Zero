@@ -15,7 +15,7 @@ export const siteConfig = {
     description: DESCRIPTION,
     images: [
       {
-        url: `${import.meta.env.VITE_PUBLIC_APP_URL}/og-api/home`,
+        url: `${import.meta.env.VITE_PUBLIC_APP_URL}/og.png`,
         width: 1200,
         height: 630,
         alt: TITLE,

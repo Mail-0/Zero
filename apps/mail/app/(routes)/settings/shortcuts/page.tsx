@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useSession } from '@/lib/auth-client';
 import { useTranslations } from 'use-intl';
 import { toast } from 'sonner';
+import { useCategorySettings } from '@/hooks/use-categories';
 
 export default function ShortcutsPage() {
   const t = useTranslations();
@@ -18,6 +19,7 @@ export default function ShortcutsPage() {
     // TODO: Implement shortcuts syncing and caching
     // updateShortcut,
   } = useShortcutCache(session?.user?.id);
+  const categorySettings = useCategorySettings();
 
   return (
     <div className="grid gap-6">
@@ -57,11 +59,32 @@ export default function ShortcutsPage() {
                 {scope.split('-').join(' ')}
               </h3>
               <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                {scopedShortcuts.map((shortcut, index) => (
-                  <Shortcut key={`${scope}-${index}`} keys={shortcut.keys} action={shortcut.action}>
-                    {t(`pages.settings.shortcuts.actions.${shortcut.action}` as MessageKey)}
-                  </Shortcut>
-                ))}
+                {scopedShortcuts.map((shortcut, index) => {
+                  const categoryActionIndex: Record<string, number> = {
+                    showImportant: 0,
+                    showAllMail: 1,
+                    showPersonal: 2,
+                    showUpdates: 3,
+                    showPromotions: 4,
+                    showUnread: 5,
+                  };
+
+                  let label: string;
+
+                  if (shortcut.action in categoryActionIndex && categorySettings.length) {
+                    const idx = categoryActionIndex[shortcut.action];
+                    const cat = categorySettings[idx];
+                    label = cat ? `Show ${cat.name}` : t(`pages.settings.shortcuts.actions.${shortcut.action}` as MessageKey);
+                  } else {
+                    label = t(`pages.settings.shortcuts.actions.${shortcut.action}` as MessageKey);
+                  }
+
+                  return (
+                    <Shortcut key={`${scope}-${index}`} keys={shortcut.keys} action={shortcut.action}>
+                      {label}
+                    </Shortcut>
+                  );
+                })}
               </div>
             </div>
           ))}

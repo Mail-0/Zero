@@ -1,4 +1,4 @@
-import { connectionToDriver, getActiveConnection } from '../lib/server-utils';
+import { connectionToDriver, getActiveConnection, getZeroDB } from '../lib/server-utils';
 import { Ratelimit, type RatelimitConfig } from '@upstash/ratelimit';
 import type { HonoContext, HonoVariables } from '../ctx';
 import { getConnInfo } from 'hono/cloudflare-workers';
@@ -41,7 +41,7 @@ export const activeConnectionProcedure = privateProcedure.use(async ({ ctx, next
 });
 
 export const activeDriverProcedure = activeConnectionProcedure.use(async ({ ctx, next }) => {
-  const { activeConnection } = ctx;
+  const { activeConnection, sessionUser } = ctx;
   const driver = connectionToDriver(activeConnection);
   const res = await next({ ctx: { ...ctx, driver } });
 
@@ -56,7 +56,7 @@ export const activeDriverProcedure = activeConnectionProcedure.use(async ({ ctx,
 
   if (!res.ok && res.error.message === 'invalid_grant') {
     // Remove the access token and refresh token
-    const db = env.ZERO_DB.get(env.ZERO_DB.idFromName('global-db'));
+    const db = getZeroDB(sessionUser.id);
     await db.updateConnection(activeConnection.id, {
       accessToken: null,
       refreshToken: null,

@@ -2,6 +2,7 @@ import { defaultLabels, EProviders, type AppContext } from '../../types';
 import { getContext } from 'hono/context-storage';
 import { connection } from '../../db/schema';
 import type { HonoContext } from '../../ctx';
+import { getZeroDB } from '../server-utils';
 import { env } from 'cloudflare:workers';
 
 export interface SubscriptionData {
@@ -25,7 +26,8 @@ export abstract class BaseSubscriptionFactory {
   abstract verifyToken(token: string): Promise<boolean>;
 
   protected async getConnectionFromDb(connectionId: string) {
-    const db = env.ZERO_DB.get(env.ZERO_DB.idFromName('global-db'));
+    // Revisit
+    const db = getZeroDB('global-db');
     const connectionData = await db.findConnectionById(connectionId);
     return connectionData;
   }

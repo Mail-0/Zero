@@ -1,4 +1,4 @@
-import { getActiveConnection } from '../server-utils';
+import { getActiveConnection, getZeroDB } from '../server-utils';
 import { getContext } from 'hono/context-storage';
 import type { gmail_v1 } from '@googleapis/gmail';
 import type { HonoContext } from '../../ctx';
@@ -15,7 +15,7 @@ export const deleteActiveConnection = async () => {
   if (!session) return console.log('No session found');
   try {
     await c.var.auth.api.signOut({ headers: c.req.raw.headers });
-    const db = env.ZERO_DB.get(env.ZERO_DB.idFromName('global-db'));
+    const db = getZeroDB(session.user.id);
     await db.deleteActiveConnection(session.user.id, activeConnection.id);
   } catch (error) {
     console.error('Server: Error deleting connection:', error);

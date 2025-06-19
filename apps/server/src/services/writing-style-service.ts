@@ -1,6 +1,7 @@
 import { mapToObj, pipe, entries, sortBy, take, fromEntries } from 'remeda';
 import { getContext } from 'hono/context-storage';
 import { writingStyleMatrix } from '../db/schema';
+import { getZeroDB } from '../lib/server-utils';
 import type { HonoContext } from '../ctx';
 import { env } from 'cloudflare:workers';
 import { google } from '@ai-sdk/google';
@@ -163,7 +164,7 @@ export const getWritingStyleMatrixForConnectionId = async ({
   connectionId: string;
   backupContent?: string;
 }) => {
-  const db = env.ZERO_DB.get(env.ZERO_DB.idFromName('global-db'));
+  const db = getZeroDB('global-db');
 
   const matrix = await db.findWritingStyleMatrix(connectionId);
 
@@ -185,46 +186,12 @@ export const getWritingStyleMatrixForConnectionId = async ({
 };
 
 export const updateWritingStyleMatrix = async (connectionId: string, emailBody: string) => {
-  const c = getContext<HonoContext>();
-
   const emailStyleMatrix = await extractStyleMatrix(emailBody);
 
   await pRetry(
     async () => {
-      await c.var.db.transaction(async (tx) => {
-        const [existingMatrix] = await tx
-          .select({
-            numMessages: writingStyleMatrix.numMessages,
-            style: writingStyleMatrix.style,
-          })
-          .from(writingStyleMatrix)
-          .where(eq(writingStyleMatrix.connectionId, connectionId))
-          .for('update');
-
-        if (!existingMatrix) {
-          const newStyle = initializeStyleMatrixFromEmail(emailStyleMatrix);
-
-          await tx.insert(writingStyleMatrix).values({
-            connectionId,
-            numMessages: 1,
-            style: newStyle,
-          });
-        } else {
-          const newStyle = createUpdatedMatrixFromNewEmail(
-            existingMatrix.numMessages,
-            existingMatrix.style as WritingStyleMatrix,
-            emailStyleMatrix,
-          );
-
-          await tx
-            .update(writingStyleMatrix)
-            .set({
-              numMessages: existingMatrix.numMessages + 1,
-              style: newStyle,
-            })
-            .where(eq(writingStyleMatrix.connectionId, connectionId));
-        }
-      });
+      const db = getZeroDB('global-db');
+      await db.syncUserMatrix(connectionId, emailStyleMatrix);
     },
     {
       retries: 1,
@@ -232,7 +199,7 @@ export const updateWritingStyleMatrix = async (connectionId: string, emailBody: 
   );
 };
 
-const createUpdatedMatrixFromNewEmail = (
+export const createUpdatedMatrixFromNewEmail = (
   numMessages: number,
   currentStyleMatrix: WritingStyleMatrix,
   emailStyleMatrix: EmailMatrix,
@@ -270,7 +237,7 @@ const takeTopK = (data: Record<string, number>, k = TAKE_TOP_K) => {
   );
 };
 
-const initializeStyleMatrixFromEmail = (matrix: EmailMatrix) => {
+export const initializeStyleMatrixFromEmail = (matrix: EmailMatrix) => {
   const initializedWelfordMetrics = mapToObj(MEAN_METRIC_KEYS, (key) => {
     return [key, initializeWelfordMetric(matrix[key])];
   });
