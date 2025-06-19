@@ -41,6 +41,7 @@ import { useQueryState } from 'nuqs';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useLoading } from '../context/loading-context';
 
 export function NavUser() {
   const { data: session, refetch: refetchSession, isPending: isSessionPending } = useSession();
@@ -59,9 +60,9 @@ export function NavUser() {
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const { data: activeConnection, refetch: refetchActiveConnection } = useActiveConnection();
-  const { revalidate } = useRevalidator();
   const [, setPricingDialog] = useQueryState('pricingDialog');
   const [category] = useQueryState('category', { defaultValue: 'All Mail' });
+  const { setLoading } = useLoading();
 
   const getSettingsHref = useCallback(() => {
     const currentPath = category
@@ -90,12 +91,68 @@ export function NavUser() {
 
   const handleAccountSwitch = (connectionId: string) => async () => {
     if (connectionId === activeConnection?.id) return;
-    setThreadId(null);
-    await setDefaultConnection({ connectionId });
-    await refetchActiveConnection();
-    await refetchConnections();
-    await revalidate();
-    refetchSession();
+    
+    try {
+      setLoading(true, t('common.navUser.switchingAccounts'));
+      
+      setThreadId(null);
+      
+      await setDefaultConnection({ connectionId });
+      
+      const targetConnection = data?.connections?.find((conn: any) => conn.id === connectionId);
+      if (targetConnection) {
+        queryClient.setQueryData(
+          trpc.connections.getDefault.queryKey(),
+          targetConnection
+        );
+      }
+      
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: trpc.connections.getDefault.queryKey(),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: trpc.connections.list.queryKey(),
+        }),
+        
+        queryClient.removeQueries({
+          queryKey: [['mail']],
+        }),
+        
+        queryClient.removeQueries({
+          queryKey: [['labels']],
+        }),
+        
+        queryClient.removeQueries({
+          queryKey: [['stats']],
+        }),
+        
+        queryClient.removeQueries({
+          queryKey: [['notes']],
+        }),
+        
+        queryClient.removeQueries({
+          queryKey: [['brain']],
+        }),
+        
+        queryClient.removeQueries({
+          queryKey: [['settings']],
+        }),
+        
+        queryClient.removeQueries({
+          queryKey: [['drafts']],
+        }),
+      ]);
+      
+      toast.success(t('common.navUser.accountSwitched'));
+    } catch (error) {
+      console.error('Error switching accounts:', error);
+      toast.error(t('common.navUser.failedToSwitchAccount'));
+      
+      await refetchActiveConnection();
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogout = async () => {
