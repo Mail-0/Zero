@@ -27,6 +27,10 @@ import { toast } from 'sonner';
 import { AiChatPrompt, StyledEmailAssistantSystemPrompt } from '@/lib/prompts';
 import { EPrompts } from '../../../server/src/types';
 
+const isPromptValid = (prompt: string): boolean => {
+  const trimmed = prompt.trim();
+  return trimmed !== '' && trimmed.toLowerCase() !== 'undefined';
+};
 
 export function PromptsDialog() {
   const trpc = useTRPC();
@@ -54,14 +58,15 @@ export function PromptsDialog() {
   useEffect(() => {
     if (prompts) {
       const rawChat = prompts.Chat ?? '';
-      const chatValid = rawChat.trim() !== '' && rawChat.trim().toLowerCase() !== 'undefined';
-      setChatPrompt(chatValid ? rawChat : AiChatPrompt('', '', ''));
+      setChatPrompt(isPromptValid(rawChat) ? rawChat : AiChatPrompt('', '', ''));
+
       const rawCompose = prompts.Compose ?? '';
-      const composeValid = rawCompose.trim() !== '' && rawCompose.trim().toLowerCase() !== 'undefined';
-      setComposePrompt(composeValid ? rawCompose : StyledEmailAssistantSystemPrompt().trim());
-      setSummarizeThread(prompts.SummarizeThread);
-      setReSummarizeThread(prompts.ReSummarizeThread);
-      setSummarizeMessage(prompts.SummarizeMessage);
+      setComposePrompt(
+        isPromptValid(rawCompose) ? rawCompose : StyledEmailAssistantSystemPrompt().trim(),
+      );
+      setSummarizeThread(prompts.SummarizeThread ?? '');
+      setReSummarizeThread(prompts.ReSummarizeThread ?? '');
+      setSummarizeMessage(prompts.SummarizeMessage ?? '');
     }
   }, [prompts]);
   
@@ -92,8 +97,7 @@ export function PromptsDialog() {
               </Link>
             </DialogTitle>
             <DialogDescription>
-              We believe in Open Source, so we're open sourcing our AI system prompts. Soon you will
-              be able to customize them to your liking.
+              We believe in Open Source, so we're open sourcing our AI system prompts.
             </DialogDescription>
           </DialogHeader>
           <Tabs className="mt-2">
