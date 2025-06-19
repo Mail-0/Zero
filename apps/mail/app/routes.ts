@@ -4,10 +4,7 @@ export default [
   index('page.tsx'),
   route('/home', 'home/page.tsx'),
 
-  route('/manifest.webmanifest', 'meta-files/manifest.ts'),
   route('/api/mailto-handler', 'mailto-handler.ts'),
-  route('/og-api/home', 'og-api/home.tsx'),
-  route('/og-api/create', 'og-api/create.tsx'),
 
   layout('(full-width)/layout.tsx', [
     route('/about', '(full-width)/about.tsx'),

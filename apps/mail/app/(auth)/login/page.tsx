@@ -13,19 +13,6 @@ export async function clientLoader() {
   };
 }
 
-export function HydrateFallback() {
-  return (
-    <div className="flex min-h-screen w-full flex-col bg-white dark:bg-black">
-      <div className="flex flex-1 items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900 dark:border-white"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function LoginPage() {
   const { allProviders, isProd } = useLoaderData<typeof clientLoader>();
 
