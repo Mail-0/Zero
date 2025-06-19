@@ -328,12 +328,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "Renk",
+      "labelName": "Etiket adı",
+      "createLabel": "Etiket oluştur",
       "deleteLabel": "Etiketi sil",
       "deleteLabelConfirm": "Bu etiketi silmek istediğinizden emin misiniz?",
       "deleteLabelConfirmDescription": "Bu eylem geri alınamaz.",
       "deleteLabelConfirmCancel": "İptal",
       "deleteLabelConfirmDelete": "Sil",
-      "deleteLabelSuccess": "Etiket başarıyla silindi"
+      "deleteLabelSuccess": "Etiket başarıyla silindi",
+      "failedToDeleteLabel": "Etiket silinemedi",
+      "deletingLabel": "Etiket siliniyor...",
+      "editLabel": "Etiketi düzenle",
+      "savingLabel": "Etiket kaydediliyor...",
+      "failedToSavingLabel": "Etiket kaydedilemedi",
+      "saveLabelSuccess": "Etiket başarıyla kaydedildi"
     }
   },
   "navigation": {
@@ -356,6 +365,7 @@
       "signatures": "İmzalar",
       "shortcuts": "Kısayollar",
       "labels": "Etiketler",
+      "categories": "Kategoriler",
       "dangerZone": "Tehlikeli Bölge",
       "deleteAccount": "Hesabı Sil",
       "privacy": "Gizlilik"

@@ -292,12 +292,21 @@ checksums:
     common/mail/archived: cf5127ecfd7e43a35466a1ba5fe16450
     common/mail/failedToArchive: e844b73a518542027803b7ff97e82b89
     common/units/mb: ed9c3b369a1ac40741b182458b69143a
+    common/labels/color: 9d53d1d120e8b8954bcae9a322573748
+    common/labels/labelName: 682eade7443c047bc680664f821c9e0d
+    common/labels/createLabel: f05ff11324149930de6d986dc627f768
     common/labels/deleteLabel: 2f1a736693311e4dc5bb4ab66f884963
     common/labels/deleteLabelConfirm: 037fbaf1d04356937e6afb574714f51f
     common/labels/deleteLabelConfirmDescription: 3d8b13374ffd3cefc0f3f7ce077bd9c9
     common/labels/deleteLabelConfirmCancel: 2e2a849c2223911717de8caa2c71bade
     common/labels/deleteLabelConfirmDelete: 8bcf303dd10a645b5baacb02b47d72c9
     common/labels/deleteLabelSuccess: a3577fff42d01a7737c8b8dcd0f57b2e
+    common/labels/failedToDeleteLabel: 8ba3381b063f7792f82063779c9f749b
+    common/labels/deletingLabel: 0b6f9a6709a0602cb183985976600dd6
+    common/labels/editLabel: dfe967d8f9d14ba8aa89254f42236097
+    common/labels/savingLabel: 232d4cc013b0bb525899a27f69d1acc8
+    common/labels/failedToSavingLabel: 9d95b12e2d0f164eeb64ad2207c8b702
+    common/labels/saveLabelSuccess: 85d1d32421806260b73c50c1e93623fa
     navigation/sidebar/inbox: 57e9db873911bf848c79e2ed546ecf45
     navigation/sidebar/drafts: 76dab0f0b2e6c4933b80f69e388070d0
     navigation/sidebar/sent: 01b803329590ea067a0e9b41b3193353
@@ -314,6 +323,7 @@ checksums:
     navigation/settings/signatures: 681d432cf5709e710da79b9d0155aaa2
     navigation/settings/shortcuts: db3330ed3240c398054f3be23c52851f
     navigation/settings/labels: 6f15627a90002323eac018274b6922d6
+    navigation/settings/categories: fd4e44f3b1b2bba9ca45f3aef963d042
     navigation/settings/dangerZone: ab5417cabdfa70b0a7c9d407ec69b450
     navigation/settings/deleteAccount: f5f7b88ff3122fb0d3a330e2b99d7e3d
     navigation/settings/privacy: 6007d5d5f6591c027b15bd49ab7a8c47

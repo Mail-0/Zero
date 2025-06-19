@@ -328,12 +328,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "Farbe",
+      "labelName": "Label-Name",
+      "createLabel": "Label erstellen",
       "deleteLabel": "Label löschen",
       "deleteLabelConfirm": "Sind Sie sicher, dass Sie dieses Label löschen möchten?",
       "deleteLabelConfirmDescription": "Diese Aktion kann nicht rückgängig gemacht werden.",
       "deleteLabelConfirmCancel": "Abbrechen",
       "deleteLabelConfirmDelete": "Löschen",
-      "deleteLabelSuccess": "Label erfolgreich gelöscht"
+      "deleteLabelSuccess": "Label erfolgreich gelöscht",
+      "failedToDeleteLabel": "Label konnte nicht gelöscht werden",
+      "deletingLabel": "Label wird gelöscht...",
+      "editLabel": "Label bearbeiten",
+      "savingLabel": "Label wird gespeichert...",
+      "failedToSavingLabel": "Label konnte nicht gespeichert werden",
+      "saveLabelSuccess": "Label erfolgreich gespeichert"
     }
   },
   "navigation": {
@@ -356,6 +365,7 @@
       "signatures": "Signaturen",
       "shortcuts": "Shortcuts",
       "labels": "Labels",
+      "categories": "Kategorien",
       "dangerZone": "Gefahrenbereich",
       "deleteAccount": "Konto löschen",
       "privacy": "Datenschutz"

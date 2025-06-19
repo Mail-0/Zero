@@ -328,12 +328,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "Krāsa",
+      "labelName": "Atzīmes nosaukums",
+      "createLabel": "Izveidot atzīmi",
       "deleteLabel": "Dzēst atzīmi",
       "deleteLabelConfirm": "Vai tiešām vēlaties dzēst šo atzīmi?",
       "deleteLabelConfirmDescription": "Šo darbību nevar atsaukt.",
       "deleteLabelConfirmCancel": "Atcelt",
       "deleteLabelConfirmDelete": "Dzēst",
-      "deleteLabelSuccess": "Atzīme veiksmīgi dzēsta"
+      "deleteLabelSuccess": "Atzīme veiksmīgi dzēsta",
+      "failedToDeleteLabel": "Neizdevās dzēst atzīmi",
+      "deletingLabel": "Dzēš atzīmi...",
+      "editLabel": "Rediģēt atzīmi",
+      "savingLabel": "Saglabā atzīmi...",
+      "failedToSavingLabel": "Neizdevās saglabāt atzīmi",
+      "saveLabelSuccess": "Atzīme veiksmīgi saglabāta"
     }
   },
   "navigation": {
@@ -356,6 +365,7 @@
       "signatures": "Paraksti",
       "shortcuts": "Īsceļi",
       "labels": "Iezīmes",
+      "categories": "Kategorijas",
       "dangerZone": "Bīstamā zona",
       "deleteAccount": "Dzēst kontu",
       "privacy": "Privātums"

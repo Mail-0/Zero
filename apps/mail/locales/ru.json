@@ -328,12 +328,21 @@
       "mb": "{amount} МБ"
     },
     "labels": {
+      "color": "Цвет",
+      "labelName": "Название метки",
+      "createLabel": "Создать метку",
       "deleteLabel": "Удалить метку",
       "deleteLabelConfirm": "Вы уверены, что хотите удалить эту метку?",
       "deleteLabelConfirmDescription": "Это действие невозможно отменить.",
       "deleteLabelConfirmCancel": "Отменить",
       "deleteLabelConfirmDelete": "Удалить",
-      "deleteLabelSuccess": "Метка успешно удалена"
+      "deleteLabelSuccess": "Метка успешно удалена",
+      "failedToDeleteLabel": "Не удалось удалить метку",
+      "deletingLabel": "Удаление метки...",
+      "editLabel": "Редактировать метку",
+      "savingLabel": "Сохранение метки...",
+      "failedToSavingLabel": "Не удалось сохранить метку",
+      "saveLabelSuccess": "Метка успешно сохранена"
     }
   },
   "navigation": {
@@ -356,6 +365,7 @@
       "signatures": "Подписи",
       "shortcuts": "Команды",
       "labels": "Ярлыки",
+      "categories": "Категории",
       "dangerZone": "Опасная зона",
       "deleteAccount": "Удалить аккаунт",
       "privacy": "Конфиденциальность"

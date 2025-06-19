@@ -328,12 +328,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "Barva",
+      "labelName": "Název štítku",
+      "createLabel": "Vytvořit štítek",
       "deleteLabel": "Smazat štítek",
       "deleteLabelConfirm": "Opravdu chcete tento štítek smazat?",
       "deleteLabelConfirmDescription": "Tuto akci nelze vrátit zpět.",
       "deleteLabelConfirmCancel": "Zrušit",
       "deleteLabelConfirmDelete": "Smazat",
-      "deleteLabelSuccess": "Štítek byl úspěšně smazán"
+      "deleteLabelSuccess": "Štítek byl úspěšně smazán",
+      "failedToDeleteLabel": "Nepodařilo se smazat štítek",
+      "deletingLabel": "Mazání štítku...",
+      "editLabel": "Upravit štítek",
+      "savingLabel": "Ukládání štítku...",
+      "failedToSavingLabel": "Nepodařilo se uložit štítek",
+      "saveLabelSuccess": "Štítek byl úspěšně uložen"
     }
   },
   "navigation": {
@@ -356,6 +365,7 @@
       "signatures": "Podpisy",
       "shortcuts": "Zástupci",
       "labels": "Štítky",
+      "categories": "Kategorie",
       "dangerZone": "Nebezpečná zóna",
       "deleteAccount": "Smazat účet",
       "privacy": "Soukromí"

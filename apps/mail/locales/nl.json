@@ -328,12 +328,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "Kleur",
+      "labelName": "Labelnaam",
+      "createLabel": "Label aanmaken",
       "deleteLabel": "Label verwijderen",
       "deleteLabelConfirm": "Weet je zeker dat je dit label wilt verwijderen?",
       "deleteLabelConfirmDescription": "Deze actie kan niet ongedaan worden gemaakt.",
       "deleteLabelConfirmCancel": "Annuleren",
       "deleteLabelConfirmDelete": "Verwijderen",
-      "deleteLabelSuccess": "Label succesvol verwijderd"
+      "deleteLabelSuccess": "Label succesvol verwijderd",
+      "failedToDeleteLabel": "Label verwijderen mislukt",
+      "deletingLabel": "Label verwijderen...",
+      "editLabel": "Label bewerken",
+      "savingLabel": "Label opslaan...",
+      "failedToSavingLabel": "Label opslaan mislukt",
+      "saveLabelSuccess": "Label succesvol opgeslagen"
     }
   },
   "navigation": {
@@ -356,6 +365,7 @@
       "signatures": "Handtekeningen",
       "shortcuts": "Snelkoppelingen",
       "labels": "Labels",
+      "categories": "Categorieën",
       "dangerZone": "Gevarenzone",
       "deleteAccount": "Account verwijderen",
       "privacy": "Privacy"

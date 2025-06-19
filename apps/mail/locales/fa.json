@@ -328,12 +328,21 @@
       "mb": "{amount} مگابایت"
     },
     "labels": {
+      "color": "رنگ",
+      "labelName": "نام برچسب",
+      "createLabel": "ایجاد برچسب",
       "deleteLabel": "حذف برچسب",
       "deleteLabelConfirm": "آیا مطمئن هستید که می‌خواهید این برچسب را حذف کنید؟",
       "deleteLabelConfirmDescription": "این عملیات غیرقابل بازگشت است.",
       "deleteLabelConfirmCancel": "لغو",
       "deleteLabelConfirmDelete": "حذف",
-      "deleteLabelSuccess": "برچسب با موفقیت حذف شد"
+      "deleteLabelSuccess": "برچسب با موفقیت حذف شد",
+      "failedToDeleteLabel": "حذف برچسب ناموفق بود",
+      "deletingLabel": "در حال حذف برچسب...",
+      "editLabel": "ویرایش برچسب",
+      "savingLabel": "در حال ذخیره برچسب...",
+      "failedToSavingLabel": "ذخیره برچسب ناموفق بود",
+      "saveLabelSuccess": "برچسب با موفقیت ذخیره شد"
     }
   },
   "navigation": {
@@ -356,6 +365,7 @@
       "signatures": "امضاها",
       "shortcuts": "میانبرها",
       "labels": "برچسب‌ها",
+      "categories": "دسته‌بندی‌ها",
       "dangerZone": "منطقه خطر",
       "deleteAccount": "حذف حساب کاربری",
       "privacy": "حریم خصوصی"
