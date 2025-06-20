@@ -328,12 +328,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "Màu sắc",
+      "labelName": "Tên nhãn",
+      "createLabel": "Tạo nhãn",
       "deleteLabel": "Xóa nhãn",
       "deleteLabelConfirm": "Bạn có chắc chắn muốn xóa nhãn này không?",
       "deleteLabelConfirmDescription": "Hành động này không thể hoàn tác.",
       "deleteLabelConfirmCancel": "Hủy",
       "deleteLabelConfirmDelete": "Xóa",
-      "deleteLabelSuccess": "Đã xóa nhãn thành công"
+      "deleteLabelSuccess": "Đã xóa nhãn thành công",
+      "failedToDeleteLabel": "Không thể xóa nhãn",
+      "deletingLabel": "Đang xóa nhãn...",
+      "editLabel": "Chỉnh sửa nhãn",
+      "savingLabel": "Đang lưu nhãn...",
+      "failedToSavingLabel": "Không thể lưu nhãn",
+      "saveLabelSuccess": "Đã lưu nhãn thành công"
     }
   },
   "navigation": {
@@ -356,6 +365,7 @@
       "signatures": "Chữ ký",
       "shortcuts": "Phím tắt",
       "labels": "Nhãn",
+      "categories": "Danh mục",
       "dangerZone": "Khu vực nguy hiểm",
       "deleteAccount": "Xóa tài khoản",
       "privacy": "Quyền riêng tư"

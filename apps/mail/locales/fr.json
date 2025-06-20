@@ -328,12 +328,21 @@
       "mb": "{amount} Mo"
     },
     "labels": {
+      "color": "Couleur",
+      "labelName": "Nom de l'étiquette",
+      "createLabel": "Créer une étiquette",
       "deleteLabel": "Supprimer l'étiquette",
       "deleteLabelConfirm": "Êtes-vous sûr de vouloir supprimer cette étiquette ?",
       "deleteLabelConfirmDescription": "Cette action ne peut pas être annulée.",
       "deleteLabelConfirmCancel": "Annuler",
       "deleteLabelConfirmDelete": "Supprimer",
-      "deleteLabelSuccess": "Étiquette supprimée avec succès"
+      "deleteLabelSuccess": "Étiquette supprimée avec succès",
+      "failedToDeleteLabel": "Échec de la suppression de l'étiquette",
+      "deletingLabel": "Suppression de l'étiquette...",
+      "editLabel": "Modifier l'étiquette",
+      "savingLabel": "Enregistrement de l'étiquette...",
+      "failedToSavingLabel": "Échec de l'enregistrement de l'étiquette",
+      "saveLabelSuccess": "Étiquette enregistrée avec succès"
     }
   },
   "navigation": {
@@ -356,6 +365,7 @@
       "signatures": "Signatures",
       "shortcuts": "Raccourcis",
       "labels": "Étiquettes",
+      "categories": "Catégories",
       "dangerZone": "Zone dangereuse",
       "deleteAccount": "Supprimer le compte",
       "privacy": "Confidentialité"

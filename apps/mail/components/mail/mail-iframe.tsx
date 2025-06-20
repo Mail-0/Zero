@@ -1,6 +1,6 @@
 import { addStyleTags, doesContainStyleTags, template } from '@/lib/email-utils.client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { defaultUserSettings } from '@zero/server/schemas';
 import { fixNonReadableColors } from '@/lib/email-utils';
 import { useTRPC } from '@/providers/query-provider';
@@ -20,7 +20,8 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
   );
   const [cspViolation, setCspViolation] = useState(false);
   const [temporaryImagesEnabled, setTemporaryImagesEnabled] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [height, setHeight] = useState(0);
   const { resolvedTheme } = useTheme();
   const trpc = useTRPC();
 
@@ -57,7 +58,7 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
     },
   });
 
-  const { data: processedHtml, isLoading: isProcessingHtml } = useQuery({
+  const { data: processedHtml } = useQuery({
     queryKey: ['email-template', html, isTrustedSender || temporaryImagesEnabled],
     queryFn: () => template(html, isTrustedSender || temporaryImagesEnabled),
     staleTime: 30 * 60 * 1000, // Increase cache time to 30 minutes
@@ -68,79 +69,75 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
 
   const t = useTranslations();
 
-  const finalHtml = useMemo(() => {
-    if (!processedHtml) return '';
+  const calculateAndSetHeight = useCallback(() => {
+    if (!iframeRef.current?.contentWindow?.document.body) return;
 
-    let html = processedHtml;
+    const body = iframeRef.current.contentWindow.document.body;
+    const boundingRectHeight = body.getBoundingClientRect().height;
+    const scrollHeight = body.scrollHeight;
+
+    if (body.innerText.trim() === '') {
+      setHeight(0);
+      return;
+    }
+
+    // Use the larger of the two values to ensure all content is visible
+    const newHeight = Math.max(boundingRectHeight, scrollHeight);
+    setHeight(newHeight);
+  }, [iframeRef, setHeight]);
+
+  useEffect(() => {
+    if (!iframeRef.current || !processedHtml) return;
+
+    let finalHtml = processedHtml;
     const containsStyleTags = doesContainStyleTags(processedHtml);
     if (!containsStyleTags) {
-      html = addStyleTags(processedHtml);
+      finalHtml = addStyleTags(processedHtml);
     }
 
-    if (!isTrustedSender && !temporaryImagesEnabled) {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, 'text/html');
-      const images = doc.querySelectorAll('img');
-      let hasViolations = false;
+    const url = URL.createObjectURL(new Blob([finalHtml], { type: 'text/html' }));
+    iframeRef.current.src = url;
 
-      images.forEach((img) => {
-        const src = img.getAttribute('src');
-        if (src && !src.startsWith('data:') && !src.startsWith('blob:')) {
-          hasViolations = true;
-          img.removeAttribute('src');
-          img.setAttribute('data-blocked-src', src);
-          img.style.display = 'none';
-        }
-      });
-
-      const backgrounds = doc.querySelectorAll('[style*="background"]');
-      backgrounds.forEach((el) => {
-        const style = el.getAttribute('style') || '';
-        if (style.includes('url(') && !style.includes('data:')) {
-          hasViolations = true;
-          el.setAttribute('style', style.replace(/background[^;]*url\([^)]*\)[^;]*/gi, ''));
-        }
-      });
-      const dangerousElements = doc.querySelectorAll('script, object, embed, form, input, button');
-      dangerousElements.forEach((el) => el.remove());
-
-      html = doc.documentElement.outerHTML;
-      setCspViolation(hasViolations);
-    }
-
-    return html;
-  }, [processedHtml, isTrustedSender, temporaryImagesEnabled]);
-
-  useEffect(() => {
-    if (!contentRef.current) return;
-
-    requestAnimationFrame(() => {
-      if (contentRef.current) {
-        fixNonReadableColors(contentRef.current);
+    const handler = () => {
+      if (iframeRef.current?.contentWindow?.document.body) {
+        calculateAndSetHeight();
+        fixNonReadableColors(iframeRef.current.contentWindow.document.body);
       }
-    });
-  }, [finalHtml]);
+      setTimeout(calculateAndSetHeight, 500);
+    };
+
+    iframeRef.current.onload = handler;
+
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [processedHtml, calculateAndSetHeight]);
 
   useEffect(() => {
-    if (contentRef.current) {
-      contentRef.current.style.backgroundColor =
+    if (iframeRef.current?.contentWindow?.document.body) {
+      const body = iframeRef.current.contentWindow.document.body;
+      body.style.backgroundColor =
         resolvedTheme === 'dark' ? 'rgb(10, 10, 10)' : 'rgb(245, 245, 245)';
       requestAnimationFrame(() => {
-        if (contentRef.current) {
-          fixNonReadableColors(contentRef.current);
-        }
+        fixNonReadableColors(body);
       });
     }
   }, [resolvedTheme]);
 
-  // Show loading fallback while processing HTML (similar to HydrateFallback pattern)
-  if (isProcessingHtml) {
-    return (
-      <div className="flex h-32 items-center justify-center">
-        <div className="text-muted-foreground text-sm">Processing email content...</div>
-      </div>
+  useEffect(() => {
+    const ctrl = new AbortController();
+    window.addEventListener(
+      'message',
+      (event) => {
+        if (event.data.type === 'csp-violation') {
+          setCspViolation(true);
+        }
+      },
+      { signal: ctrl.signal },
     );
-  }
+
+    return () => ctrl.abort();
+  }, []);
 
   return (
     <>
@@ -160,10 +157,13 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
           </button>
         </div>
       )}
-      <div
-        ref={contentRef}
-        className={cn('w-full flex-1 overflow-hidden px-4 transition-opacity duration-200')}
-        dangerouslySetInnerHTML={{ __html: finalHtml }}
+      <iframe
+        height={height}
+        ref={iframeRef}
+        className={cn(
+          '!min-h-0 w-full flex-1 overflow-hidden px-4 transition-opacity duration-200',
+        )}
+        title="Email Content"
         style={{
           width: '100%',
           overflow: 'hidden',

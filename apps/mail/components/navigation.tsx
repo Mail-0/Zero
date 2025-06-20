@@ -12,13 +12,13 @@ import { GitHub, Twitter, Discord, LinkedIn, Star } from './icons/icons';
 import { AnimatedNumber } from '@/components/ui/animated-number';
 import { signIn, useSession } from '@/lib/auth-client';
 import { Separator } from '@/components/ui/separator';
+import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
-import { Menu } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 const resources = [
   {
@@ -92,7 +92,7 @@ export function Navigation() {
     queryFn: async () => {
       const response = await fetch('https://api.github.com/repos/Mail-0/Zero', {
         headers: {
-          'Accept': 'application/vnd.github.v3+json',
+          Accept: 'application/vnd.github.v3+json',
         },
       });
       if (!response.ok) {
@@ -123,7 +123,9 @@ export function Navigation() {
             <NavigationMenu>
               <NavigationMenuList className="gap-1">
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className='bg-transparent text-white'>Company</NavigationMenuTrigger>
+                  <NavigationMenuTrigger className="bg-transparent text-white">
+                    Company
+                  </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-1 lg:w-[600px]">
                       {aboutLinks.map((link) => (
@@ -135,7 +137,9 @@ export function Navigation() {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className='bg-transparent text-white'>Resources</NavigationMenuTrigger>
+                  <NavigationMenuTrigger className="bg-transparent text-white">
+                    Resources
+                  </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
                       {resources.map((resource) => (
@@ -151,7 +155,7 @@ export function Navigation() {
                     </ul>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
-                <NavigationMenuItem className='bg-transparent text-white'>
+                <NavigationMenuItem className="bg-transparent text-white">
                   <a href="/pricing">
                     <Button variant="ghost" className="h-9 bg-transparent">
                       Pricing
@@ -167,20 +171,17 @@ export function Navigation() {
               target="_blank"
               rel="noopener noreferrer"
               className={cn(
-                "h-8 inline-flex items-center gap-2 rounded-lg  bg-black px-3 text-sm text-white hover:bg-black/90  transition-colors group"
+                'group inline-flex h-8 items-center gap-2 rounded-lg bg-black px-3 text-sm text-white transition-colors hover:bg-black/90',
               )}
             >
               <div className="flex items-center text-white">
-                <GitHub className="size-4 fill-white mr-1" />
+                <GitHub className="mr-1 size-4 fill-white" />
                 <span className="ml-1 lg:hidden">Star</span>
                 <span className="ml-1 hidden lg:inline">Stars on GitHub</span>
               </div>
               <div className="flex items-center gap-1 text-sm">
-                <Star className="size-4 fill-gray-400 transition-all duration-300 group-hover:fill-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.6)] relative top-[1px]" />
-                <AnimatedNumber
-                  value={stars}
-                  className="font-medium text-white"
-                />
+                <Star className="relative top-[1px] size-4 fill-gray-400 transition-all duration-300 group-hover:fill-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" />
+                <AnimatedNumber value={stars} className="font-medium text-white" />
               </div>
             </a>
             <Button
@@ -215,23 +216,35 @@ export function Navigation() {
               <Menu className="h-6 w-6" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-[300px] dark:bg-[#111111] sm:w-[400px]">
+          <SheetContent side="left" className="w-[300px] sm:w-[400px] dark:bg-[#111111]">
             <SheetHeader className="flex flex-row items-center justify-between">
               <SheetTitle>
-                <img src="white-icon.svg" alt="Zero Email" className='hidden object-contain dark:block' width={22} height={22} />
-                <img
-                  src="/black-icon.svg"
-                  alt="0.email Logo"
-                  className="object-contain dark:hidden"
-                  width={22} height={22}
-                />
+                <Link to="/" onClick={() => setOpen(false)}>
+                  <img
+                    src="white-icon.svg"
+                    alt="Zero Email"
+                    className="hidden object-contain dark:block"
+                    width={22}
+                    height={22}
+                  />
+                  <img
+                    src="/black-icon.svg"
+                    alt="0.email Logo"
+                    className="object-contain dark:hidden"
+                    width={22}
+                    height={22}
+                  />
+                </Link>
               </SheetTitle>
               <a href="/login">
                 <Button className="w-full">Sign in</Button>
               </a>
             </SheetHeader>
             <div className="mt-8 flex flex-col space-y-3">
-              <div className="space-y-3 flex flex-col">
+              <div className="flex flex-col space-y-3">
+                <Link to="/" className="mt-2" onClick={() => setOpen(false)}>
+                  Home
+                </Link>
                 <Link to="/pricing" className="mt-2">
                   Pricing
                 </Link>

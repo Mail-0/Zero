@@ -55,18 +55,18 @@ export default function LabelsPage() {
         ? updateLabel({ id: editingLabel.id!, name: data.name, color: data.color })
         : createLabel({ color: data.color, name: data.name }),
       {
-        loading: 'Saving label...',
-        success: 'Label saved successfully',
-        error: 'Failed to save label',
+        loading: t('common.labels.savingLabel'),
+        success: t('common.labels.saveLabelSuccess'),
+        error: t('common.labels.failedToSavingLabel'),
       },
     );
   };
 
   const handleDelete = async (id: string) => {
     toast.promise(deleteLabel({ id }), {
-      loading: 'Deleting label...',
-      success: 'Label deleted successfully',
-      error: 'Failed to delete label',
+      loading:  t('common.labels.deletingLabel'),
+      success: t('common.labels.deleteLabelSuccess'),
+      error: t('common.labels.failedToDeleteLabel'),
       finally: async () => {
         await refetch();
       },
@@ -86,9 +86,9 @@ export default function LabelsPage() {
         action={
           <LabelDialog
             trigger={
-              <Button onClick={() => setEditingLabel(null)}>
+              <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Create Label
+                {t('common.mail.createNewLabel')}
               </Button>
             }
             editingLabel={editingLabel}
@@ -114,7 +114,7 @@ export default function LabelsPage() {
                 <p className="text-muted-foreground py-4 text-center text-sm">{error.message}</p>
               ) : labels?.length === 0 ? (
                 <p className="text-muted-foreground py-4 text-center text-sm">
-                  No labels created yet. Click the button above to create one.
+                 {t('common.mail.noLabelsAvailable')}
                 </p>
               ) : (
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-6">
@@ -148,7 +148,7 @@ export default function LabelsPage() {
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent className="dark:bg-panelDark mb-1 bg-white">
-                              Edit Label
+                               {t('common.labels.editLabel')}
                             </TooltipContent>
                           </Tooltip>
                           <Tooltip>
@@ -163,7 +163,7 @@ export default function LabelsPage() {
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent className="dark:bg-panelDark mb-1 bg-white">
-                              Delete Label
+                              {t('common.labels.deleteLabel')}
                             </TooltipContent>
                           </Tooltip>
                         </div>

@@ -1,3 +1,4 @@
+import { useCommandPalette } from '@/components/context/command-palette-context';
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { useOptimisticActions } from './use-optimistic-actions';
 import { useMail } from '@/components/mail/use-mail';
@@ -22,6 +23,7 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
   itemsRef.current = items;
   const onNavigateRef = useRef(onNavigate);
   onNavigateRef.current = onNavigate;
+  const { open: isCommandPaletteOpen } = useCommandPalette();
 
   const hoveredMailRef = useRef<string | null>(null);
   const keyboardActiveRef = useRef(false);
@@ -193,12 +195,12 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
     keyboardActiveRef.current = false;
   }, [setFocusedIndex, onNavigateRef]);
 
-  useHotkeys('ArrowUp', handleArrowUp, { preventDefault: true });
-  useHotkeys('ArrowDown', handleArrowDown, { preventDefault: true });
-  useHotkeys('j', handleArrowDown);
-  useHotkeys('k', handleArrowUp);
-  useHotkeys('Enter', handleEnter, { preventDefault: true });
-  useHotkeys('Escape', handleEscape, { preventDefault: true });
+  useHotkeys('ArrowUp', handleArrowUp, { preventDefault: true, enabled: !isCommandPaletteOpen });
+  useHotkeys('ArrowDown', handleArrowDown, { preventDefault: true, enabled: !isCommandPaletteOpen });
+  useHotkeys('j', handleArrowDown,{enabled: !isCommandPaletteOpen });
+  useHotkeys('k', handleArrowUp, { enabled: !isCommandPaletteOpen });
+  useHotkeys('Enter', handleEnter, { preventDefault: true,enabled: !isCommandPaletteOpen });
+  useHotkeys('Escape', handleEscape, { preventDefault: true,enabled: !isCommandPaletteOpen });
 
   const handleMouseEnter = useCallback(
     (threadId: string) => {
@@ -239,6 +241,7 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
     const MOVE_DELAY = 100;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (isCommandPaletteOpen) return;
       if (!event.repeat) return;
       if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
 
@@ -266,7 +269,13 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [fastScroll]);
+  }, [fastScroll, isCommandPaletteOpen]);
+
+  useEffect(() => {
+    if (isCommandPaletteOpen) {
+      keyboardActiveRef.current = false;
+    }
+  }, [isCommandPaletteOpen]);
 
   return {
     focusedIndex,

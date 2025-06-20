@@ -328,12 +328,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "색상",
+      "labelName": "라벨 이름",
+      "createLabel": "라벨 생성",
       "deleteLabel": "라벨 삭제",
       "deleteLabelConfirm": "이 라벨을 삭제하시겠습니까?",
       "deleteLabelConfirmDescription": "이 작업은 되돌릴 수 없습니다.",
       "deleteLabelConfirmCancel": "취소",
       "deleteLabelConfirmDelete": "삭제",
-      "deleteLabelSuccess": "라벨이 성공적으로 삭제되었습니다"
+      "deleteLabelSuccess": "라벨이 성공적으로 삭제되었습니다",
+      "failedToDeleteLabel": "라벨 삭제 실패",
+      "deletingLabel": "라벨 삭제 중...",
+      "editLabel": "라벨 편집",
+      "savingLabel": "라벨 저장 중...",
+      "failedToSavingLabel": "라벨 저장 실패",
+      "saveLabelSuccess": "라벨이 성공적으로 저장됨"
     }
   },
   "navigation": {
@@ -356,6 +365,7 @@
       "signatures": "서명",
       "shortcuts": "단축키",
       "labels": "라벨",
+      "categories": "카테고리",
       "dangerZone": "위험 구역",
       "deleteAccount": "계정 삭제",
       "privacy": "개인정보 보호"

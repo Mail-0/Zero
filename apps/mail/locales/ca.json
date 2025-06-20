@@ -328,12 +328,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "Color",
+      "labelName": "Nom de l'etiqueta",
+      "createLabel": "Crear etiqueta",
       "deleteLabel": "Eliminar etiqueta",
       "deleteLabelConfirm": "Estàs segur que vols eliminar aquesta etiqueta?",
       "deleteLabelConfirmDescription": "Aquesta acció no es pot desfer.",
       "deleteLabelConfirmCancel": "Cancel·lar",
       "deleteLabelConfirmDelete": "Eliminar",
-      "deleteLabelSuccess": "Etiqueta eliminada correctament"
+      "deleteLabelSuccess": "Etiqueta eliminada correctament",
+      "failedToDeleteLabel": "No s'ha pogut eliminar l'etiqueta",
+      "deletingLabel": "Eliminant etiqueta...",
+      "editLabel": "Editar etiqueta",
+      "savingLabel": "Desant etiqueta...",
+      "failedToSavingLabel": "No s'ha pogut desar l'etiqueta",
+      "saveLabelSuccess": "Etiqueta desada correctament"
     }
   },
   "navigation": {
@@ -356,6 +365,7 @@
       "signatures": "Signatures",
       "shortcuts": "Dreceres",
       "labels": "Etiquetes",
+      "categories": "Categories",
       "dangerZone": "Zona perillosa",
       "deleteAccount": "Elimina el compte",
       "privacy": "Privacitat"

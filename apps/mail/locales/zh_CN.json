@@ -328,12 +328,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "颜色",
+      "labelName": "标签名称",
+      "createLabel": "创建标签",
       "deleteLabel": "删除标签",
       "deleteLabelConfirm": "确定要删除此标签吗？",
       "deleteLabelConfirmDescription": "此操作无法撤销。",
       "deleteLabelConfirmCancel": "取消",
       "deleteLabelConfirmDelete": "删除",
-      "deleteLabelSuccess": "标签已成功删除"
+      "deleteLabelSuccess": "标签已成功删除",
+      "failedToDeleteLabel": "删除标签失败",
+      "deletingLabel": "正在删除标签...",
+      "editLabel": "编辑标签",
+      "savingLabel": "正在保存标签...",
+      "failedToSavingLabel": "保存标签失败",
+      "saveLabelSuccess": "标签保存成功"
     }
   },
   "navigation": {
@@ -356,6 +365,7 @@
       "signatures": "签名",
       "shortcuts": "快捷键",
       "labels": "标签",
+      "categories": "类别",
       "dangerZone": "危险区域",
       "deleteAccount": "删除账户",
       "privacy": "隐私"
