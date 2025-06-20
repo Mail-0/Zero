@@ -122,6 +122,13 @@ For services requiring external setup, follow these guides.
   1. Go to [Autumn's onboarding page](https://app.useautumn.com/sandbox/onboarding) to get a key for local use.
   2. Add the key to the `AUTUMN_SECRET_KEY` variable in your `.env` file.
 
+- **Twilio (for SMS/phone services):**
+  1. Go to [Twilio Console](https://console.twilio.com/) and create an account or log in.
+  2. From your Dashboard, copy your **Account SID** and add it to the `TWILIO_ACCOUNT_SID` variable.
+  3. Copy your **Auth Token** (click "Show" to reveal it) and add it to the `TWILIO_AUTH_TOKEN` variable.
+  4. Go to `Phone Numbers` > `Manage` > `Active numbers` to get a phone number, or purchase one from `Buy a number`.
+  5. Copy your Twilio phone number and add it to the `TWILIO_PHONE_NUMBER` variable in your `.env` file.
+
 **D. Sync Environment**
 After saving your `.env` file, run the sync command.
 ```bash
