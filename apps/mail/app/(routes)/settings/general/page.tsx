@@ -115,7 +115,6 @@ TimezoneSelect.displayName = 'TimezoneSelect';
 
 export default function GeneralPage() {
   const [isSaving, setIsSaving] = useState(false);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | undefined>();
   const locale = useLocale();
   const t = useTranslations();
   const { data } = useSettings();
