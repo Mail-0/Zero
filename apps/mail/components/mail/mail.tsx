@@ -822,9 +822,10 @@ function BulkSelectActions() {
 
 export const Categories = () => {
   const t = useTranslations();
+  const defaultCategoryIdInner = useDefaultCategoryId()
   const categorySettings = useCategorySettings();
   const [activeCategory] = useQueryState('category',{
-    defaultValue:"All Mail"
+     defaultValue: defaultCategoryIdInner,
   });
 
   const categories = categorySettings.map((cat) => {
