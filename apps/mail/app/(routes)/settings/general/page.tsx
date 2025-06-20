@@ -34,7 +34,6 @@ import { useRevalidator } from 'react-router';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import * as z from 'zod';
-import { promptTemplates, type PromptTemplate } from '@/config/promptTemplates';
 
 const TimezoneSelect = memo(
   ({
@@ -263,37 +262,6 @@ export default function GeneralPage() {
               )}
             />
 
-            <div className="space-y-4 pt-4">
-              <FormItem>
-                <FormLabel>{t('pages.settings.general.promptTemplate')}</FormLabel>
-                <Select
-                  value={selectedTemplateId}
-                  onValueChange={(value: string) => {
-                    setSelectedTemplateId(value);
-                    const tmpl = promptTemplates.find((p: PromptTemplate) => p.id === value);
-                    if (tmpl) {
-                      form.setValue('customPrompt', tmpl.content, { shouldDirty: true });
-                    }
-                  }}
-                >
-                  <FormControl>
-                    <SelectTrigger className="w-72">
-                      <SelectValue placeholder={t('pages.settings.general.chooseTemplate')} />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {promptTemplates.map((template: PromptTemplate) => (
-                      <SelectItem key={template.id} value={template.id}>
-                        {template.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  {t('pages.settings.general.promptTemplateDescription')}
-                </FormDescription>
-              </FormItem>
-            </div>
           </form>
         </Form>
       </SettingsCard>
