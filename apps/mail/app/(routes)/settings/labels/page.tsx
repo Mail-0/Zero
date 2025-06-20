@@ -86,7 +86,7 @@ export default function LabelsPage() {
         action={
           <LabelDialog
             trigger={
-              <Button onClick={() => setEditingLabel(null)}>
+              <Button>
                 <Plus className="mr-2 h-4 w-4" />
                 {t('common.mail.createNewLabel')}
               </Button>

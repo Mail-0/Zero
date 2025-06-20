@@ -49,7 +49,10 @@ export function LabelDialog({
   const form = useForm<LabelType>({
     defaultValues: {
       name: '',
-      color: { backgroundColor: '#E2E2E2', textColor: '#000000' },
+      color: {
+        backgroundColor: '',
+        textColor: '',
+      },
     },
   });
 
@@ -127,9 +130,9 @@ export function LabelDialog({
                         key={index}
                         type="button"
                         className={`h-10 w-10 rounded-[4px] border-[0.5px] border-white/10 transition-all ${
-                          formColor?.backgroundColor === color.backgroundColor &&
-                          formColor?.textColor === color.textColor
-                            ? 'scale-110 ring-2 ring-blue-500'
+                          formColor?.backgroundColor.toString() === color.backgroundColor &&
+                          formColor.textColor.toString() === color.textColor
+                            ? 'scale-110 ring-2 ring-blue-500 ring-offset-1'
                             : 'hover:scale-105'
                         }`}
                         style={{ backgroundColor: color.backgroundColor }}
