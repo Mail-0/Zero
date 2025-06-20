@@ -72,7 +72,7 @@ export default function MailPage() {
   if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
-        <Loader2 className="text-primary h-8 w-8 animate-spin" />
+        <Loader2 className="text-primary h-8 w-8 animate-spin" style={{ animation: 'spin 0.5s linear infinite' }} />
       </div>
     );
   }

@@ -16,7 +16,7 @@ const Toaster = () => {
         error: <ExclamationCircle2 className="h-4.5 w-4.5 fill-[#FF0000]" />,
         warning: <ExclamationTriangle className="h-4.5 w-4.5 fill-[#FFC107]" />,
         info: <InfoCircle className="h-4.5 w-4.5 fill-[#5767fb]" />,
-        loading: <Loader2 className="stroke-muted-foreground h-[17px] w-[17px] animate-spin" />,
+        loading: <Loader2 className="stroke-muted-foreground h-[17px] w-[17px] animate-spin" style={{ animation: 'spin 0.5s linear infinite' }} />,
       }}
       toastOptions={{
         classNames: {

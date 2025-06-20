@@ -560,57 +560,57 @@ const downloadAttachment = (attachment: { body: string; mimeType: string; filena
 
 const handleDownloadAllAttachments =
   (subject: string, attachments: { body: string; mimeType: string; filename: string }[]) =>
-  async () => {
-    if (!attachments.length) return;
+    async () => {
+      if (!attachments.length) return;
 
-    const JSZip = (await import('jszip')).default;
-    const zip = new JSZip();
+      const JSZip = (await import('jszip')).default;
+      const zip = new JSZip();
 
-    console.log('attachments', attachments);
-    attachments.forEach((attachment) => {
-      try {
-        const byteCharacters = atob(attachment.body);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
+      console.log('attachments', attachments);
+      attachments.forEach((attachment) => {
+        try {
+          const byteCharacters = atob(attachment.body);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+
+          zip.file(attachment.filename, byteArray, {
+            binary: true,
+            date: new Date(),
+            unixPermissions: 0o644,
+          });
+        } catch (error) {
+          console.error(`Error adding ${attachment.filename} to zip:`, error);
         }
-        const byteArray = new Uint8Array(byteNumbers);
-
-        zip.file(attachment.filename, byteArray, {
-          binary: true,
-          date: new Date(),
-          unixPermissions: 0o644,
-        });
-      } catch (error) {
-        console.error(`Error adding ${attachment.filename} to zip:`, error);
-      }
-    });
-
-    // Generate and download the zip file
-    zip
-      .generateAsync({
-        type: 'blob',
-        compression: 'DEFLATE',
-        compressionOptions: {
-          level: 9,
-        },
-      })
-      .then((content) => {
-        const url = window.URL.createObjectURL(content);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `attachments-${subject || 'email'}.zip`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-      })
-      .catch((error) => {
-        console.error('Error generating zip file:', error);
       });
 
-    console.log('downloaded', subject, attachments);
-  };
+      // Generate and download the zip file
+      zip
+        .generateAsync({
+          type: 'blob',
+          compression: 'DEFLATE',
+          compressionOptions: {
+            level: 9,
+          },
+        })
+        .then((content) => {
+          const url = window.URL.createObjectURL(content);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `attachments-${subject || 'email'}.zip`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+        })
+        .catch((error) => {
+          console.error('Error generating zip file:', error);
+        });
+
+      console.log('downloaded', subject, attachments);
+    };
 
 const openAttachment = (attachment: { body: string; mimeType: string; filename: string }) => {
   try {
@@ -706,13 +706,13 @@ const MoreAboutPerson = ({
         </DialogHeader>
         <div className="mt-4 flex justify-center">
           {isPending ? (
-            <Loader2 className="animate-spin" />
+            <Loader2 className="animate-spin" style={{ animation: 'spin 0.5s linear infinite' }} />
           ) : data ? (
             <StreamingText text={replaceSourcesInText(data.text)} />
           ) : error ? (
             <p>Error: {error.message}</p>
           ) : (
-            <Loader2 className="animate-spin" />
+            <Loader2 className="animate-spin" style={{ animation: 'spin 0.5s linear infinite' }} />
           )}
         </div>
       </DialogContent>
@@ -779,13 +779,13 @@ const MoreAboutQuery = ({
         </DialogHeader>
         <div className="mt-4 flex justify-center">
           {isPending ? (
-            <Loader2 className="animate-spin" />
+            <Loader2 className="animate-spin" style={{ animation: 'spin 0.5s linear infinite' }} />
           ) : data ? (
             <StreamingText text={replaceSourcesInText(data.text)} />
           ) : error ? (
             <p>Error: {error.message}</p>
           ) : (
-            <Loader2 className="animate-spin" />
+            <Loader2 className="animate-spin" style={{ animation: 'spin 0.5s linear infinite' }} />
           )}
         </div>
       </DialogContent>
@@ -1130,17 +1130,16 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             <div class="email-header">
               <h1 class="email-title">${emailData.subject || 'No Subject'}</h1>
               
-              ${
-                emailData?.tags && emailData.tags.length > 0
-                  ? `
+              ${emailData?.tags && emailData.tags.length > 0
+          ? `
                 <div class="labels-section">
                   ${emailData.tags
-                    .map((tag) => `<span class="label-badge">${tag.name}</span>`)
-                    .join('')}
+            .map((tag) => `<span class="label-badge">${tag.name}</span>`)
+            .join('')}
                 </div>
               `
-                  : ''
-              }
+          : ''
+        }
               
               <div class="email-meta">
                 <div class="meta-row">
@@ -1151,59 +1150,56 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                   </span>
                 </div>
                 
-                ${
-                  emailData.to && emailData.to.length > 0
-                    ? `
+                ${emailData.to && emailData.to.length > 0
+          ? `
                   <div class="meta-row">
                     <span class="meta-label">To:</span>
                     <span class="meta-value">
                       ${emailData.to
-                        .map(
-                          (recipient) =>
-                            `${cleanNameDisplay(recipient.name)} &lt;${recipient.email}&gt;`,
-                        )
-                        .join(', ')}
+            .map(
+              (recipient) =>
+                `${cleanNameDisplay(recipient.name)} &lt;${recipient.email}&gt;`,
+            )
+            .join(', ')}
                     </span>
                   </div>
                 `
-                    : ''
-                }
+          : ''
+        }
                 
-                ${
-                  emailData.cc && emailData.cc.length > 0
-                    ? `
+                ${emailData.cc && emailData.cc.length > 0
+          ? `
                   <div class="meta-row">
                     <span class="meta-label">CC:</span>
                     <span class="meta-value">
                       ${emailData.cc
-                        .map(
-                          (recipient) =>
-                            `${cleanNameDisplay(recipient.name)} &lt;${recipient.email}&gt;`,
-                        )
-                        .join(', ')}
+            .map(
+              (recipient) =>
+                `${cleanNameDisplay(recipient.name)} &lt;${recipient.email}&gt;`,
+            )
+            .join(', ')}
                     </span>
                   </div>
                 `
-                    : ''
-                }
+          : ''
+        }
                 
-                ${
-                  emailData.bcc && emailData.bcc.length > 0
-                    ? `
+                ${emailData.bcc && emailData.bcc.length > 0
+          ? `
                   <div class="meta-row">
                     <span class="meta-label">BCC:</span>
                     <span class="meta-value">
                       ${emailData.bcc
-                        .map(
-                          (recipient) =>
-                            `${cleanNameDisplay(recipient.name)} &lt;${recipient.email}&gt;`,
-                        )
-                        .join(', ')}
+            .map(
+              (recipient) =>
+                `${cleanNameDisplay(recipient.name)} &lt;${recipient.email}&gt;`,
+            )
+            .join(', ')}
                     </span>
                   </div>
                 `
-                    : ''
-                }
+          : ''
+        }
                 
                 <div class="meta-row">
                   <span class="meta-label">Date:</span>
@@ -1222,25 +1218,24 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             </div>
             
             <!-- Attachments -->
-            ${
-              emailData.attachments && emailData.attachments.length > 0
-                ? `
+            ${emailData.attachments && emailData.attachments.length > 0
+          ? `
               <div class="attachments-section">
                 <h2 class="attachments-title">Attachments (${emailData.attachments.length})</h2>
                 ${emailData.attachments
-                  .map(
-                    (attachment, index) => `
+            .map(
+              (attachment, index) => `
                   <div class="attachment-item">
                     <span class="attachment-name">${attachment.filename}</span>
                     ${formatFileSize(attachment.size) ? ` - <span class="attachment-size">${formatFileSize(attachment.size)}</span>` : ''}
                   </div>
                 `,
-                  )
-                  .join('')}
+            )
+            .join('')}
               </div>
             `
-                : ''
-            }
+          : ''
+        }
           </div>
         </body>
       </html>
@@ -1551,7 +1546,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                   </span>
                                   <span className="text-muted-foreground ml-3 text-nowrap">
                                     {emailData?.receivedOn &&
-                                    !isNaN(new Date(emailData.receivedOn).getTime())
+                                      !isNaN(new Date(emailData.receivedOn).getTime())
                                       ? format(new Date(emailData.receivedOn), 'PPpp')
                                       : ''}
                                   </span>
