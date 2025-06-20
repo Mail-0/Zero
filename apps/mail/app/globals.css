@@ -342,6 +342,10 @@
   animation: blink 0.8s ease-in-out infinite;
 }
 
+.animate-spin-fast {
+  animation: spin 0.5s linear infinite;
+}
+
 .tiptap p {
   margin-bottom: 0.3rem;
 }

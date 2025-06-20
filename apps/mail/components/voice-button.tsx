@@ -48,7 +48,7 @@ export function VoiceButton() {
         <div className="dark:bg[#141414] flex h-7 items-center justify-center rounded-sm bg-[#262626] px-2">
           {isInitializing && (
             <div className="flex items-center justify-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" style={{ animation: 'spin 0.5s linear infinite' }} />
+              <Loader2 className="h-4 w-4 animate-spin-fast" />
             </div>
           )}
           {!isInitializing &&

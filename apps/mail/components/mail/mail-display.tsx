@@ -706,13 +706,13 @@ const MoreAboutPerson = ({
         </DialogHeader>
         <div className="mt-4 flex justify-center">
           {isPending ? (
-            <Loader2 className="animate-spin" style={{ animation: 'spin 0.5s linear infinite' }} />
+            <Loader2 className="animate-spin-fast" />
           ) : data ? (
             <StreamingText text={replaceSourcesInText(data.text)} />
           ) : error ? (
             <p>Error: {error.message}</p>
           ) : (
-            <Loader2 className="animate-spin" style={{ animation: 'spin 0.5s linear infinite' }} />
+            <Loader2 className="animate-spin-fast" />
           )}
         </div>
       </DialogContent>
@@ -779,13 +779,13 @@ const MoreAboutQuery = ({
         </DialogHeader>
         <div className="mt-4 flex justify-center">
           {isPending ? (
-            <Loader2 className="animate-spin" style={{ animation: 'spin 0.5s linear infinite' }} />
+            <Loader2 className="animate-spin-fast" />
           ) : data ? (
             <StreamingText text={replaceSourcesInText(data.text)} />
           ) : error ? (
             <p>Error: {error.message}</p>
           ) : (
-            <Loader2 className="animate-spin" style={{ animation: 'spin 0.5s linear infinite' }} />
+            <Loader2 className="animate-spin-fast" />
           )}
         </div>
       </DialogContent>
