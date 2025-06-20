@@ -39,6 +39,7 @@ export const mailCategorySchema = z.object({
   name: z.string(),
   searchValue: z.string(),
   order: z.number().int(),
+  icon: z.string().optional(),
   isDefault: z.boolean().optional().default(false),
 });
 
@@ -50,6 +51,7 @@ export const defaultMailCategories: MailCategory[] = [
     name: 'Important',
     searchValue: 'is:important NOT is:sent NOT is:draft',
     order: 0,
+    icon: 'Lightning',
     isDefault: false,
   },
   {
@@ -57,6 +59,7 @@ export const defaultMailCategories: MailCategory[] = [
     name: 'All Mail',
     searchValue: 'NOT is:draft (is:inbox OR (is:sent AND to:me))',
     order: 1,
+    icon: 'Mail',
     isDefault: true,
   },
   {
@@ -64,6 +67,7 @@ export const defaultMailCategories: MailCategory[] = [
     name: 'Personal',
     searchValue: 'is:personal NOT is:sent NOT is:draft',
     order: 2,
+    icon: 'User',
     isDefault: false,
   },
   {
@@ -71,6 +75,7 @@ export const defaultMailCategories: MailCategory[] = [
     name: 'Promotions',
     searchValue: 'is:promotions NOT is:sent NOT is:draft',
     order: 3,
+    icon: 'Tag',
     isDefault: false,
   },
   {
@@ -78,6 +83,7 @@ export const defaultMailCategories: MailCategory[] = [
     name: 'Updates',
     searchValue: 'is:updates NOT is:sent NOT is:draft',
     order: 4,
+    icon: 'Bell',
     isDefault: false,
   },
   {
@@ -85,6 +91,7 @@ export const defaultMailCategories: MailCategory[] = [
     name: 'Unread',
     searchValue: 'is:unread NOT is:sent NOT is:draft',
     order: 5,
+    icon: 'ScanEye',
     isDefault: false,
   },
 ];

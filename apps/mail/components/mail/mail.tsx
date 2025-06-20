@@ -64,6 +64,7 @@ import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
 import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
+import * as CustomIcons from '@/components/icons/icons';
 
 interface ITag {
   id: string;
@@ -836,6 +837,20 @@ export const Categories = () => {
 
     // Helper to decide fill colour depending on selection
     const isSelected = activeCategory === cat.id;
+    if (cat.icon && cat.icon in CustomIcons) {
+      const DynamicIcon = CustomIcons[cat.icon as keyof typeof CustomIcons];
+      return {
+        ...base,
+        icon: (
+          <DynamicIcon
+            className={cn(
+              'fill-muted-foreground dark:fill-white h-4 w-4',
+              isSelected && 'fill-white',
+            )}
+          />
+        ),
+      };
+    }
 
     switch (cat.id) {
       case 'Important':
