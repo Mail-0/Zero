@@ -1,13 +1,13 @@
 <p align="center">
   <picture>
     <source srcset="apps/mail/public/white-icon.svg" media="(prefers-color-scheme: dark)">
-    <img src="apps/mail/public/black-icon.svg" alt="Zero Logo" width="64" style="background-color: #000; padding: 10px;"/>
+    <img src="apps/mail/public/black-icon.svg" alt="Zero Logo" width="64" style="background-color: #000; padding: 10px; border-radius: 10px;"/>
   </picture>
 </p>
 
 # Zero
 
-An Open-Source Gmail Alternative for the Future of Email
+An Open-Source Gmail Alternative for the Future of Email.
 
 ## What is Zero?
 
@@ -34,213 +34,131 @@ Zero is built with modern and reliable technologies:
 - **Backend**: Node.js, Drizzle ORM
 - **Database**: PostgreSQL
 - **Authentication**: Better Auth, Google OAuth
-<!-- - **Testing**: Jest, React Testing Library -->
 
 ## Getting Started
 
+Welcome, contributor! Follow this guide to set up the project locally.
+
 ### Prerequisites
 
-**Required Versions:**
+Before you begin, ensure you have the following tools installed:
+* [Node.js](https://nodejs.org/en/) (v18 or later recommended)
+* [pnpm](https://pnpm.io/installation)
+* [Docker](https://www.docker.com/products/docker-desktop/) & Docker Compose
 
-- [Node.js](https://nodejs.org/en/download) (v18 or higher)
-- [pnpm](https://pnpm.io) (v10 or higher)
-- [Docker](https://docs.docker.com/engine/install/) (v20 or higher)
+If you're using macOS or Linux, you can set it up directly. For Windows users, it's recommended to use WSL (Windows Subsystem for Linux) for a smoother setup experience.
 
-Before running the application, you'll need to set up services and configure environment variables. For more details on environment variables, see the [Environment Variables](#environment-variables) section.
+### 1. Fork & Clone
+First, create your own copy (a "fork") of the repository and clone it.
 
-### Setup Options
+```bash
+# Replace [YOUR_USERNAME] with your GitHub username.
+git clone https://github.com/[YOUR_USERNAME]/Zero.git
+cd Zero
+```
 
-You can set up Zero in two ways:
+### 2. Install Dependencies
+Install all project dependencies using `pnpm`.
 
-<details open>
-<summary><b>Standard Setup (Recommended)</b></summary>
+```bash
+pnpm install
+```
 
-#### Quick Start Guide
+### 3. Start Database
+With Docker running, start the local PostgreSQL instance.
 
-1. **Clone and Install**
+```bash
+pnpm docker:db:up
+```
+This creates a database with: Name: `zerodotemail`, User: `postgres`, Pass: `postgres`, Port: `5432`.
 
-   ```bash
-   # Clone the repository
-   git clone https://github.com/Mail-0/Zero.git
-   cd Zero
+### 4. Configure Environment
 
-   # Install dependencies
-   pnpm install
+**A. Generate `.env` file**
+```bash
+pnpm nizzy env
+```
+This copies `.env.example` to a new `.env` file in the project root.
 
-   # Start database locally
-   pnpm docker:db:up
-   ```
+**B. Fill Environment Variables**
+Open the newly created `.env` file. Below is a complete list of variables that are mandatory to run the project locally.
 
-2. **Set Up Environment**
+| Variable Name | Value |
+| :--- | :--- |
+| `GOOGLE_CLIENT_ID` | `"your_google_client_id"` | 
+| `GOOGLE_CLIENT_SECRET`| `"your_google_client_secret"` |
+| `VITE_PUBLIC_APP_URL` | `"http://localhost:3000"` |
+| `VITE_PUBLIC_BACKEND_URL`| `"http://localhost:8787"` |
+| `DATABASE_URL` | `"postgresql://postgres:postgres@localhost:5432/zerodotemail"` |
+| `BETTER_AUTH_SECRET` | `"generated_secret_key"` |
+| `BETTER_AUTH_URL` | `"http://localhost:3000"` |
+| `COOKIE_DOMAIN` | `"localhost"` | 
+| `REDIS_URL` | `"http://localhost:8079"` |
+| `REDIS_TOKEN` | `"upstash-local-token"` |
+| `RESEND_API_KEY` | `"your_resend_api_key"` | 
+| `NODE_ENV` | `"development"` | 
+| `AUTUMN_SECRET_KEY` | `"your_autumn_secret_key"` |
+| `TWILIO_ACCOUNT_SID` | `"your_twilio_sid"` |
+| `TWILIO_AUTH_TOKEN` | `"your_twilio_auth_token"` |
+| `TWILIO_PHONE_NUMBER`| `"your_twilio_phone_number"`|
 
-   - Run `pnpm nizzy env` to setup your environment variables
-   - Run `pnpm nizzy sync` to sync your environment variables and types
-   - Start the database with the provided docker compose setup: `pnpm docker:db:up`
-   - Initialize the database: `pnpm db:push`
+**C. Detailed Setup for Key Services**
+For services requiring external setup, follow these guides.
 
-3. **Start the App**
+- **Better Auth:**
+  Generate a secret with `openssl rand -hex 32` and add it to your `.env` file for the `BETTER_AUTH_SECRET` variable.
 
-   ```bash
-   pnpm dev
-   ```
+- **Google OAuth (for Gmail integration):**
+  1. Go to the [Google Cloud Console](https://console.cloud.google.com) and create a project.
+  2. Enable the **People API** and **Gmail API**.
+  3. Go to `APIs & Services` > `OAuth consent screen`, configure it, and add your email as a test user.
+  4. Go to `Credentials`, create `OAuth 2.0 Client IDs` for a `Web application`.
+  5. Add the authorized redirect URI: `http://localhost:8787/api/auth/callback/google`
+     > [!WARNING]
+     > This URI must match **exactly**.
+  6. Copy your Client ID and Secret into the `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` variables in the `.env` file.
 
-4. **Open in Browser**
+- **Autumn (for encryption):**
+  1. Go to [Autumn's onboarding page](https://app.useautumn.com/sandbox/onboarding) to get a key for local use.
+  2. Add the key to the `AUTUMN_SECRET_KEY` variable in your `.env` file.
 
-   Visit [http://localhost:3000](http://localhost:3000)
-   </details>
+**D. Sync Environment**
+After saving your `.env` file, run the sync command.
+```bash
+pnpm nizzy sync
+```
 
-<details open>
-<summary><b>Devcontainer Setup</b></summary>
+### 5. Initialize Database
+Push the database schema to your local PostgreSQL instance.
+```bash
+pnpm db:push
+```
 
-#### Quick Start guide
+### 6. Start the App
+You're all set! Run the development server.
+```bash
+pnpm dev
+```
+The app will be available at **[http://localhost:3000](http://localhost:3000)**. The database studio will also be running.
 
-1. **Clone and Install**
+## Database Commands
 
-   ```bash
-   # Clone the repository
-   git clone https://github.com/Mail-0/Zero.git
-   cd Zero
-   ```
-
-   Then open the code in devcontainer and install the dependencies:
-
-   ```
-   pnpm install
-
-   # Start the database locally
-   pnpm docker:db:up
-   ```
-
-2. **Set Up Environment**
-
-   - Run `pnpm nizzy env` to setup your environment variables
-   - Run `pnpm nizzy sync` to sync your environment variables and types
-   - Start the database with the provided docker compose setup: `pnpm docker:db:up`
-   - Initialize the database: `pnpm db:push`
-
-3. **Start The App**
-   ```bash
-   pnpm dev
-   ```
-   Visit [http://localhost:3000](http://localhost:3000)
-     </details>
-
-### Environment Setup
-
-1. **Better Auth Setup**
-
-   - Open the `.env` file and change the BETTER_AUTH_SECRET to a random string. (Use `openssl rand -hex 32` to generate a 32 character string)
-
-     ```env
-     BETTER_AUTH_SECRET=your_secret_key
-     ```
-
-2. **Google OAuth Setup** (Required for Gmail integration)
-
-   - Go to [Google Cloud Console](https://console.cloud.google.com)
-   - Create a new project
-   - Add the following APIs in your Google Cloud Project: [People API](https://console.cloud.google.com/apis/library/people.googleapis.com), [Gmail API](https://console.cloud.google.com/apis/library/gmail.googleapis.com)
-     - Use the links above and click 'Enable' or
-     - Go to 'APIs and Services' > 'Enable APIs and Services' > Search for 'Google People API' and click 'Enable'
-     - Go to 'APIs and Services' > 'Enable APIs and Services' > Search for 'Gmail API' and click 'Enable'
-   - Enable the Google OAuth2 API
-   - Create OAuth 2.0 credentials (Web application type)
-   - Add authorized redirect URIs:
-     - Development:
-       - `http://localhost:8787/api/auth/callback/google`
-     - Production:
-       - `https://your-production-url/api/auth/callback/google`
-   - Add to `.env`:
-
-     ```env
-     GOOGLE_CLIENT_ID=your_client_id
-     GOOGLE_CLIENT_SECRET=your_client_secret
-     ```
-
-   - Add yourself as a test user:
-
-     - Go to [`Audience`](https://console.cloud.google.com/auth/audience)
-     - Under 'Test users' click 'Add Users'
-     - Add your email and click 'Save'
-
-> [!WARNING]
-> The authorized redirect URIs in Google Cloud Console must match **exactly** what you configure in the `.env`, including the protocol (http/https), domain, and path - these are provided above.
-
-3. **Autumn Setup** (Required for some encryption)
-
-   -Go to [Autumn](https://useautumn.com/)
-   -For Local Use, click [onboarding](https://app.useautumn.com/sandbox/onboarding) button and generate an Autumn Secret Key
-   -For production, select the production mode from upper left corner and generate an fill the other fields. After that, generate an Autumn Secret Key
-
-   - Add to `.env`:
-
-   ```env
-   AUTUMN_SECRET_KEY=your_autumn_secret
-   ```
-
-### Environment Variables
-
-Run `pnpm nizzy env` to setup your environment variables. It will copy the `.env.example` file to `.env` and fill in the variables for you.
-For local development a connection string example is provided in the `.env.example` file located in the same folder as the database.
-
-### Database Setup
-
-Zero uses PostgreSQL for storing data. Here's how to set it up:
-
-1. **Start the Database**
-
-   Run this command to start a local PostgreSQL instance:
-
-   ```bash
-   pnpm docker:db:up
-   ```
-
-   This creates a database with:
-
-   - Name: `zerodotemail`
-   - Username: `postgres`
-   - Password: `postgres`
-   - Port: `5432`
-
-2. **Set Up Database Connection**
-
-   Make sure your database connection string is in `.env` file. And you have ran `pnpm nizzy sync` to sync the latest env.
-
-   For local development use:
-
-   ```
-   DATABASE_URL="postgresql://postgres:postgres@localhost:5432/zerodotemail"
-   ```
-
-3. **Database Commands**
-
-   - **Set up database tables**:
-
-     ```bash
-     pnpm db:push
-     ```
-
-   - **Create migration files** (after schema changes):
-
-     ```bash
-     pnpm db:generate
-     ```
-
-   - **Apply migrations**:
-
-     ```bash
-     pnpm db:migrate
-     ```
-
-   - **View database content**:
-     ```bash
-     pnpm db:studio
-     ```
-     > If you run `pnpm dev` in your terminal, the studio command should be automatically running with the app.
+- **Create migration files** (after schema changes):
+  ```bash
+  pnpm db:generate
+  ```
+- **Apply migrations**:
+  ```bash
+  pnpm db:migrate
+  ```
+- **View database content**:
+  ```bash
+  pnpm db:studio
+  ```
 
 ## Contribute
 
-Please refer to the [contributing guide](.github/CONTRIBUTING.md).
+Please refer to the [contributing guide](.github/CONTRIBUTING.md) and the [translation guide](.github/TRANSLATION.md).
 
 If you'd like to help with translating Zero to other languages, check out our [translation guide](.github/TRANSLATION.md).
 
@@ -250,7 +168,7 @@ If you'd like to help with translating Zero to other languages, check out our [t
 
 ## This project wouldn't be possible without these awesome companies
 
-<div style="display: flex; justify-content: center;">
+<div style="display: flex; justify-content: center; gap: 16px; align-items: center;">
   <a href="https://vercel.com" style="text-decoration: none;">
     <img src="public/vercel.png" alt="Vercel" width="96"/>
   </a>
@@ -265,6 +183,6 @@ If you'd like to help with translating Zero to other languages, check out our [t
   </a>
 </div>
 
-## 🤍 The team
+## 🤍 The Team
 
-Curious who makes Zero? Here are our [contributors and maintainers](https://0.email/contributors)
+Curious who makes Zero? Here are our [contributors and maintainers](https://0.email/contributors).
