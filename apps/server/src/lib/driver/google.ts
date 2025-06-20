@@ -572,7 +572,16 @@ export class GoogleMailManager implements MailManager {
         const message = await sanitizeTipTapHtml(data.message);
         const msg = createMimeMessage();
         msg.setSender('me');
-        msg.setTo(data.to.split(', ').map((recipient: string) => ({ addr: recipient })));
+        // name <email@example.com>
+        const to = data.to.split(', ').map((recipient: string) => {
+          if (recipient.includes('<')) {
+            const [name, email] = recipient.split('<');
+            return { addr: email.replace('>', ''), name: name.replace('>', '') };
+          }
+          return { addr: recipient };
+        });
+
+        msg.setTo(to);
         if (data.cc)
           msg.setCc(data.cc?.split(', ').map((recipient: string) => ({ addr: recipient })));
         if (data.bcc)

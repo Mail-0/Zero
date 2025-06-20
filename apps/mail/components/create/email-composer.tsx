@@ -448,6 +448,7 @@ export function EmailComposer({
     if (messageText.trim() === initialMessage.trim()) return;
     if (editor.getHTML() === initialMessage.trim()) return;
     if (!values.to.length || !values.subject.length || !messageText.length) return;
+    if (aiGeneratedMessage || aiIsLoading || isGeneratingSubject) return;
 
     try {
       setIsSavingDraft(true);
@@ -1471,10 +1472,10 @@ const ContentPreview = ({
     initial="initial"
     animate="animate"
     exit="exit"
-    className="dark:bg-subtleBlack absolute bottom-full right-0 z-30 w-[400px] overflow-hidden rounded-xl border bg-white p-1 shadow-md"
+    className="dark:bg-subtleBlack absolute bottom-full right-0 z-30 z-50 w-[400px] overflow-hidden rounded-xl border bg-white p-1 shadow-md"
   >
     <div
-      className="max-h-60 min-h-[150px] overflow-y-auto rounded-md p-1 text-sm"
+      className="max-h-60 min-h-[150px] overflow-auto rounded-md p-1 text-sm"
       style={{
         scrollbarGutter: 'stable',
       }}
