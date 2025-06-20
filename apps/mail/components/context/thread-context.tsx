@@ -61,27 +61,42 @@ interface EmailContextMenuProps {
 
 const LabelsList = ({ threadId }: { threadId: string }) => {
   const { data: labels } = useLabels();
-  const { data: thread, refetch } = useThread(threadId);
+  const { data: thread } = useThread(threadId);
+  const [mail] = useMail();
+  const { optimisticToggleLabel } = useOptimisticActions();
+  const optimisticState = useOptimisticThreadState(threadId);
   const t = useTranslations();
-  const trpc = useTRPC();
-  const { mutateAsync: modifyLabels } = useMutation(trpc.mail.modifyLabels.mutationOptions());
 
   if (!labels || !thread) return null;
 
+  const getOptimisticLabels = () => {
+    if (!thread.labels) return [];
+    let currentLabels = [...thread.labels];
+    
+    if (optimisticState.optimisticLabels) {
+      const { labelIds, add } = optimisticState.optimisticLabels;
+      if (add) {
+        labelIds.forEach(labelId => {
+          if (!currentLabels.some(l => l.id === labelId)) {
+            const label = labels?.find(l => l.id === labelId);
+            if (label) currentLabels.push(label);
+          }
+        });
+      } else {
+        currentLabels = currentLabels.filter(l => !labelIds.includes(l.id));
+      }
+    }
+    
+    return currentLabels;
+  };
+
   const handleToggleLabel = async (labelId: string) => {
     if (!labelId) return;
-    const hasLabel = thread.labels?.map((label) => label.id).includes(labelId);
-    const promise = modifyLabels({
-      threadId: [threadId],
-      addLabels: hasLabel ? [] : [labelId],
-      removeLabels: hasLabel ? [labelId] : [],
-    });
-    toast.promise(promise, {
-      error: hasLabel ? 'Failed to remove label' : 'Failed to add label',
-      finally: async () => {
-        await refetch();
-      },
-    });
+    const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
+    const optimisticLabels = getOptimisticLabels();
+    const hasLabel = optimisticLabels.some(label => label.id === labelId);
+    
+    optimisticToggleLabel(targets, labelId, !hasLabel);
   };
 
   return (
@@ -97,7 +112,7 @@ const LabelsList = ({ threadId }: { threadId: string }) => {
             <div className="flex items-center">
               <Checkbox
                 checked={
-                  label.id ? thread.labels?.map((label) => label.id).includes(label.id) : false
+                  label.id ? getOptimisticLabels().some((l) => l.id === label.id) : false
                 }
                 className="mr-2 h-4 w-4"
               />

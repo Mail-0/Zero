@@ -32,6 +32,7 @@ export function useOptimisticActions() {
   const { mutateAsync: bulkArchive } = useMutation(trpc.mail.bulkArchive.mutationOptions());
   const { mutateAsync: bulkStar } = useMutation(trpc.mail.bulkStar.mutationOptions());
   const { mutateAsync: bulkDeleteThread } = useMutation(trpc.mail.bulkDelete.mutationOptions());
+  const { mutateAsync: modifyLabels } = useMutation(trpc.mail.modifyLabels.mutationOptions());
 
   const generatePendingActionId = () =>
     `pending_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -376,6 +377,39 @@ export function useOptimisticActions() {
     });
   }
 
+  function optimisticToggleLabel(threadIds: string[], labelId: string, add: boolean) {
+    if (!threadIds.length || !labelId) return;
+
+    const optimisticId = addOptimisticAction({
+      type: 'LABEL',
+      threadIds,
+      labelIds: [labelId],
+      add,
+    });
+
+    createPendingAction({
+      type: 'LABEL',
+      threadIds,
+      params: { labelId, add },
+      optimisticId,
+      execute: async () => {
+        await modifyLabels({
+          threadId: threadIds,
+          addLabels: add ? [labelId] : [],
+          removeLabels: add ? [] : [labelId],
+        });
+
+        if (mail.bulkSelected.length > 0) {
+          setMail({ ...mail, bulkSelected: [] });
+        }
+      },
+      undo: () => {
+        removeOptimisticAction(optimisticId);
+      },
+      toastMessage: add ? 'Label added' : 'Label removed',
+    });
+  }
+
   function undoLastAction() {
     if (!optimisticActionsManager.lastActionId) return;
 
@@ -405,6 +439,7 @@ export function useOptimisticActions() {
     optimisticMoveThreadsTo,
     optimisticDeleteThreads,
     optimisticToggleImportant,
+    optimisticToggleLabel,
     undoLastAction,
   };
 }

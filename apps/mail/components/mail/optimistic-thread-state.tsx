@@ -31,6 +31,7 @@ export function useOptimisticThreadState(threadId: string) {
       optimisticRead: null as boolean | null,
       optimisticDestination: null as string | null,
       optimisticImportant: null as boolean | null,
+      optimisticLabels: null as { labelIds: string[]; add: boolean } | null,
     };
 
     if (!isAffectedByOptimisticAction || !optimisticActions || optimisticActions.length === 0) {
@@ -57,6 +58,7 @@ export function useOptimisticThreadState(threadId: string) {
 
         case 'LABEL':
           states.isAddingLabel = action.add;
+          states.optimisticLabels = { labelIds: action.labelIds, add: action.add };
           break;
 
         case 'IMPORTANT':
