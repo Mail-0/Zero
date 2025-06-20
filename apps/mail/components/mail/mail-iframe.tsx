@@ -170,7 +170,6 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
           '!min-h-0 w-full flex-1 overflow-hidden px-4 transition-opacity duration-200',
         )}
         title="Email Content"
-        sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-scripts"
         style={{
           width: '100%',
           overflow: 'hidden',
