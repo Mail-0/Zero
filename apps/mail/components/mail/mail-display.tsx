@@ -913,19 +913,8 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
 
       if(!personEmail) return ;
     
-      try {
-        await navigator.clipboard.writeText(personEmail || '');
-        toast.success('Email copied to clipboard');
-      } catch (error) {
-        const textarea = document.createElement('textarea');
-        textarea.value = personEmail;
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-      }
+      await navigator.clipboard.writeText(personEmail || '');
+      toast.success('Email copied to clipboard');
       
   }, []);
 
