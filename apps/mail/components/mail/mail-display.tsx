@@ -1,6 +1,5 @@
 import {
   Bell,
-  Calendar,
   Docx,
   Figma,
   Forward,
@@ -13,7 +12,6 @@ import {
   Tag,
   User,
   ChevronDown,
-  Check,
   Printer,
 } from '../icons/icons';
 import {
@@ -22,59 +20,41 @@ import {
   StickyNote,
   Users,
   Lock,
-  Download,
-  MoreVertical,
   HardDriveDownload,
-  Paperclip,
   Loader2,
   CopyIcon,
   SearchIcon,
 } from 'lucide-react';
-import {
-  Dialog,
-  DialogTitle,
-  DialogHeader,
-  DialogContent,
-  DialogTrigger,
-  DialogDescription,
-} from '../ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
-import { memo, useEffect, useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
+import { Dialog, DialogTitle, DialogHeader, DialogContent } from '../ui/dialog';
+import { memo, useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import type { Sender, ParsedMessage, Attachment } from '@/types';
 import { useActiveConnection } from '@/hooks/use-connections';
-import { handleUnsubscribe } from '@/lib/email-utils.client';
-import { getListUnsubscribeAction } from '@/lib/email-utils';
-import AttachmentsAccordion from './attachments-accordion';
 import { cn, getEmailLogo, formatDate } from '@/lib/utils';
 import { useBrainState } from '../../hooks/use-summary';
 import { useTRPC } from '@/providers/query-provider';
 import { useThreadLabels } from '@/hooks/use-labels';
 import { useMutation } from '@tanstack/react-query';
 import { Markdown } from '@react-email/components';
-import AttachmentDialog from './attachment-dialog';
 import { useSummary } from '@/hooks/use-summary';
 import { TextShimmer } from '../ui/text-shimmer';
-import { useSession } from '@/lib/auth-client';
 import { RenderLabels } from './render-labels';
-import ReplyCompose from './reply-composer';
-import { Separator } from '../ui/separator';
 import { MailIframe } from './mail-iframe';
 import { useTranslations } from 'use-intl';
 import { useParams } from 'react-router';
-import { MailLabels } from './mail-list';
 import { FileText } from 'lucide-react';
-import { format, set } from 'date-fns';
 import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Badge } from '../ui/badge';
+import { format } from 'date-fns';
 
 // HTML escaping function to prevent XSS attacks
 function escapeHtml(text: string): string {
@@ -664,7 +644,7 @@ const MoreAboutPerson = ({
   } = useMutation(trpc.ai.webSearch.mutationOptions());
   const handleSearch = useCallback(() => {
     doSearch({
-      query: `In 50 words or less: What is the background of ${person.name} & ${person.email}, of ${person.email.split('@')[1]}. 
+      query: `In 50 words or less: What is the background of ${person.name} & ${person.email}, of ${person.email.split('@')[1]}.
       This could be a phishing email address, indicate if the domain is suspicious, example: x.io is not a valid domain for x.com | example: x.com is a valid domain for x.com | example: paypalcom.com is not a valid domain for paypal.com`,
     });
   }, [person.name]);
@@ -934,7 +914,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
               padding: 0;
               box-sizing: border-box;
             }
-            
+
             body {
               font-family: Arial, sans-serif;
               line-height: 1.5;
@@ -943,17 +923,17 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
               padding: 20px;
               font-size: 12px;
             }
-            
+
             .email-container {
               max-width: 100%;
               margin: 0 auto;
               background: white;
             }
-            
+
             .email-header {
               margin-bottom: 25px;
             }
-            
+
             .email-title {
               font-size: 18px;
               font-weight: bold;
@@ -961,105 +941,105 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
               margin-bottom: 15px;
               word-wrap: break-word;
             }
-            
+
             .email-meta {
               margin-bottom: 20px;
             }
-            
+
             .meta-row {
               margin-bottom: 5px;
               display: flex;
               align-items: flex-start;
             }
-            
+
             .meta-label {
               font-weight: bold;
               min-width: 60px;
               color: #333;
               margin-right: 10px;
             }
-            
+
             .meta-value {
               flex: 1;
               word-wrap: break-word;
               color: #333;
             }
-            
+
             .separator {
               width: 100%;
               height: 1px;
               background: #ddd;
               margin: 20px 0;
             }
-            
+
             .email-body {
               margin: 20px 0;
               background: white;
             }
-            
+
             .email-content {
               word-wrap: break-word;
               overflow-wrap: break-word;
               font-size: 12px;
               line-height: 1.6;
             }
-            
+
             .email-content img {
               max-width: 100% !important;
               height: auto !important;
               display: block;
               margin: 10px 0;
             }
-            
+
             .email-content table {
               width: 100%;
               border-collapse: collapse;
               margin: 10px 0;
             }
-            
+
             .email-content td, .email-content th {
               padding: 6px;
               text-align: left;
               font-size: 11px;
             }
-            
+
             .email-content a {
               color: #0066cc;
               text-decoration: underline;
             }
-            
+
             .attachments-section {
               margin-top: 25px;
               background: white;
             }
-            
+
             .attachments-title {
               font-size: 14px;
               font-weight: bold;
               color: #000;
               margin-bottom: 10px;
             }
-            
+
             .attachment-item {
               margin-bottom: 5px;
               font-size: 11px;
               padding: 3px 0;
             }
-            
+
             .attachment-name {
               font-weight: 500;
               color: #333;
             }
-            
+
             .attachment-size {
               color: #666;
               font-size: 10px;
             }
-            
+
             .labels-section {
               margin: 10px 0;
             }
-            
+
             .label-badge {
               display: inline-block;
               padding: 2px 6px;
@@ -1069,7 +1049,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
               margin-right: 5px;
               margin-bottom: 3px;
             }
-            
+
             @media print {
               body {
                 margin: 0;
@@ -1078,46 +1058,46 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
               }
-              
+
               .email-container {
                 max-width: none;
                 width: 100%;
               }
-              
-              
+
+
               .separator {
                 background: #000 !important;
               }
-              
+
               .email-content a {
                 color: #000 !important;
               }
-              
+
               .label-badge {
                 background: #f0f0f0 !important;
                 border: 1px solid #ccc;
               }
-              
+
               .no-print {
                 display: none !important;
               }
-              
+
               /* Remove any default borders */
               * {
                 border: none !important;
                 box-shadow: none !important;
               }
-              
+
               /* Ensure clean page breaks */
               .email-header {
                 page-break-after: avoid;
               }
-              
+
               .attachments-section {
                 page-break-inside: avoid;
               }
             }
-            
+
             @page {
               margin: 0.5in;
               size: A4;
@@ -1129,7 +1109,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             <!-- Email Header -->
             <div class="email-header">
               <h1 class="email-title">${emailData.subject || 'No Subject'}</h1>
-              
+
               ${
                 emailData?.tags && emailData.tags.length > 0
                   ? `
@@ -1141,16 +1121,16 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
               `
                   : ''
               }
-              
+
               <div class="email-meta">
                 <div class="meta-row">
                   <span class="meta-label">From:</span>
                   <span class="meta-value">
-                    ${cleanNameDisplay(emailData.sender?.name)} 
+                    ${cleanNameDisplay(emailData.sender?.name)}
                     ${emailData.sender?.email ? `&lt;${emailData.sender.email}&gt;` : ''}
                   </span>
                 </div>
-                
+
                 ${
                   emailData.to && emailData.to.length > 0
                     ? `
@@ -1168,7 +1148,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                 `
                     : ''
                 }
-                
+
                 ${
                   emailData.cc && emailData.cc.length > 0
                     ? `
@@ -1186,7 +1166,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                 `
                     : ''
                 }
-                
+
                 ${
                   emailData.bcc && emailData.bcc.length > 0
                     ? `
@@ -1204,23 +1184,23 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                 `
                     : ''
                 }
-                
+
                 <div class="meta-row">
                   <span class="meta-label">Date:</span>
                   <span class="meta-value">${formatDate(emailData.receivedOn)}</span>
                 </div>
               </div>
             </div>
-            
+
             <div class="separator"></div>
-            
+
             <!-- Email Body -->
             <div class="email-body">
               <div class="email-content">
                 ${escapeHtml(emailData.decodedBody) || '<p><em>No email content available</em></p>'}
               </div>
             </div>
-            
+
             <!-- Attachments -->
             ${
               emailData.attachments && emailData.attachments.length > 0
@@ -1229,7 +1209,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                 <h2 class="attachments-title">Attachments (${emailData.attachments.length})</h2>
                 ${emailData.attachments
                   .map(
-                    (attachment, index) => `
+                    (attachment) => `
                   <div class="attachment-item">
                     <span class="attachment-name">${attachment.filename}</span>
                     ${formatFileSize(attachment.size) ? ` - <span class="attachment-size">${formatFileSize(attachment.size)}</span>` : ''}

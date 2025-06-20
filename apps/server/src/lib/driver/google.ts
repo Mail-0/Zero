@@ -82,30 +82,22 @@ export class GoogleMailManager implements MailManager {
   }
   public getEmailAliases() {
     return this.withErrorHandler('getEmailAliases', async () => {
-      console.log('Fetching email aliases...');
-
       const profile = await this.gmail.users.getProfile({
         userId: 'me',
       });
-      console.log('Retrieved user profile:', { email: profile.data.emailAddress });
 
       const primaryEmail = profile.data.emailAddress || '';
       const aliases: { email: string; name?: string; primary?: boolean }[] = [
         { email: primaryEmail, primary: true },
       ];
-      console.log('Added primary email to aliases:', { primaryEmail });
 
       const settings = await this.gmail.users.settings.sendAs.list({
         userId: 'me',
-      });
-      console.log('Retrieved sendAs settings:', {
-        sendAsCount: settings.data.sendAs?.length || 0,
       });
 
       if (settings.data.sendAs) {
         settings.data.sendAs.forEach((alias) => {
           if (alias.isPrimary && alias.sendAsEmail === primaryEmail) {
-            console.log('Skipping duplicate primary email:', { email: alias.sendAsEmail });
             return;
           }
 
@@ -114,15 +106,9 @@ export class GoogleMailManager implements MailManager {
             name: alias.displayName || undefined,
             primary: alias.isPrimary || false,
           });
-          console.log('Added alias:', {
-            email: alias.sendAsEmail,
-            name: alias.displayName,
-            primary: alias.isPrimary,
-          });
         });
       }
 
-      console.log('Returning aliases:', { aliasCount: aliases.length });
       return aliases;
     });
   }
@@ -572,7 +558,16 @@ export class GoogleMailManager implements MailManager {
         const message = await sanitizeTipTapHtml(data.message);
         const msg = createMimeMessage();
         msg.setSender('me');
-        msg.setTo(data.to.split(', ').map((recipient: string) => ({ addr: recipient })));
+        // name <email@example.com>
+        const to = data.to.split(', ').map((recipient: string) => {
+          if (recipient.includes('<')) {
+            const [name, email] = recipient.split('<');
+            return { addr: email.replace('>', ''), name: name.replace('>', '') };
+          }
+          return { addr: recipient };
+        });
+
+        msg.setTo(to);
         if (data.cc)
           msg.setCc(data.cc?.split(', ').map((recipient: string) => ({ addr: recipient })));
         if (data.bcc)

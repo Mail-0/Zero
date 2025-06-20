@@ -328,12 +328,21 @@
       "mb": "{amount} ميجابايت"
     },
     "labels": {
+      "color": "اللون",
+      "labelName": "اسم التصنيف",
+      "createLabel": "إنشاء تصنيف",
       "deleteLabel": "حذف التصنيف",
       "deleteLabelConfirm": "هل أنت متأكد من رغبتك في حذف هذا التصنيف؟",
       "deleteLabelConfirmDescription": "لا يمكن التراجع عن هذا الإجراء.",
       "deleteLabelConfirmCancel": "إلغاء",
       "deleteLabelConfirmDelete": "حذف",
-      "deleteLabelSuccess": "تم حذف التصنيف بنجاح"
+      "deleteLabelSuccess": "تم حذف التصنيف بنجاح",
+      "failedToDeleteLabel": "فشل في حذف التصنيف",
+      "deletingLabel": "جارٍ حذف التصنيف...",
+      "editLabel": "تعديل التصنيف",
+      "savingLabel": "جارٍ حفظ التصنيف...",
+      "failedToSavingLabel": "فشل في حفظ التصنيف",
+      "saveLabelSuccess": "تم حفظ التصنيف بنجاح"
     }
   },
   "navigation": {
@@ -356,6 +365,7 @@
       "signatures": "التوقيعات",
       "shortcuts": "الاختصارات",
       "labels": "التصنيفات",
+      "categories": "الفئات",
       "dangerZone": "منطقة الخطر",
       "deleteAccount": "حذف الحساب",
       "privacy": "الخصوصية"

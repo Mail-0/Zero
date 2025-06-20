@@ -328,12 +328,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "色",
+      "labelName": "ラベル名",
+      "createLabel": "ラベルを作成",
       "deleteLabel": "ラベルを削除",
       "deleteLabelConfirm": "このラベルを削除してもよろしいですか？",
       "deleteLabelConfirmDescription": "この操作は元に戻せません。",
       "deleteLabelConfirmCancel": "キャンセル",
       "deleteLabelConfirmDelete": "削除",
-      "deleteLabelSuccess": "ラベルが正常に削除されました"
+      "deleteLabelSuccess": "ラベルが正常に削除されました",
+      "failedToDeleteLabel": "ラベルの削除に失敗しました",
+      "deletingLabel": "ラベルを削除中...",
+      "editLabel": "ラベルを編集",
+      "savingLabel": "ラベルを保存中...",
+      "failedToSavingLabel": "ラベルの保存に失敗しました",
+      "saveLabelSuccess": "ラベルが正常に保存されました"
     }
   },
   "navigation": {
@@ -356,6 +365,7 @@
       "signatures": "署名",
       "shortcuts": "ショートカット",
       "labels": "ラベル",
+      "categories": "カテゴリー",
       "dangerZone": "危険ゾーン",
       "deleteAccount": "アカウントを削除",
       "privacy": "プライバシー"
