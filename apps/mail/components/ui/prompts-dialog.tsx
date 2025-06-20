@@ -21,11 +21,12 @@ import { Button } from '@/components/ui/button';
 import { Paper } from '../icons/icons'; 
 import { Textarea } from './textarea';
 import { Link } from 'react-router';
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { AiChatPrompt, StyledEmailAssistantSystemPrompt } from '@/lib/prompts';
 import { EPrompts } from '../../../server/src/types';
+import { useForm } from 'react-hook-form';
 
 const isPromptValid = (prompt: string): boolean => {
   const trimmed = prompt.trim();
@@ -49,27 +50,43 @@ export function PromptsDialog() {
     }),
   );
 
-  const [chatPrompt, setChatPrompt] = useState('');
-  const [composePrompt, setComposePrompt] = useState('');
-  const [summarizeThread, setSummarizeThread] = useState('');
-  const [reSummarizeThread, setReSummarizeThread] = useState('');
-  const [summarizeMessage, setSummarizeMessage] = useState('');
+  type PromptFormValues = {
+    chatPrompt: string;
+    composePrompt: string;
+    summarizeThread: string;
+    reSummarizeThread: string;
+    summarizeMessage: string;
+  };
 
-  useEffect(() => {
-    if (prompts) {
-      const rawChat = prompts.Chat ?? '';
-      setChatPrompt(isPromptValid(rawChat) ? rawChat : AiChatPrompt('', '', ''));
+  const initialValues: PromptFormValues = {
+    chatPrompt: '',
+    composePrompt: '',
+    summarizeThread: '',
+    reSummarizeThread: '',
+    summarizeMessage: '',
+  };
 
-      const rawCompose = prompts.Compose ?? '';
-      setComposePrompt(
-        isPromptValid(rawCompose) ? rawCompose : StyledEmailAssistantSystemPrompt().trim(),
-      );
-      setSummarizeThread(prompts.SummarizeThread ?? '');
-      setReSummarizeThread(prompts.ReSummarizeThread ?? '');
-      setSummarizeMessage(prompts.SummarizeMessage ?? '');
-    }
+  const mappedValues = useMemo<PromptFormValues>(() => {
+    if (!prompts) return initialValues;
+
+    return {
+      chatPrompt: isPromptValid(prompts.Chat ?? '')
+        ? prompts.Chat
+        : AiChatPrompt('', '', ''),
+      composePrompt: isPromptValid(prompts.Compose ?? '')
+        ? prompts.Compose
+        : StyledEmailAssistantSystemPrompt().trim(),
+      summarizeThread: prompts.SummarizeThread ?? '',
+      reSummarizeThread: prompts.ReSummarizeThread ?? '',
+      summarizeMessage: prompts.SummarizeMessage ?? '',
+    };
   }, [prompts]);
-  
+
+  const { register, getValues } = useForm<PromptFormValues>({
+    defaultValues: initialValues,
+    values: mappedValues,
+  });
+
   return (
     <TooltipProvider delayDuration={0}>
       <Dialog>
@@ -124,17 +141,16 @@ export function PromptsDialog() {
                   This system prompt is used in the chat sidebar agent. The agent has multiple tools
                   available.
                 </span>
-                <Textarea 
-                  className="min-h-60" 
-                  value={chatPrompt} 
-                  onChange={(e) => setChatPrompt(e.target.value)}
+                <Textarea
+                  className="min-h-60"
+                  {...register('chatPrompt')}
                 />
                 <Button
                   size="sm"
                   onClick={() =>
                     updatePrompt({
                       promptType: EPrompts.Chat,
-                      content: chatPrompt,
+                      content: getValues('chatPrompt'),
                     })
                   }
                   disabled={isSavingPrompt}
@@ -150,15 +166,14 @@ export function PromptsDialog() {
                 </span>
                 <Textarea
                   className="min-h-60"
-                  value={composePrompt}
-                  onChange={(e) => setComposePrompt(e.target.value)}
+                  {...register('composePrompt')}
                 />
                 <Button
                   size="sm"
                   onClick={() =>
                     updatePrompt({
                       promptType: EPrompts.Compose,
-                      content: composePrompt,
+                      content: getValues('composePrompt'),
                     })
                   }
                   disabled={isSavingPrompt}
@@ -175,15 +190,14 @@ export function PromptsDialog() {
                 </span>
                 <Textarea
                   className="min-h-60"
-                  value={summarizeThread}
-                  onChange={(e) => setSummarizeThread(e.target.value)}
+                  {...register('summarizeThread')}
                 />
                 <Button
                   size="sm"
                   onClick={() =>
                     updatePrompt({
                       promptType: EPrompts.SummarizeThread,
-                      content: summarizeThread,
+                      content: getValues('summarizeThread'),
                     })
                   }
                   disabled={isSavingPrompt}
@@ -200,15 +214,14 @@ export function PromptsDialog() {
                 </span>
                 <Textarea
                   className="min-h-60"
-                  value={reSummarizeThread}
-                  onChange={(e) => setReSummarizeThread(e.target.value)}
+                  {...register('reSummarizeThread')}
                 />
                 <Button
                   size="sm"
                   onClick={() =>
                     updatePrompt({
                       promptType: EPrompts.ReSummarizeThread,
-                      content: reSummarizeThread,
+                      content: getValues('reSummarizeThread'),
                     })
                   }
                   disabled={isSavingPrompt}
@@ -225,15 +238,14 @@ export function PromptsDialog() {
                 </span>
                 <Textarea
                   className="min-h-60"
-                  value={summarizeMessage}
-                  onChange={(e) => setSummarizeMessage(e.target.value)}
+                  {...register('summarizeMessage')}
                 />
                 <Button
                   size="sm"
                   onClick={() =>
                     updatePrompt({
                       promptType: EPrompts.SummarizeMessage,
-                      content: summarizeMessage,
+                      content: getValues('summarizeMessage'),
                     })
                   }
                   disabled={isSavingPrompt}
