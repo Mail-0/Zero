@@ -135,7 +135,7 @@
     "navUser": {
       "customerSupport": "Community",
       "documentation": "Documentation",
-      "appTheme": "App Theme",
+      "appTheme": "Toggle Theme",
       "accounts": "Accounts",
       "signIn": "Sign in",
       "otherAccounts": "Other Accounts"
@@ -330,21 +330,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
-      "color":"Color",
-      "labelName":"Label Name",
-      "createLabel":"Create Label",
+      "color": "Color",
+      "labelName": "Label Name",
+      "createLabel": "Create Label",
       "deleteLabel": "Delete Label",
       "deleteLabelConfirm": "Are you sure you want to delete this label?",
       "deleteLabelConfirmDescription": "This action cannot be undone.",
       "deleteLabelConfirmCancel": "Cancel",
       "deleteLabelConfirmDelete": "Delete",
       "deleteLabelSuccess": "Label deleted successfully",
-      "failedToDeleteLabel":"Failed to delete label",
-      "deletingLabel":"Deleting label...",
-      "editLabel":"Edit Label",
-      "savingLabel":"Saving label...",
-      "failedToSavingLabel":"Failed to save label",
-      "saveLabelSuccess":"Label saved successfully"
+      "failedToDeleteLabel": "Failed to delete label",
+      "deletingLabel": "Deleting label...",
+      "editLabel": "Edit Label",
+      "savingLabel": "Saving label...",
+      "failedToSavingLabel": "Failed to save label",
+      "saveLabelSuccess": "Label saved successfully"
     }
   },
   "navigation": {

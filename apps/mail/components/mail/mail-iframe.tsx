@@ -58,7 +58,7 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
     },
   });
 
-  const { data: processedHtml, isLoading: isProcessingHtml } = useQuery({
+  const { data: processedHtml } = useQuery({
     queryKey: ['email-template', html, isTrustedSender || temporaryImagesEnabled],
     queryFn: () => template(html, isTrustedSender || temporaryImagesEnabled),
     staleTime: 30 * 60 * 1000, // Increase cache time to 30 minutes
@@ -76,11 +76,14 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
     const boundingRectHeight = body.getBoundingClientRect().height;
     const scrollHeight = body.scrollHeight;
 
-    // Use the larger of the two values to ensure all content is visible
-    setHeight(Math.max(boundingRectHeight, scrollHeight));
     if (body.innerText.trim() === '') {
       setHeight(0);
+      return;
     }
+
+    // Use the larger of the two values to ensure all content is visible
+    const newHeight = Math.max(boundingRectHeight, scrollHeight);
+    setHeight(newHeight);
   }, [iframeRef, setHeight]);
 
   useEffect(() => {
@@ -135,15 +138,6 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
 
     return () => ctrl.abort();
   }, []);
-
-  // Show loading fallback while processing HTML (similar to HydrateFallback pattern)
-  if (isProcessingHtml) {
-    return (
-      <div className="flex h-32 items-center justify-center">
-        <div className="text-muted-foreground text-sm">Processing email content...</div>
-      </div>
-    );
-  }
 
   return (
     <>

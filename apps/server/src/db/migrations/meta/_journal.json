@@ -211,6 +211,13 @@
       "when": 1750268247218,
       "tag": "0029_common_network",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1750384854243,
+      "tag": "0030_blue_grandmaster",
+      "breakpoints": true
     }
   ]
 }
