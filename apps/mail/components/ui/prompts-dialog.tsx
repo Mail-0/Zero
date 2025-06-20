@@ -12,6 +12,7 @@ import {
   MessageSquareIcon,
   RefreshCcwDotIcon,
   SendIcon,
+  RotateCcwIcon,
 } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs';
@@ -27,6 +28,11 @@ import { toast } from 'sonner';
 import { AiChatPrompt, StyledEmailAssistantSystemPrompt } from '@/lib/prompts';
 import { EPrompts } from '../../../server/src/types';
 import { useForm } from 'react-hook-form';
+import { 
+  SummarizeMessage, 
+  SummarizeThread, 
+  ReSummarizeThread 
+} from '../../../server/src/lib/brain.fallback.prompts';
 
 const isPromptValid = (prompt: string): boolean => {
   const trimmed = prompt.trim();
@@ -76,16 +82,68 @@ export function PromptsDialog() {
       composePrompt: isPromptValid(prompts.Compose ?? '')
         ? prompts.Compose
         : StyledEmailAssistantSystemPrompt().trim(),
-      summarizeThread: prompts.SummarizeThread ?? '',
-      reSummarizeThread: prompts.ReSummarizeThread ?? '',
-      summarizeMessage: prompts.SummarizeMessage ?? '',
+      summarizeThread: isPromptValid(prompts.SummarizeThread ?? '')
+        ? prompts.SummarizeThread
+        : SummarizeThread,
+      reSummarizeThread: isPromptValid(prompts.ReSummarizeThread ?? '')
+        ? prompts.ReSummarizeThread
+        : ReSummarizeThread,
+      summarizeMessage: isPromptValid(prompts.SummarizeMessage ?? '')
+        ? prompts.SummarizeMessage
+        : SummarizeMessage,
     };
   }, [prompts]);
 
-  const { register, getValues } = useForm<PromptFormValues>({
+  const { register, getValues, setValue } = useForm<PromptFormValues>({
     defaultValues: initialValues,
     values: mappedValues,
   });
+
+  const resetToDefault = (promptType: keyof PromptFormValues) => {
+    switch (promptType) {
+      case 'chatPrompt':
+        setValue('chatPrompt', AiChatPrompt('', '', '').trim());
+        break;
+      case 'composePrompt':
+        setValue('composePrompt', StyledEmailAssistantSystemPrompt().trim());
+        break;
+      case 'summarizeThread':
+        setValue('summarizeThread', SummarizeThread.trim());
+        break;
+      case 'reSummarizeThread':
+        setValue('reSummarizeThread', ReSummarizeThread.trim());
+        break;
+      case 'summarizeMessage':
+        setValue('summarizeMessage', SummarizeMessage.trim());
+        break;
+    }
+  };
+
+  const renderPromptButtons = (promptType: keyof PromptFormValues, enumType: EPrompts) => (
+    <div className="flex gap-2">
+      <Button
+        size="sm"
+        onClick={() =>
+          updatePrompt({
+            promptType: enumType,
+            content: getValues(promptType),
+          })
+        }
+        disabled={isSavingPrompt}
+      >
+        Save
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={() => resetToDefault(promptType)}
+        disabled={isSavingPrompt}
+      >
+        <RotateCcwIcon className="h-3 w-3 mr-1" />
+        Reset to Default
+      </Button>
+    </div>
+  );
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -145,18 +203,7 @@ export function PromptsDialog() {
                   className="min-h-60"
                   {...register('chatPrompt')}
                 />
-                <Button
-                  size="sm"
-                  onClick={() =>
-                    updatePrompt({
-                      promptType: EPrompts.Chat,
-                      content: getValues('chatPrompt'),
-                    })
-                  }
-                  disabled={isSavingPrompt}
-                >
-                  Save
-                </Button>
+                {renderPromptButtons('chatPrompt', EPrompts.Chat)}
               </TabsContent>
             ) : null}
             {prompts ? (
@@ -168,18 +215,7 @@ export function PromptsDialog() {
                   className="min-h-60"
                   {...register('composePrompt')}
                 />
-                <Button
-                  size="sm"
-                  onClick={() =>
-                    updatePrompt({
-                      promptType: EPrompts.Compose,
-                      content: getValues('composePrompt'),
-                    })
-                  }
-                  disabled={isSavingPrompt}
-                >
-                  Save
-                </Button>
+                {renderPromptButtons('composePrompt', EPrompts.Compose)}
               </TabsContent>
             ) : null}
             {prompts ? (
@@ -192,18 +228,7 @@ export function PromptsDialog() {
                   className="min-h-60"
                   {...register('summarizeThread')}
                 />
-                <Button
-                  size="sm"
-                  onClick={() =>
-                    updatePrompt({
-                      promptType: EPrompts.SummarizeThread,
-                      content: getValues('summarizeThread'),
-                    })
-                  }
-                  disabled={isSavingPrompt}
-                >
-                  Save
-                </Button>
+                {renderPromptButtons('summarizeThread', EPrompts.SummarizeThread)}
               </TabsContent>
             ) : null}
             {prompts ? (
@@ -216,18 +241,7 @@ export function PromptsDialog() {
                   className="min-h-60"
                   {...register('reSummarizeThread')}
                 />
-                <Button
-                  size="sm"
-                  onClick={() =>
-                    updatePrompt({
-                      promptType: EPrompts.ReSummarizeThread,
-                      content: getValues('reSummarizeThread'),
-                    })
-                  }
-                  disabled={isSavingPrompt}
-                >
-                  Save
-                </Button>
+                {renderPromptButtons('reSummarizeThread', EPrompts.ReSummarizeThread)}
               </TabsContent>
             ) : null}
             {prompts ? (
@@ -240,18 +254,7 @@ export function PromptsDialog() {
                   className="min-h-60"
                   {...register('summarizeMessage')}
                 />
-                <Button
-                  size="sm"
-                  onClick={() =>
-                    updatePrompt({
-                      promptType: EPrompts.SummarizeMessage,
-                      content: getValues('summarizeMessage'),
-                    })
-                  }
-                  disabled={isSavingPrompt}
-                >
-                  Save
-                </Button>
+                {renderPromptButtons('summarizeMessage', EPrompts.SummarizeMessage)}
               </TabsContent>
             ) : null}
           </Tabs>
