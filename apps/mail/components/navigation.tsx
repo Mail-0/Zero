@@ -177,7 +177,7 @@ export function Navigation() {
               <div className="flex items-center text-white">
                 <GitHub className="mr-1 size-4 fill-white" />
                 <span className="ml-1 lg:hidden">Star</span>
-                <span className="ml-1 hidden lg:inline">Stars on GitHub</span>
+                <span className="ml-1 hidden lg:inline whitespace-nowrap">Stars on GitHub</span>
               </div>
               <div className="flex items-center gap-1 text-sm">
                 <Star className="relative top-[1px] size-4 fill-gray-400 transition-all duration-300 group-hover:fill-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" />
@@ -202,7 +202,7 @@ export function Navigation() {
                 }
               }}
             >
-              Sign in
+              {session ? 'Go to Inbox' : 'Sign in'}
             </Button>
           </div>
         </nav>
@@ -236,9 +236,27 @@ export function Navigation() {
                   />
                 </Link>
               </SheetTitle>
-              <a href="/login">
-                <Button className="w-full">Sign in</Button>
-              </a>
+                <Button 
+                  className="w-fit"
+                  onClick={() => {
+                    if (session) {
+                      navigate('/mail/inbox');
+                      setOpen(false);
+                    } else {
+                      toast.promise(
+                        signIn.social({
+                          provider: 'google',
+                          callbackURL: `${window.location.origin}/mail`,
+                        }),
+                        {
+                          error: 'Login redirect failed',
+                        },
+                      );
+                    }
+                  }}
+                >
+                  {session ? 'Go to Inbox' : 'Sign in'}
+                </Button>
             </SheetHeader>
             <div className="mt-8 flex flex-col space-y-3">
               <div className="flex flex-col space-y-3">
