@@ -172,7 +172,7 @@ export function ThreadDisplay() {
   const [searchParams] = useSearchParams();
   const folder = params?.folder ?? 'inbox';
   const [id, setThreadId] = useQueryState('threadId');
-  const { data: emailData, isLoading, refetch: refetchThread } = useThread(id ?? null);
+  const { data: emailData, isLoading, refetch: refetchThread, latestDraft } = useThread(id ?? null);
   const [{ refetch: mutateThreads }, items] = useThreads();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isStarred, setIsStarred] = useState(false);
@@ -208,11 +208,24 @@ export function ThreadDisplay() {
     if (focusedIndex > 0) {
       const prevThread = items[focusedIndex - 1];
       if (prevThread) {
+        // Clear draft and reply state when navigating to previous thread
+        setMode(null);
+        setActiveReplyId(null);
+        setDraftId(null);
         setThreadId(prevThread.id);
         setFocusedIndex(focusedIndex - 1);
       }
     }
-  }, [items, id, focusedIndex, setThreadId, setFocusedIndex]);
+  }, [
+    items,
+    id,
+    focusedIndex,
+    setThreadId,
+    setFocusedIndex,
+    setMode,
+    setActiveReplyId,
+    setDraftId,
+  ]);
 
   const handleNext = useCallback(() => {
     if (!id || !items.length || focusedIndex === null) return setThreadId(null);
@@ -221,14 +234,24 @@ export function ThreadDisplay() {
       //   console.log('nextIndex', nextIndex);
 
       const nextThread = items[nextIndex];
-      setActiveReplyId(null);
       if (nextThread) {
+        setMode(null);
+        setActiveReplyId(null);
+        setDraftId(null);
         setThreadId(nextThread.id);
-        // Don't clear activeReplyId - let the auto-open effect handle it
         setFocusedIndex(focusedIndex + 1);
       }
     }
-  }, [items, id, focusedIndex, setThreadId, setFocusedIndex]);
+  }, [
+    items,
+    id,
+    focusedIndex,
+    setThreadId,
+    setFocusedIndex,
+    setMode,
+    setActiveReplyId,
+    setDraftId,
+  ]);
 
   const handleUnsubscribeProcess = () => {
     if (!emailData?.latest) return;
@@ -246,7 +269,7 @@ export function ThreadDisplay() {
     setMode(null);
     setActiveReplyId(null);
     setDraftId(null);
-  }, [setThreadId, setMode]);
+  }, [setThreadId, setMode, setActiveReplyId, setDraftId]);
 
   const { optimisticMoveThreadsTo } = useOptimisticActions();
 
@@ -254,10 +277,14 @@ export function ThreadDisplay() {
     async (destination: ThreadDestination) => {
       if (!id) return;
 
+      setMode(null);
+      setActiveReplyId(null);
+      setDraftId(null);
+
       optimisticMoveThreadsTo([id], folder, destination);
       handleNext();
     },
-    [id, folder, optimisticMoveThreadsTo, handleNext],
+    [id, folder, optimisticMoveThreadsTo, handleNext, setMode, setActiveReplyId, setDraftId],
   );
 
   const { optimisticToggleStar } = useOptimisticActions();
