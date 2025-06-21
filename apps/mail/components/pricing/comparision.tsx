@@ -10,7 +10,7 @@ export default function Comparision() {
   const navigate = useNavigate();
 
   const handleUpgrade = async () => {
-    if (!session) {
+    if (!session?.user?.id) {
       toast.promise(
         signIn.social({
           provider: 'google',
@@ -148,7 +148,7 @@ export default function Comparision() {
               </div>
               <button
                 onClick={() => {
-                  if (session) {
+                  if (session?.user?.id) {
                     // User is logged in, redirect to inbox
                     navigate('/mail/inbox');
                   } else {

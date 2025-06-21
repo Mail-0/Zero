@@ -8,7 +8,7 @@ export const useDraft = (id: string | null) => {
   const draftQuery = useQuery(
     trpc.drafts.get.queryOptions(
       { id: id! },
-      { enabled: !!session?.user.id && !!id, staleTime: 1000 * 60 * 60 },
+      { enabled: !!session?.user?.id && !!id, staleTime: 1000 * 60 * 60 },
     ),
   );
   return draftQuery;

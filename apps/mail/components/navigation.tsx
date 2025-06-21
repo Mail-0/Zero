@@ -187,7 +187,7 @@ export function Navigation() {
             <Button
               className="h-8 bg-white text-black hover:bg-white hover:text-black"
               onClick={() => {
-                if (session) {
+                if (session?.user?.id) {
                   navigate('/mail/inbox');
                 } else {
                   toast.promise(

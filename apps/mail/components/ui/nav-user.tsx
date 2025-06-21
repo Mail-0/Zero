@@ -247,7 +247,9 @@ export function NavUser() {
                         ) : (
                           <SunIcon className="size-4 opacity-60" />
                         )}
-                        <p className="text-[13px] opacity-60">{t('common.navUser.appTheme')}</p>
+                        <p className="text-[13px] opacity-60">
+                          {theme === 'dark' ? 'Light Theme' : 'Dark Theme'}
+                        </p>
                       </div>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
@@ -467,13 +469,18 @@ export function NavUser() {
                       </DropdownMenuItem>
                     ) : null}
                     <DropdownMenuItem onClick={handleThemeToggle} className="cursor-pointer">
-                      <div className="flex w-full items-center gap-2">
-                        {theme === 'dark' ? (
-                          <MoonIcon className="size-4 opacity-60" />
-                        ) : (
-                          <SunIcon className="size-4 opacity-60" />
-                        )}
-                        <p className="text-[13px] opacity-60">{t('common.navUser.appTheme')}</p>
+                      <div className="flex w-full items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {theme === 'dark' ? (
+                            <MoonIcon className="size-4 opacity-60" />
+                          ) : (
+                            <SunIcon className="size-4 opacity-60" />
+                          )}
+                          <p className="text-[13px] opacity-60">
+                            {theme === 'dark' ? 'Light Theme' : 'Dark Theme'}
+                          </p>
+                        </div>
+                        <p className="text-muted-foreground text-[11px]">⌘ K</p>
                       </div>
                     </DropdownMenuItem>
                     <DropdownMenuItem>

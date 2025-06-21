@@ -88,7 +88,7 @@ export default function PricingCard() {
   const navigate = useNavigate();
 
   const handleUpgrade = async () => {
-    if (!session) {
+    if (!session?.user?.id) {
       handleGoogleSignIn(`${window.location.origin}/pricing`);
       return;
     }
@@ -159,7 +159,7 @@ export default function PricingCard() {
           </div>
           <button
             onClick={() => {
-              if (session) {
+              if (session?.user?.id) {
                 navigate('/mail/inbox');
               } else {
                 handleGoogleSignIn(`${window.location.origin}/mail`, {

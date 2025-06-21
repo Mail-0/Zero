@@ -16,7 +16,7 @@ export const getProjectRoot = async () => {
 };
 
 export const runCommand = async (command: string, args: string[], options: SpawnOptions = {}) => {
-  const child = spawn(command, args, { stdio: 'inherit', ...options });
+  const child = spawn(command, args, { stdio: 'inherit', shell: true, ...options });
   await new Promise((resolve, reject) => {
     child.once('close', resolve);
     child.once('error', reject);

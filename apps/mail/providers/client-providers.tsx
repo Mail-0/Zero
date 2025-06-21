@@ -10,7 +10,7 @@ import { ThemeProvider } from 'next-themes';
 export function ClientProviders({ children }: PropsWithChildren) {
   const { data } = useSettings();
 
-  const theme = data?.settings.colorTheme || 'system';
+  const theme = data?.settings?.colorTheme || 'system';
 
   return (
     <NuqsAdapter>
