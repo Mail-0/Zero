@@ -353,7 +353,7 @@ importers:
         specifier: 1.7.4
         version: 1.7.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       superjson:
-        specifier: ^2.2.2
+        specifier: 'catalog:'
         version: 2.2.2
       tailwind-merge:
         specifier: 3.0.2
