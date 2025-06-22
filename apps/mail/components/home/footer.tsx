@@ -26,7 +26,7 @@ export default function Footer() {
   const ref = useRef(null);
 
   return (
-    <div className="bg-panelDark m-4 hidden flex-col items-center justify-center rounded-xl md:flex">
+    <div className="bg-panelDark m-4 flex flex-col items-center justify-center rounded-xl">
       <div>
         {/* <div className="h-[527px] w-screen bg-gradient-to-b from-violet-600 via-orange-400 to-slate-950 blur-2xl" /> */}
         <div>
@@ -35,7 +35,7 @@ export default function Footer() {
             alt="logo"
             width={1000}
             height={100}
-            className="w-screen rounded-t-2xl"
+            className="w-full rounded-t-2xl"
           />
         </div>
         <div className="relative bottom-20 inline-flex w-full justify-center lg:bottom-60">
@@ -80,9 +80,9 @@ export default function Footer() {
           </div>
         </div>
       </div>
-      <div className="relative z-50 mx-auto mb-12 mt-52 flex max-w-[2900px] flex-col items-start justify-start gap-10 self-stretch px-4">
-        <div className="flex w-full items-start justify-between lg:w-[900px]">
-          <div className="inline-flex flex-col items-start justify-between self-stretch">
+      <div className="relative z-50 mx-auto mb-12 mt-32 flex max-w-[2900px] flex-col items-start justify-start gap-10 self-stretch px-4">
+        <div className="flex w-full flex-col items-start justify-between gap-6 lg:w-[900px] lg:flex-row">
+          <div className="inline-flex flex-col items-start justify-between gap-6 self-stretch">
             <div className="inline-flex w-8 items-center justify-start gap-3">
               <a href="/">
                 <img src="/white-icon.svg" alt="logo" width={100} height={100} />
@@ -120,7 +120,7 @@ export default function Footer() {
               </a>
             </div>
           </div>
-          <div className="flex flex-1 items-start justify-end gap-10 opacity-0 md:opacity-100">
+          <div className="flex flex-1 items-start justify-end gap-10 md:opacity-100">
             <div className="inline-flex flex-col items-start justify-start gap-5">
               <div className="justify-start self-stretch text-sm font-normal text-white/40">
                 Product
@@ -186,18 +186,18 @@ export default function Footer() {
         </div>
         <div className="h-0.5 self-stretch bg-white/20" />
         <div className="flex flex-col items-start justify-start gap-6 self-stretch">
-          <div className="inline-flex items-center justify-between self-stretch">
+          <div className="flex flex-col items-start justify-between gap-4 self-stretch sm:flex-row">
             <div className="justify-start text-xs font-medium leading-tight text-white opacity-80 sm:text-sm">
               © 2025 Zero Email Inc, All Rights Reserved
             </div>
-            <div className="flex items-center justify-start gap-4">
+            <div className="flex flex-wrap items-center justify-start gap-4">
               <Link
                 to="/about"
                 className="justify-start text-sm font-normal leading-tight text-white/70 opacity-80 transition-opacity hover:opacity-100"
               >
                 About
               </Link>
-              <div className="h-5 w-0 outline outline-1 outline-offset-[-0.50px] outline-white/20" />
+              <div className="hidden h-5 w-0 outline outline-1 outline-offset-[-0.50px] outline-white/20 sm:block" />
 
               <Link
                 to="/terms"
@@ -205,7 +205,7 @@ export default function Footer() {
               >
                 Terms & Conditions
               </Link>
-              <div className="h-5 w-0 outline outline-1 outline-offset-[-0.50px] outline-white/20" />
+              <div className="hidden h-5 w-0 outline outline-1 outline-offset-[-0.50px] outline-white/20 sm:block" />
               <Link
                 to="/privacy"
                 className="justify-start text-sm font-normal leading-tight text-white/70 opacity-80 transition-opacity hover:opacity-100"
