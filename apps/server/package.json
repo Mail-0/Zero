@@ -61,7 +61,7 @@
     "partyserver": "^0.0.71",
     "postgres": "3.4.5",
     "react": "catalog:",
-    "remeda": "2.21.3",
+    "remeda": "2.23.0",
     "resend": "^4.5.1",
     "sanitize-html": "^2.16.0",
     "string-strip-html": "^13.4.12",
