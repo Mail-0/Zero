@@ -138,7 +138,10 @@
       "appTheme": "Toggle Theme",
       "accounts": "Accounts",
       "signIn": "Sign in",
-      "otherAccounts": "Other Accounts"
+      "otherAccounts": "Other Accounts",
+      "switchingAccounts": "Switching accounts...",
+      "accountSwitched": "Account switched successfully",
+      "failedToSwitchAccount": "Failed to switch accounts. Please try again."
     },
     "mailCategories": {
       "primary": "Primary",
