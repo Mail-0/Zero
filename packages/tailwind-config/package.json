@@ -7,6 +7,6 @@
   },
   "devDependencies": {
     "@zero/tsconfig": "workspace:*",
-    "tailwindcss": "3.4.17"
+    "tailwindcss": "4.1.10"
   }
 }

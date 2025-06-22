@@ -31,14 +31,14 @@
     "scripts": "dotenv -- pnpx tsx ./scripts/run.ts"
   },
   "devDependencies": {
-    "@types/node": "22.15.29",
+    "@types/node": "24.0.3",
     "@zero/tsconfig": "workspace:*",
     "dotenv-cli": "^8.0.0",
     "husky": "9.1.7",
     "prettier": "3.5.3",
     "prettier-plugin-sort-imports": "1.8.8",
-    "prettier-plugin-tailwindcss": "0.6.12",
-    "tsx": "4.19.4",
+    "prettier-plugin-tailwindcss": "0.6.13",
+    "tsx": "4.20.3",
     "turbo": "^2.5.4",
     "typescript": "catalog:"
   }

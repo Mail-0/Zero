@@ -5,7 +5,7 @@
   "author": "BlankParticle",
   "packageManager": "pnpm@10.11.0",
   "devDependencies": {
-    "@clack/prompts": "0.10.1",
+    "@clack/prompts": "0.11.0",
     "@zero/tsconfig": "workspace:*",
     "tiny-glob": "0.2.9"
   }
