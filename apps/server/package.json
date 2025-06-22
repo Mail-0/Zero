@@ -53,7 +53,7 @@
     "he": "^1.2.0",
     "hono": "^4.8.2",
     "hono-agents": "0.0.85",
-    "hono-party": "^0.0.12",
+    "hono-party": "^0.0.13",
     "jose": "6.0.11",
     "jsonrepair": "^3.12.0",
     "mimetext": "^3.0.27",
