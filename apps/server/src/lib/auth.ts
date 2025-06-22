@@ -6,7 +6,7 @@ import {
   session,
   userHotkeys,
 } from '../db/schema';
-import { createAuthMiddleware, phoneNumber, jwt, bearer } from 'better-auth/plugins';
+import { createAuthMiddleware, phoneNumber, jwt, bearer, mcp } from 'better-auth/plugins';
 import { type Account, betterAuth, type BetterAuthOptions } from 'better-auth';
 import { getBrowserTimezone, isValidTimezone } from './timezones';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
@@ -14,6 +14,7 @@ import { getSocialProviders } from './auth-providers';
 import { redis, resend, twilio } from './services';
 import { getContext } from 'hono/context-storage';
 import { defaultUserSettings } from './schemas';
+import { getMigrations } from 'better-auth/db';
 import { disableBrainFunction } from './brain';
 import { APIError } from 'better-auth/api';
 import { getZeroDB } from './server-utils';
@@ -78,6 +79,9 @@ export const createAuth = () => {
 
   return betterAuth({
     plugins: [
+      mcp({
+        loginPage: env.VITE_PUBLIC_APP_URL + '/login',
+      }),
       jwt(),
       bearer(),
       phoneNumber({
@@ -235,7 +239,8 @@ const createAuthConfig = () => {
     database: drizzleAdapter(db, { provider: 'pg' }),
     secondaryStorage: {
       get: async (key: string) => {
-        return ((await cache.get(key)) as string) ?? null;
+        const value = await cache.get(key);
+        return typeof value === 'string' ? value : value ? JSON.stringify(value) : null;
       },
       set: async (key: string, value: string, ttl?: number) => {
         if (ttl) await cache.set(key, value, { ex: ttl });
