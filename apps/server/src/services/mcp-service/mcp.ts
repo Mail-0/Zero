@@ -138,8 +138,8 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { connectionId: string }> 
           };
 
           // const response = await env.VECTORIZE.getByIds([s.threadId]);
-          // if (response.length && response?.[0]?.metadata?.['content']) {
-          //   const content = response[0].metadata['content'] as string;
+          // if (response.length && response?.[0]?.metadata?.['summary']) {
+          //   const content = response[0].metadata['summary'] as string;
           //   const shortResponse = await env.AI.run('@cf/facebook/bart-large-cnn', {
           //     input_text: content,
           //   });
