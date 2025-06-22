@@ -311,6 +311,7 @@ export default function GeneralPage() {
                 </FormItem>
               )}
             />
+
           </form>
         </Form>
       </SettingsCard>
