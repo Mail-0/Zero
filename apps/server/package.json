@@ -51,7 +51,7 @@
     "email-addresses": "^5.0.0",
     "google-auth-library": "9.15.1",
     "he": "^1.2.0",
-    "hono": "^4.7.8",
+    "hono": "^4.8.2",
     "hono-agents": "0.0.83",
     "hono-party": "^0.0.12",
     "jose": "6.0.11",
