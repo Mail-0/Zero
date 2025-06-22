@@ -110,6 +110,31 @@ export const formatDate = (date: string) => {
   }
 };
 
+export const formatTime = (date: string) => {
+  try {
+    // Handle empty or invalid input
+    if (!date) {
+      return '';
+    }
+
+    const timezone = getBrowserTimezone();
+    // Parse the date string to a Date object
+    const dateObj = new Date(date);
+
+    // Check if the date is valid
+    if (isNaN(dateObj.getTime())) {
+      console.error('Invalid date', date);
+      return '';
+    }
+
+    // Always return the time in h:mm a format
+    return formatInTimeZone(dateObj, timezone, 'h:mm a');
+  } catch (error) {
+    console.error('Error formatting time', error);
+    return '';
+  }
+};
+
 export const cleanEmailAddress = (email: string = '') => {
   return email.replace(/[<>]/g, '').trim();
 };
