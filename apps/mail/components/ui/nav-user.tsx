@@ -248,7 +248,7 @@ export function NavUser() {
                           <SunIcon className="size-4 opacity-60" />
                         )}
                         <p className="text-[13px] opacity-60">
-                          {theme === 'dark' ? 'Light Theme' : 'Dark Theme'}
+                          {theme === 'dark' ? t('common.themes.light') : t('common.themes.dark')}
                         </p>
                       </div>
                     </DropdownMenuItem>
@@ -477,7 +477,7 @@ export function NavUser() {
                             <SunIcon className="size-4 opacity-60" />
                           )}
                           <p className="text-[13px] opacity-60">
-                            {theme === 'dark' ? 'Light Theme' : 'Dark Theme'}
+                            {theme === 'dark' ? t('common.themes.light') : t('common.themes.dark')}
                           </p>
                         </div>
                         <p className="text-muted-foreground text-[11px]">⌘ K</p>
