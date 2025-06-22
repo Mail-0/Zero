@@ -1457,7 +1457,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                               </button>
                             </PopoverTrigger>
                             <PopoverContent
-                              className="align-items-start dark:bg-panelDark w-[420px] rounded-lg border p-3 text-left shadow-lg"
+                              className="flex dark:bg-panelDark w-[420px] rounded-lg border p-4  text-left shadow-lg overflow-auto"
                               onBlur={(e) => {
                                 if (!triggerRef.current?.contains(e.relatedTarget)) {
                                   setOpenDetailsPopover(false);
