@@ -27,7 +27,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/componen
 import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
 import { useActiveConnection, useConnections } from '@/hooks/use-connections';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCommandPalette } from '../context/command-palette-context';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { ThreadDisplay } from '@/components/mail/thread-display';
@@ -1069,7 +1069,7 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
     );
 
     if (!isDesktop) {
-      return { ...button, key: cat.id };
+      return React.cloneElement(button, { key: cat.id });
     }
 
     return (
