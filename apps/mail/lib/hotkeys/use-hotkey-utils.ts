@@ -63,7 +63,7 @@ export const useShortcutCache = (userId?: string) => {
       });
 
       try {
-        updateShortcuts({ shortcuts: newShortcuts });
+        await updateShortcuts({ shortcuts: newShortcuts });
       } catch (error) {
         // revert on error
         console.error('Error updating shortcuts:', error);

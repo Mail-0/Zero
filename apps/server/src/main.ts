@@ -16,6 +16,7 @@ import {
 } from './db/schema';
 import { env, WorkerEntrypoint, DurableObject } from 'cloudflare:workers';
 import { MainWorkflow, ThreadWorkflow, ZeroWorkflow } from './pipelines';
+import { shortcutSchema, type Shortcut } from './lib/shortcuts';
 import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
 import { getZeroDB, verifyToken } from './lib/server-utils';
 import { EProviders, type ISubscribeBatch } from './types';
@@ -26,7 +27,6 @@ import { createLocalJWKSet, jwtVerify } from 'jose';
 import { routePartykitRequest } from 'partyserver';
 import { withMcpAuth } from 'better-auth/plugins';
 import { enableBrainFunction } from './lib/brain';
-import type { Shortcut } from './lib/shortcuts';
 import { trpcServer } from '@hono/trpc-server';
 import { agentsMiddleware } from 'hono-agents';
 import { publicRouter } from './routes/auth';
@@ -42,6 +42,7 @@ import { Autumn } from 'autumn-js';
 import { appRouter } from './trpc';
 import { cors } from 'hono/cors';
 import { Hono } from 'hono';
+import { z } from 'zod';
 
 class ZeroDB extends DurableObject {
   db: DB = createDb(env.HYPERDRIVE.connectionString);
@@ -186,9 +187,19 @@ class ZeroDB extends DurableObject {
   async findUserHotkeys(
     userId: string,
   ): Promise<(typeof userHotkeys.$inferSelect & { shortcuts: Shortcut[] }) | undefined> {
-    return (await this.db.query.userHotkeys.findFirst({
+    const result = await this.db.query.userHotkeys.findFirst({
       where: eq(userHotkeys.userId, userId),
-    })) as (typeof userHotkeys.$inferSelect & { shortcuts: Shortcut[] }) | undefined;
+    });
+
+    if (!result) return undefined;
+
+    const shortcuts = z.array(shortcutSchema).safeParse(result.shortcuts);
+    if (!shortcuts.success) {
+      console.error('Invalid shortcuts data in database:', shortcuts.error);
+      return { ...result, shortcuts: [] };
+    }
+
+    return { ...result, shortcuts: shortcuts.data };
   }
 
   async insertUserHotkeys(userId: string, shortcuts: (typeof userHotkeys.$inferInsert)[]) {
