@@ -59,7 +59,7 @@
     "mimetext": "^3.0.27",
     "p-retry": "6.2.1",
     "partyserver": "^0.0.71",
-    "postgres": "3.4.5",
+    "postgres": "3.4.7",
     "react": "catalog:",
     "remeda": "2.23.0",
     "resend": "^4.5.1",
