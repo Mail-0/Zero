@@ -78,6 +78,9 @@ const RenderThreads = ({
 };
 
 const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => void }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  
   const firstRowQueries = [
     'Find invoice from Stripe',
     'Show unpaid invoices',
@@ -86,16 +89,55 @@ const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => voi
 
   const secondRowQueries = ['Find all work meetings', 'What projects do i have coming up'];
 
+
+  const createInfiniteContent = (queries: string[]) => {
+    return [...queries, ...queries, ...queries, ...queries, ...queries];
+  };
+
+  useEffect(() => {
+    setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  }, []);
+
+  const handleButtonClick = (query: string, event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    
+    onQueryClick(query);
+    
+    event.currentTarget.blur();
+    
+    setTimeout(() => {
+      event.currentTarget.blur();
+      event.currentTarget.classList.remove('active');
+      (event.currentTarget as any).active = false;
+    }, 50);
+  };
+
+  const handleMouseEnter = () => {
+    if (!isTouchDevice) {
+      setIsHovered(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (!isTouchDevice) {
+      setIsHovered(false);
+    }
+  };
+
   return (
-    <div className="mt-6 flex w-full flex-col items-center gap-2">
+    <div className="mt-6 flex w-full max-w-xl flex-col items-center gap-2">
       {/* First row */}
-      <div className="no-scrollbar relative flex w-full justify-center overflow-x-auto">
-        <div className="flex gap-4 px-4">
-          {firstRowQueries.map((query, index) => (
+      <div 
+        className="no-scrollbar relative flex w-full justify-center overflow-hidden"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <div className={`flex gap-4 px-4 whitespace-nowrap ${isHovered ? 'animate-scroll-left-paused' : 'animate-scroll-left'}`}>
+          {createInfiniteContent(firstRowQueries).map((query, index) => (
             <button
               key={index}
-              onClick={() => onQueryClick(query)}
-              className="flex-shrink-0 whitespace-nowrap rounded-md bg-[#f0f0f0] p-1 px-2 text-sm text-[#555555] dark:bg-[#262626] dark:text-[#929292]"
+              onClick={(e) => handleButtonClick(query, e)}
+              className="flex-shrink-0 whitespace-nowrap rounded-md bg-[#f0f0f0] p-1 px-2 text-sm text-[#555555] dark:bg-[#262626] dark:text-[#929292] hover:bg-[#e0e0e0] dark:hover:bg-[#363636] transition-colors duration-200 focus:outline-none focus:ring-0 focus:bg-[#f0f0f0] dark:focus:bg-[#262626] active:bg-[#f0f0f0] dark:active:bg-[#262626] focus-visible:outline-none focus-visible:ring-0 touch-manipulation"
             >
               {query}
             </button>
@@ -108,13 +150,17 @@ const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => voi
       </div>
 
       {/* Second row */}
-      <div className="no-scrollbar relative flex w-full justify-center overflow-x-auto">
-        <div className="flex gap-4 px-4">
-          {secondRowQueries.map((query, index) => (
+      <div 
+        className="no-scrollbar relative flex w-full justify-center overflow-hidden"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <div className={`flex gap-4 px-4 whitespace-nowrap ${isHovered ? 'animate-scroll-left-paused' : 'animate-scroll-left'}`}>
+          {createInfiniteContent(secondRowQueries).map((query, index) => (
             <button
               key={index}
-              onClick={() => onQueryClick(query)}
-              className="flex-shrink-0 whitespace-nowrap rounded-md bg-[#f0f0f0] p-1 px-2 text-sm text-[#555555] dark:bg-[#262626] dark:text-[#929292]"
+              onClick={(e) => handleButtonClick(query, e)}
+              className="flex-shrink-0 whitespace-nowrap rounded-md bg-[#f0f0f0] p-1 px-2 text-sm text-[#555555] dark:bg-[#262626] dark:text-[#929292] hover:bg-[#e0e0e0] dark:hover:bg-[#363636] transition-colors duration-200 focus:outline-none focus:ring-0 focus:bg-[#f0f0f0] dark:focus:bg-[#262626] active:bg-[#f0f0f0] dark:active:bg-[#262626] focus-visible:outline-none focus-visible:ring-0 touch-manipulation"
             >
               {query}
             </button>
@@ -260,7 +306,6 @@ export function AIChat({
 }: AIChatProps): React.ReactElement {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const { chatMessages } = useBilling();
   const { isFullScreen } = useAIFullScreen();
   const [, setPricingDialog] = useQueryState('pricingDialog');
@@ -289,6 +334,12 @@ export function AIChat({
     editor.commands.clearContent(true);
   };
 
+  const handleQueryClick = (query: string) => {
+    editor.commands.setContent(query);
+    setInput(query);
+    editor.commands.focus();
+  };
+
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
@@ -304,14 +355,20 @@ export function AIChat({
       <div className="no-scrollbar flex-1 overflow-y-auto" ref={messagesContainerRef}>
         <div className="min-h-full space-y-4 px-2 py-4">
           {chatMessages && !chatMessages.enabled ? (
-            <div
-              onClick={() => setPricingDialog('true')}
-              className="absolute inset-0 flex flex-col items-center justify-center"
-            >
-              <TextShimmer className="text-center text-xl font-medium">
-                Upgrade to Zero Pro for unlimited AI chat
-              </TextShimmer>
-              <Button className="mt-2 h-8 w-52">Start 7 day free trial</Button>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <div className="relative mb-4 h-[44px] w-[44px]">
+              <img src="/black-icon.svg" alt="Zero Logo" className="dark:hidden" />
+              <img src="/white-icon.svg" alt="Zero Logo" className="hidden dark:block" />
+            </div>
+            <p className="mb-1 mt-2 hidden text-center text-sm font-medium text-black md:block dark:text-white">
+              Ask anything about your emails
+            </p>
+            <p className="mb-3 text-center text-sm text-[#8C8C8C] dark:text-[#929292]">
+              Ask to do or show anything using natural language
+            </p>
+
+            {/* Example Thread */}
+            <ExampleQueries onQueryClick={handleQueryClick} />
             </div>
           ) : !messages.length ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -327,12 +384,7 @@ export function AIChat({
               </p>
 
               {/* Example Thread */}
-              <ExampleQueries
-                onQueryClick={(query) => {
-                  setInput(query);
-                  inputRef.current?.focus();
-                }}
-              />
+              <ExampleQueries onQueryClick={handleQueryClick} />
             </div>
           ) : (
             messages.map((message, index) => {
@@ -425,7 +477,7 @@ export function AIChat({
           </div>
         </div>
 
-        {/* <div className="flex items-center justify-end gap-1">
+     {/* <div className="flex items-center justify-end gap-1">
         <div className="mt-1 flex items-center justify-end relative z-10">
           <Select
 
