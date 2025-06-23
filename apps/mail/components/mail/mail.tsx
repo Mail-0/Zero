@@ -27,7 +27,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/componen
 import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
 import { useActiveConnection, useConnections } from '@/hooks/use-connections';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCommandPalette } from '../context/command-palette-context';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { ThreadDisplay } from '@/components/mail/thread-display';
@@ -64,6 +64,7 @@ import { useTranslations } from 'use-intl';
 import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
+import type { IConnection } from '@/types';
 
 interface ITag {
   id: string;
@@ -391,7 +392,7 @@ export function MailLayout() {
 
   const activeAccount = useMemo(() => {
     if (!activeConnection?.id || !connections?.connections) return null;
-    return connections.connections.find((connection) => connection.id === activeConnection?.id);
+    return connections.connections.find((connection: IConnection) => connection.id === activeConnection?.id);
   }, [activeConnection?.id, connections?.connections]);
 
   useEffect(() => {
@@ -943,6 +944,7 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
   const activeTabElementRef = useRef<HTMLButtonElement>(null);
   const overlayContainerRef = useRef<HTMLDivElement>(null);
   const [textSize, setTextSize] = useState<'normal' | 'small' | 'xs' | 'hidden'>('normal');
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
 
   if (folder !== 'inbox') return <div className="h-8"></div>;
 
@@ -1036,40 +1038,47 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
 
     const showText = textSize !== 'hidden';
 
+    const button = (
+      <button
+        ref={!isOverlay ? activeTabElementRef : null}
+        onClick={() => {
+          setCategory(cat.id);
+          setSearchValue({
+            value: `${cat.searchValue} ${cleanSearchValue(searchValue.value).trim().length ? `AND ${cleanSearchValue(searchValue.value)}` : ''}`,
+            highlight: searchValue.highlight,
+            folder: '',
+          });
+        }}
+        className={cn(
+          'flex h-8 items-center justify-center gap-1 overflow-hidden rounded-lg border transition-all duration-300 ease-out dark:border-none',
+          isSelected
+            ? cn('flex-1 border-none text-white', getPaddingClasses(), bgColor)
+            : 'w-8 bg-white hover:bg-gray-100 dark:bg-[#313131] dark:hover:bg-[#313131]/80',
+        )}
+        tabIndex={isOverlay ? -1 : undefined}
+      >
+        <div className="relative overflow-visible">{cat.icon}</div>
+        {isSelected && showText && (
+          <div className="flex items-center justify-center gap-2.5 px-0.5">
+            <div className={cn('justify-start truncate leading-none text-white', getTextClasses())}>
+              {cat.name}
+            </div>
+          </div>
+        )}
+      </button>
+    );
+
+    if (!isDesktop) {
+      return React.cloneElement(button, { key: cat.id });
+    }
+
     return (
       <Tooltip key={cat.id}>
-        <TooltipTrigger asChild>
-          <button
-            ref={!isOverlay ? activeTabElementRef : null}
-            onClick={() => {
-              setCategory(cat.id);
-              setSearchValue({
-                value: `${cat.searchValue} ${cleanSearchValue(searchValue.value).trim().length ? `AND ${cleanSearchValue(searchValue.value)}` : ''}`,
-                highlight: searchValue.highlight,
-                folder: '',
-              });
-            }}
-            className={cn(
-              'flex h-8 items-center justify-center gap-1 overflow-hidden rounded-lg border transition-all duration-300 ease-out dark:border-none',
-              isSelected
-                ? cn('flex-1 border-none text-white', getPaddingClasses(), bgColor)
-                : 'w-8 bg-white hover:bg-gray-100 dark:bg-[#313131] dark:hover:bg-[#313131]/80',
-            )}
-            tabIndex={isOverlay ? -1 : undefined}
-          >
-            <div className="relative overflow-visible">{cat.icon}</div>
-            {isSelected && showText && (
-              <div className="flex items-center justify-center gap-2.5 px-0.5">
-                <div
-                  className={cn('justify-start truncate leading-none text-white', getTextClasses())}
-                >
-                  {cat.name}
-                </div>
-              </div>
-            )}
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side="top" className={`${idx === 0 ? 'ml-4' : ''}`}>
+        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        <TooltipContent
+          side="top"
+          align={idx === 0 ? 'start' : idx === categories.length - 1 ? 'end' : 'center'}
+        >
           <span className="mr-2">{cat.name}</span>
           <kbd
             className={cn(
