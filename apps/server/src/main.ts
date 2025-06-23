@@ -16,6 +16,7 @@ import {
 } from './db/schema';
 import { env, WorkerEntrypoint, DurableObject } from 'cloudflare:workers';
 import { MainWorkflow, ThreadWorkflow, ZeroWorkflow } from './pipelines';
+import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
 import { getZeroDB, verifyToken } from './lib/server-utils';
 import { EProviders, type ISubscribeBatch } from './types';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
@@ -23,6 +24,7 @@ import { contextStorage } from 'hono/context-storage';
 import { defaultUserSettings } from './lib/schemas';
 import { createLocalJWKSet, jwtVerify } from 'jose';
 import { routePartykitRequest } from 'partyserver';
+import { withMcpAuth } from 'better-auth/plugins';
 import { enableBrainFunction } from './lib/brain';
 import { trpcServer } from '@hono/trpc-server';
 import { agentsMiddleware } from 'hono-agents';
@@ -374,12 +376,19 @@ export default class extends WorkerEntrypoint<typeof env> {
 
       const autumn = new Autumn({ secretKey: env.AUTUMN_SECRET_KEY });
       c.set('autumn', autumn);
+
       await next();
+
+      c.set('sessionUser', undefined);
+      c.set('autumn', undefined as any);
+      c.set('auth', undefined as any);
     })
     .route('/ai', aiRouter)
     .route('/autumn', autumnApi)
     .route('/public', publicRouter)
-    .on(['GET', 'POST'], '/auth/*', (c) => c.var.auth.handler(c.req.raw))
+    .on(['GET', 'POST', 'OPTIONS'], '/auth/*', (c) => {
+      return c.var.auth.handler(c.req.raw);
+    })
     .use(
       trpcServer({
         endpoint: '/api/trpc',
@@ -421,6 +430,10 @@ export default class extends WorkerEntrypoint<typeof env> {
         exposeHeaders: ['X-Zero-Redirect'],
       }),
     )
+    .get('.well-known/oauth-authorization-server', async (c) => {
+      const auth = createAuth();
+      return oAuthDiscoveryMetadata(auth)(c.req.raw);
+    })
     .mount(
       '/sse',
       async (request, env, ctx) => {
@@ -428,8 +441,13 @@ export default class extends WorkerEntrypoint<typeof env> {
         if (!authBearer) {
           return new Response('Unauthorized', { status: 401 });
         }
+        const auth = createAuth();
+        const session = await auth.api.getMcpSession({ headers: request.headers });
+        if (!session) {
+          return new Response('Unauthorized', { status: 401 });
+        }
         ctx.props = {
-          cookie: authBearer,
+          userId: session?.userId,
         };
         return ZeroMCP.serveSSE('/sse', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
       },
@@ -442,8 +460,10 @@ export default class extends WorkerEntrypoint<typeof env> {
         if (!authBearer) {
           return new Response('Unauthorized', { status: 401 });
         }
+        const auth = createAuth();
+        const session = await auth.api.getMcpSession({ headers: request.headers });
         ctx.props = {
-          cookie: authBearer,
+          userId: session?.userId,
         };
         return ZeroMCP.serve('/mcp', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
       },
