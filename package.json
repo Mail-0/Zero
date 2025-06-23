@@ -2,7 +2,7 @@
   "name": "zero",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@10.11.0",
+  "packageManager": "pnpm@10.12.1",
   "scripts": {
     "go": "pnpm docker:db:up && pnpm run dev",
     "prepare": "husky",

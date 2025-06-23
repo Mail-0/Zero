@@ -16,6 +16,8 @@ export interface ParsedDraft<T = unknown> {
   subject?: string;
   content?: string;
   rawMessage?: T;
+  cc?: string[];
+  bcc?: string[];
 }
 
 export interface IConfig {
