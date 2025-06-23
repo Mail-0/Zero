@@ -135,10 +135,13 @@
     "navUser": {
       "customerSupport": "社群",
       "documentation": "文件",
-      "appTheme": "應用程式主題",
+      "appTheme": "切換主題",
       "accounts": "帳戶",
       "signIn": "登入",
-      "otherAccounts": "其他帳戶"
+      "otherAccounts": "其他帳戶",
+      "switchingAccounts": "正在切換帳戶...",
+      "accountSwitched": "帳戶已成功切換",
+      "failedToSwitchAccount": "切換帳戶失敗。請再試一次。"
     },
     "mailCategories": {
       "primary": "主要",
@@ -169,6 +172,7 @@
       "details": "詳細資訊",
       "from": "寄件者",
       "to": "收件者",
+      "replyTo": "回覆至",
       "cc": "副本",
       "bcc": "密件副本",
       "date": "日期",
@@ -268,7 +272,9 @@
       "notFound": "找不到設定",
       "saved": "設定已儲存",
       "failedToSave": "儲存設定失敗",
-      "languageChanged": "語言已更改為 {locale}"
+      "languageChanged": "語言已更改為 {locale}",
+      "defaultEmailUpdated": "Gmail 中的預設電子郵件別名已更新",
+      "failedToUpdateGmailAlias": "無法更新 Gmail 設定中的預設別名"
     },
     "mail": {
       "replies": "{count, plural, =0 {回覆} one {# 則回覆} other {# 則回覆}}",
@@ -327,12 +333,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "顏色",
+      "labelName": "標籤名稱",
+      "createLabel": "建立標籤",
       "deleteLabel": "刪除標籤",
       "deleteLabelConfirm": "確定要刪除此標籤嗎？",
       "deleteLabelConfirmDescription": "此操作無法撤銷。",
       "deleteLabelConfirmCancel": "取消",
       "deleteLabelConfirmDelete": "刪除",
-      "deleteLabelSuccess": "標籤已成功刪除"
+      "deleteLabelSuccess": "標籤已成功刪除",
+      "failedToDeleteLabel": "刪除標籤失敗",
+      "deletingLabel": "正在刪除標籤...",
+      "editLabel": "編輯標籤",
+      "savingLabel": "正在儲存標籤...",
+      "failedToSavingLabel": "儲存標籤失敗",
+      "saveLabelSuccess": "標籤已成功儲存"
     }
   },
   "navigation": {
@@ -355,6 +370,7 @@
       "signatures": "簽名檔",
       "shortcuts": "快捷鍵",
       "labels": "標籤",
+      "categories": "分類",
       "dangerZone": "危險區域",
       "deleteAccount": "刪除帳戶",
       "privacy": "隱私"
@@ -385,7 +401,10 @@
         "customPromptDescription": "自訂 AI 撰寫電子郵件回覆的方式。這將添加到基本提示中。",
         "noResultsFound": "找不到結果",
         "zeroSignature": "Zero 簽名檔",
-        "zeroSignatureDescription": "在您的電子郵件中新增 Zero 簽名檔。"
+        "zeroSignatureDescription": "在您的電子郵件中新增 Zero 簽名檔。",
+        "defaultEmailAlias": "預設電子郵件別名",
+        "selectDefaultEmail": "選擇預設電子郵件",
+        "defaultEmailDescription": "此電子郵件將作為撰寫新郵件時的預設「寄件者」地址"
       },
       "connections": {
         "title": "電子郵件連接",

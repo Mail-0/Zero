@@ -135,10 +135,13 @@
     "navUser": {
       "customerSupport": "コミュニティ",
       "documentation": "ドキュメント",
-      "appTheme": "テーマ",
+      "appTheme": "テーマを切り替え",
       "accounts": "アカウント",
       "signIn": "サインイン",
-      "otherAccounts": "その他のアカウント"
+      "otherAccounts": "その他のアカウント",
+      "switchingAccounts": "アカウント切り替え中...",
+      "accountSwitched": "アカウントの切り替えに成功しました",
+      "failedToSwitchAccount": "アカウントの切り替えに失敗しました。もう一度お試しください。"
     },
     "mailCategories": {
       "primary": "プライマリ",
@@ -169,6 +172,7 @@
       "details": "詳細",
       "from": "差出人",
       "to": "宛先",
+      "replyTo": "返信先",
       "cc": "Cc",
       "bcc": "Bcc",
       "date": "日付",
@@ -268,7 +272,9 @@
       "notFound": "設定が見つかりません",
       "saved": "設定が保存されました",
       "failedToSave": "設定の保存に失敗しました",
-      "languageChanged": "言語を {locale}に変更しました"
+      "languageChanged": "言語を {locale}に変更しました",
+      "defaultEmailUpdated": "Gmailでデフォルトのメールエイリアスが更新されました",
+      "failedToUpdateGmailAlias": "Gmail設定でデフォルトのエイリアスの更新に失敗しました"
     },
     "mail": {
       "replies": "{count, plural, =0 {replies} other {# replies}}",
@@ -327,12 +333,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "色",
+      "labelName": "ラベル名",
+      "createLabel": "ラベルを作成",
       "deleteLabel": "ラベルを削除",
       "deleteLabelConfirm": "このラベルを削除してもよろしいですか？",
       "deleteLabelConfirmDescription": "この操作は元に戻せません。",
       "deleteLabelConfirmCancel": "キャンセル",
       "deleteLabelConfirmDelete": "削除",
-      "deleteLabelSuccess": "ラベルが正常に削除されました"
+      "deleteLabelSuccess": "ラベルが正常に削除されました",
+      "failedToDeleteLabel": "ラベルの削除に失敗しました",
+      "deletingLabel": "ラベルを削除中...",
+      "editLabel": "ラベルを編集",
+      "savingLabel": "ラベルを保存中...",
+      "failedToSavingLabel": "ラベルの保存に失敗しました",
+      "saveLabelSuccess": "ラベルが正常に保存されました"
     }
   },
   "navigation": {
@@ -355,6 +370,7 @@
       "signatures": "署名",
       "shortcuts": "ショートカット",
       "labels": "ラベル",
+      "categories": "カテゴリー",
       "dangerZone": "危険ゾーン",
       "deleteAccount": "アカウントを削除",
       "privacy": "プライバシー"
@@ -385,7 +401,10 @@
         "customPromptDescription": "AIがメールの返信を書く方法をカスタマイズします。これはベースプロンプトに追加されます。",
         "noResultsFound": "結果が見つかりませんでした",
         "zeroSignature": "Zero署名",
-        "zeroSignatureDescription": "メールにZero署名を追加します。"
+        "zeroSignatureDescription": "メールにZero署名を追加します。",
+        "defaultEmailAlias": "デフォルトのメールエイリアス",
+        "selectDefaultEmail": "デフォルトのメールを選択",
+        "defaultEmailDescription": "このメールは新しいメールを作成する際のデフォルトの「差出人」アドレスとして使用されます"
       },
       "connections": {
         "title": "メールの接続",

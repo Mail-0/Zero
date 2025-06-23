@@ -135,10 +135,13 @@
     "navUser": {
       "customerSupport": "المجتمع",
       "documentation": "الوثائق",
-      "appTheme": "مظهر التطبيق",
+      "appTheme": "تبديل السمة",
       "accounts": "الحسابات",
       "signIn": "تسجيل الدخول",
-      "otherAccounts": "حسابات أخرى"
+      "otherAccounts": "حسابات أخرى",
+      "switchingAccounts": "جارٍ تبديل الحسابات...",
+      "accountSwitched": "تم تبديل الحساب بنجاح",
+      "failedToSwitchAccount": "فشل تبديل الحسابات. يرجى المحاولة مرة أخرى."
     },
     "mailCategories": {
       "primary": "الرئيسية",
@@ -169,6 +172,7 @@
       "details": "التفاصيل",
       "from": "من",
       "to": "إلى",
+      "replyTo": "الرد على",
       "cc": "نسخة",
       "bcc": "نسخة مخفية",
       "date": "التاريخ",
@@ -268,7 +272,9 @@
       "notFound": "لم يتم العثور على الإعدادات",
       "saved": "تم حفظ الإعدادات",
       "failedToSave": "فشل في حفظ الإعدادات",
-      "languageChanged": "تم تغيير اللغة إلى {locale}"
+      "languageChanged": "تم تغيير اللغة إلى {locale}",
+      "defaultEmailUpdated": "تم تحديث البريد الإلكتروني الافتراضي في جيميل",
+      "failedToUpdateGmailAlias": "فشل تحديث الاسم المستعار الافتراضي في إعدادات جيميل"
     },
     "mail": {
       "replies": "{count, plural, =0 {ردود} one {رد واحد} two {ردان} few {# ردود} many {# رداً} other {# رد}}",
@@ -327,12 +333,21 @@
       "mb": "{amount} ميجابايت"
     },
     "labels": {
+      "color": "اللون",
+      "labelName": "اسم التصنيف",
+      "createLabel": "إنشاء تصنيف",
       "deleteLabel": "حذف التصنيف",
       "deleteLabelConfirm": "هل أنت متأكد من رغبتك في حذف هذا التصنيف؟",
       "deleteLabelConfirmDescription": "لا يمكن التراجع عن هذا الإجراء.",
       "deleteLabelConfirmCancel": "إلغاء",
       "deleteLabelConfirmDelete": "حذف",
-      "deleteLabelSuccess": "تم حذف التصنيف بنجاح"
+      "deleteLabelSuccess": "تم حذف التصنيف بنجاح",
+      "failedToDeleteLabel": "فشل في حذف التصنيف",
+      "deletingLabel": "جارٍ حذف التصنيف...",
+      "editLabel": "تعديل التصنيف",
+      "savingLabel": "جارٍ حفظ التصنيف...",
+      "failedToSavingLabel": "فشل في حفظ التصنيف",
+      "saveLabelSuccess": "تم حفظ التصنيف بنجاح"
     }
   },
   "navigation": {
@@ -355,6 +370,7 @@
       "signatures": "التوقيعات",
       "shortcuts": "الاختصارات",
       "labels": "التصنيفات",
+      "categories": "الفئات",
       "dangerZone": "منطقة الخطر",
       "deleteAccount": "حذف الحساب",
       "privacy": "الخصوصية"
@@ -385,7 +401,10 @@
         "customPromptDescription": "خصص كيفية كتابة الذكاء الاصطناعي لردود بريدك الإلكتروني. سيتم إضافة هذا إلى التوجيه الأساسي.",
         "noResultsFound": "لم يتم العثور على نتائج",
         "zeroSignature": "توقيع Zero",
-        "zeroSignatureDescription": "إضافة توقيع Zero إلى رسائل البريد الإلكتروني الخاصة بك."
+        "zeroSignatureDescription": "إضافة توقيع Zero إلى رسائل البريد الإلكتروني الخاصة بك.",
+        "defaultEmailAlias": "الاسم المستعار الافتراضي للبريد الإلكتروني",
+        "selectDefaultEmail": "اختر البريد الإلكتروني الافتراضي",
+        "defaultEmailDescription": "سيتم استخدام هذا البريد الإلكتروني كعنوان \"من\" الافتراضي عند إنشاء رسائل إلكترونية جديدة"
       },
       "connections": {
         "title": "اتصالات البريد الإلكتروني",

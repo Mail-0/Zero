@@ -135,10 +135,13 @@
     "navUser": {
       "customerSupport": "Cộng đồng",
       "documentation": "Tài liệu",
-      "appTheme": "Giao diện ứng dụng",
+      "appTheme": "Chuyển đổi giao diện",
       "accounts": "Tài khoản",
       "signIn": "Đăng nhập",
-      "otherAccounts": "Tài khoản khác"
+      "otherAccounts": "Tài khoản khác",
+      "switchingAccounts": "Đang chuyển đổi tài khoản...",
+      "accountSwitched": "Chuyển đổi tài khoản thành công",
+      "failedToSwitchAccount": "Không thể chuyển đổi tài khoản. Vui lòng thử lại."
     },
     "mailCategories": {
       "primary": "Chính",
@@ -169,6 +172,7 @@
       "details": "Chi tiết",
       "from": "Từ",
       "to": "Đến",
+      "replyTo": "Trả lời đến",
       "cc": "Cc",
       "bcc": "Bcc",
       "date": "Ngày",
@@ -268,7 +272,9 @@
       "notFound": "Không tìm thấy cài đặt",
       "saved": "Đã lưu cài đặt",
       "failedToSave": "Không thể lưu cài đặt",
-      "languageChanged": "Đã chuyển ngôn ngữ sang {locale}"
+      "languageChanged": "Đã chuyển ngôn ngữ sang {locale}",
+      "defaultEmailUpdated": "Đã cập nhật bí danh email mặc định trong Gmail",
+      "failedToUpdateGmailAlias": "Không thể cập nhật bí danh mặc định trong cài đặt Gmail"
     },
     "mail": {
       "replies": "{count, plural, =0 {phản hồi} one {# phản hồi} other {# phản hồi}}",
@@ -327,12 +333,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "Màu sắc",
+      "labelName": "Tên nhãn",
+      "createLabel": "Tạo nhãn",
       "deleteLabel": "Xóa nhãn",
       "deleteLabelConfirm": "Bạn có chắc chắn muốn xóa nhãn này không?",
       "deleteLabelConfirmDescription": "Hành động này không thể hoàn tác.",
       "deleteLabelConfirmCancel": "Hủy",
       "deleteLabelConfirmDelete": "Xóa",
-      "deleteLabelSuccess": "Đã xóa nhãn thành công"
+      "deleteLabelSuccess": "Đã xóa nhãn thành công",
+      "failedToDeleteLabel": "Không thể xóa nhãn",
+      "deletingLabel": "Đang xóa nhãn...",
+      "editLabel": "Chỉnh sửa nhãn",
+      "savingLabel": "Đang lưu nhãn...",
+      "failedToSavingLabel": "Không thể lưu nhãn",
+      "saveLabelSuccess": "Đã lưu nhãn thành công"
     }
   },
   "navigation": {
@@ -355,6 +370,7 @@
       "signatures": "Chữ ký",
       "shortcuts": "Phím tắt",
       "labels": "Nhãn",
+      "categories": "Danh mục",
       "dangerZone": "Khu vực nguy hiểm",
       "deleteAccount": "Xóa tài khoản",
       "privacy": "Quyền riêng tư"
@@ -385,7 +401,10 @@
         "customPromptDescription": "Tùy chỉnh cách AI viết các trả lời email của bạn. Điều này sẽ được thêm vào lệnh cơ bản.",
         "noResultsFound": "Không tìm thấy kết quả nào",
         "zeroSignature": "Chữ ký Zero",
-        "zeroSignatureDescription": "Thêm chữ ký Zero vào email của bạn."
+        "zeroSignatureDescription": "Thêm chữ ký Zero vào email của bạn.",
+        "defaultEmailAlias": "Bí danh email mặc định",
+        "selectDefaultEmail": "Chọn email mặc định",
+        "defaultEmailDescription": "Email này sẽ được sử dụng làm địa chỉ 'Từ' mặc định khi soạn email mới"
       },
       "connections": {
         "title": "Kết nối email",

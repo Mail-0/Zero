@@ -135,10 +135,13 @@
     "navUser": {
       "customerSupport": "社区",
       "documentation": "文档",
-      "appTheme": "应用主题",
+      "appTheme": "切换主题",
       "accounts": "账户",
       "signIn": "登录",
-      "otherAccounts": "其他账户"
+      "otherAccounts": "其他账户",
+      "switchingAccounts": "正在切换账户...",
+      "accountSwitched": "账户切换成功",
+      "failedToSwitchAccount": "账户切换失败，请重试。"
     },
     "mailCategories": {
       "primary": "主要",
@@ -169,6 +172,7 @@
       "details": "详情",
       "from": "发件人",
       "to": "收件人",
+      "replyTo": "回复",
       "cc": "抄送",
       "bcc": "密送",
       "date": "日期",
@@ -268,7 +272,9 @@
       "notFound": "未找到设置",
       "saved": "设置已保存",
       "failedToSave": "保存设置失败",
-      "languageChanged": "语言已更改为{locale}"
+      "languageChanged": "语言已更改为{locale}",
+      "defaultEmailUpdated": "默认邮箱别名已在 Gmail 中更新",
+      "failedToUpdateGmailAlias": "无法更新 Gmail 设置中的默认别名"
     },
     "mail": {
       "replies": "{count, plural, =0 {回复} one {# 条回复} other {# 条回复}}",
@@ -327,12 +333,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "颜色",
+      "labelName": "标签名称",
+      "createLabel": "创建标签",
       "deleteLabel": "删除标签",
       "deleteLabelConfirm": "确定要删除此标签吗？",
       "deleteLabelConfirmDescription": "此操作无法撤销。",
       "deleteLabelConfirmCancel": "取消",
       "deleteLabelConfirmDelete": "删除",
-      "deleteLabelSuccess": "标签已成功删除"
+      "deleteLabelSuccess": "标签已成功删除",
+      "failedToDeleteLabel": "删除标签失败",
+      "deletingLabel": "正在删除标签...",
+      "editLabel": "编辑标签",
+      "savingLabel": "正在保存标签...",
+      "failedToSavingLabel": "保存标签失败",
+      "saveLabelSuccess": "标签保存成功"
     }
   },
   "navigation": {
@@ -355,6 +370,7 @@
       "signatures": "签名",
       "shortcuts": "快捷键",
       "labels": "标签",
+      "categories": "类别",
       "dangerZone": "危险区域",
       "deleteAccount": "删除账户",
       "privacy": "隐私"
@@ -385,7 +401,10 @@
         "customPromptDescription": "自定义AI如何撰写您的邮件回复。这将添加到基础提示中。",
         "noResultsFound": "未找到结果",
         "zeroSignature": "Zero 签名",
-        "zeroSignatureDescription": "在您的邮件中添加 Zero 签名。"
+        "zeroSignatureDescription": "在您的邮件中添加 Zero 签名。",
+        "defaultEmailAlias": "默认邮箱别名",
+        "selectDefaultEmail": "选择默认邮箱",
+        "defaultEmailDescription": "此邮箱将作为撰写新邮件时的默认“发件人”地址"
       },
       "connections": {
         "title": "邮箱连接",

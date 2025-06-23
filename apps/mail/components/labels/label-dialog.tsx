@@ -22,6 +22,7 @@ import { Label } from '@/components/ui/label';
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Command } from 'lucide-react';
+import { useTranslations } from 'use-intl';
 
 interface LabelDialogProps {
   trigger?: React.ReactNode;
@@ -44,11 +45,14 @@ export function LabelDialog({
   const isControlled = open !== undefined;
   const dialogOpen = isControlled ? open : isOpen;
   const setDialogOpen = isControlled ? onOpenChange! : setIsOpen;
-
+  const t = useTranslations();
   const form = useForm<LabelType>({
     defaultValues: {
       name: '',
-      color: { backgroundColor: '#E2E2E2', textColor: '#000000' },
+      color: {
+        backgroundColor: '',
+        textColor: '',
+      },
     },
   });
 
@@ -90,7 +94,7 @@ export function LabelDialog({
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent showOverlay={true}>
         <DialogHeader>
-          <DialogTitle>{editingLabel ? 'Edit Label' : 'Create New Label'}</DialogTitle>
+          <DialogTitle>{editingLabel ? t('common.labels.editLabel') : t('common.mail.createNewLabel')}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form
@@ -109,7 +113,7 @@ export function LabelDialog({
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Label Name</FormLabel>
+                    <FormLabel>{t('common.labels.labelName')}</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter label name" {...field} autoFocus />
                     </FormControl>
@@ -118,7 +122,7 @@ export function LabelDialog({
                 )}
               />
               <div className="space-y-2">
-                <Label>Color</Label>
+                <Label>{t('common.labels.color')}</Label>
                 <div className="w-full">
                   <div className="flex flex-wrap gap-2">
                     {LABEL_COLORS.map((color, index) => (
@@ -126,9 +130,9 @@ export function LabelDialog({
                         key={index}
                         type="button"
                         className={`h-10 w-10 rounded-[4px] border-[0.5px] border-white/10 transition-all ${
-                          formColor?.backgroundColor === color.backgroundColor &&
-                          formColor?.textColor === color.textColor
-                            ? 'scale-110 ring-2 ring-blue-500'
+                          formColor?.backgroundColor.toString() === color.backgroundColor &&
+                          formColor.textColor.toString() === color.textColor
+                            ? 'scale-110 ring-2 ring-blue-500 ring-offset-1'
                             : 'hover:scale-105'
                         }`}
                         style={{ backgroundColor: color.backgroundColor }}
@@ -146,10 +150,10 @@ export function LabelDialog({
             </div>
             <div className="flex justify-end gap-2">
               <Button className="h-8" type="button" variant="outline" onClick={handleClose}>
-                Cancel
+                {t('common.actions.cancel')}
               </Button>
               <Button className="h-8 [&_svg]:size-4" type="submit">
-                {editingLabel ? 'Save Changes' : 'Create Label'}
+                {editingLabel ? t('common.actions.saveChanges') : t('common.labels.createLabel')}
                 <div className="flex h-5 items-center justify-center gap-1 rounded-sm bg-white/10 px-1 dark:bg-black/10">
                   <Command className="h-3 w-3 text-white dark:text-[#929292]" />
                   <CurvedArrow className="mt-1.5 h-3.5 w-3.5 fill-white dark:fill-[#929292]" />

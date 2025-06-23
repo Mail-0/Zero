@@ -135,10 +135,13 @@
     "navUser": {
       "customerSupport": "커뮤니티",
       "documentation": "문서",
-      "appTheme": "앱 테마",
+      "appTheme": "테마 전환",
       "accounts": "계정",
       "signIn": "로그인",
-      "otherAccounts": "다른 계정"
+      "otherAccounts": "다른 계정",
+      "switchingAccounts": "계정 전환 중...",
+      "accountSwitched": "계정이 성공적으로 전환되었습니다",
+      "failedToSwitchAccount": "계정 전환에 실패했습니다. 다시 시도해 주세요."
     },
     "mailCategories": {
       "primary": "기본",
@@ -169,6 +172,7 @@
       "details": "세부 사항",
       "from": "보낸 사람",
       "to": "받는 사람",
+      "replyTo": "회신 대상",
       "cc": "참조",
       "bcc": "숨은참조",
       "date": "날짜",
@@ -268,7 +272,9 @@
       "notFound": "설정을 찾을 수 없습니다",
       "saved": "설정 저장됨",
       "failedToSave": "설정 저장 실패",
-      "languageChanged": "언어가 {locale}(으)로 변경되었습니다"
+      "languageChanged": "언어가 {locale}(으)로 변경되었습니다",
+      "defaultEmailUpdated": "Gmail에서 기본 이메일 별칭이 업데이트되었습니다",
+      "failedToUpdateGmailAlias": "Gmail 설정에서 기본 별칭 업데이트에 실패했습니다"
     },
     "mail": {
       "replies": "{count, plural, =0 {답장} one {답장 #개} other {답장 #개}}",
@@ -327,12 +333,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "색상",
+      "labelName": "라벨 이름",
+      "createLabel": "라벨 생성",
       "deleteLabel": "라벨 삭제",
       "deleteLabelConfirm": "이 라벨을 삭제하시겠습니까?",
       "deleteLabelConfirmDescription": "이 작업은 되돌릴 수 없습니다.",
       "deleteLabelConfirmCancel": "취소",
       "deleteLabelConfirmDelete": "삭제",
-      "deleteLabelSuccess": "라벨이 성공적으로 삭제되었습니다"
+      "deleteLabelSuccess": "라벨이 성공적으로 삭제되었습니다",
+      "failedToDeleteLabel": "라벨 삭제 실패",
+      "deletingLabel": "라벨 삭제 중...",
+      "editLabel": "라벨 편집",
+      "savingLabel": "라벨 저장 중...",
+      "failedToSavingLabel": "라벨 저장 실패",
+      "saveLabelSuccess": "라벨이 성공적으로 저장됨"
     }
   },
   "navigation": {
@@ -355,6 +370,7 @@
       "signatures": "서명",
       "shortcuts": "단축키",
       "labels": "라벨",
+      "categories": "카테고리",
       "dangerZone": "위험 구역",
       "deleteAccount": "계정 삭제",
       "privacy": "개인정보 보호"
@@ -385,7 +401,10 @@
         "customPromptDescription": "AI가 이메일 답장을 작성하는 방식을 맞춤설정하세요. 이것은 기본 프롬프트에 추가됩니다.",
         "noResultsFound": "검색 결과 없음",
         "zeroSignature": "Zero 서명",
-        "zeroSignatureDescription": "이메일에 Zero 서명을 추가합니다."
+        "zeroSignatureDescription": "이메일에 Zero 서명을 추가합니다.",
+        "defaultEmailAlias": "기본 이메일 별칭",
+        "selectDefaultEmail": "기본 이메일 선택",
+        "defaultEmailDescription": "이 이메일은 새 이메일 작성 시 기본 '보낸 사람' 주소로 사용됩니다"
       },
       "connections": {
         "title": "이메일 연결",

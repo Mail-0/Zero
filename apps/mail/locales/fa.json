@@ -135,10 +135,13 @@
     "navUser": {
       "customerSupport": "انجمن",
       "documentation": "مستندات",
-      "appTheme": "تم برنامه",
+      "appTheme": "تغییر پوسته",
       "accounts": "حساب‌ها",
       "signIn": "ورود",
-      "otherAccounts": "حساب‌های دیگر"
+      "otherAccounts": "حساب‌های دیگر",
+      "switchingAccounts": "در حال تغییر حساب‌ها...",
+      "accountSwitched": "حساب با موفقیت تغییر کرد",
+      "failedToSwitchAccount": "تغییر حساب ناموفق بود. لطفاً دوباره تلاش کنید."
     },
     "mailCategories": {
       "primary": "اصلی",
@@ -169,6 +172,7 @@
       "details": "جزئیات",
       "from": "از",
       "to": "به",
+      "replyTo": "پاسخ به",
       "cc": "رونوشت",
       "bcc": "رونوشت مخفی",
       "date": "تاریخ",
@@ -268,7 +272,9 @@
       "notFound": "تنظیمات یافت نشد",
       "saved": "تنظیمات ذخیره شد",
       "failedToSave": "ذخیره تنظیمات ناموفق بود",
-      "languageChanged": "زبان به {locale} تغییر کرد"
+      "languageChanged": "زبان به {locale} تغییر کرد",
+      "defaultEmailUpdated": "نام مستعار ایمیل پیش‌فرض در جیمیل به‌روزرسانی شد",
+      "failedToUpdateGmailAlias": "به‌روزرسانی نام مستعار پیش‌فرض در تنظیمات جیمیل ناموفق بود"
     },
     "mail": {
       "replies": "{count, plural, =0 {پاسخ‌ها} one {# پاسخ} other {# پاسخ}}",
@@ -327,12 +333,21 @@
       "mb": "{amount} مگابایت"
     },
     "labels": {
+      "color": "رنگ",
+      "labelName": "نام برچسب",
+      "createLabel": "ایجاد برچسب",
       "deleteLabel": "حذف برچسب",
       "deleteLabelConfirm": "آیا مطمئن هستید که می‌خواهید این برچسب را حذف کنید؟",
       "deleteLabelConfirmDescription": "این عملیات غیرقابل بازگشت است.",
       "deleteLabelConfirmCancel": "لغو",
       "deleteLabelConfirmDelete": "حذف",
-      "deleteLabelSuccess": "برچسب با موفقیت حذف شد"
+      "deleteLabelSuccess": "برچسب با موفقیت حذف شد",
+      "failedToDeleteLabel": "حذف برچسب ناموفق بود",
+      "deletingLabel": "در حال حذف برچسب...",
+      "editLabel": "ویرایش برچسب",
+      "savingLabel": "در حال ذخیره برچسب...",
+      "failedToSavingLabel": "ذخیره برچسب ناموفق بود",
+      "saveLabelSuccess": "برچسب با موفقیت ذخیره شد"
     }
   },
   "navigation": {
@@ -355,6 +370,7 @@
       "signatures": "امضاها",
       "shortcuts": "میانبرها",
       "labels": "برچسب‌ها",
+      "categories": "دسته‌بندی‌ها",
       "dangerZone": "منطقه خطر",
       "deleteAccount": "حذف حساب کاربری",
       "privacy": "حریم خصوصی"
@@ -385,7 +401,10 @@
         "customPromptDescription": "نحوه نگارش پاسخ‌های ایمیل توسط هوش مصنوعی را سفارشی کنید. این به پرامپت پایه اضافه خواهد شد.",
         "noResultsFound": "نتیجه‌ای یافت نشد",
         "zeroSignature": "امضای Zero",
-        "zeroSignatureDescription": "افزودن امضای Zero به ایمیل‌های شما."
+        "zeroSignatureDescription": "افزودن امضای Zero به ایمیل‌های شما.",
+        "defaultEmailAlias": "نام مستعار ایمیل پیش‌فرض",
+        "selectDefaultEmail": "انتخاب ایمیل پیش‌فرض",
+        "defaultEmailDescription": "این ایمیل به عنوان آدرس پیش‌فرض 'از طرف' هنگام نوشتن ایمیل‌های جدید استفاده خواهد شد"
       },
       "connections": {
         "title": "اتصالات ایمیل",

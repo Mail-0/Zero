@@ -135,10 +135,13 @@
     "navUser": {
       "customerSupport": "Topluluk",
       "documentation": "Dokümantasyon",
-      "appTheme": "Uygulama Teması",
+      "appTheme": "Temayı Değiştir",
       "accounts": "Hesaplar",
       "signIn": "Giriş Yap",
-      "otherAccounts": "Diğer Hesaplar"
+      "otherAccounts": "Diğer Hesaplar",
+      "switchingAccounts": "Hesaplar değiştiriliyor...",
+      "accountSwitched": "Hesap başarıyla değiştirildi",
+      "failedToSwitchAccount": "Hesap değiştirilemedi. Lütfen tekrar deneyin."
     },
     "mailCategories": {
       "primary": "Birincil",
@@ -169,6 +172,7 @@
       "details": "Detaylar",
       "from": "Kimden",
       "to": "Kime",
+      "replyTo": "Yanıtla",
       "cc": "Gönderilecek Kişiler",
       "bcc": "Gizli Alıcı",
       "date": "Tarih",
@@ -268,7 +272,9 @@
       "notFound": "Ayarlar bulunamadı",
       "saved": "Ayarlar kaydedildi",
       "failedToSave": "Ayarlar kaydedilemedi",
-      "languageChanged": "Dil {locale} olarak değiştirildi"
+      "languageChanged": "Dil {locale} olarak değiştirildi",
+      "defaultEmailUpdated": "Varsayılan e-posta adresi Gmail'de güncellendi",
+      "failedToUpdateGmailAlias": "Gmail ayarlarında varsayılan adres güncellenemedi"
     },
     "mail": {
       "replies": "{count, plural, =0 {cevaplar} one {# cevap} other {# cevaplar}}",
@@ -327,12 +333,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "Renk",
+      "labelName": "Etiket adı",
+      "createLabel": "Etiket oluştur",
       "deleteLabel": "Etiketi sil",
       "deleteLabelConfirm": "Bu etiketi silmek istediğinizden emin misiniz?",
       "deleteLabelConfirmDescription": "Bu eylem geri alınamaz.",
       "deleteLabelConfirmCancel": "İptal",
       "deleteLabelConfirmDelete": "Sil",
-      "deleteLabelSuccess": "Etiket başarıyla silindi"
+      "deleteLabelSuccess": "Etiket başarıyla silindi",
+      "failedToDeleteLabel": "Etiket silinemedi",
+      "deletingLabel": "Etiket siliniyor...",
+      "editLabel": "Etiketi düzenle",
+      "savingLabel": "Etiket kaydediliyor...",
+      "failedToSavingLabel": "Etiket kaydedilemedi",
+      "saveLabelSuccess": "Etiket başarıyla kaydedildi"
     }
   },
   "navigation": {
@@ -355,6 +370,7 @@
       "signatures": "İmzalar",
       "shortcuts": "Kısayollar",
       "labels": "Etiketler",
+      "categories": "Kategoriler",
       "dangerZone": "Tehlikeli Bölge",
       "deleteAccount": "Hesabı Sil",
       "privacy": "Gizlilik"
@@ -385,7 +401,10 @@
         "customPromptDescription": "Yapay zekanın e-posta yanıtlarınızı nasıl yazacağını özelleştirin. Bu, temel yönergeye eklenecektir.",
         "noResultsFound": "Sonuç bulunamadı",
         "zeroSignature": "Zero İmzası",
-        "zeroSignatureDescription": "E-postalarınıza Zero imzası ekleyin."
+        "zeroSignatureDescription": "E-postalarınıza Zero imzası ekleyin.",
+        "defaultEmailAlias": "Varsayılan E-posta Adresi",
+        "selectDefaultEmail": "Varsayılan e-postayı seç",
+        "defaultEmailDescription": "Bu e-posta, yeni e-postalar oluştururken varsayılan 'Kimden' adresi olarak kullanılacaktır"
       },
       "connections": {
         "title": "E-posta Bağlantıları",

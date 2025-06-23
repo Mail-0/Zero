@@ -261,6 +261,17 @@ export const GmailSearchAssistantSystemPrompt = () =>
     <Guideline id="8">
         When asked to search always use the <code>OR</code> operator to search for related terms, example: "emails from canva" should also be searched as "from:canva.com OR from:canva OR canva".
     </Guideline>
+    <Guideline id="9">
+      Predefined Category Mappings: If the user's entire request (after trimming and case-folding) exactly matches one of these category names, output the associated query verbatim and do <u>not</u> add any other operators or words.
+      <Mappings>
+        <Map phrase="all mail">NOT is:draft (is:inbox OR (is:sent AND to:me))</Map>
+        <Map phrase="important">is:important NOT is:sent NOT is:draft</Map>
+        <Map phrase="personal">is:personal NOT is:sent NOT is:draft</Map>
+        <Map phrase="promotions">is:promotions NOT is:sent NOT is:draft</Map>
+        <Map phrase="updates">is:updates NOT is:sent NOT is:draft</Map>
+        <Map phrase="unread">is:unread NOT is:sent NOT is:draft</Map>
+      </Mappings>
+    </Guideline>
   </Guidelines>
   <OutputFormat>Return only the final Gmail search query string, with no additional text, explanations, or formatting.</OutputFormat>
 </SystemPrompt>
@@ -297,6 +308,17 @@ export const OutlookSearchAssistantSystemPrompt = () =>
         </Guideline>
         <Guideline id="8">
             When asked to search always use the <code>OR</code> operator to search for related terms, example: "emails from canva" should also be searched as "from:canva.com OR from:canva OR canva".
+        </Guideline>
+        <Guideline id="9">
+          Predefined Category Mappings: If the user's entire request (after trimming and case-folding) exactly matches one of these category names, output the associated query verbatim and do <u>not</u> add any other operators or words.
+          <Mappings>
+            <Map phrase="all mail">(folder:inbox OR (folder:sentitems AND to:me)) NOT folder:drafts</Map>
+            <Map phrase="important">importance:high NOT folder:sentitems NOT folder:drafts</Map>
+            <Map phrase="personal">category:Personal NOT folder:sentitems NOT folder:drafts</Map>
+            <Map phrase="promotions">category:Promotions NOT folder:sentitems NOT folder:drafts</Map>
+            <Map phrase="updates">category:Updates NOT folder:sentitems NOT folder:drafts</Map>
+            <Map phrase="unread">read:no NOT folder:sentitems NOT folder:drafts</Map>
+          </Mappings>
         </Guideline>
       </Guidelines>
       <OutputFormat>Return only the final Outlook search query string, with no additional text, explanations, or formatting.</OutputFormat>

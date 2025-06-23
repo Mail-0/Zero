@@ -135,10 +135,13 @@
     "navUser": {
       "customerSupport": "Kopiena",
       "documentation": "Dokumentācija",
-      "appTheme": "Aplikācijas motīvs",
+      "appTheme": "Pārslēgt krāsu tēmu",
       "accounts": "Konti",
       "signIn": "Pierakstīties",
-      "otherAccounts": "Citi konti"
+      "otherAccounts": "Citi konti",
+      "switchingAccounts": "Pārslēdz kontus...",
+      "accountSwitched": "Konts veiksmīgi pārslēgts",
+      "failedToSwitchAccount": "Neizdevās pārslēgt kontus. Lūdzu, mēģiniet vēlreiz."
     },
     "mailCategories": {
       "primary": "Galvenā",
@@ -169,6 +172,7 @@
       "details": "Detaļas",
       "from": "No",
       "to": "Kam",
+      "replyTo": "Atbildēt",
       "cc": "Cc",
       "bcc": "Bcc",
       "date": "Datums",
@@ -268,7 +272,9 @@
       "notFound": "Iestatījumu lapa nav atrasta",
       "saved": "Iestatījumi saglabāti",
       "failedToSave": "Neizdevās saglabāt iestatījumus",
-      "languageChanged": "Valoda nomainīta uz {locale}"
+      "languageChanged": "Valoda nomainīta uz {locale}",
+      "defaultEmailUpdated": "Noklusējuma e-pasta adreses aizstājvārds atjaunināts Gmail",
+      "failedToUpdateGmailAlias": "Neizdevās atjaunināt noklusējuma aizstājvārdu Gmail iestatījumos"
     },
     "mail": {
       "replies": "{count, plural, zero {}=0 {atbildes} one {# atbilde} other {# atbildes}}",
@@ -327,12 +333,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "Krāsa",
+      "labelName": "Atzīmes nosaukums",
+      "createLabel": "Izveidot atzīmi",
       "deleteLabel": "Dzēst atzīmi",
       "deleteLabelConfirm": "Vai tiešām vēlaties dzēst šo atzīmi?",
       "deleteLabelConfirmDescription": "Šo darbību nevar atsaukt.",
       "deleteLabelConfirmCancel": "Atcelt",
       "deleteLabelConfirmDelete": "Dzēst",
-      "deleteLabelSuccess": "Atzīme veiksmīgi dzēsta"
+      "deleteLabelSuccess": "Atzīme veiksmīgi dzēsta",
+      "failedToDeleteLabel": "Neizdevās dzēst atzīmi",
+      "deletingLabel": "Dzēš atzīmi...",
+      "editLabel": "Rediģēt atzīmi",
+      "savingLabel": "Saglabā atzīmi...",
+      "failedToSavingLabel": "Neizdevās saglabāt atzīmi",
+      "saveLabelSuccess": "Atzīme veiksmīgi saglabāta"
     }
   },
   "navigation": {
@@ -355,6 +370,7 @@
       "signatures": "Paraksti",
       "shortcuts": "Īsceļi",
       "labels": "Iezīmes",
+      "categories": "Kategorijas",
       "dangerZone": "Bīstamā zona",
       "deleteAccount": "Dzēst kontu",
       "privacy": "Privātums"
@@ -385,7 +401,10 @@
         "customPromptDescription": "Pielāgot, kā AI raksta jūsu e-pasta atbildes. Jūsu norādījumi tiks pievienoti AI noklusējuma instrukcijām.",
         "noResultsFound": "Netika atrasts neviens rezultāts",
         "zeroSignature": "Zero paraksts",
-        "zeroSignatureDescription": "Pievienot Zero parakstu saviem e-pastiem."
+        "zeroSignatureDescription": "Pievienot Zero parakstu saviem e-pastiem.",
+        "defaultEmailAlias": "Noklusējuma e-pasta aizstājvārds",
+        "selectDefaultEmail": "Izvēlieties noklusējuma e-pastu",
+        "defaultEmailDescription": "Šis e-pasts tiks izmantots kā noklusējuma 'No' adrese, rakstot jaunus e-pastus"
       },
       "connections": {
         "title": "E-pasta savienojumi",

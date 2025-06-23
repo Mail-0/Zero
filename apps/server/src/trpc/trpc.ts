@@ -1,11 +1,10 @@
-import { connectionToDriver, getActiveConnection } from '../lib/server-utils';
+import { connectionToDriver, getActiveConnection, getZeroDB } from '../lib/server-utils';
 import { Ratelimit, type RatelimitConfig } from '@upstash/ratelimit';
 import type { HonoContext, HonoVariables } from '../ctx';
 import { getConnInfo } from 'hono/cloudflare-workers';
 import { initTRPC, TRPCError } from '@trpc/server';
-import { connection } from '../db/schema';
+import { env } from 'cloudflare:workers';
 import { redis } from '../lib/services';
-import { eq, and } from 'drizzle-orm';
 import type { Context } from 'hono';
 import superjson from 'superjson';
 
@@ -42,9 +41,8 @@ export const activeConnectionProcedure = privateProcedure.use(async ({ ctx, next
 });
 
 export const activeDriverProcedure = activeConnectionProcedure.use(async ({ ctx, next }) => {
-  const { activeConnection } = ctx;
-  const driver = connectionToDriver(activeConnection);
-  const res = await next({ ctx: { ...ctx, driver } });
+  const { activeConnection, sessionUser } = ctx;
+  const res = await next({ ctx: { ...ctx } });
 
   // This is for when the user has not granted the required scopes for GMail
   if (!res.ok && res.error.message === 'Precondition check failed.') {
@@ -57,10 +55,11 @@ export const activeDriverProcedure = activeConnectionProcedure.use(async ({ ctx,
 
   if (!res.ok && res.error.message === 'invalid_grant') {
     // Remove the access token and refresh token
-    await ctx.c.var.db
-      .update(connection)
-      .set({ accessToken: null, refreshToken: null })
-      .where(and(eq(connection.id, activeConnection.id)));
+    const db = getZeroDB(sessionUser.id);
+    await db.updateConnection(activeConnection.id, {
+      accessToken: null,
+      refreshToken: null,
+    });
 
     ctx.c.header(
       'X-Zero-Redirect',

@@ -135,10 +135,13 @@
     "navUser": {
       "customerSupport": "Сообщество",
       "documentation": "Документация",
-      "appTheme": "Тема",
+      "appTheme": "Переключить тему",
       "accounts": "Аккаунты",
       "signIn": "Войти",
-      "otherAccounts": "Другие аккаунты"
+      "otherAccounts": "Другие аккаунты",
+      "switchingAccounts": "Переключение между аккаунтами...",
+      "accountSwitched": "Аккаунт успешно переключен",
+      "failedToSwitchAccount": "Не удалось переключить аккаунты. Пожалуйста, попробуйте снова."
     },
     "mailCategories": {
       "primary": "Основные",
@@ -169,6 +172,7 @@
       "details": "Подробнее",
       "from": "От",
       "to": "Кому",
+      "replyTo": "Ответить",
       "cc": "Cc",
       "bcc": "Скрытая копия",
       "date": "Дата",
@@ -268,7 +272,9 @@
       "notFound": "Настройки не найдены",
       "saved": "Настройки сохранены",
       "failedToSave": "Не удалось сохранить настройки",
-      "languageChanged": "Язык изменен на {locale}"
+      "languageChanged": "Язык изменен на {locale}",
+      "defaultEmailUpdated": "Адрес электронной почты по умолчанию обновлен в Gmail",
+      "failedToUpdateGmailAlias": "Не удалось обновить адрес по умолчанию в настройках Gmail"
     },
     "mail": {
       "replies": "{count, plural, =0 {ответы} one {# ответ} few {# ответа} many {# ответов} other {# ответы}}",
@@ -327,12 +333,21 @@
       "mb": "{amount} МБ"
     },
     "labels": {
+      "color": "Цвет",
+      "labelName": "Название метки",
+      "createLabel": "Создать метку",
       "deleteLabel": "Удалить метку",
       "deleteLabelConfirm": "Вы уверены, что хотите удалить эту метку?",
       "deleteLabelConfirmDescription": "Это действие невозможно отменить.",
       "deleteLabelConfirmCancel": "Отменить",
       "deleteLabelConfirmDelete": "Удалить",
-      "deleteLabelSuccess": "Метка успешно удалена"
+      "deleteLabelSuccess": "Метка успешно удалена",
+      "failedToDeleteLabel": "Не удалось удалить метку",
+      "deletingLabel": "Удаление метки...",
+      "editLabel": "Редактировать метку",
+      "savingLabel": "Сохранение метки...",
+      "failedToSavingLabel": "Не удалось сохранить метку",
+      "saveLabelSuccess": "Метка успешно сохранена"
     }
   },
   "navigation": {
@@ -355,6 +370,7 @@
       "signatures": "Подписи",
       "shortcuts": "Команды",
       "labels": "Ярлыки",
+      "categories": "Категории",
       "dangerZone": "Опасная зона",
       "deleteAccount": "Удалить аккаунт",
       "privacy": "Конфиденциальность"
@@ -385,7 +401,10 @@
         "customPromptDescription": "Настройте, как ИИ будет писать ваши ответы на письма. Этот текст будет добавлен к основному запросу.",
         "noResultsFound": "Результаты не найдены",
         "zeroSignature": "Подпись Zero",
-        "zeroSignatureDescription": "Добавьте подпись Zero к вашим письмам."
+        "zeroSignatureDescription": "Добавьте подпись Zero к вашим письмам.",
+        "defaultEmailAlias": "Адрес электронной почты по умолчанию",
+        "selectDefaultEmail": "Выберите адрес электронной почты по умолчанию",
+        "defaultEmailDescription": "Этот адрес будет использоваться в качестве адреса отправителя по умолчанию при создании новых писем"
       },
       "connections": {
         "title": "Подключения",

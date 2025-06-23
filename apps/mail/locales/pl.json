@@ -135,10 +135,13 @@
     "navUser": {
       "customerSupport": "Społeczność",
       "documentation": "Dokumentacja",
-      "appTheme": "Motyw aplikacji",
+      "appTheme": "Przełącz motyw",
       "accounts": "Konta",
       "signIn": "Zaloguj się",
-      "otherAccounts": "Inne konta"
+      "otherAccounts": "Inne konta",
+      "switchingAccounts": "Przełączanie kont...",
+      "accountSwitched": "Konto zostało pomyślnie przełączone",
+      "failedToSwitchAccount": "Nie udało się przełączyć kont. Spróbuj ponownie."
     },
     "mailCategories": {
       "primary": "Główne",
@@ -169,6 +172,7 @@
       "details": "Szczegóły",
       "from": "Od",
       "to": "Do",
+      "replyTo": "Odpowiedz do",
       "cc": "Dw",
       "bcc": "UDW",
       "date": "Data",
@@ -268,7 +272,9 @@
       "notFound": "Nie znaleziono ustawień",
       "saved": "Ustawienia zapisane",
       "failedToSave": "Nie udało się zapisać ustawień",
-      "languageChanged": "Język zmieniony na {locale}"
+      "languageChanged": "Język zmieniony na {locale}",
+      "defaultEmailUpdated": "Domyślny alias e-mail został zaktualizowany w Gmailu",
+      "failedToUpdateGmailAlias": "Nie udało się zaktualizować domyślnego aliasu w ustawieniach Gmaila"
     },
     "mail": {
       "replies": "{count, plural, =0 {odpowiedzi} one {# odpowiedź} few {# odpowiedzi} many {# odpowiedzi} other {# odpowiedzi}}",
@@ -327,12 +333,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "Kolor",
+      "labelName": "Nazwa etykiety",
+      "createLabel": "Utwórz etykietę",
       "deleteLabel": "Usuń etykietę",
       "deleteLabelConfirm": "Czy na pewno chcesz usunąć tę etykietę?",
       "deleteLabelConfirmDescription": "Tej operacji nie można cofnąć.",
       "deleteLabelConfirmCancel": "Anuluj",
       "deleteLabelConfirmDelete": "Usuń",
-      "deleteLabelSuccess": "Etykieta została pomyślnie usunięta"
+      "deleteLabelSuccess": "Etykieta została pomyślnie usunięta",
+      "failedToDeleteLabel": "Nie udało się usunąć etykiety",
+      "deletingLabel": "Usuwanie etykiety...",
+      "editLabel": "Edytuj etykietę",
+      "savingLabel": "Zapisywanie etykiety...",
+      "failedToSavingLabel": "Nie udało się zapisać etykiety",
+      "saveLabelSuccess": "Etykieta została pomyślnie zapisana"
     }
   },
   "navigation": {
@@ -355,6 +370,7 @@
       "signatures": "Podpisy",
       "shortcuts": "Skróty",
       "labels": "Etykiety",
+      "categories": "Kategorie",
       "dangerZone": "Strefa zagrożenia",
       "deleteAccount": "Usuń konto",
       "privacy": "Prywatność"
@@ -385,7 +401,10 @@
         "customPromptDescription": "Dostosuj sposób, w jaki AI pisze odpowiedzi na Twoje e-maile. Zostanie to dodane do podstawowego polecenia.",
         "noResultsFound": "Nie znaleziono wyników",
         "zeroSignature": "Podpis Zero",
-        "zeroSignatureDescription": "Dodaj podpis Zero do swoich e-maili."
+        "zeroSignatureDescription": "Dodaj podpis Zero do swoich e-maili.",
+        "defaultEmailAlias": "Domyślny alias e-mail",
+        "selectDefaultEmail": "Wybierz domyślny e-mail",
+        "defaultEmailDescription": "Ten e-mail będzie używany jako domyślny adres 'Od' podczas tworzenia nowych wiadomości e-mail"
       },
       "connections": {
         "title": "Połączenia e-mail",

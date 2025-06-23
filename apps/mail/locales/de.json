@@ -135,10 +135,13 @@
     "navUser": {
       "customerSupport": "Community",
       "documentation": "Dokumentation",
-      "appTheme": "App Theme",
+      "appTheme": "Theme wechseln",
       "accounts": "Benutzerkonten",
       "signIn": "Anmelden",
-      "otherAccounts": "Andere Konten"
+      "otherAccounts": "Andere Konten",
+      "switchingAccounts": "Konten werden gewechselt...",
+      "accountSwitched": "Konto erfolgreich gewechselt",
+      "failedToSwitchAccount": "Kontowechsel fehlgeschlagen. Bitte versuche es erneut."
     },
     "mailCategories": {
       "primary": "Primär",
@@ -169,6 +172,7 @@
       "details": "Details",
       "from": "Von",
       "to": "An",
+      "replyTo": "Antwort an",
       "cc": "Cc",
       "bcc": "Bcc",
       "date": "Datum",
@@ -268,7 +272,9 @@
       "notFound": "Einstellungen nicht gefunden",
       "saved": "Einstellungen gespeichert",
       "failedToSave": "Einstellungen konnten nicht gespeichert werden",
-      "languageChanged": "Sprache zu {locale} geändert"
+      "languageChanged": "Sprache zu {locale} geändert",
+      "defaultEmailUpdated": "Standard-E-Mail-Alias in Gmail aktualisiert",
+      "failedToUpdateGmailAlias": "Aktualisierung des Standard-Alias in den Gmail-Einstellungen fehlgeschlagen"
     },
     "mail": {
       "replies": "{count, plural, =0 {Antworten} one {# Antwort} other {# Antworten}}",
@@ -327,12 +333,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "Farbe",
+      "labelName": "Label-Name",
+      "createLabel": "Label erstellen",
       "deleteLabel": "Label löschen",
       "deleteLabelConfirm": "Sind Sie sicher, dass Sie dieses Label löschen möchten?",
       "deleteLabelConfirmDescription": "Diese Aktion kann nicht rückgängig gemacht werden.",
       "deleteLabelConfirmCancel": "Abbrechen",
       "deleteLabelConfirmDelete": "Löschen",
-      "deleteLabelSuccess": "Label erfolgreich gelöscht"
+      "deleteLabelSuccess": "Label erfolgreich gelöscht",
+      "failedToDeleteLabel": "Label konnte nicht gelöscht werden",
+      "deletingLabel": "Label wird gelöscht...",
+      "editLabel": "Label bearbeiten",
+      "savingLabel": "Label wird gespeichert...",
+      "failedToSavingLabel": "Label konnte nicht gespeichert werden",
+      "saveLabelSuccess": "Label erfolgreich gespeichert"
     }
   },
   "navigation": {
@@ -355,6 +370,7 @@
       "signatures": "Signaturen",
       "shortcuts": "Shortcuts",
       "labels": "Labels",
+      "categories": "Kategorien",
       "dangerZone": "Gefahrenbereich",
       "deleteAccount": "Konto löschen",
       "privacy": "Datenschutz"
@@ -385,7 +401,10 @@
         "customPromptDescription": "Passen Sie an, wie die KI Ihre E-Mail beantwortet. Dies wird zur Base-Prompt hinzugefügt.",
         "noResultsFound": "Keine Ergebnisse gefunden",
         "zeroSignature": "Zero-Signatur",
-        "zeroSignatureDescription": "Füge deinen E-Mails eine Zero-Signatur hinzu."
+        "zeroSignatureDescription": "Füge deinen E-Mails eine Zero-Signatur hinzu.",
+        "defaultEmailAlias": "Standard-E-Mail-Alias",
+        "selectDefaultEmail": "Standard-E-Mail auswählen",
+        "defaultEmailDescription": "Diese E-Mail wird als Standard-Absenderadresse beim Verfassen neuer E-Mails verwendet"
       },
       "connections": {
         "title": "E-Mail Verbindungen",

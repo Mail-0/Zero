@@ -135,10 +135,13 @@
     "navUser": {
       "customerSupport": "Komunita",
       "documentation": "Dokumentace",
-      "appTheme": "Vzhled aplikace",
+      "appTheme": "Přepnout motiv",
       "accounts": "Účty",
       "signIn": "Přihlásit se",
-      "otherAccounts": "Další účty"
+      "otherAccounts": "Další účty",
+      "switchingAccounts": "Přepínání účtů...",
+      "accountSwitched": "Účet byl úspěšně přepnut",
+      "failedToSwitchAccount": "Nepodařilo se přepnout účty. Zkuste to prosím znovu."
     },
     "mailCategories": {
       "primary": "Hlavní",
@@ -169,6 +172,7 @@
       "details": "Podrobnosti",
       "from": "Od",
       "to": "Pro",
+      "replyTo": "Odpovědět",
       "cc": "Kopie",
       "bcc": "Skrytá kopie",
       "date": "Datum",
@@ -268,7 +272,9 @@
       "notFound": "Nastavení nebylo nalezeno",
       "saved": "Nastavení bylo uloženo",
       "failedToSave": "Nepodařilo se uložit nastavení",
-      "languageChanged": "Jazyk změněn na {locale}"
+      "languageChanged": "Jazyk změněn na {locale}",
+      "defaultEmailUpdated": "Výchozí e-mailový alias byl aktualizován v Gmailu",
+      "failedToUpdateGmailAlias": "Nepodařilo se aktualizovat výchozí alias v nastavení Gmailu"
     },
     "mail": {
       "replies": "{count, plural, =0 {odpovědí} one {#odpověď} few {#odpovědi} many {#odpovědí} other {#odpovědí}}",
@@ -327,12 +333,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "Barva",
+      "labelName": "Název štítku",
+      "createLabel": "Vytvořit štítek",
       "deleteLabel": "Smazat štítek",
       "deleteLabelConfirm": "Opravdu chcete tento štítek smazat?",
       "deleteLabelConfirmDescription": "Tuto akci nelze vrátit zpět.",
       "deleteLabelConfirmCancel": "Zrušit",
       "deleteLabelConfirmDelete": "Smazat",
-      "deleteLabelSuccess": "Štítek byl úspěšně smazán"
+      "deleteLabelSuccess": "Štítek byl úspěšně smazán",
+      "failedToDeleteLabel": "Nepodařilo se smazat štítek",
+      "deletingLabel": "Mazání štítku...",
+      "editLabel": "Upravit štítek",
+      "savingLabel": "Ukládání štítku...",
+      "failedToSavingLabel": "Nepodařilo se uložit štítek",
+      "saveLabelSuccess": "Štítek byl úspěšně uložen"
     }
   },
   "navigation": {
@@ -355,6 +370,7 @@
       "signatures": "Podpisy",
       "shortcuts": "Zástupci",
       "labels": "Štítky",
+      "categories": "Kategorie",
       "dangerZone": "Nebezpečná zóna",
       "deleteAccount": "Smazat účet",
       "privacy": "Soukromí"
@@ -385,7 +401,10 @@
         "customPromptDescription": "Přizpůsobte, jak AI píše vaše e-mailové odpovědi. Toto bude přidáno k základnímu pokynu.",
         "noResultsFound": "Nebyly nalezeny žádné výsledky",
         "zeroSignature": "Zero podpis",
-        "zeroSignatureDescription": "Přidat Zero podpis k vašim emailům."
+        "zeroSignatureDescription": "Přidat Zero podpis k vašim emailům.",
+        "defaultEmailAlias": "Výchozí e-mailový alias",
+        "selectDefaultEmail": "Vybrat výchozí e-mail",
+        "defaultEmailDescription": "Tento e-mail bude použit jako výchozí adresa 'Od' při psaní nových e-mailů"
       },
       "connections": {
         "title": "Propojení emailu",

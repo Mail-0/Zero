@@ -135,10 +135,13 @@
     "navUser": {
       "customerSupport": "Comunitat",
       "documentation": "Documentació",
-      "appTheme": "Tema de l'aplicació",
+      "appTheme": "Canvia el tema",
       "accounts": "Comptes",
       "signIn": "Iniciar la sessió",
-      "otherAccounts": "Altres comptes"
+      "otherAccounts": "Altres comptes",
+      "switchingAccounts": "Canviant de comptes...",
+      "accountSwitched": "S'ha canviat de compte correctament",
+      "failedToSwitchAccount": "No s'ha pogut canviar de compte. Torneu-ho a provar."
     },
     "mailCategories": {
       "primary": "Primari",
@@ -169,6 +172,7 @@
       "details": "Detalls",
       "from": "De",
       "to": "A",
+      "replyTo": "Respondre a",
       "cc": "Cc",
       "bcc": "Cco",
       "date": "Data",
@@ -268,7 +272,9 @@
       "notFound": "Configuració no trobada",
       "saved": "Configuració desada",
       "failedToSave": "No s'ha pogut desar la configuració",
-      "languageChanged": "Idioma canviat a {locale}"
+      "languageChanged": "Idioma canviat a {locale}",
+      "defaultEmailUpdated": "L'àlies de correu predeterminat s'ha actualitzat a Gmail",
+      "failedToUpdateGmailAlias": "No s'ha pogut actualitzar l'àlies predeterminat a la configuració de Gmail"
     },
     "mail": {
       "replies": "{count, plural, =0 {respostes} one {# resposta} other {# respostes}}",
@@ -327,12 +333,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "Color",
+      "labelName": "Nom de l'etiqueta",
+      "createLabel": "Crear etiqueta",
       "deleteLabel": "Eliminar etiqueta",
       "deleteLabelConfirm": "Estàs segur que vols eliminar aquesta etiqueta?",
       "deleteLabelConfirmDescription": "Aquesta acció no es pot desfer.",
       "deleteLabelConfirmCancel": "Cancel·lar",
       "deleteLabelConfirmDelete": "Eliminar",
-      "deleteLabelSuccess": "Etiqueta eliminada correctament"
+      "deleteLabelSuccess": "Etiqueta eliminada correctament",
+      "failedToDeleteLabel": "No s'ha pogut eliminar l'etiqueta",
+      "deletingLabel": "Eliminant etiqueta...",
+      "editLabel": "Editar etiqueta",
+      "savingLabel": "Desant etiqueta...",
+      "failedToSavingLabel": "No s'ha pogut desar l'etiqueta",
+      "saveLabelSuccess": "Etiqueta desada correctament"
     }
   },
   "navigation": {
@@ -355,6 +370,7 @@
       "signatures": "Signatures",
       "shortcuts": "Dreceres",
       "labels": "Etiquetes",
+      "categories": "Categories",
       "dangerZone": "Zona perillosa",
       "deleteAccount": "Elimina el compte",
       "privacy": "Privacitat"
@@ -385,7 +401,10 @@
         "customPromptDescription": "Personalitza com la IA escriu les teves respostes de correu. Això s'afegirà a la instrucció base.",
         "noResultsFound": "No s'han trobat resultats",
         "zeroSignature": "Signatura Zero",
-        "zeroSignatureDescription": "Afegeix una signatura Zero als teus correus."
+        "zeroSignatureDescription": "Afegeix una signatura Zero als teus correus.",
+        "defaultEmailAlias": "Àlies de correu predeterminat",
+        "selectDefaultEmail": "Selecciona el correu predeterminat",
+        "defaultEmailDescription": "Aquest correu s'utilitzarà com a adreça predeterminada 'De' quan es redactin nous correus"
       },
       "connections": {
         "title": "Connexions Correu",

@@ -173,6 +173,11 @@ export const navigationConfig: Record<string, NavConfig> = {
             icon: Sheet,
           },
           {
+            title: 'navigation.settings.categories',
+            url: '/settings/categories',
+            icon: Tabs,
+          },
+          {
             title: 'navigation.settings.signatures',
             url: '/settings/signatures',
             icon: MessageSquareIcon,

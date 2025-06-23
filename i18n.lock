@@ -123,10 +123,13 @@ checksums:
     common/searchBar/aiEnhancedQuery: 7bc20def675d9eacbec6d98a7f6cccd0
     common/navUser/customerSupport: aa83f4456d11185e5e72dba3260bf00b
     common/navUser/documentation: 1563fcb5ddb5037b0709ccd3dd384a92
-    common/navUser/appTheme: bfaec6c6c45b8e7c28ea3b017260e2ce
+    common/navUser/appTheme: 0a3e19fea2f7b1045f53ebf0ccff6bd5
     common/navUser/accounts: dbb9796c495f5e0f0de6f71bd32527ae
     common/navUser/signIn: cb8757c7450e17de1e226e82fb0fa4a2
     common/navUser/otherAccounts: 6206808c3673bd05c8d024eaac703f2a
+    common/navUser/switchingAccounts: fa53f8796a652161c8ec25281a1c5d3e
+    common/navUser/accountSwitched: e7b3f7c988574e8cf7aa8d2caed27adb
+    common/navUser/failedToSwitchAccount: 21c3b37b3b23c44637ce98b6af08e1c5
     common/mailCategories/primary: f5fb269c8406736788b7785a0c68e500
     common/mailCategories/allMail: 8ee9a794d1366b252decb770c6f7558a
     common/mailCategories/important: 4cf0e8fc8e4e7c5c9b9458059a172a2b
@@ -151,6 +154,7 @@ checksums:
     common/mailDisplay/details: 2a8bbb1bc386c059783f925aca2cc522
     common/mailDisplay/from: 3d84daca8c92c8609deeab4b294b4afb
     common/mailDisplay/to: 24ef32707b456cff90a91d438df59bbe
+    common/mailDisplay/replyTo: 06ad90a6586a800226eb585a16af4f50
     common/mailDisplay/cc: 3502fdcc26caeb501541c6437fcd4d45
     common/mailDisplay/bcc: 0a8e9f01c54ba0df044f3ad679aa6298
     common/mailDisplay/date: 56f41c5d30a76295bb087b20b7bee4c3
@@ -239,6 +243,8 @@ checksums:
     common/settings/saved: 0f46e6d1d0a3c93ca8136cc8c91fecd4
     common/settings/failedToSave: 40417c48b29d285eadcd5363630dff1a
     common/settings/languageChanged: 71fdc3486c49d228838ed1b541de999c
+    common/settings/defaultEmailUpdated: 9ef02980f416d937d5724dfc1434ba3f
+    common/settings/failedToUpdateGmailAlias: b8e186766156fba39688cd87ac8dc467
     common/mail/replies: fc3e60cff29ffe474db270154bb64099
     common/mail/deselectAll: d06b551a6d60cdc4dfc51c7683644bad
     common/mail/selectedEmails: 8070ccaf317cb4216c364b2cb1223fd7
@@ -291,12 +297,21 @@ checksums:
     common/mail/archived: cf5127ecfd7e43a35466a1ba5fe16450
     common/mail/failedToArchive: e844b73a518542027803b7ff97e82b89
     common/units/mb: ed9c3b369a1ac40741b182458b69143a
+    common/labels/color: 9d53d1d120e8b8954bcae9a322573748
+    common/labels/labelName: 682eade7443c047bc680664f821c9e0d
+    common/labels/createLabel: f05ff11324149930de6d986dc627f768
     common/labels/deleteLabel: 2f1a736693311e4dc5bb4ab66f884963
     common/labels/deleteLabelConfirm: 037fbaf1d04356937e6afb574714f51f
     common/labels/deleteLabelConfirmDescription: 3d8b13374ffd3cefc0f3f7ce077bd9c9
     common/labels/deleteLabelConfirmCancel: 2e2a849c2223911717de8caa2c71bade
     common/labels/deleteLabelConfirmDelete: 8bcf303dd10a645b5baacb02b47d72c9
     common/labels/deleteLabelSuccess: a3577fff42d01a7737c8b8dcd0f57b2e
+    common/labels/failedToDeleteLabel: 8ba3381b063f7792f82063779c9f749b
+    common/labels/deletingLabel: 0b6f9a6709a0602cb183985976600dd6
+    common/labels/editLabel: dfe967d8f9d14ba8aa89254f42236097
+    common/labels/savingLabel: 232d4cc013b0bb525899a27f69d1acc8
+    common/labels/failedToSavingLabel: 9d95b12e2d0f164eeb64ad2207c8b702
+    common/labels/saveLabelSuccess: 85d1d32421806260b73c50c1e93623fa
     navigation/sidebar/inbox: 57e9db873911bf848c79e2ed546ecf45
     navigation/sidebar/drafts: 76dab0f0b2e6c4933b80f69e388070d0
     navigation/sidebar/sent: 01b803329590ea067a0e9b41b3193353
@@ -313,6 +328,7 @@ checksums:
     navigation/settings/signatures: 681d432cf5709e710da79b9d0155aaa2
     navigation/settings/shortcuts: db3330ed3240c398054f3be23c52851f
     navigation/settings/labels: 6f15627a90002323eac018274b6922d6
+    navigation/settings/categories: fd4e44f3b1b2bba9ca45f3aef963d042
     navigation/settings/dangerZone: ab5417cabdfa70b0a7c9d407ec69b450
     navigation/settings/deleteAccount: f5f7b88ff3122fb0d3a330e2b99d7e3d
     navigation/settings/privacy: 6007d5d5f6591c027b15bd49ab7a8c47
@@ -335,6 +351,9 @@ checksums:
     pages/settings/general/noResultsFound: 5518f2865757dc73900aa03ef8be6934
     pages/settings/general/zeroSignature: 0e94e29f00f4b39838ebed8a774148c3
     pages/settings/general/zeroSignatureDescription: 296c4c81828361128b071969cde8ad76
+    pages/settings/general/defaultEmailAlias: dc269bad429dd22b27d82118441ea9b2
+    pages/settings/general/selectDefaultEmail: c2abb2947589920179e4757876ea905c
+    pages/settings/general/defaultEmailDescription: 0ebf26fceccb4cad99f4b2a20cbcfab0
     pages/settings/connections/title: d7bc733cc82ab74c649a4816373a2295
     pages/settings/connections/description: f05d355994f9fe0e089ce2c54d0de381
     pages/settings/connections/disconnectTitle: efecc2354d665e68492fe985af575508

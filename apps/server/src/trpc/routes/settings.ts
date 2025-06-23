@@ -1,8 +1,8 @@
 import { createRateLimiterMiddleware, privateProcedure, publicProcedure, router } from '../trpc';
 import { defaultUserSettings, userSettingsSchema, type UserSettings } from '../../lib/schemas';
+import { getZeroDB } from '../../lib/server-utils';
 import { Ratelimit } from '@upstash/ratelimit';
-import { userSettings } from '../../db/schema';
-import { eq } from 'drizzle-orm';
+import { env } from 'cloudflare:workers';
 
 export const settingsRouter = router({
   get: publicProcedure
@@ -15,27 +15,16 @@ export const settingsRouter = router({
     .query(async ({ ctx }) => {
       if (!ctx.sessionUser) return { settings: defaultUserSettings };
 
-      const { db, sessionUser } = ctx;
-      const [result] = await db
-        .select()
-        .from(userSettings)
-        .where(eq(userSettings.userId, sessionUser.id))
-        .limit(1);
+      const { sessionUser } = ctx;
+      const db = getZeroDB(sessionUser.id);
+      const result: any = await db.findUserSettings();
 
       // Returning null here when there are no settings so we can use the default settings with timezone from the browser
       if (!result) return { settings: defaultUserSettings };
 
       const settingsRes = userSettingsSchema.safeParse(result.settings);
       if (!settingsRes.success) {
-        ctx.c.executionCtx.waitUntil(
-          db
-            .update(userSettings)
-            .set({
-              settings: defaultUserSettings,
-              updatedAt: new Date(),
-            })
-            .where(eq(userSettings.userId, sessionUser.id)),
-        );
+        ctx.c.executionCtx.waitUntil(db.updateUserSettings(defaultUserSettings));
         console.log('returning default settings');
         return { settings: defaultUserSettings };
       }
@@ -44,32 +33,15 @@ export const settingsRouter = router({
     }),
 
   save: privateProcedure.input(userSettingsSchema.partial()).mutation(async ({ ctx, input }) => {
-    const { db, sessionUser } = ctx;
-    const timestamp = new Date();
-
-    const [existingSettings] = await db
-      .select()
-      .from(userSettings)
-      .where(eq(userSettings.userId, sessionUser.id))
-      .limit(1);
+    const { sessionUser } = ctx;
+    const db = getZeroDB(sessionUser.id);
+    const existingSettings: any = await db.findUserSettings();
 
     if (existingSettings) {
-      const newSettings = { ...(existingSettings.settings as UserSettings), ...input };
-      await db
-        .update(userSettings)
-        .set({
-          settings: newSettings,
-          updatedAt: timestamp,
-        })
-        .where(eq(userSettings.userId, sessionUser.id));
+      const newSettings: any = { ...(existingSettings.settings as UserSettings), ...input };
+      await db.updateUserSettings(newSettings);
     } else {
-      await db.insert(userSettings).values({
-        id: crypto.randomUUID(),
-        userId: sessionUser.id,
-        settings: { ...defaultUserSettings, ...input },
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      });
+      await db.insertUserSettings({ ...(defaultUserSettings as any), ...input });
     }
 
     return { success: true };

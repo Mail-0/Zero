@@ -135,10 +135,13 @@
     "navUser": {
       "customerSupport": "समुदाय",
       "documentation": "डॉक्यूमेंटेशन",
-      "appTheme": "एप थीम",
+      "appTheme": "थीम टॉगल करें",
       "accounts": "खाता",
       "signIn": "साइन इन करें",
-      "otherAccounts": "अन्य खाते"
+      "otherAccounts": "अन्य खाते",
+      "switchingAccounts": "खाते स्विच कर रहे हैं...",
+      "accountSwitched": "खाता सफलतापूर्वक स्विच किया गया",
+      "failedToSwitchAccount": "खाते स्विच करने में विफल। कृपया पुनः प्रयास करें।"
     },
     "mailCategories": {
       "primary": "प्राइमरी",
@@ -169,6 +172,7 @@
       "details": "डिटेल्स",
       "from": "से",
       "to": "को",
+      "replyTo": "जवाब दें",
       "cc": "सीसी",
       "bcc": "बीसीसी",
       "date": "तारीख",
@@ -268,7 +272,9 @@
       "notFound": "सेटिंग्स नहीं मिली",
       "saved": "सेटिंग्स सहेजी गई",
       "failedToSave": "सेटिंग्स सहेजने में विफल",
-      "languageChanged": "भाषा बदलकर {locale} कर दी गई"
+      "languageChanged": "भाषा बदलकर {locale} कर दी गई",
+      "defaultEmailUpdated": "Gmail में डिफ़ॉल्ट ईमेल उपनाम अपडेट किया गया",
+      "failedToUpdateGmailAlias": "Gmail सेटिंग्स में डिफ़ॉल्ट उपनाम अपडेट करने में विफल"
     },
     "mail": {
       "replies": "{count, plural, =0 {जवाब} one {# जवाब} other {# जवाब}}",
@@ -327,12 +333,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "रंग",
+      "labelName": "लेबल का नाम",
+      "createLabel": "लेबल बनाएं",
       "deleteLabel": "लेबल हटाएं",
       "deleteLabelConfirm": "क्या आप वाकई इस लेबल को हटाना चाहते हैं?",
       "deleteLabelConfirmDescription": "यह क्रिया वापस नहीं ली जा सकती।",
       "deleteLabelConfirmCancel": "रद्द करें",
       "deleteLabelConfirmDelete": "हटाएं",
-      "deleteLabelSuccess": "लेबल सफलतापूर्वक हटा दिया गया"
+      "deleteLabelSuccess": "लेबल सफलतापूर्वक हटा दिया गया",
+      "failedToDeleteLabel": "लेबल हटाने में विफल",
+      "deletingLabel": "लेबल हटा रहे हैं...",
+      "editLabel": "लेबल संपादित करें",
+      "savingLabel": "लेबल सहेज रहे हैं...",
+      "failedToSavingLabel": "लेबल सहेजने में विफल",
+      "saveLabelSuccess": "लेबल सफलतापूर्वक सहेजा गया"
     }
   },
   "navigation": {
@@ -355,6 +370,7 @@
       "signatures": "हस्ताक्षर",
       "shortcuts": "शॉर्टकट",
       "labels": "लेबल",
+      "categories": "श्रेणियां",
       "dangerZone": "खतरे का क्षेत्र",
       "deleteAccount": "अकाउंट डिलीट करें",
       "privacy": "गोपनीयता"
@@ -385,7 +401,10 @@
         "customPromptDescription": "AI आपके ईमेल जवाब कैसे लिखता है, इसे अनुकूलित करें। यह आधार प्रॉम्प्ट में जोड़ा जाएगा।",
         "noResultsFound": "कोई परिणाम नहीं मिला",
         "zeroSignature": "ज़ीरो सिग्नेचर",
-        "zeroSignatureDescription": "अपने ईमेल में ज़ीरो सिग्नेचर जोड़ें।"
+        "zeroSignatureDescription": "अपने ईमेल में ज़ीरो सिग्नेचर जोड़ें।",
+        "defaultEmailAlias": "डिफ़ॉल्ट ईमेल उपनाम",
+        "selectDefaultEmail": "डिफ़ॉल्ट ईमेल चुनें",
+        "defaultEmailDescription": "नए ईमेल लिखते समय यह ईमेल डिफ़ॉल्ट 'प्रेषक' पते के रूप में उपयोग किया जाएगा"
       },
       "connections": {
         "title": "ईमेल कनेक्शन्स",

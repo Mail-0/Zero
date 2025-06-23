@@ -135,10 +135,13 @@
     "navUser": {
       "customerSupport": "Közösség",
       "documentation": "Dokumentáció",
-      "appTheme": "Alkalmazás téma",
+      "appTheme": "Téma váltása",
       "accounts": "Fiókok",
       "signIn": "Bejelentkezés",
-      "otherAccounts": "Egyéb fiókok"
+      "otherAccounts": "Egyéb fiókok",
+      "switchingAccounts": "Fiókok közötti váltás...",
+      "accountSwitched": "Fiókváltás sikeres",
+      "failedToSwitchAccount": "Nem sikerült fiókot váltani. Kérjük, próbálja újra."
     },
     "mailCategories": {
       "primary": "Elsődleges",
@@ -169,6 +172,7 @@
       "details": "Részletek",
       "from": "Feladó",
       "to": "Címzett",
+      "replyTo": "Válaszcím",
       "cc": "Másolat",
       "bcc": "Titkos másolat",
       "date": "Dátum",
@@ -268,7 +272,9 @@
       "notFound": "Beállítások nem találhatók",
       "saved": "Beállítások mentve",
       "failedToSave": "Nem sikerült menteni a beállításokat",
-      "languageChanged": "Nyelv megváltoztatva erre: {locale}"
+      "languageChanged": "Nyelv megváltoztatva erre: {locale}",
+      "defaultEmailUpdated": "Az alapértelmezett e-mail álnév frissítve a Gmailben",
+      "failedToUpdateGmailAlias": "Nem sikerült frissíteni az alapértelmezett álnevet a Gmail beállításaiban"
     },
     "mail": {
       "replies": "{count, plural, =0 {válasz} one {# válasz} other {# válasz}}",
@@ -327,12 +333,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "Szín",
+      "labelName": "Címke neve",
+      "createLabel": "Címke létrehozása",
       "deleteLabel": "Címke törlése",
       "deleteLabelConfirm": "Biztosan törölni szeretné ezt a címkét?",
       "deleteLabelConfirmDescription": "Ez a művelet nem vonható vissza.",
       "deleteLabelConfirmCancel": "Mégse",
       "deleteLabelConfirmDelete": "Törlés",
-      "deleteLabelSuccess": "Címke sikeresen törölve"
+      "deleteLabelSuccess": "Címke sikeresen törölve",
+      "failedToDeleteLabel": "Nem sikerült törölni a címkét",
+      "deletingLabel": "Címke törlése...",
+      "editLabel": "Címke szerkesztése",
+      "savingLabel": "Címke mentése...",
+      "failedToSavingLabel": "Nem sikerült menteni a címkét",
+      "saveLabelSuccess": "Címke sikeresen mentve"
     }
   },
   "navigation": {
@@ -355,6 +370,7 @@
       "signatures": "Aláírások",
       "shortcuts": "Gyorsbillentyűk",
       "labels": "Címkék",
+      "categories": "Kategóriák",
       "dangerZone": "Veszélyes zóna",
       "deleteAccount": "Fiók törlése",
       "privacy": "Adatvédelem"
@@ -385,7 +401,10 @@
         "customPromptDescription": "Szabd testre, hogyan írja az AI az e-mail válaszaidat. Ez hozzáadódik az alap utasításhoz.",
         "noResultsFound": "Nincs találat",
         "zeroSignature": "Zero aláírás",
-        "zeroSignatureDescription": "Zero aláírás hozzáadása az e-mailjeihez."
+        "zeroSignatureDescription": "Zero aláírás hozzáadása az e-mailjeihez.",
+        "defaultEmailAlias": "Alapértelmezett e-mail álnév",
+        "selectDefaultEmail": "Alapértelmezett e-mail kiválasztása",
+        "defaultEmailDescription": "Ez az e-mail lesz az alapértelmezett 'Feladó' cím új e-mailek írásakor"
       },
       "connections": {
         "title": "E-mail kapcsolatok",

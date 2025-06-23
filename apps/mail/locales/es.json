@@ -135,10 +135,13 @@
     "navUser": {
       "customerSupport": "Comunidad",
       "documentation": "Documentación",
-      "appTheme": "Tema de aplicación",
+      "appTheme": "Cambiar tema",
       "accounts": "Cuentas",
       "signIn": "Registrarse",
-      "otherAccounts": "Otras cuentas"
+      "otherAccounts": "Otras cuentas",
+      "switchingAccounts": "Cambiando cuentas...",
+      "accountSwitched": "Cuenta cambiada correctamente",
+      "failedToSwitchAccount": "No se pudo cambiar de cuenta. Por favor, inténtalo de nuevo."
     },
     "mailCategories": {
       "primary": "Principal",
@@ -169,6 +172,7 @@
       "details": "Detalles",
       "from": "De",
       "to": "Para",
+      "replyTo": "Responder a",
       "cc": "Cc",
       "bcc": "Cco",
       "date": "Fecha",
@@ -268,7 +272,9 @@
       "notFound": "Configuración no encontrada",
       "saved": "Configuración guardada",
       "failedToSave": "Error al guardar la configuración",
-      "languageChanged": "Idioma cambiado a {locale}"
+      "languageChanged": "Idioma cambiado a {locale}",
+      "defaultEmailUpdated": "Alias de correo predeterminado actualizado en Gmail",
+      "failedToUpdateGmailAlias": "No se pudo actualizar el alias predeterminado en la configuración de Gmail"
     },
     "mail": {
       "replies": "{count, plural, =0 {respuestas} one {# respuesta} other {# respuestas}}",
@@ -327,12 +333,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "Color",
+      "labelName": "Nombre de etiqueta",
+      "createLabel": "Crear etiqueta",
       "deleteLabel": "Eliminar etiqueta",
       "deleteLabelConfirm": "¿Estás seguro de que quieres eliminar esta etiqueta?",
       "deleteLabelConfirmDescription": "Esta acción no se puede deshacer.",
       "deleteLabelConfirmCancel": "Cancelar",
       "deleteLabelConfirmDelete": "Eliminar",
-      "deleteLabelSuccess": "Etiqueta eliminada correctamente"
+      "deleteLabelSuccess": "Etiqueta eliminada correctamente",
+      "failedToDeleteLabel": "Error al eliminar etiqueta",
+      "deletingLabel": "Eliminando etiqueta...",
+      "editLabel": "Editar etiqueta",
+      "savingLabel": "Guardando etiqueta...",
+      "failedToSavingLabel": "Error al guardar etiqueta",
+      "saveLabelSuccess": "Etiqueta guardada correctamente"
     }
   },
   "navigation": {
@@ -355,6 +370,7 @@
       "signatures": "Firmas",
       "shortcuts": "Accesos directos",
       "labels": "Etiquetas",
+      "categories": "Categorías",
       "dangerZone": "Zona de peligro",
       "deleteAccount": "Eliminar cuenta",
       "privacy": "Privacidad"
@@ -385,7 +401,10 @@
         "customPromptDescription": "Personaliza cómo la IA escribe tus respuestas de correo electrónico. Esto se añadirá al prompt base.",
         "noResultsFound": "No se han encontrado resultados",
         "zeroSignature": "Firma Zero",
-        "zeroSignatureDescription": "Añade una firma Zero a tus correos."
+        "zeroSignatureDescription": "Añade una firma Zero a tus correos.",
+        "defaultEmailAlias": "Alias de correo electrónico predeterminado",
+        "selectDefaultEmail": "Seleccionar correo predeterminado",
+        "defaultEmailDescription": "Este correo electrónico se utilizará como dirección predeterminada 'De' al redactar nuevos correos"
       },
       "connections": {
         "title": "Conexiones de correo",

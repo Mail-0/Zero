@@ -135,10 +135,13 @@
     "navUser": {
       "customerSupport": "Communauté",
       "documentation": "Documentation",
-      "appTheme": "Thème de l'application",
+      "appTheme": "Changer de thème",
       "accounts": "Comptes",
       "signIn": "Se connecter",
-      "otherAccounts": "Autres comptes"
+      "otherAccounts": "Autres comptes",
+      "switchingAccounts": "Changement de compte...",
+      "accountSwitched": "Compte changé avec succès",
+      "failedToSwitchAccount": "Échec du changement de compte. Veuillez réessayer."
     },
     "mailCategories": {
       "primary": "Principale",
@@ -169,6 +172,7 @@
       "details": "Détails",
       "from": "De",
       "to": "À",
+      "replyTo": "Répondre à",
       "cc": "Cc",
       "bcc": "Cci",
       "date": "Date",
@@ -268,7 +272,9 @@
       "notFound": "Paramètres introuvables",
       "saved": "Paramètres enregistrés",
       "failedToSave": "Échec de la sauvegarde des paramètres",
-      "languageChanged": "Langue changée en {locale}"
+      "languageChanged": "Langue changée en {locale}",
+      "defaultEmailUpdated": "Adresse e-mail par défaut mise à jour dans Gmail",
+      "failedToUpdateGmailAlias": "Échec de la mise à jour de l'alias par défaut dans les paramètres Gmail"
     },
     "mail": {
       "replies": "{count, plural, =0 {réponses} one {# réponse} other {# réponses}}",
@@ -327,12 +333,21 @@
       "mb": "{amount} Mo"
     },
     "labels": {
+      "color": "Couleur",
+      "labelName": "Nom de l'étiquette",
+      "createLabel": "Créer une étiquette",
       "deleteLabel": "Supprimer l'étiquette",
       "deleteLabelConfirm": "Êtes-vous sûr de vouloir supprimer cette étiquette ?",
       "deleteLabelConfirmDescription": "Cette action ne peut pas être annulée.",
       "deleteLabelConfirmCancel": "Annuler",
       "deleteLabelConfirmDelete": "Supprimer",
-      "deleteLabelSuccess": "Étiquette supprimée avec succès"
+      "deleteLabelSuccess": "Étiquette supprimée avec succès",
+      "failedToDeleteLabel": "Échec de la suppression de l'étiquette",
+      "deletingLabel": "Suppression de l'étiquette...",
+      "editLabel": "Modifier l'étiquette",
+      "savingLabel": "Enregistrement de l'étiquette...",
+      "failedToSavingLabel": "Échec de l'enregistrement de l'étiquette",
+      "saveLabelSuccess": "Étiquette enregistrée avec succès"
     }
   },
   "navigation": {
@@ -355,6 +370,7 @@
       "signatures": "Signatures",
       "shortcuts": "Raccourcis",
       "labels": "Étiquettes",
+      "categories": "Catégories",
       "dangerZone": "Zone dangereuse",
       "deleteAccount": "Supprimer le compte",
       "privacy": "Confidentialité"
@@ -385,7 +401,10 @@
         "customPromptDescription": "Personnalisez la façon dont l'IA écrit vos réponses. Cela sera ajouté à la requête par défaut.",
         "noResultsFound": "Aucun résultat trouvé",
         "zeroSignature": "Signature Zero",
-        "zeroSignatureDescription": "Ajouter une signature Zero à vos courriels."
+        "zeroSignatureDescription": "Ajouter une signature Zero à vos courriels.",
+        "defaultEmailAlias": "Alias e-mail par défaut",
+        "selectDefaultEmail": "Sélectionner l'e-mail par défaut",
+        "defaultEmailDescription": "Cette adresse e-mail sera utilisée comme adresse d'expédition par défaut lors de la rédaction de nouveaux e-mails"
       },
       "connections": {
         "title": "Connexions de courriels",

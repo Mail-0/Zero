@@ -135,10 +135,13 @@
     "navUser": {
       "customerSupport": "Comunidade",
       "documentation": "Documentação",
-      "appTheme": "Tema da aplicação",
+      "appTheme": "Alternar o Tema",
       "accounts": "Contas",
       "signIn": "Iniciar sessão",
-      "otherAccounts": "Outras Contas"
+      "otherAccounts": "Outras Contas",
+      "switchingAccounts": "Alternando contas...",
+      "accountSwitched": "Conta alternada com sucesso",
+      "failedToSwitchAccount": "Falha ao alternar contas. Por favor, tente novamente."
     },
     "mailCategories": {
       "primary": "Principal",
@@ -169,6 +172,7 @@
       "details": "Detalhes",
       "from": "De",
       "to": "Para",
+      "replyTo": "Responder Para",
       "cc": "Cc",
       "bcc": "Cco",
       "date": "Data",
@@ -268,7 +272,9 @@
       "notFound": "Configurações não encontradas",
       "saved": "Configurações salvas",
       "failedToSave": "Falha ao salvar configurações",
-      "languageChanged": "Idioma alterado para {locale}"
+      "languageChanged": "Idioma alterado para {locale}",
+      "defaultEmailUpdated": "Alias de email padrão atualizado no Gmail",
+      "failedToUpdateGmailAlias": "Falha ao atualizar o alias padrão nas configurações do Gmail"
     },
     "mail": {
       "replies": "{count, plural, =0 {arquivos} one {arquivo} other {arquivos}}",
@@ -327,12 +333,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "Cor",
+      "labelName": "Nome da etiqueta",
+      "createLabel": "Criar etiqueta",
       "deleteLabel": "Excluir etiqueta",
       "deleteLabelConfirm": "Tem certeza que deseja excluir esta etiqueta?",
       "deleteLabelConfirmDescription": "Esta ação não pode ser desfeita.",
       "deleteLabelConfirmCancel": "Cancelar",
       "deleteLabelConfirmDelete": "Excluir",
-      "deleteLabelSuccess": "Etiqueta excluída com sucesso"
+      "deleteLabelSuccess": "Etiqueta excluída com sucesso",
+      "failedToDeleteLabel": "Falha ao excluir etiqueta",
+      "deletingLabel": "Excluindo etiqueta...",
+      "editLabel": "Editar etiqueta",
+      "savingLabel": "Salvando etiqueta...",
+      "failedToSavingLabel": "Falha ao salvar etiqueta",
+      "saveLabelSuccess": "Etiqueta salva com sucesso"
     }
   },
   "navigation": {
@@ -355,6 +370,7 @@
       "signatures": "Assinaturas",
       "shortcuts": "Atalhos",
       "labels": "Etiquetas",
+      "categories": "Categorias",
       "dangerZone": "Zona de perigo",
       "deleteAccount": "Excluir conta",
       "privacy": "Privacidade"
@@ -385,7 +401,10 @@
         "customPromptDescription": "Personalize como a IA escreve suas respostas de email. Isto será adicionado ao prompt base.",
         "noResultsFound": "Nenhum resultado encontrado",
         "zeroSignature": "Assinatura Zero",
-        "zeroSignatureDescription": "Adicionar uma assinatura Zero aos seus e-mails."
+        "zeroSignatureDescription": "Adicionar uma assinatura Zero aos seus e-mails.",
+        "defaultEmailAlias": "Alias de Email Padrão",
+        "selectDefaultEmail": "Selecionar email padrão",
+        "defaultEmailDescription": "Este email será usado como endereço 'De' padrão ao compor novos emails"
       },
       "connections": {
         "title": "Conexões de E-mail",

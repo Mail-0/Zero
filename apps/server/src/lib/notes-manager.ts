@@ -1,35 +1,12 @@
-import { eq, and, desc, asc, sql } from 'drizzle-orm';
+import { getZeroDB } from './server-utils';
 import { note } from '../db/schema';
-import type { DB } from '../db';
-
-export interface Note {
-  id: string;
-  userId: string;
-  threadId: string;
-  content: string;
-  color: string;
-  isPinned: boolean | null;
-  order: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 export class NotesManager {
-  constructor(private db: DB) {}
-  async getNotes(userId: string): Promise<Note[]> {
-    return this.db
-      .select()
-      .from(note)
-      .where(eq(note.userId, userId))
-      .orderBy(desc(note.isPinned), asc(note.order), desc(note.createdAt));
-  }
+  constructor() {}
 
-  async getThreadNotes(userId: string, threadId: string): Promise<Note[]> {
-    return this.db
-      .select()
-      .from(note)
-      .where(and(eq(note.userId, userId), eq(note.threadId, threadId)))
-      .orderBy(desc(note.isPinned), asc(note.order), desc(note.createdAt));
+  async getThreadNotes(userId: string, threadId: string): Promise<(typeof note.$inferSelect)[]> {
+    const db = getZeroDB(userId);
+    return await db.findManyNotesByThreadId(threadId);
   }
 
   async createNote(
@@ -38,27 +15,19 @@ export class NotesManager {
     content: string,
     color: string = 'default',
     isPinned: boolean = false,
-  ): Promise<Note> {
-    const userNotes = await this.db
-      .select()
-      .from(note)
-      .where(eq(note.userId, userId))
-      .orderBy(desc(note.order));
+  ): Promise<typeof note.$inferSelect> {
+    const db = getZeroDB(userId);
+    const highestOrder = await db.findHighestNoteOrder();
 
-    const highestOrder = userNotes[0]?.order ?? -1;
-
-    const result = await this.db
-      .insert(note)
-      .values({
-        id: sql`gen_random_uuid()`,
-        userId,
-        threadId,
-        content,
-        color,
-        isPinned,
-        order: highestOrder + 1,
-      })
-      .returning();
+    const id = crypto.randomUUID();
+    const result = await db.createNote({
+      id,
+      threadId,
+      content,
+      color,
+      isPinned,
+      order: (highestOrder?.order ?? 0) + 1,
+    });
 
     if (!result[0]) {
       throw new Error('Failed to create note');
@@ -69,47 +38,34 @@ export class NotesManager {
   async updateNote(
     userId: string,
     noteId: string,
-    data: Partial<Omit<Note, 'id' | 'userId' | 'threadId' | 'createdAt' | 'updatedAt'>>,
-  ): Promise<Note> {
-    const existingNote = await this.db
-      .select()
-      .from(note)
-      .where(and(eq(note.id, noteId), eq(note.userId, userId)))
-      .limit(1);
+    data: Partial<
+      Omit<typeof note.$inferSelect, 'id' | 'userId' | 'threadId' | 'createdAt' | 'updatedAt'>
+    >,
+  ): Promise<typeof note.$inferSelect> {
+    const db = getZeroDB(userId);
+    const existingNote = await db.findNoteById(noteId);
 
-    if (existingNote.length === 0) {
+    if (!existingNote) {
       throw new Error('Note not found or unauthorized');
     }
 
-    const result = await this.db
-      .update(note)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
-      .where(eq(note.id, noteId))
-      .returning();
+    const result = await db.updateNote(noteId, data);
 
-    if (!result[0]) {
+    if (!result) {
       throw new Error('Failed to update note');
     }
-    return result[0];
+    return result;
   }
 
-  async deleteNote(userId: string, noteId: string): Promise<boolean> {
-    const existingNote = await this.db
-      .select()
-      .from(note)
-      .where(and(eq(note.id, noteId), eq(note.userId, userId)))
-      .limit(1);
-
-    if (existingNote.length === 0) {
-      throw new Error('Note not found or unauthorized');
+  async deleteNote(userId: string, noteId: string) {
+    const db = getZeroDB(userId);
+    try {
+      await db.deleteNote(noteId);
+      return true;
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      return false;
     }
-
-    await this.db.delete(note).where(eq(note.id, noteId));
-
-    return true;
   }
 
   async reorderNotes(
@@ -122,18 +78,8 @@ export class NotesManager {
 
     const noteIds = notes.map((n) => n.id);
 
-    const userNotes = await this.db
-      .select({ id: note.id })
-      .from(note)
-      .where(
-        and(
-          eq(note.userId, userId),
-          sql`${note.id} IN (${sql.join(
-            noteIds.map((id) => sql`${id}`),
-            sql`, `,
-          )})`,
-        ),
-      );
+    const db = getZeroDB(userId);
+    const userNotes = await db.findManyNotesByIds(noteIds);
 
     const foundNoteIds = new Set(userNotes.map((n) => n.id));
 
@@ -143,29 +89,6 @@ export class NotesManager {
       throw new Error('One or more notes not found or unauthorized');
     }
 
-    return await this.db
-      .transaction(async (tx) => {
-        for (const n of notes) {
-          const updateData: Record<string, unknown> = {
-            order: n.order,
-            updatedAt: new Date(),
-          };
-
-          if (n.isPinned !== undefined) {
-            updateData.isPinned = n.isPinned;
-          }
-
-          await tx
-            .update(note)
-            .set(updateData)
-            .where(and(eq(note.id, n.id), eq(note.userId, userId)));
-        }
-
-        return true;
-      })
-      .catch((error) => {
-        console.error('Error in reorderNotes transaction:', error);
-        throw new Error('Failed to reorder notes: ' + error.message);
-      });
+    return await db.updateManyNotes(notes);
   }
 }

@@ -24,9 +24,10 @@ import {
 } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
 import { useActiveConnection, useConnections } from '@/hooks/use-connections';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCommandPalette } from '../context/command-palette-context';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { ThreadDisplay } from '@/components/mail/thread-display';
@@ -63,6 +64,7 @@ import { useTranslations } from 'use-intl';
 import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
+import type { IConnection } from '@/types';
 
 interface ITag {
   id: string;
@@ -185,7 +187,7 @@ const AutoLabelingSettings = () => {
   };
 
   const handleEnableBrain = useCallback(async () => {
-    toast.promise(EnableBrain({}), {
+    toast.promise(EnableBrain, {
       loading: 'Enabling autolabeling...',
       success: 'Autolabeling enabled successfully',
       error: 'Failed to enable autolabeling',
@@ -196,7 +198,7 @@ const AutoLabelingSettings = () => {
   }, []);
 
   const handleDisableBrain = useCallback(async () => {
-    toast.promise(DisableBrain({}), {
+    toast.promise(DisableBrain, {
       loading: 'Disabling autolabeling...',
       success: 'Autolabeling disabled successfully',
       error: 'Failed to disable autolabeling',
@@ -390,7 +392,7 @@ export function MailLayout() {
 
   const activeAccount = useMemo(() => {
     if (!activeConnection?.id || !connections?.connections) return null;
-    return connections.connections.find((connection) => connection.id === activeConnection?.id);
+    return connections.connections.find((connection: IConnection) => connection.id === activeConnection?.id);
   }, [activeConnection?.id, connections?.connections]);
 
   useEffect(() => {
@@ -458,7 +460,8 @@ export function MailLayout() {
     }
   }, []);
 
-  const category = useQueryState('category', { defaultValue: 'All Mail' });
+  const defaultCategoryId = useDefaultCategoryId();
+  const [category, setCategory] = useQueryState('category', { defaultValue: defaultCategoryId });
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -549,7 +552,7 @@ export function MailLayout() {
                       : 'Search...'}
                   </span>
 
-                  <span className="absolute right-[0.1rem] flex gap-1">
+                  <span className="absolute right-[0.1rem] flex items-center gap-1">
                     {/* {activeFilters.length > 0 && (
                       <Badge variant="secondary" className="ml-2 h-5 rounded px-1">
                         {activeFilters.length}
@@ -559,7 +562,7 @@ export function MailLayout() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-5 rounded-xl px-1.5 text-xs"
+                        className="my-auto h-5 rounded-xl px-1.5 text-xs"
                         onClick={(e) => {
                           e.stopPropagation();
                           clearAllFilters();
@@ -589,7 +592,7 @@ export function MailLayout() {
               </div>
               <div
                 className={cn(
-                  `${category[0] === 'Important' ? 'bg-[#F59E0D]' : category[0] === 'All Mail' ? 'bg-[#006FFE]' : category[0] === 'Personal' ? 'bg-[#39ae4a]' : category[0] === 'Updates' ? 'bg-[#8B5CF6]' : category[0] === 'Promotions' ? 'bg-[#F43F5E]' : category[0] === 'Unread' ? 'bg-[#FF4800]' : 'bg-[#F59E0D]'}`,
+                  `${category === 'Important' ? 'bg-[#F59E0D]' : category === 'All Mail' ? 'bg-[#006FFE]' : category === 'Personal' ? 'bg-[#39ae4a]' : category === 'Updates' ? 'bg-[#8B5CF6]' : category === 'Promotions' ? 'bg-[#F43F5E]' : category === 'Unread' ? 'bg-[#FF4800]' : 'bg-[#F59E0D]'}`,
                   'relative bottom-0.5 z-[5] h-0.5 w-full transition-opacity',
                   isFetching ? 'opacity-100' : 'opacity-0',
                 )}
@@ -820,91 +823,88 @@ function BulkSelectActions() {
 
 export const Categories = () => {
   const t = useTranslations();
-  const [category] = useQueryState('category', {
-    defaultValue: 'All Mail',
+  const defaultCategoryIdInner = useDefaultCategoryId()
+  const categorySettings = useCategorySettings();
+  const [activeCategory] = useQueryState('category',{
+     defaultValue: defaultCategoryIdInner,
   });
-  return [
-    {
-      id: 'Important',
-      name: t('common.mailCategories.important'),
-      searchValue: 'is:important NOT is:sent NOT is:draft',
-      icon: (
-        <Lightning
-          className={cn(
-            'fill-muted-foreground dark:fill-white',
-            category === 'Important' && 'fill-white',
-          )}
-        />
-      ),
-    },
-    {
-      id: 'All Mail',
-      name: t('common.mailCategories.allMail'),
-      searchValue: 'NOT is:draft (is:inbox OR (is:sent AND to:me))',
-      icon: (
-        <Mail
-          className={cn(
-            'fill-muted-foreground dark:fill-white',
-            category === 'All Mail' && 'fill-white',
-          )}
-        />
-      ),
-      colors:
-        'border-0 bg-[#006FFE] text-white dark:bg-[#006FFE] dark:text-white dark:hover:bg-[#006FFE]/90',
-    },
-    {
-      id: 'Personal',
-      name: t('common.mailCategories.personal'),
-      searchValue: 'is:personal NOT is:sent NOT is:draft',
-      icon: (
-        <User
-          className={cn(
-            'fill-muted-foreground dark:fill-white',
-            category === 'Personal' && 'fill-white',
-          )}
-        />
-      ),
-    },
-    {
-      id: 'Updates',
-      name: t('common.mailCategories.updates'),
-      searchValue: 'is:updates NOT is:sent NOT is:draft',
-      icon: (
-        <Bell
-          className={cn(
-            'fill-muted-foreground dark:fill-white',
-            category === 'Updates' && 'fill-white',
-          )}
-        />
-      ),
-    },
-    {
-      id: 'Promotions',
-      name: t('common.mailCategories.promotions'),
-      searchValue: 'is:promotions NOT is:sent NOT is:draft',
-      icon: (
-        <Tag
-          className={cn(
-            'fill-muted-foreground dark:fill-white',
-            category === 'Promotions' && 'fill-white',
-          )}
-        />
-      ),
-    },
-    {
-      id: 'Unread',
-      name: t('common.mailCategories.unread'),
-      searchValue: 'is:unread NOT is:sent NOT is:draft',
-      icon: (
-        <ScanEye
-          className={cn(
-            'fill-muted-foreground h-4 w-4 dark:fill-white',
-            category === 'Unread' && 'fill-white',
-          )}
-        />
-      ),
-    },
-  ];
+
+  const categories = categorySettings.map((cat) => {
+    const base = {
+      id: cat.id,
+      name: cat.name || t(`common.mailCategories.${cat.id.toLowerCase().replace(' ', '')}` as any),
+      searchValue: cat.searchValue,
+    } as const;
+
+    // Helper to decide fill colour depending on selection
+    const isSelected = activeCategory === cat.id;
+
+    switch (cat.id) {
+      case 'Important':
+        return {
+          ...base,
+          icon: (
+            <Lightning
+              className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')}
+            />
+          ),
+        };
+      case 'All Mail':
+        return {
+          ...base,
+          icon: (
+            <Mail
+              className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')}
+            />
+          ),
+          colors:
+            'border-0 bg-[#006FFE] text-white dark:bg-[#006FFE] dark:text-white dark:hover:bg-[#006FFE]/90',
+        };
+      case 'Personal':
+        return {
+          ...base,
+          icon: (
+            <User
+              className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')}
+            />
+          ),
+        };
+      case 'Promotions':
+        return {
+          ...base,
+          icon: (
+            <Tag
+              className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')}
+            />
+          ),
+        };
+      case 'Updates':
+        return {
+          ...base,
+          icon: (
+            <Bell
+              className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')}
+            />
+          ),
+        };
+      case 'Unread':
+        return {
+          ...base,
+          icon: (
+            <ScanEye
+              className={cn(
+                'fill-muted-foreground h-4 w-4 dark:fill-white',
+                isSelected && 'fill-white',
+              )}
+            />
+          ),
+        };
+      default:
+        return base as any;
+    }
+  });
+
+  return categories;
 };
 
 type CategoryType = ReturnType<typeof Categories>[0];
@@ -936,22 +936,18 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
   const categories = Categories();
   const params = useParams<{ folder: string }>();
   const folder = params?.folder ?? 'inbox';
+  const defaultCategoryIdInner = useDefaultCategoryId();
   const [category, setCategory] = useQueryState('category', {
-    defaultValue: 'All Mail',
+    defaultValue: defaultCategoryIdInner,
   });
   const containerRef = useRef<HTMLDivElement>(null);
   const activeTabElementRef = useRef<HTMLButtonElement>(null);
   const overlayContainerRef = useRef<HTMLDivElement>(null);
   const [textSize, setTextSize] = useState<'normal' | 'small' | 'xs' | 'hidden'>('normal');
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
 
-  // Only show category selection for inbox folder
   if (folder !== 'inbox') return <div className="h-8"></div>;
 
-  // Primary category is always the first one
-  const primaryCategory = categories[0];
-  if (!primaryCategory) return null;
-
-  // Check text size based on available space
   useEffect(() => {
     const checkTextSize = () => {
       const container = containerRef.current;
@@ -1042,40 +1038,47 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
 
     const showText = textSize !== 'hidden';
 
+    const button = (
+      <button
+        ref={!isOverlay ? activeTabElementRef : null}
+        onClick={() => {
+          setCategory(cat.id);
+          setSearchValue({
+            value: `${cat.searchValue} ${cleanSearchValue(searchValue.value).trim().length ? `AND ${cleanSearchValue(searchValue.value)}` : ''}`,
+            highlight: searchValue.highlight,
+            folder: '',
+          });
+        }}
+        className={cn(
+          'flex h-8 items-center justify-center gap-1 overflow-hidden rounded-lg border transition-all duration-300 ease-out dark:border-none',
+          isSelected
+            ? cn('flex-1 border-none text-white', getPaddingClasses(), bgColor)
+            : 'w-8 bg-white hover:bg-gray-100 dark:bg-[#313131] dark:hover:bg-[#313131]/80',
+        )}
+        tabIndex={isOverlay ? -1 : undefined}
+      >
+        <div className="relative overflow-visible">{cat.icon}</div>
+        {isSelected && showText && (
+          <div className="flex items-center justify-center gap-2.5 px-0.5">
+            <div className={cn('justify-start truncate leading-none text-white', getTextClasses())}>
+              {cat.name}
+            </div>
+          </div>
+        )}
+      </button>
+    );
+
+    if (!isDesktop) {
+      return React.cloneElement(button, { key: cat.id });
+    }
+
     return (
       <Tooltip key={cat.id}>
-        <TooltipTrigger asChild>
-          <button
-            ref={!isOverlay ? activeTabElementRef : null}
-            onClick={() => {
-              setCategory(cat.id);
-              setSearchValue({
-                value: `${cat.searchValue} ${cleanSearchValue(searchValue.value).trim().length ? `AND ${cleanSearchValue(searchValue.value)}` : ''}`,
-                highlight: searchValue.highlight,
-                folder: '',
-              });
-            }}
-            className={cn(
-              'flex h-8 items-center justify-center gap-1 overflow-hidden rounded-lg border transition-all duration-300 ease-out dark:border-none',
-              isSelected
-                ? cn('flex-1 border-none text-white', getPaddingClasses(), bgColor)
-                : 'w-8 bg-white hover:bg-gray-100 dark:bg-[#313131] dark:hover:bg-[#313131]/80',
-            )}
-            tabIndex={isOverlay ? -1 : undefined}
-          >
-            <div className="relative overflow-visible">{cat.icon}</div>
-            {isSelected && showText && (
-              <div className="flex items-center justify-center gap-2.5 px-0.5">
-                <div
-                  className={cn('justify-start truncate leading-none text-white', getTextClasses())}
-                >
-                  {cat.name}
-                </div>
-              </div>
-            )}
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side="top" className={`${idx === 0 ? 'ml-4' : ''}`}>
+        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        <TooltipContent
+          side="top"
+          align={idx === 0 ? 'start' : idx === categories.length - 1 ? 'end' : 'center'}
+        >
           <span className="mr-2">{cat.name}</span>
           <kbd
             className={cn(

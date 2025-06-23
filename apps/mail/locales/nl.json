@@ -135,10 +135,13 @@
     "navUser": {
       "customerSupport": "Community",
       "documentation": "Documentatie",
-      "appTheme": "App-thema",
+      "appTheme": "Thema wisselen",
       "accounts": "Accounts",
       "signIn": "Inloggen",
-      "otherAccounts": "Andere accounts"
+      "otherAccounts": "Andere accounts",
+      "switchingAccounts": "Accounts wisselen...",
+      "accountSwitched": "Account succesvol gewisseld",
+      "failedToSwitchAccount": "Kon niet van account wisselen. Probeer het opnieuw."
     },
     "mailCategories": {
       "primary": "Primair",
@@ -169,6 +172,7 @@
       "details": "Details",
       "from": "Van",
       "to": "Aan",
+      "replyTo": "Antwoorden aan",
       "cc": "Cc",
       "bcc": "Bcc",
       "date": "Datum",
@@ -268,7 +272,9 @@
       "notFound": "Instellingen niet gevonden",
       "saved": "Instellingen opgeslagen",
       "failedToSave": "Instellingen opslaan mislukt",
-      "languageChanged": "Taal gewijzigd naar {locale}"
+      "languageChanged": "Taal gewijzigd naar {locale}",
+      "defaultEmailUpdated": "Standaard e-mailalias bijgewerkt in Gmail",
+      "failedToUpdateGmailAlias": "Kon standaardalias niet bijwerken in Gmail-instellingen"
     },
     "mail": {
       "replies": "{count, plural, =0 {reacties} one {# reactie} other {# reacties}}",
@@ -327,12 +333,21 @@
       "mb": "{amount} MB"
     },
     "labels": {
+      "color": "Kleur",
+      "labelName": "Labelnaam",
+      "createLabel": "Label aanmaken",
       "deleteLabel": "Label verwijderen",
       "deleteLabelConfirm": "Weet je zeker dat je dit label wilt verwijderen?",
       "deleteLabelConfirmDescription": "Deze actie kan niet ongedaan worden gemaakt.",
       "deleteLabelConfirmCancel": "Annuleren",
       "deleteLabelConfirmDelete": "Verwijderen",
-      "deleteLabelSuccess": "Label succesvol verwijderd"
+      "deleteLabelSuccess": "Label succesvol verwijderd",
+      "failedToDeleteLabel": "Label verwijderen mislukt",
+      "deletingLabel": "Label verwijderen...",
+      "editLabel": "Label bewerken",
+      "savingLabel": "Label opslaan...",
+      "failedToSavingLabel": "Label opslaan mislukt",
+      "saveLabelSuccess": "Label succesvol opgeslagen"
     }
   },
   "navigation": {
@@ -355,6 +370,7 @@
       "signatures": "Handtekeningen",
       "shortcuts": "Snelkoppelingen",
       "labels": "Labels",
+      "categories": "Categorieën",
       "dangerZone": "Gevarenzone",
       "deleteAccount": "Account verwijderen",
       "privacy": "Privacy"
@@ -385,7 +401,10 @@
         "customPromptDescription": "Pas aan hoe de AI je e-mailantwoorden schrijft. Dit wordt toegevoegd aan de basisprompt.",
         "noResultsFound": "Geen resultaten gevonden",
         "zeroSignature": "Zero-handtekening",
-        "zeroSignatureDescription": "Voeg een Zero-handtekening toe aan je e-mails."
+        "zeroSignatureDescription": "Voeg een Zero-handtekening toe aan je e-mails.",
+        "defaultEmailAlias": "Standaard e-mailalias",
+        "selectDefaultEmail": "Selecteer standaard e-mail",
+        "defaultEmailDescription": "Dit e-mailadres wordt gebruikt als standaard 'Van'-adres bij het opstellen van nieuwe e-mails"
       },
       "connections": {
         "title": "E-mailverbindingen",

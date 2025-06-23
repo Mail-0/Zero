@@ -44,7 +44,24 @@ export class GoogleMailManager implements MailManager {
       'https://www.googleapis.com/auth/userinfo.email',
     ].join(' ');
   }
-  public getAttachment(messageId: string, attachmentId: string) {
+  public async listHistory<T>(historyId: string): Promise<{ history: T[]; historyId: string }> {
+    return this.withErrorHandler(
+      'listHistory',
+      async () => {
+        const response = await this.gmail.users.history.list({
+          userId: 'me',
+          startHistoryId: historyId,
+        });
+
+        const history = response.data.history || [];
+        const nextHistoryId = response.data.historyId || historyId;
+
+        return { history: history as T[], historyId: nextHistoryId };
+      },
+      { historyId },
+    );
+  }
+  public async getAttachment(messageId: string, attachmentId: string) {
     return this.withErrorHandler(
       'getAttachment',
       async () => {
@@ -65,30 +82,22 @@ export class GoogleMailManager implements MailManager {
   }
   public getEmailAliases() {
     return this.withErrorHandler('getEmailAliases', async () => {
-      console.log('Fetching email aliases...');
-
       const profile = await this.gmail.users.getProfile({
         userId: 'me',
       });
-      console.log('Retrieved user profile:', { email: profile.data.emailAddress });
 
       const primaryEmail = profile.data.emailAddress || '';
       const aliases: { email: string; name?: string; primary?: boolean }[] = [
         { email: primaryEmail, primary: true },
       ];
-      console.log('Added primary email to aliases:', { primaryEmail });
 
       const settings = await this.gmail.users.settings.sendAs.list({
         userId: 'me',
-      });
-      console.log('Retrieved sendAs settings:', {
-        sendAsCount: settings.data.sendAs?.length || 0,
       });
 
       if (settings.data.sendAs) {
         settings.data.sendAs.forEach((alias) => {
           if (alias.isPrimary && alias.sendAsEmail === primaryEmail) {
-            console.log('Skipping duplicate primary email:', { email: alias.sendAsEmail });
             return;
           }
 
@@ -97,15 +106,9 @@ export class GoogleMailManager implements MailManager {
             name: alias.displayName || undefined,
             primary: alias.isPrimary || false,
           });
-          console.log('Added alias:', {
-            email: alias.sendAsEmail,
-            name: alias.displayName,
-            primary: alias.isPrimary,
-          });
         });
       }
 
-      console.log('Returning aliases:', { aliasCount: aliases.length });
       return aliases;
     });
   }
@@ -113,16 +116,16 @@ export class GoogleMailManager implements MailManager {
     return this.withErrorHandler(
       'markAsRead',
       async () => {
-        const finalIds = await Promise.all(
-          threadIds.map(async (id) => {
-            // Use the new method to get only metadata
-            const threadMetadata = await this.getThreadMetadata(id);
-            // Filter messages based on labelIds from metadata
-            return threadMetadata.messages
-              .filter((msg) => msg.labelIds && msg.labelIds.includes('UNREAD'))
-              .map((msg) => msg.id);
-          }),
-        ).then((idArrays) => [...new Set(idArrays.flat())]);
+        const finalIds = (
+          await Promise.all(
+            threadIds.map(async (id) => {
+              const threadMetadata = await this.getThreadMetadata(id);
+              return threadMetadata.messages
+                .filter((msg) => msg.labelIds && msg.labelIds.includes('UNREAD'))
+                .map((msg) => msg.id);
+            }),
+          ).then((idArrays) => [...new Set(idArrays.flat())])
+        ).filter((id): id is string => id !== undefined);
 
         await this.modifyThreadLabels(finalIds, { removeLabelIds: ['UNREAD'] });
       },
@@ -133,16 +136,16 @@ export class GoogleMailManager implements MailManager {
     return this.withErrorHandler(
       'markAsUnread',
       async () => {
-        const finalIds = await Promise.all(
-          threadIds.map(async (id) => {
-            // Use the new method to get only metadata
-            const threadMetadata = await this.getThreadMetadata(id);
-            // Filter messages based on labelIds from metadata
-            return threadMetadata.messages
-              .filter((msg) => msg.labelIds && !msg.labelIds.includes('UNREAD'))
-              .map((msg) => msg.id);
-          }),
-        ).then((idArrays) => [...new Set(idArrays.flat())]);
+        const finalIds = (
+          await Promise.all(
+            threadIds.map(async (id) => {
+              const threadMetadata = await this.getThreadMetadata(id);
+              return threadMetadata.messages
+                .filter((msg) => msg.labelIds && !msg.labelIds.includes('UNREAD'))
+                .map((msg) => msg.id);
+            }),
+          ).then((idArrays) => [...new Set(idArrays.flat())])
+        ).filter((id): id is string => id !== undefined);
         await this.modifyThreadLabels(finalIds, { addLabelIds: ['UNREAD'] });
       },
       { threadIds },
@@ -352,6 +355,9 @@ export class GoogleMailManager implements MailManager {
                     attachmentId: attachmentId,
                     headers: part.headers || [],
                     body: attachmentData ?? '',
+                    replyTo: message.payload?.headers?.find(
+                      (h) => h.name?.toLowerCase() === 'reply-to',
+                    )?.value,
                   };
                 } catch {
                   return null;
@@ -375,12 +381,13 @@ export class GoogleMailManager implements MailManager {
             return fullEmailData;
           }),
         );
+
         return {
           labels: Array.from(labels).map((id) => ({ id, name: id })),
           messages,
-          latest: messages[messages.length - 1],
+          latest: messages.findLast((e) => !e.isDraft),
           hasUnread,
-          totalReplies: messages.length,
+          totalReplies: messages.filter((e) => !e.isDraft).length,
         };
       },
       { id, email: this.config.auth?.email },
@@ -551,7 +558,16 @@ export class GoogleMailManager implements MailManager {
         const message = await sanitizeTipTapHtml(data.message);
         const msg = createMimeMessage();
         msg.setSender('me');
-        msg.setTo(data.to.split(', ').map((recipient: string) => ({ addr: recipient })));
+        // name <email@example.com>
+        const to = data.to.split(', ').map((recipient: string) => {
+          if (recipient.includes('<')) {
+            const [name, email] = recipient.split('<');
+            return { addr: email.replace('>', ''), name: name.replace('>', '') };
+          }
+          return { addr: recipient };
+        });
+
+        msg.setTo(to);
         if (data.cc)
           msg.setCc(data.cc?.split(', ').map((recipient: string) => ({ addr: recipient })));
         if (data.bcc)
@@ -585,6 +601,7 @@ export class GoogleMailManager implements MailManager {
         const requestBody = {
           message: {
             raw: encodedMessage,
+            threadId: data.threadId,
           },
         };
 
@@ -902,6 +919,7 @@ export class GoogleMailManager implements MailManager {
       receivedOn,
       subject: subject ? subject.replace(/"/g, '').trim() : '(no subject)',
       messageId,
+      isDraft: labelIds ? labelIds.includes('DRAFT') : false,
     };
   }
   private async parseOutgoing({
@@ -1086,7 +1104,10 @@ export class GoogleMailManager implements MailManager {
       }
     }
 
-    // TODO: Hook up CC and BCC from the draft so it can populate the composer on open.
+    const cc =
+      draft.message.payload?.headers?.find((h) => h.name === 'Cc')?.value?.split(',') || [];
+    const bcc =
+      draft.message.payload?.headers?.find((h) => h.name === 'Bcc')?.value?.split(',') || [];
 
     return {
       id: draft.id || '',
@@ -1094,6 +1115,8 @@ export class GoogleMailManager implements MailManager {
       subject: subject ? he.decode(subject).trim() : '',
       content,
       rawMessage: draft.message,
+      cc,
+      bcc,
     };
   }
   private async withErrorHandler<T>(

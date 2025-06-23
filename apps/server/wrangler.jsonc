@@ -30,8 +30,32 @@
             "class_name": "ZeroMCP",
           },
           {
+            "name": "ZERO_DB",
+            "class_name": "ZeroDB",
+          },
+          {
             "class_name": "DurableMailbox",
             "name": "DURABLE_MAILBOX",
+          },
+        ],
+      },
+      "queues": {
+        "producers": [
+          {
+            "queue": "thread-queue",
+            "binding": "thread_queue",
+          },
+          {
+            "queue": "subscribe-queue",
+            "binding": "subscribe_queue",
+          },
+        ],
+        "consumers": [
+          {
+            "queue": "subscribe-queue",
+          },
+          {
+            "queue": "thread-queue",
           },
         ],
       },
@@ -44,11 +68,26 @@
           "tag": "v2",
           "new_sqlite_classes": ["ZeroAgent", "ZeroMCP"],
         },
-      ],
-      "services": [
         {
-          "binding": "zero",
-          "service": "zero-worker",
+          "tag": "v3",
+          "new_classes": ["ZeroDB"],
+        },
+      ],
+      "workflows": [
+        {
+          "name": "main-workflow",
+          "binding": "MAIN_WORKFLOW",
+          "class_name": "MainWorkflow",
+        },
+        {
+          "name": "zero-workflow",
+          "binding": "ZERO_WORKFLOW",
+          "class_name": "ZeroWorkflow",
+        },
+        {
+          "name": "thread-workflow",
+          "binding": "THREAD_WORKFLOW",
+          "class_name": "ThreadWorkflow",
         },
       ],
       "observability": {
@@ -70,27 +109,39 @@
         "ELEVENLABS_API_KEY": "1234567890",
         "DISABLE_CALLS": "true",
         "VOICE_SECRET": "1234567890",
+        "GOOGLE_S_ACCOUNT": "{}",
       },
       "kv_namespaces": [
         {
+          "binding": "gmail_history_id",
+          "id": "4e814c70e35d413d99c923029928efae",
+        },
+        {
+          "binding": "gmail_processing_threads",
+          "id": "b7db3a98a80f4e16a8b6edc5fa8c7b76",
+        },
+        {
           "binding": "subscribed_accounts",
-          "id": "cd3ff4a80734444c98aee76ea9166e3d",
+          "id": "7e6eadacf19c4c56a9ec3c357adb584a",
         },
         {
           "binding": "connection_labels",
-          "id": "26c5a521b1294ef88d36b96e5617c428",
+          "id": "4d3a28d3265a4388aae2e9e9b534d019",
         },
         {
           "binding": "prompts_storage",
-          "id": "1caf4e863e2149519cef97f2ba3c9851",
+          "id": "620e710aaea744e59df4788f9ec18ff9",
         },
         {
-          "binding": "connection_limits",
-          "id": "19d415777f554b7c8fbe6eca7dc87918",
+          "binding": "gmail_sub_age",
+          "id": "c55e692bb71d4e5bae23dded092b09d5",
         },
       ],
     },
     "staging": {
+      "triggers": {
+        "crons": ["0 0 * * *"],
+      },
       "ai": {
         "binding": "AI",
       },
@@ -118,8 +169,32 @@
             "class_name": "ZeroMCP",
           },
           {
+            "name": "ZERO_DB",
+            "class_name": "ZeroDB",
+          },
+          {
             "class_name": "DurableMailbox",
             "name": "DURABLE_MAILBOX",
+          },
+        ],
+      },
+      "queues": {
+        "producers": [
+          {
+            "queue": "thread-queue-staging",
+            "binding": "thread_queue",
+          },
+          {
+            "queue": "subscribe-queue-staging",
+            "binding": "subscribe_queue",
+          },
+        ],
+        "consumers": [
+          {
+            "queue": "subscribe-queue-staging",
+          },
+          {
+            "queue": "thread-queue-staging",
           },
         ],
       },
@@ -132,11 +207,26 @@
           "tag": "v2",
           "new_sqlite_classes": ["ZeroAgent", "ZeroMCP"],
         },
-      ],
-      "services": [
         {
-          "binding": "zero",
-          "service": "zero-worker",
+          "tag": "v3",
+          "new_classes": ["ZeroDB"],
+        },
+      ],
+      "workflows": [
+        {
+          "name": "main-workflow",
+          "binding": "MAIN_WORKFLOW",
+          "class_name": "MainWorkflow",
+        },
+        {
+          "name": "zero-workflow",
+          "binding": "ZERO_WORKFLOW",
+          "class_name": "ZeroWorkflow",
+        },
+        {
+          "name": "thread-workflow",
+          "binding": "THREAD_WORKFLOW",
+          "class_name": "ThreadWorkflow",
         },
       ],
       "observability": {
@@ -158,24 +248,35 @@
       },
       "kv_namespaces": [
         {
+          "binding": "gmail_history_id",
+          "id": "4e814c70e35d413d99c923029928efae",
+        },
+        {
+          "binding": "gmail_processing_threads",
+          "id": "b7db3a98a80f4e16a8b6edc5fa8c7b76",
+        },
+        {
           "binding": "subscribed_accounts",
-          "id": "cd3ff4a80734444c98aee76ea9166e3d",
+          "id": "7e6eadacf19c4c56a9ec3c357adb584a",
         },
         {
           "binding": "connection_labels",
-          "id": "26c5a521b1294ef88d36b96e5617c428",
+          "id": "4d3a28d3265a4388aae2e9e9b534d019",
         },
         {
           "binding": "prompts_storage",
-          "id": "1caf4e863e2149519cef97f2ba3c9851",
+          "id": "620e710aaea744e59df4788f9ec18ff9",
         },
         {
-          "binding": "connection_limits",
-          "id": "19d415777f554b7c8fbe6eca7dc87918",
+          "binding": "gmail_sub_age",
+          "id": "c55e692bb71d4e5bae23dded092b09d5",
         },
       ],
     },
     "production": {
+      "triggers": {
+        "crons": ["0 0 * * *"],
+      },
       "ai": {
         "binding": "AI",
       },
@@ -187,6 +288,23 @@
         {
           "binding": "VECTORIZE_MESSAGE",
           "index_name": "messages-vector",
+        },
+      ],
+      "workflows": [
+        {
+          "name": "main-workflow",
+          "binding": "MAIN_WORKFLOW",
+          "class_name": "MainWorkflow",
+        },
+        {
+          "name": "zero-workflow",
+          "binding": "ZERO_WORKFLOW",
+          "class_name": "ZeroWorkflow",
+        },
+        {
+          "name": "thread-workflow",
+          "binding": "THREAD_WORKFLOW",
+          "class_name": "ThreadWorkflow",
         },
       ],
       "observability": {
@@ -210,8 +328,32 @@
             "class_name": "ZeroMCP",
           },
           {
+            "name": "ZERO_DB",
+            "class_name": "ZeroDB",
+          },
+          {
             "class_name": "DurableMailbox",
             "name": "DURABLE_MAILBOX",
+          },
+        ],
+      },
+      "queues": {
+        "producers": [
+          {
+            "queue": "thread-queue-prod",
+            "binding": "thread_queue",
+          },
+          {
+            "queue": "subscribe-queue-prod",
+            "binding": "subscribe_queue",
+          },
+        ],
+        "consumers": [
+          {
+            "queue": "subscribe-queue-prod",
+          },
+          {
+            "queue": "thread-queue-prod",
           },
         ],
       },
@@ -224,11 +366,9 @@
           "tag": "v2",
           "new_sqlite_classes": ["ZeroAgent", "ZeroMCP"],
         },
-      ],
-      "services": [
         {
-          "binding": "zero",
-          "service": "zero-worker",
+          "tag": "v3",
+          "new_classes": ["ZeroDB"],
         },
       ],
       "vars": {
@@ -240,20 +380,28 @@
       },
       "kv_namespaces": [
         {
+          "binding": "gmail_history_id",
+          "id": "10005d74e84f4f18a17c9618d9e9cecf",
+        },
+        {
+          "binding": "gmail_processing_threads",
+          "id": "3348ff0976284269a8d8a5e6e4c04c56",
+        },
+        {
           "binding": "subscribed_accounts",
-          "id": "0528897082354647a1c371d338db13d5",
+          "id": "5902b3b948ff4c4ba1aedbbbbe25503d",
         },
         {
           "binding": "connection_labels",
-          "id": "26c5a521b1294ef88d36b96e5617c428",
+          "id": "9a13290a55ad4f62824c67005dd66f6f",
         },
         {
           "binding": "prompts_storage",
-          "id": "1caf4e863e2149519cef97f2ba3c9851",
+          "id": "2a4ebda553f3456085cfcf92cc0f570f",
         },
         {
-          "binding": "connection_limits",
-          "id": "19d415777f554b7c8fbe6eca7dc87918",
+          "binding": "gmail_sub_age",
+          "id": "0591e91fffcc4675aaf00f909bee77d2",
         },
       ],
     },

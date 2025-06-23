@@ -7,17 +7,17 @@ import { useRef } from 'react';
 const socialLinks = [
   {
     name: 'Twitter',
-    href: 'https://x.com/zerodotemail',
+    href: 'https://x.com/mail0dotcom',
     icon: Twitter,
   },
   {
     name: 'LinkedIn',
-    href: 'https://www.linkedin.com/company/zerodotemail/',
+    href: 'https://www.linkedin.com/company/mail0/',
     icon: LinkedIn,
   },
   {
     name: 'Discord',
-    href: 'https://discord.gg/0email',
+    href: 'https://discord.gg/mail0',
     icon: Discord,
   },
 ];

@@ -8,9 +8,9 @@ import {
   appendResponseMessages,
 } from 'ai';
 import {
-  AiChatPrompt,
   getCurrentDateContext,
   GmailSearchAssistantSystemPrompt,
+  AiChatPrompt,
 } from '../lib/prompts';
 import { type Connection, type ConnectionContext, type WSMessage } from 'agents';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -22,12 +22,15 @@ import { AIChatAgent } from 'agents/ai-chat-agent';
 import { tools as authTools } from './agent/tools';
 import { processToolCalls } from './agent/utils';
 import type { Message as ChatMessage } from 'ai';
+import { getPromptName } from '../pipelines';
 import { connection } from '../db/schema';
 import { env } from 'cloudflare:workers';
+import { getPrompt } from '../lib/brain';
 import { openai } from '@ai-sdk/openai';
+import { and, eq } from 'drizzle-orm';
 import { McpAgent } from 'agents/mcp';
 import { groq } from '@ai-sdk/groq';
-import { eq } from 'drizzle-orm';
+import { EPrompts } from '../types';
 import { createDb } from '../db';
 import { z } from 'zod';
 
@@ -112,6 +115,21 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     super(ctx, env);
   }
 
+  public async callDriver<TResult = any>(
+    method: keyof MailManager,
+    ...args: any[]
+  ): Promise<TResult> {
+    if (!this.driver) {
+      throw new Error('Driver not initialized');
+    }
+    const driverMethod = this.driver[method] as any;
+    if (typeof driverMethod !== 'function') {
+      throw new Error(`Method ${String(method)} is not a function on driver`);
+    }
+    const result = await driverMethod.apply(this.driver, args);
+    return result as TResult;
+  }
+
   private getDataStreamResponse(
     onFinish: StreamTextOnFinishCallback<{}>,
     options?: {
@@ -144,7 +162,10 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
           messages: processedMessages,
           tools,
           onFinish,
-          system: AiChatPrompt('', '', ''),
+          system: await getPrompt(
+            getPromptName(connectionId, EPrompts.Chat),
+            AiChatPrompt('', '', ''),
+          ),
         });
 
         result.mergeIntoDataStream(dataStream);
@@ -351,32 +372,85 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
   }
 }
 
-export class ZeroMCP extends McpAgent<typeof env, {}, { cookie: string }> {
-  auth: SimpleAuth;
+export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
   server = new McpServer({
     name: 'zero-mcp',
     version: '1.0.0',
     description: 'Zero MCP',
   });
 
+  activeConnectionId: string | undefined;
+
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
-    this.auth = createSimpleAuth();
   }
 
   async init(): Promise<void> {
-    const session = await this.auth.api.getSession({ headers: parseHeaders(this.props.cookie) });
-    if (!session) {
-      throw new Error('Unauthorized');
-    }
     const db = createDb(env.HYPERDRIVE.connectionString);
     const _connection = await db.query.connection.findFirst({
-      where: eq(connection.email, session.user.email),
+      where: eq(connection.userId, this.props.userId),
     });
     if (!_connection) {
       throw new Error('Unauthorized');
     }
+    this.activeConnectionId = _connection.id;
     const driver = connectionToDriver(_connection);
+
+    this.server.tool('getConnections', async () => {
+      const connections = await db.query.connection.findMany({
+        where: eq(connection.userId, this.props.userId),
+      });
+      return {
+        content: connections.map((c) => ({
+          type: 'text',
+          text: `Email: ${c.email} | Provider: ${c.providerId}`,
+        })),
+      };
+    });
+
+    this.server.tool('getActiveConnection', async () => {
+      if (!this.activeConnectionId) {
+        throw new Error('No active connection');
+      }
+      const _connection = await db.query.connection.findFirst({
+        where: eq(connection.id, this.activeConnectionId),
+      });
+      if (!_connection) {
+        throw new Error('Connection not found');
+      }
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: `Email: ${_connection.email} | Provider: ${_connection.providerId}`,
+          },
+        ],
+      };
+    });
+
+    this.server.tool(
+      'setActiveConnection',
+      {
+        email: z.string(),
+      },
+      async (s) => {
+        const _connection = await db.query.connection.findFirst({
+          where: and(eq(connection.userId, this.props.userId), eq(connection.email, s.email)),
+        });
+        if (!_connection) {
+          throw new Error('Connection not found');
+        }
+        this.activeConnectionId = _connection.id;
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: `Active connection set to ${_connection.email}`,
+            },
+          ],
+        };
+      },
+    );
 
     this.server.tool(
       'buildGmailSearchQuery',
@@ -423,7 +497,11 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { cookie: string }> {
             return [
               {
                 type: 'text' as const,
-                text: `Subject: ${loadedThread.latest?.subject} | ID: ${thread.id} | Received: ${loadedThread.latest?.receivedOn}`,
+                text: `Subject: ${loadedThread.latest?.subject} | ID: ${thread.id} | Latest Message Received: ${loadedThread.latest?.receivedOn}`,
+              },
+              {
+                type: 'text' as const,
+                text: `Latest Message Sender: ${loadedThread.latest?.sender}`,
               },
             ];
           }),
@@ -448,28 +526,54 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { cookie: string }> {
       },
       async (s) => {
         const thread = await driver.get(s.threadId);
+        const initialResponse = [
+          {
+            type: 'text' as const,
+            text: `Subject: ${thread.latest?.subject}`,
+          },
+          {
+            type: 'text' as const,
+            text: `Latest Message Received: ${thread.latest?.receivedOn}`,
+          },
+          {
+            type: 'text' as const,
+            text: `Latest Message Sender: ${thread.latest?.sender}`,
+          },
+          {
+            type: 'text' as const,
+            text: `Latest Message Raw Content: ${thread.latest?.decodedBody}`,
+          },
+          {
+            type: 'text' as const,
+            text: `Thread ID: ${s.threadId}`,
+          },
+        ];
         const response = await env.VECTORIZE.getByIds([s.threadId]);
-        if (response.length && response?.[0]?.metadata?.['content']) {
-          const content = response[0].metadata['content'] as string;
+        if (response.length && response?.[0]?.metadata?.['summary']) {
+          const content = response[0].metadata['summary'] as string;
           const shortResponse = await env.AI.run('@cf/facebook/bart-large-cnn', {
             input_text: content,
           });
           return {
             content: [
+              ...initialResponse,
               {
                 type: 'text',
-                text: shortResponse.summary,
+                text: `Subject: ${thread.latest?.subject}`,
+              },
+              {
+                type: 'text',
+                text: `Long Summary: ${content}`,
+              },
+              {
+                type: 'text',
+                text: `Short Summary: ${shortResponse.summary}`,
               },
             ],
           };
         }
         return {
-          content: [
-            {
-              type: 'text',
-              text: `Subject: ${thread.latest?.subject}`,
-            },
-          ],
+          content: initialResponse,
         };
       },
     );
