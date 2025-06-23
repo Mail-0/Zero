@@ -180,7 +180,7 @@ You can set up Zero in two ways:
 
    - Go to [Autumn](https://useautumn.com/)
    - For Local Use, click [onboarding](https://app.useautumn.com/sandbox/onboarding) button and generate an Autumn Secret Key
-   - For production, select the production mode from upper left corner and generate an fill the other fields. After that, generate an Autumn Secret Key
+   - For production, select the production mode from upper left corner and generate and fill the other fields. After that, generate an Autumn Secret Key
 
    - Add to `.env`:
 
