@@ -195,6 +195,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
   const [saveSearchName, setSaveSearchName] = useState('');
   const [emailSuggestions, setEmailSuggestions] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [commandInputValue, setCommandInputValue] = useState('');
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const t = useTranslations();
@@ -248,6 +249,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
       setSearchQuery('');
       setSaveSearchName('');
       setFilterBuilderState({});
+      setCommandInputValue('');
     }
   }, [open]);
 
@@ -768,6 +770,22 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     return result;
   }, [pathname, t, setIsComposeOpen, quickFilterOptions]);
 
+  const hasMatchingCommands = useMemo(() => {
+    if (!commandInputValue.trim()) return true;
+
+    const searchTerm = commandInputValue.toLowerCase();
+
+    return allCommands.some((group) =>
+      group.items.some(
+        (item) =>
+          item.title.toLowerCase().includes(searchTerm) ||
+          (item.description && item.description.toLowerCase().includes(searchTerm)) ||
+          (item.keywords &&
+            item.keywords.some((keyword) => keyword.toLowerCase().includes(searchTerm))),
+      ),
+    );
+  }, [commandInputValue, allCommands]);
+
   const renderMainView = () => (
     <>
       {activeFilters.length > 0 && (
@@ -799,7 +817,18 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <CommandInput autoFocus placeholder="Type a command or search..." />
+      <CommandInput
+        autoFocus
+        placeholder="Type a command or search..."
+        value={commandInputValue}
+        onValueChange={setCommandInputValue}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && commandInputValue.trim() && !hasMatchingCommands) {
+            e.preventDefault();
+            handleSearch(commandInputValue, true);
+          }
+        }}
+      />
       <Separator />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
@@ -881,7 +910,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
       <>
         <div className="flex items-center border-b px-3">
           <button
-            className="text-muted-foreground hover:text-foreground mr-2 relative top-0.5"
+            className="text-muted-foreground hover:text-foreground relative top-0.5 mr-2"
             onClick={() => setCurrentView('main')}
             disabled={isProcessing}
           >
@@ -892,7 +921,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             value={searchQuery}
             onValueChange={setSearchQuery}
             placeholder="Search your emails..."
-            className="border-none w-full"
+            className="w-full border-none"
             disabled={isProcessing}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && searchQuery.trim()) {
@@ -971,7 +1000,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                 onSelect={() => handleSearch(searchQuery, false)}
                 disabled={isProcessing}
               >
-                <Search className="h-4 w-4 opacity-60 relative top-2" />
+                <Search className="relative top-2 h-4 w-4 opacity-60" />
                 <span className="ml-2">Exact match: "{searchQuery}"</span>
               </CommandItem>
 
