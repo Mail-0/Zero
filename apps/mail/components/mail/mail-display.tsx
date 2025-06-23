@@ -38,8 +38,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import type { Sender, ParsedMessage, Attachment } from '@/types';
 import { useActiveConnection } from '@/hooks/use-connections';
-import { cn, getEmailLogo, formatDate, formatTime } from '@/lib/utils';
-import { isToday } from 'date-fns';
+import { cn, getEmailLogo, formatDate, formatTime, shouldShowSeparateTime } from '@/lib/utils';
 import { useBrainState } from '../../hooks/use-summary';
 import { useTRPC } from '@/providers/query-provider';
 import { useThreadLabels } from '@/hooks/use-labels';
@@ -1572,12 +1571,11 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                         <div className="flex items-center justify-center">
                           <div className="text-muted-foreground mr-2 text-sm font-medium dark:text-[#8C8C8C] flex flex-col items-end">
                             <time>
-                              {formatDate(emailData?.receivedOn)}
+                              {emailData?.receivedOn ? formatDate(emailData.receivedOn) : ''}
                             </time>
-                            {/* Only show separate time if not received today */}
-                            {emailData?.receivedOn && !isToday(new Date(emailData.receivedOn)) && (
+                            {shouldShowSeparateTime(emailData?.receivedOn) && (
                               <time className="text-xs opacity-75">
-                                {formatTime(emailData?.receivedOn)}
+                                {emailData?.receivedOn && formatTime(emailData.receivedOn)}
                               </time>
                             )}
                           </div>

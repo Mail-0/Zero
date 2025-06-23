@@ -66,7 +66,6 @@ export const getCookie = (key: string): string | null => {
   return cookies?.[key] ?? null;
 };
 
-
 export const parseAndValidateDate = (dateString: string): Date | null => {
   try {
     // Handle empty input
@@ -88,6 +87,29 @@ export const parseAndValidateDate = (dateString: string): Date | null => {
     console.error('Error parsing date', error);
     return null;
   }
+};
+
+/**
+ * Helper function to determine if a separate time display is needed
+ * Returns false for emails from today or within last 12 hours since formatDate already shows time for these
+ */
+export const shouldShowSeparateTime = (dateString: string | undefined): boolean => {
+  if (!dateString) return false;
+  
+  const dateObj = parseAndValidateDate(dateString);
+  if (!dateObj) return false;
+  
+  const now = new Date();
+  
+  // Don't show separate time if email is from today
+  if (isToday(dateObj)) return false;
+  
+  // Don't show separate time if email is within the last 12 hours
+  const hoursDifference = (now.getTime() - dateObj.getTime()) / (1000 * 60 * 60);
+  if (hoursDifference <= 12) return false;
+  
+  // Show separate time for older emails
+  return true;
 };
 
 export const formatDate = (date: string) => {
