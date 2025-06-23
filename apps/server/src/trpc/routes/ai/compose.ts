@@ -3,6 +3,8 @@ import {
   type WritingStyleMatrix,
 } from '../../../services/writing-style-service';
 import { StyledEmailAssistantSystemPrompt } from '../../../lib/prompts';
+import { getPrompt } from '../../../lib/brain';
+import { EPrompts } from '../../../types';
 import { webSearch } from '../../../routes/agent/tools';
 import { activeConnectionProcedure } from '../../trpc';
 import { stripHtml } from 'string-strip-html';
@@ -33,7 +35,10 @@ export async function composeEmail(input: ComposeEmailInput) {
     connectionId,
   });
 
-  const systemPrompt = StyledEmailAssistantSystemPrompt();
+  const systemPrompt = await getPrompt(
+    `${connectionId}-${EPrompts.Compose}`, 
+    StyledEmailAssistantSystemPrompt()
+  );
   const userPrompt = EmailAssistantPrompt({
     currentSubject: emailSubject,
     recipients: [...(to ?? []), ...(cc ?? [])],

@@ -229,6 +229,21 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
     };
   }, [mode, enableScope, disableScope]);
 
+  const ensureEmailArray = (emails: string | string[] | undefined | null): string[] => {
+    if (!emails) return [];
+    if (Array.isArray(emails)) {
+      return emails.map((email) => email.trim().replace(/[<>]/g, ''));
+    }
+    if (typeof emails === 'string') {
+      return emails
+        .split(',')
+        .map((email) => email.trim())
+        .filter((email) => email.length > 0)
+        .map((email) => email.replace(/[<>]/g, ''));
+    }
+    return [];
+  };
+
   if (!mode || !emailData) return null;
 
   return (
@@ -243,7 +258,9 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
           await setActiveReplyId(null);
         }}
         initialMessage={draft?.content ?? latestDraft?.decodedBody}
-        initialTo={draft?.to}
+        initialTo={ensureEmailArray(draft?.to)}
+        initialCc={ensureEmailArray(draft?.cc)}
+        initialBcc={ensureEmailArray(draft?.bcc)}
         initialSubject={draft?.subject}
         autofocus={false}
         settingsLoading={settingsLoading}

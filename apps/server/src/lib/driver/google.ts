@@ -1104,7 +1104,10 @@ export class GoogleMailManager implements MailManager {
       }
     }
 
-    // TODO: Hook up CC and BCC from the draft so it can populate the composer on open.
+    const cc =
+      draft.message.payload?.headers?.find((h) => h.name === 'Cc')?.value?.split(',') || [];
+    const bcc =
+      draft.message.payload?.headers?.find((h) => h.name === 'Bcc')?.value?.split(',') || [];
 
     return {
       id: draft.id || '',
@@ -1112,6 +1115,8 @@ export class GoogleMailManager implements MailManager {
       subject: subject ? he.decode(subject).trim() : '',
       content,
       rawMessage: draft.message,
+      cc,
+      bcc,
     };
   }
   private async withErrorHandler<T>(
