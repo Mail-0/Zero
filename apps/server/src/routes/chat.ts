@@ -12,8 +12,6 @@ import {
   GmailSearchAssistantSystemPrompt,
   AiChatPrompt,
 } from '../lib/prompts';
-import { getPrompt } from '../lib/brain';
-import { EPrompts } from '../types';
 import { type Connection, type ConnectionContext, type WSMessage } from 'agents';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createSimpleAuth, type SimpleAuth } from '../lib/auth';
@@ -24,12 +22,15 @@ import { AIChatAgent } from 'agents/ai-chat-agent';
 import { tools as authTools } from './agent/tools';
 import { processToolCalls } from './agent/utils';
 import type { Message as ChatMessage } from 'ai';
+import { getPromptName } from '../pipelines';
 import { connection } from '../db/schema';
 import { env } from 'cloudflare:workers';
+import { getPrompt } from '../lib/brain';
 import { openai } from '@ai-sdk/openai';
 import { and, eq } from 'drizzle-orm';
 import { McpAgent } from 'agents/mcp';
 import { groq } from '@ai-sdk/groq';
+import { EPrompts } from '../types';
 import { createDb } from '../db';
 import { z } from 'zod';
 
@@ -114,6 +115,21 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     super(ctx, env);
   }
 
+  public async callDriver<TResult = any>(
+    method: keyof MailManager,
+    ...args: any[]
+  ): Promise<TResult> {
+    if (!this.driver) {
+      throw new Error('Driver not initialized');
+    }
+    const driverMethod = this.driver[method] as any;
+    if (typeof driverMethod !== 'function') {
+      throw new Error(`Method ${String(method)} is not a function on driver`);
+    }
+    const result = await driverMethod.apply(this.driver, args);
+    return result as TResult;
+  }
+
   private getDataStreamResponse(
     onFinish: StreamTextOnFinishCallback<{}>,
     options?: {
@@ -146,7 +162,10 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
           messages: processedMessages,
           tools,
           onFinish,
-          system: await getPrompt(`${connectionId}-${EPrompts.Chat}`, AiChatPrompt('', '', '')),
+          system: await getPrompt(
+            getPromptName(connectionId, EPrompts.Chat),
+            AiChatPrompt('', '', ''),
+          ),
         });
 
         result.mergeIntoDataStream(dataStream);

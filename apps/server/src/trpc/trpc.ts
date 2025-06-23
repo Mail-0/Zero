@@ -42,8 +42,7 @@ export const activeConnectionProcedure = privateProcedure.use(async ({ ctx, next
 
 export const activeDriverProcedure = activeConnectionProcedure.use(async ({ ctx, next }) => {
   const { activeConnection, sessionUser } = ctx;
-  const driver = connectionToDriver(activeConnection);
-  const res = await next({ ctx: { ...ctx, driver } });
+  const res = await next({ ctx: { ...ctx } });
 
   // This is for when the user has not granted the required scopes for GMail
   if (!res.ok && res.error.message === 'Precondition check failed.') {
