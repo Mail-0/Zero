@@ -18,7 +18,7 @@ export const connectionsRouter = router({
     .query(async ({ ctx }) => {
       const { sessionUser } = ctx;
       const db = getZeroDB(sessionUser.id);
-      const connections = await db.findManyConnections(sessionUser.id);
+      const connections = await db.findManyConnections();
 
       const disconnectedIds = connections
         .filter((c) => !c.accessToken || !c.refreshToken)
@@ -44,9 +44,9 @@ export const connectionsRouter = router({
       const { connectionId } = input;
       const user = ctx.sessionUser;
       const db = getZeroDB(user.id);
-      const foundConnection = await db.findUserConnection(user.id, connectionId);
+      const foundConnection = await db.findUserConnection(connectionId);
       if (!foundConnection) throw new TRPCError({ code: 'NOT_FOUND' });
-      await db.updateUser(user.id, { defaultConnectionId: connectionId });
+      await db.updateUser({ defaultConnectionId: connectionId });
     }),
   delete: privateProcedure
     .input(z.object({ connectionId: z.string() }))
@@ -54,11 +54,10 @@ export const connectionsRouter = router({
       const { connectionId } = input;
       const user = ctx.sessionUser;
       const db = getZeroDB(user.id);
-      await db.deleteConnection(connectionId, user.id);
+      await db.deleteConnection(connectionId);
 
       const activeConnection = await getActiveConnection();
-      if (connectionId === activeConnection.id)
-        await db.updateUser(user.id, { defaultConnectionId: null });
+      if (connectionId === activeConnection.id) await db.updateUser({ defaultConnectionId: null });
     }),
   getDefault: publicProcedure.query(async ({ ctx }) => {
     if (!ctx.sessionUser) return null;
