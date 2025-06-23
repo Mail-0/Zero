@@ -38,6 +38,8 @@ import { useQueryState } from 'nuqs';
 import pluralize from 'pluralize';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { ContactAutocomplete } from './contact-autocomplete';
+
 
 type ThreadContent = {
   from: string;
@@ -70,11 +72,6 @@ interface EmailComposerProps {
   settingsLoading?: boolean;
   editorClassName?: string;
 }
-
-const isValidEmail = (email: string): boolean => {
-  const emailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  return emailRegex.test(email);
-};
 
 const schema = z.object({
   to: z.array(z.string().email()).min(1),
@@ -112,9 +109,6 @@ export function EmailComposer({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [messageLength, setMessageLength] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const toInputRef = useRef<HTMLInputElement>(null);
-  const ccInputRef = useRef<HTMLInputElement>(null);
-  const bccInputRef = useRef<HTMLInputElement>(null);
   const [threadId] = useQueryState('threadId');
   const [mode] = useQueryState('mode');
   const [isComposeOpen, setIsComposeOpen] = useQueryState('isComposeOpen');
@@ -123,36 +117,10 @@ export function EmailComposer({
   const [aiGeneratedMessage, setAiGeneratedMessage] = useState<string | null>(null);
   const [aiIsLoading, setAiIsLoading] = useState(false);
   const [isGeneratingSubject, setIsGeneratingSubject] = useState(false);
-  const [isAddingRecipients, setIsAddingRecipients] = useState(false);
-  const [isAddingCcRecipients, setIsAddingCcRecipients] = useState(false);
-  const [isAddingBccRecipients, setIsAddingBccRecipients] = useState(false);
-  const toWrapperRef = useRef<HTMLDivElement>(null);
-  const ccWrapperRef = useRef<HTMLDivElement>(null);
-  const bccWrapperRef = useRef<HTMLDivElement>(null);
   const { data: activeConnection } = useActiveConnection();
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
 
-  // Add this function to handle clicks outside the input fields
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (toWrapperRef.current && !toWrapperRef.current.contains(event.target as Node)) {
-        setIsAddingRecipients(false);
-      }
-      if (ccWrapperRef.current && !ccWrapperRef.current.contains(event.target as Node)) {
-        setIsAddingCcRecipients(false);
-      }
-      if (bccWrapperRef.current && !bccWrapperRef.current.contains(event.target as Node)) {
-        setIsAddingBccRecipients(false);
-      }
-    }
 
-    // Add event listener
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      // Remove event listener on cleanup
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   const trpc = useTRPC();
   const { mutateAsync: aiCompose } = useMutation(trpc.ai.compose.mutationOptions());
@@ -160,11 +128,7 @@ export function EmailComposer({
   const { mutateAsync: generateEmailSubject } = useMutation(
     trpc.ai.generateEmailSubject.mutationOptions(),
   );
-  useEffect(() => {
-    if (isComposeOpen === 'true' && toInputRef.current) {
-      toInputRef.current.focus();
-    }
-  }, [isComposeOpen]);
+
 
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -591,188 +555,21 @@ export function EmailComposer({
         {/* To, Cc, Bcc */}
         <div className="shrink-0 overflow-y-auto border-b border-[#E7E7E7] pb-2 dark:border-[#252525]">
           <div className="flex justify-between px-3 pt-3">
-            <div
-              onClick={() => {
-                setIsAddingRecipients(true);
-                setTimeout(() => {
-                  if (toInputRef.current) {
-                    toInputRef.current.focus();
-                  }
-                }, 0);
-              }}
-              className="flex w-full items-center gap-2"
-            >
+            <div className="flex w-full items-center gap-2">
               <p className="text-sm font-medium text-[#8C8C8C]">To:</p>
-              {isAddingRecipients || toEmails.length === 0 ? (
-                <div ref={toWrapperRef} className="flex flex-wrap items-center gap-2">
-                  {toEmails.map((email, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-1 rounded-full border px-1 py-0.5 pr-2"
-                    >
-                      <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
-                        <Avatar className="h-5 w-5">
-                          <AvatarFallback className="bg-offsetLight text-muted-foreground dark:bg-muted rounded-full text-xs font-bold dark:text-[#9B9B9B]">
-                            {email.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        {email}
-                      </span>
-                      <button
-                        onClick={() => {
-                          setValue(
-                            'to',
-                            toEmails.filter((_, i) => i !== index),
-                          );
-                          setHasUnsavedChanges(true);
-                        }}
-                        className="text-white/50 hover:text-white/90"
-                      >
-                        <X className="mt-0.5 h-3.5 w-3.5 fill-black dark:fill-[#9A9A9A]" />
-                      </button>
-                    </div>
-                  ))}
-                  <input
-                    ref={toInputRef}
-                    className="h-6 flex-1 bg-transparent text-sm font-normal leading-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white"
-                    placeholder="Enter email"
-                    onPaste={(e) => {
-                      e.preventDefault();
-                      const pastedText = e.clipboardData.getData('text');
-                      const emails = pastedText
-                        .split(/[,;\s]+/)
-                        .map((email) => email.trim())
-                        .filter((email) => email.length > 0);
-
-                      const validEmails: string[] = [];
-                      const invalidEmails: string[] = [];
-
-                      emails.forEach((email) => {
-                        if (isValidEmail(email)) {
-                          const emailLower = email.toLowerCase();
-                          if (!toEmails.some((e) => e.toLowerCase() === emailLower)) {
-                            validEmails.push(email);
-                          }
-                        } else {
-                          invalidEmails.push(email);
-                        }
-                      });
-
-                      if (validEmails.length > 0) {
-                        setValue('to', [...toEmails, ...validEmails]);
-                        setHasUnsavedChanges(true);
-                        if (validEmails.length === 1) {
-                          toast.success('Email address added');
-                        } else {
-                          toast.success(`${validEmails.length} email addresses added`);
-                        }
-                      }
-
-                      if (invalidEmails.length > 0) {
-                        toast.error(
-                          `Invalid email ${invalidEmails.length === 1 ? 'address' : 'addresses'}: ${invalidEmails.join(', ')}`,
-                        );
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                        e.preventDefault();
-                        if (isValidEmail(e.currentTarget.value.trim())) {
-                          if (toEmails.includes(e.currentTarget.value.trim())) {
-                            toast.error('This email is already in the list');
-                          } else {
-                            setValue('to', [...toEmails, e.currentTarget.value.trim()]);
-                            e.currentTarget.value = '';
-                            setHasUnsavedChanges(true);
-                          }
-                        } else {
-                          toast.error('Please enter a valid email address');
-                        }
-                      } else if (
-                        (e.key === ' ' && e.currentTarget.value.trim()) ||
-                        (e.key === 'Tab' && e.currentTarget.value.trim())
-                      ) {
-                        e.preventDefault();
-                        if (isValidEmail(e.currentTarget.value.trim())) {
-                          if (toEmails.includes(e.currentTarget.value.trim())) {
-                            toast.error('This email is already in the list');
-                          } else {
-                            setValue('to', [...toEmails, e.currentTarget.value.trim()]);
-                            e.currentTarget.value = '';
-                            setHasUnsavedChanges(true);
-                          }
-                        } else {
-                          toast.error('Please enter a valid email address');
-                        }
-                      } else if (
-                        e.key === 'Backspace' &&
-                        !e.currentTarget.value &&
-                        toEmails.length > 0
-                      ) {
-                        setValue('to', toEmails.slice(0, -1));
-                        setHasUnsavedChanges(true);
-                      }
-                    }}
-                    onFocus={() => {
-                      setIsAddingRecipients(true);
-                    }}
-                    onBlur={(e) => {
-                      if (e.currentTarget.value.trim()) {
-                        if (isValidEmail(e.currentTarget.value.trim())) {
-                          if (toEmails.includes(e.currentTarget.value.trim())) {
-                            toast.error('This email is already in the list');
-                          } else {
-                            setValue('to', [...toEmails, e.currentTarget.value.trim()]);
-                            e.currentTarget.value = '';
-                            setHasUnsavedChanges(true);
-                          }
-                        } else {
-                          toast.error('Please enter a valid email address');
-                        }
-                      }
-                    }}
-                  />
-                </div>
-              ) : (
-                <div className="flex min-h-6 flex-1 cursor-pointer items-center text-sm text-black dark:text-white">
-                  {toEmails.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-1">
-                      {toEmails.slice(0, 3).map((email, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center gap-1 rounded-full border px-1 py-0.5 pr-2"
-                        >
-                          <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
-                            <Avatar className="h-5 w-5">
-                              <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
-                                {email.charAt(0).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            {email}
-                          </span>
-                          <button
-                            onClick={() => {
-                              setValue(
-                                'to',
-                                toEmails.filter((_, i) => i !== index),
-                              );
-                              setHasUnsavedChanges(true);
-                            }}
-                            className="text-white/50 hover:text-white/90"
-                          >
-                            <X className="mt-0.5 h-3.5 w-3.5 fill-black dark:fill-[#9A9A9A]" />
-                          </button>
-                        </div>
-                      ))}
-                      {toEmails.length > 3 && (
-                        <span className="ml-1 text-center text-[#8C8C8C]">
-                          +{toEmails.length - 3} more
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+              <div className="flex-1">
+                <ContactAutocomplete
+                  value={toEmails}
+                  onChange={(emails) => {
+                    setValue('to', emails);
+                    setHasUnsavedChanges(true);
+                  }}
+                  placeholder="Enter email"
+                  className="border-0 bg-transparent p-0 focus-within:ring-0 focus-within:ring-offset-0"
+                  autoFocus={isComposeOpen === 'true'}
+                  type="to"
+                />
+              </div>
             </div>
 
             <div className="flex gap-2">
@@ -805,293 +602,39 @@ export function EmailComposer({
           <div className={`flex flex-col gap-2 ${showCc || showBcc ? 'pt-2' : ''}`}>
             {/* CC Section */}
             {showCc && (
-              <div
-                onClick={() => {
-                  setIsAddingCcRecipients(true);
-                  setTimeout(() => {
-                    if (ccInputRef.current) {
-                      ccInputRef.current.focus();
-                    }
-                  }, 0);
-                }}
-                className="flex items-center gap-2 px-3"
-              >
+              <div className="flex items-center gap-2 px-3">
                 <p className="text-sm font-medium text-[#8C8C8C]">Cc:</p>
-                {isAddingCcRecipients || (ccEmails && ccEmails.length === 0) ? (
-                  <div ref={ccWrapperRef} className="flex flex-1 flex-wrap items-center gap-2">
-                    {ccEmails?.map((email, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-1 rounded-full border px-2 py-0.5"
-                      >
-                        <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
-                          <Avatar className="h-5 w-5">
-                            <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
-                              {email.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          {email}
-                        </span>
-                        <button
-                          onClick={() => {
-                            setValue(
-                              'cc',
-                              ccEmails.filter((_, i) => i !== index),
-                            );
-                            setHasUnsavedChanges(true);
-                          }}
-                          className="text-white/50 hover:text-white/90"
-                        >
-                          <X className="mt-0.5 h-3.5 w-3.5 fill-black dark:fill-[#9A9A9A]" />
-                        </button>
-                      </div>
-                    ))}
-                    <input
-                      ref={ccInputRef}
-                      className="h-6 flex-1 bg-transparent text-sm font-normal leading-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white"
-                      placeholder="Enter email"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                          e.preventDefault();
-                          if (isValidEmail(e.currentTarget.value.trim())) {
-                            if (ccEmails?.includes(e.currentTarget.value.trim())) {
-                              toast.error('This email is already in the list');
-                            } else {
-                              setValue('cc', [...(ccEmails || []), e.currentTarget.value.trim()]);
-                              e.currentTarget.value = '';
-                              setHasUnsavedChanges(true);
-                            }
-                          } else {
-                            toast.error('Please enter a valid email address');
-                          }
-                        } else if (e.key === ' ' && e.currentTarget.value.trim()) {
-                          e.preventDefault();
-                          if (isValidEmail(e.currentTarget.value.trim())) {
-                            if (ccEmails?.includes(e.currentTarget.value.trim())) {
-                              toast.error('This email is already in the list');
-                            } else {
-                              setValue('cc', [...(ccEmails || []), e.currentTarget.value.trim()]);
-                              e.currentTarget.value = '';
-                              setHasUnsavedChanges(true);
-                            }
-                          } else {
-                            toast.error('Please enter a valid email address');
-                          }
-                        } else if (
-                          e.key === 'Backspace' &&
-                          !e.currentTarget.value &&
-                          ccEmails?.length
-                        ) {
-                          setValue('cc', ccEmails.slice(0, -1));
-                          setHasUnsavedChanges(true);
-                        }
-                      }}
-                      onFocus={() => {
-                        setIsAddingCcRecipients(true);
-                      }}
-                      onBlur={(e) => {
-                        if (e.currentTarget.value.trim()) {
-                          if (isValidEmail(e.currentTarget.value.trim())) {
-                            if (ccEmails?.includes(e.currentTarget.value.trim())) {
-                              toast.error('This email is already in the list');
-                            } else {
-                              setValue('cc', [...(ccEmails || []), e.currentTarget.value.trim()]);
-                              e.currentTarget.value = '';
-                              setHasUnsavedChanges(true);
-                            }
-                          } else {
-                            toast.error('Please enter a valid email address');
-                          }
-                        }
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div className="flex min-h-6 flex-1 cursor-pointer items-center text-sm text-black dark:text-white">
-                    {ccEmails && ccEmails.length > 0 && (
-                      <div className="flex flex-wrap items-center gap-1">
-                        {ccEmails.slice(0, 3).map((email, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center gap-1 rounded-full border px-1 py-0.5 pr-2"
-                          >
-                            <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
-                              <Avatar className="h-5 w-5">
-                                <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
-                                  {email.charAt(0).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              {email}
-                            </span>
-                            <button
-                              onClick={() => {
-                                setValue(
-                                  'cc',
-                                  ccEmails.filter((_, i) => i !== index),
-                                );
-                                setHasUnsavedChanges(true);
-                              }}
-                              className="text-white/50 hover:text-white/90"
-                            >
-                              <X className="mt-0.5 h-3.5 w-3.5 fill-black dark:fill-[#9A9A9A]" />
-                            </button>
-                          </div>
-                        ))}
-                        {ccEmails.length > 3 && (
-                          <span className="ml-1 text-center text-[#8C8C8C]">
-                            +{ccEmails.length - 3} more
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
+                <div className="flex-1">
+                  <ContactAutocomplete
+                    value={ccEmails || []}
+                    onChange={(emails) => {
+                      setValue('cc', emails);
+                      setHasUnsavedChanges(true);
+                    }}
+                    placeholder="Enter email"
+                    className="border-0 bg-transparent p-0 focus-within:ring-0 focus-within:ring-offset-0"
+                    type="cc"
+                  />
+                </div>
               </div>
             )}
 
             {/* BCC Section */}
             {showBcc && (
-              <div
-                onClick={() => {
-                  setIsAddingBccRecipients(true);
-                  setTimeout(() => {
-                    if (bccInputRef.current) {
-                      bccInputRef.current.focus();
-                    }
-                  }, 0);
-                }}
-                className="flex items-center gap-2 px-3"
-              >
+              <div className="flex items-center gap-2 px-3">
                 <p className="text-sm font-medium text-[#8C8C8C]">Bcc:</p>
-                {isAddingBccRecipients || (bccEmails && bccEmails.length === 0) ? (
-                  <div ref={bccWrapperRef} className="flex flex-1 flex-wrap items-center gap-2">
-                    {bccEmails?.map((email, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-1 rounded-full border px-2 py-0.5"
-                      >
-                        <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
-                          <Avatar className="h-5 w-5">
-                            <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
-                              {email.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          {email}
-                        </span>
-                        <button
-                          onClick={() => {
-                            setValue(
-                              'bcc',
-                              bccEmails.filter((_, i) => i !== index),
-                            );
-                            setHasUnsavedChanges(true);
-                          }}
-                          className="text-white/50 hover:text-white/90"
-                        >
-                          <X className="mt-0.5 h-3.5 w-3.5 fill-black dark:fill-[#9A9A9A]" />
-                        </button>
-                      </div>
-                    ))}
-                    <input
-                      ref={bccInputRef}
-                      className="h-6 flex-1 bg-transparent text-sm font-normal leading-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white"
-                      placeholder="Enter email"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                          e.preventDefault();
-                          if (isValidEmail(e.currentTarget.value.trim())) {
-                            if (bccEmails?.includes(e.currentTarget.value.trim())) {
-                              toast.error('This email is already in the list');
-                            } else {
-                              setValue('bcc', [...(bccEmails || []), e.currentTarget.value.trim()]);
-                              e.currentTarget.value = '';
-                              setHasUnsavedChanges(true);
-                            }
-                          } else {
-                            toast.error('Please enter a valid email address');
-                          }
-                        } else if (e.key === ' ' && e.currentTarget.value.trim()) {
-                          e.preventDefault();
-                          if (isValidEmail(e.currentTarget.value.trim())) {
-                            if (bccEmails?.includes(e.currentTarget.value.trim())) {
-                              toast.error('This email is already in the list');
-                            } else {
-                              setValue('bcc', [...(bccEmails || []), e.currentTarget.value.trim()]);
-                              e.currentTarget.value = '';
-                              setHasUnsavedChanges(true);
-                            }
-                          } else {
-                            toast.error('Please enter a valid email address');
-                          }
-                        } else if (
-                          e.key === 'Backspace' &&
-                          !e.currentTarget.value &&
-                          bccEmails?.length
-                        ) {
-                          setValue('bcc', bccEmails.slice(0, -1));
-                          setHasUnsavedChanges(true);
-                        }
-                      }}
-                      onFocus={() => {
-                        setIsAddingBccRecipients(true);
-                      }}
-                      onBlur={(e) => {
-                        if (e.currentTarget.value.trim()) {
-                          if (isValidEmail(e.currentTarget.value.trim())) {
-                            if (bccEmails?.includes(e.currentTarget.value.trim())) {
-                              toast.error('This email is already in the list');
-                            } else {
-                              setValue('bcc', [...(bccEmails || []), e.currentTarget.value.trim()]);
-                              e.currentTarget.value = '';
-                              setHasUnsavedChanges(true);
-                            }
-                          } else {
-                            toast.error('Please enter a valid email address');
-                          }
-                        }
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div className="flex min-h-6 flex-1 cursor-pointer items-center text-sm text-black dark:text-white">
-                    {bccEmails && bccEmails.length > 0 && (
-                      <div className="flex flex-wrap items-center gap-1">
-                        {bccEmails.slice(0, 3).map((email, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center gap-1 rounded-full border px-1 py-0.5 pr-2"
-                          >
-                            <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
-                              <Avatar className="h-5 w-5">
-                                <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
-                                  {email.charAt(0).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              {email}
-                            </span>
-                            <button
-                              onClick={() => {
-                                setValue(
-                                  'bcc',
-                                  bccEmails.filter((_, i) => i !== index),
-                                );
-                                setHasUnsavedChanges(true);
-                              }}
-                              className="text-white/50 hover:text-white/90"
-                            >
-                              <X className="mt-0.5 h-3.5 w-3.5 fill-black dark:fill-[#9A9A9A]" />
-                            </button>
-                          </div>
-                        ))}
-                        {bccEmails.length > 3 && (
-                          <span className="ml-1 text-center text-[#8C8C8C]">
-                            +{bccEmails.length - 3} more
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
+                <div className="flex-1">
+                  <ContactAutocomplete
+                    value={bccEmails || []}
+                    onChange={(emails) => {
+                      setValue('bcc', emails);
+                      setHasUnsavedChanges(true);
+                    }}
+                    placeholder="Enter email"
+                    className="border-0 bg-transparent p-0 focus-within:ring-0 focus-within:ring-offset-0"
+                    type="bcc"
+                  />
+                </div>
               </div>
             )}
           </div>

@@ -166,7 +166,8 @@
       "fileCount": "{count, plural, =0 {files} one {file} other {files}}",
       "saveDraft": "Save draft",
       "send": "Send",
-      "forward": "Forward"
+      "forward": "Forward",
+      "enterEmail": "Enter email"
     },
     "mailDisplay": {
       "details": "Details",
@@ -327,7 +328,12 @@
       "failedToMute": "Failed to mute",
       "failedToUnmute": "Failed to unmute",
       "archived": "Archived",
-      "failedToArchive": "Failed to archive"
+      "failedToArchive": "Failed to archive",
+      "searchingContacts": "Searching contacts...",
+      "pressEnterToAdd": "Press Enter to add this email",
+      "noContactsFound": "No contacts found",
+      "suggestedContacts": "Suggested contacts",
+      "usedTimes": "Used {count} times"
     },
     "units": {
       "mb": "{amount} MB"

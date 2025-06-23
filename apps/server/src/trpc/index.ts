@@ -1,6 +1,7 @@
 import { type inferRouterInputs, type inferRouterOutputs } from '@trpc/server';
 import { cookiePreferencesRouter } from './routes/cookies';
 import { connectionsRouter } from './routes/connections';
+import { contactsRouter } from './routes/contacts';
 import { shortcutRouter } from './routes/shortcut';
 import { settingsRouter } from './routes/settings';
 import { getContext } from 'hono/context-storage';
@@ -20,6 +21,7 @@ export const appRouter = router({
   brain: brainRouter,
   categories: categoriesRouter,
   connections: connectionsRouter,
+  contacts: contactsRouter,
   cookiePreferences: cookiePreferencesRouter,
   drafts: draftsRouter,
   labels: labelsRouter,
