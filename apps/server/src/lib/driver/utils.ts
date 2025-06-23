@@ -16,7 +16,7 @@ export const deleteActiveConnection = async () => {
   try {
     await c.var.auth.api.signOut({ headers: c.req.raw.headers });
     const db = getZeroDB(session.user.id);
-    await db.deleteActiveConnection(session.user.id, activeConnection.id);
+    await db.deleteActiveConnection(activeConnection.id);
   } catch (error) {
     console.error('Server: Error deleting connection:', error);
     throw error;
