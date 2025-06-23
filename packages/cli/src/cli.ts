@@ -1,12 +1,14 @@
+// packages/cli/src/cli.ts
 import { intro, select, isCancel, outro, log } from '@clack/prompts';
 import * as commands from './commands';
 
-let args = [];
+let args: string[] = [];
+
 if (process.argv.slice(2).length === 0) {
   intro(`Welcome to the Nizzy CLI`);
 
   const command = await select({
-    message: `Hey ${process.env.USER}, what do you want to do?`,
+    message: `Hey ${process.env.USER || 'there'}, what do you want to do?`,
     options: Object.values(commands).map((command) => ({
       label: command.description,
       value: command.id,

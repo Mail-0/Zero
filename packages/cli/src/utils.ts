@@ -15,13 +15,30 @@ export const getProjectRoot = async () => {
   return cwd;
 };
 
-export const runCommand = async (command: string, args: string[], options: SpawnOptions = {}) => {
-  const child = spawn(command, args, { stdio: 'inherit', ...options });
+export const runCommand = async (
+  command: string,
+  args: string[],
+  options: SpawnOptions = {}
+) => {
+  const isWindows = process.platform === 'win32';
+  const executable = isWindows ? `${command}.cmd` : command;
+
+  const child = spawn(executable, args, {
+    stdio: 'inherit',
+    shell: true, // ← this is key!
+    ...options,
+  });
+
   await new Promise((resolve, reject) => {
-    child.once('close', resolve);
+    child.once('close', (code) => {
+      if (code === 0) resolve(undefined);
+      else reject(new Error(`${command} exited with code ${code}`));
+    });
     child.once('error', reject);
   });
 };
+
+
 
 export const parseEnv = (env: string) => {
   return env
