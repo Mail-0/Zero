@@ -218,6 +218,13 @@
       "when": 1750384854243,
       "tag": "0030_blue_grandmaster",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1750551357064,
+      "tag": "0031_legal_colleen_wing",
+      "breakpoints": true
     }
   ]
 }

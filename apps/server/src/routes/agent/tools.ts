@@ -65,7 +65,7 @@ const askZeroMailbox = (connectionId: string) =>
         };
       }
       return {
-        response: threadResults.matches.map((e) => e.metadata?.['content'] ?? 'no content'),
+        response: threadResults.matches.map((e) => e.metadata?.['summary'] ?? 'no content'),
         success: true,
       };
     },
@@ -96,7 +96,7 @@ const askZeroThread = (connectionId: string) =>
       const topThread = threadResults.matches[0];
       if (!topThread) return { response: "I don't know, no threads found", success: false };
       return {
-        response: topThread.metadata?.['content'] ?? 'no content',
+        response: topThread.metadata?.['summary'] ?? 'no content',
         success: true,
       };
     },
