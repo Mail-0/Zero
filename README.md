@@ -38,6 +38,16 @@ Zero is built with modern and reliable technologies:
 
 ## Getting Started
 
+### Video Tutorial
+
+Watch this helpful video tutorial on how to set up Zero locally:
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=yIXLQcjbeEM">
+    <img src="https://img.youtube.com/vi/yIXLQcjbeEM/0.jpg" alt="Zero Setup Tutorial" />
+  </a>
+</p>
+
 ### Prerequisites
 
 **Required Versions:**
