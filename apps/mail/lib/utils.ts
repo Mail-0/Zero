@@ -112,8 +112,35 @@ export const shouldShowSeparateTime = (dateString: string | undefined): boolean 
   return true;
 };
 
-export const formatDate = (date: string) => {
-  const dateObj = parseAndValidateDate(date);
+/**
+ * Formats a date with different formatting logic based on parameters
+ * Overloaded to handle both mail date formatting and notes date formatting
+ */
+export function formatDate(date: string): string;
+export function formatDate(dateInput: string | Date, formatter?: any): string;
+export function formatDate(dateInput: string | Date, formatter?: any): string {
+  // Notes formatting logic (when formatter is provided or date is a Date object)
+  if (formatter || dateInput instanceof Date) {
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+
+    if (formatter) {
+      return formatter.dateTime(date, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      });
+    }
+
+    return date.toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  // Original mail formatting logic
+  const dateObj = parseAndValidateDate(dateInput as string);
   if (!dateObj) {
     return '';
   }
