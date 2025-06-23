@@ -28,6 +28,7 @@ export function DraftContextMenu({
   const { optimisticDeleteDrafts } = useOptimisticActions();
   const t = useTranslations();
   const [mail, setMail] = useMail();
+  const isDraftDeleteEnabled = import.meta.env.VITE_PUBLIC_IS_DRAFT_DELETE_ENABLED;
 
   const handleDeleteDraft = () => {
     const targets = mail.bulkSelected.length ? mail.bulkSelected : [draftId];
@@ -41,7 +42,7 @@ export function DraftContextMenu({
   return (
     <ContextMenu>
       <ContextMenuTrigger className="w-full">{children}</ContextMenuTrigger>
-      <ContextMenuContent
+      {isDraftDeleteEnabled === "true" && <ContextMenuContent
         className="dark:bg-panelDark w-56 bg-white"
         onContextMenu={(e) => e.preventDefault()}
       >
@@ -52,7 +53,7 @@ export function DraftContextMenu({
           <Trash className="mr-2.5 h-4 w-4" />
           {t('common.actions.deleteDraft')}
         </ContextMenuItem>
-      </ContextMenuContent>
+      </ContextMenuContent>}
     </ContextMenu>
   );
 }
