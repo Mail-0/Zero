@@ -27,6 +27,14 @@ Thank you for your interest in contributing to 0.email! We're excited to have yo
 
    - Click the 'Fork' button at the top right of this repository
    - Clone your fork locally: `git clone https://github.com/YOUR-USERNAME/Zero.git`
+   - Next, add an `upstream` [remote](https://git-scm.com/book/en/v2/Git-Basics-Working-with-Remotes) to sync this repository with your local fork.
+
+   ```bash
+   # HTTPS
+   git remote add upstream https://github.com/Mail-0/Zero.git
+   # or SSH
+   git remote add upstream git@github.com:Mail-0/Zero.git
+   ```
 
 2. **Set Up Development Environment**
    - Install [pnpm](https://pnpm.io)
