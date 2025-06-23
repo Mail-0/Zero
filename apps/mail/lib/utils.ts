@@ -66,23 +66,39 @@ export const getCookie = (key: string): string | null => {
   return cookies?.[key] ?? null;
 };
 
-export const formatDate = (date: string) => {
+
+export const parseAndValidateDate = (dateString: string): Date | null => {
   try {
-    // Handle empty or invalid input
-    if (!date) {
-      return '';
+    // Handle empty input
+    if (!dateString) {
+      return null;
     }
 
-    const timezone = getBrowserTimezone();
     // Parse the date string to a Date object
-    const dateObj = new Date(date);
-    const now = new Date();
+    const dateObj = new Date(dateString);
 
     // Check if the date is valid
     if (isNaN(dateObj.getTime())) {
-      console.error('Invalid date', date);
-      return '';
+      console.error('Invalid date', dateString);
+      return null;
     }
+
+    return dateObj;
+  } catch (error) {
+    console.error('Error parsing date', error);
+    return null;
+  }
+};
+
+export const formatDate = (date: string) => {
+  const dateObj = parseAndValidateDate(date);
+  if (!dateObj) {
+    return '';
+  }
+
+  try {
+    const timezone = getBrowserTimezone();
+    const now = new Date();
 
     // If it's today, always show the time
     if (isToday(dateObj)) {
@@ -111,22 +127,14 @@ export const formatDate = (date: string) => {
 };
 
 export const formatTime = (date: string) => {
+  const dateObj = parseAndValidateDate(date);
+  if (!dateObj) {
+    return '';
+  }
+
   try {
-    // Handle empty or invalid input
-    if (!date) {
-      return '';
-    }
-
     const timezone = getBrowserTimezone();
-    // Parse the date string to a Date object
-    const dateObj = new Date(date);
-
-    // Check if the date is valid
-    if (isNaN(dateObj.getTime())) {
-      console.error('Invalid date', date);
-      return '';
-    }
-
+    
     // Always return the time in h:mm a format
     return formatInTimeZone(dateObj, timezone, 'h:mm a');
   } catch (error) {

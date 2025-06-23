@@ -39,6 +39,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import type { Sender, ParsedMessage, Attachment } from '@/types';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { cn, getEmailLogo, formatDate, formatTime } from '@/lib/utils';
+import { isToday } from 'date-fns';
 import { useBrainState } from '../../hooks/use-summary';
 import { useTRPC } from '@/providers/query-provider';
 import { useThreadLabels } from '@/hooks/use-labels';
@@ -1573,9 +1574,12 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                             <time>
                               {formatDate(emailData?.receivedOn)}
                             </time>
-                            <time className="text-xs opacity-75">
-                              {formatTime(emailData?.receivedOn)}
-                            </time>
+                            {/* Only show separate time if not received today */}
+                            {emailData?.receivedOn && !isToday(new Date(emailData.receivedOn)) && (
+                              <time className="text-xs opacity-75">
+                                {formatTime(emailData?.receivedOn)}
+                              </time>
+                            )}
                           </div>
                             
                           {/* options menu */}
