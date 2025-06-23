@@ -54,7 +54,9 @@ import { FileText } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Badge } from '../ui/badge';
+import { toast } from 'sonner';
 import { format } from 'date-fns';
+
 
 // HTML escaping function to prevent XSS attacks
 function escapeHtml(text: string): string {
@@ -887,6 +889,16 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
     }
   }, [isCollapsed, preventCollapse, openDetailsPopover]);
 
+  // Handle email copy of senders
+  const handleCopySenderEmail = useCallback(async (personEmail: string) => {
+
+      if(!personEmail) return ;
+    
+      await navigator.clipboard.writeText(personEmail || '');
+      toast.success('Email copied to clipboard');
+      
+  }, []);
+
   // email printing
   const printMail = () => {
     try {
@@ -1286,13 +1298,32 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             </div>
           </div>
         </PopoverTrigger>
-        <PopoverContent className="text-sm">
-          <p>Email: {person.email}</p>
-          <p>Name: {person.name || 'Unknown'}</p>
+        <PopoverContent className="text-sm min-w-fit">
+          <div className='flex items-center gap-2'>
+            <Avatar className="h-12 w-12">
+              <AvatarImage src={getEmailLogo(person.email)} className="rounded-full" />
+              <AvatarFallback className="bg-offsetLight rounded-full text-sm font-bold dark:bg-[#373737]">
+                {getFirstLetterCharacter(person.name || person.email)}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <p className='font-medium'>{person.name || 'Unknown'}</p>
+              <div className="flex gap-2 items-center group">
+                <p>{person.email || 'No email'}</p>
+                <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                  <CopyIcon
+                  size={14}
+                  className="cursor-pointer"
+                  onClick={() => handleCopySenderEmail(person.email)}
+                  />
+                </span>
+              </div>
+            </div>
+          </div>
         </PopoverContent>
       </Popover>
     ),
-    [],
+    []
   );
 
   const people = useMemo(() => {
