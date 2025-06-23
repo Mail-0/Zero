@@ -225,6 +225,13 @@
       "when": 1750551357064,
       "tag": "0031_legal_colleen_wing",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1750648088006,
+      "tag": "0032_add_image_compression_setting",
+      "breakpoints": true
     }
   ]
 }
