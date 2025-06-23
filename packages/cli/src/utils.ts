@@ -16,10 +16,21 @@ export const getProjectRoot = async () => {
 };
 
 export const runCommand = async (command: string, args: string[], options: SpawnOptions = {}) => {
-  const child = spawn(command, args, { stdio: 'inherit', ...options });
-  await new Promise((resolve, reject) => {
-    child.once('close', resolve);
-    child.once('error', reject);
+  const useShell = process.platform === 'win32';
+  const finalCommand = command;
+  const finalArgs = args;
+  
+  const spawnOptions: SpawnOptions = {
+    stdio: 'inherit',
+    ...options,
+    ...(useShell && options.shell === undefined ? { shell: true } : {})
+  };
+  
+  const child = spawn(finalCommand, finalArgs, spawnOptions);
+
+  await new Promise<void>((resolve, reject) => {
+    child.once('close', () => resolve());
+    child.once('error', (err) => reject(err));
   });
 };
 

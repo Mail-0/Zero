@@ -10,7 +10,7 @@ export default function AboutPage() {
     <div className="relative flex min-h-screen w-full flex-col overflow-auto bg-white dark:bg-[#111111]">
       <Navigation />
       <div className="relative z-10 flex flex-grow flex-col">
-        <div className="absolute left-4 top-4 md:left-8 md:top-8">
+        <div className="absolute right-4 top-6 md:left-8 md:right-auto md:top-8">
           <a href="/">
             <Button
               variant="ghost"

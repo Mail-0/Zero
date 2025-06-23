@@ -135,10 +135,13 @@
     "navUser": {
       "customerSupport": "Comunidade",
       "documentation": "Documentação",
-      "appTheme": "Tema da aplicação",
+      "appTheme": "Alternar o Tema",
       "accounts": "Contas",
       "signIn": "Iniciar sessão",
-      "otherAccounts": "Outras Contas"
+      "otherAccounts": "Outras Contas",
+      "switchingAccounts": "Alternando contas...",
+      "accountSwitched": "Conta alternada com sucesso",
+      "failedToSwitchAccount": "Falha ao alternar contas. Por favor, tente novamente."
     },
     "mailCategories": {
       "primary": "Principal",
@@ -269,7 +272,9 @@
       "notFound": "Configurações não encontradas",
       "saved": "Configurações salvas",
       "failedToSave": "Falha ao salvar configurações",
-      "languageChanged": "Idioma alterado para {locale}"
+      "languageChanged": "Idioma alterado para {locale}",
+      "defaultEmailUpdated": "Alias de email padrão atualizado no Gmail",
+      "failedToUpdateGmailAlias": "Falha ao atualizar o alias padrão nas configurações do Gmail"
     },
     "mail": {
       "replies": "{count, plural, =0 {arquivos} one {arquivo} other {arquivos}}",
@@ -396,7 +401,10 @@
         "customPromptDescription": "Personalize como a IA escreve suas respostas de email. Isto será adicionado ao prompt base.",
         "noResultsFound": "Nenhum resultado encontrado",
         "zeroSignature": "Assinatura Zero",
-        "zeroSignatureDescription": "Adicionar uma assinatura Zero aos seus e-mails."
+        "zeroSignatureDescription": "Adicionar uma assinatura Zero aos seus e-mails.",
+        "defaultEmailAlias": "Alias de Email Padrão",
+        "selectDefaultEmail": "Selecionar email padrão",
+        "defaultEmailDescription": "Este email será usado como endereço 'De' padrão ao compor novos emails"
       },
       "connections": {
         "title": "Conexões de E-mail",

@@ -135,10 +135,13 @@
     "navUser": {
       "customerSupport": "Сообщество",
       "documentation": "Документация",
-      "appTheme": "Тема",
+      "appTheme": "Переключить тему",
       "accounts": "Аккаунты",
       "signIn": "Войти",
-      "otherAccounts": "Другие аккаунты"
+      "otherAccounts": "Другие аккаунты",
+      "switchingAccounts": "Переключение между аккаунтами...",
+      "accountSwitched": "Аккаунт успешно переключен",
+      "failedToSwitchAccount": "Не удалось переключить аккаунты. Пожалуйста, попробуйте снова."
     },
     "mailCategories": {
       "primary": "Основные",
@@ -269,7 +272,9 @@
       "notFound": "Настройки не найдены",
       "saved": "Настройки сохранены",
       "failedToSave": "Не удалось сохранить настройки",
-      "languageChanged": "Язык изменен на {locale}"
+      "languageChanged": "Язык изменен на {locale}",
+      "defaultEmailUpdated": "Адрес электронной почты по умолчанию обновлен в Gmail",
+      "failedToUpdateGmailAlias": "Не удалось обновить адрес по умолчанию в настройках Gmail"
     },
     "mail": {
       "replies": "{count, plural, =0 {ответы} one {# ответ} few {# ответа} many {# ответов} other {# ответы}}",
@@ -396,7 +401,10 @@
         "customPromptDescription": "Настройте, как ИИ будет писать ваши ответы на письма. Этот текст будет добавлен к основному запросу.",
         "noResultsFound": "Результаты не найдены",
         "zeroSignature": "Подпись Zero",
-        "zeroSignatureDescription": "Добавьте подпись Zero к вашим письмам."
+        "zeroSignatureDescription": "Добавьте подпись Zero к вашим письмам.",
+        "defaultEmailAlias": "Адрес электронной почты по умолчанию",
+        "selectDefaultEmail": "Выберите адрес электронной почты по умолчанию",
+        "defaultEmailDescription": "Этот адрес будет использоваться в качестве адреса отправителя по умолчанию при создании новых писем"
       },
       "connections": {
         "title": "Подключения",
