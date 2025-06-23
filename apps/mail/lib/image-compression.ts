@@ -26,17 +26,25 @@ export async function compressImage(
     const img = new Image();
 
     img.onload = () => {
+      URL.revokeObjectURL(img.src);
+      
       let { width, height } = img;
       
+      let scaleX = 1;
+      let scaleY = 1;
+      
       if (options.maxWidth && width > options.maxWidth) {
-        height = (height * options.maxWidth) / width;
-        width = options.maxWidth;
+        scaleX = options.maxWidth / width;
       }
       
       if (options.maxHeight && height > options.maxHeight) {
-        width = (width * options.maxHeight) / height;
-        height = options.maxHeight;
+        scaleY = options.maxHeight / height;
       }
+
+      const scale = Math.min(scaleX, scaleY);
+      
+      width = Math.round(width * scale);
+      height = Math.round(height * scale);
 
       canvas.width = width;
       canvas.height = height;
@@ -61,7 +69,11 @@ export async function compressImage(
       );
     };
 
-    img.onerror = () => reject(new Error('Failed to load image'));
+    img.onerror = () => {
+      URL.revokeObjectURL(img.src);
+      reject(new Error('Failed to load image'));
+    };
+    
     img.src = URL.createObjectURL(file);
   });
 }

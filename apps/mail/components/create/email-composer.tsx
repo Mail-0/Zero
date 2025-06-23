@@ -1355,7 +1355,12 @@ export function EmailComposer({
                               onClick={async (e: React.MouseEvent<HTMLButtonElement>) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                await removeAttachment(index);
+                                try {
+                                  await removeAttachment(index);
+                                } catch (error) {
+                                  console.error('Failed to remove attachment:', error);
+                                  toast.error('Failed to remove attachment');
+                                }
                               }}
                               className="focus-visible:ring-ring ml-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-transparent hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2"
                               aria-label={`Remove ${file.name}`}
