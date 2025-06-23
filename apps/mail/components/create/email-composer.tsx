@@ -149,35 +149,57 @@ export function EmailComposer({
       return;
     }
 
-    const compressedFiles = await compressImages(filesToProcess, {
-      quality,
-      maxWidth: 1920,
-      maxHeight: 1080,
-    });
+    try {
+      const compressedFiles = await compressImages(filesToProcess, {
+        quality,
+        maxWidth: 1920,
+        maxHeight: 1080,
+      });
 
-    setValue('attachments', compressedFiles, { shouldDirty: true });
-    setHasUnsavedChanges(true);
-
-    if (showToast && quality !== 'original') {
-      let totalOriginalSize = 0;
-      let totalCompressedSize = 0;
-
-      const imageFilesExist = filesToProcess.some((f) => f.type.startsWith('image/'));
-
-      if (imageFilesExist) {
-        filesToProcess.forEach((originalFile, index) => {
-          if (originalFile.type.startsWith('image/')) {
-            totalOriginalSize += originalFile.size;
-            totalCompressedSize += compressedFiles[index].size;
-          }
+      if (compressedFiles.length !== filesToProcess.length) {
+        console.warn('Compressed files array length mismatch:', {
+          original: filesToProcess.length,
+          compressed: compressedFiles.length,
         });
+        setValue('attachments', filesToProcess, { shouldDirty: true });
+        setHasUnsavedChanges(true);
+        if (showToast) {
+          toast.error('Image compression failed, using original files');
+        }
+        return;
+      }
 
-        if (totalOriginalSize > totalCompressedSize) {
-          const savings = (((totalOriginalSize - totalCompressedSize) / totalOriginalSize) * 100).toFixed(1);
-          if (parseFloat(savings) > 0.1) {
-            toast.success(`Images compressed: ${savings}% smaller`);
+      setValue('attachments', compressedFiles, { shouldDirty: true });
+      setHasUnsavedChanges(true);
+
+      if (showToast && quality !== 'original') {
+        let totalOriginalSize = 0;
+        let totalCompressedSize = 0;
+
+        const imageFilesExist = filesToProcess.some((f) => f.type.startsWith('image/'));
+
+        if (imageFilesExist) {
+          filesToProcess.forEach((originalFile, index) => {
+            if (originalFile.type.startsWith('image/') && compressedFiles[index]) {
+              totalOriginalSize += originalFile.size;
+              totalCompressedSize += compressedFiles[index].size;
+            }
+          });
+
+          if (totalOriginalSize > totalCompressedSize) {
+            const savings = (((totalOriginalSize - totalCompressedSize) / totalOriginalSize) * 100).toFixed(1);
+            if (parseFloat(savings) > 0.1) {
+              toast.success(`Images compressed: ${savings}% smaller`);
+            }
           }
         }
+      }
+    } catch (error) {
+      console.error('Error compressing images:', error);
+      setValue('attachments', filesToProcess, { shouldDirty: true });
+      setHasUnsavedChanges(true);
+      if (showToast) {
+        toast.error('Image compression failed, using original files');
       }
     }
   };
