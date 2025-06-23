@@ -583,11 +583,11 @@ export function EmailComposer({
   return (
     <div
       className={cn(
-        'no-scrollbar max-h-[500px] w-full max-w-[750px] overflow-hidden rounded-2xl bg-[#FAFAFA] p-0 py-0 shadow-sm dark:bg-[#202020]',
+        'flex max-h-[500px] w-full max-w-[750px] flex-col overflow-hidden rounded-2xl bg-[#FAFAFA] shadow-sm dark:bg-[#202020]',
         className,
       )}
     >
-      <div className="no-scrollbar dark:bg-panelDark max-h-[500px] grow overflow-y-auto">
+      <div className="no-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto dark:bg-panelDark">
         {/* To, Cc, Bcc */}
         <div className="shrink-0 overflow-y-auto border-b border-[#E7E7E7] pb-2 dark:border-[#252525]">
           <div className="flex justify-between px-3 pt-3">
@@ -1156,13 +1156,13 @@ export function EmailComposer({
         )}
 
         {/* Message Content */}
-        <div className="grow self-stretch overflow-y-auto border-t bg-[#FFFFFF] px-3 py-3 outline-white/5 dark:bg-[#202020]">
+        <div className="flex-1 overflow-y-auto border-t bg-[#FFFFFF] px-3 py-3 outline-white/5 dark:bg-[#202020]">
           <div
             onClick={() => {
               editor.commands.focus();
             }}
             className={cn(
-              `max-h-[300px] min-h-[200px] w-full`,
+              `min-h-[200px] w-full`,
               editorClassName,
               aiGeneratedMessage !== null ? 'blur-sm' : '',
             )}
@@ -1173,7 +1173,7 @@ export function EmailComposer({
       </div>
 
       {/* Bottom Actions */}
-      <div className="inline-flex w-full items-center justify-between self-stretch rounded-b-2xl bg-[#FFFFFF] px-3 py-3 outline-white/5 dark:bg-[#202020]">
+      <div className="inline-flex w-full shrink-0 items-center justify-between self-stretch rounded-b-2xl bg-[#FFFFFF] px-3 py-3 outline-white/5 dark:bg-[#202020]">
         <div className="flex items-center justify-start gap-2">
           <div className="flex items-center justify-start gap-2">
             <Button size={'xs'} onClick={handleSend} disabled={isLoading || settingsLoading}>

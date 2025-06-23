@@ -1,10 +1,19 @@
 import { getContext } from 'hono/context-storage';
-import { connection, user } from '../db/schema';
+import { connection } from '../db/schema';
 import type { HonoContext } from '../ctx';
 import { env } from 'cloudflare:workers';
 import { createDriver } from './driver';
 
-export const getZeroDB = (userId: string) => env.ZERO_DB.get(env.ZERO_DB.idFromName(userId));
+export const getZeroDB = (userId: string) => {
+  const stub = env.ZERO_DB.get(env.ZERO_DB.idFromName(userId));
+  const rpcTarget = stub.setMetaData(userId);
+  return rpcTarget;
+};
+
+export const getZeroAgent = (connectionId: string) => {
+  const stub = env.ZERO_AGENT.get(env.ZERO_AGENT.idFromName(connectionId));
+  return stub;
+};
 
 export const getActiveConnection = async () => {
   const c = getContext<HonoContext>();
@@ -13,17 +22,14 @@ export const getActiveConnection = async () => {
 
   const db = getZeroDB(sessionUser.id);
 
-  const userData = await db.findUser(sessionUser.id);
+  const userData = await db.findUser();
 
   if (userData?.defaultConnectionId) {
-    const activeConnection = await db.findUserConnection(
-      sessionUser.id,
-      userData.defaultConnectionId,
-    );
+    const activeConnection = await db.findUserConnection(userData.defaultConnectionId);
     if (activeConnection) return activeConnection;
   }
 
-  const firstConnection = await db.findFirstConnection(sessionUser.id);
+  const firstConnection = await db.findFirstConnection();
   if (!firstConnection) {
     console.error(`No connections found for user ${sessionUser.id}`);
     throw new Error('No connections found for user');
@@ -85,8 +91,7 @@ export const notifyUser = async ({
     payload,
   });
 
-  const durableObject = env.ZERO_AGENT.idFromName(connectionId);
-  const mailbox = env.ZERO_AGENT.get(durableObject);
+  const mailbox = getZeroAgent(connectionId);
 
   try {
     console.log(`[notifyUser] Broadcasting message`, {
