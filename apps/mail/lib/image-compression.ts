@@ -17,6 +17,12 @@ export async function compressImage(
   return new Promise((resolve, reject) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
+    
+    if (!ctx) {
+      reject(new Error('Failed to get canvas 2D context'));
+      return;
+    }
+    
     const img = new Image();
 
     img.onload = () => {
@@ -35,7 +41,7 @@ export async function compressImage(
       canvas.width = width;
       canvas.height = height;
 
-      ctx?.drawImage(img, 0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
 
       const qualityValue = options.quality === 'low' ? 0.6 : 0.8;
       canvas.toBlob(
