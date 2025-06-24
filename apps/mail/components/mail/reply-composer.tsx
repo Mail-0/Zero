@@ -33,6 +33,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
   const { data: draft, isLoading: isDraftLoading } = useDraft(draftId ?? null);
   const trpc = useTRPC();
   const { mutateAsync: sendEmail } = useMutation(trpc.mail.send.mutationOptions());
+  const { mutateAsync: unsendEmail } = useMutation(trpc.mail.unsend.mutationOptions());
   const { data: activeConnection } = useActiveConnection();
   const { data: settings, isLoading: settingsLoading } = useSettings();
   const { data: session } = useSession();
@@ -109,6 +110,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
     subject: string;
     message: string;
     attachments: File[];
+    scheduleAt?: string;
   }) => {
     if (!replyToMessage || !activeConnection?.email) return;
 
@@ -183,7 +185,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
               replyToMessage.decodedBody,
             );
 
-      await sendEmail({
+      const result = await sendEmail({
         to: toRecipients,
         cc: ccRecipients,
         bcc: bccRecipients,
@@ -204,6 +206,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
         threadId: replyToMessage?.threadId,
         isForward: mode === 'forward',
         originalMessage: replyToMessage.decodedBody,
+        scheduleAt: data.scheduleAt,
       });
 
       posthog.capture('Reply Email Sent');
@@ -212,6 +215,24 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
       setMode(null);
       await refetch();
       toast.success(t('pages.createEmail.emailSent'));
+
+      if ((result as any)?.queued && (result as any)?.messageId) {
+        const messageId = (result as any).messageId as string;
+        toast.success('Email scheduled', {
+          action: {
+            label: 'Undo',
+            onClick: async () => {
+              try {
+                await unsendEmail({ messageId });
+                toast.info('Send cancelled');
+              } catch (error) {
+                toast.error('Failed to cancel');
+              }
+            },
+          },
+          duration: 30000,
+        });
+      }
     } catch (error) {
       console.error('Error sending email:', error);
       toast.error(t('pages.createEmail.failedToSendEmail'));

@@ -38,6 +38,7 @@ import { useQueryState } from 'nuqs';
 import pluralize from 'pluralize';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { ScheduleSendPicker } from './schedule-send-picker';
 
 type ThreadContent = {
   from: string;
@@ -63,6 +64,7 @@ interface EmailComposerProps {
     message: string;
     attachments: File[];
     fromEmail?: string;
+    scheduleAt?: string;
   }) => Promise<void>;
   onClose?: () => void;
   className?: string;
@@ -131,6 +133,7 @@ export function EmailComposer({
   const bccWrapperRef = useRef<HTMLDivElement>(null);
   const { data: activeConnection } = useActiveConnection();
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
+  const [scheduleAt, setScheduleAt] = useState<string>();
 
   // Add this function to handle clicks outside the input fields
   useEffect(() => {
@@ -378,6 +381,7 @@ export function EmailComposer({
         message: editor.getHTML(),
         attachments: values.attachments || [],
         fromEmail: values.fromEmail,
+        scheduleAt,
       });
       setHasUnsavedChanges(false);
       editor.commands.clearContent(true);
@@ -1126,7 +1130,7 @@ export function EmailComposer({
         </div>
 
         {/* From */}
-        {aliases.length > 0 && (
+        {aliases && aliases.length > 0 && (
           <div className="flex items-center gap-2 border-b p-3">
             <p className="text-sm font-medium text-[#8C8C8C]">From:</p>
             <Select
@@ -1187,6 +1191,10 @@ export function EmailComposer({
                 <CurvedArrow className="mt-1.5 h-4 w-4 fill-white dark:fill-black" />
               </div>
             </Button>
+            <ScheduleSendPicker
+              value={scheduleAt}
+              onChange={(value) => setScheduleAt(value)}
+            />
             <Button variant={'secondary'} size={'xs'} onClick={() => fileInputRef.current?.click()}>
               <Plus className="h-3 w-3 fill-[#9A9A9A]" />
               <span className="hidden px-0.5 text-sm md:block">Add</span>
@@ -1365,37 +1373,6 @@ export function EmailComposer({
               </div>
             </Button>
           </div>
-          {/* <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  disabled
-                  className="hidden h-7 items-center gap-0.5 overflow-hidden rounded-md bg-white/5 px-1.5 shadow-sm hover:bg-white/10 disabled:opacity-50 md:flex"
-                >
-                  <Smile className="h-3 w-3 fill-[#9A9A9A]" />
-                  <span className="px-0.5 text-sm">Casual</span>
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Coming soon...</p>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  disabled
-                  className="flex h-7 items-center gap-0.5 overflow-hidden rounded-md bg-white/5 px-1.5 shadow-sm hover:bg-white/10 disabled:opacity-50 md:flex"
-                >
-                  {messageLength < 50 && <ShortStack className="h-3 w-3 fill-[#9A9A9A]" />}
-                  {messageLength >= 50 && messageLength < 200 && (
-                    <MediumStack className="h-3 w-3 fill-[#9A9A9A]" />
-                  )}
-                  {messageLength >= 200 && <LongStack className="h-3 w-3 fill-[#9A9A9A]" />}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Coming soon...</p>
-              </TooltipContent>
-            </Tooltip> */}
         </div>
       </div>
 

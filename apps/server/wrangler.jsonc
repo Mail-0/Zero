@@ -49,6 +49,10 @@
             "queue": "subscribe-queue",
             "binding": "subscribe_queue",
           },
+          {
+            "queue": "send-email-queue",
+            "binding": "send_email_queue"
+          },
         ],
         "consumers": [
           {
@@ -56,6 +60,9 @@
           },
           {
             "queue": "thread-queue",
+          },
+          {
+            "queue": "send-email-queue"
           },
         ],
       },
@@ -136,11 +143,26 @@
           "binding": "gmail_sub_age",
           "id": "c55e692bb71d4e5bae23dded092b09d5",
         },
+        {
+          "binding": "pending_emails_status",
+          "id": "e65f8f72441d4eadb9d5ae36269316c9"
+        },
+        {
+          "binding": "pending_emails_payload",
+          "id": "e65f8f72441d4eadb9d5ae36269316c9_payload"
+        },
+        {
+          "binding": "scheduled_emails",
+          "id": "e65f8f72441d4eadb9d5ae36269316c9_scheduled"
+        },
       ],
+      "triggers": {
+        "crons": ["0 0 * * *", "0 * * * *"],
+      },
     },
     "staging": {
       "triggers": {
-        "crons": ["0 0 * * *"],
+        "crons": ["0 0 * * *", "0 * * * *"],
       },
       "ai": {
         "binding": "AI",
@@ -188,6 +210,10 @@
             "queue": "subscribe-queue-staging",
             "binding": "subscribe_queue",
           },
+          {
+            "queue": "send-email-queue-staging",
+            "binding": "send_email_queue"
+          },
         ],
         "consumers": [
           {
@@ -195,6 +221,9 @@
           },
           {
             "queue": "thread-queue-staging",
+          },
+          {
+            "queue": "send-email-queue-staging"
           },
         ],
       },
@@ -271,11 +300,23 @@
           "binding": "gmail_sub_age",
           "id": "c55e692bb71d4e5bae23dded092b09d5",
         },
+        {
+          "binding": "pending_emails_status",
+          "id": "e65f8f72441d4eadb9d5ae36269316c9"
+        },
+        {
+          "binding": "pending_emails_payload",
+          "id": "e65f8f72441d4eadb9d5ae36269316c9_payload"
+        },
+        {
+          "binding": "scheduled_emails",
+          "id": "e65f8f72441d4eadb9d5ae36269316c9_scheduled"
+        },
       ],
     },
     "production": {
       "triggers": {
-        "crons": ["0 0 * * *"],
+        "crons": ["0 0 * * *", "0 * * * *"],
       },
       "ai": {
         "binding": "AI",
@@ -347,6 +388,10 @@
             "queue": "subscribe-queue-prod",
             "binding": "subscribe_queue",
           },
+          {
+            "queue": "send-email-queue-prod",
+            "binding": "send_email_queue"
+          },
         ],
         "consumers": [
           {
@@ -354,6 +399,9 @@
           },
           {
             "queue": "thread-queue-prod",
+          },
+          {
+            "queue": "send-email-queue-prod"
           },
         ],
       },
@@ -402,6 +450,18 @@
         {
           "binding": "gmail_sub_age",
           "id": "0591e91fffcc4675aaf00f909bee77d2",
+        },
+        {
+          "binding": "pending_emails_status",
+          "id": "e65f8f72441d4eadb9d5ae36269316c9"
+        },
+        {
+          "binding": "pending_emails_payload",
+          "id": "e65f8f72441d4eadb9d5ae36269316c9_payload"
+        },
+        {
+          "binding": "scheduled_emails",
+          "id": "e65f8f72441d4eadb9d5ae36269316c9_scheduled"
         },
       ],
     },

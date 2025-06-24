@@ -1,11 +1,29 @@
 import { activeDriverProcedure, createRateLimiterMiddleware, router } from '../trpc';
 import { updateWritingStyleMatrix } from '../../services/writing-style-service';
-import { deserializeFiles, serializedFileSchema } from '../../lib/schemas';
+import { serializedFileSchema } from '../../lib/schemas';
 import { defaultPageSize, FOLDERS, LABELS } from '../../lib/utils';
-import type { DeleteAllSpamResponse } from '../../types';
+import type { DeleteAllSpamResponse, IEmailSendBatch } from '../../types';
 import { getZeroAgent } from '../../lib/server-utils';
 import { env } from 'cloudflare:workers';
 import { z } from 'zod';
+import { toAttachmentFiles } from '../../lib/attachments';
+
+type KVNamespaceLike = {
+  get: (key: string) => Promise<string | null>;
+  put: (key: string, value: string, options?: { expirationTtl?: number }) => Promise<void>;
+  delete: (key: string) => Promise<void>;
+};
+
+type QueueLike<T> = {
+  send: (body: T, options?: { delaySeconds?: number }) => Promise<void>;
+};
+
+type ExtendedEnv = typeof env & {
+  pending_emails_status: KVNamespaceLike;
+  pending_emails_payload: KVNamespaceLike;
+  scheduled_emails: KVNamespaceLike;
+  send_email_queue: QueueLike<IEmailSendBatch>;
+};
 
 const senderSchema = z.object({
   name: z.string().optional(),
@@ -138,7 +156,7 @@ export const mailRouter = router({
       }
 
       const threadResults: PromiseSettledResult<{ messages: { tags: { name: string }[] }[] }>[] =
-        await Promise.allSettled(threadIds.map((id) => agent.get(id)));
+        await Promise.allSettled(threadIds.map((id: string) => agent.get(id)));
 
       let anyStarred = false;
       let processedThreads = 0;
@@ -178,7 +196,7 @@ export const mailRouter = router({
       }
 
       const threadResults: PromiseSettledResult<{ messages: { tags: { name: string }[] }[] }>[] =
-        await Promise.allSettled(threadIds.map((id) => agent.get(id)));
+        await Promise.allSettled(threadIds.map((id: string) => agent.get(id)));
 
       let anyImportant = false;
       let processedThreads = 0;
@@ -270,7 +288,6 @@ export const mailRouter = router({
         message: z.string(),
         attachments: z
           .array(serializedFileSchema)
-          .transform(deserializeFiles)
           .optional()
           .default([]),
         headers: z.record(z.string()).optional().default({}),
@@ -281,12 +298,23 @@ export const mailRouter = router({
         draftId: z.string().optional(),
         isForward: z.boolean().optional(),
         originalMessage: z.string().optional(),
+        scheduleAt: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const { activeConnection } = ctx;
       const agent = getZeroAgent(activeConnection.id);
-      const { draftId, ...mail } = input;
+
+      const {
+        draftId,
+        scheduleAt,
+        attachments,
+        ...mail
+      } = input as typeof input & { scheduleAt?: string };
+
+      // Always go through the scheduling flow so the 30-second undo window works even when attachments are present.
+      // The actual delay is 30 s when no custom scheduleAt is provided.
+      const shouldSchedule = true;
 
       const afterTask = async () => {
         try {
@@ -298,13 +326,98 @@ export const mailRouter = router({
         }
       };
 
+      if (shouldSchedule) {
+        const messageId = crypto.randomUUID();
+        const targetTime = scheduleAt ? new Date(scheduleAt).getTime() : Date.now() + 30_000;
+        const rawDelaySeconds = Math.floor((targetTime - Date.now()) / 1000);
+        const maxQueueDelay = 43200; // 12 hours
+        const isLongTerm = rawDelaySeconds > maxQueueDelay;
+        
+        const {
+          pending_emails_status: statusKV,
+          pending_emails_payload: payloadKV,
+          scheduled_emails: scheduledKV,
+          send_email_queue,
+        } = env as ExtendedEnv;
+
+        await statusKV.put(messageId, 'pending', {
+          expirationTtl: 60 * 60 * 24,
+        });
+
+        const mailPayload = {
+          ...mail,
+          draftId,
+          attachments,
+        };
+
+        await payloadKV.put(
+          messageId,
+          JSON.stringify(mailPayload),
+          { expirationTtl: 60 * 60 * 24 },
+        );
+
+        if (isLongTerm) {
+          await scheduledKV.put(
+            messageId,
+            JSON.stringify({
+              messageId,
+              connectionId: activeConnection.id,
+              sendAt: targetTime,
+            }),
+            { expirationTtl: Math.ceil(rawDelaySeconds + 3600) }, // TTL slightly longer than needed
+          );
+        } else {
+          const delaySeconds = Math.max(0, rawDelaySeconds);
+          const queueBody: IEmailSendBatch = {
+            messageId,
+            connectionId: activeConnection.id,
+            sendAt: targetTime,
+          };
+          await send_email_queue.send(queueBody, { delaySeconds });
+        }
+
+        ctx.c.executionCtx.waitUntil(afterTask());
+
+        return { success: true, queued: true, messageId };
+      }
+
+      const mailWithAttachments = {
+        ...mail,
+        attachments: attachments?.map((att: any) =>
+          typeof att?.arrayBuffer === 'function' ? att : toAttachmentFiles([att])[0],
+        ),
+      } as typeof mail & { attachments: any[] };
+
       if (draftId) {
-        await agent.sendDraft(draftId, mail);
+        await agent.sendDraft(draftId, mailWithAttachments);
       } else {
-        await agent.create(input);
+        await agent.create(mailWithAttachments);
       }
 
       ctx.c.executionCtx.waitUntil(afterTask());
+      return { success: true };
+    }),
+  unsend: activeDriverProcedure
+    .input(
+      z.object({
+        messageId: z.string(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { messageId } = input;
+      const { 
+        pending_emails_status: statusKV, 
+        pending_emails_payload: payloadKV,
+        scheduled_emails: scheduledKV,
+      } = env as ExtendedEnv;
+
+      await statusKV.put(messageId, 'cancelled', {
+        expirationTtl: 60 * 60,
+      });
+
+      await payloadKV.delete(messageId);
+      await scheduledKV.delete(messageId); // Clean up long-term schedule if it exists
+
       return { success: true };
     }),
   delete: activeDriverProcedure

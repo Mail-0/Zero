@@ -219,3 +219,21 @@ export enum EPrompts {
   Compose = 'Compose',
   //   ThreadLabels = 'ThreadLabels'
 }
+
+export interface IEmailSendBatch {
+  /** Unique ID for the scheduled email – also used as the KV key. */
+  messageId: string;
+  /** ID of the user connection (used to instantiate the Agent). */
+  connectionId: string;
+  /**
+   * Light-weight envelope. For immediate sends this can include the whole mail,
+   * for scheduled sends we keep it optional and retrieve the payload from KV
+   * inside the consumer to avoid the 128 KB queue limit.
+   */
+  mail?: IOutgoingMessage & { draftId?: string };
+  /**
+   * Unix epoch milliseconds when the email should be sent.
+   * Only informational – actual delaySeconds dictates scheduling.
+   */
+  sendAt?: number;
+}

@@ -18,7 +18,7 @@ import { env, WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:work
 import { getZeroAgent, getZeroDB, verifyToken } from './lib/server-utils';
 import { MainWorkflow, ThreadWorkflow, ZeroWorkflow } from './pipelines';
 import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
-import { EProviders, type ISubscribeBatch } from './types';
+import { EProviders, type ISubscribeBatch, type IEmailSendBatch } from './types';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
 import { contextStorage } from 'hono/context-storage';
 import { defaultUserSettings } from './lib/schemas';
@@ -41,6 +41,25 @@ import { Autumn } from 'autumn-js';
 import { appRouter } from './trpc';
 import { cors } from 'hono/cors';
 import { Hono } from 'hono';
+import { toAttachmentFiles } from './lib/attachments';
+
+type KVNamespaceLike = {
+  get: (key: string) => Promise<string | null>;
+  put: (key: string, value: string, options?: { expirationTtl?: number }) => Promise<void>;
+  delete: (key: string) => Promise<void>;
+  list: (options?: { prefix?: string }) => Promise<{ keys: { name: string }[] }>;
+};
+
+type QueueLike<T> = {
+  send: (body: T, options?: { delaySeconds?: number }) => Promise<void>;
+};
+
+type ExtendedEnv = typeof env & {
+  pending_emails_status: KVNamespaceLike;
+  pending_emails_payload: KVNamespaceLike;
+  scheduled_emails: KVNamespaceLike;
+  send_email_queue: QueueLike<IEmailSendBatch>;
+};
 
 export class RpcDO extends RpcTarget {
   constructor(
@@ -658,37 +677,131 @@ export default class extends WorkerEntrypoint<typeof env> {
     return this.app.fetch(request, this.env, this.ctx);
   }
 
-  async queue(batch: MessageBatch<ISubscribeBatch>) {
-    switch (batch.queue) {
-      case 'subscribe-queue': {
-        console.log('batch', batch);
-        try {
-          await Promise.all(
-            batch.messages.map(async (msg) => {
-              const connectionId = msg.body.connectionId;
-              const providerId = msg.body.providerId;
-              console.log('connectionId', connectionId);
-              console.log('providerId', providerId);
-              try {
-                await enableBrainFunction({ id: connectionId, providerId });
-              } catch (error) {
-                console.error(
-                  `Failed to enable brain function for connection ${connectionId}:`,
-                  error,
+  async queue(batch: MessageBatch<any>) {
+    const queueName = typeof batch.queue === 'string' ? batch.queue : '';
+
+    if (queueName.startsWith('subscribe-queue')) {
+      try {
+        await Promise.all(
+          batch.messages.map(async (msg) => {
+            const { connectionId, providerId } = msg.body as ISubscribeBatch;
+            try {
+              await enableBrainFunction({ id: connectionId, providerId });
+            } catch (error) {
+              console.error(`Failed to enable brain function for connection ${connectionId}:`, error);
+            }
+          }),
+        );
+      } finally {
+        batch.ackAll();
+      }
+      return;
+    }
+
+    if (queueName.startsWith('send-email-queue')) {
+      try {
+        await Promise.all(
+          batch.messages.map(async (msg) => {
+            const { messageId, connectionId, mail } = msg.body as IEmailSendBatch;
+
+            const {
+              pending_emails_status: statusKV,
+              pending_emails_payload: payloadKV,
+            } = env as ExtendedEnv;
+
+            const status = await statusKV.get(messageId);
+            if (status === 'cancelled') {
+              console.log(`Email ${messageId} cancelled – skipping send.`);
+              return;
+            }
+
+            let payload = mail;
+            if (!payload) {
+              const stored = await payloadKV.get(messageId);
+              if (!stored) {
+                console.error(`No payload found for scheduled email ${messageId}`);
+                return;
+              }
+              const parsedPayload = JSON.parse(stored);
+              payload = parsedPayload;
+            }
+
+            const agent = getZeroAgent(connectionId);
+            try {
+              if ((payload as any).attachments && Array.isArray((payload as any).attachments)) {
+                (payload as any).attachments = (payload as any).attachments.map((att: any) =>
+                  typeof att?.arrayBuffer === 'function' ? att : toAttachmentFiles([att])[0],
                 );
               }
-            }),
-          );
-          console.log('batch done');
-        } finally {
-          batch.ackAll();
-        }
-        return;
+
+              if ('draftId' in (payload as any) && (payload as any).draftId) {
+                const { draftId, ...rest } = payload as any;
+                await agent.sendDraft(draftId, rest as any);
+              } else {
+                await agent.create(payload as any);
+              }
+
+              await statusKV.delete(messageId);
+              await payloadKV.delete(messageId);
+              console.log(`Email ${messageId} sent successfully`);
+            } catch (error) {
+              console.error(`Failed to send scheduled email ${messageId}:`, error);
+            }
+          }),
+        );
+      } finally {
+        batch.ackAll();
       }
+      return;
     }
   }
 
   async scheduled() {
+    console.log('Running scheduled tasks...');
+    
+    await this.processScheduledEmails();
+    
+    await this.processExpiredSubscriptions();
+  }
+
+  private async processScheduledEmails() {
+    console.log('Checking for scheduled emails ready to be queued...');
+    const { scheduled_emails: scheduledKV, send_email_queue } = env as ExtendedEnv;
+    
+    try {
+      const allScheduled = await scheduledKV.list();
+      const now = Date.now();
+      const twelveHoursFromNow = now + (12 * 60 * 60 * 1000);
+      
+      for (const key of allScheduled.keys) {
+        const scheduledData = await scheduledKV.get(key.name);
+        if (!scheduledData) continue;
+        
+        const { messageId, connectionId, sendAt } = JSON.parse(scheduledData);
+        
+        if (sendAt <= twelveHoursFromNow) {
+          const delaySeconds = Math.max(0, Math.floor((sendAt - now) / 1000));
+          
+          console.log(`Queueing scheduled email ${messageId} with ${delaySeconds}s delay`);
+          
+          const queueBody: IEmailSendBatch = {
+            messageId,
+            connectionId,
+            sendAt,
+          };
+          
+          await send_email_queue.send(queueBody, { delaySeconds });
+          await scheduledKV.delete(key.name);
+          
+          console.log(`Successfully queued scheduled email ${messageId}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error processing scheduled emails:', error);
+    }
+  }
+
+  private async processExpiredSubscriptions() {
     console.log('Checking for expired subscriptions...');
     const allAccounts = await env.subscribed_accounts.list();
     console.log('allAccounts', allAccounts.keys);

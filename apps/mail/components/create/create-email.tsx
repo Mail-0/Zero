@@ -66,6 +66,7 @@ export function CreateEmail({
   const [, setIsDraftFailed] = useState(false);
   const trpc = useTRPC();
   const { mutateAsync: sendEmail } = useMutation(trpc.mail.send.mutationOptions());
+  const { mutateAsync: unsendEmail } = useMutation(trpc.mail.unsend.mutationOptions());
   const [isComposeOpen, setIsComposeOpen] = useQueryState('isComposeOpen');
   const [, setThreadId] = useQueryState('threadId');
   const [, setActiveReplyId] = useQueryState('activeReplyId');
@@ -102,6 +103,7 @@ export function CreateEmail({
     message: string;
     attachments: File[];
     fromEmail?: string;
+    scheduleAt?: string;
   }) => {
     const fromEmail = data.fromEmail || aliases?.[0]?.email || userEmail;
 
@@ -109,7 +111,7 @@ export function CreateEmail({
       ? '<p style="color: #666; font-size: 12px;">Sent via <a href="https://0.email/" style="color: #0066cc; text-decoration: none;">Zero</a></p>'
       : '';
 
-    await sendEmail({
+    const result = await sendEmail({
       to: data.to.map((email) => ({ email, name: email.split('@')[0] || email })),
       cc: data.cc?.map((email) => ({ email, name: email.split('@')[0] || email })),
       bcc: data.bcc?.map((email) => ({ email, name: email.split('@')[0] || email })),
@@ -118,6 +120,7 @@ export function CreateEmail({
       attachments: await serializeFiles(data.attachments),
       fromEmail: userName.trim() ? `${userName.replace(/[<>]/g, '')} <${fromEmail}>` : fromEmail,
       draftId: draftId ?? undefined,
+      scheduleAt: data.scheduleAt,
     });
 
     // Clear draft ID from URL
@@ -135,6 +138,24 @@ export function CreateEmail({
     }
 
     toast.success(t('pages.createEmail.emailSentSuccessfully'));
+
+    if ((result as any)?.queued && (result as any)?.messageId) {
+      const messageId = (result as any).messageId as string;
+      toast.success('Email scheduled', {
+        action: {
+          label: 'Undo',
+          onClick: async () => {
+            try {
+              await unsendEmail({ messageId });
+              toast.info('Send cancelled');
+            } catch (error) {
+              toast.error('Failed to cancel');
+            }
+          },
+        },
+        duration: 30000,
+      });
+    }
   };
 
   useEffect(() => {
