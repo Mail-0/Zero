@@ -62,7 +62,7 @@
     "postgres": "3.4.5",
     "react": "catalog:",
     "remeda": "2.21.3",
-    "resend": "^4.5.1",
+    "resend": "^4.6.0",
     "sanitize-html": "^2.16.0",
     "string-strip-html": "^13.4.12",
     "superjson": "catalog:",
