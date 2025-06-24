@@ -12,6 +12,8 @@ export const useShortcutStore = (userId?: string) => {
 
   const { mutateAsync: updateShortcuts } = useMutation(trpc.shortcut.update.mutationOptions());
 
+  const { mutateAsync: pruneShortcuts } = useMutation(trpc.shortcut.prune.mutationOptions());
+
   const overrideShortcuts = useCallback(() => {
     return keyboardShortcuts.map((shortcut) => {
       const overridedShortcut = shortcuts?.shortcuts?.shortcuts?.find(
@@ -26,7 +28,7 @@ export const useShortcutStore = (userId?: string) => {
 
   const resetShortcuts = useCallback(async () => {
     try {
-      await updateShortcuts({ shortcuts: keyboardShortcuts });
+      await pruneShortcuts();
       queryClient.invalidateQueries({ queryKey: trpc.shortcut.get.queryKey() });
     } catch (error) {
       console.error('Error resetting shortcuts:', error);
@@ -256,14 +258,20 @@ export function useShortcuts(
   handlers: { [key: string]: () => void },
   options: Partial<HotkeyOptions> = {},
 ) {
+  const { shortcuts: overrideShortcuts } = useShortcutStore();
   const shortcutMap = useMemo(() => {
     return shortcuts.reduce<Record<string, Shortcut>>((acc, shortcut) => {
       if (handlers[shortcut.action]) {
         acc[shortcut.action] = shortcut;
       }
+      console.log(overrideShortcuts);
+      const overrideShortcut = overrideShortcuts.find((s) => s.action === shortcut.action);
+      if (overrideShortcut) {
+        acc[shortcut.action] = overrideShortcut;
+      }
       return acc;
     }, {});
-  }, [shortcuts]);
+  }, [shortcuts, overrideShortcuts]);
 
   const shortcutString = useMemo(() => {
     return Object.entries(shortcutMap)

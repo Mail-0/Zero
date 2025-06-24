@@ -120,12 +120,18 @@ export class RpcDO extends RpcTarget {
     return await this.mainDo.findUserSettings(this.userId);
   }
 
-  async findUserHotkeys(): Promise<(typeof userHotkeys.$inferSelect)[]> {
+  async findUserHotkeys(): Promise<
+    (typeof userHotkeys.$inferSelect & { shortcuts: Shortcut[] }) | undefined
+  > {
     return await this.mainDo.findUserHotkeys(this.userId);
   }
 
   async insertUserHotkeys(shortcuts: (typeof userHotkeys.$inferInsert)[]) {
     return await this.mainDo.insertUserHotkeys(this.userId, shortcuts);
+  }
+
+  async pruneUserHotkeys() {
+    return await this.mainDo.pruneUserHotkeys(this.userId);
   }
 
   async insertUserSettings(settings: typeof defaultUserSettings) {
@@ -353,6 +359,10 @@ class ZeroDB extends DurableObject<Env> {
           updatedAt: new Date(),
         },
       });
+  }
+
+  async pruneUserHotkeys(userId: string) {
+    await this.db.delete(userHotkeys).where(eq(userHotkeys.userId, userId));
   }
 
   async insertUserSettings(userId: string, settings: typeof defaultUserSettings) {
