@@ -78,7 +78,7 @@
     "@zero/eslint-config": "workspace:*",
     "@zero/tsconfig": "workspace:*",
     "drizzle-kit": "catalog:",
-    "eslint": "^9.27.0",
+    "eslint": "^9.29.0",
     "jiti": "2.4.2",
     "typescript": "catalog:"
   }
