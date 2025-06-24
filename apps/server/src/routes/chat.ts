@@ -115,21 +115,6 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     super(ctx, env);
   }
 
-  public async callDriver<TResult = any>(
-    method: keyof MailManager,
-    ...args: any[]
-  ): Promise<TResult> {
-    if (!this.driver) {
-      throw new Error('Driver not initialized');
-    }
-    const driverMethod = this.driver[method] as any;
-    if (typeof driverMethod !== 'function') {
-      throw new Error(`Method ${String(method)} is not a function on driver`);
-    }
-    const result = await driverMethod.apply(this.driver, args);
-    return result as TResult;
-  }
-
   private getDataStreamResponse(
     onFinish: StreamTextOnFinishCallback<{}>,
     options?: {
@@ -369,6 +354,232 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     },
   ) {
     return this.getDataStreamResponse(onFinish, options);
+  }
+
+  // Mail Manager Methods
+  async listThreads(params: {
+    folder: string;
+    query?: string;
+    maxResults?: number;
+    labelIds?: string[];
+    pageToken?: string;
+  }) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.list(params);
+  }
+
+  async getThread(threadId: string) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.get(threadId);
+  }
+
+  async markThreadsRead(threadIds: string[]) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.modifyLabels(threadIds, {
+      addLabels: [],
+      removeLabels: ['UNREAD'],
+    });
+  }
+
+  async markThreadsUnread(threadIds: string[]) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.modifyLabels(threadIds, {
+      addLabels: ['UNREAD'],
+      removeLabels: [],
+    });
+  }
+
+  async modifyLabels(threadIds: string[], addLabelIds: string[], removeLabelIds: string[]) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.modifyLabels(threadIds, {
+      addLabels: addLabelIds,
+      removeLabels: removeLabelIds,
+    });
+  }
+
+  async getUserLabels() {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return (await this.driver.getUserLabels()).filter((label) => label.type === 'user');
+  }
+
+  async getLabel(id: string) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.getLabel(id);
+  }
+
+  async createLabel(params: {
+    name: string;
+    color?: {
+      backgroundColor: string;
+      textColor: string;
+    };
+  }) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.createLabel(params);
+  }
+
+  async bulkDelete(threadIds: string[]) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.modifyLabels(threadIds, {
+      addLabels: ['TRASH'],
+      removeLabels: ['INBOX'],
+    });
+  }
+
+  async bulkArchive(threadIds: string[]) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.modifyLabels(threadIds, {
+      addLabels: [],
+      removeLabels: ['INBOX'],
+    });
+  }
+
+  async buildGmailSearchQuery(query: string) {
+    const result = await generateText({
+      model: openai('gpt-4o'),
+      system: GmailSearchAssistantSystemPrompt(),
+      prompt: query,
+    });
+    return result.text;
+  }
+
+  async updateLabel(id: string, label: any) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.updateLabel(id, label);
+  }
+
+  async deleteLabel(id: string) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.deleteLabel(id);
+  }
+
+  async createDraft(draftData: any) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.createDraft(draftData);
+  }
+
+  async getDraft(id: string) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.getDraft(id);
+  }
+
+  async listDrafts(params: { q?: string; maxResults?: number; pageToken?: string }) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.listDrafts(params);
+  }
+
+  // Additional mail operations
+  async count() {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.count();
+  }
+
+  async list(params: {
+    folder: string;
+    query?: string;
+    maxResults?: number;
+    labelIds?: string[];
+    pageToken?: string;
+  }) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.list(params);
+  }
+
+  async markAsRead(threadIds: string[]) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.markAsRead(threadIds);
+  }
+
+  async markAsUnread(threadIds: string[]) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.markAsUnread(threadIds);
+  }
+
+  async normalizeIds(ids: string[]) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return this.driver.normalizeIds(ids);
+  }
+
+  async get(id: string) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.get(id);
+  }
+
+  async sendDraft(id: string, data: any) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.sendDraft(id, data);
+  }
+
+  async create(data: any) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.create(data);
+  }
+
+  async delete(id: string) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.delete(id);
+  }
+
+  async deleteAllSpam() {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.deleteAllSpam();
+  }
+
+  async getEmailAliases() {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.getEmailAliases();
   }
 }
 
