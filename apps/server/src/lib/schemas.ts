@@ -108,6 +108,18 @@ const categoriesSchema = z.array(mailCategorySchema).superRefine((cats, ctx) => 
     });
   }
 });
+export const defaultUserSettings = {
+  language: 'en',
+  timezone: 'UTC',
+  dynamicContent: false,
+  externalImages: true,
+  customPrompt: '',
+  trustedSenders: [],
+  isOnboarded: false,
+  colorTheme: 'system',
+  zeroSignature: true,
+  autoRead: true,
+} satisfies UserSettings;
 
 export const userSettingsSchema = z.object({
   language: z.string(),
