@@ -141,8 +141,7 @@ export const formatKeys = (keys: string[] | undefined): string => {
   if (!keys || !keys.length) return '';
 
   const mapKey = (key: string) => {
-    const lowerKey = key.toLowerCase();
-    const mappedKey = isDvorak ? qwertyToDvorak[lowerKey] || key : key;
+    const mappedKey = isDvorak ? qwertyToDvorak[key] || key : key;
 
     switch (mappedKey) {
       case 'mod':
@@ -154,7 +153,7 @@ export const formatKeys = (keys: string[] | undefined): string => {
       case '!':
         return 'shift+1';
       default:
-        return mappedKey;
+        return mappedKey.toLowerCase();
     }
   };
 
@@ -164,6 +163,7 @@ export const formatKeys = (keys: string[] | undefined): string => {
 
   const firstKey = keys[0];
   if (!firstKey) return '';
+
   return mapKey(firstKey);
 };
 
@@ -260,14 +260,9 @@ export function useShortcuts(
 ) {
   const { shortcuts: overrideShortcuts } = useShortcutStore();
   const shortcutMap = useMemo(() => {
-    return shortcuts.reduce<Record<string, Shortcut>>((acc, shortcut) => {
+    return overrideShortcuts.reduce<Record<string, Shortcut>>((acc, shortcut) => {
       if (handlers[shortcut.action]) {
         acc[shortcut.action] = shortcut;
-      }
-      console.log(overrideShortcuts);
-      const overrideShortcut = overrideShortcuts.find((s) => s.action === shortcut.action);
-      if (overrideShortcut) {
-        acc[shortcut.action] = overrideShortcut;
       }
       return acc;
     }, {});
@@ -306,6 +301,8 @@ export function useShortcuts(
       const matchingEntry = Object.entries(shortcutMap).find(
         ([_, shortcut]) => formatKeys(shortcut.keys) === pressedKeys,
       );
+
+      console.log({ matchingEntry });
 
       if (matchingEntry) {
         const [action, shortcut] = matchingEntry;
