@@ -226,7 +226,7 @@ export default function HomeContent() {
           <h1 className="text-center text-4xl font-medium text-white md:text-6xl">
             Speed Is Everything
           </h1>
-          <h1 className="text-center text-4xl font-medium text-white/40 md:text-6xl">
+          <h1 className="text-center text-4xl font-medium mb-3 text-white/40 md:text-6xl">
             Reply in seconds
           </h1>
         </motion.div>
@@ -236,7 +236,7 @@ export default function HomeContent() {
           transition={{ duration: 0.5, delay: 0.4 }}
           className="relative bottom-3 mx-12 flex items-center justify-center bg-[#0F0F0F] md:mx-0"
         >
-          <div className="bg-panelDark mx-auto inline-flex max-w-[600px] flex-col items-center justify-center overflow-hidden rounded-2xl shadow-md">
+          <div className="bg-panelDark mx-auto inline-flex max-w-[600px] flex-col items-center justify-center overflow-hidden rounded-2xl shadow-md mt-10">
             <div className="inline-flex h-12 items-center justify-start gap-2 self-stretch border-b-[0.50px] p-4">
               <div className="text-base-gray-500/50 justify-start text-sm leading-none">To:</div>
               <div className="flex flex-1 items-center justify-start gap-1">
@@ -1068,7 +1068,7 @@ export default function HomeContent() {
             className="mt-2 flex flex-col items-center justify-center md:mt-8"
           >
             <h1 className="text-4xl font-medium text-white md:text-6xl">Ask away</h1>
-            <h1 className="text-4xl font-medium text-white/40 md:text-6xl">Get your answers</h1>
+            <h1 className="text-4xl font-medium text-white/40 md:text-6xl mb-4">Get your answers</h1>
           </motion.div>
 
           <motion.div
