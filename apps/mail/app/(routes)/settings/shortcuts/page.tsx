@@ -1,7 +1,7 @@
 import { keyboardShortcuts, type Shortcut } from '@/config/shortcuts';
 import { SettingsCard } from '@/components/settings/settings-card';
 import { formatDisplayKeys } from '@/lib/hotkeys/use-hotkey-utils';
-import { useShortcutCache } from '@/lib/hotkeys/use-hotkey-utils';
+import { useShortcutStore } from '@/lib/hotkeys/use-hotkey-utils';
 import { useCategorySettings } from '@/hooks/use-categories';
 import { useState, type ReactNode, useEffect } from 'react';
 import type { MessageKey } from '@/config/navigation';
@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 export default function ShortcutsPage() {
   const t = useTranslations();
   const { data: session } = useSession();
-  const { shortcuts, resetShortcuts } = useShortcutCache(session?.user?.id);
+  const { shortcuts, resetShortcuts } = useShortcutStore(session?.user?.id);
   const categorySettings = useCategorySettings();
 
   return (
@@ -103,7 +103,7 @@ function Shortcut({
   const [isRecording, setIsRecording] = useState(false);
   const displayKeys = formatDisplayKeys(keys);
   const { data: session } = useSession();
-  const { updateShortcut } = useShortcutCache(session?.user?.id);
+  const { updateShortcut } = useShortcutStore(session?.user?.id);
 
   const handleHotkeyRecorded = async (newKeys: string[]) => {
     try {

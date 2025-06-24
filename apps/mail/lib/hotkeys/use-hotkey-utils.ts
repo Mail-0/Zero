@@ -5,7 +5,7 @@ import { useTRPC } from '@/providers/query-provider';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useCallback, useMemo } from 'react';
 
-export const useShortcutCache = (userId?: string) => {
+export const useShortcutStore = (userId?: string) => {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { data: shortcuts } = useQuery(trpc.shortcut.get.queryOptions());
@@ -24,15 +24,14 @@ export const useShortcutCache = (userId?: string) => {
     });
   }, [shortcuts, keyboardShortcuts]);
 
-  const resetShortcuts = useCallback(() => {
-    updateShortcuts(
-      { shortcuts: keyboardShortcuts },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: trpc.shortcut.get.queryKey() });
-        },
-      },
-    );
+  const resetShortcuts = useCallback(async () => {
+    try {
+      await updateShortcuts({ shortcuts: keyboardShortcuts });
+      queryClient.invalidateQueries({ queryKey: trpc.shortcut.get.queryKey() });
+    } catch (error) {
+      console.error('Error resetting shortcuts:', error);
+      throw error;
+    }
   }, [updateShortcuts, keyboardShortcuts, queryClient, trpc.shortcut.get]);
 
   const updateShortcut = useCallback(
