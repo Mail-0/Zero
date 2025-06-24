@@ -79,12 +79,26 @@ export const contactsRouter = router({
             allContacts = parsedData.contacts;
           } else {
             // Cache data is corrupted, fetch fresh data
-            allContacts = await getRecentContacts(driver, activeConnection.email, '', limit * 10);
+            // Fetch only what we need rather than multiplying by 3
+            const fetchLimit = Math.min(limit + 10, 30); // Add a small buffer but cap at a reasonable maximum
+            allContacts = await getRecentContacts(
+              driver,
+              activeConnection.email,
+              '',
+              fetchLimit
+            );
             await cacheContactData(cache, cacheKey, allContacts, activeConnection.email);
           }
         } else {
           // Get contacts from recent emails
-          allContacts = await getRecentContacts(driver, activeConnection.email, '', limit * 10);
+          // Fetch more than requested to allow for filtering but be reasonable
+          const fetchLimit = Math.min(limit + 10, 30); // Add a small buffer but cap at a reasonable maximum
+          allContacts = await getRecentContacts(
+            driver,
+            activeConnection.email,
+            '',
+            fetchLimit
+          );
           
           // Cache the results in Redis with TTL
           await cacheContactData(cache, cacheKey, allContacts, activeConnection.email);

@@ -24,6 +24,37 @@ const isValidEmail = (email: string): boolean => {
   return emailRegex.test(email);
 };
 
+const calculateDropdownPosition = (
+  rect: DOMRect, 
+  dropdownWidth: number = 300, 
+  dropdownHeight: number = 300, 
+  spacing: number = 4
+): { top: number; left: number; } => {
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  
+  // Calculate potential positions
+  let top = rect.bottom + window.scrollY + spacing;
+  let left = rect.left + window.scrollX;
+  
+  if (top + dropdownHeight > viewportHeight + window.scrollY) {
+    // Position above the input if there's not enough space below
+    top = Math.max(rect.top + window.scrollY - dropdownHeight - spacing, window.scrollY);
+  }
+  
+  if (left + dropdownWidth > viewportWidth + window.scrollX) {
+    left = Math.max(
+      (rect.right + window.scrollX) - dropdownWidth, 
+      window.scrollX
+    );
+  }
+  
+  // Ensure dropdown is never positioned offscreen to the left
+  left = Math.max(left, window.scrollX);
+  
+  return { top, left };
+};
+
 export const ContactAutocomplete = forwardRef<HTMLInputElement, ContactAutocompleteProps>(
   ({ value = [], onChange, onFocus, onBlur, placeholder, className, autoFocus, disabled, type = 'to' }, ref) => {
     const t = useTranslations();
@@ -33,6 +64,7 @@ export const ContactAutocomplete = forwardRef<HTMLInputElement, ContactAutocompl
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
     const inputRef = useRef<HTMLInputElement>(null);
     const wrapperRef = useRef<HTMLDivElement>(null);
+    const isInteractingWithDropdownRef = useRef(false);
     
     const { suggestions, isLoading } = useContactSuggestions(inputValue, true); // Always fetch when there's input
 
@@ -79,10 +111,16 @@ export const ContactAutocomplete = forwardRef<HTMLInputElement, ContactAutocompl
     const updateDropdownPosition = () => {
       if (inputRef.current) {
         const rect = inputRef.current.getBoundingClientRect();
+        const width = rect.width;
+        const minWidth = Math.max(width, 300);
+        const maxDropdownHeight = 300;
+        
+        const { top, left } = calculateDropdownPosition(rect, minWidth, maxDropdownHeight, 4);
+        
         setDropdownPosition({
-          top: rect.bottom + window.scrollY,
-          left: rect.left + window.scrollX,
-          width: rect.width,
+          top,
+          left,
+          width
         });
       }
     };
@@ -118,13 +156,13 @@ export const ContactAutocomplete = forwardRef<HTMLInputElement, ContactAutocompl
       } else if (e.key === 'Backspace' && inputValue === '' && value.length > 0) {
         e.preventDefault();
         handleRemoveEmail(value[value.length - 1]);
-              } else if (e.key === 'ArrowDown') {
-          e.preventDefault();
-          if (!open && inputValue.length > 0) {
-            updateDropdownPosition();
-            setOpen(true);
-          }
-          setFocusedIndex(prev => Math.min(prev + 1, suggestions.length - 1));
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (!open && inputValue.length > 0) {
+          updateDropdownPosition();
+          setOpen(true);
+        }
+        setFocusedIndex(prev => Math.min(prev + 1, suggestions.length - 1));
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         setFocusedIndex(prev => Math.max(prev - 1, -1));
@@ -173,34 +211,18 @@ export const ContactAutocomplete = forwardRef<HTMLInputElement, ContactAutocompl
     };
 
     const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-      // Don't process blur if we're about to click on the dropdown
-      const relatedTarget = e.relatedTarget as Element;
-      const dropdownElement = document.querySelector('[data-contact-dropdown="true"]');
-      
-      if (dropdownElement?.contains(relatedTarget)) {
+      if (isInteractingWithDropdownRef.current) {
         return;
       }
+
+      if (e.currentTarget.value.trim() && e.currentTarget.value.includes('@')) {
+        handleAddEmail(e.currentTarget.value.trim());
+      } else {
+        setInputValue('');
+      }
       
-      // Delay to allow clicking on suggestions
-      setTimeout(() => {
-        // Check if dropdown is still open and if we're clicking inside it
-        const activeElement = document.activeElement;
-        const currentDropdown = document.querySelector('[data-contact-dropdown="true"]');
-        
-        if (currentDropdown?.contains(activeElement)) {
-          return;
-        }
-        
-        // Only add email if user types and blurs without pressing enter, and it looks like an email
-        if (e.currentTarget.value.trim() && e.currentTarget.value.includes('@')) {
-          handleAddEmail(e.currentTarget.value.trim());
-        } else {
-          // Just clear the input if it's not a valid email
-          setInputValue('');
-        }
-        setOpen(false);
-        onBlur?.(e);
-      }, 150);
+      setOpen(false);
+      onBlur?.(e);
     };
 
     const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -230,6 +252,10 @@ export const ContactAutocomplete = forwardRef<HTMLInputElement, ContactAutocompl
       if (!open) return;
 
       const handleClickOutside = (event: MouseEvent) => {
+        if (isInteractingWithDropdownRef.current) {
+          return;
+        }
+        
         const target = event.target as Element;
         
         // Don't close if clicking on the input or wrapper
@@ -321,15 +347,32 @@ export const ContactAutocomplete = forwardRef<HTMLInputElement, ContactAutocompl
             data-contact-dropdown="true"
             className="fixed z-[99999] max-h-[300px] overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
             style={{
-              top: dropdownPosition.top + 4,
+              top: dropdownPosition.top,
               left: dropdownPosition.left,
               minWidth: Math.max(dropdownPosition.width, 300),
               maxWidth: 400,
               pointerEvents: 'auto',
             }}
+            onMouseEnter={() => {
+              isInteractingWithDropdownRef.current = true;
+            }}
+            onMouseLeave={() => {
+              setTimeout(() => {
+                if (!document.activeElement || 
+                    !document.querySelector('[data-contact-dropdown="true"]')?.contains(document.activeElement)) {
+                  isInteractingWithDropdownRef.current = false;
+                }
+              }, 0);
+            }}
             onMouseDown={(e) => {
               // Prevent the event from bubbling up and triggering outside click
               e.stopPropagation();
+              isInteractingWithDropdownRef.current = true;
+            }}
+            onClick={() => {
+              setTimeout(() => {
+                isInteractingWithDropdownRef.current = false;
+              }, 0);
             }}
           >
             <div className="max-h-[300px] overflow-y-auto">
