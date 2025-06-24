@@ -10,7 +10,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 export default function SelectAllCheckbox({ className }: { className?: string }) {
   const [mail, setMail] = useMail();
-  const [{}, loadedThreads] = useThreads();
+  const [, loadedThreads] = useThreads();
   const [{ value: query }] = useSearchValue();
   const { folder = 'inbox' } = useParams<{ folder: string }>() ?? {};
 
