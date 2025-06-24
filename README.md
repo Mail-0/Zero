@@ -38,6 +38,16 @@ Zero is built with modern and reliable technologies:
 
 ## Getting Started
 
+### Video Tutorial
+
+Watch this helpful video tutorial on how to set up Zero locally:
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=yIXLQcjbeEM">
+    <img src="https://img.youtube.com/vi/yIXLQcjbeEM/0.jpg" alt="Zero Setup Tutorial" />
+  </a>
+</p>
+
 ### Prerequisites
 
 **Required Versions:**
@@ -170,7 +180,7 @@ You can set up Zero in two ways:
 
    - Go to [Autumn](https://useautumn.com/)
    - For Local Use, click [onboarding](https://app.useautumn.com/sandbox/onboarding) button and generate an Autumn Secret Key
-   - For production, select the production mode from upper left corner and generate an fill the other fields. After that, generate an Autumn Secret Key
+   - For production, select the production mode from upper left corner and generate and fill the other fields. After that, generate an Autumn Secret Key
 
    - Add to `.env`:
 

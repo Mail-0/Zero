@@ -3,7 +3,8 @@ import { updateWritingStyleMatrix } from '../../services/writing-style-service';
 import { deserializeFiles, serializedFileSchema } from '../../lib/schemas';
 import { defaultPageSize, FOLDERS, LABELS } from '../../lib/utils';
 import type { DeleteAllSpamResponse } from '../../types';
-import { Ratelimit } from '@upstash/ratelimit';
+import { getZeroAgent } from '../../lib/server-utils';
+import { env } from 'cloudflare:workers';
 import { z } from 'zod';
 
 const senderSchema = z.object({
@@ -19,12 +20,14 @@ export const mailRouter = router({
       }),
     )
     .query(async ({ input, ctx }) => {
-      const { driver } = ctx;
-      return await driver.get(input.id);
+      const { activeConnection } = ctx;
+      const agent = getZeroAgent(activeConnection.id);
+      return await agent.getThread(input.id);
     }),
   count: activeDriverProcedure.query(async ({ ctx }) => {
-    const { driver } = ctx;
-    return await driver.count();
+    const { activeConnection } = ctx;
+    const agent = getZeroAgent(activeConnection.id);
+    return await agent.count();
   }),
   listThreads: activeDriverProcedure
     .input(
@@ -35,22 +38,20 @@ export const mailRouter = router({
         cursor: z.string().optional().default(''),
       }),
     )
-    // .use(
-    //   createRateLimiterMiddleware({
-    //     generatePrefix: ({ sessionUser }, input) =>
-    //       `ratelimit:list-threads-${input.folder}-${sessionUser?.id}`,
-    //     limiter: Ratelimit.slidingWindow(60, '1m'),
-    //   }),
-    // )
     .query(async ({ ctx, input }) => {
       const { folder, max, cursor, q } = input;
-      const { driver } = ctx;
+      const { activeConnection } = ctx;
+      const agent = getZeroAgent(activeConnection.id);
 
       if (folder === FOLDERS.DRAFT) {
-        const drafts = await driver.listDrafts({ q, maxResults: max, pageToken: cursor });
+        const drafts = await agent.listDrafts({
+          q,
+          maxResults: max,
+          pageToken: cursor,
+        });
         return drafts;
       }
-      const threadsResponse = await driver.list({
+      const threadsResponse = await agent.list({
         folder,
         query: q,
         maxResults: max,
@@ -65,8 +66,9 @@ export const mailRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { driver } = ctx;
-      return driver.markAsRead(input.ids);
+      const { activeConnection } = ctx;
+      const agent = getZeroAgent(activeConnection.id);
+      return agent.markAsRead(input.ids);
     }),
   markAsUnread: activeDriverProcedure
     .input(
@@ -75,8 +77,9 @@ export const mailRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { driver } = ctx;
-      return driver.markAsUnread(input.ids);
+      const { activeConnection } = ctx;
+      const agent = getZeroAgent(activeConnection.id);
+      return agent.markAsUnread(input.ids);
     }),
   markAsImportant: activeDriverProcedure
     .input(
@@ -85,8 +88,9 @@ export const mailRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { driver } = ctx;
-      return driver.modifyLabels(input.ids, { addLabels: ['IMPORTANT'], removeLabels: [] });
+      const { activeConnection } = ctx;
+      const agent = getZeroAgent(activeConnection.id);
+      return agent.modifyLabels(input.ids, ['IMPORTANT'], []);
     }),
   modifyLabels: activeDriverProcedure
     .input(
@@ -97,20 +101,19 @@ export const mailRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { driver } = ctx;
+      const { activeConnection } = ctx;
+      const agent = getZeroAgent(activeConnection.id);
       const { threadId, addLabels, removeLabels } = input;
 
       console.log(`Server: updateThreadLabels called for thread ${threadId}`);
       console.log(`Adding labels: ${addLabels.join(', ')}`);
       console.log(`Removing labels: ${removeLabels.join(', ')}`);
 
-      const { threadIds } = driver.normalizeIds(threadId);
+      const result = await agent.normalizeIds(threadId);
+      const { threadIds } = result;
 
       if (threadIds.length) {
-        await driver.modifyLabels(threadIds, {
-          addLabels,
-          removeLabels,
-        });
+        await agent.modifyLabels(threadIds, addLabels, removeLabels);
         console.log('Server: Successfully updated thread labels');
         return { success: true };
       }
@@ -126,14 +129,16 @@ export const mailRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { driver } = ctx;
-      const { threadIds } = driver.normalizeIds(input.ids);
+      const { activeConnection } = ctx;
+      const agent = getZeroAgent(activeConnection.id);
+      const { threadIds } = await agent.normalizeIds(input.ids);
 
       if (!threadIds.length) {
         return { success: false, error: 'No thread IDs provided' };
       }
 
-      const threadResults = await Promise.allSettled(threadIds.map((id) => driver.get(id)));
+      const threadResults: PromiseSettledResult<{ messages: { tags: { name: string }[] }[] }>[] =
+        await Promise.allSettled(threadIds.map((id) => agent.get(id)));
 
       let anyStarred = false;
       let processedThreads = 0;
@@ -153,10 +158,7 @@ export const mailRouter = router({
 
       const shouldStar = processedThreads > 0 && !anyStarred;
 
-      await driver.modifyLabels(threadIds, {
-        addLabels: shouldStar ? ['STARRED'] : [],
-        removeLabels: shouldStar ? [] : ['STARRED'],
-      });
+      await agent.modifyLabels(threadIds, shouldStar ? ['STARRED'] : [], shouldStar ? [] : ['STARRED']);
 
       return { success: true };
     }),
@@ -167,14 +169,16 @@ export const mailRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { driver } = ctx;
-      const { threadIds } = driver.normalizeIds(input.ids);
+      const { activeConnection } = ctx;
+      const agent = getZeroAgent(activeConnection.id);
+      const { threadIds } = await agent.normalizeIds(input.ids);
 
       if (!threadIds.length) {
         return { success: false, error: 'No thread IDs provided' };
       }
 
-      const threadResults = await Promise.allSettled(threadIds.map((id) => driver.get(id)));
+      const threadResults: PromiseSettledResult<{ messages: { tags: { name: string }[] }[] }>[] =
+        await Promise.allSettled(threadIds.map((id) => agent.get(id)));
 
       let anyImportant = false;
       let processedThreads = 0;
@@ -194,10 +198,7 @@ export const mailRouter = router({
 
       const shouldMarkImportant = processedThreads > 0 && !anyImportant;
 
-      await driver.modifyLabels(threadIds, {
-        addLabels: shouldMarkImportant ? ['IMPORTANT'] : [],
-        removeLabels: shouldMarkImportant ? [] : ['IMPORTANT'],
-      });
+      await agent.modifyLabels(threadIds, shouldMarkImportant ? ['IMPORTANT'] : [], shouldMarkImportant ? [] : ['IMPORTANT']);
 
       return { success: true };
     }),
@@ -208,8 +209,9 @@ export const mailRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { driver } = ctx;
-      return driver.modifyLabels(input.ids, { addLabels: ['STARRED'], removeLabels: [] });
+      const { activeConnection } = ctx;
+      const agent = getZeroAgent(activeConnection.id);
+      return agent.modifyLabels(input.ids, ['STARRED'], []);
     }),
   bulkMarkImportant: activeDriverProcedure
     .input(
@@ -218,8 +220,9 @@ export const mailRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { driver } = ctx;
-      return driver.modifyLabels(input.ids, { addLabels: ['IMPORTANT'], removeLabels: [] });
+      const { activeConnection } = ctx;
+      const agent = getZeroAgent(activeConnection.id);
+      return agent.modifyLabels(input.ids, ['IMPORTANT'], []);
     }),
   bulkUnstar: activeDriverProcedure
     .input(
@@ -228,13 +231,15 @@ export const mailRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { driver } = ctx;
-      return driver.modifyLabels(input.ids, { addLabels: [], removeLabels: ['STARRED'] });
+      const { activeConnection } = ctx;
+      const agent = getZeroAgent(activeConnection.id);
+      return agent.modifyLabels(input.ids, [], ['STARRED']);
     }),
   deleteAllSpam: activeDriverProcedure.mutation(async ({ ctx }): Promise<DeleteAllSpamResponse> => {
-    const { driver } = ctx;
+    const { activeConnection } = ctx;
+    const agent = getZeroAgent(activeConnection.id);
     try {
-      return await driver.deleteAllSpam();
+      return await agent.deleteAllSpam();
     } catch (error) {
       console.error('Error deleting spam emails:', error);
       return {
@@ -252,8 +257,9 @@ export const mailRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { driver } = ctx;
-      return driver.modifyLabels(input.ids, { addLabels: [], removeLabels: ['IMPORTANT'] });
+      const { activeConnection } = ctx;
+      const agent = getZeroAgent(activeConnection.id);
+      return agent.modifyLabels(input.ids, [], ['IMPORTANT']);
     }),
 
   send: activeDriverProcedure
@@ -278,7 +284,8 @@ export const mailRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { driver, activeConnection } = ctx;
+      const { activeConnection } = ctx;
+      const agent = getZeroAgent(activeConnection.id);
       const { draftId, ...mail } = input;
 
       const afterTask = async () => {
@@ -292,9 +299,9 @@ export const mailRouter = router({
       };
 
       if (draftId) {
-        await driver.sendDraft(draftId, mail);
+        await agent.sendDraft(draftId, mail);
       } else {
-        await driver.create(input);
+        await agent.create(input);
       }
 
       ctx.c.executionCtx.waitUntil(afterTask());
@@ -307,8 +314,9 @@ export const mailRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { driver } = ctx;
-      return driver.delete(input.id);
+      const { activeConnection } = ctx;
+      const agent = getZeroAgent(activeConnection.id);
+      return agent.delete(input.id);
     }),
   bulkDelete: activeDriverProcedure
     .input(
@@ -317,8 +325,9 @@ export const mailRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { driver } = ctx;
-      return driver.modifyLabels(input.ids, { addLabels: ['TRASH'], removeLabels: [] });
+      const { activeConnection } = ctx;
+      const agent = getZeroAgent(activeConnection.id);
+      return agent.modifyLabels(input.ids, ['TRASH'], []);
     }),
   bulkArchive: activeDriverProcedure
     .input(
@@ -327,8 +336,9 @@ export const mailRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { driver } = ctx;
-      return driver.modifyLabels(input.ids, { addLabels: [], removeLabels: ['INBOX'] });
+      const { activeConnection } = ctx;
+      const agent = getZeroAgent(activeConnection.id);
+      return agent.modifyLabels(input.ids, [], ['INBOX']);
     }),
   bulkMute: activeDriverProcedure
     .input(
@@ -337,11 +347,13 @@ export const mailRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { driver } = ctx;
-      return driver.modifyLabels(input.ids, { addLabels: ['MUTE'], removeLabels: [] });
+      const { activeConnection } = ctx;
+      const agent = getZeroAgent(activeConnection.id);
+      return agent.modifyLabels(input.ids, ['MUTE'], []);
     }),
   getEmailAliases: activeDriverProcedure.query(async ({ ctx }) => {
-    const { driver } = ctx;
-    return driver.getEmailAliases();
+    const { activeConnection } = ctx;
+    const agent = getZeroAgent(activeConnection.id);
+    return agent.getEmailAliases();
   }),
 });

@@ -135,10 +135,13 @@
     "navUser": {
       "customerSupport": "社区",
       "documentation": "文档",
-      "appTheme": "应用主题",
+      "appTheme": "切换主题",
       "accounts": "账户",
       "signIn": "登录",
-      "otherAccounts": "其他账户"
+      "otherAccounts": "其他账户",
+      "switchingAccounts": "正在切换账户...",
+      "accountSwitched": "账户切换成功",
+      "failedToSwitchAccount": "账户切换失败，请重试。"
     },
     "mailCategories": {
       "primary": "主要",
@@ -269,7 +272,9 @@
       "notFound": "未找到设置",
       "saved": "设置已保存",
       "failedToSave": "保存设置失败",
-      "languageChanged": "语言已更改为{locale}"
+      "languageChanged": "语言已更改为{locale}",
+      "defaultEmailUpdated": "默认邮箱别名已在 Gmail 中更新",
+      "failedToUpdateGmailAlias": "无法更新 Gmail 设置中的默认别名"
     },
     "mail": {
       "replies": "{count, plural, =0 {回复} one {# 条回复} other {# 条回复}}",
@@ -396,7 +401,10 @@
         "customPromptDescription": "自定义AI如何撰写您的邮件回复。这将添加到基础提示中。",
         "noResultsFound": "未找到结果",
         "zeroSignature": "Zero 签名",
-        "zeroSignatureDescription": "在您的邮件中添加 Zero 签名。"
+        "zeroSignatureDescription": "在您的邮件中添加 Zero 签名。",
+        "defaultEmailAlias": "默认邮箱别名",
+        "selectDefaultEmail": "选择默认邮箱",
+        "defaultEmailDescription": "此邮箱将作为撰写新邮件时的默认“发件人”地址"
       },
       "connections": {
         "title": "邮箱连接",

@@ -12,8 +12,6 @@ import {
   GmailSearchAssistantSystemPrompt,
   AiChatPrompt,
 } from '../lib/prompts';
-import { getPrompt } from '../lib/brain';
-import { EPrompts } from '../types';
 import { type Connection, type ConnectionContext, type WSMessage } from 'agents';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createSimpleAuth, type SimpleAuth } from '../lib/auth';
@@ -24,12 +22,15 @@ import { AIChatAgent } from 'agents/ai-chat-agent';
 import { tools as authTools } from './agent/tools';
 import { processToolCalls } from './agent/utils';
 import type { Message as ChatMessage } from 'ai';
+import { getPromptName } from '../pipelines';
 import { connection } from '../db/schema';
 import { env } from 'cloudflare:workers';
+import { getPrompt } from '../lib/brain';
 import { openai } from '@ai-sdk/openai';
 import { and, eq } from 'drizzle-orm';
 import { McpAgent } from 'agents/mcp';
 import { groq } from '@ai-sdk/groq';
+import { EPrompts } from '../types';
 import { createDb } from '../db';
 import { z } from 'zod';
 
@@ -146,7 +147,10 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
           messages: processedMessages,
           tools,
           onFinish,
-          system: await getPrompt(`${connectionId}-${EPrompts.Chat}`, AiChatPrompt('', '', '')),
+          system: await getPrompt(
+            getPromptName(connectionId, EPrompts.Chat),
+            AiChatPrompt('', '', ''),
+          ),
         });
 
         result.mergeIntoDataStream(dataStream);
@@ -350,6 +354,232 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     },
   ) {
     return this.getDataStreamResponse(onFinish, options);
+  }
+
+  // Mail Manager Methods
+  async listThreads(params: {
+    folder: string;
+    query?: string;
+    maxResults?: number;
+    labelIds?: string[];
+    pageToken?: string;
+  }) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.list(params);
+  }
+
+  async getThread(threadId: string) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.get(threadId);
+  }
+
+  async markThreadsRead(threadIds: string[]) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.modifyLabels(threadIds, {
+      addLabels: [],
+      removeLabels: ['UNREAD'],
+    });
+  }
+
+  async markThreadsUnread(threadIds: string[]) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.modifyLabels(threadIds, {
+      addLabels: ['UNREAD'],
+      removeLabels: [],
+    });
+  }
+
+  async modifyLabels(threadIds: string[], addLabelIds: string[], removeLabelIds: string[]) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.modifyLabels(threadIds, {
+      addLabels: addLabelIds,
+      removeLabels: removeLabelIds,
+    });
+  }
+
+  async getUserLabels() {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return (await this.driver.getUserLabels()).filter((label) => label.type === 'user');
+  }
+
+  async getLabel(id: string) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.getLabel(id);
+  }
+
+  async createLabel(params: {
+    name: string;
+    color?: {
+      backgroundColor: string;
+      textColor: string;
+    };
+  }) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.createLabel(params);
+  }
+
+  async bulkDelete(threadIds: string[]) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.modifyLabels(threadIds, {
+      addLabels: ['TRASH'],
+      removeLabels: ['INBOX'],
+    });
+  }
+
+  async bulkArchive(threadIds: string[]) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.modifyLabels(threadIds, {
+      addLabels: [],
+      removeLabels: ['INBOX'],
+    });
+  }
+
+  async buildGmailSearchQuery(query: string) {
+    const result = await generateText({
+      model: openai('gpt-4o'),
+      system: GmailSearchAssistantSystemPrompt(),
+      prompt: query,
+    });
+    return result.text;
+  }
+
+  async updateLabel(id: string, label: any) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.updateLabel(id, label);
+  }
+
+  async deleteLabel(id: string) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.deleteLabel(id);
+  }
+
+  async createDraft(draftData: any) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.createDraft(draftData);
+  }
+
+  async getDraft(id: string) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.getDraft(id);
+  }
+
+  async listDrafts(params: { q?: string; maxResults?: number; pageToken?: string }) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.listDrafts(params);
+  }
+
+  // Additional mail operations
+  async count() {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.count();
+  }
+
+  async list(params: {
+    folder: string;
+    query?: string;
+    maxResults?: number;
+    labelIds?: string[];
+    pageToken?: string;
+  }) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.list(params);
+  }
+
+  async markAsRead(threadIds: string[]) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.markAsRead(threadIds);
+  }
+
+  async markAsUnread(threadIds: string[]) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.markAsUnread(threadIds);
+  }
+
+  async normalizeIds(ids: string[]) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return this.driver.normalizeIds(ids);
+  }
+
+  async get(id: string) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.get(id);
+  }
+
+  async sendDraft(id: string, data: any) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.sendDraft(id, data);
+  }
+
+  async create(data: any) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.create(data);
+  }
+
+  async delete(id: string) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.delete(id);
+  }
+
+  async deleteAllSpam() {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.deleteAllSpam();
+  }
+
+  async getEmailAliases() {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.getEmailAliases();
   }
 }
 
