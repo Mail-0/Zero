@@ -836,9 +836,7 @@ export const MailList = memo(
     const handleMailClick = useCallback(
       (message: ParsedMessage) => async () => {
         const mode = getSelectMode();
-        console.log("cooking");
-        const autoRead = settingsData?.settings?.autoRead;
-        console.log("COOKED!")
+        const autoRead = settingsData?.settings?.autoRead ?? true;
         console.log('Mail click with mode:', mode);
 
         if (mode !== 'single') {
