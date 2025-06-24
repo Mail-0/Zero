@@ -74,7 +74,7 @@
     "@types/he": "1.2.3",
     "@types/node": "^22.9.0",
     "@types/react": "19.1.6",
-    "@types/sanitize-html": "2.13.0",
+    "@types/sanitize-html": "2.16.0",
     "@zero/eslint-config": "workspace:*",
     "@zero/tsconfig": "workspace:*",
     "drizzle-kit": "catalog:",
