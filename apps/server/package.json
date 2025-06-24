@@ -27,7 +27,7 @@
     "@coinbase/cookie-manager": "1.1.8",
     "@googleapis/gmail": "12.0.0",
     "@googleapis/people": "3.0.9",
-    "@hono/trpc-server": "^0.3.4",
+    "@hono/trpc-server": "^0.4.0",
     "@microsoft/microsoft-graph-client": "^3.0.7",
     "@microsoft/microsoft-graph-types": "^2.40.0",
     "@modelcontextprotocol/sdk": "1.12.0",
