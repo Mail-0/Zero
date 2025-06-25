@@ -16,11 +16,11 @@ import {
 import { Check, Command, Loader, Paperclip, Plus, X as XIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TextEffect } from '@/components/motion-primitives/text-effect';
-import { CurvedArrow, Sparkles, X } from '../icons/icons';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
 import useComposeEditor from '@/hooks/use-compose-editor';
+import { CurvedArrow, Sparkles, X } from '../icons/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Avatar, AvatarFallback } from '../ui/avatar';
@@ -456,6 +456,8 @@ export function EmailComposer({
     if (!values.to.length || !values.subject.length || !messageText.length) return;
     if (aiGeneratedMessage || aiIsLoading || isGeneratingSubject) return;
 
+    console.log('editor.getHTML()', editor.getHTML());
+
     try {
       setIsSavingDraft(true);
       const draftData = {
@@ -587,7 +589,7 @@ export function EmailComposer({
         className,
       )}
     >
-      <div className="no-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto dark:bg-panelDark">
+      <div className="no-scrollbar dark:bg-panelDark flex min-h-0 flex-1 flex-col overflow-y-auto">
         {/* To, Cc, Bcc */}
         <div className="shrink-0 overflow-y-auto border-b border-[#E7E7E7] pb-2 dark:border-[#252525]">
           <div className="flex justify-between px-3 pt-3">
@@ -1126,7 +1128,7 @@ export function EmailComposer({
         </div>
 
         {/* From */}
-        {aliases.length > 0 && (
+        {aliases && aliases.length > 1 ? (
           <div className="flex items-center gap-2 border-b p-3">
             <p className="text-sm font-medium text-[#8C8C8C]">From:</p>
             <Select
@@ -1153,7 +1155,7 @@ export function EmailComposer({
               </SelectContent>
             </Select>
           </div>
-        )}
+        ) : null}
 
         {/* Message Content */}
         <div className="flex-1 overflow-y-auto border-t bg-[#FFFFFF] px-3 py-3 outline-white/5 dark:bg-[#202020]">

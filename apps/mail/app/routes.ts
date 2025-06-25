@@ -27,6 +27,7 @@ export default [
     layout(
       '(routes)/mail/layout.tsx',
       prefix('/mail', [
+        route('/composer-test', '(routes)/mail/composer-test/page.tsx'),
         index('(routes)/mail/page.tsx'),
         route('/create', '(routes)/mail/create/page.tsx'),
         route('/compose', '(routes)/mail/compose/page.tsx'),

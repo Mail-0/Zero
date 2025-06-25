@@ -555,7 +555,7 @@ export class GoogleMailManager implements MailManager {
     return this.withErrorHandler(
       'createDraft',
       async () => {
-        const message = await sanitizeTipTapHtml(data.message);
+        const { html: message, inlineImages } = await sanitizeTipTapHtml(data.message);
         const msg = createMimeMessage();
         msg.setSender('me');
         // name <email@example.com>
@@ -578,6 +578,21 @@ export class GoogleMailManager implements MailManager {
           contentType: 'text/html',
           data: message || '',
         });
+
+        if (inlineImages.length > 0) {
+          for (const image of inlineImages) {
+            msg.addAttachment({
+              inline: true,
+              filename: `${image.cid}`,
+              contentType: image.mimeType,
+              data: image.data,
+              headers: {
+                'Content-ID': `<${image.cid}>`,
+                'Content-Disposition': 'inline',
+              },
+            });
+          }
+        }
 
         if (data.attachments && data.attachments?.length > 0) {
           for (const attachment of data.attachments) {
@@ -1025,16 +1040,33 @@ export class GoogleMailManager implements MailManager {
 
     msg.setSubject(subject);
 
+    const { html: processedMessage, inlineImages } = await sanitizeTipTapHtml(message.trim());
+
     if (originalMessage) {
       msg.addMessage({
         contentType: 'text/html',
-        data: `${await sanitizeTipTapHtml(message.trim())}${originalMessage}`,
+        data: `${processedMessage}${originalMessage}`,
       });
     } else {
       msg.addMessage({
         contentType: 'text/html',
-        data: await sanitizeTipTapHtml(message.trim()),
+        data: processedMessage,
       });
+    }
+
+    if (inlineImages.length > 0) {
+      for (const image of inlineImages) {
+        msg.addAttachment({
+          inline: true,
+          filename: `${image.cid}`,
+          contentType: image.mimeType,
+          data: image.data,
+          headers: {
+            'Content-ID': `<${image.cid}>`,
+            'Content-Disposition': 'inline',
+          },
+        });
+      }
     }
 
     if (headers) {

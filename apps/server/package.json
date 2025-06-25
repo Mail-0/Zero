@@ -75,11 +75,14 @@
     "@types/node": "^22.9.0",
     "@types/react": "19.1.6",
     "@types/sanitize-html": "2.13.0",
+    "@types/uuid": "10.0.0",
     "@zero/eslint-config": "workspace:*",
     "@zero/tsconfig": "workspace:*",
     "drizzle-kit": "catalog:",
     "eslint": "^9.27.0",
     "jiti": "2.4.2",
-    "typescript": "catalog:"
+    "mime-types": "3.0.1",
+    "typescript": "catalog:",
+    "uuid": "11.1.0"
   }
 }
