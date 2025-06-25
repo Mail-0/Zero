@@ -577,7 +577,12 @@ export function NavUser() {
         )}
       </div>
 
-      {state !== 'collapsed' && (
+      <div
+        className={cn(
+          'duration-1500 overflow-hidden transition ease-in-out',
+          state !== 'collapsed' ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0',
+        )}
+      >
         <div className="flex items-center justify-between gap-2">
           <div className="mt-[2px] flex flex-col items-start gap-1 space-y-1">
             <div className="flex items-center gap-1 text-[13px] leading-none text-black dark:text-white">
@@ -600,10 +605,9 @@ export function NavUser() {
               {activeAccount?.email || session.user.email}
             </div>
           </div>
-
           <div className="ml-2">{/* Gauge component removed */}</div>
         </div>
-      )}
+      </div>
 
       <div className="space-y-1">
         {/* <div>

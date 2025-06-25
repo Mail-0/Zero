@@ -217,13 +217,14 @@ export function NavMain({ items }: NavMainProps) {
             <SidebarMenuItem>
               {state !== 'collapsed' ? (
                 section.title ? (
-                  <p className="text-muted-foreground mx-2 mb-2 text-[13px] dark:text-[#898989]">
+                  <p className="text-muted-foreground animate-fade-in mx-2 mb-2 text-[13px] opacity-0 transition-opacity delay-500 duration-300 dark:text-[#898989]">
                     {section.title}
                   </p>
                 ) : null
               ) : (
                 <div className="bg-muted-foreground/50 mx-2 mb-4 mt-2 h-[0.5px] dark:bg-[#262626]" />
               )}
+
               <div className="z-20 space-y-1 pb-2">
                 {section.items.map((item) => (
                   <NavItem
