@@ -98,6 +98,7 @@ export default function HomeContent() {
         >
           Zero is an AI-native email client that manages your inbox, so you don't have to.
         </motion.p>
+        <p className="mb-4 ml-0.5 text-xs text-[#B7B7B7]/60">No credit card required.</p>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
