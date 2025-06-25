@@ -160,9 +160,9 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     return dataStreamResponse;
   }
 
-  private async setupAuth() {
-    if (this.name) {
-      const db = createDb(env.HYPERDRIVE.connectionString);
+  public async setupAuth() {
+    if (this.name && !this.driver) {
+      const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
       const _connection = await db.query.connection.findFirst({
         where: eq(connection.id, this.name),
       });
@@ -170,6 +170,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
         await this.ctx.storage.put('connectionId', _connection.id);
         this.driver = connectionToDriver(_connection);
       }
+      this.ctx.waitUntil(conn.end());
     }
   }
 
@@ -356,7 +357,6 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     return this.getDataStreamResponse(onFinish, options);
   }
 
-  // Mail Manager Methods
   async listThreads(params: {
     folder: string;
     query?: string;
@@ -597,7 +597,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
   }
 
   async init(): Promise<void> {
-    const db = createDb(env.HYPERDRIVE.connectionString);
+    const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
     const _connection = await db.query.connection.findFirst({
       where: eq(connection.userId, this.props.userId),
     });
@@ -1004,6 +1004,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
         }
       },
     );
+    this.ctx.waitUntil(conn.end());
   }
 }
 

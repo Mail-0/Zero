@@ -21,12 +21,12 @@ export const mailRouter = router({
     )
     .query(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       return await agent.getThread(input.id);
     }),
   count: activeDriverProcedure.query(async ({ ctx }) => {
     const { activeConnection } = ctx;
-    const agent = getZeroAgent(activeConnection.id);
+    const agent = await getZeroAgent(activeConnection.id);
     return await agent.count();
   }),
   listThreads: activeDriverProcedure
@@ -41,7 +41,7 @@ export const mailRouter = router({
     .query(async ({ ctx, input }) => {
       const { folder, max, cursor, q } = input;
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
 
       if (folder === FOLDERS.DRAFT) {
         const drafts = await agent.listDrafts({
@@ -67,7 +67,7 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       return agent.markAsRead(input.ids);
     }),
   markAsUnread: activeDriverProcedure
@@ -78,7 +78,7 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       return agent.markAsUnread(input.ids);
     }),
   markAsImportant: activeDriverProcedure
@@ -89,7 +89,7 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       return agent.modifyLabels(input.ids, ['IMPORTANT'], []);
     }),
   modifyLabels: activeDriverProcedure
@@ -102,7 +102,7 @@ export const mailRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       const { threadId, addLabels, removeLabels } = input;
 
       console.log(`Server: updateThreadLabels called for thread ${threadId}`);
@@ -130,7 +130,7 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       const { threadIds } = await agent.normalizeIds(input.ids);
 
       if (!threadIds.length) {
@@ -158,7 +158,11 @@ export const mailRouter = router({
 
       const shouldStar = processedThreads > 0 && !anyStarred;
 
-      await agent.modifyLabels(threadIds, shouldStar ? ['STARRED'] : [], shouldStar ? [] : ['STARRED']);
+      await agent.modifyLabels(
+        threadIds,
+        shouldStar ? ['STARRED'] : [],
+        shouldStar ? [] : ['STARRED'],
+      );
 
       return { success: true };
     }),
@@ -170,7 +174,7 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       const { threadIds } = await agent.normalizeIds(input.ids);
 
       if (!threadIds.length) {
@@ -198,7 +202,11 @@ export const mailRouter = router({
 
       const shouldMarkImportant = processedThreads > 0 && !anyImportant;
 
-      await agent.modifyLabels(threadIds, shouldMarkImportant ? ['IMPORTANT'] : [], shouldMarkImportant ? [] : ['IMPORTANT']);
+      await agent.modifyLabels(
+        threadIds,
+        shouldMarkImportant ? ['IMPORTANT'] : [],
+        shouldMarkImportant ? [] : ['IMPORTANT'],
+      );
 
       return { success: true };
     }),
@@ -210,7 +218,7 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       return agent.modifyLabels(input.ids, ['STARRED'], []);
     }),
   bulkMarkImportant: activeDriverProcedure
@@ -221,7 +229,7 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       return agent.modifyLabels(input.ids, ['IMPORTANT'], []);
     }),
   bulkUnstar: activeDriverProcedure
@@ -232,12 +240,12 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       return agent.modifyLabels(input.ids, [], ['STARRED']);
     }),
   deleteAllSpam: activeDriverProcedure.mutation(async ({ ctx }): Promise<DeleteAllSpamResponse> => {
     const { activeConnection } = ctx;
-    const agent = getZeroAgent(activeConnection.id);
+    const agent = await getZeroAgent(activeConnection.id);
     try {
       return await agent.deleteAllSpam();
     } catch (error) {
@@ -258,7 +266,7 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       return agent.modifyLabels(input.ids, [], ['IMPORTANT']);
     }),
 
@@ -285,7 +293,7 @@ export const mailRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       const { draftId, ...mail } = input;
 
       const afterTask = async () => {
@@ -315,7 +323,7 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       return agent.delete(input.id);
     }),
   bulkDelete: activeDriverProcedure
@@ -326,7 +334,7 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       return agent.modifyLabels(input.ids, ['TRASH'], []);
     }),
   bulkArchive: activeDriverProcedure
@@ -337,7 +345,7 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       return agent.modifyLabels(input.ids, [], ['INBOX']);
     }),
   bulkMute: activeDriverProcedure
@@ -348,12 +356,12 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       return agent.modifyLabels(input.ids, ['MUTE'], []);
     }),
   getEmailAliases: activeDriverProcedure.query(async ({ ctx }) => {
     const { activeConnection } = ctx;
-    const agent = getZeroAgent(activeConnection.id);
+    const agent = await getZeroAgent(activeConnection.id);
     return agent.getEmailAliases();
   }),
 });

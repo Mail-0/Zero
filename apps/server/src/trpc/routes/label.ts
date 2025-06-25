@@ -13,7 +13,7 @@ export const labelsRouter = router({
     )
     .query(async ({ ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       return await agent.getUserLabels();
     }),
   create: activeDriverProcedure
@@ -39,7 +39,7 @@ export const labelsRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       const label = {
         ...input,
         type: 'user',
@@ -68,7 +68,7 @@ export const labelsRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       const { id, ...label } = input;
       return await agent.updateLabel(id, label);
     }),
@@ -82,7 +82,7 @@ export const labelsRouter = router({
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       return await agent.deleteLabel(input.id);
     }),
 });

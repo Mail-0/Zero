@@ -174,7 +174,7 @@ export class RpcDO extends RpcTarget {
 }
 
 class ZeroDB extends DurableObject<Env> {
-  db: DB = createDb(env.HYPERDRIVE.connectionString);
+  db: DB = createDb(env.HYPERDRIVE.connectionString).db;
 
   async setMetaData(userId: string) {
     return new RpcDO(this, userId);
