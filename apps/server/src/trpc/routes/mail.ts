@@ -24,11 +24,20 @@ export const mailRouter = router({
       const agent = await getZeroAgent(activeConnection.id);
       return await agent.getThread(input.id);
     }),
-  count: activeDriverProcedure.query(async ({ ctx }) => {
-    const { activeConnection } = ctx;
-    const agent = await getZeroAgent(activeConnection.id);
-    return await agent.count();
-  }),
+  count: activeDriverProcedure
+    .output(
+      z.array(
+        z.object({
+          count: z.number().optional(),
+          label: z.string().optional(),
+        }),
+      ),
+    )
+    .query(async ({ ctx }) => {
+      const { activeConnection } = ctx;
+      const agent = await getZeroAgent(activeConnection.id);
+      return await agent.count();
+    }),
   listThreads: activeDriverProcedure
     .input(
       z.object({

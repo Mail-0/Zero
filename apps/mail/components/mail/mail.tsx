@@ -388,7 +388,8 @@ export function MailLayout() {
   const prevFolderRef = useRef(folder);
   const { enableScope, disableScope } = useHotkeysContext();
   const { data: activeConnection } = useActiveConnection();
-  const { open, setOpen, activeFilters, clearAllFilters } = useCommandPalette();
+  const { activeFilters, clearAllFilters } = useCommandPalette();
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useQueryState('isCommandPaletteOpen');
 
   const { data: activeAccount } = useActiveConnection();
 
@@ -534,7 +535,7 @@ export function MailLayout() {
                   className={cn(
                     'text-muted-foreground relative flex h-8 w-full select-none items-center justify-start overflow-hidden rounded-lg border bg-white pl-2 text-left text-sm font-normal shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-none dark:bg-[#141414]',
                   )}
-                  onClick={() => setOpen(!open)}
+                  onClick={() => setIsCommandPaletteOpen('true')}
                 >
                   <Search className="fill-[#71717A] dark:fill-[#6F6F6F]" />
 

@@ -11,6 +11,21 @@ export const labelsRouter = router({
         limiter: Ratelimit.slidingWindow(60, '1m'),
       }),
     )
+    .output(
+      z.array(
+        z.object({
+          id: z.string(),
+          name: z.string(),
+          color: z
+            .object({
+              backgroundColor: z.string(),
+              textColor: z.string(),
+            })
+            .optional(),
+          type: z.string(),
+        }),
+      ),
+    )
     .query(async ({ ctx }) => {
       const { activeConnection } = ctx;
       const agent = await getZeroAgent(activeConnection.id);

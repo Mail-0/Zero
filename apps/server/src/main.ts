@@ -42,7 +42,7 @@ import { appRouter } from './trpc';
 import { cors } from 'hono/cors';
 import { Hono } from 'hono';
 
-export class RpcDO extends RpcTarget {
+export class DbRpcDO extends RpcTarget {
   constructor(
     private mainDo: ZeroDB,
     private userId: string,
@@ -177,7 +177,7 @@ class ZeroDB extends DurableObject<Env> {
   db: DB = createDb(env.HYPERDRIVE.connectionString).db;
 
   async setMetaData(userId: string) {
-    return new RpcDO(this, userId);
+    return new DbRpcDO(this, userId);
   }
 
   async findUser(userId: string): Promise<typeof user.$inferSelect | undefined> {

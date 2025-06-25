@@ -260,11 +260,9 @@ export function NavMain({ items }: NavMainProps) {
                 ) : activeAccount?.providerId === 'microsoft' ? null : null}
               </div>
 
-              <SidebarLabels
-                data={data ?? []}
-                activeAccount={activeAccount ?? null}
-                stats={stats}
-              />
+              {activeAccount ? (
+                <SidebarLabels data={data ?? []} activeAccount={activeAccount} stats={stats} />
+              ) : null}
             </SidebarMenuItem>
           </Collapsible>
         )}
