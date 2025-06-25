@@ -127,7 +127,7 @@ export function Navigation() {
                     Company
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-1 lg:w-[600px]">
+                    <ul className="grid w-[300px] gap-3 p-4 md:w-[300px] md:grid-cols-1 lg:w-[400px]">
                       {aboutLinks.map((link) => (
                         <ListItem key={link.title} title={link.title} href={link.href}>
                           {link.description}
