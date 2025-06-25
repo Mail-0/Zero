@@ -36,6 +36,7 @@ import { backgroundQueueAtom } from '@/store/backgroundQueue';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
 import { useMediaQuery } from '../../hooks/use-media-query';
 import { useSearchValue } from '@/hooks/use-search-value';
+import * as CustomIcons from '@/components/icons/icons';
 import { isMac } from '@/lib/hotkeys/use-hotkey-utils';
 import { MailList } from '@/components/mail/mail-list';
 import { useHotkeysContext } from 'react-hotkeys-hook';
@@ -65,8 +66,6 @@ import type { IConnection } from '@/types';
 import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
-import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
-import * as CustomIcons from '@/components/icons/icons';
 
 interface ITag {
   id: string;
@@ -845,7 +844,7 @@ export const Categories = () => {
         icon: (
           <DynamicIcon
             className={cn(
-              'fill-muted-foreground dark:fill-white h-4 w-4',
+              'fill-muted-foreground h-4 w-4 dark:fill-white',
               isSelected && 'fill-white',
             )}
           />
