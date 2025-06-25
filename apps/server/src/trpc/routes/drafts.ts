@@ -1,16 +1,19 @@
 import { activeDriverProcedure, router } from '../trpc';
+import { getZeroAgent } from '../../lib/server-utils';
 import { createDraftData } from '../../lib/schemas';
 import { z } from 'zod';
 
 export const draftsRouter = router({
   create: activeDriverProcedure.input(createDraftData).mutation(async ({ input, ctx }) => {
-    const { driver } = ctx;
-    return driver.createDraft(input);
+    const { activeConnection } = ctx;
+    const agent = getZeroAgent(activeConnection.id);
+    return agent.createDraft(input);
   }),
   get: activeDriverProcedure.input(z.object({ id: z.string() })).query(async ({ input, ctx }) => {
-    const { driver } = ctx;
+    const { activeConnection } = ctx;
+    const agent = getZeroAgent(activeConnection.id);
     const { id } = input;
-    return driver.getDraft(id);
+    return agent.getDraft(id);
   }),
   list: activeDriverProcedure
     .input(
@@ -21,8 +24,9 @@ export const draftsRouter = router({
       }),
     )
     .query(async ({ input, ctx }) => {
-      const { driver } = ctx;
+      const { activeConnection } = ctx;
+      const agent = getZeroAgent(activeConnection.id);
       const { q, max, pageToken } = input;
-      return driver.listDrafts({ q, maxResults: max, pageToken });
+      return agent.listDrafts({ q, maxResults: max, pageToken });
     }),
 });
