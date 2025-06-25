@@ -697,6 +697,7 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
 export const MailList = memo(
   function MailList() {
     const { folder } = useParams<{ folder: string }>();
+    const { data: settingsData } = useSettings();
     const t = useTranslations();
     const [, setThreadId] = useQueryState('threadId');
     const [, setDraftId] = useQueryState('draftId');
@@ -843,6 +844,7 @@ export const MailList = memo(
     const handleMailClick = useCallback(
       (message: ParsedMessage) => async () => {
         const mode = getSelectMode();
+        const autoRead = settingsData?.settings?.autoRead ?? true;
         console.log('Mail click with mode:', mode);
 
         if (mode !== 'single') {
@@ -854,7 +856,7 @@ export const MailList = memo(
         const messageThreadId = message.threadId ?? message.id;
         const clickedIndex = itemsRef.current.findIndex((item) => item.id === messageThreadId);
         setFocusedIndex(clickedIndex);
-        if (message.unread) optimisticMarkAsRead([messageThreadId], true);
+        if (message.unread && autoRead) optimisticMarkAsRead([messageThreadId], true);
         await setThreadId(messageThreadId);
         await setDraftId(null);
         // Don't clear activeReplyId - let ThreadDisplay handle Reply All auto-opening

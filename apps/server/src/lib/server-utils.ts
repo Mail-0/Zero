@@ -10,8 +10,9 @@ export const getZeroDB = (userId: string) => {
   return rpcTarget;
 };
 
-export const getZeroAgent = (connectionId: string) => {
+export const getZeroAgent = async (connectionId: string) => {
   const stub = env.ZERO_AGENT.get(env.ZERO_AGENT.idFromName(connectionId));
+  await stub.setupAuth();
   return stub;
 };
 
@@ -91,7 +92,7 @@ export const notifyUser = async ({
     payload,
   });
 
-  const mailbox = getZeroAgent(connectionId);
+  const mailbox = await getZeroAgent(connectionId);
 
   try {
     console.log(`[notifyUser] Broadcasting message`, {

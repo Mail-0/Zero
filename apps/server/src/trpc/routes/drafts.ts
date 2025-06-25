@@ -6,14 +6,14 @@ import { z } from 'zod';
 export const draftsRouter = router({
   create: activeDriverProcedure.input(createDraftData).mutation(async ({ input, ctx }) => {
     const { activeConnection } = ctx;
-    const agent = getZeroAgent(activeConnection.id);
-    return agent.callDriver('createDraft', input);
+    const agent = await getZeroAgent(activeConnection.id);
+    return agent.createDraft(input);
   }),
   get: activeDriverProcedure.input(z.object({ id: z.string() })).query(async ({ input, ctx }) => {
     const { activeConnection } = ctx;
-    const agent = getZeroAgent(activeConnection.id);
+    const agent = await getZeroAgent(activeConnection.id);
     const { id } = input;
-    return agent.callDriver('getDraft', id);
+    return agent.getDraft(id);
   }),
   list: activeDriverProcedure
     .input(
@@ -25,8 +25,8 @@ export const draftsRouter = router({
     )
     .query(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       const { q, max, pageToken } = input;
-      return agent.callDriver('listDrafts', { q, maxResults: max, pageToken });
+      return agent.listDrafts({ q, maxResults: max, pageToken });
     }),
 });
