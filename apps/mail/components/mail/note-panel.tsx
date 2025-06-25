@@ -371,13 +371,21 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
   };
 
   const confirmDeleteNote = (noteId: string) => {
-    // TODO: Dialog is bugged? needs to be fixed then implement a confirmation dialog
-    const promise = handleDeleteNote(noteId);
-    toast.promise(promise, {
-      loading: t('common.actions.loading'),
-      success: t('common.notes.noteDeleted'),
-      error: t('common.notes.errors.failedToDeleteNote'),
-    });
+    setNoteToDelete(noteId);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (noteToDelete) {
+      const promise = handleDeleteNote(noteToDelete);
+      toast.promise(promise, {
+        loading: t('common.actions.loading'),
+        success: t('common.notes.noteDeleted'),
+        error: t('common.notes.errors.failedToDeleteNote'),
+      });
+      setDeleteConfirmOpen(false);
+      setNoteToDelete(null);
+    }
   };
 
   const handleCopyNote = (content: string) => {
@@ -588,6 +596,36 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
             >
               <ScrollArea className="flex-1 overflow-y-auto">
                 <div className="p-3">
+                  {/* Delete Confirmation Dialog */}
+                  <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+                    <DialogContent className="dark:bg-[#202020] sm:max-w-[425px]" showOverlay={true}>
+                      <DialogHeader>
+                        <DialogTitle className="text-black dark:text-white">
+                          {t('common.notes.confirmDelete')}
+                        </DialogTitle>
+                        <DialogDescription className="text-[#8C8C8C]">
+                          {t('common.notes.confirmDeleteDescription')}
+                        </DialogDescription>
+                      </DialogHeader>
+                      <DialogFooter>
+                        <Button
+                          variant="outline"
+                          onClick={() => setDeleteConfirmOpen(false)}
+                          className="mt-3 border-[#E7E7E7] bg-white text-black sm:mt-0 dark:border-[#252525] dark:bg-[#313131] dark:text-white/90"
+                        >
+                          {t('common.notes.cancel')}
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          onClick={() => void handleConfirmDelete()}
+                          className="mt-3 sm:mt-0"
+                        >
+                          {t('common.notes.delete')}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+
                   {notes.length === 0 && !isAddingNewNote ? (
                     <div className="flex flex-col items-center justify-center py-8 text-center">
                       <StickyNote className="mb-2 h-12 w-12 text-[#8C8C8C] opacity-50" />

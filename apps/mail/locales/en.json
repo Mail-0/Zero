@@ -236,6 +236,8 @@
       "otherNotes": "Other notes",
       "created": "Created",
       "updated": "Updated",
+      "confirmDelete": "Delete Note",
+      "confirmDeleteDescription": "Are you sure you want to delete this note? This action cannot be undone.",
       "errors": {
         "failedToLoadNotes": "Failed to load notes",
         "failedToLoadThreadNotes": "Failed to load thread notes",
