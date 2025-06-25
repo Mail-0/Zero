@@ -17,6 +17,7 @@ import {
   Sheet,
   Plane2,
   LockIcon,
+  Clock,
 } from '@/components/icons/icons';
 import type { NestedKeyOf, MessageKeys } from 'use-intl';
 import type { IntlMessages } from '@/i18n/config';
@@ -87,6 +88,13 @@ export const navigationConfig: Record<string, NavConfig> = {
             url: '/mail/archive',
             icon: Archive,
             shortcut: 'g + a',
+          },
+          {
+            id: 'snoozed',
+            title: 'navigation.sidebar.snoozed',
+            url: '/mail/snoozed',
+            icon: Clock,
+            shortcut: 'g + z',
           },
           {
             id: 'spam',

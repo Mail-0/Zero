@@ -51,12 +51,54 @@ export const mailRouter = router({
         });
         return drafts;
       }
-      const threadsResponse = await agent.list({
+      type ThreadItem = { id: string; historyId: string | null; $raw?: unknown };
+
+      const threadsResponse: {
+        threads: ThreadItem[];
+        nextPageToken: string | null;
+      } = await agent.list({
         folder,
         query: q,
         maxResults: max,
         pageToken: cursor,
       });
+
+      if (folder === FOLDERS.SNOOZED) {
+        const nowTs = Date.now();
+        const filtered: ThreadItem[] = [];
+
+        await Promise.all(
+          threadsResponse.threads.map(async (t) => {
+            const keyName = `${t.id}__${activeConnection.id}`;
+            try {
+              const wakeAtIso = await (env as any).snoozed_emails.get(keyName);
+              if (!wakeAtIso) {
+                filtered.push(t);
+                return;
+              }
+
+              const wakeAt = new Date(wakeAtIso).getTime();
+              if (wakeAt > nowTs) {
+                filtered.push(t);
+                return;
+              }
+
+              console.log('[UNSNOOZE_ON_ACCESS] Expired thread', t.id, {
+                wakeAtIso,
+                now: new Date(nowTs).toISOString(),
+              });
+
+              await agent.modifyLabels([t.id], ['INBOX'], ['SNOOZED']);
+              await (env as any).snoozed_emails.delete(keyName);
+            } catch (error) {
+              console.error('[UNSNOOZE_ON_ACCESS] Failed for', t.id, error);
+              filtered.push(t);
+            }
+          }),
+        );
+
+        threadsResponse.threads = filtered;
+      }
       return threadsResponse;
     }),
   markAsRead: activeDriverProcedure
@@ -356,4 +398,49 @@ export const mailRouter = router({
     const agent = getZeroAgent(activeConnection.id);
     return agent.getEmailAliases();
   }),
+  snoozeThreads: activeDriverProcedure
+    .input(
+      z.object({
+        ids: z.string().array(),
+        wakeAt: z.string(), // ISO string
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { activeConnection } = ctx;
+      const agent = getZeroAgent(activeConnection.id);
+
+      if (!input.ids.length) {
+        return { success: false, error: 'No thread IDs provided' };
+      }
+
+      // Apply labels
+      await agent.modifyLabels(input.ids, ['SNOOZED'], ['INBOX']);
+
+      // Persist wake time in KV for each thread
+      const wakeAtIso = new Date(input.wakeAt).toISOString();
+      await Promise.all(
+        input.ids.map((threadId) =>
+          (env as any).snoozed_emails.put(`${threadId}__${activeConnection.id}`, wakeAtIso),
+        ),
+      );
+
+      return { success: true };
+    }),
+  unsnoozeThreads: activeDriverProcedure
+    .input(
+      z.object({
+        ids: z.string().array(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { activeConnection } = ctx;
+      const agent = getZeroAgent(activeConnection.id);
+      if (!input.ids.length) return { success: false, error: 'No thread IDs' };
+      await agent.modifyLabels(input.ids, ['INBOX'], ['SNOOZED']);
+
+      await Promise.all(
+        input.ids.map((threadId) => (env as any).snoozed_emails.delete(`${threadId}__${activeConnection.id}`)),
+      );
+      return { success: true };
+    }),
 });

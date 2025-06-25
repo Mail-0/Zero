@@ -32,6 +32,8 @@ export function useOptimisticActions() {
   const { mutateAsync: bulkArchive } = useMutation(trpc.mail.bulkArchive.mutationOptions());
   const { mutateAsync: bulkStar } = useMutation(trpc.mail.bulkStar.mutationOptions());
   const { mutateAsync: bulkDeleteThread } = useMutation(trpc.mail.bulkDelete.mutationOptions());
+  const { mutateAsync: snoozeThreads } = useMutation(trpc.mail.snoozeThreads.mutationOptions());
+  const { mutateAsync: unsnoozeThreads } = useMutation(trpc.mail.unsnoozeThreads.mutationOptions());
 
   const generatePendingActionId = () =>
     `pending_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -65,7 +67,7 @@ export function useOptimisticActions() {
     toastMessage,
     folders,
   }: {
-    type: 'MOVE' | 'STAR' | 'READ' | 'LABEL' | 'IMPORTANT';
+    type: 'MOVE' | 'STAR' | 'READ' | 'LABEL' | 'IMPORTANT' | 'SNOOZE' | 'UNSNOOZE';
     threadIds: string[];
     params: any;
     optimisticId: string;
@@ -376,6 +378,58 @@ export function useOptimisticActions() {
     });
   }
 
+  function optimisticSnooze(threadIds: string[], currentFolder: string, wakeAt: Date) {
+    if (!threadIds.length) return;
+
+    const optimisticId = addOptimisticAction({
+      type: 'SNOOZE',
+      threadIds,
+      wakeAt: wakeAt.toISOString(),
+    });
+
+    createPendingAction({
+      type: 'SNOOZE',
+      threadIds,
+      params: { currentFolder, wakeAt: wakeAt.toISOString() },
+      optimisticId,
+      execute: async () => {
+        await snoozeThreads({ ids: threadIds, wakeAt: wakeAt.toISOString() });
+        if (mail.bulkSelected.length > 0) {
+          setMail({ ...mail, bulkSelected: [] });
+        }
+      },
+      undo: () => {
+        removeOptimisticAction(optimisticId);
+      },
+      toastMessage: `Snoozed until ${wakeAt.toLocaleString()}`,
+      folders: [currentFolder, 'snoozed'],
+    });
+  }
+
+  function optimisticUnsnooze(threadIds: string[], currentFolder: string) {
+    if (!threadIds.length) return;
+
+    const optimisticId = addOptimisticAction({
+      type: 'UNSNOOZE',
+      threadIds,
+    });
+
+    createPendingAction({
+      type: 'UNSNOOZE',
+      threadIds,
+      params: { currentFolder },
+      optimisticId,
+      execute: async () => {
+        await unsnoozeThreads({ ids: threadIds });
+      },
+      undo: () => {
+        removeOptimisticAction(optimisticId);
+      },
+      toastMessage: 'Moved to Inbox',
+      folders: [currentFolder, 'inbox'],
+    });
+  }
+
   function undoLastAction() {
     if (!optimisticActionsManager.lastActionId) return;
 
@@ -405,6 +459,8 @@ export function useOptimisticActions() {
     optimisticMoveThreadsTo,
     optimisticDeleteThreads,
     optimisticToggleImportant,
+    optimisticSnooze,
+    optimisticUnsnooze,
     undoLastAction,
   };
 }

@@ -26,10 +26,10 @@ import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-st
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { type ThreadDestination } from '@/lib/thread-actions';
 import { useThread, useThreads } from '@/hooks/use-threads';
-import { ExclamationCircle, Mail } from '../icons/icons';
+import { ExclamationCircle, Mail, Clock } from '../icons/icons';
 import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
-import { useMemo, type ReactNode } from 'react';
+import { useMemo, type ReactNode, useState } from 'react';
 import { useLabels } from '@/hooks/use-labels';
 import { FOLDERS, LABELS } from '@/lib/utils';
 import { useMail } from '../mail/use-mail';
@@ -38,6 +38,7 @@ import { Checkbox } from '../ui/checkbox';
 import { useParams } from 'react-router';
 import { useQueryState } from 'nuqs';
 import { toast } from 'sonner';
+import { SnoozeDialog } from '@/components/mail/snooze-dialog';
 
 interface EmailAction {
   id: string;
@@ -68,6 +69,8 @@ const LabelsList = ({ threadId }: { threadId: string }) => {
 
   if (!labels || !thread) return null;
 
+  const labelArr = labels as unknown as any[];
+
   const handleToggleLabel = async (labelId: string) => {
     if (!labelId) return;
     const hasLabel = thread.labels?.map((label) => label.id).includes(labelId);
@@ -86,22 +89,22 @@ const LabelsList = ({ threadId }: { threadId: string }) => {
 
   return (
     <>
-      {labels
-        .filter((label) => label.id)
-        .map((label) => (
+      {labelArr
+        .filter((lbl: any) => lbl.id)
+        .map((lbl: any) => (
           <ContextMenuItem
-            key={label.id}
-            onClick={() => label.id && handleToggleLabel(label.id)}
+            key={lbl.id}
+            onClick={() => lbl.id && handleToggleLabel(lbl.id)}
             className="font-normal"
           >
             <div className="flex items-center">
               <Checkbox
                 checked={
-                  label.id ? thread.labels?.map((label) => label.id).includes(label.id) : false
+                  lbl.id ? thread.labels?.map((l) => l.id).includes(lbl.id) : false
                 }
                 className="mr-2 h-4 w-4"
               />
-              {label.name}
+              {lbl.name}
             </div>
           </ContextMenuItem>
         ))}
@@ -122,6 +125,7 @@ export function ThreadContextMenu({
   const [{ isLoading, isFetching }] = useThreads();
   const currentFolder = folder ?? '';
   const isArchiveFolder = currentFolder === FOLDERS.ARCHIVE;
+  const isSnoozedFolder = currentFolder === FOLDERS.SNOOZED;
   const t = useTranslations();
   const [, setMode] = useQueryState('mode');
   const [, setThreadId] = useQueryState('threadId');
@@ -197,6 +201,8 @@ export function ThreadContextMenu({
   };
 
   const { optimisticToggleImportant } = useOptimisticActions();
+  const { optimisticSnooze } = useOptimisticActions();
+  const { optimisticUnsnooze } = useOptimisticActions();
 
   const handleToggleImportant = () => {
     const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
@@ -332,6 +338,31 @@ export function ThreadContextMenu({
       ];
     }
 
+    if (isSnoozedFolder) {
+      return [
+        {
+          id: 'unsnooze',
+          label: 'Unsnooze',
+          icon: <Inbox className="mr-2.5 h-4 w-4 opacity-60" />,
+          action: () => {
+            const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
+            optimisticUnsnooze(targets, currentFolder);
+            if (mail.bulkSelected.length) {
+              setMail({ ...mail, bulkSelected: [] });
+            }
+          },
+          disabled: false,
+        },
+        {
+          id: 'move-to-bin',
+          label: t('common.mail.moveToBin'),
+          icon: <Trash className="mr-2.5 h-4 w-4 opacity-60" />,
+          action: handleMove(LABELS.SNOOZED, LABELS.TRASH),
+          disabled: false,
+        },
+      ];
+    }
+
     if (isArchiveFolder || !isInbox) {
       return [
         {
@@ -395,6 +426,14 @@ export function ThreadContextMenu({
     ];
   };
 
+  const [snoozeOpen, setSnoozeOpen] = useState(false);
+
+  const handleSnoozeConfirm = (wakeAt: Date) => {
+    const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
+    optimisticSnooze(targets, currentFolder, wakeAt);
+    setSnoozeOpen(false);
+  };
+
   const otherActions: EmailAction[] = [
     {
       id: 'toggle-read',
@@ -423,6 +462,13 @@ export function ThreadContextMenu({
       ),
       action: handleFavorites,
     },
+    {
+      id: 'snooze',
+      label: 'Snooze',
+      icon: <Clock className="mr-2.5 h-4 w-4 opacity-60" />,
+      action: () => setSnoozeOpen(true),
+      disabled: false,
+    },
   ];
 
   const renderAction = (action: EmailAction) => {
@@ -441,36 +487,39 @@ export function ThreadContextMenu({
   };
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger disabled={isLoading || isFetching} className="w-full">
-        {children}
-      </ContextMenuTrigger>
-      <ContextMenuContent
-        className="dark:bg-panelDark w-56 overflow-y-auto bg-white "
-        onContextMenu={(e) => e.preventDefault()}
-      >
-        {primaryActions.map(renderAction)}
+    <>
+      <ContextMenu>
+        <ContextMenuTrigger disabled={isLoading || isFetching} className="w-full">
+          {children}
+        </ContextMenuTrigger>
+        <ContextMenuContent
+          className="dark:bg-panelDark w-56 overflow-y-auto bg-white "
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          {primaryActions.map(renderAction)}
 
-        <ContextMenuSeparator className="bg-[#E7E7E7] dark:bg-[#252525]" />
+          <ContextMenuSeparator className="bg-[#E7E7E7] dark:bg-[#252525]" />
 
-        <ContextMenuSub>
-          <ContextMenuSubTrigger className="font-normal">
-            <Tag className="mr-2.5 h-4 w-4 opacity-60" />
-            {t('common.mail.labels')}
-          </ContextMenuSubTrigger>
-          <ContextMenuSubContent className="dark:bg-panelDark max-h-[520px] w-48 overflow-y-auto bg-white">
-            <LabelsList threadId={threadId} />
-          </ContextMenuSubContent>
-        </ContextMenuSub>
+          <ContextMenuSub>
+            <ContextMenuSubTrigger className="font-normal">
+              <Tag className="mr-2.5 h-4 w-4 opacity-60" />
+              {t('common.mail.labels')}
+            </ContextMenuSubTrigger>
+            <ContextMenuSubContent className="dark:bg-panelDark max-h-[520px] w-48 overflow-y-auto bg-white">
+              <LabelsList threadId={threadId} />
+            </ContextMenuSubContent>
+          </ContextMenuSub>
 
-        <ContextMenuSeparator className="bg-[#E7E7E7] dark:bg-[#252525]" />
+          <ContextMenuSeparator className="bg-[#E7E7E7] dark:bg-[#252525]" />
 
-        {getActions().map(renderAction as any)}
+          {getActions().map(renderAction as any)}
 
-        <ContextMenuSeparator className="bg-[#E7E7E7] dark:bg-[#252525]" />
+          <ContextMenuSeparator className="bg-[#E7E7E7] dark:bg-[#252525]" />
 
-        {otherActions.map(renderAction)}
-      </ContextMenuContent>
-    </ContextMenu>
+          {otherActions.map(renderAction)}
+        </ContextMenuContent>
+      </ContextMenu>
+      <SnoozeDialog open={snoozeOpen} onOpenChange={setSnoozeOpen} onConfirm={handleSnoozeConfirm} />
+    </>
   );
 }

@@ -26,6 +26,27 @@ export class GoogleMailManager implements MailManager {
   private auth;
   private gmail;
 
+  // Cache for custom/user label IDs resolved at runtime.
+  private labelIdCache: Record<string, string> = {};
+
+  // Gmail system labels that can be passed as-is.
+  private readonly systemLabelIds = new Set<string>([
+    'INBOX',
+    'TRASH',
+    'SPAM',
+    'DRAFT',
+    'SENT',
+    'STARRED',
+    'UNREAD',
+    'IMPORTANT',
+    'CATEGORY_PERSONAL',
+    'CATEGORY_SOCIAL',
+    'CATEGORY_UPDATES',
+    'CATEGORY_FORUMS',
+    'CATEGORY_PROMOTIONS',
+    'MUTED',
+  ]);
+
   constructor(public config: ManagerConfig) {
     this.auth = new OAuth2Client(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET);
 
@@ -432,16 +453,29 @@ export class GoogleMailManager implements MailManager {
       { ids },
     );
   }
+  // Backward-compatible signature: modifyLabels(ids, addLabels, removeLabels)
   public modifyLabels(
     threadIds: string[],
-    options: { addLabels: string[]; removeLabels: string[] },
+    addOrOptions: { addLabels: string[]; removeLabels: string[] } | string[],
+    maybeRemove?: string[],
   ) {
+    // Detect old positional form
+    const options = Array.isArray(addOrOptions)
+      ? { addLabels: addOrOptions as string[], removeLabels: maybeRemove ?? [] }
+      : addOrOptions;
     return this.withErrorHandler(
       'modifyLabels',
       async () => {
+        const addLabelIds = await Promise.all(
+          (options.addLabels || []).map((lbl) => this.resolveLabelId(lbl)),
+        );
+        const removeLabelIds = await Promise.all(
+          (options.removeLabels || []).map((lbl) => this.resolveLabelId(lbl)),
+        );
+
         await this.modifyThreadLabels(threadIds, {
-          addLabelIds: options.addLabels,
-          removeLabelIds: options.removeLabels,
+          addLabelIds,
+          removeLabelIds,
         });
       },
       { threadIds, options },
@@ -815,7 +849,11 @@ export class GoogleMailManager implements MailManager {
     const failures = allResults.filter((result) => result.status === 'rejected');
     if (failures.length > 0) {
       const failureReasons = failures.map((f) => ({ threadId: f.threadId, reason: f.reason }));
-      failureReasons;
+      // Surface the first error so the caller knows something went wrong.
+      const first = failureReasons[0];
+      throw new Error(
+        `Failed to modify labels for thread ${first.threadId}: ${JSON.stringify(first.reason)}`,
+      );
     }
   }
   private normalizeSearch(folder: string, q: string) {
@@ -830,6 +868,11 @@ export class GoogleMailManager implements MailManager {
       }
       if (folder === 'draft') {
         return { folder: undefined, q: `is:draft AND (${q})` };
+      }
+
+      // Handle snoozed folder using the custom "Snoozed" user label.
+      if (folder === 'snoozed') {
+        return { folder: undefined, q: `label:Snoozed AND (${q})` };
       }
 
       return { folder, q: folder.trim().length ? `in:${folder} ${q}` : q };
@@ -1192,5 +1235,51 @@ export class GoogleMailManager implements MailManager {
     }
 
     return results;
+  }
+
+  /**
+   * Resolve a human label name (e.g. "SNOOZED") to a Gmail label ID.
+   * If the label is a system label it is returned unchanged.
+   * For custom labels we first try a cached id, then fetch the user's labels to
+   * find a match (case-insensitive). If still not found we create the label and
+   * return the newly created id.
+   */
+  private async resolveLabelId(labelName: string): Promise<string> {
+    // System labels are accepted verbatim by Gmail.
+    if (this.systemLabelIds.has(labelName)) {
+      return labelName;
+    }
+
+    // Use cache when available.
+    if (this.labelIdCache[labelName]) {
+      return this.labelIdCache[labelName];
+    }
+
+    // Fetch existing user labels.
+    const userLabels = await this.getUserLabels();
+    const existing = userLabels.find(
+      (l) => l.name?.toLowerCase() === labelName.toLowerCase(),
+    );
+    if (existing && existing.id) {
+      this.labelIdCache[labelName] = existing.id;
+      return existing.id;
+    }
+
+    // Create a new user label. We prettify the name for Gmail UI but keep the
+    // original mapping in cache so repeated calls reuse the same id.
+    const prettifiedName = labelName.charAt(0).toUpperCase() + labelName.slice(1).toLowerCase();
+    await this.createLabel({ name: prettifiedName });
+
+    // Fetch again to obtain id of the newly created label.
+    const refreshedLabels = await this.getUserLabels();
+    const created = refreshedLabels.find(
+      (l) => l.name?.toLowerCase() === prettifiedName.toLowerCase(),
+    );
+    if (!created || !created.id) {
+      throw new Error(`Failed to create or retrieve Gmail label '${labelName}'.`);
+    }
+
+    this.labelIdCache[labelName] = created.id;
+    return created.id;
   }
 }
