@@ -121,6 +121,7 @@ export const userSettingsSchema = z.object({
   zeroSignature: z.boolean().default(true),
   categories: categoriesSchema.optional(),
   defaultEmailAlias: z.string().optional(),
+  undoSendEnabled: z.boolean().default(false),
 });
 
 export type UserSettings = z.infer<typeof userSettingsSchema>;
@@ -137,4 +138,5 @@ export const defaultUserSettings: UserSettings = {
   zeroSignature: true,
   defaultEmailAlias: '',
   categories: defaultMailCategories,
+  undoSendEnabled: false,
 };

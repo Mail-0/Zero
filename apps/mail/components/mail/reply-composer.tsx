@@ -216,22 +216,28 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
       await refetch();
       toast.success(t('pages.createEmail.emailSent'));
 
-      if ((result as any)?.queued && (result as any)?.messageId) {
+      if ((result as any)?.queued && (result as any)?.messageId && settings?.settings?.undoSendEnabled) {
         const messageId = (result as any).messageId as string;
-        toast.success('Email scheduled', {
-          action: {
-            label: 'Undo',
-            onClick: async () => {
-              try {
-                await unsendEmail({ messageId });
-                toast.info('Send cancelled');
-              } catch (error) {
-                toast.error('Failed to cancel');
-              }
+        const sendAt = (result as any)?.sendAt;
+        
+        const timeRemaining = sendAt ? sendAt - Date.now() : 30000;
+        
+        if (timeRemaining > 5000) {
+          toast.success('Email scheduled', {
+            action: {
+              label: 'Undo',
+              onClick: async () => {
+                try {
+                  await unsendEmail({ messageId });
+                  toast.info('Send cancelled');
+                } catch (error) {
+                  toast.error('Failed to cancel');
+                }
+              },
             },
-          },
-          duration: 30000,
-        });
+            duration: Math.min(timeRemaining, 30000),
+          });
+        }
       }
     } catch (error) {
       console.error('Error sending email:', error);

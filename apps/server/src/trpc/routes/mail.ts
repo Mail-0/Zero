@@ -3,7 +3,7 @@ import { updateWritingStyleMatrix } from '../../services/writing-style-service';
 import { serializedFileSchema } from '../../lib/schemas';
 import { defaultPageSize, FOLDERS, LABELS } from '../../lib/utils';
 import type { DeleteAllSpamResponse, IEmailSendBatch } from '../../types';
-import { getZeroAgent } from '../../lib/server-utils';
+import { getZeroAgent, getZeroDB } from '../../lib/server-utils';
 import { env } from 'cloudflare:workers';
 import { z } from 'zod';
 import { toAttachmentFiles } from '../../lib/attachments';
@@ -302,7 +302,7 @@ export const mailRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { activeConnection } = ctx;
+      const { activeConnection, sessionUser } = ctx;
       const agent = getZeroAgent(activeConnection.id);
 
       const {
@@ -312,9 +312,11 @@ export const mailRouter = router({
         ...mail
       } = input as typeof input & { scheduleAt?: string };
 
-      // Always go through the scheduling flow so the 30-second undo window works even when attachments are present.
-      // The actual delay is 30 s when no custom scheduleAt is provided.
-      const shouldSchedule = true;
+      const db = getZeroDB(sessionUser.id);
+      const userSettings = await db.findUserSettings();
+      const undoSendEnabled = userSettings?.settings?.undoSendEnabled ?? false;
+
+      const shouldSchedule = !!scheduleAt || undoSendEnabled;
 
       const afterTask = async () => {
         try {
@@ -378,7 +380,7 @@ export const mailRouter = router({
 
         ctx.c.executionCtx.waitUntil(afterTask());
 
-        return { success: true, queued: true, messageId };
+        return { success: true, queued: true, messageId, sendAt: targetTime };
       }
 
       const mailWithAttachments = {

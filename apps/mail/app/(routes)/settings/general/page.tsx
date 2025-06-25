@@ -311,6 +311,23 @@ export default function GeneralPage() {
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="undoSendEnabled"
+              render={({ field }) => (
+                <FormItem className="flex max-w-xl flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <FormLabel>{t('pages.settings.general.undoSendEnabled')}</FormLabel>
+                    <FormDescription>
+                      {t('pages.settings.general.undoSendEnabledDescription')}
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
 
           </form>
         </Form>
