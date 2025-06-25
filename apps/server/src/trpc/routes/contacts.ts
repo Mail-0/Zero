@@ -2,6 +2,7 @@ import { activeDriverProcedure, router } from '../trpc';
 import { z } from 'zod';
 import { redis } from '../../lib/services';
 import type { MailManager } from '../../lib/driver/types';
+import { connectionToDriver } from '../../lib/server-utils';
 
 interface ContactInfo {
   email: string;
@@ -39,6 +40,29 @@ const serializeContactData = (data: CachedContactData): string => {
 const deserializeContactData = (data: string): CachedContactData | null => {
   try {
     const parsed = JSON.parse(data);
+    
+    // Validate the parsed structure
+    if (!parsed || typeof parsed !== 'object') {
+      console.error('Deserialized contact data is not an object');
+      return null;
+    }
+    
+    // Check if required properties exist
+    if (!Array.isArray(parsed.contacts)) {
+      console.error('Deserialized contact data does not have valid contacts array');
+      return null;
+    }
+    
+    if (!parsed.timestamp || typeof parsed.timestamp !== 'number') {
+      console.error('Deserialized contact data does not have valid timestamp');
+      return null;
+    }
+    
+    if (!parsed.userEmail || typeof parsed.userEmail !== 'string') {
+      console.error('Deserialized contact data does not have valid userEmail');
+      return null;
+    }
+    
     return {
       ...parsed,
       contacts: parsed.contacts.map((contact: any) => ({
@@ -61,7 +85,8 @@ export const contactsRouter = router({
       }),
     )
     .query(async ({ input, ctx }) => {
-      const { driver, activeConnection } = ctx;
+      const { activeConnection } = ctx;
+      const driver = connectionToDriver(activeConnection);
       const { query, limit } = input;
 
       try {
@@ -142,7 +167,8 @@ export const contactsRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const { driver, activeConnection } = ctx;
+      const { activeConnection } = ctx;
+      const driver = connectionToDriver(activeConnection);
       const { limit } = input;
 
       try {
@@ -155,7 +181,8 @@ export const contactsRouter = router({
         if (cachedData && typeof cachedData === 'string') {
           const parsedData = deserializeContactData(cachedData);
           if (parsedData) {
-            return parsedData.contacts.slice(0, limit);
+            const result = parsedData.contacts.slice(0, limit);
+            return result;
           }
         }
         

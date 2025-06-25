@@ -67,7 +67,6 @@ export const ContactAutocomplete = forwardRef<HTMLInputElement, ContactAutocompl
     const isInteractingWithDropdownRef = useRef(false);
     
     const { suggestions, isLoading } = useContactSuggestions(inputValue, true); // Always fetch when there's input
-
     // Handle ref forwarding
     useEffect(() => {
       if (ref && 'current' in ref && inputRef.current) {
@@ -338,6 +337,17 @@ export const ContactAutocomplete = forwardRef<HTMLInputElement, ContactAutocompl
             placeholder={value.length === 0 ? placeholder : ''}
             className="h-6 w-full bg-transparent text-sm font-normal leading-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white"
             disabled={disabled}
+            aria-controls={shouldShowDropdown ? "contact-suggestions-dropdown" : undefined}
+            aria-expanded={open}
+            aria-autocomplete="list"
+            aria-activedescendant={focusedIndex >= 0 ? 
+              (focusedIndex < suggestions.length ? `contact-suggestion-${focusedIndex}` : "contact-suggestion-add-new") 
+              : undefined}
+            role="combobox"
+            aria-label={`${type === 'to' ? 'To' : type === 'cc' ? 'CC' : 'BCC'} recipient email address`}
+            aria-required="false"
+            aria-invalid={inputValue.length > 0 && !isValidEmail(inputValue)}
+            aria-describedby="email-format-description"
           />
         </div>
         
@@ -353,6 +363,9 @@ export const ContactAutocomplete = forwardRef<HTMLInputElement, ContactAutocompl
               maxWidth: 400,
               pointerEvents: 'auto',
             }}
+            role="listbox"
+            aria-label="Contact suggestions"
+            aria-expanded={open}
             onMouseEnter={() => {
               isInteractingWithDropdownRef.current = true;
             }}
@@ -427,6 +440,9 @@ export const ContactAutocomplete = forwardRef<HTMLInputElement, ContactAutocompl
                         "flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700",
                         focusedIndex === index && "bg-blue-50 dark:bg-blue-900/20"
                       )}
+                      role="option"
+                      aria-selected={focusedIndex === index}
+                      id={`contact-suggestion-${index}`}
                     >
                       <Avatar className="h-8 w-8">
                         {contact.picture && <AvatarImage src={contact.picture} />}
@@ -460,6 +476,9 @@ export const ContactAutocomplete = forwardRef<HTMLInputElement, ContactAutocompl
                         e.stopPropagation();
                       }}
                       className="flex cursor-pointer items-center gap-3 border-t border-gray-100 px-4 py-3 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700"
+                      role="option"
+                      aria-selected={focusedIndex === suggestions.length}
+                      id="contact-suggestion-add-new"
                     >
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
                         <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
