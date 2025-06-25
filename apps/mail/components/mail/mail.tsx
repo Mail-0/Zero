@@ -25,9 +25,9 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useActiveConnection, useConnections } from '@/hooks/use-connections';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCommandPalette } from '../context/command-palette-context';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { ThreadDisplay } from '@/components/mail/thread-display';
@@ -61,10 +61,10 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useStats } from '@/hooks/use-stats';
 import { useTranslations } from 'use-intl';
+import type { IConnection } from '@/types';
 import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
-import type { IConnection } from '@/types';
 
 interface ITag {
   id: string;
@@ -390,10 +390,7 @@ export function MailLayout() {
   const { data: activeConnection } = useActiveConnection();
   const { open, setOpen, activeFilters, clearAllFilters } = useCommandPalette();
 
-  const activeAccount = useMemo(() => {
-    if (!activeConnection?.id || !connections?.connections) return null;
-    return connections.connections.find((connection: IConnection) => connection.id === activeConnection?.id);
-  }, [activeConnection?.id, connections?.connections]);
+  const { data: activeAccount } = useActiveConnection();
 
   useEffect(() => {
     if (prevFolderRef.current !== folder && mail.bulkSelected.length > 0) {
@@ -823,10 +820,10 @@ function BulkSelectActions() {
 
 export const Categories = () => {
   const t = useTranslations();
-  const defaultCategoryIdInner = useDefaultCategoryId()
+  const defaultCategoryIdInner = useDefaultCategoryId();
   const categorySettings = useCategorySettings();
-  const [activeCategory] = useQueryState('category',{
-     defaultValue: defaultCategoryIdInner,
+  const [activeCategory] = useQueryState('category', {
+    defaultValue: defaultCategoryIdInner,
   });
 
   const categories = categorySettings.map((cat) => {
