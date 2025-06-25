@@ -222,10 +222,10 @@ const useComposeEditor = ({
     editable: !isReadOnly,
     autofocus: autofocus ? 'end' : false,
     onCreate: ({ editor }) => {
-      if (onLengthChange) {
-        const content = editor.getText();
-        void onLengthChange(content.length);
-      }
+      //   if (onLengthChange) {
+      //     const content = editor.getText();
+      //     void onLengthChange(content.length);
+      //   }
       if (autofocus) {
         setTimeout(() => {
           editor.commands.focus('end');

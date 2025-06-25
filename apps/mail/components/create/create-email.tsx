@@ -63,12 +63,12 @@ export function CreateEmail({
     error: draftError,
   } = useDraft(draftId ?? propDraftId ?? null);
   const t = useTranslations();
-  const navigate = useNavigate();
-  const { enableScope, disableScope } = useHotkeysContext();
-  const [isDraftFailed, setIsDraftFailed] = useState(false);
+  const [, setIsDraftFailed] = useState(false);
   const trpc = useTRPC();
   const { mutateAsync: sendEmail } = useMutation(trpc.mail.send.mutationOptions());
   const [isComposeOpen, setIsComposeOpen] = useQueryState('isComposeOpen');
+  const [, setThreadId] = useQueryState('threadId');
+  const [, setActiveReplyId] = useQueryState('activeReplyId');
   const { data: activeConnection } = useActiveConnection();
   const { data: settings, isLoading: settingsLoading } = useSettings();
   // If there was an error loading the draft, set the failed state
@@ -80,16 +80,7 @@ export function CreateEmail({
     }
   }, [draftError]);
 
-  const activeAccount = useMemo(() => {
-    if (!session) return null;
-    if (!connections) return null;
-
-    // Properly access the connections array from the data structure
-    const connectionsList = connections.connections as Connection[];
-    if (!connectionsList || !Array.isArray(connectionsList)) return null;
-
-    return connectionsList.find((connection) => connection.id === activeConnection?.id);
-  }, [session, connections, activeConnection]);
+  const { data: activeAccount } = useActiveConnection();
 
   const userEmail = activeAccount?.email || activeConnection?.email || session?.user?.email || '';
   const userName = activeAccount?.name || activeConnection?.name || session?.user?.name || '';
@@ -199,8 +190,14 @@ export function CreateEmail({
                 typedDraft?.bcc?.map((e: string) => e.replace(/[<>]/g, '')) ||
                 processInitialEmails(initialBcc)
               }
+              onClose={() => {
+                setThreadId(null);
+                setActiveReplyId(null);
+                setIsComposeOpen(null);
+                setDraftId(null);
+              }}
               initialSubject={typedDraft?.subject || initialSubject}
-              autofocus={true}
+              autofocus={false}
               settingsLoading={settingsLoading}
             />
           )}

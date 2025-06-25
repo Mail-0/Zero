@@ -14,11 +14,10 @@ const closeView = (event: KeyboardEvent) => {
 
 export function ThreadDisplayHotkeys() {
   const scope = 'thread-display';
-  const [mode, setMode] = useQueryState('mode');
-  const [activeReplyId, setActiveReplyId] = useQueryState('activeReplyId');
+  const [, setMode] = useQueryState('mode');
+  const [, setActiveReplyId] = useQueryState('activeReplyId');
   const [openThreadId] = useQueryState('threadId');
   const { data: thread } = useThread(openThreadId);
-  const [{ refetch }, items] = useThreads();
   const params = useParams<{
     folder: string;
   }>();

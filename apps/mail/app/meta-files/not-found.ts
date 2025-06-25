@@ -1,4 +1,4 @@
-export function loader() {
+export function clientLoader() {
   throw new Response('Not Found', { status: 404 });
 }
 

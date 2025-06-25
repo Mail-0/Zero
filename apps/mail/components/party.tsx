@@ -2,27 +2,14 @@ import { useActiveConnection } from '@/hooks/use-connections';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTRPC } from '@/providers/query-provider';
 import { usePartySocket } from 'partysocket/react';
-import { useThreads } from '@/hooks/use-threads';
-import { useLabels } from '@/hooks/use-labels';
-import { useSession } from '@/lib/auth-client';
 import { funnel } from 'remeda';
 
 const DEBOUNCE_DELAY = 10_000; // 10 seconds is appropriate for real-time notifications
 
-export const NotificationProvider = ({ headers }: { headers: Record<string, string> }) => {
+export const NotificationProvider = () => {
   const trpc = useTRPC();
-  //   const { refetch: refetchLabels } = useLabels();
   const queryClient = useQueryClient();
-  //   const [{ refetch: refetchThreads }] = useThreads();
   const { data: activeConnection } = useActiveConnection();
-
-  //   const handleRefetchLabels = useCallback(async () => {
-  //     await refetchLabels();
-  //   }, [refetchLabels]);
-
-  //   const handleRefetchThreads = useCallback(async () => {
-  //     await refetchThreads();
-  //   }, [refetchThreads]);
 
   const labelsDebouncer = funnel(
     () => queryClient.invalidateQueries({ queryKey: trpc.labels.list.queryKey() }),
@@ -38,9 +25,6 @@ export const NotificationProvider = ({ headers }: { headers: Record<string, stri
     room: activeConnection?.id ? String(activeConnection.id) : 'general',
     prefix: 'agents',
     maxRetries: 1,
-    query: {
-      token: headers['cookie'],
-    },
     host: import.meta.env.VITE_PUBLIC_BACKEND_URL!,
     onMessage: async (message: MessageEvent<string>) => {
       try {

@@ -10,7 +10,7 @@ import { generateText } from 'ai';
 import { z } from 'zod';
 
 export const getDriverFromConnectionId = async (connectionId: string) => {
-  const db = createDb(env.HYPERDRIVE.connectionString);
+  const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
   const activeConnection = await db.query.connection.findFirst({
     where: (connection, ops) => ops.eq(connection.id, connectionId),
     columns: {
@@ -21,6 +21,8 @@ export const getDriverFromConnectionId = async (connectionId: string) => {
       email: true,
     },
   });
+
+  await conn.end();
 
   if (!activeConnection || !activeConnection.accessToken || !activeConnection.refreshToken) {
     throw new Error('No connection found');
@@ -138,8 +140,8 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { connectionId: string }> 
           };
 
           // const response = await env.VECTORIZE.getByIds([s.threadId]);
-          // if (response.length && response?.[0]?.metadata?.['content']) {
-          //   const content = response[0].metadata['content'] as string;
+          // if (response.length && response?.[0]?.metadata?.['summary']) {
+          //   const content = response[0].metadata['summary'] as string;
           //   const shortResponse = await env.AI.run('@cf/facebook/bart-large-cnn', {
           //     input_text: content,
           //   });

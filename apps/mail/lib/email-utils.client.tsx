@@ -126,10 +126,6 @@ const proxyImageUrls = (html: string): string => {
     if (proxiedUrl !== src) {
       img.setAttribute('data-original-src', src);
       img.setAttribute('src', proxiedUrl);
-      img.setAttribute(
-        'onerror',
-        `this.onerror=null; this.src=this.getAttribute('data-original-src');`,
-      );
     }
   });
 

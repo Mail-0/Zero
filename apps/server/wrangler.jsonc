@@ -181,20 +181,20 @@
       "queues": {
         "producers": [
           {
-            "queue": "thread-queue",
+            "queue": "thread-queue-staging",
             "binding": "thread_queue",
           },
           {
-            "queue": "subscribe-queue",
+            "queue": "subscribe-queue-staging",
             "binding": "subscribe_queue",
           },
         ],
         "consumers": [
           {
-            "queue": "subscribe-queue",
+            "queue": "subscribe-queue-staging",
           },
           {
-            "queue": "thread-queue",
+            "queue": "thread-queue-staging",
           },
         ],
       },
@@ -340,20 +340,20 @@
       "queues": {
         "producers": [
           {
-            "queue": "thread-queue",
+            "queue": "thread-queue-prod",
             "binding": "thread_queue",
           },
           {
-            "queue": "subscribe-queue",
+            "queue": "subscribe-queue-prod",
             "binding": "subscribe_queue",
           },
         ],
         "consumers": [
           {
-            "queue": "subscribe-queue",
+            "queue": "subscribe-queue-prod",
           },
           {
-            "queue": "thread-queue",
+            "queue": "thread-queue-prod",
           },
         ],
       },
