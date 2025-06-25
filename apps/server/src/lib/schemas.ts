@@ -121,6 +121,7 @@ export const userSettingsSchema = z.object({
   zeroSignature: z.boolean().default(true),
   categories: categoriesSchema.optional(),
   defaultEmailAlias: z.string().optional(),
+  autoRead: z.boolean().default(true),
 });
 
 export type UserSettings = z.infer<typeof userSettingsSchema>;
@@ -135,6 +136,7 @@ export const defaultUserSettings: UserSettings = {
   isOnboarded: false,
   colorTheme: 'system',
   zeroSignature: true,
+  autoRead: true,
   defaultEmailAlias: '',
   categories: defaultMailCategories,
 };
