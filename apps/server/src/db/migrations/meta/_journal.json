@@ -225,6 +225,13 @@
       "when": 1750551357064,
       "tag": "0031_legal_colleen_wing",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1750794533968,
+      "tag": "0032_smiling_raider",
+      "breakpoints": true
     }
   ]
 }

@@ -12,6 +12,7 @@ export default [
     route('/pricing', '(full-width)/pricing.tsx'),
     route('/privacy', '(full-width)/privacy.tsx'),
     route('/contributors', '(full-width)/contributors.tsx'),
+    route('/hr', '(full-width)/hr.tsx'),
   ]),
 
   route('/login', '(auth)/login/page.tsx'),
