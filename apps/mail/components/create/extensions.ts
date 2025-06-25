@@ -20,9 +20,15 @@ import {
 
 import { cx } from 'class-variance-authority';
 
-//TODO I am using cx here to get tailwind autocomplete working, idk if someone else can write a regex to just capture the class key in objects
+// Use a tailwind class extractor function to parse class strings from cx usage
+const extractClassesFromObjectLiteral = (classString: string): string => {
+  // This regex captures class names used in objects like { class: 'text-red-500 bg-blue-200' }
+  // It works for both quoted and unquoted property names
+  return classString.replace(/['"]?class['"]?\s*:\s*['"]([^'"]+)['"]|\b\w+\s*:\s*['"]([^'"]+)['"]|cx\(['"]([^'"]+)['"]\)/g, '$1$2$3');
+};
+
 const aiHighlight = AIHighlight;
-//You can overwrite the placeholder with your own configuration
+// You can overwrite the placeholder with your own configuration
 const placeholder = Placeholder;
 // Custom link extension that exits the link mark when space is typed
 import { Extension } from '@tiptap/core';
