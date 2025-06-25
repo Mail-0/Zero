@@ -241,6 +241,7 @@ async function getRecentContacts(
 ): Promise<ContactInfo[]> {
   try {
     const contactMap = new Map<string, ContactInfo>();
+    const processedEmailsSet = new Set<string>(); // Track unique emails
     
     // Process sent and inbox threads in parallel with reduced thread counts
     const [sentThreads, inboxThreads] = await Promise.all([
@@ -256,12 +257,11 @@ async function getRecentContacts(
 
     // Process threads in batches to avoid overwhelming the API
     const batchSize = 5;
-    let processedContacts = 0;
 
     // Process sent emails in batches
     if (sentThreads?.threads) {
       for (let i = 0; i < sentThreads.threads.length; i += batchSize) {
-        if (processedContacts >= MAX_CONTACTS_TO_PROCESS) break;
+        if (processedEmailsSet.size >= MAX_CONTACTS_TO_PROCESS) break;
         
         const batch = sentThreads.threads.slice(i, i + batchSize);
         const threadPromises = batch.map(async (thread: any) => {
@@ -282,29 +282,31 @@ async function getRecentContacts(
             // Add TO recipients
             message.to?.forEach((recipient: any) => {
               if (recipient.email && recipient.email.toLowerCase() !== userEmail.toLowerCase()) {
+                const emailKey = recipient.email.toLowerCase();
                 updateContactMap(contactMap, recipient.email, recipient.name, 'sent', new Date(message.receivedOn));
-                processedContacts++;
+                processedEmailsSet.add(emailKey);
               }
             });
             // Add CC recipients
             message.cc?.forEach((recipient: any) => {
               if (recipient.email && recipient.email.toLowerCase() !== userEmail.toLowerCase()) {
+                const emailKey = recipient.email.toLowerCase();
                 updateContactMap(contactMap, recipient.email, recipient.name, 'sent', new Date(message.receivedOn));
-                processedContacts++;
+                processedEmailsSet.add(emailKey);
               }
             });
             
-            if (processedContacts >= MAX_CONTACTS_TO_PROCESS) break;
+            if (processedEmailsSet.size >= MAX_CONTACTS_TO_PROCESS) break;
           }
-          if (processedContacts >= MAX_CONTACTS_TO_PROCESS) break;
+          if (processedEmailsSet.size >= MAX_CONTACTS_TO_PROCESS) break;
         }
       }
     }
 
     // Process received emails in batches
-    if (inboxThreads?.threads && processedContacts < MAX_CONTACTS_TO_PROCESS) {
+    if (inboxThreads?.threads && processedEmailsSet.size < MAX_CONTACTS_TO_PROCESS) {
       for (let i = 0; i < inboxThreads.threads.length; i += batchSize) {
-        if (processedContacts >= MAX_CONTACTS_TO_PROCESS) break;
+        if (processedEmailsSet.size >= MAX_CONTACTS_TO_PROCESS) break;
         
         const batch = inboxThreads.threads.slice(i, i + batchSize);
         const threadPromises = batch.map(async (thread: any) => {
@@ -323,13 +325,14 @@ async function getRecentContacts(
           
           for (const message of threadData.messages) {
             if (message.sender?.email && message.sender.email.toLowerCase() !== userEmail.toLowerCase()) {
+              const emailKey = message.sender.email.toLowerCase();
               updateContactMap(contactMap, message.sender.email, message.sender.name, 'received', new Date(message.receivedOn));
-              processedContacts++;
+              processedEmailsSet.add(emailKey);
               
-              if (processedContacts >= MAX_CONTACTS_TO_PROCESS) break;
+              if (processedEmailsSet.size >= MAX_CONTACTS_TO_PROCESS) break;
             }
           }
-          if (processedContacts >= MAX_CONTACTS_TO_PROCESS) break;
+          if (processedEmailsSet.size >= MAX_CONTACTS_TO_PROCESS) break;
         }
       }
     }
