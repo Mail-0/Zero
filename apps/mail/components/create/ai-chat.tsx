@@ -1,32 +1,29 @@
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { CurvedArrow, Puzzle, Stop } from '../icons/icons';
+import { useAIFullScreen, useAISidebar } from '../ui/ai-sidebar';
 import useComposeEditor from '@/hooks/use-compose-editor';
 import { useRef, useCallback, useEffect } from 'react';
 import { Markdown } from '@react-email/components';
-import { useAIFullScreen } from '../ui/ai-sidebar';
 import { useBilling } from '@/hooks/use-billing';
 import { TextShimmer } from '../ui/text-shimmer';
 import { useThread } from '@/hooks/use-threads';
 import { MailLabels } from '../mail/mail-list';
 import { cn, getEmailLogo } from '@/lib/utils';
 import { EditorContent } from '@tiptap/react';
+import { CurvedArrow } from '../icons/icons';
 import { Tools } from '../../types/tools';
 import { InfoIcon } from 'lucide-react';
 import { Button } from '../ui/button';
 import { format } from 'date-fns-tz';
 import { useQueryState } from 'nuqs';
-import { useState } from 'react';
 
 const renderThread = (thread: { id: string; title: string; snippet: string }) => {
   const [, setThreadId] = useQueryState('threadId');
   const { data: getThread } = useThread(thread.id);
-  //   const [, setAiSidebarOpen] = useQueryState('aiSidebar');
   const [, setIsFullScreen] = useQueryState('isFullScreen');
 
   const handleClick = () => {
     setThreadId(thread.id);
-    // setAiSidebarOpen(null);
     setIsFullScreen(null);
   };
 
@@ -264,17 +261,24 @@ export function AIChat({
   const { chatMessages } = useBilling();
   const { isFullScreen } = useAIFullScreen();
   const [, setPricingDialog] = useQueryState('pricingDialog');
+  const [aiSidebarOpen] = useQueryState('aiSidebar');
+  const { toggleOpen } = useAISidebar();
+
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, []);
-  const [aiSidebarOpen] = useQueryState('aiSidebar');
 
   const editor = useComposeEditor({
     placeholder: 'Ask Zero to do anything...',
     onLengthChange: () => setInput(editor.getText()),
     onKeydown(event) {
+      // Cmd+0 to toggle the AI sidebar (Added explicitly since TipTap editor doesn't bubble up the event)
+      if (event.key === '0' && event.metaKey) {
+        return toggleOpen();
+      }
+
       if (event.key === 'Enter' && !event.metaKey && !event.shiftKey) {
         event.preventDefault();
         handleSubmit(event as unknown as React.FormEvent<HTMLFormElement>);

@@ -80,16 +80,7 @@ export function CreateEmail({
     }
   }, [draftError]);
 
-  const activeAccount = useMemo(() => {
-    if (!session) return null;
-    if (!connections) return null;
-
-    // Properly access the connections array from the data structure
-    const connectionsList = connections.connections as Connection[];
-    if (!connectionsList || !Array.isArray(connectionsList)) return null;
-
-    return connectionsList.find((connection) => connection.id === activeConnection?.id);
-  }, [session, connections, activeConnection]);
+  const { data: activeAccount } = useActiveConnection();
 
   const userEmail = activeAccount?.email || activeConnection?.email || session?.user?.email || '';
   const userName = activeAccount?.name || activeConnection?.name || session?.user?.name || '';

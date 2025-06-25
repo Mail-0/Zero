@@ -1,3 +1,16 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 import {
   ReSummarizeThread,
   SummarizeMessage,
@@ -144,7 +157,7 @@ export class ZeroWorkflow extends WorkflowEntrypoint<Env, Params> {
 
       await env.gmail_processing_threads.put(historyProcessingKey, 'true');
       log('[ZERO_WORKFLOW] Set processing flag for history:', historyProcessingKey);
-      const db = createDb(env.HYPERDRIVE.connectionString);
+      const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
       const foundConnection = await step.do(`[ZERO] Find Connection ${connectionId}`, async () => {
         log('[ZERO_WORKFLOW] Finding connection:', connectionId);
         const [foundConnection] = await db
@@ -325,6 +338,7 @@ export class ZeroWorkflow extends WorkflowEntrypoint<Env, Params> {
           });
         }
       }
+      this.ctx.waitUntil(conn.end());
     } catch (error) {
       const historyProcessingKey = `history_${event.payload.connectionId}__${event.payload.historyId}`;
       try {
@@ -363,7 +377,7 @@ export class ThreadWorkflow extends WorkflowEntrypoint<Env, Params> {
       const { connectionId, threadId, providerId } = event.payload;
       if (providerId === EProviders.google) {
         log('[THREAD_WORKFLOW] Processing Google provider workflow');
-        const db = createDb(env.HYPERDRIVE.connectionString);
+        const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
         const foundConnection = await step.do(
           `[ZERO] Find Connection ${connectionId}`,
           async () => {
@@ -372,6 +386,7 @@ export class ThreadWorkflow extends WorkflowEntrypoint<Env, Params> {
               .select()
               .from(connection)
               .where(eq(connection.id, connectionId.toString()));
+            this.ctx.waitUntil(conn.end());
             if (!foundConnection) throw new Error('Connection not found');
             if (!foundConnection.accessToken || !foundConnection.refreshToken)
               throw new Error('Connection is not authorized');

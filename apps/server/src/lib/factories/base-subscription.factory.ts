@@ -4,6 +4,8 @@ import { connection } from '../../db/schema';
 import type { HonoContext } from '../../ctx';
 import { getZeroDB } from '../server-utils';
 import { env } from 'cloudflare:workers';
+import { createDb } from '../../db';
+import { eq } from 'drizzle-orm';
 
 export interface SubscriptionData {
   connectionId?: string;
@@ -27,8 +29,11 @@ export abstract class BaseSubscriptionFactory {
 
   protected async getConnectionFromDb(connectionId: string) {
     // Revisit
-    const db = getZeroDB('global-db');
-    const connectionData = await db.findConnectionById(connectionId);
+    const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
+    const connectionData = await db.query.connection.findFirst({
+      where: eq(connection.id, connectionId),
+    });
+    await conn.end();
     return connectionData;
   }
 

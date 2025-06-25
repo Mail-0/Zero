@@ -123,10 +123,13 @@ checksums:
     common/searchBar/aiEnhancedQuery: 7bc20def675d9eacbec6d98a7f6cccd0
     common/navUser/customerSupport: aa83f4456d11185e5e72dba3260bf00b
     common/navUser/documentation: 1563fcb5ddb5037b0709ccd3dd384a92
-    common/navUser/appTheme: bfaec6c6c45b8e7c28ea3b017260e2ce
+    common/navUser/appTheme: 0a3e19fea2f7b1045f53ebf0ccff6bd5
     common/navUser/accounts: dbb9796c495f5e0f0de6f71bd32527ae
     common/navUser/signIn: cb8757c7450e17de1e226e82fb0fa4a2
     common/navUser/otherAccounts: 6206808c3673bd05c8d024eaac703f2a
+    common/navUser/switchingAccounts: fa53f8796a652161c8ec25281a1c5d3e
+    common/navUser/accountSwitched: e7b3f7c988574e8cf7aa8d2caed27adb
+    common/navUser/failedToSwitchAccount: 21c3b37b3b23c44637ce98b6af08e1c5
     common/mailCategories/primary: f5fb269c8406736788b7785a0c68e500
     common/mailCategories/allMail: 8ee9a794d1366b252decb770c6f7558a
     common/mailCategories/important: 4cf0e8fc8e4e7c5c9b9458059a172a2b
@@ -240,6 +243,8 @@ checksums:
     common/settings/saved: 0f46e6d1d0a3c93ca8136cc8c91fecd4
     common/settings/failedToSave: 40417c48b29d285eadcd5363630dff1a
     common/settings/languageChanged: 71fdc3486c49d228838ed1b541de999c
+    common/settings/defaultEmailUpdated: 9ef02980f416d937d5724dfc1434ba3f
+    common/settings/failedToUpdateGmailAlias: b8e186766156fba39688cd87ac8dc467
     common/mail/replies: fc3e60cff29ffe474db270154bb64099
     common/mail/deselectAll: d06b551a6d60cdc4dfc51c7683644bad
     common/mail/selectedEmails: 8070ccaf317cb4216c364b2cb1223fd7
@@ -346,6 +351,9 @@ checksums:
     pages/settings/general/noResultsFound: 5518f2865757dc73900aa03ef8be6934
     pages/settings/general/zeroSignature: 0e94e29f00f4b39838ebed8a774148c3
     pages/settings/general/zeroSignatureDescription: 296c4c81828361128b071969cde8ad76
+    pages/settings/general/defaultEmailAlias: dc269bad429dd22b27d82118441ea9b2
+    pages/settings/general/selectDefaultEmail: c2abb2947589920179e4757876ea905c
+    pages/settings/general/defaultEmailDescription: 0ebf26fceccb4cad99f4b2a20cbcfab0
     pages/settings/connections/title: d7bc733cc82ab74c649a4816373a2295
     pages/settings/connections/description: f05d355994f9fe0e089ce2c54d0de381
     pages/settings/connections/disconnectTitle: efecc2354d665e68492fe985af575508
