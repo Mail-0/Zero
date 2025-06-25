@@ -232,6 +232,13 @@
       "when": 1750794533968,
       "tag": "0032_smiling_raider",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1750885796261,
+      "tag": "0033_first_bastion",
+      "breakpoints": true
     }
   ]
 }
