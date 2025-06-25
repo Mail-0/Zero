@@ -711,7 +711,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
 
                             <div className="mt-2 flex flex-wrap items-center justify-between gap-y-2 px-3 py-2">
                               <div className="flex items-center gap-2">
-                                <span className="text-xs text-[#8C8C8C]">
+                                <span className="text-sm text-[#8C8C8C]">
                                   {t('common.notes.label')}
                                 </span>
                                 <div className="flex flex-wrap gap-1.5">
@@ -721,7 +721,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                                         <button
                                           onClick={() => setSelectedColor(color.value)}
                                           className={cn(
-                                            'h-5 w-5 rounded-full transition-all',
+                                            'h-4 w-4 rounded-full transition-all',
                                             color.value === 'default' ? 'bg-background border' : '',
                                             color.value === 'red' ? 'bg-red-500' : '',
                                             color.value === 'orange' ? 'bg-orange-500' : '',
@@ -740,7 +740,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                                       </TooltipTrigger>
                                       <TooltipContent
                                         side="bottom"
-                                        className="bg-white dark:bg-[#313131]"
+                                        className="bg-white dark:bg-[#313131] mt-0.5"
                                       >
                                         {t(`common.notes.colors.${color.value}` as any)}
                                       </TooltipContent>
@@ -750,7 +750,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                               </div>
                             </div>
 
-                            <div className="mx-1 my-2 flex justify-between">
+                            <div className="mx-2 my-2 flex justify-between">
                               <Button
                                 variant="ghost"
                                 size="xs"
