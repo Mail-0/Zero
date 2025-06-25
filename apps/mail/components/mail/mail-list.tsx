@@ -641,9 +641,8 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
     );
   }
 
-  return (
-    draft ? (
-        {!optimisticState.shouldHide && (<DraftContextMenu draftId={message.id}>
+  return draft && !optimisticState.shouldHide ? (
+        <DraftContextMenu draftId={message.id}>
           <div className="select-none py-1" onClick={handleMailClick}>
             <div
               key={message.id}
@@ -687,7 +686,7 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
               </div>
             </div>
           </div>
-        </DraftContextMenu> )}
+        </DraftContextMenu>
     ): null
   );
 });
