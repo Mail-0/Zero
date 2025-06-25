@@ -577,8 +577,13 @@ export function NavUser() {
       {state !== 'collapsed' && (
         <div className="flex items-center justify-between gap-2">
           <div className="mt-[2px] flex flex-col items-start gap-1 space-y-1">
-            <div className="flex items-center gap-1 text-[13px] leading-none text-black dark:text-white">
-              <p className={cn('truncate text-[13px]', isPro ? 'max-w-[14.5ch]' : 'max-w-[8.5ch]')}>
+            <div
+              className={cn(
+                'flex items-center gap-1 text-[13px] leading-none text-black dark:text-white',
+                !isPro ? 'flex-col items-start' : '',
+              )}
+            >
+              <p className={cn('truncate text-[13px]', isPro ? 'max-w-[17.5ch]' : 'max-w-[18ch]')}>
                 {activeAccount?.name || session.user.name || 'User'}
               </p>
               {isPro ? (
