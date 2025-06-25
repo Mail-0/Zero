@@ -38,7 +38,7 @@ import { useThread, useThreads } from '@/hooks/use-threads';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { highlightText } from '@/lib/email-utils.client';
 import { useHotkeysContext } from 'react-hotkeys-hook';
-import { AnimatePresence, motion } from 'motion/react';
+import { motion } from 'motion/react';
 import { useTRPC } from '@/providers/query-provider';
 import { useThreadLabels } from '@/hooks/use-labels';
 import { template } from '@/lib/email-utils.client';
@@ -643,7 +643,6 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
 
   return (
     draft ? (
-      <AnimatePresence mode="sync">
         {!optimisticState.shouldHide && (<DraftContextMenu draftId={message.id}>
           <div className="select-none py-1" onClick={handleMailClick}>
             <div
@@ -689,7 +688,6 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
             </div>
           </div>
         </DraftContextMenu> )}
-      </AnimatePresence>
     ): null
   );
 });
