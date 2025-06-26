@@ -684,7 +684,11 @@ export function ThreadDisplay() {
   const handleToggleImportant = useCallback(async () => {
     if (!emailData || !id) return;
     await toggleImportant({ ids: [id] });
-    await refetchThread();
+    const updatedThread = (await refetchThread());
+    // Set isImportant based on the updated thread data
+    const updatedTags = updatedThread?.data?.latest?.tags || [];
+    const isNowImportant = updatedTags.some((tag) => tag.name === 'IMPORTANT');
+    setIsImportant(isNowImportant);
     if (isImportant) {
       toast.success(t('common.mail.markedAsImportant'));
     } else {

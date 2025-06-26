@@ -8,11 +8,11 @@ import {
 } from '@/lib/utils';
 import {
   Archive2,
-  ExclamationCircle,
   GroupPeople,
   Star2,
   Trash,
   PencilCompose,
+  ExclamationCircle2,
 } from '../icons/icons';
 import {
   memo,
@@ -334,7 +334,7 @@ const Thread = memo(
                     )}
                     onClick={handleToggleImportant}
                   >
-                    <ExclamationCircle
+                    <ExclamationCircle2
                       className={cn(displayImportant ? 'fill-orange-400' : 'fill-[#9D9D9D]')}
                     />
                   </Button>

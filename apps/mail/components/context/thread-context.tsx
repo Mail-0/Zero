@@ -148,7 +148,7 @@ export function ThreadContextMenu({
     return threadData?.messages.some((message) =>
       message.tags?.some((tag) => tag.name.toLowerCase() === 'important'),
     );
-  }, [threadData]);
+  }, [threadData, optimisticState.optimisticImportant]);
 
   const noopAction = () => async () => {
     toast.info(t('common.actions.featureNotImplemented'));
