@@ -10,7 +10,15 @@ import { useTRPC } from '@/providers/query-provider';
 import { toast } from 'sonner';
 import type { CategorySetting } from '@/hooks/use-categories';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import * as Icons from '@/components/icons/icons';
 import { Sparkles } from '@/components/icons/icons';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
 import { Loader } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -47,7 +55,7 @@ export default function CategoriesSettingsPage() {
     setCategories(merged.sort((a, b) => a.order - b.order));
   }, [data, defaultMailCategories]);
 
-  const handleFieldChange = (id: string, field: keyof CategorySetting, value: any) => {
+  const handleFieldChange = (id: string, field: keyof CategorySetting, value: string | number | boolean) => {
     setCategories((prev) =>
       prev.map((cat) => (cat.id === id ? { ...cat, [field]: value } : cat)),
     );
@@ -70,7 +78,7 @@ export default function CategoriesSettingsPage() {
 
     try {
       await saveUserSettings({ categories: sortedCategories });
-      queryClient.setQueryData(trpc.settings.get.queryKey(), (updater: any) => {
+      queryClient.setQueryData(trpc.settings.get.queryKey(), (updater) => {
         if (!updater) return;
         return {
           settings: { ...updater.settings, categories: sortedCategories },
@@ -134,7 +142,7 @@ export default function CategoriesSettingsPage() {
               </div>
 
               <div className="grid grid-cols-12 gap-4 items-start">
-                <div className="col-span-12 sm:col-span-5">
+                <div className="col-span-12 sm:col-span-4">
                   <Label className="text-xs mb-1.5 block">Display Name</Label>
                   <Input
                     className="h-8 text-sm"
@@ -143,7 +151,43 @@ export default function CategoriesSettingsPage() {
                   />
                 </div>
                 
-                <div className="col-span-12 sm:col-span-5">
+                <div className="col-span-12 sm:col-span-2">
+                  <Label className="text-xs mb-1.5 block">Icon</Label>
+                  <Select
+                    value={cat.icon ?? ''}
+                    onValueChange={(val) => handleFieldChange(cat.id, 'icon', val)}
+                  >
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder="Select icon">
+                        {cat.icon && (
+                          <div className="flex items-center gap-2">
+                            {(() => {
+                              const IconComp = Icons[cat.icon as keyof typeof Icons];
+                              return IconComp ? <IconComp className="size-4 fill-muted-foreground" /> : null;
+                            })()}
+                            <span className="truncate">{cat.icon}</span>
+                          </div>
+                        )}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="max-h-60">
+                      {Object.keys(Icons).map((iconName) => {
+                        const IconComp = Icons[iconName as keyof typeof Icons];
+                        if (typeof IconComp !== 'function') return null;
+                        return (
+                          <SelectItem value={iconName} key={iconName}>
+                            <div className="flex items-center gap-2">
+                              <IconComp className="size-4 fill-muted-foreground" />
+                              <span>{iconName}</span>
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="col-span-12 sm:col-span-4">
                   <Label className="text-xs mb-1.5 block">Search Query</Label>
                   <div className="relative">
                     <Input

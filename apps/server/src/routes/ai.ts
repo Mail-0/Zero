@@ -22,7 +22,7 @@ aiRouter.post('/do/:action', async (c) => {
   if (env.VOICE_SECRET !== c.req.header('X-Voice-Secret'))
     return c.json({ success: false, error: 'Unauthorized' }, 401);
   if (!c.req.header('X-Caller')) return c.json({ success: false, error: 'Unauthorized' }, 401);
-  const db = createDb(env.HYPERDRIVE.connectionString);
+  const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
   const user = await db.query.user.findFirst({
     where: (user, { eq, and }) =>
       and(eq(user.phoneNumber, c.req.header('X-Caller')!), eq(user.phoneNumberVerified, true)),
@@ -33,6 +33,7 @@ aiRouter.post('/do/:action', async (c) => {
     where: (connection, { eq, or }) =>
       or(eq(connection.id, user.defaultConnectionId!), eq(connection.userId, user.id)),
   });
+  await conn.end();
   if (!connection) return c.json({ success: false, error: 'Unauthorized' }, 401);
 
   try {
@@ -114,7 +115,7 @@ aiRouter.post('/call', async (c) => {
   }
 
   console.log('[DEBUG] Connecting to database');
-  const db = createDb(env.HYPERDRIVE.connectionString);
+  const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
 
   console.log('[DEBUG] Finding user by phone number:', c.req.header('X-Caller'));
   const user = await db.query.user.findFirst({
@@ -132,6 +133,8 @@ aiRouter.post('/call', async (c) => {
     where: (connection, { eq, or }) =>
       or(eq(connection.id, user.defaultConnectionId!), eq(connection.userId, user.id)),
   });
+
+  await conn.end();
 
   if (!connection) {
     console.log('[DEBUG] No connection found for user');

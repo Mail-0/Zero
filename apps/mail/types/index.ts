@@ -91,6 +91,8 @@ export interface IConnection {
   email: string;
   name?: string;
   picture?: string;
+  createdAt: Date;
+  providerId: string;
 }
 
 export interface Attachment {
