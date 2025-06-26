@@ -404,7 +404,9 @@
         "zeroSignatureDescription": "Add a Zero signature to your emails.",
         "defaultEmailAlias": "Default Email Alias",
         "selectDefaultEmail": "Select default email",
-        "defaultEmailDescription": "This email will be used as the default 'From' address when composing new emails"
+        "defaultEmailDescription": "This email will be used as the default 'From' address when composing new emails",
+        "autoRead": "Auto Read",
+        "autoReadDescription": "Automatically mark emails as read when you click on them."
       },
       "connections": {
         "title": "Email Connections",

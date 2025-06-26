@@ -129,13 +129,6 @@ export interface ParsedMessage {
   isDraft?: boolean;
 }
 
-export interface IConnection {
-  id: string;
-  email: string;
-  name?: string;
-  picture?: string;
-}
-
 export interface Attachment {
   attachmentId: string;
   filename: string;

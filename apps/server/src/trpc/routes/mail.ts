@@ -21,14 +21,23 @@ export const mailRouter = router({
     )
     .query(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
-      return await agent.callDriver('get', input.id);
+      const agent = await getZeroAgent(activeConnection.id);
+      return await agent.getThread(input.id);
     }),
-  count: activeDriverProcedure.query(async ({ ctx }) => {
-    const { activeConnection } = ctx;
-    const agent = getZeroAgent(activeConnection.id);
-    return await agent.callDriver('count');
-  }),
+  count: activeDriverProcedure
+    .output(
+      z.array(
+        z.object({
+          count: z.number().optional(),
+          label: z.string().optional(),
+        }),
+      ),
+    )
+    .query(async ({ ctx }) => {
+      const { activeConnection } = ctx;
+      const agent = await getZeroAgent(activeConnection.id);
+      return await agent.count();
+    }),
   listThreads: activeDriverProcedure
     .input(
       z.object({
@@ -41,17 +50,17 @@ export const mailRouter = router({
     .query(async ({ ctx, input }) => {
       const { folder, max, cursor, q } = input;
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
 
       if (folder === FOLDERS.DRAFT) {
-        const drafts = await agent.callDriver('listDrafts', {
+        const drafts = await agent.listDrafts({
           q,
           maxResults: max,
           pageToken: cursor,
         });
         return drafts;
       }
-      const threadsResponse = await agent.callDriver('list', {
+      const threadsResponse = await agent.list({
         folder,
         query: q,
         maxResults: max,
@@ -67,8 +76,8 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
-      return agent.callDriver('markAsRead', input.ids);
+      const agent = await getZeroAgent(activeConnection.id);
+      return agent.markAsRead(input.ids);
     }),
   markAsUnread: activeDriverProcedure
     .input(
@@ -78,8 +87,8 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
-      return agent.callDriver('markAsUnread', input.ids);
+      const agent = await getZeroAgent(activeConnection.id);
+      return agent.markAsUnread(input.ids);
     }),
   markAsImportant: activeDriverProcedure
     .input(
@@ -89,11 +98,8 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
-      return agent.callDriver('modifyLabels', input.ids, {
-        addLabels: ['IMPORTANT'],
-        removeLabels: [],
-      });
+      const agent = await getZeroAgent(activeConnection.id);
+      return agent.modifyLabels(input.ids, ['IMPORTANT'], []);
     }),
   modifyLabels: activeDriverProcedure
     .input(
@@ -105,21 +111,18 @@ export const mailRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       const { threadId, addLabels, removeLabels } = input;
 
       console.log(`Server: updateThreadLabels called for thread ${threadId}`);
       console.log(`Adding labels: ${addLabels.join(', ')}`);
       console.log(`Removing labels: ${removeLabels.join(', ')}`);
 
-      const result = (await agent.callDriver('normalizeIds', threadId)) as { threadIds: string[] };
+      const result = await agent.normalizeIds(threadId);
       const { threadIds } = result;
 
       if (threadIds.length) {
-        await agent.callDriver('modifyLabels', threadIds, {
-          addLabels,
-          removeLabels,
-        });
+        await agent.modifyLabels(threadIds, addLabels, removeLabels);
         console.log('Server: Successfully updated thread labels');
         return { success: true };
       }
@@ -136,17 +139,15 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
-      const { threadIds } = (await agent.callDriver('normalizeIds', input.ids)) as {
-        threadIds: string[];
-      };
+      const agent = await getZeroAgent(activeConnection.id);
+      const { threadIds } = await agent.normalizeIds(input.ids);
 
       if (!threadIds.length) {
         return { success: false, error: 'No thread IDs provided' };
       }
 
       const threadResults: PromiseSettledResult<{ messages: { tags: { name: string }[] }[] }>[] =
-        await Promise.allSettled(threadIds.map((id) => agent.callDriver('get', id)));
+        await Promise.allSettled(threadIds.map((id) => agent.get(id)));
 
       let anyStarred = false;
       let processedThreads = 0;
@@ -166,10 +167,11 @@ export const mailRouter = router({
 
       const shouldStar = processedThreads > 0 && !anyStarred;
 
-      await agent.callDriver('modifyLabels', threadIds, {
-        addLabels: shouldStar ? ['STARRED'] : [],
-        removeLabels: shouldStar ? [] : ['STARRED'],
-      });
+      await agent.modifyLabels(
+        threadIds,
+        shouldStar ? ['STARRED'] : [],
+        shouldStar ? [] : ['STARRED'],
+      );
 
       return { success: true };
     }),
@@ -181,17 +183,15 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
-      const { threadIds } = (await agent.callDriver('normalizeIds', input.ids)) as {
-        threadIds: string[];
-      };
+      const agent = await getZeroAgent(activeConnection.id);
+      const { threadIds } = await agent.normalizeIds(input.ids);
 
       if (!threadIds.length) {
         return { success: false, error: 'No thread IDs provided' };
       }
 
       const threadResults: PromiseSettledResult<{ messages: { tags: { name: string }[] }[] }>[] =
-        await Promise.allSettled(threadIds.map((id) => agent.callDriver('get', id)));
+        await Promise.allSettled(threadIds.map((id) => agent.get(id)));
 
       let anyImportant = false;
       let processedThreads = 0;
@@ -211,10 +211,11 @@ export const mailRouter = router({
 
       const shouldMarkImportant = processedThreads > 0 && !anyImportant;
 
-      await agent.callDriver('modifyLabels', threadIds, {
-        addLabels: shouldMarkImportant ? ['IMPORTANT'] : [],
-        removeLabels: shouldMarkImportant ? [] : ['IMPORTANT'],
-      });
+      await agent.modifyLabels(
+        threadIds,
+        shouldMarkImportant ? ['IMPORTANT'] : [],
+        shouldMarkImportant ? [] : ['IMPORTANT'],
+      );
 
       return { success: true };
     }),
@@ -226,11 +227,8 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
-      return agent.callDriver('modifyLabels', input.ids, {
-        addLabels: ['STARRED'],
-        removeLabels: [],
-      });
+      const agent = await getZeroAgent(activeConnection.id);
+      return agent.modifyLabels(input.ids, ['STARRED'], []);
     }),
   bulkMarkImportant: activeDriverProcedure
     .input(
@@ -240,11 +238,8 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
-      return agent.callDriver('modifyLabels', input.ids, {
-        addLabels: ['IMPORTANT'],
-        removeLabels: [],
-      });
+      const agent = await getZeroAgent(activeConnection.id);
+      return agent.modifyLabels(input.ids, ['IMPORTANT'], []);
     }),
   bulkUnstar: activeDriverProcedure
     .input(
@@ -254,17 +249,14 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
-      return agent.callDriver('modifyLabels', input.ids, {
-        addLabels: [],
-        removeLabels: ['STARRED'],
-      });
+      const agent = await getZeroAgent(activeConnection.id);
+      return agent.modifyLabels(input.ids, [], ['STARRED']);
     }),
   deleteAllSpam: activeDriverProcedure.mutation(async ({ ctx }): Promise<DeleteAllSpamResponse> => {
     const { activeConnection } = ctx;
-    const agent = getZeroAgent(activeConnection.id);
+    const agent = await getZeroAgent(activeConnection.id);
     try {
-      return await agent.callDriver('deleteAllSpam');
+      return await agent.deleteAllSpam();
     } catch (error) {
       console.error('Error deleting spam emails:', error);
       return {
@@ -283,11 +275,8 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
-      return agent.callDriver('modifyLabels', input.ids, {
-        addLabels: [],
-        removeLabels: ['IMPORTANT'],
-      });
+      const agent = await getZeroAgent(activeConnection.id);
+      return agent.modifyLabels(input.ids, [], ['IMPORTANT']);
     }),
 
   send: activeDriverProcedure
@@ -313,7 +302,7 @@ export const mailRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       const { draftId, ...mail } = input;
 
       const afterTask = async () => {
@@ -327,9 +316,9 @@ export const mailRouter = router({
       };
 
       if (draftId) {
-        await agent.callDriver('sendDraft', draftId, mail);
+        await agent.sendDraft(draftId, mail);
       } else {
-        await agent.callDriver('create', input);
+        await agent.create(input);
       }
 
       ctx.c.executionCtx.waitUntil(afterTask());
@@ -343,8 +332,8 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
-      return agent.callDriver('delete', input.id);
+      const agent = await getZeroAgent(activeConnection.id);
+      return agent.delete(input.id);
     }),
   bulkDelete: activeDriverProcedure
     .input(
@@ -354,11 +343,8 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
-      return agent.callDriver('modifyLabels', input.ids, {
-        addLabels: ['TRASH'],
-        removeLabels: [],
-      });
+      const agent = await getZeroAgent(activeConnection.id);
+      return agent.modifyLabels(input.ids, ['TRASH'], []);
     }),
   bulkArchive: activeDriverProcedure
     .input(
@@ -368,11 +354,8 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
-      return agent.callDriver('modifyLabels', input.ids, {
-        addLabels: [],
-        removeLabels: ['INBOX'],
-      });
+      const agent = await getZeroAgent(activeConnection.id);
+      return agent.modifyLabels(input.ids, [], ['INBOX']);
     }),
   bulkMute: activeDriverProcedure
     .input(
@@ -382,12 +365,12 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
-      return agent.callDriver('modifyLabels', input.ids, { addLabels: ['MUTE'], removeLabels: [] });
+      const agent = await getZeroAgent(activeConnection.id);
+      return agent.modifyLabels(input.ids, ['MUTE'], []);
     }),
   getEmailAliases: activeDriverProcedure.query(async ({ ctx }) => {
     const { activeConnection } = ctx;
-    const agent = getZeroAgent(activeConnection.id);
-    return agent.callDriver('getEmailAliases');
+    const agent = await getZeroAgent(activeConnection.id);
+    return agent.getEmailAliases();
   }),
 });

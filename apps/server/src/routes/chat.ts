@@ -15,22 +15,23 @@ import {
 import { type Connection, type ConnectionContext, type WSMessage } from 'agents';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createSimpleAuth, type SimpleAuth } from '../lib/auth';
+import { EPrompts, type IOutgoingMessage } from '../types';
 import { connectionToDriver } from '../lib/server-utils';
 import type { MailManager } from '../lib/driver/types';
+import type { CreateDraftData } from '../lib/schemas';
 import { FOLDERS, parseHeaders } from '../lib/utils';
+import { env, RpcTarget } from 'cloudflare:workers';
 import { AIChatAgent } from 'agents/ai-chat-agent';
 import { tools as authTools } from './agent/tools';
 import { processToolCalls } from './agent/utils';
 import type { Message as ChatMessage } from 'ai';
 import { getPromptName } from '../pipelines';
 import { connection } from '../db/schema';
-import { env } from 'cloudflare:workers';
 import { getPrompt } from '../lib/brain';
 import { openai } from '@ai-sdk/openai';
 import { and, eq } from 'drizzle-orm';
 import { McpAgent } from 'agents/mcp';
 import { groq } from '@ai-sdk/groq';
-import { EPrompts } from '../types';
 import { createDb } from '../db';
 import { z } from 'zod';
 
@@ -108,6 +109,149 @@ export type OutgoingMessage =
       };
     };
 
+export class AgentRpcDO extends RpcTarget {
+  constructor(
+    private mainDo: ZeroAgent,
+    private connectionId: string,
+  ) {
+    super();
+  }
+
+  async getUserLabels() {
+    return await this.mainDo.getUserLabels();
+  }
+
+  async getLabel(id: string) {
+    return await this.mainDo.getLabel(id);
+  }
+
+  async createLabel(label: {
+    name: string;
+    color?: { backgroundColor: string; textColor: string };
+  }) {
+    return await this.mainDo.createLabel(label);
+  }
+
+  async updateLabel(
+    id: string,
+    label: { name: string; color?: { backgroundColor: string; textColor: string } },
+  ) {
+    return await this.mainDo.updateLabel(id, label);
+  }
+
+  async deleteLabel(id: string) {
+    return await this.mainDo.deleteLabel(id);
+  }
+
+  async bulkDelete(threadIds: string[]) {
+    return await this.mainDo.bulkDelete(threadIds);
+  }
+
+  async bulkArchive(threadIds: string[]) {
+    return await this.mainDo.bulkArchive(threadIds);
+  }
+
+  async buildGmailSearchQuery(query: string) {
+    return await this.mainDo.buildGmailSearchQuery(query);
+  }
+
+  async listThreads(params: {
+    folder: string;
+    query?: string;
+    maxResults?: number;
+    labelIds?: string[];
+    pageToken?: string;
+  }) {
+    return await this.mainDo.listThreads(params);
+  }
+
+  async getThread(threadId: string) {
+    return await this.mainDo.getThread(threadId);
+  }
+
+  async markThreadsRead(threadIds: string[]) {
+    return await this.mainDo.markThreadsRead(threadIds);
+  }
+
+  async markThreadsUnread(threadIds: string[]) {
+    return await this.mainDo.markThreadsUnread(threadIds);
+  }
+
+  async modifyLabels(threadIds: string[], addLabelIds: string[], removeLabelIds: string[]) {
+    return await this.mainDo.modifyLabels(threadIds, addLabelIds, removeLabelIds);
+  }
+
+  async createDraft(draftData: CreateDraftData) {
+    return await this.mainDo.createDraft(draftData);
+  }
+
+  async getDraft(id: string) {
+    return await this.mainDo.getDraft(id);
+  }
+
+  async listDrafts(params: { q?: string; maxResults?: number; pageToken?: string }) {
+    return await this.mainDo.listDrafts(params);
+  }
+
+  async count() {
+    return await this.mainDo.count();
+  }
+
+  async list(params: {
+    folder: string;
+    query?: string;
+    maxResults?: number;
+    labelIds?: string[];
+    pageToken?: string;
+  }) {
+    return await this.mainDo.list(params);
+  }
+
+  async markAsRead(threadIds: string[]) {
+    return await this.mainDo.markAsRead(threadIds);
+  }
+
+  async markAsUnread(threadIds: string[]) {
+    return await this.mainDo.markAsUnread(threadIds);
+  }
+
+  async normalizeIds(ids: string[]) {
+    return await this.mainDo.normalizeIds(ids);
+  }
+
+  async get(id: string) {
+    return await this.mainDo.get(id);
+  }
+
+  async sendDraft(id: string, data: IOutgoingMessage) {
+    return await this.mainDo.sendDraft(id, data);
+  }
+
+  async create(data: IOutgoingMessage) {
+    return await this.mainDo.create(data);
+  }
+
+  async delete(id: string) {
+    return await this.mainDo.delete(id);
+  }
+
+  async deleteAllSpam() {
+    return await this.mainDo.deleteAllSpam();
+  }
+
+  async getEmailAliases() {
+    return await this.mainDo.getEmailAliases();
+  }
+
+  async setupAuth(connectionId: string) {
+    return await this.mainDo.setupAuth(connectionId);
+  }
+
+  async broadcast(message: string) {
+    return this.mainDo.broadcast(message);
+  }
+}
+
 export class ZeroAgent extends AIChatAgent<typeof env> {
   private chatMessageAbortControllers: Map<string, AbortController> = new Map();
   driver: MailManager | null = null;
@@ -115,19 +259,8 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     super(ctx, env);
   }
 
-  public async callDriver<TResult = any>(
-    method: keyof MailManager,
-    ...args: any[]
-  ): Promise<TResult> {
-    if (!this.driver) {
-      throw new Error('Driver not initialized');
-    }
-    const driverMethod = this.driver[method] as any;
-    if (typeof driverMethod !== 'function') {
-      throw new Error(`Method ${String(method)} is not a function on driver`);
-    }
-    const result = await driverMethod.apply(this.driver, args);
-    return result as TResult;
+  async setMetaData(connectionId: string) {
+    return new AgentRpcDO(this, connectionId);
   }
 
   private getDataStreamResponse(
@@ -138,10 +271,10 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
   ) {
     const dataStreamResponse = createDataStreamResponse({
       execute: async (dataStream) => {
-        const connectionId = (await this.ctx.storage.get('connectionId')) as string;
+        const connectionId = this.name;
         if (!connectionId || !this.driver) {
           console.log('Unauthorized no driver or connectionId [1]', connectionId, this.driver);
-          await this.setupAuth();
+          await this.setupAuth(connectionId);
           if (!connectionId || !this.driver) {
             console.log('Unauthorized no driver or connectionId', connectionId, this.driver);
             throw new Error('Unauthorized no driver or connectionId [2]');
@@ -175,16 +308,14 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     return dataStreamResponse;
   }
 
-  private async setupAuth() {
-    if (this.name) {
-      const db = createDb(env.HYPERDRIVE.connectionString);
+  public async setupAuth(connectionId: string) {
+    if (!this.driver) {
+      const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
       const _connection = await db.query.connection.findFirst({
-        where: eq(connection.id, this.name),
+        where: eq(connection.id, connectionId),
       });
-      if (_connection) {
-        await this.ctx.storage.put('connectionId', _connection.id);
-        this.driver = connectionToDriver(_connection);
-      }
+      if (_connection) this.driver = connectionToDriver(_connection);
+      this.ctx.waitUntil(conn.end());
     }
   }
 
@@ -352,7 +483,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
   }
 
   async onConnect() {
-    await this.setupAuth();
+    await this.setupAuth(this.name);
   }
 
   private destroyAbortControllers() {
@@ -370,6 +501,234 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
   ) {
     return this.getDataStreamResponse(onFinish, options);
   }
+
+  async listThreads(params: {
+    folder: string;
+    query?: string;
+    maxResults?: number;
+    labelIds?: string[];
+    pageToken?: string;
+  }) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.list(params);
+  }
+
+  async getThread(threadId: string) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.get(threadId);
+  }
+
+  async markThreadsRead(threadIds: string[]) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.modifyLabels(threadIds, {
+      addLabels: [],
+      removeLabels: ['UNREAD'],
+    });
+  }
+
+  async markThreadsUnread(threadIds: string[]) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.modifyLabels(threadIds, {
+      addLabels: ['UNREAD'],
+      removeLabels: [],
+    });
+  }
+
+  async modifyLabels(threadIds: string[], addLabelIds: string[], removeLabelIds: string[]) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.modifyLabels(threadIds, {
+      addLabels: addLabelIds,
+      removeLabels: removeLabelIds,
+    });
+  }
+
+  async getUserLabels() {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return (await this.driver.getUserLabels()).filter((label) => label.type === 'user');
+  }
+
+  async getLabel(id: string) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.getLabel(id);
+  }
+
+  async createLabel(params: {
+    name: string;
+    color?: {
+      backgroundColor: string;
+      textColor: string;
+    };
+  }) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.createLabel(params);
+  }
+
+  async bulkDelete(threadIds: string[]) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.modifyLabels(threadIds, {
+      addLabels: ['TRASH'],
+      removeLabels: ['INBOX'],
+    });
+  }
+
+  async bulkArchive(threadIds: string[]) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.modifyLabels(threadIds, {
+      addLabels: [],
+      removeLabels: ['INBOX'],
+    });
+  }
+
+  async buildGmailSearchQuery(query: string) {
+    const result = await generateText({
+      model: openai('gpt-4o'),
+      system: GmailSearchAssistantSystemPrompt(),
+      prompt: query,
+    });
+    return result.text;
+  }
+
+  async updateLabel(
+    id: string,
+    label: { name: string; color?: { backgroundColor: string; textColor: string } },
+  ) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.updateLabel(id, label);
+  }
+
+  async deleteLabel(id: string) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.deleteLabel(id);
+  }
+
+  async createDraft(draftData: CreateDraftData) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.createDraft(draftData);
+  }
+
+  async getDraft(id: string) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.getDraft(id);
+  }
+
+  async listDrafts(params: { q?: string; maxResults?: number; pageToken?: string }) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.listDrafts(params);
+  }
+
+  // Additional mail operations
+  async count() {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.count();
+  }
+
+  async list(params: {
+    folder: string;
+    query?: string;
+    maxResults?: number;
+    labelIds?: string[];
+    pageToken?: string;
+  }) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.list(params);
+  }
+
+  async markAsRead(threadIds: string[]) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.markAsRead(threadIds);
+  }
+
+  async markAsUnread(threadIds: string[]) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.markAsUnread(threadIds);
+  }
+
+  async normalizeIds(ids: string[]) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return this.driver.normalizeIds(ids);
+  }
+
+  async get(id: string) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.get(id);
+  }
+
+  async sendDraft(id: string, data: IOutgoingMessage) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.sendDraft(id, data);
+  }
+
+  async create(data: IOutgoingMessage) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.create(data);
+  }
+
+  async delete(id: string) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.delete(id);
+  }
+
+  async deleteAllSpam() {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.deleteAllSpam();
+  }
+
+  async getEmailAliases() {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.getEmailAliases();
+  }
 }
 
 export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
@@ -386,7 +745,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
   }
 
   async init(): Promise<void> {
-    const db = createDb(env.HYPERDRIVE.connectionString);
+    const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
     const _connection = await db.query.connection.findFirst({
       where: eq(connection.userId, this.props.userId),
     });
@@ -793,6 +1152,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
         }
       },
     );
+    this.ctx.waitUntil(conn.end());
   }
 }
 

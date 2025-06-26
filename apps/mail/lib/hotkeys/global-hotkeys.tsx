@@ -7,13 +7,14 @@ import { useQueryState } from 'nuqs';
 
 export function GlobalHotkeys() {
   const [composeOpen, setComposeOpen] = useQueryState('isComposeOpen');
-  const { openModal, clearAllFilters } = useCommandPalette();
+  const { clearAllFilters } = useCommandPalette();
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useQueryState('isCommandPaletteOpen');
   const { undoLastAction } = useOptimisticActions();
   const scope = 'global';
 
   const handlers = {
     newEmail: () => setComposeOpen('true'),
-    commandPalette: () => openModal(),
+    commandPalette: () => setIsCommandPaletteOpen('true'),
     clearAllFilters: () => clearAllFilters(),
     undoLastAction: () => {
       undoLastAction();

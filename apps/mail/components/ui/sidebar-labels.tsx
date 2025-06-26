@@ -1,21 +1,11 @@
+import type { IConnection, Label as LabelType } from '@/types';
 import { RecursiveFolder } from './recursive-folder';
-import type { Label as LabelType } from '@/types';
 import { Tree } from '../magicui/file-tree';
 import { useCallback } from 'react';
 
 type Props = {
   data: LabelType[];
-  activeAccount:
-    | {
-        id: string;
-        email: string;
-        name: string | null;
-        picture: string | null;
-        createdAt: Date;
-        providerId: 'google' | 'microsoft';
-      }
-    | null
-    | undefined;
+  activeAccount: IConnection | null | undefined;
   stats:
     | {
         count?: number;

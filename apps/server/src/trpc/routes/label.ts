@@ -11,12 +11,25 @@ export const labelsRouter = router({
         limiter: Ratelimit.slidingWindow(60, '1m'),
       }),
     )
+    .output(
+      z.array(
+        z.object({
+          id: z.string(),
+          name: z.string(),
+          color: z
+            .object({
+              backgroundColor: z.string(),
+              textColor: z.string(),
+            })
+            .optional(),
+          type: z.string(),
+        }),
+      ),
+    )
     .query(async ({ ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
-      return ((await agent.callDriver('getUserLabels')) as { type: string }[]).filter(
-        (label) => label.type === 'user',
-      );
+      const agent = await getZeroAgent(activeConnection.id);
+      return await agent.getUserLabels();
     }),
   create: activeDriverProcedure
     .use(
@@ -41,12 +54,12 @@ export const labelsRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       const label = {
         ...input,
         type: 'user',
       };
-      return await agent.callDriver('createLabel', label);
+      return await agent.createLabel(label);
     }),
   update: activeDriverProcedure
     .use(
@@ -70,9 +83,9 @@ export const labelsRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       const { id, ...label } = input;
-      return await agent.callDriver('updateLabel', id, label);
+      return await agent.updateLabel(id, label);
     }),
   delete: activeDriverProcedure
     .use(
@@ -84,7 +97,7 @@ export const labelsRouter = router({
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
-      return await agent.callDriver('deleteLabel', input.id);
+      const agent = await getZeroAgent(activeConnection.id);
+      return await agent.deleteLabel(input.id);
     }),
 });

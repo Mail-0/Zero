@@ -82,10 +82,7 @@ export function NavUser() {
     toast.success('Connection ID copied to clipboard');
   }, [activeConnection]);
 
-  const activeAccount = useMemo(() => {
-    if (!activeConnection || !data) return null;
-    return data.connections?.find((connection) => connection.id === activeConnection.id);
-  }, [activeConnection, data]);
+  const { data: activeAccount } = useActiveConnection();
 
   useEffect(() => setIsRendered(true), []);
 
