@@ -575,6 +575,9 @@ importers:
       jsonrepair:
         specifier: ^3.12.0
         version: 3.12.0
+      mime-types:
+        specifier: 3.0.1
+        version: 3.0.1
       mimetext:
         specifier: ^3.0.27
         version: 3.0.27
@@ -608,6 +611,9 @@ importers:
       twilio:
         specifier: 5.7.0
         version: 5.7.0
+      uuid:
+        specifier: 11.1.0
+        version: 11.1.0
       wrangler:
         specifier: 'catalog:'
         version: 4.18.0(@cloudflare/workers-types@4.20250514.0)
@@ -645,15 +651,9 @@ importers:
       jiti:
         specifier: 2.4.2
         version: 2.4.2
-      mime-types:
-        specifier: 3.0.1
-        version: 3.0.1
       typescript:
         specifier: 'catalog:'
         version: 5.8.3
-      uuid:
-        specifier: 11.1.0
-        version: 11.1.0
 
   packages/cli:
     devDependencies:

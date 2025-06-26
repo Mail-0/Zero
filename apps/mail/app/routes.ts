@@ -23,11 +23,9 @@ export default [
 
   layout('(routes)/layout.tsx', [
     route('/developer', '(routes)/developer/page.tsx'),
-    route('/toast-test', '(routes)/toast-test.tsx'),
     layout(
       '(routes)/mail/layout.tsx',
       prefix('/mail', [
-        route('/composer-test', '(routes)/mail/composer-test/page.tsx'),
         index('(routes)/mail/page.tsx'),
         route('/create', '(routes)/mail/create/page.tsx'),
         route('/compose', '(routes)/mail/compose/page.tsx'),

@@ -68,7 +68,9 @@
     "superjson": "catalog:",
     "twilio": "5.7.0",
     "wrangler": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "uuid": "11.1.0",
+    "mime-types": "3.0.1"
   },
   "devDependencies": {
     "@types/he": "1.2.3",
@@ -81,8 +83,6 @@
     "drizzle-kit": "catalog:",
     "eslint": "^9.27.0",
     "jiti": "2.4.2",
-    "mime-types": "3.0.1",
-    "typescript": "catalog:",
-    "uuid": "11.1.0"
+    "typescript": "catalog:"
   }
 }
