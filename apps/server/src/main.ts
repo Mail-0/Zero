@@ -231,7 +231,7 @@ class ZeroDB extends DurableObject<Env> {
     return await this.db.insert(note).values({
       ...payload,
       userId,
-    });
+    }).returning();
   }
 
   async updateNote(
