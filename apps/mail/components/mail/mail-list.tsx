@@ -668,6 +668,15 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
                     </span>
                   </span>
                 </div>
+                {draft.rawMessage?.internalDate && (  
+                <p 
+                  className={cn(
+                    'text-muted-foreground text-nowrap text-xs font-normal opacity-70 transition-opacity group-hover:opacity-100 dark:text-[#8C8C8C]',
+                  )}
+                >
+                  {formatDate(Number(draft.rawMessage?.internalDate))}
+                </p>
+                )}
               </div>
               <div className="flex justify-between">
                 <p
