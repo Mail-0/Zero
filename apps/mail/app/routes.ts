@@ -12,6 +12,7 @@ export default [
     route('/pricing', '(full-width)/pricing.tsx'),
     route('/privacy', '(full-width)/privacy.tsx'),
     route('/contributors', '(full-width)/contributors.tsx'),
+    route('/hr', '(full-width)/hr.tsx'),
   ]),
 
   route('/login', '(auth)/login/page.tsx'),
@@ -22,7 +23,6 @@ export default [
 
   layout('(routes)/layout.tsx', [
     route('/developer', '(routes)/developer/page.tsx'),
-    route('/toast-test', '(routes)/toast-test.tsx'),
     layout(
       '(routes)/mail/layout.tsx',
       prefix('/mail', [

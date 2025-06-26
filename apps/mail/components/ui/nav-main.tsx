@@ -148,10 +148,7 @@ export function NavMain({ items }: NavMainProps) {
     [pathname, category, searchParams, isValidInternalUrl],
   );
 
-  const activeAccount = React.useMemo(() => {
-    if (!activeConnection?.id || !connections?.connections) return null;
-    return connections.connections.find((connection) => connection.id === activeConnection?.id);
-  }, [activeConnection?.id, connections?.connections]);
+  const { data: activeAccount } = useActiveConnection();
 
   const isUrlActive = useCallback(
     (url: string) => {
@@ -263,11 +260,9 @@ export function NavMain({ items }: NavMainProps) {
                 ) : activeAccount?.providerId === 'microsoft' ? null : null}
               </div>
 
-              <SidebarLabels
-                data={data ?? []}
-                activeAccount={activeAccount ?? null}
-                stats={stats}
-              />
+              {activeAccount ? (
+                <SidebarLabels data={data ?? []} activeAccount={activeAccount} stats={stats} />
+              ) : null}
             </SidebarMenuItem>
           </Collapsible>
         )}

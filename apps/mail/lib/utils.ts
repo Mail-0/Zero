@@ -66,23 +66,88 @@ export const getCookie = (key: string): string | null => {
   return cookies?.[key] ?? null;
 };
 
-export const formatDate = (date: string) => {
+export const parseAndValidateDate = (dateString: string): Date | null => {
   try {
-    // Handle empty or invalid input
-    if (!date) {
-      return '';
+    // Handle empty input
+    if (!dateString) {
+      return null;
     }
 
-    const timezone = getBrowserTimezone();
     // Parse the date string to a Date object
-    const dateObj = new Date(date);
-    const now = new Date();
+    const dateObj = new Date(dateString);
 
     // Check if the date is valid
     if (isNaN(dateObj.getTime())) {
-      console.error('Invalid date', date);
-      return '';
+      console.error('Invalid date', dateString);
+      return null;
     }
+
+    return dateObj;
+  } catch (error) {
+    console.error('Error parsing date', error);
+    return null;
+  }
+};
+
+/**
+ * Helper function to determine if a separate time display is needed
+ * Returns false for emails from today or within last 12 hours since formatDate already shows time for these
+ */
+export const shouldShowSeparateTime = (dateString: string | undefined): boolean => {
+  if (!dateString) return false;
+  
+  const dateObj = parseAndValidateDate(dateString);
+  if (!dateObj) return false;
+  
+  const now = new Date();
+  
+  // Don't show separate time if email is from today
+  if (isToday(dateObj)) return false;
+  
+  // Don't show separate time if email is within the last 12 hours
+  const hoursDifference = (now.getTime() - dateObj.getTime()) / (1000 * 60 * 60);
+  if (hoursDifference <= 12) return false;
+  
+  // Show separate time for older emails
+  return true;
+};
+
+/**
+ * Formats a date with different formatting logic based on parameters
+ * Overloaded to handle both mail date formatting and notes date formatting
+ */
+export function formatDate(date: string): string;
+export function formatDate(dateInput: string | Date, formatter?: any): string;
+export function formatDate(dateInput: string | Date, formatter?: any): string {
+  // Notes formatting logic (when formatter is provided or date is a Date object)
+  if (formatter || dateInput instanceof Date) {
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+
+    if (formatter) {
+      return formatter.dateTime(date, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      });
+    }
+
+    return date.toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  // Original mail formatting logic
+  const dateObj = parseAndValidateDate(dateInput as string);
+  if (!dateObj) {
+    return '';
+  }
+
+  try {
+    const timezone = getBrowserTimezone();
+    const now = new Date();
 
     // If it's today, always show the time
     if (isToday(dateObj)) {
@@ -106,6 +171,23 @@ export const formatDate = (date: string) => {
     return formatInTimeZone(dateObj, timezone, 'MM/dd/yy');
   } catch (error) {
     console.error('Error formatting date', error);
+    return '';
+  }
+};
+
+export const formatTime = (date: string) => {
+  const dateObj = parseAndValidateDate(date);
+  if (!dateObj) {
+    return '';
+  }
+
+  try {
+    const timezone = getBrowserTimezone();
+    
+    // Always return the time in h:mm a format
+    return formatInTimeZone(dateObj, timezone, 'h:mm a');
+  } catch (error) {
+    console.error('Error formatting time', error);
     return '';
   }
 };

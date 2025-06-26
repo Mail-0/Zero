@@ -1,9 +1,11 @@
 import { useEditor, type KeyboardShortcutCommand, Extension, generateJSON } from '@tiptap/react';
 import { AutoComplete } from '@/components/create/editor-autocomplete';
 import { defaultExtensions } from '@/components/create/extensions';
+import { FileHandler } from '@tiptap/extension-file-handler';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { TextSelection } from 'prosemirror-state';
+import { Image } from '@tiptap/extension-image';
 import { Markdown } from 'tiptap-markdown';
 import { isObjectType } from 'remeda';
 import { cn } from '@/lib/utils';
@@ -187,6 +189,53 @@ const useComposeEditor = ({
   const extensions = [
     ...defaultExtensions,
     Markdown,
+    Image,
+    FileHandler.configure({
+      allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
+      onDrop: (currentEditor, files, pos) => {
+        files.forEach((file) => {
+          const fileReader = new FileReader();
+
+          fileReader.readAsDataURL(file);
+          fileReader.onload = () => {
+            currentEditor
+              .chain()
+              .insertContentAt(pos, {
+                type: 'image',
+                attrs: {
+                  src: fileReader.result,
+                },
+              })
+              .focus()
+              .run();
+          };
+        });
+      },
+      onPaste: (currentEditor, files, htmlContent) => {
+        files.forEach((file) => {
+          if (htmlContent) {
+            console.log(htmlContent); // eslint-disable-line no-console
+            return false;
+          }
+
+          const fileReader = new FileReader();
+
+          fileReader.readAsDataURL(file);
+          fileReader.onload = () => {
+            currentEditor
+              .chain()
+              .insertContentAt(currentEditor.state.selection.anchor, {
+                type: 'image',
+                attrs: {
+                  src: fileReader.result,
+                },
+              })
+              .focus()
+              .run();
+          };
+        });
+      },
+    }),
     AutoCompleteExtension({
       myInfo,
       sender,
@@ -209,13 +258,14 @@ const useComposeEditor = ({
     Placeholder.configure({
       placeholder,
     }),
-    ...(onAttachmentsChange
-      ? [
-          PreventNavigateOnDragOver((files) => {
-            onAttachmentsChange(files);
-          }),
-        ]
-      : []),
+    // breaks the image upload
+    // ...(onAttachmentsChange
+    //   ? [
+    //       PreventNavigateOnDragOver((files) => {
+    //         onAttachmentsChange(files);
+    //       }),
+    //     ]
+    //   : []),
   ];
 
   return useEditor({

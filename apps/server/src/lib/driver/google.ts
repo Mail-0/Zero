@@ -555,7 +555,7 @@ export class GoogleMailManager implements MailManager {
     return this.withErrorHandler(
       'createDraft',
       async () => {
-        const message = await sanitizeTipTapHtml(data.message);
+        const { html: message, inlineImages } = await sanitizeTipTapHtml(data.message);
         const msg = createMimeMessage();
         msg.setSender('me');
         // name <email@example.com>
@@ -579,10 +579,24 @@ export class GoogleMailManager implements MailManager {
           data: message || '',
         });
 
+        if (inlineImages.length > 0) {
+          for (const image of inlineImages) {
+            msg.addAttachment({
+              inline: true,
+              filename: `${image.cid}`,
+              contentType: image.mimeType,
+              data: image.data,
+              headers: {
+                'Content-ID': `<${image.cid}>`,
+                'Content-Disposition': 'inline',
+              },
+            });
+          }
+        }
+
         if (data.attachments && data.attachments?.length > 0) {
           for (const attachment of data.attachments) {
-            const arrayBuffer = await attachment.arrayBuffer();
-            const base64Data = Buffer.from(arrayBuffer).toString('base64');
+            const base64Data = attachment.base64;
             msg.addAttachment({
               filename: attachment.name,
               contentType: attachment.type,
@@ -1025,16 +1039,33 @@ export class GoogleMailManager implements MailManager {
 
     msg.setSubject(subject);
 
+    const { html: processedMessage, inlineImages } = await sanitizeTipTapHtml(message.trim());
+
     if (originalMessage) {
       msg.addMessage({
         contentType: 'text/html',
-        data: `${await sanitizeTipTapHtml(message.trim())}${originalMessage}`,
+        data: `${processedMessage}${originalMessage}`,
       });
     } else {
       msg.addMessage({
         contentType: 'text/html',
-        data: await sanitizeTipTapHtml(message.trim()),
+        data: processedMessage,
       });
+    }
+
+    if (inlineImages.length > 0) {
+      for (const image of inlineImages) {
+        msg.addAttachment({
+          inline: true,
+          filename: `${image.cid}`,
+          contentType: image.mimeType,
+          data: image.data,
+          headers: {
+            'Content-ID': `<${image.cid}>`,
+            'Content-Disposition': 'inline',
+          },
+        });
+      }
     }
 
     if (headers) {
@@ -1059,9 +1090,7 @@ export class GoogleMailManager implements MailManager {
 
     if (attachments?.length > 0) {
       for (const file of attachments) {
-        const arrayBuffer = await file.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        const base64Content = buffer.toString('base64');
+        const base64Content = file.base64;
 
         msg.addAttachment({
           filename: file.name,
