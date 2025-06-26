@@ -66,7 +66,6 @@ import type { IConnection } from '@/types';
 import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
-import type { IConnection } from '@/types';
 import SelectAllCheckbox from './select-all-checkbox';
 
 interface ITag {
