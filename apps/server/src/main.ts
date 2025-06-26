@@ -13,6 +13,7 @@ import {
   userHotkeys,
   userSettings,
   writingStyleMatrix,
+  organizationDomain,
 } from './db/schema';
 import { env, WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
 import { EProviders, type ISubscribeBatch, type IThreadBatch } from './types';
@@ -42,6 +43,8 @@ import { appRouter } from './trpc';
 import { cors } from 'hono/cors';
 import { Effect } from 'effect';
 import { Hono } from 'hono';
+import { orgRouter } from './routes/organization';
+import { invitationRouter } from './routes/invitation';
 
 export class DbRpcDO extends RpcTarget {
   constructor(
@@ -171,6 +174,23 @@ export class DbRpcDO extends RpcTarget {
     updatingInfo: Partial<typeof connection.$inferInsert>,
   ) {
     return await this.mainDo.updateConnection(connectionId, updatingInfo);
+  }
+
+  // Organization Domain methods
+  async findOrganizationDomains(organizationId: string) {
+    return await this.mainDo.findOrganizationDomains(organizationId);
+  }
+  async insertOrganizationDomain(domain: any) {
+    return await this.mainDo.insertOrganizationDomain(domain);
+  }
+  async deleteOrganizationDomain(organizationId: string, domain: string) {
+    return await this.mainDo.deleteOrganizationDomain(organizationId, domain);
+  }
+  async findOrganizationDomain(organizationId: string, domain: string) {
+    return await this.mainDo.findOrganizationDomain(organizationId, domain);
+  }
+  async updateOrganizationDomain(organizationId: string, domain: string, update: any) {
+    return await this.mainDo.updateOrganizationDomain(organizationId, domain, update);
   }
 }
 
@@ -489,6 +509,36 @@ class ZeroDB extends DurableObject<Env> {
       .set(updatingInfo)
       .where(eq(connection.id, connectionId));
   }
+
+  // Organization Domain methods
+  async findOrganizationDomains(organizationId: string) {
+    return await this.db.query.organizationDomain.findMany({
+      where: eq(organizationDomain.organizationId, organizationId),
+    });
+  }
+  async insertOrganizationDomain(domain: any) {
+    return await this.db.insert(organizationDomain).values(domain);
+  }
+  async deleteOrganizationDomain(organizationId: string, domain: string) {
+    return await this.db.delete(organizationDomain).where(and(
+      eq(organizationDomain.organizationId, organizationId),
+      eq(organizationDomain.domain, domain)
+    ));
+  }
+  async findOrganizationDomain(organizationId: string, domain: string) {
+    return await this.db.query.organizationDomain.findFirst({
+      where: and(
+        eq(organizationDomain.organizationId, organizationId),
+        eq(organizationDomain.domain, domain)
+      ),
+    });
+  }
+  async updateOrganizationDomain(organizationId: string, domain: string, update: any) {
+    return await this.db.update(organizationDomain).set(update).where(and(
+      eq(organizationDomain.organizationId, organizationId),
+      eq(organizationDomain.domain, domain)
+    ));
+  }
 }
 
 export default class extends WorkerEntrypoint<typeof env> {
@@ -536,6 +586,8 @@ export default class extends WorkerEntrypoint<typeof env> {
     .route('/ai', aiRouter)
     .route('/autumn', autumnApi)
     .route('/public', publicRouter)
+    .route('/organization', orgRouter)
+    .route('/invitations', invitationRouter)
     .on(['GET', 'POST', 'OPTIONS'], '/auth/*', (c) => {
       return c.var.auth.handler(c.req.raw);
     })

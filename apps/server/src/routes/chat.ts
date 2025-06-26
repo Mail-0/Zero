@@ -353,7 +353,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
   }
 
   async dropTables() {
-    return this.sql`       
+    return this.sql`
         DROP TABLE IF EXISTS threads;`;
   }
 
@@ -905,12 +905,12 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
 
         this.sql`
           INSERT OR REPLACE INTO threads (
-            id, 
-            thread_id, 
-            provider_id,  
-            latest_sender, 
-            latest_received_on, 
-            latest_subject, 
+            id,
+            thread_id,
+            provider_id,
+            latest_sender,
+            latest_received_on,
+            latest_subject,
             latest_label_ids,
             updated_at
           ) VALUES (

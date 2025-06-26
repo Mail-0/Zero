@@ -6,7 +6,7 @@ import {
   session,
   userHotkeys,
 } from '../db/schema';
-import { createAuthMiddleware, phoneNumber, jwt, bearer, mcp } from 'better-auth/plugins';
+import { createAuthMiddleware, phoneNumber, jwt, bearer, mcp, organization } from 'better-auth/plugins';
 import { type Account, betterAuth, type BetterAuthOptions } from 'better-auth';
 import { getBrowserTimezone, isValidTimezone } from './timezones';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
@@ -78,6 +78,50 @@ export const createAuth = () => {
 
   return betterAuth({
     plugins: [
+      organization({
+        allowUserToCreateOrganization: async (user) => {
+          // const subscription = await getSubscription(user.id) 
+          // return subscription.plan === "pro"
+          return true;
+        },
+        async sendInvitationEmail(data: {
+          id: string;
+          email: string;
+          inviter: { user: { name: string; email: string } };
+          organization: { name: string };
+        }) {
+          console.log('[INVITE] sendInvitationEmail HOOK TRIGGERED');
+          console.log('[INVITE] Invitation Data:', JSON.stringify(data, null, 2));
+          const inviteLink = `${env.VITE_PUBLIC_APP_URL}/accept-invitation/${data.id}`;
+          console.log('[INVITE] Generated invite link:', inviteLink);
+          await sendOrganizationInvitation({
+            email: data.email,
+            invitedByUsername: data.inviter.user.name,
+            invitedByEmail: data.inviter.user.email,
+            teamName: data.organization.name,
+            inviteLink
+          });
+          console.log('[INVITE] sendInvitationEmail HOOK COMPLETED');
+        },
+        organizationCreation: {
+          beforeCreate: async ({ organization, user }, request) => {
+            return {
+              data: {
+                ...organization,
+                metadata: {
+                  customField: "value"
+                }
+              }
+            }
+          },
+          afterCreate: async ({ organization, member, user }, request) => {
+              // Run custom logic after organization is created
+              // e.g., create default resources, send notifications
+              // await setupDefaultResources(organization.id)
+              console.log('organization created', organization, member, user, request);
+          },     
+      }
+      }),
       mcp({
         loginPage: env.VITE_PUBLIC_APP_URL + '/login',
       }),
@@ -306,3 +350,33 @@ export const createSimpleAuth = () => {
 
 export type Auth = ReturnType<typeof createAuth>;
 export type SimpleAuth = ReturnType<typeof createSimpleAuth>;
+
+
+async function sendOrganizationInvitation({ email, invitedByUsername, invitedByEmail, teamName, inviteLink }: {
+  email: string;
+  invitedByUsername: string;
+  invitedByEmail: string;
+  teamName: string;
+  inviteLink: string;
+}) {
+  console.log('[INVITE] sendOrganizationInvitation CALLED');
+  console.log('[INVITE] Email Params:', { email, invitedByUsername, invitedByEmail, teamName, inviteLink });
+  try {
+    await resend().emails.send({
+      from: '0.email <me@amritwt.me>',
+      to: email,
+      subject: `You have been invited to join ${teamName} on 0.email`,
+      html: `
+        <h2>You've been invited to join <b>${teamName}</b>!</h2>
+        <p><b>${invitedByUsername}</b> (${invitedByEmail}) has invited you to join their team on 0.email.</p>
+        <p>Click the link below to accept your invitation:</p>
+        <a href="${inviteLink}">${inviteLink}</a>
+        <p>If you did not expect this invitation, you can safely ignore this email.</p>
+      `,
+    });
+    console.log('[INVITE] Email sent successfully to', email);
+  } catch (err) {
+    console.error('[INVITE] Failed to send invite email:', err);
+    throw err;
+  }
+}

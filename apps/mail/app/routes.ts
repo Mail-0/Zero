@@ -23,6 +23,7 @@ export default [
 
   layout('(routes)/layout.tsx', [
     route('/developer', '(routes)/developer/page.tsx'),
+    route('/accept-invitation/:invitationToken', '(organizations)/accept-invitation/page.tsx'),
     layout(
       '(routes)/mail/layout.tsx',
       prefix('/mail', [
@@ -44,6 +45,7 @@ export default [
         route('/labels', '(routes)/settings/labels/page.tsx'),
         // route('/categories', '(routes)/settings/categories/page.tsx'),
         route('/notifications', '(routes)/settings/notifications/page.tsx'),
+        route('/organization', '(routes)/settings/organization/page.tsx'),
         route('/privacy', '(routes)/settings/privacy/page.tsx'),
         route('/security', '(routes)/settings/security/page.tsx'),
         route('/shortcuts', '(routes)/settings/shortcuts/page.tsx'),

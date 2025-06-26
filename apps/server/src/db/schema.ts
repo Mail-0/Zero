@@ -8,6 +8,7 @@ import {
   primaryKey,
   unique,
   index,
+  pgEnum,
 } from 'drizzle-orm/pg-core';
 import { defaultUserSettings } from '../lib/schemas';
 
@@ -40,6 +41,7 @@ export const session = createTable(
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
+    activeOrganizationId: text('active_organization_id').references(() => organization.id),
   },
   (t) => [
     index('session_user_id_idx').on(t.userId),
@@ -237,6 +239,61 @@ export const jwks = createTable(
   (t) => [index('jwks_created_at_idx').on(t.createdAt)],
 );
 
+export const organization = createTable('organization', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  slug: text('slug').notNull().unique(),
+  logo: text('logo'),
+  metadata: text('metadata'),
+  createdAt: timestamp('created_at').notNull(),
+});
+
+export const roleEnum = pgEnum('role', ['owner', 'admin', 'member']);
+export type Role = 'owner' | 'admin' | 'member';
+
+export const member = createTable(
+  'member',
+  {
+    id: text('id').primaryKey(),
+    userId: text('userId')
+      .notNull()
+      .references(() => user.id),
+    organizationId: text('organizationId')
+      .notNull()
+      .references(() => organization.id),
+    teamId: text('teamId').references(() => team.id),
+    role: roleEnum('role').notNull().default('member'),
+    createdAt: timestamp('createdAt').notNull(),
+  },
+  (t) => [
+    unique().on(t.userId, t.organizationId),
+  ],
+);
+
+export const invitation = createTable('invitation', {
+  id: text('id').primaryKey(),
+  email: text('email').notNull(),
+  inviterId: text('inviterId')
+    .notNull()
+    .references(() => user.id),
+  organizationId: text('organizationId')
+    .notNull()
+    .references(() => organization.id),
+  teamId: text('teamId'),
+  role: roleEnum('role').notNull().default('member'),
+  status: text('status').notNull().default('pending'),
+  expiresAt: timestamp('expiresAt'),
+  createdAt: timestamp('createdAt').defaultNow(),
+});
+
+export const team = createTable('team', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  organizationId: text('organizationId').references(() => organization.id),
+  created_at: timestamp('createdAt').notNull(),
+  updated_at: timestamp('updatedAt'),
+});
+
 export const oauthApplication = createTable(
   'oauth_application',
   {
@@ -297,3 +354,27 @@ export const oauthConsent = createTable(
     index('oauth_consent_given_idx').on(t.consentGiven),
   ],
 );
+
+export const organizationDomain = createTable('organization_domain', {
+  id: text('id').primaryKey(),
+  organizationId: text('organizationId')
+    .notNull()
+    .references(() => organization.id, { onDelete: 'cascade' }),
+  domain: text('domain').notNull(),
+  createdAt: timestamp('createdAt').notNull(),
+  verified: boolean('verified').notNull().default(false),
+  verificationToken: text('verificationToken'),
+});
+
+export const organizationConnection = createTable('organization_connection', {
+  id: text('id').primaryKey(),
+  organizationId: text('organizationId')
+    .notNull()
+    .references(() => organization.id, { onDelete: 'cascade' }),
+  connectionId: text('connectionId')
+    .notNull()
+    .references(() => connection.id, { onDelete: 'cascade' }),
+  alias: text('alias'),
+  createdAt: timestamp('createdAt').notNull(),
+});
+

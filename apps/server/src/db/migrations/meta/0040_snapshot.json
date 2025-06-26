@@ -1,6 +1,6 @@
 {
-  "id": "20287de0-64f8-4f6a-bc57-9aa4fe103f93",
-  "prevId": "63675907-78bc-4b07-a565-3fdf2e24f8b9",
+  "id": "e6217256-504b-49f9-960f-beb96000f0fe",
+  "prevId": "1248acfa-f141-4883-a4b5-c0c98477df9c",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -87,7 +87,59 @@
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "account_user_id_idx": {
+          "name": "account_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "account_provider_user_id_idx": {
+          "name": "account_provider_user_id_idx",
+          "columns": [
+            {
+              "expression": "provider_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "account_expires_at_idx": {
+          "name": "account_expires_at_idx",
+          "columns": [
+            {
+              "expression": "access_token_expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "mail0_account_user_id_mail0_user_id_fk": {
           "name": "mail0_account_user_id_mail0_user_id_fk",
@@ -99,7 +151,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -186,7 +238,53 @@
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "connection_user_id_idx": {
+          "name": "connection_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "connection_expires_at_idx": {
+          "name": "connection_expires_at_idx",
+          "columns": [
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "connection_provider_id_idx": {
+          "name": "connection_provider_id_idx",
+          "columns": [
+            {
+              "expression": "provider_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "mail0_connection_user_id_mail0_user_id_fk": {
           "name": "mail0_connection_user_id_mail0_user_id_fk",
@@ -198,7 +296,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -260,7 +358,23 @@
           "default": "''"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "early_access_is_early_access_idx": {
+          "name": "early_access_is_early_access_idx",
+          "columns": [
+            {
+              "expression": "is_early_access",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
@@ -272,6 +386,104 @@
           ]
         }
       },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.mail0_invitation": {
+      "name": "mail0_invitation",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "inviterId": {
+          "name": "inviterId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "organizationId": {
+          "name": "organizationId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "teamId": {
+          "name": "teamId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "role": {
+          "name": "role",
+          "type": "role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'member'"
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "expiresAt": {
+          "name": "expiresAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "mail0_invitation_inviterId_mail0_user_id_fk": {
+          "name": "mail0_invitation_inviterId_mail0_user_id_fk",
+          "tableFrom": "mail0_invitation",
+          "tableTo": "mail0_user",
+          "columnsFrom": [
+            "inviterId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "mail0_invitation_organizationId_mail0_organization_id_fk": {
+          "name": "mail0_invitation_organizationId_mail0_organization_id_fk",
+          "tableFrom": "mail0_invitation",
+          "tableTo": "mail0_organization",
+          "columnsFrom": [
+            "organizationId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -305,10 +517,126 @@
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "jwks_created_at_idx": {
+          "name": "jwks_created_at_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.mail0_member": {
+      "name": "mail0_member",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "organizationId": {
+          "name": "organizationId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "teamId": {
+          "name": "teamId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "role": {
+          "name": "role",
+          "type": "role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'member'"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "mail0_member_userId_mail0_user_id_fk": {
+          "name": "mail0_member_userId_mail0_user_id_fk",
+          "tableFrom": "mail0_member",
+          "tableTo": "mail0_user",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "mail0_member_organizationId_mail0_organization_id_fk": {
+          "name": "mail0_member_organizationId_mail0_organization_id_fk",
+          "tableFrom": "mail0_member",
+          "tableTo": "mail0_organization",
+          "columnsFrom": [
+            "organizationId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "mail0_member_teamId_mail0_team_id_fk": {
+          "name": "mail0_member_teamId_mail0_team_id_fk",
+          "tableFrom": "mail0_member",
+          "tableTo": "mail0_team",
+          "columnsFrom": [
+            "teamId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "mail0_member_userId_organizationId_unique": {
+          "name": "mail0_member_userId_organizationId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "userId",
+            "organizationId"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -377,7 +705,74 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "note_user_id_idx": {
+          "name": "note_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "note_thread_id_idx": {
+          "name": "note_thread_id_idx",
+          "columns": [
+            {
+              "expression": "thread_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "note_user_thread_idx": {
+          "name": "note_user_thread_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "thread_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "note_is_pinned_idx": {
+          "name": "note_is_pinned_idx",
+          "columns": [
+            {
+              "expression": "is_pinned",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "mail0_note_user_id_mail0_user_id_fk": {
           "name": "mail0_note_user_id_mail0_user_id_fk",
@@ -464,7 +859,53 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "oauth_access_token_user_id_idx": {
+          "name": "oauth_access_token_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "oauth_access_token_client_id_idx": {
+          "name": "oauth_access_token_client_id_idx",
+          "columns": [
+            {
+              "expression": "client_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "oauth_access_token_expires_at_idx": {
+          "name": "oauth_access_token_expires_at_idx",
+          "columns": [
+            {
+              "expression": "access_token_expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
@@ -564,7 +1005,38 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "oauth_application_user_id_idx": {
+          "name": "oauth_application_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "oauth_application_disabled_idx": {
+          "name": "oauth_application_disabled_idx",
+          "columns": [
+            {
+              "expression": "disabled",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
@@ -627,7 +1099,53 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "oauth_consent_user_id_idx": {
+          "name": "oauth_consent_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "oauth_consent_client_id_idx": {
+          "name": "oauth_consent_client_id_idx",
+          "columns": [
+            {
+              "expression": "client_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "oauth_consent_given_idx": {
+          "name": "oauth_consent_given_idx",
+          "columns": [
+            {
+              "expression": "consent_given",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
@@ -692,8 +1210,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.mail0_invitation": {
-      "name": "mail0_invitation",
+    "public.mail0_organization_connection": {
+      "name": "mail0_organization_connection",
       "schema": "",
       "columns": {
         "id": {
@@ -702,47 +1220,21 @@
           "primaryKey": true,
           "notNull": true
         },
-        "email": {
-          "name": "email",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "inviterId": {
-          "name": "inviterId",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "organizationId": {
           "name": "organizationId",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "teamId": {
-          "name": "teamId",
+        "connectionId": {
+          "name": "connectionId",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
-        "role": {
-          "name": "role",
+        "alias": {
+          "name": "alias",
           "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'member'"
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'pending'"
-        },
-        "expiresAt": {
-          "name": "expiresAt",
-          "type": "timestamp",
           "primaryKey": false,
           "notNull": false
         },
@@ -755,22 +1247,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "mail0_invitation_inviterId_mail0_user_id_fk": {
-          "name": "mail0_invitation_inviterId_mail0_user_id_fk",
-          "tableFrom": "mail0_invitation",
-          "tableTo": "mail0_user",
-          "columnsFrom": [
-            "inviterId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "mail0_invitation_organizationId_mail0_organization_id_fk": {
-          "name": "mail0_invitation_organizationId_mail0_organization_id_fk",
-          "tableFrom": "mail0_invitation",
+        "mail0_organization_connection_organizationId_mail0_organization_id_fk": {
+          "name": "mail0_organization_connection_organizationId_mail0_organization_id_fk",
+          "tableFrom": "mail0_organization_connection",
           "tableTo": "mail0_organization",
           "columnsFrom": [
             "organizationId"
@@ -778,7 +1257,20 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "mail0_organization_connection_connectionId_mail0_connection_id_fk": {
+          "name": "mail0_organization_connection_connectionId_mail0_connection_id_fk",
+          "tableFrom": "mail0_organization_connection",
+          "tableTo": "mail0_connection",
+          "columnsFrom": [
+            "connectionId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -788,8 +1280,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.mail0_member": {
-      "name": "mail0_member",
+    "public.mail0_organization_domain": {
+      "name": "mail0_organization_domain",
       "schema": "",
       "columns": {
         "id": {
@@ -798,56 +1290,43 @@
           "primaryKey": true,
           "notNull": true
         },
-        "userId": {
-          "name": "userId",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "organizationId": {
           "name": "organizationId",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "teamId": {
-          "name": "teamId",
+        "domain": {
+          "name": "domain",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
-        },
-        "role": {
-          "name": "role",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'member'"
+          "notNull": true
         },
         "createdAt": {
           "name": "createdAt",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true
+        },
+        "verified": {
+          "name": "verified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "verificationToken": {
+          "name": "verificationToken",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "mail0_member_userId_mail0_user_id_fk": {
-          "name": "mail0_member_userId_mail0_user_id_fk",
-          "tableFrom": "mail0_member",
-          "tableTo": "mail0_user",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "mail0_member_organizationId_mail0_organization_id_fk": {
-          "name": "mail0_member_organizationId_mail0_organization_id_fk",
-          "tableFrom": "mail0_member",
+        "mail0_organization_domain_organizationId_mail0_organization_id_fk": {
+          "name": "mail0_organization_domain_organizationId_mail0_organization_id_fk",
+          "tableFrom": "mail0_organization_domain",
           "tableTo": "mail0_organization",
           "columnsFrom": [
             "organizationId"
@@ -855,7 +1334,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -924,7 +1403,38 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "session_user_id_idx": {
+          "name": "session_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "session_expires_at_idx": {
+          "name": "session_expires_at_idx",
+          "columns": [
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "mail0_session_user_id_mail0_user_id_fk": {
           "name": "mail0_session_user_id_mail0_user_id_fk",
@@ -932,6 +1442,19 @@
           "tableTo": "mail0_user",
           "columnsFrom": [
             "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "mail0_session_active_organization_id_mail0_organization_id_fk": {
+          "name": "mail0_session_active_organization_id_mail0_organization_id_fk",
+          "tableFrom": "mail0_session",
+          "tableTo": "mail0_organization",
+          "columnsFrom": [
+            "active_organization_id"
           ],
           "columnsTo": [
             "id"
@@ -1008,8 +1531,74 @@
           "notNull": false
         }
       },
-      "indexes": {},
-      "foreignKeys": {},
+      "indexes": {
+        "summary_connection_id_idx": {
+          "name": "summary_connection_id_idx",
+          "columns": [
+            {
+              "expression": "connection_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "summary_connection_id_saved_idx": {
+          "name": "summary_connection_id_saved_idx",
+          "columns": [
+            {
+              "expression": "connection_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "saved",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "summary_saved_idx": {
+          "name": "summary_saved_idx",
+          "columns": [
+            {
+              "expression": "saved",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "mail0_summary_connection_id_mail0_connection_id_fk": {
+          "name": "mail0_summary_connection_id_mail0_connection_id_fk",
+          "tableFrom": "mail0_summary",
+          "tableTo": "mail0_connection",
+          "columnsFrom": [
+            "connection_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -1052,7 +1641,21 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "mail0_team_organizationId_mail0_organization_id_fk": {
+          "name": "mail0_team_organizationId_mail0_organization_id_fk",
+          "tableFrom": "mail0_team",
+          "tableTo": "mail0_organization",
+          "columnsFrom": [
+            "organizationId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -1182,7 +1785,23 @@
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "user_hotkeys_shortcuts_idx": {
+          "name": "user_hotkeys_shortcuts_idx",
+          "columns": [
+            {
+              "expression": "shortcuts",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "mail0_user_hotkeys_user_id_mail0_user_id_fk": {
           "name": "mail0_user_hotkeys_user_id_mail0_user_id_fk",
@@ -1194,7 +1813,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -1225,7 +1844,7 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true,
-          "default": "'{\"language\":\"en\",\"timezone\":\"UTC\",\"dynamicContent\":false,\"externalImages\":true,\"customPrompt\":\"\",\"trustedSenders\":[],\"isOnboarded\":false,\"colorTheme\":\"system\",\"zeroSignature\":true,\"autoRead\":true,\"defaultEmailAlias\":\"\",\"categories\":[{\"id\":\"Important\",\"name\":\"Important\",\"searchValue\":\"is:important NOT is:sent NOT is:draft\",\"order\":0,\"icon\":\"Lightning\",\"isDefault\":false},{\"id\":\"All Mail\",\"name\":\"All Mail\",\"searchValue\":\"NOT is:draft (is:inbox OR (is:sent AND to:me))\",\"order\":1,\"icon\":\"Mail\",\"isDefault\":true},{\"id\":\"Personal\",\"name\":\"Personal\",\"searchValue\":\"is:personal NOT is:sent NOT is:draft\",\"order\":2,\"icon\":\"User\",\"isDefault\":false},{\"id\":\"Promotions\",\"name\":\"Promotions\",\"searchValue\":\"is:promotions NOT is:sent NOT is:draft\",\"order\":3,\"icon\":\"Tag\",\"isDefault\":false},{\"id\":\"Updates\",\"name\":\"Updates\",\"searchValue\":\"is:updates NOT is:sent NOT is:draft\",\"order\":4,\"icon\":\"Bell\",\"isDefault\":false},{\"id\":\"Unread\",\"name\":\"Unread\",\"searchValue\":\"is:unread NOT is:sent NOT is:draft\",\"order\":5,\"icon\":\"ScanEye\",\"isDefault\":false}]}'::jsonb"
+          "default": "'{\"language\":\"en\",\"timezone\":\"UTC\",\"dynamicContent\":false,\"externalImages\":true,\"customPrompt\":\"\",\"trustedSenders\":[],\"isOnboarded\":false,\"colorTheme\":\"system\",\"zeroSignature\":true,\"autoRead\":true,\"defaultEmailAlias\":\"\",\"categories\":[{\"id\":\"Important\",\"name\":\"Important\",\"searchValue\":\"is:important NOT is:sent NOT is:draft\",\"order\":0,\"icon\":\"Lightning\",\"isDefault\":false},{\"id\":\"All Mail\",\"name\":\"All Mail\",\"searchValue\":\"NOT is:draft (is:inbox OR (is:sent AND to:me))\",\"order\":1,\"icon\":\"Mail\",\"isDefault\":true},{\"id\":\"Personal\",\"name\":\"Personal\",\"searchValue\":\"is:personal NOT is:sent NOT is:draft\",\"order\":2,\"icon\":\"User\",\"isDefault\":false},{\"id\":\"Promotions\",\"name\":\"Promotions\",\"searchValue\":\"is:promotions NOT is:sent NOT is:draft\",\"order\":3,\"icon\":\"Tag\",\"isDefault\":false},{\"id\":\"Updates\",\"name\":\"Updates\",\"searchValue\":\"is:updates NOT is:sent NOT is:draft\",\"order\":4,\"icon\":\"Bell\",\"isDefault\":false},{\"id\":\"Unread\",\"name\":\"Unread\",\"searchValue\":\"is:unread NOT is:sent NOT is:draft\",\"order\":5,\"icon\":\"ScanEye\",\"isDefault\":false}],\"imageCompression\":\"medium\"}'::jsonb"
         },
         "created_at": {
           "name": "created_at",
@@ -1240,7 +1859,23 @@
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "user_settings_settings_idx": {
+          "name": "user_settings_settings_idx",
+          "columns": [
+            {
+              "expression": "settings",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "mail0_user_settings_user_id_mail0_user_id_fk": {
           "name": "mail0_user_settings_user_id_mail0_user_id_fk",
@@ -1252,7 +1887,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -1311,7 +1946,38 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "verification_identifier_idx": {
+          "name": "verification_identifier_idx",
+          "columns": [
+            {
+              "expression": "identifier",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "verification_expires_at_idx": {
+          "name": "verification_expires_at_idx",
+          "columns": [
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
@@ -1349,7 +2015,23 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "writing_style_matrix_style_idx": {
+          "name": "writing_style_matrix_style_idx",
+          "columns": [
+            {
+              "expression": "style",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "mail0_writing_style_matrix_connectionId_mail0_connection_id_fk": {
           "name": "mail0_writing_style_matrix_connectionId_mail0_connection_id_fk",
@@ -1379,7 +2061,17 @@
       "isRLSEnabled": false
     }
   },
-  "enums": {},
+  "enums": {
+    "public.role": {
+      "name": "role",
+      "schema": "public",
+      "values": [
+        "owner",
+        "admin",
+        "member"
+      ]
+    }
+  },
   "schemas": {},
   "sequences": {},
   "roles": {},

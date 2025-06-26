@@ -1,0 +1,1 @@
+ALTER TABLE "mail0_invitation" ALTER COLUMN "createdAt" DROP NOT NULL;
