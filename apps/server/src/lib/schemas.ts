@@ -121,7 +121,7 @@ export const userSettingsSchema = z.object({
   timezone: z.string(),
   dynamicContent: z.boolean().optional(),
   externalImages: z.boolean(),
-  customPrompt: z.string(),
+  customPrompt: z.string().default(''),
   isOnboarded: z.boolean().optional(),
   trustedSenders: z.string().array().optional(),
   colorTheme: z.enum(['light', 'dark', 'system']).default('system'),
