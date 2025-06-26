@@ -29,7 +29,7 @@ export class NotesManager {
         isPinned,
         order: (highestOrder?.order ?? 0) + 1,
       });
-      if (!result) {
+      if (!result || result.length === 0) {
         throw new Error('Failed to create note');
       }
       return result[0];
