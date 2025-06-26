@@ -6,7 +6,7 @@ import {
   session,
   userHotkeys,
 } from '../db/schema';
-import { createAuthMiddleware, phoneNumber, jwt, bearer, mcp } from 'better-auth/plugins';
+import { createAuthMiddleware, phoneNumber, jwt, bearer, mcp, organization } from 'better-auth/plugins';
 import { type Account, betterAuth, type BetterAuthOptions } from 'better-auth';
 import { getBrowserTimezone, isValidTimezone } from './timezones';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
@@ -78,6 +78,7 @@ export const createAuth = () => {
 
   return betterAuth({
     plugins: [
+      organization(),
       mcp({
         loginPage: env.VITE_PUBLIC_APP_URL + '/login',
       }),

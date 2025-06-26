@@ -40,6 +40,7 @@ export const session = createTable(
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
+  activeOrganizationId: text('active_organization_id'),
   },
   (t) => [
     index('session_user_id_idx').on(t.userId),
@@ -237,6 +238,52 @@ export const jwks = createTable(
   (t) => [index('jwks_created_at_idx').on(t.createdAt)],
 );
 
+export const organization = createTable('organization', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  slug: text('slug').notNull().unique(),
+  logo: text('logo'),
+  metadata: text('metadata'),
+  createdAt: timestamp('created_at').notNull(),
+});
+
+export const organizationMember = createTable('member', {
+  id: text('id').primaryKey(),
+  userId: text('userId')
+    .notNull()
+    .references(() => user.id),
+  organizationId: text('organizationId')
+    .notNull()
+    .references(() => organization.id),
+  teamId: text('teamId'),
+  role: text('role').notNull().default('member'),
+  createdAt: timestamp('createdAt').notNull(),
+});
+
+export const organizationInvitation = createTable('invitation', {
+  id: text('id').primaryKey(),
+  email: text('email').notNull(),
+  inviterId: text('inviterId')
+    .notNull()
+    .references(() => user.id),
+  organizationId: text('organizationId')
+    .notNull()
+    .references(() => organization.id),
+  teamId: text('teamId'),
+  role: text('role').notNull().default('member'),
+  status: text('status').notNull().default('pending'),
+  expiresAt: timestamp('expiresAt'),
+  createdAt: timestamp('createdAt').notNull(),
+});
+
+export const team = createTable('team', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  organizationId: text('organizationId'),
+  createdAt: timestamp('createdAt').notNull(),
+  updatedAt: timestamp('updatedAt'),
+});
+
 export const oauthApplication = createTable(
   'oauth_application',
   {
@@ -297,3 +344,4 @@ export const oauthConsent = createTable(
     index('oauth_consent_given_idx').on(t.consentGiven),
   ],
 );
+
