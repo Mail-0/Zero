@@ -187,7 +187,8 @@
       "unsubscribeOpenSiteDescription": "To stop getting messages from this mailing list, go to their website to unsubscribe.",
       "cancel": "Cancel",
       "goToWebsite": "Go to website",
-      "failedToUnsubscribe": "Failed to unsubscribe from mailing list"
+      "failedToUnsubscribe": "Failed to unsubscribe from mailing list",
+      "print":"Print"
     },
     "threadDisplay": {
       "exitFullscreen": "Exit fullscreen",
@@ -206,7 +207,8 @@
       "disableImages": "Hide Images",
       "enableImages": "Show Images",
       "star": "Star",
-      "unstar": "Unstar"
+      "unstar": "Unstar",
+      "printThread":"Print thread"
     },
     "notes": {
       "title": "Notes",
