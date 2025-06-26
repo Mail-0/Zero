@@ -34,7 +34,6 @@ import {
 import { Dialog, DialogTitle, DialogHeader, DialogContent } from '../ui/dialog';
 import { memo, useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import type { Sender, ParsedMessage, Attachment } from '@/types';
 import { useActiveConnection } from '@/hooks/use-connections';
@@ -56,9 +55,10 @@ import { useQueryState } from 'nuqs';
 import { Badge } from '../ui/badge';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
+import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
 
 
-// HTML escaping function to prevent XSS attacks
 function escapeHtml(text: string): string {
   if (!text) return text;
   const div = document.createElement('div');
@@ -77,22 +77,19 @@ function TextSelectionPopover({
   const [selectedText, setSelectedText] = useState('');
   const popoverTriggerRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
+  const { copyToClipboard } = useCopyToClipboard();
 
   const handleSelectionChange = useCallback(() => {
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed) {
-      setSelectionCoords(null);
-      setSelectedText('');
       return;
     }
-
     try {
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2 + window.scrollX - window.innerWidth / 2;
-      const y = rect.top + window.scrollY;
-
-      setSelectionCoords({ x: centerX, y });
+      const x = rect.left + rect.width / 2;
+      const y = rect.top;
+      setSelectionCoords({ x, y });
       setSelectedText(selection.toString().trim());
     } catch (error) {
       console.error('Error handling text selection:', error);
@@ -121,7 +118,6 @@ function TextSelectionPopover({
         setSelectedText('');
       }
     });
-
     return () => {
       document.removeEventListener('mouseup', handleSelectionChange);
       //   document.removeEventListener('mousedown', handleClickOutside);
@@ -134,10 +130,12 @@ function TextSelectionPopover({
       {selectionCoords && (
         <div
           ref={popoverRef}
-          className="absolute z-50"
+          className="fixed"
           style={{
             top: selectionCoords.y,
             left: selectionCoords.x,
+            transform: 'translate(-50%, -110%)',
+            zIndex: 2147483647,
           }}
           role="dialog"
           aria-label="Text selection options"
@@ -147,11 +145,14 @@ function TextSelectionPopover({
             onOpenChange={(open) => (open ? undefined : setSelectedText(''))}
           >
             <PopoverTrigger asChild>
-              <button className="invisible h-0 w-0" aria-label="Text selection options" />
+              <button
+                className="invisible h-0 w-0"
+                aria-label="Text selection options"
+              />
             </PopoverTrigger>
             <PopoverContent
               side="top"
-              className="break-words rounded-lg p-0"
+              className="break-words rounded-lg p-0 !z-[2147483647]"
               onInteractOutside={() => {
                 setSelectionCoords(null);
                 setSelectedText('');
@@ -180,7 +181,11 @@ function TextSelectionPopover({
                     onClick={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
-                      navigator.clipboard.writeText(selectedText);
+                      if (selectedText) {
+                        copyToClipboard(selectedText, 'selection');
+                        setSelectionCoords(null);
+                        setSelectedText('');
+                      }
                     }}
                   >
                     <CopyIcon />
@@ -777,16 +782,8 @@ const MoreAboutQuery = ({
 
 const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }: Props) => {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
-  //   const [unsubscribed, setUnsubscribed] = useState(false);
-  //   const [isUnsubscribing, setIsUnsubscribing] = useState(false);
   const [preventCollapse, setPreventCollapse] = useState(false);
   const { folder } = useParams<{ folder: string }>();
-  //   const [selectedAttachment, setSelectedAttachment] = useState<null | {
-  //     id: string;
-  //     name: string;
-  //     type: string;
-  //     url: string;
-  //   }>(null);
   const [openDetailsPopover, setOpenDetailsPopover] = useState<boolean>(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -827,31 +824,6 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
     }
   }, [demo, emailData.id, isLastEmail, activeReplyId]);
 
-  //   const listUnsubscribeAction = useMemo(
-  //     () =>
-  //       emailData.listUnsubscribe
-  //         ? getListUnsubscribeAction({
-  //             listUnsubscribe: emailData.listUnsubscribe,
-  //             listUnsubscribePost: emailData.listUnsubscribePost,
-  //           })
-  //         : undefined,
-  //     [emailData.listUnsubscribe, emailData.listUnsubscribePost],
-  //   );
-
-  //   const _handleUnsubscribe = async () => {
-  //     setIsUnsubscribing(true);
-  //     try {
-  //       await handleUnsubscribe({
-  //         emailData,
-  //       });
-  //       setIsUnsubscribing(false);
-  //       setUnsubscribed(true);
-  //     } catch (e) {
-  //       setIsUnsubscribing(false);
-  //       setUnsubscribed(false);
-  //     }
-  //   };
-
   // Clear any pending timeouts when component unmounts
   useEffect(() => {
     return () => {
@@ -889,14 +861,11 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
     }
   }, [isCollapsed, preventCollapse, openDetailsPopover]);
 
-  // Handle email copy of senders
-  const handleCopySenderEmail = useCallback(async (personEmail: string) => {
+  const handleCopySenderEmail = useCallback(async (personEmail?: string) => {
+    if (!personEmail) return;
 
-      if(!personEmail) return ;
-    
-      await navigator.clipboard.writeText(personEmail || '');
-      toast.success('Email copied to clipboard');
-      
+    await navigator.clipboard.writeText(personEmail);
+    toast.success('Email copied to clipboard');
   }, []);
 
   // email printing
