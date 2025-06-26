@@ -169,7 +169,13 @@ export interface IOutgoingMessage {
   bcc?: Sender[];
   subject: string;
   message: string;
-  attachments: File[];
+  attachments: {
+    name: string;
+    type: string;
+    size: number;
+    lastModified: number;
+    base64: string;
+  }[];
   headers: Record<string, string>;
   threadId?: string;
   fromEmail?: string;
