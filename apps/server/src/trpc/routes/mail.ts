@@ -285,11 +285,7 @@ export const mailRouter = router({
         to: z.array(senderSchema),
         subject: z.string(),
         message: z.string(),
-        attachments: z
-          .array(serializedFileSchema)
-          .transform(deserializeFiles)
-          .optional()
-          .default([]),
+        attachments: z.array(serializedFileSchema).optional().default([]),
         headers: z.record(z.string()).optional().default({}),
         cc: z.array(senderSchema).optional(),
         bcc: z.array(senderSchema).optional(),

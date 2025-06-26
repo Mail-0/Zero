@@ -596,8 +596,7 @@ export class GoogleMailManager implements MailManager {
 
         if (data.attachments && data.attachments?.length > 0) {
           for (const attachment of data.attachments) {
-            const arrayBuffer = await attachment.arrayBuffer();
-            const base64Data = Buffer.from(arrayBuffer).toString('base64');
+            const base64Data = attachment.base64;
             msg.addAttachment({
               filename: attachment.name,
               contentType: attachment.type,
@@ -1091,9 +1090,7 @@ export class GoogleMailManager implements MailManager {
 
     if (attachments?.length > 0) {
       for (const file of attachments) {
-        const arrayBuffer = await file.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        const base64Content = buffer.toString('base64');
+        const base64Content = file.base64;
 
         msg.addAttachment({
           filename: file.name,

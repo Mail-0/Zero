@@ -28,7 +28,7 @@ export const createDraftData = z.object({
   bcc: z.string().optional(),
   subject: z.string(),
   message: z.string(),
-  attachments: z.array(serializedFileSchema).transform(deserializeFiles).optional(),
+  attachments: z.array(serializedFileSchema).optional(),
   id: z.string().nullable(),
   threadId: z.string().nullable(),
   fromEmail: z.string().nullable(),
