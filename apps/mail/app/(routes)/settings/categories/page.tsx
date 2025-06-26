@@ -203,14 +203,6 @@ const SortableCategoryItem = React.memo(function SortableCategoryItem({
       </div>
     </div>
   );
-}, (prev, next) => {
-  // Custom equality check to avoid unnecessary re-renders
-  return (
-    prev.cat === next.cat &&
-    prev.isActiveAi === next.isActiveAi &&
-    prev.promptValue === next.promptValue &&
-    prev.isGeneratingQuery === next.isGeneratingQuery
-  );
 });
 
 export default function CategoriesSettingsPage() {
