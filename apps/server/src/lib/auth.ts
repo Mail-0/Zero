@@ -78,7 +78,42 @@ export const createAuth = () => {
 
   return betterAuth({
     plugins: [
-      organization(),
+      organization({
+        allowUserToCreateOrganization: async (user) => { 
+          const subscription = await getSubscription(user.id) 
+          return subscription.plan === "pro"
+        },
+        organizationCreation: {
+          disabled: false, // Set to true to disable organization creation
+          beforeCreate: async ({ organization, user }, request) => {
+              // Run custom logic before organization is created
+              // Optionally modify the organization data
+              return {
+                  data: {
+                      ...organization,
+                      metadata: {
+                          customField: "value"
+                      }
+                  }
+              }
+          },
+          afterCreate: async ({ organization, member, user }, request) => {
+              // Run custom logic after organization is created
+              // e.g., create default resources, send notifications
+              await setupDefaultResources(organization.id)
+          },
+          async sendInvitationEmail(data) {
+            const inviteLink = `https://example.com/accept-invitation/${data.id}`
+            await sendOrganizationInvitation({
+                email: data.email,
+                invitedByUsername: data.inviter.user.name,
+                invitedByEmail: data.inviter.user.email,
+                teamName: data.organization.name,
+                inviteLink
+            })
+          },
+      }
+      }),
       mcp({
         loginPage: env.VITE_PUBLIC_APP_URL + '/login',
       }),
@@ -300,3 +335,25 @@ export const createSimpleAuth = () => {
 
 export type Auth = ReturnType<typeof createAuth>;
 export type SimpleAuth = ReturnType<typeof createSimpleAuth>;
+
+// Add this helper function for sending organization invites
+async function sendOrganizationInvitation({ email, invitedByUsername, invitedByEmail, teamName, inviteLink }: {
+  email: string;
+  invitedByUsername: string;
+  invitedByEmail: string;
+  teamName: string;
+  inviteLink: string;
+}) {
+  await resend().emails.send({
+    from: '0.email <no-reply@0.email>',
+    to: email,
+    subject: `You have been invited to join ${teamName} on 0.email`,
+    html: `
+      <h2>You've been invited to join <b>${teamName}</b>!</h2>
+      <p><b>${invitedByUsername}</b> (${invitedByEmail}) has invited you to join their team on 0.email.</p>
+      <p>Click the link below to accept your invitation:</p>
+      <a href="${inviteLink}">${inviteLink}</a>
+      <p>If you did not expect this invitation, you can safely ignore this email.</p>
+    `,
+  });
+}
