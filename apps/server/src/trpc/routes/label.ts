@@ -1,4 +1,5 @@
 import { activeDriverProcedure, createRateLimiterMiddleware, router } from '../trpc';
+import { getZeroAgent } from '../../lib/server-utils';
 import { Ratelimit } from '@upstash/ratelimit';
 import { z } from 'zod';
 
@@ -10,9 +11,25 @@ export const labelsRouter = router({
         limiter: Ratelimit.slidingWindow(60, '1m'),
       }),
     )
+    .output(
+      z.array(
+        z.object({
+          id: z.string(),
+          name: z.string(),
+          color: z
+            .object({
+              backgroundColor: z.string(),
+              textColor: z.string(),
+            })
+            .optional(),
+          type: z.string(),
+        }),
+      ),
+    )
     .query(async ({ ctx }) => {
-      const { driver } = ctx;
-      return (await driver.getUserLabels()).filter((label) => label.type === 'user');
+      const { activeConnection } = ctx;
+      const agent = await getZeroAgent(activeConnection.id);
+      return await agent.getUserLabels();
     }),
   create: activeDriverProcedure
     .use(
@@ -36,12 +53,13 @@ export const labelsRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { driver } = ctx;
+      const { activeConnection } = ctx;
+      const agent = await getZeroAgent(activeConnection.id);
       const label = {
         ...input,
         type: 'user',
       };
-      return await driver.createLabel(label);
+      return await agent.createLabel(label);
     }),
   update: activeDriverProcedure
     .use(
@@ -64,9 +82,10 @@ export const labelsRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { driver } = ctx;
+      const { activeConnection } = ctx;
+      const agent = await getZeroAgent(activeConnection.id);
       const { id, ...label } = input;
-      return await driver.updateLabel(id, label);
+      return await agent.updateLabel(id, label);
     }),
   delete: activeDriverProcedure
     .use(
@@ -77,7 +96,8 @@ export const labelsRouter = router({
     )
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const { driver } = ctx;
-      return await driver.deleteLabel(input.id);
+      const { activeConnection } = ctx;
+      const agent = await getZeroAgent(activeConnection.id);
+      return await agent.deleteLabel(input.id);
     }),
 });

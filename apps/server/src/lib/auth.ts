@@ -6,7 +6,7 @@ import {
   session,
   userHotkeys,
 } from '../db/schema';
-import { createAuthMiddleware, phoneNumber, jwt, bearer } from 'better-auth/plugins';
+import { createAuthMiddleware, phoneNumber, jwt, bearer, mcp } from 'better-auth/plugins';
 import { type Account, betterAuth, type BetterAuthOptions } from 'better-auth';
 import { getBrowserTimezone, isValidTimezone } from './timezones';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
@@ -14,6 +14,7 @@ import { getSocialProviders } from './auth-providers';
 import { redis, resend, twilio } from './services';
 import { getContext } from 'hono/context-storage';
 import { defaultUserSettings } from './schemas';
+import { getMigrations } from 'better-auth/db';
 import { disableBrainFunction } from './brain';
 import { APIError } from 'better-auth/api';
 import { getZeroDB } from './server-utils';
@@ -61,7 +62,6 @@ const connectionHandlerHook = async (account: Account) => {
   const [result] = await db.createConnection(
     account.providerId as EProviders,
     userInfo.address,
-    account.userId,
     updatingInfo,
   );
 
@@ -78,6 +78,9 @@ export const createAuth = () => {
 
   return betterAuth({
     plugins: [
+      mcp({
+        loginPage: env.VITE_PUBLIC_APP_URL + '/login',
+      }),
       jwt(),
       bearer(),
       phoneNumber({
@@ -96,10 +99,24 @@ export const createAuth = () => {
     user: {
       deleteUser: {
         enabled: true,
+        async sendDeleteAccountVerification(data) {
+          const verificationUrl = data.url;
+
+          await resend().emails.send({
+            from: '0.email <no-reply@0.email>',
+            to: data.user.email,
+            subject: 'Delete your 0.email account',
+            html: `
+            <h2>Delete Your 0.email Account</h2>
+            <p>Click the link below to delete your account:</p>
+            <a href="${verificationUrl}">${verificationUrl}</a>
+          `,
+          });
+        },
         beforeDelete: async (user, request) => {
           if (!request) throw new APIError('BAD_REQUEST', { message: 'Request object is missing' });
           const db = getZeroDB(user.id);
-          const connections = await db.findManyConnections(user.id);
+          const connections = await db.findManyConnections();
 
           const revokedAccounts = (
             await Promise.allSettled(
@@ -132,7 +149,7 @@ export const createAuth = () => {
             console.log('Failed to revoke some accounts');
           }
 
-          await db.deleteUser(user.id);
+          await db.deleteUser();
         },
       },
     },
@@ -190,7 +207,7 @@ export const createAuth = () => {
           if (newSession) {
             // Check if user already has settings
             const db = getZeroDB(newSession.user.id);
-            const existingSettings = await db.findUserSettings(newSession.user.id);
+            const existingSettings = await db.findUserSettings();
 
             if (!existingSettings) {
               // get timezone from vercel's header
@@ -201,7 +218,7 @@ export const createAuth = () => {
                   ? headerTimezone
                   : getBrowserTimezone();
               // write default settings against the user
-              await db.insertUserSettings(newSession.user.id, {
+              await db.insertUserSettings({
                 ...defaultUserSettings,
                 timezone,
               });
@@ -216,12 +233,13 @@ export const createAuth = () => {
 
 const createAuthConfig = () => {
   const cache = redis();
-  const db = createDb(env.HYPERDRIVE.connectionString);
+  const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
   return {
     database: drizzleAdapter(db, { provider: 'pg' }),
     secondaryStorage: {
       get: async (key: string) => {
-        return ((await cache.get(key)) as string) ?? null;
+        const value = await cache.get(key);
+        return typeof value === 'string' ? value : value ? JSON.stringify(value) : null;
       },
       set: async (key: string, value: string, ttl?: number) => {
         if (ttl) await cache.set(key, value, { ex: ttl });

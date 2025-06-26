@@ -7,6 +7,7 @@ import {
   Filter,
   Hash,
   Info,
+  Loader2,
   Mail,
   Paperclip,
   Search,
@@ -62,9 +63,6 @@ import { useQueryState } from 'nuqs';
 import { toast } from 'sonner';
 
 type CommandPaletteContext = {
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  openModal: () => void;
   activeFilters: ActiveFilter[];
   clearAllFilters: () => void;
 };
@@ -177,7 +175,7 @@ const deleteSavedSearch = (id: string) => {
 };
 
 export function CommandPalette({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useQueryState('isCommandPaletteOpen');
   const [, setIsComposeOpen] = useQueryState('isComposeOpen');
   const [currentView, setCurrentView] = useState<CommandView>('main');
   const [selectedDateFilter, setSelectedDateFilter] = useState<string | null>(null);
@@ -195,6 +193,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
   const [saveSearchName, setSaveSearchName] = useState('');
   const [emailSuggestions, setEmailSuggestions] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [commandInputValue, setCommandInputValue] = useState('');
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const t = useTranslations();
@@ -248,6 +247,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
       setSearchQuery('');
       setSaveSearchName('');
       setFilterBuilderState({});
+      setCommandInputValue('');
     }
   }, [open]);
 
@@ -255,7 +255,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     const down = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        setOpen((prevOpen) => !prevOpen);
+        setOpen((prevOpen) => (prevOpen ? null : 'true'));
       }
 
       if (open) {
@@ -286,7 +286,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
   }, [open, currentView]);
 
   const runCommand = useCallback((command: () => unknown) => {
-    setOpen(false);
+    setOpen(null);
     command();
   }, []);
 
@@ -397,6 +397,12 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  useEffect(() => {
+    if (pathname && activeFilters.length) {
+      clearAllFilters();
+    }
+  }, [pathname]);
+
   const clearAllFilters = useCallback(() => {
     setActiveFilters([]);
     try {
@@ -410,12 +416,11 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
       folder: searchValue.folder,
       isAISearching: false,
     });
-    toast.success('All filters cleared');
   }, [searchValue.folder, setSearchValue]);
 
   const executeSearch = useCallback(
     (query: string, isNaturalLanguage = false) => {
-      setOpen(false);
+      setOpen(null);
 
       if (query && query.trim()) {
         saveRecentSearch(query);
@@ -526,6 +531,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
 
   const handleSearch = useCallback(
     async (query: string, useNaturalLanguage = true) => {
+      if (isProcessing) return;
       setIsProcessing(true);
 
       try {
@@ -534,9 +540,6 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         if (useNaturalLanguage) {
           const result = await generateSearchQuery({ query });
           finalQuery = result.query;
-          toast.info('Search applied', {
-            description: finalQuery,
-          });
 
           const searchFilter: ActiveFilter = {
             id: `ai-search-${Date.now()}`,
@@ -545,6 +548,8 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             display: `AI Search: "${query}"`,
           };
           addFilter(searchFilter);
+
+          setOpen(null);
 
           return setSearchValue({
             value: finalQuery,
@@ -590,7 +595,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           description: finalQuery,
         });
 
-        setOpen(false);
+        setOpen(null);
       } catch (error) {
         console.error('Search error:', error);
         toast.error('Failed to process search');
@@ -598,7 +603,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         setIsProcessing(false);
       }
     },
-    [activeFilters, searchValue.folder, setSearchValue, setOpen, generateSearchQuery, addFilter],
+    [activeFilters, searchValue.folder, isProcessing],
   );
 
   const quickSearchResults = useMemo(() => {
@@ -768,6 +773,22 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     return result;
   }, [pathname, t, setIsComposeOpen, quickFilterOptions]);
 
+  const hasMatchingCommands = useMemo(() => {
+    if (!commandInputValue.trim()) return true;
+
+    const searchTerm = commandInputValue.toLowerCase();
+
+    return allCommands.some((group) =>
+      group.items.some(
+        (item) =>
+          item.title.toLowerCase().includes(searchTerm) ||
+          (item.description && item.description.toLowerCase().includes(searchTerm)) ||
+          (item.keywords &&
+            item.keywords.some((keyword) => keyword.toLowerCase().includes(searchTerm))),
+      ),
+    );
+  }, [commandInputValue, allCommands]);
+
   const renderMainView = () => (
     <>
       {activeFilters.length > 0 && (
@@ -799,10 +820,30 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <CommandInput autoFocus placeholder="Type a command or search..." />
+      <CommandInput
+        autoFocus
+        placeholder="Type a command or search..."
+        value={commandInputValue}
+        onValueChange={setCommandInputValue}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && commandInputValue.trim() && !hasMatchingCommands) {
+            e.preventDefault();
+            handleSearch(commandInputValue, true);
+          }
+        }}
+      />
       <Separator />
       <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
+        <CommandEmpty>
+          {isProcessing ? (
+            <Loader2 className="m-auto h-4 w-4 animate-spin" />
+          ) : (
+            <>
+              No results found, press <span className="font-bold">ENTER</span> to search for emails
+              in this folder
+            </>
+          )}
+        </CommandEmpty>
         {allCommands.map((group, groupIndex) => (
           <Fragment key={groupIndex}>
             {group.items.length > 0 && (
@@ -881,7 +922,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
       <>
         <div className="flex items-center border-b px-3">
           <button
-            className="text-muted-foreground hover:text-foreground mr-2 relative top-0.5"
+            className="text-muted-foreground hover:text-foreground relative top-0.5 mr-2"
             onClick={() => setCurrentView('main')}
             disabled={isProcessing}
           >
@@ -892,7 +933,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             value={searchQuery}
             onValueChange={setSearchQuery}
             placeholder="Search your emails..."
-            className="border-none w-full"
+            className="w-full border-none"
             disabled={isProcessing}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && searchQuery.trim()) {
@@ -971,7 +1012,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                 onSelect={() => handleSearch(searchQuery, false)}
                 disabled={isProcessing}
               >
-                <Search className="h-4 w-4 opacity-60 relative top-2" />
+                <Search className="relative top-2 h-4 w-4 opacity-60" />
                 <span className="ml-2">Exact match: "{searchQuery}"</span>
               </CommandItem>
 
@@ -1465,7 +1506,6 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                   saveSavedSearch(newSearch);
                   setSavedSearches(getSavedSearches());
                   setSaveSearchName('');
-                  toast.success('Search saved');
                 }
               }}
               disabled={!saveSearchName.trim()}
@@ -1498,7 +1538,6 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                     onClick={() => {
                       deleteSavedSearch(search.id);
                       setSavedSearches(getSavedSearches());
-                      toast.success('Search deleted');
                     }}
                     className="opacity-0 transition-opacity group-hover:opacity-100"
                   >
@@ -1834,23 +1873,18 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
   return (
     <CommandPaletteContext.Provider
       value={{
-        open,
-        setOpen,
-        openModal: () => {
-          setOpen(true);
-        },
         activeFilters,
         clearAllFilters,
       }}
     >
       <CommandDialog
-        open={open}
+        open={!!open}
         onOpenChange={(isOpen) => {
           if (!isOpen && currentView !== 'main') {
             setCurrentView('main');
             return;
           }
-          setOpen(isOpen);
+          setOpen(isOpen ? 'true' : null);
         }}
       >
         <VisuallyHidden.VisuallyHidden>

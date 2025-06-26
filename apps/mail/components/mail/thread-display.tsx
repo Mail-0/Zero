@@ -23,10 +23,10 @@ import {
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { focusedIndexAtom } from '@/hooks/use-mail-navigation';
 import { backgroundQueueAtom } from '@/store/backgroundQueue';
 import { type ThreadDestination } from '@/lib/thread-actions';
@@ -172,7 +172,7 @@ export function ThreadDisplay() {
   const [searchParams] = useSearchParams();
   const folder = params?.folder ?? 'inbox';
   const [id, setThreadId] = useQueryState('threadId');
-  const { data: emailData, isLoading, refetch: refetchThread } = useThread(id ?? null);
+  const { data: emailData, isLoading, refetch: refetchThread, latestDraft } = useThread(id ?? null);
   const [{ refetch: mutateThreads }, items] = useThreads();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isStarred, setIsStarred] = useState(false);
@@ -208,11 +208,24 @@ export function ThreadDisplay() {
     if (focusedIndex > 0) {
       const prevThread = items[focusedIndex - 1];
       if (prevThread) {
+        // Clear draft and reply state when navigating to previous thread
+        setMode(null);
+        setActiveReplyId(null);
+        setDraftId(null);
         setThreadId(prevThread.id);
         setFocusedIndex(focusedIndex - 1);
       }
     }
-  }, [items, id, focusedIndex, setThreadId, setFocusedIndex]);
+  }, [
+    items,
+    id,
+    focusedIndex,
+    setThreadId,
+    setFocusedIndex,
+    setMode,
+    setActiveReplyId,
+    setDraftId,
+  ]);
 
   const handleNext = useCallback(() => {
     if (!id || !items.length || focusedIndex === null) return setThreadId(null);
@@ -221,14 +234,24 @@ export function ThreadDisplay() {
       //   console.log('nextIndex', nextIndex);
 
       const nextThread = items[nextIndex];
-      setActiveReplyId(null);
       if (nextThread) {
+        setMode(null);
+        setActiveReplyId(null);
+        setDraftId(null);
         setThreadId(nextThread.id);
-        // Don't clear activeReplyId - let the auto-open effect handle it
         setFocusedIndex(focusedIndex + 1);
       }
     }
-  }, [items, id, focusedIndex, setThreadId, setFocusedIndex]);
+  }, [
+    items,
+    id,
+    focusedIndex,
+    setThreadId,
+    setFocusedIndex,
+    setMode,
+    setActiveReplyId,
+    setDraftId,
+  ]);
 
   const handleUnsubscribeProcess = () => {
     if (!emailData?.latest) return;
@@ -246,7 +269,7 @@ export function ThreadDisplay() {
     setMode(null);
     setActiveReplyId(null);
     setDraftId(null);
-  }, [setThreadId, setMode]);
+  }, [setThreadId, setMode, setActiveReplyId, setDraftId]);
 
   const { optimisticMoveThreadsTo } = useOptimisticActions();
 
@@ -254,10 +277,14 @@ export function ThreadDisplay() {
     async (destination: ThreadDestination) => {
       if (!id) return;
 
+      setMode(null);
+      setActiveReplyId(null);
+      setDraftId(null);
+
       optimisticMoveThreadsTo([id], folder, destination);
       handleNext();
     },
-    [id, folder, optimisticMoveThreadsTo, handleNext],
+    [id, folder, optimisticMoveThreadsTo, handleNext, setMode, setActiveReplyId, setDraftId],
   );
 
   const { optimisticToggleStar } = useOptimisticActions();
@@ -583,7 +610,7 @@ export function ThreadDisplay() {
 
               <div class="email-body">
                 <div class="email-content">
-                  ${escapeHtml(message.decodedBody) || '<p><em>No email content available</em></p>'}
+                  ${escapeHtml(message.decodedBody ?? '') || '<p><em>No email content available</em></p>'}
                 </div>
               </div>
 
@@ -680,18 +707,18 @@ export function ThreadDisplay() {
     }
   }, [optimisticState.optimisticStarred]);
 
-  // Automatically open Reply All composer when email thread is loaded
-  useEffect(() => {
-    if (emailData?.latest?.id) {
-      // Small delay to ensure other effects have completed
-      const timer = setTimeout(() => {
-        setMode('replyAll');
-        setActiveReplyId(emailData.latest!.id);
-      }, 50);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [emailData?.latest?.id, setMode, setActiveReplyId]);
+  //   // Automatically open Reply All composer when email thread is loaded
+  //   useEffect(() => {
+  //     if (emailData?.latest?.id) {
+  //       // Small delay to ensure other effects have completed
+  //       const timer = setTimeout(() => {
+  //         setMode('replyAll');
+  //         setActiveReplyId(emailData.latest!.id);
+  //       }, 50);
+
+  //       return () => clearTimeout(timer);
+  //     }
+  //   }, [emailData?.latest?.id, setMode, setActiveReplyId]);
 
   // Removed conflicting useEffect that was clearing activeReplyId
 
@@ -775,7 +802,7 @@ export function ThreadDisplay() {
           <>
             <div
               className={cn(
-                'flex flex-shrink-0 items-center px-1 pb-1 md:px-3 md:pb-[11px] md:pt-[12px] ',
+                'flex flex-shrink-0 items-center px-1 pb-1 md:px-3 md:pb-[11px] md:pt-[12px]',
                 isMobile && 'bg-panelLight dark:bg-panelDark sticky top-0 z-10 mt-2',
               )}
             >
@@ -988,7 +1015,7 @@ export function ThreadDisplay() {
                   {(emailData.messages || []).map((message, index) => {
                     const isLastMessage = index === emailData.messages.length - 1;
                     const isReplyingToThisMessage = mode && activeReplyId === message.id;
-                    
+
                     return (
                       <div
                         key={message.id}
@@ -1017,13 +1044,18 @@ export function ThreadDisplay() {
                   })}
                 </div>
               </ScrollArea>
-              
+
               {/* Sticky Reply Compose at Bottom - Only for last message */}
-              {mode && activeReplyId && activeReplyId === emailData.messages[emailData.messages.length - 1]?.id && (
-                <div className="sticky bottom-0 z-10 border-t border-border bg-panelLight dark:bg-panelDark px-4 py-2" id={`reply-composer-${activeReplyId}`}>
-                  <ReplyCompose messageId={activeReplyId} />
-                </div>
-              )}
+              {mode &&
+                activeReplyId &&
+                activeReplyId === emailData.messages[emailData.messages.length - 1]?.id && (
+                  <div
+                    className="border-border bg-panelLight dark:bg-panelDark sticky bottom-0 z-10 border-t px-4 py-2"
+                    id={`reply-composer-${activeReplyId}`}
+                  >
+                    <ReplyCompose messageId={activeReplyId} />
+                  </div>
+                )}
             </div>
           </>
         )}

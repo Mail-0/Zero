@@ -1,7 +1,7 @@
 import { authProxy } from '@/lib/auth-proxy';
 import type { Route } from './+types/page';
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function clientLoader({ request }: Route.ClientLoaderArgs) {
   const session = await authProxy.api.getSession({ headers: request.headers });
   if (!session) return Response.redirect(`${import.meta.env.VITE_PUBLIC_APP_URL}/login`);
 

@@ -24,9 +24,10 @@ import {
 } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useActiveConnection, useConnections } from '@/hooks/use-connections';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCommandPalette } from '../context/command-palette-context';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { ThreadDisplay } from '@/components/mail/thread-display';
@@ -35,6 +36,7 @@ import { backgroundQueueAtom } from '@/store/backgroundQueue';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
 import { useMediaQuery } from '../../hooks/use-media-query';
 import { useSearchValue } from '@/hooks/use-search-value';
+import * as CustomIcons from '@/components/icons/icons';
 import { isMac } from '@/lib/hotkeys/use-hotkey-utils';
 import { MailList } from '@/components/mail/mail-list';
 import { useHotkeysContext } from 'react-hotkeys-hook';
@@ -60,10 +62,10 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useStats } from '@/hooks/use-stats';
 import { useTranslations } from 'use-intl';
+import type { IConnection } from '@/types';
 import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
-import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
 
 interface ITag {
   id: string;
@@ -186,7 +188,7 @@ const AutoLabelingSettings = () => {
   };
 
   const handleEnableBrain = useCallback(async () => {
-    toast.promise(EnableBrain(), {
+    toast.promise(EnableBrain, {
       loading: 'Enabling autolabeling...',
       success: 'Autolabeling enabled successfully',
       error: 'Failed to enable autolabeling',
@@ -197,7 +199,7 @@ const AutoLabelingSettings = () => {
   }, []);
 
   const handleDisableBrain = useCallback(async () => {
-    toast.promise(DisableBrain(), {
+    toast.promise(DisableBrain, {
       loading: 'Disabling autolabeling...',
       success: 'Autolabeling disabled successfully',
       error: 'Failed to disable autolabeling',
@@ -387,12 +389,10 @@ export function MailLayout() {
   const prevFolderRef = useRef(folder);
   const { enableScope, disableScope } = useHotkeysContext();
   const { data: activeConnection } = useActiveConnection();
-  const { open, setOpen, activeFilters, clearAllFilters } = useCommandPalette();
+  const { activeFilters, clearAllFilters } = useCommandPalette();
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useQueryState('isCommandPaletteOpen');
 
-  const activeAccount = useMemo(() => {
-    if (!activeConnection?.id || !connections?.connections) return null;
-    return connections.connections.find((connection) => connection.id === activeConnection?.id);
-  }, [activeConnection?.id, connections?.connections]);
+  const { data: activeAccount } = useActiveConnection();
 
   useEffect(() => {
     if (prevFolderRef.current !== folder && mail.bulkSelected.length > 0) {
@@ -536,7 +536,7 @@ export function MailLayout() {
                   className={cn(
                     'text-muted-foreground relative flex h-8 w-full select-none items-center justify-start overflow-hidden rounded-lg border bg-white pl-2 text-left text-sm font-normal shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-none dark:bg-[#141414]',
                   )}
-                  onClick={() => setOpen(!open)}
+                  onClick={() => setIsCommandPaletteOpen('true')}
                 >
                   <Search className="fill-[#71717A] dark:fill-[#6F6F6F]" />
 
@@ -551,7 +551,7 @@ export function MailLayout() {
                       : 'Search...'}
                   </span>
 
-                  <span className="absolute right-[0.1rem] flex gap-1  items-center">
+                  <span className="absolute right-[0.1rem] flex items-center gap-1">
                     {/* {activeFilters.length > 0 && (
                       <Badge variant="secondary" className="ml-2 h-5 rounded px-1">
                         {activeFilters.length}
@@ -561,7 +561,7 @@ export function MailLayout() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-5 rounded-xl px-1.5 text-xs my-auto"
+                        className="my-auto h-5 rounded-xl px-1.5 text-xs"
                         onClick={(e) => {
                           e.stopPropagation();
                           clearAllFilters();
@@ -822,52 +822,95 @@ function BulkSelectActions() {
 
 export const Categories = () => {
   const t = useTranslations();
+  const defaultCategoryIdInner = useDefaultCategoryId();
   const categorySettings = useCategorySettings();
-  const [activeCategory] = useQueryState('category');
+  const [activeCategory] = useQueryState('category', {
+    defaultValue: defaultCategoryIdInner,
+  });
 
   const categories = categorySettings.map((cat) => {
     const base = {
       id: cat.id,
-      name:
-        cat.name ||
-        t(`common.mailCategories.${cat.id.toLowerCase().replace(' ', '')}` as any),
+      name: cat.name || t(`common.mailCategories.${cat.id.toLowerCase().replace(' ', '')}` as any),
       searchValue: cat.searchValue,
     } as const;
 
     // Helper to decide fill colour depending on selection
     const isSelected = activeCategory === cat.id;
+    if (cat.icon && cat.icon in CustomIcons) {
+      const DynamicIcon = CustomIcons[cat.icon as keyof typeof CustomIcons];
+      return {
+        ...base,
+        icon: (
+          <DynamicIcon
+            className={cn(
+              'fill-muted-foreground h-4 w-4 dark:fill-white',
+              isSelected && 'fill-white',
+            )}
+          />
+        ),
+      };
+    }
 
     switch (cat.id) {
       case 'Important':
         return {
           ...base,
-          icon: <Lightning className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')} />,
+          icon: (
+            <Lightning
+              className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')}
+            />
+          ),
         };
       case 'All Mail':
         return {
           ...base,
-          icon: <Mail className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')} />,
-          colors: 'border-0 bg-[#006FFE] text-white dark:bg-[#006FFE] dark:text-white dark:hover:bg-[#006FFE]/90',
+          icon: (
+            <Mail
+              className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')}
+            />
+          ),
+          colors:
+            'border-0 bg-[#006FFE] text-white dark:bg-[#006FFE] dark:text-white dark:hover:bg-[#006FFE]/90',
         };
       case 'Personal':
         return {
           ...base,
-          icon: <User className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')} />,
+          icon: (
+            <User
+              className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')}
+            />
+          ),
         };
       case 'Promotions':
         return {
           ...base,
-          icon: <Tag className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')} />,
+          icon: (
+            <Tag
+              className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')}
+            />
+          ),
         };
       case 'Updates':
         return {
           ...base,
-          icon: <Bell className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')} />,
+          icon: (
+            <Bell
+              className={cn('fill-muted-foreground dark:fill-white', isSelected && 'fill-white')}
+            />
+          ),
         };
       case 'Unread':
         return {
           ...base,
-          icon: <ScanEye className={cn('fill-muted-foreground h-4 w-4 dark:fill-white', isSelected && 'fill-white')} />,
+          icon: (
+            <ScanEye
+              className={cn(
+                'fill-muted-foreground h-4 w-4 dark:fill-white',
+                isSelected && 'fill-white',
+              )}
+            />
+          ),
         };
       default:
         return base as any;
@@ -914,15 +957,10 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
   const activeTabElementRef = useRef<HTMLButtonElement>(null);
   const overlayContainerRef = useRef<HTMLDivElement>(null);
   const [textSize, setTextSize] = useState<'normal' | 'small' | 'xs' | 'hidden'>('normal');
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
 
-  // Only show category selection for inbox folder
   if (folder !== 'inbox') return <div className="h-8"></div>;
 
-  // Primary category is always the first one
-  const primaryCategory = categories[0];
-  if (!primaryCategory) return null;
-
-  // Check text size based on available space
   useEffect(() => {
     const checkTextSize = () => {
       const container = containerRef.current;
@@ -1013,40 +1051,47 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
 
     const showText = textSize !== 'hidden';
 
+    const button = (
+      <button
+        ref={!isOverlay ? activeTabElementRef : null}
+        onClick={() => {
+          setCategory(cat.id);
+          setSearchValue({
+            value: `${cat.searchValue} ${cleanSearchValue(searchValue.value).trim().length ? `AND ${cleanSearchValue(searchValue.value)}` : ''}`,
+            highlight: searchValue.highlight,
+            folder: '',
+          });
+        }}
+        className={cn(
+          'flex h-8 items-center justify-center gap-1 overflow-hidden rounded-lg border transition-all duration-300 ease-out dark:border-none',
+          isSelected
+            ? cn('flex-1 border-none text-white', getPaddingClasses(), bgColor)
+            : 'w-8 bg-white hover:bg-gray-100 dark:bg-[#313131] dark:hover:bg-[#313131]/80',
+        )}
+        tabIndex={isOverlay ? -1 : undefined}
+      >
+        <div className="relative overflow-visible">{cat.icon}</div>
+        {isSelected && showText && (
+          <div className="flex items-center justify-center gap-2.5 px-0.5">
+            <div className={cn('justify-start truncate leading-none text-white', getTextClasses())}>
+              {cat.name}
+            </div>
+          </div>
+        )}
+      </button>
+    );
+
+    if (!isDesktop) {
+      return React.cloneElement(button, { key: cat.id });
+    }
+
     return (
       <Tooltip key={cat.id}>
-        <TooltipTrigger asChild>
-          <button
-            ref={!isOverlay ? activeTabElementRef : null}
-            onClick={() => {
-              setCategory(cat.id);
-              setSearchValue({
-                value: `${cat.searchValue} ${cleanSearchValue(searchValue.value).trim().length ? `AND ${cleanSearchValue(searchValue.value)}` : ''}`,
-                highlight: searchValue.highlight,
-                folder: '',
-              });
-            }}
-            className={cn(
-              'flex h-8 items-center justify-center gap-1 overflow-hidden rounded-lg border transition-all duration-300 ease-out dark:border-none',
-              isSelected
-                ? cn('flex-1 border-none text-white', getPaddingClasses(), bgColor)
-                : 'w-8 bg-white hover:bg-gray-100 dark:bg-[#313131] dark:hover:bg-[#313131]/80',
-            )}
-            tabIndex={isOverlay ? -1 : undefined}
-          >
-            <div className="relative overflow-visible">{cat.icon}</div>
-            {isSelected && showText && (
-              <div className="flex items-center justify-center gap-2.5 px-0.5">
-                <div
-                  className={cn('justify-start truncate leading-none text-white', getTextClasses())}
-                >
-                  {cat.name}
-                </div>
-              </div>
-            )}
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side="top" className={`${idx === 0 ? 'ml-4' : ''}`}>
+        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        <TooltipContent
+          side="top"
+          align={idx === 0 ? 'start' : idx === categories.length - 1 ? 'end' : 'center'}
+        >
           <span className="mr-2">{cat.name}</span>
           <kbd
             className={cn(

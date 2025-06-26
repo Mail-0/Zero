@@ -1,3 +1,4 @@
+import { constructReplyBody, constructForwardBody } from '@/lib/utils';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
 import { EmailComposer } from '../create/email-composer';
@@ -5,8 +6,8 @@ import { useHotkeysContext } from 'react-hotkeys-hook';
 import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
 import { useSettings } from '@/hooks/use-settings';
-import { constructReplyBody, constructForwardBody } from '@/lib/utils';
 import { useThread } from '@/hooks/use-threads';
+import { useSession } from '@/lib/auth-client';
 import { serializeFiles } from '@/lib/schemas';
 import { useDraft } from '@/hooks/use-drafts';
 import { useEffect, useState } from 'react';
@@ -15,20 +16,20 @@ import type { Sender } from '@/types';
 import { useQueryState } from 'nuqs';
 import posthog from 'posthog-js';
 import { toast } from 'sonner';
-import { useSession } from '@/lib/auth-client';
 
 interface ReplyComposeProps {
   messageId?: string;
 }
 
 export default function ReplyCompose({ messageId }: ReplyComposeProps) {
-  const [threadId] = useQueryState('threadId');
-  const { data: emailData, refetch } = useThread(threadId);
   const [mode, setMode] = useQueryState('mode');
   const { enableScope, disableScope } = useHotkeysContext();
   const { data: aliases, isLoading: isLoadingAliases } = useEmailAliases();
   const t = useTranslations();
   const [draftId, setDraftId] = useQueryState('draftId');
+  const [threadId] = useQueryState('threadId');
+  const [, setActiveReplyId] = useQueryState('activeReplyId');
+  const { data: emailData, refetch, latestDraft } = useThread(threadId);
   const { data: draft, isLoading: isDraftLoading } = useDraft(draftId ?? null);
   const trpc = useTRPC();
   const { mutateAsync: sendEmail } = useMutation(trpc.mail.send.mutationOptions());
@@ -118,7 +119,6 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
       let fromEmail = userEmail;
 
       if (aliases && aliases.length > 0 && replyToMessage) {
-
         const allRecipients = [
           ...(replyToMessage.to || []),
           ...(replyToMessage.cc || []),
@@ -131,11 +131,15 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
         );
 
         if (matchingAlias) {
-          fromEmail = userName.trim() ? `${userName.replace(/[<>]/g, '')} <${matchingAlias.email}>` : matchingAlias.email;
-
+          fromEmail = userName.trim()
+            ? `${userName.replace(/[<>]/g, '')} <${matchingAlias.email}>`
+            : matchingAlias.email;
         } else {
-          const primaryEmail =  aliases.find((alias) => alias.primary)?.email || aliases[0]?.email || userEmail;
-          fromEmail = userName.trim() ? `${userName.replace(/[<>]/g, '')} <${primaryEmail}>` : primaryEmail;
+          const primaryEmail =
+            aliases.find((alias) => alias.primary)?.email || aliases[0]?.email || userEmail;
+          fromEmail = userName.trim()
+            ? `${userName.replace(/[<>]/g, '')} <${primaryEmail}>`
+            : primaryEmail;
         }
       }
 
@@ -162,21 +166,22 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
         ? '<p style="color: #666; font-size: 12px;">Sent via <a href="https://0.email/" style="color: #0066cc; text-decoration: none;">Zero</a></p>'
         : '';
 
-      const emailBody = mode === 'forward'
-        ? constructForwardBody(
-            data.message + zeroSignature,
-            new Date(replyToMessage.receivedOn || '').toLocaleString(),
-            { ...replyToMessage.sender, subject: replyToMessage.subject },
-            toRecipients,
-            replyToMessage.decodedBody,
-          )
-        : constructReplyBody(
-            data.message + zeroSignature,
-            new Date(replyToMessage.receivedOn || '').toLocaleString(),
-            replyToMessage.sender,
-            toRecipients,
-            replyToMessage.decodedBody,
-          );
+      const emailBody =
+        mode === 'forward'
+          ? constructForwardBody(
+              data.message + zeroSignature,
+              new Date(replyToMessage.receivedOn || '').toLocaleString(),
+              { ...replyToMessage.sender, subject: replyToMessage.subject },
+              toRecipients,
+              replyToMessage.decodedBody,
+            )
+          : constructReplyBody(
+              data.message + zeroSignature,
+              new Date(replyToMessage.receivedOn || '').toLocaleString(),
+              replyToMessage.sender,
+              toRecipients,
+              replyToMessage.decodedBody,
+            );
 
       await sendEmail({
         to: toRecipients,
@@ -213,8 +218,6 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
     }
   };
 
-  console.log('draftcontent', draft);
-
   useEffect(() => {
     if (mode) {
       enableScope('compose');
@@ -226,15 +229,20 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
     };
   }, [mode, enableScope, disableScope]);
 
-  // Add effect to handle initial focus
-  const [shouldFocus, setShouldFocus] = useState(true);
-  useEffect(() => {
-    if (mode) {
-      setShouldFocus(true);
-    } else {
-      setShouldFocus(false);
+  const ensureEmailArray = (emails: string | string[] | undefined | null): string[] => {
+    if (!emails) return [];
+    if (Array.isArray(emails)) {
+      return emails.map((email) => email.trim().replace(/[<>]/g, ''));
     }
-  }, [mode]);
+    if (typeof emails === 'string') {
+      return emails
+        .split(',')
+        .map((email) => email.trim())
+        .filter((email) => email.length > 0)
+        .map((email) => email.replace(/[<>]/g, ''));
+    }
+    return [];
+  };
 
   if (!mode || !emailData) return null;
 
@@ -247,30 +255,14 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
         onClose={async () => {
           await setMode(null);
           await setDraftId(null);
+          await setActiveReplyId(null);
         }}
-        initialMessage={draft?.content}
-        initialTo={draft?.to}
+        initialMessage={draft?.content ?? latestDraft?.decodedBody}
+        initialTo={ensureEmailArray(draft?.to)}
+        initialCc={ensureEmailArray(draft?.cc)}
+        initialBcc={ensureEmailArray(draft?.bcc)}
         initialSubject={draft?.subject}
-        threadContent={emailData.messages.map((message) => {
-          return {
-            body: message.decodedBody ?? '',
-            from: message.sender.name ?? message.sender.email,
-            to: message.to.reduce<string[]>((to, recipient) => {
-              if (recipient.name) {
-                to.push(recipient.name);
-              }
-              return to;
-            }, []),
-            cc: message.cc?.reduce<string[]>((cc, recipient) => {
-              if (recipient.name) {
-                cc.push(recipient.name);
-              }
-              return cc;
-            }, []),
-            subject: message.subject,
-          };
-        })}
-        autofocus={shouldFocus}
+        autofocus={false}
         settingsLoading={settingsLoading}
         replyingTo={replyToMessage?.sender.email}
       />

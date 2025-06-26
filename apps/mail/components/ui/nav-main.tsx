@@ -148,10 +148,7 @@ export function NavMain({ items }: NavMainProps) {
     [pathname, category, searchParams, isValidInternalUrl],
   );
 
-  const activeAccount = React.useMemo(() => {
-    if (!activeConnection?.id || !connections?.connections) return null;
-    return connections.connections.find((connection) => connection.id === activeConnection?.id);
-  }, [activeConnection?.id, connections?.connections]);
+  const { data: activeAccount } = useActiveConnection();
 
   const isUrlActive = useCallback(
     (url: string) => {
@@ -263,11 +260,9 @@ export function NavMain({ items }: NavMainProps) {
                 ) : activeAccount?.providerId === 'microsoft' ? null : null}
               </div>
 
-              <SidebarLabels
-                data={data ?? []}
-                activeAccount={activeAccount ?? null}
-                stats={stats}
-              />
+              {activeAccount ? (
+                <SidebarLabels data={data ?? []} activeAccount={activeAccount} stats={stats} />
+              ) : null}
             </SidebarMenuItem>
           </Collapsible>
         )}
@@ -315,7 +310,7 @@ function NavItem(item: NavItemProps & { href: string }) {
           )}
           onClick={handleClick}
         >
-          <Link target={item.target} to={item.href} prefetch="intent">
+          <Link target={item.target} to={item.href}>
             {item.icon && <item.icon ref={iconRef} className="mr-2 shrink-0" />}
             <p className="relative bottom-[1px] mt-0.5 min-w-0 flex-1 truncate text-[13px]">
               {t(item.title as MessageKey)}

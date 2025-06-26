@@ -1009,7 +1009,7 @@ export default function OpenPage() {
 
         <div className="mb-6 mt-2 flex items-center justify-center gap-4">
           <a
-            href="https://discord.gg/0email"
+            href="https://discord.gg/mail0"
             target="_blank"
             className="text-neutral-500 transition-colors hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
             aria-label="Join our Discord"
@@ -1017,7 +1017,7 @@ export default function OpenPage() {
             <Discord className="dark:fill-muted-foreground h-4 w-4" />
           </a>
           <a
-            href="https://x.com/zerodotemail"
+            href="https://x.com/mail0dotcom"
             target="_blank"
             className="text-neutral-500 transition-colors hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
             aria-label="Follow us on X (Twitter)"

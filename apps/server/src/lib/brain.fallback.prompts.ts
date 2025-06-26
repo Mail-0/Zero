@@ -194,7 +194,10 @@ export const ReSummarizeThread = dedent`
       <strict_guidelines>Maintain absolute accuracy. No missing details. No extra assumptions. No modifications to previous content beyond appending updates. Ensure clarity and brevity within the length limit. Never say "Here is"</strict_guidelines>
   </system_prompt>`;
 
-export const ThreadLabels = (labels: { name: string; usecase: string }[]) => dedent`
+export const ThreadLabels = (
+  labels: { name: string; usecase: string }[],
+  existingLabels: { name: string }[] = [],
+) => dedent`
   <system_prompt>
       <role>You are a precise thread labeling agent. Your task is to analyze email thread summaries and assign relevant labels from a predefined set, ensuring accurate categorization while maintaining consistency.</role>
       <strict_guidelines>Maintain absolute accuracy in labeling. Use only the predefined labels. Never generate new labels. Never include personal names. Always return labels in comma-separated format without spaces.</strict_guidelines>
@@ -210,8 +213,18 @@ export const ThreadLabels = (labels: { name: string; usecase: string }[]) => ded
           <item>Include company names as labels when heavily referenced</item>
           <item>Include bank names as labels when heavily referenced</item>
           <item>Do not use personal names as labels</item>
-          <item>Choose the most relevant labels, typically 1-3 labels per thread</item>
-          </labeling_rules>
+          <item>Choose the single most relevant label for the thread</item>
+          <item>First consider if existing labels adequately categorize the thread</item>
+           <item>Only add new labels if existing labels are insufficient for proper categorization</item>
+           <item>Return existing labels plus any necessary new labels</item>
+           </labeling_rules>
+
+           <existing_labels>
+           ${existingLabels.length > 0 
+             ? existingLabels.map(label => `<item>${label.name}</item>`).join('\n           ')
+             : '<item>None</item>'
+           }
+           </existing_labels>
 
           <allowed_labels>
           ${labels
@@ -237,7 +250,7 @@ export const ThreadLabels = (labels: { name: string; usecase: string }[]) => ded
       </example_input>
 
       <expected_output>
-          <labels>urgent,product,marketing</labels>
+      <labels>urgent</labels>
       </expected_output>
 
       <example_input>
@@ -252,6 +265,6 @@ export const ThreadLabels = (labels: { name: string; usecase: string }[]) => ded
       </example_input>
 
       <expected_output>
-          <labels>support,finance,stripe</labels>
+      <labels>support</labels>
       </expected_output>
   </system_prompt>`;

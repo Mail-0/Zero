@@ -7,17 +7,17 @@ import { useRef } from 'react';
 const socialLinks = [
   {
     name: 'Twitter',
-    href: 'https://x.com/zerodotemail',
+    href: 'https://x.com/mail0dotcom',
     icon: Twitter,
   },
   {
     name: 'LinkedIn',
-    href: 'https://www.linkedin.com/company/zerodotemail/',
+    href: 'https://www.linkedin.com/company/mail0/',
     icon: LinkedIn,
   },
   {
     name: 'Discord',
-    href: 'https://discord.gg/0email',
+    href: 'https://discord.gg/mail0',
     icon: Discord,
   },
 ];
@@ -121,6 +121,28 @@ export default function Footer() {
             </div>
           </div>
           <div className="flex flex-1 items-start justify-end gap-10 opacity-0 md:opacity-100">
+          <div className="inline-flex flex-col items-start justify-start gap-5">
+              <div className="justify-start self-stretch text-sm font-normal text-white/40">
+                Resources
+              </div>
+              <div className="flex flex-col items-start justify-start gap-4 self-stretch">
+                <a target="_blank" href="https://trust.inc/zero" className="w-full">
+                  <div className="justify-start self-stretch text-base font-normal leading-none text-white opacity-80 transition-opacity hover:opacity-100">
+                    SOC2
+                  </div>
+                </a>
+                <a
+                  href="/privacy"
+                  className="w-full"
+                  target="_blank"
+                >
+                  <div className="justify-start self-stretch text-base leading-none text-white opacity-80 transition-opacity hover:opacity-100">
+                    Privacy Policy
+                  </div>
+                </a>
+                
+              </div>
+            </div>
             <div className="inline-flex flex-col items-start justify-start gap-5">
               <div className="justify-start self-stretch text-sm font-normal text-white/40">
                 Product
@@ -132,7 +154,7 @@ export default function Footer() {
                   target="_blank"
                 >
                   <div className="justify-start self-stretch text-base leading-none text-white opacity-80 transition-opacity hover:opacity-100">
-                    Product
+                    Chat with Zero
                   </div>
                 </a>
                 <a
@@ -175,13 +197,9 @@ export default function Footer() {
                     Github
                   </div>
                 </a>
-                <a target="_blank" href="https://x.com/nizzyabi" className="w-full">
-                  <div className="justify-start self-stretch text-base font-normal leading-none text-white opacity-80 transition-opacity hover:opacity-100">
-                    Content
-                  </div>
-                </a>
               </div>
             </div>
+            
           </div>
         </div>
         <div className="h-0.5 self-stretch bg-white/20" />

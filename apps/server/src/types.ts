@@ -126,13 +126,7 @@ export interface ParsedMessage {
   messageId?: string;
   threadId?: string;
   attachments?: Attachment[];
-}
-
-export interface IConnection {
-  id: string;
-  email: string;
-  name?: string;
-  picture?: string;
+  isDraft?: boolean;
 }
 
 export interface Attachment {
@@ -214,6 +208,7 @@ export enum EPrompts {
   SummarizeMessage = 'SummarizeMessage',
   ReSummarizeThread = 'ReSummarizeThread',
   SummarizeThread = 'SummarizeThread',
-  //   ThreadLabels = 'ThreadLabels',
-  //   Chat = 'Chat',
+  Chat = 'Chat',
+  Compose = 'Compose',
+  //   ThreadLabels = 'ThreadLabels'
 }

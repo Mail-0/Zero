@@ -10,8 +10,6 @@ export function ComposeHotkeys() {
     closeCompose: () => {
       if (isComposeOpen === 'true') {
         setIsComposeOpen('false');
-      } else {
-        setIsComposeOpen('true');
       }
     },
   };

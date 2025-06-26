@@ -14,18 +14,21 @@ import {
   userSettings,
   writingStyleMatrix,
 } from './db/schema';
-import { env, WorkerEntrypoint, DurableObject } from 'cloudflare:workers';
+import { env, WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
+import { getZeroAgent, getZeroDB, verifyToken } from './lib/server-utils';
 import { MainWorkflow, ThreadWorkflow, ZeroWorkflow } from './pipelines';
-import { getZeroDB, verifyToken } from './lib/server-utils';
+import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
 import { EProviders, type ISubscribeBatch } from './types';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
 import { contextStorage } from 'hono/context-storage';
 import { defaultUserSettings } from './lib/schemas';
 import { createLocalJWKSet, jwtVerify } from 'jose';
 import { routePartykitRequest } from 'partyserver';
+import { withMcpAuth } from 'better-auth/plugins';
 import { enableBrainFunction } from './lib/brain';
 import { trpcServer } from '@hono/trpc-server';
 import { agentsMiddleware } from 'hono-agents';
+import { publicRouter } from './routes/auth';
 import { DurableMailbox } from './lib/party';
 import { autumnApi } from './routes/autumn';
 import { ZeroAgent } from './routes/chat';
@@ -39,8 +42,143 @@ import { appRouter } from './trpc';
 import { cors } from 'hono/cors';
 import { Hono } from 'hono';
 
-class ZeroDB extends DurableObject {
-  db: DB = createDb(env.HYPERDRIVE.connectionString);
+export class DbRpcDO extends RpcTarget {
+  constructor(
+    private mainDo: ZeroDB,
+    private userId: string,
+  ) {
+    super();
+  }
+
+  async findUser(): Promise<typeof user.$inferSelect | undefined> {
+    return await this.mainDo.findUser(this.userId);
+  }
+
+  async findUserConnection(
+    connectionId: string,
+  ): Promise<typeof connection.$inferSelect | undefined> {
+    return await this.mainDo.findUserConnection(this.userId, connectionId);
+  }
+
+  async updateUser(data: Partial<typeof user.$inferInsert>) {
+    return await this.mainDo.updateUser(this.userId, data);
+  }
+
+  async deleteConnection(connectionId: string) {
+    return await this.mainDo.deleteConnection(connectionId, this.userId);
+  }
+
+  async findFirstConnection(): Promise<typeof connection.$inferSelect | undefined> {
+    return await this.mainDo.findFirstConnection(this.userId);
+  }
+
+  async findManyConnections(): Promise<(typeof connection.$inferSelect)[]> {
+    return await this.mainDo.findManyConnections(this.userId);
+  }
+
+  async findManyNotesByThreadId(threadId: string): Promise<(typeof note.$inferSelect)[]> {
+    return await this.mainDo.findManyNotesByThreadId(this.userId, threadId);
+  }
+
+  async createNote(payload: Omit<typeof note.$inferInsert, 'userId'>) {
+    return await this.mainDo.createNote(this.userId, payload as typeof note.$inferInsert);
+  }
+
+  async updateNote(noteId: string, payload: Partial<typeof note.$inferInsert>) {
+    return await this.mainDo.updateNote(this.userId, noteId, payload);
+  }
+
+  async updateManyNotes(
+    notes: { id: string; order: number; isPinned?: boolean | null }[],
+  ): Promise<boolean> {
+    return await this.mainDo.updateManyNotes(this.userId, notes);
+  }
+
+  async findManyNotesByIds(noteIds: string[]): Promise<(typeof note.$inferSelect)[]> {
+    return await this.mainDo.findManyNotesByIds(this.userId, noteIds);
+  }
+
+  async deleteNote(noteId: string) {
+    return await this.mainDo.deleteNote(this.userId, noteId);
+  }
+
+  async findNoteById(noteId: string): Promise<typeof note.$inferSelect | undefined> {
+    return await this.mainDo.findNoteById(this.userId, noteId);
+  }
+
+  async findHighestNoteOrder(): Promise<{ order: number } | undefined> {
+    return await this.mainDo.findHighestNoteOrder(this.userId);
+  }
+
+  async deleteUser() {
+    return await this.mainDo.deleteUser(this.userId);
+  }
+
+  async findUserSettings(): Promise<typeof userSettings.$inferSelect | undefined> {
+    return await this.mainDo.findUserSettings(this.userId);
+  }
+
+  async findUserHotkeys(): Promise<(typeof userHotkeys.$inferSelect)[]> {
+    return await this.mainDo.findUserHotkeys(this.userId);
+  }
+
+  async insertUserHotkeys(shortcuts: (typeof userHotkeys.$inferInsert)[]) {
+    return await this.mainDo.insertUserHotkeys(this.userId, shortcuts);
+  }
+
+  async insertUserSettings(settings: typeof defaultUserSettings) {
+    return await this.mainDo.insertUserSettings(this.userId, settings);
+  }
+
+  async updateUserSettings(settings: typeof defaultUserSettings) {
+    return await this.mainDo.updateUserSettings(this.userId, settings);
+  }
+
+  async createConnection(
+    providerId: EProviders,
+    email: string,
+    updatingInfo: {
+      expiresAt: Date;
+      scope: string;
+    },
+  ): Promise<{ id: string }[]> {
+    return await this.mainDo.createConnection(providerId, email, this.userId, updatingInfo);
+  }
+
+  async findConnectionById(
+    connectionId: string,
+  ): Promise<typeof connection.$inferSelect | undefined> {
+    return await this.mainDo.findConnectionById(connectionId);
+  }
+
+  async syncUserMatrix(connectionId: string, emailStyleMatrix: EmailMatrix) {
+    return await this.mainDo.syncUserMatrix(connectionId, emailStyleMatrix);
+  }
+
+  async findWritingStyleMatrix(
+    connectionId: string,
+  ): Promise<typeof writingStyleMatrix.$inferSelect | undefined> {
+    return await this.mainDo.findWritingStyleMatrix(connectionId);
+  }
+
+  async deleteActiveConnection(connectionId: string) {
+    return await this.mainDo.deleteActiveConnection(this.userId, connectionId);
+  }
+
+  async updateConnection(
+    connectionId: string,
+    updatingInfo: Partial<typeof connection.$inferInsert>,
+  ) {
+    return await this.mainDo.updateConnection(connectionId, updatingInfo);
+  }
+}
+
+class ZeroDB extends DurableObject<Env> {
+  db: DB = createDb(env.HYPERDRIVE.connectionString).db;
+
+  async setMetaData(userId: string) {
+    return new DbRpcDO(this, userId);
+  }
 
   async findUser(userId: string): Promise<typeof user.$inferSelect | undefined> {
     return await this.db.query.user.findFirst({
@@ -366,18 +504,32 @@ export default class extends WorkerEntrypoint<typeof env> {
 
           if (userId) {
             const db = getZeroDB(userId);
-            c.set('sessionUser', await db.findUser(userId));
+            c.set('sessionUser', await db.findUser());
+            (await db)[Symbol.dispose]?.();
           }
         }
       }
 
       const autumn = new Autumn({ secretKey: env.AUTUMN_SECRET_KEY });
       c.set('autumn', autumn);
+
       await next();
+
+      if (c.var.sessionUser?.id) {
+        const db = getZeroDB(c.var.sessionUser.id);
+        (await db)[Symbol.dispose]?.();
+      }
+
+      c.set('sessionUser', undefined);
+      c.set('autumn', undefined as any);
+      c.set('auth', undefined as any);
     })
     .route('/ai', aiRouter)
     .route('/autumn', autumnApi)
-    .on(['GET', 'POST'], '/auth/*', (c) => c.var.auth.handler(c.req.raw))
+    .route('/public', publicRouter)
+    .on(['GET', 'POST', 'OPTIONS'], '/auth/*', (c) => {
+      return c.var.auth.handler(c.req.raw);
+    })
     .use(
       trpcServer({
         endpoint: '/api/trpc',
@@ -419,6 +571,10 @@ export default class extends WorkerEntrypoint<typeof env> {
         exposeHeaders: ['X-Zero-Redirect'],
       }),
     )
+    .get('.well-known/oauth-authorization-server', async (c) => {
+      const auth = createAuth();
+      return oAuthDiscoveryMetadata(auth)(c.req.raw);
+    })
     .mount(
       '/sse',
       async (request, env, ctx) => {
@@ -426,8 +582,13 @@ export default class extends WorkerEntrypoint<typeof env> {
         if (!authBearer) {
           return new Response('Unauthorized', { status: 401 });
         }
+        const auth = createAuth();
+        const session = await auth.api.getMcpSession({ headers: request.headers });
+        if (!session) {
+          return new Response('Unauthorized', { status: 401 });
+        }
         ctx.props = {
-          cookie: authBearer,
+          userId: session?.userId,
         };
         return ZeroMCP.serveSSE('/sse', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
       },
@@ -440,8 +601,10 @@ export default class extends WorkerEntrypoint<typeof env> {
         if (!authBearer) {
           return new Response('Unauthorized', { status: 401 });
         }
+        const auth = createAuth();
+        const session = await auth.api.getMcpSession({ headers: request.headers });
         ctx.props = {
-          cookie: authBearer,
+          userId: session?.userId,
         };
         return ZeroMCP.serve('/mcp', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
       },
@@ -562,31 +725,6 @@ export default class extends WorkerEntrypoint<typeof env> {
     console.log(
       `Processed ${allAccounts.keys.length} accounts, found ${expiredSubscriptions.length} expired subscriptions`,
     );
-  }
-
-  public async notifyUser({
-    connectionId,
-    threadIds,
-    type,
-  }: {
-    connectionId: string;
-    threadIds: string[];
-    type: 'refresh' | 'list';
-  }) {
-    console.log(`Notifying user ${connectionId} for threads ${threadIds} with type ${type}`);
-    const durableObject = env.DURABLE_MAILBOX.idFromName(`${connectionId}`);
-    if (env.DURABLE_MAILBOX.get(durableObject)) {
-      const stub = env.DURABLE_MAILBOX.get(durableObject);
-      if (stub) {
-        console.log(`Broadcasting message for thread ${threadIds} with type ${type}`);
-        await stub.broadcast(JSON.stringify({ threadIds, type }));
-        console.log(`Successfully broadcasted message for thread ${threadIds}`);
-      } else {
-        console.log(`No stub found for connection ${connectionId}`);
-      }
-    } else {
-      console.log(`No durable object found for connection ${connectionId}`);
-    }
   }
 }
 

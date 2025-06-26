@@ -10,8 +10,16 @@ import { useTRPC } from '@/providers/query-provider';
 import { toast } from 'sonner';
 import type { CategorySetting } from '@/hooks/use-categories';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import * as Icons from '@/components/icons/icons';
 import { Sparkles } from '@/components/icons/icons';
 import { Loader, GripVertical } from 'lucide-react';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import {
   DndContext,
@@ -256,7 +264,7 @@ export default function CategoriesSettingsPage() {
     setCategories(merged.sort((a, b) => a.order - b.order));
   }, [data, defaultMailCategories]);
 
-  const handleFieldChange = (id: string, field: keyof CategorySetting, value: any) => {
+  const handleFieldChange = (id: string, field: keyof CategorySetting, value: string | number | boolean) => {
     setCategories((prev) =>
       prev.map((cat) => (cat.id === id ? { ...cat, [field]: value } : cat)),
     );
@@ -295,7 +303,7 @@ export default function CategoriesSettingsPage() {
 
     try {
       await saveUserSettings({ categories: sortedCategories });
-      queryClient.setQueryData(trpc.settings.get.queryKey(), (updater: any) => {
+      queryClient.setQueryData(trpc.settings.get.queryKey(), (updater) => {
         if (!updater) return;
         return {
           settings: { ...updater.settings, categories: sortedCategories },

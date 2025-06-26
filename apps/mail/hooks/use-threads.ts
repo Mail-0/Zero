@@ -1,5 +1,6 @@
 import { backgroundQueueAtom, isThreadInBackgroundQueueAtom } from '@/store/backgroundQueue';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { IGetThreadResponse } from '../../server/src/lib/driver/types';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useTRPC } from '@/providers/query-provider';
 import { useSession } from '@/lib/auth-client';
@@ -84,6 +85,11 @@ export const useThread = (threadId: string | null, historyId?: string | null) =>
     ),
   );
 
+  const latestDraft = useMemo(() => {
+    if (!threadQuery.data?.latest?.id) return undefined;
+    return threadQuery.data.messages.findLast((e) => e.isDraft);
+  }, [threadQuery]);
+
   const isGroupThread = useMemo(() => {
     if (!threadQuery.data?.latest?.id) return false;
     const totalRecipients = [
@@ -94,5 +100,13 @@ export const useThread = (threadId: string | null, historyId?: string | null) =>
     return totalRecipients > 1;
   }, [threadQuery.data]);
 
-  return { ...threadQuery, isGroupThread };
+  const finalData: IGetThreadResponse | undefined = useMemo(() => {
+    if (!threadQuery.data) return undefined;
+    return {
+      ...threadQuery.data,
+      messages: threadQuery.data?.messages.filter((e) => !e.isDraft),
+    };
+  }, [threadQuery.data]);
+
+  return { ...threadQuery, data: finalData, isGroupThread, latestDraft };
 };

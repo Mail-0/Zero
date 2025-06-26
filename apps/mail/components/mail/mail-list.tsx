@@ -7,6 +7,14 @@ import {
   parseNaturalLanguageSearch,
 } from '@/lib/utils';
 import {
+  Archive2,
+  ExclamationCircle,
+  GroupPeople,
+  Star2,
+  Trash,
+  PencilCompose,
+} from '../icons/icons';
+import {
   memo,
   useCallback,
   useEffect,
@@ -15,7 +23,6 @@ import {
   useState,
   type ComponentProps,
 } from 'react';
-import { Archive2, ExclamationCircle, GroupPeople, Star2, Trash } from '../icons/icons';
 import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
 import { focusedIndexAtom, useMailNavigation } from '@/hooks/use-mail-navigation';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -62,11 +69,31 @@ const Thread = memo(
     const { folder } = useParams<{ folder: string }>();
     const [{}, threads] = useThreads();
     const [threadId] = useQueryState('threadId');
-    const { data: getThreadData, isGroupThread } = useThread(message.id, message.historyId);
+    const {
+      data: getThreadData,
+      isGroupThread,
+      latestDraft,
+    } = useThread(message.id, message.historyId);
     const [id, setThreadId] = useQueryState('threadId');
     const [, setActiveReplyId] = useQueryState('activeReplyId');
     const [focusedIndex, setFocusedIndex] = useAtom(focusedIndexAtom);
-    const latestMessage = getThreadData?.latest;
+
+    const latestReceivedMessage = useMemo(() => {
+      if (!getThreadData?.messages) return getThreadData?.latest;
+
+      const nonDraftMessages = getThreadData.messages.filter((msg) => !msg.isDraft);
+      if (nonDraftMessages.length === 0) return getThreadData?.latest;
+
+      return (
+        nonDraftMessages.sort((a, b) => {
+          const dateA = new Date(a.receivedOn).getTime();
+          const dateB = new Date(b.receivedOn).getTime();
+          return dateB - dateA;
+        })[0] || getThreadData?.latest
+      );
+    }, [getThreadData?.messages, getThreadData?.latest]);
+
+    const latestMessage = latestReceivedMessage;
     const idToUse = useMemo(() => latestMessage?.threadId ?? latestMessage?.id, [latestMessage]);
     const { data: settingsData } = useSettings();
     const queryClient = useQueryClient();
@@ -233,6 +260,11 @@ const Thread = memo(
       if (!latestMessage?.sender?.name) return '';
       return latestMessage.sender.name.trim().replace(/^['"]|['"]$/g, '');
     }, [latestMessage?.sender?.name]);
+
+    // Check if thread has a draft
+    const hasDraft = useMemo(() => {
+      return !!latestDraft;
+    }, [latestDraft]);
 
     const content =
       latestMessage && getThreadData ? (
@@ -470,6 +502,16 @@ const Thread = memo(
                           </TooltipContent>
                         </Tooltip>
                       ) : null}
+                      {hasDraft ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="inline-flex items-center">
+                              <PencilCompose className="h-3 w-3 fill-blue-500 dark:fill-blue-400" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent className="p-1 text-xs">Draft</TooltipContent>
+                        </Tooltip>
+                      ) : null}
                       <MailLabels labels={optimisticLabels} />
                     </div>
                     {latestMessage.receivedOn ? (
@@ -647,6 +689,7 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
 export const MailList = memo(
   function MailList() {
     const { folder } = useParams<{ folder: string }>();
+    const { data: settingsData } = useSettings();
     const t = useTranslations();
     const [, setThreadId] = useQueryState('threadId');
     const [, setDraftId] = useQueryState('draftId');
@@ -673,7 +716,7 @@ export const MailList = memo(
 
       const currentCategory = category
         ? allCategories.find((cat) => cat.id === category)
-        : allCategories.find((cat) => cat.id === 'Important');
+        : allCategories.find((cat) => cat.id === 'All Mail');
 
       if (currentCategory && searchValue.value === '') {
         setSearchValue({
@@ -793,6 +836,7 @@ export const MailList = memo(
     const handleMailClick = useCallback(
       (message: ParsedMessage) => async () => {
         const mode = getSelectMode();
+        const autoRead = settingsData?.settings?.autoRead ?? true;
         console.log('Mail click with mode:', mode);
 
         if (mode !== 'single') {
@@ -804,7 +848,7 @@ export const MailList = memo(
         const messageThreadId = message.threadId ?? message.id;
         const clickedIndex = itemsRef.current.findIndex((item) => item.id === messageThreadId);
         setFocusedIndex(clickedIndex);
-        if (message.unread) optimisticMarkAsRead([messageThreadId], true);
+        if (message.unread && autoRead) optimisticMarkAsRead([messageThreadId], true);
         await setThreadId(messageThreadId);
         await setDraftId(null);
         // Don't clear activeReplyId - let ThreadDisplay handle Reply All auto-opening

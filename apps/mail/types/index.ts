@@ -82,6 +82,7 @@ export interface ParsedMessage {
   replyTo?: string;
   messageId?: string;
   threadId?: string;
+  isDraft?: boolean;
   attachments?: Attachment[];
 }
 
@@ -90,6 +91,8 @@ export interface IConnection {
   email: string;
   name?: string;
   picture?: string;
+  createdAt: Date;
+  providerId: string;
 }
 
 export interface Attachment {
@@ -137,4 +140,3 @@ export interface Note {
   createdAt: Date;
   updatedAt: Date;
 }
-
