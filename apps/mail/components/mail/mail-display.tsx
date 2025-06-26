@@ -796,6 +796,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
   const { data: activeConnection } = useActiveConnection();
   const [researchSender, setResearchSender] = useState<Sender | null>(null);
   const [searchQuery, setSearchQuery] = useState<string | null>(null);
+  const { copyToClipboard } = useCopyToClipboard();
 
   const isLastEmail = totalEmails && index === totalEmails - 1;
 
@@ -861,12 +862,13 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
     }
   }, [isCollapsed, preventCollapse, openDetailsPopover]);
 
-  const handleCopySenderEmail = useCallback(async (personEmail?: string) => {
-    if (!personEmail) return;
-
-    await navigator.clipboard.writeText(personEmail);
-    toast.success('Email copied to clipboard');
-  }, []);
+  const handleCopySenderEmail = useCallback(
+    (personEmail?: string) => {
+      if (!personEmail) return;
+      copyToClipboard(personEmail, 'sender-email');
+    },
+    [copyToClipboard],
+  );
 
   // email printing
   const printMail = () => {
