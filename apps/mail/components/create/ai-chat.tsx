@@ -12,10 +12,11 @@ import { cn, getEmailLogo } from '@/lib/utils';
 import { EditorContent } from '@tiptap/react';
 import { CurvedArrow } from '../icons/icons';
 import { Tools } from '../../types/tools';
-import { InfoIcon } from 'lucide-react';
+import { InfoIcon, Mic, MicOff } from 'lucide-react';
 import { Button } from '../ui/button';
 import { format } from 'date-fns-tz';
 import { useQueryState } from 'nuqs';
+import { useWhisperSpeech } from '@/hooks/use-whisper-speech';
 
 const renderThread = (thread: { id: string; title: string; snippet: string }) => {
   const [, setThreadId] = useQueryState('threadId');
@@ -303,11 +304,71 @@ export function AIChat({
     }
   }, [aiSidebarOpen, editor]);
 
+  // Speech-to-text functionality using Whisper
+  const {
+    isRecording,
+    isProcessing,
+    error: speechError,
+    startRecording,
+    stopRecording,
+    resetError,
+  } = useWhisperSpeech({
+    onTranscript: (text: string) => {
+      console.log('Whisper transcript received:', text);
+      const currentContent = editor.getText();
+      const newContent = currentContent ? `${currentContent} ${text}` : text;
+      editor.commands.setContent(newContent);
+      setInput(newContent);
+    },
+    onError: (error: string) => {
+      console.error('Whisper error:', error);
+    },
+  });
+
+  const handleToggleListening = useCallback(async () => {
+    console.log('Voice button clicked:', { 
+      isRecording, 
+      isProcessing,
+      speechError 
+    });
+    
+    if (isRecording) {
+      console.log('Stopping recording...');
+      await stopRecording();
+    } else {
+      console.log('Starting recording...');
+      resetError();
+      await startRecording();
+    }
+  }, [isRecording, isProcessing, startRecording, stopRecording, resetError, speechError]);
+
+  // Auto-stop recording after 30 seconds for better UX
+  useEffect(() => {
+    if (!isRecording) return;
+
+    const timeout = setTimeout(() => {
+      stopRecording();
+    }, 30000);
+
+    return () => clearTimeout(timeout);
+  }, [isRecording, stopRecording]);
+
   return (
-    <div className={cn('flex h-full flex-col', isFullScreen ? 'mx-auto max-w-xl' : '')}>
-      <div className="no-scrollbar flex-1 overflow-y-auto" ref={messagesContainerRef}>
+    <>
+      <style>{`
+        @keyframes waveform {
+          0% { height: 4px; }
+          50% { height: 20px; }
+          100% { height: 8px; }
+        }
+        .waveform-bar {
+          animation: waveform 0.8s ease-in-out infinite alternate;
+        }
+      `}</style>
+      <div className={cn('flex h-full flex-col', isFullScreen ? 'mx-auto max-w-xl' : '')}>
+        <div className="no-scrollbar flex-1 overflow-y-auto" ref={messagesContainerRef}>
         <div className="min-h-full space-y-4 px-2 py-4">
-          {chatMessages && !chatMessages.enabled ? (
+          {chatMessages && !chatMessages.enabled && !import.meta.env.DEV ? (
             <div
               onClick={() => setPricingDialog('true')}
               className="absolute inset-0 flex flex-col items-center justify-center"
@@ -399,7 +460,7 @@ export function AIChat({
           <div className="flex flex-col">
             <div className="w-full">
               <form id="ai-chat-form" onSubmit={onSubmit} className="relative">
-                <div className="grow self-stretch overflow-y-auto outline-white/5 dark:bg-[#202020]">
+                <div className="grow self-stretch overflow-y-auto outline-white/5 dark:bg-[#202020] relative">
                   <div
                     onClick={() => {
                       editor.commands.focus();
@@ -408,12 +469,71 @@ export function AIChat({
                   >
                     <EditorContent editor={editor} className="h-full w-full" />
                   </div>
+                  
+
                 </div>
               </form>
             </div>
             <div className="grid">
-              <div className="flex justify-end gap-1">
-                {/* <VoiceButton /> */}
+              <div className="flex justify-end gap-1 items-center">
+                {/* Inline Waveform - only show when recording */}
+                {isRecording && (
+                  <div className="flex items-center space-x-1 h-7 mr-2">
+                    {[...Array(4)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-1 bg-gradient-to-t from-blue-600 to-blue-400 dark:from-blue-400 dark:to-blue-200 rounded-full waveform-bar"
+                        style={{
+                          animationDelay: `${i * 100}ms`,
+                          animationDuration: `${0.6 + (i % 2) * 0.2}s`
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+                
+                {/* Voice-to-text button */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={handleToggleListening}
+                      disabled={false}
+                      className="inline-flex cursor-pointer gap-1.5 rounded-lg transition-colors"
+                    >
+                      <div 
+                        className={cn(
+                          'flex h-7 items-center justify-center rounded-sm px-2',
+                          isRecording || isProcessing
+                            ? 'bg-red-600 dark:bg-red-700' 
+                            : 'bg-[#262626] dark:bg-[#141414]',
+                          'transition-colors duration-200'
+                        )}
+                      >
+                        {isProcessing ? (
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : isRecording ? (
+                          <MicOff className="h-4 w-4 text-white dark:text-white" />
+                        ) : (
+                          <Mic className="h-4 w-4 text-white dark:text-[#929292]" />
+                        )}
+                      </div>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="text-xs">
+                      <p>
+                        {speechError
+                          ? `Error: ${speechError}`
+                          : isProcessing
+                          ? 'Processing audio...'
+                          : isRecording
+                          ? 'Click to stop recording'
+                          : 'Click to start voice input (Whisper AI)'}
+                      </p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
                 <button
                   form="ai-chat-form"
                   type="submit"
@@ -505,5 +625,6 @@ export function AIChat({
         </div> */}
       </div>
     </div>
+    </>
   );
 }

@@ -17,6 +17,92 @@ export const aiRouter = new Hono();
 
 aiRouter.get('/', (c) => c.text('Twilio + ElevenLabs + AI Phone System Ready'));
 
+aiRouter.post('/speech-to-text', async (c) => {
+
+  try {
+    const formData = await c.req.formData();
+    const audioFile = formData.get('audio') as File;
+    
+    if (!audioFile) {
+      return c.json({ error: 'No audio file provided' }, 400);
+    }
+
+    const audioBuffer = await audioFile.arrayBuffer();
+    const audioType = audioFile.type || 'audio/mp4';
+    const audioName = audioFile.name || 'recording.mp4';
+    
+    console.log('Received audio for Whisper:', { 
+      type: audioType, 
+      name: audioName, 
+      size: audioBuffer.byteLength 
+    });
+    
+    const openaiFormData = new FormData();
+    openaiFormData.append('file', new Blob([audioBuffer], { type: audioType }), audioName);
+    openaiFormData.append('model', 'gpt-4o-transcribe');
+    openaiFormData.append('response_format', 'text');
+
+    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
+      },
+      body: openaiFormData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('[WHISPER_API_ERROR]', {
+        status: response.status,
+        headers: Object.fromEntries(response.headers.entries()),
+        body: errorData,
+        audioType,
+        audioName,
+      });
+      
+      try {
+        const errorJson = JSON.parse(errorData);
+        const errorMessage = errorJson.error?.message || errorData;
+        
+        if (response.status === 400) {
+          if (errorMessage.includes('mimeType is not supported') || errorMessage.includes('supported')) {
+            return c.json({ 
+              error: `Audio format "${audioType}" is not supported by Whisper. Supported formats: mp3, mp4, mpeg, mpga, m4a, wav, webm` 
+            }, 400);
+          }
+          if (errorMessage.includes('file size')) {
+            return c.json({ 
+              error: 'Audio file is too large. Maximum size is 25MB.' 
+            }, 400);
+          }
+        }
+        
+                 return c.json({ 
+           error: `Whisper API error: ${errorMessage}` 
+         }, response.status as 400 | 401 | 403 | 429 | 500);
+      } catch {
+        return c.json({ 
+          error: `Failed to transcribe audio (${response.status})` 
+        }, 500);
+      }
+    }
+
+    // With response_format: "text", OpenAI returns plain text instead of JSON
+    const transcriptText = await response.text();
+    
+    return c.json({ 
+      transcript: transcriptText.trim(),
+      success: true 
+    });
+
+  } catch (error) {
+    console.error('Speech-to-text error:', error);
+    return c.json({ 
+      error: error instanceof Error ? error.message : 'Unknown error occurred' 
+    }, 500);
+  }
+});
+
 aiRouter.post('/do/:action', async (c) => {
   if (env.DISABLE_CALLS) return c.json({ success: false, error: 'Not implemented' }, 400);
   if (env.VOICE_SECRET !== c.req.header('X-Voice-Secret'))
