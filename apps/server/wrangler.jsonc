@@ -19,6 +19,12 @@
           "index_name": "messages-vector",
         },
       ],
+      "r2_buckets": [
+        {
+          "binding": "THREADS_BUCKET",
+          "bucket_name": "threads-staging",
+        },
+      ],
       "durable_objects": {
         "bindings": [
           {
@@ -110,6 +116,9 @@
         "DISABLE_CALLS": "true",
         "VOICE_SECRET": "1234567890",
         "GOOGLE_S_ACCOUNT": "{}",
+        "DROP_AGENT_TABLES": "false",
+        "THREAD_SYNC_MAX_COUNT": "40",
+        "THREAD_SYNC_LOOP": "false",
       },
       "kv_namespaces": [
         {
@@ -178,6 +187,12 @@
           },
         ],
       },
+      "r2_buckets": [
+        {
+          "binding": "THREADS_BUCKET",
+          "bucket_name": "threads-staging",
+        },
+      ],
       "queues": {
         "producers": [
           {
@@ -245,6 +260,9 @@
         "VITE_PUBLIC_BACKEND_URL": "https://sapi.0.email",
         "VITE_PUBLIC_APP_URL": "https://staging.0.email",
         "DISABLE_CALLS": "",
+        "DROP_AGENT_TABLES": "false",
+        "THREAD_SYNC_MAX_COUNT": "40",
+        "THREAD_SYNC_LOOP": "false",
       },
       "kv_namespaces": [
         {
@@ -277,6 +295,12 @@
       "triggers": {
         "crons": ["0 0 * * *"],
       },
+      "r2_buckets": [
+        {
+          "binding": "THREADS_BUCKET",
+          "bucket_name": "threads",
+        },
+      ],
       "ai": {
         "binding": "AI",
       },
@@ -377,6 +401,9 @@
         "VITE_PUBLIC_BACKEND_URL": "https://api.0.email",
         "VITE_PUBLIC_APP_URL": "https://0.email",
         "DISABLE_CALLS": "true",
+        "DROP_AGENT_TABLES": "true",
+        "THREAD_SYNC_MAX_COUNT": "40",
+        "THREAD_SYNC_LOOP": "false",
       },
       "kv_namespaces": [
         {

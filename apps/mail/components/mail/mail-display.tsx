@@ -38,7 +38,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import type { Sender, ParsedMessage, Attachment } from '@/types';
 import { useActiveConnection } from '@/hooks/use-connections';
-import { cn, getEmailLogo, formatDate } from '@/lib/utils';
+import { cn, getEmailLogo, formatDate, formatTime, shouldShowSeparateTime } from '@/lib/utils';
 import { useBrainState } from '../../hooks/use-summary';
 import { useTRPC } from '@/providers/query-provider';
 import { useThreadLabels } from '@/hooks/use-labels';
@@ -1600,10 +1600,17 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                         </div>
 
                         <div className="flex items-center justify-center">
-                          <time className="text-muted-foreground mr-2 text-sm font-medium dark:text-[#8C8C8C]">
-                            {formatDate(emailData?.receivedOn)}
-                          </time>
-
+                          <div className="text-muted-foreground mr-2 text-sm font-medium dark:text-[#8C8C8C] flex flex-col items-end">
+                            <time>
+                              {emailData?.receivedOn ? formatDate(emailData.receivedOn) : ''}
+                            </time>
+                            {shouldShowSeparateTime(emailData?.receivedOn) && (
+                              <time className="text-xs opacity-75">
+                                {emailData?.receivedOn && formatTime(emailData.receivedOn)}
+                              </time>
+                            )}
+                          </div>
+                            
                           {/* options menu */}
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>

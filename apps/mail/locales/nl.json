@@ -404,7 +404,9 @@
         "zeroSignatureDescription": "Voeg een Zero-handtekening toe aan je e-mails.",
         "defaultEmailAlias": "Standaard e-mailalias",
         "selectDefaultEmail": "Selecteer standaard e-mail",
-        "defaultEmailDescription": "Dit e-mailadres wordt gebruikt als standaard 'Van'-adres bij het opstellen van nieuwe e-mails"
+        "defaultEmailDescription": "Dit e-mailadres wordt gebruikt als standaard 'Van'-adres bij het opstellen van nieuwe e-mails",
+        "autoRead": "Automatisch lezen",
+        "autoReadDescription": "E-mails automatisch als gelezen markeren wanneer je erop klikt."
       },
       "connections": {
         "title": "E-mailverbindingen",

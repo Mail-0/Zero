@@ -2,6 +2,7 @@ import { activeDriverProcedure, createRateLimiterMiddleware, router } from '../t
 import { updateWritingStyleMatrix } from '../../services/writing-style-service';
 import { deserializeFiles, serializedFileSchema } from '../../lib/schemas';
 import { defaultPageSize, FOLDERS, LABELS } from '../../lib/utils';
+import { IGetThreadResponseSchema } from '../../lib/driver/types';
 import type { DeleteAllSpamResponse } from '../../types';
 import { getZeroAgent } from '../../lib/server-utils';
 import { env } from 'cloudflare:workers';
@@ -12,6 +13,18 @@ const senderSchema = z.object({
   email: z.string(),
 });
 
+const FOLDER_TO_LABEL_MAP: Record<string, string> = {
+  inbox: 'INBOX',
+  sent: 'SENT',
+  draft: 'DRAFT',
+  spam: 'SPAM',
+  trash: 'TRASH',
+};
+
+const getFolderLabelId = (folder: string) => {
+  return FOLDER_TO_LABEL_MAP[folder];
+};
+
 export const mailRouter = router({
   get: activeDriverProcedure
     .input(
@@ -19,16 +32,26 @@ export const mailRouter = router({
         id: z.string(),
       }),
     )
+    .output(IGetThreadResponseSchema)
     .query(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
       const agent = await getZeroAgent(activeConnection.id);
-      return await agent.getThread(input.id);
+      return await agent.getThreadFromDB(input.id);
     }),
-  count: activeDriverProcedure.query(async ({ ctx }) => {
-    const { activeConnection } = ctx;
-    const agent = await getZeroAgent(activeConnection.id);
-    return await agent.count();
-  }),
+  count: activeDriverProcedure
+    .output(
+      z.array(
+        z.object({
+          count: z.number().optional(),
+          label: z.string().optional(),
+        }),
+      ),
+    )
+    .query(async ({ ctx }) => {
+      const { activeConnection } = ctx;
+      const agent = await getZeroAgent(activeConnection.id);
+      return await agent.count();
+    }),
   listThreads: activeDriverProcedure
     .input(
       z.object({
@@ -36,10 +59,11 @@ export const mailRouter = router({
         q: z.string().optional().default(''),
         max: z.number().optional().default(defaultPageSize),
         cursor: z.string().optional().default(''),
+        labelIds: z.array(z.string()).optional().default([]),
       }),
     )
     .query(async ({ ctx, input }) => {
-      const { folder, max, cursor, q } = input;
+      const { folder, max, cursor, q, labelIds } = input;
       const { activeConnection } = ctx;
       const agent = await getZeroAgent(activeConnection.id);
 
@@ -51,11 +75,22 @@ export const mailRouter = router({
         });
         return drafts;
       }
-      const threadsResponse = await agent.list({
-        folder,
-        query: q,
-        maxResults: max,
-        pageToken: cursor,
+      if (q) {
+        const threadsResponse = await agent.listThreads({
+          labelIds: labelIds,
+          maxResults: max,
+          pageToken: cursor,
+          query: q,
+          folder,
+        });
+        return threadsResponse;
+      }
+      const folderLabelId = getFolderLabelId(folder);
+      const labelIdsToUse = folderLabelId ? [...labelIds, folderLabelId] : labelIds;
+      const threadsResponse = await agent.getThreadsFromDB({
+        labelIds: labelIdsToUse,
+        max: max,
+        cursor: cursor,
       });
       return threadsResponse;
     }),
@@ -138,7 +173,7 @@ export const mailRouter = router({
       }
 
       const threadResults: PromiseSettledResult<{ messages: { tags: { name: string }[] }[] }>[] =
-        await Promise.allSettled(threadIds.map((id) => agent.get(id)));
+        await Promise.allSettled(threadIds.map((id) => agent.getThreadFromDB(id)));
 
       let anyStarred = false;
       let processedThreads = 0;
@@ -182,7 +217,7 @@ export const mailRouter = router({
       }
 
       const threadResults: PromiseSettledResult<{ messages: { tags: { name: string }[] }[] }>[] =
-        await Promise.allSettled(threadIds.map((id) => agent.get(id)));
+        await Promise.allSettled(threadIds.map((id) => agent.getThreadFromDB(id)));
 
       let anyImportant = false;
       let processedThreads = 0;
@@ -276,11 +311,7 @@ export const mailRouter = router({
         to: z.array(senderSchema),
         subject: z.string(),
         message: z.string(),
-        attachments: z
-          .array(serializedFileSchema)
-          .transform(deserializeFiles)
-          .optional()
-          .default([]),
+        attachments: z.array(serializedFileSchema).optional().default([]),
         headers: z.record(z.string()).optional().default({}),
         cc: z.array(senderSchema).optional(),
         bcc: z.array(senderSchema).optional(),

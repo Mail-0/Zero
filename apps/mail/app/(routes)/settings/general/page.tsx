@@ -13,15 +13,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useForm, type ControllerRenderProps } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { SettingsCard } from '@/components/settings/settings-card';
+import { Globe, Clock, XIcon, Mail, InfoIcon } from 'lucide-react';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
 import { useState, useEffect, useMemo, memo } from 'react';
 import { userSettingsSchema } from '@zero/server/schemas';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Globe, Clock, XIcon, Mail } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations, useLocale } from 'use-intl';
 import { useTRPC } from '@/providers/query-provider';
@@ -200,7 +201,7 @@ export default function GeneralPage() {
       >
         <Form {...form}>
           <form id="general-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="flex w-full items-center gap-5">
+            <div className="flex w-full items-center gap-4">
               <FormField
                 control={form.control}
                 name="language"
@@ -235,70 +236,58 @@ export default function GeneralPage() {
                   </FormItem>
                 )}
               />
-            </div>
-            {aliases && aliases.length > 0 && (
-              <FormField
-                control={form.control}
-                name="defaultEmailAlias"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('pages.settings.general.defaultEmailAlias')}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ''}>
-                      <FormControl>
-                        <SelectTrigger className="w-[300px] justify-start">
-                          <Mail className="mr-2 h-4 w-4" />
-                          <SelectValue
-                            placeholder={t('pages.settings.general.selectDefaultEmail')}
-                          />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {aliases.map((alias) => (
-                          <SelectItem key={alias.email} value={alias.email}>
-                            <div className="flex flex-row items-center gap-1">
-                              <span className="text-sm">
-                                {alias.name ? `${alias.name} <${alias.email}>` : alias.email}
-                              </span>
-                              {alias.primary && (
-                                <span className="text-muted-foreground text-xs">(Primary)</span>
-                              )}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      {t('pages.settings.general.defaultEmailDescription')}
-                    </FormDescription>
-                  </FormItem>
-                )}
-              />
-            )}
-            <FormField
-              control={form.control}
-              name="customPrompt"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('pages.settings.general.customPrompt')}</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder={t('pages.settings.general.customPromptPlaceholder')}
-                      className="min-h-[150px]"
-                      maxLength={3000}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    {t('pages.settings.general.customPromptDescription')}
-                  </FormDescription>
-                </FormItem>
+              {aliases && aliases.length > 0 && (
+                <FormField
+                  control={form.control}
+                  name="defaultEmailAlias"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1">
+                        {t('pages.settings.general.defaultEmailAlias')}{' '}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <InfoIcon className="h-4 w-4" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {t('pages.settings.general.defaultEmailDescription')}
+                          </TooltipContent>
+                        </Tooltip>
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ''}>
+                        <FormControl>
+                          <SelectTrigger className="w-[300px] justify-start">
+                            <Mail className="mr-2 h-4 w-4" />
+                            <SelectValue
+                              placeholder={t('pages.settings.general.selectDefaultEmail')}
+                            />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {aliases.map((alias) => (
+                            <SelectItem key={alias.email} value={alias.email}>
+                              <div className="flex flex-row items-center gap-1">
+                                <span className="text-sm">
+                                  {alias.name ? `${alias.name} <${alias.email}>` : alias.email}
+                                </span>
+                                {alias.primary && (
+                                  <span className="text-muted-foreground text-xs">(Primary)</span>
+                                )}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
               )}
-            />
+            </div>
+
             <FormField
               control={form.control}
               name="zeroSignature"
               render={({ field }) => (
-                <FormItem className="flex max-w-xl flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                <FormItem className="flex max-w-xl flex-row items-center justify-between rounded-lg border px-4 py-2">
                   <div className="space-y-0.5">
                     <FormLabel>{t('pages.settings.general.zeroSignature')}</FormLabel>
                     <FormDescription>

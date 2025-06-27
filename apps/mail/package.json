@@ -34,6 +34,8 @@
     "@tiptap/core": "2.11.5",
     "@tiptap/extension-bold": "2.11.5",
     "@tiptap/extension-document": "2.11.5",
+    "@tiptap/extension-file-handler": "2.22.3",
+    "@tiptap/extension-image": "2.22.3",
     "@tiptap/extension-link": "2.11.5",
     "@tiptap/extension-paragraph": "2.11.5",
     "@tiptap/extension-placeholder": "2.11.5",

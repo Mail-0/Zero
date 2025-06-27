@@ -36,6 +36,7 @@ import { backgroundQueueAtom } from '@/store/backgroundQueue';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
 import { useMediaQuery } from '../../hooks/use-media-query';
 import { useSearchValue } from '@/hooks/use-search-value';
+import * as CustomIcons from '@/components/icons/icons';
 import { isMac } from '@/lib/hotkeys/use-hotkey-utils';
 import { MailList } from '@/components/mail/mail-list';
 import { useHotkeysContext } from 'react-hotkeys-hook';
@@ -65,6 +66,7 @@ import type { IConnection } from '@/types';
 import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
+import SelectAllCheckbox from './select-all-checkbox';
 
 interface ITag {
   id: string;
@@ -388,7 +390,8 @@ export function MailLayout() {
   const prevFolderRef = useRef(folder);
   const { enableScope, disableScope } = useHotkeysContext();
   const { data: activeConnection } = useActiveConnection();
-  const { open, setOpen, activeFilters, clearAllFilters } = useCommandPalette();
+  const { activeFilters, clearAllFilters } = useCommandPalette();
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useQueryState('isCommandPaletteOpen');
 
   const { data: activeAccount } = useActiveConnection();
 
@@ -489,6 +492,7 @@ export function MailLayout() {
                 <div className="flex w-full items-center justify-between gap-2">
                   <div>
                     <SidebarToggle className="h-fit px-2" />
+                    <SelectAllCheckbox className="ml-2" />
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -534,7 +538,7 @@ export function MailLayout() {
                   className={cn(
                     'text-muted-foreground relative flex h-8 w-full select-none items-center justify-start overflow-hidden rounded-lg border bg-white pl-2 text-left text-sm font-normal shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-none dark:bg-[#141414]',
                   )}
-                  onClick={() => setOpen(!open)}
+                  onClick={() => setIsCommandPaletteOpen('true')}
                 >
                   <Search className="fill-[#71717A] dark:fill-[#6F6F6F]" />
 
@@ -581,11 +585,11 @@ export function MailLayout() {
                     </kbd>
                   </span>
                 </Button>
-                <div className="mt-2">
+                {/* <div className="mt-2">
                   {activeAccount?.providerId === 'google' && folder === 'inbox' && (
                     <CategorySelect isMultiSelectMode={mail.bulkSelected.length > 0} />
                   )}
-                </div>
+                </div> */}
               </div>
               <div
                 className={cn(
@@ -594,7 +598,7 @@ export function MailLayout() {
                   isFetching ? 'opacity-100' : 'opacity-0',
                 )}
               />
-              <div className="relative z-[1] h-[calc(100dvh-(2px+88px+49px+2px))] overflow-hidden pt-0 md:h-[calc(100dvh-9.8rem)]">
+              <div className="relative z-[1] h-[calc(100dvh-(2px+88px+49px+2px))] overflow-hidden pt-0 md:h-[calc(100dvh-7rem)]">
                 <MailList />
               </div>
             </div>
@@ -835,6 +839,20 @@ export const Categories = () => {
 
     // Helper to decide fill colour depending on selection
     const isSelected = activeCategory === cat.id;
+    if (cat.icon && cat.icon in CustomIcons) {
+      const DynamicIcon = CustomIcons[cat.icon as keyof typeof CustomIcons];
+      return {
+        ...base,
+        icon: (
+          <DynamicIcon
+            className={cn(
+              'fill-muted-foreground h-4 w-4 dark:fill-white',
+              isSelected && 'fill-white',
+            )}
+          />
+        ),
+      };
+    }
 
     switch (cat.id) {
       case 'Important':

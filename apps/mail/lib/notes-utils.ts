@@ -1,5 +1,6 @@
 import type { Note } from '@/types';
 import React from 'react';
+import { formatDate } from './utils';
 
 export const NOTE_COLORS = [
   { value: 'default', label: 'Default', class: 'border-transparent', bgClass: '', style: {} },
@@ -107,28 +108,10 @@ export function formatRelativeTime(dateInput: string | Date, formatter?: any): s
     const days = Math.floor(diffInSeconds / 86400);
     return `${days} ${days === 1 ? 'day' : 'days'} ago`;
   } else {
-    return formatDate(date);
+    return formatDate(date, formatter);
   }
 }
 
-export function formatDate(dateInput: string | Date, formatter?: any): string {
-  const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
-
-  if (formatter) {
-    return formatter.dateTime(date, {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    });
-  }
-
-  return date.toLocaleString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
 
 export function sortNotes(notes: Note[]): Note[] {
   const pinnedNotes = notes.filter((note) => note.isPinned);
