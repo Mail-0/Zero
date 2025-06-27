@@ -1,6 +1,6 @@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Clock } from '@/components/icons/icons';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -9,6 +9,7 @@ interface ScheduleSendPickerProps {
   value?: string | undefined;
   onChange: (value?: string) => void;
   className?: string;
+  onValidityChange?: (isValid: boolean) => void;
 }
 
 const toLocalInputValue = (date: Date) => {
@@ -21,6 +22,7 @@ export const ScheduleSendPicker: React.FC<ScheduleSendPickerProps> = ({
   value,
   onChange,
   className,
+  onValidityChange,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -38,20 +40,26 @@ export const ScheduleSendPicker: React.FC<ScheduleSendPickerProps> = ({
 
     if (!val) {
       onChange(undefined);
+      onValidityChange?.(true);
       return;
     }
 
     const maybeDate = new Date(val);
+
+    // Invalid date string
     if (isNaN(maybeDate.getTime())) {
+      onValidityChange?.(false);
       return;
     }
 
     const now = new Date();
     if (maybeDate.getTime() < now.getTime()) {
       toast.error('Scheduled time cannot be in the past');
+      onValidityChange?.(false);
       return;
     }
 
+    onValidityChange?.(true);
     onChange(maybeDate.toISOString());
   };
 
@@ -70,8 +78,13 @@ export const ScheduleSendPicker: React.FC<ScheduleSendPickerProps> = ({
             {(() => {
               if (!localValue) return 'Send later';
               const parsed = new Date(localValue);
-              if (isNaN(parsed.getTime())) return 'Send later';
-              return format(parsed, 'dd MMM yyyy hh:mm aaa');
+              if (!isValid(parsed)) return 'Send later';
+              try {
+                return format(parsed, 'dd MMM yyyy hh:mm aaa');
+              } catch (error) {
+                console.error('Error formatting date', error);
+                return 'Send later';
+              }
             })()}
           </span>
         </button>

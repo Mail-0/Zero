@@ -137,6 +137,7 @@ export function EmailComposer({
   const { data: activeConnection } = useActiveConnection();
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
   const [scheduleAt, setScheduleAt] = useState<string>();
+  const [isScheduleValid, setIsScheduleValid] = useState<boolean>(true);
   const [originalAttachments, setOriginalAttachments] = useState<File[]>(initialAttachments);
   const [imageQuality, setImageQuality] = useState<ImageQuality>(
     settings?.settings?.imageCompression || 'medium',
@@ -439,6 +440,11 @@ export function EmailComposer({
       // Validate recipient field
       if (!values.to || values.to.length === 0) {
         toast.error('Recipient is required');
+        return;
+      }
+
+      if (!isScheduleValid) {
+        toast.error('Please choose a valid date & time for scheduling');
         return;
       }
 
@@ -1259,7 +1265,7 @@ export function EmailComposer({
       <div className="inline-flex w-full shrink-0 items-center justify-between self-stretch rounded-b-2xl bg-[#FFFFFF] px-3 py-3 outline-white/5 dark:bg-[#202020]">
         <div className="flex items-center justify-start gap-2">
           <div className="flex items-center justify-start gap-2">
-            <Button size={'xs'} onClick={handleSend} disabled={isLoading || settingsLoading}>
+            <Button size={'xs'} onClick={handleSend} disabled={isLoading || settingsLoading || !isScheduleValid}>
               <div className="flex items-center justify-center">
                 <div className="text-center text-sm leading-none text-white dark:text-black">
                   <span>Send </span>
@@ -1273,6 +1279,7 @@ export function EmailComposer({
             <ScheduleSendPicker
               value={scheduleAt}
               onChange={(value) => setScheduleAt(value)}
+              onValidityChange={(valid) => setIsScheduleValid(valid)}
             />
             <Button variant={'secondary'} size={'xs'} onClick={() => fileInputRef.current?.click()}>
               <Plus className="h-3 w-3 fill-[#9A9A9A]" />
