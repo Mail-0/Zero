@@ -187,7 +187,8 @@
       "unsubscribeOpenSiteDescription": "للتوقف عن تلقي رسائل من هذه القائمة البريدية، انتقل إلى موقعهم الإلكتروني لإلغاء الاشتراك.",
       "cancel": "إلغاء",
       "goToWebsite": "الانتقال إلى الموقع",
-      "failedToUnsubscribe": "فشل إلغاء الاشتراك من القائمة البريدية"
+      "failedToUnsubscribe": "فشل إلغاء الاشتراك من القائمة البريدية",
+      "print": "طباعة"
     },
     "threadDisplay": {
       "exitFullscreen": "الخروج من وضع ملء الشاشة",
@@ -206,7 +207,8 @@
       "disableImages": "إخفاء الصور",
       "enableImages": "عرض الصور",
       "star": "تمييز بنجمة",
-      "unstar": "إلغاء التمييز بنجمة"
+      "unstar": "إلغاء التمييز بنجمة",
+      "printThread": "طباعة المحادثة"
     },
     "notes": {
       "title": "الملاحظات",

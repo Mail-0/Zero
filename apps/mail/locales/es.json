@@ -187,7 +187,8 @@
       "unsubscribeOpenSiteDescription": "Para dejar de recibir mensajes de esta lista de correo, vaya a su sitio web para darse de baja.",
       "cancel": "Cancelar",
       "goToWebsite": "Ir al sitio web",
-      "failedToUnsubscribe": "Error al cancelar la suscripción de la lista de correo"
+      "failedToUnsubscribe": "Error al cancelar la suscripción de la lista de correo",
+      "print": "Imprimir"
     },
     "threadDisplay": {
       "exitFullscreen": "Salir de pantalla completa",
@@ -206,7 +207,8 @@
       "disableImages": "Ocultar imágenes",
       "enableImages": "Mostrar imágenes",
       "star": "Destacar",
-      "unstar": "Quitar destacado"
+      "unstar": "Quitar destacado",
+      "printThread": "Imprimir conversación"
     },
     "notes": {
       "title": "Notas",

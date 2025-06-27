@@ -187,7 +187,8 @@
       "unsubscribeOpenSiteDescription": "Bu posta listesinden ayrılmak için, abonelikten çıkmak üzere internet sitelerine gidin.",
       "cancel": "İptal",
       "goToWebsite": "İnternet sitesine git",
-      "failedToUnsubscribe": "Posta listesi aboneliğinden çıkılamadı"
+      "failedToUnsubscribe": "Posta listesi aboneliğinden çıkılamadı",
+      "print": "Yazdır"
     },
     "threadDisplay": {
       "exitFullscreen": "Tam ekrandan çık",
@@ -206,7 +207,8 @@
       "disableImages": "Görselleri Gizle",
       "enableImages": "Görselleri Göster",
       "star": "Yıldızla",
-      "unstar": "Yıldızı kaldır"
+      "unstar": "Yıldızı kaldır",
+      "printThread": "Yazışmayı yazdır"
     },
     "notes": {
       "title": "Notlar",

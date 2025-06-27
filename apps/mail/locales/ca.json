@@ -187,7 +187,8 @@
       "unsubscribeOpenSiteDescription": "Per deixar de rebre missatges d'aquesta llista de correu, aneu al seu lloc web per cancel·lar la subscripció.",
       "cancel": "Cancel·lar",
       "goToWebsite": "Anar al lloc web",
-      "failedToUnsubscribe": "No s'ha pogut cancel·lar la subscripció a la llista de correu"
+      "failedToUnsubscribe": "No s'ha pogut cancel·lar la subscripció a la llista de correu",
+      "print": "Imprimir"
     },
     "threadDisplay": {
       "exitFullscreen": "Sortir de la visualització en pantalla completa",
@@ -206,7 +207,8 @@
       "disableImages": "Amaga les imatges",
       "enableImages": "Mostra les imatges",
       "star": "Destacar",
-      "unstar": "Treure destacat"
+      "unstar": "Treure destacat",
+      "printThread": "Imprimir fil"
     },
     "notes": {
       "title": "Notes",

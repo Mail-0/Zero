@@ -187,7 +187,8 @@
       "unsubscribeOpenSiteDescription": "Aby przestać otrzymywać wiadomości z tej listy mailingowej, przejdź na ich stronę internetową, aby się wypisać.",
       "cancel": "Anuluj",
       "goToWebsite": "Przejdź do strony",
-      "failedToUnsubscribe": "Nie udało się wypisać z listy mailingowej"
+      "failedToUnsubscribe": "Nie udało się wypisać z listy mailingowej",
+      "print": "Drukuj"
     },
     "threadDisplay": {
       "exitFullscreen": "Wyjdź z pełnego ekranu",
@@ -206,7 +207,8 @@
       "disableImages": "Ukryj obrazy",
       "enableImages": "Pokaż obrazy",
       "star": "Oznacz gwiazdką",
-      "unstar": "Usuń oznaczenie gwiazdką"
+      "unstar": "Usuń oznaczenie gwiazdką",
+      "printThread": "Drukuj wątek"
     },
     "notes": {
       "title": "Notatki",

@@ -187,7 +187,8 @@
       "unsubscribeOpenSiteDescription": "要停止接收来自此邮件列表的消息，请访问他们的网站取消订阅。",
       "cancel": "取消",
       "goToWebsite": "访问网站",
-      "failedToUnsubscribe": "取消订阅邮件列表失败"
+      "failedToUnsubscribe": "取消订阅邮件列表失败",
+      "print": "打印"
     },
     "threadDisplay": {
       "exitFullscreen": "退出全屏",
@@ -206,7 +207,8 @@
       "disableImages": "隐藏图片",
       "enableImages": "显示图片",
       "star": "标记为星标",
-      "unstar": "取消星标"
+      "unstar": "取消星标",
+      "printThread": "打印线程"
     },
     "notes": {
       "title": "笔记",

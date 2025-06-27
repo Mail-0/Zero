@@ -187,7 +187,8 @@
       "unsubscribeOpenSiteDescription": "이 메일링 리스트에서 메시지를 받지 않으려면, 웹 사이트를 방문하여 구독을 취소하세요.",
       "cancel": "취소",
       "goToWebsite": "웹사이트로 이동",
-      "failedToUnsubscribe": "메일링 리스트의 구독을 취소하는 데 실패했습니다"
+      "failedToUnsubscribe": "메일링 리스트의 구독을 취소하는 데 실패했습니다",
+      "print": "인쇄"
     },
     "threadDisplay": {
       "exitFullscreen": "전체 화면 종료",
@@ -206,7 +207,8 @@
       "disableImages": "이미지 숨기기",
       "enableImages": "이미지 표시",
       "star": "별표 표시",
-      "unstar": "별표 제거"
+      "unstar": "별표 제거",
+      "printThread": "스레드 인쇄"
     },
     "notes": {
       "title": "노트",

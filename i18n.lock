@@ -170,6 +170,7 @@ checksums:
     common/mailDisplay/cancel: 2e2a849c2223911717de8caa2c71bade
     common/mailDisplay/goToWebsite: 4a606fcd69b644552771f4ecb9454065
     common/mailDisplay/failedToUnsubscribe: b6c4eafb9b32021163988213d80c7deb
+    common/mailDisplay/print: 96b471223326706b965b5f5c36675935
     common/threadDisplay/exitFullscreen: 910de8c8ec56a0b09328c471d76ea301
     common/threadDisplay/enterFullscreen: f7e424edfd72ea623565c2cef45b5ccb
     common/threadDisplay/archive: fa813ab3074103e5daad07462af25789
@@ -187,6 +188,7 @@ checksums:
     common/threadDisplay/enableImages: b9e8dc2ce5380180886b89cbe9d51508
     common/threadDisplay/star: 0586c1c76e8a0367c0a7b93adf598cb7
     common/threadDisplay/unstar: f3f96945ed198343b3641ae902af454e
+    common/threadDisplay/printThread: 3398c39f3f12a05c2338ab77a2feaf32
     common/notes/title: 93c7ef9bc767f51fbe360afcf6b1fecb
     common/notes/empty: fa2d823fe4c9adb5df5c5c725ccc3815
     common/notes/emptyDescription: 344e82cfef3fcad6fb4461324874a662

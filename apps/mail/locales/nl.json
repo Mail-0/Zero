@@ -187,7 +187,8 @@
       "unsubscribeOpenSiteDescription": "Ga naar hun website om je af te melden voor berichten van deze mailinglijst.",
       "cancel": "Annuleren",
       "goToWebsite": "Naar website",
-      "failedToUnsubscribe": "Afmelden voor mailinglijst mislukt"
+      "failedToUnsubscribe": "Afmelden voor mailinglijst mislukt",
+      "print": "Afdrukken"
     },
     "threadDisplay": {
       "exitFullscreen": "Volledig scherm afsluiten",
@@ -206,7 +207,8 @@
       "disableImages": "Afbeeldingen verbergen",
       "enableImages": "Afbeeldingen tonen",
       "star": "Ster toevoegen",
-      "unstar": "Ster verwijderen"
+      "unstar": "Ster verwijderen",
+      "printThread": "Thread afdrukken"
     },
     "notes": {
       "title": "Notities",

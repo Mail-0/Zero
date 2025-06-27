@@ -187,7 +187,8 @@
       "unsubscribeOpenSiteDescription": "इस मेलिंग लिस्ट से संदेश प्राप्त करना बंद करने के लिए, सदस्यता समाप्त करने के लिए उनकी वेबसाइट पर जाएँ।",
       "cancel": "रद्द करें",
       "goToWebsite": "वेबसाइट पर जाएँ",
-      "failedToUnsubscribe": "मेलिंग लिस्ट से सदस्यता समाप्त करने में विफल"
+      "failedToUnsubscribe": "मेलिंग लिस्ट से सदस्यता समाप्त करने में विफल",
+      "print": "प्रिंट करें"
     },
     "threadDisplay": {
       "exitFullscreen": "फ़ुल स्क्रीन से बाहर निकलें",
@@ -206,7 +207,8 @@
       "disableImages": "छवियाँ छिपाएँ",
       "enableImages": "छवियाँ दिखाएँ",
       "star": "स्टार करें",
-      "unstar": "स्टार हटाएं"
+      "unstar": "स्टार हटाएं",
+      "printThread": "थ्रेड प्रिंट करें"
     },
     "notes": {
       "title": "नोट्स",

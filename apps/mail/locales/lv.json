@@ -187,7 +187,8 @@
       "unsubscribeOpenSiteDescription": "Lai pārtrauktu saņemt ziņojumus, dodieties uz viņu vietni, lai atteiktos.",
       "cancel": "Atcelt",
       "goToWebsite": "Doties uz tīmekļvietni",
-      "failedToUnsubscribe": "Neizdevās atrakstīties"
+      "failedToUnsubscribe": "Neizdevās atrakstīties",
+      "print": "Drukāt"
     },
     "threadDisplay": {
       "exitFullscreen": "Aizvērt pilnekrāna režīmu",
@@ -206,7 +207,8 @@
       "disableImages": "Slēpt attēlus",
       "enableImages": "Rādīt attēlus",
       "star": "Pievienot zvaigznīti",
-      "unstar": "Noņemt zvaigznīti"
+      "unstar": "Noņemt zvaigznīti",
+      "printThread": "Drukāt saraksti"
     },
     "notes": {
       "title": "Piezīmes",

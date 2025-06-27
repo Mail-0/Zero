@@ -187,7 +187,8 @@
       "unsubscribeOpenSiteDescription": "Para parar de receber mensagens desta lista de envio, vá para o site deles para cancelar a inscrição.",
       "cancel": "Cancelar",
       "goToWebsite": "Ir para o site",
-      "failedToUnsubscribe": "Falha ao cancelar a inscrição da lista de e-mails"
+      "failedToUnsubscribe": "Falha ao cancelar a inscrição da lista de e-mails",
+      "print": "Imprimir"
     },
     "threadDisplay": {
       "exitFullscreen": "Sair da tela cheia",
@@ -206,7 +207,8 @@
       "disableImages": "Ocultar Imagens",
       "enableImages": "Mostrar Imagens",
       "star": "Favoritar",
-      "unstar": "Remover dos favoritos"
+      "unstar": "Remover dos favoritos",
+      "printThread": "Imprimir conversa"
     },
     "notes": {
       "title": "Notas",

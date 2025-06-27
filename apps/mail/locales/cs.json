@@ -187,7 +187,8 @@
       "unsubscribeOpenSiteDescription": "Chcete-li přestat dostávat zprávy z tohoto seznamu emailů, přejděte na jejich webové stránky a odhlašte se.",
       "cancel": "Zrušit",
       "goToWebsite": "Přejít na webovou stránku",
-      "failedToUnsubscribe": "Odhlášení z emailového seznamu se nezdařilo"
+      "failedToUnsubscribe": "Odhlášení z emailového seznamu se nezdařilo",
+      "print": "Tisk"
     },
     "threadDisplay": {
       "exitFullscreen": "Ukončit režim celé obrazovky",
@@ -206,7 +207,8 @@
       "disableImages": "Skrýt obrázky",
       "enableImages": "Zobrazit obrázky",
       "star": "Označit hvězdičkou",
-      "unstar": "Odebrat hvězdičku"
+      "unstar": "Odebrat hvězdičku",
+      "printThread": "Tisknout vlákno"
     },
     "notes": {
       "title": "Poznámky",

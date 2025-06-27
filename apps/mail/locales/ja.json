@@ -187,7 +187,8 @@
       "unsubscribeOpenSiteDescription": "このメーリングリストからのメッセージの取得を停止するには、解除するために彼らのウェブサイトに行きます。",
       "cancel": "キャンセル",
       "goToWebsite": "ウェブサイトへ移動",
-      "failedToUnsubscribe": "メーリングリストの登録解除に失敗しました"
+      "failedToUnsubscribe": "メーリングリストの登録解除に失敗しました",
+      "print": "印刷"
     },
     "threadDisplay": {
       "exitFullscreen": "フルスクリーン表示を終了",
@@ -206,7 +207,8 @@
       "disableImages": "画像を非表示",
       "enableImages": "画像を表示",
       "star": "スターを付ける",
-      "unstar": "スターを外す"
+      "unstar": "スターを外す",
+      "printThread": "スレッドを印刷"
     },
     "notes": {
       "title": "メモ",

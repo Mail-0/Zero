@@ -187,7 +187,8 @@
       "unsubscribeOpenSiteDescription": "Ha nem szeretnél több üzenetet kapni ettől a levelezőlistától, látogass el a weboldalukra a leiratkozáshoz.",
       "cancel": "Mégse",
       "goToWebsite": "Ugrás a weboldalra",
-      "failedToUnsubscribe": "Nem sikerült leiratkozni a levelezőlistáról"
+      "failedToUnsubscribe": "Nem sikerült leiratkozni a levelezőlistáról",
+      "print": "Nyomtatás"
     },
     "threadDisplay": {
       "exitFullscreen": "Kilépés a teljes képernyőből",
@@ -206,7 +207,8 @@
       "disableImages": "Képek elrejtése",
       "enableImages": "Képek megjelenítése",
       "star": "Csillagozás",
-      "unstar": "Csillagozás törlése"
+      "unstar": "Csillagozás törlése",
+      "printThread": "Beszélgetés nyomtatása"
     },
     "notes": {
       "title": "Jegyzetek",

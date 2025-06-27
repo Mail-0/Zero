@@ -187,7 +187,8 @@
       "unsubscribeOpenSiteDescription": "Um nicht mehr Nachrichten von dieser Mailingliste zu erhalten, gehen Sie auf ihre Website zum Abbestellen.",
       "cancel": "Abbrechen",
       "goToWebsite": "Zur Website",
-      "failedToUnsubscribe": "Fehler beim Abbestellen der Mailingliste"
+      "failedToUnsubscribe": "Fehler beim Abbestellen der Mailingliste",
+      "print": "Drucken"
     },
     "threadDisplay": {
       "exitFullscreen": "Vollbildansicht beenden",
@@ -206,7 +207,8 @@
       "disableImages": "Bilder ausblenden",
       "enableImages": "Bilder anzeigen",
       "star": "Mit Stern markieren",
-      "unstar": "Stern entfernen"
+      "unstar": "Stern entfernen",
+      "printThread": "Thread drucken"
     },
     "notes": {
       "title": "Notizen",

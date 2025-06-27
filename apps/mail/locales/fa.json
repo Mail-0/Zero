@@ -187,7 +187,8 @@
       "unsubscribeOpenSiteDescription": "برای توقف دریافت پیام‌ها از این لیست ایمیل، به وب‌سایت آن‌ها مراجعه کنید تا اشتراک خود را لغو کنید.",
       "cancel": "لغو",
       "goToWebsite": "رفتن به وب‌سایت",
-      "failedToUnsubscribe": "لغو اشتراک از لیست ایمیل ناموفق بود"
+      "failedToUnsubscribe": "لغو اشتراک از لیست ایمیل ناموفق بود",
+      "print": "چاپ"
     },
     "threadDisplay": {
       "exitFullscreen": "خروج از حالت تمام‌صفحه",
@@ -206,7 +207,8 @@
       "disableImages": "پنهان کردن تصاویر",
       "enableImages": "نمایش تصاویر",
       "star": "ستاره‌دار کردن",
-      "unstar": "حذف ستاره"
+      "unstar": "حذف ستاره",
+      "printThread": "چاپ رشته"
     },
     "notes": {
       "title": "یادداشت‌ها",
