@@ -10,6 +10,7 @@ import { moveThreadsTo } from '@/lib/thread-actions';
 import { useCallback, useRef } from 'react';
 import { m } from '@/paraglide/messages';
 import { useQueryState } from 'nuqs';
+import posthog from 'posthog-js';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
 
@@ -161,6 +162,8 @@ export function useOptimisticActions() {
   function optimisticMarkAsRead(threadIds: string[], silent = false) {
     if (!threadIds.length) return;
 
+    posthog.capture('Email Marked as Read');
+
     const optimisticId = addOptimisticAction({
       type: 'READ',
       threadIds,
@@ -189,6 +192,8 @@ export function useOptimisticActions() {
   function optimisticMarkAsUnread(threadIds: string[]) {
     if (!threadIds.length) return;
 
+    posthog.capture('Email Marked as Unread');
+
     const optimisticId = addOptimisticAction({
       type: 'READ',
       threadIds,
@@ -216,6 +221,8 @@ export function useOptimisticActions() {
 
   function optimisticToggleStar(threadIds: string[], starred: boolean) {
     if (!threadIds.length) return;
+
+    posthog.capture(starred ? 'Email Starred' : 'Email Unstarred');
 
     const optimisticId = addOptimisticAction({
       type: 'STAR',
@@ -246,6 +253,8 @@ export function useOptimisticActions() {
     destination: ThreadDestination,
   ) {
     if (!threadIds.length || !destination) return;
+
+    posthog.capture('Email Moved');
 
     // setFocusedIndex(null);
 
@@ -306,6 +315,8 @@ export function useOptimisticActions() {
   function optimisticDeleteThreads(threadIds: string[], currentFolder: string) {
     if (!threadIds.length) return;
 
+    posthog.capture('Email Deleted');
+
     // setFocusedIndex(null);
 
     const optimisticId = addOptimisticAction({
@@ -351,6 +362,8 @@ export function useOptimisticActions() {
 
   function optimisticToggleImportant(threadIds: string[], isImportant: boolean) {
     if (!threadIds.length) return;
+
+    posthog.capture(isImportant ? 'Email Marked Important' : 'Email Unmarked Important');
 
     const optimisticId = addOptimisticAction({
       type: 'IMPORTANT',
@@ -419,6 +432,8 @@ export function useOptimisticActions() {
       optimisticActionsManager.lastActionId,
     );
     if (!lastAction) return;
+
+    posthog.capture('Action Undone');
 
     lastAction.undo();
 
