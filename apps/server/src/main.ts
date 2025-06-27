@@ -41,6 +41,7 @@ import { Autumn } from 'autumn-js';
 import { appRouter } from './trpc';
 import { cors } from 'hono/cors';
 import { Hono } from 'hono';
+import templatesRoute from './routes/templates';
 
 export class DbRpcDO extends RpcTarget {
   constructor(
@@ -526,6 +527,7 @@ export default class extends WorkerEntrypoint<typeof env> {
     })
     .route('/ai', aiRouter)
     .route('/autumn', autumnApi)
+    .route('/templates', templatesRoute)
     .route('/public', publicRouter)
     .on(['GET', 'POST', 'OPTIONS'], '/auth/*', (c) => {
       return c.var.auth.handler(c.req.raw);
