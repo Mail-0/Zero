@@ -16,7 +16,7 @@ Zero is an open-source AI email solution that gives users the power to **self-ho
 ## Why Zero?
 
 Most email services today are either **closed-source**, **data-hungry**, or **too complex to self-host**.
-0.email is different:
+Mail0 is different:
 
 - ✅ **Open-Source** – No hidden agendas, fully transparent.
 - 🦾 **AI Driven** - Enhance your emails with Agents & LLMs.
