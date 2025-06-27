@@ -80,11 +80,12 @@ export const mailRouter = router({
       const threadsResponse: {
         threads: ThreadItem[];
         nextPageToken: string | null;
-      } = await agent.list({
+      } = await agent.listThreads({
         folder,
         query: q,
         maxResults: max,
         pageToken: cursor,
+        labelIds: labelIds,
       });
 
       if (folder === FOLDERS.SNOOZED) {
