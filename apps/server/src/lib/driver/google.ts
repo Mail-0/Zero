@@ -353,7 +353,11 @@ export class GoogleMailManager implements MailManager {
                     mimeType: part.mimeType || '',
                     size: Number(part.body?.size || 0),
                     attachmentId: attachmentId,
-                    headers: part.headers || [],
+                    headers:
+                      part.headers?.map((h) => ({
+                        name: h.name ?? '',
+                        value: h.value ?? '',
+                      })) ?? [],
                     body: attachmentData ?? '',
                     replyTo: message.payload?.headers?.find(
                       (h) => h.name?.toLowerCase() === 'reply-to',

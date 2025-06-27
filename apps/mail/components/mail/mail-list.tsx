@@ -269,7 +269,10 @@ const Thread = memo(
     const content =
       latestMessage && getThreadData ? (
         <div
-          className={'select-none border-b md:my-2 md:border-none'}
+          className={cn(
+            'select-none border-b md:my-1 md:border-none',
+            displayUnread ? '' : 'opacity-60',
+          )}
           onClick={onClick ? onClick(latestMessage) : undefined}
           onMouseEnter={() => {
             window.dispatchEvent(new CustomEvent('emailHover', { detail: { id: idToUse } }));
