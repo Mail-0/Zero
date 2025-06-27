@@ -236,26 +236,6 @@ export function Navigation() {
                   />
                 </Link>
               </SheetTitle>
-              <Button
-                onClick={() => {
-                  if (session) {
-                    navigate('/mail/inbox');
-                  } else {
-                    toast.promise(
-                      signIn.social({
-                        provider: 'google',
-                        callbackURL: `${window.location.origin}/mail`,
-                      }),
-                      {
-                        error: 'Login redirect failed',
-                      },
-                    );
-                  }
-                }}
-                className="w-full"
-              >
-                Get Started
-              </Button>
             </SheetHeader>
             <div className="mt-8 flex flex-col space-y-3">
               <div className="flex flex-col space-y-3">
