@@ -162,7 +162,7 @@ export function CreateEmail({
               }
             },
           },
-          duration: Math.min(timeRemaining, 30_000),
+          duration: 30_000,
         });
       }
     }

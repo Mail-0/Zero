@@ -726,7 +726,7 @@ export default class extends WorkerEntrypoint<typeof env> {
               payload = parsedPayload;
             }
 
-            const agent = getZeroAgent(connectionId);
+            const agent = await getZeroAgent(connectionId);
             try {
               if ((payload as any).attachments && Array.isArray((payload as any).attachments)) {
                 (payload as any).attachments = (payload as any).attachments.map((att: any) =>

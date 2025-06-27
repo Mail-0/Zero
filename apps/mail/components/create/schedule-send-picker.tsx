@@ -1,14 +1,21 @@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Clock } from 'lucide-react';
 import { format } from 'date-fns';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface ScheduleSendPickerProps {
   value?: string | undefined;
   onChange: (value?: string) => void;
   className?: string;
 }
+
+const toLocalInputValue = (date: Date) => {
+  const tzOffsetMs = date.getTimezoneOffset() * 60 * 1000;
+  const local = new Date(date.getTime() - tzOffsetMs);
+  return local.toISOString().slice(0, 16);
+};
 
 export const ScheduleSendPicker: React.FC<ScheduleSendPickerProps> = ({
   value,
@@ -18,28 +25,34 @@ export const ScheduleSendPicker: React.FC<ScheduleSendPickerProps> = ({
   const [isOpen, setIsOpen] = useState(false);
 
   const [localValue, setLocalValue] = useState<string>(() => {
-    if (!value) return '';
-    const d = new Date(value);
-    if (isNaN(d.getTime())) return '';
-    const iso = d.toISOString();
-    return iso.substring(0, 16);
+    if (value) {
+      const d = new Date(value);
+      if (!isNaN(d.getTime())) return toLocalInputValue(d);
+    }
+    return toLocalInputValue(new Date());
   });
 
-  useEffect(() => {
-    if (isOpen && !value && !localValue) {
-      const now = new Date();
-      setLocalValue(now.toISOString().substring(0, 16));
-    }
-  }, [isOpen, value, localValue]);
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLocalValue(e.target.value);
-    if (!e.target.value) {
+    const val = e.target.value;
+    setLocalValue(val);
+
+    if (!val) {
       onChange(undefined);
       return;
     }
-    const selected = new Date(e.target.value);
-    onChange(selected.toISOString());
+
+    const maybeDate = new Date(val);
+    if (isNaN(maybeDate.getTime())) {
+      return;
+    }
+
+    const now = new Date();
+    if (maybeDate.getTime() < now.getTime()) {
+      toast.error('Scheduled time cannot be in the past');
+      return;
+    }
+
+    onChange(maybeDate.toISOString());
   };
 
   return (
