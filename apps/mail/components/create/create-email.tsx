@@ -38,6 +38,20 @@ type Connection = {
   createdAt: Date;
 };
 
+// The shape of the response when the email is queued (i.e. undo-send or scheduled).
+interface QueuedSendEmailResult {
+  queued: true;
+  messageId: string;
+  sendAt?: number;
+}
+
+// Type-guard to detect a queued send result at runtime.
+const isQueuedSendResult = (value: unknown): value is QueuedSendEmailResult => {
+  if (!value || typeof value !== 'object') return false;
+  const obj = value as Record<string, unknown>;
+  return obj.queued === true && typeof obj.messageId === 'string';
+};
+
 export function CreateEmail({
   initialTo = '',
   initialSubject = '',
@@ -139,13 +153,12 @@ export function CreateEmail({
 
     toast.success(t('pages.createEmail.emailSentSuccessfully'));
 
-    if ((result as any)?.queued && (result as any)?.messageId && settings?.settings?.undoSendEnabled) {
-      const messageId = (result as any).messageId as string;
-      const sendAt = (result as any)?.sendAt;
-      
-      const timeRemaining = sendAt ? sendAt - Date.now() : 30000;
-      
-      if (timeRemaining > 5000) {
+    if (isQueuedSendResult(result) && settings?.settings?.undoSendEnabled) {
+      const { messageId, sendAt } = result;
+
+      const timeRemaining = sendAt ? sendAt - Date.now() : 30_000;
+
+      if (timeRemaining > 5_000) {
         toast.success('Email scheduled', {
           action: {
             label: 'Undo',
@@ -153,12 +166,12 @@ export function CreateEmail({
               try {
                 await unsendEmail({ messageId });
                 toast.info('Send cancelled');
-              } catch (error) {
+              } catch {
                 toast.error('Failed to cancel');
               }
             },
           },
-          duration: Math.min(timeRemaining, 30000),
+          duration: Math.min(timeRemaining, 30_000),
         });
       }
     }

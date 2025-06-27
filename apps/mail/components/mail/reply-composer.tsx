@@ -21,6 +21,18 @@ interface ReplyComposeProps {
   messageId?: string;
 }
 
+interface QueuedSendEmailResult {
+  queued: true;
+  messageId: string;
+  sendAt?: number;
+}
+
+const isQueuedSendResult = (value: unknown): value is QueuedSendEmailResult => {
+  if (!value || typeof value !== 'object') return false;
+  const obj = value as Record<string, unknown>;
+  return obj.queued === true && typeof obj.messageId === 'string';
+};
+
 export default function ReplyCompose({ messageId }: ReplyComposeProps) {
   const [mode, setMode] = useQueryState('mode');
   const { enableScope, disableScope } = useHotkeysContext();
@@ -216,13 +228,11 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
       await refetch();
       toast.success(t('pages.createEmail.emailSent'));
 
-      if ((result as any)?.queued && (result as any)?.messageId && settings?.settings?.undoSendEnabled) {
-        const messageId = (result as any).messageId as string;
-        const sendAt = (result as any)?.sendAt;
-        
-        const timeRemaining = sendAt ? sendAt - Date.now() : 30000;
-        
-        if (timeRemaining > 5000) {
+      if (isQueuedSendResult(result) && settings?.settings?.undoSendEnabled) {
+        const { messageId, sendAt } = result;
+        const timeRemaining = sendAt ? sendAt - Date.now() : 30_000;
+
+        if (timeRemaining > 5_000) {
           toast.success('Email scheduled', {
             action: {
               label: 'Undo',
@@ -235,7 +245,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
                 }
               },
             },
-            duration: Math.min(timeRemaining, 30000),
+            duration: Math.min(timeRemaining, 30_000),
           });
         }
       }
