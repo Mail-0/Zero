@@ -41,6 +41,7 @@ import { z } from 'zod';
 import { ImageCompressionSettings } from './image-compression-settings';
 import { compressImages } from '@/lib/image-compression';
 import type { ImageQuality } from '@/lib/image-compression';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 type ThreadContent = {
   from: string;
@@ -106,6 +107,7 @@ export function EmailComposer({
   replyingTo,
   editorClassName,
 }: EmailComposerProps) {
+  const isMobile = useIsMobile();
   const { data: aliases } = useEmailAliases();
   const { data: settings } = useSettings();
   const [showCc, setShowCc] = useState(initialCc.length > 0);
@@ -869,7 +871,7 @@ export function EmailComposer({
               >
                 <span>Bcc</span>
               </button>
-              {onClose && (
+              {onClose && isMobile && (
                 <button
                   tabIndex={-1}
                   className="flex h-full items-center gap-2 text-sm font-medium text-[#8C8C8C] hover:text-[#A8A8A8]"
