@@ -394,7 +394,8 @@ export function AIChat({
       </div>
 
       {/* Fixed input at bottom */}
-      <div className={cn('mb-4 flex-shrink-0 px-4', isFullScreen ? 'px-0' : '')}>
+      { chatMessages && !chatMessages.enabled ?
+      (null) : (<div className={cn('mb-4 flex-shrink-0 px-4', isFullScreen ? 'px-0' : '')}>
         <div className="bg-offsetLight relative rounded-lg p-2 dark:bg-[#202020]">
           <div className="flex flex-col">
             <div className="w-full">
@@ -503,7 +504,7 @@ export function AIChat({
           </Select>
         </div>
         </div> */}
-      </div>
+      </div>)}
     </div>
   );
 }

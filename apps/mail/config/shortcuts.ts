@@ -108,6 +108,13 @@ const navigation: Shortcut[] = [
     description: 'Show keyboard shortcuts',
     scope: 'navigation',
   },
+  {
+    keys: ['mod', '0'],
+    action: 'openAIAssistant',
+    type: 'combination',
+    description: 'Open AI assistant',
+    scope: 'navigation',
+  }
 ];
 
 const globalShortcuts: Shortcut[] = [
