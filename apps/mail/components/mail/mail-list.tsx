@@ -861,6 +861,7 @@ export const MailList = memo(
         optimisticMarkAsRead,
         setThreadId,
         setDraftId,
+        settingsData,
         setActiveReplyId,
       ],
     );
