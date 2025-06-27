@@ -404,7 +404,9 @@
         "zeroSignatureDescription": "이메일에 Zero 서명을 추가합니다.",
         "defaultEmailAlias": "기본 이메일 별칭",
         "selectDefaultEmail": "기본 이메일 선택",
-        "defaultEmailDescription": "이 이메일은 새 이메일 작성 시 기본 '보낸 사람' 주소로 사용됩니다"
+        "defaultEmailDescription": "이 이메일은 새 이메일 작성 시 기본 '보낸 사람' 주소로 사용됩니다",
+        "autoRead": "자동 읽음",
+        "autoReadDescription": "이메일을 클릭하면 자동으로 읽음으로 표시합니다."
       },
       "connections": {
         "title": "이메일 연결",
@@ -573,6 +575,22 @@
           "orderedList": "번호 매기기 목록",
           "viewAttachments": "첨부 파일 보기",
           "attachFiles": "파일 첨부"
+        }
+      },
+      "imageCompression": {
+        "title": "이미지 압축",
+        "description": "첨부 파일의 이미지 품질 선택",
+        "low": {
+          "label": "낮음",
+          "description": "가장 작은 파일 크기, 눈에 띄는 품질 저하"
+        },
+        "medium": {
+          "label": "중간",
+          "description": "크기와 품질의 균형"
+        },
+        "original": {
+          "label": "원본",
+          "description": "압축 없음, 원본 품질"
         }
       }
     }

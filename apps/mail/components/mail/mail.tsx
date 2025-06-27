@@ -66,6 +66,7 @@ import type { IConnection } from '@/types';
 import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
+import SelectAllCheckbox from './select-all-checkbox';
 
 interface ITag {
   id: string;
@@ -491,6 +492,7 @@ export function MailLayout() {
                 <div className="flex w-full items-center justify-between gap-2">
                   <div>
                     <SidebarToggle className="h-fit px-2" />
+                    <SelectAllCheckbox className="ml-2" />
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -583,11 +585,11 @@ export function MailLayout() {
                     </kbd>
                   </span>
                 </Button>
-                <div className="mt-2">
+                {/* <div className="mt-2">
                   {activeAccount?.providerId === 'google' && folder === 'inbox' && (
                     <CategorySelect isMultiSelectMode={mail.bulkSelected.length > 0} />
                   )}
-                </div>
+                </div> */}
               </div>
               <div
                 className={cn(
@@ -596,7 +598,7 @@ export function MailLayout() {
                   isFetching ? 'opacity-100' : 'opacity-0',
                 )}
               />
-              <div className="relative z-[1] h-[calc(100dvh-(2px+88px+49px+2px))] overflow-hidden pt-0 md:h-[calc(100dvh-9.8rem)]">
+              <div className="relative z-[1] h-[calc(100dvh-(2px+88px+49px+2px))] overflow-hidden pt-0 md:h-[calc(100dvh-7rem)]">
                 <MailList />
               </div>
             </div>
@@ -831,7 +833,7 @@ export const Categories = () => {
   const categories = categorySettings.map((cat) => {
     const base = {
       id: cat.id,
-      name: cat.name || t(`common.mailCategories.${cat.id.toLowerCase().replace(' ', '')}` as any),
+      name:  t(`common.mailCategories.${cat.id.split(' ').map((w, i) => i === 0 ? w.toLowerCase() : w).join('')}` as any) || cat.name,
       searchValue: cat.searchValue,
     } as const;
 

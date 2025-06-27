@@ -404,7 +404,9 @@
         "zeroSignatureDescription": "Dodaj podpis Zero do swoich e-maili.",
         "defaultEmailAlias": "Domyślny alias e-mail",
         "selectDefaultEmail": "Wybierz domyślny e-mail",
-        "defaultEmailDescription": "Ten e-mail będzie używany jako domyślny adres 'Od' podczas tworzenia nowych wiadomości e-mail"
+        "defaultEmailDescription": "Ten e-mail będzie używany jako domyślny adres 'Od' podczas tworzenia nowych wiadomości e-mail",
+        "autoRead": "Auto Read",
+        "autoReadDescription": "Automatycznie oznaczaj e-maile jako przeczytane po ich kliknięciu."
       },
       "connections": {
         "title": "Połączenia e-mail",
@@ -573,6 +575,22 @@
           "orderedList": "Lista numerowana",
           "viewAttachments": "Zobacz załączniki",
           "attachFiles": "Załącz pliki"
+        }
+      },
+      "imageCompression": {
+        "title": "Kompresja obrazów",
+        "description": "Wybierz jakość obrazu dla załączników",
+        "low": {
+          "label": "Niska",
+          "description": "Najmniejszy rozmiar pliku, zauważalna utrata jakości"
+        },
+        "medium": {
+          "label": "Średnia",
+          "description": "Zrównoważony rozmiar i jakość"
+        },
+        "original": {
+          "label": "Oryginalna",
+          "description": "Bez kompresji, oryginalna jakość"
         }
       }
     }

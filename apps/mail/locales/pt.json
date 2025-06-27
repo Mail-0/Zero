@@ -404,7 +404,9 @@
         "zeroSignatureDescription": "Adicionar uma assinatura Zero aos seus e-mails.",
         "defaultEmailAlias": "Alias de Email Padrão",
         "selectDefaultEmail": "Selecionar email padrão",
-        "defaultEmailDescription": "Este email será usado como endereço 'De' padrão ao compor novos emails"
+        "defaultEmailDescription": "Este email será usado como endereço 'De' padrão ao compor novos emails",
+        "autoRead": "Leitura automática",
+        "autoReadDescription": "Marcar automaticamente os emails como lidos quando você clicar neles."
       },
       "connections": {
         "title": "Conexões de E-mail",
@@ -573,6 +575,22 @@
           "orderedList": "Lista numerada",
           "viewAttachments": "Ver anexos",
           "attachFiles": "Anexar arquivos"
+        }
+      },
+      "imageCompression": {
+        "title": "Compressão de imagem",
+        "description": "Escolha a qualidade da imagem para anexos",
+        "low": {
+          "label": "Baixa",
+          "description": "Tamanho de arquivo menor, perda de qualidade perceptível"
+        },
+        "medium": {
+          "label": "Média",
+          "description": "Equilíbrio entre tamanho e qualidade"
+        },
+        "original": {
+          "label": "Original",
+          "description": "Sem compressão, qualidade original"
         }
       }
     }

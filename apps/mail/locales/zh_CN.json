@@ -404,7 +404,9 @@
         "zeroSignatureDescription": "在您的邮件中添加 Zero 签名。",
         "defaultEmailAlias": "默认邮箱别名",
         "selectDefaultEmail": "选择默认邮箱",
-        "defaultEmailDescription": "此邮箱将作为撰写新邮件时的默认“发件人”地址"
+        "defaultEmailDescription": "此邮箱将作为撰写新邮件时的默认“发件人”地址",
+        "autoRead": "自动阅读",
+        "autoReadDescription": "点击邮件时自动将其标记为已读。"
       },
       "connections": {
         "title": "邮箱连接",
@@ -573,6 +575,22 @@
           "orderedList": "有序列表",
           "viewAttachments": "查看附件",
           "attachFiles": "附加文件"
+        }
+      },
+      "imageCompression": {
+        "title": "图片压缩",
+        "description": "为附件选择图片质量",
+        "low": {
+          "label": "低",
+          "description": "最小文件大小，质量有明显损失"
+        },
+        "medium": {
+          "label": "中",
+          "description": "文件大小与质量的平衡"
+        },
+        "original": {
+          "label": "原始",
+          "description": "无压缩，原始质量"
         }
       }
     }

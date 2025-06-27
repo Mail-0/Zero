@@ -404,7 +404,9 @@
         "zeroSignatureDescription": "Thêm chữ ký Zero vào email của bạn.",
         "defaultEmailAlias": "Bí danh email mặc định",
         "selectDefaultEmail": "Chọn email mặc định",
-        "defaultEmailDescription": "Email này sẽ được sử dụng làm địa chỉ 'Từ' mặc định khi soạn email mới"
+        "defaultEmailDescription": "Email này sẽ được sử dụng làm địa chỉ 'Từ' mặc định khi soạn email mới",
+        "autoRead": "Tự động đọc",
+        "autoReadDescription": "Tự động đánh dấu email là đã đọc khi bạn nhấp vào chúng."
       },
       "connections": {
         "title": "Kết nối email",
@@ -573,6 +575,22 @@
           "orderedList": "Danh sách có thứ tự",
           "viewAttachments": "Xem tệp đính kèm",
           "attachFiles": "Đính kèm tệp"
+        }
+      },
+      "imageCompression": {
+        "title": "Nén ảnh",
+        "description": "Chọn chất lượng ảnh cho tệp đính kèm",
+        "low": {
+          "label": "Thấp",
+          "description": "Kích thước tệp nhỏ nhất, chất lượng giảm đáng kể"
+        },
+        "medium": {
+          "label": "Trung bình",
+          "description": "Cân bằng giữa kích thước và chất lượng"
+        },
+        "original": {
+          "label": "Nguyên bản",
+          "description": "Không nén, chất lượng gốc"
         }
       }
     }

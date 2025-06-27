@@ -117,11 +117,15 @@ export const shouldShowSeparateTime = (dateString: string | undefined): boolean 
  * Overloaded to handle both mail date formatting and notes date formatting
  */
 export function formatDate(date: string): string;
-export function formatDate(dateInput: string | Date, formatter?: any): string;
-export function formatDate(dateInput: string | Date, formatter?: any): string {
+export function formatDate(timestamp: number): string;
+export function formatDate(dateInput: string | Date | number, formatter?: any): string {
+  if (typeof dateInput === 'number') {
+    dateInput = new Date(dateInput).toISOString();
+  }
+
   // Notes formatting logic (when formatter is provided or date is a Date object)
   if (formatter || dateInput instanceof Date) {
-    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : (dateInput as Date);
 
     if (formatter) {
       return formatter.dateTime(date, {
@@ -173,7 +177,7 @@ export function formatDate(dateInput: string | Date, formatter?: any): string {
     console.error('Error formatting date', error);
     return '';
   }
-};
+}
 
 export const formatTime = (date: string) => {
   const dateObj = parseAndValidateDate(date);

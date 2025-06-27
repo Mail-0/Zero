@@ -404,7 +404,9 @@
         "zeroSignatureDescription": "Ajouter une signature Zero à vos courriels.",
         "defaultEmailAlias": "Alias e-mail par défaut",
         "selectDefaultEmail": "Sélectionner l'e-mail par défaut",
-        "defaultEmailDescription": "Cette adresse e-mail sera utilisée comme adresse d'expédition par défaut lors de la rédaction de nouveaux e-mails"
+        "defaultEmailDescription": "Cette adresse e-mail sera utilisée comme adresse d'expédition par défaut lors de la rédaction de nouveaux e-mails",
+        "autoRead": "Lecture automatique",
+        "autoReadDescription": "Marquer automatiquement les emails comme lus lorsque vous cliquez dessus."
       },
       "connections": {
         "title": "Connexions de courriels",
@@ -573,6 +575,22 @@
           "orderedList": "Liste numérotée",
           "viewAttachments": "Voir les pièces jointes",
           "attachFiles": "Joindre des fichiers"
+        }
+      },
+      "imageCompression": {
+        "title": "Compression d'image",
+        "description": "Choisir la qualité d'image pour les pièces jointes",
+        "low": {
+          "label": "Faible",
+          "description": "Taille de fichier minimale, perte de qualité visible"
+        },
+        "medium": {
+          "label": "Moyenne",
+          "description": "Équilibre entre taille et qualité"
+        },
+        "original": {
+          "label": "Originale",
+          "description": "Aucune compression, qualité originale"
         }
       }
     }

@@ -404,7 +404,9 @@
         "zeroSignatureDescription": "Añade una firma Zero a tus correos.",
         "defaultEmailAlias": "Alias de correo electrónico predeterminado",
         "selectDefaultEmail": "Seleccionar correo predeterminado",
-        "defaultEmailDescription": "Este correo electrónico se utilizará como dirección predeterminada 'De' al redactar nuevos correos"
+        "defaultEmailDescription": "Este correo electrónico se utilizará como dirección predeterminada 'De' al redactar nuevos correos",
+        "autoRead": "Lectura automática",
+        "autoReadDescription": "Marcar automáticamente los correos electrónicos como leídos cuando haces clic en ellos."
       },
       "connections": {
         "title": "Conexiones de correo",
@@ -573,6 +575,22 @@
           "orderedList": "Lista numerada",
           "viewAttachments": "Ver adjuntos",
           "attachFiles": "Adjuntar archivos"
+        }
+      },
+      "imageCompression": {
+        "title": "Compresión de imágenes",
+        "description": "Elige la calidad de imagen para los archivos adjuntos",
+        "low": {
+          "label": "Baja",
+          "description": "Tamaño de archivo más pequeño, pérdida de calidad notable"
+        },
+        "medium": {
+          "label": "Media",
+          "description": "Equilibrio entre tamaño y calidad"
+        },
+        "original": {
+          "label": "Original",
+          "description": "Sin compresión, calidad original"
         }
       }
     }

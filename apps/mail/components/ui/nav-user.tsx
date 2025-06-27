@@ -308,7 +308,7 @@ export function NavUser() {
                       </a>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                      <a href="https://discord.gg/0email" target="_blank" className="w-full">
+                      <a href="https://discord.gg/mail0" target="_blank" className="w-full">
                         <div className="flex items-center gap-2">
                           <HelpCircle size={16} className="opacity-60" />
                           <p className="text-[13px] opacity-60">
@@ -526,7 +526,7 @@ export function NavUser() {
                       </div>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                      <a href="https://discord.gg/0email" target="_blank" className="w-full">
+                      <a href="https://discord.gg/mail0" target="_blank" className="w-full">
                         <div className="flex items-center gap-2">
                           <HelpCircle size={16} className="opacity-60" />
                           <p className="text-[13px] opacity-60">

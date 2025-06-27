@@ -404,7 +404,9 @@
         "zeroSignatureDescription": "Přidat Zero podpis k vašim emailům.",
         "defaultEmailAlias": "Výchozí e-mailový alias",
         "selectDefaultEmail": "Vybrat výchozí e-mail",
-        "defaultEmailDescription": "Tento e-mail bude použit jako výchozí adresa 'Od' při psaní nových e-mailů"
+        "defaultEmailDescription": "Tento e-mail bude použit jako výchozí adresa 'Od' při psaní nových e-mailů",
+        "autoRead": "Automatické přečtení",
+        "autoReadDescription": "Automaticky označit e-maily jako přečtené při kliknutí na ně."
       },
       "connections": {
         "title": "Propojení emailu",
@@ -573,6 +575,22 @@
           "orderedList": "Číslovaný seznam",
           "viewAttachments": "Zobrazit přílohy",
           "attachFiles": "Připojit soubory"
+        }
+      },
+      "imageCompression": {
+        "title": "Komprese obrázků",
+        "description": "Vyberte kvalitu obrázků pro přílohy",
+        "low": {
+          "label": "Nízká",
+          "description": "Nejmenší velikost souboru, znatelná ztráta kvality"
+        },
+        "medium": {
+          "label": "Střední",
+          "description": "Vyvážená velikost a kvalita"
+        },
+        "original": {
+          "label": "Originál",
+          "description": "Bez komprese, původní kvalita"
         }
       }
     }

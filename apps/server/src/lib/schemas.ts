@@ -28,7 +28,7 @@ export const createDraftData = z.object({
   bcc: z.string().optional(),
   subject: z.string(),
   message: z.string(),
-  attachments: z.array(serializedFileSchema).transform(deserializeFiles).optional(),
+  attachments: z.array(serializedFileSchema).optional(),
   id: z.string().nullable(),
   threadId: z.string().nullable(),
   fromEmail: z.string().nullable(),
@@ -121,13 +121,14 @@ export const userSettingsSchema = z.object({
   timezone: z.string(),
   dynamicContent: z.boolean().optional(),
   externalImages: z.boolean(),
-  customPrompt: z.string(),
+  customPrompt: z.string().default(''),
   isOnboarded: z.boolean().optional(),
   trustedSenders: z.string().array().optional(),
   colorTheme: z.enum(['light', 'dark', 'system']).default('system'),
   zeroSignature: z.boolean().default(true),
   categories: categoriesSchema.optional(),
   defaultEmailAlias: z.string().optional(),
+  imageCompression: z.enum(['low', 'medium', 'original']).default('medium'),
   autoRead: z.boolean().default(true),
 });
 
@@ -146,4 +147,5 @@ export const defaultUserSettings: UserSettings = {
   autoRead: true,
   defaultEmailAlias: '',
   categories: defaultMailCategories,
+  imageCompression: 'medium',
 };
