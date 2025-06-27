@@ -856,7 +856,6 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
             ${threadId},
             ${threadId},
             'google',
-            'nothing',
             ${JSON.stringify(latest.sender)},
             ${normalizedReceivedOn},
             ${latest.subject},
