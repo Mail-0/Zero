@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 type SnoozeDialogProps = {
   trigger?: React.ReactElement;
@@ -22,13 +23,38 @@ export function SnoozeDialog({ trigger, onConfirm, open: controlledOpen, onOpenC
   const [date, setDate] = useState<string>(defaultDate);
   const [time, setTime] = useState<string>(defaultTime);
 
+  const timeZoneLabel = (() => {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch {
+      const offsetMin = new Date().getTimezoneOffset();
+      const sign = offsetMin > 0 ? '-' : '+';
+      const abs = Math.abs(offsetMin);
+      const hrs = Math.floor(abs / 60)
+        .toString()
+        .padStart(2, '0');
+      const mins = (abs % 60).toString().padStart(2, '0');
+      return `UTC${sign}${hrs}:${mins}`;
+    }
+  })();
+
   const handleSubmit = () => {
     let wakeDate: Date;
+
     if (date) {
       wakeDate = new Date(`${date}T${time || defaultTime}`);
     } else {
-      wakeDate = new Date();
+      const today = new Date();
+      const [hours, minutes] = (time || defaultTime).split(':').map((v) => parseInt(v, 10));
+      today.setHours(hours, minutes, 0, 0);
+      wakeDate = today;
     }
+
+    if (wakeDate.getTime() <= Date.now()) {
+      toast.error('Please choose a future date and time.');
+      return;
+    }
+
     onConfirm(wakeDate);
     setOpen(false);
   };
@@ -44,11 +70,20 @@ export function SnoozeDialog({ trigger, onConfirm, open: controlledOpen, onOpenC
         <div className="flex flex-col gap-4 py-2">
           <label className="text-sm font-medium">
             Date
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <Input
+              type="date"
+              min={defaultDate}
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
           </label>
           <label className="text-sm font-medium">
-            Time
-            <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+            Time <span className="text-xs font-normal text-muted-foreground">({timeZoneLabel})</span>
+            <Input
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+            />
           </label>
         </div>
         <DialogFooter className="flex justify-end gap-2">
