@@ -231,7 +231,9 @@ class ZeroDB extends DurableObject<Env> {
     return await this.db.insert(note).values({
       ...payload,
       userId,
-    });
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
   }
 
   async updateNote(
@@ -241,7 +243,10 @@ class ZeroDB extends DurableObject<Env> {
   ): Promise<typeof note.$inferSelect | undefined> {
     const [updated] = await this.db
       .update(note)
-      .set(payload)
+      .set({
+        ...payload,
+        updatedAt: new Date(),
+      })
       .where(and(eq(note.id, noteId), eq(note.userId, userId)))
       .returning();
     return updated;
