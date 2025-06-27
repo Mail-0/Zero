@@ -28,7 +28,7 @@ export const createDraftData = z.object({
   bcc: z.string().optional(),
   subject: z.string(),
   message: z.string(),
-  attachments: z.array(serializedFileSchema).transform(deserializeFiles).optional(),
+  attachments: z.array(serializedFileSchema).optional(),
   id: z.string().nullable(),
   threadId: z.string().nullable(),
   fromEmail: z.string().nullable(),
@@ -115,28 +115,13 @@ const categoriesSchema = z.array(mailCategorySchema).superRefine((cats, ctx) => 
     });
   }
 });
-<<<<<<< snoozing
-// export const defaultUserSettings = {
-//   language: 'en',
-//   timezone: 'UTC',
-//   dynamicContent: false,
-//   externalImages: true,
-//   customPrompt: '',
-//   trustedSenders: [],
-//   isOnboarded: false,
-//   colorTheme: 'system',
-//   zeroSignature: true,
-//   autoRead: true,
-// } satisfies UserSettings;
-=======
->>>>>>> staging
 
 export const userSettingsSchema = z.object({
   language: z.string(),
   timezone: z.string(),
   dynamicContent: z.boolean().optional(),
   externalImages: z.boolean(),
-  customPrompt: z.string(),
+  customPrompt: z.string().default(''),
   isOnboarded: z.boolean().optional(),
   trustedSenders: z.string().array().optional(),
   colorTheme: z.enum(['light', 'dark', 'system']).default('system'),

@@ -697,25 +697,23 @@ export default class extends WorkerEntrypoint<typeof env> {
 
     const expiredSubscriptions: Array<{ connectionId: string; providerId: EProviders }> = [];
 
-    // 2. Unsnooze emails whose wake time has passed
-    const snoozedKeys = await (env as any).snoozed_emails.list();
+    const snoozedKeys = await env.snoozed_emails.list();
     const nowTs = Date.now();
 
     await Promise.all(
-      (snoozedKeys.keys as any[]).map(async (key: { name: string }) => {
+      snoozedKeys.keys.map(async (key: { name: string }) => {
         try {
-          const wakeAtIso = await (env as any).snoozed_emails.get(key.name);
+          const wakeAtIso = await env.snoozed_emails.get(key.name);
           if (!wakeAtIso) return;
           const wakeAt = new Date(wakeAtIso).getTime();
           if (wakeAt > nowTs) return;
 
-          // Key pattern: `${threadId}__${connectionId}`
           const [threadId, connectionId] = key.name.split('__');
           if (!threadId || !connectionId) return;
 
-          const agent = getZeroAgent(connectionId);
+          const agent = await getZeroAgent(connectionId);
           await agent.modifyLabels([threadId], ['INBOX'], ['SNOOZED']);
-          await (env as any).snoozed_emails.delete(key.name);
+          await env.snoozed_emails.delete(key.name);
         } catch (error) {
           console.error('Failed to unsnooze thread from key', key.name, error);
         }

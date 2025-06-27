@@ -39,6 +39,7 @@ import { useParams } from 'react-router';
 import { useQueryState } from 'nuqs';
 import { toast } from 'sonner';
 import { SnoozeDialog } from '@/components/mail/snooze-dialog';
+import type { Label } from '@/types';
 
 interface EmailAction {
   id: string;
@@ -69,7 +70,7 @@ const LabelsList = ({ threadId }: { threadId: string }) => {
 
   if (!labels || !thread) return null;
 
-  const labelArr = labels as unknown as any[];
+  const labelArr = labels as Label[];
 
   const handleToggleLabel = async (labelId: string) => {
     if (!labelId) return;
@@ -90,8 +91,8 @@ const LabelsList = ({ threadId }: { threadId: string }) => {
   return (
     <>
       {labelArr
-        .filter((lbl: any) => lbl.id)
-        .map((lbl: any) => (
+        .filter((lbl) => lbl.id)
+        .map((lbl) => (
           <ContextMenuItem
             key={lbl.id}
             onClick={() => lbl.id && handleToggleLabel(lbl.id)}
@@ -512,7 +513,7 @@ export function ThreadContextMenu({
 
           <ContextMenuSeparator className="bg-[#E7E7E7] dark:bg-[#252525]" />
 
-          {getActions().map(renderAction as any)}
+          {getActions().map(renderAction)}
 
           <ContextMenuSeparator className="bg-[#E7E7E7] dark:bg-[#252525]" />
 

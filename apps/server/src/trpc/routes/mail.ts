@@ -80,7 +80,7 @@ export const mailRouter = router({
           threadsResponse.threads.map(async (t) => {
             const keyName = `${t.id}__${activeConnection.id}`;
             try {
-              const wakeAtIso = await (env as any).snoozed_emails.get(keyName);
+              const wakeAtIso = await env.snoozed_emails.get(keyName);
               if (!wakeAtIso) {
                 filtered.push(t);
                 return;
@@ -98,7 +98,7 @@ export const mailRouter = router({
               });
 
               await agent.modifyLabels([t.id], ['INBOX'], ['SNOOZED']);
-              await (env as any).snoozed_emails.delete(keyName);
+              await env.snoozed_emails.delete(keyName);
             } catch (error) {
               console.error('[UNSNOOZE_ON_ACCESS] Failed for', t.id, error);
               filtered.push(t);
@@ -419,25 +419,23 @@ export const mailRouter = router({
     .input(
       z.object({
         ids: z.string().array(),
-        wakeAt: z.string(), // ISO string
+        wakeAt: z.string(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
 
       if (!input.ids.length) {
         return { success: false, error: 'No thread IDs provided' };
       }
 
-      // Apply labels
       await agent.modifyLabels(input.ids, ['SNOOZED'], ['INBOX']);
 
-      // Persist wake time in KV for each thread
       const wakeAtIso = new Date(input.wakeAt).toISOString();
       await Promise.all(
         input.ids.map((threadId) =>
-          (env as any).snoozed_emails.put(`${threadId}__${activeConnection.id}`, wakeAtIso),
+          env.snoozed_emails.put(`${threadId}__${activeConnection.id}`, wakeAtIso),
         ),
       );
 
@@ -451,12 +449,12 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
       if (!input.ids.length) return { success: false, error: 'No thread IDs' };
       await agent.modifyLabels(input.ids, ['INBOX'], ['SNOOZED']);
 
       await Promise.all(
-        input.ids.map((threadId) => (env as any).snoozed_emails.delete(`${threadId}__${activeConnection.id}`)),
+        input.ids.map((threadId) => env.snoozed_emails.delete(`${threadId}__${activeConnection.id}`)),
       );
       return { success: true };
     }),
