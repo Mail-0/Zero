@@ -1,5 +1,5 @@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Clock } from 'lucide-react';
+import { Clock } from '@/components/icons/icons';
 import { format } from 'date-fns';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -66,7 +66,14 @@ export const ScheduleSendPicker: React.FC<ScheduleSendPickerProps> = ({
           )}
         >
           <Clock className="h-4 w-4" />
-          <span>{localValue ? format(new Date(localValue), 'dd MMM yyyy hh:mm aaa') : 'Send later'}</span>
+          <span>
+            {(() => {
+              if (!localValue) return 'Send later';
+              const parsed = new Date(localValue);
+              if (isNaN(parsed.getTime())) return 'Send later';
+              return format(parsed, 'dd MMM yyyy hh:mm aaa');
+            })()}
+          </span>
         </button>
       </PopoverTrigger>
       <PopoverContent className="z-[100] w-64 p-4" align="start" side="top" sideOffset={8}>
