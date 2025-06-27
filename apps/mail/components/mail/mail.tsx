@@ -66,6 +66,7 @@ import type { IConnection } from '@/types';
 import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
+import SelectAllCheckbox from './select-all-checkbox';
 
 interface ITag {
   id: string;
@@ -491,6 +492,7 @@ export function MailLayout() {
                 <div className="flex w-full items-center justify-between gap-2">
                   <div>
                     <SidebarToggle className="h-fit px-2" />
+                    <SelectAllCheckbox className="ml-2" />
                   </div>
 
                   <div className="flex items-center gap-2">
