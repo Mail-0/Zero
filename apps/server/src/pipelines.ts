@@ -19,7 +19,7 @@ import {
 } from './lib/brain.fallback.prompts';
 import { defaultLabels, EPrompts, EProviders, type ParsedMessage, type Sender } from './types';
 import { WorkflowEntrypoint, WorkflowStep, type WorkflowEvent } from 'cloudflare:workers';
-import { connectionToDriver } from './lib/server-utils';
+import { connectionToDriver, notifyUser } from './lib/server-utils';
 import { type gmail_v1 } from '@googleapis/gmail';
 import { env } from 'cloudflare:workers';
 import { connection } from './db/schema';
@@ -366,7 +366,6 @@ export class ZeroWorkflow extends WorkflowEntrypoint<Env, Params> {
     }
   }
 }
-
 export class ThreadWorkflow extends WorkflowEntrypoint<Env, Params> {
   async run(
     event: Readonly<WorkflowEvent<Params<'connectionId' | 'threadId' | 'providerId'>>>,
@@ -398,6 +397,11 @@ export class ThreadWorkflow extends WorkflowEntrypoint<Env, Params> {
         const thread = await step.do(`[ZERO] Get Thread ${threadId}`, async () => {
           log('[THREAD_WORKFLOW] Getting thread:', threadId);
           const thread = await driver.get(threadId.toString());
+          await notifyUser({
+            connectionId: connectionId.toString(),
+            result: thread,
+            threadId: threadId.toString(),
+          });
           log('[THREAD_WORKFLOW] Found thread with messages:', thread.messages.length);
           return thread;
         });

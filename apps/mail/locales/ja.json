@@ -404,7 +404,9 @@
         "zeroSignatureDescription": "メールにZero署名を追加します。",
         "defaultEmailAlias": "デフォルトのメールエイリアス",
         "selectDefaultEmail": "デフォルトのメールを選択",
-        "defaultEmailDescription": "このメールは新しいメールを作成する際のデフォルトの「差出人」アドレスとして使用されます"
+        "defaultEmailDescription": "このメールは新しいメールを作成する際のデフォルトの「差出人」アドレスとして使用されます",
+        "autoRead": "自動既読",
+        "autoReadDescription": "メールをクリックすると自動的に既読としてマークします。"
       },
       "connections": {
         "title": "メールの接続",

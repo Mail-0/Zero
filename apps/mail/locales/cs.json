@@ -404,7 +404,9 @@
         "zeroSignatureDescription": "Přidat Zero podpis k vašim emailům.",
         "defaultEmailAlias": "Výchozí e-mailový alias",
         "selectDefaultEmail": "Vybrat výchozí e-mail",
-        "defaultEmailDescription": "Tento e-mail bude použit jako výchozí adresa 'Od' při psaní nových e-mailů"
+        "defaultEmailDescription": "Tento e-mail bude použit jako výchozí adresa 'Od' při psaní nových e-mailů",
+        "autoRead": "Automatické přečtení",
+        "autoReadDescription": "Automaticky označit e-maily jako přečtené při kliknutí na ně."
       },
       "connections": {
         "title": "Propojení emailu",

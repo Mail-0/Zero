@@ -404,7 +404,9 @@
         "zeroSignatureDescription": "अपने ईमेल में ज़ीरो सिग्नेचर जोड़ें।",
         "defaultEmailAlias": "डिफ़ॉल्ट ईमेल उपनाम",
         "selectDefaultEmail": "डिफ़ॉल्ट ईमेल चुनें",
-        "defaultEmailDescription": "नए ईमेल लिखते समय यह ईमेल डिफ़ॉल्ट 'प्रेषक' पते के रूप में उपयोग किया जाएगा"
+        "defaultEmailDescription": "नए ईमेल लिखते समय यह ईमेल डिफ़ॉल्ट 'प्रेषक' पते के रूप में उपयोग किया जाएगा",
+        "autoRead": "ऑटो रीड",
+        "autoReadDescription": "जब आप ईमेल पर क्लिक करते हैं तो उन्हें स्वचालित रूप से पढ़ा हुआ चिह्नित करें।"
       },
       "connections": {
         "title": "ईमेल कनेक्शन्स",

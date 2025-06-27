@@ -404,7 +404,9 @@
         "zeroSignatureDescription": "Pievienot Zero parakstu saviem e-pastiem.",
         "defaultEmailAlias": "Noklusējuma e-pasta aizstājvārds",
         "selectDefaultEmail": "Izvēlieties noklusējuma e-pastu",
-        "defaultEmailDescription": "Šis e-pasts tiks izmantots kā noklusējuma 'No' adrese, rakstot jaunus e-pastus"
+        "defaultEmailDescription": "Šis e-pasts tiks izmantots kā noklusējuma 'No' adrese, rakstot jaunus e-pastus",
+        "autoRead": "Automātiska lasīšana",
+        "autoReadDescription": "Automātiski atzīmēt e-pastus kā izlasītus, kad uz tiem uzklikšķināt."
       },
       "connections": {
         "title": "E-pasta savienojumi",

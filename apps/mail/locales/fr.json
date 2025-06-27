@@ -404,7 +404,9 @@
         "zeroSignatureDescription": "Ajouter une signature Zero à vos courriels.",
         "defaultEmailAlias": "Alias e-mail par défaut",
         "selectDefaultEmail": "Sélectionner l'e-mail par défaut",
-        "defaultEmailDescription": "Cette adresse e-mail sera utilisée comme adresse d'expédition par défaut lors de la rédaction de nouveaux e-mails"
+        "defaultEmailDescription": "Cette adresse e-mail sera utilisée comme adresse d'expédition par défaut lors de la rédaction de nouveaux e-mails",
+        "autoRead": "Lecture automatique",
+        "autoReadDescription": "Marquer automatiquement les emails comme lus lorsque vous cliquez dessus."
       },
       "connections": {
         "title": "Connexions de courriels",

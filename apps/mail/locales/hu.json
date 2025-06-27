@@ -404,7 +404,9 @@
         "zeroSignatureDescription": "Zero aláírás hozzáadása az e-mailjeihez.",
         "defaultEmailAlias": "Alapértelmezett e-mail álnév",
         "selectDefaultEmail": "Alapértelmezett e-mail kiválasztása",
-        "defaultEmailDescription": "Ez az e-mail lesz az alapértelmezett 'Feladó' cím új e-mailek írásakor"
+        "defaultEmailDescription": "Ez az e-mail lesz az alapértelmezett 'Feladó' cím új e-mailek írásakor",
+        "autoRead": "Automatikus olvasás",
+        "autoReadDescription": "Automatikusan olvasottként jelöli az e-maileket, amikor rájuk kattintasz."
       },
       "connections": {
         "title": "E-mail kapcsolatok",
