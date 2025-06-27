@@ -404,7 +404,9 @@
         "zeroSignatureDescription": "E-postalarınıza Zero imzası ekleyin.",
         "defaultEmailAlias": "Varsayılan E-posta Adresi",
         "selectDefaultEmail": "Varsayılan e-postayı seç",
-        "defaultEmailDescription": "Bu e-posta, yeni e-postalar oluştururken varsayılan 'Kimden' adresi olarak kullanılacaktır"
+        "defaultEmailDescription": "Bu e-posta, yeni e-postalar oluştururken varsayılan 'Kimden' adresi olarak kullanılacaktır",
+        "autoRead": "Otomatik Okuma",
+        "autoReadDescription": "E-postalara tıkladığınızda otomatik olarak okundu olarak işaretlenir."
       },
       "connections": {
         "title": "E-posta Bağlantıları",

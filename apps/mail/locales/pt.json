@@ -404,7 +404,9 @@
         "zeroSignatureDescription": "Adicionar uma assinatura Zero aos seus e-mails.",
         "defaultEmailAlias": "Alias de Email Padrão",
         "selectDefaultEmail": "Selecionar email padrão",
-        "defaultEmailDescription": "Este email será usado como endereço 'De' padrão ao compor novos emails"
+        "defaultEmailDescription": "Este email será usado como endereço 'De' padrão ao compor novos emails",
+        "autoRead": "Leitura automática",
+        "autoReadDescription": "Marcar automaticamente os emails como lidos quando você clicar neles."
       },
       "connections": {
         "title": "Conexões de E-mail",
