@@ -403,7 +403,10 @@ export function EmailComposer({
   const handleSend = async () => {
     const values = getValues();
     const messageText = editor.getText().toLowerCase();
-    const hasAttachmentKeywords = attachmentKeywords.some((keyword) => messageText.includes(keyword));
+    const hasAttachmentKeywords = attachmentKeywords.some((keyword) => {
+      const regex = new RegExp(`\\b${keyword.replace(/\s+/g, '\\s+')}\\b`, 'i');
+      return regex.test(messageText);
+    });
 
     if (hasAttachmentKeywords && (!values.attachments || values.attachments.length === 0)) {
       setShowAttachmentWarning(true);
