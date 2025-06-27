@@ -3,6 +3,7 @@ import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-quer
 import type { IGetThreadResponse } from '../../server/src/lib/driver/types';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useTRPC } from '@/providers/query-provider';
+import useSearchLabels from './use-labels-search';
 import { useSession } from '@/lib/auth-client';
 import { useAtom, useAtomValue } from 'jotai';
 import { usePrevious } from './use-previous';
@@ -17,12 +18,14 @@ export const useThreads = () => {
   const [backgroundQueue] = useAtom(backgroundQueueAtom);
   const isInQueue = useAtomValue(isThreadInBackgroundQueueAtom);
   const trpc = useTRPC();
+  const { labels, setLabels } = useSearchLabels();
 
   const threadsQuery = useInfiniteQuery(
     trpc.mail.listThreads.infiniteQueryOptions(
       {
         q: searchValue.value,
         folder,
+        labelIds: labels,
       },
       {
         initialCursor: '',

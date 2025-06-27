@@ -38,6 +38,9 @@ import { useQueryState } from 'nuqs';
 import pluralize from 'pluralize';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { ImageCompressionSettings } from './image-compression-settings';
+import { compressImages } from '@/lib/image-compression';
+import type { ImageQuality } from '@/lib/image-compression';
 
 type ThreadContent = {
   from: string;
@@ -131,6 +134,75 @@ export function EmailComposer({
   const bccWrapperRef = useRef<HTMLDivElement>(null);
   const { data: activeConnection } = useActiveConnection();
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
+  const [originalAttachments, setOriginalAttachments] = useState<File[]>(initialAttachments);
+  const [imageQuality, setImageQuality] = useState<ImageQuality>(
+    settings?.settings?.imageCompression || 'medium',
+  );
+
+  const processAndSetAttachments = async (
+    filesToProcess: File[],
+    quality: ImageQuality,
+    showToast: boolean = false,
+  ) => {
+    if (filesToProcess.length === 0) {
+      setValue('attachments', [], { shouldDirty: true });
+      return;
+    }
+
+    try {
+      const compressedFiles = await compressImages(filesToProcess, {
+        quality,
+        maxWidth: 1920,
+        maxHeight: 1080,
+      });
+
+      if (compressedFiles.length !== filesToProcess.length) {
+        console.warn('Compressed files array length mismatch:', {
+          original: filesToProcess.length,
+          compressed: compressedFiles.length,
+        });
+        setValue('attachments', filesToProcess, { shouldDirty: true });
+        setHasUnsavedChanges(true);
+        if (showToast) {
+          toast.error('Image compression failed, using original files');
+        }
+        return;
+      }
+
+      setValue('attachments', compressedFiles, { shouldDirty: true });
+      setHasUnsavedChanges(true);
+
+      if (showToast && quality !== 'original') {
+        let totalOriginalSize = 0;
+        let totalCompressedSize = 0;
+
+        const imageFilesExist = filesToProcess.some((f) => f.type.startsWith('image/'));
+
+        if (imageFilesExist) {
+          filesToProcess.forEach((originalFile, index) => {
+            if (originalFile.type.startsWith('image/') && compressedFiles[index]) {
+              totalOriginalSize += originalFile.size;
+              totalCompressedSize += compressedFiles[index].size;
+            }
+          });
+
+          if (totalOriginalSize > totalCompressedSize) {
+            const savings = (((totalOriginalSize - totalCompressedSize) / totalOriginalSize) * 100).toFixed(1);
+            if (parseFloat(savings) > 0.1) {
+              toast.success(`Images compressed: ${savings}% smaller`);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error compressing images:', error);
+      setValue('attachments', filesToProcess, { shouldDirty: true });
+      setHasUnsavedChanges(true);
+      if (showToast) {
+        toast.error('Image compression failed, using original files');
+      }
+    }
+  };
 
   // Add this function to handle clicks outside the input fields
   useEffect(() => {
@@ -277,18 +349,18 @@ export function EmailComposer({
   const attachments = watch('attachments');
   const fromEmail = watch('fromEmail');
 
-  const handleAttachment = (files: File[]) => {
-    if (files && files.length > 0) {
-      setValue('attachments', [...(attachments ?? []), ...files]);
-      setHasUnsavedChanges(true);
+  const handleAttachment = async (newFiles: File[]) => {
+    if (newFiles && newFiles.length > 0) {
+      const newOriginals = [...originalAttachments, ...newFiles];
+      setOriginalAttachments(newOriginals);
+      await processAndSetAttachments(newOriginals, imageQuality, true);
     }
   };
 
-  const removeAttachment = (index: number) => {
-    setValue(
-      'attachments',
-      (attachments || []).filter((_, i) => i !== index),
-    );
+  const removeAttachment = async (index: number) => {
+    const newOriginals = originalAttachments.filter((_, i) => i !== index);
+    setOriginalAttachments(newOriginals);
+    await processAndSetAttachments(newOriginals, imageQuality);
     setHasUnsavedChanges(true);
   };
 
@@ -303,8 +375,8 @@ export function EmailComposer({
       void handleSend();
       return true;
     },
-    onAttachmentsChange: (files) => {
-      handleAttachment(files);
+    onAttachmentsChange: async (files) => {
+      await handleAttachment(files);
     },
     placeholder: 'Start your email here',
     autofocus,
@@ -581,6 +653,11 @@ export function EmailComposer({
   //   setAiGeneratedMessage(null);
   //   await handleAiGenerate();
   // });
+
+  const handleQualityChange = async (newQuality: ImageQuality) => {
+    setImageQuality(newQuality);
+    await processAndSetAttachments(originalAttachments, newQuality, true);
+  };
 
   return (
     <div
@@ -1197,10 +1274,10 @@ export function EmailComposer({
               type="file"
               id="attachment-input"
               className="hidden"
-              onChange={(event) => {
+              onChange={async (event) => {
                 const fileList = event.target.files;
                 if (fileList) {
-                  handleAttachment(Array.from(fileList));
+                  await handleAttachment(Array.from(fileList));
                 }
               }}
               multiple
@@ -1233,6 +1310,15 @@ export function EmailComposer({
                         {pluralize('file', attachments.length, true)}
                       </p>
                     </div>
+                    
+                    <div className="border-b border-[#E7E7E7] p-3 dark:border-[#2B2B2B]">
+                      <ImageCompressionSettings
+                        quality={imageQuality}
+                        onQualityChange={handleQualityChange}
+                        className="border-0 shadow-none"
+                      />
+                    </div>
+                    
                     <div className="max-h-[250px] flex-1 space-y-0.5 overflow-y-auto p-1.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                       {attachments.map((file: File, index: number) => {
                         const nameParts = file.name.split('.');
@@ -1290,16 +1376,15 @@ export function EmailComposer({
                             </div>
                             <button
                               type="button"
-                              onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                              onClick={async (e: React.MouseEvent<HTMLButtonElement>) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                const updatedAttachments = attachments.filter(
-                                  (_, i) => i !== index,
-                                );
-                                setValue('attachments', updatedAttachments, {
-                                  shouldDirty: true,
-                                });
-                                setHasUnsavedChanges(true);
+                                try {
+                                  await removeAttachment(index);
+                                } catch (error) {
+                                  console.error('Failed to remove attachment:', error);
+                                  toast.error('Failed to remove attachment');
+                                }
                               }}
                               className="focus-visible:ring-ring ml-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-transparent hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2"
                               aria-label={`Remove ${file.name}`}

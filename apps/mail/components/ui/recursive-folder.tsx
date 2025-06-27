@@ -3,6 +3,7 @@ import { LabelSidebarContextMenu } from '../context/label-sidebar-context';
 import { useSearchValue } from '@/hooks/use-search-value';
 import type { Label, Label as LabelType } from '@/types';
 import { useSidebar } from '../context/sidebar-context';
+import useSearchLabels from '@/hooks/use-labels-search';
 import { Folder } from '../magicui/file-tree';
 import { useNavigate } from 'react-router';
 import { useQueryState } from 'nuqs';
@@ -18,37 +19,21 @@ export const RecursiveFolder = ({
   activeAccount?: any;
   count?: number;
 }) => {
-  const [searchValue, setSearchValue] = useSearchValue();
-  const isActive = searchValue.value.includes(`label:${label.name}`);
+  const { labels, setLabels } = useSearchLabels();
+  const isActive = labels?.includes(label.id);
   const isFolderActive = isActive || window.location.pathname.includes(`/mail/label/${label.id}`);
   const navigate = useNavigate();
   const { setOpenMobile, isMobile } = useSidebar();
-  const [category, setCategory] = useQueryState('category');
 
   const handleFilterByLabel = useCallback(
     (labelToFilter: LabelType) => {
-      const existingValue = searchValue.value;
-      if (!category || category !== 'All Mail') {
-        setCategory('All Mail');
+      if (labels?.includes(labelToFilter.id)) {
+        setLabels(labels.filter((l) => l !== labelToFilter.id));
+      } else {
+        setLabels([...(labels ?? []), labelToFilter.id]);
       }
-      if (existingValue.includes(`label:${labelToFilter.name}`)) {
-        setSearchValue({
-          value: existingValue.replace(`label:${labelToFilter.name}`, '').trim(),
-          highlight: '',
-          folder: '',
-        });
-        return;
-      }
-      const newValue = existingValue
-        ? `${existingValue} label:${labelToFilter.name}`
-        : `label:${labelToFilter.name}`;
-      setSearchValue({
-        value: newValue,
-        highlight: '',
-        folder: '',
-      });
     },
-    [searchValue, setSearchValue, category],
+    [labels, setLabels],
   );
 
   const handleFolderClick = useCallback(
