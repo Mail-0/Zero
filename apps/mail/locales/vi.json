@@ -576,6 +576,22 @@
           "viewAttachments": "Xem tệp đính kèm",
           "attachFiles": "Đính kèm tệp"
         }
+      },
+      "imageCompression": {
+        "title": "Nén ảnh",
+        "description": "Chọn chất lượng ảnh cho tệp đính kèm",
+        "low": {
+          "label": "Thấp",
+          "description": "Kích thước tệp nhỏ nhất, chất lượng giảm đáng kể"
+        },
+        "medium": {
+          "label": "Trung bình",
+          "description": "Cân bằng giữa kích thước và chất lượng"
+        },
+        "original": {
+          "label": "Nguyên bản",
+          "description": "Không nén, chất lượng gốc"
+        }
       }
     }
   },

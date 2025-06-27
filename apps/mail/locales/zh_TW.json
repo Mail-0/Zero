@@ -576,6 +576,22 @@
           "viewAttachments": "檢視附件",
           "attachFiles": "附加檔案"
         }
+      },
+      "imageCompression": {
+        "title": "圖片壓縮",
+        "description": "選擇附件的圖片品質",
+        "low": {
+          "label": "低",
+          "description": "最小的檔案大小，明顯的品質損失"
+        },
+        "medium": {
+          "label": "中",
+          "description": "檔案大小與品質的平衡"
+        },
+        "original": {
+          "label": "原始",
+          "description": "無壓縮，原始品質"
+        }
       }
     }
   },

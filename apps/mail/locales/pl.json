@@ -576,6 +576,22 @@
           "viewAttachments": "Zobacz załączniki",
           "attachFiles": "Załącz pliki"
         }
+      },
+      "imageCompression": {
+        "title": "Kompresja obrazów",
+        "description": "Wybierz jakość obrazu dla załączników",
+        "low": {
+          "label": "Niska",
+          "description": "Najmniejszy rozmiar pliku, zauważalna utrata jakości"
+        },
+        "medium": {
+          "label": "Średnia",
+          "description": "Zrównoważony rozmiar i jakość"
+        },
+        "original": {
+          "label": "Oryginalna",
+          "description": "Bez kompresji, oryginalna jakość"
+        }
       }
     }
   },

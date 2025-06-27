@@ -576,6 +576,22 @@
           "viewAttachments": "अटैचमेंट देखें",
           "attachFiles": "फ़ाइलें अटैच करें"
         }
+      },
+      "imageCompression": {
+        "title": "छवि संपीड़न",
+        "description": "अटैचमेंट के लिए छवि गुणवत्ता चुनें",
+        "low": {
+          "label": "निम्न",
+          "description": "सबसे छोटा फ़ाइल आकार, स्पष्ट गुणवत्ता हानि"
+        },
+        "medium": {
+          "label": "मध्यम",
+          "description": "आकार और गुणवत्ता का संतुलन"
+        },
+        "original": {
+          "label": "मूल",
+          "description": "कोई संपीड़न नहीं, मूल गुणवत्ता"
+        }
       }
     }
   },

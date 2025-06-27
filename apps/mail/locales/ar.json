@@ -576,6 +576,22 @@
           "viewAttachments": "عرض المرفقات",
           "attachFiles": "إرفاق ملفات"
         }
+      },
+      "imageCompression": {
+        "title": "ضغط الصور",
+        "description": "اختر جودة الصور للمرفقات",
+        "low": {
+          "label": "منخفضة",
+          "description": "حجم ملف أصغر، مع فقدان ملحوظ في الجودة"
+        },
+        "medium": {
+          "label": "متوسطة",
+          "description": "توازن بين الحجم والجودة"
+        },
+        "original": {
+          "label": "أصلية",
+          "description": "بدون ضغط، الجودة الأصلية"
+        }
       }
     }
   },

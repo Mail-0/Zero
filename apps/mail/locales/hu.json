@@ -576,6 +576,22 @@
           "viewAttachments": "Mellékletek megtekintése",
           "attachFiles": "Fájlok csatolása"
         }
+      },
+      "imageCompression": {
+        "title": "Képtömörítés",
+        "description": "Válassz képminőséget a csatolmányokhoz",
+        "low": {
+          "label": "Alacsony",
+          "description": "Legkisebb fájlméret, észrevehető minőségromlás"
+        },
+        "medium": {
+          "label": "Közepes",
+          "description": "Kiegyensúlyozott méret és minőség"
+        },
+        "original": {
+          "label": "Eredeti",
+          "description": "Nincs tömörítés, eredeti minőség"
+        }
       }
     }
   },

@@ -576,6 +576,22 @@
           "viewAttachments": "添付ファイルを表示",
           "attachFiles": "ファイルを添付"
         }
+      },
+      "imageCompression": {
+        "title": "画像圧縮",
+        "description": "添付ファイルの画質を選択",
+        "low": {
+          "label": "低",
+          "description": "ファイルサイズ最小、目立つ画質劣化"
+        },
+        "medium": {
+          "label": "中",
+          "description": "サイズと品質のバランス"
+        },
+        "original": {
+          "label": "オリジナル",
+          "description": "圧縮なし、元の品質"
+        }
       }
     }
   },

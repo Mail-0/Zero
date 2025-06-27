@@ -576,6 +576,22 @@
           "viewAttachments": "첨부 파일 보기",
           "attachFiles": "파일 첨부"
         }
+      },
+      "imageCompression": {
+        "title": "이미지 압축",
+        "description": "첨부 파일의 이미지 품질 선택",
+        "low": {
+          "label": "낮음",
+          "description": "가장 작은 파일 크기, 눈에 띄는 품질 저하"
+        },
+        "medium": {
+          "label": "중간",
+          "description": "크기와 품질의 균형"
+        },
+        "original": {
+          "label": "원본",
+          "description": "압축 없음, 원본 품질"
+        }
       }
     }
   },

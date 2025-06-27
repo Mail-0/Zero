@@ -576,6 +576,22 @@
           "viewAttachments": "Veure fitxers adjunts",
           "attachFiles": "Adjuntar fitxers"
         }
+      },
+      "imageCompression": {
+        "title": "Compressió d'imatges",
+        "description": "Tria la qualitat de les imatges per als fitxers adjunts",
+        "low": {
+          "label": "Baixa",
+          "description": "Mida de fitxer més petita, pèrdua de qualitat notable"
+        },
+        "medium": {
+          "label": "Mitjana",
+          "description": "Equilibri entre mida i qualitat"
+        },
+        "original": {
+          "label": "Original",
+          "description": "Sense compressió, qualitat original"
+        }
       }
     }
   },

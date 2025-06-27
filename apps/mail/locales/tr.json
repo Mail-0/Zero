@@ -576,6 +576,22 @@
           "viewAttachments": "Ekleri görüntüle",
           "attachFiles": "Dosya ekle"
         }
+      },
+      "imageCompression": {
+        "title": "Görüntü Sıkıştırma",
+        "description": "Ekler için görüntü kalitesini seçin",
+        "low": {
+          "label": "Düşük",
+          "description": "En küçük dosya boyutu, fark edilir kalite kaybı"
+        },
+        "medium": {
+          "label": "Orta",
+          "description": "Dengeli boyut ve kalite"
+        },
+        "original": {
+          "label": "Orijinal",
+          "description": "Sıkıştırma yok, orijinal kalite"
+        }
       }
     }
   },

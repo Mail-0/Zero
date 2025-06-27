@@ -576,6 +576,22 @@
           "viewAttachments": "Skatīt pielikumus",
           "attachFiles": "Pievienot failus"
         }
+      },
+      "imageCompression": {
+        "title": "Attēlu saspiešana",
+        "description": "Izvēlieties attēlu kvalitāti pielikumiem",
+        "low": {
+          "label": "Zema",
+          "description": "Mazākais faila izmērs, pamanāms kvalitātes zudums"
+        },
+        "medium": {
+          "label": "Vidēja",
+          "description": "Līdzsvarots izmērs un kvalitāte"
+        },
+        "original": {
+          "label": "Oriģināls",
+          "description": "Bez saspiešanas, oriģinālā kvalitāte"
+        }
       }
     }
   },

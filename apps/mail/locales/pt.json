@@ -576,6 +576,22 @@
           "viewAttachments": "Ver anexos",
           "attachFiles": "Anexar arquivos"
         }
+      },
+      "imageCompression": {
+        "title": "Compressão de imagem",
+        "description": "Escolha a qualidade da imagem para anexos",
+        "low": {
+          "label": "Baixa",
+          "description": "Tamanho de arquivo menor, perda de qualidade perceptível"
+        },
+        "medium": {
+          "label": "Média",
+          "description": "Equilíbrio entre tamanho e qualidade"
+        },
+        "original": {
+          "label": "Original",
+          "description": "Sem compressão, qualidade original"
+        }
       }
     }
   },

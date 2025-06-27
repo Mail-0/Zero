@@ -576,6 +576,22 @@
           "viewAttachments": "Bijlagen bekijken",
           "attachFiles": "Bestanden bijvoegen"
         }
+      },
+      "imageCompression": {
+        "title": "Beeldcompressie",
+        "description": "Kies beeldkwaliteit voor bijlagen",
+        "low": {
+          "label": "Laag",
+          "description": "Kleinste bestandsgrootte, merkbaar kwaliteitsverlies"
+        },
+        "medium": {
+          "label": "Gemiddeld",
+          "description": "Evenwichtige grootte en kwaliteit"
+        },
+        "original": {
+          "label": "Origineel",
+          "description": "Geen compressie, originele kwaliteit"
+        }
       }
     }
   },

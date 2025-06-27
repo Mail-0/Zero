@@ -576,6 +576,22 @@
           "viewAttachments": "查看附件",
           "attachFiles": "附加文件"
         }
+      },
+      "imageCompression": {
+        "title": "图片压缩",
+        "description": "为附件选择图片质量",
+        "low": {
+          "label": "低",
+          "description": "最小文件大小，质量有明显损失"
+        },
+        "medium": {
+          "label": "中",
+          "description": "文件大小与质量的平衡"
+        },
+        "original": {
+          "label": "原始",
+          "description": "无压缩，原始质量"
+        }
       }
     }
   },

@@ -576,6 +576,22 @@
           "viewAttachments": "Zobrazit přílohy",
           "attachFiles": "Připojit soubory"
         }
+      },
+      "imageCompression": {
+        "title": "Komprese obrázků",
+        "description": "Vyberte kvalitu obrázků pro přílohy",
+        "low": {
+          "label": "Nízká",
+          "description": "Nejmenší velikost souboru, znatelná ztráta kvality"
+        },
+        "medium": {
+          "label": "Střední",
+          "description": "Vyvážená velikost a kvalita"
+        },
+        "original": {
+          "label": "Originál",
+          "description": "Bez komprese, původní kvalita"
+        }
       }
     }
   },

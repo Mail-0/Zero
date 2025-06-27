@@ -576,6 +576,22 @@
           "viewAttachments": "مشاهده پیوست‌ها",
           "attachFiles": "پیوست فایل‌ها"
         }
+      },
+      "imageCompression": {
+        "title": "فشرده‌سازی تصویر",
+        "description": "کیفیت تصویر برای پیوست‌ها را انتخاب کنید",
+        "low": {
+          "label": "پایین",
+          "description": "کوچک‌ترین حجم فایل، با افت کیفیت قابل توجه"
+        },
+        "medium": {
+          "label": "متوسط",
+          "description": "تعادل بین حجم و کیفیت"
+        },
+        "original": {
+          "label": "اصلی",
+          "description": "بدون فشرده‌سازی، کیفیت اصلی"
+        }
       }
     }
   },
