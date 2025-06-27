@@ -1,20 +1,9 @@
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
-}
 
 @layer utilities {
   .text-balance {
@@ -24,6 +13,12 @@
 
 @layer base {
   :root {
+    --font-geist-sans:
+      'Geist Variable', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui,
+      sans-serif;
+    --font-geist-mono:
+      'Geist Mono Variable', 'Geist Mono', ui-monospace, SFMono-Regular, 'SF Mono', Consolas,
+      'Liberation Mono', Menlo, monospace;
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
@@ -57,11 +52,11 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
-    --icon-color: black;
+    --icon-color: currentColor;
   }
 
   .dark {
-    --background: 240 3.9% 7%;
+    --background: 1;
     --foreground: 0 0% 98%;
     --card: 240 5.9% 10%;
     --card-foreground: 0 0% 98%;
@@ -101,9 +96,18 @@
   * {
     @apply border-border;
   }
-
   body {
-    @apply bg-background font-sans text-foreground;
+    @apply bg-background text-foreground;
+    font-family:
+      'Geist Variable',
+      'Geist',
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      system-ui,
+      sans-serif;
+    overscroll-behavior: none;
+    @apply style-scrollbar;
   }
 }
 
@@ -112,9 +116,9 @@
     pointer-events: none !important;
   }
 
-  *[class^="text-"] {
+  *[class^='text-'] {
     color: transparent;
-    @apply animate-pulse select-none rounded-md bg-foreground/20;
+    @apply bg-foreground/20 animate-pulse select-none rounded-md;
   }
 
   .skeleton-bg {
@@ -122,7 +126,7 @@
   }
 
   .skeleton-div {
-    @apply animate-pulse bg-foreground/20;
+    @apply bg-foreground/20 animate-pulse;
   }
 }
 
@@ -166,8 +170,8 @@
   @apply bg-blue-200 hover:bg-blue-300 dark:bg-blue-500/40 dark:text-blue-50 dark:hover:bg-blue-400/50;
 }
 
-.dark [data-hide-on-theme="dark"],
-.light [data-hide-on-theme="light"] {
+.dark [data-hide-on-theme='dark'],
+.light [data-hide-on-theme='light'] {
   display: none;
 }
 
@@ -202,26 +206,55 @@
 }
 
 .compose-loading {
-  background: #016FFE;
+  background: #016ffe;
   animation: none;
 }
 
 .compose-gradient-animated {
-  background: linear-gradient(90deg, rgba(255, 213, 208, 1), rgba(219, 255, 228, 1), rgba(226, 214, 255, 1), rgba(255, 213, 208, 1));
+  background: linear-gradient(
+    90deg,
+    rgba(255, 213, 208, 1),
+    rgba(219, 255, 228, 1),
+    rgba(226, 214, 255, 1),
+    rgba(255, 213, 208, 1)
+  );
   background-size: 300% 100%;
   animation: gradient-animation 8s ease infinite;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
 }
 
 @keyframes gradient-animation {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .compose-gradient-text {
-  background: linear-gradient(90deg, rgba(255, 213, 208, 1) 0%, rgba(219, 255, 228, 1) 50%, rgba(226, 214, 255, 1) 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 213, 208, 1) 0%,
+    rgba(219, 255, 228, 1) 50%,
+    rgba(226, 214, 255, 1) 100%
+  );
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -230,10 +263,10 @@
 
 .compose-gradient-text-shiny {
   background: linear-gradient(
-    90deg, 
-    rgba(255, 213, 208, 1) 0%, 
+    90deg,
+    rgba(255, 213, 208, 1) 0%,
     rgba(255, 255, 255, 1) 25%,
-    rgba(219, 255, 228, 1) 50%, 
+    rgba(219, 255, 228, 1) 50%,
     rgba(255, 255, 255, 1) 75%,
     rgba(226, 214, 255, 1) 100%
   );
@@ -245,7 +278,7 @@
 }
 
 .compose-gradient-text-shiny::after {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
@@ -268,16 +301,6 @@
   padding: 0.5rem;
 }
 
-/* Hide scrollbar but keep functionality */
-.hide-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
-
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;  /* Chrome, Safari and Opera */
-}
-
 /* Animation keyframes */
 @keyframes shine {
   from {
@@ -298,7 +321,8 @@
 }
 
 @keyframes blink {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -316,4 +340,24 @@
 
 .animate-blink {
   animation: blink 0.8s ease-in-out infinite;
+}
+
+.tiptap p {
+  margin-bottom: 0.3rem;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+/* Add scrollbar styling */
+.style-scrollbar {
+  @apply scrollbar scrollbar-w-0 scrollbar-thumb-accent/40 scrollbar-track-transparent hover:scrollbar-thumb-accent scrollbar-thumb-rounded-full;
 }

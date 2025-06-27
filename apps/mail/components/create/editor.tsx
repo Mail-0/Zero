@@ -1,5 +1,3 @@
-'use client';
-
 import {
   Bold,
   Italic,
@@ -34,24 +32,27 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { AnyExtension, Editor as TiptapEditor, useCurrentEditor } from '@tiptap/react';
+import { useEditor as useEditorContext } from '@/components/providers/editor-provider';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { TextButtons } from '@/components/create/selectors/text-buttons';
+import { Editor as TiptapEditor, useCurrentEditor } from '@tiptap/react';
 import { suggestionItems } from '@/components/create/slash-command';
 import { defaultExtensions } from '@/components/create/extensions';
 import { ImageResizer, handleCommandNavigation } from 'novel';
-import { uploadFn } from '@/components/create/image-upload';
 import { handleImageDrop, handleImagePaste } from 'novel';
 import EditorMenu from '@/components/create/editor-menu';
 import { UploadedFileIcon } from './uploaded-file-icon';
 import { Separator } from '@/components/ui/separator';
+import { useReducer, useRef, useEffect } from 'react';
 import { AutoComplete } from './editor-autocomplete';
+import { Editor as CoreEditor } from '@tiptap/core';
 import { cn, truncateFileName } from '@/lib/utils';
+import { TextSelection } from 'prosemirror-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useTranslations } from 'next-intl';
+import { EditorView } from 'prosemirror-view';
 import { Markdown } from 'tiptap-markdown';
-import { useReducer, useRef } from 'react';
+import { useTranslations } from 'use-intl';
+import { Slice } from 'prosemirror-model';
 import { useState } from 'react';
 import React from 'react';
 
@@ -83,6 +84,13 @@ interface EditorProps {
     email?: string;
   };
   onTab?: () => boolean;
+  onEditorReady?: (editor: TiptapEditor) => void;
+  includeSignature?: boolean;
+  onSignatureToggle?: (include: boolean) => void;
+  signature?: string;
+  hasSignature?: boolean;
+  readOnly?: boolean;
+  hideToolbar?: boolean;
 }
 
 interface EditorState {
@@ -114,16 +122,18 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
 }
 
 // Update the MenuBar component with icons
-const MenuBar = ({
-  onAttachmentsChange,
-}: {
+interface MenuBarProps {
   onAttachmentsChange?: (attachments: File[]) => void;
-}) => {
+  includeSignature?: boolean;
+  onSignatureToggle?: (include: boolean) => void;
+  hasSignature?: boolean;
+}
+
+const MenuBar = () => {
   const { editor } = useCurrentEditor();
   const t = useTranslations();
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
-  const [attachments, setAttachments] = useState<File[]>([]);
 
   if (!editor) {
     return null;
@@ -162,86 +172,17 @@ const MenuBar = ({
     setLinkDialogOpen(false);
   };
 
-  const handleAttachment = (files: FileList) => {
-    const newAttachments = [...attachments, ...Array.from(files)];
-    setAttachments(newAttachments);
-    onAttachmentsChange?.(newAttachments);
-  };
-
-  const handleAttachmentClick = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.multiple = true;
-    input.accept = '*/*';
-
-    input.onchange = (e) => {
-      const files = (e.target as HTMLInputElement).files;
-      if (files && files.length > 0) {
-        handleAttachment(files);
-      }
-    };
-
-    input.click();
-  };
-
-  const removeAttachment = (index: number) => {
-    const newAttachments = attachments.filter((_, i) => i !== index);
-    setAttachments(newAttachments);
-    onAttachmentsChange?.(newAttachments);
-  };
-
   return (
     <>
-      <TooltipProvider delayDuration={0}>
+      <TooltipProvider>
         <div className="control-group mb-2 overflow-x-auto">
-          <div className="button-group ml-2 mt-1 flex flex-wrap gap-1 border-b pb-2">
+          <div className="button-group ml-0 mt-1 flex flex-wrap gap-1 border-b pb-2">
             <div className="mr-2 flex items-center gap-1">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('heading', { level: 1 }) ? 'bg-muted' : 'bg-background'}`}
-                  >
-                    <Heading1 className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t('pages.createEmail.editor.menuBar.heading1')}</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('heading', { level: 2 }) ? 'bg-muted' : 'bg-background'}`}
-                  >
-                    <Heading2 className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t('pages.createEmail.editor.menuBar.heading2')}</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('heading', { level: 3 }) ? 'bg-muted' : 'bg-background'}`}
-                  >
-                    <Heading3 className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t('pages.createEmail.editor.menuBar.heading3')}</TooltipContent>
-              </Tooltip>
-            </div>
-
-            <Separator orientation="vertical" className="relative right-1 top-0.5 h-6" />
-            <div className="mr-2 flex items-center gap-1">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
+                    type="button"
+                    tabIndex={-1}
                     variant="ghost"
                     size="icon"
                     onClick={() => editor.chain().focus().toggleBold().run()}
@@ -257,6 +198,8 @@ const MenuBar = ({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
+                    type="button"
+                    tabIndex={-1}
                     variant="ghost"
                     size="icon"
                     onClick={() => editor.chain().focus().toggleItalic().run()}
@@ -271,6 +214,8 @@ const MenuBar = ({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
+                    type="button"
+                    tabIndex={-1}
                     variant="ghost"
                     size="icon"
                     onClick={() => editor.chain().focus().toggleStrike().run()}
@@ -287,6 +232,8 @@ const MenuBar = ({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
+                    type="button"
+                    tabIndex={-1}
                     variant="ghost"
                     size="icon"
                     onClick={() => editor.chain().focus().toggleUnderline().run()}
@@ -300,6 +247,8 @@ const MenuBar = ({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
+                    type="button"
+                    tabIndex={-1}
                     variant="ghost"
                     size="icon"
                     onClick={handleLinkDialogOpen}
@@ -318,6 +267,8 @@ const MenuBar = ({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
+                    type="button"
+                    tabIndex={-1}
                     variant="ghost"
                     size="icon"
                     onClick={() => editor.chain().focus().toggleBulletList().run()}
@@ -331,6 +282,8 @@ const MenuBar = ({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
+                    type="button"
+                    tabIndex={-1}
                     variant="ghost"
                     size="icon"
                     onClick={() => editor.chain().focus().toggleOrderedList().run()}
@@ -341,90 +294,6 @@ const MenuBar = ({
                 </TooltipTrigger>
                 <TooltipContent>{t('pages.createEmail.editor.menuBar.orderedList')}</TooltipContent>
               </Tooltip>
-
-              {attachments.length > 0 ? (
-                <Popover>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="bg-background relative h-auto w-auto rounded p-1.5"
-                        >
-                          <Paperclip className="h-4 w-4" />
-                          <span className="absolute -right-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-[#016FFE] text-[10px] text-white">
-                            {attachments.length}
-                          </span>
-                        </Button>
-                      </PopoverTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {t('pages.createEmail.editor.menuBar.viewAttachments')}
-                    </TooltipContent>
-                  </Tooltip>
-                  <PopoverContent className="w-80 touch-auto" align="end">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between px-1">
-                        <h4 className="font-medium leading-none">
-                          {t('pages.createEmail.attachments', { count: attachments.length })}
-                        </h4>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={handleAttachmentClick}
-                          className="hover:text-muted-foreground text-muted-foreground h-auto rounded px-2 py-1 text-xs font-normal"
-                        >
-                          {t('pages.createEmail.addMore')}
-                        </Button>
-                      </div>
-                      <Separator />
-                      <div className="h-[300px] touch-auto overflow-y-auto overscroll-contain px-1 py-1">
-                        <div className="grid grid-cols-2 gap-2">
-                          {attachments.map((file, index) => (
-                            <div
-                              key={index}
-                              className="group relative overflow-hidden rounded-md border"
-                            >
-                              <UploadedFileIcon
-                                removeAttachment={removeAttachment}
-                                index={index}
-                                file={file}
-                              />
-                              <div className="bg-muted/10 p-2">
-                                <p className="text-xs font-medium">
-                                  {truncateFileName(file.name, 20)}
-                                </p>
-                                <p className="text-muted-foreground text-xs">
-                                  {t('common.units.mb', {
-                                    amount: (file.size / (1024 * 1024)).toFixed(2),
-                                  })}
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              ) : (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleAttachmentClick}
-                      className="bg-background h-auto w-auto rounded p-1.5"
-                    >
-                      <Paperclip className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {t('pages.createEmail.editor.menuBar.attachFiles')}
-                  </TooltipContent>
-                </Tooltip>
-              )}
             </div>
           </div>
         </div>
@@ -475,6 +344,8 @@ export default function Editor({
   onAttachmentsChange,
   senderInfo,
   myInfo,
+  readOnly,
+  hideToolbar,
 }: EditorProps) {
   const [state, dispatch] = useReducer(editorReducer, {
     openNode: false,
@@ -483,46 +354,43 @@ export default function Editor({
     openAI: false,
   });
 
-  // Add a ref to store the editor content to prevent losing it on refresh
   const contentRef = useRef<string>('');
-  // Add a ref to the editor instance
-  const editorRef = useRef<TiptapEditor>(null);
-
+  const [editor, setEditor] = useState<TiptapEditor | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const { openNode, openColor, openLink, openAI } = state;
 
   // Function to focus the editor
-  const focusEditor = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === containerRef.current && editorRef.current?.commands) {
-      editorRef.current.commands.focus('end');
+  const focusEditor = () => {
+    if (editor && !readOnly) {
+      editor.commands.focus('end');
     }
   };
 
   // Function to clear editor content
   const clearEditorContent = React.useCallback(() => {
-    if (editorRef.current) {
-      editorRef.current.commands.clearContent(true);
+    if (editor) {
+      editor.commands.clearContent(true);
       // Also update our reference and notify parent
       contentRef.current = '';
       onChange('');
     }
-  }, [onChange]);
+  }, [editor, onChange]);
 
   // Reset editor content when initialValue changes
   React.useEffect(() => {
     // We need to make sure both the editor reference exists AND initialValue is provided
-    if (editorRef.current && initialValue) {
+    if (editor && initialValue) {
       try {
         // Make sure the editor is ready before setting content
         setTimeout(() => {
           // Double-check that the editor still exists in case of unmounting
-          if (editorRef.current?.commands?.setContent) {
-            editorRef.current.commands.setContent(initialValue);
+          if (editor?.commands?.setContent) {
+            editor.commands.setContent(initialValue);
 
             // Important: after setting content, manually trigger an update
             // to ensure the parent component gets the latest content
-            const html = editorRef.current.getHTML();
+            const html = editor.getHTML();
             contentRef.current = html;
             onChange(html);
           }
@@ -531,20 +399,7 @@ export default function Editor({
         console.error('Error setting editor content:', error);
       }
     }
-  }, [initialValue, onChange]);
-
-  // Fix useImperativeHandle type errors
-  React.useImperativeHandle(editorRef, () => {
-    // Only extend the current editor if it exists
-    if (!editorRef.current) {
-      return {} as TiptapEditor;
-    }
-    // Otherwise return the editor with our additional methods
-    return {
-      ...editorRef.current,
-      clearContent: clearEditorContent,
-    } as TiptapEditor & { clearContent: () => void };
-  }, [clearEditorContent]);
+  }, [initialValue, editor, onChange]);
 
   // Handle command+enter or ctrl+enter
   const handleCommandEnter = React.useCallback(() => {
@@ -553,17 +408,18 @@ export default function Editor({
 
     // Clear the editor content after sending
     setTimeout(() => {
-      if (editorRef.current?.commands?.clearContent) {
+      if (editor?.commands?.clearContent) {
         clearEditorContent();
       }
     }, 200);
-  }, [onCommandEnter, clearEditorContent]);
+  }, [onCommandEnter, clearEditorContent, editor]);
 
   return (
     <div
-      className={`relative w-full max-w-[450px] sm:max-w-[600px] ${className || ''}`}
+      className={`relative w-full ${className || ''}`}
       onClick={focusEditor}
       onKeyDown={(e) => {
+        if (readOnly) return;
         // Handle tab key
         if (e.key === 'Tab' && !e.shiftKey) {
           if (onTab && onTab()) {
@@ -622,11 +478,31 @@ export default function Editor({
             }),
           ]}
           ref={containerRef}
-          className="min-h-52 cursor-text"
+          className="no-scrollbar relative max-h-[500px] min-h-[220px] cursor-text overflow-auto"
           editorProps={{
+            editable: () => !readOnly,
             handleDOMEvents: {
+              mousedown: (view, event) => {
+                if (readOnly) return false;
+                focusEditor();
+                const coords = view.posAtCoords({
+                  left: event.clientX,
+                  top: event.clientY,
+                });
+
+                if (coords) {
+                  const pos = coords.pos;
+                  const tr = view.state.tr;
+                  const selection = TextSelection.create(view.state.doc, pos);
+                  tr.setSelection(selection);
+                  view.dispatch(tr);
+                }
+
+                // Let the default handler also run
+                return false;
+              },
               keydown: (view, event) => {
-                // Handle tab key
+                if (readOnly) return false;
                 if (event.key === 'Tab' && !event.shiftKey) {
                   if (onTab && onTab()) {
                     event.preventDefault();
@@ -634,42 +510,50 @@ export default function Editor({
                   }
                 }
 
-                // Handle Command+Enter (Mac) or Ctrl+Enter (Windows/Linux)
-                // if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
-                //   event.preventDefault();
-                //   handleCommandEnter();
-                //   return true;
-                // }
+                // Prevent Command+Enter from adding a new line
+                if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+                  event.preventDefault();
+                  return true;
+                }
+
                 return handleCommandNavigation(event);
               },
               focus: () => {
-                onFocus?.();
+                if (!readOnly) onFocus?.();
                 return false;
               },
               blur: () => {
-                onBlur?.();
+                if (!readOnly) onBlur?.();
                 return false;
               },
             },
-            handlePaste: (view, event) => handleImagePaste(view, event, uploadFn),
-            handleDrop: (view, event, _slice, moved) =>
-              handleImageDrop(view, event, moved, uploadFn),
+            handleDrop: (view, event, _slice, moved) => {
+              if (readOnly) return false;
+              return handleImageDrop(view, event, moved, (file) => {
+                onAttachmentsChange?.([file]);
+              });
+            },
             attributes: {
-              class:
-                'prose dark:prose-invert prose-headings:font-title font-default focus:outline-none max-w-full',
+              class: cn(
+                'prose dark:prose-invert prose-headings:font-title focus:outline-none max-w-full min-h-[200px]',
+                readOnly && 'pointer-events-none select-text',
+              ),
               'data-placeholder': placeholder,
             },
           }}
-          onCreate={({ editor }) => {
-            editorRef.current = editor;
+          onCreate={({ editor: ed }) => {
+            setEditor(ed);
           }}
-          onUpdate={({ editor }) => {
+          onDestroy={() => {
+            setEditor(null);
+          }}
+          onUpdate={({ editor: ed }) => {
+            if (readOnly) return;
             // Store the content in the ref to prevent losing it
-            contentRef.current = editor.getHTML();
-            onChange(editor.getHTML());
+            contentRef.current = ed.getHTML();
+            onChange(ed.getHTML());
           }}
-          slotBefore={<MenuBar onAttachmentsChange={onAttachmentsChange} />}
-          slotAfter={<ImageResizer />}
+          slotAfter={null}
         >
           {/* Make sure the command palette doesn't cause a refresh */}
           <EditorCommand

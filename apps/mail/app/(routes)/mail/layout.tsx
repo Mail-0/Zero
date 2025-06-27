@@ -1,12 +1,22 @@
-import { KeyboardShortcuts } from '@/components/mail/keyboard-shortcuts';
+import { HotkeyProviderWrapper } from '@/components/providers/hotkey-provider-wrapper';
+import { OnboardingWrapper } from '@/components/onboarding';
+import { VoiceProvider } from '@/providers/voice-provider';
+import { NotificationProvider } from '@/components/party';
 import { AppSidebar } from '@/components/ui/app-sidebar';
+import { Outlet, useLoaderData } from 'react-router';
+import type { Route } from './+types/layout';
 
-export default function MailLayout({ children }: { children: React.ReactNode }) {
+export default function MailLayout() {
   return (
-    <>
+    // <VoiceProvider>
+    <HotkeyProviderWrapper>
       <AppSidebar />
-      <KeyboardShortcuts />
-      <div className="w-full bg-white md:py-3 md:pr-2 dark:bg-black">{children}</div>
-    </>
+      <div className="bg-sidebar dark:bg-sidebar w-full">
+        <Outlet />
+      </div>
+      <OnboardingWrapper />
+      <NotificationProvider />
+    </HotkeyProviderWrapper>
+    // </VoiceProvider>
   );
 }

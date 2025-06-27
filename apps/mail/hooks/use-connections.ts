@@ -1,39 +1,14 @@
-import { getConnections, deleteConnection, putConnection } from "@/actions/connections";
-import { type IConnection } from "@/types";
-import useSWR from "swr";
+import { useTRPC } from '@/providers/query-provider';
+import { useQuery } from '@tanstack/react-query';
 
 export const useConnections = () => {
-  const { data, error, isLoading, mutate } = useSWR<IConnection[]>(
-    "/api/v1/mail/connections",
-    getConnections,
-  );
+  const trpc = useTRPC();
+  const connectionsQuery = useQuery(trpc.connections.list.queryOptions());
+  return connectionsQuery;
+};
 
-  const handleDeleteConnection = async (connectionId: string) => {
-    try {
-      await deleteConnection(connectionId);
-      mutate();
-    } catch (error) {
-      console.error("Failed to delete connection:", error);
-      throw error;
-    }
-  };
-
-  const handleSetDefaultConnection = async (connectionId: string) => {
-    try {
-      await putConnection(connectionId);
-      mutate();
-    } catch (error) {
-      console.error("Failed to set default connection:", error);
-      throw error;
-    }
-  };
-
-  return {
-    data,
-    error,
-    isLoading,
-    mutate,
-    deleteConnection: handleDeleteConnection,
-    setDefaultConnection: handleSetDefaultConnection,
-  };
+export const useActiveConnection = () => {
+  const trpc = useTRPC();
+  const connectionsQuery = useQuery(trpc.connections.getDefault.queryOptions());
+  return connectionsQuery;
 };

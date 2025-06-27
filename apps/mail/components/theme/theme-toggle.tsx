@@ -1,5 +1,3 @@
-'use client';
-
 import { MoonIcon } from '@/components/icons/animated/moon';
 import { SunIcon } from '@/components/icons/animated/sun';
 import { useEffect, useState } from 'react';

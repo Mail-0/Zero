@@ -1,5 +1,3 @@
-'use client';
-
 import { useTheme } from 'next-themes';
 
 import { MoonIcon } from '../icons/animated/moon';

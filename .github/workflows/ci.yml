@@ -1,19 +1,25 @@
 name: autofix.ci
+
 on:
   pull_request:
-  push:
-permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  prettier:
+  autofix:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code 🛎
         uses: actions/checkout@v4
 
-      - name: Setup Bun 🌟
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: latest
-      - uses: actions/setup-node@v4
-      - run: |
-          bun install
+      - name: Setup pnpm 🌟
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node 📦
+        uses: actions/setup-node@v4
+
+      - name: Install dependencies 📦
+        run: pnpm install

@@ -1,0 +1,44 @@
+name: Deploy to Production Command
+
+on:
+  issue_comment:
+    types:
+      - created
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  deploy-to-production:
+    runs-on: ubuntu-latest
+    name: Merge Staging to Production
+    if: github.event.issue.pull_request && contains(github.event.issue.labels.*.name, 'production-deploy') && startsWith(github.event.comment.body, '/deploy') && github.event.comment.author_association == 'MEMBER'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Rebase the main branch on staging
+        id: rebase
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch origin staging
+          git checkout main
+          git rebase staging
+          echo "rebase_status=$?" >> $GITHUB_OUTPUT
+
+      - name: Error if rebase was not successful
+        if: ${{ steps.rebase.outputs.rebase_status != 0 }}
+        uses: mshick/add-pr-comment@v2
+        with:
+          message: |
+            Failed to rebase staging on main, please rebase manually and run the command again.
+
+      - name: Push changes if rebase was successful
+        if: ${{ steps.rebase.outputs.rebase_status == 0 }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: git push --force-with-lease origin main

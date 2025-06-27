@@ -1,5 +1,3 @@
-'use client';
-
 import {
   Select,
   SelectContent,
@@ -11,7 +9,7 @@ import { useEffect, useState } from 'react';
 
 import { type MessageKey } from '@/config/navigation';
 import { Laptop, Moon, Sun } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations } from 'use-intl';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 interface ModeToggleProps {

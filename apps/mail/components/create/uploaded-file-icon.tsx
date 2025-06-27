@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/button';
 import { FileIcon, X } from 'lucide-react';
-import Image from 'next/image';
 import React from 'react';
 
 const getLogo = (mimetype: string): string => {
@@ -37,7 +36,7 @@ export const UploadedFileIcon = ({ removeAttachment, index, file }: Props) => {
     <div className="relative h-24 w-full">
       {file.type.startsWith('image/') ? (
         <>
-          <Image src={URL.createObjectURL(file)} alt={file.name} fill className="object-cover" />
+          <img src={URL.createObjectURL(file)} alt={file.name} className="object-cover" />
           <Button
             variant="ghost"
             size="icon"
@@ -50,7 +49,7 @@ export const UploadedFileIcon = ({ removeAttachment, index, file }: Props) => {
       ) : (
         <div className="bg-muted/20 flex h-full w-full items-center justify-center">
           {getLogo(file.type) && (
-            <Image src={getLogo(file.type)} alt={file.name} width={80} height={80} />
+            <img src={getLogo(file.type)} alt={file.name} width={80} height={80} />
           )}
           <Button
             variant="ghost"

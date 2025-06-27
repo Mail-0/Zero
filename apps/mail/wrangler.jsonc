@@ -1,0 +1,30 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "zero",
+  "compatibility_date": "2025-05-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "./worker.ts",
+  "observability": {
+    "enabled": true,
+  },
+  "env": {
+    "local": {
+      "vars": {
+        "VITE_PUBLIC_BACKEND_URL": "http://localhost:8787",
+        "VITE_PUBLIC_APP_URL": "http://localhost:3000",
+      },
+    },
+    "staging": {
+      "vars": {
+        "VITE_PUBLIC_BACKEND_URL": "https://sapi.0.email",
+        "VITE_PUBLIC_APP_URL": "https://staging.0.email",
+      },
+    },
+    "production": {
+      "vars": {
+        "VITE_PUBLIC_BACKEND_URL": "https://api.0.email",
+        "VITE_PUBLIC_APP_URL": "https://0.email",
+      },
+    },
+  },
+}

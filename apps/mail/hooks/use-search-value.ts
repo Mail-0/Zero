@@ -9,9 +9,9 @@ type Config = {
 };
 
 const configAtom = atom<Config>({
-  value: "",
-  highlight: "",
-  folder: "",
+  value: '',
+  highlight: '',
+  folder: '',
   isLoading: false,
   isAISearching: false,
 });

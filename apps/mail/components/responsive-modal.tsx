@@ -1,9 +1,14 @@
-import { Dialog, DialogContent, DialogHeader, DialogDescription } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogDescription,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { DialogTitle } from '@radix-ui/react-dialog';
+import { VisuallyHidden } from 'radix-ui';
 import { type ReactElement } from 'react';
-import { useMedia } from 'react-use';
+// import { useMedia } from 'react-use';
 
 type ResponsiveModalProps = {
   children: React.ReactNode;
@@ -16,18 +21,18 @@ export default function ResponsiveModal({
   open,
   onOpenChange,
 }: ResponsiveModalProps): ReactElement {
-  const isDesktop = useMedia('(min-width: 1024px)', true);
+  const isDesktop = true;
 
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <VisuallyHidden>
+        <VisuallyHidden.VisuallyHidden>
           <DialogHeader>
             <DialogTitle>Title</DialogTitle>
             <DialogDescription>Modal content</DialogDescription>
           </DialogHeader>
-        </VisuallyHidden>
-        <DialogContent className="bordr-none w-full overflow-y-auto p-0 [-ms-overflow-style:none] [scrollbar-width:none] sm:max-w-lg [&::-webkit-scrollbar]:hidden">
+        </VisuallyHidden.VisuallyHidden>
+        <DialogContent className="w-full overflow-y-auto border-none p-0 [-ms-overflow-style:none] [scrollbar-width:none] sm:max-w-lg [&::-webkit-scrollbar]:hidden">
           {children}
         </DialogContent>
       </Dialog>
@@ -37,11 +42,11 @@ export default function ResponsiveModal({
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
-        <VisuallyHidden>
+        <VisuallyHidden.VisuallyHidden>
           <DrawerHeader>
             <DrawerTitle>Title</DrawerTitle>
           </DrawerHeader>
-        </VisuallyHidden>
+        </VisuallyHidden.VisuallyHidden>
         <div className="overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {children}
         </div>

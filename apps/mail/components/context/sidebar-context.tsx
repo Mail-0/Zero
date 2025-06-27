@@ -1,5 +1,3 @@
-'use client';
-
 import {
   SIDEBAR_COOKIE_MAX_AGE,
   SIDEBAR_COOKIE_NAME,

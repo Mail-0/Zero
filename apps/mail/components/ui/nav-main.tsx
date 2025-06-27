@@ -1,27 +1,34 @@
-'use client';
-
-import { SidebarGroup, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from './sidebar';
+import { SidebarGroup, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from './sidebar';
 import { Collapsible, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { clearBulkSelectionAtom } from '../mail/use-mail';
-import { type MessageKey } from '@/config/navigation';
+import { useActiveConnection, useConnections } from '@/hooks/use-connections';
+import { type MessageKey, type NavItem } from '@/config/navigation';
+import { LabelDialog } from '@/components/labels/label-dialog';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { Link, useLocation, useNavigate } from 'react-router';
+import Intercom, { show } from '@intercom/messenger-js-sdk';
+import { MessageSquare, OldPhone } from '../icons/icons';
+import { useSidebar } from '../context/sidebar-context';
+import { useTRPC } from '@/providers/query-provider';
+import type { Label as LabelType } from '@/types';
+import { Button } from '@/components/ui/button';
+import { useLabels } from '@/hooks/use-labels';
 import { Badge } from '@/components/ui/badge';
 import { useStats } from '@/hooks/use-stats';
-import { useTranslations } from 'next-intl';
-import { useRef, useCallback } from 'react';
+import SidebarLabels from './sidebar-labels';
+import { useCallback, useRef } from 'react';
 import { BASE_URL } from '@/lib/constants';
+import { useTranslations } from 'use-intl';
+import { useQueryState } from 'nuqs';
+import { Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAtom } from 'jotai';
+import { toast } from 'sonner';
 import * as React from 'react';
-import Link from 'next/link';
-import {type NavItem} from '@/config/navigation'
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
   ref?: React.Ref<SVGSVGElement>;
   startAnimation?: () => void;
   stopAnimation?: () => void;
 }
-
 interface NavItemProps extends NavItem {
   isActive?: boolean;
   isExpanded?: boolean;
@@ -44,8 +51,33 @@ type IconRefType = SVGSVGElement & {
 };
 
 export function NavMain({ items }: NavMainProps) {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const location = useLocation();
+  const pathname = location.pathname;
+  const searchParams = new URLSearchParams();
+  const [category] = useQueryState('category');
+  const { data: connections } = useConnections();
+  const { data: stats } = useStats();
+  const { data: activeConnection } = useActiveConnection();
+  const trpc = useTRPC();
+  const { data: intercomToken } = useQuery(trpc.user.getIntercomToken.queryOptions());
+
+  React.useEffect(() => {
+    if (intercomToken) {
+      Intercom({
+        app_id: 'aavenrba',
+        intercom_user_jwt: intercomToken,
+      });
+    }
+  }, [intercomToken]);
+
+  const { mutateAsync: createLabel } = useMutation(trpc.labels.create.mutationOptions());
+
+  const { data, refetch } = useLabels();
+
+  const { state } = useSidebar();
+
+  // Check if these are bottom navigation items by looking at the first section's title
+  const isBottomNav = items[0]?.title === '';
 
   /**
    * Validates URLs to prevent open redirect vulnerabilities.
@@ -73,9 +105,6 @@ export function NavMain({ items }: NavMainProps) {
     (item: NavItemProps) => {
       // Get the current 'from' parameter
       const currentFrom = searchParams.get('from');
-      const category = searchParams.get('category');
-
-      
 
       // Handle settings navigation
       if (item.isSettingsButton) {
@@ -110,14 +139,16 @@ export function NavMain({ items }: NavMainProps) {
       }
 
       // Handle category links
-      if (category && item.url.includes('category=')) {
-        return item.url;
+      if (item.id === 'inbox' && category) {
+        return `${item.url}?category=${encodeURIComponent(category)}`;
       }
 
       return item.url;
     },
-    [pathname, searchParams, isValidInternalUrl],
+    [pathname, category, searchParams, isValidInternalUrl],
   );
+
+  const { data: activeAccount } = useActiveConnection();
 
   const isUrlActive = useCallback(
     (url: string) => {
@@ -140,10 +171,40 @@ export function NavMain({ items }: NavMainProps) {
     },
     [pathname, searchParams],
   );
+  const t = useTranslations();
+
+  const onSubmit = async (data: LabelType) => {
+    toast.promise(createLabel(data), {
+      loading: 'Creating label...',
+      success: 'Label created successfully',
+      error: 'Failed to create label',
+    });
+  };
 
   return (
-    <SidebarGroup className="space-y-2.5 py-0">
+    <SidebarGroup className={`${state !== 'collapsed' ? '' : 'mt-1'} space-y-2.5 py-0 md:px-0`}>
       <SidebarMenu>
+        {isBottomNav ? (
+          <>
+            <SidebarMenuButton
+              onClick={() => show()}
+              tooltip={state === 'collapsed' ? t('help' as MessageKey) : undefined}
+              className="hover:bg-subtleWhite flex cursor-pointer items-center dark:hover:bg-[#202020]"
+            >
+              <OldPhone className="relative mr-2.5 h-2 w-2 fill-[#8F8F8F]" />
+              <p className="relative bottom-0.5 mt-0.5 truncate text-[13px]">Live Support</p>
+            </SidebarMenuButton>
+            <NavItem
+              key={'feedback'}
+              isActive={isUrlActive('https://feedback.0.email')}
+              href={'https://feedback.0.email'}
+              url={'https://feedback.0.email'}
+              icon={MessageSquare}
+              target={'_blank'}
+              title={'navigation.sidebar.feedback'}
+            />
+          </>
+        ) : null}
         {items.map((section) => (
           <Collapsible
             key={section.title}
@@ -151,7 +212,16 @@ export function NavMain({ items }: NavMainProps) {
             className="group/collapsible"
           >
             <SidebarMenuItem>
-              <div className="space-y-1 pb-2">
+              {state !== 'collapsed' ? (
+                section.title ? (
+                  <p className="text-muted-foreground mx-2 mb-2 text-[13px] dark:text-[#898989]">
+                    {section.title}
+                  </p>
+                ) : null
+              ) : (
+                <div className="bg-muted-foreground/50 mx-2 mb-4 mt-2 h-[0.5px] dark:bg-[#262626]" />
+              )}
+              <div className="z-20 space-y-1 pb-2">
                 {section.items.map((item) => (
                   <NavItem
                     key={item.url}
@@ -159,73 +229,103 @@ export function NavMain({ items }: NavMainProps) {
                     isActive={isUrlActive(item.url)}
                     href={getHref(item)}
                     target={item.target}
+                    title={item.title}
                   />
                 ))}
               </div>
             </SidebarMenuItem>
           </Collapsible>
         ))}
+        {!pathname.includes('/settings') && !isBottomNav && state !== 'collapsed' && (
+          <Collapsible defaultOpen={true} className="group/collapsible flex-col">
+            <SidebarMenuItem className="mb-4" style={{ height: 'auto' }}>
+              <div className="mx-2 mb-4 flex items-center justify-between">
+                <span className="text-muted-foreground text-[13px] dark:text-[#898989]">
+                  {activeAccount?.providerId === 'google' ? 'Labels' : 'Folders'}
+                </span>
+                {activeAccount?.providerId === 'google' ? (
+                  <LabelDialog
+                    trigger={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="mr-1 h-4 w-4 p-0 hover:bg-transparent"
+                      >
+                        <Plus className="text-muted-foreground h-3 w-3 dark:text-[#898989]" />
+                      </Button>
+                    }
+                    onSubmit={onSubmit}
+                    onSuccess={refetch}
+                  />
+                ) : activeAccount?.providerId === 'microsoft' ? null : null}
+              </div>
+
+              {activeAccount ? (
+                <SidebarLabels data={data ?? []} activeAccount={activeAccount} stats={stats} />
+              ) : null}
+            </SidebarMenuItem>
+          </Collapsible>
+        )}
       </SidebarMenu>
     </SidebarGroup>
   );
 }
 
 function NavItem(item: NavItemProps & { href: string }) {
-	const iconRef = useRef<IconRefType>(null);
-	const { data: stats } = useStats();
-	const t = useTranslations();
-	const [, clearBulkSelection] = useAtom(clearBulkSelectionAtom);
+  const iconRef = useRef<IconRefType>(null);
+  const { data: stats } = useStats();
+  const t = useTranslations();
+  const { state, setOpenMobile } = useSidebar();
 
   if (item.disabled) {
     return (
       <SidebarMenuButton
-        tooltip={t(item.title as MessageKey)}
+        tooltip={state === 'collapsed' ? t(item.title as MessageKey) : undefined}
         className="flex cursor-not-allowed items-center opacity-50"
       >
         {item.icon && <item.icon ref={iconRef} className="relative mr-2.5 h-3 w-3.5" />}
-        <p className="mt-0.5 text-[13px]">{t(item.title as MessageKey)}</p>
+        <p className="relative bottom-[1px] mt-0.5 truncate text-[13px]">
+          {t(item.title as MessageKey)}
+        </p>
       </SidebarMenuButton>
     );
   }
 
-
-  // Apply animation handlers to all buttons including back buttons
-  const linkProps = {
-    href: item.href,
-    onMouseEnter: () => iconRef.current?.startAnimation?.(),
-    onMouseLeave: () => iconRef.current?.stopAnimation?.(),
+  const handleClick = (e: React.MouseEvent) => {
+    if (item.onClick) {
+      item.onClick(e as React.MouseEvent<HTMLAnchorElement>);
+    }
+    setOpenMobile(false);
   };
-
-  const buttonContent = (
-    <SidebarMenuButton
-      tooltip={t(item.title as MessageKey)}
-      className={cn(
-        'hover:bg-subtleWhite dark:hover:bg-subtleBlack flex items-center',
-        item.isActive && 'bg-subtleWhite text-accent-foreground dark:bg-subtleBlack',
-      )}
-    >
-      {item.icon && <item.icon ref={iconRef} className="mr-2" />}
-      <p className="mt-0.5 text-[13px]">{t(item.title as MessageKey)}</p>
-      {stats && stats.find((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase()) && (
-        <Badge className="ml-auto rounded-md" variant="outline">
-          {stats
-
-            .find((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase())
-
-            ?.count?.toLocaleString() || '0'}
-        </Badge>
-      )}
-    </SidebarMenuButton>
-  );
-
-  if (item.isBackButton) {
-    return <Link {...linkProps}>{buttonContent}</Link>;
-  }
 
   return (
     <Collapsible defaultOpen={item.isActive}>
       <CollapsibleTrigger asChild>
-        <Link {...linkProps} target={item.target}>{buttonContent}</Link>
+        <SidebarMenuButton
+          asChild
+          tooltip={state === 'collapsed' ? t(item.title as MessageKey) : undefined}
+          className={cn(
+            'hover:bg-subtleWhite flex items-center dark:hover:bg-[#202020]',
+            item.isActive && 'bg-subtleWhite text-accent-foreground dark:bg-[#202020]',
+          )}
+          onClick={handleClick}
+        >
+          <Link target={item.target} to={item.href}>
+            {item.icon && <item.icon ref={iconRef} className="mr-2 shrink-0" />}
+            <p className="relative bottom-[1px] mt-0.5 min-w-0 flex-1 truncate text-[13px]">
+              {t(item.title as MessageKey)}
+            </p>
+            {stats &&
+              item.id?.toLowerCase() !== 'sent' &&
+              stats.some((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase()) && (
+                <Badge className="text-muted-foreground ml-auto shrink-0 rounded-full border-none bg-transparent">
+                  {stats
+                    .find((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase())
+                    ?.count?.toLocaleString() || '0'}
+                </Badge>
+              )}
+          </Link>
+        </SidebarMenuButton>
       </CollapsibleTrigger>
     </Collapsible>
   );

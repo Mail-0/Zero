@@ -3,7 +3,6 @@ import type { SelectorItem } from './node-selector';
 import { EditorBubbleItem, useEditor } from 'novel';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import Image from 'next/image';
 
 export const TextButtons = () => {
   const { editor } = useEditor();
@@ -41,17 +40,18 @@ export const TextButtons = () => {
           }}
         >
           <Button size="sm" className="flex items-center gap-1.5 rounded-none px-3" variant="ghost">
-            {item.useImage ? (
-              <Image
-                src={item.imageSrc}
-                alt={item.label}
-                width={16}
-                height={16}
-                className="h-4 w-4"
-              />
-            ) : (
-              <item.icon className="h-4 w-4" />
-            )}
+            {
+              item.useImage ? (
+                <img
+                  src={item.imageSrc}
+                  alt={item.label}
+                  width={16}
+                  height={16}
+                  className="h-4 w-4"
+                />
+              ) : null
+              // <item.icon className="h-4 w-4" />
+            }
             <span className="text-xs">{item.label}</span>
           </Button>
         </EditorBubbleItem>

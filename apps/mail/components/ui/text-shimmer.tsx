@@ -1,5 +1,5 @@
 // Source: https://motion-primitives.com/docs/text-shimmer
-'use client';
+
 import React, { useMemo, type JSX } from 'react';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';

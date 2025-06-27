@@ -1,12 +1,10 @@
-'use client';
-
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';
+import { Link } from 'react-router';
 import { toast } from 'sonner';
-import Link from 'next/link';
 import { z } from 'zod';
 
 const formSchema = z.object({
@@ -69,7 +67,7 @@ export default function LoginZero() {
                   <div className="flex items-center justify-between">
                     <FormLabel className="text-muted-foreground">Password</FormLabel>
                     <Link
-                      href="/forgot-password"
+                      to="/forgot-password"
                       className="text-muted-foreground text-xs hover:text-white"
                     >
                       Forgot your password?
@@ -94,9 +92,9 @@ export default function LoginZero() {
             <div className="mt-6 text-center text-sm">
               <p className="text-muted-foreground">
                 Don't have an account?{' '}
-                <Link href="/zero/signup" className="text-white underline hover:text-white/80">
+                <a href="/zero/signup" className="text-white underline hover:text-white/80">
                   Sign up
-                </Link>
+                </a>
               </p>
             </div>
           </form>

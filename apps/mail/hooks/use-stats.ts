@@ -1,26 +1,17 @@
-'use client';
+import { useTRPC } from '@/providers/query-provider';
+import { useQuery } from '@tanstack/react-query';
 import { useSession } from '@/lib/auth-client';
-import { mailCount } from '@/actions/mail';
-import useSWR from 'swr';
 
 export const useStats = () => {
   const { data: session } = useSession();
-  const {
-    data = [],
-    isValidating,
-    isLoading,
-    mutate,
-    error,
-  } = useSWR<{ label: string; count: number }[]>(
-    session?.connectionId ? `/mail-count/${session?.connectionId}` : null,
-    mailCount,
+  const trpc = useTRPC();
+
+  const statsQuery = useQuery(
+    trpc.mail.count.queryOptions(void 0, {
+      enabled: !!session?.user.id,
+      staleTime: 1000 * 60 * 60, // 1 hour
+    }),
   );
 
-  return {
-    data,
-    isValidating,
-    isLoading,
-    mutate,
-    error,
-  };
+  return statsQuery;
 };

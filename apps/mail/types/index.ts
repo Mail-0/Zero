@@ -1,7 +1,30 @@
+export type Label = {
+  id: string;
+  name: string;
+  color?: {
+    backgroundColor: string;
+    textColor: string;
+  };
+  type: string;
+  labels?: Label[];
+};
+
 export interface User {
   name: string;
   email: string;
   avatar: string;
+}
+
+export interface ISendEmail {
+  to: Sender[];
+  subject: string;
+  message: string;
+  attachments?: File[];
+  headers?: Record<string, string>;
+  cc?: Sender[];
+  bcc?: Sender[];
+  threadId?: string;
+  fromEmail?: string;
 }
 
 export interface Account {
@@ -30,8 +53,9 @@ export interface SidebarData {
 }
 
 export interface Sender {
-  name: string;
+  name?: string;
   email: string;
+  subject?: string;
 }
 
 export interface ParsedMessage {
@@ -39,10 +63,11 @@ export interface ParsedMessage {
   connectionId?: string;
   title: string;
   subject: string;
-  tags: string[];
+  tags: Label[];
   sender: Sender;
   to: Sender[];
-  cc: Sender[];
+  cc: Sender[] | null;
+  bcc: Sender[] | null;
   tls: boolean;
   listUnsubscribe?: string;
   listUnsubscribePost?: string;
@@ -54,8 +79,10 @@ export interface ParsedMessage {
   decodedBody?: string;
   references?: string;
   inReplyTo?: string;
+  replyTo?: string;
   messageId?: string;
   threadId?: string;
+  isDraft?: boolean;
   attachments?: Attachment[];
 }
 
@@ -64,20 +91,8 @@ export interface IConnection {
   email: string;
   name?: string;
   picture?: string;
-}
-
-export interface InitialThread {
-  id: string;
-  threadId?: string;
-  title: string;
-  tags: string[];
-  sender: Sender;
-  receivedOn: string;
-  unread: boolean;
-  subject: string;
-  totalReplies: number;
-  references?: string;
-  inReplyTo?: string;
+  createdAt: Date;
+  providerId: string;
 }
 
 export interface Attachment {
@@ -86,25 +101,42 @@ export interface Attachment {
   mimeType: string;
   size: number;
   body: string;
-  // TODO: Fix typing
-  headers: any;
+  headers: { name?: string | null; value?: string | null }[];
 }
 export interface MailListProps {
   isCompact?: boolean;
 }
 
-export type MailSelectMode = "mass" | "range" | "single" | "selectAllBelow";
+export type MailSelectMode = 'mass' | 'range' | 'single' | 'selectAllBelow';
 
 export type ThreadProps = {
-  message: InitialThread;
-  selectMode: MailSelectMode;
-  // TODO: enforce types instead of sprinkling "any"
-  onMouseDown?: (message: InitialThread) => () => any;
-  isCompact?: boolean;
+  message: { id: string; historyId?: string | null };
+  onClick?: (message: ParsedMessage) => () => void;
+  isKeyboardFocused?: boolean;
 };
 
-export type ConditionalThreadProps = ThreadProps &
-  (
-    | { demo?: true; sessionData?: { userId: string; connectionId: string | null } }
-    | { demo?: false; sessionData: { userId: string; connectionId: string | null } }
-  );
+export interface IOutgoingMessage {
+  to: Sender[];
+  subject: string;
+  message: string;
+  attachments?: File[];
+  headers?: Record<string, string>;
+  cc?: Sender[];
+  bcc?: Sender[];
+  threadId?: string;
+  fromEmail?: string;
+  isForward?: boolean;
+  originalMessage?: string;
+}
+
+export interface Note {
+  id: string;
+  userId: string;
+  threadId: string;
+  content: string;
+  color: string;
+  isPinned: boolean | null;
+  order: number;
+  createdAt: Date;
+  updatedAt: Date;
+}

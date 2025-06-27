@@ -1,5 +1,3 @@
-'use client';
-
 import {
   Form,
   FormControl,
@@ -15,40 +13,36 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useForm, type ControllerRenderProps } from 'react-hook-form';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { SettingsCard } from '@/components/settings/settings-card';
-import { availableLocales, locales, Locale } from '@/i18n/config';
-import { useForm, ControllerRenderProps } from 'react-hook-form';
+import { Globe, Clock, XIcon, Mail, InfoIcon } from 'lucide-react';
+import { useEmailAliases } from '@/hooks/use-email-aliases';
 import { useState, useEffect, useMemo, memo } from 'react';
+import { userSettingsSchema } from '@zero/server/schemas';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useTranslations, useLocale } from 'next-intl';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { saveUserSettings } from '@/actions/settings';
+import { useTranslations, useLocale } from 'use-intl';
+import { useTRPC } from '@/providers/query-provider';
 import { getBrowserTimezone } from '@/lib/timezones';
 import { Textarea } from '@/components/ui/textarea';
 import { useSettings } from '@/hooks/use-settings';
-import { Button } from '@/components/ui/button';
+import { availableLocales } from '@/i18n/config';
 import { Switch } from '@/components/ui/switch';
-import { Globe, Clock } from 'lucide-react';
-import { changeLocale } from '@/i18n/utils';
+import { Button } from '@/components/ui/button';
+import { useRevalidator } from 'react-router';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import * as z from 'zod';
-
-const formSchema = z.object({
-  language: z.enum(locales as [string, ...string[]]),
-  timezone: z.string(),
-  dynamicContent: z.boolean(),
-  externalImages: z.boolean(),
-  customPrompt: z.string(),
-});
 
 const TimezoneSelect = memo(
   ({
     field,
     t,
   }: {
-    field: ControllerRenderProps<z.infer<typeof formSchema>, 'timezone'>;
+    field: ControllerRenderProps<z.infer<typeof userSettingsSchema>, 'timezone'>;
     t: any;
   }) => {
     const [open, setOpen] = useState(false);
@@ -125,46 +119,70 @@ export default function GeneralPage() {
   const [isSaving, setIsSaving] = useState(false);
   const locale = useLocale();
   const t = useTranslations();
-  const { settings, mutate } = useSettings();
+  const { data } = useSettings();
+  const { data: aliases } = useEmailAliases();
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const { mutateAsync: saveUserSettings } = useMutation(trpc.settings.save.mutationOptions());
+  const { mutateAsync: setLocaleCookie } = useMutation(
+    trpc.cookiePreferences.setLocaleCookie.mutationOptions(),
+  );
+  const { revalidate } = useRevalidator();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof userSettingsSchema>>({
+    resolver: zodResolver(userSettingsSchema),
     defaultValues: {
-      language: locale as string,
+      language: locale,
       timezone: getBrowserTimezone(),
       dynamicContent: false,
-      externalImages: true,
       customPrompt: '',
+      zeroSignature: true,
+      defaultEmailAlias: '',
     },
   });
 
   useEffect(() => {
-    if (settings) {
-      form.reset(settings);
+    if (data?.settings) {
+      form.reset(data.settings);
     }
-  }, [form, settings]);
+  }, [form, data?.settings]);
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  useEffect(() => {
+    if (aliases && !data?.settings?.defaultEmailAlias) {
+      const primaryAlias = aliases.find((alias) => alias.primary);
+      if (primaryAlias) {
+        form.setValue('defaultEmailAlias', primaryAlias.email);
+      }
+    }
+  }, [aliases, data?.settings?.defaultEmailAlias, form]);
+
+  async function onSubmit(values: z.infer<typeof userSettingsSchema>) {
     setIsSaving(true);
-
+    const saved = data?.settings ? { ...data.settings } : undefined;
     try {
       await saveUserSettings(values);
-      await mutate(values, { revalidate: false });
+      queryClient.setQueryData(trpc.settings.get.queryKey(), (updater) => {
+        if (!updater) return;
+        return { settings: { ...updater.settings, ...values } };
+      });
 
-      if (values.language !== locale) {
-        await changeLocale(values.language as Locale);
+      if (saved?.language !== values.language) {
+        await setLocaleCookie({ locale: values.language });
         const localeName = new Intl.DisplayNames([values.language], { type: 'language' }).of(
           values.language,
         );
-        toast.success(t('common.settings.languageChanged', { locale: localeName }));
+        toast.success(t('common.settings.languageChanged', { locale: localeName! }));
+        await revalidate();
       }
 
       toast.success(t('common.settings.saved'));
     } catch (error) {
       console.error('Failed to save settings:', error);
       toast.error(t('common.settings.failedToSave'));
-      // Revert the optimistic update
-      await mutate();
+      queryClient.setQueryData(trpc.settings.get.queryKey(), (updater) => {
+        if (!updater) return;
+        return saved ? { settings: { ...updater.settings, ...saved } } : updater;
+      });
     } finally {
       setIsSaving(false);
     }
@@ -183,7 +201,7 @@ export default function GeneralPage() {
       >
         <Form {...form}>
           <form id="general-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="flex w-full items-center gap-5">
+            <div className="flex w-full items-center gap-4">
               <FormField
                 control={form.control}
                 name="language"
@@ -192,7 +210,7 @@ export default function GeneralPage() {
                     <FormLabel>{t('pages.settings.general.language')}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger className="w-36">
+                        <SelectTrigger className="w-36 justify-start">
                           <Globe className="mr-2 h-4 w-4" />
                           <SelectValue placeholder={t('pages.settings.general.selectLanguage')} />
                         </SelectTrigger>
@@ -218,63 +236,84 @@ export default function GeneralPage() {
                   </FormItem>
                 )}
               />
+              {aliases && aliases.length > 0 && (
+                <FormField
+                  control={form.control}
+                  name="defaultEmailAlias"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1">
+                        {t('pages.settings.general.defaultEmailAlias')}{' '}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <InfoIcon className="h-4 w-4" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {t('pages.settings.general.defaultEmailDescription')}
+                          </TooltipContent>
+                        </Tooltip>
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ''}>
+                        <FormControl>
+                          <SelectTrigger className="w-[300px] justify-start">
+                            <Mail className="mr-2 h-4 w-4" />
+                            <SelectValue
+                              placeholder={t('pages.settings.general.selectDefaultEmail')}
+                            />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {aliases.map((alias) => (
+                            <SelectItem key={alias.email} value={alias.email}>
+                              <div className="flex flex-row items-center gap-1">
+                                <span className="text-sm">
+                                  {alias.name ? `${alias.name} <${alias.email}>` : alias.email}
+                                </span>
+                                {alias.primary && (
+                                  <span className="text-muted-foreground text-xs">(Primary)</span>
+                                )}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
-            {/* <div className="flex flex-col md:flex-row w-full items-center gap-5">
-              <FormField
-                control={form.control}
-                name="dynamicContent"
-                render={({ field }) => (
-                  <FormItem className="bg-popover flex flex-row items-center justify-between rounded-lg border p-4 w-full md:w-auto">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">
-                        {t('pages.settings.general.dynamicContent')}
-                      </FormLabel>
-                      <FormDescription>
-                        {t('pages.settings.general.dynamicContentDescription')}
-                      </FormDescription>
-                    </div>
-                    <FormControl className="ml-4">
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="externalImages"
-                render={({ field }) => (
-                  <FormItem className="bg-popover flex flex-row items-center justify-between rounded-lg border p-4 w-full md:w-auto">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">
-                        {t('pages.settings.general.externalImages')}
-                      </FormLabel>
-                      <FormDescription>
-                        {t('pages.settings.general.externalImagesDescription')}
-                      </FormDescription>
-                    </div>
-                    <FormControl className="ml-4">
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div> */}
+
             <FormField
               control={form.control}
-              name="customPrompt"
+              name="zeroSignature"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('pages.settings.general.customPrompt')}</FormLabel>
+                <FormItem className="flex max-w-xl flex-row items-center justify-between rounded-lg border px-4 py-2">
+                  <div className="space-y-0.5">
+                    <FormLabel>{t('pages.settings.general.zeroSignature')}</FormLabel>
+                    <FormDescription>
+                      {t('pages.settings.general.zeroSignatureDescription')}
+                    </FormDescription>
+                  </div>
                   <FormControl>
-                    <Textarea
-                      placeholder={t('pages.settings.general.customPromptPlaceholder')}
-                      className="min-h-[350px]"
-                      {...field}
-                    />
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
-                  <FormDescription>
-                    {t('pages.settings.general.customPromptDescription')}
-                  </FormDescription>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="autoRead"
+              render={({ field }) => (
+                <FormItem className="flex max-w-xl flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <FormLabel>{t('pages.settings.general.autoRead')}</FormLabel>
+                    <FormDescription>
+                      {t('pages.settings.general.autoReadDescription')}
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
                 </FormItem>
               )}
             />

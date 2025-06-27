@@ -2,41 +2,44 @@
   "name": "zero",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "bun@1.2.5",
+  "packageManager": "pnpm@10.12.1",
   "scripts": {
+    "go": "pnpm docker:db:up && pnpm run dev",
+    "prepare": "husky",
+    "nizzy": "tsx ./packages/cli/src/cli.ts",
+    "postinstall": "pnpm nizzy sync",
     "dev": "turbo run dev",
     "build": "turbo run build",
+    "build:frontend": "pnpm run --filter=@zero/mail build",
+    "deploy:frontend": "pnpm run --filter=@zero/mail deploy",
+    "deploy:backend": "pnpm run --filter=@zero/server deploy",
     "start": "turbo run start",
     "lint": "turbo run lint",
     "format": "prettier --write apps/**/*.{ts,tsx} --log-level silent",
-    "check": "bun run check:format && bun run lint",
+    "check": "pnpm run check:format && pnpm run lint",
     "check:format": "prettier . --check",
-    "prepare": "husky",
     "lint-staged": "prettier --write --ignore-unknown",
-    "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down",
-    "docker:clean": "docker-compose down -v",
-    "db:dependencies": "cd packages/db && bun install",
-    "db:generate": "cd packages/db && bun run db:generate",
-    "db:migrate": "cd packages/db && bun run db:migrate",
-    "db:push": "cd packages/db && bun run db:push",
-    "db:studio": "cd packages/db && bun run db:studio"
+    "docker:db:up": "docker compose -f docker-compose.db.yaml up -d",
+    "docker:db:stop": "docker compose -f docker-compose.db.yaml stop",
+    "docker:db:down": "docker compose -f docker-compose.db.yaml down",
+    "docker:db:clean": "docker compose -f docker-compose.db.yaml down -v",
+    "db:generate": "dotenv -- pnpm run -C apps/server db:generate",
+    "db:migrate": "dotenv -- pnpm run -C apps/server db:migrate",
+    "db:push": "dotenv -- pnpm run -C apps/server db:push",
+    "db:studio": "dotenv -- pnpm run -C apps/server db:studio",
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org zero-7y --project nextjs ./apps/mail/.next && sentry-cli sourcemaps upload --org zero-7y --project nextjs ./apps/mail/.next",
+    "scripts": "dotenv -- pnpx tsx ./scripts/run.ts"
   },
   "devDependencies": {
-    "@types/node": "22.13.8",
+    "@types/node": "22.15.29",
     "@zero/tsconfig": "workspace:*",
+    "dotenv-cli": "^8.0.0",
     "husky": "9.1.7",
     "prettier": "3.5.3",
-    "prettier-plugin-sort-imports": "1.8.6",
-    "prettier-plugin-tailwindcss": "0.6.11",
-    "turbo": "2.4.4",
-    "typescript": "5.8.2"
-  },
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
-  "dependencies": {
-    "posthog-js": "^1.234.4"
+    "prettier-plugin-sort-imports": "1.8.8",
+    "prettier-plugin-tailwindcss": "0.6.12",
+    "tsx": "4.19.4",
+    "turbo": "^2.5.4",
+    "typescript": "catalog:"
   }
 }

@@ -1,18 +1,71 @@
+import { addStyleTags, doesContainStyleTags, template } from '@/lib/email-utils.client';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { fixNonReadableColors, template } from '@/lib/email-utils';
-import { useTranslations } from 'next-intl';
-import { Skeleton } from '../ui/skeleton';
-import { Loader2 } from 'lucide-react';
+import { defaultUserSettings } from '@zero/server/schemas';
+import { fixNonReadableColors } from '@/lib/email-utils';
+import { useTRPC } from '@/providers/query-provider';
+import { getBrowserTimezone } from '@/lib/timezones';
+import { useSettings } from '@/hooks/use-settings';
+import { useTranslations } from 'use-intl';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
-export function MailIframe({ html }: { html: string }) {
+export function MailIframe({ html, senderEmail }: { html: string; senderEmail: string }) {
+  const { data, refetch } = useSettings();
+  const queryClient = useQueryClient();
+  const isTrustedSender = useMemo(
+    () => data?.settings?.externalImages || data?.settings?.trustedSenders?.includes(senderEmail),
+    [data?.settings, senderEmail],
+  );
+  const [cspViolation, setCspViolation] = useState(false);
+  const [temporaryImagesEnabled, setTemporaryImagesEnabled] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [height, setHeight] = useState(300);
+  const [height, setHeight] = useState(0);
   const { resolvedTheme } = useTheme();
-  // const [loaded, setLoaded] = useState(false);
+  const trpc = useTRPC();
 
-  const iframeDoc = useMemo(() => template(html), [html]);
+  const { mutateAsync: saveUserSettings } = useMutation({
+    ...trpc.settings.save.mutationOptions(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['settings'] });
+    },
+  });
+
+  const { mutateAsync: trustSender } = useMutation({
+    mutationFn: async () => {
+      const existingSettings = data?.settings ?? {
+        ...defaultUserSettings,
+        timezone: getBrowserTimezone(),
+      };
+
+      const { success } = await saveUserSettings({
+        ...existingSettings,
+        trustedSenders: data?.settings.trustedSenders
+          ? data.settings.trustedSenders.concat(senderEmail)
+          : [senderEmail],
+      });
+
+      if (!success) {
+        throw new Error('Failed to trust sender');
+      }
+    },
+    onSuccess: () => {
+      refetch();
+    },
+    onError: () => {
+      toast.error('Failed to trust sender');
+    },
+  });
+
+  const { data: processedHtml } = useQuery({
+    queryKey: ['email-template', html, isTrustedSender || temporaryImagesEnabled],
+    queryFn: () => template(html, isTrustedSender || temporaryImagesEnabled),
+    staleTime: 30 * 60 * 1000, // Increase cache time to 30 minutes
+    gcTime: 60 * 60 * 1000, // Keep in cache for 1 hour
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    refetchOnMount: false, // Don't refetch on mount if data exists
+  });
 
   const t = useTranslations();
 
@@ -23,29 +76,42 @@ export function MailIframe({ html }: { html: string }) {
     const boundingRectHeight = body.getBoundingClientRect().height;
     const scrollHeight = body.scrollHeight;
 
+    if (body.innerText.trim() === '') {
+      setHeight(0);
+      return;
+    }
+
     // Use the larger of the two values to ensure all content is visible
-    setHeight(Math.max(boundingRectHeight, scrollHeight));
+    const newHeight = Math.max(boundingRectHeight, scrollHeight);
+    setHeight(newHeight);
   }, [iframeRef, setHeight]);
 
   useEffect(() => {
-    if (!iframeRef.current) return;
-    const url = URL.createObjectURL(new Blob([iframeDoc], { type: 'text/html' }));
+    if (!iframeRef.current || !processedHtml) return;
+
+    let finalHtml = processedHtml;
+    const containsStyleTags = doesContainStyleTags(processedHtml);
+    if (!containsStyleTags) {
+      finalHtml = addStyleTags(processedHtml);
+    }
+
+    const url = URL.createObjectURL(new Blob([finalHtml], { type: 'text/html' }));
     iframeRef.current.src = url;
+
     const handler = () => {
       if (iframeRef.current?.contentWindow?.document.body) {
         calculateAndSetHeight();
         fixNonReadableColors(iframeRef.current.contentWindow.document.body);
       }
-      // setLoaded(true);
-      // Recalculate after a slight delay to catch any late-loading content
       setTimeout(calculateAndSetHeight, 500);
     };
+
     iframeRef.current.onload = handler;
 
     return () => {
       URL.revokeObjectURL(url);
     };
-  }, [iframeDoc, calculateAndSetHeight]);
+  }, [processedHtml, calculateAndSetHeight]);
 
   useEffect(() => {
     if (iframeRef.current?.contentWindow?.document.body) {
@@ -58,31 +124,46 @@ export function MailIframe({ html }: { html: string }) {
     }
   }, [resolvedTheme]);
 
+  useEffect(() => {
+    const ctrl = new AbortController();
+    window.addEventListener(
+      'message',
+      (event) => {
+        if (event.data.type === 'csp-violation') {
+          setCspViolation(true);
+        }
+      },
+      { signal: ctrl.signal },
+    );
+
+    return () => ctrl.abort();
+  }, []);
+
   return (
     <>
-      {/* {!loaded && (
-        <div className="flex h-full w-full items-center justify-center gap-4 p-4">
-          <div className="w-full space-y-4">
-            <div className="flex flex-col space-y-2">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-[90%]" />
-              <Skeleton className="h-4 w-[95%]" />
-            </div>
-            <div className="flex flex-col space-y-2">
-              <Skeleton className="h-4 w-[88%]" />
-              <Skeleton className="h-4 w-[92%]" />
-              <Skeleton className="h-4 w-[85%]" />
-            </div>
-          </div>
+      {cspViolation && !isTrustedSender && !data?.settings?.externalImages && (
+        <div className="flex items-center justify-start bg-amber-600/20 px-2 py-1 text-sm text-amber-600">
+          <p>{t('common.actions.hiddenImagesWarning')}</p>
+          <button
+            onClick={() => setTemporaryImagesEnabled(!temporaryImagesEnabled)}
+            className="ml-2 cursor-pointer underline"
+          >
+            {temporaryImagesEnabled
+              ? t('common.actions.disableImages')
+              : t('common.actions.showImages')}
+          </button>
+          <button onClick={() => void trustSender()} className="ml-2 cursor-pointer underline">
+            {t('common.actions.trustSender')}
+          </button>
         </div>
-      )} */}
+      )}
       <iframe
-        onClick={calculateAndSetHeight}
         height={height}
         ref={iframeRef}
-        className={cn('w-full flex-1 overflow-hidden transition-opacity duration-200')}
+        className={cn(
+          '!min-h-0 w-full flex-1 overflow-hidden px-4 transition-opacity duration-200',
+        )}
         title="Email Content"
-        sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
         style={{
           width: '100%',
           overflow: 'hidden',

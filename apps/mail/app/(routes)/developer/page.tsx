@@ -1,10 +1,7 @@
-'use client';
-
 import { Github, Book, Users, Terminal, Code2, Webhook, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useNavigate } from 'react-router';
 
 const developerResources = [
   {
@@ -70,7 +67,7 @@ const developerResources = [
 ] as const;
 
 export default function DeveloperPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
 
   return (
     <div className="bg-background flex min-h-screen w-full flex-col">
@@ -80,7 +77,7 @@ export default function DeveloperPage() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => router.back()}
+              onClick={() => navigate(-1)}
               className="text-muted-foreground hover:text-foreground mb-6 gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -116,12 +113,12 @@ export default function DeveloperPage() {
                     variant="outline"
                     className="hover:bg-secondary w-full justify-between"
                   >
-                    <Link href={resource.href}>
+                    <a href={resource.href}>
                       <span className="flex items-center justify-between">
                         {resource.linkText}
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </span>
-                    </Link>
+                    </a>
                   </Button>
                 </CardContent>
               </Card>
@@ -138,7 +135,7 @@ export default function DeveloperPage() {
                 </p>
               </div>
               <Button asChild variant="default" className="w-full sm:w-auto">
-                <Link href="/support">Contact Support</Link>
+                <a href="/support">Contact Support</a>
               </Button>
             </div>
           </div>

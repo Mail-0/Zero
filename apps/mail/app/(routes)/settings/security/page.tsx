@@ -1,5 +1,3 @@
-'use client';
-
 import {
   Form,
   FormControl,
@@ -12,7 +10,7 @@ import { SettingsCard } from '@/components/settings/settings-card';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { useTranslations } from 'next-intl';
+import { useTranslations } from 'use-intl';
 import { useForm } from 'react-hook-form';
 import { KeyRound } from 'lucide-react';
 import { useState } from 'react';
@@ -61,12 +59,12 @@ export default function SecurityPage() {
       >
         <Form {...form}>
           <form id="security-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="flex flex-col md:flex-row w-full items-center gap-5">
+            <div className="flex w-full flex-col items-center gap-5 md:flex-row">
               <FormField
                 control={form.control}
                 name="twoFactorAuth"
                 render={({ field }) => (
-                  <FormItem className="bg-popover flex flex-row items-center justify-between rounded-lg border p-4 w-full md:w-auto">
+                  <FormItem className="bg-popover flex w-full flex-row items-center justify-between rounded-lg border p-4 md:w-auto">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">
                         {t('pages.settings.security.twoFactorAuth')}
@@ -85,7 +83,7 @@ export default function SecurityPage() {
                 control={form.control}
                 name="loginNotifications"
                 render={({ field }) => (
-                  <FormItem className="bg-popover flex flex-row items-center justify-between rounded-lg border p-4 w-full md:w-auto">
+                  <FormItem className="bg-popover flex w-full flex-row items-center justify-between rounded-lg border p-4 md:w-auto">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">
                         {t('pages.settings.security.loginNotifications')}

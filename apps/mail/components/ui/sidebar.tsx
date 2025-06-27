@@ -1,5 +1,3 @@
-'use client';
-
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { type VariantProps, cva } from 'class-variance-authority';
@@ -10,9 +8,9 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Slot } from '@radix-ui/react-slot';
 import { Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Slot } from 'radix-ui';
 import * as React from 'react';
 
 const Sidebar = React.forwardRef<
@@ -41,7 +39,7 @@ const Sidebar = React.forwardRef<
       return (
         <div
           className={cn(
-            'text-sidebar-foreground flex h-full w-[--sidebar-width] flex-col bg-white dark:bg-black',
+            'text-sidebar-foreground bg-sidebar dark:bg-sidebar flex h-full w-[--sidebar-width] flex-col',
             className,
           )}
           ref={ref}
@@ -58,7 +56,7 @@ const Sidebar = React.forwardRef<
           <SheetContent
             data-sidebar="sidebar"
             data-mobile="true"
-            className="text-sidebar-foreground w-[--sidebar-width] bg-white p-0 dark:bg-black [&>button]:hidden"
+            className="text-sidebar-foreground bg-sidebar dark:bg-sidebar w-[--sidebar-width] p-4 [&>button]:hidden"
             style={
               {
                 '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
@@ -112,7 +110,7 @@ const Sidebar = React.forwardRef<
         >
           <div
             data-sidebar="sidebar"
-            className="group-data-[variant=floating]:border-sidebar-border flex h-full w-full flex-col bg-white group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:shadow dark:bg-black"
+            className="group-data-[variant=floating]:border-sidebar-border bg-sidebar dark:bg-sidebar flex h-full w-full flex-col group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:shadow"
           >
             {children}
           </div>
@@ -218,7 +216,7 @@ const SidebarHeader = React.forwardRef<HTMLDivElement, React.ComponentProps<'div
       <div
         ref={ref}
         data-sidebar="header"
-        className={cn('flex flex-col gap-2 p-2', className)}
+        className={cn('flex flex-col gap-2 md:p-2', className)}
         {...props}
       />
     );
@@ -262,7 +260,7 @@ const SidebarContent = React.forwardRef<HTMLDivElement, React.ComponentProps<'di
         ref={ref}
         data-sidebar="content"
         className={cn(
-          'flex min-h-0 flex-1 flex-col gap-2 overflow-auto group-data-[collapsible=icon]:overflow-hidden',
+          'scrollbar-none scrollbar-w-0 flex min-h-0 flex-1 flex-col gap-2 overflow-auto group-data-[collapsible=icon]:overflow-hidden',
           className,
         )}
         {...props}
@@ -278,7 +276,7 @@ const SidebarGroup = React.forwardRef<HTMLDivElement, React.ComponentProps<'div'
       <div
         ref={ref}
         data-sidebar="group"
-        className={cn('relative flex w-full min-w-0 flex-col p-2', className)}
+        className={cn('relative flex w-full min-w-0 flex-col !pt-0 md:p-2', className)}
         {...props}
       />
     );
@@ -290,7 +288,7 @@ const SidebarGroupLabel = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<'div'> & { asChild?: boolean }
 >(({ className, asChild = false, ...props }, ref) => {
-  const Comp = asChild ? Slot : 'div';
+  const Comp = asChild ? Slot.Slot : 'div';
 
   return (
     <Comp
@@ -311,7 +309,7 @@ const SidebarGroupAction = React.forwardRef<
   HTMLButtonElement,
   React.ComponentProps<'button'> & { asChild?: boolean }
 >(({ className, asChild = false, ...props }, ref) => {
-  const Comp = asChild ? Slot : 'button';
+  const Comp = asChild ? Slot.Slot : 'button';
 
   return (
     <Comp
@@ -408,7 +406,7 @@ const SidebarMenuButton = React.forwardRef<
     },
     ref,
   ) => {
-    const Comp = asChild ? Slot : 'button';
+    const Comp = asChild ? Slot.Slot : 'button';
     const { isMobile, state } = useSidebar();
 
     const button = (
@@ -435,12 +433,20 @@ const SidebarMenuButton = React.forwardRef<
     return (
       <Tooltip>
         <TooltipTrigger asChild>{button}</TooltipTrigger>
-        <TooltipContent
-          side="right"
-          align="center"
-          hidden={state !== 'collapsed' || isMobile}
-          {...tooltip}
-        />
+        {state === 'collapsed' && (
+          <TooltipContent
+            side="right"
+            align="center"
+            variant="sidebar"
+            hidden={state !== 'collapsed' || isMobile}
+            sideOffset={8}
+            {...tooltip}
+          >
+            <div className="text-base-gray-950 text-sm font-medium leading-none dark:text-white">
+              {typeof tooltip === 'string' ? tooltip : tooltip.children}
+            </div>
+          </TooltipContent>
+        )}
       </Tooltip>
     );
   },
@@ -454,7 +460,7 @@ const SidebarMenuAction = React.forwardRef<
     showOnHover?: boolean;
   }
 >(({ className, asChild = false, showOnHover = false, ...props }, ref) => {
-  const Comp = asChild ? Slot : 'button';
+  const Comp = asChild ? Slot.Slot : 'button';
 
   return (
     <Comp
@@ -560,7 +566,7 @@ const SidebarMenuSubButton = React.forwardRef<
     isActive?: boolean;
   }
 >(({ asChild = false, size = 'md', isActive, className, ...props }, ref) => {
-  const Comp = asChild ? Slot : 'a';
+  const Comp = asChild ? Slot.Slot : 'a';
 
   return (
     <Comp

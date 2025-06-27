@@ -1,0 +1,46 @@
+name: lingo-dev
+
+on:
+  push:
+    branches:
+      - staging
+  workflow_dispatch:
+    inputs:
+      skip_localization:
+        description: 'Skip Lingo.dev step'
+        type: 'boolean'
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  main:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code 🛎
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm 🌟
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node 📦
+        uses: actions/setup-node@v4
+
+      - name: Install dependencies 📦
+        run: pnpm install
+
+      - name: Run Lingo.dev Localization 🌐
+        if: ${{ !inputs.skip_localization }}
+        uses: lingodotdev/lingo.dev@main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        with:
+          api-key: ${{ secrets.LINGODOTDEV_API_KEY }}
+          pull-request: true

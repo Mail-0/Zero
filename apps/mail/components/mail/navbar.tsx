@@ -1,10 +1,6 @@
-'use client';
-
-import { type LucideIcon } from 'lucide-react';
-import Link from 'next/link';
-
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { buttonVariants } from '@/components/ui/button';
+import { type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface NavProps {
@@ -28,7 +24,7 @@ export function Nav({ links, isCollapsed }: NavProps) {
           isCollapsed ? (
             <Tooltip key={index} delayDuration={0}>
               <TooltipTrigger asChild>
-                <Link
+                <a
                   href="#"
                   className={cn(
                     buttonVariants({ variant: link.variant, size: 'icon' }),
@@ -39,7 +35,7 @@ export function Nav({ links, isCollapsed }: NavProps) {
                 >
                   <link.icon className="h-4 w-4" />
                   <span className="sr-only">{link.title}</span>
-                </Link>
+                </a>
               </TooltipTrigger>
               <TooltipContent side="right" className="flex items-center gap-4">
                 {link.title}
@@ -47,7 +43,7 @@ export function Nav({ links, isCollapsed }: NavProps) {
               </TooltipContent>
             </Tooltip>
           ) : (
-            <Link
+            <a
               key={index}
               href="#"
               className={cn(
@@ -69,7 +65,7 @@ export function Nav({ links, isCollapsed }: NavProps) {
                   {link.label}
                 </span>
               )}
-            </Link>
+            </a>
           ),
         )}
       </nav>
