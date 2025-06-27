@@ -14,6 +14,7 @@ import {
   Trash,
   PencilCompose,
 } from '../icons/icons';
+import { StickyNote } from 'lucide-react';
 import {
   memo,
   useCallback,
@@ -56,6 +57,7 @@ import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Categories } from './mail';
 import { useAtom } from 'jotai';
+import { useThreadNotes } from '@/hooks/use-notes';
 
 const Thread = memo(
   function Thread({
@@ -97,6 +99,12 @@ const Thread = memo(
     const idToUse = useMemo(() => latestMessage?.threadId ?? latestMessage?.id, [latestMessage]);
     const { data: settingsData } = useSettings();
     const queryClient = useQueryClient();
+
+    // Check if thread has notes
+    const { data: threadNotes } = useThreadNotes(idToUse || '');
+    const hasNotes = useMemo(() => {
+      return (threadNotes?.notes && threadNotes.notes.length > 0) || false;
+    }, [threadNotes?.notes]);
 
     const optimisticState = useOptimisticThreadState(idToUse ?? '');
 
@@ -514,6 +522,11 @@ const Thread = memo(
                           </TooltipTrigger>
                           <TooltipContent className="p-1 text-xs">Draft</TooltipContent>
                         </Tooltip>
+                      ) : null}
+                      {hasNotes ? (
+                        <span className="inline-flex items-center">
+                          <StickyNote className="h-3 w-3 fill-amber-500 stroke-amber-500 dark:fill-amber-400 dark:stroke-amber-400" />
+                        </span>
                       ) : null}
                       <MailLabels labels={optimisticLabels} />
                     </div>
