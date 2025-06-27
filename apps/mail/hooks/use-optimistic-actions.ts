@@ -14,6 +14,23 @@ import posthog from 'posthog-js';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
 
+enum ActionType {
+  MOVE = 'MOVE',
+  STAR = 'STAR',
+  READ = 'READ',
+  LABEL = 'LABEL',
+  IMPORTANT = 'IMPORTANT',
+}
+
+const actionEventNames: Record<ActionType, (params: any) => string> = {
+  [ActionType.MOVE]: () => 'email_moved',
+  [ActionType.STAR]: (params) => (params.starred ? 'email_starred' : 'email_unstarred'),
+  [ActionType.READ]: (params) => (params.read ? 'email_marked_read' : 'email_marked_unread'),
+  [ActionType.IMPORTANT]: (params) =>
+    params.important ? 'email_marked_important' : 'email_unmarked_important',
+  [ActionType.LABEL]: (params) => (params.add ? 'email_label_added' : 'email_label_removed'),
+};
+
 export function useOptimisticActions() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -67,9 +84,9 @@ export function useOptimisticActions() {
     toastMessage,
     folders,
   }: {
-    type: 'MOVE' | 'STAR' | 'READ' | 'LABEL' | 'IMPORTANT';
+    type: keyof typeof ActionType;
     threadIds: string[];
-    params: any;
+    params: PendingAction['params'];
     optimisticId: string;
     execute: () => Promise<void>;
     undo: () => void;
@@ -93,7 +110,7 @@ export function useOptimisticActions() {
       optimisticActionsManager.pendingActionsByType.get(type)?.size,
     );
 
-    const pendingAction: PendingAction = {
+    const pendingAction = {
       id: pendingActionId,
       type,
       threadIds,
@@ -103,7 +120,7 @@ export function useOptimisticActions() {
       undo,
     };
 
-    optimisticActionsManager.pendingActions.set(pendingActionId, pendingAction);
+    optimisticActionsManager.pendingActions.set(pendingActionId, pendingAction as PendingAction);
 
     const itemCount = threadIds.length;
     const bulkActionMessage = itemCount > 1 ? `${toastMessage} (${itemCount} items)` : toastMessage;
@@ -117,6 +134,12 @@ export function useOptimisticActions() {
           pendingActionsRef: optimisticActionsManager.pendingActions.size,
           typeActions: typeActions?.size,
         });
+
+        const eventName = actionEventNames[type]?.(params);
+        if (eventName) {
+          posthog.capture(eventName);
+        }
+
         optimisticActionsManager.pendingActions.delete(pendingActionId);
         optimisticActionsManager.pendingActionsByType.get(type)?.delete(pendingActionId);
         if (typeActions?.size === 1) {
@@ -162,8 +185,6 @@ export function useOptimisticActions() {
   function optimisticMarkAsRead(threadIds: string[], silent = false) {
     if (!threadIds.length) return;
 
-    posthog.capture('Email Marked as Read');
-
     const optimisticId = addOptimisticAction({
       type: 'READ',
       threadIds,
@@ -192,8 +213,6 @@ export function useOptimisticActions() {
   function optimisticMarkAsUnread(threadIds: string[]) {
     if (!threadIds.length) return;
 
-    posthog.capture('Email Marked as Unread');
-
     const optimisticId = addOptimisticAction({
       type: 'READ',
       threadIds,
@@ -221,8 +240,6 @@ export function useOptimisticActions() {
 
   function optimisticToggleStar(threadIds: string[], starred: boolean) {
     if (!threadIds.length) return;
-
-    posthog.capture(starred ? 'Email Starred' : 'Email Unstarred');
 
     const optimisticId = addOptimisticAction({
       type: 'STAR',
@@ -253,8 +270,6 @@ export function useOptimisticActions() {
     destination: ThreadDestination,
   ) {
     if (!threadIds.length || !destination) return;
-
-    posthog.capture('Email Moved');
 
     // setFocusedIndex(null);
 
@@ -315,8 +330,6 @@ export function useOptimisticActions() {
   function optimisticDeleteThreads(threadIds: string[], currentFolder: string) {
     if (!threadIds.length) return;
 
-    posthog.capture('Email Deleted');
-
     // setFocusedIndex(null);
 
     const optimisticId = addOptimisticAction({
@@ -362,8 +375,6 @@ export function useOptimisticActions() {
 
   function optimisticToggleImportant(threadIds: string[], isImportant: boolean) {
     if (!threadIds.length) return;
-
-    posthog.capture(isImportant ? 'Email Marked Important' : 'Email Unmarked Important');
 
     const optimisticId = addOptimisticAction({
       type: 'IMPORTANT',
@@ -432,8 +443,6 @@ export function useOptimisticActions() {
       optimisticActionsManager.lastActionId,
     );
     if (!lastAction) return;
-
-    posthog.capture('Action Undone');
 
     lastAction.undo();
 
