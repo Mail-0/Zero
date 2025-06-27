@@ -1,3 +1,5 @@
+import { OutgoingMessageType, type OutgoingMessage } from '../routes/chat';
+import type { IGetThreadResponse } from './driver/types';
 import { getContext } from 'hono/context-storage';
 import { connection } from '../db/schema';
 import type { HonoContext } from '../ctx';
@@ -10,9 +12,11 @@ export const getZeroDB = (userId: string) => {
   return rpcTarget;
 };
 
-export const getZeroAgent = (connectionId: string) => {
+export const getZeroAgent = async (connectionId: string) => {
   const stub = env.ZERO_AGENT.get(env.ZERO_AGENT.idFromName(connectionId));
-  return stub;
+  const rpcTarget = await stub.setMetaData(connectionId);
+  await rpcTarget.setupAuth(connectionId);
+  return rpcTarget;
 };
 
 export const getActiveConnection = async () => {
@@ -53,63 +57,30 @@ export const connectionToDriver = (activeConnection: typeof connection.$inferSel
   });
 };
 
-type NotificationType = 'listThreads' | 'getThread';
-
-type ListThreadsNotification = {
-  type: 'listThreads';
-  payload: {};
-};
-
-type GetThreadNotification = {
-  type: 'getThread';
-  payload: {
-    threadId: string;
-  };
-};
-
-const createNotification = (
-  type: NotificationType,
-  payload: ListThreadsNotification['payload'] | GetThreadNotification['payload'],
-) => {
-  return JSON.stringify({
-    type,
-    payload,
-  });
-};
-
 export const notifyUser = async ({
   connectionId,
-  payload,
-  type,
+  result,
+  threadId,
 }: {
   connectionId: string;
-  payload: ListThreadsNotification['payload'] | GetThreadNotification['payload'];
-  type: NotificationType;
+  result: IGetThreadResponse;
+  threadId: string;
 }) => {
-  console.log(`[notifyUser] Starting notification for connection ${connectionId}`, {
-    type,
-    payload,
-  });
-
-  const mailbox = getZeroAgent(connectionId);
+  const mailbox = await getZeroAgent(connectionId);
 
   try {
-    console.log(`[notifyUser] Broadcasting message`, {
-      connectionId,
-      type,
-      payload,
-    });
-    await mailbox.broadcast(createNotification(type, payload));
-    console.log(`[notifyUser] Successfully broadcasted message`, {
-      connectionId,
-      type,
-      payload,
-    });
+    await mailbox.broadcast(
+      JSON.stringify({
+        type: OutgoingMessageType.Mail_Get,
+        threadId,
+        result,
+      } as OutgoingMessage),
+    );
   } catch (error) {
     console.error(`[notifyUser] Failed to broadcast message`, {
       connectionId,
-      payload,
-      type,
+      threadId,
+      result,
       error,
     });
     throw error;

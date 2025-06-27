@@ -8,7 +8,8 @@ export interface CategorySetting {
   name: string;
   searchValue: string;
   order: number;
-  isDefault?: boolean;
+  icon?: string;
+  isDefault: boolean;
 }
 
 export function useCategorySettings(): CategorySetting[] {

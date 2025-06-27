@@ -404,7 +404,9 @@
         "zeroSignatureDescription": "Füge deinen E-Mails eine Zero-Signatur hinzu.",
         "defaultEmailAlias": "Standard-E-Mail-Alias",
         "selectDefaultEmail": "Standard-E-Mail auswählen",
-        "defaultEmailDescription": "Diese E-Mail wird als Standard-Absenderadresse beim Verfassen neuer E-Mails verwendet"
+        "defaultEmailDescription": "Diese E-Mail wird als Standard-Absenderadresse beim Verfassen neuer E-Mails verwendet",
+        "autoRead": "Auto-Lesen",
+        "autoReadDescription": "E-Mails automatisch als gelesen markieren, wenn du sie anklickst."
       },
       "connections": {
         "title": "E-Mail Verbindungen",

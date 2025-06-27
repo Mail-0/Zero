@@ -404,7 +404,9 @@
         "zeroSignatureDescription": "在您的邮件中添加 Zero 签名。",
         "defaultEmailAlias": "默认邮箱别名",
         "selectDefaultEmail": "选择默认邮箱",
-        "defaultEmailDescription": "此邮箱将作为撰写新邮件时的默认“发件人”地址"
+        "defaultEmailDescription": "此邮箱将作为撰写新邮件时的默认“发件人”地址",
+        "autoRead": "自动阅读",
+        "autoReadDescription": "点击邮件时自动将其标记为已读。"
       },
       "connections": {
         "title": "邮箱连接",

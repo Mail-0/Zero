@@ -404,7 +404,9 @@
         "zeroSignatureDescription": "이메일에 Zero 서명을 추가합니다.",
         "defaultEmailAlias": "기본 이메일 별칭",
         "selectDefaultEmail": "기본 이메일 선택",
-        "defaultEmailDescription": "이 이메일은 새 이메일 작성 시 기본 '보낸 사람' 주소로 사용됩니다"
+        "defaultEmailDescription": "이 이메일은 새 이메일 작성 시 기본 '보낸 사람' 주소로 사용됩니다",
+        "autoRead": "자동 읽음",
+        "autoReadDescription": "이메일을 클릭하면 자동으로 읽음으로 표시합니다."
       },
       "connections": {
         "title": "이메일 연결",

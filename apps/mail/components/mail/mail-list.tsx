@@ -269,7 +269,10 @@ const Thread = memo(
     const content =
       latestMessage && getThreadData ? (
         <div
-          className={'select-none border-b md:my-2 md:border-none'}
+          className={cn(
+            'select-none border-b md:my-1 md:border-none',
+            displayUnread ? '' : 'opacity-60',
+          )}
           onClick={onClick ? onClick(latestMessage) : undefined}
           onMouseEnter={() => {
             window.dispatchEvent(new CustomEvent('emailHover', { detail: { id: idToUse } }));
@@ -689,6 +692,7 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
 export const MailList = memo(
   function MailList() {
     const { folder } = useParams<{ folder: string }>();
+    const { data: settingsData } = useSettings();
     const t = useTranslations();
     const [, setThreadId] = useQueryState('threadId');
     const [, setDraftId] = useQueryState('draftId');
@@ -835,6 +839,7 @@ export const MailList = memo(
     const handleMailClick = useCallback(
       (message: ParsedMessage) => async () => {
         const mode = getSelectMode();
+        const autoRead = settingsData?.settings?.autoRead ?? true;
         console.log('Mail click with mode:', mode);
 
         if (mode !== 'single') {
@@ -846,7 +851,7 @@ export const MailList = memo(
         const messageThreadId = message.threadId ?? message.id;
         const clickedIndex = itemsRef.current.findIndex((item) => item.id === messageThreadId);
         setFocusedIndex(clickedIndex);
-        if (message.unread) optimisticMarkAsRead([messageThreadId], true);
+        if (message.unread && autoRead) optimisticMarkAsRead([messageThreadId], true);
         await setThreadId(messageThreadId);
         await setDraftId(null);
         // Don't clear activeReplyId - let ThreadDisplay handle Reply All auto-opening
@@ -859,6 +864,7 @@ export const MailList = memo(
         optimisticMarkAsRead,
         setThreadId,
         setDraftId,
+        settingsData,
         setActiveReplyId,
       ],
     );

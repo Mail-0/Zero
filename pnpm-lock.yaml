@@ -154,6 +154,12 @@ importers:
       '@tiptap/extension-document':
         specifier: 2.11.5
         version: 2.11.5(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))
+      '@tiptap/extension-file-handler':
+        specifier: 2.22.3
+        version: 2.22.3(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))(@tiptap/extension-text-style@2.12.0(@tiptap/core@2.11.5(@tiptap/pm@2.11.5)))
+      '@tiptap/extension-image':
+        specifier: 2.22.3
+        version: 2.22.3(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))
       '@tiptap/extension-link':
         specifier: 2.11.5
         version: 2.11.5(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))(@tiptap/pm@2.11.5)
@@ -569,6 +575,9 @@ importers:
       jsonrepair:
         specifier: ^3.12.0
         version: 3.12.0
+      mime-types:
+        specifier: 3.0.1
+        version: 3.0.1
       mimetext:
         specifier: ^3.0.27
         version: 3.0.27
@@ -602,6 +611,9 @@ importers:
       twilio:
         specifier: 5.7.0
         version: 5.7.0
+      uuid:
+        specifier: 11.1.0
+        version: 11.1.0
       wrangler:
         specifier: 'catalog:'
         version: 4.18.0(@cloudflare/workers-types@4.20250514.0)
@@ -621,6 +633,9 @@ importers:
       '@types/sanitize-html':
         specifier: 2.13.0
         version: 2.13.0
+      '@types/uuid':
+        specifier: 10.0.0
+        version: 10.0.0
       '@zero/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
@@ -3307,6 +3322,12 @@ packages:
       '@tiptap/core': ^2.7.0
       '@tiptap/pm': ^2.7.0
 
+  '@tiptap/extension-file-handler@2.22.3':
+    resolution: {integrity: sha512-SiIUUAWgYw6CO3OB5ADgOVEzeLQQR5sKyNzoccbM58Cy1Jy1gSYPKlRAPIlxmgHc98Ke8abcHqgt37p+s74o3A==}
+    peerDependencies:
+      '@tiptap/core': ^2.7.0
+      '@tiptap/extension-text-style': ^2.7.0
+
   '@tiptap/extension-floating-menu@2.12.0':
     resolution: {integrity: sha512-BYpyZx/56KCDksWuJJbhki/uNgt9sACuSSZFH5AN1yS1ISD+EzIxqf6Pzzv8QCoNJ+KcRNVaZsOlOFaJGoyzag==}
     peerDependencies:
@@ -3346,8 +3367,8 @@ packages:
       '@tiptap/core': ^2.7.0
       '@tiptap/pm': ^2.7.0
 
-  '@tiptap/extension-image@2.12.0':
-    resolution: {integrity: sha512-wO+yrfMlnW3SYCb1Q1qAb+nt5WH6jnlQPTV6qdoIabRtW0puwMWULZDUgclPN5hxn8EXb9vBEu44egvH6hgkfQ==}
+  '@tiptap/extension-image@2.22.3':
+    resolution: {integrity: sha512-JO8n5YOqOs+bckPZZ3qJFFLpRbYlu4N52n/7Do0XmxEMWaa3fLcR0Rsa1v3X4dGH2T5cKQ475dWSpJQRc+x07w==}
     peerDependencies:
       '@tiptap/core': ^2.7.0
 
@@ -3599,6 +3620,9 @@ packages:
 
   '@types/use-sync-external-store@0.0.6':
     resolution: {integrity: sha512-zFDAD+tlpf2r4asuHEj0XH6pY6i0g5NeAHPn+15wk3BV6JA69eERFXC1gyGThDkVa1zCyKr5jox1+2LbV/AMLg==}
+
+  '@types/uuid@10.0.0':
+    resolution: {integrity: sha512-7gqG38EyHgyP1S+7+xomFtL+ZNHcKv6DwNaCZmJmo1vgMugyF3TCnXVg4t1uk89mLNwnLtnY3TpOpCOyp1/xHQ==}
 
   '@typescript-eslint/eslint-plugin@8.32.1':
     resolution: {integrity: sha512-6u6Plg9nP/J1GRpe/vcjjabo6Uc5YQPAMxsgQyGC/I0RuukiG1wIe3+Vtg3IrSCVJDmqK3j8adrtzXSENRtFgg==}
@@ -7309,6 +7333,10 @@ packages:
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
 
+  uuid@11.1.0:
+    resolution: {integrity: sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==}
+    hasBin: true
+
   uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
     hasBin: true
@@ -10166,6 +10194,11 @@ snapshots:
       '@tiptap/core': 2.11.5(@tiptap/pm@2.11.5)
       '@tiptap/pm': 2.11.5
 
+  '@tiptap/extension-file-handler@2.22.3(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))(@tiptap/extension-text-style@2.12.0(@tiptap/core@2.11.5(@tiptap/pm@2.11.5)))':
+    dependencies:
+      '@tiptap/core': 2.11.5(@tiptap/pm@2.11.5)
+      '@tiptap/extension-text-style': 2.12.0(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))
+
   '@tiptap/extension-floating-menu@2.12.0(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))(@tiptap/pm@2.11.5)':
     dependencies:
       '@tiptap/core': 2.11.5(@tiptap/pm@2.11.5)
@@ -10199,7 +10232,7 @@ snapshots:
       '@tiptap/core': 2.11.5(@tiptap/pm@2.11.5)
       '@tiptap/pm': 2.11.5
 
-  '@tiptap/extension-image@2.12.0(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))':
+  '@tiptap/extension-image@2.22.3(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))':
     dependencies:
       '@tiptap/core': 2.11.5(@tiptap/pm@2.11.5)
 
@@ -10472,6 +10505,8 @@ snapshots:
   '@types/unist@3.0.3': {}
 
   '@types/use-sync-external-store@0.0.6': {}
+
+  '@types/uuid@10.0.0': {}
 
   '@typescript-eslint/eslint-plugin@8.32.1(@typescript-eslint/parser@8.32.1(eslint@9.27.0(jiti@2.4.2))(typescript@5.8.3))(eslint@9.27.0(jiti@2.4.2))(typescript@5.8.3)':
     dependencies:
@@ -13036,7 +13071,7 @@ snapshots:
       '@tiptap/extension-color': 2.12.0(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))(@tiptap/extension-text-style@2.12.0(@tiptap/core@2.11.5(@tiptap/pm@2.11.5)))
       '@tiptap/extension-highlight': 2.12.0(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))
       '@tiptap/extension-horizontal-rule': 2.12.0(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))(@tiptap/pm@2.11.5)
-      '@tiptap/extension-image': 2.12.0(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))
+      '@tiptap/extension-image': 2.22.3(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))
       '@tiptap/extension-link': 2.11.5(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))(@tiptap/pm@2.11.5)
       '@tiptap/extension-placeholder': 2.11.5(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))(@tiptap/pm@2.11.5)
       '@tiptap/extension-task-item': 2.12.0(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))(@tiptap/pm@2.11.5)
@@ -14831,6 +14866,8 @@ snapshots:
       react: 19.1.0
 
   util-deprecate@1.0.2: {}
+
+  uuid@11.1.0: {}
 
   uuid@9.0.1: {}
 

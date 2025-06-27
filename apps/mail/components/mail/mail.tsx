@@ -25,9 +25,9 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useActiveConnection, useConnections } from '@/hooks/use-connections';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCommandPalette } from '../context/command-palette-context';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { ThreadDisplay } from '@/components/mail/thread-display';
@@ -36,6 +36,7 @@ import { backgroundQueueAtom } from '@/store/backgroundQueue';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
 import { useMediaQuery } from '../../hooks/use-media-query';
 import { useSearchValue } from '@/hooks/use-search-value';
+import * as CustomIcons from '@/components/icons/icons';
 import { isMac } from '@/lib/hotkeys/use-hotkey-utils';
 import { MailList } from '@/components/mail/mail-list';
 import { useHotkeysContext } from 'react-hotkeys-hook';
@@ -61,10 +62,10 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useStats } from '@/hooks/use-stats';
 import { useTranslations } from 'use-intl';
+import type { IConnection } from '@/types';
 import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
-import type { IConnection } from '@/types';
 
 interface ITag {
   id: string;
@@ -388,12 +389,10 @@ export function MailLayout() {
   const prevFolderRef = useRef(folder);
   const { enableScope, disableScope } = useHotkeysContext();
   const { data: activeConnection } = useActiveConnection();
-  const { open, setOpen, activeFilters, clearAllFilters } = useCommandPalette();
+  const { activeFilters, clearAllFilters } = useCommandPalette();
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useQueryState('isCommandPaletteOpen');
 
-  const activeAccount = useMemo(() => {
-    if (!activeConnection?.id || !connections?.connections) return null;
-    return connections.connections.find((connection: IConnection) => connection.id === activeConnection?.id);
-  }, [activeConnection?.id, connections?.connections]);
+  const { data: activeAccount } = useActiveConnection();
 
   useEffect(() => {
     if (prevFolderRef.current !== folder && mail.bulkSelected.length > 0) {
@@ -537,7 +536,7 @@ export function MailLayout() {
                   className={cn(
                     'text-muted-foreground relative flex h-8 w-full select-none items-center justify-start overflow-hidden rounded-lg border bg-white pl-2 text-left text-sm font-normal shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-none dark:bg-[#141414]',
                   )}
-                  onClick={() => setOpen(!open)}
+                  onClick={() => setIsCommandPaletteOpen('true')}
                 >
                   <Search className="fill-[#71717A] dark:fill-[#6F6F6F]" />
 
@@ -584,11 +583,11 @@ export function MailLayout() {
                     </kbd>
                   </span>
                 </Button>
-                <div className="mt-2">
+                {/* <div className="mt-2">
                   {activeAccount?.providerId === 'google' && folder === 'inbox' && (
                     <CategorySelect isMultiSelectMode={mail.bulkSelected.length > 0} />
                   )}
-                </div>
+                </div> */}
               </div>
               <div
                 className={cn(
@@ -597,7 +596,7 @@ export function MailLayout() {
                   isFetching ? 'opacity-100' : 'opacity-0',
                 )}
               />
-              <div className="relative z-[1] h-[calc(100dvh-(2px+88px+49px+2px))] overflow-hidden pt-0 md:h-[calc(100dvh-9.8rem)]">
+              <div className="relative z-[1] h-[calc(100dvh-(2px+88px+49px+2px))] overflow-hidden pt-0 md:h-[calc(100dvh-7rem)]">
                 <MailList />
               </div>
             </div>
@@ -823,10 +822,10 @@ function BulkSelectActions() {
 
 export const Categories = () => {
   const t = useTranslations();
-  const defaultCategoryIdInner = useDefaultCategoryId()
+  const defaultCategoryIdInner = useDefaultCategoryId();
   const categorySettings = useCategorySettings();
-  const [activeCategory] = useQueryState('category',{
-     defaultValue: defaultCategoryIdInner,
+  const [activeCategory] = useQueryState('category', {
+    defaultValue: defaultCategoryIdInner,
   });
 
   const categories = categorySettings.map((cat) => {
@@ -838,6 +837,20 @@ export const Categories = () => {
 
     // Helper to decide fill colour depending on selection
     const isSelected = activeCategory === cat.id;
+    if (cat.icon && cat.icon in CustomIcons) {
+      const DynamicIcon = CustomIcons[cat.icon as keyof typeof CustomIcons];
+      return {
+        ...base,
+        icon: (
+          <DynamicIcon
+            className={cn(
+              'fill-muted-foreground h-4 w-4 dark:fill-white',
+              isSelected && 'fill-white',
+            )}
+          />
+        ),
+      };
+    }
 
     switch (cat.id) {
       case 'Important':

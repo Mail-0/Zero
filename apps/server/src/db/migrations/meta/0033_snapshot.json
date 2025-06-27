@@ -1,6 +1,6 @@
 {
-  "id": "d890f4a8-0a7d-4902-8c1b-f58fb6f10e25",
-  "prevId": "266ef84e-3757-44e8-9b8b-4c2bedbbd2bf",
+  "id": "63675907-78bc-4b07-a565-3fdf2e24f8b9",
+  "prevId": "dc914d1f-e63e-4d9b-b47e-437c41235b45",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -93,8 +93,12 @@
           "name": "mail0_account_user_id_mail0_user_id_fk",
           "tableFrom": "mail0_account",
           "tableTo": "mail0_user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -188,8 +192,12 @@
           "name": "mail0_connection_user_id_mail0_user_id_fk",
           "tableFrom": "mail0_connection",
           "tableTo": "mail0_user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -199,7 +207,10 @@
         "mail0_connection_user_id_email_unique": {
           "name": "mail0_connection_user_id_email_unique",
           "nullsNotDistinct": false,
-          "columns": ["user_id", "email"]
+          "columns": [
+            "user_id",
+            "email"
+          ]
         }
       },
       "policies": {},
@@ -256,7 +267,9 @@
         "mail0_early_access_email_unique": {
           "name": "mail0_early_access_email_unique",
           "nullsNotDistinct": false,
-          "columns": ["email"]
+          "columns": [
+            "email"
+          ]
         }
       },
       "policies": {},
@@ -370,12 +383,252 @@
           "name": "mail0_note_user_id_mail0_user_id_fk",
           "tableFrom": "mail0_note",
           "tableTo": "mail0_user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.mail0_oauth_access_token": {
+      "name": "mail0_oauth_access_token",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "access_token": {
+          "name": "access_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "refresh_token": {
+          "name": "refresh_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "access_token_expires_at": {
+          "name": "access_token_expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "refresh_token_expires_at": {
+          "name": "refresh_token_expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "client_id": {
+          "name": "client_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scopes": {
+          "name": "scopes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "mail0_oauth_access_token_access_token_unique": {
+          "name": "mail0_oauth_access_token_access_token_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "access_token"
+          ]
+        },
+        "mail0_oauth_access_token_refresh_token_unique": {
+          "name": "mail0_oauth_access_token_refresh_token_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "refresh_token"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.mail0_oauth_application": {
+      "name": "mail0_oauth_application",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "icon": {
+          "name": "icon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "client_id": {
+          "name": "client_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "client_secret": {
+          "name": "client_secret",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "redirect_u_r_ls": {
+          "name": "redirect_u_r_ls",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "disabled": {
+          "name": "disabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "mail0_oauth_application_client_id_unique": {
+          "name": "mail0_oauth_application_client_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "client_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.mail0_oauth_consent": {
+      "name": "mail0_oauth_consent",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "client_id": {
+          "name": "client_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scopes": {
+          "name": "scopes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "consent_given": {
+          "name": "consent_given",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -441,8 +694,12 @@
           "name": "mail0_session_user_id_mail0_user_id_fk",
           "tableFrom": "mail0_session",
           "tableTo": "mail0_user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -452,7 +709,9 @@
         "mail0_session_token_unique": {
           "name": "mail0_session_token_unique",
           "nullsNotDistinct": false,
-          "columns": ["token"]
+          "columns": [
+            "token"
+          ]
         }
       },
       "policies": {},
@@ -599,12 +858,16 @@
         "mail0_user_email_unique": {
           "name": "mail0_user_email_unique",
           "nullsNotDistinct": false,
-          "columns": ["email"]
+          "columns": [
+            "email"
+          ]
         },
         "mail0_user_phone_number_unique": {
           "name": "mail0_user_phone_number_unique",
           "nullsNotDistinct": false,
-          "columns": ["phone_number"]
+          "columns": [
+            "phone_number"
+          ]
         }
       },
       "policies": {},
@@ -646,8 +909,12 @@
           "name": "mail0_user_hotkeys_user_id_mail0_user_id_fk",
           "tableFrom": "mail0_user_hotkeys",
           "tableTo": "mail0_user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -679,7 +946,7 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true,
-          "default": "'{\"language\":\"en\",\"timezone\":\"UTC\",\"dynamicContent\":false,\"externalImages\":true,\"customPrompt\":\"\",\"trustedSenders\":[],\"isOnboarded\":false,\"colorTheme\":\"system\",\"zeroSignature\":true,\"categories\":[{\"id\":\"Important\",\"name\":\"Important\",\"searchValue\":\"is:important NOT is:sent NOT is:draft\",\"order\":0,\"isDefault\":false},{\"id\":\"All Mail\",\"name\":\"All Mail\",\"searchValue\":\"NOT is:draft (is:inbox OR (is:sent AND to:me))\",\"order\":1,\"isDefault\":true},{\"id\":\"Personal\",\"name\":\"Personal\",\"searchValue\":\"is:personal NOT is:sent NOT is:draft\",\"order\":2,\"isDefault\":false},{\"id\":\"Promotions\",\"name\":\"Promotions\",\"searchValue\":\"is:promotions NOT is:sent NOT is:draft\",\"order\":3,\"isDefault\":false},{\"id\":\"Updates\",\"name\":\"Updates\",\"searchValue\":\"is:updates NOT is:sent NOT is:draft\",\"order\":4,\"isDefault\":false},{\"id\":\"Unread\",\"name\":\"Unread\",\"searchValue\":\"is:unread NOT is:sent NOT is:draft\",\"order\":5,\"isDefault\":false}]}'::jsonb"
+          "default": "'{\"language\":\"en\",\"timezone\":\"UTC\",\"dynamicContent\":false,\"externalImages\":true,\"customPrompt\":\"\",\"trustedSenders\":[],\"isOnboarded\":false,\"colorTheme\":\"system\",\"zeroSignature\":true,\"autoRead\":true,\"defaultEmailAlias\":\"\",\"categories\":[{\"id\":\"Important\",\"name\":\"Important\",\"searchValue\":\"is:important NOT is:sent NOT is:draft\",\"order\":0,\"icon\":\"Lightning\",\"isDefault\":false},{\"id\":\"All Mail\",\"name\":\"All Mail\",\"searchValue\":\"NOT is:draft (is:inbox OR (is:sent AND to:me))\",\"order\":1,\"icon\":\"Mail\",\"isDefault\":true},{\"id\":\"Personal\",\"name\":\"Personal\",\"searchValue\":\"is:personal NOT is:sent NOT is:draft\",\"order\":2,\"icon\":\"User\",\"isDefault\":false},{\"id\":\"Promotions\",\"name\":\"Promotions\",\"searchValue\":\"is:promotions NOT is:sent NOT is:draft\",\"order\":3,\"icon\":\"Tag\",\"isDefault\":false},{\"id\":\"Updates\",\"name\":\"Updates\",\"searchValue\":\"is:updates NOT is:sent NOT is:draft\",\"order\":4,\"icon\":\"Bell\",\"isDefault\":false},{\"id\":\"Unread\",\"name\":\"Unread\",\"searchValue\":\"is:unread NOT is:sent NOT is:draft\",\"order\":5,\"icon\":\"ScanEye\",\"isDefault\":false}]}'::jsonb"
         },
         "created_at": {
           "name": "created_at",
@@ -700,8 +967,12 @@
           "name": "mail0_user_settings_user_id_mail0_user_id_fk",
           "tableFrom": "mail0_user_settings",
           "tableTo": "mail0_user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -711,7 +982,9 @@
         "mail0_user_settings_user_id_unique": {
           "name": "mail0_user_settings_user_id_unique",
           "nullsNotDistinct": false,
-          "columns": ["user_id"]
+          "columns": [
+            "user_id"
+          ]
         }
       },
       "policies": {},
@@ -803,8 +1076,12 @@
           "name": "mail0_writing_style_matrix_connectionId_mail0_connection_id_fk",
           "tableFrom": "mail0_writing_style_matrix",
           "tableTo": "mail0_connection",
-          "columnsFrom": ["connectionId"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "connectionId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -812,7 +1089,9 @@
       "compositePrimaryKeys": {
         "mail0_writing_style_matrix_connectionId_pk": {
           "name": "mail0_writing_style_matrix_connectionId_pk",
-          "columns": ["connectionId"]
+          "columns": [
+            "connectionId"
+          ]
         }
       },
       "uniqueConstraints": {},

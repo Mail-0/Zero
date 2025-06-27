@@ -404,7 +404,9 @@
         "zeroSignatureDescription": "在您的電子郵件中新增 Zero 簽名檔。",
         "defaultEmailAlias": "預設電子郵件別名",
         "selectDefaultEmail": "選擇預設電子郵件",
-        "defaultEmailDescription": "此電子郵件將作為撰寫新郵件時的預設「寄件者」地址"
+        "defaultEmailDescription": "此電子郵件將作為撰寫新郵件時的預設「寄件者」地址",
+        "autoRead": "自動標記為已讀",
+        "autoReadDescription": "當您點擊電子郵件時，會自動將其標記為已讀。"
       },
       "connections": {
         "title": "電子郵件連接",
