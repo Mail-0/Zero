@@ -680,7 +680,7 @@ export default class extends WorkerEntrypoint<typeof env> {
   async queue(batch: MessageBatch<any>) {
     const queueName = typeof batch.queue === 'string' ? batch.queue : '';
 
-    if (queueName.startsWith('subscribe-queue')) {
+    if (queueName === 'subscribe-queue') {
       try {
         await Promise.all(
           batch.messages.map(async (msg) => {
@@ -698,7 +698,7 @@ export default class extends WorkerEntrypoint<typeof env> {
       return;
     }
 
-    if (queueName.startsWith('send-email-queue')) {
+    if (queueName === 'send-email-queue') {
       try {
         await Promise.all(
           batch.messages.map(async (msg) => {

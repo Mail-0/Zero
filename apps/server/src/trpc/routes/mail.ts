@@ -342,9 +342,14 @@ export const mailRouter = router({
           send_email_queue,
         } = env as ExtendedEnv;
 
-        await statusKV.put(messageId, 'pending', {
-          expirationTtl: 60 * 60 * 24,
-        });
+        try {
+          await statusKV.put(messageId, 'pending', {
+            expirationTtl: 60 * 60 * 24,
+          });
+        } catch (error) {
+          console.error(`Failed to write pending status to KV for message ${messageId}`, error);
+          return { success: false, error: 'Failed to schedule email status' } as const;
+        }
 
         const mailPayload = {
           ...mail,
@@ -352,22 +357,32 @@ export const mailRouter = router({
           attachments,
         };
 
-        await payloadKV.put(
-          messageId,
-          JSON.stringify(mailPayload),
-          { expirationTtl: 60 * 60 * 24 },
-        );
+        try {
+          await payloadKV.put(
+            messageId,
+            JSON.stringify(mailPayload),
+            { expirationTtl: 60 * 60 * 24 },
+          );
+        } catch (error) {
+          console.error(`Failed to write email payload to KV for message ${messageId}`, error);
+          return { success: false, error: 'Failed to schedule email payload' } as const;
+        }
 
         if (isLongTerm) {
-          await scheduledKV.put(
-            messageId,
-            JSON.stringify({
+          try {
+            await scheduledKV.put(
               messageId,
-              connectionId: activeConnection.id,
-              sendAt: targetTime,
-            }),
-            { expirationTtl: Math.ceil(rawDelaySeconds + 3600) }, // TTL slightly longer than needed
-          );
+              JSON.stringify({
+                messageId,
+                connectionId: activeConnection.id,
+                sendAt: targetTime,
+              }),
+              { expirationTtl: Math.ceil(rawDelaySeconds + 3600) }, // TTL slightly longer than needed
+            );
+          } catch (error) {
+            console.error(`Failed to write long-term schedule to KV for message ${messageId}`, error);
+            return { success: false, error: 'Failed to schedule email (long-term)' } as const;
+          }
         } else {
           const delaySeconds = Math.max(0, rawDelaySeconds);
           const queueBody: IEmailSendBatch = {
@@ -375,7 +390,12 @@ export const mailRouter = router({
             connectionId: activeConnection.id,
             sendAt: targetTime,
           };
-          await send_email_queue.send(queueBody, { delaySeconds });
+          try {
+            await send_email_queue.send(queueBody, { delaySeconds });
+          } catch (error) {
+            console.error(`Failed to enqueue email send for message ${messageId}`, error);
+            return { success: false, error: 'Failed to enqueue email send' } as const;
+          }
         }
 
         ctx.c.executionCtx.waitUntil(afterTask());
