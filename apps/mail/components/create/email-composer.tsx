@@ -83,7 +83,7 @@ const isValidEmail = (email: string): boolean => {
 const createPasteHandler = (
   fieldName: 'to' | 'cc' | 'bcc',
   currentEmails: string[] | undefined,
-  setValue: any, // Using any type to accommodate the form's setValue function
+  setValue: UseFormSetValue<FormValues>, // Properly typed setValue from react-hook-form
   setHasUnsavedChanges: (value: boolean) => void
 ) => (e: React.ClipboardEvent<HTMLInputElement>) => {
   e.preventDefault();
