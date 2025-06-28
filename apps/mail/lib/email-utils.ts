@@ -1,5 +1,6 @@
 import * as emailAddresses from 'email-addresses';
 import type { Sender } from '@/types';
+import DOMPurify from 'dompurify';
 import Color from 'color';
 
 export const fixNonReadableColors = (rootElement: HTMLElement, minContrast = 3.5) => {
@@ -202,4 +203,20 @@ export const wasSentWithTLS = (receivedHeaders: string[]) => {
   }
 
   return false;
+};
+
+// cleans up html string for xss attacks and returns html
+export const sanitizeHtml = (html: string) => {
+  if (!html) return '<p><em>No email content available</em></p>';
+
+  if (typeof DOMPurify !== 'undefined') {
+    return DOMPurify.sanitize(html);
+  } else {
+    console.warn('DOMPurify not available, falling back to basic sanitization');
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    const scripts = tempDiv.querySelectorAll('script, iframe, object, embed, form');
+    scripts.forEach((el) => el.remove());
+    return tempDiv.innerHTML;
+  }
 };
