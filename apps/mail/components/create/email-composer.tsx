@@ -81,56 +81,79 @@ const isValidEmail = (email: string): boolean => {
 };
 
 const extractEmails = (text: string): string[] => {
-  // Handle multiple formats:
-// 1. Name <email@example.com>
-// 2. email@example.com
-// 3. Multiple emails separated by commas, semicolons, or whitespace
-
-// First try to extract email patterns like "Name <email@example.com>"
-const nameEmailPattern = /([^<]+)\s*<([^>]+)>/g;
-const nameEmailMatches = Array.from(text.matchAll(nameEmailPattern));
-
-let extractedEmails: string[] = [];
-
-if (nameEmailMatches.length > 0) {
-  // Extract all emails from name-email format
-  extractedEmails = nameEmailMatches.map(match => match[2].trim());
+  // 1. email@example.com (simple email pattern)
+  // 2. Name <email@example.com>
+  // 3. Multiple emails separated by commas, semicolons, newlines, or whitespace
   
-  // Remove the matched parts from the text to process any remaining plain emails
-  let remainingText = text;
-  nameEmailMatches.forEach(match => {
-    remainingText = remainingText.replace(match[0], '');
+  // First, split the text by newlines to handle Excel paste format
+  const lines = text.split(/[\n\r]+/);
+  let extractedEmails: string[] = [];
+  
+  // Process each line separately for better handling of Excel data
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    
+    // Check if the line contains a simple email pattern first for optimization
+    const simpleEmailPattern = /[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+    const simpleMatches = line.match(simpleEmailPattern);
+    
+    // Check if the line contains a "Name <email>" format
+    const nameEmailPattern = /([^<]+)\s*<([^>]+)>/g;
+    const nameEmailMatches = Array.from(line.matchAll(nameEmailPattern));
+    
+    if (nameEmailMatches.length > 0) {
+      // Extract emails from "Name <email>" format
+      const nameEmails = nameEmailMatches.map(match => match[2].trim());
+      extractedEmails.push(...nameEmails);
+      
+      // Remove matched parts from the line to process any remaining emails
+      let remainingText = line;
+      nameEmailMatches.forEach(match => {
+        remainingText = remainingText.replace(match[0], ' ');
+      });
+      
+      // Look for additional simple emails in the remaining text
+      const remainingMatches = remainingText.match(simpleEmailPattern);
+      if (remainingMatches) {
+        extractedEmails.push(...remainingMatches);
+      }
+    } 
+    else if (simpleMatches) {
+      // If the line contains simple emails without the "Name <email>" format
+      extractedEmails.push(...simpleMatches);
+    }
+    else {
+      // If no email patterns found, try to split by common separators
+      // This is for handling potential non-standard or partial email formats
+      const parts = line
+        .split(/[,;\s]+/)
+        .map(part => part.trim())
+        .filter(part => part.length > 0 && part.includes('@'));
+      
+      if (parts.length > 0) {
+        extractedEmails.push(...parts);
+      }
+    }
+  }
+  
+  // Filter for valid email format before deduplication
+  extractedEmails = extractedEmails.filter(email => {
+    // Basic email validation to avoid false positives
+    return /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
   });
   
-  // Process any remaining text for plain emails
-  if (remainingText.trim()) {
-    const plainEmails = remainingText
-      .split(/[,;\s]+/)
-      .map(email => email.trim())
-      .filter(email => email.length > 0);
-    
-    extractedEmails = [...extractedEmails, ...plainEmails];
+  // Deduplicate emails (comparing case-insensitively but preserving original case)
+  const uniqueEmails: string[] = [];
+  const seen = new Set<string>();
+  for (const email of extractedEmails) {
+    const normalizedEmail = email.toLowerCase();
+    if (!seen.has(normalizedEmail)) {
+      seen.add(normalizedEmail);
+      uniqueEmails.push(email);
+    }
   }
-} else {
-  // If no name-email format found, split by common separators
-  extractedEmails = text
-    .split(/[,;\s]+/)
-    .map(email => email.trim())
-    .filter(email => email.length > 0);
-}
-
-// Deduplicate emails (comparing case-insensitively but preserving original case)
-const uniqueEmails: string[] = [];
-const seen = new Set<string>();
-for (const email of extractedEmails) {
-  const normalizedEmail = email.toLowerCase();
-  if (!seen.has(normalizedEmail)) {
-    seen.add(normalizedEmail);
-    uniqueEmails.push(email);
-  }
-}
-
-return uniqueEmails;
+  
+  return uniqueEmails;
 };
 
 const schema = z.object({
