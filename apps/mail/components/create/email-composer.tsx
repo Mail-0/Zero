@@ -38,6 +38,10 @@ import { useQueryState } from 'nuqs';
 import pluralize from 'pluralize';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { TemplateSelector } from '@/components/create/selectors/template-selector';
+import { SaveTemplateDialog } from '@/components/create/save-template-dialog';
+import { TemplateManager }    from '@/components/create/template-manager';
+import type { Template }      from '@/lib/templates';
 
 type ThreadContent = {
   from: string;
@@ -123,6 +127,14 @@ export function EmailComposer({
   const [aiGeneratedMessage, setAiGeneratedMessage] = useState<string | null>(null);
   const [aiIsLoading, setAiIsLoading] = useState(false);
   const [isGeneratingSubject, setIsGeneratingSubject] = useState(false);
+  const handleTemplateSelect = (template: Template) => {
+ if (template.subject) form.setValue('subject', template.subject);
+  editor.commands.setContent(template.content);
+   toast.success(`“${template.name}” template loaded`);
+ };
+ const handleTemplateSaved = () => {
+   toast.success('Template saved');
+ };
   const [isAddingRecipients, setIsAddingRecipients] = useState(false);
   const [isAddingCcRecipients, setIsAddingCcRecipients] = useState(false);
   const [isAddingBccRecipients, setIsAddingBccRecipients] = useState(false);
@@ -1177,6 +1189,25 @@ export function EmailComposer({
       {/* Bottom Actions */}
       <div className="inline-flex w-full shrink-0 items-center justify-between self-stretch rounded-b-2xl bg-[#FFFFFF] px-3 py-3 outline-white/5 dark:bg-[#202020]">
         <div className="flex items-center justify-start gap-2">
+          <div className="flex items-center justify-start gap-2">
+        {/* ───── template controls (use / save / manage) ───── */}
+       <TemplateSelector
+         onSelectTemplate={handleTemplateSelect}
+          className="hidden md:flex"
+        />
+        <SaveTemplateDialog
+          subject={subjectInput}
+         content={editor?.getHTML() ?? ''}
+         onTemplateSaved={handleTemplateSaved}
+       />
+       <TemplateManager
+        onSelectTemplate={handleTemplateSelect}
+        trigger={
+            <Button variant="secondary" size="xs">
+               Manage
+             </Button>
+          }
+       /></div>
           <div className="flex items-center justify-start gap-2">
             <Button size={'xs'} onClick={handleSend} disabled={isLoading || settingsLoading}>
               <div className="flex items-center justify-center">
