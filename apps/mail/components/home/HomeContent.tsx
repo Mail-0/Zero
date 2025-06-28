@@ -33,12 +33,12 @@ import { PixelatedBackground, PixelatedLeft, PixelatedRight } from '@/components
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Balancer } from 'react-wrap-balancer';
-import { signIn } from '@/lib/auth-client';
+import { signIn, useSession } from '@/lib/auth-client';
 import { Navigation } from '../navigation';
 import { useTheme } from 'next-themes';
 import { use, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import Footer from './footer';
 import React from 'react';
@@ -62,6 +62,8 @@ const tabs = [
 
 export default function HomeContent() {
   const { setTheme } = useTheme();
+  const navigate = useNavigate();
+  const { data: session } = useSession();
 
   useEffect(() => {
     setTheme('dark');
@@ -118,6 +120,34 @@ export default function HomeContent() {
             </span>
             Combinator
           </Link>
+        </motion.div>
+        
+        {/* Get Started button only visible for mobile screens */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="mb-6 md:hidden"
+        >
+          <Button
+            onClick={() => {
+              if (session) {
+                navigate('/mail/inbox');
+              } else {
+                toast.promise(
+                  signIn.social({
+                    provider: 'google',
+                    callbackURL: `${window.location.origin}/mail`,
+                  }),
+                  {
+                    error: 'Login redirect failed',
+                  },
+                );
+              }
+            }}
+          >
+            Get Started
+          </Button>
         </motion.div>
       </section>
 

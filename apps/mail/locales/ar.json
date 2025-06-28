@@ -187,7 +187,8 @@
       "unsubscribeOpenSiteDescription": "للتوقف عن تلقي رسائل من هذه القائمة البريدية، انتقل إلى موقعهم الإلكتروني لإلغاء الاشتراك.",
       "cancel": "إلغاء",
       "goToWebsite": "الانتقال إلى الموقع",
-      "failedToUnsubscribe": "فشل إلغاء الاشتراك من القائمة البريدية"
+      "failedToUnsubscribe": "فشل إلغاء الاشتراك من القائمة البريدية",
+      "print": "طباعة"
     },
     "threadDisplay": {
       "exitFullscreen": "الخروج من وضع ملء الشاشة",
@@ -206,7 +207,8 @@
       "disableImages": "إخفاء الصور",
       "enableImages": "عرض الصور",
       "star": "تمييز بنجمة",
-      "unstar": "إلغاء التمييز بنجمة"
+      "unstar": "إلغاء التمييز بنجمة",
+      "printThread": "طباعة المحادثة"
     },
     "notes": {
       "title": "الملاحظات",
@@ -575,6 +577,22 @@
           "orderedList": "قائمة مرتبة",
           "viewAttachments": "عرض المرفقات",
           "attachFiles": "إرفاق ملفات"
+        }
+      },
+      "imageCompression": {
+        "title": "ضغط الصور",
+        "description": "اختر جودة الصور للمرفقات",
+        "low": {
+          "label": "منخفضة",
+          "description": "حجم ملف أصغر، مع فقدان ملحوظ في الجودة"
+        },
+        "medium": {
+          "label": "متوسطة",
+          "description": "توازن بين الحجم والجودة"
+        },
+        "original": {
+          "label": "أصلية",
+          "description": "بدون ضغط، الجودة الأصلية"
         }
       }
     }

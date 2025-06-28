@@ -187,7 +187,8 @@
       "unsubscribeOpenSiteDescription": "Bu posta listesinden ayrılmak için, abonelikten çıkmak üzere internet sitelerine gidin.",
       "cancel": "İptal",
       "goToWebsite": "İnternet sitesine git",
-      "failedToUnsubscribe": "Posta listesi aboneliğinden çıkılamadı"
+      "failedToUnsubscribe": "Posta listesi aboneliğinden çıkılamadı",
+      "print": "Yazdır"
     },
     "threadDisplay": {
       "exitFullscreen": "Tam ekrandan çık",
@@ -206,7 +207,8 @@
       "disableImages": "Görselleri Gizle",
       "enableImages": "Görselleri Göster",
       "star": "Yıldızla",
-      "unstar": "Yıldızı kaldır"
+      "unstar": "Yıldızı kaldır",
+      "printThread": "Yazışmayı yazdır"
     },
     "notes": {
       "title": "Notlar",
@@ -575,6 +577,22 @@
           "orderedList": "Sıralı liste",
           "viewAttachments": "Ekleri görüntüle",
           "attachFiles": "Dosya ekle"
+        }
+      },
+      "imageCompression": {
+        "title": "Görüntü Sıkıştırma",
+        "description": "Ekler için görüntü kalitesini seçin",
+        "low": {
+          "label": "Düşük",
+          "description": "En küçük dosya boyutu, fark edilir kalite kaybı"
+        },
+        "medium": {
+          "label": "Orta",
+          "description": "Dengeli boyut ve kalite"
+        },
+        "original": {
+          "label": "Orijinal",
+          "description": "Sıkıştırma yok, orijinal kalite"
         }
       }
     }

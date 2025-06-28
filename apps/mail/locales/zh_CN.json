@@ -187,7 +187,8 @@
       "unsubscribeOpenSiteDescription": "要停止接收来自此邮件列表的消息，请访问他们的网站取消订阅。",
       "cancel": "取消",
       "goToWebsite": "访问网站",
-      "failedToUnsubscribe": "取消订阅邮件列表失败"
+      "failedToUnsubscribe": "取消订阅邮件列表失败",
+      "print": "打印"
     },
     "threadDisplay": {
       "exitFullscreen": "退出全屏",
@@ -206,7 +207,8 @@
       "disableImages": "隐藏图片",
       "enableImages": "显示图片",
       "star": "标记为星标",
-      "unstar": "取消星标"
+      "unstar": "取消星标",
+      "printThread": "打印线程"
     },
     "notes": {
       "title": "笔记",
@@ -575,6 +577,22 @@
           "orderedList": "有序列表",
           "viewAttachments": "查看附件",
           "attachFiles": "附加文件"
+        }
+      },
+      "imageCompression": {
+        "title": "图片压缩",
+        "description": "为附件选择图片质量",
+        "low": {
+          "label": "低",
+          "description": "最小文件大小，质量有明显损失"
+        },
+        "medium": {
+          "label": "中",
+          "description": "文件大小与质量的平衡"
+        },
+        "original": {
+          "label": "原始",
+          "description": "无压缩，原始质量"
         }
       }
     }

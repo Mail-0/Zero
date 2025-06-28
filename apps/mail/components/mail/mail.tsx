@@ -833,7 +833,7 @@ export const Categories = () => {
   const categories = categorySettings.map((cat) => {
     const base = {
       id: cat.id,
-      name: cat.name || t(`common.mailCategories.${cat.id.toLowerCase().replace(' ', '')}` as any),
+      name:  t(`common.mailCategories.${cat.id.split(' ').map((w, i) => i === 0 ? w.toLowerCase() : w).join('')}` as any) || cat.name,
       searchValue: cat.searchValue,
     } as const;
 

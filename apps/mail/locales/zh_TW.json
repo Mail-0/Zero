@@ -187,7 +187,8 @@
       "unsubscribeOpenSiteDescription": "若要停止接收此郵件列表的訊息，請前往他們的網站取消訂閱。",
       "cancel": "取消",
       "goToWebsite": "前往網站",
-      "failedToUnsubscribe": "無法取消訂閱郵件列表"
+      "failedToUnsubscribe": "無法取消訂閱郵件列表",
+      "print": "列印"
     },
     "threadDisplay": {
       "exitFullscreen": "退出全螢幕",
@@ -206,7 +207,8 @@
       "disableImages": "隱藏圖片",
       "enableImages": "顯示圖片",
       "star": "加星標記",
-      "unstar": "取消星標記"
+      "unstar": "取消星標記",
+      "printThread": "列印討論串"
     },
     "notes": {
       "title": "筆記",
@@ -575,6 +577,22 @@
           "orderedList": "編號清單",
           "viewAttachments": "檢視附件",
           "attachFiles": "附加檔案"
+        }
+      },
+      "imageCompression": {
+        "title": "圖片壓縮",
+        "description": "選擇附件的圖片品質",
+        "low": {
+          "label": "低",
+          "description": "最小的檔案大小，明顯的品質損失"
+        },
+        "medium": {
+          "label": "中",
+          "description": "檔案大小與品質的平衡"
+        },
+        "original": {
+          "label": "原始",
+          "description": "無壓縮，原始品質"
         }
       }
     }

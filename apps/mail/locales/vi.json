@@ -187,7 +187,8 @@
       "unsubscribeOpenSiteDescription": "Để ngừng nhận tin nhắn từ danh sách gửi thư này, hãy truy cập trang web của họ để hủy đăng ký.",
       "cancel": "Hủy",
       "goToWebsite": "Đi đến trang web",
-      "failedToUnsubscribe": "Không thể hủy đăng ký khỏi danh sách gửi thư"
+      "failedToUnsubscribe": "Không thể hủy đăng ký khỏi danh sách gửi thư",
+      "print": "In"
     },
     "threadDisplay": {
       "exitFullscreen": "Thoát chế độ toàn màn hình",
@@ -206,7 +207,8 @@
       "disableImages": "Ẩn hình ảnh",
       "enableImages": "Hiển thị hình ảnh",
       "star": "Đánh dấu sao",
-      "unstar": "Bỏ đánh dấu sao"
+      "unstar": "Bỏ đánh dấu sao",
+      "printThread": "In chuỗi thư"
     },
     "notes": {
       "title": "Ghi chú",
@@ -575,6 +577,22 @@
           "orderedList": "Danh sách có thứ tự",
           "viewAttachments": "Xem tệp đính kèm",
           "attachFiles": "Đính kèm tệp"
+        }
+      },
+      "imageCompression": {
+        "title": "Nén ảnh",
+        "description": "Chọn chất lượng ảnh cho tệp đính kèm",
+        "low": {
+          "label": "Thấp",
+          "description": "Kích thước tệp nhỏ nhất, chất lượng giảm đáng kể"
+        },
+        "medium": {
+          "label": "Trung bình",
+          "description": "Cân bằng giữa kích thước và chất lượng"
+        },
+        "original": {
+          "label": "Nguyên bản",
+          "description": "Không nén, chất lượng gốc"
         }
       }
     }

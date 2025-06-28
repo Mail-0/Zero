@@ -127,7 +127,7 @@ export function Navigation() {
                     Company
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-1 lg:w-[600px]">
+                    <ul className="grid w-[300px] gap-3 p-4 md:w-[300px] md:grid-cols-1 lg:w-[400px]">
                       {aboutLinks.map((link) => (
                         <ListItem key={link.title} title={link.title} href={link.href}>
                           {link.description}
@@ -236,26 +236,6 @@ export function Navigation() {
                   />
                 </Link>
               </SheetTitle>
-              <Button
-                onClick={() => {
-                  if (session) {
-                    navigate('/mail/inbox');
-                  } else {
-                    toast.promise(
-                      signIn.social({
-                        provider: 'google',
-                        callbackURL: `${window.location.origin}/mail`,
-                      }),
-                      {
-                        error: 'Login redirect failed',
-                      },
-                    );
-                  }
-                }}
-                className="w-full"
-              >
-                Get Started
-              </Button>
             </SheetHeader>
             <div className="mt-8 flex flex-col space-y-3">
               <div className="flex flex-col space-y-3">

@@ -187,7 +187,8 @@
       "unsubscribeOpenSiteDescription": "このメーリングリストからのメッセージの取得を停止するには、解除するために彼らのウェブサイトに行きます。",
       "cancel": "キャンセル",
       "goToWebsite": "ウェブサイトへ移動",
-      "failedToUnsubscribe": "メーリングリストの登録解除に失敗しました"
+      "failedToUnsubscribe": "メーリングリストの登録解除に失敗しました",
+      "print": "印刷"
     },
     "threadDisplay": {
       "exitFullscreen": "フルスクリーン表示を終了",
@@ -206,7 +207,8 @@
       "disableImages": "画像を非表示",
       "enableImages": "画像を表示",
       "star": "スターを付ける",
-      "unstar": "スターを外す"
+      "unstar": "スターを外す",
+      "printThread": "スレッドを印刷"
     },
     "notes": {
       "title": "メモ",
@@ -575,6 +577,22 @@
           "orderedList": "番号付きリスト",
           "viewAttachments": "添付ファイルを表示",
           "attachFiles": "ファイルを添付"
+        }
+      },
+      "imageCompression": {
+        "title": "画像圧縮",
+        "description": "添付ファイルの画質を選択",
+        "low": {
+          "label": "低",
+          "description": "ファイルサイズ最小、目立つ画質劣化"
+        },
+        "medium": {
+          "label": "中",
+          "description": "サイズと品質のバランス"
+        },
+        "original": {
+          "label": "オリジナル",
+          "description": "圧縮なし、元の品質"
         }
       }
     }
