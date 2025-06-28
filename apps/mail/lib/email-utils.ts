@@ -209,14 +209,37 @@ export const wasSentWithTLS = (receivedHeaders: string[]) => {
 export const cleanHtml = (html: string) => {
   if (!html) return '<p><em>No email content available</em></p>';
 
-  if (typeof DOMPurify !== 'undefined') {
+  if (typeof DOMPurify !== 'undefined' && DOMPurify.sanitize) {
     return DOMPurify.sanitize(html);
   } else {
     console.warn('DOMPurify not available, falling back to basic sanitization');
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = html;
-    const scripts = tempDiv.querySelectorAll('script, iframe, object, embed, form');
+
+    const scripts = tempDiv.querySelectorAll(
+      'script, iframe, object, embed, form, link[rel="stylesheet"], style',
+    );
+
+    // removes dangerous elements
     scripts.forEach((el) => el.remove());
+
+    //removes dangerous attributes
+    tempDiv.querySelectorAll('*').forEach((el) => {
+      Array.from(el.attributes).forEach((attr) => {
+        const attrName = attr.name.toLowerCase();
+        const attrValue = attr.value.toLowerCase();
+
+        if (
+          attrName.startsWith('on') ||
+          attrValue.includes('javascript:') ||
+          attrValue.includes('data:') ||
+          attrValue.includes('vbscript:')
+        ) {
+          el.removeAttribute(attr.name);
+        }
+      });
+    });
+
     return tempDiv.innerHTML;
   }
 };
