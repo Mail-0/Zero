@@ -76,8 +76,9 @@ export function EmailAddressMenu({
         onClick={handleEmailClick}
         className="cursor-pointer text-black dark:text-white outline-none focus:outline-none"
       >
-        <span onDoubleClick={handleDoubleClick} className="cursor-pointer">
+        <button type="button" onDoubleClick={handleDoubleClick} className="cursor-pointer bg-transparent border-0 p-0 text-inherit">
           {email}
+        </button>
         </span>
       </DropdownMenuTrigger>
       <DropdownMenuContent 
