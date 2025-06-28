@@ -73,7 +73,7 @@ export function EmailAddressMenu({
   // Update dropdown menu behavior to improve interaction
   useEffect(() => {
     if (isOpen) {
-      console.log("Dropdown opened");
+      console.log('Dropdown opened');
     }
   }, [isOpen]);
 
