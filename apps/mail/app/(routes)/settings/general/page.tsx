@@ -234,7 +234,7 @@ export default function GeneralPage() {
                         {m['pages.settings.general.defaultEmailAlias']()}{' '}
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <InfoIcon className="h-4 w-4" />
+                            <InfoIcon className="h-[1em] w-[1em]" />
                           </TooltipTrigger>
                           <TooltipContent>
                             {m['pages.settings.general.defaultEmailDescription']()}
