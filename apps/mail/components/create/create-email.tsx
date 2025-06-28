@@ -18,6 +18,7 @@ import { X } from '../icons/icons';
 import posthog from 'posthog-js';
 import { toast } from 'sonner';
 import './prosemirror.css';
+import type { Attachment } from '@/types';
 
 // Define the draft type to include CC and BCC fields
 type DraftType = {
@@ -30,18 +31,6 @@ type DraftType = {
   attachments?: File[]
 };
 
-// Define the attachment type
-type Attachment = {
-  attachmentId: string;
-  body: string; // base64 encoded content
-  filename: string;
-  mimeType: string;
-  size: number;
-  headers: {
-    name: string;
-    value: string;
-  }[];
-};
 
 
 // Define the connection type
@@ -168,19 +157,24 @@ export function CreateEmail({
     }
   };
 
-  const base64ToFile = (base64: string, filename: string, mimeType: string): File => {
-    const byteString = atob(base64);
-    const byteArray = new Uint8Array(byteString.length);
-    for (let i = 0; i < byteString.length; i++) {
-      byteArray[i] = byteString.charCodeAt(i);
+  const base64ToFile = (base64: string, filename: string, mimeType: string): File | null => {
+    try {
+      const byteString = atob(base64);
+      const byteArray = new Uint8Array(byteString.length);
+      for (let i = 0; i < byteString.length; i++) {
+        byteArray[i] = byteString.charCodeAt(i);
+      }
+      return new File([byteArray], filename, { type: mimeType });
+    } catch (error) {
+      console.error('Failed to convert base64 to file', error)
+      return null;
     }
-    return new File([byteArray], filename, { type: mimeType });
   }
 
   // convert the attachments into File[]
-  const files: File[] = ((typedDraft?.attachments as Attachment[] | undefined) || []).map((att: Attachment) => 
-    base64ToFile(att.body, att.filename, att.mimeType)
-  );
+  const files: File[] = ((typedDraft?.attachments as Attachment[] | undefined) || [])
+  .map((att: Attachment) => base64ToFile(att.body, att.filename, att.mimeType))
+  .filter((file): file is File => file !== null);
 
 
   return (

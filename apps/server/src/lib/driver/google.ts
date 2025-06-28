@@ -1124,11 +1124,12 @@ export class GoogleMailManager implements MailManager {
         .filter(Boolean) || [];
 
     const subject = headers.find((h) => h.name === 'Subject')?.value;
+   
     const cc =
-      headers.find((h) => h.name === 'Cc')?.value?.split(',').map((e) => e.trim()) || [];
+      draft.message.payload?.headers?.find((h) => h.name === 'Cc')?.value?.split(',') || [];
     const bcc =
-      headers.find((h) => h.name === 'Bcc')?.value?.split(',').map((e) => e.trim()) || [];
-
+      draft.message.payload?.headers?.find((h) => h.name === 'Bcc')?.value?.split(',') || [];
+      
     const payload = draft.message.payload;
     let content = '';
     let attachments: {
