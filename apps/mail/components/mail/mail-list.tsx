@@ -14,6 +14,7 @@ import {
   Trash,
   PencilCompose,
 } from '../icons/icons';
+import { StickyNote } from 'lucide-react';
 import {
   memo,
   useCallback,
@@ -56,6 +57,7 @@ import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Categories } from './mail';
 import { useAtom } from 'jotai';
+import { useThreadNotes } from '@/hooks/use-notes';
 
 const Thread = memo(
   function Thread({
@@ -98,6 +100,12 @@ const Thread = memo(
     const { data: settingsData } = useSettings();
     const queryClient = useQueryClient();
 
+    // Check if thread has notes
+    const { data: threadNotes } = useThreadNotes(idToUse || '');
+    const hasNotes = useMemo(() => {
+      return (threadNotes?.notes && threadNotes.notes.length > 0) || false;
+    }, [threadNotes?.notes]);
+
     const optimisticState = useOptimisticThreadState(idToUse ?? '');
 
     const displayStarred = useMemo(() => {
@@ -124,19 +132,35 @@ const Thread = memo(
     const optimisticLabels = useMemo(() => {
       if (!getThreadData?.labels) return [];
 
-      const labels = [...getThreadData.labels];
+      let labels = [...getThreadData.labels];
       const hasStarredLabel = labels.some((label) => label.name === 'STARRED');
 
       if (optimisticState.optimisticStarred !== null) {
         if (optimisticState.optimisticStarred && !hasStarredLabel) {
           labels.push({ id: 'starred-optimistic', name: 'STARRED' });
         } else if (!optimisticState.optimisticStarred && hasStarredLabel) {
-          return labels.filter((label) => label.name !== 'STARRED');
+          labels = labels.filter((label) => label.name !== 'STARRED');
         }
       }
 
+      if (optimisticState.optimisticLabels) {
+        labels = labels.filter(
+          (label) => !optimisticState.optimisticLabels.removedLabelIds.includes(label.id),
+        );
+
+        optimisticState.optimisticLabels.addedLabelIds.forEach((labelId) => {
+          if (!labels.some((label) => label.id === labelId)) {
+            labels.push({ id: labelId, name: labelId });
+          }
+        });
+      }
+
       return labels;
-    }, [getThreadData?.labels, optimisticState.optimisticStarred]);
+    }, [
+      getThreadData?.labels,
+      optimisticState.optimisticStarred,
+      optimisticState.optimisticLabels,
+    ]);
 
     const { optimisticToggleStar, optimisticToggleImportant, optimisticMoveThreadsTo } =
       useOptimisticActions();
@@ -216,7 +240,7 @@ const Thread = memo(
     }, [latestMessage?.body, latestMessage?.sender?.email, settingsData?.settings, queryClient]);
 
     const { labels: threadLabels } = useThreadLabels(
-      getThreadData?.labels ? getThreadData.labels.map((l) => l.id) : [],
+      optimisticLabels ? optimisticLabels.map((l) => l.id) : [],
     );
 
     const mainSearchTerm = useMemo(() => {
@@ -515,6 +539,11 @@ const Thread = memo(
                           <TooltipContent className="p-1 text-xs">Draft</TooltipContent>
                         </Tooltip>
                       ) : null}
+                      {hasNotes ? (
+                        <span className="inline-flex items-center">
+                          <StickyNote className="h-3 w-3 fill-amber-500 stroke-amber-500 dark:fill-amber-400 dark:stroke-amber-400" />
+                        </span>
+                      ) : null}
                       <MailLabels labels={optimisticLabels} />
                     </div>
                     {latestMessage.receivedOn ? (
@@ -671,6 +700,15 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
                     </span>
                   </span>
                 </div>
+                {draft.rawMessage?.internalDate && (  
+                <p 
+                  className={cn(
+                    'text-muted-foreground text-nowrap text-xs font-normal opacity-70 transition-opacity group-hover:opacity-100 dark:text-[#8C8C8C]',
+                  )}
+                >
+                  {formatDate(Number(draft.rawMessage?.internalDate))}
+                </p>
+                )}
               </div>
               <div className="flex justify-between">
                 <p

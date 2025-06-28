@@ -41,6 +41,7 @@ import { z } from 'zod';
 import { ImageCompressionSettings } from './image-compression-settings';
 import { compressImages } from '@/lib/image-compression';
 import type { ImageQuality } from '@/lib/image-compression';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 type ThreadContent = {
   from: string;
@@ -106,6 +107,7 @@ export function EmailComposer({
   replyingTo,
   editorClassName,
 }: EmailComposerProps) {
+  const isMobile = useIsMobile();
   const { data: aliases } = useEmailAliases();
   const { data: settings } = useSettings();
   const [showCc, setShowCc] = useState(initialCc.length > 0);
@@ -134,6 +136,7 @@ export function EmailComposer({
   const bccWrapperRef = useRef<HTMLDivElement>(null);
   const { data: activeConnection } = useActiveConnection();
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
+  const [showAttachmentWarning, setShowAttachmentWarning] = useState(false);
   const [originalAttachments, setOriginalAttachments] = useState<File[]>(initialAttachments);
   const [imageQuality, setImageQuality] = useState<ImageQuality>(
     settings?.settings?.imageCompression || 'medium',
@@ -225,6 +228,14 @@ export function EmailComposer({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  const attachmentKeywords = [
+    'attachment',
+    'attached',
+    'attaching',
+    'see the file',
+    'see the files',
+  ];
 
   const trpc = useTRPC();
   const { mutateAsync: aiCompose } = useMutation(trpc.ai.compose.mutationOptions());
@@ -427,7 +438,7 @@ export function EmailComposer({
     return () => document.removeEventListener('keydown', handleKeyDown, true);
   }, [editor, draftId]);
 
-  const handleSend = async () => {
+  const proceedWithSend = async () => {
     try {
       if (isLoading || isSavingDraft) return;
 
@@ -461,6 +472,22 @@ export function EmailComposer({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSend = async () => {
+    const values = getValues();
+    const messageText = editor.getText().toLowerCase();
+    const hasAttachmentKeywords = attachmentKeywords.some((keyword) => {
+      const regex = new RegExp(`\\b${keyword.replace(/\s+/g, '\\s+')}\\b`, 'i');
+      return regex.test(messageText);
+    });
+
+    if (hasAttachmentKeywords && (!values.attachments || values.attachments.length === 0)) {
+      setShowAttachmentWarning(true);
+      return;
+    }
+
+    await proceedWithSend();
   };
 
   const threadContent: ThreadContent = useMemo(() => {
@@ -869,7 +896,7 @@ export function EmailComposer({
               >
                 <span>Bcc</span>
               </button>
-              {onClose && (
+              {onClose && isMobile && (
                 <button
                   tabIndex={-1}
                   className="flex h-full items-center gap-2 text-sm font-medium text-[#8C8C8C] hover:text-[#A8A8A8]"
@@ -1501,6 +1528,36 @@ export function EmailComposer({
             </Button>
             <Button variant="destructive" onClick={confirmLeave}>
               Leave
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showAttachmentWarning} onOpenChange={setShowAttachmentWarning}>
+        <DialogContent showOverlay className="z-[99999] sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Attachment Warning</DialogTitle>
+            <DialogDescription>
+              Looks like you mentioned an attachment in your message, but there are no files attached.
+              Are you sure you want to send this email?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowAttachmentWarning(false);
+              }}
+            >
+              Recheck
+            </Button>
+            <Button
+              onClick={() => {
+                setShowAttachmentWarning(false);
+                void proceedWithSend();
+              }}
+            >
+              Send Anyway
             </Button>
           </DialogFooter>
         </DialogContent>

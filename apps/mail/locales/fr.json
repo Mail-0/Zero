@@ -187,7 +187,8 @@
       "unsubscribeOpenSiteDescription": "Pour ne plus recevoir de messages de cette liste de diffusion, allez sur leur site Web pour vous désabonner.",
       "cancel": "Annuler",
       "goToWebsite": "Accéder au site",
-      "failedToUnsubscribe": "Échec de la désinscription à la liste de diffusion"
+      "failedToUnsubscribe": "Échec de la désinscription à la liste de diffusion",
+      "print": "Imprimer"
     },
     "threadDisplay": {
       "exitFullscreen": "Quitter le mode plein écran",
@@ -206,7 +207,8 @@
       "disableImages": "Masquer les images",
       "enableImages": "Afficher les images",
       "star": "Marquer d'une étoile",
-      "unstar": "Retirer l'étoile"
+      "unstar": "Retirer l'étoile",
+      "printThread": "Imprimer la conversation"
     },
     "notes": {
       "title": "Notes",
@@ -575,6 +577,22 @@
           "orderedList": "Liste numérotée",
           "viewAttachments": "Voir les pièces jointes",
           "attachFiles": "Joindre des fichiers"
+        }
+      },
+      "imageCompression": {
+        "title": "Compression d'image",
+        "description": "Choisir la qualité d'image pour les pièces jointes",
+        "low": {
+          "label": "Faible",
+          "description": "Taille de fichier minimale, perte de qualité visible"
+        },
+        "medium": {
+          "label": "Moyenne",
+          "description": "Équilibre entre taille et qualité"
+        },
+        "original": {
+          "label": "Originale",
+          "description": "Aucune compression, qualité originale"
         }
       }
     }

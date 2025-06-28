@@ -27,8 +27,6 @@ import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { type ThreadDestination } from '@/lib/thread-actions';
 import { useThread, useThreads } from '@/hooks/use-threads';
 import { ExclamationCircle, Mail } from '../icons/icons';
-import { useTRPC } from '@/providers/query-provider';
-import { useMutation } from '@tanstack/react-query';
 import { useMemo, type ReactNode } from 'react';
 import { useLabels } from '@/hooks/use-labels';
 import { FOLDERS, LABELS } from '@/lib/utils';
@@ -59,52 +57,69 @@ interface EmailContextMenuProps {
   refreshCallback?: () => void;
 }
 
-const LabelsList = ({ threadId }: { threadId: string }) => {
+const LabelsList = ({ threadId, bulkSelected }: { threadId: string; bulkSelected: string[] }) => {
   const { data: labels } = useLabels();
-  const { data: thread, refetch } = useThread(threadId);
-  const t = useTranslations();
-  const trpc = useTRPC();
-  const { mutateAsync: modifyLabels } = useMutation(trpc.mail.modifyLabels.mutationOptions());
+  const { optimisticToggleLabel } = useOptimisticActions();
+  const targetThreadIds = bulkSelected.length > 0 ? bulkSelected : [threadId];
+
+  const { data: thread } = useThread(threadId);
+  const rightClickedThreadOptimisticState = useOptimisticThreadState(threadId);
 
   if (!labels || !thread) return null;
 
   const handleToggleLabel = async (labelId: string) => {
     if (!labelId) return;
-    const hasLabel = thread.labels?.map((label) => label.id).includes(labelId);
-    const promise = modifyLabels({
-      threadId: [threadId],
-      addLabels: hasLabel ? [] : [labelId],
-      removeLabels: hasLabel ? [labelId] : [],
-    });
-    toast.promise(promise, {
-      error: hasLabel ? 'Failed to remove label' : 'Failed to add label',
-      finally: async () => {
-        await refetch();
-      },
-    });
+
+    let shouldAddLabel = false;
+
+    let hasLabel = thread.labels?.map((label) => label.id).includes(labelId) || false;
+
+    if (rightClickedThreadOptimisticState.optimisticLabels) {
+      if (rightClickedThreadOptimisticState.optimisticLabels.addedLabelIds.includes(labelId)) {
+        hasLabel = true;
+      } else if (
+        rightClickedThreadOptimisticState.optimisticLabels.removedLabelIds.includes(labelId)
+      ) {
+        hasLabel = false;
+      }
+    }
+
+    shouldAddLabel = !hasLabel;
+
+    optimisticToggleLabel(targetThreadIds, labelId, shouldAddLabel);
   };
 
   return (
     <>
       {labels
         .filter((label) => label.id)
-        .map((label) => (
-          <ContextMenuItem
-            key={label.id}
-            onClick={() => label.id && handleToggleLabel(label.id)}
-            className="font-normal"
-          >
-            <div className="flex items-center">
-              <Checkbox
-                checked={
-                  label.id ? thread.labels?.map((label) => label.id).includes(label.id) : false
-                }
-                className="mr-2 h-4 w-4"
-              />
-              {label.name}
-            </div>
-          </ContextMenuItem>
-        ))}
+        .map((label) => {
+          let isChecked = label.id ? thread.labels?.map((l) => l.id).includes(label.id) : false;
+
+          const checkboxOptimisticState = useOptimisticThreadState(threadId);
+          if (label.id && checkboxOptimisticState.optimisticLabels) {
+            if (checkboxOptimisticState.optimisticLabels.addedLabelIds.includes(label.id)) {
+              isChecked = true;
+            } else if (
+              checkboxOptimisticState.optimisticLabels.removedLabelIds.includes(label.id)
+            ) {
+              isChecked = false;
+            }
+          }
+
+          return (
+            <ContextMenuItem
+              key={label.id}
+              onClick={() => label.id && handleToggleLabel(label.id)}
+              className="font-normal"
+            >
+              <div className="flex items-center">
+                <Checkbox checked={isChecked} className="mr-2 h-4 w-4" />
+                {label.name}
+              </div>
+            </ContextMenuItem>
+          );
+        })}
     </>
   );
 };
@@ -410,7 +425,7 @@ export function ThreadContextMenu({
     {
       id: 'toggle-important',
       label: isImportant ? t('common.mail.removeFromImportant') : t('common.mail.markAsImportant'),
-      icon: <ExclamationCircle className='mr-2.5 h-4 w-4 opacity-60' />,
+      icon: <ExclamationCircle className="mr-2.5 h-4 w-4 opacity-60" />,
       action: handleToggleImportant,
     },
     {
@@ -446,7 +461,7 @@ export function ThreadContextMenu({
         {children}
       </ContextMenuTrigger>
       <ContextMenuContent
-        className="dark:bg-panelDark w-56 overflow-y-auto bg-white "
+        className="dark:bg-panelDark w-56 overflow-y-auto bg-white"
         onContextMenu={(e) => e.preventDefault()}
       >
         {primaryActions.map(renderAction)}
@@ -459,7 +474,7 @@ export function ThreadContextMenu({
             {t('common.mail.labels')}
           </ContextMenuSubTrigger>
           <ContextMenuSubContent className="dark:bg-panelDark max-h-[520px] w-48 overflow-y-auto bg-white">
-            <LabelsList threadId={threadId} />
+            <LabelsList threadId={threadId} bulkSelected={mail.bulkSelected} />
           </ContextMenuSubContent>
         </ContextMenuSub>
 

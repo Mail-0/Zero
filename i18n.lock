@@ -170,6 +170,7 @@ checksums:
     common/mailDisplay/cancel: 2e2a849c2223911717de8caa2c71bade
     common/mailDisplay/goToWebsite: 4a606fcd69b644552771f4ecb9454065
     common/mailDisplay/failedToUnsubscribe: b6c4eafb9b32021163988213d80c7deb
+    common/mailDisplay/print: 96b471223326706b965b5f5c36675935
     common/threadDisplay/exitFullscreen: 910de8c8ec56a0b09328c471d76ea301
     common/threadDisplay/enterFullscreen: f7e424edfd72ea623565c2cef45b5ccb
     common/threadDisplay/archive: fa813ab3074103e5daad07462af25789
@@ -187,6 +188,7 @@ checksums:
     common/threadDisplay/enableImages: b9e8dc2ce5380180886b89cbe9d51508
     common/threadDisplay/star: 0586c1c76e8a0367c0a7b93adf598cb7
     common/threadDisplay/unstar: f3f96945ed198343b3641ae902af454e
+    common/threadDisplay/printThread: 3398c39f3f12a05c2338ab77a2feaf32
     common/notes/title: 93c7ef9bc767f51fbe360afcf6b1fecb
     common/notes/empty: fa2d823fe4c9adb5df5c5c725ccc3815
     common/notes/emptyDescription: 344e82cfef3fcad6fb4461324874a662
@@ -499,6 +501,14 @@ checksums:
     pages/createEmail/editor/menuBar/orderedList: fb2995db78e8fd28b74f8b7e52969c7e
     pages/createEmail/editor/menuBar/viewAttachments: d3750ecafb12686d72305e51a239451c
     pages/createEmail/editor/menuBar/attachFiles: f618d751abb8f97c634df1b19bf52b10
+    pages/createEmail/imageCompression/title: 958063ff8c4d3b6f485a258fd9f2a0fe
+    pages/createEmail/imageCompression/description: e33a2430b45b8dec586362365d638c4e
+    pages/createEmail/imageCompression/low/label: 97359f18d6648e0980854c5e68bb0969
+    pages/createEmail/imageCompression/low/description: e4517ba7a36e205a94d28e12e18379fd
+    pages/createEmail/imageCompression/medium/label: 43983f2178fb28aacaef6c5f41282c4a
+    pages/createEmail/imageCompression/medium/description: fdeca6d179e1f87c059296ec72985d91
+    pages/createEmail/imageCompression/original/label: 7e55782bdf7cb49f5616b326c003c278
+    pages/createEmail/imageCompression/original/description: 1cb2ca29cc6051f042017e7fc460c722
     errorMessages/required_scopes_missing: 5c38faec359df462e422e2178da18852
     errorMessages/early_access_required: 177c31769f58822fd05ac5363b0a560c
     errorMessages/unauthorized: 1fc10fbde54ddc7a8e5989f16f84a86f

@@ -308,7 +308,7 @@ export function NavUser() {
                       </a>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                      <a href="https://discord.gg/0email" target="_blank" className="w-full">
+                      <a href="https://discord.gg/mail0" target="_blank" className="w-full">
                         <div className="flex items-center gap-2">
                           <HelpCircle size={16} className="opacity-60" />
                           <p className="text-[13px] opacity-60">
@@ -526,7 +526,7 @@ export function NavUser() {
                       </div>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                      <a href="https://discord.gg/0email" target="_blank" className="w-full">
+                      <a href="https://discord.gg/mail0" target="_blank" className="w-full">
                         <div className="flex items-center gap-2">
                           <HelpCircle size={16} className="opacity-60" />
                           <p className="text-[13px] opacity-60">
@@ -573,29 +573,30 @@ export function NavUser() {
           </div>
         )}
       </div>
-
+      
       {state !== 'collapsed' && (
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-2 mt-2">
           <div className="mt-[2px] flex flex-col items-start gap-1 space-y-1">
             <div className="flex items-center gap-1 text-[13px] leading-none text-black dark:text-white">
-              <p className={cn('truncate text-[13px]', isPro ? 'max-w-[14.5ch]' : 'max-w-[8.5ch]')}>
+              <p className={cn('truncate text-[13px] max-w-[14.5ch]')}>
                 {activeAccount?.name || session.user.name || 'User'}
               </p>
               {isPro ? (
                 <BadgeCheck className="h-4 w-4 text-white dark:text-[#141414]" fill="#1D9BF0" />
-              ) : (
-                <button
+              ) : null}
+            </div>
+            <div className="h-5 max-w-[200px] overflow-hidden truncate text-xs font-normal leading-none text-[#898989]">
+              {activeAccount?.email || session.user.email}
+            </div>
+            {!isPro && (
+            <button
                   onClick={() => setPricingDialog('true')}
                   className="flex h-5 items-center gap-1 rounded-full border px-1 pr-1.5 hover:bg-transparent"
                 >
                   <BadgeCheck className="h-4 w-4 text-white dark:text-[#141414]" fill="#1D9BF0" />
                   <span className="text-muted-foreground text-[10px] uppercase">Get verified</span>
                 </button>
-              )}
-            </div>
-            <div className="h-5 max-w-[200px] overflow-hidden truncate text-xs font-normal leading-none text-[#898989]">
-              {activeAccount?.email || session.user.email}
-            </div>
+           )}
           </div>
 
           <div className="ml-2">{/* Gauge component removed */}</div>

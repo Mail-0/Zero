@@ -1483,7 +1483,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 ref={triggerRef}
                               >
                                 <p className="text-muted-foreground text-xs underline dark:text-[#8C8C8C]">
-                                  Details
+                                  {t('common.mailDisplay.details')}
                                 </p>
                               </button>
                             </PopoverTrigger>
@@ -1633,7 +1633,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 }}
                               >
                                 <Printer className="fill-iconLight dark:fill-iconDark mr-2 h-4 w-4" />
-                                Print
+                                {t('common.mailDisplay.print')}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 disabled={!emailData.attachments?.length}
@@ -1656,7 +1656,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                       <div className="flex justify-between">
                         <div className="flex gap-1">
                           <p className="text-muted-foreground text-sm font-medium dark:text-[#8C8C8C]">
-                            To:{' '}
+                            {t('common.mailDisplay.to')}:{' '}
                             {(() => {
                               // Combine to and cc recipients
                               const allRecipients = [

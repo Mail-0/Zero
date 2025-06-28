@@ -887,7 +887,7 @@ export function ThreadDisplay() {
                   <Reply className="fill-muted-foreground dark:fill-[#9B9B9B]" />
                   <div className="flex items-center justify-center gap-2.5 pl-0.5 pr-1">
                     <div className="justify-start text-sm leading-none text-black dark:text-white">
-                      Reply All
+                      {t('common.threadDisplay.replyAll')}
                     </div>
                   </div>
                 </button>
@@ -981,7 +981,7 @@ export function ThreadDisplay() {
                           }}
                         >
                           <Printer className="fill-iconLight dark:fill-iconDark mr-2 h-4 w-4" />
-                          <span>Print thread</span>
+                          <span>{t('common.threadDisplay.printThread')}</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => moveThreadTo('spam')}>
                           <ArchiveX className="fill-iconLight dark:fill-iconDark mr-2" />
@@ -991,7 +991,7 @@ export function ThreadDisplay() {
                         emailData.latest?.listUnsubscribePost ? (
                           <DropdownMenuItem onClick={handleUnsubscribeProcess}>
                             <Folders className="fill-iconLight dark:fill-iconDark mr-2" />
-                            <span>Unsubscribe</span>
+                            <span>{t('common.mailDisplay.unsubscribe')}</span>
                           </DropdownMenuItem>
                         ) : null}
                       </>
