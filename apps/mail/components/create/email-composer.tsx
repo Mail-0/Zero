@@ -80,6 +80,59 @@ const isValidEmail = (email: string): boolean => {
   return emailRegex.test(email);
 };
 
+const extractEmails = (text: string): string[] => {
+  // Handle multiple formats:
+// 1. Name <email@example.com>
+// 2. email@example.com
+// 3. Multiple emails separated by commas, semicolons, or whitespace
+
+// First try to extract email patterns like "Name <email@example.com>"
+const nameEmailPattern = /([^<]+)\s*<([^>]+)>/g;
+const nameEmailMatches = Array.from(text.matchAll(nameEmailPattern));
+
+let extractedEmails: string[] = [];
+
+if (nameEmailMatches.length > 0) {
+  // Extract all emails from name-email format
+  extractedEmails = nameEmailMatches.map(match => match[2].trim());
+  
+  // Remove the matched parts from the text to process any remaining plain emails
+  let remainingText = text;
+  nameEmailMatches.forEach(match => {
+    remainingText = remainingText.replace(match[0], '');
+  });
+  
+  // Process any remaining text for plain emails
+  if (remainingText.trim()) {
+    const plainEmails = remainingText
+      .split(/[,;\s]+/)
+      .map(email => email.trim())
+      .filter(email => email.length > 0);
+    
+    extractedEmails = [...extractedEmails, ...plainEmails];
+  }
+} else {
+  // If no name-email format found, split by common separators
+  extractedEmails = text
+    .split(/[,;\s]+/)
+    .map(email => email.trim())
+    .filter(email => email.length > 0);
+}
+
+// Deduplicate emails (comparing case-insensitively but preserving original case)
+const uniqueEmails: string[] = [];
+const seen = new Set<string>();
+for (const email of extractedEmails) {
+  const normalizedEmail = email.toLowerCase();
+  if (!seen.has(normalizedEmail)) {
+    seen.add(normalizedEmail);
+    uniqueEmails.push(email);
+  }
+}
+
+return uniqueEmails;
+};
+
 const schema = z.object({
   to: z.array(z.string().email()).min(1),
   subject: z.string().min(1),
@@ -745,10 +798,7 @@ export function EmailComposer({
                     onPaste={(e) => {
                       e.preventDefault();
                       const pastedText = e.clipboardData.getData('text');
-                      const emails = pastedText
-                        .split(/[,;\s]+/)
-                        .map((email) => email.trim())
-                        .filter((email) => email.length > 0);
+                      const emails = extractEmails(pastedText);
 
                       const validEmails: string[] = [];
                       const invalidEmails: string[] = [];
@@ -776,7 +826,11 @@ export function EmailComposer({
 
                       if (invalidEmails.length > 0) {
                         toast.error(
-                          `Invalid email ${invalidEmails.length === 1 ? 'address' : 'addresses'}: ${invalidEmails.join(', ')}`,
+                          `Invalid email ${invalidEmails.length === 1 ? 'address' : 'addresses'}: ${
+                            invalidEmails.length > 3 
+                              ? `${invalidEmails.slice(0, 3).join(', ')} and ${invalidEmails.length - 3} more` 
+                              : invalidEmails.join(', ')
+                          }`,
                         );
                       }
                     }}
@@ -956,40 +1010,43 @@ export function EmailComposer({
                       ref={ccInputRef}
                       className="h-6 flex-1 bg-transparent text-sm font-normal leading-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white"
                       placeholder="Enter email"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                          e.preventDefault();
-                          if (isValidEmail(e.currentTarget.value.trim())) {
-                            if (ccEmails?.includes(e.currentTarget.value.trim())) {
-                              toast.error('This email is already in the list');
-                            } else {
-                              setValue('cc', [...(ccEmails || []), e.currentTarget.value.trim()]);
-                              e.currentTarget.value = '';
-                              setHasUnsavedChanges(true);
+                      onPaste={(e) => {
+                        e.preventDefault();
+                        const pastedText = e.clipboardData.getData('text');
+                        const emails = extractEmails(pastedText);
+
+                        const validEmails: string[] = [];
+                        const invalidEmails: string[] = [];
+
+                        emails.forEach((email) => {
+                          if (isValidEmail(email)) {
+                            const emailLower = email.toLowerCase();
+                            if (!ccEmails?.some((e) => e.toLowerCase() === emailLower)) {
+                              validEmails.push(email);
                             }
                           } else {
-                            toast.error('Please enter a valid email address');
+                            invalidEmails.push(email);
                           }
-                        } else if (e.key === ' ' && e.currentTarget.value.trim()) {
-                          e.preventDefault();
-                          if (isValidEmail(e.currentTarget.value.trim())) {
-                            if (ccEmails?.includes(e.currentTarget.value.trim())) {
-                              toast.error('This email is already in the list');
-                            } else {
-                              setValue('cc', [...(ccEmails || []), e.currentTarget.value.trim()]);
-                              e.currentTarget.value = '';
-                              setHasUnsavedChanges(true);
-                            }
-                          } else {
-                            toast.error('Please enter a valid email address');
-                          }
-                        } else if (
-                          e.key === 'Backspace' &&
-                          !e.currentTarget.value &&
-                          ccEmails?.length
-                        ) {
-                          setValue('cc', ccEmails.slice(0, -1));
+                        });
+
+                        if (validEmails.length > 0) {
+                          setValue('cc', [...(ccEmails || []), ...validEmails]);
                           setHasUnsavedChanges(true);
+                          if (validEmails.length === 1) {
+                            toast.success('Email address added');
+                          } else {
+                            toast.success(`${validEmails.length} email addresses added`);
+                          }
+                        }
+
+                        if (invalidEmails.length > 0) {
+                          toast.error(
+                            `Invalid email ${invalidEmails.length === 1 ? 'address' : 'addresses'}: ${
+                              invalidEmails.length > 3 
+                                ? `${invalidEmails.slice(0, 3).join(', ')} and ${invalidEmails.length - 3} more` 
+                                : invalidEmails.join(', ')
+                            }`,
+                          );
                         }
                       }}
                       onFocus={() => {
@@ -1102,40 +1159,43 @@ export function EmailComposer({
                       ref={bccInputRef}
                       className="h-6 flex-1 bg-transparent text-sm font-normal leading-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white"
                       placeholder="Enter email"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                          e.preventDefault();
-                          if (isValidEmail(e.currentTarget.value.trim())) {
-                            if (bccEmails?.includes(e.currentTarget.value.trim())) {
-                              toast.error('This email is already in the list');
-                            } else {
-                              setValue('bcc', [...(bccEmails || []), e.currentTarget.value.trim()]);
-                              e.currentTarget.value = '';
-                              setHasUnsavedChanges(true);
+                      onPaste={(e) => {
+                        e.preventDefault();
+                        const pastedText = e.clipboardData.getData('text');
+                        const emails = extractEmails(pastedText);
+
+                        const validEmails: string[] = [];
+                        const invalidEmails: string[] = [];
+
+                        emails.forEach((email) => {
+                          if (isValidEmail(email)) {
+                            const emailLower = email.toLowerCase();
+                            if (!bccEmails?.some((e) => e.toLowerCase() === emailLower)) {
+                              validEmails.push(email);
                             }
                           } else {
-                            toast.error('Please enter a valid email address');
+                            invalidEmails.push(email);
                           }
-                        } else if (e.key === ' ' && e.currentTarget.value.trim()) {
-                          e.preventDefault();
-                          if (isValidEmail(e.currentTarget.value.trim())) {
-                            if (bccEmails?.includes(e.currentTarget.value.trim())) {
-                              toast.error('This email is already in the list');
-                            } else {
-                              setValue('bcc', [...(bccEmails || []), e.currentTarget.value.trim()]);
-                              e.currentTarget.value = '';
-                              setHasUnsavedChanges(true);
-                            }
-                          } else {
-                            toast.error('Please enter a valid email address');
-                          }
-                        } else if (
-                          e.key === 'Backspace' &&
-                          !e.currentTarget.value &&
-                          bccEmails?.length
-                        ) {
-                          setValue('bcc', bccEmails.slice(0, -1));
+                        });
+
+                        if (validEmails.length > 0) {
+                          setValue('bcc', [...(bccEmails || []), ...validEmails]);
                           setHasUnsavedChanges(true);
+                          if (validEmails.length === 1) {
+                            toast.success('Email address added');
+                          } else {
+                            toast.success(`${validEmails.length} email addresses added`);
+                          }
+                        }
+
+                        if (invalidEmails.length > 0) {
+                          toast.error(
+                            `Invalid email ${invalidEmails.length === 1 ? 'address' : 'addresses'}: ${
+                              invalidEmails.length > 3 
+                                ? `${invalidEmails.slice(0, 3).join(', ')} and ${invalidEmails.length - 3} more` 
+                                : invalidEmails.join(', ')
+                            }`,
+                          );
                         }
                       }}
                       onFocus={() => {
