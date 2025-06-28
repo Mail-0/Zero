@@ -42,6 +42,8 @@ import { ImageCompressionSettings } from './image-compression-settings';
 import { compressImages } from '@/lib/image-compression';
 import type { ImageQuality } from '@/lib/image-compression';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { EmailAddressMenu } from './email-address-menu';
+import { useClipboard } from '../../hooks/use-copy-to-clipboard';
 
 type ThreadContent = {
   from: string;
@@ -141,6 +143,8 @@ export function EmailComposer({
   const [imageQuality, setImageQuality] = useState<ImageQuality>(
     settings?.settings?.imageCompression || 'medium',
   );
+  const { copy } = useClipboard();
+  const [editingEmail, setEditingEmail] = useState<{index: number, field: 'to' | 'cc' | 'bcc', value: string} | null>(null);
 
   const processAndSetAttachments = async (
     filesToProcess: File[],
@@ -686,6 +690,69 @@ export function EmailComposer({
     await processAndSetAttachments(originalAttachments, newQuality, true);
   };
 
+  const handleCopyEmail = (email: string) => {
+    copy(email);
+    toast.success('Email address copied to clipboard');
+  };
+
+  const handleEditEmail = (email: string, index: number, field: 'to' | 'cc' | 'bcc') => {
+    setEditingEmail({index, field, value: email});
+  };
+
+  const handleSaveEditedEmail = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!editingEmail) return;
+    
+    if (e.key === 'Enter' && editingEmail.value.trim()) {
+      e.preventDefault();
+      
+      if (isValidEmail(editingEmail.value.trim())) {
+        const { field, index } = editingEmail;
+        const currentEmails = form.getValues(field) || [];
+        const updatedEmails = [...currentEmails];
+        updatedEmails[index] = editingEmail.value.trim();
+        form.setValue(field, updatedEmails);
+        setEditingEmail(null);
+        setHasUnsavedChanges(true);
+      } else {
+        toast.error('Please enter a valid email address');
+      }
+    } else if (e.key === 'Escape') {
+      setEditingEmail(null);
+    }
+  };
+  
+  const handleEditBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (!editingEmail) return;
+    
+    // Check if the new focus target is within the same component
+    // to prevent losing edit mode when clicking within the input
+    const isClickInsideComponent = e.currentTarget.contains(e.relatedTarget as Node);
+    if (isClickInsideComponent) {
+      // If clicking inside the component, don't exit edit mode
+      e.currentTarget.focus();
+      return;
+    }
+    
+    if (editingEmail.value.trim()) {
+      if (isValidEmail(editingEmail.value.trim())) {
+        const { field, index } = editingEmail;
+        const currentEmails = form.getValues(field) || [];
+        const updatedEmails = [...currentEmails];
+        updatedEmails[index] = editingEmail.value.trim();
+        form.setValue(field, updatedEmails);
+        setHasUnsavedChanges(true);
+      } else {
+        toast.error('Please enter a valid email address');
+      }
+    }
+    
+    setEditingEmail(null);
+  };
+  
+  const handleEditMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
   return (
     <div
       className={cn(
@@ -710,20 +777,44 @@ export function EmailComposer({
             >
               <p className="text-sm font-medium text-[#8C8C8C]">To:</p>
               {isAddingRecipients || toEmails.length === 0 ? (
-                <div ref={toWrapperRef} className="flex flex-wrap items-center gap-2">
+                <div ref={toWrapperRef} className="flex flex-wrap items-center gap-2 z-10">
                   {toEmails.map((email, index) => (
                     <div
                       key={index}
                       className="flex items-center gap-1 rounded-full border px-1 py-0.5 pr-2"
                     >
-                      <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
-                        <Avatar className="h-5 w-5">
-                          <AvatarFallback className="bg-offsetLight text-muted-foreground dark:bg-muted rounded-full text-xs font-bold dark:text-[#9B9B9B]">
-                            {email.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        {email}
-                      </span>
+                      {editingEmail && editingEmail.field === 'to' && editingEmail.index === index ? (
+                        <input
+                          autoFocus
+                          className="w-full bg-transparent text-sm focus:outline-none z-20"
+                          value={editingEmail.value}
+                          onChange={(e) => setEditingEmail({...editingEmail, value: e.target.value})}
+                          onKeyDown={handleSaveEditedEmail}
+                          onBlur={handleEditBlur}
+                          onMouseDown={handleEditMouseDown}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      ) : (
+                        <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
+                          <Avatar className="h-5 w-5">
+                            <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
+                              {email.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <EmailAddressMenu 
+                            email={email}
+                            onCopy={handleCopyEmail}
+                            onEdit={(emailToEdit) => handleEditEmail(emailToEdit, index, 'to')}
+                            onRemove={() => {
+                              setValue(
+                                'to',
+                                toEmails.filter((_, i) => i !== index),
+                              );
+                              setHasUnsavedChanges(true);
+                            }}
+                          />
+                        </span>
+                      )}
                       <button
                         onClick={() => {
                           setValue(
@@ -848,14 +939,38 @@ export function EmailComposer({
                           key={index}
                           className="flex items-center gap-1 rounded-full border px-1 py-0.5 pr-2"
                         >
-                          <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
-                            <Avatar className="h-5 w-5">
-                              <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
-                                {email.charAt(0).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            {email}
-                          </span>
+                          {editingEmail && editingEmail.field === 'to' && editingEmail.index === index ? (
+                            <input
+                              autoFocus
+                              className="w-full bg-transparent text-sm focus:outline-none z-20"
+                              value={editingEmail.value}
+                              onChange={(e) => setEditingEmail({...editingEmail, value: e.target.value})}
+                              onKeyDown={handleSaveEditedEmail}
+                              onBlur={handleEditBlur}
+                              onMouseDown={handleEditMouseDown}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          ) : (
+                            <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
+                              <Avatar className="h-5 w-5">
+                                <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
+                                  {email.charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <EmailAddressMenu 
+                                email={email}
+                                onCopy={handleCopyEmail}
+                                onEdit={(emailToEdit) => handleEditEmail(emailToEdit, index, 'to')}
+                                onRemove={() => {
+                                  setValue(
+                                    'to',
+                                    toEmails.filter((_, i) => i !== index),
+                                  );
+                                  setHasUnsavedChanges(true);
+                                }}
+                              />
+                            </span>
+                          )}
                           <button
                             onClick={() => {
                               setValue(
@@ -930,14 +1045,38 @@ export function EmailComposer({
                         key={index}
                         className="flex items-center gap-1 rounded-full border px-2 py-0.5"
                       >
-                        <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
-                          <Avatar className="h-5 w-5">
-                            <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
-                              {email.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          {email}
-                        </span>
+                        {editingEmail && editingEmail.field === 'cc' && editingEmail.index === index ? (
+                          <input
+                            autoFocus
+                            className="w-full bg-transparent text-sm focus:outline-none z-20"
+                            value={editingEmail.value}
+                            onChange={(e) => setEditingEmail({...editingEmail, value: e.target.value})}
+                            onKeyDown={handleSaveEditedEmail}
+                            onBlur={handleEditBlur}
+                            onMouseDown={handleEditMouseDown}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
+                            <Avatar className="h-5 w-5">
+                              <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
+                                {email.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <EmailAddressMenu 
+                              email={email}
+                              onCopy={handleCopyEmail}
+                              onEdit={(emailToEdit) => handleEditEmail(emailToEdit, index, 'cc')}
+                              onRemove={() => {
+                                setValue(
+                                  'cc',
+                                  ccEmails.filter((_, i) => i !== index),
+                                );
+                                setHasUnsavedChanges(true);
+                              }}
+                            />
+                          </span>
+                        )}
                         <button
                           onClick={() => {
                             setValue(
@@ -1021,14 +1160,38 @@ export function EmailComposer({
                             key={index}
                             className="flex items-center gap-1 rounded-full border px-1 py-0.5 pr-2"
                           >
-                            <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
-                              <Avatar className="h-5 w-5">
-                                <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
-                                  {email.charAt(0).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              {email}
-                            </span>
+                            {editingEmail && editingEmail.field === 'cc' && editingEmail.index === index ? (
+                              <input
+                                autoFocus
+                                className="w-full bg-transparent text-sm focus:outline-none z-20"
+                                value={editingEmail.value}
+                                onChange={(e) => setEditingEmail({...editingEmail, value: e.target.value})}
+                                onKeyDown={handleSaveEditedEmail}
+                                onBlur={handleEditBlur}
+                                onMouseDown={handleEditMouseDown}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            ) : (
+                              <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
+                                <Avatar className="h-5 w-5">
+                                  <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
+                                    {email.charAt(0).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <EmailAddressMenu 
+                                  email={email}
+                                  onCopy={handleCopyEmail}
+                                  onEdit={(emailToEdit) => handleEditEmail(emailToEdit, index, 'cc')}
+                                  onRemove={() => {
+                                    setValue(
+                                      'cc',
+                                      ccEmails.filter((_, i) => i !== index),
+                                    );
+                                    setHasUnsavedChanges(true);
+                                  }}
+                                />
+                              </span>
+                            )}
                             <button
                               onClick={() => {
                                 setValue(
@@ -1076,14 +1239,38 @@ export function EmailComposer({
                         key={index}
                         className="flex items-center gap-1 rounded-full border px-2 py-0.5"
                       >
-                        <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
-                          <Avatar className="h-5 w-5">
-                            <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
-                              {email.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          {email}
-                        </span>
+                        {editingEmail && editingEmail.field === 'bcc' && editingEmail.index === index ? (
+                          <input
+                            autoFocus
+                            className="w-full bg-transparent text-sm focus:outline-none z-20"
+                            value={editingEmail.value}
+                            onChange={(e) => setEditingEmail({...editingEmail, value: e.target.value})}
+                            onKeyDown={handleSaveEditedEmail}
+                            onBlur={handleEditBlur}
+                            onMouseDown={handleEditMouseDown}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
+                            <Avatar className="h-5 w-5">
+                              <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
+                                {email.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <EmailAddressMenu 
+                              email={email}
+                              onCopy={handleCopyEmail}
+                              onEdit={(emailToEdit) => handleEditEmail(emailToEdit, index, 'bcc')}
+                              onRemove={() => {
+                                setValue(
+                                  'bcc',
+                                  bccEmails.filter((_, i) => i !== index),
+                                );
+                                setHasUnsavedChanges(true);
+                              }}
+                            />
+                          </span>
+                        )}
                         <button
                           onClick={() => {
                             setValue(
@@ -1167,14 +1354,38 @@ export function EmailComposer({
                             key={index}
                             className="flex items-center gap-1 rounded-full border px-1 py-0.5 pr-2"
                           >
-                            <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
-                              <Avatar className="h-5 w-5">
-                                <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
-                                  {email.charAt(0).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              {email}
-                            </span>
+                            {editingEmail && editingEmail.field === 'bcc' && editingEmail.index === index ? (
+                              <input
+                                autoFocus
+                                className="w-full bg-transparent text-sm focus:outline-none z-20"
+                                value={editingEmail.value}
+                                onChange={(e) => setEditingEmail({...editingEmail, value: e.target.value})}
+                                onKeyDown={handleSaveEditedEmail}
+                                onBlur={handleEditBlur}
+                                onMouseDown={handleEditMouseDown}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            ) : (
+                              <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
+                                <Avatar className="h-5 w-5">
+                                  <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
+                                    {email.charAt(0).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <EmailAddressMenu 
+                                  email={email}
+                                  onCopy={handleCopyEmail}
+                                  onEdit={(emailToEdit) => handleEditEmail(emailToEdit, index, 'bcc')}
+                                  onRemove={() => {
+                                    setValue(
+                                      'bcc',
+                                      bccEmails.filter((_, i) => i !== index),
+                                    );
+                                    setHasUnsavedChanges(true);
+                                  }}
+                                />
+                              </span>
+                            )}
                             <button
                               onClick={() => {
                                 setValue(
