@@ -1,0 +1,48 @@
+name: Feature Request
+description: Suggest a new feature or enhancement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to suggest a feature! Please provide as much detail as possible to help us understand and evaluate your request.
+
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Feature Description
+      description: A clear and concise description of the feature or enhancement you are requesting.
+      placeholder: I would like to see a feature that allows users to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Please explain how this feature would be useful to you or others. Real-world scenarios are helpful.
+      placeholder: |
+        This feature would be helpful because...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: If you have a suggestion on how this could be implemented, let us know.
+      placeholder: |
+        One way to implement this could be...
+
+  - type: input
+    id: related-issues
+    attributes:
+      label: Related Issues or Discussions
+      description: If this feature request is related to an existing issue or discussion, please link it here.
+      placeholder: e.g., Related to #123
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        By submitting this feature request, you agree to follow our [Code of Conduct](../CODE_OF_CONDUCT.md).
