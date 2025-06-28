@@ -7,6 +7,7 @@ import {
   jsonb,
   primaryKey,
   unique,
+  uuid,
 } from 'drizzle-orm/pg-core';
 import { defaultUserSettings } from '../lib/schemas';
 
@@ -211,14 +212,21 @@ export const oauthConsent = createTable('oauth_consent', {
   consentGiven: boolean('consent_given'),
 });
 
-export const mail0_templates = createTable('templates', {
-  id: text('id').primaryKey(),
-  userId: text('user_id')
-    .notNull()
-    .references(() => user.id, { onDelete: 'cascade' }),
-  name: text('name').notNull(),
-  subject: text('subject'),
-  content: text('content').notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
+export const mail0_templates = createTable(
+  'templates',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    subject: text('subject'),
+    content: text('content').notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.userId, t.name)],
+);
+
+export type Template = typeof mail0_templates.$inferSelect;
+export type NewTemplate = typeof mail0_templates.$inferInsert;
