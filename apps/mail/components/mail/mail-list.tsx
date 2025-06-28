@@ -295,7 +295,6 @@ const Thread = memo(
         <div
           className={cn(
             'select-none border-b md:my-1 md:border-none',
-            displayUnread ? '' : 'opacity-60',
           )}
           onClick={onClick ? onClick(latestMessage) : undefined}
           onMouseEnter={() => {
@@ -419,7 +418,7 @@ const Thread = memo(
               ) : null}
             </div>
 
-            <div className="relative flex w-full items-center justify-between gap-4 px-4">
+            <div className={`relative flex w-full items-center justify-between gap-4 px-4 ${displayUnread ? '' : 'opacity-60'}`}>
               <div>
                 <Avatar
                   className={cn(
