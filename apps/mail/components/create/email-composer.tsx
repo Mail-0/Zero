@@ -726,12 +726,14 @@ export function EmailComposer({
     
     // Check if the new focus target is within the same component
     // to prevent losing edit mode when clicking within the input
-    const isClickInsideComponent = e.currentTarget.contains(e.relatedTarget as Node);
+
+    const isClickInsideComponent = emailChipRef.current?.contains(e.relatedTarget as Node);
     if (isClickInsideComponent) {
       // If clicking inside the component, don't exit edit mode
       e.currentTarget.focus();
       return;
     }
+
     
     if (editingEmail.value.trim()) {
       if (isValidEmail(editingEmail.value.trim())) {
