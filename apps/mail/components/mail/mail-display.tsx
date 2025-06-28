@@ -56,7 +56,7 @@ import { useQueryState } from 'nuqs';
 import { Badge } from '../ui/badge';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { sanitizeHtml } from '@/lib/email-utils';
+import { cleanHtml } from '@/lib/email-utils';
 
 
 // HTML escaping function to prevent XSS attacks
@@ -1210,7 +1210,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             <!-- Email Body -->
             <div class="email-body">
               <div class="email-content">
-                ${sanitizeHtml(emailData.decodedBody ?? '<p><em>No email content available</em></p>' ) }
+                ${cleanHtml(emailData.decodedBody ?? '<p><em>No email content available</em></p>' ) }
               </div>
             </div>
 

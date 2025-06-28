@@ -206,7 +206,7 @@ export const wasSentWithTLS = (receivedHeaders: string[]) => {
 };
 
 // cleans up html string for xss attacks and returns html
-export const sanitizeHtml = (html: string) => {
+export const cleanHtml = (html: string) => {
   if (!html) return '<p><em>No email content available</em></p>';
 
   if (typeof DOMPurify !== 'undefined') {

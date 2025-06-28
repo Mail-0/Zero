@@ -38,7 +38,7 @@ import type { ParsedMessage, Attachment } from '@/types';
 import { MailDisplaySkeleton } from './mail-skeleton';
 import { useTRPC } from '@/providers/query-provider';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { sanitizeHtml } from '@/lib/email-utils';
+import { cleanHtml } from '@/lib/email-utils';
 import { Button } from '@/components/ui/button';
 import { useStats } from '@/hooks/use-stats';
 import ReplyCompose from './reply-composer';
@@ -611,7 +611,7 @@ export function ThreadDisplay() {
 
               <div class="email-body">
                 <div class="email-content">
-                  ${sanitizeHtml(message.decodedBody ?? '<p><em>No email content available</em></p>')}
+                  ${cleanHtml(message.decodedBody ?? '<p><em>No email content available</em></p>')}
                 </div>
               </div>
 
