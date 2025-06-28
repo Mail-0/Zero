@@ -80,6 +80,62 @@ const isValidEmail = (email: string): boolean => {
   return emailRegex.test(email);
 };
 
+const createPasteHandler = (
+  fieldName: 'to' | 'cc' | 'bcc',
+  currentEmails: string[] | undefined,
+  setValue: any, // Using any type to accommodate the form's setValue function
+  setHasUnsavedChanges: (value: boolean) => void
+) => (e: React.ClipboardEvent<HTMLInputElement>) => {
+  e.preventDefault();
+  const pastedText = e.clipboardData.getData('text');
+  const emails = extractEmails(pastedText);
+
+  const validEmails: string[] = [];
+  const invalidEmails: string[] = [];
+  
+  // Only check for duplicates within the current field
+  const currentEmailsLower = (currentEmails || []).map(e => e.toLowerCase());
+  
+  emails.forEach((email) => {
+    if (isValidEmail(email)) {
+      const emailLower = email.toLowerCase();
+      if (!currentEmailsLower.includes(emailLower)) {
+        validEmails.push(email);
+      }
+    } else {
+      invalidEmails.push(email);
+    }
+  });
+  
+  const duplicatesCount = emails.length - invalidEmails.length - validEmails.length;
+  
+  if (validEmails.length > 0) {
+    setValue(fieldName, [...(currentEmails || []), ...validEmails]);
+    setHasUnsavedChanges(true);
+    if (validEmails.length === 1) {
+      toast.success('Email address added');
+    } else {
+      toast.success(`${validEmails.length} email addresses added`);
+    }
+  }
+  
+  if (duplicatesCount > 0) {
+    toast.info(
+      `${duplicatesCount} duplicate ${duplicatesCount === 1 ? 'email was' : 'emails were'} skipped`
+    );
+  }
+
+  if (invalidEmails.length > 0) {
+    toast.error(
+      `Invalid email ${invalidEmails.length === 1 ? 'address' : 'addresses'}: ${
+        invalidEmails.length > 3 
+          ? `${invalidEmails.slice(0, 3).join(', ')} and ${invalidEmails.length - 3} more` 
+          : invalidEmails.join(', ')
+      }`,
+    );
+  }
+};
+
 const extractEmails = (text: string): string[] => {
   // 1. email@example.com (simple email pattern)
   // 2. Name <email@example.com>
@@ -818,45 +874,12 @@ export function EmailComposer({
                     ref={toInputRef}
                     className="h-6 flex-1 bg-transparent text-sm font-normal leading-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white"
                     placeholder="Enter email"
-                    onPaste={(e) => {
-                      e.preventDefault();
-                      const pastedText = e.clipboardData.getData('text');
-                      const emails = extractEmails(pastedText);
-
-                      const validEmails: string[] = [];
-                      const invalidEmails: string[] = [];
-
-                      emails.forEach((email) => {
-                        if (isValidEmail(email)) {
-                          const emailLower = email.toLowerCase();
-                          if (!toEmails.some((e) => e.toLowerCase() === emailLower)) {
-                            validEmails.push(email);
-                          }
-                        } else {
-                          invalidEmails.push(email);
-                        }
-                      });
-
-                      if (validEmails.length > 0) {
-                        setValue('to', [...toEmails, ...validEmails]);
-                        setHasUnsavedChanges(true);
-                        if (validEmails.length === 1) {
-                          toast.success('Email address added');
-                        } else {
-                          toast.success(`${validEmails.length} email addresses added`);
-                        }
-                      }
-
-                      if (invalidEmails.length > 0) {
-                        toast.error(
-                          `Invalid email ${invalidEmails.length === 1 ? 'address' : 'addresses'}: ${
-                            invalidEmails.length > 3 
-                              ? `${invalidEmails.slice(0, 3).join(', ')} and ${invalidEmails.length - 3} more` 
-                              : invalidEmails.join(', ')
-                          }`,
-                        );
-                      }
-                    }}
+                    onPaste={createPasteHandler(
+                      'to',
+                      toEmails,
+                      setValue,
+                      setHasUnsavedChanges
+                    )}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && e.currentTarget.value.trim()) {
                         e.preventDefault();
@@ -1033,45 +1056,12 @@ export function EmailComposer({
                       ref={ccInputRef}
                       className="h-6 flex-1 bg-transparent text-sm font-normal leading-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white"
                       placeholder="Enter email"
-                      onPaste={(e) => {
-                        e.preventDefault();
-                        const pastedText = e.clipboardData.getData('text');
-                        const emails = extractEmails(pastedText);
-
-                        const validEmails: string[] = [];
-                        const invalidEmails: string[] = [];
-
-                        emails.forEach((email) => {
-                          if (isValidEmail(email)) {
-                            const emailLower = email.toLowerCase();
-                            if (!ccEmails?.some((e) => e.toLowerCase() === emailLower)) {
-                              validEmails.push(email);
-                            }
-                          } else {
-                            invalidEmails.push(email);
-                          }
-                        });
-
-                        if (validEmails.length > 0) {
-                          setValue('cc', [...(ccEmails || []), ...validEmails]);
-                          setHasUnsavedChanges(true);
-                          if (validEmails.length === 1) {
-                            toast.success('Email address added');
-                          } else {
-                            toast.success(`${validEmails.length} email addresses added`);
-                          }
-                        }
-
-                        if (invalidEmails.length > 0) {
-                          toast.error(
-                            `Invalid email ${invalidEmails.length === 1 ? 'address' : 'addresses'}: ${
-                              invalidEmails.length > 3 
-                                ? `${invalidEmails.slice(0, 3).join(', ')} and ${invalidEmails.length - 3} more` 
-                                : invalidEmails.join(', ')
-                            }`,
-                          );
-                        }
-                      }}
+                      onPaste={createPasteHandler(
+                        'cc',
+                        ccEmails,
+                        setValue,
+                        setHasUnsavedChanges
+                      )}
                       onFocus={() => {
                         setIsAddingCcRecipients(true);
                       }}
@@ -1182,45 +1172,12 @@ export function EmailComposer({
                       ref={bccInputRef}
                       className="h-6 flex-1 bg-transparent text-sm font-normal leading-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white"
                       placeholder="Enter email"
-                      onPaste={(e) => {
-                        e.preventDefault();
-                        const pastedText = e.clipboardData.getData('text');
-                        const emails = extractEmails(pastedText);
-
-                        const validEmails: string[] = [];
-                        const invalidEmails: string[] = [];
-
-                        emails.forEach((email) => {
-                          if (isValidEmail(email)) {
-                            const emailLower = email.toLowerCase();
-                            if (!bccEmails?.some((e) => e.toLowerCase() === emailLower)) {
-                              validEmails.push(email);
-                            }
-                          } else {
-                            invalidEmails.push(email);
-                          }
-                        });
-
-                        if (validEmails.length > 0) {
-                          setValue('bcc', [...(bccEmails || []), ...validEmails]);
-                          setHasUnsavedChanges(true);
-                          if (validEmails.length === 1) {
-                            toast.success('Email address added');
-                          } else {
-                            toast.success(`${validEmails.length} email addresses added`);
-                          }
-                        }
-
-                        if (invalidEmails.length > 0) {
-                          toast.error(
-                            `Invalid email ${invalidEmails.length === 1 ? 'address' : 'addresses'}: ${
-                              invalidEmails.length > 3 
-                                ? `${invalidEmails.slice(0, 3).join(', ')} and ${invalidEmails.length - 3} more` 
-                                : invalidEmails.join(', ')
-                            }`,
-                          );
-                        }
-                      }}
+                      onPaste={createPasteHandler(
+                        'bcc',
+                        bccEmails,
+                        setValue,
+                        setHasUnsavedChanges
+                      )}
                       onFocus={() => {
                         setIsAddingBccRecipients(true);
                       }}
