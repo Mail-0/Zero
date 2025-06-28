@@ -43,24 +43,6 @@ import { cors } from 'hono/cors';
 import { Hono } from 'hono';
 import { toAttachmentFiles } from './lib/attachments';
 
-type KVNamespaceLike = {
-  get: (key: string) => Promise<string | null>;
-  put: (key: string, value: string, options?: { expirationTtl?: number }) => Promise<void>;
-  delete: (key: string) => Promise<void>;
-  list: (options?: { prefix?: string }) => Promise<{ keys: { name: string }[] }>;
-};
-
-type QueueLike<T> = {
-  send: (body: T, options?: { delaySeconds?: number }) => Promise<void>;
-};
-
-type ExtendedEnv = typeof env & {
-  pending_emails_status: KVNamespaceLike;
-  pending_emails_payload: KVNamespaceLike;
-  scheduled_emails: KVNamespaceLike;
-  send_email_queue: QueueLike<IEmailSendBatch>;
-};
-
 export class DbRpcDO extends RpcTarget {
   constructor(
     private mainDo: ZeroDB,
@@ -707,7 +689,7 @@ export default class extends WorkerEntrypoint<typeof env> {
             const {
               pending_emails_status: statusKV,
               pending_emails_payload: payloadKV,
-            } = env as ExtendedEnv;
+            } = env;
 
             const status = await statusKV.get(messageId);
             if (status === 'cancelled') {
@@ -766,7 +748,7 @@ export default class extends WorkerEntrypoint<typeof env> {
 
   private async processScheduledEmails() {
     console.log('Checking for scheduled emails ready to be queued...');
-    const { scheduled_emails: scheduledKV, send_email_queue } = env as ExtendedEnv;
+    const { scheduled_emails: scheduledKV, send_email_queue } = env;
     
     try {
       const allScheduled = await scheduledKV.list();

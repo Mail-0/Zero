@@ -9,22 +9,6 @@ import { env } from 'cloudflare:workers';
 import { z } from 'zod';
 import { toAttachmentFiles } from '../../lib/attachments';
 
-type KVNamespaceLike = {
-  get: (key: string) => Promise<string | null>;
-  put: (key: string, value: string, options?: { expirationTtl?: number }) => Promise<void>;
-  delete: (key: string) => Promise<void>;
-};
-
-type QueueLike<T> = {
-  send: (body: T, options?: { delaySeconds?: number }) => Promise<void>;
-};
-
-type ExtendedEnv = typeof env & {
-  pending_emails_status: KVNamespaceLike;
-  pending_emails_payload: KVNamespaceLike;
-  scheduled_emails: KVNamespaceLike;
-  send_email_queue: QueueLike<IEmailSendBatch>;
-};
 
 const senderSchema = z.object({
   name: z.string().optional(),
@@ -350,7 +334,7 @@ export const mailRouter = router({
     .mutation(async ({ ctx, input }) => {
 
       const { activeConnection, sessionUser } = ctx;
-      const agent = getZeroAgent(activeConnection.id);
+      const agent = await getZeroAgent(activeConnection.id);
 
       const {
         draftId,
@@ -387,7 +371,7 @@ export const mailRouter = router({
           pending_emails_payload: payloadKV,
           scheduled_emails: scheduledKV,
           send_email_queue,
-        } = env as ExtendedEnv;
+        } = env 
 
         try {
           await statusKV.put(messageId, 'pending', {
@@ -478,7 +462,7 @@ export const mailRouter = router({
         pending_emails_status: statusKV, 
         pending_emails_payload: payloadKV,
         scheduled_emails: scheduledKV,
-      } = env as ExtendedEnv;
+      } = env;
 
       await statusKV.put(messageId, 'cancelled', {
         expirationTtl: 60 * 60,
