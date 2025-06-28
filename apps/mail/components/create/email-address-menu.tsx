@@ -45,7 +45,6 @@ export function EmailAddressMenu({
   const handleEditAction = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    console.log('Editing email directly:', email);
     setIsOpen(false);
     onEdit(email);
   };
@@ -69,13 +68,6 @@ export function EmailAddressMenu({
     e.stopPropagation();
     setIsOpen(true);
   };
-
-  // Update dropdown menu behavior to improve interaction
-  useEffect(() => {
-    if (isOpen) {
-      console.log('Dropdown opened');
-    }
-  }, [isOpen]);
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen} modal={false}>

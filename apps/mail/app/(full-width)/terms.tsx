@@ -17,7 +17,7 @@ export default function TermsOfService() {
 
   const handleCopyLink = (sectionId: string) => {
     const url = `${window.location.origin}${window.location.pathname}#${sectionId}`;
-    copyToClipboard(url, sectionId);
+    copyToClipboard(url, sectionId, 'link');
   };
 
   return (

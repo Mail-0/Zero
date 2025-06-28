@@ -43,7 +43,7 @@ import { compressImages } from '@/lib/image-compression';
 import type { ImageQuality } from '@/lib/image-compression';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { EmailAddressMenu } from './email-address-menu';
-import { useClipboard } from '../../hooks/use-copy-to-clipboard';
+import { useCopyToClipboard } from '../../hooks/use-copy-to-clipboard';
 
 type ThreadContent = {
   from: string;
@@ -122,6 +122,7 @@ export function EmailComposer({
   const toInputRef = useRef<HTMLInputElement>(null);
   const ccInputRef = useRef<HTMLInputElement>(null);
   const bccInputRef = useRef<HTMLInputElement>(null);
+  const emailChipRef = useRef<HTMLDivElement>(null);
   const [threadId] = useQueryState('threadId');
   const [mode] = useQueryState('mode');
   const [isComposeOpen, setIsComposeOpen] = useQueryState('isComposeOpen');
@@ -143,7 +144,7 @@ export function EmailComposer({
   const [imageQuality, setImageQuality] = useState<ImageQuality>(
     settings?.settings?.imageCompression || 'medium',
   );
-  const { copy } = useClipboard();
+  const { copyToClipboard } = useCopyToClipboard();
   const [editingEmail, setEditingEmail] = useState<{index: number, field: 'to' | 'cc' | 'bcc', value: string} | null>(null);
 
   const processAndSetAttachments = async (
@@ -690,9 +691,8 @@ export function EmailComposer({
     await processAndSetAttachments(originalAttachments, newQuality, true);
   };
 
-  const handleCopyEmail = (email: string) => {
-    copy(email);
-    toast.success('Email address copied to clipboard');
+  const handleCopyEmail = async (email: string) => {
+    await copyToClipboard(email, email, 'email');
   };
 
   const handleEditEmail = (email: string, index: number, field: 'to' | 'cc' | 'bcc') => {
@@ -726,14 +726,13 @@ export function EmailComposer({
     
     // Check if the new focus target is within the same component
     // to prevent losing edit mode when clicking within the input
-
-    const isClickInsideComponent = emailChipRef.current?.contains(e.relatedTarget as Node);
+    
+    const isClickInsideComponent = e.currentTarget.contains(e.relatedTarget as Node);
     if (isClickInsideComponent) {
       // If clicking inside the component, don't exit edit mode
       e.currentTarget.focus();
       return;
     }
-
     
     if (editingEmail.value.trim()) {
       if (isValidEmail(editingEmail.value.trim())) {
