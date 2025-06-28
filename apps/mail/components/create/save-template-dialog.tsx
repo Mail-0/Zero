@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Save, Loader2 } from 'lucide-react';
 import { useTemplates } from '../../hooks/use-templates';
+import { toast } from 'sonner';
 
 interface SaveTemplateDialogProps {
   subject: string;
@@ -35,10 +36,12 @@ export function SaveTemplateDialog({
 
   const handleSave = async () => {
     if (!name.trim()) {
+      toast.error('Please enter a template name');
       return;
     }
 
     if (!content.trim()) {
+      toast.error('Cannot save empty template');
       return;
     }
 

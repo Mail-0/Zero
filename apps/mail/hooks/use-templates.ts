@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { templatesApi, type Template, type CreateTemplateRequest } from '@/lib/templates';
+import { toast } from 'sonner';
 
 export function useTemplates() {
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -16,6 +17,7 @@ export function useTemplates() {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch templates';
       setError(errorMessage);
       console.error('Error fetching templates:', err);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -25,11 +27,33 @@ export function useTemplates() {
     try {
       const newTemplate = await templatesApi.createTemplate(template);
       setTemplates(prev => [newTemplate, ...prev]);
+      
+      // Show success message
       console.log('Template saved successfully!');
+      toast.success('Template saved successfully!');
+      
       return newTemplate;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to save template';
       console.error('Error saving template:', errorMessage);
+      toast.error(errorMessage);
+      throw err;
+    }
+  };
+
+  const updateTemplate = async (id: string, template: Partial<CreateTemplateRequest>) => {
+    try {
+      const updatedTemplate = await templatesApi.updateTemplate(id, template);
+      setTemplates(prev => prev.map(t => t.id === id ? updatedTemplate : t));
+      
+      console.log('Template updated successfully!');
+      toast.success('Template updated successfully!');
+      
+      return updatedTemplate;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update template';
+      console.error('Error updating template:', errorMessage);
+      toast.error(errorMessage);
       throw err;
     }
   };
@@ -38,10 +62,13 @@ export function useTemplates() {
     try {
       await templatesApi.deleteTemplate(id);
       setTemplates(prev => prev.filter(t => t.id !== id));
+      
       console.log('Template deleted successfully!');
+      toast.success('Template deleted successfully!');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete template';
       console.error('Error deleting template:', errorMessage);
+      toast.error(errorMessage);
       throw err;
     }
   };
@@ -55,6 +82,7 @@ export function useTemplates() {
     loading,
     error,
     createTemplate,
+    updateTemplate,
     deleteTemplate,
     refetch: fetchTemplates,
   };

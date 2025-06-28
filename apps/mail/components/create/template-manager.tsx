@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useTemplates } from '../../hooks/use-templates';
 import type { Template } from '../../lib/templates';
+import { toast } from 'sonner';
 
 interface TemplateManagerProps {
   onSelectTemplate?: (template: Template) => void;
@@ -44,8 +45,10 @@ export function TemplateManager({ onSelectTemplate, trigger }: TemplateManagerPr
     if (confirm('Are you sure you want to delete this template?')) {
       try {
         await deleteTemplate(id);
+        toast.success('Template deleted successfully!');
       } catch (error) {
         console.error('Failed to delete template:', error);
+        toast.error('Failed to delete template');
       }
     }
   };
@@ -53,6 +56,7 @@ export function TemplateManager({ onSelectTemplate, trigger }: TemplateManagerPr
   const handleUseTemplate = (template: Template) => {
     if (onSelectTemplate) {
       onSelectTemplate(template);
+      toast.success(`Template "${template.name}" loaded successfully!`);
       setOpen(false);
     }
   };
