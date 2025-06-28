@@ -18,9 +18,9 @@ import {
   Plane2,
   LockIcon,
 } from '@/components/icons/icons';
+import { MessageSquareIcon, Palette } from 'lucide-react';
 import type { NestedKeyOf, MessageKeys } from 'use-intl';
 import type { IntlMessages } from '@/i18n/config';
-import { MessageSquareIcon } from 'lucide-react';
 
 export type MessageKey = MessageKeys<IntlMessages, NestedKeyOf<IntlMessages>>;
 
@@ -166,6 +166,11 @@ export const navigationConfig: Record<string, NavConfig> = {
             title: 'navigation.settings.appearance',
             url: '/settings/appearance',
             icon: Stars,
+          },
+          {
+            title: 'navigation.settings.themes',
+            url: '/themes',
+            icon: Palette,
           },
           {
             title: 'navigation.settings.labels',

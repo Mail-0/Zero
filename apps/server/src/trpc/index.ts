@@ -1,9 +1,11 @@
 import { type inferRouterInputs, type inferRouterOutputs } from '@trpc/server';
 import { cookiePreferencesRouter } from './routes/cookies';
 import { connectionsRouter } from './routes/connections';
+import { categoriesRouter } from './routes/categories';
 import { shortcutRouter } from './routes/shortcut';
 import { settingsRouter } from './routes/settings';
 import { getContext } from 'hono/context-storage';
+import { themesRouter } from './routes/themes';
 import { draftsRouter } from './routes/drafts';
 import { labelsRouter } from './routes/label';
 import { notesRouter } from './routes/notes';
@@ -13,7 +15,6 @@ import { mailRouter } from './routes/mail';
 import type { HonoContext } from '../ctx';
 import { aiRouter } from './routes/ai';
 import { router } from './trpc';
-import { categoriesRouter } from './routes/categories';
 
 export const appRouter = router({
   ai: aiRouter,
@@ -27,6 +28,7 @@ export const appRouter = router({
   notes: notesRouter,
   shortcut: shortcutRouter,
   settings: settingsRouter,
+  themes: themesRouter,
   user: userRouter,
 });
 

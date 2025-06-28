@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { SettingsCard } from '@/components/settings/settings-card';
+import { ThemeSelector } from '@/components/theme/theme-selector';
 import { AddConnectionDialog } from '@/components/connection/add';
 import { PricingDialog } from '@/components/ui/pricing-dialog';
 import { useSession, authClient } from '@/lib/auth-client';
@@ -65,21 +66,21 @@ export default function ConnectionsPage() {
               {[...Array(3)].map((_, i) => (
                 <div
                   key={i}
-                  className="bg-popover flex items-center justify-between rounded-lg border p-4"
+                  className="flex justify-between items-center p-4 rounded-lg border bg-popover"
                 >
-                  <div className="flex min-w-0 items-center gap-4">
-                    <Skeleton className="h-12 w-12 rounded-lg" />
+                  <div className="flex gap-4 items-center min-w-0">
+                    <Skeleton className="w-12 h-12 rounded-lg" />
                     <div className="flex flex-col gap-1">
-                      <Skeleton className="h-4 w-full lg:w-32" />
-                      <Skeleton className="h-3 w-full lg:w-48" />
+                      <Skeleton className="w-full h-4 lg:w-32" />
+                      <Skeleton className="w-full h-3 lg:w-48" />
                     </div>
                   </div>
-                  <Skeleton className="ml-4 h-8 w-8 rounded-full" />
+                  <Skeleton className="ml-4 w-8 h-8 rounded-full" />
                 </div>
               ))}
             </div>
           ) : data?.connections?.length ? (
-            <div className="lg: grid gap-4 sm:grid-cols-1 md:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:">
               {data.connections.map((connection) => {
                 const Icon = emailProviders.find(
                   (p) => p.providerId === connection.providerId,
@@ -87,25 +88,25 @@ export default function ConnectionsPage() {
                 return (
                   <div
                     key={connection.id}
-                    className="bg-popover flex items-center justify-between rounded-lg border p-4"
+                    className="flex justify-between items-center p-4 rounded-lg border bg-popover"
                   >
-                    <div className="flex min-w-0 items-center gap-4">
+                    <div className="flex gap-4 items-center min-w-0">
                       {connection.picture ? (
                         <img
                           src={connection.picture}
                           alt=""
-                          className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                          className="object-cover w-12 h-12 rounded-lg shrink-0"
                           width={48}
                           height={48}
                         />
                       ) : (
-                        <div className="bg-primary/10 flex h-12 w-12 shrink-0 items-center justify-center rounded-lg">
+                        <div className="flex justify-center items-center w-12 h-12 rounded-lg bg-primary/10 shrink-0">
                           {Icon && <Icon className="size-6" />}
                         </div>
                       )}
-                      <div className="flex min-w-0 flex-col gap-1">
-                        <span className="truncate text-sm font-medium">{connection.name}</span>
-                        <div className="text-muted-foreground flex items-center gap-2 text-xs">
+                      <div className="flex flex-col gap-1 min-w-0">
+                        <span className="text-sm font-medium truncate">{connection.name}</span>
+                        <div className="flex gap-2 items-center text-xs text-muted-foreground">
                           <Tooltip
                             delayDuration={0}
                             open={openTooltip === connection.id}
@@ -117,7 +118,7 @@ export default function ConnectionsPage() {
                           >
                             <TooltipTrigger asChild>
                               <span
-                                className="max-w-[180px] cursor-default truncate sm:max-w-[240px] md:max-w-[300px]"
+                                className="cursor-default max-w-[180px] truncate sm:max-w-[240px] md:max-w-[300px]"
                                 onClick={() => {
                                   if (window.innerWidth <= 768) {
                                     setOpenTooltip(
@@ -134,9 +135,13 @@ export default function ConnectionsPage() {
                             </TooltipContent>
                           </Tooltip>
                         </div>
+                        {/* Theme Selector */}
+                        <div className="mt-2">
+                          <ThemeSelector connectionId={connection.id} />
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex gap-4 items-center">
                       {data.disconnectedIds?.includes(connection.id) ? (
                         <>
                           <div>
@@ -164,9 +169,9 @@ export default function ConnectionsPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-muted-foreground hover:text-primary ml-4 shrink-0"
+                            className="ml-4 text-muted-foreground shrink-0 hover:text-primary"
                           >
-                            <Trash className="h-4 w-4" />
+                            <Trash className="w-4 h-4" />
                           </Button>
                         </DialogTrigger>
                         <DialogContent showOverlay>
@@ -178,7 +183,7 @@ export default function ConnectionsPage() {
                               {t('pages.settings.connections.disconnectDescription')}
                             </DialogDescription>
                           </DialogHeader>
-                          <div className="flex justify-end gap-4">
+                          <div className="flex gap-4 justify-end">
                             <DialogClose asChild>
                               <Button variant="outline">
                                 {t('pages.settings.connections.cancel')}
@@ -199,15 +204,15 @@ export default function ConnectionsPage() {
             </div>
           ) : null}
 
-          <div className="flex items-center justify-start">
+          <div className="flex justify-start items-center">
             {isPro ? (
               <AddConnectionDialog>
                 <Button
                   variant="outline"
                   className="group relative w-9 overflow-hidden transition-all duration-200 hover:w-full sm:hover:w-[32.5%]"
                 >
-                  <Plus className="absolute left-2 h-4 w-4" />
-                  <span className="whitespace-nowrap pl-7 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                  <Plus className="absolute left-2 w-4 h-4" />
+                  <span className="pl-7 whitespace-nowrap opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                     {t('pages.settings.connections.addEmail')}
                   </span>
                 </Button>
@@ -218,8 +223,8 @@ export default function ConnectionsPage() {
                 variant="outline"
                 className="group relative w-9 overflow-hidden transition-all duration-200 hover:w-full sm:hover:w-[32.5%]"
               >
-                <Plus className="absolute left-2 h-4 w-4" />
-                <span className="whitespace-nowrap pl-7 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                <Plus className="absolute left-2 w-4 h-4" />
+                <span className="pl-7 whitespace-nowrap opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                   {t('pages.settings.connections.addEmail')}
                 </span>
               </Button>
