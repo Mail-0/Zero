@@ -36,7 +36,7 @@ export default function SelectAllCheckbox({ className }: { className?: string })
   const fetchAllMatchingThreadIds = useCallback(async (): Promise<string[]> => {
     const ids: string[] = [];
     let cursor = '';
-    const MAX_PER_PAGE = 1000;
+    const MAX_PER_PAGE = 500;
 
     setFetchProgress({ fetched: 0, total: 0 });
 
