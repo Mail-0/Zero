@@ -363,7 +363,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
         );
 
         const result = streamText({
-          model: openai('gpt-4o'),
+          model: openai(env.OPENAI_MODEL || 'gpt-4o'),
           messages: processedMessages,
           tools,
           onFinish,
@@ -689,7 +689,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
 
   async buildGmailSearchQuery(query: string) {
     const result = await generateText({
-      model: openai('gpt-4o'),
+      model: openai(env.OPENAI_MODEL || 'gpt-4o'),
       system: GmailSearchAssistantSystemPrompt(),
       prompt: query,
     });
@@ -1242,7 +1242,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
       },
       async (s) => {
         const result = await generateText({
-          model: openai('gpt-4o'),
+          model: openai(env.OPENAI_MODEL || 'gpt-4o'),
           system: GmailSearchAssistantSystemPrompt(),
           prompt: s.query,
         });
@@ -1587,7 +1587,7 @@ const buildGmailSearchQuery = tool({
   }),
   execute: async ({ query }) => {
     const result = await generateObject({
-      model: openai('gpt-4o'),
+      model: openai(env.OPENAI_MODEL || 'gpt-4o'),
       system: GmailSearchAssistantSystemPrompt(),
       prompt: query,
       schema: z.object({

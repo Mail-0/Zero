@@ -5,6 +5,7 @@ import {
 import { activeDriverProcedure } from '../../trpc';
 import { openai } from '@ai-sdk/openai';
 import { generateObject } from 'ai';
+import { env } from 'cloudflare:workers';
 import { z } from 'zod';
 
 export const generateSearchQuery = activeDriverProcedure
@@ -21,7 +22,7 @@ export const generateSearchQuery = activeDriverProcedure
           : '';
 
     const result = await generateObject({
-      model: openai('gpt-4o'),
+      model: openai(env.OPENAI_MODEL || 'gpt-4o'),
       system: systemPrompt,
       prompt: input.query,
       schema: z.object({
