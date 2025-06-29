@@ -748,13 +748,13 @@ export function ThreadDisplay() {
       );
       
       if (!popup) {
-        toast.error(t('common.threadDisplay.popupBlocked', {
+        toast.error(t('common.actions.popupBlocked', {
           fallback: 'Popup blocked. Please allow popups for this site.'
         }));
       }
     } catch (error) {
       console.error('Failed to open popup:', error);
-      toast.error(t('common.threadDisplay.failedToOpenPopup', {
+      toast.error(t('common.actions.failedToOpenPopup', {
         fallback: 'Failed to open thread in new tab.'
       }));
     }

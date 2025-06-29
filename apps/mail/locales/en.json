@@ -56,7 +56,9 @@
       "errorDeletingSpam": "Failed to delete spam emails",
       "confirmDeleteSpam": "Delete All Spam",
       "confirmDeleteSpamDescription": "Are you sure you want to delete all spam emails? This action cannot be undone.",
-      "confirmDelete": "Delete"
+      "confirmDelete": "Delete",
+      "popupBlocked": "Popup blocked. Please allow popups for this site.",
+      "failedToOpenPopup": "Failed to open thread in new tab."
     },
     "themes": {
       "dark": "Dark",
