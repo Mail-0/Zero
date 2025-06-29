@@ -1,5 +1,5 @@
 import { PopupThreadDisplay } from '@/components/mail/popup-thread-display';
-import { useSearchParams } from 'react-router';
+import { useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 import { useQueryState } from 'nuqs';
 
