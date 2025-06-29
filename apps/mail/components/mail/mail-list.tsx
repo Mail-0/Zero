@@ -58,6 +58,7 @@ import { useQueryState } from 'nuqs';
 import { Categories } from './mail';
 import { useAtom } from 'jotai';
 import { useThreadNotes } from '@/hooks/use-notes';
+import type { ParsedDraft } from '../../../server/src/lib/driver/types';
 
 const Thread = memo(
   function Thread({
@@ -629,7 +630,9 @@ const Thread = memo(
 );
 
 const Draft = memo(({ message }: { message: { id: string } }) => {
-  const { data: draft } = useDraft(message.id);
+  const draftQuery = useDraft(message.id);
+  const draft = draftQuery.data as ParsedDraft | undefined;
+  console.log("draft is here", draft);
   const [, setComposeOpen] = useQueryState('isComposeOpen');
   const [, setDraftId] = useQueryState('draftId');
   const handleMailClick = useCallback(() => {
@@ -696,7 +699,7 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
                     )}
                   >
                     <span className={cn('max-w-[25ch] truncate text-sm')}>
-                      {cleanNameDisplay(draft?.to?.[0] || 'noname') || ''}
+                      {cleanNameDisplay(draft.to?.[0] || 'noname') || ''}
                     </span>
                   </span>
                 </div>
@@ -716,7 +719,7 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
                     'mt-1 line-clamp-1 max-w-[50ch] text-sm text-[#8C8C8C] md:max-w-[30ch]',
                   )}
                 >
-                  {draft?.subject}
+                  {draft.subject}
                 </p>
               </div>
             </div>
