@@ -15,7 +15,7 @@ export function PopupThreadDisplay() {
     if (!emailData?.messages) return [];
     return emailData.messages.reduce<Attachment[]>((acc, message) => {
       if (message.attachments && message.attachments.length > 0) {
-        return [...acc, ...message.attachments];
+        message.attachments.forEach(attachment => acc.push(attachment));
       }
       return acc;
     }, []);
