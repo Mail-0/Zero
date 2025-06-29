@@ -1,8 +1,8 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { useConnectionTheme } from '@/hooks/use-themes';
 import { useActiveConnection } from '@/hooks/use-connections';
+import { useConnectionTheme } from '@/hooks/use-themes';
 import { Theme, defaultTheme } from '@/types/theme';
 
 interface ThemeContextType {
@@ -26,26 +26,28 @@ interface ThemeProviderProps {
   children: React.ReactNode;
 }
 
-export function Them[48;52;178;1768;2848teProvider({ children }: ThemeProviderProps) {
+export function ThemeProvider({ children }: ThemeProviderProps) {
   const [currentTheme, setCurrentTheme] = useState<Theme>(defaultTheme);
   const { data: activeConnection } = useActiveConnection();
   const { data: connectionTheme, isLoading } = useConnectionTheme(activeConnection?.id);
 
   // Apply connection theme when it changes
   useEffect(() => {
+        // Reset to default first to avoid flash of previous theme
++    resetThemeToDefault();
++
     if (connectionTheme?.connectionTheme?.theme) {
       const theme = connectionTheme.connectionTheme.theme;
       setCurrentTheme(theme);
       applyThemeToDocument(theme);
     } else {
       setCurrentTheme(defaultTheme);
-      resetThemeToDefault();
     }
   }, [connectionTheme]);
 
   const applyThemeToDocument = (theme: Theme) => {
     const root = document.documentElement;
-    
+
     // Apply CSS variables
     Object.entries(theme.colors).forEach(([key, value]) => {
       const cssVar = `--${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
@@ -78,7 +80,7 @@ export function Them[48;52;178;1768;2848teProvider({ children }: ThemeProviderP
   const loadGoogleFont = (fontFamily: string) => {
     const fontName = fontFamily.split(',')[0].trim();
     const existingLink = document.getElementById('custom-google-font');
-    
+
     if (existingLink) {
       existingLink.remove();
     }
@@ -86,7 +88,7 @@ export function Them[48;52;178;1768;2848teProvider({ children }: ThemeProviderP
     if (fontName !== 'Inter' && fontName !== 'system-ui' && fontName !== 'sans-serif') {
       const link = document.createElement('link');
       link.id = 'custom-google-font';
-      link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/\s+/g, '+')}:wght@100;300;400;500;600;700;800&display=swap`;
+      link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@100;300;400;500;600;700;800&display=swap`;
       link.rel = 'stylesheet';
       document.head.appendChild(link);
     }
@@ -94,7 +96,7 @@ export function Them[48;52;178;1768;2848teProvider({ children }: ThemeProviderP
 
   const resetThemeToDefault = () => {
     const root = document.documentElement;
-    
+
     // Reset color variables
     Object.keys(defaultTheme.colors).forEach((key) => {
       const cssVar = `--${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
@@ -144,4 +146,3 @@ export function Them[48;52;178;1768;2848teProvider({ children }: ThemeProviderP
     </ThemeContext.Provider>
   );
 }
-

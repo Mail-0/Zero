@@ -216,60 +216,35 @@ export const theme = createTable('theme', {
   borderRadius: jsonb('border_radius').notNull(),
   backgrounds: jsonb('backgrounds').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow().$onUpdate(() => new Date()),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
 });
 
-export const connectionTheme = createTable('connection_theme', {
-  connectionId: text('connection_id')
-    .notNull()
-    .references(() => connection.id, { onDelete: 'cascade' }),
-  themeId: text('theme_id')
-    .notNull()
-    .references(() => theme.id, { onDelete: 'cascade' }),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow().$onUpdate(() => new Date()),
-}, (table) => {
-  return [
-    primaryKey({
-      columns: [table.connectionId],
-    }),
-  ];
-});
-
-export const theme = createTable('theme', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  description: text('description'),
-  userId: text('user_id')
-    .notNull()
-    .references(() => user.id, { onDelete: 'cascade' }),
-  isPublic: boolean('is_public').default(false),
-  colors: jsonb('colors').notNull(),
-  typography: jsonb('typography').notNull(),
-  spacing: jsonb('spacing').notNull(),
-  shadows: jsonb('shadows').notNull(),
-  borderRadius: jsonb('border_radius').notNull(),
-  backgrounds: jsonb('backgrounds').notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow().$onUpdate(() => new Date()),
-});
-
-export const connectionTheme = createTable('connection_theme', {
-  connectionId: text('connection_id')
-    .notNull()
-    .references(() => connection.id, { onDelete: 'cascade' }),
-  themeId: text('theme_id')
-    .notNull()
-    .references(() => theme.id, { onDelete: 'cascade' }),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow().$onUpdate(() => new Date()),
-}, (table) => {
-  return [
-    primaryKey({
-      columns: [table.connectionId],
-    }),
-  ];
-});
+export const connectionTheme = createTable(
+  'connection_theme',
+  {
+    connectionId: text('connection_id')
+      .notNull()
+      .references(() => connection.id, { onDelete: 'cascade' }),
+    themeId: text('theme_id')
+      .notNull()
+      .references(() => theme.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => {
+    return [
+      primaryKey({
+        columns: [table.connectionId],
+      }),
+    ];
+  },
+);
 
 export const oauthConsent = createTable('oauth_consent', {
   id: text('id').primaryKey(),
