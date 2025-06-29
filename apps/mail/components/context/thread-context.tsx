@@ -12,6 +12,7 @@ import {
 import {
   Archive,
   ArchiveX,
+  ExternalLink,
   Forward,
   Inbox,
   MailOpen,
@@ -266,6 +267,34 @@ export function ThreadContextMenu({
     if (threadData?.latest) setActiveReplyId(threadData?.latest?.id);
   };
 
+  const handleOpenInNewTab = () => {
+    try {
+      const baseUrl = window.location.origin;
+      const encodedThreadId = encodeURIComponent(threadId);
+      const popupUrl = `${baseUrl}/popup/thread?threadId=${encodedThreadId}`;
+      const popup = window.open(
+        popupUrl,
+        `thread-${encodedThreadId}`,
+        'width=800,height=600,resizable=yes,status=no,location=no,toolbar=no,menubar=no'
+      );
+
+      if (!popup) {
+        toast.error(
+          t('common.actions.popupBlocked', {
+            fallback: 'Popup blocked. Please allow popups for this site.',
+          })
+        );
+      }
+    } catch (error) {
+      console.error('Failed to open popup:', error);
+      toast.error(
+        t('common.actions.failedToOpenPopup', {
+          fallback: 'Failed to open thread in new tab.',
+        })
+      );
+    }
+  };
+
   const primaryActions: EmailAction[] = [
     {
       id: 'reply',
@@ -286,6 +315,13 @@ export function ThreadContextMenu({
       label: t('common.mail.forward'),
       icon: <Forward className="mr-2.5 h-4 w-4 opacity-60" />,
       action: handleThreadForward,
+      disabled: false,
+    },
+    {
+      id: 'open-in-tab',
+      label: t('common.threadDisplay.openInNewTab', { fallback: 'Open in new tab' }),
+      icon: <ExternalLink className="mr-2.5 h-4 w-4 opacity-60" />,
+      action: handleOpenInNewTab,
       disabled: false,
     },
   ];

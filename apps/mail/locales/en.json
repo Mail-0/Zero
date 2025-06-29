@@ -208,7 +208,8 @@
       "enableImages": "Show Images",
       "star": "Star",
       "unstar": "Unstar",
-      "printThread":"Print thread"
+      "printThread":"Print thread",
+      "openInNewTab": "Open in new tab"
     },
     "notes": {
       "title": "Notes",

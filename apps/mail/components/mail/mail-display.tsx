@@ -294,6 +294,7 @@ type Props = {
   onReplyAll?: () => void;
   onForward?: () => void;
   threadAttachments?: Attachment[];
+  isPopup?: boolean;
 };
 
 const MailDisplayLabels = ({ labels }: { labels: string[] }) => {

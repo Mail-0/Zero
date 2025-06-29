@@ -46,7 +46,7 @@ import { NotesPanel } from './note-panel';
 import { cn, FOLDERS } from '@/lib/utils';
 import MailDisplay from './mail-display';
 import { useTheme } from 'next-themes';
-import { Inbox } from 'lucide-react';
+import { ExternalLink, Inbox } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { format } from 'date-fns';
 import { useAtom } from 'jotai';
@@ -734,6 +734,32 @@ export function ThreadDisplay() {
     }
   }, [mode, activeReplyId]);
 
+  const handleOpenInNewTab = useCallback(() => {
+    if (!id) return;
+    
+    try {
+      const baseUrl = window.location.origin;
+      const encodedId = encodeURIComponent(id);
+      const popupUrl = `${baseUrl}/popup/thread?threadId=${encodedId}`;
+      const popup = window.open(
+        popupUrl,
+        `thread-${encodedId}`,
+        'width=800,height=600,resizable=yes,status=no,location=no,toolbar=no,menubar=no'
+      );
+      
+      if (!popup) {
+        toast.error(t('common.threadDisplay.popupBlocked', {
+          fallback: 'Popup blocked. Please allow popups for this site.'
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to open popup:', error);
+      toast.error(t('common.threadDisplay.failedToOpenPopup', {
+        fallback: 'Failed to open thread in new tab.'
+      }));
+    }
+  }, [id]);
+
   return (
     <div
       className={cn(
@@ -967,6 +993,26 @@ export function ThreadDisplay() {
                       </span>
                     </DropdownMenuItem> */}
 
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenInNewTab();
+                      }}
+                    >
+                      <ExternalLink className="fill-iconLight dark:fill-iconDark mr-2 h-4 w-4" />
+                      <span>{t('common.threadDisplay.openInNewTab', { fallback: 'Open in new tab' })}</span>
+                    </DropdownMenuItem>
+                    
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        printThread();
+                      }}
+                    >
+                      <Printer className="fill-iconLight dark:fill-iconDark mr-2 h-4 w-4" />
+                      <span>{t('common.threadDisplay.printThread')}</span>
+                    </DropdownMenuItem>
+
                     {isInSpam || isInArchive || isInBin ? (
                       <DropdownMenuItem onClick={() => moveThreadTo('inbox')}>
                         <Inbox className="mr-2 h-4 w-4" />
@@ -974,15 +1020,6 @@ export function ThreadDisplay() {
                       </DropdownMenuItem>
                     ) : (
                       <>
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            printThread();
-                          }}
-                        >
-                          <Printer className="fill-iconLight dark:fill-iconDark mr-2 h-4 w-4" />
-                          <span>{t('common.threadDisplay.printThread')}</span>
-                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => moveThreadTo('spam')}>
                           <ArchiveX className="fill-iconLight dark:fill-iconDark mr-2" />
                           <span>{t('common.threadDisplay.moveToSpam')}</span>
