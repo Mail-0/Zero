@@ -1637,6 +1637,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 disabled={!emailData.attachments?.length}
+                                className={!emailData.attachments?.length ? "data-[disabled]:pointer-events-auto" : ""}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   e.preventDefault();
