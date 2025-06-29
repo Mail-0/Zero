@@ -1,6 +1,5 @@
 'use client';
 
-import { Palette, Type, Square, Sparkles, Layers, Eye, Save, RefreshCw } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -9,6 +8,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Palette, Type, Square, Sparkles, Layers, Eye, Save, RefreshCw } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Theme, defaultTheme, googleFonts, GoogleFont } from '@/types/theme';
 import { useCreateTheme, useUpdateTheme } from '@/hooks/use-themes';
@@ -61,7 +61,9 @@ export function ThemeEditor({ theme, onSave, onCancel, isEditing = false }: Them
   const applyThemeToDocument = (theme: Theme) => {
     const root = document.documentElement;
     Object.entries(theme.colors).forEach(([key, value]) => {
-      const cssVar = `--${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+      // Validate key contains only alphanumeric characters and hyphens
+      const sanitizedKey = key.replace(/[^a-zA-Z0-9-]/g, '');
+      const cssVar = `--${sanitizedKey.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
       root.style.setProperty(cssVar, value);
     });
 
@@ -74,7 +76,8 @@ export function ThemeEditor({ theme, onSave, onCancel, isEditing = false }: Them
 
       const link = document.createElement('link');
       link.id = 'google-font';
-      link.href = `https://fonts.googleapis.com/css2?family=${theme.typography.fontFamily.split(',')[0].replace(/\s+/g, '+')}:wght@100;300;400;500;600;700;800&display=swap`;
+      const fontName = encodeURIComponent(theme.typography.fontFamily.split(',')[0].trim());
+      link.href = `https://fonts.googleapis.com/css2?family=${fontName}:wght@100;300;400;500;600;700;800&display=swap`;
       link.rel = 'stylesheet';
       document.head.appendChild(link);
 
@@ -106,9 +109,8 @@ export function ThemeEditor({ theme, onSave, onCancel, isEditing = false }: Them
         });
         toast.success('Theme updated successfully');
       } else {
-        const result = await createTheme.mutateAsync(currentTheme);
+        await createTheme.mutateAsync(currentTheme);
         toast.success('Theme created successfully');
-        setCurrentTheme(result.theme);
       }
       onSave?.(currentTheme);
     } catch (error) {

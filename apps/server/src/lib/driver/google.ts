@@ -234,7 +234,7 @@ export class GoogleMailManager implements MailManager {
         return {
           threads: threads
             .filter((thread) => typeof thread.id === 'string')
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+             
             .map((thread) => ({
               id: thread.id!,
               historyId: thread.historyId ?? null,
@@ -303,7 +303,7 @@ export class GoogleMailManager implements MailManager {
                 )?.value;
                 if (contentId && part.body?.attachmentId) {
                   try {
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                     
                     const imageData = await this.getAttachment(message.id!, part.body.attachmentId);
                     if (imageData) {
                       const cleanContentId = contentId.replace(/[<>]/g, '');

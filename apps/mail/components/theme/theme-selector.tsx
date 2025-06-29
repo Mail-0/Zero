@@ -9,6 +9,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
+  useThemes,
+  useConnectionTheme,
+  useSetConnectionTheme,
+  useRemoveConnectionTheme,
+  useDeleteTheme,
+} from '@/hooks/use-themes';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -16,13 +23,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  useThemes,
-  useConnectionTheme,
-  useSetConnectionTheme,
-  useRemoveConnectionTheme,
-  useDeleteTheme,
-} from '@/hooks/use-themes';
 import { Palette, Plus, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -69,6 +69,10 @@ export function ThemeSelector({ connectionId, className }: ThemeSelectorProps) {
   };
 
   const handleDeleteTheme = async (themeId: string) => {
+    const confirmDelete = window.confirm(
+      'Are you sure you want to delete this theme? This action cannot be undone.',
+    );
+    if (!confirmDelete) return;
     try {
       await deleteTheme.mutateAsync({ themeId });
       toast.success('Theme deleted successfully');
@@ -145,16 +149,16 @@ export function ThemeSelector({ connectionId, className }: ThemeSelectorProps) {
                       )}
                     </div>
                   </DropdownMenuItem>
-                  <div className="absolute right-2 top-1/2 opacity-0 transition-opacity -translate-y-1/2 group-hover:opacity-100">
+                  <div className="absolute right-2 top-1/2 opacity-0 transition-opacity -translate-y-1/2 group-hover:opacity-100 touch:opacity-100">
                     <div className="flex gap-1">
                       <Button
-                        size="sm"
+                        size="default"
                         variant="ghost"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleEditTheme(theme);
                         }}
-                        className="p-0 w-6 h-6"
+                        className="p-1 min-h-[32px] min-w-[32px]"
                       >
                         <Edit className="w-3 h-3" />
                       </Button>
@@ -187,6 +191,9 @@ export function ThemeSelector({ connectionId, className }: ThemeSelectorProps) {
       {/* Theme Editor Dialog */}
       <Dialog open={showThemeEditor} onOpenChange={setShowThemeEditor}>
         <DialogContent className="p-0 max-w-7xl max-h-[90vh]">
+          <DialogDescription className="sr-only">
+            {editingTheme ? 'Edit your existing theme' : 'Create a new custom theme'}
+          </DialogDescription>
           <ThemeEditor
             theme={editingTheme}
             isEditing={!!editingTheme}

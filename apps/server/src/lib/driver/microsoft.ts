@@ -133,7 +133,7 @@ export class OutlookMailManager implements MailManager {
           .select('id,displayName,userPrincipalName,mail')
           .get();
 
-        let photoUrl = '';
+        const photoUrl = '';
         try {
           // Requires separate fetching logic
         } catch (error: unknown) {
