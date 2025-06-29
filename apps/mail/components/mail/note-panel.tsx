@@ -132,7 +132,7 @@ function SortableNote({
 
       <div className="flex items-start gap-3 pl-1.5">
         <div className="min-w-0 flex-1">
-          <p className="whitespace-pre-wrap break-words text-sm text-black dark:text-white/90">
+          <p className="whitespace-pre-wrap break-words text-sm text-black dark:text-white/90 max-h-60 overflow-y-auto">
             {note.content}
           </p>
 
@@ -534,9 +534,9 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
             <span className="sr-only">{t('common.notes.title')}</span>
           </Button>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">
+        {!isOpen && <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">
           <p>{t('common.notes.noteCount', { count: notes.length })}</p>
-        </TooltipContent>
+        </TooltipContent>}
       </Tooltip>
 
       {isOpen && (
@@ -587,7 +587,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
               onDragEnd={handleDragEnd}
             >
               <ScrollArea className="flex-1 overflow-y-auto">
-                <div className="p-3">
+                <div className="p-3 max-w-[350px]">
                   {notes.length === 0 && !isAddingNewNote ? (
                     <div className="flex flex-col items-center justify-center py-8 text-center">
                       <StickyNote className="mb-2 h-12 w-12 text-[#8C8C8C] opacity-50" />

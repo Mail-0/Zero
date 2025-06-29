@@ -14,7 +14,6 @@ import {
   Trash,
   PencilCompose,
 } from '../icons/icons';
-import { StickyNote } from 'lucide-react';
 import {
   memo,
   useCallback,
@@ -43,6 +42,7 @@ import { useTRPC } from '@/providers/query-provider';
 import { useThreadLabels } from '@/hooks/use-labels';
 import { template } from '@/lib/email-utils.client';
 import { useSettings } from '@/hooks/use-settings';
+import { useThreadNotes } from '@/hooks/use-notes';
 import { useKeyState } from '@/hooks/use-hot-key';
 import { VList, type VListHandle } from 'virtua';
 import { RenderLabels } from './render-labels';
@@ -51,13 +51,13 @@ import { useDraft } from '@/hooks/use-drafts';
 import { Check, Star } from 'lucide-react';
 import { useTranslations } from 'use-intl';
 import { Skeleton } from '../ui/skeleton';
+import { StickyNote } from 'lucide-react';
 import { useParams } from 'react-router';
 import { useTheme } from 'next-themes';
 import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Categories } from './mail';
 import { useAtom } from 'jotai';
-import { useThreadNotes } from '@/hooks/use-notes';
 
 const Thread = memo(
   function Thread({
@@ -105,6 +105,12 @@ const Thread = memo(
     const hasNotes = useMemo(() => {
       return (threadNotes?.notes && threadNotes.notes.length > 0) || false;
     }, [threadNotes?.notes]);
+
+    // Get the last note content
+
+    const lastNoteContent = useMemo(() => {
+    return ( hasNotes && threadNotes.notes[threadNotes.notes.length - 1]?.content) || '';
+    }, [hasNotes, threadNotes.notes]);
 
     const optimisticState = useOptimisticThreadState(idToUse ?? '');
 
@@ -540,9 +546,16 @@ const Thread = memo(
                         </Tooltip>
                       ) : null}
                       {hasNotes ? (
-                        <span className="inline-flex items-center">
-                          <StickyNote className="h-3 w-3 fill-amber-500 stroke-amber-500 dark:fill-amber-400 dark:stroke-amber-400" />
-                        </span>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="inline-flex items-center">
+                              <StickyNote className="h-3 w-3 fill-amber-500 stroke-amber-500 dark:fill-amber-400 dark:stroke-amber-400" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="p-1 text-xs max-w-72 border-yellow-300 border-solid">
+                            <p className="truncate">{lastNoteContent}</p>
+                          </TooltipContent>
+                        </Tooltip>
                       ) : null}
                       <MailLabels labels={optimisticLabels} />
                     </div>
@@ -700,14 +713,14 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
                     </span>
                   </span>
                 </div>
-                {draft.rawMessage?.internalDate && (  
-                <p 
-                  className={cn(
-                    'text-muted-foreground text-nowrap text-xs font-normal opacity-70 transition-opacity group-hover:opacity-100 dark:text-[#8C8C8C]',
-                  )}
-                >
-                  {formatDate(Number(draft.rawMessage?.internalDate))}
-                </p>
+                {draft.rawMessage?.internalDate && (
+                  <p
+                    className={cn(
+                      'text-muted-foreground text-nowrap text-xs font-normal opacity-70 transition-opacity group-hover:opacity-100 dark:text-[#8C8C8C]',
+                    )}
+                  >
+                    {formatDate(Number(draft.rawMessage?.internalDate))}
+                  </p>
                 )}
               </div>
               <div className="flex justify-between">
