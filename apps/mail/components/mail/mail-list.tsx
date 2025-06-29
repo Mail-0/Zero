@@ -552,7 +552,7 @@ const Thread = memo(
                               <StickyNote className="h-3 w-3 fill-amber-500 stroke-amber-500 dark:fill-amber-400 dark:stroke-amber-400" />
                             </span>
                           </TooltipTrigger>
-                          <TooltipContent side="bottom" className="p-1 text-xs max-w-72 border-yellow-300 border-solid">
+                          <TooltipContent side="bottom" className="p-1 text-xs md:max-w-52 max-w-60 border-yellow-300 border-solid">
                             <p className="truncate">{lastNoteContent}</p>
                           </TooltipContent>
                         </Tooltip>
