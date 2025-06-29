@@ -698,7 +698,7 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
                     )}
                   >
                     <span className={cn('max-w-[25ch] truncate text-sm')}>
-                      {cleanNameDisplay(draft.to?.[0] || 'noname') || ''}
+                      {cleanNameDisplay(draft?.to?.[0] || 'noname') || ''}
                     </span>
                   </span>
                 </div>
@@ -718,7 +718,7 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
                     'mt-1 line-clamp-1 max-w-[50ch] text-sm text-[#8C8C8C] md:max-w-[30ch]',
                   )}
                 >
-                  {draft.subject}
+                  {draft?.subject}
                 </p>
               </div>
             </div>
