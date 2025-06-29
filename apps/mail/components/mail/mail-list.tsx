@@ -109,7 +109,7 @@ const Thread = memo(
     // Get the last note content
 
     const lastNoteContent = useMemo(() => {
-    return ( hasNotes && threadNotes.notes[threadNotes.notes.length - 1]?.content) || '';
+    return ( hasNotes && threadNotes.notes?.[threadNotes.notes.length - 1]?.content) || '';
     }, [hasNotes, threadNotes.notes]);
 
     const optimisticState = useOptimisticThreadState(idToUse ?? '');
