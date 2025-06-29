@@ -632,7 +632,6 @@ const Thread = memo(
 const Draft = memo(({ message }: { message: { id: string } }) => {
   const draftQuery = useDraft(message.id);
   const draft = draftQuery.data as ParsedDraft | undefined;
-  console.log("draft is here", draft);
   const [, setComposeOpen] = useQueryState('isComposeOpen');
   const [, setDraftId] = useQueryState('draftId');
   const handleMailClick = useCallback(() => {
