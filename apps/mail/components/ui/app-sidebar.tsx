@@ -41,8 +41,8 @@ import { Button } from '@/components/ui/button';
 import { useAIFullScreen } from './ai-sidebar';
 import { useStats } from '@/hooks/use-stats';
 import { useLocation } from 'react-router';
-import { useTranslations } from 'use-intl';
 import { useForm } from 'react-hook-form';
+import { m } from '@/paraglide/messages';
 import { FOLDERS } from '@/lib/utils';
 import { NavUser } from './nav-user';
 import { NavMain } from './nav-main';
@@ -177,7 +177,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 function ComposeButton() {
   const { state } = useSidebar();
   const isMobile = useIsMobile();
-  const t = useTranslations();
 
   const [dialogOpen, setDialogOpen] = useQueryState('isComposeOpen');
   const [, setDraftId] = useQueryState('draftId');
@@ -206,7 +205,7 @@ function ComposeButton() {
             <div className="flex items-center justify-center gap-2.5 pl-0.5 pr-1">
               <PencilCompose className="fill-iconLight dark:fill-iconDark" />
               <div className="justify-start text-sm leading-none">
-                {t('common.commandPalette.commands.newEmail')}
+                {m['common.commandPalette.commands.newEmail']()}
               </div>
             </div>
           )}

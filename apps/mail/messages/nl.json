@@ -162,8 +162,28 @@
       "thisEmail": "deze e-mail",
       "dropFiles": "Sleep bestanden om bij te voegen",
       "attachments": "Bijlagen",
-      "attachmentCount": "{count, plural, =0 {bijlagen} one {bijlage} other {bijlagen}}",
-      "fileCount": "{count, plural, =0 {bestanden} one {bestand} other {bestanden}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "bijlagen",
+            "countPlural=one": "bijlage",
+            "countPlural=other": "bijlagen"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "bestanden",
+            "countPlural=one": "bestand",
+            "countPlural=other": "bestanden"
+          }
+        }
+      ],
       "saveDraft": "Concept opslaan",
       "send": "Verzenden",
       "forward": "Doorsturen"
@@ -226,7 +246,17 @@
       "toSave": "om op te slaan",
       "label": "Label:",
       "search": "Notities zoeken...",
-      "noteCount": "{count, plural, =0 {Notities toevoegen} one {# notitie} other {# notities}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "Notities toevoegen",
+            "countPlural=one": "# notitie",
+            "countPlural=other": "# notities"
+          }
+        }
+      ],
       "notePinned": "Notitie vastgezet",
       "noteUnpinned": "Notitie losgemaakt",
       "colorChanged": "Notitie kleur bijgewerkt",
@@ -279,7 +309,17 @@
       "failedToUpdateGmailAlias": "Kon standaardalias niet bijwerken in Gmail-instellingen"
     },
     "mail": {
-      "replies": "{count, plural, =0 {reacties} one {# reactie} other {# reacties}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "reacties",
+            "countPlural=one": "# reactie",
+            "countPlural=other": "# reacties"
+          }
+        }
+      ],
       "deselectAll": "Alle e-mails gedeselecteerd",
       "selectedEmails": "{count} e-mails geselecteerd",
       "noEmailsToSelect": "Geen e-mails om te selecteren",

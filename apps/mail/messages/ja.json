@@ -162,8 +162,28 @@
       "thisEmail": "このメール",
       "dropFiles": "添付するファイルをドロップ",
       "attachments": "添付ファイル",
-      "attachmentCount": "{count, plural, =0 {attachments} other {attachments}}",
-      "fileCount": "{count, plural, =0 {files} other {files}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "添付ファイル",
+            "countPlural=one": "添付ファイル",
+            "countPlural=other": "添付ファイル"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "ファイル",
+            "countPlural=one": "ファイル",
+            "countPlural=other": "ファイル"
+          }
+        }
+      ],
       "saveDraft": "下書きを保存",
       "send": "送信",
       "forward": "転送"
@@ -226,7 +246,17 @@
       "toSave": "保存する",
       "label": "ラベル：",
       "search": "メモを検索…",
-      "noteCount": "{count, plural, =0 {Add notes} one {# note} other {# notes}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "Add notes",
+            "countPlural=one": "# note",
+            "countPlural=other": "# notes"
+          }
+        }
+      ],
       "notePinned": "メモをピン留めしました",
       "noteUnpinned": "メモのピン留めを解除しました",
       "colorChanged": "メモの色が更新されました",
@@ -279,7 +309,17 @@
       "failedToUpdateGmailAlias": "Gmail設定でデフォルトのエイリアスの更新に失敗しました"
     },
     "mail": {
-      "replies": "{count, plural, =0 {replies} other {# replies}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "返信",
+            "countPlural=one": "返信 #個",
+            "countPlural=other": "返信 #個"
+          }
+        }
+      ],
       "deselectAll": "すべてのメールを選択解除しました",
       "selectedEmails": "選択したメール {count} 件",
       "noEmailsToSelect": "選択したメールはありません",

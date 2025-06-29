@@ -6,10 +6,10 @@ import { fixNonReadableColors } from '@/lib/email-utils';
 import { useTRPC } from '@/providers/query-provider';
 import { getBrowserTimezone } from '@/lib/timezones';
 import { useSettings } from '@/hooks/use-settings';
-import { useTranslations } from 'use-intl';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { m } from '@/paraglide/messages';
 
 export function MailIframe({ html, senderEmail }: { html: string; senderEmail: string }) {
   const { data, refetch } = useSettings();
@@ -67,7 +67,7 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
     refetchOnMount: false, // Don't refetch on mount if data exists
   });
 
-  const t = useTranslations();
+
 
   const calculateAndSetHeight = useCallback(() => {
     if (!iframeRef.current?.contentWindow?.document.body) return;
@@ -143,17 +143,17 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
     <>
       {cspViolation && !isTrustedSender && !data?.settings?.externalImages && (
         <div className="flex items-center justify-start bg-amber-600/20 px-2 py-1 text-sm text-amber-600">
-          <p>{t('common.actions.hiddenImagesWarning')}</p>
+          <p>{m['common.actions.hiddenImagesWarning']()}</p>
           <button
             onClick={() => setTemporaryImagesEnabled(!temporaryImagesEnabled)}
             className="ml-2 cursor-pointer underline"
           >
             {temporaryImagesEnabled
-              ? t('common.actions.disableImages')
-              : t('common.actions.showImages')}
+              ? m['common.actions.disableImages']()
+              : m['common.actions.showImages']()}
           </button>
           <button onClick={() => void trustSender()} className="ml-2 cursor-pointer underline">
-            {t('common.actions.trustSender')}
+            {m['common.actions.trustSender']()}
           </button>
         </div>
       )}

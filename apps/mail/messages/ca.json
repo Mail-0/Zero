@@ -162,8 +162,28 @@
       "thisEmail": "aquest correu",
       "dropFiles": "Arrossega arxius per adjuntar",
       "attachments": "Adjunts",
-      "attachmentCount": "{count, plural, =0 {adjunts} one {adjunt} other {adjunts}}",
-      "fileCount": "{count, plural, =0 {fitxers} one {fitxer} other {fitxers}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "adjunts",
+            "countPlural=one": "adjunt",
+            "countPlural=other": "adjunts"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "fitxers",
+            "countPlural=one": "fitxer",
+            "countPlural=other": "fitxers"
+          }
+        }
+      ],
       "saveDraft": "Desa l'esborrany",
       "send": "Enviar",
       "forward": "Reenviar"
@@ -226,7 +246,17 @@
       "toSave": "per desar",
       "label": "Etiqueta:",
       "search": "Cerca notes...",
-      "noteCount": "{count, plural, =0 {Afegeix notes} one {# nota} other {# notes}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "Afegeix notes",
+            "countPlural=one": "# nota",
+            "countPlural=other": "# notes"
+          }
+        }
+      ],
       "notePinned": "Nota fixada",
       "noteUnpinned": "Nota desfixada",
       "colorChanged": "Color de la nota actualitzat",
@@ -279,7 +309,17 @@
       "failedToUpdateGmailAlias": "No s'ha pogut actualitzar l'àlies predeterminat a la configuració de Gmail"
     },
     "mail": {
-      "replies": "{count, plural, =0 {respostes} one {# resposta} other {# respostes}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "respostes",
+            "countPlural=one": "# resposta",
+            "countPlural=other": "# respostes"
+          }
+        }
+      ],
       "deselectAll": "S'han desseleccionat tots els correus",
       "selectedEmails": "S'han seleccionat {count} correus",
       "noEmailsToSelect": "No hi ha correus per seleccionar",
