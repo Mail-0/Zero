@@ -23,6 +23,7 @@ import { useEmailAliases } from '@/hooks/use-email-aliases';
 import { getLocale, setLocale } from '@/paraglide/runtime';
 import { useState, useEffect, useMemo, memo } from 'react';
 import { userSettingsSchema } from '@zero/server/schemas';
+import { locales } from '@/project.inlang/settings.json';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTRPC } from '@/providers/query-provider';
@@ -203,12 +204,11 @@ export default function GeneralPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {/* TODO: Add available locales */}
-                        {/* {availableLocales.map((locale) => (
-                          <SelectItem key={locale.code} value={locale.code}>
-                            {locale.name}
+                        {locales.map((locale) => (
+                          <SelectItem key={locale} value={locale}>
+                            {locale}
                           </SelectItem>
-                        ))} */}
+                        ))}
                       </SelectContent>
                     </Select>
                   </FormItem>
