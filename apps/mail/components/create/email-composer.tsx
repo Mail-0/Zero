@@ -44,6 +44,7 @@ import { Toolbar } from './toolbar';
 import pluralize from 'pluralize';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 type ThreadContent = {
   from: string;
@@ -1432,17 +1433,24 @@ export function EmailComposer({
                 </PopoverContent>
               </Popover>
             )}
-
-            <Button
-              type="button"
-              tabIndex={-1}
-              variant="ghost"
-              size="icon"
-              onClick={() => setToggleToolbar(!toggleToolbar)}
-              className={`h-auto w-auto rounded p-1.5 ${toggleToolbar ? 'bg-muted' : 'bg-background'} border`}
-            >
-              <Type className="h-4 w-4" />
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    tabIndex={-1}
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setToggleToolbar(!toggleToolbar)}
+                    className={`h-auto w-auto rounded p-1.5 ${toggleToolbar ? 'bg-muted' : 'bg-background'} border`}
+                  >
+                  <Type className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Formatting options</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+           
           </div>
         </div>
         <div className="flex items-start justify-start gap-2">
