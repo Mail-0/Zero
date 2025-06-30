@@ -162,8 +162,28 @@
       "thisEmail": "este e-mail",
       "dropFiles": "Arraste e solte arquivos para anexar",
       "attachments": "Anexos",
-      "attachmentCount": "{count, plural, =0 {anexos} one {anexo} other {anexos}}",
-      "fileCount": "{count, plural, =0 {arquivos} one {arquivo} other {arquivos}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "anexos",
+            "countPlural=one": "anexo",
+            "countPlural=other": "anexos"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "arquivos",
+            "countPlural=one": "arquivo",
+            "countPlural=other": "arquivos"
+          }
+        }
+      ],
       "saveDraft": "Salvar rascunho",
       "send": "Enviar",
       "forward": "Encaminhar"
@@ -226,7 +246,17 @@
       "toSave": "para salvar",
       "label": "Etiqueta:",
       "search": "Pesquisar notas...",
-      "noteCount": "{count, plural, =0 {Adicione notas} one {# nota} other {# notas}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "Adicione notas",
+            "countPlural=one": "# nota",
+            "countPlural=other": "# notas"
+          }
+        }
+      ],
       "notePinned": "Nota fixada",
       "noteUnpinned": "Nota desfixada",
       "colorChanged": "Cor da nota atualizada",
@@ -279,7 +309,17 @@
       "failedToUpdateGmailAlias": "Falha ao atualizar o alias padrão nas configurações do Gmail"
     },
     "mail": {
-      "replies": "{count, plural, =0 {arquivos} one {arquivo} other {arquivos}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "arquivos",
+            "countPlural=one": "arquivo",
+            "countPlural=other": "arquivos"
+          }
+        }
+      ],
       "deselectAll": "Todos os e-mails desselecionados",
       "selectedEmails": "{count} e-mails selecionados",
       "noEmailsToSelect": "Não há e-mails para selecionar",

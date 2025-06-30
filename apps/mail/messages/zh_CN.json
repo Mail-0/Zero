@@ -162,8 +162,28 @@
       "thisEmail": "此邮件",
       "dropFiles": "拖放文件以附加",
       "attachments": "附件",
-      "attachmentCount": "{count, plural, =0 {附件} one {个附件} other {个附件}}",
-      "fileCount": "{count, plural, =0 {文件} one {个文件} other {个文件}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "附件",
+            "countPlural=one": "个附件",
+            "countPlural=other": "个附件"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "文件",
+            "countPlural=one": "个文件",
+            "countPlural=other": "个文件"
+          }
+        }
+      ],
       "saveDraft": "保存草稿",
       "send": "发送",
       "forward": "转发"
@@ -226,7 +246,17 @@
       "toSave": "以保存",
       "label": "标签：",
       "search": "搜索笔记...",
-      "noteCount": "{count, plural, =0 {添加笔记} one {# 条笔记} other {# 条笔记}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "添加笔记",
+            "countPlural=one": "# 条笔记",
+            "countPlural=other": "# 条笔记"
+          }
+        }
+      ],
       "notePinned": "笔记已固定",
       "noteUnpinned": "笔记已取消固定",
       "colorChanged": "笔记颜色已更新",
@@ -279,7 +309,17 @@
       "failedToUpdateGmailAlias": "无法更新 Gmail 设置中的默认别名"
     },
     "mail": {
-      "replies": "{count, plural, =0 {回复} one {# 条回复} other {# 条回复}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "回复",
+            "countPlural=one": "# 条回复",
+            "countPlural=other": "# 条回复"
+          }
+        }
+      ],
       "deselectAll": "已取消选择所有邮件",
       "selectedEmails": "已选择 {count} 封邮件",
       "noEmailsToSelect": "没有可选择的邮件",
@@ -406,7 +446,7 @@
         "zeroSignatureDescription": "在您的邮件中添加 Zero 签名。",
         "defaultEmailAlias": "默认邮箱别名",
         "selectDefaultEmail": "选择默认邮箱",
-        "defaultEmailDescription": "此邮箱将作为撰写新邮件时的默认“发件人”地址",
+        "defaultEmailDescription": "此邮箱将作为撰写新邮件时的默认\"发件人\"地址",
         "autoRead": "自动阅读",
         "autoReadDescription": "点击邮件时自动将其标记为已读。"
       },

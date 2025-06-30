@@ -162,8 +162,28 @@
       "thisEmail": "यह ईमेल",
       "dropFiles": "अटैच करने के लिए फाइलें यहां छोड़ें",
       "attachments": "अटैचमेंटस",
-      "attachmentCount": "{count, plural, =0 {अटैचमेंटस} one {अटैचमेंट} other {अटैचमेंटस}}",
-      "fileCount": "{count, plural, =0 {फ़ाइलें} one {फाइल्} other {फ़ाइलें}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "अटैचमेंटस",
+            "countPlural=one": "अटैचमेंट",
+            "countPlural=other": "अटैचमेंटस"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "फ़ाइलें",
+            "countPlural=one": "फाइल्",
+            "countPlural=other": "फ़ाइलें"
+          }
+        }
+      ],
       "saveDraft": "ड्राफ्ट सेव करें",
       "send": "भेजें",
       "forward": "आगे भेजें"
@@ -226,7 +246,17 @@
       "toSave": "सेव करने के लिए",
       "label": "लेबल:",
       "search": "नोट्स खोजें...",
-      "noteCount": "{count, plural, =0 {नोट्स जोड़ें} one {# नोट} other {# नोट्स}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "नोट्स जोड़ें",
+            "countPlural=one": "# नोट",
+            "countPlural=other": "# नोट्स"
+          }
+        }
+      ],
       "notePinned": "नोट पिन किया गया",
       "noteUnpinned": "नोट अनपिन किया गया",
       "colorChanged": "नोट का रंग अपडेट किया गया",
@@ -279,7 +309,17 @@
       "failedToUpdateGmailAlias": "Gmail सेटिंग्स में डिफ़ॉल्ट उपनाम अपडेट करने में विफल"
     },
     "mail": {
-      "replies": "{count, plural, =0 {जवाब} one {# जवाब} other {# जवाब}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "जवाब",
+            "countPlural=one": "# जवाब",
+            "countPlural=other": "# जवाब"
+          }
+        }
+      ],
       "deselectAll": "सभी ईमेल अचयनित किए गए",
       "selectedEmails": "{count} ईमेल चयनित किए गए",
       "noEmailsToSelect": "चयन करने के लिए कोई ईमेल नहीं है",
