@@ -6,6 +6,7 @@ import {
   getMainSearchTerm,
   parseNaturalLanguageSearch,
 } from '@/lib/utils';
+import { EmptyStateIcon } from '../icons/empty-state-svg';
 import {
   Archive2,
   ExclamationCircle,
@@ -986,13 +987,7 @@ export const MailList = memo(
             ) : !items || items.length === 0 ? (
               <div className="flex w-full items-center justify-center">
                 <div className="flex flex-col items-center justify-center gap-2 text-center">
-                  <img
-                    suppressHydrationWarning
-                    src={resolvedTheme === 'dark' ? '/empty-state.svg' : '/empty-state-light.svg'}
-                    alt="Empty Inbox"
-                    width={200}
-                    height={200}
-                  />
+                  <EmptyStateIcon width={200} height={200} />
                   <div className="mt-5">
                     <p className="text-lg">It's empty here</p>
                     <p className="text-md text-muted-foreground dark:text-white/50">
