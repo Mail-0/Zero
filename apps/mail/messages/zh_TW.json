@@ -1,4 +1,5 @@
 {
+  "$schema": "https://inlang.com/schema/inlang-message-format",
   "common": {
     "actions": {
       "logout": "登出",
