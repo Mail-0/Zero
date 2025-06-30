@@ -227,7 +227,7 @@ export const Toolbar = ({ editor }: { editor: Editor | null }) => {
                     variant="ghost"
                     size="icon"
                     onClick={() => editor.chain().focus().toggleBlockquote().run()}
-                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('blockQuote') ? 'bg-muted' : 'bg-background'}`}
+                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('blockquote') ? 'bg-muted' : 'bg-background'}`}
                   >
                     <TextQuote className="h-4 w-4" />
                   </Button>
