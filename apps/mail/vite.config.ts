@@ -13,8 +13,8 @@ const ReactCompilerConfig = {
 
 export default defineConfig({
   plugins: [
-    cloudflare(),
     reactRouter(),
+    cloudflare(),
     babel({
       filter: /\.[jt]sx?$/,
       babelConfig: {
