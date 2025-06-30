@@ -13,8 +13,12 @@ import {
   Star2,
   Trash,
   PencilCompose,
+  Lightning,
+  Tag,
+  User,
+  Bell,
 } from '../icons/icons';
-import { StickyNote } from 'lucide-react';
+import { StickyNote, Briefcase, Users, Check } from 'lucide-react';
 import {
   memo,
   useCallback,
@@ -48,7 +52,6 @@ import { VList, type VListHandle } from 'virtua';
 import { RenderLabels } from './render-labels';
 import { Badge } from '@/components/ui/badge';
 import { useDraft } from '@/hooks/use-drafts';
-import { Check, Star } from 'lucide-react';
 import { useTranslations } from 'use-intl';
 import { Skeleton } from '../ui/skeleton';
 import { useParams } from 'react-router';
@@ -58,6 +61,7 @@ import { useQueryState } from 'nuqs';
 import { Categories } from './mail';
 import { useAtom } from 'jotai';
 import { useThreadNotes } from '@/hooks/use-notes';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const Thread = memo(
   function Thread({
@@ -547,14 +551,81 @@ const Thread = memo(
                       <MailLabels labels={optimisticLabels} />
                     </div>
                     {latestMessage.receivedOn ? (
-                      <p
-                        className={cn(
-                          'text-muted-foreground text-nowrap text-xs font-normal opacity-70 transition-opacity group-hover:opacity-100 dark:text-[#8C8C8C]',
-                          isMailSelected && 'opacity-100',
+                      <div className="flex flex-col items-end">
+                        <p
+                          className={cn(
+                            'text-muted-foreground text-nowrap text-xs font-normal opacity-70 transition-opacity group-hover:opacity-100 dark:text-[#8C8C8C]',
+                            isMailSelected && 'opacity-100',
+                          )}
+                        >
+                          {formatDate(latestMessage.receivedOn.split('.')[0] || '')}
+                        </p>
+                        {threadLabels && threadLabels.length > 0 && (
+                          <div className="mt-1 flex items-center gap-1">
+                            {threadLabels.length <= 2 ? (
+                              threadLabels.map((label) => {
+                                const icon = getLabelIcon(label.name);
+                                if (!icon) return null;
+                                
+                                return (
+                                  <Tooltip key={label.id}>
+                                    <TooltipTrigger asChild>
+                                      <span className="cursor-pointer">{icon}</span>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="px-2 py-1 text-xs">
+                                      {label.name}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                );
+                              })
+                            ) : (
+                              <>
+                                {(() => {
+                                  const firstLabel = threadLabels[0];
+                                  const icon = getLabelIcon(firstLabel.name);
+                                  if (!icon) return null;
+                                  
+                                  return (
+                                    <Tooltip key={firstLabel.id}>
+                                      <TooltipTrigger asChild>
+                                        <span className="cursor-pointer">{icon}</span>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top" className="px-2 py-1 text-xs">
+                                        {firstLabel.name}
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  );
+                                })()}
+                                
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <span className="cursor-pointer text-xs text-muted-foreground">
+                                      +{threadLabels.length - 1}
+                                    </span>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="flex w-auto flex-wrap gap-2 p-2" side="top">
+                                    {threadLabels.slice(1).map((label) => {
+                                      const icon = getLabelIcon(label.name);
+                                      if (!icon) return null;
+                                      
+                                      return (
+                                        <Tooltip key={label.id}>
+                                          <TooltipTrigger asChild>
+                                            <span className="cursor-pointer">{icon}</span>
+                                          </TooltipTrigger>
+                                          <TooltipContent side="top" className="px-2 py-1 text-xs">
+                                            {label.name}
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      );
+                                    })}
+                                  </PopoverContent>
+                                </Popover>
+                              </>
+                            )}
+                          </div>
                         )}
-                      >
-                        {formatDate(latestMessage.receivedOn.split('.')[0] || '')}
-                      </p>
+                      </div>
                     ) : null}
                   </div>
                   <div className="flex justify-between">
@@ -1109,7 +1180,21 @@ function getLabelIcon(label: string) {
 
   switch (normalizedLabel) {
     case 'starred':
-      return <Star className="h-[12px] w-[12px] fill-yellow-400 stroke-yellow-400" />;
+      return <Star2 className="h-[12px] w-[12px] fill-yellow-400 stroke-yellow-400" />;
+    case 'important':
+      return <Lightning className="h-[12px] w-[12px] fill-amber-500" />;
+    case 'promotions':
+      return <Tag className="h-[12px] w-[12px] fill-rose-500" />;
+    case 'personal':
+      return <User className="h-[12px] w-[12px] fill-green-500" />;
+    case 'updates':
+      return <Bell className="h-[12px] w-[12px] fill-purple-500" />;
+    case 'work':
+      return <Briefcase className="h-[12px] w-[12px] fill-black dark:fill-white" />;
+    case 'forums':
+      return <Users className="h-[12px] w-[12px] fill-blue-500" />;
+    case 'notes':
+      return <StickyNote className="h-[12px] w-[12px] fill-amber-400" />;
     default:
       return null;
   }
