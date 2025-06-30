@@ -67,6 +67,7 @@ import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
 import SelectAllCheckbox from './select-all-checkbox';
+import EmptyFolderButton from './empty-folder-button';
 
 interface ITag {
   id: string;
@@ -519,6 +520,16 @@ export function MailLayout() {
                       ) : null}
                     </div>
                     <AutoLabelingSettings />
+                    {/* Bulk action buttons when emails are selected */}
+                    {mail.bulkSelected.length > 0 && (
+                      <div className="dark:bg-iconDark/20 relative ml-2 rounded-full" aria-hidden>
+                        <BulkSelectActions />
+                      </div>
+                    )}
+                    {/* Empty folder actions for Spam & Bin */}
+                    {['spam', 'bin'].includes(folder) && (
+                      <EmptyFolderButton folder={folder} />
+                    )}
                     <div className="dark:bg-iconDark/20 relative ml-2 h-3 w-0.5 rounded-full bg-[#E7E7E7]" />{' '}
                     <Button
                       onClick={() => {
