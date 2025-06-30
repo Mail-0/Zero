@@ -162,8 +162,28 @@
       "thisEmail": "이 이메일",
       "dropFiles": "첨부할 파일 끌어놓기",
       "attachments": "첨부 파일",
-      "attachmentCount": "{count, plural, =0 {첨부 파일} other {첨부 파일}}",
-      "fileCount": "{count, plural, =0 {파일} other {파일}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "첨부 파일",
+            "countPlural=one": "첨부 파일",
+            "countPlural=other": "첨부 파일"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "파일",
+            "countPlural=one": "파일",
+            "countPlural=other": "파일"
+          }
+        }
+      ],
       "saveDraft": "임시 저장",
       "send": "전송",
       "forward": "전달"
@@ -226,7 +246,17 @@
       "toSave": "저장하기",
       "label": "라벨:",
       "search": "노트 검색...",
-      "noteCount": "{count, plural, =0 {메모 추가} one {메모 #개} other {메모 #개}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "메모 추가",
+            "countPlural=one": "메모 #개",
+            "countPlural=other": "메모 #개"
+          }
+        }
+      ],
       "notePinned": "노트를 고정했습니다",
       "noteUnpinned": "노트를 고정 해제했습니다",
       "colorChanged": "노트 색상을 변경했습니다",
@@ -279,7 +309,17 @@
       "failedToUpdateGmailAlias": "Gmail 설정에서 기본 별칭 업데이트에 실패했습니다"
     },
     "mail": {
-      "replies": "{count, plural, =0 {답장} one {답장 #개} other {답장 #개}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "답장",
+            "countPlural=one": "답장 #개",
+            "countPlural=other": "답장 #개"
+          }
+        }
+      ],
       "deselectAll": "모든 이메일 선택 해제됨",
       "selectedEmails": "{count}개의 이메일 선택됨",
       "noEmailsToSelect": "선택할 이메일이 없습니다",

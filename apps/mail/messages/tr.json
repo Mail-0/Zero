@@ -162,8 +162,28 @@
       "thisEmail": "bu e-postaya",
       "dropFiles": "Eklemek için dosyaları bırakın",
       "attachments": "Ekler",
-      "attachmentCount": "{count, plural, =0 {ekler} one {ek} other {ekler}}",
-      "fileCount": "{count, plural, =0 {dosyalar} one {dosya} other {dosyalar}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "ekler",
+            "countPlural=one": "ek",
+            "countPlural=other": "ekler"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "dosyalar",
+            "countPlural=one": "dosya",
+            "countPlural=other": "dosyalar"
+          }
+        }
+      ],
       "saveDraft": "Taslağı kaydet",
       "send": "Gönder",
       "forward": "İlet"
@@ -226,7 +246,17 @@
       "toSave": "kaydetmek",
       "label": "Etiket:",
       "search": "Notlarda ara...",
-      "noteCount": "{count, plural, =0 {Not ekle} one {# not} other {# notlar}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "Not ekle",
+            "countPlural=one": "# not",
+            "countPlural=other": "# notlar"
+          }
+        }
+      ],
       "notePinned": "Not sabitlendi",
       "noteUnpinned": "Notun sabitlenmesi iptal edildi",
       "colorChanged": "Not rengi güncellendi",
@@ -279,7 +309,17 @@
       "failedToUpdateGmailAlias": "Gmail ayarlarında varsayılan adres güncellenemedi"
     },
     "mail": {
-      "replies": "{count, plural, =0 {cevaplar} one {# cevap} other {# cevaplar}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "cevaplar",
+            "countPlural=one": "# cevap",
+            "countPlural=other": "# cevaplar"
+          }
+        }
+      ],
       "deselectAll": "Seçilen tüm postaları bırak",
       "selectedEmails": "{count} adet posta seçildi",
       "noEmailsToSelect": "Seçilecek posta yok",

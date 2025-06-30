@@ -10,7 +10,7 @@ import { SettingsCard } from '@/components/settings/settings-card';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { useTranslations } from 'use-intl';
+import { m } from '@/paraglide/messages';
 import { useForm } from 'react-hook-form';
 import { KeyRound } from 'lucide-react';
 import { useState } from 'react';
@@ -23,7 +23,6 @@ const formSchema = z.object({
 
 export default function SecurityPage() {
   const [isSaving, setIsSaving] = useState(false);
-  const t = useTranslations();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,13 +45,13 @@ export default function SecurityPage() {
   return (
     <div className="grid gap-6">
       <SettingsCard
-        title={t('pages.settings.security.title')}
-        description={t('pages.settings.security.description')}
+        title={m['pages.settings.security.title']()}
+        description={m['pages.settings.security.description']()}
         footer={
           <div className="flex gap-4">
-            <Button variant="destructive">{t('pages.settings.security.deleteAccount')}</Button>
+            <Button variant="destructive">{m['pages.settings.security.deleteAccount']()}</Button>
             <Button type="submit" form="security-form" disabled={isSaving}>
-              {isSaving ? t('common.actions.saving') : t('common.actions.saveChanges')}
+              {isSaving ? m['common.actions.saving']() : m['common.actions.saveChanges']()}
             </Button>
           </div>
         }
@@ -67,10 +66,10 @@ export default function SecurityPage() {
                   <FormItem className="bg-popover flex w-full flex-row items-center justify-between rounded-lg border p-4 md:w-auto">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">
-                        {t('pages.settings.security.twoFactorAuth')}
+                      {m['pages.settings.security.twoFactorAuth']()}
                       </FormLabel>
                       <FormDescription>
-                        {t('pages.settings.security.twoFactorAuthDescription')}
+                      {m['pages.settings.security.twoFactorAuthDescription']()}
                       </FormDescription>
                     </div>
                     <FormControl className="ml-4">
@@ -86,10 +85,10 @@ export default function SecurityPage() {
                   <FormItem className="bg-popover flex w-full flex-row items-center justify-between rounded-lg border p-4 md:w-auto">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">
-                        {t('pages.settings.security.loginNotifications')}
+                      {m['pages.settings.security.loginNotifications']()}
                       </FormLabel>
                       <FormDescription>
-                        {t('pages.settings.security.loginNotificationsDescription')}
+                      {m['pages.settings.security.loginNotificationsDescription']()}
                       </FormDescription>
                     </div>
                     <FormControl className="ml-4">

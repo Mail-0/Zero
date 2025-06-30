@@ -162,8 +162,28 @@
       "thisEmail": "此郵件",
       "dropFiles": "拖放檔案以附加",
       "attachments": "附件",
-      "attachmentCount": "{count, plural, =0 {附件} one {附件} other {附件}}",
-      "fileCount": "{count, plural, =0 {檔案} one {檔案} other {檔案}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "附件",
+            "countPlural=one": "附件",
+            "countPlural=other": "附件"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "檔案",
+            "countPlural=one": "檔案",
+            "countPlural=other": "檔案"
+          }
+        }
+      ],
       "saveDraft": "儲存草稿",
       "send": "傳送",
       "forward": "轉寄"
@@ -226,7 +246,17 @@
       "toSave": "以儲存",
       "label": "標籤：",
       "search": "搜尋筆記...",
-      "noteCount": "{count, plural, =0 {添加筆記} one {# 則筆記} other {# 則筆記}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "添加筆記",
+            "countPlural=one": "# 則筆記",
+            "countPlural=other": "# 則筆記"
+          }
+        }
+      ],
       "notePinned": "筆記已釘選",
       "noteUnpinned": "筆記已取消釘選",
       "colorChanged": "筆記顏色已更新",
@@ -279,7 +309,17 @@
       "failedToUpdateGmailAlias": "無法更新 Gmail 設定中的預設別名"
     },
     "mail": {
-      "replies": "{count, plural, =0 {回覆} one {# 則回覆} other {# 則回覆}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "回覆",
+            "countPlural=one": "# 則回覆",
+            "countPlural=other": "# 則回覆"
+          }
+        }
+      ],
       "deselectAll": "已取消選取所有郵件",
       "selectedEmails": "已選取 {count} 封郵件",
       "noEmailsToSelect": "沒有可選取的郵件",

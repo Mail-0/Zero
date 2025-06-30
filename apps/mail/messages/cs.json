@@ -162,8 +162,32 @@
       "thisEmail": "tento email",
       "dropFiles": "Přetáhněte sem soubory",
       "attachments": "Přílohy",
-      "attachmentCount": "{count, plural, =0 {příloh} one {příloha} few {přílohy} many {příloh} other {příloh}}",
-      "fileCount": "{count, plural, =0 {souborů} one {soubor} few {soubory} many {souborů} other {souborů}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "příloh",
+            "countPlural=one": "příloha",
+            "countPlural=few": "přílohy",
+            "countPlural=many": "příloh",
+            "countPlural=other": "příloh"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "souborů",
+            "countPlural=one": "soubor",
+            "countPlural=few": "soubory",
+            "countPlural=many": "souborů",
+            "countPlural=other": "souborů"
+          }
+        }
+      ],
       "saveDraft": "Uložit koncept",
       "send": "Odeslat",
       "forward": "Přeposlat"
@@ -226,7 +250,19 @@
       "toSave": "uložit",
       "label": "Značka:",
       "search": "Hledat poznámky...",
-      "noteCount": "{count, plural, =0 {Přidat poznámku} one {# poznámka} few {# poznámky} many {# poznámky} other {# poznámek}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "Přidat poznámku",
+            "countPlural=one": "# poznámka",
+            "countPlural=few": "# poznámky",
+            "countPlural=many": "# poznámky",
+            "countPlural=other": "# poznámek"
+          }
+        }
+      ],
       "notePinned": "Poznámka připnuta",
       "noteUnpinned": "Poznámka odepnuta",
       "colorChanged": "Barva poznámky aktualizována",
@@ -279,7 +315,19 @@
       "failedToUpdateGmailAlias": "Nepodařilo se aktualizovat výchozí alias v nastavení Gmailu"
     },
     "mail": {
-      "replies": "{count, plural, =0 {odpovědí} one {#odpověď} few {#odpovědi} many {#odpovědí} other {#odpovědí}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "odpovědí",
+            "countPlural=one": "#odpověď",
+            "countPlural=few": "#odpovědi",
+            "countPlural=many": "#odpovědí",
+            "countPlural=other": "#odpovědí"
+          }
+        }
+      ],
       "deselectAll": "Zrušit všechny emaily",
       "selectedEmails": "Vybráno {count} emailů",
       "noEmailsToSelect": "Žádné emaily k vybrání",

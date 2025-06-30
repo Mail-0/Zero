@@ -162,8 +162,28 @@
       "thisEmail": "ez az e-mail",
       "dropFiles": "Húzd ide a fájlokat a csatoláshoz",
       "attachments": "Csatolmányok",
-      "attachmentCount": "{count, plural, =0 {csatolmány} one {csatolmány} other {csatolmány}}",
-      "fileCount": "{count, plural, =0 {fájl} one {fájl} other {fájl}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "csatolmány",
+            "countPlural=one": "csatolmány",
+            "countPlural=other": "csatolmány"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "fájl",
+            "countPlural=one": "fájl",
+            "countPlural=other": "fájl"
+          }
+        }
+      ],
       "saveDraft": "Piszkozat mentése",
       "send": "Küldés",
       "forward": "Továbbítás"
@@ -226,7 +246,17 @@
       "toSave": "mentéshez",
       "label": "Címke:",
       "search": "Jegyzetek keresése...",
-      "noteCount": "{count, plural, =0 {Jegyzetek hozzáadása} one {# jegyzet} other {# jegyzet}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "Jegyzetek hozzáadása",
+            "countPlural=one": "# jegyzet",
+            "countPlural=other": "# jegyzet"
+          }
+        }
+      ],
       "notePinned": "Jegyzet rögzítve",
       "noteUnpinned": "Jegyzet rögzítése feloldva",
       "colorChanged": "Jegyzet színe frissítve",
@@ -279,7 +309,17 @@
       "failedToUpdateGmailAlias": "Nem sikerült frissíteni az alapértelmezett álnevet a Gmail beállításaiban"
     },
     "mail": {
-      "replies": "{count, plural, =0 {válasz} one {# válasz} other {# válasz}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "válasz",
+            "countPlural=one": "# válasz",
+            "countPlural=other": "# válasz"
+          }
+        }
+      ],
       "deselectAll": "Összes e-mail kijelölése megszüntetve",
       "selectedEmails": "{count} e-mail kiválasztva",
       "noEmailsToSelect": "Nincsenek kiválasztható e-mailek",

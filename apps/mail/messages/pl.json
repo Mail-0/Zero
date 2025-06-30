@@ -162,8 +162,32 @@
       "thisEmail": "ten email",
       "dropFiles": "Upuść pliki, aby załączyć",
       "attachments": "Załączniki",
-      "attachmentCount": "{count, plural, =0 {załączników} one {załącznik} few {załączniki} many {załączników} other {załączników}}",
-      "fileCount": "{count, plural, =0 {plików} one {plik} few {pliki} many {plików} other {plików}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "załączników",
+            "countPlural=one": "załącznik",
+            "countPlural=few": "załączniki",
+            "countPlural=many": "załączników",
+            "countPlural=other": "załączników"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "plików",
+            "countPlural=one": "plik",
+            "countPlural=few": "pliki",
+            "countPlural=many": "plików",
+            "countPlural=other": "plików"
+          }
+        }
+      ],
       "saveDraft": "Zapisz wersję roboczą",
       "send": "Wyślij",
       "forward": "Przekaż dalej"
@@ -226,7 +250,19 @@
       "toSave": "aby zapisać",
       "label": "Etykieta:",
       "search": "Szukaj notatek...",
-      "noteCount": "{count, plural, =0 {Dodaj notatki} one {# notatka} few {# notatki} many {# notatek} other {# notatek}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "Dodaj notatki",
+            "countPlural=one": "# notatka",
+            "countPlural=few": "# notatki",
+            "countPlural=many": "# notatek",
+            "countPlural=other": "# notatek"
+          }
+        }
+      ],
       "notePinned": "Notatka przypięta",
       "noteUnpinned": "Notatka odpięta",
       "colorChanged": "Kolor notatki zaktualizowany",
@@ -279,7 +315,19 @@
       "failedToUpdateGmailAlias": "Nie udało się zaktualizować domyślnego aliasu w ustawieniach Gmaila"
     },
     "mail": {
-      "replies": "{count, plural, =0 {odpowiedzi} one {# odpowiedź} few {# odpowiedzi} many {# odpowiedzi} other {# odpowiedzi}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "odpowiedzi",
+            "countPlural=one": "# odpowiedź",
+            "countPlural=few": "# odpowiedzi",
+            "countPlural=many": "# odpowiedzi",
+            "countPlural=other": "# odpowiedzi"
+          }
+        }
+      ],
       "deselectAll": "Odznaczono wszystkie e-maile",
       "selectedEmails": "Zaznaczono {count} e-maili",
       "noEmailsToSelect": "Brak e-maili do zaznaczenia",
