@@ -23,6 +23,7 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from 'use-intl';
 import { useForm } from 'react-hook-form';
 import { Command } from 'lucide-react';
+import { m } from '@/paraglide/messages';
 
 interface LabelDialogProps {
   trigger?: React.ReactNode;
@@ -45,7 +46,7 @@ export function LabelDialog({
   const isControlled = open !== undefined;
   const dialogOpen = isControlled ? open : isOpen;
   const setDialogOpen = isControlled ? onOpenChange! : setIsOpen;
-  const t = useTranslations();
+
   const form = useForm<LabelType>({
     defaultValues: {
       name: '',
@@ -95,9 +96,7 @@ export function LabelDialog({
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent showOverlay={true}>
         <DialogHeader>
-          <DialogTitle>
-            {editingLabel ? t('common.labels.editLabel') : t('common.mail.createNewLabel')}
-          </DialogTitle>
+          <DialogTitle>{editingLabel ? m['common.labels.editLabel']() : m['common.mail.createNewLabel']()}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form
@@ -116,7 +115,7 @@ export function LabelDialog({
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('common.labels.labelName')}</FormLabel>
+                    <FormLabel>{m['common.labels.labelName']()}</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter label name" {...field} autoFocus />
                     </FormControl>
@@ -125,7 +124,7 @@ export function LabelDialog({
                 )}
               />
               <div className="space-y-2">
-                <Label>{t('common.labels.color')}</Label>
+                <Label>{m['common.labels.color']()}</Label>
                 <div className="w-full">
                   <div className="flex flex-wrap gap-2">
                     {LABEL_COLORS.map((color, index) => (
@@ -153,10 +152,10 @@ export function LabelDialog({
             </div>
             <div className="flex justify-end gap-2">
               <Button className="h-8" type="button" variant="outline" onClick={handleClose}>
-                {t('common.actions.cancel')}
+                {m['common.actions.cancel']()}
               </Button>
               <Button className="h-8 [&_svg]:size-4" type="submit">
-                {editingLabel ? t('common.actions.saveChanges') : t('common.labels.createLabel')}
+                {editingLabel ? m['common.actions.saveChanges']() : m['common.labels.createLabel']()}
                 <div className="flex h-5 items-center justify-center gap-1 rounded-sm bg-white/10 px-1 dark:bg-black/10">
                   <Command className="h-3 w-3 text-white dark:text-[#929292]" />
                   <CurvedArrow className="mt-1.5 h-3.5 w-3.5 fill-white dark:fill-[#929292]" />

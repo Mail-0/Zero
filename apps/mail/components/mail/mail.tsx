@@ -40,6 +40,7 @@ import * as CustomIcons from '@/components/icons/icons';
 import { isMac } from '@/lib/hotkeys/use-hotkey-utils';
 import { MailList } from '@/components/mail/mail-list';
 import { useHotkeysContext } from 'react-hotkeys-hook';
+import SelectAllCheckbox from './select-all-checkbox';
 import { useNavigate, useParams } from 'react-router';
 import { useMail } from '@/components/mail/use-mail';
 import { SidebarToggle } from '../ui/sidebar-toggle';
@@ -61,12 +62,11 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useStats } from '@/hooks/use-stats';
-import { useTranslations } from 'use-intl';
 import type { IConnection } from '@/types';
+import { m } from '@/paraglide/messages';
 import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
-import SelectAllCheckbox from './select-all-checkbox';
 
 interface ITag {
   id: string;
@@ -386,7 +386,6 @@ export function MailLayout() {
   const navigate = useNavigate();
   const { data: session, isPending } = useSession();
   const { data: connections } = useConnections();
-  const t = useTranslations();
   const prevFolderRef = useRef(folder);
   const { enableScope, disableScope } = useHotkeysContext();
   const { data: activeConnection } = useActiveConnection();
@@ -512,7 +511,7 @@ export function MailLayout() {
                               </button>
                             </TooltipTrigger>
                             <TooltipContent>
-                              {t('common.actions.exitSelectionModeEsc')}
+                              {m['common.actions.exitSelectionModeEsc']()}
                             </TooltipContent>
                           </Tooltip>
                         </div>
@@ -642,7 +641,6 @@ export function MailLayout() {
 }
 
 function BulkSelectActions() {
-  const t = useTranslations();
   const [isLoading, setIsLoading] = useState(false);
   const [isUnsub, setIsUnsub] = useState(false);
   const [mail, setMail] = useMail();
@@ -718,7 +716,7 @@ function BulkSelectActions() {
             </div>
           </button>
         </TooltipTrigger>
-        <TooltipContent>{t('common.mail.starAll')}</TooltipContent>
+        <TooltipContent>{m['common.mail.starAll']()}</TooltipContent>
       </Tooltip>
 
       <Tooltip>
@@ -735,7 +733,7 @@ function BulkSelectActions() {
             </div>
           </button>
         </TooltipTrigger>
-        <TooltipContent>{t('common.mail.archive')}</TooltipContent>
+        <TooltipContent>{m['common.mail.archive']()}</TooltipContent>
       </Tooltip>
 
       <Dialog onOpenChange={setIsUnsub} open={isUnsub}>
@@ -763,7 +761,7 @@ function BulkSelectActions() {
               </button>
             </DialogTrigger>
           </TooltipTrigger>
-          <TooltipContent>{t('common.mail.unSubscribeFromAll')}</TooltipContent>
+          <TooltipContent>{m['common.mail.unSubscribeFromAll']()}</TooltipContent>
         </Tooltip>
 
         <DialogContent
@@ -816,14 +814,13 @@ function BulkSelectActions() {
             </div>
           </button>
         </TooltipTrigger>
-        <TooltipContent>{t('common.mail.moveToBin')}</TooltipContent>
+        <TooltipContent>{m['common.mail.moveToBin']()}</TooltipContent>
       </Tooltip>
     </div>
   );
 }
 
 export const Categories = () => {
-  const t = useTranslations();
   const defaultCategoryIdInner = useDefaultCategoryId();
   const categorySettings = useCategorySettings();
   const [activeCategory] = useQueryState('category', {
@@ -833,7 +830,13 @@ export const Categories = () => {
   const categories = categorySettings.map((cat) => {
     const base = {
       id: cat.id,
-      name:  t(`common.mailCategories.${cat.id.split(' ').map((w, i) => i === 0 ? w.toLowerCase() : w).join('')}` as any) || cat.name,
+      name: (() => {
+        const key = `common.mailCategories.${cat.id
+          .split(' ')
+          .map((w, i) => (i === 0 ? w.toLowerCase() : w))
+          .join('')}` as keyof typeof m;
+        return m[key] && typeof m[key] === 'function' ? (m[key] as () => string)() : cat.name;
+      })(),
       searchValue: cat.searchValue,
     } as const;
 

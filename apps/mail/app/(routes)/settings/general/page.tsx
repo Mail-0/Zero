@@ -20,31 +20,26 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { SettingsCard } from '@/components/settings/settings-card';
 import { Globe, Clock, XIcon, Mail, InfoIcon } from 'lucide-react';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
+import { getLocale, setLocale } from '@/paraglide/runtime';
 import { useState, useEffect, useMemo, memo } from 'react';
 import { userSettingsSchema } from '@zero/server/schemas';
+import { locales } from '@/project.inlang/settings.json';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslations, useLocale } from 'use-intl';
 import { useTRPC } from '@/providers/query-provider';
 import { getBrowserTimezone } from '@/lib/timezones';
 import { Textarea } from '@/components/ui/textarea';
 import { useSettings } from '@/hooks/use-settings';
-import { availableLocales } from '@/i18n/config';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { useRevalidator } from 'react-router';
+// import { useRevalidator } from 'react-router';
+import { m } from '@/paraglide/messages';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
 const TimezoneSelect = memo(
-  ({
-    field,
-    t,
-  }: {
-    field: ControllerRenderProps<z.infer<typeof userSettingsSchema>, 'timezone'>;
-    t: any;
-  }) => {
+  ({ field }: { field: ControllerRenderProps<z.infer<typeof userSettingsSchema>, 'timezone'> }) => {
     const [open, setOpen] = useState(false);
     const [timezoneSearch, setTimezoneSearch] = useState('');
 
@@ -76,7 +71,7 @@ const TimezoneSelect = memo(
           <div className="px-3 py-2">
             <input
               className="border-input bg-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-1 disabled:cursor-not-allowed disabled:opacity-50"
-              placeholder={t('pages.settings.general.selectTimezone')}
+              placeholder={m['pages.settings.general.selectTimezone']()}
               value={timezoneSearch}
               onChange={(e) => setTimezoneSearch(e.target.value)}
             />
@@ -85,7 +80,7 @@ const TimezoneSelect = memo(
             <div className="p-1">
               {filteredTimezones.length === 0 && (
                 <div className="text-muted-foreground p-2 text-center text-sm">
-                  {t('pages.settings.general.noResultsFound')}
+                  {m['pages.settings.general.noResultsFound']()}
                 </div>
               )}
               {filteredTimezones.map((timezone) => (
@@ -117,17 +112,17 @@ TimezoneSelect.displayName = 'TimezoneSelect';
 
 export default function GeneralPage() {
   const [isSaving, setIsSaving] = useState(false);
-  const locale = useLocale();
-  const t = useTranslations();
-  const { data } = useSettings();
+  const locale = getLocale();
+
+  const { data, refetch: refetchSettings } = useSettings();
   const { data: aliases } = useEmailAliases();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { mutateAsync: saveUserSettings } = useMutation(trpc.settings.save.mutationOptions());
-  const { mutateAsync: setLocaleCookie } = useMutation(
-    trpc.cookiePreferences.setLocaleCookie.mutationOptions(),
-  );
-  const { revalidate } = useRevalidator();
+  //   const { mutateAsync: setLocaleCookie } = useMutation(
+  //     trpc.cookiePreferences.setLocaleCookie.mutationOptions(),
+  //   );
+  //   const { revalidate } = useRevalidator();
 
   const form = useForm<z.infer<typeof userSettingsSchema>>({
     resolver: zodResolver(userSettingsSchema),
@@ -144,6 +139,7 @@ export default function GeneralPage() {
   useEffect(() => {
     if (data?.settings) {
       form.reset(data.settings);
+      setLocale(data.settings.language as any);
     }
   }, [form, data?.settings]);
 
@@ -159,26 +155,18 @@ export default function GeneralPage() {
   async function onSubmit(values: z.infer<typeof userSettingsSchema>) {
     setIsSaving(true);
     const saved = data?.settings ? { ...data.settings } : undefined;
+
     try {
-      await saveUserSettings(values);
       queryClient.setQueryData(trpc.settings.get.queryKey(), (updater) => {
         if (!updater) return;
         return { settings: { ...updater.settings, ...values } };
       });
+      await saveUserSettings(values);
+      await refetchSettings();
 
-      if (saved?.language !== values.language) {
-        await setLocaleCookie({ locale: values.language });
-        const localeName = new Intl.DisplayNames([values.language], { type: 'language' }).of(
-          values.language,
-        );
-        toast.success(t('common.settings.languageChanged', { locale: localeName! }));
-        await revalidate();
-      }
-
-      toast.success(t('common.settings.saved'));
+      toast.success(m['common.settings.saved']());
     } catch (error) {
-      console.error('Failed to save settings:', error);
-      toast.error(t('common.settings.failedToSave'));
+      toast.error(m['common.settings.failedToSave']());
       queryClient.setQueryData(trpc.settings.get.queryKey(), (updater) => {
         if (!updater) return;
         return saved ? { settings: { ...updater.settings, ...saved } } : updater;
@@ -191,11 +179,11 @@ export default function GeneralPage() {
   return (
     <div className="grid gap-6">
       <SettingsCard
-        title={t('pages.settings.general.title')}
-        description={t('pages.settings.general.description')}
+        title={m['pages.settings.general.title']()}
+        description={m['pages.settings.general.description']()}
         footer={
           <Button type="submit" form="general-form" disabled={isSaving}>
-            {isSaving ? t('common.actions.saving') : t('common.actions.saveChanges')}
+            {isSaving ? m['common.actions.saving']() : m['common.actions.saveChanges']()}
           </Button>
         }
       >
@@ -207,18 +195,18 @@ export default function GeneralPage() {
                 name="language"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('pages.settings.general.language')}</FormLabel>
+                    <FormLabel>{m['pages.settings.general.language']()}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-36 justify-start">
                           <Globe className="mr-2 h-4 w-4" />
-                          <SelectValue placeholder={t('pages.settings.general.selectLanguage')} />
+                          <SelectValue placeholder={m['pages.settings.general.selectLanguage']()} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {availableLocales.map((locale) => (
-                          <SelectItem key={locale.code} value={locale.code}>
-                            {locale.name}
+                        {locales.map((locale) => (
+                          <SelectItem key={locale} value={locale}>
+                            {locale}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -231,8 +219,8 @@ export default function GeneralPage() {
                 name="timezone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('pages.settings.general.timezone')}</FormLabel>
-                    <TimezoneSelect field={field} t={t} />
+                    <FormLabel>{m['pages.settings.general.timezone']()}</FormLabel>
+                    <TimezoneSelect field={field} />
                   </FormItem>
                 )}
               />
@@ -243,13 +231,13 @@ export default function GeneralPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center gap-1">
-                        {t('pages.settings.general.defaultEmailAlias')}{' '}
+                        {m['pages.settings.general.defaultEmailAlias']()}{' '}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <InfoIcon className="h-4 w-4" />
                           </TooltipTrigger>
                           <TooltipContent>
-                            {t('pages.settings.general.defaultEmailDescription')}
+                            {m['pages.settings.general.defaultEmailDescription']()}
                           </TooltipContent>
                         </Tooltip>
                       </FormLabel>
@@ -258,7 +246,7 @@ export default function GeneralPage() {
                           <SelectTrigger className="w-[300px] justify-start">
                             <Mail className="mr-2 h-4 w-4" />
                             <SelectValue
-                              placeholder={t('pages.settings.general.selectDefaultEmail')}
+                              placeholder={m['pages.settings.general.selectDefaultEmail']()}
                             />
                           </SelectTrigger>
                         </FormControl>
@@ -289,9 +277,9 @@ export default function GeneralPage() {
               render={({ field }) => (
                 <FormItem className="flex max-w-xl flex-row items-center justify-between rounded-lg border px-4 py-2">
                   <div className="space-y-0.5">
-                    <FormLabel>{t('pages.settings.general.zeroSignature')}</FormLabel>
+                    <FormLabel>{m['pages.settings.general.zeroSignature']()}</FormLabel>
                     <FormDescription>
-                      {t('pages.settings.general.zeroSignatureDescription')}
+                      {m['pages.settings.general.zeroSignatureDescription']()}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -306,9 +294,9 @@ export default function GeneralPage() {
               render={({ field }) => (
                 <FormItem className="flex max-w-xl flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                   <div className="space-y-0.5">
-                    <FormLabel>{t('pages.settings.general.autoRead')}</FormLabel>
+                    <FormLabel>{m['pages.settings.general.autoRead']()}</FormLabel>
                     <FormDescription>
-                      {t('pages.settings.general.autoReadDescription')}
+                      {m['pages.settings.general.autoReadDescription']()}
                     </FormDescription>
                   </div>
                   <FormControl>

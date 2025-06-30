@@ -1,26 +1,32 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "zero",
-  "compatibility_date": "2025-05-01",
-  "compatibility_flags": ["nodejs_compat"],
-  "main": "./worker.ts",
+  "compatibility_date": "2025-06-27",
   "observability": {
     "enabled": true,
   },
+  "assets": {
+    "directory": "./build/client/",
+    "not_found_handling": "single-page-application",
+    "html_handling": "force-trailing-slash",
+  },
   "env": {
     "local": {
+      "name": "zero-local",
       "vars": {
         "VITE_PUBLIC_BACKEND_URL": "http://localhost:8787",
         "VITE_PUBLIC_APP_URL": "http://localhost:3000",
       },
     },
     "staging": {
+      "name": "zero-staging",
       "vars": {
         "VITE_PUBLIC_BACKEND_URL": "https://sapi.0.email",
         "VITE_PUBLIC_APP_URL": "https://staging.0.email",
       },
     },
     "production": {
+      "name": "zero-production",
       "vars": {
         "VITE_PUBLIC_BACKEND_URL": "https://api.0.email",
         "VITE_PUBLIC_APP_URL": "https://0.email",

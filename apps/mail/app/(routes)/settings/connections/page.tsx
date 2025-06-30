@@ -22,7 +22,7 @@ import { useBilling } from '@/hooks/use-billing';
 import { emailProviders } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useTranslations } from 'use-intl';
+import { m } from '@/paraglide/messages';
 import { useQueryState } from 'nuqs';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -31,7 +31,7 @@ export default function ConnectionsPage() {
   const { data, isLoading, refetch: refetchConnections } = useConnections();
   const { refetch } = useSession();
   const [openTooltip, setOpenTooltip] = useState<string | null>(null);
-  const t = useTranslations();
+
   const trpc = useTRPC();
   const { mutateAsync: deleteConnection } = useMutation(trpc.connections.delete.mutationOptions());
   const [{ refetch: refetchThreads }] = useThreads();
@@ -43,11 +43,11 @@ export default function ConnectionsPage() {
       {
         onError: (error) => {
           console.error('Error disconnecting account:', error);
-          toast.error(t('pages.settings.connections.disconnectError'));
+          toast.error(m['pages.settings.connections.disconnectError']());
         },
       },
     );
-    toast.success(t('pages.settings.connections.disconnectSuccess'));
+    toast.success(m['pages.settings.connections.disconnectSuccess']());
     void refetchConnections();
     refetch();
     void refetchThreads();
@@ -56,8 +56,8 @@ export default function ConnectionsPage() {
   return (
     <div className="grid gap-6">
       <SettingsCard
-        title={t('pages.settings.connections.title')}
-        description={t('pages.settings.connections.description')}
+        title={m['pages.settings.connections.title']()}
+        description={m['pages.settings.connections.description']()}
       >
         <div className="space-y-6">
           {isLoading ? (
@@ -141,7 +141,7 @@ export default function ConnectionsPage() {
                         <>
                           <div>
                             <Badge variant="destructive">
-                              {t('pages.settings.connections.disconnected')}
+                              {m['pages.settings.connections.disconnected']()}
                             </Badge>
                           </div>
                           <Button
@@ -155,7 +155,7 @@ export default function ConnectionsPage() {
                             }}
                           >
                             <Unplug className="size-4" />
-                            {t('pages.settings.connections.reconnect')}
+                            {m['pages.settings.connections.reconnect']()}
                           </Button>
                         </>
                       ) : null}
@@ -172,21 +172,21 @@ export default function ConnectionsPage() {
                         <DialogContent showOverlay>
                           <DialogHeader>
                             <DialogTitle>
-                              {t('pages.settings.connections.disconnectTitle')}
+                              {m['pages.settings.connections.disconnectTitle']()}
                             </DialogTitle>
                             <DialogDescription>
-                              {t('pages.settings.connections.disconnectDescription')}
+                              {m['pages.settings.connections.disconnectDescription']()}
                             </DialogDescription>
                           </DialogHeader>
                           <div className="flex justify-end gap-4">
                             <DialogClose asChild>
                               <Button variant="outline">
-                                {t('pages.settings.connections.cancel')}
+                                {m['pages.settings.connections.cancel']()}
                               </Button>
                             </DialogClose>
                             <DialogClose asChild>
                               <Button onClick={() => disconnectAccount(connection.id)}>
-                                {t('pages.settings.connections.remove')}
+                                {m['pages.settings.connections.remove']()}
                               </Button>
                             </DialogClose>
                           </div>
@@ -208,7 +208,7 @@ export default function ConnectionsPage() {
                 >
                   <Plus className="absolute left-2 h-4 w-4" />
                   <span className="whitespace-nowrap pl-7 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                    {t('pages.settings.connections.addEmail')}
+                    {m['pages.settings.connections.addEmail']()}
                   </span>
                 </Button>
               </AddConnectionDialog>
@@ -220,7 +220,7 @@ export default function ConnectionsPage() {
               >
                 <Plus className="absolute left-2 h-4 w-4" />
                 <span className="whitespace-nowrap pl-7 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                  {t('pages.settings.connections.addEmail')}
+                  {m['pages.settings.connections.addEmail']()}
                 </span>
               </Button>
             )}

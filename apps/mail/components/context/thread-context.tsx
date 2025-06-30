@@ -31,8 +31,8 @@ import { useMemo, type ReactNode } from 'react';
 import { useLabels } from '@/hooks/use-labels';
 import { FOLDERS, LABELS } from '@/lib/utils';
 import { useMail } from '../mail/use-mail';
-import { useTranslations } from 'use-intl';
 import { Checkbox } from '../ui/checkbox';
+import { m } from '@/paraglide/messages';
 import { useParams } from 'react-router';
 import { useQueryState } from 'nuqs';
 import { toast } from 'sonner';
@@ -137,7 +137,7 @@ export function ThreadContextMenu({
   const [{ isLoading, isFetching }] = useThreads();
   const currentFolder = folder ?? '';
   const isArchiveFolder = currentFolder === FOLDERS.ARCHIVE;
-  const t = useTranslations();
+
   const [, setMode] = useQueryState('mode');
   const [, setThreadId] = useQueryState('threadId');
   const { data: threadData } = useThread(threadId);
@@ -166,7 +166,7 @@ export function ThreadContextMenu({
   }, [threadData]);
 
   const noopAction = () => async () => {
-    toast.info(t('common.actions.featureNotImplemented'));
+    toast.info(m['common.actions.featureNotImplemented']());
   };
 
   const { optimisticMoveThreadsTo } = useOptimisticActions();
@@ -193,7 +193,7 @@ export function ThreadContextMenu({
       }
     } catch (error) {
       console.error(`Error moving ${threadId ? 'email' : 'thread'}:`, error);
-      toast.error(t('common.actions.failedToMove'));
+      toast.error(m['common.actions.failedToMove']());
     }
   };
 
@@ -269,21 +269,21 @@ export function ThreadContextMenu({
   const primaryActions: EmailAction[] = [
     {
       id: 'reply',
-      label: t('common.mail.reply'),
+      label: m['common.mail.reply'](),
       icon: <Reply className="mr-2.5 h-4 w-4 opacity-60" />,
       action: handleThreadReply,
       disabled: false,
     },
     {
       id: 'reply-all',
-      label: t('common.mail.replyAll'),
+      label: m['common.mail.replyAll'](),
       icon: <ReplyAll className="mr-2.5 h-4 w-4 opacity-60" />,
       action: handleThreadReplyAll,
       disabled: false,
     },
     {
       id: 'forward',
-      label: t('common.mail.forward'),
+      label: m['common.mail.forward'](),
       icon: <Forward className="mr-2.5 h-4 w-4 opacity-60" />,
       action: handleThreadForward,
       disabled: false,
@@ -313,14 +313,14 @@ export function ThreadContextMenu({
       return [
         {
           id: 'move-to-inbox',
-          label: t('common.mail.moveToInbox'),
+          label: m['common.mail.moveToInbox'](),
           icon: <Inbox className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleMove(LABELS.SPAM, LABELS.INBOX),
           disabled: false,
         },
         {
           id: 'move-to-bin',
-          label: t('common.mail.moveToBin'),
+          label: m['common.mail.moveToBin'](),
           icon: <Trash className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleMove(LABELS.SPAM, LABELS.TRASH),
           disabled: false,
@@ -332,14 +332,14 @@ export function ThreadContextMenu({
       return [
         {
           id: 'restore-from-bin',
-          label: t('common.mail.restoreFromBin'),
+          label: m['common.mail.restoreFromBin'](),
           icon: <Inbox className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleMove(LABELS.TRASH, LABELS.INBOX),
           disabled: false,
         },
         {
           id: 'delete-from-bin',
-          label: t('common.mail.deleteFromBin'),
+          label: m['common.mail.deleteFromBin'](),
           icon: <Trash className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleDelete(),
           disabled: true,
@@ -351,14 +351,14 @@ export function ThreadContextMenu({
       return [
         {
           id: 'move-to-inbox',
-          label: t('common.mail.unarchive'),
+          label: m['common.mail.unarchive'](),
           icon: <Inbox className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleMove('', LABELS.INBOX),
           disabled: false,
         },
         {
           id: 'move-to-bin',
-          label: t('common.mail.moveToBin'),
+          label: m['common.mail.moveToBin'](),
           icon: <Trash className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleMove('', LABELS.TRASH),
           disabled: false,
@@ -370,14 +370,14 @@ export function ThreadContextMenu({
       return [
         {
           id: 'archive',
-          label: t('common.mail.archive'),
+          label: m['common.mail.archive'](),
           icon: <Archive className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleMove(LABELS.SENT, ''),
           disabled: false,
         },
         {
           id: 'move-to-bin',
-          label: t('common.mail.moveToBin'),
+          label: m['common.mail.moveToBin'](),
           icon: <Trash className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleMove(LABELS.SENT, LABELS.TRASH),
           disabled: false,
@@ -388,21 +388,21 @@ export function ThreadContextMenu({
     return [
       {
         id: 'archive',
-        label: t('common.mail.archive'),
+        label: m['common.mail.archive'](),
         icon: <Archive className="mr-2.5 h-4 w-4 opacity-60" />,
         action: handleMove(LABELS.INBOX, ''),
         disabled: false,
       },
       {
         id: 'move-to-spam',
-        label: t('common.mail.moveToSpam'),
+        label: m['common.mail.moveToSpam'](),
         icon: <ArchiveX className="mr-2.5 h-4 w-4 opacity-60" />,
         action: handleMove(LABELS.INBOX, LABELS.SPAM),
         disabled: !isInbox,
       },
       {
         id: 'move-to-bin',
-        label: t('common.mail.moveToBin'),
+        label: m['common.mail.moveToBin'](),
         icon: <Trash className="mr-2.5 h-4 w-4 opacity-60" />,
         action: handleMove(LABELS.INBOX, LABELS.TRASH),
         disabled: false,
@@ -413,7 +413,7 @@ export function ThreadContextMenu({
   const otherActions: EmailAction[] = [
     {
       id: 'toggle-read',
-      label: isUnread ? t('common.mail.markAsRead') : t('common.mail.markAsUnread'),
+      label: isUnread ? m['common.mail.markAsRead']() : m['common.mail.markAsUnread'](),
       icon: !isUnread ? (
         <Mail className="mr-2.5 h-4 w-4 fill-[#9D9D9D] dark:fill-[#9D9D9D]" />
       ) : (
@@ -424,13 +424,15 @@ export function ThreadContextMenu({
     },
     {
       id: 'toggle-important',
-      label: isImportant ? t('common.mail.removeFromImportant') : t('common.mail.markAsImportant'),
+      label: isImportant
+        ? m['common.mail.removeFromImportant']()
+        : m['common.mail.markAsImportant'](),
       icon: <ExclamationCircle className="mr-2.5 h-4 w-4 opacity-60" />,
       action: handleToggleImportant,
     },
     {
       id: 'favorite',
-      label: isStarred ? t('common.mail.removeFavorite') : t('common.mail.addFavorite'),
+      label: isStarred ? m['common.mail.removeFavorite']() : m['common.mail.addFavorite'](),
       icon: isStarred ? (
         <StarOff className="mr-2.5 h-4 w-4 opacity-60" />
       ) : (
@@ -471,7 +473,7 @@ export function ThreadContextMenu({
         <ContextMenuSub>
           <ContextMenuSubTrigger className="font-normal">
             <Tag className="mr-2.5 h-4 w-4 opacity-60" />
-            {t('common.mail.labels')}
+            {m['common.mail.labels']()}
           </ContextMenuSubTrigger>
           <ContextMenuSubContent className="dark:bg-panelDark max-h-[520px] w-48 overflow-y-auto bg-white">
             <LabelsList threadId={threadId} bulkSelected={mail.bulkSelected} />
