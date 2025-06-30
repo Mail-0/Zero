@@ -105,74 +105,71 @@ export default function LabelsPage() {
         <div className="space-y-6">
           <Separator />
           <ScrollArea className="h-full pr-4">
-            <div className="space-y-4">
-              {isLoading && !error ? (
-                <div className="flex h-32 items-center justify-center">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
-                </div>
-              ) : error ? (
-                <p className="text-muted-foreground py-4 text-center text-sm">{error.message}</p>
-              ) : labels?.length === 0 ? (
-                <p className="text-muted-foreground py-4 text-center text-sm">
-                 {t('common.mail.noLabelsAvailable')}
-                </p>
-              ) : (
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-6">
-                  {labels?.map((label) => {
-                    return (
-                      <div
-                        key={label.id}
-                        className="hover:bg-muted/50 group relative flex items-center justify-between rounded-lg p-3 transition-colors"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <Badge
-                            className="px-2 py-1"
-                            style={{
-                              backgroundColor: label.color?.backgroundColor,
-                              color: label.color?.textColor,
-                            }}
-                          >
-                            <span>{label.name}</span>
-                          </Badge>
-                        </div>
-                        <div className="dark:bg-panelDark absolute right-2 z-[25] flex items-center gap-1 rounded-xl border bg-white p-1 opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 [&_svg]:size-3.5"
-                                onClick={() => handleEdit(label)}
-                              >
-                                <Pencil className="text-[#898989]" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent className="dark:bg-panelDark mb-1 bg-white">
-                               {t('common.labels.editLabel')}
-                            </TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 hover:bg-[#FDE4E9] dark:hover:bg-[#411D23] [&_svg]:size-3.5"
-                                onClick={() => handleDelete(label.id!)}
-                              >
-                                <Bin className="fill-[#F43F5E]" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent className="dark:bg-panelDark mb-1 bg-white">
-                              {t('common.labels.deleteLabel')}
-                            </TooltipContent>
-                          </Tooltip>
-                        </div>
+            {isLoading && !error ? (
+              <div className="flex h-32 items-center justify-center">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
+              </div>
+            ) : error ? (
+              <p className="text-muted-foreground py-4 text-center text-sm">{error.message}</p>
+            ) : labels?.length === 0 ? (
+              <p className="text-muted-foreground py-4 text-center text-sm">
+               {t('common.mail.noLabelsAvailable')}
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {labels?.map((label) => {
+                  return (
+                    <div
+                      key={label.id}
+                      className="group relative flex items-center justify-between rounded-lg border border-border/40 p-3 transition-colors hover:bg-muted/50"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Badge
+                          className="h-6 min-w-[24px] px-2"
+                          style={{
+                            backgroundColor: label.color?.backgroundColor,
+                            color: label.color?.textColor,
+                          }}
+                        />
+                        <span className="font-medium">{label.name}</span>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+                      <div className="flex items-center gap-2">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 opacity-0 group-hover:opacity-100"
+                              onClick={() => handleEdit(label)}
+                            >
+                              <Pencil className="h-4 w-4 text-iconDark dark:text-iconLight" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                             {t('common.labels.editLabel')}
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 opacity-0 group-hover:opacity-100 hover:bg-[#FDE4E9] hover:text-destructive dark:hover:bg-[#411D23]"
+                              onClick={() => handleDelete(label.id!)}
+                            >
+                              <Bin className="h-4 w-4 fill-destructive" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {t('common.labels.deleteLabel')}
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </ScrollArea>
         </div>
       </SettingsCard>

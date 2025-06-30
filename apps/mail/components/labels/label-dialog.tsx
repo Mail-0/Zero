@@ -19,9 +19,11 @@ import type { Label as LabelType } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
+import { cn } from '@/lib/utils';
 import { useForm } from 'react-hook-form';
-import { Command } from 'lucide-react';
+import { Command, Check } from 'lucide-react';
 import { useTranslations } from 'use-intl';
 
 interface LabelDialogProps {
@@ -92,14 +94,14 @@ export function LabelDialog({
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent showOverlay={true}>
+      <DialogContent showOverlay={true} className="max-w-md">
         <DialogHeader>
           <DialogTitle>{editingLabel ? t('common.labels.editLabel') : t('common.mail.createNewLabel')}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="mt-4 space-y-4"
+            className="mt-4 space-y-6"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
                 e.preventDefault();
@@ -107,53 +109,87 @@ export function LabelDialog({
               }
             }}
           >
-            <div className="space-y-2">
+            <div className="space-y-4">
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('common.labels.labelName')}</FormLabel>
+                    <FormLabel className="text-sm font-medium">{t('common.labels.labelName')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter label name" {...field} autoFocus />
+                      <Input 
+                        placeholder={t('common.labels.enterLabelName')}
+                        {...field} 
+                        autoFocus
+                        className="h-10" 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <div className="space-y-2">
-                <Label>{t('common.labels.color')}</Label>
-                <div className="w-full">
-                  <div className="flex flex-wrap gap-2">
-                    {LABEL_COLORS.map((color, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        className={`h-10 w-10 rounded-[4px] border-[0.5px] border-white/10 transition-all ${
-                          formColor?.backgroundColor.toString() === color.backgroundColor &&
-                          formColor.textColor.toString() === color.textColor
-                            ? 'scale-110 ring-2 ring-blue-500 ring-offset-1'
-                            : 'hover:scale-105'
-                        }`}
-                        style={{ backgroundColor: color.backgroundColor }}
-                        onClick={() =>
-                          form.setValue('color', {
-                            backgroundColor: color.backgroundColor,
-                            textColor: color.textColor,
-                          })
-                        }
-                      />
-                    ))}
-                  </div>
+
+              <div className="space-y-3">
+                <FormLabel className="text-sm font-medium">{t('common.labels.color')}</FormLabel>
+                
+                <div className="flex items-center gap-4 mb-2">
+                  <Badge
+                    className="h-6 min-w-[24px] px-2"
+                    style={{
+                      backgroundColor: formColor?.backgroundColor,
+                      color: formColor?.textColor,
+                    }}
+                  />
+                  <span className="text-sm">
+                    {form.watch('name') || t('common.labels.labelPreview')}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+                  {LABEL_COLORS.map((color, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      className={cn(
+                        "relative h-10 rounded-md transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1",
+                        formColor?.backgroundColor === color.backgroundColor && 
+                        formColor?.textColor === color.textColor && 
+                        "ring-2 ring-primary"
+                      )}
+                      style={{ backgroundColor: color.backgroundColor }}
+                      onClick={() =>
+                        form.setValue('color', {
+                          backgroundColor: color.backgroundColor,
+                          textColor: color.textColor,
+                        })
+                      }
+                    >
+                      {formColor?.backgroundColor === color.backgroundColor && 
+                       formColor?.textColor === color.textColor && (
+                        <Check className="absolute inset-0 m-auto h-5 w-5" style={{ color: color.textColor }} />
+                      )}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
-            <div className="flex justify-end gap-2">
-              <Button className="h-8" type="button" variant="outline" onClick={handleClose}>
+            
+            <div className="flex justify-end gap-2 pt-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handleClose}
+                className="h-9"
+              >
                 {t('common.actions.cancel')}
               </Button>
-              <Button className="h-8 [&_svg]:size-4" type="submit">
-                {editingLabel ? t('common.actions.saveChanges') : t('common.labels.createLabel')}
+              <Button 
+                type="submit" 
+                className="h-9"
+              >
+                <span className="mr-1">
+                  {editingLabel ? t('common.actions.saveChanges') : t('common.labels.createLabel')}
+                </span>
                 <div className="flex h-5 items-center justify-center gap-1 rounded-sm bg-white/10 px-1 dark:bg-black/10">
                   <Command className="h-3 w-3 text-white dark:text-[#929292]" />
                   <CurvedArrow className="mt-1.5 h-3.5 w-3.5 fill-white dark:fill-[#929292]" />
