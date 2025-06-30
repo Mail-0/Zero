@@ -22,10 +22,8 @@ const PreventNavigateOnDragOver = (handleFiles: (files: File[]) => void | Promis
               dragover: (_view, event) => {
                 if (event.dataTransfer?.types?.includes('Files')) {
                   event.preventDefault();
-
                   return true;
                 }
-
                 return false;
               },
               drop: (_view, event) => {
@@ -39,7 +37,6 @@ const PreventNavigateOnDragOver = (handleFiles: (files: File[]) => void | Promis
 
                   return true;
                 }
-
                 return false;
               },
             },

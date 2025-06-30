@@ -114,7 +114,7 @@ export function EmailComposer({
   const [showBcc, setShowBcc] = useState(initialBcc.length > 0);
   const [isLoading, setIsLoading] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   const [messageLength, setMessageLength] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const toInputRef = useRef<HTMLInputElement>(null);
@@ -137,10 +137,11 @@ export function EmailComposer({
   const { data: activeConnection } = useActiveConnection();
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
   const [showAttachmentWarning, setShowAttachmentWarning] = useState(false);
-  const [originalAttachments, setOriginalAttachments] = useState<File[]>(initialAttachments);
+  const [originalAttachments, setOriginalAttachments] = useState<File[]>(initialAttachments || []);
   const [imageQuality, setImageQuality] = useState<ImageQuality>(
     settings?.settings?.imageCompression || 'medium',
   );
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
 
   const processAndSetAttachments = async (
     filesToProcess: File[],
@@ -669,6 +670,35 @@ export function EmailComposer({
     };
   }, [handleAttachment]);
 
+  // Add global dragend event to reset isDraggingOver
+  useEffect(() => {
+    const handleDragEnd = () => {
+      setIsDraggingOver(false);
+    };
+
+    document.addEventListener('dragend', handleDragEnd);
+    document.addEventListener('drop', handleDragEnd);
+    
+    return () => {
+      document.removeEventListener('dragend', handleDragEnd);
+      document.removeEventListener('drop', handleDragEnd);
+    };
+  }, []);
+
+  // Prevent files from opening in a new tab
+  useEffect(() => {
+    const preventDefaultDragBehavior = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    document.addEventListener('dragover', preventDefaultDragBehavior);
+    
+    return () => {
+      document.removeEventListener('dragover', preventDefaultDragBehavior);
+    };
+  }, []);
+
   // useHotkeys('meta+y', async (e) => {
   //   if (!editor.getText().trim().length && !subjectInput.trim().length) {
   //     toast.error('Please enter a subject or a message');
@@ -686,12 +716,49 @@ export function EmailComposer({
     await processAndSetAttachments(originalAttachments, newQuality, true);
   };
 
+  // Event handlers for drag and drop highlighting
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isDraggingOver) {
+      setIsDraggingOver(true);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      handleAttachment(files);
+    }
+  };
+
   return (
     <div
       className={cn(
         'flex max-h-[500px] w-full max-w-[750px] flex-col overflow-hidden rounded-2xl bg-[#FAFAFA] shadow-sm dark:bg-[#202020]',
         className,
       )}
+      onDragOver={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+      onDrop={handleDrop}
     >
       <div className="no-scrollbar dark:bg-panelDark flex min-h-0 flex-1 flex-col overflow-y-auto">
         {/* To, Cc, Bcc */}
@@ -1267,12 +1334,25 @@ export function EmailComposer({
             onClick={() => {
               editor.commands.focus();
             }}
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
             className={cn(
-              `min-h-[200px] w-full`,
+              `min-h-[200px] w-full relative`,
               editorClassName,
               aiGeneratedMessage !== null ? 'blur-sm' : '',
+              isDraggingOver ? 'ring-2 ring-primary/50 bg-primary/5 rounded-md' : '',
             )}
           >
+            {isDraggingOver && (
+              <div className="absolute inset-0 flex items-center justify-center rounded-md bg-primary/10 pointer-events-none">
+                <div className="flex flex-col items-center justify-center gap-2 text-primary">
+                  <Paperclip className="h-8 w-8" />
+                  <p className="text-sm font-medium">Drop files to attach</p>
+                </div>
+              </div>
+            )}
             <EditorContent editor={editor} className="h-full w-full" />
           </div>
         </div>
