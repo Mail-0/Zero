@@ -162,8 +162,34 @@
       "thisEmail": "هذا البريد الإلكتروني",
       "dropFiles": "أفلت الملفات للإرفاق",
       "attachments": "المرفقات",
-      "attachmentCount": "{count, plural, =0 {مرفقات} one {مرفق} two {مرفقان} few {مرفقات} many {مرفقات} other {مرفقات}}",
-      "fileCount": "{count, plural, =0 {ملفات} one {ملف} two {ملفان} few {ملفات} many {ملفات} other {ملفات}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "مرفقات",
+            "countPlural=one": "مرفق",
+            "countPlural=two": "مرفقان",
+            "countPlural=few": "مرفقات",
+            "countPlural=many": "مرفقات",
+            "countPlural=other": "مرفقات"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "ملفات",
+            "countPlural=one": "ملف",
+            "countPlural=two": "ملفان",
+            "countPlural=few": "ملفات",
+            "countPlural=many": "ملفات",
+            "countPlural=other": "ملفات"
+          }
+        }
+      ],
       "saveDraft": "حفظ المسودة",
       "send": "إرسال",
       "forward": "إعادة توجيه"
@@ -226,7 +252,20 @@
       "toSave": "للحفظ",
       "label": "التصنيف:",
       "search": "البحث في الملاحظات...",
-      "noteCount": "{count, plural, =0 {إضافة ملاحظات} one {ملاحظة واحدة} two {ملاحظتان} few {# ملاحظات} many {# ملاحظة} other {# ملاحظة}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "إضافة ملاحظات",
+            "countPlural=one": "ملاحظة واحدة",
+            "countPlural=two": "ملاحظتان",
+            "countPlural=few": "# ملاحظات",
+            "countPlural=many": "# ملاحظة",
+            "countPlural=other": "# ملاحظة"
+          }
+        }
+      ],
       "notePinned": "تم تثبيت الملاحظة",
       "noteUnpinned": "تم إلغاء تثبيت الملاحظة",
       "colorChanged": "تم تحديث لون الملاحظة",
@@ -279,7 +318,20 @@
       "failedToUpdateGmailAlias": "فشل تحديث الاسم المستعار الافتراضي في إعدادات جيميل"
     },
     "mail": {
-      "replies": "{count, plural, =0 {ردود} one {رد واحد} two {ردان} few {# ردود} many {# رداً} other {# رد}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "ردود",
+            "countPlural=one": "رد واحد",
+            "countPlural=two": "ردان",
+            "countPlural=few": "# ردود",
+            "countPlural=many": "# رداً",
+            "countPlural=other": "# رد"
+          }
+        }
+      ],
       "deselectAll": "تم إلغاء تحديد جميع الرسائل",
       "selectedEmails": "تم تحديد {count} من الرسائل",
       "noEmailsToSelect": "لا توجد رسائل للتحديد",

@@ -11,7 +11,7 @@ import { emailProviders } from '@/lib/constants';
 import { authClient } from '@/lib/auth-client';
 import { Plus, UserPlus } from 'lucide-react';
 import { useLocation } from 'react-router';
-import { useTranslations } from 'use-intl';
+import { m } from '@/paraglide/messages';
 import { motion } from 'motion/react';
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
@@ -28,7 +28,6 @@ export const AddConnectionDialog = ({
   onOpenChange?: (open: boolean) => void;
 }) => {
   const { connections, attach } = useBilling();
-  const t = useTranslations();
 
   const canCreateConnection = useMemo(() => {
     if (!connections?.remaining && !connections?.unlimited) return false;
@@ -61,15 +60,15 @@ export const AddConnectionDialog = ({
             className={cn('w-full justify-start gap-2', className)}
           >
             <UserPlus size={16} strokeWidth={2} className="opacity-60" aria-hidden="true" />
-            <p className="text-[13px] opacity-60">{t('pages.settings.connections.addEmail')}</p>
+            <p className="text-[13px] opacity-60">{m['pages.settings.connections.addEmail']()}</p>
           </Button>
         )}
       </DialogTrigger>
       <DialogContent showOverlay={true}>
         <DialogHeader>
-          <DialogTitle>{t('pages.settings.connections.connectEmail')}</DialogTitle>
+          <DialogTitle>{m['pages.settings.connections.connectEmail']()}</DialogTitle>
           <DialogDescription>
-            {t('pages.settings.connections.connectEmailDescription')}
+            {m['pages.settings.connections.connectEmailDescription']()}
           </DialogDescription>
         </DialogHeader>
         {!canCreateConnection && (
@@ -135,7 +134,7 @@ export const AddConnectionDialog = ({
               className="h-24 w-full flex-col items-center justify-center gap-2 border-dashed"
             >
               <Plus className="h-12 w-12" />
-              <span className="text-xs">{t('pages.settings.connections.moreComingSoon')}</span>
+              <span className="text-xs">{m['pages.settings.connections.moreComingSoon']()}</span>
             </Button>
           </motion.div>
         </motion.div>

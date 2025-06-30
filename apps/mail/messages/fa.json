@@ -162,8 +162,28 @@
       "thisEmail": "این ایمیل",
       "dropFiles": "فایل‌ها را برای پیوست کردن اینجا رها کنید",
       "attachments": "پیوست‌ها",
-      "attachmentCount": "{count, plural, =0 {پیوست} one {پیوست} other {پیوست}}",
-      "fileCount": "{count, plural, =0 {فایل} one {فایل} other {فایل}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "پیوست",
+            "countPlural=one": "پیوست",
+            "countPlural=other": "پیوست"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "فایل",
+            "countPlural=one": "فایل",
+            "countPlural=other": "فایل"
+          }
+        }
+      ],
       "saveDraft": "ذخیره پیش‌نویس",
       "send": "ارسال",
       "forward": "ارسال به دیگران"
@@ -226,7 +246,17 @@
       "toSave": "برای ذخیره",
       "label": "برچسب:",
       "search": "جستجوی یادداشت‌ها...",
-      "noteCount": "{count, plural, =0 {افزودن یادداشت‌ها} one {# یادداشت} other {# یادداشت}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "افزودن یادداشت‌ها",
+            "countPlural=one": "# یادداشت",
+            "countPlural=other": "# یادداشت"
+          }
+        }
+      ],
       "notePinned": "یادداشت سنجاق شد",
       "noteUnpinned": "سنجاق یادداشت برداشته شد",
       "colorChanged": "رنگ یادداشت به‌روزرسانی شد",
@@ -279,7 +309,17 @@
       "failedToUpdateGmailAlias": "به‌روزرسانی نام مستعار پیش‌فرض در تنظیمات جیمیل ناموفق بود"
     },
     "mail": {
-      "replies": "{count, plural, =0 {پاسخ‌ها} one {# پاسخ} other {# پاسخ}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "پاسخ‌ها",
+            "countPlural=one": "# پاسخ",
+            "countPlural=other": "# پاسخ"
+          }
+        }
+      ],
       "deselectAll": "همه ایمیل‌ها از حالت انتخاب خارج شدند",
       "selectedEmails": "{count} ایمیل انتخاب شده",
       "noEmailsToSelect": "ایمیلی برای انتخاب وجود ندارد",

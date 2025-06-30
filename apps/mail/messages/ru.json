@@ -162,8 +162,32 @@
       "thisEmail": "это письмо",
       "dropFiles": "Поместите файлы, чтобы прикрепить",
       "attachments": "Приложения",
-      "attachmentCount": "{count, plural, =0 {вложений} one {вложение} few {вложения} many {вложений} other {вложений}}",
-      "fileCount": "{count, plural, =0 {файлов} one {файл} few {файла} many {файлов} other {файла}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "вложений",
+            "countPlural=one": "вложение",
+            "countPlural=few": "вложения",
+            "countPlural=many": "вложений",
+            "countPlural=other": "вложений"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "файлов",
+            "countPlural=one": "файл",
+            "countPlural=few": "файла",
+            "countPlural=many": "файлов",
+            "countPlural=other": "файла"
+          }
+        }
+      ],
       "saveDraft": "Сохранить черновик",
       "send": "Отправить",
       "forward": "Переслать"
@@ -226,7 +250,19 @@
       "toSave": "чтобы сохранить",
       "label": "Метка:",
       "search": "Найти заметки...",
-      "noteCount": "{count, plural, =0 {Добавьте заметки} one {# заметка} few {# заметки} many {# заметок} other {# заметки}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "Добавьте заметки",
+            "countPlural=one": "# заметка",
+            "countPlural=few": "# заметки",
+            "countPlural=many": "# заметок",
+            "countPlural=other": "# заметки"
+          }
+        }
+      ],
       "notePinned": "Заметка закреплена",
       "noteUnpinned": "Заметка откреплена",
       "colorChanged": "Цвет заметки обновлён",
@@ -279,9 +315,32 @@
       "failedToUpdateGmailAlias": "Не удалось обновить адрес по умолчанию в настройках Gmail"
     },
     "mail": {
-      "replies": "{count, plural, =0 {ответы} one {# ответ} few {# ответа} many {# ответов} other {# ответы}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "ответы",
+            "countPlural=one": "# ответ",
+            "countPlural=few": "# ответа",
+            "countPlural=many": "# ответов",
+            "countPlural=other": "# ответы"
+          }
+        }
+      ],
       "deselectAll": "Отменить выбор всех писем",
-      "selectedEmails": "{count, plural, one {Выбрано # письмо} few {Выбрано # письма} many {Выбрано # писем} other {Выбрано # письма}}",
+      "selectedEmails": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=one": "Выбрано # письмо",
+            "countPlural=few": "Выбрано # письма",
+            "countPlural=many": "Выбрано # писем",
+            "countPlural=other": "Выбрано # письма"
+          }
+        }
+      ],
       "noEmailsToSelect": "Нет писем для выбора",
       "markedAsRead": "Отметить как прочитанное",
       "markedAsUnread": "Отметить как непрочитанное",

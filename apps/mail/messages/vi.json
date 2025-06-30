@@ -162,8 +162,28 @@
       "thisEmail": "email này",
       "dropFiles": "Kéo thả tệp để đính kèm",
       "attachments": "Tệp đính kèm",
-      "attachmentCount": "{count, plural, =0 {tệp đính kèm} one {tệp đính kèm} other {tệp đính kèm}}",
-      "fileCount": "{count, plural, =0 {tệp} one {tệp} other {tệp}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "tệp đính kèm",
+            "countPlural=one": "tệp đính kèm",
+            "countPlural=other": "tệp đính kèm"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "tệp",
+            "countPlural=one": "tệp",
+            "countPlural=other": "tệp"
+          }
+        }
+      ],
       "saveDraft": "Lưu bản nháp",
       "send": "Gửi",
       "forward": "Chuyển tiếp"
@@ -226,7 +246,17 @@
       "toSave": "để lưu",
       "label": "Nhãn:",
       "search": "Tìm kiếm ghi chú...",
-      "noteCount": "{count, plural, =0 {Thêm ghi chú} one {# ghi chú} other {# ghi chú}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "Thêm ghi chú",
+            "countPlural=one": "# ghi chú",
+            "countPlural=other": "# ghi chú"
+          }
+        }
+      ],
       "notePinned": "Đã ghim ghi chú",
       "noteUnpinned": "Đã bỏ ghim ghi chú",
       "colorChanged": "Đã cập nhật màu ghi chú",
@@ -279,7 +309,17 @@
       "failedToUpdateGmailAlias": "Không thể cập nhật bí danh mặc định trong cài đặt Gmail"
     },
     "mail": {
-      "replies": "{count, plural, =0 {phản hồi} one {# phản hồi} other {# phản hồi}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "phản hồi",
+            "countPlural=one": "# phản hồi",
+            "countPlural=other": "# phản hồi"
+          }
+        }
+      ],
       "deselectAll": "Đã bỏ chọn tất cả email",
       "selectedEmails": "Đã chọn {count} email",
       "noEmailsToSelect": "Không có email nào để chọn",

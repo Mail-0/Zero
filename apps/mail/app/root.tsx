@@ -15,12 +15,11 @@ import { useEffect, type PropsWithChildren } from 'react';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { getServerTrpc } from '@/lib/trpc.server';
 import { Button } from '@/components/ui/button';
+import { getLocale } from '@/paraglide/runtime';
 import { siteConfig } from '@/lib/site-config';
-import { resolveLocale } from '@/i18n/request';
-import { getMessages } from '@/i18n/request';
 import { signOut } from '@/lib/auth-client';
 import type { Route } from './+types/root';
-import { useTranslations } from 'use-intl';
+import { m } from '@/paraglide/messages';
 import { ArrowLeft } from 'lucide-react';
 import './globals.css';
 
@@ -37,26 +36,9 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-export async function loader({ request }: Route.ClientLoaderArgs) {
-  const locale = resolveLocale(request);
-  const trpc = getServerTrpc(request);
-
-  const connectionId = await trpc.connections.getDefault
-    .query()
-    .then((res) => res?.id ?? null)
-    .catch(() => null);
-
-  return {
-    locale: locale ?? 'en',
-    messages: await getMessages(locale),
-    connectionId,
-  };
-}
-
 export function Layout({ children }: PropsWithChildren) {
-  const { locale = 'en', messages, connectionId } = useLoaderData<typeof loader>();
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang={getLocale()} suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -70,7 +52,7 @@ export function Layout({ children }: PropsWithChildren) {
         <Links />
       </head>
       <body className="antialiased">
-        <ServerProviders messages={messages} locale={locale} connectionId={connectionId}>
+        <ServerProviders>
           <ClientProviders>{children}</ClientProviders>
         </ServerProviders>
         <ScrollRestoration />
@@ -150,7 +132,6 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
 function NotFound() {
   const navigate = useNavigate();
-  const t = useTranslations();
 
   return (
     <div className="dark:bg-background flex w-full items-center justify-center bg-white text-center">
@@ -165,9 +146,9 @@ function NotFound() {
         {/* Message */}
         <div className="space-y-2">
           <h2 className="text-2xl font-semibold tracking-tight">
-            {t('pages.error.notFound.title')}
+            {m['pages.error.notFound.title']()}
           </h2>
-          <p className="text-muted-foreground">{t('pages.error.notFound.description')}</p>
+          <p className="text-muted-foreground">{m['pages.error.notFound.description']()}</p>
         </div>
 
         {/* Buttons */}
@@ -178,7 +159,7 @@ function NotFound() {
             className="text-muted-foreground gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            {t('pages.error.notFound.goBack')}
+            {m['pages.error.notFound.goBack']()}
           </Button>
         </div>
       </div>

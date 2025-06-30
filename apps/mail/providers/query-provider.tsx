@@ -28,7 +28,7 @@ function createIDBPersister(idbValidKey: IDBValidKey = 'zero-query-cache') {
   } satisfies Persister;
 }
 
-export const makeQueryClient = (connectionId: string | null) =>
+export const makeQueryClient = () =>
   new QueryClient({
     queryCache: new QueryCache({
       onError: (err, { meta }) => {
@@ -50,7 +50,7 @@ export const makeQueryClient = (connectionId: string | null) =>
       queries: {
         retry: false,
         refetchOnWindowFocus: false,
-        queryKeyHashFn: (queryKey) => hashKey([{ connectionId }, ...queryKey]),
+        queryKeyHashFn: (queryKey) => hashKey([{ connectionId: 'default' }, ...queryKey]),
         gcTime: 1000 * 60 * 60 * 24,
       },
       mutations: {
@@ -67,13 +67,12 @@ let browserQueryClient = {
   activeConnectionId: string | null;
 };
 
-const getQueryClient = (connectionId: string | null) => {
+const getQueryClient = () => {
   if (typeof window === 'undefined') {
-    return makeQueryClient(connectionId);
+    return makeQueryClient();
   } else {
-    if (!browserQueryClient.queryClient || browserQueryClient.activeConnectionId !== connectionId) {
-      browserQueryClient.queryClient = makeQueryClient(connectionId);
-      browserQueryClient.activeConnectionId = connectionId;
+    if (!browserQueryClient.queryClient) {
+      browserQueryClient.queryClient = makeQueryClient();
     }
     return browserQueryClient.queryClient;
   }
@@ -104,15 +103,9 @@ export const trpcClient = createTRPCClient<AppRouter>({
 
 type TrpcHook = ReturnType<typeof useTRPC>;
 
-export function QueryProvider({
-  children,
-  connectionId,
-}: PropsWithChildren<{ connectionId: string | null }>) {
-  const persister = useMemo(
-    () => createIDBPersister(`zero-query-cache-${connectionId ?? 'default'}`),
-    [connectionId],
-  );
-  const queryClient = useMemo(() => getQueryClient(connectionId), [connectionId]);
+export function QueryProvider({ children }: PropsWithChildren) {
+  const persister = useMemo(() => createIDBPersister(`zero-query-cache-default`), []);
+  const queryClient = useMemo(() => getQueryClient(), []);
 
   return (
     <PersistQueryClientProvider
