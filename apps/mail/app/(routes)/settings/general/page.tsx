@@ -65,23 +65,23 @@ const TimezoneSelect = memo(
               variant="outline"
               role="combobox"
               aria-expanded={open}
-              className="w-46 flex items-center justify-start"
+              className="w-full md:w-46 flex items-center justify-start mt-2 py-1 h-9"
             >
               <Clock className="mr-2 h-4 w-4 flex-shrink-0" />
               <span className="truncate">{field.value}</span>
             </Button>
           </FormControl>
         </PopoverTrigger>
-        <PopoverContent className="w-[300px] p-0">
-          <div className="px-3 py-2">
+        <PopoverContent className="w-[300px] p-0 max-w-[calc(100vw-2rem)] md:max-w-none">
+          <div className="px-3 py-1">
             <input
-              className="border-input bg-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-1 disabled:cursor-not-allowed disabled:opacity-50"
+              className="border-input bg-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-8 w-full rounded-md border px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-1 disabled:cursor-not-allowed disabled:opacity-50"
               placeholder={t('pages.settings.general.selectTimezone')}
               value={timezoneSearch}
               onChange={(e) => setTimezoneSearch(e.target.value)}
             />
           </div>
-          <ScrollArea className="h-[300px]">
+          <ScrollArea className="h-[250px]">
             <div className="p-1">
               {filteredTimezones.length === 0 && (
                 <div className="text-muted-foreground p-2 text-center text-sm">
@@ -201,16 +201,18 @@ export default function GeneralPage() {
       >
         <Form {...form}>
           <form id="general-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="flex w-full items-center gap-4">
+            <div className="flex flex-col md:flex-row w-full items-start md:items-end gap-6 md:gap-4">
               <FormField
                 control={form.control}
                 name="language"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('pages.settings.general.language')}</FormLabel>
+                  <FormItem className="w-full md:w-auto">
+                    <div className="flex items-center h-6">
+                      <FormLabel className="flex items-center m-0">{t('pages.settings.general.language')}</FormLabel>
+                    </div>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger className="w-36 justify-start">
+                        <SelectTrigger className="w-full md:w-36 justify-start mt-2">
                           <Globe className="mr-2 h-4 w-4" />
                           <SelectValue placeholder={t('pages.settings.general.selectLanguage')} />
                         </SelectTrigger>
@@ -230,8 +232,10 @@ export default function GeneralPage() {
                 control={form.control}
                 name="timezone"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('pages.settings.general.timezone')}</FormLabel>
+                  <FormItem className="w-full md:w-auto">
+                    <div className="flex items-center h-6">
+                      <FormLabel className="flex items-center m-0">{t('pages.settings.general.timezone')}</FormLabel>
+                    </div>
                     <TimezoneSelect field={field} t={t} />
                   </FormItem>
                 )}
@@ -241,21 +245,21 @@ export default function GeneralPage() {
                   control={form.control}
                   name="defaultEmailAlias"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-1">
-                        {t('pages.settings.general.defaultEmailAlias')}{' '}
+                    <FormItem className="w-full md:w-auto">
+                      <div className="flex items-center h-6">
+                        <FormLabel className="flex items-center m-0">{t('pages.settings.general.defaultEmailAlias')}</FormLabel>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <InfoIcon className="h-4 w-4" />
+                            <InfoIcon className="ml-1 h-4 w-4" />
                           </TooltipTrigger>
                           <TooltipContent>
                             {t('pages.settings.general.defaultEmailDescription')}
                           </TooltipContent>
                         </Tooltip>
-                      </FormLabel>
+                      </div>
                       <Select onValueChange={field.onChange} value={field.value || ''}>
                         <FormControl>
-                          <SelectTrigger className="w-[300px] justify-start">
+                          <SelectTrigger className="w-full md:w-[300px] justify-start mt-2">
                             <Mail className="mr-2 h-4 w-4" />
                             <SelectValue
                               placeholder={t('pages.settings.general.selectDefaultEmail')}
@@ -287,15 +291,19 @@ export default function GeneralPage() {
               control={form.control}
               name="zeroSignature"
               render={({ field }) => (
-                <FormItem className="flex max-w-xl flex-row items-center justify-between rounded-lg border px-4 py-2">
+                <FormItem className="flex flex-col sm:flex-row max-w-xl items-start sm:items-center justify-between rounded-lg border px-3 py-3 gap-3">
                   <div className="space-y-0.5">
-                    <FormLabel>{t('pages.settings.general.zeroSignature')}</FormLabel>
-                    <FormDescription>
+                    <FormLabel className="text-base">{t('pages.settings.general.zeroSignature')}</FormLabel>
+                    <FormDescription className="pr-2">
                       {t('pages.settings.general.zeroSignatureDescription')}
                     </FormDescription>
                   </div>
                   <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    <Switch 
+                      className="mt-1 sm:mt-0"
+                      checked={field.value} 
+                      onCheckedChange={field.onChange} 
+                    />
                   </FormControl>
                 </FormItem>
               )}
@@ -304,15 +312,19 @@ export default function GeneralPage() {
               control={form.control}
               name="autoRead"
               render={({ field }) => (
-                <FormItem className="flex max-w-xl flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                <FormItem className="flex flex-col sm:flex-row max-w-xl items-start sm:items-center justify-between rounded-lg border px-3 py-3 gap-3 shadow-sm">
                   <div className="space-y-0.5">
-                    <FormLabel>{t('pages.settings.general.autoRead')}</FormLabel>
-                    <FormDescription>
+                    <FormLabel className="text-base">{t('pages.settings.general.autoRead')}</FormLabel>
+                    <FormDescription className="pr-2">
                       {t('pages.settings.general.autoReadDescription')}
                     </FormDescription>
                   </div>
                   <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    <Switch 
+                      className="mt-1 sm:mt-0"
+                      checked={field.value} 
+                      onCheckedChange={field.onChange} 
+                    />
                   </FormControl>
                 </FormItem>
               )}
