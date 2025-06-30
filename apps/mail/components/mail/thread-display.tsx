@@ -42,7 +42,7 @@ import { cleanHtml } from '@/lib/email-utils';
 import { Button } from '@/components/ui/button';
 import { useStats } from '@/hooks/use-stats';
 import ReplyCompose from './reply-composer';
-import { useTranslations } from 'use-intl';
+import { m } from '@/paraglide/messages';
 import { NotesPanel } from './note-panel';
 import { cn, FOLDERS } from '@/lib/utils';
 import MailDisplay from './mail-display';
@@ -189,7 +189,7 @@ export function ThreadDisplay() {
       return acc;
     }, []);
   }, [emailData?.messages]);
-  const t = useTranslations();
+
   const { refetch: refetchStats } = useStats();
   const [mode, setMode] = useQueryState('mode');
   const [, setBackgroundQueue] = useAtom(backgroundQueueAtom);
@@ -687,7 +687,7 @@ export function ThreadDisplay() {
     await toggleImportant({ ids: [id] });
     await refetchThread();
     if (isImportant) {
-      toast.success(t('common.mail.markedAsImportant'));
+      toast.success(m['common.mail.markedAsImportant']());
     } else {
       toast.error('Failed to mark as important');
     }
@@ -819,13 +819,13 @@ export function ThreadDisplay() {
                       </button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">
-                      {t('common.actions.close')}
+                      {m['common.actions.close']()}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
                 <ThreadActionButton
                   icon={X}
-                  label={t('common.actions.close')}
+                  label={m['common.actions.close']()}
                   onClick={handleClose}
                   className="hidden md:flex"
                 />
@@ -888,7 +888,7 @@ export function ThreadDisplay() {
                   <Reply className="fill-muted-foreground dark:fill-[#9B9B9B]" />
                   <div className="flex items-center justify-center gap-2.5 pl-0.5 pr-1">
                     <div className="justify-start text-sm leading-none text-black dark:text-white">
-                      {t('common.threadDisplay.replyAll')}
+                      {m['common.threadDisplay.replyAll']()}
                     </div>
                   </div>
                 </button>
@@ -912,8 +912,8 @@ export function ThreadDisplay() {
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">
                       {isStarred
-                        ? t('common.threadDisplay.unstar')
-                        : t('common.threadDisplay.star')}
+                        ? m['common.threadDisplay.unstar']()
+                        : m['common.threadDisplay.star']()}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -929,7 +929,7 @@ export function ThreadDisplay() {
                       </button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">
-                      {t('common.threadDisplay.archive')}
+                      {m['common.threadDisplay.archive']()}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -946,7 +946,7 @@ export function ThreadDisplay() {
                         </button>
                       </TooltipTrigger>
                       <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">
-                        {t('common.mail.moveToBin')}
+                        {m['common.mail.moveToBin']()}
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -971,7 +971,7 @@ export function ThreadDisplay() {
                     {isInSpam || isInArchive || isInBin ? (
                       <DropdownMenuItem onClick={() => moveThreadTo('inbox')}>
                         <Inbox className="mr-2 h-4 w-4" />
-                        <span>{t('common.mail.moveToInbox')}</span>
+                        <span>{m['common.mail.moveToInbox']()}</span>
                       </DropdownMenuItem>
                     ) : (
                       <>
@@ -982,17 +982,17 @@ export function ThreadDisplay() {
                           }}
                         >
                           <Printer className="fill-iconLight dark:fill-iconDark mr-2 h-4 w-4" />
-                          <span>{t('common.threadDisplay.printThread')}</span>
+                          <span>{m['common.threadDisplay.printThread']()}</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => moveThreadTo('spam')}>
                           <ArchiveX className="fill-iconLight dark:fill-iconDark mr-2" />
-                          <span>{t('common.threadDisplay.moveToSpam')}</span>
+                          <span>{m['common.threadDisplay.moveToSpam']()}</span>
                         </DropdownMenuItem>
                         {emailData.latest?.listUnsubscribe ||
                         emailData.latest?.listUnsubscribePost ? (
                           <DropdownMenuItem onClick={handleUnsubscribeProcess}>
                             <Folders className="fill-iconLight dark:fill-iconDark mr-2" />
-                            <span>{t('common.mailDisplay.unsubscribe')}</span>
+                            <span>{m['common.mailDisplay.unsubscribe']()}</span>
                           </DropdownMenuItem>
                         ) : null}
                       </>
@@ -1000,7 +1000,7 @@ export function ThreadDisplay() {
                     {!isImportant && (
                       <DropdownMenuItem onClick={handleToggleImportant}>
                         <Lightning className="fill-iconLight dark:fill-iconDark mr-2" />
-                        {t('common.mail.markAsImportant')}
+                        {m['common.mail.markAsImportant']()}
                       </DropdownMenuItem>
                     )}
                   </DropdownMenuContent>

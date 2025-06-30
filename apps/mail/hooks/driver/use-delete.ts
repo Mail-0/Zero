@@ -4,7 +4,7 @@ import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
 import { useThreads } from '@/hooks/use-threads';
 import { useStats } from '@/hooks/use-stats';
-import { useTranslations } from 'use-intl';
+import { m } from '@/paraglide/messages';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -13,7 +13,6 @@ const useDelete = () => {
   const [mail, setMail] = useMail();
   const [{ refetch: refetchThreads }] = useThreads();
   const { refetch: refetchStats } = useStats();
-  const t = useTranslations();
   const { addToQueue, deleteFromQueue } = useBackgroundQueue();
   const trpc = useTRPC();
   const { mutateAsync: deleteThread } = useMutation(trpc.mail.delete.mutationOptions());
@@ -27,12 +26,12 @@ const useDelete = () => {
           id,
         }),
         {
-          loading: t('common.actions.deletingMail'),
-          success: t('common.actions.deletedMail'),
+          loading: m['common.actions.deletingMail'](),
+          success: m['common.actions.deletedMail'](),
           error: (error) => {
             console.error(`Error deleting ${type}:`, error);
 
-            return t('common.actions.failedToDeleteMail');
+            return m['common.actions.failedToDeleteMail']();
           },
           finally: async () => {
             setMail({
