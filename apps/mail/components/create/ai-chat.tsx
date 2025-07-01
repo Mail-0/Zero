@@ -84,7 +84,7 @@ const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => voi
   const secondRowQueries = ['Find all work meetings', 'What projects do i have coming up'];
 
   return (
-    <div className="mt-6 flex w-full flex-col items-center gap-2 [-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_10%,black_90%,transparent_100%)] [mask-image:linear-gradient(to_right,transparent_0%,black_10%,black_90%,transparent_100%)]">
+    <div className="horizontal-fade-mask mt-6 flex w-full flex-col items-center gap-2">
       {/* First row */}
       <div className="no-scrollbar relative flex w-full justify-center overflow-x-auto">
         <div className="flex gap-4 px-4">
