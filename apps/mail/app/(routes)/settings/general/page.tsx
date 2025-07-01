@@ -30,6 +30,7 @@ import { useTRPC } from '@/providers/query-provider';
 import { getBrowserTimezone } from '@/lib/timezones';
 import { Textarea } from '@/components/ui/textarea';
 import { useSettings } from '@/hooks/use-settings';
+import { locales as localesData } from '@/locales';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 // import { useRevalidator } from 'react-router';
@@ -206,7 +207,7 @@ export default function GeneralPage() {
                       <SelectContent>
                         {locales.map((locale) => (
                           <SelectItem key={locale} value={locale}>
-                            {locale}
+                            {localesData[locale as keyof typeof localesData]}
                           </SelectItem>
                         ))}
                       </SelectContent>
