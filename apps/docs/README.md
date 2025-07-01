@@ -165,11 +165,10 @@ We welcome contributions to improve the documentation! Here's how you can help:
 - **[Next.js Documentation](https://nextjs.org/docs)** - Learn about Next.js
 
 ## Support
-
-- **Bug Reports** - [Create an issue](https://github.com/your-org/zero/issues)
-- **Feature Requests** - [Start a discussion](https://github.com/your-org/zero/discussions)
-- **Documentation Issues** - [Report documentation problems](https://github.com/your-org/zero/issues)
-- **General Questions** - [Ask in discussions](https://github.com/your-org/zero/discussions)
+- **Bug Reports** - [Create an issue](https://github.com/Mail-0/zero/issues)
+- **Feature Requests** - [Start a discussion](https://github.com/Mail-0/zero/discussions)
+- **Documentation Issues** - [Report documentation problems](https://github.com/Mail-0/zero/issues)
+- **General Questions** - [Ask in discussions](https://github.com/Mail-0/zero/discussions)
 
 ---
 
