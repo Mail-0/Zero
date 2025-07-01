@@ -900,10 +900,6 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             mailCommands.push(item);
           } else if (sectionKey === 'settings') {
             if (!item.isBackButton || pathname.startsWith('/settings')) {
-              // Add slash command notation to settings
-              if (item.title === t('navigation.settings.general' as MessageKey)) {
-                item.title = `${item.title}`;
-              }
               settingsCommands.push(item);
             }
           } else {
@@ -948,7 +944,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     });
 
     return result;
-  }, [pathname, t, setIsComposeOpen, quickFilterOptions, commandInputValue, slashCommands]);
+  }, [pathname, setIsComposeOpen, quickFilterOptions, commandInputValue, slashCommands]);
 
   const hasMatchingCommands = useMemo(() => {
     if (!commandInputValue.trim()) return true;
