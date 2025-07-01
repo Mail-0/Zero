@@ -22,7 +22,9 @@ This documentation site provides:
 - **API Reference** - Detailed API documentation for developers
 - **Plugin Development** - Build custom extensions and integrations
 - **Contributing Guide** - How to contribute to the Zero project
-- **Blog Posts** - Latest news, updates, and technical deep-dives
+- **Professional Blog** - Latest news, updates, and technical deep-dives with enterprise-grade design
+- **Interactive Search** - Powerful search functionality across all content
+- **Responsive Design** - Optimized for all devices and screen sizes
 
 ## Development
 
@@ -71,16 +73,23 @@ pnpm build
 apps/docs/
 ├── app/                    # Next.js app directory
 │   ├── (home)/            # Landing page and home routes
+│   │   ├── blog/          # Blog index and post pages
+│   │   │   ├── page.tsx   # Blog index with Fumadocs design
+│   │   │   └── [slug]/    # Individual blog posts
+│   │   └── page.tsx       # Documentation homepage
 │   ├── docs/              # Documentation layout and pages
 │   ├── api/search/        # Search API endpoint
 │   └── layout.config.tsx  # Shared layout configuration
 ├── content/               # MDX content files
 │   ├── docs/             # Documentation pages
-│   └── blog/             # Blog posts
+│   │   ├── getting-started/ # Getting started guides
+│   │   └── ...           # Other documentation sections
+│   └── blog/             # Blog posts and announcements
+│       └── sample.mdx    # Professional sample blog post
 ├── components/           # React components
 ├── lib/                 # Utility functions and configurations
-│   └── source.ts        # Content source adapter
-└── source.config.ts     # Fumadocs MDX configuration
+│   └── source.ts        # Content source adapter with blog support
+└── source.config.ts     # Fumadocs MDX configuration with blog schema
 ```
 
 ## Key Files & Directories
@@ -88,22 +97,37 @@ apps/docs/
 | Path                      | Description                                            |
 | ------------------------- | ------------------------------------------------------ |
 | `content/docs/`           | Main documentation content in MDX format              |
-| `content/blog/`           | Blog posts and announcements                          |
-| `lib/source.ts`           | Content source adapter for Fumadocs                   |
+| `content/blog/`           | Professional blog posts with enterprise-grade design  |
+| `app/(home)/blog/`        | Blog pages using official Fumadocs blog implementation|
+| `lib/source.ts`           | Content source adapter with docs and blog support     |
 | `app/layout.config.tsx`   | Shared layout options and navigation configuration    |
-| `app/api/search/route.ts` | Search functionality for the documentation            |
-| `source.config.ts`        | MDX processing and frontmatter schema configuration   |
+| `app/api/search/route.ts` | Search functionality for docs and blog content        |
+| `source.config.ts`        | MDX processing with blog and docs schema definitions  |
 
 ## Technology Stack
 
 This documentation site is built with:
 
 - **[Next.js 15](https://nextjs.org/)** - React framework for production
-- **[Fumadocs](https://fumadocs.vercel.app/)** - Documentation framework
+- **[Fumadocs](https://fumadocs.vercel.app/)** - Documentation framework with official blog support
 - **[MDX](https://mdxjs.com/)** - Markdown with JSX for rich content
 - **[TypeScript](https://www.typescriptlang.org/)** - Type-safe JavaScript
 - **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first styling
 - **[Mermaid](https://mermaid.js.org/)** - Diagram and flowchart generation
+
+## Blog Implementation
+
+The blog section uses the official Fumadocs blog implementation, featuring:
+
+- **Professional Design** - Matches the official Fumadocs blog aesthetic
+- **Gradient Backgrounds** - Beautiful visual effects with noise textures
+- **Responsive Layout** - Optimized for all screen sizes
+- **InlineTOC** - Table of contents for easy navigation
+- **MDX Support** - Rich content with React components
+- **Automatic Sorting** - Posts sorted by date (newest first)
+- **SEO Optimized** - Proper metadata and structured data
+
+The blog can be accessed at `/blog` and individual posts at `/blog/[slug]`.
 
 ## Contributing to Documentation
 
