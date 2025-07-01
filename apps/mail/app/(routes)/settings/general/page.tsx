@@ -60,14 +60,14 @@ const TimezoneSelect = memo(
               variant="outline"
               role="combobox"
               aria-expanded={open}
-              className="w-46 flex items-center justify-start"
+              className="w-46 flex !h-9 items-center justify-start rounded-md hover:bg-transparent"
             >
               <Clock className="mr-2 h-4 w-4 flex-shrink-0" />
               <span className="truncate">{field.value}</span>
             </Button>
           </FormControl>
         </PopoverTrigger>
-        <PopoverContent className="w-[300px] p-0">
+        <PopoverContent className="w-[300px] p-0" align="start">
           <div className="px-3 py-2">
             <input
               className="border-input bg-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-1 disabled:cursor-not-allowed disabled:opacity-50"
@@ -198,7 +198,7 @@ export default function GeneralPage() {
                     <FormLabel>{m['pages.settings.general.language']()}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger className="w-36 justify-start">
+                        <SelectTrigger className="w-36 justify-start hover:bg-transparent">
                           <Globe className="mr-2 h-4 w-4" />
                           <SelectValue placeholder={m['pages.settings.general.selectLanguage']()} />
                         </SelectTrigger>
@@ -230,20 +230,12 @@ export default function GeneralPage() {
                   name="defaultEmailAlias"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center gap-1">
+                      <FormLabel className="!mb-1">
                         {m['pages.settings.general.defaultEmailAlias']()}{' '}
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <InfoIcon className="h-4 w-4" />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {m['pages.settings.general.defaultEmailDescription']()}
-                          </TooltipContent>
-                        </Tooltip>
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value || ''}>
                         <FormControl>
-                          <SelectTrigger className="w-[300px] justify-start">
+                          <SelectTrigger className="w-[300px] justify-start hover:bg-transparent">
                             <Mail className="mr-2 h-4 w-4" />
                             <SelectValue
                               placeholder={m['pages.settings.general.selectDefaultEmail']()}
