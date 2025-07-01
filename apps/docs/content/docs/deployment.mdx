@@ -8,9 +8,9 @@ import { Cards, Card } from 'fumadocs-ui/components/card';
 import { Steps, Step } from 'fumadocs-ui/components/steps';
 import { CodeBlock } from 'fumadocs-ui/components/codeblock';
 import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
-import { Mermaid } from '@/components/Mermaid';
+import { Mermaid } from '../../components/Mermaid';
 
-This guide covers various deployment strategies for Zero Email Client, from simple single-server deployments to scalable cloud architectures. Choose the approach that best fits your requirements and infrastructure.
+This guide covers various deployment strategies for Zero, from simple single-server deployments to scalable cloud architectures. Choose the approach that best fits your requirements and infrastructure.
 
 ## Deployment Options
 
@@ -24,8 +24,8 @@ This guide covers various deployment strategies for Zero Email Client, from simp
 
 ### 1. Cloudflare Workers (Recommended)
 
-<Callout type="tip">
-Zero Email Client is optimized for deployment on Cloudflare Workers, providing global edge distribution and excellent performance.
+<Callout type="info">
+Zero is optimized for deployment on Cloudflare Workers, providing global edge distribution and excellent performance.
 </Callout>
 
 #### Prerequisites
@@ -112,11 +112,32 @@ Zero uses separate Cloudflare Workers for different services. The main configura
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "zero",
-  "compatibility_date": "2025-05-01", 
-  "compatibility_flags": ["nodejs_compat"],
-  "main": "./worker.ts",
+  "compatibility_date": "2025-06-27",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "./build/client/",
+    "not_found_handling": "single-page-application",
+    "html_handling": "force-trailing-slash"
+  },
   "env": {
+    "local": {
+      "name": "zero-local",
+      "vars": {
+        "VITE_PUBLIC_BACKEND_URL": "http://localhost:8787",
+        "VITE_PUBLIC_APP_URL": "http://localhost:3000"
+      }
+    },
+    "staging": {
+      "name": "zero-staging", 
+      "vars": {
+        "VITE_PUBLIC_BACKEND_URL": "https://sapi.0.email",
+        "VITE_PUBLIC_APP_URL": "https://staging.0.email"
+      }
+    },
     "production": {
+      "name": "zero-production",
       "vars": {
         "VITE_PUBLIC_BACKEND_URL": "https://api.0.email",
         "VITE_PUBLIC_APP_URL": "https://0.email"
@@ -179,7 +200,7 @@ Zero uses separate Cloudflare Workers for different services. The main configura
 
 #### Environment Variables
 
-```bash title="Production Secrets"
+```bash title="Production Environment Variables"
 # Core Configuration
 wrangler secret put DATABASE_URL
 wrangler secret put BETTER_AUTH_SECRET
@@ -192,22 +213,21 @@ wrangler secret put GOOGLE_CLIENT_SECRET
 # AI Services
 wrangler secret put OPENAI_API_KEY
 wrangler secret put PERPLEXITY_API_KEY
+wrangler secret put GROQ_API_KEY
 wrangler secret put AI_SYSTEM_PROMPT
 
 # Email Services
 wrangler secret put RESEND_API_KEY
 
-# Redis/Caching
+# Cache/Storage
 wrangler secret put REDIS_URL
 wrangler secret put REDIS_TOKEN
 
-# Security
-wrangler secret put AUTUMN_SECRET_KEY
-
-# SMS/Voice (Optional)
+# Optional Services
 wrangler secret put TWILIO_ACCOUNT_SID
 wrangler secret put TWILIO_AUTH_TOKEN
 wrangler secret put TWILIO_PHONE_NUMBER
+wrangler secret put AUTUMN_SECRET_KEY
 ```
 
 <Callout type="info">
@@ -216,12 +236,13 @@ wrangler secret put TWILIO_PHONE_NUMBER
 
 #### Deploy
 
-```bash title="Terminal"
-# Build for production
-# Build for production
-pnpm build
+```bash title="Deploy Commands"
+# Deploy server to Cloudflare Workers
+cd apps/server
+wrangler deploy
 
-# Deploy to Cloudflare Workers
+# Deploy mail app to Cloudflare Workers  
+cd apps/mail
 wrangler deploy
 ```
 
@@ -240,98 +261,158 @@ Deploy using Docker containers for consistent environments across different plat
 
 #### Docker Configuration
 
-```dockerfile title="Dockerfile"
-FROM node:20-alpine AS base
+```dockerfile title="docker/app/Dockerfile"
+# Base Stage: Node.js with Alpine Linux  
+FROM node:22-alpine AS base
 
-# Install dependencies
+# Dependencies Stage: Install Dependencies
 FROM base AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
-COPY package.json pnpm-lock.yaml ./
-RUN npm install -g pnpm && pnpm install --frozen-lockfile
 
-# Build application
+# Install package managers
+RUN npm install -g pnpm
+RUN pnpm install -g turbo
+
+# Copy dependency files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+RUN mkdir -p apps packages
+COPY apps/*/package.json ./apps/
+COPY packages/ ./packages/
+
+RUN pnpm install --prod --ignore-scripts
+
+# Builder Stage: Build the Application
 FROM base AS builder
 WORKDIR /app
+
+# Install global dependencies
+RUN npm install -g pnpm
+RUN pnpm install -g turbo
+
+# Copy source code and dependencies
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm install -g pnpm && pnpm build
 
-# Production image
+# Build the application
+RUN turbo build
+
+# Production Stage: Runtime Environment
 FROM base AS runner
 WORKDIR /app
 
 RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN adduser --system --uid 1001 nodejs
 
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
+# Copy built application
+COPY --from=builder --chown=nodejs:nodejs /app/apps/mail/build ./apps/mail/build
+COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nodejs:nodejs /app/package.json ./package.json
 
-USER nextjs
+USER nodejs
 
 EXPOSE 3000
 
 ENV NODE_ENV=production
 ENV PORT=3000
 
-CMD ["node", "dist/server.js"]
+CMD ["node", "apps/mail/build/server/index.js"]
 ```
 
 #### Docker Compose
 
-<Callout type="tip">
+<Callout type="info">
 Use Docker Compose for easy multi-service deployment with database and cache services.
 </Callout>
 
 ```yaml title="docker-compose.prod.yaml"
-version: '3.8'
-
 services:
-  app:
-    build: .
-    ports:
-      - "3000:3000"
+  zero:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
     environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgresql://user:password@db:5432/zero_prod
-      - REDIS_URL=redis://redis:6379
+      VITE_PUBLIC_BACKEND_URL: ${VITE_PUBLIC_BACKEND_URL:-http://cf-worker.example}
+      VITE_PUBLIC_APP_URL: ${VITE_PUBLIC_APP_URL:-http://localhost:3000}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-zerodotemail}
+      REDIS_URL: ${REDIS_URL}
+      REDIS_TOKEN: ${REDIS_TOKEN:-upstash-local-token}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      AI_SYSTEM_PROMPT: ${AI_SYSTEM_PROMPT}
+      GROQ_API_KEY: ${GROQ_API_KEY}
     depends_on:
-      - db
-      - redis
-    restart: unless-stopped
+      db:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+      valkey:
+        condition: service_healthy
+      upstash-proxy:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '--quiet', 'http://127.0.0.1:3000']
+      interval: 90s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    ports:
+      - 3000:3000
 
   db:
-    image: postgres:15-alpine
+    container_name: zerodotemail-db
+    image: postgres:17
+    restart: unless-stopped
     environment:
-      - POSTGRES_DB=zero_prod
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./docker/db/init.sql:/docker-entrypoint-initdb.d/init.sql
-    restart: unless-stopped
-
-  redis:
-    image: redis:7-alpine
-    volumes:
-      - redis_data:/data
-    restart: unless-stopped
-
-  nginx:
-    image: nginx:alpine
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: zerodotemail
+      PGDATA: /var/lib/postgresql/data/pgdata
     ports:
-      - "80:80"
-      - "443:443"
+      - 5432:5432
     volumes:
-      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./docker/nginx/ssl:/etc/nginx/ssl
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  valkey:
+    container_name: zerodotemail-redis
+    image: docker.io/bitnami/valkey:8.0
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - VALKEY_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+    ports:
+      - 6379:6379
+    volumes:
+      - valkey-data:/bitnami/valkey/data
+    healthcheck:
+      test: ['CMD', 'valkey-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  upstash-proxy:
+    container_name: zerodotemail-upstash-proxy
+    image: hiett/serverless-redis-http:latest
+    environment:
+      REDIS_URL: redis://valkey:6379
+      TOKEN: upstash-local-token
+    ports:
+      - 8079:80
     depends_on:
-      - app
-    restart: unless-stopped
+      valkey:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '--quiet', 'http://127.0.0.1:80/health']
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  postgres_data:
-  redis_data:
+  postgres-data:
+  valkey-data:
 ```
 
 #### Deployment Commands
@@ -347,54 +428,70 @@ docker-compose logs -f app
 docker-compose up -d --scale app=3
 ```
 
-### 3. Vercel Deployment
+### 3. Local Development
 
-<Callout type="tip">
-Deploy the frontend to Vercel with serverless functions for automatic scaling and global distribution.
+<Callout type="info">
+For local development and testing, Zero includes a comprehensive Docker Compose setup.
 </Callout>
 
-#### Vercel Configuration
+#### Local Development Setup
 
-```json title="vercel.json"
-{
-  "framework": "vite",
-  "buildCommand": "pnpm build",
-  "outputDirectory": "dist",
-  "installCommand": "pnpm install",
-  "functions": {
-    "app/api/**/*.ts": {
-      "runtime": "nodejs18.x"
-    }
-  },
-  "env": {
-    "NODE_ENV": "production"
-  },
-  "build": {
-    "env": {
-      "DATABASE_URL": "@database_url",
-      "BETTER_AUTH_SECRET": "@better_auth_secret"
-    }
-  }
-}
+```bash title="Local Development Commands"
+# Start local development environment
+docker-compose -f docker-compose.db.yaml up -d
+
+# Install dependencies
+pnpm install
+
+# Start development servers
+pnpm dev
 ```
 
-#### Deploy to Vercel
+#### Local Services
 
-<Steps>
-  <Step>Install Vercel CLI</Step>
-  <Step>Login to Vercel</Step>
-  <Step>Deploy to production</Step>
-</Steps>
+The local development environment includes:
 
-```bash title="Vercel Deployment"
-# Install Vercel CLI
-npm install -g vercel
+- **PostgreSQL Database** - Primary data storage
+- **Valkey (Redis)** - Caching and session storage  
+- **Upstash Proxy** - Redis HTTP proxy for serverless compatibility
 
-# Login to Vercel
-vercel login
+```yaml title="docker-compose.db.yaml"
+services:
+  db:
+    container_name: zerodotemail-db
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: zerodotemail
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
 
-# Deploy
-vercel --prod
+  valkey:
+    container_name: zerodotemail-redis
+    image: docker.io/bitnami/valkey:8.0
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - 6379:6379
+    volumes:
+      - valkey-data:/bitnami/valkey/data
+
+  upstash-proxy:
+    container_name: zerodotemail-upstash-proxy
+    image: hiett/serverless-redis-http:latest
+    environment:
+      REDIS_URL: redis://valkey:6379
+      TOKEN: upstash-local-token
+    ports:
+      - 8079:80
+
+volumes:
+  postgres-data:
+  valkey-data:
 ```
 
 ### 4. AWS Deployment
@@ -551,495 +648,154 @@ export class ZeroEmailStack extends cdk.Stack {
 }
 ```
 
-### 5. Google Cloud Platform
+## Production Environment Variables
 
-<Callout type="note">
-Deploy on GCP using Cloud Run for serverless container deployment with automatic scaling.
+<Callout type="warning">
+Ensure all production environment variables are properly set before deployment. Missing variables will cause deployment failures.
 </Callout>
 
-#### Cloud Run Configuration
-
-```yaml title="cloudrun.yaml"
-apiVersion: serving.knative.dev/v1
-kind: Service
-metadata:
-  name: zero-email-client
-  annotations:
-    run.googleapis.com/ingress: all
-spec:
-  template:
-    metadata:
-      annotations:
-        autoscaling.knative.dev/maxScale: "10"
-        run.googleapis.com/cpu-throttling: "false"
-        run.googleapis.com/memory: "1Gi"
-        run.googleapis.com/cpu: "1000m"
-    spec:
-      containerConcurrency: 100
-      containers:
-      - image: gcr.io/your-project/zero-email-client:latest
-        ports:
-        - containerPort: 3000
-        env:
-        - name: NODE_ENV
-          value: "production"
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: database-url
-              key: url
-        resources:
-          limits:
-            cpu: "1000m"
-            memory: "1Gi"
-```
-
-#### Deployment Script
-
-```bash title="deploy-gcp.sh"
-#!/bin/bash
-
-# Set project
-gcloud config set project your-project-id
-
-# Build and push image
-docker build -t gcr.io/your-project/zero-email-client:latest .
-docker push gcr.io/your-project/zero-email-client:latest
-
-# Deploy to Cloud Run
-gcloud run deploy zero-email-client \
-  --image gcr.io/your-project/zero-email-client:latest \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --memory 1Gi \
-  --cpu 1 \
-  --max-instances 10 \
-  --set-env-vars NODE_ENV=production
-```
-
-## Database Setup
-
-### PostgreSQL (Recommended for Production)
-
-```bash title="script"
-# Create database
-createdb zero_production
-
-# Set connection string
-export DATABASE_URL="postgresql://user:password@localhost:5432/zero_production"
-
-# Run migrations
-pnpm db:migrate
-
-# Optional: Set up read replicas
-# Configure read replica in your hosting provider
-export DATABASE_READ_URL="postgresql://user:password@read-replica:5432/zero_production"
-```
-
-### Database Optimization
-
-```sql title="SQL"
--- Performance indexes
-CREATE INDEX CONCURRENTLY idx_emails_user_id_created_at ON emails(user_id, created_at DESC);
-CREATE INDEX CONCURRENTLY idx_emails_message_id ON emails(message_id);
-CREATE INDEX CONCURRENTLY idx_emails_folder_unread ON emails(folder, is_read) WHERE is_read = false;
-
--- Full-text search index
-CREATE INDEX CONCURRENTLY idx_emails_search ON emails USING gin(to_tsvector('english', subject || ' ' || body));
-
--- Connection pooling settings
-ALTER SYSTEM SET max_connections = 200;
-ALTER SYSTEM SET shared_buffers = '256MB';
-ALTER SYSTEM SET effective_cache_size = '1GB';
-ALTER SYSTEM SET work_mem = '4MB';
-```
-
-## Environment Configuration
-
-### Production Environment Variables
-
-```bash title=".env"
-# Application
-NODE_ENV=production
-PORT=3000
-APP_URL=https://mail.yourdomain.com
-
+```bash title="Required Environment Variables" 
 # Database
-DATABASE_URL=postgresql://user:password@prod-db:5432/zero_prod
-DATABASE_POOL_SIZE=20
-
-# Redis Cache
-REDIS_URL=redis://redis-cluster:6379
-REDIS_POOL_SIZE=10
+DATABASE_URL=postgresql://user:password@prod-db:5432/zerodotemail
 
 # Authentication
 BETTER_AUTH_SECRET=your-super-long-production-secret-key
-BETTER_AUTH_URL=https://mail.yourdomain.com
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
 
-# Email Configuration
-SMTP_HOST=smtp.yourdomain.com
-SMTP_PORT=587
-SMTP_SECURE=true
-SMTP_USER=noreply@yourdomain.com
-SMTP_PASS=your-smtp-password
+# AI Services  
+OPENAI_API_KEY=your-openai-api-key
+PERPLEXITY_API_KEY=your-perplexity-api-key
+GROQ_API_KEY=your-groq-api-key
+AI_SYSTEM_PROMPT=your-custom-system-prompt
 
-# File Storage
-STORAGE_PROVIDER=s3
-AWS_ACCESS_KEY_ID=your-access-key
-AWS_SECRET_ACCESS_KEY=your-secret-key
-AWS_REGION=us-east-1
-AWS_S3_BUCKET=zero-attachments-prod
+# Email Services
+RESEND_API_KEY=your-resend-api-key
 
-# Monitoring
-SENTRY_DSN=https://your-sentry-dsn
-LOG_LEVEL=info
-ENABLE_METRICS=true
+# Cache/Storage
+REDIS_URL=your-redis-connection-string
+REDIS_TOKEN=your-redis-token
 
-# Security
-FORCE_HTTPS=true
-SECURE_COOKIES=true
-TRUST_PROXY=true
-RATE_LIMIT_ENABLED=true
-```
+# Application URLs
+VITE_PUBLIC_BACKEND_URL=https://api.yourdomain.com
+VITE_PUBLIC_APP_URL=https://yourdomain.com
 
-## SSL/TLS Configuration
-
-### Let's Encrypt with Nginx
-
-```nginx title="/etc/nginx/sites-available/zero-email-client"
-server {
-    listen 80;
-    server_name mail.yourdomain.com;
-    return 301 https://$server_name$request_uri;
-}
-
-server {
-    listen 443 ssl http2;
-    server_name mail.yourdomain.com;
-
-    ssl_certificate /etc/letsencrypt/live/mail.yourdomain.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/mail.yourdomain.com/privkey.pem;
-    
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384;
-    ssl_prefer_server_ciphers off;
-    ssl_session_cache shared:SSL:10m;
-    ssl_session_timeout 10m;
-
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
-
-### Cloudflare SSL
-
-```bash title="script"
-# Enable Full (strict) SSL mode in Cloudflare dashboard
-# Add SSL/TLS → Edge Certificates → Always Use HTTPS
-# Enable HTTP Strict Transport Security (HSTS)
-```
-
-## Monitoring and Logging
-
-### Application Monitoring
-
-```typescript title="lib/monitoring.ts"
-import * as Sentry from '@sentry/node'
-import { PrometheusRegistry } from 'prom-client'
-
-export function initializeMonitoring() {
-  // Sentry for error tracking
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-    environment: process.env.NODE_ENV,
-    integrations: [
-      new Sentry.Integrations.Http({ tracing: true }),
-      new Sentry.Integrations.Express({ app }),
-    ],
-    tracesSampleRate: 0.1,
-  })
-
-  // Prometheus metrics
-  const register = new PrometheusRegistry()
-  
-  // Custom metrics
-  const httpRequestDuration = new Histogram({
-    name: 'http_request_duration_seconds',
-    help: 'Duration of HTTP requests in seconds',
-    labelNames: ['method', 'route', 'status'],
-    registers: [register],
-  })
-
-  const emailsSent = new Counter({
-    name: 'emails_sent_total',
-    help: 'Total number of emails sent',
-    registers: [register],
-  })
-
-  return { register, httpRequestDuration, emailsSent }
-}
-```
-
-### Log Configuration
-
-```typescript title="lib/logger.ts"
-import winston from 'winston'
-
-export const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.errors({ stack: true }),
-    process.env.NODE_ENV === 'production'
-      ? winston.format.json()
-      : winston.format.simple()
-  ),
-  transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({ 
-      filename: 'logs/error.log', 
-      level: 'error' 
-    }),
-    new winston.transports.File({ 
-      filename: 'logs/combined.log' 
-    }),
-  ],
-})
-```
-
-## Health Checks
-
-### Application Health Check
-
-```typescript title="routes/health.ts"
-export const healthCheck = async (req: Request, res: Response) => {
-  const checks = {
-    database: await checkDatabase(),
-    redis: await checkRedis(),
-    smtp: await checkSMTP(),
-    storage: await checkStorage(),
-  }
-
-  const isHealthy = Object.values(checks).every(check => check.status === 'ok')
-  res.status(isHealthy ? 200 : 503).json({
-    status: isHealthy ? 'ok' : 'error',
-    timestamp: new Date().toISOString(),
-    checks,
-  })
-}
-
-async function checkDatabase() {
-  try {
-    await db.raw('SELECT 1')
-    return { status: 'ok', responseTime: Date.now() }
-  } catch (error) {
-    return { status: 'error', error: error.message }
-  }
-}
-```
-
-### Docker Health Check
-
-```dockerfile title="Dockerfile"
-# Add to Dockerfile
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/health || exit 1
-```
-
-## Backup Strategy
-
-### Database Backups
-
-```bash title="backup-db.sh"
-#!/bin/bash
-
-BACKUP_DIR="/backups"
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-DB_NAME="zero_production"
-
-# Create backup
-pg_dump $DATABASE_URL > "$BACKUP_DIR/zero_backup_$TIMESTAMP.sql"
-
-# Compress backup
-gzip "$BACKUP_DIR/zero_backup_$TIMESTAMP.sql"
-
-# Upload to S3
-aws s3 cp "$BACKUP_DIR/zero_backup_$TIMESTAMP.sql.gz" \
-  s3://your-backup-bucket/database/
-
-# Clean up old local backups (keep last 7 days)
-find $BACKUP_DIR -name "zero_backup_*.sql.gz" -mtime +7 -delete
-
-# Clean up old S3 backups (keep last 30 days)
-aws s3 ls s3://your-backup-bucket/database/ | \
-  grep zero_backup | \
-  awk '{print $4}' | \
-  sort | \
-  head -n -30 | \
-  xargs -I {} aws s3 rm s3://your-backup-bucket/database/{}
-```
-
-### Automated Backup Cron
-
-```bash title="Corn-job"
-# Daily backup at 2 AM
-0 2 * * * /opt/zero/scripts/backup-db.sh
-
-# Weekly full backup at Sunday 3 AM
-0 3 * * 0 /opt/zero/scripts/full-backup.sh
+# Optional Services
+TWILIO_ACCOUNT_SID=your-twilio-sid
+TWILIO_AUTH_TOKEN=your-twilio-token
+TWILIO_PHONE_NUMBER=your-twilio-phone
 ```
 
 ## Security Considerations
 
-### Production Security Checklist
-<Callout type="warning" title="Critical Security Requirements">
-All items in this checklist must be implemented before deploying to production. Security is not optional!
+<Callout type="warning">
+Security is critical for email applications. Ensure all security measures are implemented before production deployment.
 </Callout>
 
-- [ ] Use HTTPS everywhere
-- [ ] Enable HSTS headers
-- [ ] Configure CSP headers
-- [ ] Set up rate limiting
-- [ ] Enable CSRF protection
-- [ ] Use secure session cookies
-- [ ] Implement proper CORS policies
-- [ ] Regular security updates
-- [ ] Database encryption at rest
-- [ ] Secure environment variables
-- [ ] Network security groups
-- [ ] Web Application Firewall (WAF)
+### Essential Security Checklist
 
-### Security Headers
+- [ ] **HTTPS Only** - Force all connections to use HTTPS
+- [ ] **Secure Headers** - Implement HSTS, CSP, and security headers
+- [ ] **Authentication** - Secure OAuth configuration and session management
+- [ ] **Database Security** - Encrypted connections and proper access controls
+- [ ] **Environment Variables** - Secure secret management
+- [ ] **Regular Updates** - Keep dependencies and base images updated
+- [ ] **Access Controls** - Proper user permissions and rate limiting
+- [ ] **Monitoring** - Error tracking and security monitoring
 
-```typescript title="middleware/security.ts"
-import helmet from 'helmet'
+### Security Headers Configuration
 
-export const securityMiddleware = helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https:"],
-      scriptSrc: ["'self'"],
-      connectSrc: ["'self'", "https://api.openai.com"],
-    },
-  },
-  hsts: {
-    maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true,
-  },
-})
-```
-
-## Performance Optimization
-
-### Caching Strategy
-
-```typescript title="lib/cache.ts"
-import Redis from 'ioredis'
-
-const redis = new Redis(process.env.REDIS_URL)
-
-export const cache = {
-  // Cache email list for 5 minutes
-  async getEmailList(userId: string, key: string) {
-    const cached = await redis.get(`emails:${userId}:${key}`)
-    return cached ? JSON.parse(cached) : null
-  },
-
-  async setEmailList(userId: string, key: string, data: any) {
-    await redis.setex(`emails:${userId}:${key}`, 300, JSON.stringify(data))
-  },
-
-  // Cache user session for 1 hour
-  async getSession(sessionId: string) {
-    return await redis.get(`session:${sessionId}`)
-  },
-
-  async setSession(sessionId: string, data: any) {
-    await redis.setex(`session:${sessionId}`, 3600, JSON.stringify(data))
-  },
+```typescript title="Security Headers Example"
+// For Cloudflare Workers - configured in wrangler.jsonc
+{
+  "headers": {
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "X-XSS-Protection": "1; mode=block",
+    "Referrer-Policy": "strict-origin-when-cross-origin"
+  }
 }
 ```
 
-### CDN Configuration
+## Monitoring and Health Checks
 
-```yaml title="CloudFront distribution"
-Resources:
-  CloudFrontDistribution:
-    Type: AWS::CloudFront::Distribution
-    Properties:
-      DistributionConfig:
-        Origins:
-          - Id: zero-origin
-            DomainName: your-app-domain.com
-            CustomOriginConfig:
-              HTTPPort: 443
-              OriginProtocolPolicy: https-only
-        DefaultCacheBehavior:
-          TargetOriginId: zero-origin
-          ViewerProtocolPolicy: redirect-to-https
-          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad # Managed-CachingOptimized
-          OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf # Managed-CORS-S3Origin
-        PriceClass: PriceClass_100
-        Enabled: true
+<Callout type="info">
+Proper monitoring ensures your Zero deployment stays healthy and performs optimally.
+</Callout>
+
+### Health Check Endpoints
+
+Zero includes built-in health check endpoints:
+
+- `/health` - Basic application health
+- `/health/db` - Database connectivity
+- `/health/redis` - Cache connectivity  
+- `/health/detailed` - Comprehensive system status
+
+### Monitoring Setup
+
+```bash title="Basic Monitoring Commands"
+# Check application status
+curl https://your-domain.com/health
+
+# Monitor Cloudflare Workers logs
+wrangler tail --env production
+
+# Check Docker container health
+docker ps --filter "name=zero"
+docker logs zero-app
 ```
 
 ## Troubleshooting
 
-### Common Issues
+### Common Deployment Issues
 
-**1. Database Connection Issues**
-```bash title="Script"
-# Check database connectivity
-psql $DATABASE_URL -c "SELECT 1"
+**Database Connection Failures**
+```bash title="Database Troubleshooting"
+# Test database connectivity
+psql $DATABASE_URL -c "SELECT version();"
 
-# Check connection pool
-SELECT count(*) FROM pg_stat_activity WHERE datname = 'zero_production';
+# Check connection string format
+echo $DATABASE_URL
 ```
 
-**2. Memory Issues**
-```bash title="Script"
-# Monitor memory usage
-docker stats zero-app
+**Cloudflare Workers Issues**
+```bash title="Workers Troubleshooting"
+# Check worker status
+wrangler whoami
+wrangler deployments list
 
-# Check Node.js heap
-node --inspect=0.0.0.0:9229 dist/server.js
+# View real-time logs
+wrangler tail --env production
 ```
 
-**3. Email Delivery Issues**
-```bash title="Script"
-# Test SMTP connectivity
-telnet smtp.yourdomain.com 587
+**Environment Variable Problems**
+```bash title="Environment Troubleshooting"
+# List all secrets (for Cloudflare Workers)
+wrangler secret list
 
-# Check email queue
-redis-cli LLEN email_queue
+# Test specific environment variables
+wrangler secret put TEST_VAR --env production
 ```
 
-### Monitoring Commands
+**Build Failures**
+```bash title="Build Troubleshooting"
+# Clear build cache
+pnpm store prune
+rm -rf node_modules
+pnpm install
 
-```bash title="Script"
-# Check application logs
-docker logs -f zero-app
-
-# Monitor system resources
-htop
-
-# Check database performance
-pg_stat_statements
-
-# Monitor Redis
-redis-cli monitor
+# Rebuild packages
+pnpm build --force
 ```
+
+### Getting Help
+
+If you encounter issues during deployment:
+
+1. Check the [GitHub Issues](https://github.com/zerodotmail/zero/issues) for similar problems
+2. Review the application logs for error messages
+3. Verify all environment variables are correctly set
+4. Ensure your deployment platform has the required permissions and resources
+5. Join the community Discord for deployment support

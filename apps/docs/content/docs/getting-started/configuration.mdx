@@ -8,7 +8,7 @@ import { Files, File, Folder } from 'fumadocs-ui/components/files';
 import { CodeBlock } from 'fumadocs-ui/components/codeblock';
 import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
 
-This guide covers all configuration options available in Zero Email Client, from basic setup to advanced customization.
+This guide covers all configuration options available in Zero, from basic setup to advanced customization.
 
 ## Configuration Files
 
@@ -17,20 +17,20 @@ The primary configuration is handled through environment variables and configura
 </Callout>
 
 <Files>
-  <Folder name="Zero/" description="Project root" defaultOpen>
-    <File name=".env.example" description="Environment variables template" />
-    <File name="package.json" description="Main package configuration" />
-    <File name="pnpm-workspace.yaml" description="pnpm workspace configuration" />
-    <File name="turbo.json" description="Turborepo configuration" />
-    <File name="tsconfig.json" description="TypeScript configuration" />
-    <File name="eslint.config.mjs" description="ESLint configuration" />
-    <File name="docker-compose.db.yaml" description="Database services" />
-    <Folder name="apps/mail/" description="Frontend app">
+  <Folder name="Zero/" defaultOpen>
+    <File name=".env.example" />
+    <File name="package.json" />
+    <File name="pnpm-workspace.yaml" />
+    <File name="turbo.json" />
+    <File name="tsconfig.json" />
+    <File name="eslint.config.mjs" />
+    <File name="docker-compose.db.yaml" />
+    <Folder name="apps/mail/">
       <File name="tailwind.config.ts" />
       <File name="vite.config.ts" />
       <File name="react-router.config.ts" />
     </Folder>
-    <Folder name="apps/server/" description="Backend app">
+    <Folder name="apps/server/">
       <File name="drizzle.config.ts" />
       <File name="wrangler.jsonc" />
     </Folder>
@@ -175,7 +175,7 @@ DATABASE_URL=sqlite:./data/db.sqlite
     - Limited concurrent access
   </Tab>
   <Tab value="PostgreSQL">
-    <Callout type="tip">
+    <Callout type="info">
       **Recommended for Production**
     </Callout>
     
@@ -194,22 +194,17 @@ pnpm db:migrate
   <Tab value="Connection Pooling">
     ```typescript title="drizzle.config.ts"
 // drizzle.config.ts
+import { type Config } from 'drizzle-kit';
+
 export default {
-  schema: "./src/db/schema.ts",
-  out: "./drizzle",
-  driver: 'pg',
+  schema: './src/db/schema.ts',
+  dialect: 'postgresql',
   dbCredentials: {
-    connectionString: process.env.DATABASE_URL!,
-    ssl: process.env.NODE_ENV === 'production'
+    url: process.env.DATABASE_URL!,
   },
-  // Connection pool settings
-  pool: {
-    min: 2,
-    max: 10,
-    acquireTimeoutMillis: 30000,
-    idleTimeoutMillis: 30000
-  }
-}
+  out: './src/db/migrations',
+  tablesFilter: ['mail0_*'],
+} satisfies Config;
 ```
   </Tab>
 </Tabs>

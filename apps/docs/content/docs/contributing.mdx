@@ -1,6 +1,6 @@
 ---
 title: "Contributing Guide"
-description: "Complete guide for contributing to Zero Email Client development with setup and workflow."
+description: "Complete guide for contributing to Zero development with setup and workflow."
 ---
 
 import { Callout } from 'fumadocs-ui/components/callout';
@@ -11,9 +11,7 @@ import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
 import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
 import { Files, File, Folder } from 'fumadocs-ui/components/files';
 
-<Callout type="tip">
-We welcome contributions to Zero Email Client! This guide will help you get started with contributing to the project, whether you're fixing bugs, adding features, or improving documentation.
-</Callout>
+We welcome contributions to 0.email! This guide will help you get started with contributing to the project, whether you're fixing bugs, adding features, or improving documentation.
 
 ## Getting Started
 
@@ -45,8 +43,11 @@ Before contributing, make sure you have the following installed:
 
 ```bash title="Clone Your Fork"
 # Click "Fork" on GitHub, then clone your fork
-git clone https://github.com/your-username/zero.git
-cd zero
+git clone https://github.com/your-username/Zero.git
+cd Zero
+
+# Add upstream remote
+git remote add upstream https://github.com/Mail-0/Zero.git
 ```
 
 #### 2. Install Dependencies
@@ -58,100 +59,126 @@ pnpm install
 #### 3. Set Up Environment
 
 ```bash title="Environment Setup"
-cp .env.example .env
-# Edit .env with your configuration
+# Start database
+pnpm docker:db:up
+
+# Setup environment variables
+pnpm nizzy env
+pnpm nizzy sync
+
+# Initialize database
+pnpm db:push
 ```
 
-#### 4. Run Database Migrations
-
-```bash title="Database Setup"
-pnpm db:generate
-pnpm db:migrate
-```
-
-#### 5. Start Development Server
+#### 4. Start Development Server
 
 ```bash title="Start Development"
 pnpm dev
 ```
 
-#### 6. Verify Setup
-
-<Callout type="tip">
-Complete these verification steps to ensure everything is working correctly:
+<Callout type="info">
+The development server will be available at http://localhost:3000
 </Callout>
-
-- Open http://localhost:3000
-- Create a test account
-- Verify all features work correctly
 
 ## Development Workflow
 
-<Callout type="note">
-We use a Git flow approach with specific branch naming conventions and commit message standards.
-</Callout>
+Follow these steps for contributing code changes:
 
-### Branch Strategy
+### 1. Create a New Branch
 
-<Tabs items={['Branch Types', 'Naming Convention', 'Workflow']}>
-  <Tab value="Branch Types">
-    <Cards>
-      <Card title="main" description="Production-ready code" />
-      <Card title="develop" description="Integration branch for features" />
-      <Card title="feature/*" description="New features and enhancements" />
-      <Card title="bugfix/*" description="Bug fixes" />
-      <Card title="hotfix/*" description="Critical production fixes" />
-    </Cards>
-  </Tab>
-  <Tab value="Naming Convention">
-    ### Branch Naming Examples
-    
-    - `feature/email-search`
-    - `feature/user-authentication`  
-    - `bugfix/compose-window-crash`
-    - `hotfix/security-vulnerability`
-    - `docs/update-api-documentation`
-  </Tab>
-  <Tab value="Workflow">
-    ### Creating a Feature Branch
-    
-    <Steps>
-      <Step>Switch to develop branch</Step>
-      <Step>Pull latest changes</Step>
-      <Step>Create feature branch</Step>
-      <Step>Make your changes</Step>
-      <Step>Commit your changes</Step>
-      <Step>Push to your fork</Step>
-    </Steps>
-  </Tab>
-</Tabs>
+Always create a new branch for your changes:
 
-```bash title="Feature Branch Workflow"
-# Switch to develop branch
-git checkout develop
-git pull origin develop
-
-# Create feature branch
+```bash title="Create Branch"
 git checkout -b feature/your-feature-name
-
-# Make your changes
-# ...
-
-# Commit your changes
-git add .
-git commit -m "feat: add new feature description"
-
-# Push to your fork
-git push origin feature/your-feature-name
+# or
+git checkout -b fix/your-bug-fix
 ```
 
-### Commit Message Convention
-
-<Callout type="info">
-We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification for consistent commit messages.
+<Callout type="warning">
+Remember to make `staging` branch as your base branch, not `main`.
 </Callout>
 
-#### Format
+### 2. Make Your Changes
+
+- Write clean, maintainable code
+- Follow our coding standards
+- Add/update tests as needed
+- Update documentation if required
+
+### 3. Test Your Changes
+
+- Make sure the app runs without errors
+- Test your feature thoroughly
+
+### 4. Commit Your Changes
+
+Use clear, descriptive commit messages following [Conventional Commits](https://www.conventionalcommits.org/):
+
+```bash title="Commit Example"
+git commit -m "feat: add new email threading feature
+
+Implements #123"
+```
+
+### 5. Stay Updated
+
+Keep your fork in sync with the main repository:
+
+```bash title="Sync Fork"
+git fetch upstream
+git merge upstream/staging
+```
+
+### 6. Push to Your Fork
+
+```bash title="Push Changes"
+git push origin your-branch-name
+```
+
+### 7. Submit a Pull Request
+
+- Go to your fork on GitHub and click "New Pull Request"
+- **Make sure to target the `staging` branch**
+- Fill out the PR template completely
+- Link any relevant issues
+- Add screenshots for UI changes
+
+## Database Management
+
+Zero uses PostgreSQL with Drizzle ORM for database operations.
+
+### Database Structure
+
+The database schema is defined in the server application directory.
+
+### Common Database Tasks
+
+```bash title="Database Operations"
+# Apply schema changes to development database
+pnpm db:push
+
+# Create migration files after schema changes
+pnpm db:generate
+
+# Apply migrations (for production)
+pnpm db:migrate
+
+# View and edit data with Drizzle Studio
+pnpm db:studio
+```
+
+### Database Connection
+
+For local development, ensure your `.env` file contains:
+
+```bash title="Database URL"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/zerodotemail"
+```
+
+### Troubleshooting
+
+- **Connection Issues**: Make sure Docker is running (`pnpm docker:db:up`)
+- **Schema Errors**: Check your schema files for syntax errors
 
 ```text title="Commit Message Format"
 <type>[optional scope]: <description>
@@ -163,7 +190,7 @@ We follow the [Conventional Commits](https://www.conventionalcommits.org/) speci
 
 #### Types
 
-<Accordions>
+<Accordions type="single">
   <Accordion value="commit-types" title="Commit Types">
     - **`feat`** - New feature
     - **`fix`** - Bug fix
@@ -186,7 +213,7 @@ git commit -m "test(mail): add email composer tests"
 
 ## Code Style and Standards
 
-<Callout type="tip">
+<Callout type="info">
 Consistent code style ensures maintainability and readability across the entire codebase.
 </Callout>
 
@@ -226,7 +253,7 @@ interface ApiResponse<T> {
 
 ### React Component Guidelines
 
-<Callout type="tip">
+<Callout type="info">
 Follow these patterns for consistent, performant React components.
 </Callout>
 
@@ -313,6 +340,45 @@ EmailList.displayName = 'EmailList'
   </Tab>
 </Tabs>
 
+## Internationalization (i18n)
+
+0.email supports multiple languages through our internationalization system, making the application accessible to users worldwide.
+
+### Adding Translations for New Features
+
+When implementing new features, follow these guidelines:
+
+#### 1. Add English Source Strings
+
+- Place all user-facing text in `apps/mail/locales/en.json`
+- Organize strings according to the existing structure
+- Use descriptive, hierarchical keys that identify the feature and context
+
+```json title="Translation Example"
+{
+  "pages": {
+    "settings": {
+      "connections": {
+        "disconnectSuccess": "Account disconnected successfully"
+      }
+    }
+  }
+}
+```
+
+#### 2. Follow i18n Formatting Standards
+
+- **Variables**: `{variableName}`
+- **Pluralization**: `{count, plural, =0 {items} one {item} other {items}}`
+- **Avoid string concatenation** to ensure proper translation
+
+#### 3. Quality Checklist
+
+- All visible UI text is externalized (not hardcoded)
+- Strings are organized in logical sections
+- Context is clear for translators
+- The feature works properly with the default language
+
 ## Testing
 
 <Callout type="info">
@@ -321,154 +387,32 @@ Comprehensive testing ensures code quality and prevents regressions. We use mult
 
 ### Testing Strategy
 
+<Callout type="info">
+Testing framework is currently being set up. Check back for updates on testing guidelines and commands.
+</Callout>
+
 <Cards>
-  <Card title="Unit Tests" description="Individual functions and components" />
-  <Card title="Integration Tests" description="Component interactions and workflows" />
-  <Card title="E2E Tests" description="Full user workflows and scenarios" />
-  <Card title="API Tests" description="Backend endpoint testing" />
+  <Card title="Unit Tests" description="Individual functions and components (Coming Soon)" />
+  <Card title="Integration Tests" description="Component interactions and workflows (Coming Soon)" />
+  <Card title="E2E Tests" description="Full user workflows and scenarios (Coming Soon)" />
+  <Card title="API Tests" description="Backend endpoint testing (Coming Soon)" />
 </Cards>
 
-### Running Tests
+### Testing Commands (Coming Soon)
 
-```bash title="Test Commands"
-# Run all tests
-pnpm test
-
-# Run tests in watch mode
-pnpm test:watch
-
-# Run tests with coverage
-pnpm test:coverage
-
-# Run E2E tests
-pnpm test:e2e
-
-# Run specific test file
-pnpm test src/components/mail/email-list.test.tsx
-# Run tests in watch mode
-pnpm test:watch
-
-# Run tests with coverage
-pnpm test:coverage
-
-# Run E2E tests
-pnpm test:e2e
-
-# Run specific test file
-pnpm test src/components/mail/email-list.test.tsx
+```bash title="Testing Commands (Not Yet Available)"
+# These commands will be available once testing is set up:
+ pnpm test            # Run all tests
+ pnpm test:watch      # Run tests in watch mode  
+ pnpm test:coverage   # Run tests with coverage
+ pnpm test:e2e        # Run E2E tests
 ```
 
-### Writing Tests
+### Writing Tests (Coming Soon)
 
-#### Component Tests
-
-```tsx title="__tests__/components/email-list.test.tsx"
-import { render, screen, fireEvent } from '@testing-library/react'
-import { EmailList } from '../email-list'
-import { mockEmails } from '@/test-utils/mock-data'
-
-describe('EmailList', () => {
-  it('renders email list correctly', () => {
-    render(<EmailList emails={mockEmails} onSelect={jest.fn()} />)
-    
-    expect(screen.getByText(mockEmails[0].subject)).toBeInTheDocument()
-    expect(screen.getByText(mockEmails[0].sender.name)).toBeInTheDocument()
-  })
-  
-  it('calls onSelect when email is clicked', () => {
-    const onSelect = jest.fn()
-    render(<EmailList emails={mockEmails} onSelect={onSelect} />)
-    
-    fireEvent.click(screen.getByText(mockEmails[0].subject))
-    expect(onSelect).toHaveBeenCalledWith(mockEmails[0])
-  })
-  
-  it('shows empty state when no emails', () => {
-    render(<EmailList emails={[]} onSelect={jest.fn()} />)
-    
-    expect(screen.getByText('No emails found')).toBeInTheDocument()
-  })
-})
-```
-
-#### API Tests
-
-```typescript title="__tests__/api/emails.test.ts"
-import { describe, it, expect, beforeEach } from 'vitest'
-import { testClient } from '@/test-utils/api-client'
-
-describe('/api/emails', () => {
-  beforeEach(async () => {
-    await testClient.auth.login('test@example.com', 'password')
-  })
-  
-  it('should get user emails', async () => {
-    const response = await testClient.emails.list()
-    
-    expect(response.status).toBe(200)
-    expect(response.data.emails).toBeInstanceOf(Array)
-  })
-  
-  it('should send email', async () => {
-    const emailData = {
-      to: ['recipient@example.com'],
-      subject: 'Test Email',
-      body: 'This is a test email'
-    }
-    
-    const response = await testClient.emails.send(emailData)
-    
-    expect(response.status).toBe(200)
-    expect(response.data.email.status).toBe('sent')
-  })
-})
-```
-
-#### E2E Tests
-
-```typescript title="e2e/email-workflow.spec.ts"
-import { test, expect } from '@playwright/test'
-
-test.describe('Email Workflow', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/')
-    await page.fill('[data-testid=email-input]', 'test@example.com')
-    await page.fill('[data-testid=password-input]', 'password')
-    await page.click('[data-testid=login-button]')
-  })
-  
-  test('should compose and send email', async ({ page }) => {
-    // Navigate to compose
-    await page.click('[data-testid=compose-button]')
-    
-    // Fill compose form
-    await page.fill('[data-testid=to-input]', 'recipient@example.com')
-    await page.fill('[data-testid=subject-input]', 'Test Email')
-    await page.fill('[data-testid=body-input]', 'This is a test email')
-    
-    // Send email
-    await page.click('[data-testid=send-button]')
-    
-    // Verify success
-    await expect(page.locator('[data-testid=success-message]')).toBeVisible()
-  })
-  
-  test('should read and reply to email', async ({ page }) => {
-    // Click on first email
-    await page.click('[data-testid=email-item]:first-child')
-    
-    // Verify email is opened
-    await expect(page.locator('[data-testid=email-viewer]')).toBeVisible()
-    
-    // Click reply
-    await page.click('[data-testid=reply-button]')
-    
-    // Verify compose window opens with prefilled data
-    await expect(page.locator('[data-testid=compose-window]')).toBeVisible()
-    await expect(page.locator('[data-testid=subject-input]')).toHaveValue(/^Re:/)
-  })
-})
-```
+<Callout type="info">
+Testing framework is currently being set up. Guidelines for writing tests will be provided once the testing infrastructure is implemented.
+</Callout>
 
 ## Documentation
 
@@ -484,16 +428,16 @@ test.describe('Email Workflow', () => {
 
 <Files>
   <Folder name="docs/" defaultOpen>
-    <File name="index.mdx" description="Main documentation homepage" />
-    <Folder name="getting-started/" description="Setup and installation">
+    <File name="index.mdx" />
+    <Folder name="getting-started/">
       <File name="index.mdx" />
       <File name="installation.mdx" />
       <File name="configuration.mdx" />
     </Folder>
-    <File name="architecture.mdx" description="System design and technical overview" />
-    <File name="MCP.mdx" description="Model Context Protocol server documentation" />
-    <File name="deployment.mdx" description="Production deployment guides" />
-    <File name="contributing.mdx" description="Development workflow and contribution guidelines" />
+    <File name="architecture.mdx" />
+    <File name="MCP.mdx" />
+    <File name="deployment.mdx" />
+    <File name="contributing.mdx" />
   </Folder>
 </Files>
 
@@ -547,10 +491,9 @@ Brief description of what this PR does.
 - [ ] Documentation update
 
 ## Testing
-- [ ] Unit tests pass
-- [ ] Integration tests pass
-- [ ] E2E tests pass
 - [ ] Manual testing completed
+- [ ] Code formatting passes (pnpm format)
+- [ ] Linting passes (pnpm lint)
 
 ## Screenshots
 Include screenshots for UI changes.

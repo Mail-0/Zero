@@ -10,15 +10,15 @@ import { Accordions, Accordion } from 'fumadocs-ui/components/accordion';
 import { CodeBlock } from 'fumadocs-ui/components/codeblock';
 import { Files, File, Folder } from 'fumadocs-ui/components/files';
 import { Steps, Step } from 'fumadocs-ui/components/steps';
-import { Mermaid } from '@/components/Mermaid';
+import { Mermaid } from '../../components/Mermaid';
 
 <Callout type="info">
-Zero Email Client is built with a modern, scalable architecture that emphasizes performance, maintainability, and user experience. This document provides a comprehensive overview of the system design, technology choices, and architectural patterns.
+Zero is built with a modern, scalable architecture that emphasizes performance, maintainability, and user experience. This document provides a comprehensive overview of the system design, technology choices, and architectural patterns.
 </Callout>
 
 ## High-Level Architecture
 
-<Callout type="tip">
+<Callout type="info">
 The architecture follows a microservices pattern with clear separation of concerns between frontend, backend, and external services.
 </Callout>
 
@@ -59,11 +59,10 @@ The architecture follows a microservices pattern with clear separation of concer
     <Cards>
       <Card title="React 19" description="UI library with latest features and concurrent rendering" />
       <Card title="TypeScript" description="Type-safe JavaScript with enhanced developer experience" />
-      <Card title="Vite" description="Underlying build tool and development server (integrated with React Router)" />
       <Card title="React Router v7" description="Full-stack web framework with Vite integration for routing and SSR" />
       <Card title="Tailwind CSS" description="Utility-first CSS framework for rapid styling" />
       <Card title="Zustand" description="Lightweight state management without boilerplate" />
-      <Card title="Radix UI" description="Accessible, unstyled component primitives" />
+      <Card title="Shadcn UI" description="Beautifully designed components built with Radix UI and Tailwind CSS" />
       <Card title="Framer Motion" description="Production-ready motion library for React" />
     </Cards>
   </Tab>
@@ -73,6 +72,7 @@ The architecture follows a microservices pattern with clear separation of concer
     <Cards>
       <Card title="Node.js" description="JavaScript runtime for server-side applications" />
       <Card title="TypeScript" description="Type-safe backend development" />
+      <Card title="Hono" description="Fast, lightweight web framework for Cloudflare Workers" />
       <Card title="Drizzle ORM" description="Type-safe database toolkit with excellent TypeScript support" />
       <Card title="Better Auth" description="Modern authentication and authorization library" />
       <Card title="PostgreSQL" description="Primary database with Docker Compose setup for local development" />
@@ -85,7 +85,7 @@ The architecture follows a microservices pattern with clear separation of concer
     <Cards>
       <Card title="Docker" description="Containerization for consistent deployments" />
       <Card title="Cloudflare" description="CDN, DNS, and edge services" />
-      <Card title="Redis/Valkey" description="In-memory caching, session storage, and real-time features" />
+      <Card title="Cloudflare Workers" description="Serverless runtime for edge computing" />
       <Card title="Cloudflare Durable Objects" description="Stateful serverless objects for real-time collaboration" />
       <Card title="Cloudflare Vectorize" description="Vector database for AI-powered search and recommendations" />
       <Card title="Cloudflare AI" description="AI inference at the edge for smart email features" />
@@ -95,7 +95,7 @@ The architecture follows a microservices pattern with clear separation of concer
 
 ## System Components
 
-<Callout type="note">
+<Callout type="info">
 The system is organized into distinct components, each handling specific aspects of the email client functionality.
 </Callout>
 
@@ -106,65 +106,84 @@ Zero follows a monorepo structure with clear separation between applications, pa
 </Callout>
 
 <Files>
-  <Folder name="Zero/" description="Project root" defaultOpen>
-    <Folder name="apps/" description="Applications">
-      <Folder name="docs/" description="Documentation site (Fumadocs)" />
-      <Folder name="mail/" description="Frontend email client (React Router v7)" />
-      <Folder name="server/" description="Backend API server (Cloudflare Workers)" />
+  <Folder name="Zero/" defaultOpen>
+    <Folder name="apps/">
+      <Folder name="docs/" />
+      <Folder name="mail/" />
+      <Folder name="server/" />
     </Folder>
-    <Folder name="packages/" description="Shared packages">
-      <Folder name="cli/" description="nizzy CLI tool" />
-      <Folder name="eslint-config/" description="Shared ESLint configuration" />
-      <Folder name="tailwind-config/" description="Shared Tailwind configuration" />
-      <Folder name="tsconfig/" description="Shared TypeScript configuration" />
+    <Folder name="packages/">
+      <Folder name="cli/" />
+      <Folder name="eslint-config/" />
+      <Folder name="tailwind-config/" />
+      <Folder name="tsconfig/" />
     </Folder>
-    <Folder name="docker/" description="Docker configurations">
-      <Folder name="app/" description="Application Docker files" />
-      <Folder name="db/" description="Database Docker files" />
+    <Folder name="docker/">
+      <Folder name="app/" />
+      <Folder name="db/" />
     </Folder>
-    <Folder name="scripts/" description="Build and utility scripts" />
-    <Folder name="public/" description="Static assets" />
-    <File name="docker-compose.db.yaml" description="Development database services" />
-    <File name="turbo.json" description="Turborepo build orchestration" />
-    <File name="pnpm-workspace.yaml" description="pnpm workspace configuration" />
+    <Folder name="scripts/" />
+    <Folder name="public/" />
+    <File name="docker-compose.db.yaml" />
+    <File name="turbo.json" />
+    <File name="pnpm-workspace.yaml" />
   </Folder>
 </Files>
 
 ### 1. Frontend Architecture
 <Files>
   <Folder name="apps/mail/" defaultOpen>
-    <Folder name="app/" description="React Router v7 application structure">
-      <Folder name="(auth)/" description="Authentication routes" />
-      <Folder name="(full-width)/" description="Full-width layout routes" />
-      <Folder name="(routes)/" description="Standard layout routes" />
-      <Folder name="home/" description="Home page components" />
-      <Folder name="meta-files/" description="Meta and SEO files" />
-      <Folder name="og-api/" description="Open Graph API routes" />
+    <Folder name="app/">
+      <Folder name="(auth)/" />
+      <Folder name="(full-width)/" />
+      <Folder name="(routes)/" />
+      <Folder name="home/" />
+      <Folder name="meta-files/" />
       <File name="entry.client.tsx" />
       <File name="entry.server.tsx" />
       <File name="root.tsx" />
       <File name="routes.ts" />
+      <File name="globals.css" />
+      <File name="mailto-handler.ts" />
+      <File name="page.tsx" />
     </Folder>
-    <Folder name="components/" description="Reusable UI components">
-      <Folder name="ui/" description="Base UI components" />
-      <Folder name="mail/" description="Email-specific components" />
-      <Folder name="icons/" description="Icon components" />
-      <Folder name="providers/" description="Context providers" />
-      <Folder name="settings/" description="Settings components" />
-      <Folder name="home/" description="Home page components" />
+    <Folder name="components/">
+      <Folder name="ui/" />
+      <Folder name="mail/" />
+      <Folder name="icons/" />
+      <Folder name="providers/" />
+      <Folder name="settings/" />
+      <Folder name="home/" />
+      <Folder name="connection/" />
+      <Folder name="context/" />
+      <Folder name="cookies/" />
+      <Folder name="create/" />
+      <Folder name="labels/" />
+      <Folder name="magicui/" />
+      <Folder name="motion-primitives/" />
+      <Folder name="pricing/" />
+      <Folder name="theme/" />
+      <Folder name="user/" />
+      <File name="ai-toggle-button.tsx" />
+      <File name="navigation.tsx" />
+      <File name="onboarding.tsx" />
+      <File name="party.tsx" />
+      <File name="responsive-modal.tsx" />
+      <File name="setup-phone.tsx" />
+      <File name="voice-button.tsx" />
     </Folder>
-    <Folder name="hooks/" description="Custom React hooks" />
-    <Folder name="lib/" description="Utility libraries and helpers" />
-    <Folder name="store/" description="Zustand state management" />
-    <Folder name="types/" description="TypeScript type definitions" />
-    <Folder name="providers/" description="React context providers" />
-    <Folder name="config/" description="Configuration files" />
+    <Folder name="hooks/" />
+    <Folder name="lib/" />
+    <Folder name="store/" />
+    <Folder name="types/" />
+    <Folder name="providers/" />
+    <Folder name="config/" />
   </Folder>
 </Files>
 
 #### State Management
 
-<Callout type="tip">
+<Callout type="info">
 We use Zustand for lightweight, performant state management without the complexity of Redux.
 </Callout>
 
@@ -239,34 +258,36 @@ The backend follows a service-oriented architecture with clear separation betwee
 
 <Files>
   <Folder name="apps/server/" defaultOpen>
-    <Folder name="src/" description="Source code">
-      <File name="main.ts" description="Main entry point" />
-      <File name="ctx.ts" description="Context configuration" />
-      <File name="pipelines.ts" description="Processing pipelines" />
-      <Folder name="routes/" description="API route handlers">
-        <Folder name="agent/" description="AI agent routes" />
-        <File name="ai.ts" description="AI-related endpoints" />
-        <File name="autumn.ts" description="Autumn service routes" />
-        <File name="chat.ts" description="Chat functionality" />
+    <Folder name="src/">
+      <File name="main.ts" />
+      <File name="ctx.ts" />
+      <File name="pipelines.ts" />
+      <File name="types.ts" />
+      <File name="overrides.d.ts" />
+      <Folder name="routes/" >
+        <Folder name="agent/"  />
+        <File name="ai.ts"  />
+        <File name="auth.ts" />
+        <File name="autumn.ts" />
+        <File name="chat.ts" />
       </Folder>
-      <Folder name="services/" description="Business logic services">
-        <Folder name="mcp-service/" description="Model Context Protocol service" />
-        <Folder name="call-service/" description="Voice/call handling service" />
-        <File name="writing-style-service.ts" description="Writing style analysis" />
+      <Folder name="services/">
+        <Folder name="mcp-service/" />
+        <Folder name="call-service/" />
+        <File name="writing-style-service.ts" />
       </Folder>
-      <Folder name="db/" description="Database schemas and migrations" />
-      <Folder name="lib/" description="Utility libraries" />
-      <Folder name="trpc/" description="tRPC API definitions" />
-      <File name="types.ts" description="TypeScript type definitions" />
+      <Folder name="db/"/>
+      <Folder name="lib/" />
+      <Folder name="trpc/"  />
     </Folder>
-    <File name="drizzle.config.ts" description="Database configuration" />
-    <File name="wrangler.jsonc" description="Cloudflare Workers configuration" />
+    <File name="drizzle.config.ts" />
+    <File name="wrangler.jsonc" />
   </Folder>
 </Files>
 
 #### Database Schema
 
-<Callout type="tip">
+<Callout type="info">
 We use Drizzle ORM for type-safe database operations with excellent TypeScript integration.
 </Callout>
 
@@ -446,131 +467,132 @@ export const jwks = createTable('jwks', {
 
 #### API Routes
 
-```typescript title="src/routes/mail.ts"
+```typescript title="src/routes/ai.ts"
 import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
-import { requireAuth } from '../auth/middleware'
-import { MailService } from '../services/mail-service'
+import { requireAuth } from '../lib/auth'
+import { OpenAIService } from '../services/openai'
 
-const mail = new Hono()
+const ai = new Hono()
 
-// Get emails
-mail.get('/', requireAuth, async (c) => {
-  const userId = c.get('user').id
-  const emails = await MailService.getEmails(userId)
-  return c.json({ emails })
-})
-
-// Send email
-mail.post('/', 
+// Compose email with AI
+ai.post('/compose', 
   requireAuth,
   zValidator('json', z.object({
-    to: z.string().email(),
-    subject: z.string(),
-    body: z.string(),
+    prompt: z.string(),
+    context: z.string().optional(),
   })),
   async (c) => {
     const userId = c.get('user').id
-    const { to, subject, body } = c.req.valid('json')
+    const { prompt, context } = c.req.valid('json')
     
-    const email = await MailService.sendEmail({
+    const composition = await OpenAIService.composeEmail({
       userId,
-      to,
-      subject,
-      body,
+      prompt,
+      context,
     })
     
-    return c.json({ email })
+    return c.json({ composition })
   }
 )
 
-export { mail }
+// Summarize email
+ai.post('/summarize',
+  requireAuth,
+  zValidator('json', z.object({
+    content: z.string(),
+  })),
+  async (c) => {
+    const { content } = c.req.valid('json')
+    
+    const summary = await OpenAIService.summarizeEmail(content)
+    
+    return c.json({ summary })
+  }
+)
+
+export default ai
 ```
 
-### 3. Email Processing System
+### 3. MCP Service Integration
 
 <Callout type="info">
-The email processing system handles synchronization with email providers, parsing, and storage with real-time updates.
+Zero uses the Model Context Protocol (MCP) for email operations, providing a standardized interface for AI agents to interact with email systems.
 </Callout>
 
-#### Email Sync Architecture
+#### MCP Service Architecture
 
-```typescript title="src/services/email-sync-service.ts"
-import { ImapFlow } from 'imapflow'
-import { parseEmail } from '../utils/email-parser'
-import { db } from '../db'
+```typescript title="src/services/mcp-service/index.ts"
+import { MCPServer } from '@modelcontextprotocol/sdk/server.js'
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
+import { ListResourcesRequestSchema } from '@modelcontextprotocol/sdk/types.js'
 
-export class EmailSyncService {
-  private imap: ImapFlow
+export class ZeroMCPService {
+  private server: MCPServer
   
-  constructor(private userId: string) {
-    this.imap = new ImapFlow({
-      host: 'imap.gmail.com',
-      port: 993,
-      secure: true,
-      auth: {
-        user: process.env.SMTP_USER!,
-        pass: process.env.SMTP_PASS!,
+  constructor() {
+    this.server = new MCPServer(
+      {
+        name: 'zero-mcp',
+        version: '1.0.0',
+      },
+      {
+        capabilities: {
+          resources: {},
+          tools: {},
+        },
+      }
+    )
+    
+    this.setupHandlers()
+  }
+  
+  private setupHandlers() {
+    // Email management tools
+    this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
+      return {
+        resources: [
+          {
+            uri: 'zero://emails',
+            name: 'Email Management',
+            description: 'Access and manage emails',
+          },
+          {
+            uri: 'zero://labels',
+            name: 'Label Management', 
+            description: 'Manage email labels and organization',
+          },
+        ],
       }
     })
   }
   
-  async syncEmails() {
-    await this.imap.connect()
-    
-    // Select INBOX
-    await this.imap.select('INBOX')
-    
-    // Get new emails
-    const messages = this.imap.fetch('1:*', {
-      envelope: true,
-      bodyStructure: true,
-      source: true,
-    })
-    
-    for await (const message of messages) {
-      const parsed = await parseEmail(message.source)
-      await this.saveEmail(parsed)
-    }
-    
-    await this.imap.logout()
-  }
-  
-  private async saveEmail(email: ParsedEmail) {
-    // Save to database
-    await db.insert(emails).values({
-      id: generateId(),
-      userId: this.userId,
-      messageId: email.messageId,
-      subject: email.subject,
-      body: email.text,
-      htmlBody: email.html,
-      from: email.from,
-      to: email.to,
-      isRead: false,
-      createdAt: new Date(),
-    })
+  async start() {
+    const transport = new StdioServerTransport()
+    await this.server.connect(transport)
   }
 }
 ```
 
-### 4. Authentication System
+### 5. Authentication System
 
-<Callout type="tip">
-We use Better Auth for modern, secure authentication with social providers and session management.
+<Callout type="info">
+We use Better Auth for modern, secure authentication with OAuth providers and session management.
 </Callout>
 
 #### Better Auth Integration
 
-```typescript title="src/auth/config.ts"
+```typescript title="src/lib/auth.ts"
 import { betterAuth } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import { db } from "../db"
+import * as schema from "../db/schema"
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
-    provider: "sqlite"
+    provider: "pg",
+    schema,
   }),
   
   socialProviders: {
@@ -580,7 +602,9 @@ export const auth = betterAuth({
       scope: [
         'email',
         'profile',
-        'https://www.googleapis.com/auth/gmail.readonly'
+        'https://www.googleapis.com/auth/gmail.readonly',
+        'https://www.googleapis.com/auth/gmail.send',
+        'https://www.googleapis.com/auth/gmail.modify'
       ]
     }
   },
@@ -590,92 +614,70 @@ export const auth = betterAuth({
     updateAge: 60 * 60 * 24, // 1 day
   },
   
-  callbacks: {
-    async signIn({ user, account }) {
-      // Store OAuth tokens for email access
-      if (account?.provider === 'google') {
-        await db.insert(emailAccounts).values({
-          userId: user.id,
-          provider: 'google',
-          accessToken: account.access_token,
-          refreshToken: account.refresh_token,
-        })
-      }
-      return true
-    }
-  }
+  plugins: [],
 })
+
+export const { GET, POST } = auth.handler
 ```
 
-### 5. AI Integration
+### 4. AI Integration
 
-<Callout type="tip">
-AI features are powered by OpenAI's GPT models for email analysis, categorization, and composition assistance.
+<Callout type="info">
+AI features are powered by multiple providers including OpenAI, Perplexity, and Cloudflare AI for enhanced email functionality.
 </Callout>
 
 #### AI Service Architecture
 
-``` typescript title="src/services/ai-service.ts" 
-import OpenAI from 'openai'
-
-interface Email {
-  subject: string
-  body: string
-}
+```typescript title="src/services/ai-service.ts"
+import { generateText } from 'ai'
+import { openai } from '@ai-sdk/openai'
+import { perplexity } from '@ai-sdk/perplexity'
 
 export class AIService {
-  private openai: OpenAI
-
-  constructor() {
-    const apiKey = process.env.OPENAI_API_KEY
-    if (!apiKey) throw new Error('Missing OpenAI API Key')
-
-    this.openai = new OpenAI({ apiKey })
-  }
-
-  async generateEmailSummary(email: Email): Promise<string> {
-    const response = await this.openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are an AI assistant that summarizes emails concisely.',
-        },
-        {
-          role: 'user',
-          content: `Summarize this email:\n\nSubject: ${email.subject}\n\nBody: ${email.body}`,
-        },
-      ],
-      max_tokens: 150,
+  static async composeEmail(params: {
+    prompt: string
+    context?: string
+    style?: 'formal' | 'casual' | 'professional'
+  }) {
+    const { prompt, context, style = 'professional' } = params
+    
+    const systemPrompt = `You are an AI email assistant. Write a ${style} email based on the user's request.`
+    
+    const { text } = await generateText({
+      model: openai('gpt-4'),
+      system: systemPrompt,
+      prompt: context ? `Context: ${context}\n\nRequest: ${prompt}` : prompt,
+      maxTokens: 500,
     })
-
-    return response.choices[0]?.message?.content || ''
+    
+    return text
   }
-
-  async categorizeEmail(email: Email): Promise<string[]> {
-    const response = await this.openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'Categorize this email. Return categories as a JSON array.',
-        },
-        {
-          role: 'user',
-          content: `Subject: ${email.subject}\n\nBody: ${email.body}`,
-        },
-      ],
-      max_tokens: 100,
+  
+  static async summarizeThread(emails: Array<{ subject: string; body: string }>) {
+    const emailContent = emails
+      .map(email => `Subject: ${email.subject}\nBody: ${email.body}`)
+      .join('\n\n---\n\n')
+    
+    const { text } = await generateText({
+      model: openai('gpt-4'),
+      system: 'Summarize this email thread concisely, highlighting key points and action items.',
+      prompt: emailContent,
+      maxTokens: 200,
     })
-
-    try {
-      return JSON.parse(response.choices[0]?.message?.content || '[]')
-    } catch {
-      return []
-    }
+    
+    return text
+  }
+  
+  static async searchWeb(query: string) {
+    const { text } = await generateText({
+      model: perplexity('llama-3.1-sonar-small-128k-online'),
+      prompt: query,
+      maxTokens: 1000,
+    })
+    
+    return text
   }
 }
-
 ```
 
 ## Data Flow
@@ -684,58 +686,55 @@ export class AIService {
 Understanding the data flow helps in debugging and optimizing the system performance.
 </Callout>
 
-### 1. Email Receiving Flow
+### 1. Email Access Flow
 
-<Callout type="note">
-This sequence diagram shows how emails are processed from external sources to the user interface.
+<Callout type="info">
+This sequence diagram shows how emails are accessed through the MCP service from external providers.
 </Callout>
 
 <Mermaid chart={`sequenceDiagram
     participant User
     participant Frontend
     participant API
-    participant Worker
-    participant IMAP
+    participant MCP
+    participant Gmail
     participant Database
     
     User->>Frontend: Open Email Client
     Frontend->>API: GET /api/emails
-    API->>Database: Query emails
-    Database-->>API: Return emails
+    API->>MCP: Request emails via MCP
+    MCP->>Gmail: OAuth API call
+    Gmail-->>MCP: Return email data
+    MCP->>Database: Cache emails
+    MCP-->>API: Return emails
     API-->>Frontend: Send emails
-    
-    Worker->>IMAP: Sync new emails
-    IMAP-->>Worker: New email data
-    Worker->>Database: Save new emails
-    Worker->>Frontend: WebSocket notification
     Frontend->>Frontend: Update UI`}
 />
 
-### 2. Email Sending Flow
+### 2. Email Composition Flow
 
 <Mermaid chart={`sequenceDiagram
     participant User
     participant Frontend
     participant API
-    participant Queue
-    participant Worker
-    participant SMTP
+    participant MCP
+    participant AI
+    participant Gmail
     
     User->>Frontend: Compose email
-    Frontend->>API: POST /api/emails
-    API->>Queue: Queue email job
-    API-->>Frontend: Return pending status
-    
-    Queue->>Worker: Process email job
-    Worker->>SMTP: Send email
-    SMTP-->>Worker: Confirm sent
-    Worker->>API: Update email status
-    API->>Frontend: WebSocket status update`}
+    Frontend->>API: POST /api/emails/compose
+    API->>AI: Generate/enhance content
+    AI-->>API: Return enhanced content
+    API->>MCP: Send email via MCP
+    MCP->>Gmail: OAuth API call
+    Gmail-->>MCP: Confirm sent
+    MCP-->>API: Return success
+    API-->>Frontend: Update UI status`}
 />
 
 ## Performance Optimizations
 
-<Callout type="tip">
+<Callout type="info">
 Performance optimizations are applied at every layer to ensure a responsive user experience.
 </Callout>
 
@@ -766,10 +765,10 @@ Performance optimizations are applied at every layer to ensure a responsive user
     ### Email Processing Optimizations
     
     <Cards>
-      <Card title="Incremental Sync" description="Only sync new emails since last check" />
-      <Card title="Batch Processing" description="Process multiple emails in batches" />
-      <Card title="Compression" description="Compress email content for storage" />
-      <Card title="Attachment Handling" description="Stream large attachments efficiently" />
+      <Card title="MCP Protocol Efficiency" description="Optimized MCP calls for minimal latency" />
+      <Card title="OAuth Token Management" description="Efficient token refresh and caching" />
+      <Card title="Batch Operations" description="Process multiple emails in single API calls" />
+      <Card title="Smart Caching" description="Cache frequently accessed emails and metadata" />
     </Cards>
   </Tab>
 </Tabs>
@@ -780,72 +779,32 @@ Performance optimizations are applied at every layer to ensure a responsive user
 Security is paramount in email client architecture. Multiple layers of protection ensure data safety.
 </Callout>
 
-<Accordions>
+<Accordions type="single" collapsible>
   <Accordion value="auth-security" title="Authentication Security">
-    - **JWT Tokens** - Secure session management with proper expiration
-    - **OAuth Integration** - Secure third-party authentication flows
+    - **Better Auth** - Modern authentication with secure session management
+    - **OAuth 2.0** - Secure third-party authentication flows with Gmail
+    - **JWT Tokens** - Stateless authentication with proper expiration
     - **CSRF Protection** - Cross-site request forgery prevention
     - **Rate Limiting** - API endpoint protection against abuse
   </Accordion>
   <Accordion value="data-security" title="Data Security">
-    - **Encryption** - Sensitive data encryption at rest using AES-256
+    - **Database Encryption** - Sensitive data protection at rest
     - **TLS/SSL** - Encrypted data transmission with latest protocols
-    - **Input Validation** - Comprehensive input sanitization and validation
-    - **SQL Injection Prevention** - Parameterized queries and ORM protection
+    - **Input Validation** - Comprehensive input sanitization via Zod schemas
+    - **SQL Injection Prevention** - Parameterized queries with Drizzle ORM
+    - **Environment Variables** - Secure configuration management
   </Accordion>
   <Accordion value="email-security" title="Email Security">
-    - **SPF/DKIM** - Email authentication protocols implementation
-    - **Spam Filtering** - Automatic spam detection and filtering
-    - **Virus Scanning** - Attachment security scanning and quarantine
+    - **OAuth Scopes** - Minimal required permissions for Gmail access
+    - **Token Refresh** - Automatic token renewal and secure storage
+    - **MCP Protocol** - Secure communication with email services
     - **Content Security Policy** - XSS protection and content filtering
   </Accordion>
 </Accordions>
 
-## Monitoring and Observability
-
-<Callout type="info">
-Comprehensive monitoring ensures system reliability and helps with proactive issue resolution.
-</Callout>
-
-### Application Monitoring
-
-```typescript title="src/utils/monitoring.ts"
-import { Sentry } from '@sentry/node'
-
-export const monitoring = {
-  init() {
-    Sentry.init({
-      dsn: process.env.SENTRY_DSN,
-      environment: process.env.NODE_ENV,
-    })
-  },
-  
-  trackError(error: Error, context?: Record<string, any>) {
-    Sentry.captureException(error, { extra: context })
-  },
-  
-  trackEvent(event: string, data?: Record<string, any>) {
-    Sentry.addBreadcrumb({
-      message: event,
-      data,
-      level: 'info',
-    })
-  }
-}
-```
-
-### Performance Monitoring
-
-<Cards>
-  <Card title="Core Web Vitals" description="Frontend performance metrics tracking" />
-  <Card title="API Response Times" description="Backend performance monitoring" />
-  <Card title="Database Query Performance" description="Slow query detection and optimization" />
-  <Card title="Email Processing Metrics" description="Sync and send performance tracking" />
-</Cards>
-
 ## Scalability Considerations
 
-<Callout type="tip">
+<Callout type="info">
 The architecture is designed to scale from single-user installations to enterprise deployments.
 </Callout>
 
@@ -861,9 +820,9 @@ The architecture is designed to scale from single-user installations to enterpri
 ### Caching Strategy
 
 <Steps>
-  <Step>**Multi-level Caching** - Browser, CDN, application, and database caching</Step>
-  <Step>**Cache Invalidation** - Intelligent cache management and TTL strategies</Step>
-  <Step>**Session Storage** - Distributed session management with Redis</Step>
-  <Step>**Static Asset Caching** - Long-term caching for static resources</Step>
+  <Step>**Multi-level Caching** - Browser, Cloudflare CDN, and application caching</Step>
+  <Step>**OAuth Token Caching** - Secure token storage and refresh management</Step>
+  <Step>**Email Metadata Caching** - Cache frequently accessed email headers and labels</Step>
+  <Step>**Static Asset Caching** - Long-term caching for static resources via Cloudflare</Step>
 </Steps>
 

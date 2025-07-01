@@ -9,7 +9,7 @@ import { CodeBlock } from 'fumadocs-ui/components/codeblock';
 import { Accordions, Accordion } from 'fumadocs-ui/components/accordion';
 import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
 
-Get up and running with Zero in minutes. This guide covers installation, basic configuration, and your first steps with the email client.
+This guide covers installation, basic configuration, and initial setup of the Zero email client.
 
 ## Prerequisites
 
@@ -56,36 +56,74 @@ cp .env.example .env
 Edit the `.env` file with your configuration:
 
 ```bash title=".env Configuration"
+# Application URLs
+VITE_PUBLIC_APP_URL=http://localhost:3000
+VITE_PUBLIC_BACKEND_URL=http://localhost:8787
+
 # Database
-DATABASE_URL="your-database-url"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/zerodotemail"
 
 # Authentication
-BETTER_AUTH_SECRET="your-secret-key"
-BETTER_AUTH_URL="http://localhost:3000"
+BETTER_AUTH_SECRET="your-super-secret-key-here"
+BETTER_AUTH_URL=http://localhost:3000
+COOKIE_DOMAIN="localhost"
 
-# Email Configuration
-SMTP_HOST="your-smtp-host"
-SMTP_PORT=587
-SMTP_USER="your-email"
-SMTP_PASS="your-password"
+# OAuth Configuration
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+
+# Redis/Valkey (for local development with Docker)
+REDIS_URL="http://localhost:8079"
+REDIS_TOKEN="upstash-local-token"
+
+# Email Service (Optional)
+RESEND_API_KEY="your-resend-api-key"
+
+# AI Services (Optional)
+OPENAI_API_KEY="your-openai-api-key"
+PERPLEXITY_API_KEY="your-perplexity-api-key"
+AI_SYSTEM_PROMPT=""
 ```
 
 ### 4. Database Setup
 
+<Callout type="info">
+Zero uses Docker Compose for local development services (PostgreSQL, Redis/Valkey).
+</Callout>
+
 ```bash title="Database Setup"
+# Start Docker services (PostgreSQL + Redis/Valkey)
+pnpm docker:db:up
+
 # Generate and run migrations
 pnpm db:generate
 pnpm db:migrate
 ```
 
-### 5. Start Development Server
+### 5. Start Development Servers
+
+Zero runs two main services in development:
 
 ```bash title="Start Development"
+# Quick start (starts database and all services)
+pnpm go
+
+# Or start services individually:
+# Start all development servers
 pnpm dev
+
+# Start database services first
+pnpm docker:db:up
+
+# Then start individual services from their directories:
+# cd apps/mail && pnpm dev     # Frontend (React Router + Vite)
+# cd apps/server && pnpm dev   # Backend (Cloudflare Workers)
 ```
 
-<Callout type="tip">
-The application will be available at `http://localhost:3000`.
+<Callout type="info">
+- **Frontend**: `http://localhost:3000`
+- **Backend API**: `http://localhost:8787`
+- **Database Studio**: `http://localhost:4983` (when running `pnpm db:studio`)
 </Callout>
 
 ## First Time Setup
@@ -105,10 +143,14 @@ The application will be available at `http://localhost:3000`.
 
 ### 2. Connect Your Email
 
+<Callout type="info">
+Zero uses OAuth to securely connect to your email providers.
+</Callout>
+
 1. Go to Settings > Connections
-2. Add your email provider (Gmail, Outlook, etc.)
-3. Authorize the connection
-4. Wait for initial sync to complete
+2. Add your email provider (currently supports Gmail via OAuth)
+3. Authorize the connection through Google OAuth
+4. Your emails will be accessible through the MCP service
 
 ### 3. Customize Your Workspace
 
@@ -122,48 +164,79 @@ The application will be available at `http://localhost:3000`.
 <Tabs items={['Development', 'Build', 'Database']}>
   <Tab value="Development">
     ```bash title="Development Commands"
-# Start development server
+# Start all development servers
 pnpm dev
 
-# Run tests
-pnpm test
+# Start individual services (from root)
+pnpm dev:docs    # Documentation
+# Or run individual services from their directories:
+# cd apps/mail && pnpm dev     # Frontend (React Router)
+# cd apps/server && pnpm dev   # Backend (Cloudflare Workers)
+
+# Alternatively, use the quick start command
+pnpm go  # Starts database and development servers
 
 # Lint code
 pnpm lint
 
 # Format code
 pnpm format
+
+# Check format
+pnpm check
 ```
   </Tab>
   <Tab value="Build">
     ```bash title="Build Commands"
-# Build for production
+# Build all applications
 pnpm build
 
-# Start production server
-pnpm start
+# Build individual apps (from root)
+pnpm build:docs        # Build documentation
+pnpm build:frontend    # Build frontend (mail app)
+
+# Deploy individual apps (from root)
+pnpm deploy:frontend   # Deploy frontend
+pnpm deploy:backend    # Deploy backend
+
+# Start applications (from individual app directories)
+# cd apps/mail && pnpm start    # Start frontend
+# cd apps/server && pnpm start  # Start backend
 ```
   </Tab>
   <Tab value="Database">
     ```bash title="Database Commands"
+# Start database services
+pnpm docker:db:up
+# Alternative: docker compose -f docker-compose.db.yaml up -d
+
+# Stop database services
+pnpm docker:db:stop
+
+# Stop and remove database services
+pnpm docker:db:down
+
+# Clean database (remove volumes)
+pnpm docker:db:clean
+
 # Generate migrations
 pnpm db:generate
 
 # Run migrations
 pnpm db:migrate
 
+# Push schema changes (development)
+pnpm db:push
+
 # Open database studio
 pnpm db:studio
-
-# Seed database
-pnpm db:seed
 ```
   </Tab>
 </Tabs>
 
 ## Troubleshooting
 
-<Accordions>
+<Accordions type="single">
   <Accordion title="Port already in use" value="port-issue">
     ```bash title="Kill process on port 3000"
 lsof -ti:3000 | xargs kill -9
@@ -183,9 +256,10 @@ lsof -ti:3000 | xargs kill -9
     <Callout type="info">
       Check these settings:
     </Callout>
-    - Verify SMTP credentials
-    - Check email provider settings
-    - Review authentication tokens
+    - Verify Google OAuth credentials in `.env`
+    - Ensure proper OAuth scopes are configured
+    - Check that Gmail API is enabled in Google Cloud Console
+    - Review MCP service authentication
   </Accordion>
 </Accordions>
 

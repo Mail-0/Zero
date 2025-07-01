@@ -8,7 +8,7 @@ import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
 import { CodeBlock } from 'fumadocs-ui/components/codeblock';
 import { Steps, Step } from 'fumadocs-ui/components/steps';
 
-This guide provides comprehensive installation instructions for Zero Email Client across different platforms and deployment scenarios.
+This guide provides comprehensive installation instructions for Zero across different platforms and deployment scenarios.
 
 ## System Requirements
 
@@ -23,7 +23,7 @@ This guide provides comprehensive installation instructions for Zero Email Clien
     - **Storage**: 2GB free space
   </Tab>
   <Tab value="Recommended">
-    <Callout type="tip">
+    <Callout type="info">
       **Recommended Requirements**
     </Callout>
     - **Node.js**: v20.0.0 or higher
@@ -37,7 +37,7 @@ This guide provides comprehensive installation instructions for Zero Email Clien
 
 <Tabs items={['pnpm', 'npm', 'yarn']}>
   <Tab value="pnpm">
-    <Callout type="tip">
+    <Callout type="info">
       **pnpm is recommended** for better performance and disk space efficiency.
     </Callout>
     
@@ -68,7 +68,7 @@ yarn install
 
 <Tabs items={['GitHub Clone', 'Download ZIP', 'Degit']}>
   <Tab value="GitHub Clone">
-    <Callout type="tip">
+    <Callout type="info">
       **Fork the [Zero repository](https://github.com/Mail-0/zero)**
       **Recommended method** for development and contributions.
     </Callout>
@@ -95,7 +95,7 @@ yarn install
   </Tab>
   <Tab value="Degit">
     ```bash title="Using Degit"
-npx degit your-org/zero my-zero-app
+npx degit Mail-0/Zero my-zero-app
 cd my-zero-app
 ```
   </Tab>
@@ -108,47 +108,50 @@ cd my-zero-app
 Create and configure your environment file:
 
 ```bash title="Copy .env.example"
-cp .env.example .env.local
+cp .env.example .env
 ```
 
 ### 2. Required Environment Variables
 
 ```bash title="Required .env Variables"
-# Application
-NODE_ENV=development
-PORT=3000
-APP_URL=http://localhost:3000
+# Application URLs
+VITE_PUBLIC_APP_URL=http://localhost:3000
+VITE_PUBLIC_BACKEND_URL=http://localhost:8787
 
 # Database
-DATABASE_URL=sqlite:./data/db.sqlite
-# Or for PostgreSQL
-# DATABASE_URL=postgresql://user:password@localhost:5432/zero
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/zerodotemail"
 
 # Authentication
-BETTER_AUTH_SECRET=your-super-secret-key-here
+BETTER_AUTH_SECRET="your-super-secret-key-here"
 BETTER_AUTH_URL=http://localhost:3000
+COOKIE_DOMAIN="localhost"
 
-# Email Provider Configuration
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
+# OAuth Configuration
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
 
-# OAuth Providers (Optional)
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
+# Redis/Valkey Configuration
+REDIS_URL="http://localhost:8079"
+REDIS_TOKEN="upstash-local-token"
 
-GITHUB_CLIENT_ID=your-github-client-id
-GITHUB_CLIENT_SECRET=your-github-client-secret
+# Email Service (Optional)
+RESEND_API_KEY="your-resend-api-key"
 
-# Storage (Optional)
-CLOUDFLARE_R2_ACCESS_KEY_ID=your-access-key
-CLOUDFLARE_R2_SECRET_ACCESS_KEY=your-secret-key
-CLOUDFLARE_R2_BUCKET=your-bucket-name
+# AI Services (Optional)
+OPENAI_API_KEY="your-openai-api-key"
+PERPLEXITY_API_KEY="your-perplexity-api-key"
+AI_SYSTEM_PROMPT=""
 
-# AI Features (Optional)
-OPENAI_API_KEY=your-openai-api-key
+# Development Environment
+NODE_ENV="development"
+
+# Security (Optional)
+AUTUMN_SECRET_KEY="your-autumn-secret-key"
+
+# SMS/Voice Services (Optional)
+TWILIO_ACCOUNT_SID="your-twilio-sid"
+TWILIO_AUTH_TOKEN="your-twilio-token"
+TWILIO_PHONE_NUMBER="your-twilio-phone"
 ```
 
 ### 3. Database Setup Options
@@ -156,7 +159,7 @@ OPENAI_API_KEY=your-openai-api-key
 #### Option A: Docker PostgreSQL (Recommended)
 ```bash title="Docker Database Setup"
 # Start PostgreSQL database with Docker Compose
-docker-compose -f docker-compose.db.yaml up -d
+pnpm docker:db:up
 ```
 
 <Callout type="info">
@@ -177,12 +180,20 @@ sudo systemctl start postgresql  # Ubuntu
 createdb zero_dev
 ```
 
-#### Option C: SQLite (Development Only)
-```bash title="SQLite Setup"
-# SQLite can be used for quick development
-# Database file will be created automatically
-# Note: Some features may not work with SQLite
+#### Option C: Local Development (Docker - Recommended)
+```bash title="Docker Development Setup"
+# Start PostgreSQL, Redis/Valkey, and proxy services
+pnpm docker:db:up
+
+# This starts:
+# - PostgreSQL on port 5432
+# - Valkey (Redis-compatible) on port 6379  
+# - Upstash Redis HTTP proxy on port 8079
 ```
+
+<Callout type="info">
+This is the recommended setup for local development as it matches the production environment and includes all necessary services.
+</Callout>
 
 ## Installation Steps
 
@@ -213,10 +224,10 @@ pnpm go
 
 # Or start manually
 pnpm docker:db:up  # Start database first
-pnpm dev          # Then start dev servers
+pnpm dev           # Then start dev servers
 ```
 
-<Callout type="tip">
+<Callout type="info">
 **Quick Start**: Use `pnpm go` to automatically start the database and development servers in one command.
 </Callout>
 
@@ -272,7 +283,7 @@ The nizzy CLI is included as part of the project dependencies and is available a
   </Tab>
 </Tabs>
 
-<Callout type="tip">
+<Callout type="info">
 The nizzy CLI tool is essential for keeping your development environment synchronized and up-to-date.
 </Callout>
 
@@ -415,13 +426,13 @@ pnpm nizzy clean
 **Docker services not starting**
 ```bash title="Terminal"
 # Check Docker service status
-docker-compose -f docker-compose.db.yaml ps
+pnpm docker:db:up
 
 # View service logs
-docker-compose -f docker-compose.db.yaml logs
+docker compose -f docker-compose.db.yaml logs
 
 # Restart services
-docker-compose -f docker-compose.db.yaml restart
+pnpm docker:db:down && pnpm docker:db:up
 ```
 
 **Port conflicts**
@@ -446,6 +457,6 @@ pnpm install
 pnpm turbo clean
 ```
 
-<Callout type="tip">
+<Callout type="info">
 **Still having issues?** Check the [GitHub Issues](https://github.com/Mail-0/Zero/issues) for similar problems or create a new issue with your error details.
 </Callout>
