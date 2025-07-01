@@ -29,7 +29,6 @@ export default function LoginZero() {
 
     // Here you would typically handle authentication
   }
-
   return (
     <div className="flex h-full min-h-screen w-full items-center justify-center bg-black">
       <div className="animate-in slide-in-from-bottom-4 w-full max-w-md px-6 py-8 duration-500">
