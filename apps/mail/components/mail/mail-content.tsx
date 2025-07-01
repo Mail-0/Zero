@@ -45,7 +45,7 @@ export function MailContent({ html, senderEmail }: MailContentProps) {
 
       const { success } = await saveUserSettings({
         ...existingSettings,
-        trustedSenders: data?.settings.trustedSenders
+        trustedSenders: data?.settings?.trustedSenders
           ? data.settings.trustedSenders.concat(senderEmail)
           : [senderEmail],
       });
@@ -67,7 +67,9 @@ export function MailContent({ html, senderEmail }: MailContentProps) {
     queryFn: () => {
       const shouldLoadImages = isTrustedSender || temporaryImagesEnabled;
 
-      const config: any = {
+      type Config = Parameters<typeof DOMPurify.sanitize>[1];
+
+      const config: Config = {
         ADD_TAGS: ['style', 'link'],
         ADD_ATTR: ['target', 'style', 'class', 'id', 'href', 'rel', 'type'],
         ALLOW_DATA_ATTR: false,
@@ -189,7 +191,12 @@ export function MailContent({ html, senderEmail }: MailContentProps) {
 
       DOMPurify.removeAllHooks();
 
-      return sanitized;
+      try {
+        const sanitized = DOMPurify.sanitize(finalHtml, config);
+        return sanitized;
+      } finally {
+        DOMPurify.removeAllHooks();
+      }
     },
     staleTime: 30 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
@@ -208,6 +215,12 @@ export function MailContent({ html, senderEmail }: MailContentProps) {
 
     shadowRootRef.current.innerHTML = sanitizedHtml as unknown as string;
   }, [sanitizedHtml]);
+
+  useEffect(() => {
+    if (isTrustedSender || temporaryImagesEnabled) {
+      setCspViolation(false);
+    }
+  }, [isTrustedSender, temporaryImagesEnabled]);
 
   const handleImageError = useCallback((e: Event) => {
     const target = e.target as HTMLImageElement;
