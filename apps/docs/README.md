@@ -157,13 +157,12 @@ We welcome contributions to improve the documentation! Here's how you can help:
 
 ## Learn More
 
-- **[Zero Main Repository](https://github.com/your-org/zero)** - The main Zero project
+- **[Zero Main Repository](https://github.com/Mail-0/zero)** - The main Zero project
 - **[Zero Documentation](/)** - Start reading the docs
 - **[Contributing Guide](/docs/contributing)** - How to contribute to Zero
-- **[Community Discussions](https://github.com/your-org/zero/discussions)** - Join the conversation
+- **[Community Discussions](https://github.com/Mail-0/zero/discussions)** - Join the conversation
 - **[Fumadocs Documentation](https://fumadocs.vercel.app)** - Learn about our docs framework
-- **[Next.js Documentation](https://nextjs.org/docs)** - Learn about Next.js
-
+  
 ## Support
 - **Bug Reports** - [Create an issue](https://github.com/Mail-0/zero/issues)
 - **Feature Requests** - [Start a discussion](https://github.com/Mail-0/zero/discussions)
