@@ -12,6 +12,8 @@ import {
   User,
   X,
   Search,
+  Plus,
+  Filter,
 } from '../icons/icons';
 import {
   Dialog,
@@ -26,6 +28,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Command, FilterIcon, PlusIcon, RefreshCcw, XIcon } from 'lucide-react';
 import { useActiveConnection, useConnections } from '@/hooks/use-connections';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCommandPalette } from '../context/command-palette-context';
@@ -40,6 +43,7 @@ import * as CustomIcons from '@/components/icons/icons';
 import { isMac } from '@/lib/hotkeys/use-hotkey-utils';
 import { MailList } from '@/components/mail/mail-list';
 import { useHotkeysContext } from 'react-hotkeys-hook';
+import SelectAllCheckbox from './select-all-checkbox';
 import { useNavigate, useParams } from 'react-router';
 import { useMail } from '@/components/mail/use-mail';
 import { SidebarToggle } from '../ui/sidebar-toggle';
@@ -48,7 +52,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { useBrainState } from '@/hooks/use-summary';
 import { clearBulkSelectionAtom } from './use-mail';
 import AISidebar from '@/components/ui/ai-sidebar';
-import { Command, RefreshCcw } from 'lucide-react';
 import { cleanSearchValue, cn } from '@/lib/utils';
 import { useThreads } from '@/hooks/use-threads';
 import { useBilling } from '@/hooks/use-billing';
@@ -60,13 +63,13 @@ import { useSession } from '@/lib/auth-client';
 import { ScrollArea } from '../ui/scroll-area';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { useStats } from '@/hooks/use-stats';
 import { useTranslations } from 'use-intl';
 import type { IConnection } from '@/types';
 import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
-import SelectAllCheckbox from './select-all-checkbox';
 
 interface ITag {
   id: string;
@@ -390,8 +393,9 @@ export function MailLayout() {
   const prevFolderRef = useRef(folder);
   const { enableScope, disableScope } = useHotkeysContext();
   const { data: activeConnection } = useActiveConnection();
-  const { activeFilters, clearAllFilters } = useCommandPalette();
+  const { activeFilters, clearAllFilters, removeFilter } = useCommandPalette();
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useQueryState('isCommandPaletteOpen');
+  const [, setCommandPaletteView] = useQueryState('commandPaletteView');
 
   const { data: activeAccount } = useActiveConnection();
 
@@ -533,46 +537,53 @@ export function MailLayout() {
                 </div>
               </div>
               <div className="p-2 px-[22px]">
-                <Button
-                  variant="outline"
-                  className={cn(
-                    'text-muted-foreground relative flex h-8 w-full select-none items-center justify-start overflow-hidden rounded-lg border bg-white pl-2 text-left text-sm font-normal shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-none dark:bg-[#141414]',
-                  )}
-                  onClick={() => setIsCommandPaletteOpen('true')}
-                >
-                  <Search className="fill-[#71717A] dark:fill-[#6F6F6F]" />
-
-                  <span className="hidden truncate pr-20 lg:inline-block">
-                    {activeFilters.length > 0
-                      ? activeFilters.map((f) => f.display).join(', ')
-                      : 'Search & Filter'}
-                  </span>
-                  <span className="inline-block truncate pr-20 lg:hidden">
-                    {activeFilters.length > 0
-                      ? `${activeFilters.length} filter${activeFilters.length > 1 ? 's' : ''}`
-                      : 'Search...'}
-                  </span>
-
-                  <span className="absolute right-[0.1rem] flex items-center gap-1">
-                    {/* {activeFilters.length > 0 && (
-                      <Badge variant="secondary" className="ml-2 h-5 rounded px-1">
-                        {activeFilters.length}
-                      </Badge>
-                    )} */}
-                    {activeFilters.length > 0 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="my-auto h-5 rounded-xl px-1.5 text-xs"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          clearAllFilters();
-                        }}
-                      >
-                        Clear
-                      </Button>
+                <div className="flex gap-1">
+                  {/* Quick Search Button */}
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      'text-muted relative flex h-8 flex-1 cursor-pointer select-none items-center justify-start overflow-hidden rounded-lg border bg-white pl-2 text-left text-sm font-normal shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-none dark:bg-[#262626] dark:text-[#cccccc]',
+                      'transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]',
+                      'active:bg-gray-100 dark:active:bg-[#333333]',
                     )}
-                    <kbd className="bg-muted text-md pointer-events-none hidden h-7 select-none flex-row items-center gap-1 rounded-md border-none px-2 font-medium !leading-[0] opacity-100 sm:flex dark:bg-[#262626] dark:text-[#929292]">
+                    onClick={async () => {
+                      await Promise.all([
+                        setIsCommandPaletteOpen('true'),
+                        setCommandPaletteView('search'),
+                      ]);
+                    }}
+                  >
+                    <Search className="mr-2 h-4 w-4 fill-[#71717A] dark:fill-[#6F6F6F]" />
+                    <span className="inline-block truncate lg:hidden">Search</span>
+                    <span className="hidden truncate lg:inline-block">Quick Search</span>
+
+                    {/* Shortcut hint only */}
+                    <div className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-1">
+                      <span className="bg-muted text-md pointer-events-none hidden h-6 select-none flex-row items-center gap-1 rounded-md border-none px-1.5 text-xs font-medium !leading-[0] opacity-100 sm:flex dark:bg-[#141414] dark:text-[#929292]">
+                        <span
+                          className={cn('h-min text-sm !leading-[0.2]', isMac ? 'mt-[1px]' : '')}
+                        >
+                          {isMac ? '⌘' : 'Ctrl'}
+                        </span>
+                        <span className="h-min text-sm !leading-[0.2]">⇧</span>
+                        <span className="h-min text-sm !leading-[0.2]">S</span>
+                      </span>
+                    </div>
+                  </Button>
+
+                  {/* Command Palette Button */}
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      'text-muted-foreground flex h-8 w-fit cursor-pointer select-none items-center justify-center gap-2 overflow-hidden rounded-lg border bg-white pl-3 pr-3 md:pr-1 text-sm font-normal shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:border dark:border-neutral-700 dark:bg-[#141414]',
+                      'transition-colors duration-200 hover:bg-gray-50 dark:hover:border-neutral-500 dark:hover:bg-[#161616]',
+                      'active:bg-gray-100 dark:active:bg-[#252525]',
+                    )}
+                    onClick={() => setIsCommandPaletteOpen('true')}
+                  >
+                    <span className="hidden lg:inline-block">Power Menu</span>
+                    <span className="inline-block lg:hidden">Menu</span>
+                    <kbd className="bg-muted text-md pointer-events-none hidden h-6 select-none flex-row items-center gap-1 rounded-md border-none px-2 font-medium !leading-[0] opacity-100 sm:flex dark:bg-[#262626] dark:text-[#929292]">
                       <span
                         className={cn(
                           'h-min !leading-[0.2]',
@@ -581,15 +592,61 @@ export function MailLayout() {
                       >
                         {isMac ? '⌘' : 'Ctrl'}{' '}
                       </span>
-                      <span className="h-min text-sm !leading-[0.2]"> K</span>
+                      <span className="h-min text-sm !leading-[0.2]">K</span>
                     </kbd>
-                  </span>
-                </Button>
-                {/* <div className="mt-2">
+                  </Button>
+                </div>
+
+                {/* Active Filters Display - Only When Filters Exist */}
+                {activeFilters.length > 0 && (
+                  <div className="mt-2 flex items-center gap-2 py-1">
+                    <FilterIcon className="ml-1 h-4 w-4 flex-shrink-0 text-neutral-400" />
+                    <div className="flex-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                      <div className="flex min-w-fit items-center gap-1.5">
+                        {activeFilters.map((filter) => (
+                          <Badge
+                            key={filter.id}
+                            variant="secondary"
+                            className="w-fit cursor-default whitespace-nowrap pr-1 text-xs text-neutral-300"
+                          >
+                            {filter.display}
+                            <button
+                              onClick={() => removeFilter(filter.id)}
+                              className="ml-1 hover:text-red-500"
+                            >
+                              <XIcon className="h-3 w-3 text-neutral-400" />
+                            </button>
+                          </Badge>
+                        ))}
+                        <button
+                          onClick={() => {
+                            setIsCommandPaletteOpen('true');
+                            setCommandPaletteView('filter');
+                          }}
+                          className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md transition-colors duration-200 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                          title="Add filter"
+                        >
+                          <PlusIcon className="h-3 w-3 text-neutral-400" />
+                        </button>
+                      </div>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        clearAllFilters();
+                      }}
+                      className="flex-shrink-0 text-xs text-neutral-500 transition-colors duration-200 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
+
+                <div className="mt-2">
                   {activeAccount?.providerId === 'google' && folder === 'inbox' && (
                     <CategorySelect isMultiSelectMode={mail.bulkSelected.length > 0} />
                   )}
-                </div> */}
+                </div>
               </div>
               <div
                 className={cn(
@@ -833,7 +890,13 @@ export const Categories = () => {
   const categories = categorySettings.map((cat) => {
     const base = {
       id: cat.id,
-      name:  t(`common.mailCategories.${cat.id.split(' ').map((w, i) => i === 0 ? w.toLowerCase() : w).join('')}` as any) || cat.name,
+      name:
+        t(
+          `common.mailCategories.${cat.id
+            .split(' ')
+            .map((w, i) => (i === 0 ? w.toLowerCase() : w))
+            .join('')}` as any,
+        ) || cat.name,
       searchValue: cat.searchValue,
     } as const;
 

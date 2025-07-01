@@ -9,6 +9,7 @@ export function GlobalHotkeys() {
   const [composeOpen, setComposeOpen] = useQueryState('isComposeOpen');
   const { clearAllFilters } = useCommandPalette();
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useQueryState('isCommandPaletteOpen');
+  const [, setCommandPaletteView] = useQueryState('commandPaletteView');
   const { undoLastAction } = useOptimisticActions();
   const scope = 'global';
 
@@ -19,6 +20,8 @@ export function GlobalHotkeys() {
     undoLastAction: () => {
       undoLastAction();
     },
+    // Note: quickSearch, quickFilter, and quickLabels are now handled directly
+    // in the command palette context to avoid conflicts and ensure proper preventDefault
   };
 
   const globalShortcuts = keyboardShortcuts.filter((shortcut) => shortcut.scope === scope);

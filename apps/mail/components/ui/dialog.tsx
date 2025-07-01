@@ -22,8 +22,8 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-[99]',
-      showOverlay ? 'bg-black/50 backdrop-blur-sm' : 'bg-[#FAFAFA] dark:bg-[#141414]',
+      'fixed inset-0 z-[99]',
+      showOverlay ? 'bg-black/70 backdrop-blur-sm' : 'bg-[#FAFAFA] dark:bg-[#141414]',
       className,
     )}
     {...props}
@@ -45,14 +45,9 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed left-[50%] top-[50%] z-[100] translate-x-[-50%] translate-y-[-50%] duration-200',
-        'data-[state=open]:animate-in data-[state=closed]:animate-out',
-        'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-        'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
-        'data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%]',
-        'data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]',
+        'fixed left-[50%] top-[50%] z-[100] translate-x-[-50%] translate-y-[-50%]',
         showOverlay
-          ? 'bg-panelLight dark:bg-panelDark w-full max-w-[500px] rounded-xl border p-6'
+          ? 'bg-panelLight dark:bg-panelDark w-full max-w-md rounded-xl border p-6 sm:max-w-lg lg:max-w-[750px]'
           : '',
         className,
       )}

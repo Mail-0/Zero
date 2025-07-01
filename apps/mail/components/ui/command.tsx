@@ -6,7 +6,7 @@ import {
   type DialogProps,
 } from '@/components/ui/dialog';
 import { Command as CommandPrimitive } from 'cmdk';
-import { Search } from '../icons/icons';
+import { Search, X } from '../icons/icons';
 import { cn } from '@/lib/utils';
 import * as React from 'react';
 
@@ -25,19 +25,72 @@ const Command = React.forwardRef<
 ));
 Command.displayName = CommandPrimitive.displayName;
 
-const CommandDialog = ({ children, ...props }: DialogProps) => {
+interface CommandDialogProps extends DialogProps {
+  showEscButton?: boolean;
+  onEscClick?: () => void;
+  currentView?: string;
+  shouldFilter?: boolean;
+}
+
+const CommandDialog = ({
+  children,
+  showEscButton = false,
+  onEscClick,
+  currentView,
+  shouldFilter = true,
+  ...props
+}: CommandDialogProps) => {
   return (
     <Dialog {...props}>
       <DialogTitle className="sr-only">Command</DialogTitle>
       <DialogDescription className="sr-only">Command</DialogDescription>
-      <DialogContent
-        showOverlay={true}
-        className="dark:bg-panelDark w-full overflow-hidden rounded-xl border-none bg-white p-0 sm:max-w-lg [&>button:last-child]:hidden"
-      >
-        <Command className="[&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]]:px-2 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-3 [&_[cmdk-item]]:py-2">
-          {children}
-        </Command>
-      </DialogContent>
+      {showEscButton ? (
+        <DialogContent
+          showOverlay={true}
+          className="fixed left-[50%] top-[50%] z-[100] flex translate-x-[-50%] translate-y-[-50%] flex-col items-center justify-center gap-2 border-none !bg-transparent p-0 shadow-none"
+        >
+          {/* ESC Button */}
+          <div className="flex w-full justify-start sm:max-w-2xl md:max-w-3xl">
+            <button
+              onClick={onEscClick}
+              className="dark:bg-panelDark flex items-center gap-1 rounded-lg bg-[#F0F0F0] px-2 py-1.5 hover:bg-[#E0E0E0] dark:hover:bg-[#202020]"
+            >
+              {currentView === 'main' ? (
+                <X className="fill-muted-foreground mt-0.5 h-3.5 w-3.5 dark:fill-[#929292]" />
+              ) : (
+                <span className="text-muted-foreground text-sm font-medium dark:text-[#929292]">
+                  ←
+                </span>
+              )}
+              <span className="text-muted-foreground text-sm font-medium dark:text-[#929292]">
+                esc
+              </span>
+            </button>
+          </div>
+
+          {/* Command Palette Content */}
+          <div className="dark:bg-panelDark w-full overflow-hidden rounded-xl border-none bg-white p-0 max-w-md sm:max-w-lg lg:max-w-[750px]">
+            <Command
+              shouldFilter={shouldFilter}
+              className="[&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]]:px-2 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-3 [&_[cmdk-item]]:py-2"
+            >
+              {children}
+            </Command>
+          </div>
+        </DialogContent>
+      ) : (
+        <DialogContent
+          showOverlay={true}
+          className="dark:bg-panelDark w-full overflow-hidden rounded-xl border-none bg-white p-0 max-w-md sm:max-w-lg lg:max-w-[750px] [&>button:last-child]:hidden"
+        >
+          <Command
+            shouldFilter={shouldFilter}
+            className="[&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]]:px-2 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-3 [&_[cmdk-item]]:py-2"
+          >
+            {children}
+          </Command>
+        </DialogContent>
+      )}
     </Dialog>
   );
 };
@@ -46,8 +99,8 @@ const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
-  <div className="border-input flex items-center border-none w-full px-5" cmdk-input-wrapper="">
-    <Search className="fill-iconLight me-3 relative top-0.5 text-muted-foreground/80 h-4 w-4" />
+  <div className="border-input flex w-full items-center border-none px-5" cmdk-input-wrapper="">
+    <Search className="fill-iconLight text-muted-foreground/80 relative top-0.5 me-3 h-4 w-4" />
     <CommandPrimitive.Input
       ref={ref}
       className={cn(
@@ -67,7 +120,10 @@ const CommandList = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.List
     ref={ref}
-    className={cn('max-h-80 overflow-y-auto overflow-x-hidden', className)}
+    className={cn(
+      'max-h-80 overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:border [&::-webkit-scrollbar-thumb]:border-neutral-200 [&::-webkit-scrollbar-thumb]:bg-neutral-300 dark:[&::-webkit-scrollbar-thumb]:border-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-600 [&::-webkit-scrollbar-track]:bg-transparent dark:[&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-2',
+      className,
+    )}
     {...props}
   />
 ));

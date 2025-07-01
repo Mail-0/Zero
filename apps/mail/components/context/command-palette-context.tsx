@@ -11,6 +11,7 @@ import {
   Mail,
   Paperclip,
   Search,
+  Settings,
   Star,
   Tag,
   Trash2,
@@ -27,6 +28,7 @@ import {
   CommandList,
   CommandSeparator,
   CommandShortcut,
+  Command,
 } from '@/components/ui/command';
 import {
   createContext,
@@ -39,12 +41,14 @@ import {
   useState,
   type ComponentType,
 } from 'react';
-import { getMainSearchTerm, parseNaturalLanguageSearch } from '@/lib/utils';
+import { cn, getMainSearchTerm, parseNaturalLanguageSearch } from '@/lib/utils';
 import { DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { navigationConfig, type MessageKey } from '@/config/navigation';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useLocation, useNavigate } from 'react-router';
+import { isMac } from '@/lib/hotkeys/use-hotkey-utils';
+import { Pencil2, SettingsGear } from '../icons/icons';
 import { Separator } from '@/components/ui/separator';
 import { useTRPC } from '@/providers/query-provider';
 import { Calendar } from '@/components/ui/calendar';
@@ -57,13 +61,13 @@ import { Badge } from '@/components/ui/badge';
 import { useTranslations } from 'use-intl';
 import { format, subDays } from 'date-fns';
 import { VisuallyHidden } from 'radix-ui';
-import { Pencil2 } from '../icons/icons';
 import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { toast } from 'sonner';
 
 type CommandPaletteContext = {
   activeFilters: ActiveFilter[];
+  removeFilter: (filterId: string) => void;
   clearAllFilters: () => void;
 };
 
@@ -176,6 +180,7 @@ const deleteSavedSearch = (id: string) => {
 
 export function CommandPalette({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useQueryState('isCommandPaletteOpen');
+  const [initialView, setInitialView] = useQueryState('commandPaletteView');
   const [, setIsComposeOpen] = useQueryState('isComposeOpen');
   const [currentView, setCurrentView] = useState<CommandView>('main');
   const [selectedDateFilter, setSelectedDateFilter] = useState<string | null>(null);
@@ -248,32 +253,54 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
       setSaveSearchName('');
       setFilterBuilderState({});
       setCommandInputValue('');
+      setInitialView(null);
+    } else if (open && initialView) {
+      // Set the view based on the initialView parameter
+      setCurrentView(initialView as CommandView);
+      setInitialView(null); // Clear the parameter after using it
     }
-  }, [open]);
+  }, [open, initialView]);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
+      // Global shortcuts that work whether palette is open or closed
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setOpen((prevOpen) => (prevOpen ? null : 'true'));
       }
 
-      if (open) {
-        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') {
-          e.preventDefault();
-          setCurrentView('filter');
-        }
-
-        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
-          e.preventDefault();
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        if (open) {
+          setCurrentView('search');
+        } else {
+          setOpen('true');
           setCurrentView('search');
         }
+      }
 
-        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'l') {
-          e.preventDefault();
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        if (open) {
+          setCurrentView('filter');
+        } else {
+          setOpen('true');
+          setCurrentView('filter');
+        }
+      }
+
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'l') {
+        e.preventDefault();
+        if (open) {
+          setCurrentView('labels');
+        } else {
+          setOpen('true');
           setCurrentView('labels');
         }
+      }
 
+      // Shortcuts that only work when palette is open
+      if (open) {
         if (e.key === 'Escape' && currentView !== 'main') {
           e.preventDefault();
           setCurrentView('main');
@@ -385,17 +412,30 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const removeFilter = useCallback((filterId: string) => {
-    setActiveFilters((prev) => {
-      const updated = prev.filter((f) => f.id !== filterId);
-      try {
-        localStorage.setItem(ACTIVE_FILTERS_KEY, JSON.stringify(updated));
-      } catch (error) {
-        console.error('Failed to save filters:', error);
-      }
-      return updated;
-    });
-  }, []);
+  const removeFilter = useCallback(
+    (filterId: string) => {
+      setActiveFilters((prev) => {
+        const updated = prev.filter((f) => f.id !== filterId);
+        try {
+          localStorage.setItem(ACTIVE_FILTERS_KEY, JSON.stringify(updated));
+        } catch (error) {
+          console.error('Failed to save filters:', error);
+        }
+
+        // Update search value with remaining filters
+        const filterQuery = updated.map((f) => f.value).join(' ');
+        setSearchValue({
+          value: filterQuery,
+          highlight: getMainSearchTerm(filterQuery),
+          folder: searchValue.folder,
+          isAISearching: false,
+        });
+
+        return updated;
+      });
+    },
+    [searchValue.folder, setSearchValue],
+  );
 
   useEffect(() => {
     if (pathname && activeFilters.length) {
@@ -643,11 +683,142 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     }
   }, [searchQuery, threads]);
 
+  // Slash commands configuration
+  const slashCommands = useMemo(
+    () => [
+      {
+        key: 's',
+        title: 'Search Emails',
+        action: () => {
+          setCurrentView('search');
+        },
+        description: 'Search across your emails',
+      },
+      {
+        key: 'f',
+        title: 'Filter Emails',
+        action: () => {
+          setCurrentView('filter');
+        },
+        description: 'Filter emails by criteria',
+      },
+      {
+        key: 'c',
+        title: 'Compose Email',
+        action: () => setIsComposeOpen('true'),
+        description: 'Create a new email',
+      },
+      {
+        key: 't',
+        title: 'Settings',
+        action: () => navigate('/settings/general'),
+        description: 'Go to settings',
+      },
+      {
+        key: 'h',
+        title: 'Help',
+        action: () => {
+          setCurrentView('help');
+        },
+        description: 'View help and keyboard shortcuts',
+      },
+    ],
+    [navigate, setIsComposeOpen, setCurrentView],
+  );
+
+  // Handle input value changes
+  const handleInputChange = useCallback((value: string) => {
+    setCommandInputValue(value);
+  }, []);
+
+  // Get tooltip message for slash commands
+  const getSlashTooltip = useCallback(() => {
+    const isCurrentlyInSlashMode = commandInputValue.startsWith('/');
+    const currentSlashCommand = isCurrentlyInSlashMode ? commandInputValue.slice(1) : '';
+
+    if (!isCurrentlyInSlashMode) return null;
+
+    if (!currentSlashCommand) {
+      return 'Select a command';
+    }
+
+    const matchingCommand = slashCommands.find((cmd) => cmd.key === currentSlashCommand);
+    if (matchingCommand) {
+      return `Press Space to go to ${matchingCommand.title.replace(' Emails', '').replace(' Email', '')}`;
+    }
+
+    return null;
+  }, [commandInputValue, slashCommands]);
+
+  // Handle space key to execute slash commands
+  const handleSlashCommandExecution = useCallback(
+    (e: React.KeyboardEvent) => {
+      const isCurrentlyInSlashMode = commandInputValue.startsWith('/');
+      const currentSlashCommand = isCurrentlyInSlashMode ? commandInputValue.slice(1) : '';
+
+      if (e.key === ' ' && isCurrentlyInSlashMode && currentSlashCommand) {
+        const matchingCommand = slashCommands.find((cmd) => cmd.key === currentSlashCommand);
+        if (matchingCommand) {
+          e.preventDefault();
+          matchingCommand.action();
+
+          // Only close the palette for compose command, keep it open for others
+          if (matchingCommand.key === 'c') {
+            setOpen(null);
+          }
+
+          setCommandInputValue('');
+        }
+      }
+    },
+    [commandInputValue, slashCommands, setOpen],
+  );
+
   const allCommands = useMemo(() => {
     type CommandGroup = {
       group: string;
       items: CommandItem[];
     };
+
+    // Derive slash mode information directly from commandInputValue
+    const isCurrentlyInSlashMode = commandInputValue.startsWith('/');
+    const currentSlashCommand = isCurrentlyInSlashMode ? commandInputValue.slice(1) : '';
+
+    // If in slash mode, only show slash commands
+    if (isCurrentlyInSlashMode) {
+      const matchingSlashCommands = slashCommands
+        .filter((cmd) => {
+          // Show all commands if currentSlashCommand is empty string, otherwise filter by prefix
+          const shouldShow =
+            currentSlashCommand.length === 0 || cmd.key.startsWith(currentSlashCommand);
+          return shouldShow;
+        })
+        .map((cmd) => ({
+          title: cmd.title,
+          icon:
+            cmd.key === 's'
+              ? Search
+              : cmd.key === 'f'
+                ? Filter
+                : cmd.key === 'c'
+                  ? Pencil2
+                  : cmd.key === 't'
+                    ? Settings
+                    : cmd.key === 'h'
+                      ? Info
+                      : undefined,
+          shortcut: `/${cmd.key}`,
+          onClick: cmd.action,
+          description: cmd.description,
+        }));
+
+      return [
+        {
+          group: 'Slash Commands',
+          items: matchingSlashCommands,
+        },
+      ];
+    }
 
     const searchCommands: CommandItem[] = [];
     const mailCommands: CommandItem[] = [];
@@ -666,7 +837,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     searchCommands.push({
       title: 'Search Emails',
       icon: Search,
-      shortcut: 's',
+      shortcut: `${isMac ? '⌘' : 'Ctrl'}+⇧+S`,
       onClick: () => {
         setCurrentView('search');
       },
@@ -676,7 +847,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     searchCommands.push({
       title: 'Filter Emails',
       icon: Filter,
-      shortcut: 'f',
+      shortcut: `${isMac ? '⌘' : 'Ctrl'}+⇧+E`,
       onClick: () => {
         setCurrentView('filter');
       },
@@ -728,6 +899,10 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             mailCommands.push(item);
           } else if (sectionKey === 'settings') {
             if (!item.isBackButton || pathname.startsWith('/settings')) {
+              // Add slash command notation to settings
+              if (item.title === t('navigation.settings.general' as MessageKey)) {
+                item.title = `${item.title}`;
+              }
               settingsCommands.push(item);
             }
           } else {
@@ -763,6 +938,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           groupTitle = t(translationKey) || groupKey;
         } catch {}
 
+        console.log(items);
         result.push({
           group: groupTitle,
           items,
@@ -771,10 +947,14 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     });
 
     return result;
-  }, [pathname, t, setIsComposeOpen, quickFilterOptions]);
+  }, [pathname, t, setIsComposeOpen, quickFilterOptions, commandInputValue, slashCommands]);
 
   const hasMatchingCommands = useMemo(() => {
     if (!commandInputValue.trim()) return true;
+
+    // In slash mode, always return true since we handle filtering in allCommands
+    const isCurrentlyInSlashMode = commandInputValue.startsWith('/');
+    if (isCurrentlyInSlashMode) return true;
 
     const searchTerm = commandInputValue.toLowerCase();
 
@@ -820,18 +1000,26 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <CommandInput
-        autoFocus
-        placeholder="Type a command or search..."
-        value={commandInputValue}
-        onValueChange={setCommandInputValue}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && commandInputValue.trim() && !hasMatchingCommands) {
-            e.preventDefault();
-            handleSearch(commandInputValue, true);
-          }
-        }}
-      />
+      <div className="relative">
+        {getSlashTooltip() && (
+          <div className="pointer-events-none absolute left-[60px] top-[6px] z-50 mt-1 bg-transparent px-2 py-1 text-sm text-neutral-500">
+            {getSlashTooltip()}
+          </div>
+        )}
+        <CommandInput
+          autoFocus
+          placeholder="Type / for command or search..."
+          value={commandInputValue}
+          onValueChange={handleInputChange}
+          onKeyDown={(e) => {
+            handleSlashCommandExecution(e);
+            if (e.key === 'Enter' && commandInputValue.trim() && !hasMatchingCommands) {
+              e.preventDefault();
+              handleSearch(commandInputValue, true);
+            }
+          }}
+        />
+      </div>
       <Separator />
       <CommandList>
         <CommandEmpty>
@@ -889,15 +1077,34 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                         <span className="text-muted-foreground text-xs">{item.description}</span>
                       )}
                     </div>
-                    {/* {item.shortcut && (
-                      <CommandShortcut>
-                        {item.shortcut === 'arrowUp'
-                          ? '↑'
-                          : item.shortcut === 'arrowDown'
-                            ? '↓'
-                            : item.shortcut}
-                      </CommandShortcut>
-                    )} */}
+                    {item.shortcut && (
+                      <div className="ml-auto flex items-center">
+                        {/* Handle different shortcut formats */}
+                        {item.shortcut.startsWith('/') ? (
+                          <span className="bg-muted text-md pointer-events-none flex h-6 select-none flex-row items-center gap-1 rounded-md border border-none px-1.5 text-xs font-medium !leading-[0] opacity-100 dark:bg-[#000000] dark:text-[#929292]">
+                            <span className="h-min text-sm !leading-[0.2]">{item.shortcut}</span>
+                          </span>
+                        ) : item.shortcut.toLowerCase().includes('mod') ||
+                          item.shortcut.toLowerCase().includes('⌘') ||
+                          item.shortcut.toLowerCase().includes('ctrl') ? (
+                          <span className="bg-muted text-md pointer-events-none flex h-6 select-none flex-row items-center gap-1 rounded-md border border-none px-1.5 text-xs font-medium !leading-[0] opacity-100 dark:bg-[#000000] dark:text-[#929292]">
+                            {item.shortcut.split('+').map((key, index) => (
+                              <span
+                                key={index}
+                                className={cn(
+                                  'h-min text-sm !leading-[0.2]',
+                                  key === (isMac ? '⌘' : 'Ctrl') ? (isMac ? 'mt-[1px]' : '') : '',
+                                )}
+                              >
+                                {key}
+                              </span>
+                            ))}
+                          </span>
+                        ) : (
+                          <></>
+                        )}
+                      </div>
+                    )}
                   </CommandItem>
                 ))}
               </CommandGroup>
@@ -920,14 +1127,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
   const renderSearchView = () => {
     return (
       <>
-        <div className="flex items-center border-b px-3">
-          <button
-            className="text-muted-foreground hover:text-foreground relative top-0.5 mr-2"
-            onClick={() => setCurrentView('main')}
-            disabled={isProcessing}
-          >
-            ←
-          </button>
+        <div className="flex items-center border-b">
           <CommandInput
             autoFocus
             value={searchQuery}
@@ -1099,21 +1299,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
   const renderFilterView = () => {
     return (
       <>
-        <div className="flex items-center border-b px-3">
-          <button
-            className="text-muted-foreground hover:text-foreground mr-2"
-            onClick={() => {
-              if (selectedDateFilter) {
-                setSelectedDateFilter(null);
-                setDateRangeStart(undefined);
-                setDateRangeEnd(undefined);
-              } else {
-                setCurrentView('main');
-              }
-            }}
-          >
-            ←
-          </button>
+        <div className="flex items-center border-b">
           <CommandInput
             autoFocus
             value={searchQuery}
@@ -1406,13 +1592,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
 
   const renderLabelsView = () => (
     <>
-      <div className="flex items-center border-b px-3">
-        <button
-          className="text-muted-foreground hover:text-foreground mr-2"
-          onClick={() => setCurrentView('filter')}
-        >
-          ←
-        </button>
+      <div className="flex items-center border-b">
         <CommandInput
           autoFocus
           value={searchQuery}
@@ -1421,7 +1601,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           className="border-0"
         />
       </div>
-      <ScrollArea className="h-[400px]">
+      <ScrollArea className="h-[400px] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-600 [&::-webkit-scrollbar-track]:bg-neutral-100 dark:[&::-webkit-scrollbar-track]:bg-neutral-800 [&::-webkit-scrollbar]:w-2">
         <div className="p-4">
           {userLabels.length === 0 ? (
             <p className="text-muted-foreground text-center text-sm">
@@ -1474,13 +1654,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
 
   const renderSavedSearchesView = () => (
     <>
-      <div className="flex items-center border-b px-3">
-        <button
-          className="text-muted-foreground hover:text-foreground mr-2"
-          onClick={() => setCurrentView('main')}
-        >
-          ←
-        </button>
+      <div className="flex items-center border-b">
         <h3 className="font-medium">Saved Searches</h3>
       </div>
 
@@ -1516,7 +1690,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <ScrollArea className="h-[400px]">
+      <ScrollArea className="h-[400px] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-600 [&::-webkit-scrollbar-track]:bg-neutral-100 dark:[&::-webkit-scrollbar-track]:bg-neutral-800 [&::-webkit-scrollbar]:w-2">
         <div className="p-4">
           {savedSearches.length === 0 ? (
             <p className="text-muted-foreground text-center text-sm">No saved searches yet</p>
@@ -1554,17 +1728,11 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
 
   const renderFilterBuilderView = () => (
     <>
-      <div className="flex items-center border-b px-3">
-        <button
-          className="text-muted-foreground hover:text-foreground mr-2"
-          onClick={() => setCurrentView('main')}
-        >
-          ←
-        </button>
+      <div className="flex items-center border-b">
         <h3 className="font-medium">Filter Builder</h3>
       </div>
 
-      <ScrollArea className="h-[400px]">
+      <ScrollArea className="h-[400px] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-600 [&::-webkit-scrollbar-track]:bg-neutral-100 dark:[&::-webkit-scrollbar-track]:bg-neutral-800 [&::-webkit-scrollbar]:w-2">
         <div className="space-y-4 p-4">
           <div className="space-y-3">
             {['from', 'to', 'subject'].map((filterType) => {
@@ -1716,17 +1884,11 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
 
   const renderHelpView = () => (
     <>
-      <div className="flex items-center border-b px-3">
-        <button
-          className="text-muted-foreground hover:text-foreground mr-2"
-          onClick={() => setCurrentView('main')}
-        >
-          ←
-        </button>
+      <div className="flex items-center border-b">
         <h3 className="font-medium">Filter Syntax Help</h3>
       </div>
 
-      <ScrollArea className="h-[400px]">
+      <ScrollArea className="h-[400px] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-600 [&::-webkit-scrollbar-track]:bg-neutral-100 dark:[&::-webkit-scrollbar-track]:bg-neutral-800 [&::-webkit-scrollbar]:w-2">
         <div className="space-y-4 p-4">
           <div>
             <h4 className="mb-2 font-medium">Basic Filters</h4>
@@ -1823,23 +1985,40 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             <h4 className="mb-2 font-medium">Keyboard Shortcuts</h4>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <kbd className="bg-muted rounded px-2 py-1">⌘K</kbd>
-                <span className="text-muted-foreground">Open command palette</span>
+                <span className="bg-muted pointer-events-none flex h-6 select-none flex-row items-center gap-0.5 rounded-md border border-none px-2 py-1 text-xs !leading-[0] opacity-100">
+                  <span className="text-xs">⌘</span>
+                  <span className="text-xs">K</span>
+                </span>
+                <span className="text-muted-foreground">Open power menu</span>
               </div>
               <div className="flex justify-between">
-                <kbd className="bg-muted rounded px-2 py-1">⌘F</kbd>
-                <span className="text-muted-foreground">Open filters (when palette is open)</span>
+                <span className="bg-muted pointer-events-none flex h-6 select-none flex-row items-center gap-0.5 rounded-md border border-none px-2 py-1 text-xs !leading-[0] opacity-100">
+                  <span className="text-xs">⌘</span>
+                  <span className="text-xs">⇧</span>
+                  <span className="text-xs">F</span>
+                </span>
+                <span className="text-muted-foreground">Open filters</span>
               </div>
               <div className="flex justify-between">
-                <kbd className="bg-muted rounded px-2 py-1">⌘S</kbd>
-                <span className="text-muted-foreground">Open search (when palette is open)</span>
+                <span className="bg-muted pointer-events-none flex h-6 select-none flex-row items-center gap-0.5 rounded-md border border-none px-2 py-1 text-xs !leading-[0] opacity-100">
+                  <span className="text-xs">⌘</span>
+                  <span className="text-xs">⇧</span>
+                  <span className="text-xs">S</span>
+                </span>
+                <span className="text-muted-foreground">Open search</span>
               </div>
               <div className="flex justify-between">
-                <kbd className="bg-muted rounded px-2 py-1">⌘L</kbd>
-                <span className="text-muted-foreground">Open labels (when palette is open)</span>
+                <span className="bg-muted pointer-events-none flex h-6 select-none flex-row items-center gap-0.5 rounded-md border border-none px-2 py-1 text-xs !leading-[0] opacity-100">
+                  <span className="text-xs">⌘</span>
+                  <span className="text-xs">⇧</span>
+                  <span className="text-xs">L</span>
+                </span>
+                <span className="text-muted-foreground">Open labels</span>
               </div>
               <div className="flex justify-between">
-                <kbd className="bg-muted rounded px-2 py-1">ESC</kbd>
+                <span className="bg-muted pointer-events-none flex h-6 select-none flex-row items-center gap-0.5 rounded-md border border-none px-2 py-1 text-xs !leading-[0] opacity-100">
+                  <span className="text-sm">esc</span>
+                </span>
                 <span className="text-muted-foreground">Go back / Close</span>
               </div>
             </div>
@@ -1870,10 +2049,19 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const handleEscClick = () => {
+    if (currentView === 'main') {
+      setOpen(null);
+    } else {
+      setCurrentView('main');
+    }
+  };
+
   return (
     <CommandPaletteContext.Provider
       value={{
         activeFilters,
+        removeFilter,
         clearAllFilters,
       }}
     >
@@ -1885,7 +2073,15 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             return;
           }
           setOpen(isOpen ? 'true' : null);
+          if (!isOpen) {
+            // Reset state when dialog closes
+            setCommandInputValue('');
+          }
         }}
+        currentView={currentView}
+        showEscButton={true}
+        onEscClick={handleEscClick}
+        shouldFilter={!commandInputValue.startsWith('/')}
       >
         <VisuallyHidden.VisuallyHidden>
           <DialogTitle>{t('common.commandPalette.title')}</DialogTitle>

@@ -156,6 +156,30 @@ const globalShortcuts: Shortcut[] = [
     scope: 'global',
     preventDefault: true,
   },
+  {
+    keys: ['mod', 'shift', 's'],
+    action: 'quickSearch',
+    type: 'combination',
+    description: 'Open quick search',
+    scope: 'global',
+    preventDefault: true,
+  },
+  {
+    keys: ['mod', 'shift', 'e'],
+    action: 'quickFilter',
+    type: 'combination',
+    description: 'Open filters directly',
+    scope: 'global',
+    preventDefault: true,
+  },
+  {
+    keys: ['mod', 'shift', 'l'],
+    action: 'quickLabels',
+    type: 'combination',
+    description: 'Open labels directly',
+    scope: 'global',
+    preventDefault: true,
+  },
 ];
 
 const mailListShortcuts: Shortcut[] = [
