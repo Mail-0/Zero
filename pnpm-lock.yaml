@@ -46,7 +46,7 @@ catalogs:
       specifier: ^4.18.0
       version: 4.22.0
     zod:
-      specifier: ^3.25.42
+      specifier: 3.25.67
       version: 3.25.67
 
 patchedDependencies:
@@ -115,6 +115,9 @@ importers:
       react-dom:
         specifier: 'catalog:'
         version: 19.1.0(react@19.1.0)
+      zod:
+        specifier: 'catalog:'
+        version: 3.25.67
     devDependencies:
       '@tailwindcss/postcss':
         specifier: ^4.1.10

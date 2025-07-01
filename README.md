@@ -267,11 +267,12 @@ Zero uses PostgreSQL for storing data. Here's how to set it up:
 
 ## Documentation
 
-Comprehensive documentation is available to help you get started with Zero:
+Comprehensive documentation and blog content is available to help you get started with Zero:
 
-- **[Full Documentation](/apps/docs)** - Complete guides, API reference, and tutorials
+- **[Full Documentation](/apps/docs)** - Complete guides, API reference, and tutorials  
+- **[Blog](/blog)** - Latest updates, insights, and technical deep-dives from the Zero team
 - **Quick Start** - Get up and running in minutes
-- **Architecture** - Understanding Zero's design and components
+- **Architecture** - Understanding Zero's design and components  
 - **Configuration** - Customizing Zero for your needs
 - **Extensions** - Building and integrating custom features
 - **Contributing** - How to contribute to the Zero project
@@ -281,10 +282,18 @@ Comprehensive documentation is available to help you get started with Zero:
 To run the documentation site locally:
 
 ```bash
+# Run all services including docs
+pnpm dev
+
+# Or run only the documentation site  
 pnpm dev:docs
 ```
 
-The documentation will be available at `http://localhost:3000`.
+The documentation will be available at `http://localhost:3001` and includes:
+- **Interactive documentation** with search and navigation
+- **Professional blog** with insights and announcements  
+- **API references** and code examples
+- **Contributing guides** and community resources
 
 ## Contribute
 

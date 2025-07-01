@@ -22,6 +22,18 @@ import { toast } from 'sonner';
 
 const resources = [
   {
+    title: 'Documentation',
+    href: 'http://localhost:3001/docs',
+    description: 'Comprehensive guides and API documentation.',
+    external: true,
+  },
+  {
+    title: 'Blog',  
+    href: 'http://localhost:3001/blog',
+    description: 'Latest news, insights, and product updates.',
+    external: true,
+  },
+  {
     title: 'GitHub',
     href: 'https://github.com/Mail-0/Zero',
     description: 'Check out our open-source projects and contributions.',
@@ -52,23 +64,27 @@ const aboutLinks = [
     title: 'About',
     href: '/about',
     description: 'Learn more about Zero and our mission.',
+    external: false,
   },
   {
     title: 'Privacy',
     href: '/privacy',
     description: 'Read our privacy policy and data handling practices.',
+    external: false,
   },
   {
     title: 'Terms of Service',
     href: '/terms',
     description: 'Review our terms of service and usage guidelines.',
+    external: false,
   },
   {
     title: 'Contributors',
     href: '/contributors',
     description: 'See the contributors to Zero.',
+    external: false,
   },
-];
+] as const;
 
 const IconComponent = {
   github: GitHub,
@@ -129,7 +145,12 @@ export function Navigation() {
                   <NavigationMenuContent>
                     <ul className="grid w-[300px] gap-3 p-4 md:w-[300px] md:grid-cols-1 lg:w-[400px]">
                       {aboutLinks.map((link) => (
-                        <ListItem key={link.title} title={link.title} href={link.href}>
+                        <ListItem 
+                          key={link.title} 
+                          title={link.title} 
+                          href={link.href}
+                          external={link.external}
+                        >
                           {link.description}
                         </ListItem>
                       ))}
@@ -246,7 +267,13 @@ export function Navigation() {
                   Pricing
                 </Link>
                 {aboutLinks.map((link) => (
-                  <a key={link.title} href={link.href} className="block font-medium">
+                  <a 
+                    key={link.title} 
+                    href={link.href} 
+                    className="block font-medium"
+                    target={link.external ? '_blank' : undefined}
+                    rel={link.external ? 'noopener noreferrer' : undefined}
+                  >
                     {link.title}
                   </a>
                 ))}
@@ -258,16 +285,36 @@ export function Navigation() {
             <Separator className="mt-8" />
             <div className="mt-8 flex flex-row items-center justify-center gap-4">
               {resources.map((resource) => {
-                const Icon = IconComponent[resource.platform];
-                return (
-                  <Link
-                    key={resource.title}
-                    to={resource.href}
-                    className="flex items-center gap-2 font-medium"
-                  >
-                    {resource.platform && <Icon className="dark:fill-muted-foreground h-5 w-5" />}
-                  </Link>
-                );
+                if (resource.external && !resource.platform) {
+                  // Handle Documentation and Blog links
+                  return (
+                    <a
+                      key={resource.title}
+                      href={resource.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 font-medium"
+                    >
+                      {resource.title}
+                    </a>
+                  );
+                }
+                
+                if (resource.platform) {
+                  // Handle social platform links
+                  const Icon = IconComponent[resource.platform];
+                  return (
+                    <Link
+                      key={resource.title}
+                      to={resource.href}
+                      className="flex items-center gap-2 font-medium"
+                    >
+                      <Icon className="dark:fill-muted-foreground h-5 w-5" />
+                    </Link>
+                  );
+                }
+                
+                return null;
               })}
             </div>
           </SheetContent>

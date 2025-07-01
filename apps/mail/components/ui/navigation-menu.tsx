@@ -112,8 +112,9 @@ const ListItem = React.forwardRef<
   React.ComponentPropsWithoutRef<'a'> & {
     title: string;
     platform?: 'github' | 'twitter' | 'linkedin' | 'discord';
+    external?: boolean;
   }
->(({ className, title, children, platform, ...props }, ref) => {
+>(({ className, title, children, platform, external, ...props }, ref) => {
   const IconComponent = platform
     ? {
         github: GitHub,
@@ -132,6 +133,8 @@ const ListItem = React.forwardRef<
             'hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors',
             className,
           )}
+          target={external ? '_blank' : undefined}
+          rel={external ? 'noopener noreferrer' : undefined}
           {...props}
         >
           <div className="flex items-center gap-2 text-sm font-medium leading-none">
