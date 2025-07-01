@@ -851,7 +851,7 @@ export function EmailComposer({
                           key={index}
                           className="flex items-center gap-1 rounded-full border px-1 py-0.5 pr-2"
                         >
-                          <span className="flex gap-1 py-0.5 flex-wrap truncate text-sm text-black dark:text-white">
+                          <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
                             <Avatar className="h-5 w-5">
                               <AvatarFallback className="bg-offsetLight text-muted-foreground rounded-full text-xs font-bold dark:bg-[#373737] dark:text-[#9B9B9B]">
                                 {email.charAt(0).toUpperCase()}
