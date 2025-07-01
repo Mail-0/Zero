@@ -1,6 +1,6 @@
 import { ReSummarizeThread, SummarizeMessage, SummarizeThread } from './brain.fallback.prompts';
-import { AiChatPrompt, StyledEmailAssistantSystemPrompt } from './prompts';
 import { getSubscriptionFactory } from './factories/subscription-factory.registry';
+import { AiChatPrompt, StyledEmailAssistantSystemPrompt } from './prompts';
 import { EPrompts, EProviders } from '../types';
 import { env } from 'cloudflare:workers';
 

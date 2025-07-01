@@ -1,6 +1,6 @@
 import { SidebarToggle } from '@/components/ui/sidebar-toggle';
-import { AppSidebar } from '@/components/ui/app-sidebar';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { AppSidebar } from '@/components/ui/app-sidebar';
 
 export function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
   return (

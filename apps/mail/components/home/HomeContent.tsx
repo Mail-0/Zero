@@ -31,14 +31,14 @@ import {
 } from '../icons/icons';
 import { PixelatedBackground, PixelatedLeft, PixelatedRight } from '@/components/home/pixelated-bg';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { signIn, useSession } from '@/lib/auth-client';
+import { Link, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Balancer } from 'react-wrap-balancer';
-import { signIn, useSession } from '@/lib/auth-client';
 import { Navigation } from '../navigation';
 import { useTheme } from 'next-themes';
 import { use, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import Footer from './footer';
 import React from 'react';
@@ -121,7 +121,7 @@ export default function HomeContent() {
             Combinator
           </Link>
         </motion.div>
-        
+
         {/* Get Started button only visible for mobile screens */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

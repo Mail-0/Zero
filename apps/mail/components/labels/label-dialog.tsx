@@ -17,12 +17,12 @@ import { CurvedArrow } from '@/components/icons/icons';
 import { LABEL_COLORS } from '@/lib/label-colors';
 import type { Label as LabelType } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Command } from 'lucide-react';
 import { m } from '@/paraglide/messages';
+import { Command } from 'lucide-react';
 
 interface LabelDialogProps {
   trigger?: React.ReactNode;
@@ -94,7 +94,9 @@ export function LabelDialog({
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent showOverlay={true}>
         <DialogHeader>
-          <DialogTitle>{editingLabel ? m['common.labels.editLabel']() : m['common.mail.createNewLabel']()}</DialogTitle>
+          <DialogTitle>
+            {editingLabel ? m['common.labels.editLabel']() : m['common.mail.createNewLabel']()}
+          </DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form
@@ -153,7 +155,9 @@ export function LabelDialog({
                 {m['common.actions.cancel']()}
               </Button>
               <Button className="h-8 [&_svg]:size-4" type="submit">
-                {editingLabel ? m['common.actions.saveChanges']() : m['common.labels.createLabel']()}
+                {editingLabel
+                  ? m['common.actions.saveChanges']()
+                  : m['common.labels.createLabel']()}
                 <div className="flex h-5 items-center justify-center gap-1 rounded-sm bg-white/10 px-1 dark:bg-black/10">
                   <Command className="h-3 w-3 text-white dark:text-[#929292]" />
                   <CurvedArrow className="mt-1.5 h-3.5 w-3.5 fill-white dark:fill-[#929292]" />

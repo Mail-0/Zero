@@ -193,6 +193,7 @@ You can set up Zero in two ways:
    - Go to the [Twilio](https://www.twilio.com/)
    - Create a Twilio account if you don’t already have one
    - From the dashboard, locate your:
+
      - Account SID
      - Auth Token
      - Phone Number

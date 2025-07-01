@@ -16,7 +16,7 @@ export class NotesManager {
     color: string = 'default',
     isPinned: boolean = false,
   ): Promise<typeof note.$inferSelect> {
-    try{
+    try {
       const db = getZeroDB(userId);
       const highestOrder = await db.findHighestNoteOrder();
 

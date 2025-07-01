@@ -1,12 +1,12 @@
-import { Checkbox } from '@/components/ui/checkbox';
-import { useMail } from '@/components/mail/use-mail';
-import { useThreads } from '@/hooks/use-threads';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { trpcClient } from '@/providers/query-provider';
-import { cn } from '@/lib/utils';
+import { useMail } from '@/components/mail/use-mail';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useThreads } from '@/hooks/use-threads';
 import { useParams } from 'react-router';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 export default function SelectAllCheckbox({ className }: { className?: string }) {
   const [mail, setMail] = useMail();
@@ -64,7 +64,7 @@ export default function SelectAllCheckbox({ className }: { className?: string })
     }
 
     setMail((prev) => ({ ...prev, bulkSelected: loadedIds }));
-    
+
     setIsFetchingIds(true);
     const allIds = await fetchAllMatchingThreadIds();
     setIsFetchingIds(false);

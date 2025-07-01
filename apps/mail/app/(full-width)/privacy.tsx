@@ -24,7 +24,7 @@ export default function PrivacyPolicy() {
     <div className="relative flex min-h-screen w-full flex-col overflow-auto bg-white dark:bg-[#111111]">
       <Navigation />
       <div className="relative z-10 flex flex-grow flex-col">
-        <div className="absolute right-4 top-6 md:left-8 md:top-8 md:right-auto">
+        <div className="absolute right-4 top-6 md:left-8 md:right-auto md:top-8">
           <a href="/">
             <Button
               variant="ghost"
@@ -344,35 +344,51 @@ const sections = [
         <div>
           <h3 className="mb-3 text-lg font-medium">Free Plan and Trial Period</h3>
           <ul className="ml-4 list-disc space-y-2">
-            <li>Zero offers a free plan with basic features that requires no payment information</li>
+            <li>
+              Zero offers a free plan with basic features that requires no payment information
+            </li>
             <li>For premium features, we offer a 7-day free trial period</li>
             <li>A valid credit card is required to start the premium free trial</li>
             <li>During the trial period, you have full access to all premium features</li>
             <li>You can cancel at any time during the trial period without any charges</li>
-            <li>If you don't cancel before the trial ends, you'll be automatically charged for the premium subscription</li>
+            <li>
+              If you don't cancel before the trial ends, you'll be automatically charged for the
+              premium subscription
+            </li>
           </ul>
         </div>
         <div>
           <h3 className="mb-3 text-lg font-medium">Payment and Billing</h3>
           <ul className="ml-4 list-disc space-y-2">
-            <li>After the 7-day free trial period ends, subscription charges will begin automatically</li>
+            <li>
+              After the 7-day free trial period ends, subscription charges will begin automatically
+            </li>
             <li>Subscription fees are billed in advance on a monthly or annual basis</li>
             <li>Current pricing information is available on our pricing page</li>
             <li>All payments are processed securely through our trusted payment partners</li>
             <li>Subscription charges will appear on your billing statement as "Zero Email"</li>
-            <li>We accept major credit cards and other payment methods as available in your region</li>
+            <li>
+              We accept major credit cards and other payment methods as available in your region
+            </li>
           </ul>
         </div>
         <div>
           <h3 className="mb-3 text-lg font-medium">Non-Refundable Policy</h3>
           <ul className="ml-4 list-disc space-y-2">
             <li className="font-semibold">
-              Important: All subscription fees are non-refundable once the 7-day free trial period has ended
+              Important: All subscription fees are non-refundable once the 7-day free trial period
+              has ended
             </li>
-            <li>This policy applies to all premium subscription plans (monthly, annual, and enterprise plans)</li>
+            <li>
+              This policy applies to all premium subscription plans (monthly, annual, and enterprise
+              plans)
+            </li>
             <li>Refunds are not provided for partial subscription periods</li>
             <li>Refunds are not available for unused portions of your subscription</li>
-            <li>In exceptional circumstances, refunds may be considered on a case-by-case basis at our sole discretion</li>
+            <li>
+              In exceptional circumstances, refunds may be considered on a case-by-case basis at our
+              sole discretion
+            </li>
           </ul>
         </div>
         <div>
@@ -380,7 +396,9 @@ const sections = [
           <ul className="ml-4 list-disc space-y-2">
             <li>You can cancel your subscription at any time through your account settings</li>
             <li>Cancellation takes effect at the end of your current billing period</li>
-            <li>You will continue to have access to premium features until the end of your paid period</li>
+            <li>
+              You will continue to have access to premium features until the end of your paid period
+            </li>
             <li>No partial refunds are provided for early cancellation</li>
             <li>Reactivation of cancelled subscriptions may be subject to current pricing</li>
           </ul>
@@ -389,7 +407,9 @@ const sections = [
           <h3 className="mb-3 text-lg font-medium">Price Changes</h3>
           <ul className="ml-4 list-disc space-y-2">
             <li>We reserve the right to modify subscription pricing at any time</li>
-            <li>Existing subscribers will be notified of price changes at least 30 days in advance</li>
+            <li>
+              Existing subscribers will be notified of price changes at least 30 days in advance
+            </li>
             <li>Price changes will take effect at your next billing cycle</li>
             <li>You may cancel your subscription before the price change takes effect</li>
           </ul>

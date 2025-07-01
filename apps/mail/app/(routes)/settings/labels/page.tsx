@@ -28,11 +28,11 @@ import { HexColorPicker } from 'react-colorful';
 import { Bin } from '@/components/icons/icons';
 import { useLabels } from '@/hooks/use-labels';
 import { GMAIL_COLORS } from '@/lib/constants';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { m } from '@/paraglide/messages';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { useForm } from 'react-hook-form';
+import { m } from '@/paraglide/messages';
 import { Command } from 'lucide-react';
 import { COLORS } from './colors';
 import { useState } from 'react';
@@ -63,7 +63,7 @@ export default function LabelsPage() {
 
   const handleDelete = async (id: string) => {
     toast.promise(deleteLabel({ id }), {
-      loading:  m['common.labels.deletingLabel'](),
+      loading: m['common.labels.deletingLabel'](),
       success: m['common.labels.deleteLabelSuccess'](),
       error: m['common.labels.failedToDeleteLabel'](),
       finally: async () => {
@@ -113,7 +113,7 @@ export default function LabelsPage() {
                 <p className="text-muted-foreground py-4 text-center text-sm">{error.message}</p>
               ) : labels?.length === 0 ? (
                 <p className="text-muted-foreground py-4 text-center text-sm">
-                 {m['common.mail.noLabelsAvailable']()}
+                  {m['common.mail.noLabelsAvailable']()}
                 </p>
               ) : (
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-6">
@@ -147,7 +147,7 @@ export default function LabelsPage() {
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent className="dark:bg-panelDark mb-1 bg-white">
-                            {m['common.labels.editLabel']()}
+                              {m['common.labels.editLabel']()}
                             </TooltipContent>
                           </Tooltip>
                           <Tooltip>
@@ -162,7 +162,7 @@ export default function LabelsPage() {
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent className="dark:bg-panelDark mb-1 bg-white">
-                            {m['common.labels.deleteLabel']()}
+                              {m['common.labels.deleteLabel']()}
                             </TooltipContent>
                           </Tooltip>
                         </div>

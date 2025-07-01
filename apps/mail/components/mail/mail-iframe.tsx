@@ -6,10 +6,10 @@ import { fixNonReadableColors } from '@/lib/email-utils';
 import { useTRPC } from '@/providers/query-provider';
 import { getBrowserTimezone } from '@/lib/timezones';
 import { useSettings } from '@/hooks/use-settings';
+import { m } from '@/paraglide/messages';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { m } from '@/paraglide/messages';
 
 export function MailIframe({ html, senderEmail }: { html: string; senderEmail: string }) {
   const { data, refetch } = useSettings();
@@ -66,8 +66,6 @@ export function MailIframe({ html, senderEmail }: { html: string; senderEmail: s
     refetchOnWindowFocus: false, // Don't refetch on window focus
     refetchOnMount: false, // Don't refetch on mount if data exists
   });
-
-
 
   const calculateAndSetHeight = useCallback(() => {
     if (!iframeRef.current?.contentWindow?.document.body) return;

@@ -1,8 +1,8 @@
 import { TriangleAlert } from 'lucide-react';
+import { m } from '@/paraglide/messages';
 import { useQueryState } from 'nuqs';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
-import { m } from '@/paraglide/messages';
 
 const errorMessages = ['required_scopes_missing'] as const;
 

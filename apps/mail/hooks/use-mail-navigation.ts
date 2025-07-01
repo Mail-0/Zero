@@ -196,11 +196,14 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
   }, [setFocusedIndex, onNavigateRef]);
 
   useHotkeys('ArrowUp', handleArrowUp, { preventDefault: true, enabled: !isCommandPaletteOpen });
-  useHotkeys('ArrowDown', handleArrowDown, { preventDefault: true, enabled: !isCommandPaletteOpen });
-  useHotkeys('j', handleArrowDown,{enabled: !isCommandPaletteOpen });
+  useHotkeys('ArrowDown', handleArrowDown, {
+    preventDefault: true,
+    enabled: !isCommandPaletteOpen,
+  });
+  useHotkeys('j', handleArrowDown, { enabled: !isCommandPaletteOpen });
   useHotkeys('k', handleArrowUp, { enabled: !isCommandPaletteOpen });
-  useHotkeys('Enter', handleEnter, { preventDefault: true,enabled: !isCommandPaletteOpen });
-  useHotkeys('Escape', handleEscape, { preventDefault: true,enabled: !isCommandPaletteOpen });
+  useHotkeys('Enter', handleEnter, { preventDefault: true, enabled: !isCommandPaletteOpen });
+  useHotkeys('Escape', handleEscape, { preventDefault: true, enabled: !isCommandPaletteOpen });
 
   const handleMouseEnter = useCallback(
     (threadId: string) => {

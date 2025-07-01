@@ -15,8 +15,8 @@ import {
 } from '@/components/ui/select';
 import { SettingsCard } from '@/components/settings/settings-card';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
 import { useForm } from 'react-hook-form';
 import { Bell } from 'lucide-react';
 import { useState } from 'react';
