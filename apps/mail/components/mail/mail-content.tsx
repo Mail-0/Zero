@@ -6,7 +6,6 @@ import { getBrowserTimezone } from '@/lib/timezones';
 import { useSettings } from '@/hooks/use-settings';
 import { m } from '@/paraglide/messages';
 import { useTheme } from 'next-themes';
-import DOMPurify from 'dompurify';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -62,185 +61,24 @@ export function MailContent({ html, senderEmail }: MailContentProps) {
     },
   });
 
-  const { data: sanitizedHtml } = useQuery({
+  const { mutateAsync: processEmailContent } = useMutation(
+    trpc.mail.processEmailContent.mutationOptions(),
+  );
+
+  const { data: processedData } = useQuery({
     queryKey: ['email-content', html, isTrustedSender || temporaryImagesEnabled, resolvedTheme],
-    queryFn: () => {
-      const shouldLoadImages = isTrustedSender || temporaryImagesEnabled;
-
-      type Config = Parameters<typeof DOMPurify.sanitize>[1];
-
-      const config: Config = {
-        ADD_TAGS: ['style', 'link', 'meta', 'center'],
-        ADD_ATTR: [
-          'target',
-          'style',
-          'class',
-          'id',
-          'href',
-          'rel',
-          'type',
-          'bgcolor',
-          'background',
-          'color',
-          'width',
-          'height',
-          'align',
-          'valign',
-          'border',
-          'cellpadding',
-          'cellspacing',
-          'colspan',
-          'rowspan',
-          'role',
-          'aria-label',
-          'alt',
-          'title',
-          'dir',
-          'lang',
-          'face',
-          'size',
-        ],
-        ALLOW_DATA_ATTR: false,
-        ALLOW_UNKNOWN_PROTOCOLS: false,
-        SAFE_FOR_TEMPLATES: true,
-        WHOLE_DOCUMENT: false,
-        RETURN_DOM: false,
-        RETURN_DOM_FRAGMENT: false,
-        FORCE_BODY: true,
-        SANITIZE_DOM: true,
-        KEEP_CONTENT: true,
-        IN_PLACE: false,
-        ALLOWED_URI_REGEXP: shouldLoadImages
-          ? /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp|data|blob):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
-          : /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
-      };
-
-      if (!shouldLoadImages) {
-        DOMPurify.addHook('uponSanitizeElement', (node) => {
-          if ((node as HTMLElement).tagName === 'IMG') {
-            setCspViolation(true);
-            (node as HTMLElement).remove();
-          }
-        });
-
-        DOMPurify.addHook('uponSanitizeAttribute', (node, data) => {
-          if (data.attrName === 'style' && data.attrValue?.includes('background-image')) {
-            data.attrValue = data.attrValue.replace(/background-image\s*:\s*url\([^)]+\)/gi, '');
-            setCspViolation(true);
-          }
-          if (data.attrName === 'background' && data.attrValue?.startsWith('http')) {
-            data.keepAttr = false;
-            setCspViolation(true);
-          }
-        });
-      }
-
-      let processedHtml = html;
-
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(processedHtml, 'text/html');
-
-      doc.querySelectorAll('a').forEach((link) => {
-        if (!link.getAttribute('target')) {
-          link.setAttribute('target', '_blank');
-        }
-        if (!link.getAttribute('rel')?.includes('noopener')) {
-          link.setAttribute('rel', 'noopener noreferrer');
-        }
+    queryFn: async () => {
+      const result = await processEmailContent({
+        html,
+        shouldLoadImages: isTrustedSender || temporaryImagesEnabled,
+        theme: (resolvedTheme as 'light' | 'dark') || 'light',
       });
 
-      const existingStyles = Array.from(doc.querySelectorAll('style'))
-        .map((s) => s.outerHTML)
-        .join('\n');
-
-      const existingMeta = Array.from(doc.querySelectorAll('meta'))
-        .map((m) => m.outerHTML)
-        .join('\n');
-
-      const bodyContent = doc.body.innerHTML;
-      const bodyStyles = doc.body.getAttribute('style') || '';
-      const bodyBgColor = doc.body.getAttribute('bgcolor') || '';
-
-      const shadowStyles = `
-        ${existingMeta}
-        <style>
-          :host {
-            all: initial;
-            display: block;
-            contain: layout style;
-            overflow: auto;
-            width: 100%;
-            ${
-              resolvedTheme === 'dark'
-                ? `
-              color-scheme: dark;
-            `
-                : `
-              color-scheme: light;
-            `
-            }
-          }
-
-          :host > div.email-wrapper {
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            ${bodyBgColor ? `background-color: ${bodyBgColor};` : ''}
-          }
-
-          * {
-            box-sizing: border-box;
-          }
-
-          img {
-            max-width: 100%;
-            height: auto;
-          }
-
-          table {
-            border-collapse: collapse;
-          }
-
-          /* Only override link colors if not specified */
-          a:not([style*="color"]) {
-            color: ${resolvedTheme === 'dark' ? '#60a5fa' : '#2563eb'};
-          }
-
-          /* Ensure readability for elements without explicit colors */
-          p:not([style*="color"]),
-          span:not([style*="color"]),
-          div:not([style*="color"]),
-          td:not([style*="color"]),
-          li:not([style*="color"]) {
-            color: inherit;
-          }
-
-          /* Handle pre/code blocks that don't have explicit styling */
-          pre:not([style*="background"]) {
-            background-color: ${resolvedTheme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'};
-            padding: 0.5rem;
-            border-radius: 0.25rem;
-            overflow-x: auto;
-          }
-
-          code:not([style*="background"]) {
-            background-color: ${resolvedTheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'};
-            padding: 0.125rem 0.25rem;
-            border-radius: 0.125rem;
-          }
-        </style>
-        ${existingStyles}
-      `;
-
-      const wrapperDiv = `<div class="email-wrapper" ${bodyStyles ? `style="${bodyStyles}"` : ''}>${bodyContent}</div>`;
-      const finalHtml = shadowStyles + wrapperDiv;
-
-      try {
-        const sanitized = DOMPurify.sanitize(finalHtml, config);
-        return sanitized;
-      } finally {
-        DOMPurify.removeAllHooks();
+      if (result.hasBlockedImages) {
+        setCspViolation(true);
       }
+
+      return result.processedHtml;
     },
     staleTime: 30 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
@@ -255,10 +93,10 @@ export function MailContent({ html, senderEmail }: MailContentProps) {
   }, []);
 
   useEffect(() => {
-    if (!shadowRootRef.current || !sanitizedHtml) return;
+    if (!shadowRootRef.current || !processedData) return;
 
-    shadowRootRef.current.innerHTML = sanitizedHtml as unknown as string;
-  }, [sanitizedHtml]);
+    shadowRootRef.current.innerHTML = processedData;
+  }, [processedData]);
 
   useEffect(() => {
     if (isTrustedSender || temporaryImagesEnabled) {
@@ -296,7 +134,7 @@ export function MailContent({ html, senderEmail }: MailContentProps) {
       shadowRootRef.current?.removeEventListener('error', handleImageError, true);
       shadowRootRef.current?.removeEventListener('click', handleClick);
     };
-  }, [handleImageError, sanitizedHtml]);
+  }, [handleImageError, processedData]);
 
   return (
     <>
@@ -316,11 +154,7 @@ export function MailContent({ html, senderEmail }: MailContentProps) {
           </button>
         </div>
       )}
-      <div
-        ref={hostRef}
-        className={cn('mail-content w-full flex-1 overflow-hidden', 'min-h-[100px]')}
-        style={{ padding: '0' }}
-      />
+      <div ref={hostRef} className={cn('mail-content w-full flex-1 overflow-hidden')} />
     </>
   );
 }
