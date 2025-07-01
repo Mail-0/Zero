@@ -1,0 +1,451 @@
+---
+title: "Installation Guide"
+description: "Comprehensive installation instructions for Zero Email Client across different platforms and environments."
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+import { CodeBlock } from 'fumadocs-ui/components/codeblock';
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+
+This guide provides comprehensive installation instructions for Zero Email Client across different platforms and deployment scenarios.
+
+## System Requirements
+
+<Tabs items={['Minimum', 'Recommended']}>
+  <Tab value="Minimum">
+    <Callout type="info">
+      **Minimum Requirements**
+    </Callout>
+    - **OS**: macOS 10.15+, Windows 10+, or Linux (Ubuntu 18.04+)
+    - **Node.js**: v18.0.0 or higher
+    - **RAM**: 4GB minimum, 8GB recommended
+    - **Storage**: 2GB free space
+  </Tab>
+  <Tab value="Recommended">
+    <Callout type="tip">
+      **Recommended Requirements**
+    </Callout>
+    - **Node.js**: v20.0.0 or higher
+    - **RAM**: 16GB or more
+    - **Storage**: 10GB free space (for development)
+    - **CPU**: Multi-core processor
+  </Tab>
+</Tabs>
+
+## Package Manager Setup
+
+<Tabs items={['pnpm', 'npm', 'yarn']}>
+  <Tab value="pnpm">
+    <Callout type="tip">
+      **pnpm is recommended** for better performance and disk space efficiency.
+    </Callout>
+    
+    ```bash title="Install pnpm"
+# Via npm
+npm install -g pnpm
+
+# Via Homebrew (macOS)
+brew install pnpm
+
+# Via curl
+curl -fsSL https://get.pnpm.io/install.sh | sh
+```
+  </Tab>
+  <Tab value="npm">
+    ```bash title="Using npm"
+npm install
+```
+  </Tab>
+  <Tab value="yarn">
+    ```bash title="Using Yarn"
+yarn install
+```
+  </Tab>
+</Tabs>
+
+## Installation Methods
+
+<Tabs items={['GitHub Clone', 'Download ZIP', 'Degit']}>
+  <Tab value="GitHub Clone">
+    <Callout type="tip">
+      **Fork the [Zero repository](https://github.com/Mail-0/zero)**
+      **Recommended method** for development and contributions.
+    </Callout>
+    
+    ```bash title="Clone Repository"
+      # Clone the Forked Repo with HTTPS
+      git clone https://github.com/your-username/zero.git
+
+      # Clone with SSH
+      git clone git@github.com:your-username/zero.git
+
+      # Clone specific branch
+      git clone -b develop https://github.com/your-username/zero.git
+    ```
+  </Tab>
+  <Tab value="Download ZIP">
+    <Steps>
+      <Step>Fork the [Zero repository](https://github.com/Mail-0/zero)</Step>
+      <Step>Visit the [GitHub repository](https://github.com/your-username/zero)</Step>
+      <Step>Click "Code" → "Download ZIP"</Step>
+      <Step>Extract the ZIP file</Step>
+      <Step>Navigate to the extracted folder</Step>
+    </Steps>
+  </Tab>
+  <Tab value="Degit">
+    ```bash title="Using Degit"
+npx degit your-org/zero my-zero-app
+cd my-zero-app
+```
+  </Tab>
+</Tabs>
+
+## Environment Configuration
+
+### 1. Environment Variables
+
+Create and configure your environment file:
+
+```bash title="Copy .env.example"
+cp .env.example .env.local
+```
+
+### 2. Required Environment Variables
+
+```bash title="Required .env Variables"
+# Application
+NODE_ENV=development
+PORT=3000
+APP_URL=http://localhost:3000
+
+# Database
+DATABASE_URL=sqlite:./data/db.sqlite
+# Or for PostgreSQL
+# DATABASE_URL=postgresql://user:password@localhost:5432/zero
+
+# Authentication
+BETTER_AUTH_SECRET=your-super-secret-key-here
+BETTER_AUTH_URL=http://localhost:3000
+
+# Email Provider Configuration
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+
+# OAuth Providers (Optional)
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+GITHUB_CLIENT_ID=your-github-client-id
+GITHUB_CLIENT_SECRET=your-github-client-secret
+
+# Storage (Optional)
+CLOUDFLARE_R2_ACCESS_KEY_ID=your-access-key
+CLOUDFLARE_R2_SECRET_ACCESS_KEY=your-secret-key
+CLOUDFLARE_R2_BUCKET=your-bucket-name
+
+# AI Features (Optional)
+OPENAI_API_KEY=your-openai-api-key
+```
+
+### 3. Database Setup Options
+
+#### Option A: Docker PostgreSQL (Recommended)
+```bash title="Docker Database Setup"
+# Start PostgreSQL database with Docker Compose
+docker-compose -f docker-compose.db.yaml up -d
+```
+
+<Callout type="info">
+This is the recommended setup as it includes PostgreSQL, Redis/Valkey, and other required services.
+</Callout>
+
+#### Option B: Local PostgreSQL
+```bash title="PostgreSQL Setup"
+# Install PostgreSQL
+brew install postgresql  # macOS
+sudo apt install postgresql postgresql-contrib  # Ubuntu
+
+# Start PostgreSQL service
+brew services start postgresql  # macOS
+sudo systemctl start postgresql  # Ubuntu
+
+# Create database
+createdb zero_dev
+```
+
+#### Option C: SQLite (Development Only)
+```bash title="SQLite Setup"
+# SQLite can be used for quick development
+# Database file will be created automatically
+# Note: Some features may not work with SQLite
+```
+
+## Installation Steps
+
+### 1. Install Dependencies
+
+```bash title="Install Dependencies"
+cd zero
+pnpm install
+```
+
+### 2. Generate Database Schema
+
+```bash title="Generate DB Schema"
+pnpm db:generate
+```
+
+### 3. Run Database Migrations
+
+```bash title="Run DB Migrations"
+pnpm db:migrate
+```
+
+### 4. Start Development Server
+
+```bash title="Start Development Server"
+# Quick start (starts database + dev servers)
+pnpm go
+
+# Or start manually
+pnpm docker:db:up  # Start database first
+pnpm dev          # Then start dev servers
+```
+
+<Callout type="tip">
+**Quick Start**: Use `pnpm go` to automatically start the database and development servers in one command.
+</Callout>
+
+## nizzy CLI Tool
+
+Zero Email Client includes a powerful CLI tool called `nizzy` for project management and synchronization.
+
+### Installation
+
+The nizzy CLI is included as part of the project dependencies and is available after running `pnpm install`.
+
+### Usage
+
+<Tabs items={['Available Commands', 'Common Usage', 'Interactive Mode']}>
+  <Tab value="Available Commands">
+    ```bash title="nizzy CLI Commands"
+    # Synchronize environment and types
+    pnpm nizzy sync
+    
+    # Fix environment variable issues
+    pnpm nizzy fix-env
+    
+    # Reinstall node modules cleanly
+    pnpm nizzy reinstall-node-modules
+    
+    # Show help and available commands
+    pnpm nizzy --help
+    ```
+  </Tab>
+  <Tab value="Common Usage">
+    ```bash title="Typical Workflow"
+    # After cloning the repository
+    pnpm install
+    pnpm nizzy sync  # Automatically runs after install
+    
+    # When environment issues occur
+    pnpm nizzy fix-env
+    
+    # When dependencies are corrupted
+    pnpm nizzy reinstall-node-modules
+    ```
+  </Tab>
+  <Tab value="Interactive Mode">
+    ```bash title="Interactive CLI"
+    # Run without arguments for interactive mode
+    pnpm nizzy
+    
+    # Select from available options:
+    # - Sync your environment variables and types
+    # - Fix environment variable issues  
+    # - Reinstall node modules cleanly
+    ```
+  </Tab>
+</Tabs>
+
+<Callout type="tip">
+The nizzy CLI tool is essential for keeping your development environment synchronized and up-to-date.
+</Callout>
+
+## Platform-Specific Instructions
+
+### macOS
+
+```bash title="macOS Installation"
+# Install Homebrew (if not installed)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Install Node.js via Homebrew
+brew install node
+
+# Install pnpm
+brew install pnpm
+
+# Continue with standard installation
+```
+
+### Windows
+
+```powershell title="Windows Installation"
+# Install Node.js from nodejs.org or via Chocolatey
+choco install nodejs
+
+# Install pnpm
+npm install -g pnpm
+
+# Continue with standard installation
+```
+
+### Linux (Ubuntu/Debian)
+
+```bash title="Linux Installation"
+# Install Node.js via NodeSource
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Install pnpm
+curl -fsSL https://get.pnpm.io/install.sh | sh
+```
+
+## Docker Installation
+
+### Using Docker Compose (Recommended)
+
+```bash title="Terminal"
+# Development environment
+docker-compose up -d
+
+# Production environment
+docker-compose -f docker-compose.prod.yaml up -d
+```
+
+### Manual Docker Setup
+
+```bash title="Terminal"
+# Build the image
+docker build -t zero-email .
+
+# Run the container
+docker run -p 3000:3000 -e NODE_ENV=production zero-email
+```
+
+## Verification
+
+### 1. Check Installation
+
+```bash title="Terminal"
+# Verify Node.js version
+node --version
+
+# Verify pnpm version
+pnpm --version
+
+# Check if all dependencies are installed
+pnpm list
+```
+
+### 2. Run Health Check
+
+```bash title="Terminal"
+# Start the application
+pnpm dev
+
+# Open browser to http://localhost:3000
+# You should see the Zero Email Client interface
+```
+
+### 3. Test Database Connection
+
+```bash title="Terminal"
+# Open database studio
+pnpm db:studio
+
+# Check database with studio interface
+# Studio will open at http://localhost:4983
+```
+
+## Troubleshooting
+
+### Common Installation Issues
+
+**Node.js version mismatch**
+```bash title="Terminal"
+# Use Node Version Manager (nvm)
+nvm install 20
+nvm use 20
+```
+
+**Permission errors on Linux/macOS**
+```bash title="Terminal"
+# Fix npm permissions
+sudo chown -R $(whoami) ~/.npm
+```
+
+**Port already in use**
+```bash title=".env"
+PORT=3001
+```
+
+**Database connection errors**
+- Verify DATABASE_URL in .env
+- Ensure database server is running
+- Check firewall settings
+
+**nizzy CLI issues**
+```bash title="Terminal"
+# Reinstall CLI dependencies
+pnpm install --force
+
+# Check nizzy is available
+pnpm nizzy --help
+
+# Clear nizzy cache
+pnpm nizzy clean
+```
+
+**Docker services not starting**
+```bash title="Terminal"
+# Check Docker service status
+docker-compose -f docker-compose.db.yaml ps
+
+# View service logs
+docker-compose -f docker-compose.db.yaml logs
+
+# Restart services
+docker-compose -f docker-compose.db.yaml restart
+```
+
+**Port conflicts**
+```bash title="Check which process is using a port"
+# macOS/Linux
+lsof -i :3000
+lsof -i :8787
+
+# Windows
+netstat -ano | findstr :3000
+```
+
+**Build errors**
+```bash title="Terminal"
+# Clear all caches and reinstall
+rm -rf node_modules
+rm -rf .next
+rm pnpm-lock.yaml
+pnpm install
+
+# Check turbo cache
+pnpm turbo clean
+```
+
+<Callout type="tip">
+**Still having issues?** Check the [GitHub Issues](https://github.com/Mail-0/Zero/issues) for similar problems or create a new issue with your error details.
+</Callout>

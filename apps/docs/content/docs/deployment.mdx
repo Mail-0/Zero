@@ -1,0 +1,1045 @@
+---
+title: "Deployment Guide"
+description: "Production deployment strategies from single-server to scalable cloud architectures."
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Cards, Card } from 'fumadocs-ui/components/card';
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+import { CodeBlock } from 'fumadocs-ui/components/codeblock';
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+import { Mermaid } from '@/components/Mermaid';
+
+This guide covers various deployment strategies for Zero Email Client, from simple single-server deployments to scalable cloud architectures. Choose the approach that best fits your requirements and infrastructure.
+
+## Deployment Options
+
+<Cards>
+  <Card title="Cloudflare Workers" description="Global edge distribution (Recommended)" />
+  <Card title="Docker" description="Consistent containerized deployment" />
+  <Card title="Vercel" description="Serverless frontend deployment" />
+  <Card title="AWS" description="Scalable cloud architecture" />
+  <Card title="Google Cloud" description="Serverless container deployment" />
+</Cards>
+
+### 1. Cloudflare Workers (Recommended)
+
+<Callout type="tip">
+Zero Email Client is optimized for deployment on Cloudflare Workers, providing global edge distribution and excellent performance.
+</Callout>
+
+#### Prerequisites
+
+<Callout type="info">
+Required for Cloudflare Workers deployment:
+</Callout>
+
+- Cloudflare account
+- Wrangler CLI installed
+- Domain configured in Cloudflare
+
+#### Setup Steps
+
+<Steps>
+  <Step>Install Wrangler CLI</Step>
+  <Step>Login to Cloudflare</Step>
+  <Step>Configure wrangler.jsonc</Step>
+  <Step>Set environment variables</Step>
+  <Step>Deploy</Step>
+</Steps>
+#### Install and Setup Wrangler
+```bash title="Terminal"
+# Install Wrangler CLI
+npm install -g wrangler
+
+# Login to Cloudflare
+wrangler login
+```
+#### Configure wrangler.jsonc
+
+Zero uses separate Cloudflare Workers for different services. The main configurations are:
+
+**Server Worker (apps/server/wrangler.jsonc)**
+```jsonc title="Server Configuration"
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "zero-server",
+  "compatibility_date": "2025-05-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "src/main.ts",
+  "env": {
+    "production": {
+      "ai": {
+        "binding": "AI"
+      },
+      "vectorize": [
+        {
+          "binding": "VECTORIZE",
+          "index_name": "threads-vector"
+        },
+        {
+          "binding": "VECTORIZE_MESSAGE", 
+          "index_name": "messages-vector"
+        }
+      ],
+      "durable_objects": {
+        "bindings": [
+          {
+            "name": "ZERO_AGENT",
+            "class_name": "ZeroAgent"
+          },
+          {
+            "name": "ZERO_MCP",
+            "class_name": "ZeroMCP"
+          },
+          {
+            "name": "ZERO_DB",
+            "class_name": "ZeroDB"
+          },
+          {
+            "class_name": "DurableMailbox",
+            "name": "DURABLE_MAILBOX"
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+**Mail Worker (apps/mail/wrangler.jsonc)**
+```jsonc title="Mail Configuration"
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "zero",
+  "compatibility_date": "2025-05-01", 
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "./worker.ts",
+  "env": {
+    "production": {
+      "vars": {
+        "VITE_PUBLIC_BACKEND_URL": "https://api.0.email",
+        "VITE_PUBLIC_APP_URL": "https://0.email"
+      }
+    }
+  }
+}
+```
+
+<Callout type="warning">
+**Complex Configuration**: Zero uses advanced Cloudflare features including Durable Objects, Vectorize, AI, and Queues. Ensure your Cloudflare account has access to these features.
+</Callout>
+
+<Callout type="warning">
+**Additional Advanced Features**: The production configuration also includes:
+- **Workflows**: For complex business process automation
+- **Hyperdrive**: For database connection pooling and acceleration  
+- **KV Namespaces**: For distributed key-value storage
+- **Scheduled Events**: For background job processing
+</Callout>
+
+#### Required Cloudflare Services
+
+<Tabs items={['Vectorize', 'Durable Objects', 'AI', 'Queues']}>
+  <Tab value="Vectorize">
+    ```bash title="Create Vectorize Indexes"
+    # Create vector indexes for AI features
+    wrangler vectorize create threads-vector --dimensions=1536 --metric=cosine
+    wrangler vectorize create messages-vector --dimensions=1536 --metric=cosine
+    ```
+  </Tab>
+  <Tab value="Durable Objects">
+    ```bash title="Deploy Durable Objects"
+    # Durable Objects are deployed automatically with the worker
+    # Ensure these classes are available:
+    # - ZeroAgent
+    # - ZeroMCP  
+    # - ZeroDB
+    # - DurableMailbox
+    ```
+  </Tab>
+  <Tab value="AI">
+    ```bash title="AI Models"
+    # Zero uses Cloudflare AI models
+    # Available models:
+    # - @cf/meta/llama-3.1-70b-instruct
+    # - @cf/openai/whisper
+    # - Various embedding models
+    ```
+  </Tab>
+  <Tab value="Queues">
+    ```bash title="Create Queues"
+    wrangler queues create thread-queue
+    wrangler queues create subscribe-queue
+    wrangler queues create digest-queue
+    wrangler queues create ai-queue
+    ```
+  </Tab>
+</Tabs>
+
+#### Environment Variables
+
+```bash title="Production Secrets"
+# Core Configuration
+wrangler secret put DATABASE_URL
+wrangler secret put BETTER_AUTH_SECRET
+wrangler secret put COOKIE_DOMAIN
+
+# OAuth Configuration  
+wrangler secret put GOOGLE_CLIENT_ID
+wrangler secret put GOOGLE_CLIENT_SECRET
+
+# AI Services
+wrangler secret put OPENAI_API_KEY
+wrangler secret put PERPLEXITY_API_KEY
+wrangler secret put AI_SYSTEM_PROMPT
+
+# Email Services
+wrangler secret put RESEND_API_KEY
+
+# Redis/Caching
+wrangler secret put REDIS_URL
+wrangler secret put REDIS_TOKEN
+
+# Security
+wrangler secret put AUTUMN_SECRET_KEY
+
+# SMS/Voice (Optional)
+wrangler secret put TWILIO_ACCOUNT_SID
+wrangler secret put TWILIO_AUTH_TOKEN
+wrangler secret put TWILIO_PHONE_NUMBER
+```
+
+<Callout type="info">
+**Environment Variables**: These secrets are set per environment (staging/production) and are encrypted by Cloudflare.
+</Callout>
+
+#### Deploy
+
+```bash title="Terminal"
+# Build for production
+# Build for production
+pnpm build
+
+# Deploy to Cloudflare Workers
+wrangler deploy
+```
+
+#### Custom Domain
+
+```bash title="Custom Domain Setup"
+# Add custom route
+wrangler route add "mail.yourdomain.com/*" zero-email-client
+```
+
+### 2. Docker Deployment
+
+<Callout type="info">
+Deploy using Docker containers for consistent environments across different platforms and infrastructure providers.
+</Callout>
+
+#### Docker Configuration
+
+```dockerfile title="Dockerfile"
+FROM node:20-alpine AS base
+
+# Install dependencies
+FROM base AS deps
+WORKDIR /app
+COPY package.json pnpm-lock.yaml ./
+RUN npm install -g pnpm && pnpm install --frozen-lockfile
+
+# Build application
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npm install -g pnpm && pnpm build
+
+# Production image
+FROM base AS runner
+WORKDIR /app
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV NODE_ENV=production
+ENV PORT=3000
+
+CMD ["node", "dist/server.js"]
+```
+
+#### Docker Compose
+
+<Callout type="tip">
+Use Docker Compose for easy multi-service deployment with database and cache services.
+</Callout>
+
+```yaml title="docker-compose.prod.yaml"
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://user:password@db:5432/zero_prod
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=zero_prod
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker/nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+```
+
+#### Deployment Commands
+
+```bash title="Docker Deployment Commands"
+# Build and start services
+docker-compose -f docker-compose.prod.yaml up -d
+
+# View logs
+docker-compose logs -f app
+
+# Scale the application
+docker-compose up -d --scale app=3
+```
+
+### 3. Vercel Deployment
+
+<Callout type="tip">
+Deploy the frontend to Vercel with serverless functions for automatic scaling and global distribution.
+</Callout>
+
+#### Vercel Configuration
+
+```json title="vercel.json"
+{
+  "framework": "vite",
+  "buildCommand": "pnpm build",
+  "outputDirectory": "dist",
+  "installCommand": "pnpm install",
+  "functions": {
+    "app/api/**/*.ts": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "build": {
+    "env": {
+      "DATABASE_URL": "@database_url",
+      "BETTER_AUTH_SECRET": "@better_auth_secret"
+    }
+  }
+}
+```
+
+#### Deploy to Vercel
+
+<Steps>
+  <Step>Install Vercel CLI</Step>
+  <Step>Login to Vercel</Step>
+  <Step>Deploy to production</Step>
+</Steps>
+
+```bash title="Vercel Deployment"
+# Install Vercel CLI
+npm install -g vercel
+
+# Login to Vercel
+vercel login
+
+# Deploy
+vercel --prod
+```
+
+### 4. AWS Deployment
+
+<Callout type="info">
+Deploy on AWS using various services for a scalable, enterprise-grade architecture.
+</Callout>
+
+#### Architecture Overview
+
+<Mermaid chart={`graph TD
+    Internet[Internet] --> CloudFront[CloudFront CDN]
+    CloudFront --> ALB[Application Load Balancer]
+    ALB --> ECS[ECS/Fargate]
+    ECS --> RDS[(RDS Database)]
+    ECS --> Cache[ElastiCache]
+    
+    subgraph "AWS Infrastructure"
+        CloudFront
+        ALB
+        ECS
+        RDS
+        Cache
+    end`
+}/>
+
+#### ECS Task Definition
+
+```json title="ECS Task Definition"
+{
+  "family": "zero-email-client",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::account:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::account:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "zero-app",
+      "image": "your-account.dkr.ecr.region.amazonaws.com/zero-email-client:latest",
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "DATABASE_URL",
+          "valueFrom": "arn:aws:ssm:region:account:parameter/zero/database-url"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/zero-email-client",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}
+```
+
+
+#### CDK Deployment Script
+
+```typescript title="infrastructure/cdk-stack.ts"
+import * as cdk from 'aws-cdk-lib'
+import * as ecs from 'aws-cdk-lib/aws-ecs'
+import * as ec2 from 'aws-cdk-lib/aws-ec2'
+import * as rds from 'aws-cdk-lib/aws-rds'
+import * as elasticache from 'aws-cdk-lib/aws-elasticache'
+
+export class ZeroEmailStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+    super(scope, id, props)
+
+    // VPC
+    const vpc = new ec2.Vpc(this, 'ZeroVPC', {
+      maxAzs: 2,
+      natGateways: 1,
+    })
+
+    // RDS Database
+    const database = new rds.DatabaseInstance(this, 'ZeroDatabase', {
+      engine: rds.DatabaseInstanceEngine.postgres({
+        version: rds.PostgresEngineVersion.VER_15,
+      }),
+      instanceType: ec2.InstanceType.of(
+        ec2.InstanceClass.T3,
+        ec2.InstanceSize.MICRO
+      ),
+      vpc,
+      multiAz: true,
+      allocatedStorage: 20,
+      storageEncrypted: true,
+      deletionProtection: true,
+    })
+
+    // ElastiCache Redis
+    const redis = new elasticache.CacheCluster(this, 'ZeroRedis', {
+      engine: 'redis',
+      cacheNodeType: 'cache.t3.micro',
+      numCacheNodes: 1,
+      vpc,
+    })
+
+    // ECS Cluster
+    const cluster = new ecs.Cluster(this, 'ZeroCluster', {
+      vpc,
+    })
+
+    // ECS Service
+    const taskDefinition = new ecs.FargateTaskDefinition(this, 'ZeroTaskDef', {
+      memoryLimitMiB: 1024,
+      cpu: 512,
+    })
+
+    const container = taskDefinition.addContainer('zero-app', {
+      image: ecs.ContainerImage.fromRegistry('your-ecr-repo:latest'),
+      memoryLimitMiB: 1024,
+      environment: {
+        NODE_ENV: 'production',
+      },
+      secrets: {
+        DATABASE_URL: ecs.Secret.fromSecretsManager(databaseSecret),
+      },
+      logging: ecs.LogDrivers.awsLogs({
+        streamPrefix: 'zero-app',
+      }),
+    })
+
+    container.addPortMappings({
+      containerPort: 3000,
+      protocol: ecs.Protocol.TCP,
+    })
+
+    new ecs.FargateService(this, 'ZeroService', {
+      cluster,
+      taskDefinition,
+      desiredCount: 2,
+      assignPublicIp: false,
+    })
+  }
+}
+```
+
+### 5. Google Cloud Platform
+
+<Callout type="note">
+Deploy on GCP using Cloud Run for serverless container deployment with automatic scaling.
+</Callout>
+
+#### Cloud Run Configuration
+
+```yaml title="cloudrun.yaml"
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: zero-email-client
+  annotations:
+    run.googleapis.com/ingress: all
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/maxScale: "10"
+        run.googleapis.com/cpu-throttling: "false"
+        run.googleapis.com/memory: "1Gi"
+        run.googleapis.com/cpu: "1000m"
+    spec:
+      containerConcurrency: 100
+      containers:
+      - image: gcr.io/your-project/zero-email-client:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: database-url
+              key: url
+        resources:
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"
+```
+
+#### Deployment Script
+
+```bash title="deploy-gcp.sh"
+#!/bin/bash
+
+# Set project
+gcloud config set project your-project-id
+
+# Build and push image
+docker build -t gcr.io/your-project/zero-email-client:latest .
+docker push gcr.io/your-project/zero-email-client:latest
+
+# Deploy to Cloud Run
+gcloud run deploy zero-email-client \
+  --image gcr.io/your-project/zero-email-client:latest \
+  --platform managed \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --memory 1Gi \
+  --cpu 1 \
+  --max-instances 10 \
+  --set-env-vars NODE_ENV=production
+```
+
+## Database Setup
+
+### PostgreSQL (Recommended for Production)
+
+```bash title="script"
+# Create database
+createdb zero_production
+
+# Set connection string
+export DATABASE_URL="postgresql://user:password@localhost:5432/zero_production"
+
+# Run migrations
+pnpm db:migrate
+
+# Optional: Set up read replicas
+# Configure read replica in your hosting provider
+export DATABASE_READ_URL="postgresql://user:password@read-replica:5432/zero_production"
+```
+
+### Database Optimization
+
+```sql title="SQL"
+-- Performance indexes
+CREATE INDEX CONCURRENTLY idx_emails_user_id_created_at ON emails(user_id, created_at DESC);
+CREATE INDEX CONCURRENTLY idx_emails_message_id ON emails(message_id);
+CREATE INDEX CONCURRENTLY idx_emails_folder_unread ON emails(folder, is_read) WHERE is_read = false;
+
+-- Full-text search index
+CREATE INDEX CONCURRENTLY idx_emails_search ON emails USING gin(to_tsvector('english', subject || ' ' || body));
+
+-- Connection pooling settings
+ALTER SYSTEM SET max_connections = 200;
+ALTER SYSTEM SET shared_buffers = '256MB';
+ALTER SYSTEM SET effective_cache_size = '1GB';
+ALTER SYSTEM SET work_mem = '4MB';
+```
+
+## Environment Configuration
+
+### Production Environment Variables
+
+```bash title=".env"
+# Application
+NODE_ENV=production
+PORT=3000
+APP_URL=https://mail.yourdomain.com
+
+# Database
+DATABASE_URL=postgresql://user:password@prod-db:5432/zero_prod
+DATABASE_POOL_SIZE=20
+
+# Redis Cache
+REDIS_URL=redis://redis-cluster:6379
+REDIS_POOL_SIZE=10
+
+# Authentication
+BETTER_AUTH_SECRET=your-super-long-production-secret-key
+BETTER_AUTH_URL=https://mail.yourdomain.com
+
+# Email Configuration
+SMTP_HOST=smtp.yourdomain.com
+SMTP_PORT=587
+SMTP_SECURE=true
+SMTP_USER=noreply@yourdomain.com
+SMTP_PASS=your-smtp-password
+
+# File Storage
+STORAGE_PROVIDER=s3
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+AWS_REGION=us-east-1
+AWS_S3_BUCKET=zero-attachments-prod
+
+# Monitoring
+SENTRY_DSN=https://your-sentry-dsn
+LOG_LEVEL=info
+ENABLE_METRICS=true
+
+# Security
+FORCE_HTTPS=true
+SECURE_COOKIES=true
+TRUST_PROXY=true
+RATE_LIMIT_ENABLED=true
+```
+
+## SSL/TLS Configuration
+
+### Let's Encrypt with Nginx
+
+```nginx title="/etc/nginx/sites-available/zero-email-client"
+server {
+    listen 80;
+    server_name mail.yourdomain.com;
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name mail.yourdomain.com;
+
+    ssl_certificate /etc/letsencrypt/live/mail.yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/mail.yourdomain.com/privkey.pem;
+    
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+### Cloudflare SSL
+
+```bash title="script"
+# Enable Full (strict) SSL mode in Cloudflare dashboard
+# Add SSL/TLS → Edge Certificates → Always Use HTTPS
+# Enable HTTP Strict Transport Security (HSTS)
+```
+
+## Monitoring and Logging
+
+### Application Monitoring
+
+```typescript title="lib/monitoring.ts"
+import * as Sentry from '@sentry/node'
+import { PrometheusRegistry } from 'prom-client'
+
+export function initializeMonitoring() {
+  // Sentry for error tracking
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV,
+    integrations: [
+      new Sentry.Integrations.Http({ tracing: true }),
+      new Sentry.Integrations.Express({ app }),
+    ],
+    tracesSampleRate: 0.1,
+  })
+
+  // Prometheus metrics
+  const register = new PrometheusRegistry()
+  
+  // Custom metrics
+  const httpRequestDuration = new Histogram({
+    name: 'http_request_duration_seconds',
+    help: 'Duration of HTTP requests in seconds',
+    labelNames: ['method', 'route', 'status'],
+    registers: [register],
+  })
+
+  const emailsSent = new Counter({
+    name: 'emails_sent_total',
+    help: 'Total number of emails sent',
+    registers: [register],
+  })
+
+  return { register, httpRequestDuration, emailsSent }
+}
+```
+
+### Log Configuration
+
+```typescript title="lib/logger.ts"
+import winston from 'winston'
+
+export const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    process.env.NODE_ENV === 'production'
+      ? winston.format.json()
+      : winston.format.simple()
+  ),
+  transports: [
+    new winston.transports.Console(),
+    new winston.transports.File({ 
+      filename: 'logs/error.log', 
+      level: 'error' 
+    }),
+    new winston.transports.File({ 
+      filename: 'logs/combined.log' 
+    }),
+  ],
+})
+```
+
+## Health Checks
+
+### Application Health Check
+
+```typescript title="routes/health.ts"
+export const healthCheck = async (req: Request, res: Response) => {
+  const checks = {
+    database: await checkDatabase(),
+    redis: await checkRedis(),
+    smtp: await checkSMTP(),
+    storage: await checkStorage(),
+  }
+
+  const isHealthy = Object.values(checks).every(check => check.status === 'ok')
+  res.status(isHealthy ? 200 : 503).json({
+    status: isHealthy ? 'ok' : 'error',
+    timestamp: new Date().toISOString(),
+    checks,
+  })
+}
+
+async function checkDatabase() {
+  try {
+    await db.raw('SELECT 1')
+    return { status: 'ok', responseTime: Date.now() }
+  } catch (error) {
+    return { status: 'error', error: error.message }
+  }
+}
+```
+
+### Docker Health Check
+
+```dockerfile title="Dockerfile"
+# Add to Dockerfile
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3000/health || exit 1
+```
+
+## Backup Strategy
+
+### Database Backups
+
+```bash title="backup-db.sh"
+#!/bin/bash
+
+BACKUP_DIR="/backups"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+DB_NAME="zero_production"
+
+# Create backup
+pg_dump $DATABASE_URL > "$BACKUP_DIR/zero_backup_$TIMESTAMP.sql"
+
+# Compress backup
+gzip "$BACKUP_DIR/zero_backup_$TIMESTAMP.sql"
+
+# Upload to S3
+aws s3 cp "$BACKUP_DIR/zero_backup_$TIMESTAMP.sql.gz" \
+  s3://your-backup-bucket/database/
+
+# Clean up old local backups (keep last 7 days)
+find $BACKUP_DIR -name "zero_backup_*.sql.gz" -mtime +7 -delete
+
+# Clean up old S3 backups (keep last 30 days)
+aws s3 ls s3://your-backup-bucket/database/ | \
+  grep zero_backup | \
+  awk '{print $4}' | \
+  sort | \
+  head -n -30 | \
+  xargs -I {} aws s3 rm s3://your-backup-bucket/database/{}
+```
+
+### Automated Backup Cron
+
+```bash title="Corn-job"
+# Daily backup at 2 AM
+0 2 * * * /opt/zero/scripts/backup-db.sh
+
+# Weekly full backup at Sunday 3 AM
+0 3 * * 0 /opt/zero/scripts/full-backup.sh
+```
+
+## Security Considerations
+
+### Production Security Checklist
+<Callout type="warning" title="Critical Security Requirements">
+All items in this checklist must be implemented before deploying to production. Security is not optional!
+</Callout>
+
+- [ ] Use HTTPS everywhere
+- [ ] Enable HSTS headers
+- [ ] Configure CSP headers
+- [ ] Set up rate limiting
+- [ ] Enable CSRF protection
+- [ ] Use secure session cookies
+- [ ] Implement proper CORS policies
+- [ ] Regular security updates
+- [ ] Database encryption at rest
+- [ ] Secure environment variables
+- [ ] Network security groups
+- [ ] Web Application Firewall (WAF)
+
+### Security Headers
+
+```typescript title="middleware/security.ts"
+import helmet from 'helmet'
+
+export const securityMiddleware = helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      scriptSrc: ["'self'"],
+      connectSrc: ["'self'", "https://api.openai.com"],
+    },
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true,
+  },
+})
+```
+
+## Performance Optimization
+
+### Caching Strategy
+
+```typescript title="lib/cache.ts"
+import Redis from 'ioredis'
+
+const redis = new Redis(process.env.REDIS_URL)
+
+export const cache = {
+  // Cache email list for 5 minutes
+  async getEmailList(userId: string, key: string) {
+    const cached = await redis.get(`emails:${userId}:${key}`)
+    return cached ? JSON.parse(cached) : null
+  },
+
+  async setEmailList(userId: string, key: string, data: any) {
+    await redis.setex(`emails:${userId}:${key}`, 300, JSON.stringify(data))
+  },
+
+  // Cache user session for 1 hour
+  async getSession(sessionId: string) {
+    return await redis.get(`session:${sessionId}`)
+  },
+
+  async setSession(sessionId: string, data: any) {
+    await redis.setex(`session:${sessionId}`, 3600, JSON.stringify(data))
+  },
+}
+```
+
+### CDN Configuration
+
+```yaml title="CloudFront distribution"
+Resources:
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+          - Id: zero-origin
+            DomainName: your-app-domain.com
+            CustomOriginConfig:
+              HTTPPort: 443
+              OriginProtocolPolicy: https-only
+        DefaultCacheBehavior:
+          TargetOriginId: zero-origin
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad # Managed-CachingOptimized
+          OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf # Managed-CORS-S3Origin
+        PriceClass: PriceClass_100
+        Enabled: true
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**1. Database Connection Issues**
+```bash title="Script"
+# Check database connectivity
+psql $DATABASE_URL -c "SELECT 1"
+
+# Check connection pool
+SELECT count(*) FROM pg_stat_activity WHERE datname = 'zero_production';
+```
+
+**2. Memory Issues**
+```bash title="Script"
+# Monitor memory usage
+docker stats zero-app
+
+# Check Node.js heap
+node --inspect=0.0.0.0:9229 dist/server.js
+```
+
+**3. Email Delivery Issues**
+```bash title="Script"
+# Test SMTP connectivity
+telnet smtp.yourdomain.com 587
+
+# Check email queue
+redis-cli LLEN email_queue
+```
+
+### Monitoring Commands
+
+```bash title="Script"
+# Check application logs
+docker logs -f zero-app
+
+# Monitor system resources
+htop
+
+# Check database performance
+pg_stat_statements
+
+# Monitor Redis
+redis-cli monitor
+```

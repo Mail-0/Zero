@@ -1,0 +1,111 @@
+---
+title: "Zero MCP"
+description: "Zero MCP capabilities for email management, label handling, and AI-powered features."
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Cards, Card } from 'fumadocs-ui/components/card';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+import { CodeBlock } from 'fumadocs-ui/components/codeblock';
+
+<Callout type="info">
+Zero MCP (Model Context Protocol) provides seamless integration with AI assistants for email management, label handling, and AI-powered features.
+</Callout>
+
+## Available Capabilities
+
+Zero MCP offers comprehensive email management through the following capabilities:
+
+<Cards>
+  <Card title="Email Management" description="Complete email lifecycle operations" />
+  <Card title="Label Management" description="Organize emails with custom labels" />
+  <Card title="AI-Powered Features" description="Smart email composition and insights" />
+  <Card title="Search & Organization" description="Advanced search and filtering" />
+</Cards>
+
+### Email Management
+
+<Accordions>
+  <Accordion value="email-operations" title="Core Email Operations">
+    - **Get email threads by ID** - Retrieve complete email conversations
+    - **List emails in specific folders** - Browse inbox, sent, drafts, etc.
+    - **Create and send new emails** - Compose and deliver messages
+    - **Create email drafts** - Save work-in-progress emails
+    - **Send existing drafts** - Complete and send saved drafts
+    - **Delete emails** - Remove unwanted messages
+    - **Mark emails as read/unread** - Manage email status
+    - **Modify email labels** - Organize with custom tags
+    - **Bulk operations** - Delete or archive multiple emails at once
+  </Accordion>
+</Accordions>
+
+### Label Management
+
+<Callout type="tip">
+Create a personalized email organization system with custom labels and colors.
+</Callout>
+
+- **Get all user labels** - Retrieve your complete label system
+- **Create new custom labels** - Add labels with custom colors
+- **Delete existing labels** - Remove unused labels
+
+### AI-Powered Features
+
+<Cards>
+  <Card title="Smart Composition" description="AI-assisted email writing and suggestions" />
+  <Card title="Content Analysis" description="Ask questions about your mailbox content" />
+  <Card title="Thread Insights" description="Get insights about specific email conversations" />
+  <Card title="Web Integration" description="Enhanced search using Perplexity AI" />
+</Cards>
+
+### Search and Organization
+
+- **Advanced search** - Find emails with custom queries
+- **Label filtering** - Filter emails by specific labels
+- **Smart organization** - Manage email structure through labels
+- **Archive management** - Efficient archive and trash handling
+
+## Authentication Methods
+
+Choose your preferred authentication method to connect to Zero MCP:
+
+<Tabs items={['Session Token', 'OAuth']}>
+  <Tab value="Session Token">
+    ### Better Auth Session Token
+    
+    <Callout type="warning">
+    This method requires access to browser cookies and is recommended for development use.
+    </Callout>
+    
+    <Steps>
+      <Step>Open your browser's developer tools</Step>
+      <Step>Navigate to the Application/Storage tab</Step>
+      <Step>Find the session cookie in your browser cookies</Step>
+      <Step>Copy the cookie value</Step>
+      <Step>Add it to the Authorization header</Step>
+    </Steps>
+    
+  ```http title="Authorization Header Format"
+  Authorization: better-auth-{env}.session_token={value}
+  ```
+  
+  <Callout type="info">
+  Replace `{env}` with `dev` for local development and `{value}` with your actual session token.
+  </Callout>
+</Tab>
+<Tab value="OAuth">
+    ### OAuth Authentication
+    
+    <Callout type="note">
+    OAuth integration is coming soon for more secure and streamlined authentication.
+    </Callout>
+    
+    Features planned for OAuth integration:
+    - Secure token exchange
+    - Refresh token support
+    - Scoped permissions
+    - Enterprise-grade security
+  </Tab>
+</Tabs>

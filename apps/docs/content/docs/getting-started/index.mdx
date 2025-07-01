@@ -1,0 +1,191 @@
+---
+title: "Getting Started"
+description: "Quick setup guide to get Zero Email Client running in minutes with installation and configuration."
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+import { CodeBlock } from 'fumadocs-ui/components/codeblock';
+import { Accordions, Accordion } from 'fumadocs-ui/components/accordion';
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+
+Get up and running with Zero in minutes. This guide covers installation, basic configuration, and your first steps with the email client.
+
+## Prerequisites
+
+<Callout type="info">
+Before you begin, ensure you have the following installed:
+</Callout>
+
+- **Node.js** (v18 or higher)
+- **pnpm** (v8 or higher)
+- **Git**
+
+## Installation
+
+<Steps>
+  <Step>Fork the Repository</Step>
+  <Step>Clone the Repository</Step>
+  <Step>Install Dependencies</Step>
+  <Step>Environment Setup</Step>
+  <Step>Database Setup</Step>
+  <Step>Start Development Server</Step>
+</Steps>
+
+### 1. Clone the Repository
+
+```bash title="Clone Repository"
+git clone https://github.com/your-username/zero.git
+cd zero
+```
+
+### 2. Install Dependencies
+
+```bash title="Install Dependencies"
+pnpm install
+```
+
+### 3. Environment Setup
+
+Copy the environment template and configure your settings:
+
+```bash title="Environment Setup"
+cp .env.example .env
+```
+
+Edit the `.env` file with your configuration:
+
+```bash title=".env Configuration"
+# Database
+DATABASE_URL="your-database-url"
+
+# Authentication
+BETTER_AUTH_SECRET="your-secret-key"
+BETTER_AUTH_URL="http://localhost:3000"
+
+# Email Configuration
+SMTP_HOST="your-smtp-host"
+SMTP_PORT=587
+SMTP_USER="your-email"
+SMTP_PASS="your-password"
+```
+
+### 4. Database Setup
+
+```bash title="Database Setup"
+# Generate and run migrations
+pnpm db:generate
+pnpm db:migrate
+```
+
+### 5. Start Development Server
+
+```bash title="Start Development"
+pnpm dev
+```
+
+<Callout type="tip">
+The application will be available at `http://localhost:3000`.
+</Callout>
+
+## First Time Setup
+
+<Steps>
+  <Step>Create Your Account</Step>
+  <Step>Connect Your Email</Step>
+  <Step>Customize Your Workspace</Step>
+</Steps>
+
+### 1. Create Your Account
+
+1. Navigate to `http://localhost:3000`
+2. Click "Sign Up" to create your account
+3. Verify your email address
+4. Complete the onboarding process
+
+### 2. Connect Your Email
+
+1. Go to Settings > Connections
+2. Add your email provider (Gmail, Outlook, etc.)
+3. Authorize the connection
+4. Wait for initial sync to complete
+
+### 3. Customize Your Workspace
+
+1. Set up your preferred labels and folders
+2. Configure notification settings
+3. Customize the interface theme
+4. Set up keyboard shortcuts
+
+## Development Commands
+
+<Tabs items={['Development', 'Build', 'Database']}>
+  <Tab value="Development">
+    ```bash title="Development Commands"
+# Start development server
+pnpm dev
+
+# Run tests
+pnpm test
+
+# Lint code
+pnpm lint
+
+# Format code
+pnpm format
+```
+  </Tab>
+  <Tab value="Build">
+    ```bash title="Build Commands"
+# Build for production
+pnpm build
+
+# Start production server
+pnpm start
+```
+  </Tab>
+  <Tab value="Database">
+    ```bash title="Database Commands"
+# Generate migrations
+pnpm db:generate
+
+# Run migrations
+pnpm db:migrate
+
+# Open database studio
+pnpm db:studio
+
+# Seed database
+pnpm db:seed
+```
+  </Tab>
+</Tabs>
+
+## Troubleshooting
+
+<Accordions>
+  <Accordion title="Port already in use" value="port-issue">
+    ```bash title="Kill process on port 3000"
+lsof -ti:3000 | xargs kill -9
+```
+  </Accordion>
+  
+  <Accordion title="Database connection issues" value="db-issue">
+    <Callout type="warning">
+      Common solutions:
+    </Callout>
+    - Verify your `DATABASE_URL` in `.env`
+    - Ensure your database server is running
+    - Check network connectivity
+  </Accordion>
+  
+  <Accordion title="Email sync problems" value="email-issue">
+    <Callout type="info">
+      Check these settings:
+    </Callout>
+    - Verify SMTP credentials
+    - Check email provider settings
+    - Review authentication tokens
+  </Accordion>
+</Accordions>
+

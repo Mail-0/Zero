@@ -1,0 +1,762 @@
+---
+title: "Contributing Guide"
+description: "Complete guide for contributing to Zero Email Client development with setup and workflow."
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Cards, Card } from 'fumadocs-ui/components/card';
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+import { CodeBlock } from 'fumadocs-ui/components/codeblock';
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+import { Files, File, Folder } from 'fumadocs-ui/components/files';
+
+<Callout type="tip">
+We welcome contributions to Zero Email Client! This guide will help you get started with contributing to the project, whether you're fixing bugs, adding features, or improving documentation.
+</Callout>
+
+## Getting Started
+
+### Prerequisites
+
+<Callout type="info">
+Before contributing, make sure you have the following installed:
+</Callout>
+
+<Cards>
+  <Card title="Node.js" description="v18 or higher for runtime environment" />
+  <Card title="pnpm" description="v8 or higher for package management" />
+  <Card title="Git" description="Version control system" />
+  <Card title="GitHub Account" description="For contributing to the repository" />
+</Cards>
+
+### Development Setup
+
+<Steps>
+  <Step>Fork the Repository</Step>
+  <Step>Install Dependencies</Step>
+  <Step>Set Up Environment</Step>
+  <Step>Run Database Migrations</Step>
+  <Step>Start Development Server</Step>
+  <Step>Verify Setup</Step>
+</Steps>
+
+#### 1. Fork the Repository
+
+```bash title="Clone Your Fork"
+# Click "Fork" on GitHub, then clone your fork
+git clone https://github.com/your-username/zero.git
+cd zero
+```
+
+#### 2. Install Dependencies
+
+```bash title="Install Dependencies"
+pnpm install
+```
+
+#### 3. Set Up Environment
+
+```bash title="Environment Setup"
+cp .env.example .env
+# Edit .env with your configuration
+```
+
+#### 4. Run Database Migrations
+
+```bash title="Database Setup"
+pnpm db:generate
+pnpm db:migrate
+```
+
+#### 5. Start Development Server
+
+```bash title="Start Development"
+pnpm dev
+```
+
+#### 6. Verify Setup
+
+<Callout type="tip">
+Complete these verification steps to ensure everything is working correctly:
+</Callout>
+
+- Open http://localhost:3000
+- Create a test account
+- Verify all features work correctly
+
+## Development Workflow
+
+<Callout type="note">
+We use a Git flow approach with specific branch naming conventions and commit message standards.
+</Callout>
+
+### Branch Strategy
+
+<Tabs items={['Branch Types', 'Naming Convention', 'Workflow']}>
+  <Tab value="Branch Types">
+    <Cards>
+      <Card title="main" description="Production-ready code" />
+      <Card title="develop" description="Integration branch for features" />
+      <Card title="feature/*" description="New features and enhancements" />
+      <Card title="bugfix/*" description="Bug fixes" />
+      <Card title="hotfix/*" description="Critical production fixes" />
+    </Cards>
+  </Tab>
+  <Tab value="Naming Convention">
+    ### Branch Naming Examples
+    
+    - `feature/email-search`
+    - `feature/user-authentication`  
+    - `bugfix/compose-window-crash`
+    - `hotfix/security-vulnerability`
+    - `docs/update-api-documentation`
+  </Tab>
+  <Tab value="Workflow">
+    ### Creating a Feature Branch
+    
+    <Steps>
+      <Step>Switch to develop branch</Step>
+      <Step>Pull latest changes</Step>
+      <Step>Create feature branch</Step>
+      <Step>Make your changes</Step>
+      <Step>Commit your changes</Step>
+      <Step>Push to your fork</Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+```bash title="Feature Branch Workflow"
+# Switch to develop branch
+git checkout develop
+git pull origin develop
+
+# Create feature branch
+git checkout -b feature/your-feature-name
+
+# Make your changes
+# ...
+
+# Commit your changes
+git add .
+git commit -m "feat: add new feature description"
+
+# Push to your fork
+git push origin feature/your-feature-name
+```
+
+### Commit Message Convention
+
+<Callout type="info">
+We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification for consistent commit messages.
+</Callout>
+
+#### Format
+
+```text title="Commit Message Format"
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+#### Types
+
+<Accordions>
+  <Accordion value="commit-types" title="Commit Types">
+    - **`feat`** - New feature
+    - **`fix`** - Bug fix
+    - **`docs`** - Documentation changes
+    - **`style`** - Code style changes (formatting, etc.)
+    - **`refactor`** - Code refactoring
+    - **`test`** - Adding or updating tests
+    - **`chore`** - Maintenance tasks
+  </Accordion>
+</Accordions>
+
+#### Examples
+
+```bash title="Commit Message Examples"
+git commit -m "feat(mail): add email search functionality"
+git commit -m "fix(auth): resolve login redirect issue"
+git commit -m "docs: update API documentation"
+git commit -m "test(mail): add email composer tests"
+```
+
+## Code Style and Standards
+
+<Callout type="tip">
+Consistent code style ensures maintainability and readability across the entire codebase.
+</Callout>
+
+### TypeScript Guidelines
+
+<Callout type="info">
+We use TypeScript for type safety and better developer experience. Follow these guidelines for consistent code.
+</Callout>
+
+```typescript title="TypeScript Best Practices"
+// Use explicit types when helpful
+interface EmailListProps {
+  emails: Email[]
+  onSelect: (email: Email) => void
+  className?: string
+}
+
+// Use type guards for runtime checks
+function isEmail(value: unknown): value is Email {
+  return typeof value === 'object' && 
+         value !== null && 
+         'id' in value && 
+         'subject' in value
+}
+
+// Prefer const assertions for immutable data
+const EMAIL_STATUSES = ['sent', 'draft', 'failed'] as const
+type EmailStatus = typeof EMAIL_STATUSES[number]
+
+// Use generics for reusable components
+interface ApiResponse<T> {
+  success: boolean
+  data: T
+  error?: string
+}
+```
+
+### React Component Guidelines
+
+<Callout type="tip">
+Follow these patterns for consistent, performant React components.
+</Callout>
+
+```tsx title="React Component Example"
+// Use functional components with hooks
+const EmailList = memo<EmailListProps>(({ emails, onSelect, className }) => {
+  // State and effects at the top
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  
+  // Memoized values
+  const sortedEmails = useMemo(() => 
+    emails.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [emails]
+  )
+  
+  // Event handlers
+  const handleSelect = useCallback((email: Email) => {
+    setSelectedId(email.id)
+    onSelect(email)
+  }, [onSelect])
+  
+  // Early returns for loading/error states
+  if (emails.length === 0) {
+    return <EmptyState />
+  }
+  
+  // Main render
+  return (
+    <div className={cn("email-list", className)}>
+      {sortedEmails.map(email => (
+        <EmailItem
+          key={email.id}
+          email={email}
+          isSelected={selectedId === email.id}
+          onSelect={handleSelect}
+        />
+      ))}
+    </div>
+  )
+})
+EmailList.displayName = 'EmailList'
+```
+
+### CSS/Styling Guidelines
+
+<Tabs items={['Tailwind CSS', 'Component Styling', 'Best Practices']}>
+  <Tab value="Tailwind CSS">
+    <Callout type="info">
+    We use Tailwind CSS for utility-first styling with consistent design patterns.
+    </Callout>
+    
+```css title="Tailwind Best Practices"
+  /* Use Tailwind utility classes */
+  .email-item {
+    @apply flex items-center gap-3 p-3 border-b border-border 
+          cursor-pointer hover:bg-accent/50 transition-colors;
+  }
+
+  .email-item--selected {
+    @apply bg-accent;
+  }
+
+  /* Avoid magic numbers, use design tokens */
+  .email-avatar {
+    @apply h-8 w-8; /* Instead of h-[32px] w-[32px] */
+  }
+``` 
+  </Tab>
+  <Tab value="Component Styling">
+    ### Component Styling Patterns
+    
+    - Use `cn()` utility for conditional classes
+    - Prefer Tailwind utilities over custom CSS
+    - Use CSS variables for theming
+    - Keep responsive design in mind
+  </Tab>
+  <Tab value="Best Practices">
+    ### Styling Best Practices
+    
+    - Use consistent spacing scale (4px, 8px, 12px, 16px, etc.)
+    - Follow color palette from design system
+    - Use semantic color names (primary, secondary, accent)
+    - Maintain consistent typography scale
+  </Tab>
+</Tabs>
+
+## Testing
+
+<Callout type="info">
+Comprehensive testing ensures code quality and prevents regressions. We use multiple testing strategies.
+</Callout>
+
+### Testing Strategy
+
+<Cards>
+  <Card title="Unit Tests" description="Individual functions and components" />
+  <Card title="Integration Tests" description="Component interactions and workflows" />
+  <Card title="E2E Tests" description="Full user workflows and scenarios" />
+  <Card title="API Tests" description="Backend endpoint testing" />
+</Cards>
+
+### Running Tests
+
+```bash title="Test Commands"
+# Run all tests
+pnpm test
+
+# Run tests in watch mode
+pnpm test:watch
+
+# Run tests with coverage
+pnpm test:coverage
+
+# Run E2E tests
+pnpm test:e2e
+
+# Run specific test file
+pnpm test src/components/mail/email-list.test.tsx
+# Run tests in watch mode
+pnpm test:watch
+
+# Run tests with coverage
+pnpm test:coverage
+
+# Run E2E tests
+pnpm test:e2e
+
+# Run specific test file
+pnpm test src/components/mail/email-list.test.tsx
+```
+
+### Writing Tests
+
+#### Component Tests
+
+```tsx title="__tests__/components/email-list.test.tsx"
+import { render, screen, fireEvent } from '@testing-library/react'
+import { EmailList } from '../email-list'
+import { mockEmails } from '@/test-utils/mock-data'
+
+describe('EmailList', () => {
+  it('renders email list correctly', () => {
+    render(<EmailList emails={mockEmails} onSelect={jest.fn()} />)
+    
+    expect(screen.getByText(mockEmails[0].subject)).toBeInTheDocument()
+    expect(screen.getByText(mockEmails[0].sender.name)).toBeInTheDocument()
+  })
+  
+  it('calls onSelect when email is clicked', () => {
+    const onSelect = jest.fn()
+    render(<EmailList emails={mockEmails} onSelect={onSelect} />)
+    
+    fireEvent.click(screen.getByText(mockEmails[0].subject))
+    expect(onSelect).toHaveBeenCalledWith(mockEmails[0])
+  })
+  
+  it('shows empty state when no emails', () => {
+    render(<EmailList emails={[]} onSelect={jest.fn()} />)
+    
+    expect(screen.getByText('No emails found')).toBeInTheDocument()
+  })
+})
+```
+
+#### API Tests
+
+```typescript title="__tests__/api/emails.test.ts"
+import { describe, it, expect, beforeEach } from 'vitest'
+import { testClient } from '@/test-utils/api-client'
+
+describe('/api/emails', () => {
+  beforeEach(async () => {
+    await testClient.auth.login('test@example.com', 'password')
+  })
+  
+  it('should get user emails', async () => {
+    const response = await testClient.emails.list()
+    
+    expect(response.status).toBe(200)
+    expect(response.data.emails).toBeInstanceOf(Array)
+  })
+  
+  it('should send email', async () => {
+    const emailData = {
+      to: ['recipient@example.com'],
+      subject: 'Test Email',
+      body: 'This is a test email'
+    }
+    
+    const response = await testClient.emails.send(emailData)
+    
+    expect(response.status).toBe(200)
+    expect(response.data.email.status).toBe('sent')
+  })
+})
+```
+
+#### E2E Tests
+
+```typescript title="e2e/email-workflow.spec.ts"
+import { test, expect } from '@playwright/test'
+
+test.describe('Email Workflow', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+    await page.fill('[data-testid=email-input]', 'test@example.com')
+    await page.fill('[data-testid=password-input]', 'password')
+    await page.click('[data-testid=login-button]')
+  })
+  
+  test('should compose and send email', async ({ page }) => {
+    // Navigate to compose
+    await page.click('[data-testid=compose-button]')
+    
+    // Fill compose form
+    await page.fill('[data-testid=to-input]', 'recipient@example.com')
+    await page.fill('[data-testid=subject-input]', 'Test Email')
+    await page.fill('[data-testid=body-input]', 'This is a test email')
+    
+    // Send email
+    await page.click('[data-testid=send-button]')
+    
+    // Verify success
+    await expect(page.locator('[data-testid=success-message]')).toBeVisible()
+  })
+  
+  test('should read and reply to email', async ({ page }) => {
+    // Click on first email
+    await page.click('[data-testid=email-item]:first-child')
+    
+    // Verify email is opened
+    await expect(page.locator('[data-testid=email-viewer]')).toBeVisible()
+    
+    // Click reply
+    await page.click('[data-testid=reply-button]')
+    
+    // Verify compose window opens with prefilled data
+    await expect(page.locator('[data-testid=compose-window]')).toBeVisible()
+    await expect(page.locator('[data-testid=subject-input]')).toHaveValue(/^Re:/)
+  })
+})
+```
+
+## Documentation
+
+### Writing Documentation
+
+- Use clear, concise language
+- Include code examples
+- Add screenshots for UI features
+- Test all code examples
+- Follow the existing structure
+
+### Documentation Structure
+
+<Files>
+  <Folder name="docs/" defaultOpen>
+    <File name="index.mdx" description="Main documentation homepage" />
+    <Folder name="getting-started/" description="Setup and installation">
+      <File name="index.mdx" />
+      <File name="installation.mdx" />
+      <File name="configuration.mdx" />
+    </Folder>
+    <File name="architecture.mdx" description="System design and technical overview" />
+    <File name="MCP.mdx" description="Model Context Protocol server documentation" />
+    <File name="deployment.mdx" description="Production deployment guides" />
+    <File name="contributing.mdx" description="Development workflow and contribution guidelines" />
+  </Folder>
+</Files>
+
+### Adding New Documentation
+
+1. Create `.mdx` file in appropriate directory
+2. Add frontmatter with title and description
+3. Include relevant code examples
+4. Add to navigation if needed
+5. Test all examples
+
+## Pull Request Process
+
+### Before Submitting
+
+1. **Run Tests**
+   ```bash title="Terminal"
+   pnpm test
+   pnpm test:e2e
+   pnpm lint
+   pnpm type-check
+   ```
+
+2. **Check Build**
+   ```bash title="Terminal"
+   pnpm build
+   ```
+
+3. **Update Documentation**
+   - Update relevant docs
+   - Add JSDoc comments
+   - Update CHANGELOG.md
+
+4. **Test Manually**
+   - Test your changes in development
+   - Verify existing functionality still works
+   - Test in different browsers
+
+### PR Template
+
+When creating a pull request, include:
+
+```markdown title="Markdown"
+## Description
+Brief description of what this PR does.
+
+## Type of Change
+- [ ] Bug fix (non-breaking change that fixes an issue)
+- [ ] New feature (non-breaking change that adds functionality)
+- [ ] Breaking change (fix or feature that causes existing functionality to not work as expected)
+- [ ] Documentation update
+
+## Testing
+- [ ] Unit tests pass
+- [ ] Integration tests pass
+- [ ] E2E tests pass
+- [ ] Manual testing completed
+
+## Screenshots
+Include screenshots for UI changes.
+
+## Checklist
+- [ ] Code follows style guidelines
+- [ ] Self-review completed
+- [ ] Code is commented where necessary
+- [ ] Documentation updated
+- [ ] Tests added/updated
+- [ ] No new console errors/warnings
+```
+
+### Review Process
+
+1. **Automated Checks**
+   - Tests must pass
+   - Linting must pass
+   - Build must succeed
+   - Type checking must pass
+
+2. **Code Review**
+   - At least one maintainer review
+   - Address all feedback
+   - Ensure code quality standards
+
+3. **Final Testing**
+   - Manual testing by reviewer
+   - Compatibility testing
+   - Performance impact assessment
+
+## Issue Guidelines
+
+### Reporting Bugs
+
+Use the bug report template:
+
+```markdown title="Markdown"
+**Bug Description**
+A clear description of the bug.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Go to '...'
+2. Click on '....'
+3. Scroll down to '....'
+4. See error
+
+**Expected Behavior**
+What you expected to happen.
+
+**Screenshots**
+If applicable, add screenshots.
+
+**Environment**
+- OS: [e.g. macOS, Windows, Linux]
+- Browser: [e.g. Chrome, Firefox, Safari]
+- Version: [e.g. 1.0.0]
+
+**Additional Context**
+Any other context about the problem.
+```
+
+### Feature Requests
+
+Use the feature request template:
+
+```markdown title="Markdown"
+**Feature Description**
+A clear description of the feature you'd like to see.
+
+**Problem Statement**
+What problem does this feature solve?
+
+**Proposed Solution**
+How would you like this feature to work?
+
+**Alternatives Considered**
+Any alternative solutions you've considered.
+
+**Additional Context**
+Any other context, screenshots, or examples.
+```
+
+## Development Environment
+
+### Recommended Tools
+
+- **Code Editor**: VS Code with recommended extensions
+- **Browser**: Chrome with React DevTools
+- **Database**: TablePlus or similar for database management
+- **API Testing**: Postman or Insomnia
+- **Git GUI**: GitHub Desktop or SourceTree (optional)
+
+### VS Code Extensions
+
+```json title=".vscode/extensions.json"
+{
+  "recommendations": [
+    "bradlc.vscode-tailwindcss",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "ms-vscode.vscode-typescript-next",
+    "bradlc.vscode-tailwindcss",
+    "ms-playwright.playwright",
+    "ms-vscode.vscode-json"
+  ]
+}
+```
+
+### Environment Variables
+
+```bash title="Terminal"
+# Development environment
+NODE_ENV=development
+PORT=3000
+APP_URL=http://localhost:3000
+
+# Debug settings
+DEBUG=zero:*
+LOG_LEVEL=debug
+ENABLE_QUERY_LOGGING=true
+
+# Test database
+TEST_DATABASE_URL=sqlite:./test.db
+```
+
+## Architecture Decisions
+
+### Making Changes
+
+For significant architectural changes:
+
+1. **Create RFC (Request for Comments)**
+   - Document in `docs/rfcs/`
+   - Explain problem and proposed solution
+   - Get community feedback
+
+2. **Discuss in Issues**
+   - Create GitHub issue for discussion
+   - Tag relevant maintainers
+   - Allow time for feedback
+
+3. **Prototype First**
+   - Create proof of concept
+   - Test performance impact
+   - Validate approach
+
+### Current Architecture
+
+See [Architecture Overview](../docs/architecture/) for detailed information about:
+
+- Component structure
+- State management patterns
+- API design principles
+- Database schema design
+- Performance considerations
+
+## Community Guidelines
+
+### Code of Conduct
+
+We follow the [Contributor Covenant](https://www.contributor-covenant.org/):
+
+- **Be respectful** - Treat everyone with respect
+- **Be inclusive** - Welcome newcomers and diverse perspectives
+- **Be patient** - Help others learn and grow
+- **Be collaborative** - Work together towards common goals
+
+### Communication Channels
+
+- **GitHub Issues** - Bug reports and feature requests
+- **GitHub Discussions** - General questions and ideas
+- **Pull Requests** - Code contributions and reviews
+- **Discord** - Real-time chat (community server)
+
+### Getting Help
+
+If you need help:
+
+1. Check existing documentation
+2. Search GitHub issues
+3. Ask in GitHub Discussions
+4. Join Discord community
+5. Tag maintainers if urgent
+
+## Recognition
+
+### Contributors
+
+All contributors are recognized in:
+
+- `CONTRIBUTORS.md` file
+- GitHub contributors page
+- Release notes for significant contributions
+- Annual contributor highlights
+
+### Types of Contributions
+
+We value all types of contributions:
+
+- **Code** - Features, bug fixes, optimizations
+- **Documentation** - Guides, API docs, examples
+- **Testing** - Writing tests, finding bugs
+- **Design** - UI/UX improvements, icons, graphics
+- **Community** - Helping others, moderation
+- **Feedback** - Bug reports, feature ideas, reviews
+
+Looking for contributing to Zero Email ! 🎉

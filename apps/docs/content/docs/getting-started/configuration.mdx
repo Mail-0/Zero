@@ -1,0 +1,534 @@
+---
+title: "Configuration Guide"
+description: "Complete configuration reference covering all options from basic setup to advanced customization."
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Files, File, Folder } from 'fumadocs-ui/components/files';
+import { CodeBlock } from 'fumadocs-ui/components/codeblock';
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+
+This guide covers all configuration options available in Zero Email Client, from basic setup to advanced customization.
+
+## Configuration Files
+
+<Callout type="info">
+The primary configuration is handled through environment variables and configuration files.
+</Callout>
+
+<Files>
+  <Folder name="Zero/" description="Project root" defaultOpen>
+    <File name=".env.example" description="Environment variables template" />
+    <File name="package.json" description="Main package configuration" />
+    <File name="pnpm-workspace.yaml" description="pnpm workspace configuration" />
+    <File name="turbo.json" description="Turborepo configuration" />
+    <File name="tsconfig.json" description="TypeScript configuration" />
+    <File name="eslint.config.mjs" description="ESLint configuration" />
+    <File name="docker-compose.db.yaml" description="Database services" />
+    <Folder name="apps/mail/" description="Frontend app">
+      <File name="tailwind.config.ts" />
+      <File name="vite.config.ts" />
+      <File name="react-router.config.ts" />
+    </Folder>
+    <Folder name="apps/server/" description="Backend app">
+      <File name="drizzle.config.ts" />
+      <File name="wrangler.jsonc" />
+    </Folder>
+  </Folder>
+</Files>
+
+### Environment Variables (.env)
+
+```bash title=".env Configuration"
+# Application Configuration
+NODE_ENV=development
+VITE_PUBLIC_APP_URL=http://localhost:3000
+VITE_PUBLIC_BACKEND_URL=http://localhost:8787
+
+# Database Configuration  
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/zerodotemail"
+
+# Authentication Configuration
+BETTER_AUTH_SECRET=my-better-auth-secret
+BETTER_AUTH_URL=http://localhost:3000
+COOKIE_DOMAIN="localhost"
+
+# OAuth Configuration
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# Redis/Valkey Configuration
+REDIS_URL="http://localhost:8079"
+REDIS_TOKEN="upstash-local-token"
+
+# Email Service Configuration
+RESEND_API_KEY=your-resend-api-key
+
+# AI Configuration
+OPENAI_API_KEY=your-openai-api-key
+PERPLEXITY_API_KEY=your-perplexity-api-key
+AI_SYSTEM_PROMPT=""
+
+# Security
+AUTUMN_SECRET_KEY=your-autumn-secret-key
+
+# SMS/Voice Configuration (Optional)
+TWILIO_ACCOUNT_SID=your-twilio-sid
+TWILIO_AUTH_TOKEN=your-twilio-token
+TWILIO_PHONE_NUMBER=your-twilio-phone
+```
+
+<Callout type="warning">
+**Important**: Replace all placeholder values with your actual credentials. Use `openssl rand -hex 32` to generate secure secret keys.
+</Callout>
+
+## Port Configuration
+
+Zero Email Client uses multiple services running on different ports:
+
+<Tabs items={['Development', 'Production']}>
+  <Tab value="Development">
+    ```bash title="Development Ports"
+    # Frontend (React Router with Vite)
+    http://localhost:3000
+    
+    # Backend API (Cloudflare Workers)
+    http://localhost:8787
+    
+    # Database Studio (Drizzle)
+    http://localhost:4983
+    
+    # Redis/Valkey (Docker)
+    http://localhost:8079
+    
+    # PostgreSQL (Docker)
+    localhost:5432
+    ```
+  </Tab>
+  <Tab value="Production">
+    ```bash title="Production URLs"
+    # Frontend
+    https://0.email
+    
+    # Backend API
+    https://api.0.email
+    
+    # Staging
+    https://staging.0.email (Frontend)
+    https://sapi.0.email (Backend)
+    ```
+  </Tab>
+</Tabs>
+
+<Callout type="info">
+**Port Conflicts**: If any ports are already in use, you can modify them in the respective configuration files or environment variables.
+</Callout>
+
+## Application Configuration
+
+### Basic Settings
+
+```typescript title="config/app.ts"
+export const appConfig = {
+  name: 'Zero Email Client',
+  version: '1.0.0',
+  description: 'Modern email client built with React',
+  url: process.env.APP_URL || 'http://localhost:3000',
+  
+  // Feature toggles
+  features: {
+    aiAssistant: process.env.ENABLE_AI_FEATURES === 'true',
+    voiceCommands: process.env.ENABLE_VOICE_FEATURES === 'true',
+    realTimeCollaboration: process.env.ENABLE_REAL_TIME_COLLABORATION === 'true',
+    darkMode: true,
+    notifications: true,
+  },
+  
+  // UI Configuration
+  ui: {
+    theme: 'system', // 'light', 'dark', 'system'
+    sidebarCollapsed: false,
+    density: 'comfortable', // 'compact', 'comfortable', 'spacious'
+  }
+}
+```
+
+## Database Configuration
+
+<Tabs items={['SQLite', 'PostgreSQL', 'Connection Pooling']}>
+  <Tab value="SQLite">
+    <Callout type="info">
+      **Default Option** - Perfect for development
+    </Callout>
+    
+    ```bash title="SQLite Configuration"
+DATABASE_URL=sqlite:./data/db.sqlite
+```
+    
+    **Pros:**
+    - No additional setup required
+    - Perfect for development
+    - Self-contained
+
+    **Cons:**
+    - Not suitable for production with multiple users
+    - Limited concurrent access
+  </Tab>
+  <Tab value="PostgreSQL">
+    <Callout type="tip">
+      **Recommended for Production**
+    </Callout>
+    
+    ```bash title="PostgreSQL Configuration"
+DATABASE_URL=postgresql://username:password@localhost:5432/zero_production
+```
+    
+    ```bash title="Setup Commands"
+# Create database
+createdb zero_production
+
+# Run migrations
+pnpm db:migrate
+```
+  </Tab>
+  <Tab value="Connection Pooling">
+    ```typescript title="drizzle.config.ts"
+// drizzle.config.ts
+export default {
+  schema: "./src/db/schema.ts",
+  out: "./drizzle",
+  driver: 'pg',
+  dbCredentials: {
+    connectionString: process.env.DATABASE_URL!,
+    ssl: process.env.NODE_ENV === 'production'
+  },
+  // Connection pool settings
+  pool: {
+    min: 2,
+    max: 10,
+    acquireTimeoutMillis: 30000,
+    idleTimeoutMillis: 30000
+  }
+}
+```
+  </Tab>
+</Tabs>
+
+## Authentication Configuration
+
+### Better Auth Setup
+
+```typescript title="lib/auth.ts"
+import { betterAuth } from "better-auth"
+
+export const auth = betterAuth({
+  database: {
+    provider: "sqlite", // or "postgres"
+    url: process.env.DATABASE_URL!,
+  },
+  
+  // Social providers
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    },
+    github: {
+      clientId: process.env.GITHUB_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+    }
+  },
+  
+  // Security settings
+  session: {
+    expiresIn: 60 * 60 * 24 * 7, // 7 days
+    updateAge: 60 * 60 * 24, // 1 day
+  },
+  
+  // Advanced options
+  advanced: {
+    generateId: () => crypto.randomUUID(),
+    crossSubDomainCookies: {
+      enabled: true,
+      domain: ".yourdomain.com"
+    }
+  }
+})
+```
+
+### OAuth Provider Setup
+
+#### Google OAuth
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing
+3. Enable Gmail API
+4. Create OAuth 2.0 credentials
+5. Add authorized redirect URIs:
+   - `http://localhost:3000/api/auth/callback/google` (development)
+   - `https://yourdomain.com/api/auth/callback/google` (production)
+
+#### GitHub OAuth
+
+1. Go to GitHub Settings > Developer settings > OAuth Apps
+2. Create a new OAuth App
+3. Set Authorization callback URL:
+   - `http://localhost:3000/api/auth/callback/github` (development)
+   - `https://yourdomain.com/api/auth/callback/github` (production)
+
+## Email Provider Configuration
+
+### Gmail Configuration
+
+```bash title="Gmail SMTP Configuration"
+# Gmail SMTP
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password  # Use App Password, not regular password
+```
+
+**Setup App Password:**
+1. Enable 2-Factor Authentication
+2. Go to Google Account settings
+3. Generate App Password
+4. Use the generated password in `SMTP_PASS`
+
+### Outlook/Hotmail Configuration
+
+```bash title="Outlook SMTP Configuration"
+# Outlook SMTP
+SMTP_HOST=smtp-mail.outlook.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-email@outlook.com
+SMTP_PASS=your-password
+```
+
+### Custom SMTP Configuration
+
+```bash title="Custom SMTP Configuration"
+# Custom SMTP
+SMTP_HOST=mail.yourcompany.com
+SMTP_PORT=587
+SMTP_SECURE=true
+SMTP_USER=your-email@yourcompany.com
+SMTP_PASS=your-password
+```
+
+## Storage Configuration
+
+### Local Storage (Default)
+
+```bash title="Local Storage Configuration"
+STORAGE_PROVIDER=local
+STORAGE_LOCAL_PATH=./uploads
+```
+
+### Cloudflare R2
+
+```bash title="Cloudflare R2 Configuration"
+STORAGE_PROVIDER=r2
+CLOUDFLARE_R2_ACCESS_KEY_ID=your-access-key
+CLOUDFLARE_R2_SECRET_ACCESS_KEY=your-secret-key
+CLOUDFLARE_R2_BUCKET=your-bucket-name
+CLOUDFLARE_R2_ENDPOINT=https://your-account-id.r2.cloudflarestorage.com
+```
+
+### AWS S3
+
+```bash title="AWS S3 Configuration"
+STORAGE_PROVIDER=s3
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+AWS_REGION=us-east-1
+AWS_S3_BUCKET=your-bucket-name
+```
+
+## AI Features Configuration
+
+### OpenAI Integration
+
+```bash title="OpenAI Configuration"
+# OpenAI Configuration
+OPENAI_API_KEY=your-openai-api-key
+OPENAI_MODEL=gpt-4
+OPENAI_MAX_TOKENS=1000
+
+# AI Features
+ENABLE_AI_COMPOSE=true
+ENABLE_AI_SUMMARY=true
+ENABLE_AI_CATEGORIZATION=true
+```
+
+### Custom AI Provider
+
+```typescript title="lib/ai.ts"
+export const aiConfig = {
+  provider: 'openai', // 'openai', 'anthropic', 'custom'
+  
+  openai: {
+    apiKey: process.env.OPENAI_API_KEY,
+    model: 'gpt-4',
+    maxTokens: 1000,
+  },
+  
+  // Custom provider configuration
+  custom: {
+    endpoint: 'https://your-ai-api.com',
+    apiKey: process.env.CUSTOM_AI_API_KEY,
+  }
+}
+```
+
+## Performance Configuration
+
+### Caching
+
+```typescript title="lib/cache.ts"
+export const cacheConfig = {
+  // Redis configuration (optional)
+  redis: {
+    url: process.env.REDIS_URL,
+    ttl: 60 * 60, // 1 hour
+  },
+  
+  // In-memory cache fallback
+  memory: {
+    max: 1000,
+    ttl: 60 * 60 * 1000, // 1 hour in milliseconds
+  }
+}
+```
+
+### Rate Limiting
+
+```typescript title="lib/rate-limit.ts"
+export const rateLimitConfig = {
+  // API rate limits
+  api: {
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // requests per window
+  },
+  
+  // Email sending limits
+  email: {
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 50, // emails per hour
+  }
+}
+```
+
+## Security Configuration
+
+### CORS Settings
+
+```typescript title="lib/cors.ts"
+export const corsConfig = {
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://yourdomain.com']
+    : ['http://localhost:3000', 'http://localhost:5173'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}
+```
+
+### Content Security Policy
+
+```typescript title="lib/security.ts"
+export const cspConfig = {
+  directives: {
+    defaultSrc: ["'self'"],
+    scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+    styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+    fontSrc: ["'self'", "https://fonts.gstatic.com"],
+    imgSrc: ["'self'", "data:", "https:"],
+    connectSrc: ["'self'", "https://api.openai.com"],
+  }
+}
+```
+
+## Development Configuration
+
+### Hot Module Replacement
+
+```typescript title="vite.config.ts"
+export default defineConfig({
+  server: {
+    hmr: {
+      port: 5173,
+    },
+    watch: {
+      usePolling: true, // Enable if you're using Docker
+    }
+  }
+})
+```
+
+### Debug Settings
+
+```bash title="Debug Configuration"
+# Debug configuration
+DEBUG=zero:*
+LOG_LEVEL=debug
+ENABLE_QUERY_LOGGING=true
+```
+
+## Production Configuration
+
+### Environment Variables for Production
+
+```bash title="Production Environment Variables"
+NODE_ENV=production
+PORT=3000
+
+# Use strong secrets
+BETTER_AUTH_SECRET=your-super-long-random-secret-key-for-production
+
+# Use production database
+DATABASE_URL=postgresql://user:pass@prod-db:5432/zero_prod
+
+# Enable security features
+FORCE_HTTPS=true
+SECURE_COOKIES=true
+TRUST_PROXY=true
+```
+
+### Docker Configuration
+
+```dockerfile title="Dockerfile"
+# Dockerfile production optimizations
+FROM node:20-alpine AS production
+
+# Set production environment
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Copy built application
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+
+EXPOSE 3000
+CMD ["node", "dist/server.js"]
+```
+
+## Configuration Validation
+
+```typescript title="lib/config-validation.ts"
+import { z } from 'zod'
+
+const configSchema = z.object({
+  NODE_ENV: z.enum(['development', 'production', 'test']),
+  PORT: z.coerce.number().default(3000),
+  DATABASE_URL: z.string(),
+  BETTER_AUTH_SECRET: z.string().min(32),
+  SMTP_HOST: z.string(),
+  SMTP_PORT: z.coerce.number(),
+  SMTP_USER: z.string().email(),
+  SMTP_PASS: z.string(),
+})
+
+export const config = configSchema.parse(process.env)
+```
