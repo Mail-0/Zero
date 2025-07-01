@@ -18,7 +18,7 @@ import {
   User,
   Bell,
 } from '../icons/icons';
-import { StickyNote, Briefcase, Users, Check } from 'lucide-react';
+import { StickyNote, Briefcase, Users, Check, Star } from 'lucide-react';
 import {
   memo,
   useCallback,
@@ -47,6 +47,7 @@ import { useTRPC } from '@/providers/query-provider';
 import { useThreadLabels } from '@/hooks/use-labels';
 import { template } from '@/lib/email-utils.client';
 import { useSettings } from '@/hooks/use-settings';
+import { useThreadNotes } from '@/hooks/use-notes';
 import { useKeyState } from '@/hooks/use-hot-key';
 import { VList, type VListHandle } from 'virtua';
 import { RenderLabels } from './render-labels';
@@ -54,6 +55,8 @@ import { Badge } from '@/components/ui/badge';
 import { useDraft } from '@/hooks/use-drafts';
 import { useTranslations } from 'use-intl';
 import { Skeleton } from '../ui/skeleton';
+import { StickyNote } from 'lucide-react';
+import { m } from '@/paraglide/messages';
 import { useParams } from 'react-router';
 import { useTheme } from 'next-themes';
 import { Button } from '../ui/button';
@@ -71,7 +74,6 @@ const Thread = memo(
     index,
   }: ThreadProps & { index?: number }) {
     const [searchValue, setSearchValue] = useSearchValue();
-    const t = useTranslations();
     const { folder } = useParams<{ folder: string }>();
     const [{}, threads] = useThreads();
     const [threadId] = useQueryState('threadId');
@@ -350,8 +352,8 @@ const Thread = memo(
                   className="mb-1 bg-white dark:bg-[#1A1A1A]"
                 >
                   {displayStarred
-                    ? t('common.threadDisplay.unstar')
-                    : t('common.threadDisplay.star')}
+                    ? m['common.threadDisplay.unstar']()
+                    : m['common.threadDisplay.star']()}
                 </TooltipContent>
               </Tooltip>
               <Tooltip>
@@ -374,7 +376,7 @@ const Thread = memo(
                   side={index === 0 ? 'bottom' : 'top'}
                   className="dark:bg-panelDark mb-1 bg-white"
                 >
-                  {t('common.mail.toggleImportant')}
+                  {m['common.mail.toggleImportant']()}
                 </TooltipContent>
               </Tooltip>
               <Tooltip>
@@ -395,7 +397,7 @@ const Thread = memo(
                   side={index === 0 ? 'bottom' : 'top'}
                   className="dark:bg-panelDark mb-1 bg-white"
                 >
-                  {t('common.threadDisplay.archive')}
+                  {m['common.threadDisplay.archive']()}
                 </TooltipContent>
               </Tooltip>
               {!isFolderBin ? (
@@ -417,7 +419,7 @@ const Thread = memo(
                     side={index === 0 ? 'bottom' : 'top'}
                     className="dark:bg-panelDark mb-1 bg-white"
                   >
-                    {t('common.actions.Bin')}
+                    {m['common.actions.Bin']()}
                   </TooltipContent>
                 </Tooltip>
               ) : null}
@@ -529,7 +531,7 @@ const Thread = memo(
                             </span>
                           </TooltipTrigger>
                           <TooltipContent className="p-1 text-xs">
-                            {t('common.mail.replies', { count: getThreadData.totalReplies })}
+                            {m['common.mail.replies']({ count: getThreadData.totalReplies })}
                           </TooltipContent>
                         </Tooltip>
                       ) : null}
@@ -771,14 +773,14 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
                     </span>
                   </span>
                 </div>
-                {draft.rawMessage?.internalDate && (  
-                <p 
-                  className={cn(
-                    'text-muted-foreground text-nowrap text-xs font-normal opacity-70 transition-opacity group-hover:opacity-100 dark:text-[#8C8C8C]',
-                  )}
-                >
-                  {formatDate(Number(draft.rawMessage?.internalDate))}
-                </p>
+                {draft.rawMessage?.internalDate && (
+                  <p
+                    className={cn(
+                      'text-muted-foreground text-nowrap text-xs font-normal opacity-70 transition-opacity group-hover:opacity-100 dark:text-[#8C8C8C]',
+                    )}
+                  >
+                    {formatDate(Number(draft.rawMessage?.internalDate))}
+                  </p>
                 )}
               </div>
               <div className="flex justify-between">
@@ -802,7 +804,6 @@ export const MailList = memo(
   function MailList() {
     const { folder } = useParams<{ folder: string }>();
     const { data: settingsData } = useSettings();
-    const t = useTranslations();
     const [, setThreadId] = useQueryState('threadId');
     const [, setDraftId] = useQueryState('draftId');
     const [category, setCategory] = useQueryState('category');
@@ -1036,7 +1037,6 @@ export const MailList = memo(
         isLoading,
         isFetching,
         hasNextPage,
-        t,
       ],
     );
 
@@ -1120,8 +1120,6 @@ export const MailList = memo(
 
 export const MailLabels = memo(
   function MailListLabels({ labels }: { labels: { id: string; name: string }[] }) {
-    const t = useTranslations();
-
     if (!labels?.length) return null;
 
     const visibleLabels = labels.filter(
@@ -1143,7 +1141,7 @@ export const MailLabels = memo(
                   </Badge>
                 </TooltipTrigger>
                 <TooltipContent className="hidden px-1 py-0 text-xs">
-                  {t('common.notes.title')}
+                  {m['common.notes.title']()}
                 </TooltipContent>
               </Tooltip>
             );

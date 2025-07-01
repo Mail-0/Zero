@@ -17,7 +17,7 @@ import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 import { useLabels } from '@/hooks/use-labels';
-import { useTranslations } from 'use-intl';
+import { m } from '@/paraglide/messages';
 import { Trash } from '../icons/icons';
 import { Button } from '../ui/button';
 import { toast } from 'sonner';
@@ -39,14 +39,14 @@ interface LabelSidebarContextMenuProps {
 
 export function LabelSidebarContextMenu({ children, labelId, hide }: LabelSidebarContextMenuProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const t = useTranslations();
+
   const trpc = useTRPC();
   const { mutateAsync: deleteLabel } = useMutation(trpc.labels.delete.mutationOptions());
   const { refetch } = useLabels();
 
   const handleDelete = () => {
     toast.promise(deleteLabel({ id: labelId }), {
-      success: t('common.labels.deleteLabelSuccess'),
+      success: m['common.labels.deleteLabelSuccess'](),
       error: 'Error deleting label',
       finally: () => {
         refetch();
@@ -74,7 +74,7 @@ export function LabelSidebarContextMenu({ children, labelId, hide }: LabelSideba
               className="hover:bg-[#FDE4E9] dark:hover:bg-[#411D23] [&_svg]:size-3.5"
             >
               <Trash className="fill-[#F43F5E]" />
-              <span>{t('common.labels.deleteLabel')}</span>
+              <span>{m['common.labels.deleteLabel']()}</span>
             </Button>
           </ContextMenuItem>
         </ContextMenuContent>
@@ -83,17 +83,19 @@ export function LabelSidebarContextMenu({ children, labelId, hide }: LabelSideba
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent showOverlay={true}>
           <DialogHeader>
-            <DialogTitle>{t('common.labels.deleteLabelConfirm')}</DialogTitle>
+            <DialogTitle>{m['common.labels.deleteLabelConfirm']()}</DialogTitle>
             <DialogDescription>
-              {t('common.labels.deleteLabelConfirmDescription')}
+              {m['common.labels.deleteLabelConfirmDescription']()}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-2">
             <DialogClose asChild>
-              <Button variant="outline">{t('common.labels.deleteLabelConfirmCancel')}</Button>
+              <Button variant="outline">{m['common.labels.deleteLabelConfirmCancel']()}</Button>
             </DialogClose>
             <DialogClose asChild>
-              <Button onClick={handleDelete}>{t('common.labels.deleteLabelConfirmDelete')}</Button>
+              <Button onClick={handleDelete}>
+                {m['common.labels.deleteLabelConfirmDelete']()}
+              </Button>
             </DialogClose>
           </DialogFooter>
         </DialogContent>
