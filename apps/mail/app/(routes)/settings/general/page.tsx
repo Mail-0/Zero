@@ -195,7 +195,7 @@ export default function GeneralPage() {
                 name="language"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{m['pages.settings.general.language']()}</FormLabel>
+                    <FormLabel className='flex'>{m['pages.settings.general.language']()}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-36 justify-start">
@@ -219,7 +219,7 @@ export default function GeneralPage() {
                 name="timezone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{m['pages.settings.general.timezone']()}</FormLabel>
+                    <FormLabel className='flex'>{m['pages.settings.general.timezone']()}</FormLabel>
                     <TimezoneSelect field={field} />
                   </FormItem>
                 )}
