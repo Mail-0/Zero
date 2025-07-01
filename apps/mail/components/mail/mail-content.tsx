@@ -87,9 +87,9 @@ export function MailContent({ html, senderEmail }: MailContentProps) {
 
       if (!shouldLoadImages) {
         DOMPurify.addHook('uponSanitizeElement', (node) => {
-          if (node.tagName === 'IMG') {
+          if ((node as HTMLElement).tagName === 'IMG') {
             setCspViolation(true);
-            node.remove();
+            (node as HTMLElement).remove();
           }
         });
 
@@ -130,34 +130,34 @@ export function MailContent({ html, senderEmail }: MailContentProps) {
             color: ${resolvedTheme === 'dark' ? '#ffffff' : '#000000'};
             background-color: transparent;
           }
-          
+
           * {
-            max-width: 100% !important;
+            /* max-width: 100% !important; */
             word-wrap: break-word !important;
             overflow-wrap: break-word !important;
           }
-          
+
           img {
             height: auto !important;
             display: block;
-            max-width: 100% !important;
+            /* max-width: 100% !important; */
           }
-          
+
           table {
             table-layout: auto !important;
             width: 100% !important;
             border-collapse: collapse;
           }
-          
+
           a {
             color: ${resolvedTheme === 'dark' ? '#60a5fa' : '#2563eb'};
             text-decoration: underline;
           }
-          
+
           a:hover {
             color: ${resolvedTheme === 'dark' ? '#93bbfc' : '#1d4ed8'};
           }
-          
+
           pre {
             white-space: pre-wrap;
             word-break: break-word;
@@ -166,14 +166,14 @@ export function MailContent({ html, senderEmail }: MailContentProps) {
             border-radius: 0.375rem;
             overflow-x: auto;
           }
-          
+
           code {
             background-color: ${resolvedTheme === 'dark' ? '#1a1a1a' : '#f5f5f5'};
             padding: 0.125rem 0.25rem;
             border-radius: 0.25rem;
             font-size: 0.875em;
           }
-          
+
           blockquote {
             border-left: 4px solid ${resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db'};
             padding-left: 1rem;
@@ -206,7 +206,7 @@ export function MailContent({ html, senderEmail }: MailContentProps) {
   useEffect(() => {
     if (!shadowRootRef.current || !sanitizedHtml) return;
 
-    shadowRootRef.current.innerHTML = sanitizedHtml;
+    shadowRootRef.current.innerHTML = sanitizedHtml as unknown as string;
   }, [sanitizedHtml]);
 
   const handleImageError = useCallback((e: Event) => {
