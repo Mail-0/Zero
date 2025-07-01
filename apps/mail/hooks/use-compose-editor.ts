@@ -187,7 +187,7 @@ const useComposeEditor = ({
   autofocus?: boolean;
 }) => {
   const extensions = [
-    ...defaultExtensions,
+    ...defaultExtensions.filter((ext: any) => ext?.name !== 'placeholder'),
     Markdown,
     Image,
     FileHandler.configure({

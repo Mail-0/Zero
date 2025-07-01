@@ -542,8 +542,8 @@ export function MailLayout() {
                   <Button
                     variant="outline"
                     className={cn(
-                      'text-muted relative flex h-8 flex-1 cursor-pointer select-none items-center justify-start overflow-hidden rounded-lg border bg-white pl-2 text-left text-sm font-normal shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-none dark:bg-[#262626] dark:text-[#cccccc]',
-                      'transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-[#2a2a2a]',
+                      'relative flex h-8 flex-1 cursor-pointer select-none items-center justify-start overflow-hidden rounded-lg border bg-neutral-300 pl-2 text-left text-sm font-normal text-neutral-600 shadow-none ring-0 hover:text-neutral-800 focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-none dark:bg-[#262626] dark:text-[#cccccc]',
+                      'transition-colors duration-200 hover:bg-neutral-400 dark:hover:bg-[#2a2a2a]',
                       'active:bg-gray-100 dark:active:bg-[#333333]',
                     )}
                     onClick={async () => {
@@ -553,13 +553,13 @@ export function MailLayout() {
                       ]);
                     }}
                   >
-                    <Search className="mr-2 h-4 w-4 fill-[#71717A] dark:fill-[#6F6F6F]" />
+                    <Search className="mr-2 h-4 w-4 fill-neutral-500 dark:fill-[#6F6F6F]" />
                     <span className="inline-block truncate lg:hidden">Search</span>
                     <span className="hidden truncate lg:inline-block">Quick Search</span>
 
                     {/* Shortcut hint only */}
                     <div className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-1">
-                      <span className="bg-muted text-md pointer-events-none hidden h-6 select-none flex-row items-center gap-1 rounded-md border-none px-1.5 text-xs font-medium !leading-[0] opacity-100 sm:flex dark:bg-[#141414] dark:text-[#929292]">
+                      <span className="bg-muted text-md pointer-events-none hidden h-6 select-none flex-row items-center gap-1 rounded-md border-none px-1.5 text-xs font-medium !leading-[0] text-neutral-700 opacity-100 sm:flex dark:bg-[#141414] dark:text-[#929292]">
                         <span
                           className={cn('h-min text-sm !leading-[0.2]', isMac ? 'mt-[1px]' : '')}
                         >
@@ -575,7 +575,7 @@ export function MailLayout() {
                   <Button
                     variant="outline"
                     className={cn(
-                      'text-muted-foreground flex h-8 w-fit cursor-pointer select-none items-center justify-center gap-2 overflow-hidden rounded-lg border bg-white pl-3 pr-3 md:pr-1 text-sm font-normal shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:border dark:border-neutral-700 dark:bg-[#141414]',
+                      'text-muted-foreground flex h-8 w-fit cursor-pointer select-none items-center justify-center gap-2 overflow-hidden rounded-lg border bg-white pl-3 pr-3 text-sm font-normal shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 md:pr-1 dark:border dark:border-neutral-700 dark:bg-[#141414]',
                       'transition-colors duration-200 hover:bg-gray-50 dark:hover:border-neutral-500 dark:hover:bg-[#161616]',
                       'active:bg-gray-100 dark:active:bg-[#252525]',
                     )}

@@ -31,6 +31,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
+import { cn, getEmailLogo, formatDate, formatTime, shouldShowSeparateTime } from '@/lib/utils';
 import { Dialog, DialogTitle, DialogHeader, DialogContent } from '../ui/dialog';
 import { memo, useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
@@ -38,7 +39,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import type { Sender, ParsedMessage, Attachment } from '@/types';
 import { useActiveConnection } from '@/hooks/use-connections';
-import { cn, getEmailLogo, formatDate, formatTime, shouldShowSeparateTime } from '@/lib/utils';
 import { useBrainState } from '../../hooks/use-summary';
 import { useTRPC } from '@/providers/query-provider';
 import { useThreadLabels } from '@/hooks/use-labels';
@@ -54,9 +54,8 @@ import { FileText } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Badge } from '../ui/badge';
-import { toast } from 'sonner';
 import { format } from 'date-fns';
-
+import { toast } from 'sonner';
 
 // HTML escaping function to prevent XSS attacks
 function escapeHtml(text: string): string {
@@ -891,12 +890,10 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
 
   // Handle email copy of senders
   const handleCopySenderEmail = useCallback(async (personEmail: string) => {
+    if (!personEmail) return;
 
-      if(!personEmail) return ;
-    
-      await navigator.clipboard.writeText(personEmail || '');
-      toast.success('Email copied to clipboard');
-      
+    await navigator.clipboard.writeText(personEmail || '');
+    toast.success('Email copied to clipboard');
   }, []);
 
   // email printing
@@ -1298,8 +1295,8 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             </div>
           </div>
         </PopoverTrigger>
-        <PopoverContent className="text-sm min-w-fit">
-          <div className='flex items-center gap-2'>
+        <PopoverContent className="min-w-fit text-sm">
+          <div className="flex items-center gap-2">
             <Avatar className="h-12 w-12">
               <AvatarImage src={getEmailLogo(person.email)} className="rounded-full" />
               <AvatarFallback className="bg-offsetLight rounded-full text-sm font-bold dark:bg-[#373737]">
@@ -1307,14 +1304,14 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className='font-medium'>{person.name || 'Unknown'}</p>
-              <div className="flex gap-2 items-center group">
+              <p className="font-medium">{person.name || 'Unknown'}</p>
+              <div className="group flex items-center gap-2">
                 <p>{person.email || 'No email'}</p>
-                <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                <span className="opacity-0 transition-opacity duration-150 group-hover:opacity-100">
                   <CopyIcon
-                  size={14}
-                  className="cursor-pointer"
-                  onClick={() => handleCopySenderEmail(person.email)}
+                    size={14}
+                    className="cursor-pointer"
+                    onClick={() => handleCopySenderEmail(person.email)}
                   />
                 </span>
               </div>
@@ -1323,7 +1320,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
         </PopoverContent>
       </Popover>
     ),
-    []
+    [],
   );
 
   const people = useMemo(() => {
@@ -1474,7 +1471,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                           <Popover open={openDetailsPopover} onOpenChange={handlePopoverChange}>
                             <PopoverTrigger asChild>
                               <button
-                                className="hover:bg-iconLight/10 dark:hover:bg-iconDark/20 flex items-center gap-2 rounded-md p-2"
+                                className="flex items-center gap-2 rounded-md p-2"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   e.preventDefault();
@@ -1482,13 +1479,13 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 }}
                                 ref={triggerRef}
                               >
-                                <p className="text-muted-foreground text-xs underline dark:text-[#8C8C8C]">
+                                <p className="text-muted-foreground text-xs underline hover:text-neutral-900 dark:text-[#8C8C8C] dark:hover:text-neutral-300">
                                   {t('common.mailDisplay.details')}
                                 </p>
                               </button>
                             </PopoverTrigger>
                             <PopoverContent
-                              className="flex dark:bg-panelDark w-[420px] rounded-lg border p-4  text-left shadow-lg overflow-auto"
+                              className="dark:bg-panelDark flex w-[420px] overflow-auto rounded-lg border p-4 text-left shadow-lg"
                               onBlur={(e) => {
                                 if (!triggerRef.current?.contains(e.relatedTarget)) {
                                   setOpenDetailsPopover(false);
@@ -1600,7 +1597,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                         </div>
 
                         <div className="flex items-center justify-center">
-                          <div className="text-muted-foreground mr-2 text-sm font-medium dark:text-[#8C8C8C] flex flex-col items-end">
+                          <div className="text-muted-foreground mr-2 flex flex-col items-end text-sm font-medium dark:text-[#8C8C8C]">
                             <time>
                               {emailData?.receivedOn ? formatDate(emailData.receivedOn) : ''}
                             </time>
@@ -1610,7 +1607,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                               </time>
                             )}
                           </div>
-                            
+
                           {/* options menu */}
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -1769,7 +1766,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             onClick={(e) => e.stopPropagation()}
           >
             <div className="min-h-0 overflow-hidden">
-              <div className="h-fit w-full p-0">
+              <div className="h-fit w-full py-4">
                 {/* mail main body */}
                 {emailData?.decodedBody ? (
                   <MailIframe html={emailData?.decodedBody} senderEmail={emailData.sender.email} />

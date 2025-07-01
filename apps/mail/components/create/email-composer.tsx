@@ -13,20 +13,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Check, Command, Loader, Paperclip, Plus, X as XIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Check, Command, Loader, Paperclip, X as XIcon } from 'lucide-react';
 import { TextEffect } from '@/components/motion-primitives/text-effect';
+import { ImageCompressionSettings } from './image-compression-settings';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
+import type { ImageQuality } from '@/lib/image-compression';
 import useComposeEditor from '@/hooks/use-compose-editor';
 import { CurvedArrow, Sparkles, X } from '../icons/icons';
+import { compressImages } from '@/lib/image-compression';
 import { AnimatePresence, motion } from 'motion/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
 import { useSettings } from '@/hooks/use-settings';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn, formatFileSize } from '@/lib/utils';
 import { useThread } from '@/hooks/use-threads';
 import { serializeFiles } from '@/lib/schemas';
@@ -38,10 +42,6 @@ import { useQueryState } from 'nuqs';
 import pluralize from 'pluralize';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import { ImageCompressionSettings } from './image-compression-settings';
-import { compressImages } from '@/lib/image-compression';
-import type { ImageQuality } from '@/lib/image-compression';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 type ThreadContent = {
   from: string;
@@ -190,7 +190,10 @@ export function EmailComposer({
           });
 
           if (totalOriginalSize > totalCompressedSize) {
-            const savings = (((totalOriginalSize - totalCompressedSize) / totalOriginalSize) * 100).toFixed(1);
+            const savings = (
+              ((totalOriginalSize - totalCompressedSize) / totalOriginalSize) *
+              100
+            ).toFixed(1);
             if (parseFloat(savings) > 0.1) {
               toast.success(`Images compressed: ${savings}% smaller`);
             }
@@ -389,7 +392,7 @@ export function EmailComposer({
     onAttachmentsChange: async (files) => {
       await handleAttachment(files);
     },
-    placeholder: 'Start your email here',
+    placeholder: `Write your email here, or describe what you'd like to say and click 'Generate' to create a draft.\nExamples:\n• Write a complete email and send it directly\n• Draft your thoughts, then use Generate to improve and polish\n• Write a brief prompt like "respond positively to their feedback" and let Generate create the full email`,
     autofocus,
   });
 
@@ -884,14 +887,24 @@ export function EmailComposer({
             <div className="flex gap-2">
               <button
                 tabIndex={-1}
-                className="flex h-full items-center gap-2 text-sm font-medium text-[#8C8C8C] hover:text-[#A8A8A8]"
+                className={cn(
+                  'flex h-full items-center gap-2 rounded-md px-2 text-sm font-medium',
+                  showCc
+                    ? 'bg-[#E7E7E7] text-black dark:bg-[#2B2B2B] dark:text-white'
+                    : 'text-[#8C8C8C] hover:text-[#A8A8A8]',
+                )}
                 onClick={() => setShowCc(!showCc)}
               >
                 <span>Cc</span>
               </button>
               <button
                 tabIndex={-1}
-                className="flex h-full items-center gap-2 text-sm font-medium text-[#8C8C8C] hover:text-[#A8A8A8]"
+                className={cn(
+                  'flex h-full items-center gap-2 rounded-md px-2 text-sm font-medium',
+                  showBcc
+                    ? 'bg-[#E7E7E7] text-black dark:bg-[#2B2B2B] dark:text-white'
+                    : 'text-[#8C8C8C] hover:text-[#A8A8A8]',
+                )}
                 onClick={() => setShowBcc(!showBcc)}
               >
                 <span>Bcc</span>
@@ -920,7 +933,7 @@ export function EmailComposer({
                     }
                   }, 0);
                 }}
-                className="flex items-center gap-2 px-3"
+                className="flex items-center gap-2 border-t-[1px] border-t-neutral-800 pt-2 px-3"
               >
                 <p className="text-sm font-medium text-[#8C8C8C]">Cc:</p>
                 {isAddingCcRecipients || (ccEmails && ccEmails.length === 0) ? (
@@ -1066,7 +1079,7 @@ export function EmailComposer({
                     }
                   }, 0);
                 }}
-                className="flex items-center gap-2 px-3"
+                className="flex items-center gap-2 border-t-[1px] border-t-neutral-800 pt-2 px-3"
               >
                 <p className="text-sm font-medium text-[#8C8C8C]">Bcc:</p>
                 {isAddingBccRecipients || (bccEmails && bccEmails.length === 0) ? (
@@ -1215,20 +1228,22 @@ export function EmailComposer({
               setHasUnsavedChanges(true);
             }}
           />
-          <button
-            onClick={handleGenerateSubject}
-            disabled={isLoading || isGeneratingSubject || messageLength < 1}
-          >
-            <div className="flex items-center justify-center gap-2.5 pl-0.5">
-              <div className="flex h-5 items-center justify-center gap-1 rounded-sm">
+          {(() => {
+            const disabled = isLoading || isGeneratingSubject || messageLength < 1;
+            return (
+              <button
+                onClick={handleGenerateSubject}
+                disabled={disabled}
+                className={cn('h-6 w-6 rounded-md p-0.5', disabled ? 'opacity-20' : '')}
+              >
                 {isGeneratingSubject ? (
-                  <Loader className="h-3.5 w-3.5 animate-spin fill-black dark:fill-white" />
+                  <Loader className="h-3.5 w-3.5 animate-spin" />
                 ) : (
                   <Sparkles className="h-3.5 w-3.5 fill-black dark:fill-white" />
                 )}
-              </div>
-            </div>
-          </button>
+              </button>
+            );
+          })()}
         </div>
 
         {/* From */}
@@ -1282,20 +1297,14 @@ export function EmailComposer({
       <div className="inline-flex w-full shrink-0 items-center justify-between self-stretch rounded-b-2xl bg-[#FFFFFF] px-3 py-3 outline-white/5 dark:bg-[#202020]">
         <div className="flex items-center justify-start gap-2">
           <div className="flex items-center justify-start gap-2">
-            <Button size={'xs'} onClick={handleSend} disabled={isLoading || settingsLoading}>
-              <div className="flex items-center justify-center">
-                <div className="text-center text-sm leading-none text-white dark:text-black">
-                  <span>Send </span>
-                </div>
-              </div>
-              <div className="flex h-5 items-center justify-center gap-1 rounded-sm bg-white/10 px-1 dark:bg-black/10">
-                <Command className="h-3.5 w-3.5 text-white dark:text-black" />
-                <CurvedArrow className="mt-1.5 h-4 w-4 fill-white dark:fill-black" />
-              </div>
-            </Button>
-            <Button variant={'secondary'} size={'xs'} onClick={() => fileInputRef.current?.click()}>
-              <Plus className="h-3 w-3 fill-[#9A9A9A]" />
-              <span className="hidden px-0.5 text-sm md:block">Add</span>
+            <Button
+              variant={'secondary'}
+              size={'xs'}
+              className="opacity-70 hover:opacity-100"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Paperclip className="h-3 w-3 text-[#9A9A9A]" />
+              <span className="hidden px-0.5 text-sm md:block">Attach</span>
             </Button>
             <Input
               type="file"
@@ -1337,7 +1346,7 @@ export function EmailComposer({
                         {pluralize('file', attachments.length, true)}
                       </p>
                     </div>
-                    
+
                     <div className="border-b border-[#E7E7E7] p-3 dark:border-[#2B2B2B]">
                       <ImageCompressionSettings
                         quality={imageQuality}
@@ -1345,7 +1354,7 @@ export function EmailComposer({
                         className="border-0 shadow-none"
                       />
                     </div>
-                    
+
                     <div className="max-h-[250px] flex-1 space-y-0.5 overflow-y-auto p-1.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                       {attachments.map((file: File, index: number) => {
                         const nameParts = file.name.split('.');
@@ -1473,43 +1482,30 @@ export function EmailComposer({
                     <Sparkles className="h-3.5 w-3.5 fill-black dark:fill-white" />
                   )}
                 </div>
-                <div className="hidden text-center text-sm leading-none text-black md:block dark:text-white">
+                <div
+                  className={`hidden text-center text-sm leading-none text-black md:block dark:text-white ${messageLength < 1 ? 'text-neutral-300 dark:text-neutral-500' : 'text-black dark:text-white'}`}
+                >
                   Generate
                 </div>
               </div>
             </Button>
           </div>
-          {/* <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  disabled
-                  className="hidden h-7 items-center gap-0.5 overflow-hidden rounded-md bg-white/5 px-1.5 shadow-sm hover:bg-white/10 disabled:opacity-50 md:flex"
-                >
-                  <Smile className="h-3 w-3 fill-[#9A9A9A]" />
-                  <span className="px-0.5 text-sm">Casual</span>
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Coming soon...</p>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  disabled
-                  className="flex h-7 items-center gap-0.5 overflow-hidden rounded-md bg-white/5 px-1.5 shadow-sm hover:bg-white/10 disabled:opacity-50 md:flex"
-                >
-                  {messageLength < 50 && <ShortStack className="h-3 w-3 fill-[#9A9A9A]" />}
-                  {messageLength >= 50 && messageLength < 200 && (
-                    <MediumStack className="h-3 w-3 fill-[#9A9A9A]" />
-                  )}
-                  {messageLength >= 200 && <LongStack className="h-3 w-3 fill-[#9A9A9A]" />}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Coming soon...</p>
-              </TooltipContent>
-            </Tooltip> */}
+          <Button
+            size={'xs'}
+            onClick={handleSend}
+            disabled={isLoading || settingsLoading}
+            className="bg-neutral-700 dark:bg-neutral-300"
+          >
+            <div className="flex items-center justify-center">
+              <div className="text-center text-sm leading-none text-neutral-200 dark:text-neutral-800">
+                <span>Send </span>
+              </div>
+            </div>
+            <div className="flex h-5 items-center justify-center gap-1 rounded-sm bg-white/15 px-1 text-sm dark:bg-black/15">
+              <Command className="h-3.5 w-3.5 text-white dark:text-black" />
+              <CurvedArrow className="mt-1.5 h-4 w-4 fill-white dark:fill-black" />
+            </div>
+          </Button>
         </div>
       </div>
 
@@ -1538,8 +1534,8 @@ export function EmailComposer({
           <DialogHeader>
             <DialogTitle>Attachment Warning</DialogTitle>
             <DialogDescription>
-              Looks like you mentioned an attachment in your message, but there are no files attached.
-              Are you sure you want to send this email?
+              Looks like you mentioned an attachment in your message, but there are no files
+              attached. Are you sure you want to send this email?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-2">
@@ -1647,7 +1643,7 @@ const ContentPreview = ({
     </div>
     <div className="flex justify-end gap-2 p-2">
       <button
-        className="flex h-7 items-center gap-0.5 overflow-hidden rounded-md border bg-red-700 px-1.5 text-sm shadow-sm hover:bg-red-800 dark:border-none"
+        className="flex h-7 items-center gap-0.5 rounded-md border border-red-600/40 bg-transparent px-1.5 text-sm text-red-600 hover:bg-red-600/10 dark:border-red-400 dark:text-red-400"
         onClick={async () => {
           if (onReject) {
             await onReject();
@@ -1660,7 +1656,7 @@ const ContentPreview = ({
         <span>Reject</span>
       </button>
       <button
-        className="flex h-7 items-center gap-0.5 overflow-hidden rounded-md border bg-green-700 px-1.5 text-sm shadow-sm hover:bg-green-800 dark:border-none"
+        className="flex h-7 items-center gap-0.5 rounded-md border border-green-600/40 bg-transparent px-1.5 text-sm text-green-600 hover:bg-green-600/10 dark:border-green-400 dark:text-green-400"
         onClick={async () => {
           if (onAccept) {
             await onAccept(content);
