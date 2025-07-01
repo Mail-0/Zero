@@ -1,4 +1,5 @@
 {
+  "extends": "@zero/tsconfig/base",
   "compilerOptions": {
     "baseUrl": ".",
     "target": "ESNext",

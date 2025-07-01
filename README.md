@@ -265,6 +265,27 @@ Zero uses PostgreSQL for storing data. Here's how to set it up:
      ```
      > If you run `pnpm dev` in your terminal, the studio command should be automatically running with the app.
 
+## Documentation
+
+Comprehensive documentation is available to help you get started with Zero:
+
+- **[Full Documentation](/apps/docs)** - Complete guides, API reference, and tutorials
+- **Quick Start** - Get up and running in minutes
+- **Architecture** - Understanding Zero's design and components
+- **Configuration** - Customizing Zero for your needs
+- **Extensions** - Building and integrating custom features
+- **Contributing** - How to contribute to the Zero project
+
+### Running Documentation Locally
+
+To run the documentation site locally:
+
+```bash
+pnpm dev:docs
+```
+
+The documentation will be available at `http://localhost:3000`.
+
 ## Contribute
 
 Please refer to the [contributing guide](.github/CONTRIBUTING.md).
