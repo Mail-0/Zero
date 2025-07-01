@@ -47,7 +47,7 @@ import { Markdown } from '@react-email/components';
 import { useSummary } from '@/hooks/use-summary';
 import { TextShimmer } from '../ui/text-shimmer';
 import { RenderLabels } from './render-labels';
-import { MailIframe } from './mail-iframe';
+import { MailContent } from './mail-content';
 import { m } from '@/paraglide/messages';
 import { useParams } from 'react-router';
 import { FileText } from 'lucide-react';
@@ -1205,7 +1205,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             <!-- Email Body -->
             <div class="email-body">
               <div class="email-content">
-                ${escapeHtml(emailData.decodedBody) || '<p><em>No email content available</em></p>'}
+                ${escapeHtml(emailData?.decodedBody || '') || '<p><em>No email content available</em></p>'}
               </div>
             </div>
 
@@ -1768,7 +1768,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
               <div className="h-fit w-full p-0">
                 {/* mail main body */}
                 {emailData?.decodedBody ? (
-                  <MailIframe html={emailData?.decodedBody} senderEmail={emailData.sender.email} />
+                  <MailContent html={emailData?.decodedBody} senderEmail={emailData.sender.email} />
                 ) : null}
                 {/* mail attachments */}
                 {emailData?.attachments && emailData?.attachments.length > 0 ? (
