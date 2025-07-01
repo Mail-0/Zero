@@ -70,8 +70,36 @@ export function MailContent({ html, senderEmail }: MailContentProps) {
       type Config = Parameters<typeof DOMPurify.sanitize>[1];
 
       const config: Config = {
-        ADD_TAGS: ['style', 'link'],
-        ADD_ATTR: ['target', 'style', 'class', 'id', 'href', 'rel', 'type'],
+        ADD_TAGS: ['style', 'link', 'meta', 'center'],
+        ADD_ATTR: [
+          'target',
+          'style',
+          'class',
+          'id',
+          'href',
+          'rel',
+          'type',
+          'bgcolor',
+          'background',
+          'color',
+          'width',
+          'height',
+          'align',
+          'valign',
+          'border',
+          'cellpadding',
+          'cellspacing',
+          'colspan',
+          'rowspan',
+          'role',
+          'aria-label',
+          'alt',
+          'title',
+          'dir',
+          'lang',
+          'face',
+          'size',
+        ],
         ALLOW_DATA_ATTR: false,
         ALLOW_UNKNOWN_PROTOCOLS: false,
         SAFE_FOR_TEMPLATES: true,
@@ -97,10 +125,10 @@ export function MailContent({ html, senderEmail }: MailContentProps) {
 
         DOMPurify.addHook('uponSanitizeAttribute', (node, data) => {
           if (data.attrName === 'style' && data.attrValue?.includes('background-image')) {
-            data.attrValue = data.attrValue.replace(/background-image\s*:\s*[^;]+;?/gi, '');
+            data.attrValue = data.attrValue.replace(/background-image\s*:\s*url\([^)]+\)/gi, '');
             setCspViolation(true);
           }
-          if (data.attrName === 'background') {
+          if (data.attrName === 'background' && data.attrValue?.startsWith('http')) {
             data.keepAttr = false;
             setCspViolation(true);
           }
@@ -113,83 +141,99 @@ export function MailContent({ html, senderEmail }: MailContentProps) {
       const doc = parser.parseFromString(processedHtml, 'text/html');
 
       doc.querySelectorAll('a').forEach((link) => {
-        link.setAttribute('target', '_blank');
-        link.setAttribute('rel', 'noopener noreferrer');
+        if (!link.getAttribute('target')) {
+          link.setAttribute('target', '_blank');
+        }
+        if (!link.getAttribute('rel')?.includes('noopener')) {
+          link.setAttribute('rel', 'noopener noreferrer');
+        }
       });
 
       const existingStyles = Array.from(doc.querySelectorAll('style'))
         .map((s) => s.outerHTML)
         .join('\n');
+
+      const existingMeta = Array.from(doc.querySelectorAll('meta'))
+        .map((m) => m.outerHTML)
+        .join('\n');
+
       const bodyContent = doc.body.innerHTML;
+      const bodyStyles = doc.body.getAttribute('style') || '';
+      const bodyBgColor = doc.body.getAttribute('bgcolor') || '';
 
       const shadowStyles = `
+        ${existingMeta}
         <style>
           :host {
             all: initial;
             display: block;
-            font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-            line-height: 1.5;
-            color: ${resolvedTheme === 'dark' ? '#ffffff' : '#000000'};
-            background-color: transparent;
+            contain: layout style;
+            overflow: auto;
+            width: 100%;
+            ${
+              resolvedTheme === 'dark'
+                ? `
+              color-scheme: dark;
+            `
+                : `
+              color-scheme: light;
+            `
+            }
+          }
+
+          :host > div.email-wrapper {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            ${bodyBgColor ? `background-color: ${bodyBgColor};` : ''}
           }
 
           * {
-            /* max-width: 100% !important; */
-            word-wrap: break-word !important;
-            overflow-wrap: break-word !important;
+            box-sizing: border-box;
           }
 
           img {
-            height: auto !important;
-            display: block;
-            /* max-width: 100% !important; */
+            max-width: 100%;
+            height: auto;
           }
 
           table {
-            table-layout: auto !important;
-            width: 100% !important;
             border-collapse: collapse;
           }
 
-          a {
+          /* Only override link colors if not specified */
+          a:not([style*="color"]) {
             color: ${resolvedTheme === 'dark' ? '#60a5fa' : '#2563eb'};
-            text-decoration: underline;
           }
 
-          a:hover {
-            color: ${resolvedTheme === 'dark' ? '#93bbfc' : '#1d4ed8'};
+          /* Ensure readability for elements without explicit colors */
+          p:not([style*="color"]),
+          span:not([style*="color"]),
+          div:not([style*="color"]),
+          td:not([style*="color"]),
+          li:not([style*="color"]) {
+            color: inherit;
           }
 
-          pre {
-            white-space: pre-wrap;
-            word-break: break-word;
-            background-color: ${resolvedTheme === 'dark' ? '#1a1a1a' : '#f5f5f5'};
-            padding: 1rem;
-            border-radius: 0.375rem;
+          /* Handle pre/code blocks that don't have explicit styling */
+          pre:not([style*="background"]) {
+            background-color: ${resolvedTheme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'};
+            padding: 0.5rem;
+            border-radius: 0.25rem;
             overflow-x: auto;
           }
 
-          code {
-            background-color: ${resolvedTheme === 'dark' ? '#1a1a1a' : '#f5f5f5'};
+          code:not([style*="background"]) {
+            background-color: ${resolvedTheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'};
             padding: 0.125rem 0.25rem;
-            border-radius: 0.25rem;
-            font-size: 0.875em;
-          }
-
-          blockquote {
-            border-left: 4px solid ${resolvedTheme === 'dark' ? '#4b5563' : '#d1d5db'};
-            padding-left: 1rem;
-            margin-left: 0;
-            color: ${resolvedTheme === 'dark' ? '#9ca3af' : '#6b7280'};
+            border-radius: 0.125rem;
           }
         </style>
         ${existingStyles}
       `;
 
-      const finalHtml = shadowStyles + bodyContent;
-      const sanitized = DOMPurify.sanitize(finalHtml, config);
-
-      DOMPurify.removeAllHooks();
+      const wrapperDiv = `<div class="email-wrapper" ${bodyStyles ? `style="${bodyStyles}"` : ''}>${bodyContent}</div>`;
+      const finalHtml = shadowStyles + wrapperDiv;
 
       try {
         const sanitized = DOMPurify.sanitize(finalHtml, config);
@@ -274,7 +318,8 @@ export function MailContent({ html, senderEmail }: MailContentProps) {
       )}
       <div
         ref={hostRef}
-        className={cn('mail-content w-full flex-1 overflow-hidden px-4', 'min-h-[100px]')}
+        className={cn('mail-content w-full flex-1 overflow-hidden', 'min-h-[100px]')}
+        style={{ padding: '0' }}
       />
     </>
   );
