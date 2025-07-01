@@ -942,6 +942,7 @@ export function EmailComposer({
                               {email.charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
+                          {email}
                         </span>
                         <button
                           onClick={() => {
