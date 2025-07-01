@@ -8,13 +8,12 @@ import { useTRPC } from '@/providers/query-provider';
 import { useMail } from '@/components/mail/use-mail';
 import { moveThreadsTo } from '@/lib/thread-actions';
 import { useCallback, useRef } from 'react';
-import { useTranslations } from 'use-intl';
+import { m } from '@/paraglide/messages';
 import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
 
 export function useOptimisticActions() {
-  const t = useTranslations();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [, setBackgroundQueue] = useAtom(backgroundQueueAtom);
@@ -236,8 +235,8 @@ export function useOptimisticActions() {
         removeOptimisticAction(optimisticId);
       },
       toastMessage: starred
-        ? t('common.actions.addedToFavorites')
-        : t('common.actions.removedFromFavorites'),
+        ? m['common.actions.addedToFavorites']()
+        : m['common.actions.removedFromFavorites'](),
     });
   }
 
@@ -266,12 +265,12 @@ export function useOptimisticActions() {
     }
     const successMessage =
       destination === 'inbox'
-        ? t('common.actions.movedToInbox')
+        ? m['common.actions.movedToInbox']()
         : destination === 'spam'
-          ? t('common.actions.movedToSpam')
+          ? m['common.actions.movedToSpam']()
           : destination === 'bin'
-            ? t('common.actions.movedToBin')
-            : t('common.actions.archived');
+            ? m['common.actions.movedToBin']()
+            : m['common.actions.archived']();
 
     createPendingAction({
       type: 'MOVE',
@@ -346,7 +345,7 @@ export function useOptimisticActions() {
           setBackgroundQueue({ type: 'delete', threadId: `thread:${id}` });
         });
       },
-      toastMessage: t('common.actions.movedToBin'),
+      toastMessage: m['common.actions.movedToBin'](),
     });
   }
 

@@ -43,12 +43,12 @@ import {
 } from 'react';
 import { cn, getMainSearchTerm, parseNaturalLanguageSearch } from '@/lib/utils';
 import { DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { navigationConfig, type MessageKey } from '@/config/navigation';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useLocation, useNavigate } from 'react-router';
 import { isMac } from '@/lib/hotkeys/use-hotkey-utils';
-import { Pencil2, SettingsGear } from '../icons/icons';
+import { SettingsGear } from '../icons/icons';
+import { navigationConfig } from '@/config/navigation';
 import { Separator } from '@/components/ui/separator';
 import { useTRPC } from '@/providers/query-provider';
 import { Calendar } from '@/components/ui/calendar';
@@ -58,9 +58,10 @@ import { useLabels } from '@/hooks/use-labels';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { useTranslations } from 'use-intl';
 import { format, subDays } from 'date-fns';
 import { VisuallyHidden } from 'radix-ui';
+import { m } from '@/paraglide/messages';
+import { Pencil2 } from '../icons/icons';
 import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { toast } from 'sonner';
@@ -201,7 +202,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
   const [commandInputValue, setCommandInputValue] = useState('');
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const t = useTranslations();
+
   const { data: userLabels = [] } = useLabels();
   const trpc = useTRPC();
   const { mutateAsync: generateSearchQuery, isPending } = useMutation(
@@ -887,7 +888,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         group.items.forEach((navItem) => {
           if (navItem.disabled) return;
           const item: CommandItem = {
-            title: t(navItem.title as MessageKey),
+            title: navItem.title,
             icon: navItem.icon,
             url: navItem.url,
             shortcut: navItem.shortcut,
@@ -935,7 +936,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         let groupTitle = groupKey;
         try {
           const translationKey = `common.commandPalette.groups.${groupKey}` as any;
-          groupTitle = t(translationKey) || groupKey;
+          groupTitle = (m as any)[translationKey]() || groupKey;
         } catch {}
 
         console.log(items);
@@ -2084,8 +2085,8 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         shouldFilter={!commandInputValue.startsWith('/')}
       >
         <VisuallyHidden.VisuallyHidden>
-          <DialogTitle>{t('common.commandPalette.title')}</DialogTitle>
-          <DialogDescription>{t('common.commandPalette.description')}</DialogDescription>
+          <DialogTitle>{m['common.commandPalette.title']()}</DialogTitle>
+          <DialogDescription>{m['common.commandPalette.description']()}</DialogDescription>
         </VisuallyHidden.VisuallyHidden>
         {renderView()}
       </CommandDialog>

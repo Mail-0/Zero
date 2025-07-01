@@ -48,7 +48,7 @@ import { useSummary } from '@/hooks/use-summary';
 import { TextShimmer } from '../ui/text-shimmer';
 import { RenderLabels } from './render-labels';
 import { MailIframe } from './mail-iframe';
-import { useTranslations } from 'use-intl';
+import { m } from '@/paraglide/messages';
 import { useParams } from 'react-router';
 import { FileText } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -296,7 +296,6 @@ type Props = {
 };
 
 const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
-  const t = useTranslations();
   const visibleLabels = labels.filter(
     (label) => !['unread', 'inbox'].includes(label.toLowerCase()),
   );
@@ -316,42 +315,42 @@ const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
           case 'important':
             icon = <Lightning className="h-3.5 w-3.5 fill-white" />;
             bgColor = 'bg-[#F59E0D]';
-            labelText = t('common.mailCategories.important');
+            labelText = m['common.mailCategories.important']();
             break;
           case 'promotions':
             icon = <Tag className="h-3.5 w-3.5 fill-white" />;
             bgColor = 'bg-[#F43F5E]';
-            labelText = t('common.mailCategories.promotions');
+            labelText = m['common.mailCategories.promotions']();
             break;
           case 'personal':
             icon = <User className="h-3.5 w-3.5 fill-white" />;
             bgColor = 'bg-[#39AE4A]';
-            labelText = t('common.mailCategories.personal');
+            labelText = m['common.mailCategories.personal']();
             break;
           case 'updates':
             icon = <Bell className="h-3.5 w-3.5 fill-white" />;
             bgColor = 'bg-[#8B5CF6]';
-            labelText = t('common.mailCategories.updates');
+            labelText = m['common.mailCategories.updates']();
             break;
           case 'work':
             icon = <Briefcase className="h-3.5 w-3.5 text-white" />;
             bgColor = '';
-            labelText = t('common.mailCategories.work');
+            labelText = m['common.mailCategories.work']();
             break;
           case 'forums':
             icon = <Users className="h-3.5 w-3.5 text-white" />;
             bgColor = 'bg-blue-600';
-            labelText = t('common.mailCategories.forums');
+            labelText = m['common.mailCategories.forums']();
             break;
           case 'notes':
             icon = <StickyNote className="h-3.5 w-3.5 text-white" />;
             bgColor = 'bg-amber-500';
-            labelText = t('common.mailCategories.notes');
+            labelText = m['common.mailCategories.notes']();
             break;
           case 'starred':
             icon = <Star className="h-3.5 w-3.5 fill-white text-white" />;
             bgColor = 'bg-yellow-500';
-            labelText = t('common.mailCategories.starred');
+            labelText = m['common.mailCategories.starred']();
             break;
           default:
             return null;
@@ -789,7 +788,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
   const [openDetailsPopover, setOpenDetailsPopover] = useState<boolean>(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const t = useTranslations();
+
   const [activeReplyId, setActiveReplyId] = useQueryState('activeReplyId');
   const { labels: threadLabels } = useThreadLabels(
     emailData.tags ? emailData.tags.map((l) => l.id) : [],
@@ -1496,7 +1495,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                               <div className="space-y-1 text-sm">
                                 <div className="flex">
                                   <span className="w-24 text-end text-gray-500">
-                                    {t('common.mailDisplay.from')}:
+                                    {m['common.mailDisplay.from']()}:
                                   </span>
                                   <div className="ml-3">
                                     <span className="text-muted-foreground text-nowrap pr-1 font-bold">
@@ -1511,7 +1510,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 </div>
                                 <div className="flex">
                                   <span className="w-24 text-nowrap text-end text-gray-500">
-                                    {t('common.mailDisplay.to')}:
+                                    {m['common.mailDisplay.to']()}:
                                   </span>
                                   <span className="text-muted-foreground ml-3 text-nowrap">
                                     {emailData?.to
@@ -1522,7 +1521,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 {emailData?.replyTo && emailData.replyTo.length > 0 && (
                                   <div className="flex">
                                     <span className="w-24 text-nowrap text-end text-gray-500">
-                                      {t('common.mailDisplay.replyTo')}:
+                                      {m['common.mailDisplay.replyTo']()}:
                                     </span>
                                     <span className="text-muted-foreground ml-3 text-nowrap">
                                       {cleanEmailDisplay(emailData?.replyTo)}
@@ -1532,7 +1531,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 {emailData?.cc && emailData.cc.length > 0 && (
                                   <div className="flex">
                                     <span className="shrink-0text-nowrap w-24 text-end text-gray-500">
-                                      {t('common.mailDisplay.cc')}:
+                                      {m['common.mailDisplay.cc']()}:
                                     </span>
                                     <span className="text-muted-foreground ml-3 text-nowrap">
                                       {emailData?.cc
@@ -1544,7 +1543,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 {emailData?.bcc && emailData.bcc.length > 0 && (
                                   <div className="flex">
                                     <span className="w-24 text-end text-gray-500">
-                                      {t('common.mailDisplay.bcc')}:
+                                      {m['common.mailDisplay.bcc']()}:
                                     </span>
                                     <span className="text-muted-foreground ml-3 text-nowrap">
                                       {emailData?.bcc
@@ -1555,7 +1554,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 )}
                                 <div className="flex">
                                   <span className="w-24 text-end text-gray-500">
-                                    {t('common.mailDisplay.date')}:
+                                    {m['common.mailDisplay.date']()}:
                                   </span>
                                   <span className="text-muted-foreground ml-3 text-nowrap">
                                     {emailData?.receivedOn &&
@@ -1566,7 +1565,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 </div>
                                 <div className="flex">
                                   <span className="w-24 text-end text-gray-500">
-                                    {t('common.mailDisplay.mailedBy')}:
+                                    {m['common.mailDisplay.mailedBy']()}:
                                   </span>
                                   <span className="text-muted-foreground ml-3 text-nowrap">
                                     {cleanEmailDisplay(emailData?.sender?.email)}
@@ -1574,7 +1573,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 </div>
                                 <div className="flex">
                                   <span className="w-24 text-end text-gray-500">
-                                    {t('common.mailDisplay.signedBy')}:
+                                    {m['common.mailDisplay.signedBy']()}:
                                   </span>
                                   <span className="text-muted-foreground ml-3 text-nowrap">
                                     {cleanEmailDisplay(emailData?.sender?.email)}
@@ -1583,11 +1582,11 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 {emailData.tls && (
                                   <div className="flex items-center">
                                     <span className="w-24 text-end text-gray-500">
-                                      {t('common.mailDisplay.security')}:
+                                      {m['common.mailDisplay.security']()}:
                                     </span>
                                     <div className="text-muted-foreground ml-3 flex items-center gap-1">
                                       <Lock className="h-4 w-4 text-green-600" />{' '}
-                                      {t('common.mailDisplay.standardEncryption')}
+                                      {m['common.mailDisplay.standardEncryption']()}
                                     </div>
                                   </div>
                                 )}
@@ -1630,7 +1629,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 }}
                               >
                                 <Printer className="fill-iconLight dark:fill-iconDark mr-2 h-4 w-4" />
-                                {t('common.mailDisplay.print')}
+                                {m['common.mailDisplay.print']()}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 disabled={!emailData.attachments?.length}
@@ -1653,7 +1652,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                       <div className="flex justify-between">
                         <div className="flex gap-1">
                           <p className="text-muted-foreground text-sm font-medium dark:text-[#8C8C8C]">
-                            {t('common.mailDisplay.to')}:{' '}
+                            {m['common.mailDisplay.to']()}:{' '}
                             {(() => {
                               // Combine to and cc recipients
                               const allRecipients = [
@@ -1810,7 +1809,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                       setActiveReplyId(emailData.id);
                     }}
                     icon={<Reply className="fill-muted-foreground dark:fill-[#9B9B9B]" />}
-                    text={t('common.mail.reply')}
+                    text={m['common.mail.reply']()}
                     shortcut={isLastEmail ? 'r' : undefined}
                   />
                   <ActionButton
@@ -1821,7 +1820,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                       setActiveReplyId(emailData.id);
                     }}
                     icon={<ReplyAll className="fill-muted-foreground dark:fill-[#9B9B9B]" />}
-                    text={t('common.mail.replyAll')}
+                    text={m['common.mail.replyAll']()}
                     shortcut={isLastEmail ? 'a' : undefined}
                   />
                   <ActionButton
@@ -1832,7 +1831,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                       setActiveReplyId(emailData.id);
                     }}
                     icon={<Forward className="fill-muted-foreground dark:fill-[#9B9B9B]" />}
-                    text={t('common.mail.forward')}
+                    text={m['common.mail.forward']()}
                     shortcut={isLastEmail ? 'f' : undefined}
                   />
                 </div>
