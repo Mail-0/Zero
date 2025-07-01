@@ -15,14 +15,13 @@ import {
 } from '@/components/ui/select';
 import { SettingsCard } from '@/components/settings/settings-card';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { MessageKey } from '@/config/navigation';
 import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
 import { useSettings } from '@/hooks/use-settings';
 import { Laptop, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useTranslations } from 'use-intl';
 import { useForm } from 'react-hook-form';
+import { m } from '@/paraglide/messages';
 import { useTheme } from 'next-themes';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -36,7 +35,7 @@ type Theme = 'dark' | 'light' | 'system';
 
 export default function AppearancePage() {
   const [isSaving, setIsSaving] = useState(false);
-  const t = useTranslations();
+
   const { data, refetch } = useSettings();
   const { theme, systemTheme, resolvedTheme, setTheme } = useTheme();
   const trpc = useTRPC();
@@ -79,8 +78,8 @@ export default function AppearancePage() {
           colorTheme: values.colorTheme as Theme,
         }),
         {
-          success: t('common.settings.saved'),
-          error: t('common.settings.failedToSave'),
+          success: m['common.settings.saved'](),
+          error: m['common.settings.failedToSave'](),
           finally: async () => {
             await refetch();
             setIsSaving(false);
@@ -95,11 +94,11 @@ export default function AppearancePage() {
   return (
     <div className="grid gap-6">
       <SettingsCard
-        title={t('pages.settings.appearance.title')}
-        description={t('pages.settings.appearance.description')}
+        title={m['pages.settings.appearance.title']()}
+        description={m['pages.settings.appearance.description']()}
         footer={
           <Button type="submit" form="appearance-form" disabled={isSaving}>
-            {isSaving ? t('common.actions.saving') : t('common.actions.saveChanges')}
+            {isSaving ? m['common.actions.saving']() : m['common.actions.saveChanges']()}
           </Button>
         }
       >
@@ -113,7 +112,7 @@ export default function AppearancePage() {
                     name="colorTheme"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t('pages.settings.appearance.theme')}</FormLabel>
+                        <FormLabel>{m['pages.settings.appearance.theme']()}</FormLabel>
                         <FormControl>
                           <Select
                             onValueChange={(value) => {
@@ -127,7 +126,7 @@ export default function AppearancePage() {
                                   {theme === 'dark' && <Moon className="h-4 w-4" />}
                                   {theme === 'light' && <Sun className="h-4 w-4" />}
                                   {theme === 'system' && <Laptop className="h-4 w-4" />}
-                                  {t(`common.themes.${theme}` as MessageKey)}
+                                  {m[`common.themes.${theme as 'dark' | 'light' | 'system'}`]()}
                                 </div>
                               </SelectValue>
                             </SelectTrigger>
@@ -135,19 +134,19 @@ export default function AppearancePage() {
                               <SelectItem value="dark">
                                 <div className="flex items-center gap-2">
                                   <Moon className="h-4 w-4" />
-                                  {t('common.themes.dark')}
+                                  {m['common.themes.dark']()}
                                 </div>
                               </SelectItem>
                               <SelectItem value="system">
                                 <div className="flex items-center gap-2">
                                   <Laptop className="h-4 w-4" />
-                                  {t('common.themes.system')}
+                                  {m['common.themes.system']()}
                                 </div>
                               </SelectItem>
                               <SelectItem value="light">
                                 <div className="flex items-center gap-2">
                                   <Sun className="h-4 w-4" />
-                                  {t('common.themes.light')}
+                                  {m['common.themes.light']()}
                                 </div>
                               </SelectItem>
                             </SelectContent>

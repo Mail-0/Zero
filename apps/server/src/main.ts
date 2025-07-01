@@ -796,8 +796,8 @@ export default class extends WorkerEntrypoint<typeof env> {
   }
 
   async queue(batch: MessageBatch<ISubscribeBatch>) {
-    switch (batch.queue) {
-      case 'subscribe-queue': {
+    switch (true) {
+      case batch.queue.startsWith('subscribe-queue'): {
         console.log('batch', batch);
         try {
           await Promise.all(

@@ -210,7 +210,7 @@ When implementing new features, follow these guidelines:
    - Context is clear for translators
    - The feature works properly with the default language
 
-For more details about our translation process and how translators contribute, see [TRANSLATION.md](../TRANSLATION.md).
+For more details about our translation process and how translators contribute, see [TRANSLATION.md](TRANSLATION.md).
 
 ## Testing
 
