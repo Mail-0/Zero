@@ -337,7 +337,7 @@
       "hyperdrive": [
         {
           "binding": "HYPERDRIVE",
-          "id": "27171042364248898fc8672c0fc532a0",
+          "id": "b1be316b45fb439a9e54b74ecc20aa21",
           "localConnectionString": "postgresql://postgres:postgres@localhost:5432/zerodotemail",
         },
       ],
