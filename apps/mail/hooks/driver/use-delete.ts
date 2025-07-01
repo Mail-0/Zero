@@ -1,6 +1,6 @@
 import useBackgroundQueue from '@/hooks/ui/use-background-queue';
-import { useMail } from '@/components/mail/use-mail';
 import { useTRPC } from '@/providers/query-provider';
+import { useMail } from '@/components/mail/use-mail';
 import { useMutation } from '@tanstack/react-query';
 import { useThreads } from '@/hooks/use-threads';
 import { useStats } from '@/hooks/use-stats';

@@ -1,5 +1,5 @@
-import { useSettings } from '@/hooks/use-settings';
 import { useTRPC } from '@/providers/query-provider';
+import { useSettings } from '@/hooks/use-settings';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 

@@ -8,9 +8,9 @@ import { Categories } from '@/components/mail/mail';
 import { useShortcuts } from './use-hotkey-utils';
 import { useThreads } from '@/hooks/use-threads';
 import { cleanSearchValue } from '@/lib/utils';
+import { m } from '@/paraglide/messages';
 import { useQueryState } from 'nuqs';
 import { toast } from 'sonner';
-import { m } from '@/paraglide/messages';
 
 export function MailListHotkeys() {
   const scope = 'mail-list';

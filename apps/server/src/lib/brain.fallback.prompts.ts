@@ -220,9 +220,10 @@ export const ThreadLabels = (
            </labeling_rules>
 
            <existing_labels>
-           ${existingLabels.length > 0 
-             ? existingLabels.map(label => `<item>${label.name}</item>`).join('\n           ')
-             : '<item>None</item>'
+           ${
+             existingLabels.length > 0
+               ? existingLabels.map((label) => `<item>${label.name}</item>`).join('\n           ')
+               : '<item>None</item>'
            }
            </existing_labels>
 

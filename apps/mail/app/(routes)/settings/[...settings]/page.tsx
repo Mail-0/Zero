@@ -3,8 +3,8 @@ import ConnectionsPage from '../connections/page';
 import AppearancePage from '../appearance/page';
 import ShortcutsPage from '../shortcuts/page';
 import SecurityPage from '../security/page';
-import { m } from '@/paraglide/messages';
 import GeneralPage from '../general/page';
+import { m } from '@/paraglide/messages';
 import { useParams } from 'react-router';
 import LabelsPage from '../labels/page';
 
@@ -21,7 +21,6 @@ const settingsPages: Record<string, React.ComponentType> = {
 export default function SettingsPage() {
   const params = useParams();
   const section = params.settings?.[0] || 'general';
-
 
   const SettingsComponent = settingsPages[section];
 

@@ -15,11 +15,11 @@ import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
 // import { saveUserSettings } from '@/actions/settings';
 import { useSettings } from '@/hooks/use-settings';
-import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
-import { m } from '@/paraglide/messages';
 import { useForm } from 'react-hook-form';
+import { m } from '@/paraglide/messages';
 import { XIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import * as z from 'zod';
@@ -87,10 +87,10 @@ export default function PrivacyPage() {
                   <FormItem className="bg-popover flex w-full flex-row items-center justify-between rounded-lg border p-4 md:w-auto">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">
-                      {m['pages.settings.privacy.externalImages']()}
+                        {m['pages.settings.privacy.externalImages']()}
                       </FormLabel>
                       <FormDescription>
-                      {m['pages.settings.privacy.externalImagesDescription']()}
+                        {m['pages.settings.privacy.externalImagesDescription']()}
                       </FormDescription>
                     </div>
                     <FormControl className="ml-4">
@@ -107,10 +107,10 @@ export default function PrivacyPage() {
                     <FormItem className="bg-popover flex w-full flex-col rounded-lg border p-4">
                       <div className="space-y-0.5">
                         <FormLabel className="text-base">
-                        {m['pages.settings.privacy.trustedSenders']()}
+                          {m['pages.settings.privacy.trustedSenders']()}
                         </FormLabel>
                         <FormDescription>
-                        {m['pages.settings.privacy.trustedSendersDescription']()}
+                          {m['pages.settings.privacy.trustedSendersDescription']()}
                         </FormDescription>
                       </div>
                       <ScrollArea className="flex max-h-32 flex-col pr-3">

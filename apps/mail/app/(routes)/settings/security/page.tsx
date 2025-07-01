@@ -10,8 +10,8 @@ import { SettingsCard } from '@/components/settings/settings-card';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { m } from '@/paraglide/messages';
 import { useForm } from 'react-hook-form';
+import { m } from '@/paraglide/messages';
 import { KeyRound } from 'lucide-react';
 import { useState } from 'react';
 import * as z from 'zod';
@@ -66,10 +66,10 @@ export default function SecurityPage() {
                   <FormItem className="bg-popover flex w-full flex-row items-center justify-between rounded-lg border p-4 md:w-auto">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">
-                      {m['pages.settings.security.twoFactorAuth']()}
+                        {m['pages.settings.security.twoFactorAuth']()}
                       </FormLabel>
                       <FormDescription>
-                      {m['pages.settings.security.twoFactorAuthDescription']()}
+                        {m['pages.settings.security.twoFactorAuthDescription']()}
                       </FormDescription>
                     </div>
                     <FormControl className="ml-4">
@@ -85,10 +85,10 @@ export default function SecurityPage() {
                   <FormItem className="bg-popover flex w-full flex-row items-center justify-between rounded-lg border p-4 md:w-auto">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">
-                      {m['pages.settings.security.loginNotifications']()}
+                        {m['pages.settings.security.loginNotifications']()}
                       </FormLabel>
                       <FormDescription>
-                      {m['pages.settings.security.loginNotificationsDescription']()}
+                        {m['pages.settings.security.loginNotificationsDescription']()}
                       </FormDescription>
                     </div>
                     <FormControl className="ml-4">

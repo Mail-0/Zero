@@ -121,7 +121,7 @@ export default function Footer() {
             </div>
           </div>
           <div className="flex flex-1 items-start justify-end gap-10 opacity-0 md:opacity-100">
-          <div className="inline-flex flex-col items-start justify-start gap-5">
+            <div className="inline-flex flex-col items-start justify-start gap-5">
               <div className="justify-start self-stretch text-sm font-normal text-white/40">
                 Resources
               </div>
@@ -131,16 +131,11 @@ export default function Footer() {
                     SOC2
                   </div>
                 </a>
-                <a
-                  href="/privacy"
-                  className="w-full"
-                  target="_blank"
-                >
+                <a href="/privacy" className="w-full" target="_blank">
                   <div className="justify-start self-stretch text-base leading-none text-white opacity-80 transition-opacity hover:opacity-100">
                     Privacy Policy
                   </div>
                 </a>
-                
               </div>
             </div>
             <div className="inline-flex flex-col items-start justify-start gap-5">
@@ -199,7 +194,6 @@ export default function Footer() {
                 </a>
               </div>
             </div>
-            
           </div>
         </div>
         <div className="h-0.5 self-stretch bg-white/20" />

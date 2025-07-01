@@ -17,7 +17,7 @@
     "lint": "turbo run lint",
     "format": "prettier --write apps/**/*.{ts,tsx} --log-level silent",
     "check": "pnpm run check:format && pnpm run lint",
-    "check:format": "prettier . --check",
+    "check:format": "prettier --check apps/**/*.{ts,tsx}",
     "lint-staged": "prettier --write --ignore-unknown",
     "docker:db:up": "docker compose -f docker-compose.db.yaml up -d",
     "docker:db:stop": "docker compose -f docker-compose.db.yaml stop",
