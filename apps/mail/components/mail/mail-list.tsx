@@ -55,7 +55,6 @@ import { Badge } from '@/components/ui/badge';
 import { useDraft } from '@/hooks/use-drafts';
 import { useTranslations } from 'use-intl';
 import { Skeleton } from '../ui/skeleton';
-import { StickyNote } from 'lucide-react';
 import { m } from '@/paraglide/messages';
 import { useParams } from 'react-router';
 import { useTheme } from 'next-themes';
@@ -63,7 +62,6 @@ import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Categories } from './mail';
 import { useAtom } from 'jotai';
-import { useThreadNotes } from '@/hooks/use-notes';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const Thread = memo(
