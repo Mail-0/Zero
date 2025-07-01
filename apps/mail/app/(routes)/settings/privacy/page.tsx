@@ -18,7 +18,7 @@ import { useSettings } from '@/hooks/use-settings';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useState, useEffect } from 'react';
-import { useTranslations } from 'use-intl';
+import { m } from '@/paraglide/messages';
 import { useForm } from 'react-hook-form';
 import { XIcon } from 'lucide-react';
 import { toast } from 'sonner';
@@ -26,7 +26,6 @@ import * as z from 'zod';
 
 export default function PrivacyPage() {
   const [isSaving, setIsSaving] = useState(false);
-  const t = useTranslations();
   const { data, refetch } = useSettings();
   const trpc = useTRPC();
   const { mutateAsync: saveUserSettings } = useMutation(trpc.settings.save.mutationOptions());
@@ -56,8 +55,8 @@ export default function PrivacyPage() {
           ...values,
         }),
         {
-          success: t('common.settings.saved'),
-          error: t('common.settings.failedToSave'),
+          success: m['common.settings.saved'](),
+          error: m['common.settings.failedToSave'](),
           finally: async () => {
             await refetch();
             setIsSaving(false);
@@ -70,11 +69,11 @@ export default function PrivacyPage() {
   return (
     <div className="grid gap-6">
       <SettingsCard
-        title={t('pages.settings.privacy.title')}
-        description={t('pages.settings.privacy.description')}
+        title={m['pages.settings.privacy.title']()}
+        description={m['pages.settings.privacy.description']()}
         footer={
           <Button type="submit" form="privacy-form" disabled={isSaving}>
-            {isSaving ? t('common.actions.saving') : t('common.actions.saveChanges')}
+            {isSaving ? m['common.actions.saving']() : m['common.actions.saveChanges']()}
           </Button>
         }
       >
@@ -88,10 +87,10 @@ export default function PrivacyPage() {
                   <FormItem className="bg-popover flex w-full flex-row items-center justify-between rounded-lg border p-4 md:w-auto">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">
-                        {t('pages.settings.privacy.externalImages')}
+                      {m['pages.settings.privacy.externalImages']()}
                       </FormLabel>
                       <FormDescription>
-                        {t('pages.settings.privacy.externalImagesDescription')}
+                      {m['pages.settings.privacy.externalImagesDescription']()}
                       </FormDescription>
                     </div>
                     <FormControl className="ml-4">
@@ -108,10 +107,10 @@ export default function PrivacyPage() {
                     <FormItem className="bg-popover flex w-full flex-col rounded-lg border p-4">
                       <div className="space-y-0.5">
                         <FormLabel className="text-base">
-                          {t('pages.settings.privacy.trustedSenders')}
+                        {m['pages.settings.privacy.trustedSenders']()}
                         </FormLabel>
                         <FormDescription>
-                          {t('pages.settings.privacy.trustedSendersDescription')}
+                        {m['pages.settings.privacy.trustedSendersDescription']()}
                         </FormDescription>
                       </div>
                       <ScrollArea className="flex max-h-32 flex-col pr-3">
@@ -131,7 +130,7 @@ export default function PrivacyPage() {
                                   <XIcon className="h-4 w-4 transition hover:opacity-80" />
                                 </button>
                               </TooltipTrigger>
-                              <TooltipContent>{t('common.actions.remove')}</TooltipContent>
+                              <TooltipContent>{m['common.actions.remove']()}</TooltipContent>
                             </Tooltip>
                           </div>
                         ))}
