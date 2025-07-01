@@ -1,4 +1,5 @@
 {
+  "$schema": "https://inlang.com/schema/inlang-message-format",
   "common": {
     "actions": {
       "logout": "Wyloguj",
@@ -169,8 +170,6 @@
           "match": {
             "countPlural=0": "załączników",
             "countPlural=one": "załącznik",
-            "countPlural=few": "załączniki",
-            "countPlural=many": "załączników",
             "countPlural=other": "załączników"
           }
         }
@@ -182,8 +181,6 @@
           "match": {
             "countPlural=0": "plików",
             "countPlural=one": "plik",
-            "countPlural=few": "pliki",
-            "countPlural=many": "plików",
             "countPlural=other": "plików"
           }
         }
@@ -257,8 +254,6 @@
           "match": {
             "countPlural=0": "Dodaj notatki",
             "countPlural=one": "# notatka",
-            "countPlural=few": "# notatki",
-            "countPlural=many": "# notatek",
             "countPlural=other": "# notatek"
           }
         }
@@ -322,8 +317,6 @@
           "match": {
             "countPlural=0": "odpowiedzi",
             "countPlural=one": "# odpowiedź",
-            "countPlural=few": "# odpowiedzi",
-            "countPlural=many": "# odpowiedzi",
             "countPlural=other": "# odpowiedzi"
           }
         }

@@ -126,7 +126,7 @@ export default function AppearancePage() {
                                   {theme === 'dark' && <Moon className="h-4 w-4" />}
                                   {theme === 'light' && <Sun className="h-4 w-4" />}
                                   {theme === 'system' && <Laptop className="h-4 w-4" />}
-                                  {m[`common.themes.${theme}` as MessageKey]()}
+                                  {m[`common.themes.${theme as 'dark' | 'light' | 'system'}`]()}
                                 </div>
                               </SelectValue>
                             </SelectTrigger>
