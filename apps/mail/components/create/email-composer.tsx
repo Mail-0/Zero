@@ -76,9 +76,13 @@ interface EmailComposerProps {
 }
 
 const isValidEmail = (email: string): boolean => {
-  const emailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/; // for format like test@example.com
-  const emailRegex2 = /^[a-zA-Z0-9._+-]+\s*<\s*[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\s*>$/; // for format like name <test@example.com>
-  return emailRegex.test(email) || emailRegex2.test(email);
+  // for format like test@example.com
+  const simpleEmailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/; 
+
+  // for format like name <test@example.com>
+  const displayNameEmailRegex = /^.+\s*<\s*[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\s*>$/; 
+
+  return simpleEmailRegex.test(email) || displayNameEmailRegex.test(email);
 };
 
 const schema = z.object({
