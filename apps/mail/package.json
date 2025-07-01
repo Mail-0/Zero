@@ -26,7 +26,7 @@
     "@intercom/messenger-js-sdk": "0.0.14",
     "@react-email/components": "^0.0.36",
     "@react-email/html": "^0.0.11",
-    "@react-email/render": "^1.1.2",
+    "@react-email/render": "1.1.0",
     "@react-router/dev": "^7.6.1",
     "@sentry/react": "9.19.0",
     "@tanstack/query-sync-storage-persister": "^5.75.0",

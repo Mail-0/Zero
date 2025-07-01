@@ -1,4 +1,5 @@
 {
+  "$schema": "https://inlang.com/schema/inlang-message-format",
   "common": {
     "actions": {
       "logout": "Odhlásit se",
@@ -169,8 +170,6 @@
           "match": {
             "countPlural=0": "příloh",
             "countPlural=one": "příloha",
-            "countPlural=few": "přílohy",
-            "countPlural=many": "příloh",
             "countPlural=other": "příloh"
           }
         }
@@ -182,8 +181,6 @@
           "match": {
             "countPlural=0": "souborů",
             "countPlural=one": "soubor",
-            "countPlural=few": "soubory",
-            "countPlural=many": "souborů",
             "countPlural=other": "souborů"
           }
         }
@@ -257,8 +254,6 @@
           "match": {
             "countPlural=0": "Přidat poznámku",
             "countPlural=one": "# poznámka",
-            "countPlural=few": "# poznámky",
-            "countPlural=many": "# poznámky",
             "countPlural=other": "# poznámek"
           }
         }
@@ -322,8 +317,6 @@
           "match": {
             "countPlural=0": "odpovědí",
             "countPlural=one": "#odpověď",
-            "countPlural=few": "#odpovědi",
-            "countPlural=many": "#odpovědí",
             "countPlural=other": "#odpovědí"
           }
         }

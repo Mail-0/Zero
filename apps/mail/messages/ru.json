@@ -1,4 +1,5 @@
 {
+  "$schema": "https://inlang.com/schema/inlang-message-format",
   "common": {
     "actions": {
       "logout": "Выйти",
@@ -169,8 +170,6 @@
           "match": {
             "countPlural=0": "вложений",
             "countPlural=one": "вложение",
-            "countPlural=few": "вложения",
-            "countPlural=many": "вложений",
             "countPlural=other": "вложений"
           }
         }
@@ -182,8 +181,6 @@
           "match": {
             "countPlural=0": "файлов",
             "countPlural=one": "файл",
-            "countPlural=few": "файла",
-            "countPlural=many": "файлов",
             "countPlural=other": "файла"
           }
         }
@@ -257,8 +254,6 @@
           "match": {
             "countPlural=0": "Добавьте заметки",
             "countPlural=one": "# заметка",
-            "countPlural=few": "# заметки",
-            "countPlural=many": "# заметок",
             "countPlural=other": "# заметки"
           }
         }
@@ -322,25 +317,12 @@
           "match": {
             "countPlural=0": "ответы",
             "countPlural=one": "# ответ",
-            "countPlural=few": "# ответа",
-            "countPlural=many": "# ответов",
             "countPlural=other": "# ответы"
           }
         }
       ],
       "deselectAll": "Отменить выбор всех писем",
-      "selectedEmails": [
-        {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
-          "match": {
-            "countPlural=one": "Выбрано # письмо",
-            "countPlural=few": "Выбрано # письма",
-            "countPlural=many": "Выбрано # писем",
-            "countPlural=other": "Выбрано # письма"
-          }
-        }
-      ],
+      "selectedEmails": "Выбрано {count} писем",
       "noEmailsToSelect": "Нет писем для выбора",
       "markedAsRead": "Отметить как прочитанное",
       "markedAsUnread": "Отметить как непрочитанное",
