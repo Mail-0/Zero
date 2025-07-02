@@ -71,8 +71,9 @@ const getQueryClient = (connectionId: string | null) => {
   if (typeof window === 'undefined') {
     return makeQueryClient(connectionId);
   } else {
-    if (!browserQueryClient.queryClient) {
+    if (!browserQueryClient.queryClient || browserQueryClient.activeConnectionId !== connectionId) {
       browserQueryClient.queryClient = makeQueryClient(connectionId);
+      browserQueryClient.activeConnectionId = connectionId;
     }
     return browserQueryClient.queryClient;
   }
