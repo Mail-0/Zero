@@ -1,5 +1,4 @@
-import React from 'react';
-import { DndContext, DragOverlay } from '@dnd-kit/core';
+import React, { useState } from 'react';
 import { Paperclip } from 'lucide-react';
 import { Droppable } from '@/components/ui/droppable';
 
@@ -16,30 +15,58 @@ export function FileDropZone({
   className, 
   onFilesDropped 
 }: FileDropZoneProps) {
-  const [isOverDropZone, setIsOverDropZone] = React.useState(false);
-
-  // This handles external files being dragged over the drop zone
-  const handleDragEnd = (event: any) => {
-    setIsOverDropZone(false);
-  };
-
-  // Since we're handling file drops from outside the app, 
-  // we need to track when the drag starts entering the drop zone
-  const handleDragStart = (event: any) => {
-    if (event.active.data?.current?.files) {
+  const [isOverDropZone, setIsOverDropZone] = useState(false);
+  
+  // Native DOM event handlers for external file drag and drop
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer.types.includes('Files')) {
       setIsOverDropZone(true);
     }
   };
 
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isOverDropZone && e.dataTransfer.types.includes('Files')) {
+      setIsOverDropZone(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Check if the drag leaves the component entirely
+    // by checking if the related target is not inside the component
+    const relatedTarget = e.relatedTarget as Node;
+    const currentTarget = e.currentTarget as Node;
+    
+    if (!currentTarget.contains(relatedTarget)) {
+      setIsOverDropZone(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsOverDropZone(false);
+    
+    if (e.dataTransfer.files.length > 0) {
+      onFilesDropped(Array.from(e.dataTransfer.files));
+    }
+  };
+
   return (
-    <DndContext 
-      onDragEnd={handleDragEnd}
-      onDragStart={handleDragStart}
-    >
-      <Droppable
+    <>
+      <div
         id={id}
         className={className}
-        onFilesDropped={onFilesDropped}
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
       >
         <div className="relative w-full h-full">
           {children}
@@ -54,15 +81,7 @@ export function FileDropZone({
             </div>
           )}
         </div>
-      </Droppable>
-
-      <DragOverlay>
-        {isOverDropZone && (
-          <div className="p-2 bg-background border rounded-md shadow-md opacity-80">
-            <Paperclip className="h-4 w-4" />
-          </div>
-        )}
-      </DragOverlay>
-    </DndContext>
+      </div>
+    </>
   );
 } 

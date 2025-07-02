@@ -1271,7 +1271,7 @@ export function EmailComposer({
           <FileDropZone 
             onFilesDropped={(files) => handleAttachment(files)} 
             className={cn(
-              `min-h-[200px] w-full relative`,
+              `min-h-[200px] w-full h-full`,
               editorClassName,
               aiGeneratedMessage !== null ? 'blur-sm' : '',
             )}
@@ -1282,8 +1282,8 @@ export function EmailComposer({
               }}
               className="w-full h-full"
             >
-              <EditorContent editor={editor} className="h-full w-full" />
-            </div>
+            <EditorContent editor={editor} className="h-full w-full" />
+          </div>
           </FileDropZone>
         </div>
       </div>
