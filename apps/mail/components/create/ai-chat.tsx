@@ -93,8 +93,7 @@ const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => voi
             <button
               key={index}
               onClick={() => onQueryClick(query)}
-              className="flex-shrink-0 whitespace-nowrap rounded-md bg-[#f0f0f0] p-1 px-2 text-sm text-[#555555] dark:bg-[#262626] dark:text-[#929292]"
-              >
+              className="flex-shrink-0 whitespace-nowrap rounded-md bg-[#f0f0f0] p-1 px-2 text-sm text-[#555555] dark:bg-[#262626] dark:text-[#929292]">
               {query}
             </button>
           ))}
@@ -105,24 +104,24 @@ const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => voi
         <div className="from-panelLight dark:from-panelDark pointer-events-none absolute bottom-0 right-0 top-0 w-12 bg-gradient-to-l to-transparent"></div>
       </div>
 
-      {/* Second row */}
-      <div className="no-scrollbar relative flex w-full justify-center overflow-x-auto">
+    {/* Second row */}
+    <div className="no-scrollbar relative flex w-full justify-center overflow-x-auto">
       <div className="flex gap-4 px-4">
-      {secondRowQueries.map((query, index) => (
-            <button
+        {secondRowQueries.map((query, index) => (
+          <button
             key={index}
             onClick={() => onQueryClick(query)}
             className="flex-shrink-0 whitespace-nowrap rounded-md bg-[#f0f0f0] p-1 px-2 text-sm text-[#555555] dark:bg-[#262626] dark:text-[#929292]">
-              {query}
-            </button>
-          ))}
-        </div>
-        {/* Left mask */}
-        <div className="from-panelLight dark:from-panelDark pointer-events-none absolute bottom-0 left-0 top-0 w-12 bg-gradient-to-r to-transparent"></div>
-        {/* Right mask */}
-        <div className="from-panelLight dark:from-panelDark pointer-events-none absolute bottom-0 right-0 top-0 w-12 bg-gradient-to-l to-transparent"></div>
+            {query}
+          </button>
+        ))}
       </div>
+      {/* Left mask */}
+      <div className="from-panelLight dark:from-panelDark pointer-events-none absolute bottom-0 left-0 top-0 w-12 bg-gradient-to-r to-transparent"></div>
+      {/* Right mask */}
+      <div className="from-panelLight dark:from-panelDark pointer-events-none absolute bottom-0 right-0 top-0 w-12 bg-gradient-to-l to-transparent"></div>
     </div>
+  </div>
   );
 };
 
