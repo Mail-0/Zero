@@ -28,7 +28,7 @@ function createIDBPersister(idbValidKey: IDBValidKey = 'zero-query-cache') {
   } satisfies Persister;
 }
 
-export const makeQueryClient = () =>
+export const makeQueryClient = (connectionId: string | null) =>
   new QueryClient({
     queryCache: new QueryCache({
       onError: (err, { meta }) => {
@@ -50,7 +50,7 @@ export const makeQueryClient = () =>
       queries: {
         retry: false,
         refetchOnWindowFocus: false,
-        queryKeyHashFn: (queryKey) => hashKey([{ connectionId: 'default' }, ...queryKey]),
+        queryKeyHashFn: (queryKey) => hashKey([{ connectionId }, ...queryKey]),
         gcTime: 1000 * 60 * 60 * 24,
       },
       mutations: {
@@ -67,12 +67,12 @@ let browserQueryClient = {
   activeConnectionId: string | null;
 };
 
-const getQueryClient = () => {
+const getQueryClient = (connectionId: string | null) => {
   if (typeof window === 'undefined') {
-    return makeQueryClient();
+    return makeQueryClient(connectionId);
   } else {
     if (!browserQueryClient.queryClient) {
-      browserQueryClient.queryClient = makeQueryClient();
+      browserQueryClient.queryClient = makeQueryClient(connectionId);
     }
     return browserQueryClient.queryClient;
   }
@@ -103,9 +103,15 @@ export const trpcClient = createTRPCClient<AppRouter>({
 
 type TrpcHook = ReturnType<typeof useTRPC>;
 
-export function QueryProvider({ children }: PropsWithChildren) {
-  const persister = useMemo(() => createIDBPersister(`zero-query-cache-default`), []);
-  const queryClient = useMemo(() => getQueryClient(), []);
+export function QueryProvider({
+  children,
+  connectionId,
+}: PropsWithChildren<{ connectionId: string | null }>) {
+  const persister = useMemo(
+    () => createIDBPersister(`zero-query-cache-${connectionId ?? 'default'}`),
+    [connectionId],
+  );
+  const queryClient = useMemo(() => getQueryClient(connectionId), [connectionId]);
 
   return (
     <PersistQueryClientProvider

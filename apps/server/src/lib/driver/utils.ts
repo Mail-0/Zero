@@ -31,7 +31,7 @@ export const getActiveDriver = async () => {
   if (!activeConnection) throw new Error('Invalid connection');
 
   if (!activeConnection || !activeConnection.accessToken || !activeConnection.refreshToken)
-    throw new Error('Invalid connection');
+    throw new Error(`Invalid connection ${JSON.stringify(activeConnection?.id)}`);
 
   return createDriver(activeConnection.providerId, {
     auth: {
