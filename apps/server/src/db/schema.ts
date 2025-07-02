@@ -247,7 +247,7 @@ export const organization = createTable('organization', {
   createdAt: timestamp('created_at').notNull(),
 });
 
-export const organizationMember = createTable('member', {
+export const member = createTable('member', {
   id: text('id').primaryKey(),
   userId: text('userId')
     .notNull()
@@ -260,7 +260,7 @@ export const organizationMember = createTable('member', {
   createdAt: timestamp('createdAt').notNull(),
 });
 
-export const organizationInvitation = createTable('invitation', {
+export const invitation = createTable('invitation', {
   id: text('id').primaryKey(),
   email: text('email').notNull(),
   inviterId: text('inviterId')
@@ -273,7 +273,7 @@ export const organizationInvitation = createTable('invitation', {
   role: text('role').notNull().default('member'),
   status: text('status').notNull().default('pending'),
   expiresAt: timestamp('expiresAt'),
-  createdAt: timestamp('createdAt').notNull(),
+  createdAt: timestamp('createdAt').defaultNow(),
 });
 
 export const team = createTable('team', {
@@ -344,4 +344,15 @@ export const oauthConsent = createTable(
     index('oauth_consent_given_idx').on(t.consentGiven),
   ],
 );
+
+export const organizationDomain = createTable('organization_domain', {
+  id: text('id').primaryKey(),
+  organizationId: text('organizationId')
+    .notNull()
+    .references(() => organization.id, { onDelete: 'cascade' }),
+  domain: text('domain').notNull(),
+  createdAt: timestamp('createdAt').notNull(),
+  verified: boolean('verified').notNull().default(false),
+  verificationToken: text('verificationToken'),
+});
 

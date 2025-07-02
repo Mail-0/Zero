@@ -41,5 +41,8 @@
     "tsx": "4.19.4",
     "turbo": "^2.5.4",
     "typescript": "catalog:"
+  },
+  "dependencies": {
+    "@tiptap/extension-file-handler": "2.22.3"
   }
 }

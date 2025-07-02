@@ -80,8 +80,9 @@ export const createAuth = () => {
     plugins: [
       organization({
         allowUserToCreateOrganization: async (user) => { 
-          const subscription = await getSubscription(user.id) 
-          return subscription.plan === "pro"
+          // const subscription = await getSubscription(user.id) 
+          // return subscription.plan === "pro"
+          return true;
         },
         organizationCreation: {
           disabled: false, // Set to true to disable organization creation
@@ -100,7 +101,8 @@ export const createAuth = () => {
           afterCreate: async ({ organization, member, user }, request) => {
               // Run custom logic after organization is created
               // e.g., create default resources, send notifications
-              await setupDefaultResources(organization.id)
+              // await setupDefaultResources(organization.id)
+              console.log('organization created', organization, member, user, request);
           },
           async sendInvitationEmail(data) {
             const inviteLink = `https://example.com/accept-invitation/${data.id}`
