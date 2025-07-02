@@ -126,13 +126,18 @@ export function MailContent({ html, senderEmail }: MailContentProps) {
     }
   }, [isTrustedSender, temporaryImagesEnabled]);
 
-  const handleImageError = useCallback((e: Event) => {
-    const target = e.target as HTMLImageElement;
-    if (target.tagName === 'IMG') {
-      setCspViolation(true);
-      target.style.display = 'none';
-    }
-  }, []);
+  const handleImageError = useCallback(
+    (e: Event) => {
+      const target = e.target as HTMLImageElement;
+      if (target.tagName === 'IMG') {
+        if (!(isTrustedSender || temporaryImagesEnabled)) {
+          setCspViolation(true);
+        }
+        target.style.display = 'none';
+      }
+    },
+    [isTrustedSender, temporaryImagesEnabled],
+  );
 
   useEffect(() => {
     if (!shadowRootRef.current) return;
@@ -144,8 +149,10 @@ export function MailContent({ html, senderEmail }: MailContentProps) {
       if (target.tagName === 'A') {
         e.preventDefault();
         const href = target.getAttribute('href');
-        if (href) {
+        if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
           window.open(href, '_blank', 'noopener,noreferrer');
+        } else if (href && href.startsWith('mailto:')) {
+          window.location.href = href;
         }
       }
     };
@@ -171,7 +178,16 @@ export function MailContent({ html, senderEmail }: MailContentProps) {
               ? m['common.actions.disableImages']()
               : m['common.actions.showImages']()}
           </button>
-          <button onClick={() => void trustSender()} className="ml-2 cursor-pointer underline">
+          <button
+            onClick={async () => {
+              try {
+                await trustSender();
+              } catch (error) {
+                console.error('Error trusting sender:', error);
+              }
+            }}
+            className="ml-2 cursor-pointer underline"
+          >
             {m['common.actions.trustSender']()}
           </button>
         </div>

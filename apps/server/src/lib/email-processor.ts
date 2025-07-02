@@ -79,7 +79,7 @@ export function processEmailHtml({ html, shouldLoadImages, theme }: ProcessEmail
         overflow: auto;
         font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
         line-height: 1.5;
-        background-color: ${theme === 'dark' ? 'rgb(10,10,10)' : '#ffffff'};
+        background-color: ${theme === 'dark' ? '#1A1A1A' : '#ffffff'};
         color: ${theme === 'dark' ? '#ffffff' : '#000000'};
       }
 
@@ -115,7 +115,7 @@ export function processEmailHtml({ html, shouldLoadImages, theme }: ProcessEmail
       .gmail_quote {
         margin: 1em 0;
         padding-left: 1em;
-        border-left: 1px solid #ccc;
+        border-left: 1px solid ${theme === 'dark' ? '#000' : '#ccc'};
       }
 
       ::selection {
