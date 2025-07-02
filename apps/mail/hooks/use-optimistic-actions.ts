@@ -10,8 +10,26 @@ import { moveThreadsTo } from '@/lib/thread-actions';
 import { useCallback, useRef } from 'react';
 import { m } from '@/paraglide/messages';
 import { useQueryState } from 'nuqs';
+import posthog from 'posthog-js';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
+
+enum ActionType {
+  MOVE = 'MOVE',
+  STAR = 'STAR',
+  READ = 'READ',
+  LABEL = 'LABEL',
+  IMPORTANT = 'IMPORTANT',
+}
+
+const actionEventNames: Record<ActionType, (params: any) => string> = {
+  [ActionType.MOVE]: () => 'email_moved',
+  [ActionType.STAR]: (params) => (params.starred ? 'email_starred' : 'email_unstarred'),
+  [ActionType.READ]: (params) => (params.read ? 'email_marked_read' : 'email_marked_unread'),
+  [ActionType.IMPORTANT]: (params) =>
+    params.important ? 'email_marked_important' : 'email_unmarked_important',
+  [ActionType.LABEL]: (params) => (params.add ? 'email_label_added' : 'email_label_removed'),
+};
 
 export function useOptimisticActions() {
   const trpc = useTRPC();
@@ -66,9 +84,9 @@ export function useOptimisticActions() {
     toastMessage,
     folders,
   }: {
-    type: 'MOVE' | 'STAR' | 'READ' | 'LABEL' | 'IMPORTANT';
+    type: keyof typeof ActionType;
     threadIds: string[];
-    params: any;
+    params: PendingAction['params'];
     optimisticId: string;
     execute: () => Promise<void>;
     undo: () => void;
@@ -92,7 +110,7 @@ export function useOptimisticActions() {
       optimisticActionsManager.pendingActionsByType.get(type)?.size,
     );
 
-    const pendingAction: PendingAction = {
+    const pendingAction = {
       id: pendingActionId,
       type,
       threadIds,
@@ -102,7 +120,7 @@ export function useOptimisticActions() {
       undo,
     };
 
-    optimisticActionsManager.pendingActions.set(pendingActionId, pendingAction);
+    optimisticActionsManager.pendingActions.set(pendingActionId, pendingAction as PendingAction);
 
     const itemCount = threadIds.length;
     const bulkActionMessage = itemCount > 1 ? `${toastMessage} (${itemCount} items)` : toastMessage;
@@ -116,6 +134,12 @@ export function useOptimisticActions() {
           pendingActionsRef: optimisticActionsManager.pendingActions.size,
           typeActions: typeActions?.size,
         });
+
+        const eventName = actionEventNames[type]?.(params);
+        if (eventName) {
+          posthog.capture(eventName);
+        }
+
         optimisticActionsManager.pendingActions.delete(pendingActionId);
         optimisticActionsManager.pendingActionsByType.get(type)?.delete(pendingActionId);
         if (typeActions?.size === 1) {
