@@ -22,9 +22,6 @@ RUN mkdir -p /workspaces
 # Set working directory
 WORKDIR /workspaces
 
-# Install zsh
-RUN apt-get update && apt-get install -y zsh
-
 #  install Oh My Zsh
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 
