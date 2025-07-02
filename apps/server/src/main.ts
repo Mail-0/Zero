@@ -13,6 +13,7 @@ import {
   userHotkeys,
   userSettings,
   writingStyleMatrix,
+  themes,
 } from './db/schema';
 import { env, WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
 import { getZeroAgent, getZeroDB, verifyToken } from './lib/server-utils';
@@ -170,6 +171,22 @@ export class DbRpcDO extends RpcTarget {
     updatingInfo: Partial<typeof connection.$inferInsert>,
   ) {
     return await this.mainDo.updateConnection(connectionId, updatingInfo);
+  }
+
+  async findManyThemes() {
+    return await this.mainDo.findManyThemes(this.userId);
+  }
+
+  async createTheme(data: Omit<typeof themes.$inferInsert, 'userId'>) {
+    return await this.mainDo.createTheme(this.userId, data);
+  }
+
+  async updateTheme(id: string, data: Partial<typeof themes.$inferInsert>) {
+    return await this.mainDo.updateTheme(this.userId, id, data);
+  }
+
+  async deleteTheme(id: string) {
+    return await this.mainDo.deleteTheme(this.userId, id);
   }
 }
 
@@ -487,6 +504,35 @@ class ZeroDB extends DurableObject<Env> {
       .update(connection)
       .set(updatingInfo)
       .where(eq(connection.id, connectionId));
+  }
+
+  async findManyThemes(userId: string) {
+    return await this.db.query.themes.findMany({
+      where: eq(themes.userId, userId),
+    });
+  }
+
+  async createTheme(userId: string, data: Omit<typeof themes.$inferInsert, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) {
+    return await this.db.insert(themes).values({
+      ...data,
+      id: crypto.randomUUID(),
+      userId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+  }
+
+  async updateTheme(userId: string, id: string, data: Partial<typeof themes.$inferInsert>) {
+    return await this.db.update(themes)
+      .set({ ...data, updatedAt: new Date() })
+      .where(and(eq(themes.id, id), eq(themes.userId, userId)))
+      .returning();
+  }
+
+  async deleteTheme(userId: string, id: string) {
+    return await this.db.delete(themes)
+      .where(and(eq(themes.id, id), eq(themes.userId, userId)))
+      .returning();
   }
 }
 

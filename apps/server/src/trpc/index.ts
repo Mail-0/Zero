@@ -14,6 +14,7 @@ import type { HonoContext } from '../ctx';
 import { aiRouter } from './routes/ai';
 import { router } from './trpc';
 import { categoriesRouter } from './routes/categories';
+import { themeRouter } from './routes/theme';
 
 export const appRouter = router({
   ai: aiRouter,
@@ -28,6 +29,7 @@ export const appRouter = router({
   shortcut: shortcutRouter,
   settings: settingsRouter,
   user: userRouter,
+  theme: themeRouter,
 });
 
 export type AppRouter = typeof appRouter;
