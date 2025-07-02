@@ -19,6 +19,7 @@ const FOLDER_TO_LABEL_MAP: Record<string, string> = {
   draft: 'DRAFT',
   spam: 'SPAM',
   trash: 'TRASH',
+  starred: 'STARRED',
 };
 
 const getFolderLabelId = (folder: string) => {

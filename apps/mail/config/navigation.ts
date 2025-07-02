@@ -86,6 +86,13 @@ export const navigationConfig: Record<string, NavConfig> = {
             shortcut: 'g + a',
           },
           {
+            id: 'starred',
+            title: m['navigation.sidebar.starred'](),
+            url: '/mail/starred',
+            icon: Stars,
+            shortcut: 'g + s',
+          },
+          {
             id: 'spam',
             title: m['navigation.sidebar.spam'](),
             url: '/mail/spam',

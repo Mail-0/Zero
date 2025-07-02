@@ -58,6 +58,7 @@ import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Categories } from './mail';
 import { useAtom } from 'jotai';
+import { ThreadSkeleton } from './thread-skeleton';
 
 const Thread = memo(
   function Thread({
@@ -725,6 +726,13 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
     </div>
   );
 });
+const MailListSkeleton = ({ count = 20 }: { count?: number }) => (
+  <div className="w-full animate-pulse">
+    {Array.from({ length: count }).map((_, i) => (
+      <ThreadSkeleton key={i} />
+    ))}
+  </div>
+);
 
 export const MailList = memo(
   function MailList() {
@@ -971,66 +979,62 @@ export const MailList = memo(
         <div
           ref={parentRef}
           className={cn(
-            'hide-link-indicator flex h-full w-full',
+            'hide-link-indicator flex h-full w-full flex-col',
             getSelectMode() === 'range' && 'select-none',
           )}
         >
-          <>
-            {isLoading ? (
-              <div className="flex h-32 w-full items-center justify-center">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
-              </div>
-            ) : !items || items.length === 0 ? (
-              <div className="flex w-full items-center justify-center">
-                <div className="flex flex-col items-center justify-center gap-2 text-center">
-                  <img
-                    suppressHydrationWarning
-                    src={resolvedTheme === 'dark' ? '/empty-state.svg' : '/empty-state-light.svg'}
-                    alt="Empty Inbox"
-                    width={200}
-                    height={200}
-                  />
-                  <div className="mt-5">
-                    <p className="text-lg">It's empty here</p>
-                    <p className="text-md text-muted-foreground dark:text-white/50">
-                      Search for another email or{' '}
-                      <button className="underline" onClick={clearFilters}>
-                        clear filters
-                      </button>
-                    </p>
-                  </div>
+          {isLoading ? (
+            <MailListSkeleton />
+          ) : !items || items.length === 0 ? (
+            <div className="flex w-full flex-1 items-center justify-center">
+              <div className="flex flex-col items-center justify-center gap-2 text-center">
+                <img
+                  suppressHydrationWarning
+                  src={resolvedTheme === 'dark' ? '/empty-state.svg' : '/empty-state-light.svg'}
+                  alt="Empty Inbox"
+                  width={200}
+                  height={200}
+                />
+                <div className="mt-5">
+                  <p className="text-lg">It's empty here</p>
+                  <p className="text-md text-muted-foreground dark:text-white/50">
+                    Search for another email or{' '}
+                    <button className="underline" onClick={clearFilters}>
+                      clear filters
+                    </button>
+                  </p>
                 </div>
               </div>
-            ) : (
-              <div className="flex flex-1 flex-col" id="mail-list-scroll">
-                <VList
-                  ref={vListRef}
-                  count={filteredItems.length}
-                  overscan={20}
-                  keepMounted={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
-                  className="scrollbar-none flex-1 overflow-x-hidden"
-                  children={vListRenderer}
-                  onScroll={() => {
-                    if (!vListRef.current) return;
-                    const endIndex = vListRef.current.findEndIndex();
-                    if (
-                      // if the shown items are last 5 items, load more
-                      Math.abs(filteredItems.length - 1 - endIndex) < 5 &&
-                      !isLoading &&
-                      !isFetchingNextPage &&
-                      !isFetchingMail &&
-                      hasNextPage
-                    ) {
-                      void loadMore();
-                    }
-                  }}
-                />
-              </div>
-            )}
-          </>
+            </div>
+          ) : (
+            <div className="flex flex-1 flex-col" id="mail-list-scroll">
+              <VList
+                ref={vListRef}
+                count={filteredItems.length}
+                overscan={20}
+                keepMounted={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
+                className="scrollbar-none flex-1 overflow-x-hidden"
+                children={vListRenderer}
+                onScroll={() => {
+                  if (!vListRef.current) return;
+                  const endIndex = vListRef.current.findEndIndex();
+                  if (
+                    // if the shown items are last 5 items, load more
+                    Math.abs(filteredItems.length - 1 - endIndex) < 5 &&
+                    !isLoading &&
+                    !isFetchingNextPage &&
+                    !isFetchingMail &&
+                    hasNextPage
+                  ) {
+                    void loadMore();
+                  }
+                }}
+              />
+            </div>
+          )}
         </div>
         <div className="w-full pt-4 text-center">
-          {isFetching ? (
+          {isFetching && !isLoading ? (
             <div className="text-center">
               <div className="mx-auto h-4 w-4 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
             </div>
