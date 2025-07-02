@@ -210,3 +210,15 @@ export const oauthConsent = createTable('oauth_consent', {
   updatedAt: timestamp('updated_at'),
   consentGiven: boolean('consent_given'),
 });
+
+export const themes = createTable('themes', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').references(() => user.id),
+  name: text('name').notNull(),
+  image: text('image'),
+  connectionId: text('connection_id').references(() => connection.id),
+  isPublic: boolean('is_public').notNull().default(false),
+  config: jsonb('config').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
