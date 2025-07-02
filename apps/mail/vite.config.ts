@@ -1,3 +1,4 @@
+import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import { cloudflare } from '@cloudflare/vite-plugin';
 import { reactRouter } from '@react-router/dev/vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
@@ -12,8 +13,8 @@ const ReactCompilerConfig = {
 
 export default defineConfig({
   plugins: [
-    cloudflare({ viteEnvironment: { name: 'ssr' } }),
     reactRouter(),
+    cloudflare(),
     babel({
       filter: /\.[jt]sx?$/,
       babelConfig: {
@@ -39,12 +40,16 @@ export default defineConfig({
         });
       },
     },
+    paraglideVitePlugin({
+      project: './project.inlang',
+      outdir: './paraglide',
+      strategy: ['cookie', 'baseLocale'],
+    }),
   ],
   server: {
     port: 3000,
     warmup: {
       clientFiles: ['./app/**/*', './components/**/*'],
-      ssrFiles: ['./app/**/*', './components/**/*'],
     },
   },
   css: {
@@ -52,11 +57,11 @@ export default defineConfig({
       plugins: [tailwindcss()],
     },
   },
-  ssr: {
-    optimizeDeps: {
-      include: ['novel', '@tiptap/extension-placeholder'],
-    },
-  },
+  //   ssr: {
+  //     optimizeDeps: {
+  //       include: ['novel', '@tiptap/extension-placeholder'],
+  //     },
+  //   },
   build: {
     sourcemap: false,
   },

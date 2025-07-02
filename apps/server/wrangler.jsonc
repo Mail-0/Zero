@@ -337,7 +337,7 @@
       "hyperdrive": [
         {
           "binding": "HYPERDRIVE",
-          "id": "27171042364248898fc8672c0fc532a0",
+          "id": "b1be316b45fb439a9e54b74ecc20aa21",
           "localConnectionString": "postgresql://postgres:postgres@localhost:5432/zerodotemail",
         },
       ],
@@ -401,7 +401,7 @@
         "VITE_PUBLIC_BACKEND_URL": "https://api.0.email",
         "VITE_PUBLIC_APP_URL": "https://0.email",
         "DISABLE_CALLS": "true",
-        "DROP_AGENT_TABLES": "true",
+        "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "40",
         "THREAD_SYNC_LOOP": "false",
       },
