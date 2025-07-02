@@ -73,11 +73,18 @@ export function processEmailHtml({ html, shouldLoadImages, theme }: ProcessEmail
   const minimalStyles = `
     <style type="text/css">
       :host {
-        all: initial;
         display: block;
         width: 100%;
         height: 100%;
         overflow: auto;
+        font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+        line-height: 1.5;
+        background-color: ${theme === 'dark' ? 'rgb(10,10,10)' : '#ffffff'};
+        color: ${theme === 'dark' ? '#ffffff' : '#000000'};
+      }
+
+      *, *::before, *::after {
+        box-sizing: border-box;
       }
 
       body {
@@ -87,11 +94,18 @@ export function processEmailHtml({ html, shouldLoadImages, theme }: ProcessEmail
 
       a {
         cursor: pointer;
+        color: ${theme === 'dark' ? '#60a5fa' : '#2563eb'};
+        text-decoration: underline;
+      }
+
+      a:hover {
+        color: ${theme === 'dark' ? '#93bbfc' : '#1d4ed8'};
       }
 
       img {
         max-width: 100%;
         height: auto;
+        display: block;
       }
 
       table {

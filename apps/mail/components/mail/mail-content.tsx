@@ -8,6 +8,7 @@ import { m } from '@/paraglide/messages';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { fixNonReadableColors } from '@/lib/email-utils';
 
 interface MailContentProps {
   html: string;
@@ -97,6 +98,27 @@ export function MailContent({ html, senderEmail }: MailContentProps) {
 
     shadowRootRef.current.innerHTML = processedData;
   }, [processedData]);
+
+  useEffect(() => {
+    if (!shadowRootRef.current) return;
+
+    const root = shadowRootRef.current;
+
+    const applyFix: () => void = () => {
+      const topLevelEls = Array.from(root.children) as HTMLElement[];
+      topLevelEls.forEach((el) => {
+        try {
+          fixNonReadableColors(el, {
+            defaultBackground: resolvedTheme === 'dark' ? 'rgb(10,10,10)' : '#ffffff',
+          });
+        } catch (err) {
+          console.error('Failed to fix colors in email content:', err);
+        }
+      });
+    };
+
+    requestAnimationFrame(applyFix);
+  }, [processedData, resolvedTheme]);
 
   useEffect(() => {
     if (isTrustedSender || temporaryImagesEnabled) {
