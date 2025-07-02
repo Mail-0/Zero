@@ -1,0 +1,2 @@
+ALTER TABLE "mail0_user" ADD COLUMN "active_theme_id" text;--> statement-breakpoint
+ALTER TABLE "mail0_user" ADD CONSTRAINT "mail0_user_active_theme_id_mail0_themes_id_fk" FOREIGN KEY ("active_theme_id") REFERENCES "public"."mail0_themes"("id") ON DELETE no action ON UPDATE no action;

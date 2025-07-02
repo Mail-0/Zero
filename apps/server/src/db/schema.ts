@@ -24,6 +24,7 @@ export const user = createTable('user', {
   customPrompt: text('custom_prompt'),
   phoneNumber: text('phone_number').unique(),
   phoneNumberVerified: boolean('phone_number_verified'),
+  activeThemeId: text('active_theme_id').references((): any => themes.id),
 });
 
 export const session = createTable('session', {
