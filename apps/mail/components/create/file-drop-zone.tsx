@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Paperclip } from 'lucide-react';
-import { Droppable } from '@/components/ui/droppable';
 
 interface FileDropZoneProps {
   id?: string;
@@ -59,29 +58,26 @@ export function FileDropZone({
   };
 
   return (
-    <>
-      <div
-        id={id}
-        className={className}
-        onDragEnter={handleDragEnter}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        <div className="relative w-full h-full">
-          {children}
-          
-          {/* Overlay that appears when files are being dragged over */}
-          {isOverDropZone && (
-            <div className="absolute inset-0 flex items-center justify-center rounded-md bg-primary/10 pointer-events-none">
-              <div className="flex flex-col items-center justify-center gap-2 text-primary">
-                <Paperclip className="h-8 w-8" />
-                <p className="text-sm font-medium">Drop files to attach</p>
-              </div>
-            </div>
-          )}
+    <div
+      id={id}
+      className={`${className} relative w-full h-full`}
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {/* The children (editor content) */}
+      {children}
+      
+      {/* Overlay that appears when files are being dragged over */}
+      {isOverDropZone && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center rounded-md bg-primary/10 pointer-events-none">
+          <div className="flex flex-col items-center justify-center gap-2 text-primary">
+            <Paperclip className="h-8 w-8" />
+            <p className="text-sm font-medium">Drop files to attach</p>
+          </div>
         </div>
-      </div>
-    </>
+      )}
+    </div>
   );
 } 
