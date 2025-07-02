@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { defaultUserSettings } from '@zero/server/schemas';
+import { fixNonReadableColors } from '@/lib/email-utils';
 import { useTRPC } from '@/providers/query-provider';
 import { getBrowserTimezone } from '@/lib/timezones';
 import { useSettings } from '@/hooks/use-settings';
@@ -8,7 +9,6 @@ import { m } from '@/paraglide/messages';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { fixNonReadableColors } from '@/lib/email-utils';
 
 interface MailContentProps {
   html: string;
