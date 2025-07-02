@@ -642,18 +642,30 @@ const MoreAboutPerson = ({
     data,
     error,
   } = useMutation(trpc.ai.webSearch.mutationOptions());
+
+  const {
+    mutate: doSmartSearch,
+    isPending: isPersonPending,
+    data: personData,
+    error: personError,
+  } = useMutation(trpc.ai.smartSearch.mutationOptions());
+
   const handleSearch = useCallback(() => {
     doSearch({
-      query: `In 50 words or less: What is the background of ${person.name} & ${person.email}, of ${person.email.split('@')[1]}.
+      query: `In 50 words or less: What is the background of ${person.name} & ${person.email}, of ${person.email ? person.email.split('@')[1] : ''}.
       This could be a phishing email address, indicate if the domain is suspicious, example: x.io is not a valid domain for x.com | example: x.com is a valid domain for x.com | example: paypalcom.com is not a valid domain for paypal.com`,
     });
-  }, [person.name]);
+
+    if (person.email) {
+      doSmartSearch({ email: person.email, name: person.name });
+    }
+  }, [person.name, person.email, doSmartSearch]);
 
   useEffect(() => {
     if (open) {
       handleSearch();
     }
-  }, [open]);
+  }, [open, handleSearch]);
 
   const findSource = useCallback(
     (id: string) => {
@@ -684,16 +696,138 @@ const MoreAboutPerson = ({
         <DialogHeader>
           <DialogTitle>More about {cleanNameDisplay(person.name)}</DialogTitle>
         </DialogHeader>
-        <div className="mt-4 flex justify-center">
-          {isPending ? (
-            <Loader2 className="animate-spin" />
-          ) : data ? (
-            <StreamingText text={replaceSourcesInText(data.text)} />
-          ) : error ? (
-            <p>Error: {error.message}</p>
-          ) : (
-            <Loader2 className="animate-spin" />
-          )}
+        <div className="mt-4 flex flex-col gap-6">
+          <div className="flex justify-center">
+            {isPending ? (
+              <Loader2 className="animate-spin" />
+            ) : data ? (
+              <StreamingText text={replaceSourcesInText(data.text)} />
+            ) : error ? (
+              <p>Error: {error.message}</p>
+            ) : (
+              <Loader2 className="animate-spin" />
+            )}
+          </div>
+
+          <div>
+            <h3 className="mb-2 text-sm font-semibold">Aviato Profile</h3>
+            {isPersonPending ? (
+              <Loader2 className="animate-spin" />
+            ) : personError ? (
+              <p className="text-red-500 text-sm">Failed to fetch Aviato data</p>
+            ) : personData ? (
+              <div className="space-y-1 text-sm">
+                {(() => {
+                  const result = personData as any;
+                  
+                  if (result.type === 'company') {
+                    const companies = result.enriched?.company ? [result.enriched.company] : result.data?.items;
+                    if (!companies || companies.length === 0) {
+                      return <p>No company found for domain: {result.searchedDomain}</p>;
+                    }
+                    
+                    const company = companies[0];
+                    return (
+                      <>
+                        <p>
+                          <span className="font-medium">Company:</span> {company.name}
+                        </p>
+                        {company.description && (
+                          <p>
+                            <span className="font-medium">Description:</span> {company.description}
+                          </p>
+                        )}
+                        {company.URLs?.website && (
+                          <p>
+                            <span className="font-medium">Website:</span>{' '}
+                            <a
+                              href={company.URLs.website.startsWith('http') ? company.URLs.website : `https://${company.URLs.website}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              {company.URLs.website}
+                            </a>
+                          </p>
+                        )}
+                        {company.URLs?.linkedin && (
+                          <p>
+                            <span className="font-medium">LinkedIn:</span>{' '}
+                            <a
+                              href={company.URLs.linkedin}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              View LinkedIn
+                            </a>
+                          </p>
+                        )}
+                        {company.country && (
+                          <p>
+                            <span className="font-medium">Location:</span> {company.locality ? `${company.locality}, ` : ''}{company.region ? `${company.region}, ` : ''}{company.country}
+                          </p>
+                        )}
+                        {company.industryList && company.industryList.length > 0 && (
+                          <p>
+                            <span className="font-medium">Industry:</span> {company.industryList.slice(0, 3).join(', ')}
+                          </p>
+                        )}
+                      </>
+                    );
+                  } else {
+                    const persons = result.enriched?.person ? [result.enriched.person] : result.data?.items;
+                    if (!persons || persons.length === 0) return <p>No person profile found.</p>;
+                    
+                    const person = persons[0];
+                    return (
+                      <>
+                        <p>
+                          <span className="font-medium">Name:</span> {person.fullName}
+                        </p>
+                        {person.location && (
+                          <p>
+                            <span className="font-medium">Location:</span> {person.location}
+                          </p>
+                        )}
+                        {person.URLs?.linkedin && (
+                          <p>
+                            <span className="font-medium">LinkedIn:</span>{' '}
+                            <a
+                              href={person.URLs.linkedin}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              View LinkedIn
+                            </a>
+                          </p>
+                        )}
+                        {person.URLs?.twitter && (
+                          <p>
+                            <span className="font-medium">Twitter:</span>{' '}
+                            <a
+                              href={person.URLs.twitter}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              View Twitter
+                            </a>
+                          </p>
+                        )}
+                        {person.headline && (
+                          <p>
+                            <span className="font-medium">Headline:</span> {person.headline}
+                          </p>
+                        )}
+                      </>
+                    );
+                  }
+                })()}
+              </div>
+            ) : null}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
@@ -1205,7 +1339,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             <!-- Email Body -->
             <div class="email-body">
               <div class="email-content">
-                ${escapeHtml(emailData.decodedBody) || '<p><em>No email content available</em></p>'}
+                ${escapeHtml(emailData.decodedBody || '') || '<p><em>No email content available</em></p>'}
               </div>
             </div>
 
@@ -1310,7 +1444,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                   <CopyIcon
                     size={14}
                     className="cursor-pointer"
-                    onClick={() => handleCopySenderEmail(person.email)}
+                    onClick={() => person.email && handleCopySenderEmail(person.email)}
                   />
                 </span>
               </div>

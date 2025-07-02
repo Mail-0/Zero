@@ -119,6 +119,7 @@
         "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "40",
         "THREAD_SYNC_LOOP": "false",
+        "AVIATO_API_KEY": "",
       },
       "kv_namespaces": [
         {
@@ -263,6 +264,7 @@
         "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "40",
         "THREAD_SYNC_LOOP": "false",
+        "AVIATO_API_KEY": "",
       },
       "kv_namespaces": [
         {
@@ -404,6 +406,7 @@
         "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "40",
         "THREAD_SYNC_LOOP": "false",
+        "AVIATO_API_KEY": "",
       },
       "kv_namespaces": [
         {

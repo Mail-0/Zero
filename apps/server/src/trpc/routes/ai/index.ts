@@ -1,6 +1,7 @@
 import { compose, generateEmailSubject } from './compose';
 import { generateSearchQuery } from './search';
 import { webSearch } from './webSearch';
+import { personSearch, companySearch, smartSearch } from './personSearch';
 import { router } from '../../trpc';
 
 export const aiRouter = router({
@@ -8,4 +9,7 @@ export const aiRouter = router({
   compose,
   generateEmailSubject,
   webSearch,
+  personSearch,
+  companySearch,
+  smartSearch,
 });
