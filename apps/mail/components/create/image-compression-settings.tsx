@@ -1,10 +1,10 @@
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Settings, Image, FileImage, Zap } from 'lucide-react';
 import type { ImageQuality } from '@/lib/image-compression';
-import { useTranslations } from 'use-intl';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { m } from '@/paraglide/messages';
 
 interface ImageCompressionSettingsProps {
   quality: ImageQuality;
@@ -35,23 +35,24 @@ export function ImageCompressionSettings({
   onQualityChange,
   className,
 }: ImageCompressionSettingsProps) {
-  const t = useTranslations();
-
   return (
     <Card className={className}>
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <Settings className="h-4 w-4" />
           <CardTitle className="text-sm font-medium">
-            {t('pages.createEmail.imageCompression.title')}
+            {m['pages.createEmail.imageCompression.title']()}
           </CardTitle>
         </div>
         <CardDescription className="text-xs">
-          {t('pages.createEmail.imageCompression.description')}
+          {m['pages.createEmail.imageCompression.description']()}
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-0">
-        <RadioGroup value={quality} onValueChange={(value) => onQualityChange(value as ImageQuality)}>
+        <RadioGroup
+          value={quality}
+          onValueChange={(value) => onQualityChange(value as ImageQuality)}
+        >
           <div className="space-y-3">
             {qualityOptions.map((option) => {
               const Icon = option.icon;
@@ -61,14 +62,11 @@ export function ImageCompressionSettings({
                   <div className="flex items-center gap-2">
                     <Icon className={`h-4 w-4 ${option.color}`} />
                     <div className="flex flex-col">
-                      <Label
-                        htmlFor={option.value}
-                        className="text-sm font-medium cursor-pointer"
-                      >
-                        {t(`pages.createEmail.imageCompression.${option.value}.label`)}
+                      <Label htmlFor={option.value} className="cursor-pointer text-sm font-medium">
+                        {m[`pages.createEmail.imageCompression.${option.value}.label`]()}
                       </Label>
-                      <span className="text-xs text-muted-foreground">
-                        {t(`pages.createEmail.imageCompression.${option.value}.description`)}
+                      <span className="text-muted-foreground text-xs">
+                        {m[`pages.createEmail.imageCompression.${option.value}.description`]()}
                       </span>
                     </div>
                   </div>
@@ -80,4 +78,4 @@ export function ImageCompressionSettings({
       </CardContent>
     </Card>
   );
-} 
+}

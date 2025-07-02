@@ -31,7 +31,7 @@ import { GMAIL_COLORS } from '@/lib/constants';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useTranslations } from 'use-intl';
+import { m } from '@/paraglide/messages';
 import { useForm } from 'react-hook-form';
 import { Command } from 'lucide-react';
 import { COLORS } from './colors';
@@ -39,7 +39,6 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 export default function LabelsPage() {
-  const t = useTranslations();
   const { data: labels, isLoading, error, refetch } = useLabels();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingLabel, setEditingLabel] = useState<LabelType | null>(null);
@@ -55,18 +54,18 @@ export default function LabelsPage() {
         ? updateLabel({ id: editingLabel.id!, name: data.name, color: data.color })
         : createLabel({ color: data.color, name: data.name }),
       {
-        loading: t('common.labels.savingLabel'),
-        success: t('common.labels.saveLabelSuccess'),
-        error: t('common.labels.failedToSavingLabel'),
+        loading: m['common.labels.savingLabel'](),
+        success: m['common.labels.saveLabelSuccess'](),
+        error: m['common.labels.failedToSavingLabel'](),
       },
     );
   };
 
   const handleDelete = async (id: string) => {
     toast.promise(deleteLabel({ id }), {
-      loading:  t('common.labels.deletingLabel'),
-      success: t('common.labels.deleteLabelSuccess'),
-      error: t('common.labels.failedToDeleteLabel'),
+      loading:  m['common.labels.deletingLabel'](),
+      success: m['common.labels.deleteLabelSuccess'](),
+      error: m['common.labels.failedToDeleteLabel'](),
       finally: async () => {
         await refetch();
       },
@@ -81,14 +80,14 @@ export default function LabelsPage() {
   return (
     <div className="grid gap-6">
       <SettingsCard
-        title={t('pages.settings.labels.title')}
-        description={t('pages.settings.labels.description')}
+        title={m['pages.settings.labels.title']()}
+        description={m['pages.settings.labels.description']()}
         action={
           <LabelDialog
             trigger={
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                {t('common.mail.createNewLabel')}
+                {m['common.mail.createNewLabel']()}
               </Button>
             }
             editingLabel={editingLabel}
@@ -114,7 +113,7 @@ export default function LabelsPage() {
                 <p className="text-muted-foreground py-4 text-center text-sm">{error.message}</p>
               ) : labels?.length === 0 ? (
                 <p className="text-muted-foreground py-4 text-center text-sm">
-                 {t('common.mail.noLabelsAvailable')}
+                 {m['common.mail.noLabelsAvailable']()}
                 </p>
               ) : (
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-6">
@@ -148,7 +147,7 @@ export default function LabelsPage() {
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent className="dark:bg-panelDark mb-1 bg-white">
-                               {t('common.labels.editLabel')}
+                            {m['common.labels.editLabel']()}
                             </TooltipContent>
                           </Tooltip>
                           <Tooltip>
@@ -163,7 +162,7 @@ export default function LabelsPage() {
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent className="dark:bg-panelDark mb-1 bg-white">
-                              {t('common.labels.deleteLabel')}
+                            {m['common.labels.deleteLabel']()}
                             </TooltipContent>
                           </Tooltip>
                         </div>

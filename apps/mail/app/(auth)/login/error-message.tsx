@@ -1,8 +1,8 @@
 import { TriangleAlert } from 'lucide-react';
-import { useTranslations } from 'use-intl';
 import { useQueryState } from 'nuqs';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
+import { m } from '@/paraglide/messages';
 
 const errorMessages = ['required_scopes_missing'] as const;
 
@@ -19,11 +19,10 @@ const isErrorMessage = (error: string): error is (typeof errorMessages)[number] 
 
 const ErrorMessage = () => {
   const [error] = useQueryState('error');
-  const t = useTranslations();
 
   useEffect(() => {
     if (error && isErrorToast(error)) {
-      toast.error(t(`errorMessages.${error}`));
+      toast.error(m[`errorMessages.${error}`]());
     }
   });
 
@@ -36,7 +35,7 @@ const ErrorMessage = () => {
       <div className="flex items-center">
         <TriangleAlert size={28} />
         <p className="ml-2 text-sm text-black/80 dark:text-white/80">
-          {t(`errorMessages.${error}`)}
+          {m[`errorMessages.${error}`]()}
         </p>
       </div>
     </div>
