@@ -29,7 +29,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import type { MailSelectMode, ParsedMessage, ThreadProps } from '@/types';
 import { ThreadContextMenu } from '@/components/context/thread-context';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
-import { useIsFetching, useQueryClient } from '@tanstack/react-query';
+import { useIsFetching, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useMail, type Config } from '@/components/mail/use-mail';
 import { type ThreadDestination } from '@/lib/thread-actions';
@@ -58,6 +58,7 @@ import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Categories } from './mail';
 import { useAtom } from 'jotai';
+import type { ParsedDraft } from '../../../server/src/lib/driver/types';
 
 const Thread = memo(
   function Thread({
@@ -628,8 +629,8 @@ const Thread = memo(
 );
 
 const Draft = memo(({ message }: { message: { id: string } }) => {
-  const draftQuery = useDraft(message.id);
-  const draft = draftQuery.data as ParsedDraft | undefined;
+  const draftQuery = useDraft(message.id) as UseQueryResult<ParsedDraft>;
+  const draft = draftQuery.data;
   const [, setComposeOpen] = useQueryState('isComposeOpen');
   const [, setDraftId] = useQueryState('draftId');
   const handleMailClick = useCallback(() => {
