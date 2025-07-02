@@ -19,7 +19,7 @@ export function FileDropZone({
   const [isOverDropZone, setIsOverDropZone] = React.useState(false);
 
   // This handles external files being dragged over the drop zone
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     setIsOverDropZone(false);
   };
 
