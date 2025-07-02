@@ -28,7 +28,7 @@
   },
   "buckets": {
     "json": {
-      "include": ["apps/mail/locales/[locale].json"]
+      "include": ["apps/mail/messages/[locale].json"]
     }
   }
 }

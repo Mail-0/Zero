@@ -8,15 +8,14 @@ import { Categories } from '@/components/mail/mail';
 import { useShortcuts } from './use-hotkey-utils';
 import { useThreads } from '@/hooks/use-threads';
 import { cleanSearchValue } from '@/lib/utils';
-import { useTranslations } from 'use-intl';
 import { useQueryState } from 'nuqs';
 import { toast } from 'sonner';
+import { m } from '@/paraglide/messages';
 
 export function MailListHotkeys() {
   const scope = 'mail-list';
   const [mail, setMail] = useMail();
   const [{}, items] = useThreads();
-  const t = useTranslations();
   const hoveredEmailId = useRef<string | null>(null);
   const categories = Categories();
   const [, setCategory] = useQueryState('category');
@@ -59,7 +58,7 @@ export function MailListHotkeys() {
         bulkSelected: allIds,
       }));
     } else {
-      toast.info(t('common.mail.noEmailsToSelect'));
+      toast.info(m['common.mail.noEmailsToSelect']());
     }
   }, [items, mail]);
 
@@ -71,12 +70,12 @@ export function MailListHotkeys() {
 
     const idsToMark = mail.bulkSelected;
     if (idsToMark.length === 0) {
-      toast.info(t('common.mail.noEmailsToSelect'));
+      toast.info(m['common.mail.noEmailsToSelect']());
       return;
     }
 
     optimisticMarkAsRead(idsToMark);
-  }, [mail.bulkSelected, optimisticMarkAsRead, t, shouldUseHover]);
+  }, [mail.bulkSelected, optimisticMarkAsRead, shouldUseHover]);
 
   const markAsUnread = useCallback(() => {
     if (shouldUseHover && hoveredEmailId.current) {
@@ -86,12 +85,12 @@ export function MailListHotkeys() {
 
     const idsToMark = mail.bulkSelected;
     if (idsToMark.length === 0) {
-      toast.info(t('common.mail.noEmailsToSelect'));
+      toast.info(m['common.mail.noEmailsToSelect']());
       return;
     }
 
     optimisticMarkAsUnread(idsToMark);
-  }, [mail.bulkSelected, optimisticMarkAsUnread, t, shouldUseHover]);
+  }, [mail.bulkSelected, optimisticMarkAsUnread, shouldUseHover]);
 
   const markAsImportant = useCallback(() => {
     if (shouldUseHover && hoveredEmailId.current) {
@@ -101,12 +100,12 @@ export function MailListHotkeys() {
 
     const idsToMark = mail.bulkSelected;
     if (idsToMark.length === 0) {
-      toast.info(t('common.mail.noEmailsToSelect'));
+      toast.info(m['common.mail.noEmailsToSelect']());
       return;
     }
 
     optimisticToggleImportant(idsToMark, true);
-  }, [mail.bulkSelected, optimisticToggleImportant, t, shouldUseHover]);
+  }, [mail.bulkSelected, optimisticToggleImportant, shouldUseHover]);
 
   const archiveEmail = useCallback(async () => {
     if (shouldUseHover && hoveredEmailId.current) {
@@ -116,12 +115,12 @@ export function MailListHotkeys() {
 
     const idsToArchive = mail.bulkSelected;
     if (idsToArchive.length === 0) {
-      toast.info(t('common.mail.noEmailsToSelect'));
+      toast.info(m['common.mail.noEmailsToSelect']());
       return;
     }
 
     optimisticMoveThreadsTo(idsToArchive, folder, 'archive');
-  }, [mail.bulkSelected, folder, optimisticMoveThreadsTo, t, shouldUseHover]);
+  }, [mail.bulkSelected, folder, optimisticMoveThreadsTo, shouldUseHover]);
 
   const bulkArchive = useCallback(() => {
     if (shouldUseHover && hoveredEmailId.current) {
@@ -131,12 +130,12 @@ export function MailListHotkeys() {
 
     const idsToArchive = mail.bulkSelected;
     if (idsToArchive.length === 0) {
-      toast.info(t('common.mail.noEmailsToSelect'));
+      toast.info(m['common.mail.noEmailsToSelect']());
       return;
     }
 
     optimisticMoveThreadsTo(idsToArchive, folder, 'archive');
-  }, [mail.bulkSelected, folder, optimisticMoveThreadsTo, t, shouldUseHover]);
+  }, [mail.bulkSelected, folder, optimisticMoveThreadsTo, shouldUseHover]);
 
   const bulkDelete = useCallback(() => {
     if (shouldUseHover && hoveredEmailId.current) {
@@ -146,12 +145,12 @@ export function MailListHotkeys() {
 
     const idsToDelete = mail.bulkSelected;
     if (idsToDelete.length === 0) {
-      toast.info(t('common.mail.noEmailsToSelect'));
+      toast.info(m['common.mail.noEmailsToSelect']());
       return;
     }
 
     optimisticDeleteThreads(idsToDelete, folder);
-  }, [mail.bulkSelected, folder, optimisticDeleteThreads, t, shouldUseHover]);
+  }, [mail.bulkSelected, folder, optimisticDeleteThreads, shouldUseHover]);
 
   const bulkStar = useCallback(() => {
     if (shouldUseHover && hoveredEmailId.current) {
@@ -161,12 +160,12 @@ export function MailListHotkeys() {
 
     const idsToStar = mail.bulkSelected;
     if (idsToStar.length === 0) {
-      toast.info(t('common.mail.noEmailsToSelect'));
+      toast.info(m['common.mail.noEmailsToSelect']());
       return;
     }
 
     optimisticToggleStar(idsToStar, true);
-  }, [mail.bulkSelected, optimisticToggleStar, t, shouldUseHover]);
+  }, [mail.bulkSelected, optimisticToggleStar, shouldUseHover]);
 
   const exitSelectionMode = useCallback(() => {
     setMail((prev) => ({

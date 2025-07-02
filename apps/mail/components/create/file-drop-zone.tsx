@@ -42,7 +42,7 @@ export function FileDropZone({
     const relatedTarget = e.relatedTarget as Node;
     const currentTarget = e.currentTarget as Node;
     
-    if (!currentTarget.contains(relatedTarget)) {
+    if (!relatedTarget || !currentTarget.contains(relatedTarget)) {
       setIsOverDropZone(false);
     }
   };
