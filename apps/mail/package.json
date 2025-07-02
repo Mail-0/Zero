@@ -35,6 +35,7 @@
     "@tiptap/core": "2.23.0",
     "@tiptap/extension-bold": "2.23.0",
     "@tiptap/extension-document": "2.23.0",
+    "@tiptap/extension-emoji": "2.23.1",
     "@tiptap/extension-file-handler": "2.23.0",
     "@tiptap/extension-image": "2.23.0",
     "@tiptap/extension-link": "2.23.0",

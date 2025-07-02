@@ -154,6 +154,9 @@ importers:
       '@tiptap/extension-document':
         specifier: 2.23.0
         version: 2.23.0(@tiptap/core@2.23.0(@tiptap/pm@2.23.0))
+      '@tiptap/extension-emoji':
+        specifier: 2.23.1
+        version: 2.23.1(@tiptap/core@2.23.0(@tiptap/pm@2.23.0))(@tiptap/pm@2.23.0)(@tiptap/suggestion@2.23.0(@tiptap/core@2.23.0(@tiptap/pm@2.23.0))(@tiptap/pm@2.23.0))(emojibase@16.0.0)
       '@tiptap/extension-file-handler':
         specifier: 2.23.0
         version: 2.23.0(@tiptap/core@2.23.0(@tiptap/pm@2.23.0))(@tiptap/extension-text-style@2.23.0(@tiptap/core@2.23.0(@tiptap/pm@2.23.0)))
@@ -3435,6 +3438,13 @@ packages:
       '@tiptap/core': ^2.7.0
       '@tiptap/pm': ^2.7.0
 
+  '@tiptap/extension-emoji@2.23.1':
+    resolution: {integrity: sha512-bqTn+hbq0bDIcrPIIjVq3GndJ/PYQfReMDlyTv0mUCtRbP7zReJ1oFx02d25RmwgS6XL3U8WW4kEFomhliwWSQ==}
+    peerDependencies:
+      '@tiptap/core': ^2.7.0
+      '@tiptap/pm': ^2.7.0
+      '@tiptap/suggestion': ^2.7.0
+
   '@tiptap/extension-file-handler@2.23.0':
     resolution: {integrity: sha512-rTimkgFtMIbYYydf2suvIpF+GnFRU80BppnrOUNfW+HzaI0i1p0gKzEDKJuPBMAEFfG/Q7Yxetk6rO6Y5Sq6Mw==}
     peerDependencies:
@@ -4628,6 +4638,15 @@ packages:
   emoji-regex@9.2.2:
     resolution: {integrity: sha512-L18DaJsXSUk2+42pv8mLs5jJT2hqFkFE4j21wOmgbUqsZ2hL72NsUU785g9RXgo3s0ZNgVl42TiHp3ZtOv/Vyg==}
 
+  emojibase-data@15.3.2:
+    resolution: {integrity: sha512-TpDyTDDTdqWIJixV5sTA6OQ0P0JfIIeK2tFRR3q56G9LK65ylAZ7z3KyBXokpvTTJ+mLUXQXbLNyVkjvnTLE+A==}
+    peerDependencies:
+      emojibase: '*'
+
+  emojibase@16.0.0:
+    resolution: {integrity: sha512-Nw2m7JLIO4Ou2X/yZPRNscHQXVbbr6SErjkJ7EooG7MbR3yDZszCv9KTizsXFc7yZl0n3WF+qUKIC/Lw6H9xaQ==}
+    engines: {node: '>=18.12.0'}
+
   encodeurl@2.0.0:
     resolution: {integrity: sha512-Q0n9HRi4m6JuGIV1eFlmvJB7ZEVxu93IrMyiMsGC0lrMJMWzRgx6WGquyfQgZVb31vhGgXnfmPNNXmxnOkRBrg==}
     engines: {node: '>= 0.8'}
@@ -5338,6 +5357,9 @@ packages:
 
   is-decimal@2.0.1:
     resolution: {integrity: sha512-AAB9hiomQs5DXWcRB1rqsxGUstbRroFOPPVAomNk/3XHR5JyEZChOyTWe2oayKnsSsr/kcGqF+z6yuH6HHpN0A==}
+
+  is-emoji-supported@0.0.5:
+    resolution: {integrity: sha512-WOlXUhDDHxYqcSmFZis+xWhhqXiK2SU0iYiqmth5Ip0FHLZQAt9rKL5ahnilE8/86WH8tZ3bmNNNC+bTzamqlw==}
 
   is-extglob@2.1.1:
     resolution: {integrity: sha512-SbKbANkN603Vi4jEZv49LeVJMn4yGwsbzZworEoyEiutsN3nJYdbO36zfhGJ6QEDpOZIFkDtnq5JRxmvl3jsoQ==}
@@ -10372,6 +10394,17 @@ snapshots:
       '@tiptap/core': 2.23.0(@tiptap/pm@2.23.0)
       '@tiptap/pm': 2.23.0
 
+  '@tiptap/extension-emoji@2.23.1(@tiptap/core@2.23.0(@tiptap/pm@2.23.0))(@tiptap/pm@2.23.0)(@tiptap/suggestion@2.23.0(@tiptap/core@2.23.0(@tiptap/pm@2.23.0))(@tiptap/pm@2.23.0))(emojibase@16.0.0)':
+    dependencies:
+      '@tiptap/core': 2.23.0(@tiptap/pm@2.23.0)
+      '@tiptap/pm': 2.23.0
+      '@tiptap/suggestion': 2.23.0(@tiptap/core@2.23.0(@tiptap/pm@2.23.0))(@tiptap/pm@2.23.0)
+      emoji-regex: 10.4.0
+      emojibase-data: 15.3.2(emojibase@16.0.0)
+      is-emoji-supported: 0.0.5
+    transitivePeerDependencies:
+      - emojibase
+
   '@tiptap/extension-file-handler@2.23.0(@tiptap/core@2.23.0(@tiptap/pm@2.23.0))(@tiptap/extension-text-style@2.23.0(@tiptap/core@2.23.0(@tiptap/pm@2.23.0)))':
     dependencies:
       '@tiptap/core': 2.23.0(@tiptap/pm@2.23.0)
@@ -11581,6 +11614,12 @@ snapshots:
 
   emoji-regex@9.2.2: {}
 
+  emojibase-data@15.3.2(emojibase@16.0.0):
+    dependencies:
+      emojibase: 16.0.0
+
+  emojibase@16.0.0: {}
+
   encodeurl@2.0.0: {}
 
   encoding-sniffer@0.2.1:
@@ -12517,6 +12556,8 @@ snapshots:
       has-tostringtag: 1.0.2
 
   is-decimal@2.0.1: {}
+
+  is-emoji-supported@0.0.5: {}
 
   is-extglob@2.1.1: {}
 
