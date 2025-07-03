@@ -1,7 +1,11 @@
-import { config } from '@zero/eslint-config';
+// apps/docs/eslint.config.mjs
+
+import base from '@zero/eslint-config';
 
 export default [
-  ...config,
+  ...base,
+  // your overrides…
+];
   {
     rules: {
       // Add any docs-specific ESLint rules here
