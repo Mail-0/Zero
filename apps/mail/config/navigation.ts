@@ -90,7 +90,7 @@ export const navigationConfig: Record<string, NavConfig> = {
             title: m['navigation.sidebar.starred'](),
             url: '/mail/starred',
             icon: Stars,
-            shortcut: 'g + s',
+            shortcut: 'g + *',
           },
           {
             id: 'spam',
