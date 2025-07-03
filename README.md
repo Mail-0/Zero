@@ -34,7 +34,7 @@ Zero is built with modern and reliable technologies:
 - **Backend**: Node.js, Drizzle ORM
 - **Database**: PostgreSQL
 - **Authentication**: Better Auth, Google OAuth
-<!-- - **Testing**: Jest, React Testing Library -->
+<!-- - **Testing**: Jest, React Testing Library, Playwright -->
 
 ## Getting Started
 

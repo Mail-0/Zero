@@ -119,6 +119,7 @@
     "@cloudflare/vite-plugin": "^1.3.1",
     "@inlang/cli": "^3.0.0",
     "@inlang/paraglide-js": "2.1.0",
+    "@playwright/test": "1.53.2",
     "@tailwindcss/typography": "0.5.16",
     "@types/accept-language-parser": "^1.5.8",
     "@types/canvas-confetti": "1.9.0",
