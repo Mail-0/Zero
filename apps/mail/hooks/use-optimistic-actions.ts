@@ -276,6 +276,7 @@ export function useOptimisticActions() {
     const optimisticId = addOptimisticAction({
       type: 'MOVE',
       threadIds,
+      source: currentFolder,
       destination,
     });
 
@@ -335,6 +336,7 @@ export function useOptimisticActions() {
     const optimisticId = addOptimisticAction({
       type: 'MOVE',
       threadIds,
+      source: currentFolder,
       destination: 'bin',
     });
 

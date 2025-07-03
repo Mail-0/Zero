@@ -4,6 +4,7 @@ import { useOptimisticActions } from './use-optimistic-actions';
 import { useMail } from '@/components/mail/use-mail';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { atom, useAtom } from 'jotai';
+import { useQueryState } from 'nuqs';
 
 export const focusedIndexAtom = atom<number | null>(null);
 export const mailNavigationCommandAtom = atom<null | 'next' | 'previous'>(null);
@@ -23,7 +24,10 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
   itemsRef.current = items;
   const onNavigateRef = useRef(onNavigate);
   onNavigateRef.current = onNavigate;
-  const { open: isCommandPaletteOpen } = useCommandPalette();
+  const [isCommandPaletteOpen] = useQueryState('isCommandPaletteOpen');
+  
+  // Track the previously focused thread ID to detect when it gets deleted
+  const prevFocusedThreadId = useRef<string | null>(null);
 
   const hoveredMailRef = useRef<string | null>(null);
   const keyboardActiveRef = useRef(false);
@@ -39,6 +43,7 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
     setFocusedIndex(null);
     onNavigateRef.current(null);
     keyboardActiveRef.current = false;
+    prevFocusedThreadId.current = null;
   }, [setFocusedIndex, onNavigateRef]);
 
   const getThreadElement = useCallback(
@@ -77,6 +82,9 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
       const message = itemsRef.current[index];
       const threadId = message.id;
 
+      // Update the tracked focused thread ID
+      prevFocusedThreadId.current = threadId;
+
       const currentThreadId = window.location.search.includes('threadId=');
       if (currentThreadId) {
         onNavigateRef.current(threadId);
@@ -98,36 +106,101 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
           const firstItem = itemsRef.current[0];
           if (firstItem) {
             onNavigateRef.current(firstItem.id);
+            prevFocusedThreadId.current = firstItem.id;
           }
           scrollIntoView(0, 'auto');
           return 0;
         }
         onNavigateRef.current(null);
+        prevFocusedThreadId.current = null;
         return null;
       }
 
-      if (prevIndex < itemsRef.current.length - 1) {
-        const newIndex = prevIndex;
-        const nextItem = itemsRef.current[prevIndex + 1];
+      // Current focused index is beyond the available items (thread was deleted)
+      if (prevIndex >= itemsRef.current.length) {
+        const newIndex = Math.max(0, itemsRef.current.length - 1);
+        const nextItem = itemsRef.current[newIndex];
         if (nextItem) {
           onNavigateRef.current(nextItem.id);
-        }
-        scrollIntoView(newIndex, 'auto');
-        return newIndex;
-      } else {
-        const newIndex = itemsRef.current.length > 1 ? prevIndex - 1 : null;
-
-        if (newIndex !== null) {
-          const nextItem = itemsRef.current[newIndex];
-          if (nextItem) {
-            onNavigateRef.current(nextItem.id);
-          }
+          prevFocusedThreadId.current = nextItem.id;
           scrollIntoView(newIndex, 'auto');
           return newIndex;
         } else {
           onNavigateRef.current(null);
+          prevFocusedThreadId.current = null;
           return null;
         }
+      }
+
+      // Check if the focused thread was deleted by comparing thread IDs
+      const currentItem = itemsRef.current[prevIndex];
+      const currentThreadId = currentItem?.id;
+      const wasFocusedThreadDeleted = prevFocusedThreadId.current && 
+        (!currentThreadId || currentThreadId !== prevFocusedThreadId.current);
+      
+      if (wasFocusedThreadDeleted) {
+        // The focused thread was deleted, navigate to the same position
+        // which now contains the next email in the list
+        if (prevIndex < itemsRef.current.length) {
+          const nextItem = itemsRef.current[prevIndex];
+          if (nextItem) {
+            onNavigateRef.current(nextItem.id);
+            prevFocusedThreadId.current = nextItem.id;
+            scrollIntoView(prevIndex, 'auto');
+            return prevIndex;
+          }
+        }
+        
+        // If no item at current position, try the previous position
+        if (prevIndex > 0) {
+          const newIndex = prevIndex - 1;
+          const nextItem = itemsRef.current[newIndex];
+          if (nextItem) {
+            onNavigateRef.current(nextItem.id);
+            prevFocusedThreadId.current = nextItem.id;
+            scrollIntoView(newIndex, 'auto');
+            return newIndex;
+          }
+        }
+        
+        onNavigateRef.current(null);
+        prevFocusedThreadId.current = null;
+        return null;
+      } else if (currentItem) {
+        // Current item existts and wasnt deleted, then navigate to the next one
+        if (prevIndex < itemsRef.current.length - 1) {
+          const newIndex = prevIndex + 1;
+          const nextItem = itemsRef.current[newIndex];
+          if (nextItem) {
+            onNavigateRef.current(nextItem.id);
+            prevFocusedThreadId.current = nextItem.id;
+          }
+          scrollIntoView(newIndex, 'auto');
+          return newIndex;
+        } else {
+          // we're at the end so stay at the current thread
+          onNavigateRef.current(currentItem.id);
+          prevFocusedThreadId.current = currentItem.id;
+          scrollIntoView(prevIndex, 'auto');
+          return prevIndex;
+        }
+      } else {
+        // no current item so try to find any available thread
+        if (itemsRef.current.length > 0) {
+          const newIndex = Math.min(prevIndex, itemsRef.current.length - 1);
+          const nextItem = itemsRef.current[newIndex];
+          if (nextItem) {
+            onNavigateRef.current(nextItem.id);
+            prevFocusedThreadId.current = nextItem.id;
+            scrollIntoView(newIndex, 'auto');
+            return newIndex;
+          }
+        }
+        
+        // 0 threads available
+        onNavigateRef.current(null);
+        prevFocusedThreadId.current = null;
+        return null;
       }
     });
   }, [onNavigateRef, scrollIntoView, setFocusedIndex]);
@@ -186,18 +259,22 @@ export function useMailNavigation({ items, containerRef, onNavigate }: UseMailNa
     if (focusedIndex === null) return;
 
     const message = itemsRef.current[focusedIndex];
-    if (message) onNavigateRef.current(message.id);
+    if (message) {
+      onNavigateRef.current(message.id);
+      prevFocusedThreadId.current = message.id;
+    }
   }, [focusedIndex]);
 
   const handleEscape = useCallback(() => {
     setFocusedIndex(null);
     onNavigateRef.current(null);
     keyboardActiveRef.current = false;
+    prevFocusedThreadId.current = null;
   }, [setFocusedIndex, onNavigateRef]);
 
   useHotkeys('ArrowUp', handleArrowUp, { preventDefault: true, enabled: !isCommandPaletteOpen });
   useHotkeys('ArrowDown', handleArrowDown, { preventDefault: true, enabled: !isCommandPaletteOpen });
-  useHotkeys('j', handleArrowDown,{enabled: !isCommandPaletteOpen });
+  useHotkeys('j', handleArrowDown, { enabled: !isCommandPaletteOpen });
   useHotkeys('k', handleArrowUp, { enabled: !isCommandPaletteOpen });
   useHotkeys('Enter', handleEnter, { preventDefault: true,enabled: !isCommandPaletteOpen });
   useHotkeys('Escape', handleEscape, { preventDefault: true,enabled: !isCommandPaletteOpen });

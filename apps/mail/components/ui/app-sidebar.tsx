@@ -39,7 +39,7 @@ import { useBilling } from '@/hooks/use-billing';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { useAIFullScreen } from './ai-sidebar';
-import { useStats } from '@/hooks/use-stats';
+import { useAdjustedStats } from '@/hooks/use-stats';
 import { useLocation } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { m } from '@/paraglide/messages';
@@ -63,7 +63,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const { isFullScreen } = useAIFullScreen();
 
-  const { data: stats } = useStats();
+  const { data: stats } = useAdjustedStats();
 
   const location = useLocation();
   const { data: session, isPending: isSessionPending } = useSession();

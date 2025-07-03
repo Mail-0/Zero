@@ -2,7 +2,7 @@ import type { ThreadDestination } from '@/lib/thread-actions';
 import { atom } from 'jotai';
 
 export type OptimisticAction =
-  | { type: 'MOVE'; threadIds: string[]; destination: ThreadDestination }
+  | { type: 'MOVE'; threadIds: string[]; source: string; destination: ThreadDestination }
   | { type: 'STAR'; threadIds: string[]; starred: boolean }
   | { type: 'READ'; threadIds: string[]; read: boolean }
   | { type: 'LABEL'; threadIds: string[]; labelIds: string[]; add: boolean }
@@ -44,4 +44,11 @@ export const removeOptimisticActionAtom = atom(null, (get, set, id: string) => {
   const currentActions = get(optimisticActionsAtom);
   const { [id]: _, ...rest } = currentActions;
   set(optimisticActionsAtom, rest);
+});
+
+// Derived atom that adjusts server stats with optimistic actions
+export const adjustedStatsAtom = atom((get) => {
+  // We can't directly access trpc query data here, so this will be used differently
+  // This is a placeholder - actual implementation will be in the hook
+  return null;
 });

@@ -14,7 +14,7 @@ import { m } from '../../paraglide/messages.js';
 import { Button } from '@/components/ui/button';
 import { useLabels } from '@/hooks/use-labels';
 import { Badge } from '@/components/ui/badge';
-import { useStats } from '@/hooks/use-stats';
+import { useAdjustedStats } from '@/hooks/use-stats';
 import SidebarLabels from './sidebar-labels';
 import { useCallback, useRef } from 'react';
 import { BASE_URL } from '@/lib/constants';
@@ -56,7 +56,7 @@ export function NavMain({ items }: NavMainProps) {
   const searchParams = new URLSearchParams();
   const [category] = useQueryState('category');
   const { data: connections } = useConnections();
-  const { data: stats } = useStats();
+  const { data: stats } = useAdjustedStats();
   const { data: activeConnection } = useActiveConnection();
   const trpc = useTRPC();
   const { data: intercomToken } = useQuery(trpc.user.getIntercomToken.queryOptions());
@@ -260,7 +260,7 @@ export function NavMain({ items }: NavMainProps) {
               </div>
 
               {activeAccount ? (
-                <SidebarLabels data={data ?? []} activeAccount={activeAccount} stats={stats} />
+                <SidebarLabels data={data ?? []} activeAccount={activeAccount} />
               ) : null}
             </SidebarMenuItem>
           </Collapsible>
@@ -272,7 +272,7 @@ export function NavMain({ items }: NavMainProps) {
 
 function NavItem(item: NavItemProps & { href: string }) {
   const iconRef = useRef<IconRefType>(null);
-  const { data: stats } = useStats();
+  const { data: stats } = useAdjustedStats();
 
   const { state, setOpenMobile } = useSidebar();
 

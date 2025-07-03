@@ -10,6 +10,7 @@ import { usePrevious } from './use-previous';
 import { useEffect, useMemo } from 'react';
 import { useParams } from 'react-router';
 import { useQueryState } from 'nuqs';
+import { optimisticActionsAtom } from '@/store/optimistic-updates';
 
 export const useThreads = () => {
   const { folder } = useParams<{ folder: string }>();
@@ -17,6 +18,7 @@ export const useThreads = () => {
   const { data: session } = useSession();
   const [backgroundQueue] = useAtom(backgroundQueueAtom);
   const isInQueue = useAtomValue(isThreadInBackgroundQueueAtom);
+  const optimisticActions = useAtomValue(optimisticActionsAtom);
   const trpc = useTRPC();
   const { labels, setLabels } = useSearchLabels();
 
@@ -37,7 +39,17 @@ export const useThreads = () => {
     ),
   );
 
-  // Flatten threads from all pages and sort by receivedOn date (newest first)
+  const shouldHideThread = useMemo(() => {
+    const hideSet = new Set<string>();
+    
+    Object.values(optimisticActions).forEach((action) => {
+      if (action.type === 'MOVE' && action.source === folder) {
+        action.threadIds.forEach((id) => hideSet.add(id));
+      }
+    });
+    
+    return (threadId: string) => hideSet.has(threadId);
+  }, [optimisticActions, folder]);
 
   const threads = useMemo(() => {
     return threadsQuery.data
@@ -45,8 +57,53 @@ export const useThreads = () => {
           .flatMap((e) => e.threads)
           .filter(Boolean)
           .filter((e) => !isInQueue(`thread:${e.id}`))
+          .filter((e) => !shouldHideThread(e.id))
       : [];
-  }, [threadsQuery.data, threadsQuery.dataUpdatedAt, isInQueue, backgroundQueue]);
+  }, [threadsQuery.data, threadsQuery.dataUpdatedAt, isInQueue, backgroundQueue, shouldHideThread]);
+
+  const THRESHOLD = 100;
+  const PREFETCH_PAGES = 3;
+
+  useEffect(() => {
+    if (
+      threads.length < THRESHOLD &&
+      threadsQuery.hasNextPage &&
+      !threadsQuery.isFetchingNextPage &&
+      !threadsQuery.isLoading
+    ) {
+      void threadsQuery.fetchNextPage();
+    }
+  }, [threads.length, threadsQuery.hasNextPage, threadsQuery.isFetchingNextPage, threadsQuery.isLoading]);
+
+  useEffect(() => {
+    const loadedPages = threadsQuery.data?.pages.length ?? 0;
+    if (
+      loadedPages < PREFETCH_PAGES &&
+      threadsQuery.hasNextPage &&
+      !threadsQuery.isFetchingNextPage &&
+      !threadsQuery.isLoading
+    ) {
+      void threadsQuery.fetchNextPage();
+    }
+  }, [threadsQuery.data?.pages.length, threadsQuery.hasNextPage, threadsQuery.isFetchingNextPage, threadsQuery.isLoading]);
+
+  useEffect(() => {
+    const optimisticlyRemovedCount = Object.values(optimisticActions).reduce((count, action) => {
+      if (action.type === 'MOVE' && action.source === folder) {
+        return count + action.threadIds.length;
+      }
+      return count;
+    }, 0);
+
+    if (
+      optimisticlyRemovedCount > 20 &&
+      threadsQuery.hasNextPage &&
+      !threadsQuery.isFetchingNextPage &&
+      !threadsQuery.isLoading
+    ) {
+      void threadsQuery.fetchNextPage();
+    }
+  }, [optimisticActions, folder, threadsQuery.hasNextPage, threadsQuery.isFetchingNextPage, threadsQuery.isLoading]);
 
   const isEmpty = useMemo(() => threads.length === 0, [threads]);
   const isReachingEnd =

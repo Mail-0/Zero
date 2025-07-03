@@ -603,18 +603,16 @@ const Thread = memo(
         </div>
       ) : null;
 
-    return latestMessage ? (
-      !optimisticState.shouldHide && idToUse ? (
-        <ThreadContextMenu
-          threadId={idToUse}
-          isInbox={isFolderInbox}
-          isSpam={isFolderSpam}
-          isSent={isFolderSent}
-          isBin={isFolderBin}
-        >
-          {content}
-        </ThreadContextMenu>
-      ) : null
+    return latestMessage && idToUse ? (
+      <ThreadContextMenu
+        threadId={idToUse}
+        isInbox={isFolderInbox}
+        isSpam={isFolderSpam}
+        isSent={isFolderSent}
+        isBin={isFolderBin}
+      >
+        {content}
+      </ThreadContextMenu>
     ) : null;
   },
   (prev, next) => {

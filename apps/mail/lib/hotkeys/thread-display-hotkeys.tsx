@@ -1,8 +1,8 @@
 import { mailNavigationCommandAtom } from '@/hooks/use-mail-navigation';
-import { useThread, useThreads } from '@/hooks/use-threads';
+import { useThread } from '@/hooks/use-threads';
 import { keyboardShortcuts } from '@/config/shortcuts';
 import useMoveTo from '@/hooks/driver/use-move-to';
-import useDelete from '@/hooks/driver/use-delete';
+import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { useShortcuts } from './use-hotkey-utils';
 import { useParams } from 'react-router';
 import { useQueryState } from 'nuqs';
@@ -21,7 +21,7 @@ export function ThreadDisplayHotkeys() {
   const params = useParams<{
     folder: string;
   }>();
-  const { mutate: deleteThread } = useDelete();
+  const { optimisticDeleteThreads } = useOptimisticActions();
   const { mutate: moveTo } = useMoveTo();
   const setMailNavigationCommand = useSetAtom(mailNavigationCommandAtom);
 
@@ -42,7 +42,7 @@ export function ThreadDisplayHotkeys() {
     delete: () => {
       if (!openThreadId) return;
       if (params.folder === 'bin') {
-        deleteThread(openThreadId);
+        optimisticDeleteThreads([openThreadId], 'bin');
         setMailNavigationCommand('next');
       } else {
         moveTo({
