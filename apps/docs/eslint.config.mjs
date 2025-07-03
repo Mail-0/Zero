@@ -4,11 +4,10 @@ import base from '@zero/eslint-config';
 
 export default [
   ...base,
-  // your overrides…
-];
   {
+    // docs-specific ESLint rules here
     rules: {
-      // Add any docs-specific ESLint rules here
+      // e.g. 'mdx/no-unused-expressions': 'error',
     },
   },
 ];
