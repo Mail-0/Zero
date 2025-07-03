@@ -302,8 +302,8 @@ importers:
         specifier: ^8.0.0
         version: 8.0.0
       posthog-js:
-        specifier: 1.236.6
-        version: 1.236.6
+        specifier: 1.256.0
+        version: 1.256.0
       prosemirror-model:
         specifier: 1.25.1
         version: 1.25.1
@@ -6246,8 +6246,8 @@ packages:
     resolution: {integrity: sha512-cDWgoah1Gez9rN3H4165peY9qfpEo+SA61oQv65O3cRUE1pOEoJWwddwcqKE8XZYjbblOJlYDlLV4h67HrEVDg==}
     engines: {node: '>=12'}
 
-  posthog-js@1.236.6:
-    resolution: {integrity: sha512-IX4fkn3HCK+ObdHr/AuWd+Ks7bgMpRpOQB93b5rDJAWkG4if4xFVUn5pgEjyCNeOO2GM1ECnp08q9tYNYEfwbA==}
+  posthog-js@1.256.0:
+    resolution: {integrity: sha512-LJSj4VcuLQGlsk4aQDOydx+oSj5+nlXHvHPDcAmzLucfoJEUi5CmluUU78V5+MwswoUHYZdGf5TPae3EXQk3FQ==}
     peerDependencies:
       '@rrweb/types': 2.0.0-alpha.17
       rrweb-snapshot: 2.0.0-alpha.17
@@ -13539,7 +13539,7 @@ snapshots:
 
   postgres@3.4.5: {}
 
-  posthog-js@1.236.6:
+  posthog-js@1.256.0:
     dependencies:
       core-js: 3.43.0
       fflate: 0.4.8
