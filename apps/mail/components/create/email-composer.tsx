@@ -5,7 +5,6 @@ import {
   Heading1,
   Heading2,
   Heading3,
-  Image,
   Loader,
   Paperclip,
   Plus,
@@ -26,10 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Italic, LinkIcon, List, ListOrdered, Strikethrough, Underline } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { BubbleMenu, EditorContent, useCurrentEditor } from '@tiptap/react';
 import { TextEffect } from '@/components/motion-primitives/text-effect';
 import { ImageCompressionSettings } from './image-compression-settings';
 import { useActiveConnection } from '@/hooks/use-connections';
@@ -38,9 +34,9 @@ import { useEmailAliases } from '@/hooks/use-email-aliases';
 import type { ImageQuality } from '@/lib/image-compression';
 import useComposeEditor from '@/hooks/use-compose-editor';
 import { CurvedArrow, Sparkles, X } from '../icons/icons';
+import { BubbleMenu, EditorContent } from '@tiptap/react';
 import { compressImages } from '@/lib/image-compression';
 import { AnimatePresence, motion } from 'motion/react';
-import { Separator } from '@/components/ui/separator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { useTRPC } from '@/providers/query-provider';
@@ -50,7 +46,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { cn, formatFileSize } from '@/lib/utils';
 import { useThread } from '@/hooks/use-threads';
 import { serializeFiles } from '@/lib/schemas';
-import { truncateFileName } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';
 import { Button } from '../ui/button';
@@ -1317,9 +1312,8 @@ export function EmailComposer({
                     onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
                     className={editor.isActive('heading', { level: 3 }) ? 'is-active' : ''}
                   >
-                    <Heading2 className="h-3 w-3 fill-[#9A9A9A]" />
+                    <Heading3 className="h-3 w-3 fill-[#9A9A9A]" />
                   </Button>
-
                   <Button
                     variant={'secondary'}
                     size={'xs'}
@@ -1327,13 +1321,6 @@ export function EmailComposer({
                     className={editor.isActive('bold') ? 'is-active' : ''}
                   >
                     <Bold className="h-3 w-3 fill-[#9A9A9A]" />
-                  </Button>
-                  <Button
-                    variant={'secondary'}
-                    size={'xs'}
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Image className="h-3 w-3 fill-[#9A9A9A]" />
                   </Button>
                 </div>
               </BubbleMenu>

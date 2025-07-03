@@ -1,4 +1,10 @@
-import { useEditor, type KeyboardShortcutCommand, Extension, generateJSON } from '@tiptap/react';
+import {
+  Extension,
+  generateJSON,
+  useEditor,
+  type AnyExtension,
+  type KeyboardShortcutCommand,
+} from '@tiptap/react';
 import { AutoComplete } from '@/components/create/editor-autocomplete';
 import { defaultExtensions } from '@/components/create/extensions';
 import { FileHandler } from '@tiptap/extension-file-handler';
@@ -9,46 +15,6 @@ import { Image } from '@tiptap/extension-image';
 import { Markdown } from 'tiptap-markdown';
 import { isObjectType } from 'remeda';
 import { cn } from '@/lib/utils';
-
-const PreventNavigateOnDragOver = (handleFiles: (files: File[]) => void | Promise<void>) => {
-  return Extension.create({
-    name: 'preventNavigateOnDrop',
-    addProseMirrorPlugins: () => {
-      return [
-        new Plugin({
-          key: new PluginKey('preventNavigateOnDrop'),
-          props: {
-            handleDOMEvents: {
-              dragover: (_view, event) => {
-                if (event.dataTransfer?.types?.includes('Files')) {
-                  event.preventDefault();
-
-                  return true;
-                }
-
-                return false;
-              },
-              drop: (_view, event) => {
-                const fileList = event.dataTransfer?.files;
-                if (fileList && fileList.length) {
-                  event.preventDefault();
-                  event.stopPropagation();
-
-                  const files = Array.from(fileList);
-                  void handleFiles(files);
-
-                  return true;
-                }
-
-                return false;
-              },
-            },
-          },
-        }),
-      ];
-    },
-  });
-};
 
 const CustomModEnter = (onModEnter: KeyboardShortcutCommand) => {
   return Extension.create({
@@ -258,24 +224,12 @@ const useComposeEditor = ({
     Placeholder.configure({
       placeholder,
     }),
-    // breaks the image upload
-    // ...(onAttachmentsChange
-    //   ? [
-    //       PreventNavigateOnDragOver((files) => {
-    //         onAttachmentsChange(files);
-    //       }),
-    //     ]
-    //   : []),
   ];
 
   return useEditor({
     editable: !isReadOnly,
     autofocus: autofocus ? 'end' : false,
     onCreate: ({ editor }) => {
-      //   if (onLengthChange) {
-      //     const content = editor.getText();
-      //     void onLengthChange(content.length);
-      //   }
       if (autofocus) {
         setTimeout(() => {
           editor.commands.focus('end');
@@ -295,11 +249,11 @@ const useComposeEditor = ({
     content: initialValue
       ? isObjectType(initialValue)
         ? initialValue
-        : generateJSON(initialValue, extensions)
+        : generateJSON(initialValue, extensions as AnyExtension[])
       : undefined,
     immediatelyRender: true,
     shouldRerenderOnTransaction: false,
-    extensions,
+    extensions: extensions as AnyExtension[],
     onFocus: isReadOnly ? undefined : onFocus,
     onBlur: isReadOnly ? undefined : onBlur,
     editorProps: {
