@@ -23,7 +23,7 @@ import { toast } from 'sonner';
 const resources = [
   {
     title: 'Documentation',
-    href:  href: process.env.VITE_DOCS_URL || 'http://localhost:3001/docs',,
+    href: process.env.VITE_DOCS_URL || 'http://localhost:3001/docs',
     description: 'Comprehensive guides and API documentation.',
     external: true,
   },
