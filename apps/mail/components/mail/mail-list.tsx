@@ -79,22 +79,22 @@ const Thread = memo(
     const [, setActiveReplyId] = useQueryState('activeReplyId');
     const [focusedIndex, setFocusedIndex] = useAtom(focusedIndexAtom);
 
-    const latestReceivedMessage = useMemo(() => {
-      if (!getThreadData?.messages) return getThreadData?.latest;
+    // const latestReceivedMessage = useMemo(() => {
+    //   if (!getThreadData?.messages) return getThreadData?.latest;
 
-      const nonDraftMessages = getThreadData.messages.filter((msg) => !msg.isDraft);
-      if (nonDraftMessages.length === 0) return getThreadData?.latest;
+    //   const nonDraftMessages = getThreadData.messages.filter((msg) => !msg.isDraft);
+    //   if (nonDraftMessages.length === 0) return getThreadData?.latest;
 
-      return (
-        nonDraftMessages.sort((a, b) => {
-          const dateA = new Date(a.receivedOn).getTime();
-          const dateB = new Date(b.receivedOn).getTime();
-          return dateB - dateA;
-        })[0] || getThreadData?.latest
-      );
-    }, [getThreadData?.messages, getThreadData?.latest]);
+    //   return (
+    //     nonDraftMessages.sort((a, b) => {
+    //       const dateA = new Date(a.receivedOn).getTime();
+    //       const dateB = new Date(b.receivedOn).getTime();
+    //       return dateB - dateA;
+    //     })[0] || getThreadData?.latest
+    //   );
+    // }, [getThreadData?.messages, getThreadData?.latest]);
 
-    const latestMessage = latestReceivedMessage;
+    const latestMessage = getThreadData?.latest;
     const idToUse = useMemo(() => latestMessage?.threadId ?? latestMessage?.id, [latestMessage]);
     const { data: settingsData } = useSettings();
     const queryClient = useQueryClient();

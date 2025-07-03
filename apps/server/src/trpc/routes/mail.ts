@@ -36,7 +36,7 @@ export const mailRouter = router({
     .query(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
       const agent = await getZeroAgent(activeConnection.id);
-      return await agent.getThreadFromDB(input.id);
+      return await agent.getThread(input.id);
     }),
   count: activeDriverProcedure
     .output(
@@ -75,24 +75,24 @@ export const mailRouter = router({
         });
         return drafts;
       }
-      if (q) {
-        const threadsResponse = await agent.listThreads({
-          labelIds: labelIds,
-          maxResults: max,
-          pageToken: cursor,
-          query: q,
-          folder,
-        });
-        return threadsResponse;
-      }
-      const folderLabelId = getFolderLabelId(folder);
-      const labelIdsToUse = folderLabelId ? [...labelIds, folderLabelId] : labelIds;
-      const threadsResponse = await agent.getThreadsFromDB({
-        labelIds: labelIdsToUse,
-        max: max,
-        cursor: cursor,
+      //   if (q) {
+      const threadsResponse = await agent.listThreads({
+        labelIds: labelIds,
+        maxResults: max,
+        pageToken: cursor,
+        query: q,
+        folder,
       });
       return threadsResponse;
+      //   }
+      //   const folderLabelId = getFolderLabelId(folder);
+      //   const labelIdsToUse = folderLabelId ? [...labelIds, folderLabelId] : labelIds;
+      //   const threadsResponse = await agent.getThreadsFromDB({
+      //     labelIds: labelIdsToUse,
+      //     max: max,
+      //     cursor: cursor,
+      //   });
+      //   return threadsResponse;
     }),
   markAsRead: activeDriverProcedure
     .input(
@@ -173,7 +173,7 @@ export const mailRouter = router({
       }
 
       const threadResults: PromiseSettledResult<{ messages: { tags: { name: string }[] }[] }>[] =
-        await Promise.allSettled(threadIds.map((id) => agent.getThreadFromDB(id)));
+        await Promise.allSettled(threadIds.map((id) => agent.getThread(id)));
 
       let anyStarred = false;
       let processedThreads = 0;
@@ -217,7 +217,7 @@ export const mailRouter = router({
       }
 
       const threadResults: PromiseSettledResult<{ messages: { tags: { name: string }[] }[] }>[] =
-        await Promise.allSettled(threadIds.map((id) => agent.getThreadFromDB(id)));
+        await Promise.allSettled(threadIds.map((id) => agent.getThread(id)));
 
       let anyImportant = false;
       let processedThreads = 0;
