@@ -128,12 +128,11 @@ Zero Email Client uses multiple services running on different ports:
 
 ### Basic Settings
 
-```typescript title="config/app.ts"
 export const appConfig = {
   name: 'Zero Email Client',
   version: '1.0.0',
   description: 'Modern email client built with React',
-  url: process.env.APP_URL || 'http://localhost:3000',
+  url: process.env.VITE_PUBLIC_APP_URL || 'http://localhost:3000',
   
   // Feature toggles
   features: {
@@ -151,7 +150,6 @@ export const appConfig = {
     density: 'comfortable', // 'compact', 'comfortable', 'spacious'
   }
 }
-```
 
 ## Database Configuration
 
