@@ -17,6 +17,7 @@ import {
   UpdatedImage,
   UploadImagesPlugin,
 } from 'novel';
+import { Link } from '@tiptap/extension-link';
 
 import { cx } from 'class-variance-authority';
 
@@ -161,4 +162,44 @@ export const defaultExtensions = [
   Color,
   CustomKeymap,
   GlobalDragHandle,
+  Link.configure({
+    openOnClick: false,
+    autolink: true,
+    defaultProtocol: 'https',
+    protocols: ['http', 'https'],
+    isAllowedUri: (url, ctx) => {
+      try {
+        // construct URL
+        const parsedUrl = url.includes(':')
+          ? new URL(url)
+          : new URL(`${ctx.defaultProtocol}://${url}`);
+
+        // use default validation
+        if (!ctx.defaultValidate(parsedUrl.href)) {
+          return false;
+        }
+
+        // disallowed protocols
+        const disallowedProtocols = ['ftp', 'file', 'mailto'];
+        const protocol = parsedUrl.protocol.replace(':', '');
+
+        if (disallowedProtocols.includes(protocol)) {
+          return false;
+        }
+
+        // only allow protocols specified in ctx.protocols
+        const allowedProtocols = ctx.protocols.map((p) => (typeof p === 'string' ? p : p.scheme));
+
+        if (!allowedProtocols.includes(protocol)) {
+          return false;
+        }
+
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    shouldAutoLink: () => true,
+  }),
+  ,
 ];

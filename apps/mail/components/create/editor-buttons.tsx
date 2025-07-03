@@ -6,7 +6,7 @@ import { truncateFileName } from '@/lib/utils';
 import { Paperclip } from 'lucide-react';
 import React from 'react';
 
-const MenuBar = () => {
+export const MenuBar = () => {
   const { editor } = useCurrentEditor();
 
   if (!editor) {

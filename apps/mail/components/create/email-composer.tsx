@@ -1,4 +1,17 @@
 import {
+  Bold,
+  Check,
+  Command,
+  Heading1,
+  Heading2,
+  Heading3,
+  Image,
+  Loader,
+  Paperclip,
+  Plus,
+  X as XIcon,
+} from 'lucide-react';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -13,35 +26,38 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Check, Command, Loader, Paperclip, Plus, X as XIcon } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Italic, LinkIcon, List, ListOrdered, Strikethrough, Underline } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { BubbleMenu, EditorContent, useCurrentEditor } from '@tiptap/react';
 import { TextEffect } from '@/components/motion-primitives/text-effect';
+import { ImageCompressionSettings } from './image-compression-settings';
 import { useActiveConnection } from '@/hooks/use-connections';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
+import type { ImageQuality } from '@/lib/image-compression';
 import useComposeEditor from '@/hooks/use-compose-editor';
 import { CurvedArrow, Sparkles, X } from '../icons/icons';
+import { compressImages } from '@/lib/image-compression';
 import { AnimatePresence, motion } from 'motion/react';
+import { Separator } from '@/components/ui/separator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
 import { useSettings } from '@/hooks/use-settings';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn, formatFileSize } from '@/lib/utils';
 import { useThread } from '@/hooks/use-threads';
 import { serializeFiles } from '@/lib/schemas';
+import { truncateFileName } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
-import { EditorContent } from '@tiptap/react';
 import { useForm } from 'react-hook-form';
 import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import pluralize from 'pluralize';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import { ImageCompressionSettings } from './image-compression-settings';
-import { compressImages } from '@/lib/image-compression';
-import type { ImageQuality } from '@/lib/image-compression';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 type ThreadContent = {
   from: string;
@@ -190,7 +206,10 @@ export function EmailComposer({
           });
 
           if (totalOriginalSize > totalCompressedSize) {
-            const savings = (((totalOriginalSize - totalCompressedSize) / totalOriginalSize) * 100).toFixed(1);
+            const savings = (
+              ((totalOriginalSize - totalCompressedSize) / totalOriginalSize) *
+              100
+            ).toFixed(1);
             if (parseFloat(savings) > 0.1) {
               toast.success(`Images compressed: ${savings}% smaller`);
             }
@@ -1273,7 +1292,57 @@ export function EmailComposer({
               aiGeneratedMessage !== null ? 'blur-sm' : '',
             )}
           >
-            <EditorContent editor={editor} className="h-full w-full" />
+            {editor && (
+              <BubbleMenu editor={editor} tippyOptions={{ duration: 100, followCursor: true }}>
+                <div className="flex items-center gap-0.5 rounded-md bg-neutral-700 p-0.5">
+                  <Button
+                    variant={'secondary'}
+                    size={'xs'}
+                    onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                    className={editor.isActive('heading', { level: 1 }) ? 'is-active' : ''}
+                  >
+                    <Heading1 className="h-3 w-3 fill-[#9A9A9A]" />
+                  </Button>
+                  <Button
+                    variant={'secondary'}
+                    size={'xs'}
+                    onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                    className={editor.isActive('heading', { level: 2 }) ? 'is-active' : ''}
+                  >
+                    <Heading2 className="h-3 w-3 fill-[#9A9A9A]" />
+                  </Button>
+                  <Button
+                    variant={'secondary'}
+                    size={'xs'}
+                    onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+                    className={editor.isActive('heading', { level: 3 }) ? 'is-active' : ''}
+                  >
+                    <Heading2 className="h-3 w-3 fill-[#9A9A9A]" />
+                  </Button>
+
+                  <Button
+                    variant={'secondary'}
+                    size={'xs'}
+                    onClick={() => editor.chain().focus().toggleBold().run()}
+                    className={editor.isActive('bold') ? 'is-active' : ''}
+                  >
+                    <Bold className="h-3 w-3 fill-[#9A9A9A]" />
+                  </Button>
+                  <Button
+                    variant={'secondary'}
+                    size={'xs'}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Image className="h-3 w-3 fill-[#9A9A9A]" />
+                  </Button>
+                </div>
+              </BubbleMenu>
+            )}
+            <EditorContent
+              editor={editor}
+              className="h-full w-full"
+              placeholder="Write a message..."
+            />
           </div>
         </div>
       </div>
@@ -1337,7 +1406,7 @@ export function EmailComposer({
                         {pluralize('file', attachments.length, true)}
                       </p>
                     </div>
-                    
+
                     <div className="border-b border-[#E7E7E7] p-3 dark:border-[#2B2B2B]">
                       <ImageCompressionSettings
                         quality={imageQuality}
@@ -1345,7 +1414,7 @@ export function EmailComposer({
                         className="border-0 shadow-none"
                       />
                     </div>
-                    
+
                     <div className="max-h-[250px] flex-1 space-y-0.5 overflow-y-auto p-1.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                       {attachments.map((file: File, index: number) => {
                         const nameParts = file.name.split('.');
@@ -1538,8 +1607,8 @@ export function EmailComposer({
           <DialogHeader>
             <DialogTitle>Attachment Warning</DialogTitle>
             <DialogDescription>
-              Looks like you mentioned an attachment in your message, but there are no files attached.
-              Are you sure you want to send this email?
+              Looks like you mentioned an attachment in your message, but there are no files
+              attached. Are you sure you want to send this email?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-2">
