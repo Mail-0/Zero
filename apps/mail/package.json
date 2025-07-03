@@ -10,6 +10,7 @@
     "types": "wrangler types",
     "deploy": "wrangler deploy",
     "lint": "eslint .",
+    "test:e2e": "playwright test",
     "machine-translate": "inlang machine translate --project project.inlang"
   },
   "dependencies": {

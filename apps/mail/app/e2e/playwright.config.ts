@@ -1,6 +1,6 @@
 import { defineConfig } from '@playwright/test';
 
-module.exports = defineConfig({
+export default defineConfig({
   retries: 1,
   timeout: 30000,
   reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }]],
@@ -20,6 +20,6 @@ module.exports = defineConfig({
       testMatch: '**/*.spec.ts',
     },
   ],
-  outputDir: 'playwright/test-results/artifacts',
+  outputDir: 'test-results',
   preserveOutput: 'failures-only',
 });
