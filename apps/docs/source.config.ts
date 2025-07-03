@@ -1,12 +1,6 @@
 import {
   defineConfig,
   defineDocs,
-  import {
-  defineConfig,
-  defineDocs,
-  frontmatterSchema,
-  metaSchema,
-} from 'fumadocs-mdx/config';
   frontmatterSchema,
   metaSchema,
 } from 'fumadocs-mdx/config';
@@ -18,7 +12,7 @@ export const blog = defineDocs({
   dir: './content/blog',
   docs: {
     schema: frontmatterSchema.extend({
-      author: z.string().optional(),
+      author: z.union([z.string(), z.array(z.string())]).optional(),
       date: z.string().optional(),
       tags: z.array(z.string()).optional(),
     }),

@@ -28,6 +28,7 @@
     "@types/react-dom": "^19.1.6",
     "@zero/eslint-config": "workspace:*",
     "@zero/tsconfig": "workspace:*",
+    "autoprefixer": "10.4.21",
     "eslint": "^8",
     "eslint-config-next": "15.3.3",
     "postcss": "^8.5.5",
