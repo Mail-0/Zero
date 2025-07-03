@@ -180,11 +180,11 @@ export class AgentRpcDO extends RpcTarget {
     labelIds?: string[];
     pageToken?: string;
   }) {
-    return await this.mainDo.listThreads(params);
+    return await this.mainDo.list(params);
   }
 
   async getThread(threadId: string) {
-    return await this.mainDo.getThreadFromDB(threadId);
+    return await this.mainDo.get(threadId);
   }
 
   async markThreadsRead(threadIds: string[]) {
@@ -279,19 +279,19 @@ export class AgentRpcDO extends RpcTarget {
     return this.mainDo.broadcast(message);
   }
 
-  async getThreadsFromDB(params: {
-    labelIds?: string[];
-    folder?: string;
-    q?: string;
-    max?: number;
-    cursor?: string;
-  }) {
-    return await this.mainDo.getThreadsFromDB(params);
-  }
+  //   async getThreadsFromDB(params: {
+  //     labelIds?: string[];
+  //     folder?: string;
+  //     q?: string;
+  //     max?: number;
+  //     cursor?: string;
+  //   }) {
+  //     return await this.mainDo.getThreadsFromDB(params);
+  //   }
 
-  async getThreadFromDB(id: string) {
-    return await this.mainDo.getThreadFromDB(id);
-  }
+  //   async getThreadFromDB(id: string) {
+  //     return await this.mainDo.getThreadFromDB(id);
+  //   }
 
   async syncThreads(folder: string) {
     return await this.mainDo.syncThreads(folder);
@@ -942,217 +942,217 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     }
   }
 
-  async getThreadsFromDB(params: {
-    labelIds?: string[];
-    folder?: string;
-    q?: string;
-    max?: number;
-    cursor?: string;
-  }) {
-    const { labelIds = [], folder, q, max = 50, cursor } = params;
+  //   async getThreadsFromDB(params: {
+  //     labelIds?: string[];
+  //     folder?: string;
+  //     q?: string;
+  //     max?: number;
+  //     cursor?: string;
+  //   }) {
+  //     const { labelIds = [], folder, q, max = 50, cursor } = params;
 
-    try {
-      // Build WHERE conditions
-      const whereConditions: string[] = [];
+  //     try {
+  //       // Build WHERE conditions
+  //       const whereConditions: string[] = [];
 
-      // Add folder condition (maps to specific label)
-      if (folder) {
-        const folderLabel = folder.toUpperCase();
-        whereConditions.push(`EXISTS (
-          SELECT 1 FROM json_each(latest_label_ids) WHERE value = '${folderLabel}'
-        )`);
-      }
+  //       // Add folder condition (maps to specific label)
+  //       if (folder) {
+  //         const folderLabel = folder.toUpperCase();
+  //         whereConditions.push(`EXISTS (
+  //           SELECT 1 FROM json_each(latest_label_ids) WHERE value = '${folderLabel}'
+  //         )`);
+  //       }
 
-      // Add label conditions (OR logic for multiple labels)
-      if (labelIds.length > 0) {
-        if (labelIds.length === 1) {
-          whereConditions.push(`EXISTS (
-            SELECT 1 FROM json_each(latest_label_ids) WHERE value = '${labelIds[0]}'
-          )`);
-        } else {
-          // Multiple labels with OR logic
-          const multiLabelCondition = labelIds
-            .map(
-              (labelId) =>
-                `EXISTS (SELECT 1 FROM json_each(latest_label_ids) WHERE value = '${labelId}')`,
-            )
-            .join(' OR ');
-          whereConditions.push(`(${multiLabelCondition})`);
-        }
-      }
+  //       // Add label conditions (OR logic for multiple labels)
+  //       if (labelIds.length > 0) {
+  //         if (labelIds.length === 1) {
+  //           whereConditions.push(`EXISTS (
+  //             SELECT 1 FROM json_each(latest_label_ids) WHERE value = '${labelIds[0]}'
+  //           )`);
+  //         } else {
+  //           // Multiple labels with OR logic
+  //           const multiLabelCondition = labelIds
+  //             .map(
+  //               (labelId) =>
+  //                 `EXISTS (SELECT 1 FROM json_each(latest_label_ids) WHERE value = '${labelId}')`,
+  //             )
+  //             .join(' OR ');
+  //           whereConditions.push(`(${multiLabelCondition})`);
+  //         }
+  //       }
 
-      //   // Add search query condition
-      //   if (q) {
-      //     const searchTerm = q.replace(/'/g, "''"); // Escape single quotes
-      //     whereConditions.push(`(
-      //       latest_subject LIKE '%${searchTerm}%' OR
-      //       latest_sender LIKE '%${searchTerm}%' OR
-      //       messages LIKE '%${searchTerm}%'
-      //     )`);
-      //   }
+  //       //   // Add search query condition
+  //       //   if (q) {
+  //       //     const searchTerm = q.replace(/'/g, "''"); // Escape single quotes
+  //       //     whereConditions.push(`(
+  //       //       latest_subject LIKE '%${searchTerm}%' OR
+  //       //       latest_sender LIKE '%${searchTerm}%' OR
+  //       //       messages LIKE '%${searchTerm}%'
+  //       //     )`);
+  //       //   }
 
-      // Add cursor condition
-      if (cursor) {
-        whereConditions.push(`latest_received_on < '${cursor}'`);
-      }
+  //       // Add cursor condition
+  //       if (cursor) {
+  //         whereConditions.push(`latest_received_on < '${cursor}'`);
+  //       }
 
-      // Execute query based on conditions
-      let result;
+  //       // Execute query based on conditions
+  //       let result;
 
-      if (whereConditions.length === 0) {
-        // No conditions
-        result = await this.sql`
-          SELECT id, latest_received_on 
-          FROM threads 
-          ORDER BY latest_received_on DESC 
-          LIMIT ${max}
-        `;
-      } else if (whereConditions.length === 1) {
-        // Single condition
-        const condition = whereConditions[0];
-        if (condition.includes('latest_received_on <')) {
-          const cursorValue = cursor!;
-          result = await this.sql`
-            SELECT id, latest_received_on 
-            FROM threads 
-            WHERE latest_received_on < ${cursorValue}
-            ORDER BY latest_received_on DESC 
-            LIMIT ${max}
-          `;
-        } else if (folder) {
-          // Folder condition
-          const folderLabel = folder.toUpperCase();
-          result = await this.sql`
-            SELECT id, latest_received_on 
-            FROM threads 
-            WHERE EXISTS (
-              SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${folderLabel}
-            )
-            ORDER BY latest_received_on DESC 
-            LIMIT ${max}
-          `;
-        } else {
-          // Single label condition
-          const labelId = labelIds[0];
-          result = await this.sql`
-            SELECT id, latest_received_on 
-            FROM threads 
-            WHERE EXISTS (
-              SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${labelId}
-            )
-            ORDER BY latest_received_on DESC 
-            LIMIT ${max}
-          `;
-        }
-      } else {
-        // Multiple conditions - handle combinations
-        if (folder && labelIds.length === 0 && cursor) {
-          // Folder + cursor
-          const folderLabel = folder.toUpperCase();
-          result = await this.sql`
-            SELECT id, latest_received_on 
-            FROM threads 
-            WHERE EXISTS (
-              SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${folderLabel}
-            ) AND latest_received_on < ${cursor}
-            ORDER BY latest_received_on DESC 
-            LIMIT ${max}
-          `;
-        } else if (labelIds.length === 1 && cursor && !folder) {
-          // Single label + cursor
-          const labelId = labelIds[0];
-          result = await this.sql`
-            SELECT id, latest_received_on 
-            FROM threads 
-            WHERE EXISTS (
-              SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${labelId}
-            ) AND latest_received_on < ${cursor}
-            ORDER BY latest_received_on DESC 
-            LIMIT ${max}
-          `;
-        } else {
-          // For now, fallback to just cursor if complex combinations
-          const cursorValue = cursor || '';
-          result = await this.sql`
-            SELECT id, latest_received_on 
-            FROM threads 
-            WHERE latest_received_on < ${cursorValue}
-            ORDER BY latest_received_on DESC 
-            LIMIT ${max}
-          `;
-        }
-      }
+  //       if (whereConditions.length === 0) {
+  //         // No conditions
+  //         result = await this.sql`
+  //           SELECT id, latest_received_on
+  //           FROM threads
+  //           ORDER BY latest_received_on DESC
+  //           LIMIT ${max}
+  //         `;
+  //       } else if (whereConditions.length === 1) {
+  //         // Single condition
+  //         const condition = whereConditions[0];
+  //         if (condition.includes('latest_received_on <')) {
+  //           const cursorValue = cursor!;
+  //           result = await this.sql`
+  //             SELECT id, latest_received_on
+  //             FROM threads
+  //             WHERE latest_received_on < ${cursorValue}
+  //             ORDER BY latest_received_on DESC
+  //             LIMIT ${max}
+  //           `;
+  //         } else if (folder) {
+  //           // Folder condition
+  //           const folderLabel = folder.toUpperCase();
+  //           result = await this.sql`
+  //             SELECT id, latest_received_on
+  //             FROM threads
+  //             WHERE EXISTS (
+  //               SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${folderLabel}
+  //             )
+  //             ORDER BY latest_received_on DESC
+  //             LIMIT ${max}
+  //           `;
+  //         } else {
+  //           // Single label condition
+  //           const labelId = labelIds[0];
+  //           result = await this.sql`
+  //             SELECT id, latest_received_on
+  //             FROM threads
+  //             WHERE EXISTS (
+  //               SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${labelId}
+  //             )
+  //             ORDER BY latest_received_on DESC
+  //             LIMIT ${max}
+  //           `;
+  //         }
+  //       } else {
+  //         // Multiple conditions - handle combinations
+  //         if (folder && labelIds.length === 0 && cursor) {
+  //           // Folder + cursor
+  //           const folderLabel = folder.toUpperCase();
+  //           result = await this.sql`
+  //             SELECT id, latest_received_on
+  //             FROM threads
+  //             WHERE EXISTS (
+  //               SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${folderLabel}
+  //             ) AND latest_received_on < ${cursor}
+  //             ORDER BY latest_received_on DESC
+  //             LIMIT ${max}
+  //           `;
+  //         } else if (labelIds.length === 1 && cursor && !folder) {
+  //           // Single label + cursor
+  //           const labelId = labelIds[0];
+  //           result = await this.sql`
+  //             SELECT id, latest_received_on
+  //             FROM threads
+  //             WHERE EXISTS (
+  //               SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${labelId}
+  //             ) AND latest_received_on < ${cursor}
+  //             ORDER BY latest_received_on DESC
+  //             LIMIT ${max}
+  //           `;
+  //         } else {
+  //           // For now, fallback to just cursor if complex combinations
+  //           const cursorValue = cursor || '';
+  //           result = await this.sql`
+  //             SELECT id, latest_received_on
+  //             FROM threads
+  //             WHERE latest_received_on < ${cursorValue}
+  //             ORDER BY latest_received_on DESC
+  //             LIMIT ${max}
+  //           `;
+  //         }
+  //       }
 
-      const threads = result.map((row: any) => ({
-        id: row.id,
-        historyId: null,
-      }));
+  //       const threads = result.map((row: any) => ({
+  //         id: row.id,
+  //         historyId: null,
+  //       }));
 
-      // Use latest_received_on for pagination cursor
-      const nextPageToken =
-        threads.length === max && result.length > 0
-          ? result[result.length - 1].latest_received_on
-          : null;
+  //       // Use latest_received_on for pagination cursor
+  //       const nextPageToken =
+  //         threads.length === max && result.length > 0
+  //           ? result[result.length - 1].latest_received_on
+  //           : null;
 
-      return {
-        threads,
-        nextPageToken,
-      };
-    } catch (error) {
-      console.error('Failed to get threads from database:', error);
-      throw error;
-    }
-  }
+  //       return {
+  //         threads,
+  //         nextPageToken,
+  //       };
+  //     } catch (error) {
+  //       console.error('Failed to get threads from database:', error);
+  //       throw error;
+  //     }
+  //   }
 
-  async getThreadFromDB(id: string): Promise<IGetThreadResponse> {
-    try {
-      const result = this.sql`
-        SELECT 
-          id,
-          thread_id,
-          provider_id,
-          latest_sender,
-          latest_received_on,
-          latest_subject,
-          latest_label_ids,
-          created_at,
-          updated_at
-        FROM threads
-        WHERE id = ${id}
-        LIMIT 1
-      `;
+  //   async getThreadFromDB(id: string): Promise<IGetThreadResponse> {
+  //     try {
+  //       const result = this.sql`
+  //         SELECT
+  //           id,
+  //           thread_id,
+  //           provider_id,
+  //           latest_sender,
+  //           latest_received_on,
+  //           latest_subject,
+  //           latest_label_ids,
+  //           created_at,
+  //           updated_at
+  //         FROM threads
+  //         WHERE id = ${id}
+  //         LIMIT 1
+  //       `;
 
-      if (result.length === 0) {
-        this.ctx.waitUntil(this.syncThread(id));
-        return {
-          messages: [],
-          latest: undefined,
-          hasUnread: false,
-          totalReplies: 0,
-          labels: [],
-        } satisfies IGetThreadResponse;
-      }
+  //       if (result.length === 0) {
+  //         this.ctx.waitUntil(this.syncThread(id));
+  //         return {
+  //           messages: [],
+  //           latest: undefined,
+  //           hasUnread: false,
+  //           totalReplies: 0,
+  //           labels: [],
+  //         } satisfies IGetThreadResponse;
+  //       }
 
-      const row = result[0] as any;
-      const storedMessages = await env.THREADS_BUCKET.get(this.getThreadKey(id));
-      const latestLabelIds = JSON.parse(row.latest_label_ids || '[]');
+  //       const row = result[0] as any;
+  //       const storedMessages = await env.THREADS_BUCKET.get(this.getThreadKey(id));
+  //       const latestLabelIds = JSON.parse(row.latest_label_ids || '[]');
 
-      const messages: ParsedMessage[] = storedMessages
-        ? JSON.parse(await storedMessages.text())
-        : [];
+  //       const messages: ParsedMessage[] = storedMessages
+  //         ? JSON.parse(await storedMessages.text())
+  //         : [];
 
-      return {
-        messages,
-        latest: messages.length > 0 ? messages[messages.length - 1] : undefined,
-        hasUnread: latestLabelIds.includes('UNREAD'),
-        totalReplies: messages.length,
-        labels: latestLabelIds.map((id: string) => ({ id, name: id })),
-      } satisfies IGetThreadResponse;
-    } catch (error) {
-      console.error('Failed to get thread from database:', error);
-      throw error;
-    }
-  }
+  //       return {
+  //         messages,
+  //         latest: messages.length > 0 ? messages[messages.length - 1] : undefined,
+  //         hasUnread: latestLabelIds.includes('UNREAD'),
+  //         totalReplies: messages.length,
+  //         labels: latestLabelIds.map((id: string) => ({ id, name: id })),
+  //       } satisfies IGetThreadResponse;
+  //     } catch (error) {
+  //       console.error('Failed to get thread from database:', error);
+  //       throw error;
+  //     }
+  //   }
 }
 
 export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
