@@ -44,7 +44,7 @@ export const getActiveConnection = async () => {
 
 export const connectionToDriver = (activeConnection: typeof connection.$inferSelect) => {
   if (!activeConnection.accessToken || !activeConnection.refreshToken) {
-    throw new Error('Invalid connection');
+    throw new Error(`Invalid connection ${JSON.stringify(activeConnection?.id)}`);
   }
 
   return createDriver(activeConnection.providerId, {
