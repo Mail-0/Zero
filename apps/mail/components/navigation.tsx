@@ -29,7 +29,7 @@ const resources = [
   },
   {
     title: 'Blog',  
-    href: ' href: process.env.VITE_BLOG_URL || http://localhost:3001/blog',
+    href: process.env.VITE_BLOG_URL || 'http://localhost:3001/blog',
     description: 'Latest news, insights, and product updates.',
     external: true,
   },
