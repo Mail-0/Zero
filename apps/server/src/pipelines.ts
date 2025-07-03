@@ -59,7 +59,7 @@ export class MainWorkflow extends WorkflowEntrypoint<Env, Params> {
           const match = subscriptionName.toString().match(regex);
           if (!match) {
             log('[MAIN_WORKFLOW] Invalid subscription name:', subscriptionName);
-            throw new Error('Invalid subscription name');
+            throw new Error(`Invalid subscription name ${subscriptionName}`);
           }
           const [, connectionId] = match;
           log('[MAIN_WORKFLOW] Extracted connectionId:', connectionId);
@@ -69,11 +69,11 @@ export class MainWorkflow extends WorkflowEntrypoint<Env, Params> {
       const status = await env.subscribed_accounts.get(`${connectionId}__${providerId}`);
       if (!status || status === 'pending') {
         log('[MAIN_WORKFLOW] Connection id is missing or not enabled %s', connectionId);
-        throw new Error('Connection is not enabled');
+        return 'Connection is not enabled';
       }
       if (!isValidUUID(connectionId)) {
         log('[MAIN_WORKFLOW] Invalid connection id format:', connectionId);
-        throw new Error('Invalid connection id');
+        return 'Invalid connection id';
       }
       const previousHistoryId = await env.gmail_history_id.get(connectionId);
       if (providerId === EProviders.google) {
@@ -164,9 +164,9 @@ export class ZeroWorkflow extends WorkflowEntrypoint<Env, Params> {
           .select()
           .from(connection)
           .where(eq(connection.id, connectionId.toString()));
-        if (!foundConnection) throw new Error('Connection not found');
+        if (!foundConnection) throw new Error(`Connection not found ${connectionId}`);
         if (!foundConnection.accessToken || !foundConnection.refreshToken)
-          throw new Error('Connection is not authorized');
+          throw new Error(`Connection is not authorized ${connectionId}`);
         log('[ZERO_WORKFLOW] Found connection:', foundConnection.id);
         return foundConnection;
       });
@@ -182,7 +182,7 @@ export class ZeroWorkflow extends WorkflowEntrypoint<Env, Params> {
               const { history } = await driver.listHistory<gmail_v1.Schema$History>(
                 historyId.toString(),
               );
-              if (!history.length) throw new Error('No history found');
+              if (!history.length) throw new Error(`No history found ${historyId} ${connectionId}`);
               log('[ZERO_WORKFLOW] Found history entries:', history.length);
               return history;
             } catch (error) {
@@ -386,9 +386,9 @@ export class ThreadWorkflow extends WorkflowEntrypoint<Env, Params> {
               .from(connection)
               .where(eq(connection.id, connectionId.toString()));
             this.ctx.waitUntil(conn.end());
-            if (!foundConnection) throw new Error('Connection not found');
+            if (!foundConnection) throw new Error(`Connection not found ${connectionId}`);
             if (!foundConnection.accessToken || !foundConnection.refreshToken)
-              throw new Error('Connection is not authorized');
+              throw new Error(`Connection is not authorized ${connectionId}`);
             log('[THREAD_WORKFLOW] Found connection:', foundConnection.id);
             return foundConnection;
           },
@@ -441,7 +441,7 @@ export class ThreadWorkflow extends WorkflowEntrypoint<Env, Params> {
                 return step.do(`[ZERO] Vectorize Message ${message.id}`, async () => {
                   log('[THREAD_WORKFLOW] Converting message to XML:', message.id);
                   const prompt = await messageToXML(message);
-                  if (!prompt) throw new Error('Message has no prompt');
+                  if (!prompt) throw new Error(`Message has no prompt ${message.id}`);
                   log('[THREAD_WORKFLOW] Got XML prompt for message:', message.id);
                   log('[THREAD_WORKFLOW] Message:', message);
 
@@ -512,7 +512,8 @@ export class ThreadWorkflow extends WorkflowEntrypoint<Env, Params> {
                     },
                   );
 
-                  if (!embeddingVector) throw new Error('Message Embedding vector is null');
+                  if (!embeddingVector)
+                    throw new Error(`Message Embedding vector is null ${message.id}`);
 
                   return {
                     id: message.id,
@@ -688,7 +689,7 @@ export class ThreadWorkflow extends WorkflowEntrypoint<Env, Params> {
             },
           );
 
-          if (!embeddingVector) throw new Error('Thread Embedding vector is null');
+          if (!embeddingVector) return console.error('Thread Embedding vector is null');
 
           try {
             log('[THREAD_WORKFLOW] Upserting thread vector');

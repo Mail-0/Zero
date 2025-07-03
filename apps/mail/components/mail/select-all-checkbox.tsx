@@ -6,7 +6,7 @@ import { trpcClient } from '@/providers/query-provider';
 import { cn } from '@/lib/utils';
 import { useParams } from 'react-router';
 import { toast } from 'sonner';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 
 export default function SelectAllCheckbox({ className }: { className?: string }) {
   const [mail, setMail] = useMail();
@@ -15,6 +15,8 @@ export default function SelectAllCheckbox({ className }: { className?: string })
   const { folder = 'inbox' } = useParams<{ folder: string }>() ?? {};
 
   const [isFetchingIds, setIsFetchingIds] = useState(false);
+  const allIdsCache = useRef<string[] | null>(null);
+
   const checkboxRef = useRef<HTMLButtonElement>(null);
 
   const loadedIds = useMemo(() => loadedThreads.map((t) => t.id), [loadedThreads]);
@@ -31,7 +33,7 @@ export default function SelectAllCheckbox({ className }: { className?: string })
   const fetchAllMatchingThreadIds = useCallback(async (): Promise<string[]> => {
     const ids: string[] = [];
     let cursor = '';
-    const MAX_PER_PAGE = 100;
+    const MAX_PER_PAGE = 500;
 
     try {
       while (true) {
@@ -55,7 +57,7 @@ export default function SelectAllCheckbox({ className }: { className?: string })
     return ids;
   }, [folder, query]);
 
-  const handleToggle = useCallback(async () => {
+  const handleToggle = useCallback(() => {
     if (isFetchingIds) return;
 
     if (mail.bulkSelected.length) {
@@ -64,21 +66,35 @@ export default function SelectAllCheckbox({ className }: { className?: string })
     }
 
     setMail((prev) => ({ ...prev, bulkSelected: loadedIds }));
-    
-    setIsFetchingIds(true);
-    const allIds = await fetchAllMatchingThreadIds();
-    setIsFetchingIds(false);
+
     toast(
       `${loadedIds.length} conversation${loadedIds.length !== 1 ? 's' : ''} on this page selected.`,
       {
         action: {
-          label: `Select all ${allIds.length} conversation${allIds.length !== 1 ? 's' : ''}`,
-          onClick: () => setMail((prev) => ({ ...prev, bulkSelected: allIds })),
+          label: 'Select all conversations',
+          onClick: async () => {
+            try {
+              if (!allIdsCache.current) {
+                setIsFetchingIds(true);
+                allIdsCache.current = await fetchAllMatchingThreadIds();
+                setIsFetchingIds(false);
+              }
+              const allIds = allIdsCache.current ?? [];
+              setMail((prev) => ({ ...prev, bulkSelected: allIds }));
+            } catch (err) {
+              setIsFetchingIds(false);
+              toast.error('Failed to select all conversations');
+            }
+          },
         },
         className: '!w-auto whitespace-nowrap',
       },
     );
-  }, [mail.bulkSelected.length, loadedIds, fetchAllMatchingThreadIds, isFetchingIds, setMail]);
+  }, [isFetchingIds, mail.bulkSelected.length, loadedIds, fetchAllMatchingThreadIds, setMail]);
+
+  useEffect(() => {
+    allIdsCache.current = null;
+  }, [folder, query]);
 
   return (
     <Checkbox
