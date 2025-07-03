@@ -189,19 +189,19 @@ export class AgentRpcDO extends RpcTarget {
 
   async markThreadsRead(threadIds: string[]) {
     const result = await this.mainDo.markThreadsRead(threadIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
+    // await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
     return result;
   }
 
   async markThreadsUnread(threadIds: string[]) {
     const result = await this.mainDo.markThreadsUnread(threadIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
+    // await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
     return result;
   }
 
   async modifyLabels(threadIds: string[], addLabelIds: string[], removeLabelIds: string[]) {
     const result = await this.mainDo.modifyLabels(threadIds, addLabelIds, removeLabelIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
+    // await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
     return result;
   }
 
@@ -233,13 +233,13 @@ export class AgentRpcDO extends RpcTarget {
 
   async markAsRead(threadIds: string[]) {
     const result = await this.mainDo.markAsRead(threadIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
+    // await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
     return result;
   }
 
   async markAsUnread(threadIds: string[]) {
     const result = await this.mainDo.markAsUnread(threadIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
+    // await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
     return result;
   }
 
@@ -310,19 +310,19 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
     if (shouldDropTables) this.dropTables();
-    this.sql`
-        CREATE TABLE IF NOT EXISTS threads (
-            id TEXT PRIMARY KEY,
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            thread_id TEXT NOT NULL,
-            provider_id TEXT NOT NULL,
-            latest_sender TEXT,
-            latest_received_on TEXT,
-            latest_subject TEXT,
-            latest_label_ids TEXT
-        );
-    `;
+    // this.sql`
+    //     CREATE TABLE IF NOT EXISTS threads (
+    //         id TEXT PRIMARY KEY,
+    //         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    //         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    //         thread_id TEXT NOT NULL,
+    //         provider_id TEXT NOT NULL,
+    //         latest_sender TEXT,
+    //         latest_received_on TEXT,
+    //         latest_subject TEXT,
+    //         latest_label_ids TEXT
+    //     );
+    // `;
   }
 
   async dropTables() {
@@ -388,10 +388,10 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
       });
       if (_connection) this.driver = connectionToDriver(_connection);
       this.ctx.waitUntil(conn.end());
-      this.ctx.waitUntil(this.syncThreads('inbox'));
-      this.ctx.waitUntil(this.syncThreads('sent'));
-      this.ctx.waitUntil(this.syncThreads('spam'));
-      this.ctx.waitUntil(this.syncThreads('archive'));
+      //   this.ctx.waitUntil(this.syncThreads('inbox'));
+      //   this.ctx.waitUntil(this.syncThreads('sent'));
+      //   this.ctx.waitUntil(this.syncThreads('spam'));
+      //   this.ctx.waitUntil(this.syncThreads('archive'));
     }
   }
 
@@ -515,34 +515,34 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
           this.cancelChatRequest(data.id);
           break;
         }
-        case IncomingMessageType.Mail_List: {
-          const result = await this.getThreadsFromDB({
-            labelIds: data.labelIds,
-            folder: data.folder,
-            q: data.query,
-            max: data.maxResults,
-            cursor: data.pageToken,
-          });
-          this.currentFolder = data.folder;
-          connection.send(
-            JSON.stringify({
-              type: OutgoingMessageType.Mail_List,
-              result,
-            }),
-          );
-          break;
-        }
-        case IncomingMessageType.Mail_Get: {
-          const result = await this.getThreadFromDB(data.threadId);
-          connection.send(
-            JSON.stringify({
-              type: OutgoingMessageType.Mail_Get,
-              result,
-              threadId: data.threadId,
-            }),
-          );
-          break;
-        }
+        // case IncomingMessageType.Mail_List: {
+        //   const result = await this.getThreadsFromDB({
+        //     labelIds: data.labelIds,
+        //     folder: data.folder,
+        //     q: data.query,
+        //     max: data.maxResults,
+        //     cursor: data.pageToken,
+        //   });
+        //   this.currentFolder = data.folder;
+        //   connection.send(
+        //     JSON.stringify({
+        //       type: OutgoingMessageType.Mail_List,
+        //       result,
+        //     }),
+        //   );
+        //   break;
+        // }
+        // case IncomingMessageType.Mail_Get: {
+        //   const result = await this.getThreadFromDB(data.threadId);
+        //   connection.send(
+        //     JSON.stringify({
+        //       type: OutgoingMessageType.Mail_Get,
+        //       result,
+        //       threadId: data.threadId,
+        //     }),
+        //   );
+        //   break;
+        // }
       }
     }
   }
