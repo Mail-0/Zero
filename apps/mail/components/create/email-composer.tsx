@@ -1085,6 +1085,12 @@ export function EmailComposer({
                       ref={ccInputRef}
                       className="h-6 flex-1 bg-transparent text-sm font-normal leading-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white"
                       placeholder="Enter email"
+                      onKeyDown={createKeyDownHandler(
+                        'cc',
+                        ccEmails,
+                        setValue,
+                        setHasUnsavedChanges
+                      )}
                       onPaste={createPasteHandler(
                         'cc',
                         ccEmails,
