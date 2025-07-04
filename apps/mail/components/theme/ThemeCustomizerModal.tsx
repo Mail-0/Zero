@@ -157,7 +157,7 @@ export function ThemeCustomizerModal({ open, theme, onClose, onSave }: {
             <div style={previewStyle} className="w-full max-w-[400px] shadow-lg border bg-white/80">
               <div className="w-full flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: customTheme.colors.primary, color: customTheme.colors.text, fontWeight: 700, fontSize: 20 }}>
-                  {customTheme.name[0]}
+                  {customTheme.name}
                 </div>
                 <div>
                   <div className="font-bold text-lg" style={{ color: customTheme.colors.text }}>{customTheme.name}</div>
