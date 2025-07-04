@@ -116,6 +116,7 @@ export interface MailManager {
   getEmailAliases(): Promise<{ email: string; name?: string; primary?: boolean }[]>;
   revokeToken(token: string): Promise<boolean>;
   deleteAllSpam(): Promise<DeleteAllSpamResponse>;
+  getRawEmail(id: string): Promise<string>;
 }
 
 export interface IGetThreadsResponse {
