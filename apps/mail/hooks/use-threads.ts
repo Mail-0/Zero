@@ -1,20 +1,22 @@
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { backgroundQueueAtom, isThreadInBackgroundQueueAtom } from '@/store/backgroundQueue';
-import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { IGetThreadResponse } from '../../server/src/lib/driver/types';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useTRPC } from '@/providers/query-provider';
 import useSearchLabels from './use-labels-search';
 import { useSession } from '@/lib/auth-client';
 import { useAtom, useAtomValue } from 'jotai';
+import { useSettings } from './use-settings';
 import { usePrevious } from './use-previous';
+import type { ParsedMessage } from '@/types';
 import { useEffect, useMemo } from 'react';
 import { useParams } from 'react-router';
+import { useTheme } from 'next-themes';
 import { useQueryState } from 'nuqs';
 
 export const useThreads = () => {
   const { folder } = useParams<{ folder: string }>();
   const [searchValue] = useSearchValue();
-  const { data: session } = useSession();
   const [backgroundQueue] = useAtom(backgroundQueueAtom);
   const isInQueue = useAtomValue(isThreadInBackgroundQueueAtom);
   const trpc = useTRPC();
@@ -67,6 +69,8 @@ export const useThread = (threadId: string | null, historyId?: string | null) =>
   const [_threadId] = useQueryState('threadId');
   const id = threadId ? threadId : _threadId;
   const trpc = useTRPC();
+  const { data } = useSettings();
+  const { resolvedTheme } = useTheme();
 
   const previousHistoryId = usePrevious(historyId ?? null);
   const queryClient = useQueryClient();
@@ -88,10 +92,44 @@ export const useThread = (threadId: string | null, historyId?: string | null) =>
     ),
   );
 
+  const isTrustedSender = useMemo(
+    () =>
+      !!data?.settings?.externalImages ||
+      !!data?.settings?.trustedSenders?.includes(threadQuery.data?.latest?.sender.email ?? ''),
+    [data?.settings, threadQuery.data?.latest?.sender.email],
+  );
+
   const latestDraft = useMemo(() => {
     if (!threadQuery.data?.latest?.id) return undefined;
     return threadQuery.data.messages.findLast((e) => e.isDraft);
   }, [threadQuery]);
+
+  const { mutateAsync: processEmailContent } = useMutation(
+    trpc.mail.processEmailContent.mutationOptions(),
+  );
+
+  const prefetchEmailContent = async (message: ParsedMessage) => {
+    return queryClient.prefetchQuery({
+      queryKey: ['email-content', message.id, isTrustedSender, resolvedTheme],
+      queryFn: async () => {
+        const result = await processEmailContent({
+          html: message.decodedBody ?? '',
+          shouldLoadImages: isTrustedSender,
+          theme: (resolvedTheme as 'light' | 'dark') || 'light',
+        });
+
+        return {
+          html: result.processedHtml,
+          hasBlockedImages: result.hasBlockedImages,
+        };
+      },
+    });
+  };
+
+  useEffect(() => {
+    if (!threadQuery.data?.latest?.id) return;
+    prefetchEmailContent(threadQuery.data.latest);
+  }, [threadQuery.data?.latest]);
 
   const isGroupThread = useMemo(() => {
     if (!threadQuery.data?.latest?.id) return false;

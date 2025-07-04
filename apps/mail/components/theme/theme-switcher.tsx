@@ -5,11 +5,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useEffect, useState } from 'react';
-
-import { type MessageKey } from '@/config/navigation';
 import { Laptop, Moon, Sun } from 'lucide-react';
-import { useTranslations } from 'use-intl';
+import { useEffect, useState } from 'react';
+import { m } from '@/paraglide/messages';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 interface ModeToggleProps {
@@ -18,8 +16,6 @@ interface ModeToggleProps {
 
 export function ModeToggle({ className }: ModeToggleProps) {
   const [mounted, setMounted] = useState(false);
-
-  const t = useTranslations();
 
   // Fixes SSR hydration
   useEffect(() => {
@@ -60,7 +56,7 @@ export function ModeToggle({ className }: ModeToggleProps) {
             {theme === 'dark' && <Moon className="h-4 w-4" />}
             {theme === 'light' && <Sun className="h-4 w-4" />}
             {theme === 'system' && <Laptop className="h-4 w-4" />}
-            {t(`common.themes.${theme}` as MessageKey)}
+            {m[`common.themes.${theme as 'dark' | 'light' | 'system'}`]()}
           </div>
         </SelectValue>
       </SelectTrigger>
@@ -68,19 +64,19 @@ export function ModeToggle({ className }: ModeToggleProps) {
         <SelectItem value="dark">
           <div className="flex items-center gap-2">
             <Moon className="h-4 w-4" />
-            {t('common.themes.dark')}
+            {m['common.themes.dark']()}
           </div>
         </SelectItem>
         <SelectItem value="system">
           <div className="flex items-center gap-2">
             <Laptop className="h-4 w-4" />
-            {t('common.themes.system')}
+            {m['common.themes.system']()}
           </div>
         </SelectItem>
         <SelectItem value="light">
           <div className="flex items-center gap-2">
             <Sun className="h-4 w-4" />
-            {t('common.themes.light')}
+            {m['common.themes.light']()}
           </div>
         </SelectItem>
       </SelectContent>

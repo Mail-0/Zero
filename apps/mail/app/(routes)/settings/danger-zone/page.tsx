@@ -16,8 +16,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router';
-import { useTranslations } from 'use-intl';
 import { useForm } from 'react-hook-form';
+import { m } from '@/paraglide/messages';
 import { clear } from 'idb-keyval';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -27,13 +27,12 @@ const CONFIRMATION_TEXT = 'DELETE';
 
 const formSchema = z.object({
   confirmText: z.string().refine((val) => val === CONFIRMATION_TEXT, {
-    message: `Please type ${CONFIRMATION_TEXT} to confirm`,
+    message: m['pages.settings.dangerZone.confirmation'](),
   }),
 });
 
 function DeleteAccountDialog() {
   const [isOpen, setIsOpen] = useState(false);
-  const t = useTranslations();
   const navigate = useNavigate();
   const trpc = useTRPC();
   const { refetch } = useSession();
@@ -48,7 +47,7 @@ function DeleteAccountDialog() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (values.confirmText !== CONFIRMATION_TEXT)
-      return toast.error(`Please type ${CONFIRMATION_TEXT} to confirm`);
+      return toast.error(m['pages.settings.dangerZone.confirmation']());
 
     await deleteAccount(void 0, {
       onSuccess: async ({ success, message }) => {
@@ -59,14 +58,14 @@ function DeleteAccountDialog() {
           await clear();
         } catch (error) {
           console.error('Failed to delete account:', error);
-          toast.error('Failed to delete account');
+          toast.error(m['pages.settings.dangerZone.error']());
         }
-        toast.success('Account deleted successfully');
+        toast.success(m['pages.settings.dangerZone.deleted']());
         window.location.href = '/';
       },
       onError: (error) => {
         console.error('Failed to delete account:', error);
-        toast.error('Failed to delete account');
+        toast.error(m['pages.settings.dangerZone.error']());
       },
       onSettled: () => form.reset(),
     });
@@ -75,17 +74,17 @@ function DeleteAccountDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="destructive">{t('pages.settings.dangerZone.deleteAccount')}</Button>
+        <Button variant="destructive">{m['pages.settings.dangerZone.deleteAccount']()}</Button>
       </DialogTrigger>
       <DialogContent showOverlay>
         <DialogHeader>
-          <DialogTitle>{t('pages.settings.dangerZone.title')}</DialogTitle>
-          <DialogDescription>{t('pages.settings.dangerZone.description')}</DialogDescription>
+          <DialogTitle>{m['pages.settings.dangerZone.title']()}</DialogTitle>
+          <DialogDescription>{m['pages.settings.dangerZone.description']()}</DialogDescription>
         </DialogHeader>
 
         <div className="border-destructive/50 bg-destructive/10 mt-2 flex items-center gap-2 rounded-md border px-3 py-2 text-sm text-red-600 dark:text-red-400">
           <AlertTriangle className="h-4 w-4" />
-          <span>{t('pages.settings.dangerZone.warning')}</span>
+          <span>{m['pages.settings.dangerZone.warning']()}</span>
         </div>
 
         <Form {...form}>
@@ -95,7 +94,7 @@ function DeleteAccountDialog() {
               name="confirmText"
               render={({ field }) => (
                 <FormItem>
-                  <FormDescription>{t('pages.settings.dangerZone.confirmation')}</FormDescription>
+                  <FormDescription>{m['pages.settings.dangerZone.confirmation']()}</FormDescription>
                   <FormControl>
                     <Input placeholder="DELETE" {...field} />
                   </FormControl>
@@ -106,8 +105,8 @@ function DeleteAccountDialog() {
             <div className="flex justify-end">
               <Button type="submit" variant="destructive" disabled={isPending}>
                 {isPending
-                  ? t('pages.settings.dangerZone.deleting')
-                  : t('pages.settings.dangerZone.deleteAccount')}
+                  ? m['pages.settings.dangerZone.deleting']()
+                  : m['pages.settings.dangerZone.deleteAccount']()}
               </Button>
             </div>
           </form>
@@ -118,13 +117,11 @@ function DeleteAccountDialog() {
 }
 
 export default function DangerPage() {
-  const t = useTranslations();
-
   return (
     <div className="grid gap-6">
       <SettingsCard
-        title={t('pages.settings.dangerZone.title')}
-        description={t('pages.settings.dangerZone.description')}
+        title={m['pages.settings.dangerZone.title']()}
+        description={m['pages.settings.dangerZone.description']()}
       >
         <DeleteAccountDialog />
       </SettingsCard>
