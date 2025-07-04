@@ -25,6 +25,7 @@ import type { ImageQuality } from '@/lib/image-compression';
 import useComposeEditor from '@/hooks/use-compose-editor';
 import { CurvedArrow, Sparkles, X } from '../icons/icons';
 import { compressImages } from '@/lib/image-compression';
+import { gitHubEmojis } from '@tiptap/extension-emoji';
 import { AnimatePresence, motion } from 'motion/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Avatar, AvatarFallback } from '../ui/avatar';
@@ -45,6 +46,7 @@ import pluralize from 'pluralize';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+
 
 type ThreadContent = {
   from: string;
@@ -79,8 +81,13 @@ interface EmailComposerProps {
 }
 
 const isValidEmail = (email: string): boolean => {
-  const emailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  return emailRegex.test(email);
+  // for format like test@example.com
+  const simpleEmailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/; 
+
+  // for format like name <test@example.com>
+  const displayNameEmailRegex = /^.+\s*<\s*[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\s*>$/; 
+
+  return simpleEmailRegex.test(email) || displayNameEmailRegex.test(email);
 };
 
 const schema = z.object({
@@ -692,6 +699,17 @@ export function EmailComposer({
     await processAndSetAttachments(originalAttachments, newQuality, true);
   };
 
+  const replaceEmojiShortcodes = (text: string): string => {
+    const shortcodeRegex = /:([a-zA-Z0-9_+-]+):/g;
+
+    return text.replace(shortcodeRegex, (match, shortcode): string => {
+      const emoji = gitHubEmojis.find(
+        (e) => e.shortcodes.includes(shortcode) || e.name === shortcode,
+      );
+      return emoji?.emoji ?? match;
+    });
+  };
+
   return (
     <div
       className={cn(
@@ -728,7 +746,9 @@ export function EmailComposer({
                             {email.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        {email}
+                        <span className="max-w-[50vw] md:max-w-[30vw] overflow-hidden text-ellipsis whitespace-nowrap">
+                          {email}
+                        </span>
                       </span>
                       <button
                         onClick={() => {
@@ -860,7 +880,10 @@ export function EmailComposer({
                                 {email.charAt(0).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
-                            {email}
+                            <span className="max-w-[50vw] md:max-w-[30vw] overflow-hidden text-ellipsis whitespace-nowrap">
+                              {/* for email format: "Display Name" <email@example.com> */}
+                              {email.match(/^"?(.*?)"?\s*<[^>]+>$/)?.[1] ?? email}
+                            </span>
                           </span>
                           <button
                             onClick={() => {
@@ -1217,7 +1240,8 @@ export function EmailComposer({
             placeholder="Re: Design review feedback"
             value={subjectInput}
             onChange={(e) => {
-              setValue('subject', e.target.value);
+              const value = replaceEmojiShortcodes(e.target.value);
+              setValue('subject', value);
               setHasUnsavedChanges(true);
             }}
           />
@@ -1382,10 +1406,10 @@ export function EmailComposer({
                                     {file.type.includes('pdf')
                                       ? '📄'
                                       : file.type.includes('excel') ||
-                                          file.type.includes('spreadsheetml')
+                                        file.type.includes('spreadsheetml')
                                         ? '📊'
                                         : file.type.includes('word') ||
-                                            file.type.includes('wordprocessingml')
+                                          file.type.includes('wordprocessingml')
                                           ? '📝'
                                           : '📎'}
                                   </span>

@@ -195,7 +195,7 @@ export default function GeneralPage() {
                 name="language"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{m['pages.settings.general.language']()}</FormLabel>
+                    <FormLabel className='flex'>{m['pages.settings.general.language']()}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-36 justify-start">
@@ -219,7 +219,7 @@ export default function GeneralPage() {
                 name="timezone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{m['pages.settings.general.timezone']()}</FormLabel>
+                    <FormLabel className='flex'>{m['pages.settings.general.timezone']()}</FormLabel>
                     <TimezoneSelect field={field} />
                   </FormItem>
                 )}
@@ -234,7 +234,7 @@ export default function GeneralPage() {
                         {m['pages.settings.general.defaultEmailAlias']()}{' '}
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <InfoIcon className="h-4 w-4" />
+                            <InfoIcon className="h-[1em] w-[1em]" />
                           </TooltipTrigger>
                           <TooltipContent>
                             {m['pages.settings.general.defaultEmailDescription']()}

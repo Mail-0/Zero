@@ -81,17 +81,17 @@
       ],
       "workflows": [
         {
-          "name": "main-workflow",
+          "name": "main-workflow-staging",
           "binding": "MAIN_WORKFLOW",
           "class_name": "MainWorkflow",
         },
         {
-          "name": "zero-workflow",
+          "name": "zero-workflow-staging",
           "binding": "ZERO_WORKFLOW",
           "class_name": "ZeroWorkflow",
         },
         {
-          "name": "thread-workflow",
+          "name": "thread-workflow-staging",
           "binding": "THREAD_WORKFLOW",
           "class_name": "ThreadWorkflow",
         },
@@ -229,17 +229,17 @@
       ],
       "workflows": [
         {
-          "name": "main-workflow",
+          "name": "main-workflow-staging",
           "binding": "MAIN_WORKFLOW",
           "class_name": "MainWorkflow",
         },
         {
-          "name": "zero-workflow",
+          "name": "zero-workflow-staging",
           "binding": "ZERO_WORKFLOW",
           "class_name": "ZeroWorkflow",
         },
         {
-          "name": "thread-workflow",
+          "name": "thread-workflow-staging",
           "binding": "THREAD_WORKFLOW",
           "class_name": "ThreadWorkflow",
         },
@@ -316,17 +316,17 @@
       ],
       "workflows": [
         {
-          "name": "main-workflow",
+          "name": "main-workflow-prod",
           "binding": "MAIN_WORKFLOW",
           "class_name": "MainWorkflow",
         },
         {
-          "name": "zero-workflow",
+          "name": "zero-workflow-prod",
           "binding": "ZERO_WORKFLOW",
           "class_name": "ZeroWorkflow",
         },
         {
-          "name": "thread-workflow",
+          "name": "thread-workflow-prod",
           "binding": "THREAD_WORKFLOW",
           "class_name": "ThreadWorkflow",
         },

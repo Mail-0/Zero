@@ -157,7 +157,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 className="mt-3 inline-flex h-7 w-full items-center justify-center gap-0.5 overflow-hidden rounded-lg bg-[#8B5CF6] px-2"
               >
                 <div className="flex items-center justify-center gap-2.5 px-0.5">
-                  <div className="justify-start text-sm leading-none text-white">
+                  <div className="justify-start md:text-sm leading-none text-white whitespace-nowrap text-xs">
                     Start 7 day free trial
                   </div>
                 </div>
