@@ -23,26 +23,6 @@ export const deleteActiveConnection = async () => {
   }
 };
 
-export const getActiveDriver = async () => {
-  const c = getContext<HonoContext>();
-  const session = await c.var.auth.api.getSession({ headers: c.req.raw.headers });
-  if (!session) throw new Error('Invalid session');
-  const activeConnection = await getActiveConnection();
-  if (!activeConnection) throw new Error('Invalid connection');
-
-  if (!activeConnection || !activeConnection.accessToken || !activeConnection.refreshToken)
-    throw new Error('Invalid connection');
-
-  return createDriver(activeConnection.providerId, {
-    auth: {
-      accessToken: activeConnection.accessToken,
-      refreshToken: activeConnection.refreshToken,
-      userId: activeConnection.userId,
-      email: activeConnection.email,
-    },
-  });
-};
-
 export const fromBase64Url = (str: string) => str.replace(/-/g, '+').replace(/_/g, '/');
 
 export const fromBinary = (str: string) =>
