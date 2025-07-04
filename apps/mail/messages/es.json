@@ -1,4 +1,5 @@
 {
+  "$schema": "https://inlang.com/schema/inlang-message-format",
   "common": {
     "actions": {
       "logout": "Cerrar sesión",
@@ -162,8 +163,28 @@
       "thisEmail": "este correo electrónico",
       "dropFiles": "Suelte los archivos para adjuntarlos",
       "attachments": "Adjuntos",
-      "attachmentCount": "{count, plural, =0 {sin adjuntos} one {adjunto} other {adjuntos}}",
-      "fileCount": "{count, plural, =0 {archivos} one {archivo} other {archivos}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "sin adjuntos",
+            "countPlural=one": "adjunto",
+            "countPlural=other": "adjuntos"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "archivos",
+            "countPlural=one": "archivo",
+            "countPlural=other": "archivos"
+          }
+        }
+      ],
       "saveDraft": "Guardar borrador",
       "send": "Enviar",
       "forward": "Reenviar"
@@ -187,7 +208,8 @@
       "unsubscribeOpenSiteDescription": "Para dejar de recibir mensajes de esta lista de correo, vaya a su sitio web para darse de baja.",
       "cancel": "Cancelar",
       "goToWebsite": "Ir al sitio web",
-      "failedToUnsubscribe": "Error al cancelar la suscripción de la lista de correo"
+      "failedToUnsubscribe": "Error al cancelar la suscripción de la lista de correo",
+      "print": "Imprimir"
     },
     "threadDisplay": {
       "exitFullscreen": "Salir de pantalla completa",
@@ -206,7 +228,8 @@
       "disableImages": "Ocultar imágenes",
       "enableImages": "Mostrar imágenes",
       "star": "Destacar",
-      "unstar": "Quitar destacado"
+      "unstar": "Quitar destacado",
+      "printThread": "Imprimir conversación"
     },
     "notes": {
       "title": "Notas",
@@ -224,7 +247,17 @@
       "toSave": "para guardar",
       "label": "Etiqueta:",
       "search": "Buscar notas...",
-      "noteCount": "{count, plural, =0 {Añade notas} one {# nota} other {# notas}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "Añade notas",
+            "countPlural=one": "# nota",
+            "countPlural=other": "# notas"
+          }
+        }
+      ],
       "notePinned": "Nota anclada",
       "noteUnpinned": "Nota desanclada",
       "colorChanged": "Color de nota actualizado",
@@ -277,7 +310,17 @@
       "failedToUpdateGmailAlias": "No se pudo actualizar el alias predeterminado en la configuración de Gmail"
     },
     "mail": {
-      "replies": "{count, plural, =0 {respuestas} one {# respuesta} other {# respuestas}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "respuestas",
+            "countPlural=one": "# respuesta",
+            "countPlural=other": "# respuestas"
+          }
+        }
+      ],
       "deselectAll": "Deseleccionar todos los correos",
       "selectedEmails": "{count} Correos seleccionados",
       "noEmailsToSelect": "No hay correos para seleccionar",
@@ -575,6 +618,22 @@
           "orderedList": "Lista numerada",
           "viewAttachments": "Ver adjuntos",
           "attachFiles": "Adjuntar archivos"
+        }
+      },
+      "imageCompression": {
+        "title": "Compresión de imágenes",
+        "description": "Elige la calidad de imagen para los archivos adjuntos",
+        "low": {
+          "label": "Baja",
+          "description": "Tamaño de archivo más pequeño, pérdida de calidad notable"
+        },
+        "medium": {
+          "label": "Media",
+          "description": "Equilibrio entre tamaño y calidad"
+        },
+        "original": {
+          "label": "Original",
+          "description": "Sin compresión, calidad original"
         }
       }
     }

@@ -1,4 +1,5 @@
 {
+  "$schema": "https://inlang.com/schema/inlang-message-format",
   "common": {
     "actions": {
       "logout": "Çıkış Yap",
@@ -162,8 +163,28 @@
       "thisEmail": "bu e-postaya",
       "dropFiles": "Eklemek için dosyaları bırakın",
       "attachments": "Ekler",
-      "attachmentCount": "{count, plural, =0 {ekler} one {ek} other {ekler}}",
-      "fileCount": "{count, plural, =0 {dosyalar} one {dosya} other {dosyalar}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "ekler",
+            "countPlural=one": "ek",
+            "countPlural=other": "ekler"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "dosyalar",
+            "countPlural=one": "dosya",
+            "countPlural=other": "dosyalar"
+          }
+        }
+      ],
       "saveDraft": "Taslağı kaydet",
       "send": "Gönder",
       "forward": "İlet"
@@ -187,7 +208,8 @@
       "unsubscribeOpenSiteDescription": "Bu posta listesinden ayrılmak için, abonelikten çıkmak üzere internet sitelerine gidin.",
       "cancel": "İptal",
       "goToWebsite": "İnternet sitesine git",
-      "failedToUnsubscribe": "Posta listesi aboneliğinden çıkılamadı"
+      "failedToUnsubscribe": "Posta listesi aboneliğinden çıkılamadı",
+      "print": "Yazdır"
     },
     "threadDisplay": {
       "exitFullscreen": "Tam ekrandan çık",
@@ -206,7 +228,8 @@
       "disableImages": "Görselleri Gizle",
       "enableImages": "Görselleri Göster",
       "star": "Yıldızla",
-      "unstar": "Yıldızı kaldır"
+      "unstar": "Yıldızı kaldır",
+      "printThread": "Yazışmayı yazdır"
     },
     "notes": {
       "title": "Notlar",
@@ -224,7 +247,17 @@
       "toSave": "kaydetmek",
       "label": "Etiket:",
       "search": "Notlarda ara...",
-      "noteCount": "{count, plural, =0 {Not ekle} one {# not} other {# notlar}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "Not ekle",
+            "countPlural=one": "# not",
+            "countPlural=other": "# notlar"
+          }
+        }
+      ],
       "notePinned": "Not sabitlendi",
       "noteUnpinned": "Notun sabitlenmesi iptal edildi",
       "colorChanged": "Not rengi güncellendi",
@@ -277,7 +310,17 @@
       "failedToUpdateGmailAlias": "Gmail ayarlarında varsayılan adres güncellenemedi"
     },
     "mail": {
-      "replies": "{count, plural, =0 {cevaplar} one {# cevap} other {# cevaplar}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "cevaplar",
+            "countPlural=one": "# cevap",
+            "countPlural=other": "# cevaplar"
+          }
+        }
+      ],
       "deselectAll": "Seçilen tüm postaları bırak",
       "selectedEmails": "{count} adet posta seçildi",
       "noEmailsToSelect": "Seçilecek posta yok",
@@ -575,6 +618,22 @@
           "orderedList": "Sıralı liste",
           "viewAttachments": "Ekleri görüntüle",
           "attachFiles": "Dosya ekle"
+        }
+      },
+      "imageCompression": {
+        "title": "Görüntü Sıkıştırma",
+        "description": "Ekler için görüntü kalitesini seçin",
+        "low": {
+          "label": "Düşük",
+          "description": "En küçük dosya boyutu, fark edilir kalite kaybı"
+        },
+        "medium": {
+          "label": "Orta",
+          "description": "Dengeli boyut ve kalite"
+        },
+        "original": {
+          "label": "Orijinal",
+          "description": "Sıkıştırma yok, orijinal kalite"
         }
       }
     }

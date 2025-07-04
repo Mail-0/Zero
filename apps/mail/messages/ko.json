@@ -1,4 +1,5 @@
 {
+  "$schema": "https://inlang.com/schema/inlang-message-format",
   "common": {
     "actions": {
       "logout": "로그아웃",
@@ -162,8 +163,28 @@
       "thisEmail": "이 이메일",
       "dropFiles": "첨부할 파일 끌어놓기",
       "attachments": "첨부 파일",
-      "attachmentCount": "{count, plural, =0 {첨부 파일} other {첨부 파일}}",
-      "fileCount": "{count, plural, =0 {파일} other {파일}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "첨부 파일",
+            "countPlural=one": "첨부 파일",
+            "countPlural=other": "첨부 파일"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "파일",
+            "countPlural=one": "파일",
+            "countPlural=other": "파일"
+          }
+        }
+      ],
       "saveDraft": "임시 저장",
       "send": "전송",
       "forward": "전달"
@@ -187,7 +208,8 @@
       "unsubscribeOpenSiteDescription": "이 메일링 리스트에서 메시지를 받지 않으려면, 웹 사이트를 방문하여 구독을 취소하세요.",
       "cancel": "취소",
       "goToWebsite": "웹사이트로 이동",
-      "failedToUnsubscribe": "메일링 리스트의 구독을 취소하는 데 실패했습니다"
+      "failedToUnsubscribe": "메일링 리스트의 구독을 취소하는 데 실패했습니다",
+      "print": "인쇄"
     },
     "threadDisplay": {
       "exitFullscreen": "전체 화면 종료",
@@ -206,7 +228,8 @@
       "disableImages": "이미지 숨기기",
       "enableImages": "이미지 표시",
       "star": "별표 표시",
-      "unstar": "별표 제거"
+      "unstar": "별표 제거",
+      "printThread": "스레드 인쇄"
     },
     "notes": {
       "title": "노트",
@@ -224,7 +247,17 @@
       "toSave": "저장하기",
       "label": "라벨:",
       "search": "노트 검색...",
-      "noteCount": "{count, plural, =0 {메모 추가} one {메모 #개} other {메모 #개}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "메모 추가",
+            "countPlural=one": "메모 #개",
+            "countPlural=other": "메모 #개"
+          }
+        }
+      ],
       "notePinned": "노트를 고정했습니다",
       "noteUnpinned": "노트를 고정 해제했습니다",
       "colorChanged": "노트 색상을 변경했습니다",
@@ -277,7 +310,17 @@
       "failedToUpdateGmailAlias": "Gmail 설정에서 기본 별칭 업데이트에 실패했습니다"
     },
     "mail": {
-      "replies": "{count, plural, =0 {답장} one {답장 #개} other {답장 #개}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "답장",
+            "countPlural=one": "답장 #개",
+            "countPlural=other": "답장 #개"
+          }
+        }
+      ],
       "deselectAll": "모든 이메일 선택 해제됨",
       "selectedEmails": "{count}개의 이메일 선택됨",
       "noEmailsToSelect": "선택할 이메일이 없습니다",
@@ -575,6 +618,22 @@
           "orderedList": "번호 매기기 목록",
           "viewAttachments": "첨부 파일 보기",
           "attachFiles": "파일 첨부"
+        }
+      },
+      "imageCompression": {
+        "title": "이미지 압축",
+        "description": "첨부 파일의 이미지 품질 선택",
+        "low": {
+          "label": "낮음",
+          "description": "가장 작은 파일 크기, 눈에 띄는 품질 저하"
+        },
+        "medium": {
+          "label": "중간",
+          "description": "크기와 품질의 균형"
+        },
+        "original": {
+          "label": "원본",
+          "description": "압축 없음, 원본 품질"
         }
       }
     }

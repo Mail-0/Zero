@@ -1,4 +1,5 @@
 {
+  "$schema": "https://inlang.com/schema/inlang-message-format",
   "common": {
     "actions": {
       "logout": "ログアウト",
@@ -162,8 +163,28 @@
       "thisEmail": "このメール",
       "dropFiles": "添付するファイルをドロップ",
       "attachments": "添付ファイル",
-      "attachmentCount": "{count, plural, =0 {attachments} other {attachments}}",
-      "fileCount": "{count, plural, =0 {files} other {files}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "添付ファイル",
+            "countPlural=one": "添付ファイル",
+            "countPlural=other": "添付ファイル"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "ファイル",
+            "countPlural=one": "ファイル",
+            "countPlural=other": "ファイル"
+          }
+        }
+      ],
       "saveDraft": "下書きを保存",
       "send": "送信",
       "forward": "転送"
@@ -187,7 +208,8 @@
       "unsubscribeOpenSiteDescription": "このメーリングリストからのメッセージの取得を停止するには、解除するために彼らのウェブサイトに行きます。",
       "cancel": "キャンセル",
       "goToWebsite": "ウェブサイトへ移動",
-      "failedToUnsubscribe": "メーリングリストの登録解除に失敗しました"
+      "failedToUnsubscribe": "メーリングリストの登録解除に失敗しました",
+      "print": "印刷"
     },
     "threadDisplay": {
       "exitFullscreen": "フルスクリーン表示を終了",
@@ -206,7 +228,8 @@
       "disableImages": "画像を非表示",
       "enableImages": "画像を表示",
       "star": "スターを付ける",
-      "unstar": "スターを外す"
+      "unstar": "スターを外す",
+      "printThread": "スレッドを印刷"
     },
     "notes": {
       "title": "メモ",
@@ -224,7 +247,17 @@
       "toSave": "保存する",
       "label": "ラベル：",
       "search": "メモを検索…",
-      "noteCount": "{count, plural, =0 {Add notes} one {# note} other {# notes}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "Add notes",
+            "countPlural=one": "# note",
+            "countPlural=other": "# notes"
+          }
+        }
+      ],
       "notePinned": "メモをピン留めしました",
       "noteUnpinned": "メモのピン留めを解除しました",
       "colorChanged": "メモの色が更新されました",
@@ -277,7 +310,17 @@
       "failedToUpdateGmailAlias": "Gmail設定でデフォルトのエイリアスの更新に失敗しました"
     },
     "mail": {
-      "replies": "{count, plural, =0 {replies} other {# replies}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "返信",
+            "countPlural=one": "返信 #個",
+            "countPlural=other": "返信 #個"
+          }
+        }
+      ],
       "deselectAll": "すべてのメールを選択解除しました",
       "selectedEmails": "選択したメール {count} 件",
       "noEmailsToSelect": "選択したメールはありません",
@@ -575,6 +618,22 @@
           "orderedList": "番号付きリスト",
           "viewAttachments": "添付ファイルを表示",
           "attachFiles": "ファイルを添付"
+        }
+      },
+      "imageCompression": {
+        "title": "画像圧縮",
+        "description": "添付ファイルの画質を選択",
+        "low": {
+          "label": "低",
+          "description": "ファイルサイズ最小、目立つ画質劣化"
+        },
+        "medium": {
+          "label": "中",
+          "description": "サイズと品質のバランス"
+        },
+        "original": {
+          "label": "オリジナル",
+          "description": "圧縮なし、元の品質"
         }
       }
     }

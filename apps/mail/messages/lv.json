@@ -1,4 +1,5 @@
 {
+  "$schema": "https://inlang.com/schema/inlang-message-format",
   "common": {
     "actions": {
       "logout": "Atslēgties",
@@ -162,8 +163,28 @@
       "thisEmail": "šis e-pasts",
       "dropFiles": "Ievelciet failus, lai pievienotu",
       "attachments": "Pielikumi",
-      "attachmentCount": "{count, plural, zero {}=0 {pielikumi} one {pielikums} other {pielikumi}}",
-      "fileCount": "{count, plural, zero {}=0 {faili} one {fails} other {faili}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "pielikumi",
+            "countPlural=one": "pielikums",
+            "countPlural=other": "pielikumi"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "faili",
+            "countPlural=one": "fails",
+            "countPlural=other": "faili"
+          }
+        }
+      ],
       "saveDraft": "Saglabāt melnrakstu",
       "send": "Sūtīt",
       "forward": "Pārsūtīt"
@@ -187,7 +208,8 @@
       "unsubscribeOpenSiteDescription": "Lai pārtrauktu saņemt ziņojumus, dodieties uz viņu vietni, lai atteiktos.",
       "cancel": "Atcelt",
       "goToWebsite": "Doties uz tīmekļvietni",
-      "failedToUnsubscribe": "Neizdevās atrakstīties"
+      "failedToUnsubscribe": "Neizdevās atrakstīties",
+      "print": "Drukāt"
     },
     "threadDisplay": {
       "exitFullscreen": "Aizvērt pilnekrāna režīmu",
@@ -206,7 +228,8 @@
       "disableImages": "Slēpt attēlus",
       "enableImages": "Rādīt attēlus",
       "star": "Pievienot zvaigznīti",
-      "unstar": "Noņemt zvaigznīti"
+      "unstar": "Noņemt zvaigznīti",
+      "printThread": "Drukāt saraksti"
     },
     "notes": {
       "title": "Piezīmes",
@@ -224,7 +247,17 @@
       "toSave": "lai saglabātu",
       "label": "Iezīme:",
       "search": "Meklēt piezīmes...",
-      "noteCount": "{count, plural, zero {}=0 {Pievienot piezīmes} one {# piezīme} other {# piezīmes}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "Pievienot piezīmes",
+            "countPlural=one": "# piezīme",
+            "countPlural=other": "# piezīmes"
+          }
+        }
+      ],
       "notePinned": "Piezīme piesprausta",
       "noteUnpinned": "Piezīme atsprausta",
       "colorChanged": "Piezīmes krāsa atjaunināta",
@@ -277,7 +310,17 @@
       "failedToUpdateGmailAlias": "Neizdevās atjaunināt noklusējuma aizstājvārdu Gmail iestatījumos"
     },
     "mail": {
-      "replies": "{count, plural, zero {}=0 {atbildes} one {# atbilde} other {# atbildes}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "atbildes",
+            "countPlural=one": "# atbilde",
+            "countPlural=other": "# atbildes"
+          }
+        }
+      ],
       "deselectAll": "Atcelta visu e-pastu izvēle",
       "selectedEmails": "Izvēlēti {count} e-pasti",
       "noEmailsToSelect": "Nav e-pastu, ko izvēlēties",
@@ -575,6 +618,22 @@
           "orderedList": "Numurēts saraksts",
           "viewAttachments": "Skatīt pielikumus",
           "attachFiles": "Pievienot failus"
+        }
+      },
+      "imageCompression": {
+        "title": "Attēlu saspiešana",
+        "description": "Izvēlieties attēlu kvalitāti pielikumiem",
+        "low": {
+          "label": "Zema",
+          "description": "Mazākais faila izmērs, pamanāms kvalitātes zudums"
+        },
+        "medium": {
+          "label": "Vidēja",
+          "description": "Līdzsvarots izmērs un kvalitāte"
+        },
+        "original": {
+          "label": "Oriģināls",
+          "description": "Bez saspiešanas, oriģinālā kvalitāte"
         }
       }
     }

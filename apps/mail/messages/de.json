@@ -1,4 +1,5 @@
 {
+  "$schema": "https://inlang.com/schema/inlang-message-format",
   "common": {
     "actions": {
       "logout": "Abmelden",
@@ -162,8 +163,28 @@
       "thisEmail": "Diese E-Mail",
       "dropFiles": "Datei ablegen, um sie anzuhängen",
       "attachments": "Anhänge",
-      "attachmentCount": "{count, plural, =0 {Anhänge} one {Anhang} other {Anhänge}}",
-      "fileCount": "{count, plural, =0 {Dateien} one {Datei} other {Dateien}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "Anhänge",
+            "countPlural=one": "Anhang",
+            "countPlural=other": "Anhänge"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "Dateien",
+            "countPlural=one": "Datei",
+            "countPlural=other": "Dateien"
+          }
+        }
+      ],
       "saveDraft": "Entwurf speichern",
       "send": "Senden",
       "forward": "Weiterleiten"
@@ -187,7 +208,8 @@
       "unsubscribeOpenSiteDescription": "Um nicht mehr Nachrichten von dieser Mailingliste zu erhalten, gehen Sie auf ihre Website zum Abbestellen.",
       "cancel": "Abbrechen",
       "goToWebsite": "Zur Website",
-      "failedToUnsubscribe": "Fehler beim Abbestellen der Mailingliste"
+      "failedToUnsubscribe": "Fehler beim Abbestellen der Mailingliste",
+      "print": "Drucken"
     },
     "threadDisplay": {
       "exitFullscreen": "Vollbildansicht beenden",
@@ -206,7 +228,8 @@
       "disableImages": "Bilder ausblenden",
       "enableImages": "Bilder anzeigen",
       "star": "Mit Stern markieren",
-      "unstar": "Stern entfernen"
+      "unstar": "Stern entfernen",
+      "printThread": "Thread drucken"
     },
     "notes": {
       "title": "Notizen",
@@ -224,7 +247,17 @@
       "toSave": "Um zu speichern",
       "label": "Label:",
       "search": "Notizen durchsuchen...",
-      "noteCount": "{count, plural, =0 {Füge Notizen hinzu} one {# Notiz} other {# Notizen}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "Füge Notizen hinzu",
+            "countPlural=one": "# Notiz",
+            "countPlural=other": "# Notizen"
+          }
+        }
+      ],
       "notePinned": "Notiz angeheftet",
       "noteUnpinned": "Notiz gelöst",
       "colorChanged": "Notizfarbe aktualisiert",
@@ -277,7 +310,17 @@
       "failedToUpdateGmailAlias": "Aktualisierung des Standard-Alias in den Gmail-Einstellungen fehlgeschlagen"
     },
     "mail": {
-      "replies": "{count, plural, =0 {Antworten} one {# Antwort} other {# Antworten}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "Antworten",
+            "countPlural=one": "# Antwort",
+            "countPlural=other": "# Antworten"
+          }
+        }
+      ],
       "deselectAll": "Deselected all emails",
       "selectedEmails": "{count} E-Mails ausgewählt",
       "noEmailsToSelect": "Keine E-Mails zum Auswählen",
@@ -575,6 +618,22 @@
           "orderedList": "Nummerierte Liste",
           "viewAttachments": "Anhänge anzeigen",
           "attachFiles": "Dateien anhängen"
+        }
+      },
+      "imageCompression": {
+        "title": "Bildkomprimierung",
+        "description": "Bildqualität für Anhänge auswählen",
+        "low": {
+          "label": "Niedrig",
+          "description": "Kleinste Dateigröße, merklicher Qualitätsverlust"
+        },
+        "medium": {
+          "label": "Mittel",
+          "description": "Ausgewogene Größe und Qualität"
+        },
+        "original": {
+          "label": "Original",
+          "description": "Keine Komprimierung, Originalqualität"
         }
       }
     }

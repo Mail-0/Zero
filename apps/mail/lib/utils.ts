@@ -95,19 +95,19 @@ export const parseAndValidateDate = (dateString: string): Date | null => {
  */
 export const shouldShowSeparateTime = (dateString: string | undefined): boolean => {
   if (!dateString) return false;
-  
+
   const dateObj = parseAndValidateDate(dateString);
   if (!dateObj) return false;
-  
+
   const now = new Date();
-  
+
   // Don't show separate time if email is from today
   if (isToday(dateObj)) return false;
-  
+
   // Don't show separate time if email is within the last 12 hours
   const hoursDifference = (now.getTime() - dateObj.getTime()) / (1000 * 60 * 60);
   if (hoursDifference <= 12) return false;
-  
+
   // Show separate time for older emails
   return true;
 };
@@ -116,20 +116,14 @@ export const shouldShowSeparateTime = (dateString: string | undefined): boolean 
  * Formats a date with different formatting logic based on parameters
  * Overloaded to handle both mail date formatting and notes date formatting
  */
-export function formatDate(date: string): string;
-export function formatDate(dateInput: string | Date, formatter?: any): string;
-export function formatDate(dateInput: string | Date, formatter?: any): string {
-  // Notes formatting logic (when formatter is provided or date is a Date object)
-  if (formatter || dateInput instanceof Date) {
-    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+export function formatDate(dateInput: string | Date | number): string {
+  if (typeof dateInput === 'number') {
+    dateInput = new Date(dateInput).toISOString();
+  }
 
-    if (formatter) {
-      return formatter.dateTime(date, {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-      });
-    }
-
+  // Notes formatting logic (when date is a Date object)
+  if (dateInput instanceof Date) {
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : (dateInput as Date);
     return date.toLocaleString(undefined, {
       year: 'numeric',
       month: 'short',
@@ -173,7 +167,7 @@ export function formatDate(dateInput: string | Date, formatter?: any): string {
     console.error('Error formatting date', error);
     return '';
   }
-};
+}
 
 export const formatTime = (date: string) => {
   const dateObj = parseAndValidateDate(date);
@@ -183,7 +177,7 @@ export const formatTime = (date: string) => {
 
   try {
     const timezone = getBrowserTimezone();
-    
+
     // Always return the time in h:mm a format
     return formatInTimeZone(dateObj, timezone, 'h:mm a');
   } catch (error) {

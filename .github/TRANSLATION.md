@@ -102,6 +102,6 @@ The AI will translate only the words inside the curly braces while maintaining t
 
 ## Need Help?
 
-If you have questions about translation or encounter issues, please [open an issue](https://github.com/Mail-0/Zero/issues) or join our [Discord server](https://discord.gg/0email).
+If you have questions about translation or encounter issues, please [open an issue](https://github.com/Mail-0/Zero/issues) or join our [Discord server](https://discord.gg/mail0).
 
 Thank you for helping make 0.email accessible to users in your language!

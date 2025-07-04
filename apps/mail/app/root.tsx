@@ -7,22 +7,38 @@ import {
   ScrollRestoration,
   useLoaderData,
   useNavigate,
+  type LoaderFunctionArgs,
   type MetaFunction,
 } from 'react-router';
 import { ServerProviders } from '@/providers/server-providers';
 import { ClientProviders } from '@/providers/client-providers';
+import { createTRPCClient, httpBatchLink } from '@trpc/client';
 import { useEffect, type PropsWithChildren } from 'react';
 import { AlertCircle, Loader2 } from 'lucide-react';
-import { getServerTrpc } from '@/lib/trpc.server';
+import type { AppRouter } from '@zero/server/trpc';
 import { Button } from '@/components/ui/button';
+import { getLocale } from '@/paraglide/runtime';
 import { siteConfig } from '@/lib/site-config';
-import { resolveLocale } from '@/i18n/request';
-import { getMessages } from '@/i18n/request';
 import { signOut } from '@/lib/auth-client';
 import type { Route } from './+types/root';
-import { useTranslations } from 'use-intl';
+import { m } from '@/paraglide/messages';
 import { ArrowLeft } from 'lucide-react';
+import superjson from 'superjson';
 import './globals.css';
+
+const getUrl = () => import.meta.env.VITE_PUBLIC_BACKEND_URL + '/api/trpc';
+
+export const getServerTrpc = (req: Request) =>
+  createTRPCClient<AppRouter>({
+    links: [
+      httpBatchLink({
+        maxItems: 8,
+        url: getUrl(),
+        transformer: superjson,
+        headers: req.headers,
+      }),
+    ],
+  });
 
 export const meta: MetaFunction = () => {
   return [
@@ -37,26 +53,20 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-export async function loader({ request }: Route.ClientLoaderArgs) {
-  const locale = resolveLocale(request);
+export async function loader({ request }: LoaderFunctionArgs) {
   const trpc = getServerTrpc(request);
-
-  const connectionId = await trpc.connections.getDefault
+  const defaultConnection = await trpc.connections.getDefault
     .query()
-    .then((res) => res?.id ?? null)
+    .then((res) => (res?.id as string) ?? null)
     .catch(() => null);
-
-  return {
-    locale: locale ?? 'en',
-    messages: await getMessages(locale),
-    connectionId,
-  };
+  return { connectionId: defaultConnection };
 }
 
 export function Layout({ children }: PropsWithChildren) {
-  const { locale = 'en', messages, connectionId } = useLoaderData<typeof loader>();
+  const { connectionId } = useLoaderData<typeof loader>();
+
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang={getLocale()} suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -70,7 +80,7 @@ export function Layout({ children }: PropsWithChildren) {
         <Links />
       </head>
       <body className="antialiased">
-        <ServerProviders messages={messages} locale={locale} connectionId={connectionId}>
+        <ServerProviders connectionId={connectionId}>
           <ClientProviders>{children}</ClientProviders>
         </ServerProviders>
         <ScrollRestoration />
@@ -150,7 +160,6 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
 function NotFound() {
   const navigate = useNavigate();
-  const t = useTranslations();
 
   return (
     <div className="dark:bg-background flex w-full items-center justify-center bg-white text-center">
@@ -165,9 +174,9 @@ function NotFound() {
         {/* Message */}
         <div className="space-y-2">
           <h2 className="text-2xl font-semibold tracking-tight">
-            {t('pages.error.notFound.title')}
+            {m['pages.error.notFound.title']()}
           </h2>
-          <p className="text-muted-foreground">{t('pages.error.notFound.description')}</p>
+          <p className="text-muted-foreground">{m['pages.error.notFound.description']()}</p>
         </div>
 
         {/* Buttons */}
@@ -178,7 +187,7 @@ function NotFound() {
             className="text-muted-foreground gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            {t('pages.error.notFound.goBack')}
+            {m['pages.error.notFound.goBack']()}
           </Button>
         </div>
       </div>

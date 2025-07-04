@@ -1,4 +1,5 @@
 {
+  "$schema": "https://inlang.com/schema/inlang-message-format",
   "common": {
     "actions": {
       "logout": "Tanca la sessió",
@@ -162,8 +163,28 @@
       "thisEmail": "aquest correu",
       "dropFiles": "Arrossega arxius per adjuntar",
       "attachments": "Adjunts",
-      "attachmentCount": "{count, plural, =0 {adjunts} one {adjunt} other {adjunts}}",
-      "fileCount": "{count, plural, =0 {fitxers} one {fitxer} other {fitxers}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "adjunts",
+            "countPlural=one": "adjunt",
+            "countPlural=other": "adjunts"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "fitxers",
+            "countPlural=one": "fitxer",
+            "countPlural=other": "fitxers"
+          }
+        }
+      ],
       "saveDraft": "Desa l'esborrany",
       "send": "Enviar",
       "forward": "Reenviar"
@@ -187,7 +208,8 @@
       "unsubscribeOpenSiteDescription": "Per deixar de rebre missatges d'aquesta llista de correu, aneu al seu lloc web per cancel·lar la subscripció.",
       "cancel": "Cancel·lar",
       "goToWebsite": "Anar al lloc web",
-      "failedToUnsubscribe": "No s'ha pogut cancel·lar la subscripció a la llista de correu"
+      "failedToUnsubscribe": "No s'ha pogut cancel·lar la subscripció a la llista de correu",
+      "print": "Imprimir"
     },
     "threadDisplay": {
       "exitFullscreen": "Sortir de la visualització en pantalla completa",
@@ -206,7 +228,8 @@
       "disableImages": "Amaga les imatges",
       "enableImages": "Mostra les imatges",
       "star": "Destacar",
-      "unstar": "Treure destacat"
+      "unstar": "Treure destacat",
+      "printThread": "Imprimir fil"
     },
     "notes": {
       "title": "Notes",
@@ -224,7 +247,17 @@
       "toSave": "per desar",
       "label": "Etiqueta:",
       "search": "Cerca notes...",
-      "noteCount": "{count, plural, =0 {Afegeix notes} one {# nota} other {# notes}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "Afegeix notes",
+            "countPlural=one": "# nota",
+            "countPlural=other": "# notes"
+          }
+        }
+      ],
       "notePinned": "Nota fixada",
       "noteUnpinned": "Nota desfixada",
       "colorChanged": "Color de la nota actualitzat",
@@ -277,7 +310,17 @@
       "failedToUpdateGmailAlias": "No s'ha pogut actualitzar l'àlies predeterminat a la configuració de Gmail"
     },
     "mail": {
-      "replies": "{count, plural, =0 {respostes} one {# resposta} other {# respostes}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "respostes",
+            "countPlural=one": "# resposta",
+            "countPlural=other": "# respostes"
+          }
+        }
+      ],
       "deselectAll": "S'han desseleccionat tots els correus",
       "selectedEmails": "S'han seleccionat {count} correus",
       "noEmailsToSelect": "No hi ha correus per seleccionar",
@@ -575,6 +618,22 @@
           "orderedList": "Llista numerada",
           "viewAttachments": "Veure fitxers adjunts",
           "attachFiles": "Adjuntar fitxers"
+        }
+      },
+      "imageCompression": {
+        "title": "Compressió d'imatges",
+        "description": "Tria la qualitat de les imatges per als fitxers adjunts",
+        "low": {
+          "label": "Baixa",
+          "description": "Mida de fitxer més petita, pèrdua de qualitat notable"
+        },
+        "medium": {
+          "label": "Mitjana",
+          "description": "Equilibri entre mida i qualitat"
+        },
+        "original": {
+          "label": "Original",
+          "description": "Sense compressió, qualitat original"
         }
       }
     }

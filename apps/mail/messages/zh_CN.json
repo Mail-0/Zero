@@ -1,4 +1,5 @@
 {
+  "$schema": "https://inlang.com/schema/inlang-message-format",
   "common": {
     "actions": {
       "logout": "退出登录",
@@ -162,8 +163,28 @@
       "thisEmail": "此邮件",
       "dropFiles": "拖放文件以附加",
       "attachments": "附件",
-      "attachmentCount": "{count, plural, =0 {附件} one {个附件} other {个附件}}",
-      "fileCount": "{count, plural, =0 {文件} one {个文件} other {个文件}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "附件",
+            "countPlural=one": "个附件",
+            "countPlural=other": "个附件"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "文件",
+            "countPlural=one": "个文件",
+            "countPlural=other": "个文件"
+          }
+        }
+      ],
       "saveDraft": "保存草稿",
       "send": "发送",
       "forward": "转发"
@@ -187,7 +208,8 @@
       "unsubscribeOpenSiteDescription": "要停止接收来自此邮件列表的消息，请访问他们的网站取消订阅。",
       "cancel": "取消",
       "goToWebsite": "访问网站",
-      "failedToUnsubscribe": "取消订阅邮件列表失败"
+      "failedToUnsubscribe": "取消订阅邮件列表失败",
+      "print": "打印"
     },
     "threadDisplay": {
       "exitFullscreen": "退出全屏",
@@ -206,7 +228,8 @@
       "disableImages": "隐藏图片",
       "enableImages": "显示图片",
       "star": "标记为星标",
-      "unstar": "取消星标"
+      "unstar": "取消星标",
+      "printThread": "打印线程"
     },
     "notes": {
       "title": "笔记",
@@ -224,7 +247,17 @@
       "toSave": "以保存",
       "label": "标签：",
       "search": "搜索笔记...",
-      "noteCount": "{count, plural, =0 {添加笔记} one {# 条笔记} other {# 条笔记}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "添加笔记",
+            "countPlural=one": "# 条笔记",
+            "countPlural=other": "# 条笔记"
+          }
+        }
+      ],
       "notePinned": "笔记已固定",
       "noteUnpinned": "笔记已取消固定",
       "colorChanged": "笔记颜色已更新",
@@ -277,7 +310,17 @@
       "failedToUpdateGmailAlias": "无法更新 Gmail 设置中的默认别名"
     },
     "mail": {
-      "replies": "{count, plural, =0 {回复} one {# 条回复} other {# 条回复}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "回复",
+            "countPlural=one": "# 条回复",
+            "countPlural=other": "# 条回复"
+          }
+        }
+      ],
       "deselectAll": "已取消选择所有邮件",
       "selectedEmails": "已选择 {count} 封邮件",
       "noEmailsToSelect": "没有可选择的邮件",
@@ -404,7 +447,7 @@
         "zeroSignatureDescription": "在您的邮件中添加 Zero 签名。",
         "defaultEmailAlias": "默认邮箱别名",
         "selectDefaultEmail": "选择默认邮箱",
-        "defaultEmailDescription": "此邮箱将作为撰写新邮件时的默认“发件人”地址",
+        "defaultEmailDescription": "此邮箱将作为撰写新邮件时的默认\"发件人\"地址",
         "autoRead": "自动阅读",
         "autoReadDescription": "点击邮件时自动将其标记为已读。"
       },
@@ -575,6 +618,22 @@
           "orderedList": "有序列表",
           "viewAttachments": "查看附件",
           "attachFiles": "附加文件"
+        }
+      },
+      "imageCompression": {
+        "title": "图片压缩",
+        "description": "为附件选择图片质量",
+        "low": {
+          "label": "低",
+          "description": "最小文件大小，质量有明显损失"
+        },
+        "medium": {
+          "label": "中",
+          "description": "文件大小与质量的平衡"
+        },
+        "original": {
+          "label": "原始",
+          "description": "无压缩，原始质量"
         }
       }
     }

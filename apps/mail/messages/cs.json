@@ -1,4 +1,5 @@
 {
+  "$schema": "https://inlang.com/schema/inlang-message-format",
   "common": {
     "actions": {
       "logout": "Odhlásit se",
@@ -162,8 +163,28 @@
       "thisEmail": "tento email",
       "dropFiles": "Přetáhněte sem soubory",
       "attachments": "Přílohy",
-      "attachmentCount": "{count, plural, =0 {příloh} one {příloha} few {přílohy} many {příloh} other {příloh}}",
-      "fileCount": "{count, plural, =0 {souborů} one {soubor} few {soubory} many {souborů} other {souborů}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "příloh",
+            "countPlural=one": "příloha",
+            "countPlural=other": "příloh"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "souborů",
+            "countPlural=one": "soubor",
+            "countPlural=other": "souborů"
+          }
+        }
+      ],
       "saveDraft": "Uložit koncept",
       "send": "Odeslat",
       "forward": "Přeposlat"
@@ -187,7 +208,8 @@
       "unsubscribeOpenSiteDescription": "Chcete-li přestat dostávat zprávy z tohoto seznamu emailů, přejděte na jejich webové stránky a odhlašte se.",
       "cancel": "Zrušit",
       "goToWebsite": "Přejít na webovou stránku",
-      "failedToUnsubscribe": "Odhlášení z emailového seznamu se nezdařilo"
+      "failedToUnsubscribe": "Odhlášení z emailového seznamu se nezdařilo",
+      "print": "Tisk"
     },
     "threadDisplay": {
       "exitFullscreen": "Ukončit režim celé obrazovky",
@@ -206,7 +228,8 @@
       "disableImages": "Skrýt obrázky",
       "enableImages": "Zobrazit obrázky",
       "star": "Označit hvězdičkou",
-      "unstar": "Odebrat hvězdičku"
+      "unstar": "Odebrat hvězdičku",
+      "printThread": "Tisknout vlákno"
     },
     "notes": {
       "title": "Poznámky",
@@ -224,7 +247,17 @@
       "toSave": "uložit",
       "label": "Značka:",
       "search": "Hledat poznámky...",
-      "noteCount": "{count, plural, =0 {Přidat poznámku} one {# poznámka} few {# poznámky} many {# poznámky} other {# poznámek}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "Přidat poznámku",
+            "countPlural=one": "# poznámka",
+            "countPlural=other": "# poznámek"
+          }
+        }
+      ],
       "notePinned": "Poznámka připnuta",
       "noteUnpinned": "Poznámka odepnuta",
       "colorChanged": "Barva poznámky aktualizována",
@@ -277,7 +310,17 @@
       "failedToUpdateGmailAlias": "Nepodařilo se aktualizovat výchozí alias v nastavení Gmailu"
     },
     "mail": {
-      "replies": "{count, plural, =0 {odpovědí} one {#odpověď} few {#odpovědi} many {#odpovědí} other {#odpovědí}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "odpovědí",
+            "countPlural=one": "#odpověď",
+            "countPlural=other": "#odpovědí"
+          }
+        }
+      ],
       "deselectAll": "Zrušit všechny emaily",
       "selectedEmails": "Vybráno {count} emailů",
       "noEmailsToSelect": "Žádné emaily k vybrání",
@@ -575,6 +618,22 @@
           "orderedList": "Číslovaný seznam",
           "viewAttachments": "Zobrazit přílohy",
           "attachFiles": "Připojit soubory"
+        }
+      },
+      "imageCompression": {
+        "title": "Komprese obrázků",
+        "description": "Vyberte kvalitu obrázků pro přílohy",
+        "low": {
+          "label": "Nízká",
+          "description": "Nejmenší velikost souboru, znatelná ztráta kvality"
+        },
+        "medium": {
+          "label": "Střední",
+          "description": "Vyvážená velikost a kvalita"
+        },
+        "original": {
+          "label": "Originál",
+          "description": "Bez komprese, původní kvalita"
         }
       }
     }

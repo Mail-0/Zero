@@ -1,4 +1,5 @@
 {
+  "$schema": "https://inlang.com/schema/inlang-message-format",
   "common": {
     "actions": {
       "logout": "Déconnexion",
@@ -162,8 +163,28 @@
       "thisEmail": "ce courriel",
       "dropFiles": "Déposer les fichiers à joindre",
       "attachments": "Pièces jointes",
-      "attachmentCount": "{count, plural, =0 {pièces jointes} one {pièce jointe} other {pièces jointes}}",
-      "fileCount": "{count, plural, =0 {fichiers} one {fichier} other {fichiers}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "pièces jointes",
+            "countPlural=one": "pièce jointe",
+            "countPlural=other": "pièces jointes"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "fichiers",
+            "countPlural=one": "fichier",
+            "countPlural=other": "fichiers"
+          }
+        }
+      ],
       "saveDraft": "Enregistrer le brouillon",
       "send": "Envoyer",
       "forward": "Transférer"
@@ -187,7 +208,8 @@
       "unsubscribeOpenSiteDescription": "Pour ne plus recevoir de messages de cette liste de diffusion, allez sur leur site Web pour vous désabonner.",
       "cancel": "Annuler",
       "goToWebsite": "Accéder au site",
-      "failedToUnsubscribe": "Échec de la désinscription à la liste de diffusion"
+      "failedToUnsubscribe": "Échec de la désinscription à la liste de diffusion",
+      "print": "Imprimer"
     },
     "threadDisplay": {
       "exitFullscreen": "Quitter le mode plein écran",
@@ -206,7 +228,8 @@
       "disableImages": "Masquer les images",
       "enableImages": "Afficher les images",
       "star": "Marquer d'une étoile",
-      "unstar": "Retirer l'étoile"
+      "unstar": "Retirer l'étoile",
+      "printThread": "Imprimer la conversation"
     },
     "notes": {
       "title": "Notes",
@@ -224,7 +247,17 @@
       "toSave": "À enregistrer",
       "label": "Étiquette :",
       "search": "Rechercher des notes...",
-      "noteCount": "{count, plural, =0 {Ajoutez des notes} one {# note} other {# notes}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "Ajoutez des notes",
+            "countPlural=one": "# note",
+            "countPlural=other": "# notes"
+          }
+        }
+      ],
       "notePinned": "Note épinglée",
       "noteUnpinned": "Note supprimée des épingles",
       "colorChanged": "Couleur de la note modifiée",
@@ -277,7 +310,17 @@
       "failedToUpdateGmailAlias": "Échec de la mise à jour de l'alias par défaut dans les paramètres Gmail"
     },
     "mail": {
-      "replies": "{count, plural, =0 {réponses} one {# réponse} other {# réponses}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "réponses",
+            "countPlural=one": "# réponse",
+            "countPlural=other": "# réponses"
+          }
+        }
+      ],
       "deselectAll": "Courriels désélectionnés",
       "selectedEmails": "{count} courriels sélectionnés",
       "noEmailsToSelect": "Aucun courriel à sélectionner",
@@ -575,6 +618,22 @@
           "orderedList": "Liste numérotée",
           "viewAttachments": "Voir les pièces jointes",
           "attachFiles": "Joindre des fichiers"
+        }
+      },
+      "imageCompression": {
+        "title": "Compression d'image",
+        "description": "Choisir la qualité d'image pour les pièces jointes",
+        "low": {
+          "label": "Faible",
+          "description": "Taille de fichier minimale, perte de qualité visible"
+        },
+        "medium": {
+          "label": "Moyenne",
+          "description": "Équilibre entre taille et qualité"
+        },
+        "original": {
+          "label": "Originale",
+          "description": "Aucune compression, qualité originale"
         }
       }
     }

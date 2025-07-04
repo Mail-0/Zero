@@ -16,23 +16,27 @@ export class NotesManager {
     color: string = 'default',
     isPinned: boolean = false,
   ): Promise<typeof note.$inferSelect> {
-    const db = getZeroDB(userId);
-    const highestOrder = await db.findHighestNoteOrder();
+    try{
+      const db = getZeroDB(userId);
+      const highestOrder = await db.findHighestNoteOrder();
 
-    const id = crypto.randomUUID();
-    const result = await db.createNote({
-      id,
-      threadId,
-      content,
-      color,
-      isPinned,
-      order: (highestOrder?.order ?? 0) + 1,
-    });
-
-    if (!result[0]) {
-      throw new Error('Failed to create note');
+      const id = crypto.randomUUID();
+      const result = await db.createNote({
+        id,
+        threadId,
+        content,
+        color,
+        isPinned,
+        order: (highestOrder?.order ?? 0) + 1,
+      });
+      if (!result || result.length === 0) {
+        throw new Error('Failed to create note');
+      }
+      return result[0];
+    } catch (error) {
+      console.error('Error creating note:', error);
+      throw error;
     }
-    return result[0];
   }
 
   async updateNote(

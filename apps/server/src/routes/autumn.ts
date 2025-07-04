@@ -1,5 +1,6 @@
 import { fetchPricingTable } from 'autumn-js';
 import type { HonoContext } from '../ctx';
+import { env } from 'cloudflare:workers';
 import { Hono } from 'hono';
 
 const sanitizeCustomerBody = (body: any) => {
@@ -132,7 +133,12 @@ export const autumnApi = new Hono<AutumnContext>()
     if (!customerData) return c.json({ error: 'No customer ID found' }, 401);
 
     return c.json(
-      await autumn.customers.billingPortal(customerData.customerId, body).then((data) => data.data),
+      await autumn.customers
+        .billingPortal(customerData.customerId, {
+          ...body,
+          return_url: `${env.VITE_PUBLIC_APP_URL}`,
+        })
+        .then((data) => data.data),
     );
   })
   .post('/entities', async (c) => {

@@ -1,4 +1,5 @@
 {
+  "$schema": "https://inlang.com/schema/inlang-message-format",
   "common": {
     "actions": {
       "logout": "خروج",
@@ -162,8 +163,28 @@
       "thisEmail": "این ایمیل",
       "dropFiles": "فایل‌ها را برای پیوست کردن اینجا رها کنید",
       "attachments": "پیوست‌ها",
-      "attachmentCount": "{count, plural, =0 {پیوست} one {پیوست} other {پیوست}}",
-      "fileCount": "{count, plural, =0 {فایل} one {فایل} other {فایل}}",
+      "attachmentCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "پیوست",
+            "countPlural=one": "پیوست",
+            "countPlural=other": "پیوست"
+          }
+        }
+      ],
+      "fileCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "فایل",
+            "countPlural=one": "فایل",
+            "countPlural=other": "فایل"
+          }
+        }
+      ],
       "saveDraft": "ذخیره پیش‌نویس",
       "send": "ارسال",
       "forward": "ارسال به دیگران"
@@ -187,7 +208,8 @@
       "unsubscribeOpenSiteDescription": "برای توقف دریافت پیام‌ها از این لیست ایمیل، به وب‌سایت آن‌ها مراجعه کنید تا اشتراک خود را لغو کنید.",
       "cancel": "لغو",
       "goToWebsite": "رفتن به وب‌سایت",
-      "failedToUnsubscribe": "لغو اشتراک از لیست ایمیل ناموفق بود"
+      "failedToUnsubscribe": "لغو اشتراک از لیست ایمیل ناموفق بود",
+      "print": "چاپ"
     },
     "threadDisplay": {
       "exitFullscreen": "خروج از حالت تمام‌صفحه",
@@ -206,7 +228,8 @@
       "disableImages": "پنهان کردن تصاویر",
       "enableImages": "نمایش تصاویر",
       "star": "ستاره‌دار کردن",
-      "unstar": "حذف ستاره"
+      "unstar": "حذف ستاره",
+      "printThread": "چاپ رشته"
     },
     "notes": {
       "title": "یادداشت‌ها",
@@ -224,7 +247,17 @@
       "toSave": "برای ذخیره",
       "label": "برچسب:",
       "search": "جستجوی یادداشت‌ها...",
-      "noteCount": "{count, plural, =0 {افزودن یادداشت‌ها} one {# یادداشت} other {# یادداشت}}",
+      "noteCount": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "افزودن یادداشت‌ها",
+            "countPlural=one": "# یادداشت",
+            "countPlural=other": "# یادداشت"
+          }
+        }
+      ],
       "notePinned": "یادداشت سنجاق شد",
       "noteUnpinned": "سنجاق یادداشت برداشته شد",
       "colorChanged": "رنگ یادداشت به‌روزرسانی شد",
@@ -277,7 +310,17 @@
       "failedToUpdateGmailAlias": "به‌روزرسانی نام مستعار پیش‌فرض در تنظیمات جیمیل ناموفق بود"
     },
     "mail": {
-      "replies": "{count, plural, =0 {پاسخ‌ها} one {# پاسخ} other {# پاسخ}}",
+      "replies": [
+        {
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
+          "match": {
+            "countPlural=0": "پاسخ‌ها",
+            "countPlural=one": "# پاسخ",
+            "countPlural=other": "# پاسخ"
+          }
+        }
+      ],
       "deselectAll": "همه ایمیل‌ها از حالت انتخاب خارج شدند",
       "selectedEmails": "{count} ایمیل انتخاب شده",
       "noEmailsToSelect": "ایمیلی برای انتخاب وجود ندارد",
@@ -575,6 +618,22 @@
           "orderedList": "فهرست شماره‌دار",
           "viewAttachments": "مشاهده پیوست‌ها",
           "attachFiles": "پیوست فایل‌ها"
+        }
+      },
+      "imageCompression": {
+        "title": "فشرده‌سازی تصویر",
+        "description": "کیفیت تصویر برای پیوست‌ها را انتخاب کنید",
+        "low": {
+          "label": "پایین",
+          "description": "کوچک‌ترین حجم فایل، با افت کیفیت قابل توجه"
+        },
+        "medium": {
+          "label": "متوسط",
+          "description": "تعادل بین حجم و کیفیت"
+        },
+        "original": {
+          "label": "اصلی",
+          "description": "بدون فشرده‌سازی، کیفیت اصلی"
         }
       }
     }

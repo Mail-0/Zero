@@ -6,6 +6,7 @@ import {
   getMainSearchTerm,
   parseNaturalLanguageSearch,
 } from '@/lib/utils';
+import { EmptyStateIcon } from '../icons/empty-state-svg';
 import {
   Archive2,
   ExclamationCircle,
@@ -29,7 +30,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import type { MailSelectMode, ParsedMessage, ThreadProps } from '@/types';
 import { ThreadContextMenu } from '@/components/context/thread-context';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
-import { useIsFetching, useQueryClient } from '@tanstack/react-query';
+import { useIsFetching, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useMail, type Config } from '@/components/mail/use-mail';
 import { type ThreadDestination } from '@/lib/thread-actions';
@@ -42,20 +43,23 @@ import { useTRPC } from '@/providers/query-provider';
 import { useThreadLabels } from '@/hooks/use-labels';
 import { template } from '@/lib/email-utils.client';
 import { useSettings } from '@/hooks/use-settings';
+import { useThreadNotes } from '@/hooks/use-notes';
 import { useKeyState } from '@/hooks/use-hot-key';
 import { VList, type VListHandle } from 'virtua';
 import { RenderLabels } from './render-labels';
 import { Badge } from '@/components/ui/badge';
 import { useDraft } from '@/hooks/use-drafts';
 import { Check, Star } from 'lucide-react';
-import { useTranslations } from 'use-intl';
 import { Skeleton } from '../ui/skeleton';
+import { StickyNote } from 'lucide-react';
+import { m } from '@/paraglide/messages';
 import { useParams } from 'react-router';
 import { useTheme } from 'next-themes';
 import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Categories } from './mail';
 import { useAtom } from 'jotai';
+import type { ParsedDraft } from '../../../server/src/lib/driver/types';
 
 const Thread = memo(
   function Thread({
@@ -65,7 +69,6 @@ const Thread = memo(
     index,
   }: ThreadProps & { index?: number }) {
     const [searchValue, setSearchValue] = useSearchValue();
-    const t = useTranslations();
     const { folder } = useParams<{ folder: string }>();
     const [{}, threads] = useThreads();
     const [threadId] = useQueryState('threadId');
@@ -78,25 +81,31 @@ const Thread = memo(
     const [, setActiveReplyId] = useQueryState('activeReplyId');
     const [focusedIndex, setFocusedIndex] = useAtom(focusedIndexAtom);
 
-    const latestReceivedMessage = useMemo(() => {
-      if (!getThreadData?.messages) return getThreadData?.latest;
+    // const latestReceivedMessage = useMemo(() => {
+    //   if (!getThreadData?.messages) return getThreadData?.latest;
 
-      const nonDraftMessages = getThreadData.messages.filter((msg) => !msg.isDraft);
-      if (nonDraftMessages.length === 0) return getThreadData?.latest;
+    //   const nonDraftMessages = getThreadData.messages.filter((msg) => !msg.isDraft);
+    //   if (nonDraftMessages.length === 0) return getThreadData?.latest;
 
-      return (
-        nonDraftMessages.sort((a, b) => {
-          const dateA = new Date(a.receivedOn).getTime();
-          const dateB = new Date(b.receivedOn).getTime();
-          return dateB - dateA;
-        })[0] || getThreadData?.latest
-      );
-    }, [getThreadData?.messages, getThreadData?.latest]);
+    //   return (
+    //     nonDraftMessages.sort((a, b) => {
+    //       const dateA = new Date(a.receivedOn).getTime();
+    //       const dateB = new Date(b.receivedOn).getTime();
+    //       return dateB - dateA;
+    //     })[0] || getThreadData?.latest
+    //   );
+    // }, [getThreadData?.messages, getThreadData?.latest]);
 
-    const latestMessage = latestReceivedMessage;
+    const latestMessage = getThreadData?.latest;
     const idToUse = useMemo(() => latestMessage?.threadId ?? latestMessage?.id, [latestMessage]);
     const { data: settingsData } = useSettings();
     const queryClient = useQueryClient();
+
+    // Check if thread has notes
+    const { data: threadNotes } = useThreadNotes(idToUse || '');
+    const hasNotes = useMemo(() => {
+      return (threadNotes?.notes && threadNotes.notes.length > 0) || false;
+    }, [threadNotes?.notes]);
 
     const optimisticState = useOptimisticThreadState(idToUse ?? '');
 
@@ -124,19 +133,35 @@ const Thread = memo(
     const optimisticLabels = useMemo(() => {
       if (!getThreadData?.labels) return [];
 
-      const labels = [...getThreadData.labels];
+      let labels = [...getThreadData.labels];
       const hasStarredLabel = labels.some((label) => label.name === 'STARRED');
 
       if (optimisticState.optimisticStarred !== null) {
         if (optimisticState.optimisticStarred && !hasStarredLabel) {
           labels.push({ id: 'starred-optimistic', name: 'STARRED' });
         } else if (!optimisticState.optimisticStarred && hasStarredLabel) {
-          return labels.filter((label) => label.name !== 'STARRED');
+          labels = labels.filter((label) => label.name !== 'STARRED');
         }
       }
 
+      if (optimisticState.optimisticLabels) {
+        labels = labels.filter(
+          (label) => !optimisticState.optimisticLabels.removedLabelIds.includes(label.id),
+        );
+
+        optimisticState.optimisticLabels.addedLabelIds.forEach((labelId) => {
+          if (!labels.some((label) => label.id === labelId)) {
+            labels.push({ id: labelId, name: labelId });
+          }
+        });
+      }
+
       return labels;
-    }, [getThreadData?.labels, optimisticState.optimisticStarred]);
+    }, [
+      getThreadData?.labels,
+      optimisticState.optimisticStarred,
+      optimisticState.optimisticLabels,
+    ]);
 
     const { optimisticToggleStar, optimisticToggleImportant, optimisticMoveThreadsTo } =
       useOptimisticActions();
@@ -216,7 +241,7 @@ const Thread = memo(
     }, [latestMessage?.body, latestMessage?.sender?.email, settingsData?.settings, queryClient]);
 
     const { labels: threadLabels } = useThreadLabels(
-      getThreadData?.labels ? getThreadData.labels.map((l) => l.id) : [],
+      optimisticLabels ? optimisticLabels.map((l) => l.id) : [],
     );
 
     const mainSearchTerm = useMemo(() => {
@@ -271,7 +296,6 @@ const Thread = memo(
         <div
           className={cn(
             'select-none border-b md:my-1 md:border-none',
-            displayUnread ? '' : 'opacity-60',
           )}
           onClick={onClick ? onClick(latestMessage) : undefined}
           onMouseEnter={() => {
@@ -322,8 +346,8 @@ const Thread = memo(
                   className="mb-1 bg-white dark:bg-[#1A1A1A]"
                 >
                   {displayStarred
-                    ? t('common.threadDisplay.unstar')
-                    : t('common.threadDisplay.star')}
+                    ? m['common.threadDisplay.unstar']()
+                    : m['common.threadDisplay.star']()}
                 </TooltipContent>
               </Tooltip>
               <Tooltip>
@@ -346,7 +370,7 @@ const Thread = memo(
                   side={index === 0 ? 'bottom' : 'top'}
                   className="dark:bg-panelDark mb-1 bg-white"
                 >
-                  {t('common.mail.toggleImportant')}
+                  {m['common.mail.toggleImportant']()}
                 </TooltipContent>
               </Tooltip>
               <Tooltip>
@@ -367,7 +391,7 @@ const Thread = memo(
                   side={index === 0 ? 'bottom' : 'top'}
                   className="dark:bg-panelDark mb-1 bg-white"
                 >
-                  {t('common.threadDisplay.archive')}
+                  {m['common.threadDisplay.archive']()}
                 </TooltipContent>
               </Tooltip>
               {!isFolderBin ? (
@@ -389,13 +413,13 @@ const Thread = memo(
                     side={index === 0 ? 'bottom' : 'top'}
                     className="dark:bg-panelDark mb-1 bg-white"
                   >
-                    {t('common.actions.Bin')}
+                    {m['common.actions.Bin']()}
                   </TooltipContent>
                 </Tooltip>
               ) : null}
             </div>
 
-            <div className="relative flex w-full items-center justify-between gap-4 px-4">
+            <div className={`relative flex w-full items-center justify-between gap-4 px-4 ${displayUnread ? '' : 'opacity-60'}`}>
               <div>
                 <Avatar
                   className={cn(
@@ -501,7 +525,7 @@ const Thread = memo(
                             </span>
                           </TooltipTrigger>
                           <TooltipContent className="p-1 text-xs">
-                            {t('common.mail.replies', { count: getThreadData.totalReplies })}
+                            {m['common.mail.replies']({ count: getThreadData.totalReplies })}
                           </TooltipContent>
                         </Tooltip>
                       ) : null}
@@ -514,6 +538,11 @@ const Thread = memo(
                           </TooltipTrigger>
                           <TooltipContent className="p-1 text-xs">Draft</TooltipContent>
                         </Tooltip>
+                      ) : null}
+                      {hasNotes ? (
+                        <span className="inline-flex items-center">
+                          <StickyNote className="h-3 w-3 fill-amber-500 stroke-amber-500 dark:fill-amber-400 dark:stroke-amber-400" />
+                        </span>
                       ) : null}
                       <MailLabels labels={optimisticLabels} />
                     </div>
@@ -600,7 +629,8 @@ const Thread = memo(
 );
 
 const Draft = memo(({ message }: { message: { id: string } }) => {
-  const { data: draft } = useDraft(message.id);
+  const draftQuery = useDraft(message.id) as UseQueryResult<ParsedDraft>;
+  const draft = draftQuery.data;
   const [, setComposeOpen] = useQueryState('isComposeOpen');
   const [, setDraftId] = useQueryState('draftId');
   const handleMailClick = useCallback(() => {
@@ -667,10 +697,19 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
                     )}
                   >
                     <span className={cn('max-w-[25ch] truncate text-sm')}>
-                      {cleanNameDisplay(draft?.to?.[0] || 'noname') || ''}
+                      {cleanNameDisplay(draft?.to?.[0] || 'No Recipient') || ''}
                     </span>
                   </span>
                 </div>
+                {draft.rawMessage?.internalDate && (
+                  <p
+                    className={cn(
+                      'text-muted-foreground text-nowrap text-xs font-normal opacity-70 transition-opacity group-hover:opacity-100 dark:text-[#8C8C8C]',
+                    )}
+                  >
+                    {formatDate(Number(draft.rawMessage?.internalDate))}
+                  </p>
+                )}
               </div>
               <div className="flex justify-between">
                 <p
@@ -693,7 +732,6 @@ export const MailList = memo(
   function MailList() {
     const { folder } = useParams<{ folder: string }>();
     const { data: settingsData } = useSettings();
-    const t = useTranslations();
     const [, setThreadId] = useQueryState('threadId');
     const [, setDraftId] = useQueryState('draftId');
     const [category, setCategory] = useQueryState('category');
@@ -927,7 +965,6 @@ export const MailList = memo(
         isLoading,
         isFetching,
         hasNextPage,
-        t,
       ],
     );
 
@@ -948,13 +985,7 @@ export const MailList = memo(
             ) : !items || items.length === 0 ? (
               <div className="flex w-full items-center justify-center">
                 <div className="flex flex-col items-center justify-center gap-2 text-center">
-                  <img
-                    suppressHydrationWarning
-                    src={resolvedTheme === 'dark' ? '/empty-state.svg' : '/empty-state-light.svg'}
-                    alt="Empty Inbox"
-                    width={200}
-                    height={200}
-                  />
+                  <EmptyStateIcon width={200} height={200} />
                   <div className="mt-5">
                     <p className="text-lg">It's empty here</p>
                     <p className="text-md text-muted-foreground dark:text-white/50">
@@ -1011,8 +1042,6 @@ export const MailList = memo(
 
 export const MailLabels = memo(
   function MailListLabels({ labels }: { labels: { id: string; name: string }[] }) {
-    const t = useTranslations();
-
     if (!labels?.length) return null;
 
     const visibleLabels = labels.filter(
@@ -1034,7 +1063,7 @@ export const MailLabels = memo(
                   </Badge>
                 </TooltipTrigger>
                 <TooltipContent className="hidden px-1 py-0 text-xs">
-                  {t('common.notes.title')}
+                  {m['common.notes.title']()}
                 </TooltipContent>
               </Tooltip>
             );
