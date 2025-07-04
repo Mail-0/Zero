@@ -8,14 +8,15 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { ThemeManagerModal } from '@/components/theme/ThemeManagerModal';
 import { SettingsCard } from '@/components/settings/settings-card';
 import { AddConnectionDialog } from '@/components/connection/add';
 import { PricingDialog } from '@/components/ui/pricing-dialog';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useSession, authClient } from '@/lib/auth-client';
 import { useConnections } from '@/hooks/use-connections';
 import { useTRPC } from '@/providers/query-provider';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useMutation } from '@tanstack/react-query';
 import { Trash, Plus, Unplug } from 'lucide-react';
 import { useThreads } from '@/hooks/use-threads';
 import { useBilling } from '@/hooks/use-billing';
@@ -53,6 +54,20 @@ export default function ConnectionsPage() {
     void refetchThreads();
   };
 
+  const [themeName, setThemeName] = useState('');
+  const [viewThemesConnectionId, setViewThemesConnectionId] = useState<string | null>(null);
+  const [editingThemeId, setEditingThemeId] = useState<string | null>(null);
+  const [editingThemeName, setEditingThemeName] = useState('');
+
+  const {
+    data: themes,
+    refetch: refetchThemes,
+    isLoading: themesLoading,
+  } = useQuery(trpc.theme.list.queryOptions());
+
+  const { mutateAsync: createTheme } = useMutation(trpc.theme.create.mutationOptions());
+  const { mutateAsync: updateTheme } = useMutation(trpc.theme.update.mutationOptions());
+
   return (
     <div className="grid gap-6">
       <SettingsCard
@@ -84,115 +99,143 @@ export default function ConnectionsPage() {
                 const Icon = emailProviders.find(
                   (p) => p.providerId === connection.providerId,
                 )?.icon;
+                // Filter themes for this connection
+                const connectionThemes = Array.isArray(themes)
+                  ? themes.filter((t: any) => t.connectionId === connection.id)
+                  : [];
                 return (
                   <div
                     key={connection.id}
-                    className="bg-popover flex items-center justify-between rounded-lg border p-4"
+                    className="bg-popover flex flex-col gap-4 rounded-lg border p-4"
                   >
-                    <div className="flex min-w-0 items-center gap-4">
-                      {connection.picture ? (
-                        <img
-                          src={connection.picture}
-                          alt=""
-                          className="h-12 w-12 shrink-0 rounded-lg object-cover"
-                          width={48}
-                          height={48}
-                        />
-                      ) : (
-                        <div className="bg-primary/10 flex h-12 w-12 shrink-0 items-center justify-center rounded-lg">
-                          {Icon && <Icon className="size-6" />}
-                        </div>
-                      )}
-                      <div className="flex min-w-0 flex-col gap-1">
-                        <span className="truncate text-sm font-medium">{connection.name}</span>
-                        <div className="text-muted-foreground flex items-center gap-2 text-xs">
-                          <Tooltip
-                            delayDuration={0}
-                            open={openTooltip === connection.id}
-                            onOpenChange={(open) => {
-                              if (window.innerWidth <= 768) {
-                                setOpenTooltip(open ? connection.id : null);
-                              }
-                            }}
-                          >
-                            <TooltipTrigger asChild>
-                              <span
-                                className="max-w-[180px] cursor-default truncate sm:max-w-[240px] md:max-w-[300px]"
-                                onClick={() => {
-                                  if (window.innerWidth <= 768) {
-                                    setOpenTooltip(
-                                      openTooltip === connection.id ? null : connection.id,
-                                    );
-                                  }
-                                }}
-                              >
-                                {connection.email}
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom" align="start" className="select-all">
-                              <div className="font-mono">{connection.email}</div>
-                            </TooltipContent>
-                          </Tooltip>
+                    <div className="flex items-center justify-between">
+                      <div className="flex min-w-0 items-center gap-4">
+                        {connection.picture ? (
+                          <img
+                            src={connection.picture}
+                            alt=""
+                            className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                            width={48}
+                            height={48}
+                          />
+                        ) : (
+                          <div className="bg-primary/10 flex h-12 w-12 shrink-0 items-center justify-center rounded-lg">
+                            {Icon && <Icon className="size-6" />}
+                          </div>
+                        )}
+                        <div className="flex min-w-0 flex-col gap-1">
+                          <span className="truncate text-sm font-medium">{connection.name}</span>
+                          <div className="text-muted-foreground flex items-center gap-2 text-xs">
+                            <Tooltip
+                              delayDuration={0}
+                              open={openTooltip === connection.id}
+                              onOpenChange={(open) => {
+                                if (window.innerWidth <= 768) {
+                                  setOpenTooltip(open ? connection.id : null);
+                                }
+                              }}
+                            >
+                              <TooltipTrigger asChild>
+                                <span
+                                  className="max-w-[180px] cursor-default truncate sm:max-w-[240px] md:max-w-[300px]"
+                                  onClick={() => {
+                                    if (window.innerWidth <= 768) {
+                                      setOpenTooltip(
+                                        openTooltip === connection.id ? null : connection.id,
+                                      );
+                                    }
+                                  }}
+                                >
+                                  {connection.email}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom" align="start" className="select-all">
+                                <div className="font-mono">{connection.email}</div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
                         </div>
                       </div>
+                      <div className="flex items-center gap-4">
+                        {data.disconnectedIds?.includes(connection.id) ? (
+                          <>
+                            <div>
+                              <Badge variant="destructive">
+                                {m['pages.settings.connections.disconnected']()}
+                              </Badge>
+                            </div>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={async () => {
+                                await authClient.linkSocial({
+                                  provider: connection.providerId,
+                                  callbackURL: `${window.location.origin}/settings/connections`,
+                                });
+                              }}
+                            >
+                              <Unplug className="size-4" />
+                              {m['pages.settings.connections.reconnect']()}
+                            </Button>
+                          </>
+                        ) : null}
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-muted-foreground hover:text-primary ml-4 shrink-0"
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent showOverlay>
+                            <DialogHeader>
+                              <DialogTitle>
+                                {m['pages.settings.connections.disconnectTitle']()}
+                              </DialogTitle>
+                              <DialogDescription>
+                                {m['pages.settings.connections.disconnectDescription']()}
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="flex justify-end gap-4">
+                              <DialogClose asChild>
+                                <Button variant="outline">
+                                  {m['pages.settings.connections.cancel']()}
+                                </Button>
+                              </DialogClose>
+                              <DialogClose asChild>
+                                <Button onClick={() => disconnectAccount(connection.id)}>
+                                  {m['pages.settings.connections.remove']()}
+                                </Button>
+                              </DialogClose>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      {data.disconnectedIds?.includes(connection.id) ? (
-                        <>
-                          <div>
-                            <Badge variant="destructive">
-                              {m['pages.settings.connections.disconnected']()}
-                            </Badge>
-                          </div>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={async () => {
-                              await authClient.linkSocial({
-                                provider: connection.providerId,
-                                callbackURL: `${window.location.origin}/settings/connections`,
-                              });
-                            }}
-                          >
-                            <Unplug className="size-4" />
-                            {m['pages.settings.connections.reconnect']()}
-                          </Button>
-                        </>
-                      ) : null}
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-muted-foreground hover:text-primary ml-4 shrink-0"
-                          >
-                            <Trash className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent showOverlay>
-                          <DialogHeader>
-                            <DialogTitle>
-                              {m['pages.settings.connections.disconnectTitle']()}
-                            </DialogTitle>
-                            <DialogDescription>
-                              {m['pages.settings.connections.disconnectDescription']()}
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="flex justify-end gap-4">
-                            <DialogClose asChild>
-                              <Button variant="outline">
-                                {m['pages.settings.connections.cancel']()}
-                              </Button>
-                            </DialogClose>
-                            <DialogClose asChild>
-                              <Button onClick={() => disconnectAccount(connection.id)}>
-                                {m['pages.settings.connections.remove']()}
-                              </Button>
-                            </DialogClose>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
+                    <Button onClick={() => setViewThemesConnectionId(connection.id)}>
+                      View themes
+                    </Button>
+                    <ThemeManagerModal
+                      open={viewThemesConnectionId === connection.id}
+                      onOpenChange={(open) => {
+                        if (!open) setViewThemesConnectionId(null);
+                      }}
+                      connection={connection}
+                      themes={connectionThemes}
+                      loading={themesLoading}
+                      onThemeCreated={async (name) => {
+                        await createTheme({ name, connectionId: connection.id, config: {} });
+                        refetchThemes();
+                        toast.success('Theme created!');
+                      }}
+                      onThemeUpdated={async (id, name, config) => {
+                        await updateTheme({ id, name, config });
+                        refetchThemes();
+                        toast.success('Theme updated!');
+                      }}
+                    />
                   </div>
                 );
               })}
