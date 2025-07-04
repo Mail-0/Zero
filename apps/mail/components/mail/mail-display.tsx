@@ -55,6 +55,7 @@ import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Badge } from '../ui/badge';
 import { format } from 'date-fns';
+import { cleanHtml } from '@/lib/email-utils';
 import { toast } from 'sonner';
 
 // HTML escaping function to prevent XSS attacks
