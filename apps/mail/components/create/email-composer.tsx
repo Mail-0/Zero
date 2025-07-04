@@ -77,8 +77,13 @@ interface EmailComposerProps {
 }
 
 const isValidEmail = (email: string): boolean => {
-  const emailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  return emailRegex.test(email);
+  // for format like test@example.com
+  const simpleEmailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/; 
+
+  // for format like name <test@example.com>
+  const displayNameEmailRegex = /^.+\s*<\s*[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\s*>$/; 
+
+  return simpleEmailRegex.test(email) || displayNameEmailRegex.test(email);
 };
 
 const schema = z.object({
@@ -737,7 +742,9 @@ export function EmailComposer({
                             {email.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        {email}
+                        <span className="max-w-[50vw] md:max-w-[30vw] overflow-hidden text-ellipsis whitespace-nowrap">
+                          {email}
+                        </span>
                       </span>
                       <button
                         onClick={() => {
@@ -869,7 +876,10 @@ export function EmailComposer({
                                 {email.charAt(0).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
-                            {email}
+                            <span className="max-w-[50vw] md:max-w-[30vw] overflow-hidden text-ellipsis whitespace-nowrap">
+                              {/* for email format: "Display Name" <email@example.com> */}
+                              {email.match(/^"?(.*?)"?\s*<[^>]+>$/)?.[1] ?? email}
+                            </span>
                           </span>
                           <button
                             onClick={() => {
@@ -1391,10 +1401,10 @@ export function EmailComposer({
                                     {file.type.includes('pdf')
                                       ? '📄'
                                       : file.type.includes('excel') ||
-                                          file.type.includes('spreadsheetml')
+                                        file.type.includes('spreadsheetml')
                                         ? '📊'
                                         : file.type.includes('word') ||
-                                            file.type.includes('wordprocessingml')
+                                          file.type.includes('wordprocessingml')
                                           ? '📝'
                                           : '📎'}
                                   </span>
