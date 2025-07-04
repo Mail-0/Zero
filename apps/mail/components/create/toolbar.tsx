@@ -15,17 +15,14 @@ import {
   TextQuote,
 } from 'lucide-react';
 
-import { useTranslations } from 'use-intl';
-
 import { TooltipContent, TooltipProvider, TooltipTrigger, Tooltip } from '../ui/tooltip';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '../ui/button';
 
 import type { Editor } from '@tiptap/core';
+import { m } from '@/paraglide/messages';
 
 export const Toolbar = ({ editor }: { editor: Editor | null }) => {
-  const t = useTranslations();
-
   if (!editor) return null;
 
   return (
@@ -133,7 +130,7 @@ export const Toolbar = ({ editor }: { editor: Editor | null }) => {
                     <Bold className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{t('pages.createEmail.editor.menuBar.bold')}</TooltipContent>
+                <TooltipContent>{m['pages.createEmail.editor.menuBar.bold']()}</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -149,7 +146,7 @@ export const Toolbar = ({ editor }: { editor: Editor | null }) => {
                     <Italic className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{t('pages.createEmail.editor.menuBar.italic')}</TooltipContent>
+                <TooltipContent>{m['pages.createEmail.editor.menuBar.italic']()}</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -166,7 +163,7 @@ export const Toolbar = ({ editor }: { editor: Editor | null }) => {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  {t('pages.createEmail.editor.menuBar.strikethrough')}
+                  {m['pages.createEmail.editor.menuBar.strikethrough']()}
                 </TooltipContent>
               </Tooltip>
               <Tooltip>
@@ -182,7 +179,7 @@ export const Toolbar = ({ editor }: { editor: Editor | null }) => {
                     <Underline className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{t('pages.createEmail.editor.menuBar.underline')}</TooltipContent>
+                <TooltipContent>{m['pages.createEmail.editor.menuBar.underline']()}</TooltipContent>
               </Tooltip>
             </div>
 
@@ -202,7 +199,9 @@ export const Toolbar = ({ editor }: { editor: Editor | null }) => {
                     <List className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{t('pages.createEmail.editor.menuBar.bulletList')}</TooltipContent>
+                <TooltipContent>
+                  {m['pages.createEmail.editor.menuBar.bulletList']()}
+                </TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -217,7 +216,9 @@ export const Toolbar = ({ editor }: { editor: Editor | null }) => {
                     <ListOrdered className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{t('pages.createEmail.editor.menuBar.orderedList')}</TooltipContent>
+                <TooltipContent>
+                  {m['pages.createEmail.editor.menuBar.orderedList']()}
+                </TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
