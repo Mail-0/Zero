@@ -118,7 +118,6 @@ const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => voi
       {/* Right mask */}
       <div className="from-panelLight dark:from-panelDark pointer-events-none absolute bottom-0 right-0 top-0 w-12 bg-gradient-to-l to-transparent"></div>
     </div>
-  </div>
   );
 };
 
@@ -144,7 +143,7 @@ export interface AIChatProps {
   setInput: (input: string) => void;
   error?: Error;
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
-  status: string;
+  status: string;fLEF
   stop: () => void;
   className?: string;
   onModelChange?: (model: string) => void;
