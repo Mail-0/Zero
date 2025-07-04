@@ -205,7 +205,7 @@ const extractEmails = (text: string): string[] => {
   // Filter for valid email format before deduplication
   extractedEmails = extractedEmails.filter(email => {
     // Basic email validation to avoid false positives
-    return /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
+    return isValidEmail(email);
   });
   
   // Deduplicate emails (comparing case-insensitively but preserving original case)
