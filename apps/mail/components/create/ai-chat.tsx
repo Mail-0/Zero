@@ -143,7 +143,7 @@ export interface AIChatProps {
   setInput: (input: string) => void;
   error?: Error;
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
-  status: string;fLEF
+  status: string;
   stop: () => void;
   className?: string;
   onModelChange?: (model: string) => void;
