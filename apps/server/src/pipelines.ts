@@ -332,7 +332,9 @@ export class ZeroWorkflow extends WorkflowEntrypoint<Env, Params> {
                       log('[ZERO_WORKFLOW] Thread already processing:', isProcessing, threadId);
                       return;
                     }
-                    await env.gmail_processing_threads.put(threadId.toString(), 'true', { expirationTtl: 1800 });
+                    await env.gmail_processing_threads.put(threadId.toString(), 'true', {
+                      expirationTtl: 1800,
+                    });
                     const existingInstance = await env.THREAD_WORKFLOW.get(
                       `${threadId.toString()}__${connectionId.toString()}`,
                     ).catch(() => null);
@@ -376,7 +378,10 @@ export class ZeroWorkflow extends WorkflowEntrypoint<Env, Params> {
 
               if (i + maxConcurrentThreads < threadsToProcess.length) {
                 log('[ZERO_WORKFLOW] Sleeping between batches:', delayBetweenBatches);
-                await step.sleep('[ZERO_WORKFLOW]', delayBetweenBatches);
+                await step.sleep(
+                  `[ZERO_WORKFLOW] Sleeping between batches ${i} ${threadsToProcess.length}`,
+                  delayBetweenBatches,
+                );
               }
             }
           },
