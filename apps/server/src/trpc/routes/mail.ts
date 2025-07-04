@@ -861,7 +861,6 @@ export const mailRouter = router({
     )
     .query(async ({ input, ctx }) => {
       try {
-        console.log(`[VERIFY_EMAIL] Starting verification for message ID: ${input.id}`);
         const { activeConnection } = ctx;
         const { stub: agent } = await getZeroAgent(activeConnection.id);
 
@@ -874,7 +873,6 @@ export const mailRouter = router({
         return result;
       } catch (error) {
         console.error('Email verification error:', error);
-        console.error(`[VERIFY_EMAIL] Failed to verify message ID: ${input.id}`, error);
         return { isVerified: false };
       }
     }),

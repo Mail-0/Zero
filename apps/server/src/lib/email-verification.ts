@@ -41,6 +41,7 @@ const extractIPFromReceived = (received: string): string | null => {
   return null;
 };
 
+// SPF Validation
 async function validateSPF(domain: string, ip: string): Promise<boolean> {
   try {
     const txtRecords = await dns.resolveTxt(domain);
@@ -91,6 +92,7 @@ async function validateSPF(domain: string, ip: string): Promise<boolean> {
             }
           }
         } catch (e) {
+          // Include domain lookup failed
         }
       }
       
@@ -111,6 +113,7 @@ function ipToInt(ip: string): number {
   return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet), 0) >>> 0;
 }
 
+// DKIM Validation
 async function validateDKIM(rawEmail: string): Promise<boolean> {
   try {
     const dkimHeader = getHeader(rawEmail, 'DKIM-Signature');
@@ -123,6 +126,7 @@ async function validateDKIM(rawEmail: string): Promise<boolean> {
     
     if (algorithm !== 'rsa-sha256') return false;
     
+    // Get public key
     const keyRecord = await dns.resolveTxt(`${selector}._domainkey.${domain}`);
     const keyString = keyRecord.flat().join('');
     const pubKeyMatch = keyString.match(/p=([^;]+)/);
@@ -130,12 +134,14 @@ async function validateDKIM(rawEmail: string): Promise<boolean> {
     
     const pubKey = pubKeyMatch[1];
     
+    // Extract and verify body hash
     const [, body] = rawEmail.split(/\r?\n\r?\n/, 2);
     const bodyToHash = body || '';
     const computedBodyHash = createHash('sha256').update(bodyToHash.replace(/\r?\n$/, '\r\n')).digest('base64');
     
     if (computedBodyHash !== bodyHash) return false;
     
+    // Create signature input
     const headerList = headers.split(':').map(h => h.trim());
     const canonicalizedHeaders = headerList.map(headerName => {
       const headerValue = getHeader(rawEmail, headerName);
@@ -145,6 +151,7 @@ async function validateDKIM(rawEmail: string): Promise<boolean> {
     const dkimCanonical = `dkim-signature:${dkimHeader.replace(/\sb=[^;]+/, ' b=')}`;
     const signatureInput = `${canonicalizedHeaders}\r\n${dkimCanonical}`;
     
+    // Verify signature
     const verifier = createVerify('RSA-SHA256');
     verifier.update(signatureInput);
     verifier.end();
@@ -157,6 +164,7 @@ async function validateDKIM(rawEmail: string): Promise<boolean> {
   }
 }
 
+// DMARC Validation
 async function validateDMARC(domain: string): Promise<boolean> {
   try {
     const txtRecords = await dns.resolveTxt(`_dmarc.${domain}`);
@@ -167,6 +175,7 @@ async function validateDMARC(domain: string): Promise<boolean> {
     const params = parseParams(dmarcRecord);
     const policy = params.p;
     
+    // Require strict policy (quarantine or reject)
     return policy === 'quarantine' || policy === 'reject';
     
   } catch (error) {
@@ -174,169 +183,252 @@ async function validateDMARC(domain: string): Promise<boolean> {
   }
 }
 
-async function getBIMILogo(domain: string): Promise<string | undefined> {
+// BIMI Validation
+async function validateBIMI(domain: string): Promise<boolean> {
   try {
-    const txtRecords = await dns.resolveTxt(`default._bimi.${domain}`);
-    const bimiRecord = txtRecords.flat().find(record => record.includes('v=BIMI1'));
+    console.log(`[BIMI_DEBUG] Validating BIMI for domain: ${domain}`);
     
-    if (!bimiRecord) return undefined;
+    // Try exact domain first
+    console.log(`[BIMI_DEBUG] Checking default._bimi.${domain}`);
+    try {
+      const txtRecords = await dns.resolveTxt(`default._bimi.${domain}`);
+      const bimiRecord = txtRecords.flat().find(record => record.includes('v=BIMI1'));
+      
+      if (bimiRecord) {
+        console.log(`[BIMI_DEBUG] Found BIMI record on exact domain: ${bimiRecord}`);
+        return await validateBIMIRecord(bimiRecord, domain);
+      }
+    } catch (exactDomainError) {
+      console.log(`[BIMI_DEBUG] No BIMI record on exact domain ${domain}: ${exactDomainError instanceof Error ? exactDomainError.message : String(exactDomainError)}`);
+    }
     
+    // If no BIMI record on exact domain, try parent domain for subdomains
+    const domainParts = domain.split('.');
+    console.log(`[BIMI_DEBUG] No BIMI on exact domain. Domain parts: ${domainParts}`);
+    if (domainParts.length > 2) {
+      const parentDomain = domainParts.slice(-2).join('.');
+      console.log(`[BIMI_DEBUG] Checking parent domain: default._bimi.${parentDomain}`);
+      try {
+        const parentTxtRecords = await dns.resolveTxt(`default._bimi.${parentDomain}`);
+        const parentBimiRecord = parentTxtRecords.flat().find(record => record.includes('v=BIMI1'));
+        
+        if (parentBimiRecord) {
+          console.log(`[BIMI_DEBUG] Found BIMI record on parent domain: ${parentBimiRecord}`);
+          return await validateBIMIRecord(parentBimiRecord, parentDomain);
+        } else {
+          console.log(`[BIMI_DEBUG] No BIMI record found on parent domain ${parentDomain}`);
+        }
+      } catch (parentDomainError) {
+        console.log(`[BIMI_DEBUG] Error checking parent domain ${parentDomain}: ${parentDomainError instanceof Error ? parentDomainError.message : String(parentDomainError)}`);
+      }
+    } else {
+      console.log(`[BIMI_DEBUG] Domain ${domain} is not a subdomain, skipping parent check`);
+    }
+    
+    console.log(`[BIMI_DEBUG] BIMI validation failed for ${domain}`);
+    return false;
+    
+  } catch (error) {
+    console.error(`[BIMI_DEBUG] Unexpected error validating BIMI for ${domain}:`, error);
+    return false;
+  }
+}
+
+async function validateBIMIRecord(bimiRecord: string, domain: string): Promise<boolean> {
+  try {
     const params = parseParams(bimiRecord);
     const logoUrl = params.l;
     const vmcUrl = params.a;
     
-    console.log(`[BIMI_VERIFICATION] Found BIMI record for ${domain}: logo=${logoUrl}, vmc=${vmcUrl}`);
+    console.log(`[BIMI_DEBUG] Validating BIMI record for ${domain}: logoUrl=${logoUrl}, vmcUrl=${vmcUrl}`);
     
-    if (vmcUrl && vmcUrl.startsWith('https://')) {
-      const isVmcValid = await validateVMC(vmcUrl, domain);
-      console.log(`[BIMI_VERIFICATION] VMC validation for ${domain}: ${isVmcValid}`);
+    // Require a valid HTTPS logo URL
+    if (!logoUrl || !logoUrl.startsWith('https://')) {
+      console.log(`[BIMI_DEBUG] Invalid logo URL for ${domain}: ${logoUrl}`);
+      return false;
+    }
+    
+    // If VMC URL is provided, validate it
+    if (vmcUrl) {
+      if (!vmcUrl.startsWith('https://')) {
+        console.log(`[BIMI_DEBUG] Invalid VMC URL for ${domain}: ${vmcUrl}`);
+        return false;
+      }
       
-      if (!isVmcValid) {
-        console.log(`[BIMI_VERIFICATION] VMC validation failed for ${domain}, rejecting logo`);
-        return undefined;
+      // Validate VMC certificate (basic check)
+      const vmcValid = await validateVMC(vmcUrl, domain);
+      if (!vmcValid) {
+        console.log(`[BIMI_DEBUG] VMC validation failed for ${domain}`);
+        return false;
       }
     }
     
-    if (logoUrl && logoUrl.startsWith('https://')) {
-      const isLogoValid = await validateLogoUrl(logoUrl);
-      console.log(`[BIMI_VERIFICATION] Logo validation for ${domain}: ${isLogoValid}`);
-      
-      if (isLogoValid) {
-        return logoUrl;
-      }
+    // Validate logo accessibility
+    const logoValid = await validateLogo(logoUrl, domain);
+    if (!logoValid) {
+      console.log(`[BIMI_DEBUG] Logo validation failed for ${domain}`);
+      return false;
     }
     
-    return undefined;
+    console.log(`[BIMI_DEBUG] BIMI validation successful for ${domain}`);
+    return true;
     
   } catch (error) {
-    console.error(`[BIMI_VERIFICATION] Error for ${domain}:`, error);
-    return undefined;
+    console.log(`[BIMI_DEBUG] Error validating BIMI record for ${domain}:`, error instanceof Error ? error.message : String(error));
+    return false;
   }
 }
 
 async function validateVMC(vmcUrl: string, domain: string): Promise<boolean> {
   try {
-    console.log(`[VMC_VALIDATION] Fetching VMC from: ${vmcUrl}`);
+    console.log(`[BIMI_DEBUG] Validating VMC for ${domain}: ${vmcUrl}`);
     
-    const response = await fetch(vmcUrl, {
-      method: 'GET',
-      headers: {
-        'User-Agent': 'Zero-Email-Verifier/1.0',
-      },
-      signal: AbortSignal.timeout(5000),
-    });
-    
-    if (!response.ok) {
-      console.log(`[VMC_VALIDATION] Failed to fetch VMC: ${response.status}`);
-      return false;
-    }
-    
-    const vmcContent = await response.text();
-    
-    const containsDomain = vmcContent.includes(domain);
-    const isValidCertificate = vmcContent.includes('BEGIN CERTIFICATE') && 
-                              vmcContent.includes('END CERTIFICATE');
-    
-    console.log(`[VMC_VALIDATION] VMC contains domain: ${containsDomain}, is valid cert: ${isValidCertificate}`);
-    
-    return containsDomain && isValidCertificate;
-    
-  } catch (error) {
-    console.error(`[VMC_VALIDATION] Error validating VMC:`, error);
-    return false;
-  }
-}
-
-async function validateLogoUrl(logoUrl: string): Promise<boolean> {
-  try {
-    console.log(`[LOGO_VALIDATION] Validating logo URL: ${logoUrl}`);
-    
-    const response = await fetch(logoUrl, {
+    // Basic VMC validation - check if certificate is accessible
+    const response = await fetch(vmcUrl, { 
       method: 'HEAD',
-      headers: {
-        'User-Agent': 'Zero-Email-Verifier/1.0',
-      },
-      signal: AbortSignal.timeout(3000),
+      signal: AbortSignal.timeout(5000) 
     });
     
     if (!response.ok) {
-      console.log(`[LOGO_VALIDATION] Logo URL not accessible: ${response.status}`);
+      console.log(`[BIMI_DEBUG] VMC not accessible for ${domain}: ${response.status}`);
       return false;
     }
     
+    // Check content type
     const contentType = response.headers.get('content-type');
-    const isValidImageType = contentType && (
-      contentType.includes('image/') || 
-      contentType.includes('image/svg+xml')
-    );
+    if (!contentType || (!contentType.includes('application/x-pem-file') && !contentType.includes('application/x-x509-ca-cert') && !contentType.includes('text/plain'))) {
+      console.log(`[BIMI_DEBUG] Invalid VMC content type for ${domain}: ${contentType}`);
+      return false;
+    }
     
-    console.log(`[LOGO_VALIDATION] Content-Type: ${contentType}, is valid image: ${isValidImageType}`);
-    
-    return !!isValidImageType;
+    console.log(`[BIMI_DEBUG] VMC validation passed for ${domain}`);
+    return true;
     
   } catch (error) {
-    console.error(`[LOGO_VALIDATION] Error validating logo URL:`, error);
+    console.log(`[BIMI_DEBUG] VMC validation error for ${domain}:`, error instanceof Error ? error.message : String(error));
     return false;
   }
 }
 
+async function validateLogo(logoUrl: string, domain: string): Promise<boolean> {
+  try {
+    console.log(`[BIMI_DEBUG] Validating logo for ${domain}: ${logoUrl}`);
+    
+    // Basic logo validation - check if logo is accessible
+    const response = await fetch(logoUrl, { 
+      method: 'HEAD',
+      signal: AbortSignal.timeout(5000) 
+    });
+    
+    if (!response.ok) {
+      console.log(`[BIMI_DEBUG] Logo not accessible for ${domain}: ${response.status}`);
+      return false;
+    }
+    
+    // Check content type for SVG
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('image/svg+xml')) {
+      console.log(`[BIMI_DEBUG] Invalid logo content type for ${domain}: ${contentType}`);
+      return false;
+    }
+    
+    console.log(`[BIMI_DEBUG] Logo validation passed for ${domain}`);
+    return true;
+    
+  } catch (error) {
+    console.log(`[BIMI_DEBUG] Logo validation error for ${domain}:`, error instanceof Error ? error.message : String(error));
+    return false;
+  }
+}
+
+async function getBIMILogo(domain: string): Promise<string | undefined> {
+  try {
+    // Try exact domain first
+    const txtRecords = await dns.resolveTxt(`default._bimi.${domain}`);
+    const bimiRecord = txtRecords.flat().find(record => record.includes('v=BIMI1'));
+    
+    if (bimiRecord) {
+      const params = parseParams(bimiRecord);
+      const logoUrl = params.l;
+      
+      if (logoUrl && logoUrl.startsWith('https://')) {
+        return logoUrl;
+      }
+    }
+    
+    // If no BIMI record on exact domain, try parent domain for subdomains
+    const domainParts = domain.split('.');
+    if (domainParts.length > 2) {
+      const parentDomain = domainParts.slice(-2).join('.');
+      const parentTxtRecords = await dns.resolveTxt(`default._bimi.${parentDomain}`);
+      const parentBimiRecord = parentTxtRecords.flat().find(record => record.includes('v=BIMI1'));
+      
+      if (parentBimiRecord) {
+        const params = parseParams(parentBimiRecord);
+        const logoUrl = params.l;
+        
+        if (logoUrl && logoUrl.startsWith('https://')) {
+          return logoUrl;
+        }
+      }
+    }
+    
+    return undefined;
+    
+  } catch (error) {
+    return undefined;
+  }
+}
+
+// Main verification function
 export async function verify(rawEmail: string): Promise<{isVerified: boolean; logoUrl?: string}> {
   try {
+    // Extract sender domain
     const fromHeader = getHeader(rawEmail, 'From');
     const domain = extractDomainFromEmail(fromHeader);
     
-    console.log(`[EMAIL_VERIFICATION] Starting verification for domain: ${domain}`);
-    
     if (!domain) {
-      console.log(`[EMAIL_VERIFICATION] No domain found in From header: ${fromHeader}`);
       return { isVerified: false };
     }
 
+    // Extract sender IP (may not always be available)
     const receivedHeader = getHeader(rawEmail, 'Received');
     const senderIP = extractIPFromReceived(receivedHeader);
     
-    console.log(`[EMAIL_VERIFICATION] Sender IP extracted: ${senderIP || 'none'}`);
-
-    const [spfValid, dkimValid, dmarcValid] = await Promise.all([
+    // Run validations in parallel
+    const [spfValid, dkimValid, dmarcValid, bimiValid] = await Promise.all([
       senderIP ? validateSPF(domain, senderIP).catch(error => {
-        console.error(`[EMAIL_VERIFICATION] SPF validation failed for ${domain}:`, error);
         return false;
       }) : Promise.resolve(false),
       validateDKIM(rawEmail).catch(error => {
-        console.error(`[EMAIL_VERIFICATION] DKIM validation failed for ${domain}:`, error);
         return false;
       }),
       validateDMARC(domain).catch(error => {
-        console.error(`[EMAIL_VERIFICATION] DMARC validation failed for ${domain}:`, error);
+        return false;
+      }),
+      validateBIMI(domain).catch(error => {
         return false;
       }),
     ]);
 
-    console.log(`[EMAIL_VERIFICATION] Email auth results for ${domain}: SPF=${spfValid}, DKIM=${dkimValid}, DMARC=${dmarcValid}`);
-
-    const emailAuthPassed = dkimValid || spfValid || dmarcValid;
+    const authValid = dkimValid || spfValid || dmarcValid;
     
-    if (!emailAuthPassed) {
-      console.log(`[EMAIL_VERIFICATION] Domain ${domain} failed email authentication - no verification`);
-      return { isVerified: false };
+    // Gmail requires both email authentication AND BIMI validation btw
+    console.log(`[VERIFY_DEBUG] Domain: ${domain}, SPF: ${spfValid}, DKIM: ${dkimValid}, DMARC: ${dmarcValid}, BIMI: ${bimiValid}`);
+    const isVerified = authValid && bimiValid;
+    console.log(`[VERIFY_DEBUG] Final verification result for ${domain}: ${isVerified} (auth: ${authValid}, bimi: ${bimiValid})`);
+
+    if (isVerified) {
+      const logoUrl = await getBIMILogo(domain);
+      return {
+        isVerified: true,
+        logoUrl,
+      };
     }
 
-    console.log(`[EMAIL_VERIFICATION] Email auth passed for ${domain}, checking logo ownership...`);
-    const logoUrl = await getBIMILogo(domain);
-    
-    if (!logoUrl) {
-      console.log(`[EMAIL_VERIFICATION] Domain ${domain} does not own their profile photo/logo - no verification despite passing email auth`);
-      return { isVerified: false };
-    }
-
-    console.log(`[EMAIL_VERIFICATION] Domain ${domain} verified successfully with owned logo: ${logoUrl}`);
-    return {
-      isVerified: true,
-      logoUrl,
-    };
-
+    return { isVerified: false };
   } catch (error) {
     console.error('Email verification error:', error);
     return { isVerified: false };
   }
-} 
+}

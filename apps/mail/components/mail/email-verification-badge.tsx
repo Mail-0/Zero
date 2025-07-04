@@ -11,11 +11,13 @@ interface EmailVerificationBadgeProps {
 export const EmailVerificationBadge: React.FC<EmailVerificationBadgeProps> = ({ messageId }) => {
   const trpc = useTRPC();
 
-  const { data: verificationResult, isLoading } = useQuery({
+  const { data: verificationResult, isLoading, error, isError } = useQuery({
     ...trpc.mail.verifyEmail.queryOptions({ id: messageId || '' }),
     enabled: !!messageId,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
     retry: 1,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });   
 
   if (!verificationResult?.isVerified || isLoading) {
@@ -31,7 +33,7 @@ export const EmailVerificationBadge: React.FC<EmailVerificationBadgeProps> = ({ 
       </TooltipTrigger>
       <TooltipContent>
         <p className="text-sm">
-          Verified sender - This email passed SPF, DKIM, and DMARC checks
+          Verified sender - This email passed email authentication (SPF/DKIM/DMARC) and BIMI validation
         </p>
       </TooltipContent>
     </Tooltip>
