@@ -90,7 +90,7 @@ export const trpcClient = createTRPCClient<AppRouter>({
       transformer: superjson,
       url: getUrl(),
       methodOverride: 'POST',
-      maxItems: 8,
+      maxItems: 1,
       fetch: (url, options) =>
         fetch(url, { ...options, credentials: 'include' }).then((res) => {
           const currentPath = new URL(window.location.href).pathname;
