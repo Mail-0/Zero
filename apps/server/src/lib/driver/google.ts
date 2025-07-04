@@ -484,7 +484,7 @@ export class GoogleMailManager implements MailManager {
           throw new Error('Draft not found');
         }
 
-        const parsedDraft = this.parseDraft(res.data);
+        const parsedDraft = await this.parseDraft(res.data);
         if (!parsedDraft) {
           throw new Error('Failed to parse draft');
         }
@@ -1111,7 +1111,8 @@ export class GoogleMailManager implements MailManager {
       raw: encodedMessage,
     };
   }
-  private parseDraft(draft: gmail_v1.Schema$Draft) {
+
+  private async parseDraft(draft: gmail_v1.Schema$Draft) {
     if (!draft.message) return null;
 
     const headers = draft.message.payload?.headers || [];
@@ -1121,26 +1122,61 @@ export class GoogleMailManager implements MailManager {
         ?.value?.split(',')
         .map((e) => e.trim())
         .filter(Boolean) || [];
+
     const subject = headers.find((h) => h.name === 'Subject')?.value;
-
-    let content = '';
-    const payload = draft.message.payload;
-
-    if (payload) {
-      if (payload.parts) {
-        const textPart = payload.parts.find((part) => part.mimeType === 'text/html');
-        if (textPart?.body?.data) {
-          content = fromBinary(textPart.body.data);
-        }
-      } else if (payload.body?.data) {
-        content = fromBinary(payload.body.data);
-      }
-    }
-
+   
     const cc =
       draft.message.payload?.headers?.find((h) => h.name === 'Cc')?.value?.split(',') || [];
     const bcc =
       draft.message.payload?.headers?.find((h) => h.name === 'Bcc')?.value?.split(',') || [];
+      
+    const payload = draft.message.payload;
+    let content = '';
+    let attachments: {
+      filename: string;
+      mimeType: string;
+      size: number;
+      attachmentId: string;
+      headers: { name: string; value: string }[];
+      body: string;
+    }[] = [];
+
+    if (payload?.parts) {
+      //  Get body
+      const htmlPart = payload.parts.find((part) => part.mimeType === 'text/html');
+      if (htmlPart?.body?.data) {
+        content = fromBinary(htmlPart.body.data);
+      }
+
+      //  Get attachments
+      const attachmentParts = payload.parts.filter(
+        (part) => !!part.filename && !!part.body?.attachmentId
+      );
+
+      attachments = await Promise.all(
+        attachmentParts.map(async (part) => {
+          try {
+            const attachmentData = await this.getAttachment(draft.message!.id!, part.body!.attachmentId!);
+            return {
+              filename: part.filename || '',
+              mimeType: part.mimeType || '',
+              size: Number(part.body?.size || 0),
+              attachmentId: part.body!.attachmentId!,
+              headers:
+                part.headers?.map((h) => ({
+                  name: h.name ?? '',
+                  value: h.value ?? '',
+                })) ?? [],
+              body: attachmentData ?? '',
+            };
+          } catch (e) {
+            return null;
+          }
+        })
+      ).then((a) => a.filter((a): a is NonNullable<typeof a> => a !== null));
+    } else if (payload?.body?.data) {
+      content = fromBinary(payload.body.data);
+    }
 
     return {
       id: draft.id || '',
@@ -1150,8 +1186,10 @@ export class GoogleMailManager implements MailManager {
       rawMessage: draft.message,
       cc,
       bcc,
+      attachments,
     };
   }
+
   private async withErrorHandler<T>(
     operation: string,
     fn: () => Promise<T> | T,

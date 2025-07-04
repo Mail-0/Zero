@@ -6,6 +6,7 @@ import {
   getMainSearchTerm,
   parseNaturalLanguageSearch,
 } from '@/lib/utils';
+import { EmptyStateIcon } from '../icons/empty-state-svg';
 import {
   Archive2,
   ExclamationCircle,
@@ -29,7 +30,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import type { MailSelectMode, ParsedMessage, ThreadProps } from '@/types';
 import { ThreadContextMenu } from '@/components/context/thread-context';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
-import { useIsFetching, useQueryClient } from '@tanstack/react-query';
+import { useIsFetching, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useMail, type Config } from '@/components/mail/use-mail';
 import { type ThreadDestination } from '@/lib/thread-actions';
@@ -58,6 +59,7 @@ import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Categories } from './mail';
 import { useAtom } from 'jotai';
+import type { ParsedDraft } from '../../../server/src/lib/driver/types';
 
 const Thread = memo(
   function Thread({
@@ -294,7 +296,6 @@ const Thread = memo(
         <div
           className={cn(
             'select-none border-b md:my-1 md:border-none',
-            displayUnread ? '' : 'opacity-60',
           )}
           onClick={onClick ? onClick(latestMessage) : undefined}
           onMouseEnter={() => {
@@ -418,7 +419,7 @@ const Thread = memo(
               ) : null}
             </div>
 
-            <div className="relative flex w-full items-center justify-between gap-4 px-4">
+            <div className={`relative flex w-full items-center justify-between gap-4 px-4 ${displayUnread ? '' : 'opacity-60'}`}>
               <div>
                 <Avatar
                   className={cn(
@@ -628,7 +629,8 @@ const Thread = memo(
 );
 
 const Draft = memo(({ message }: { message: { id: string } }) => {
-  const { data: draft } = useDraft(message.id);
+  const draftQuery = useDraft(message.id) as UseQueryResult<ParsedDraft>;
+  const draft = draftQuery.data;
   const [, setComposeOpen] = useQueryState('isComposeOpen');
   const [, setDraftId] = useQueryState('draftId');
   const handleMailClick = useCallback(() => {
@@ -695,7 +697,7 @@ const Draft = memo(({ message }: { message: { id: string } }) => {
                     )}
                   >
                     <span className={cn('max-w-[25ch] truncate text-sm')}>
-                      {cleanNameDisplay(draft?.to?.[0] || 'noname') || ''}
+                      {cleanNameDisplay(draft?.to?.[0] || 'No Recipient') || ''}
                     </span>
                   </span>
                 </div>
@@ -983,13 +985,7 @@ export const MailList = memo(
             ) : !items || items.length === 0 ? (
               <div className="flex w-full items-center justify-center">
                 <div className="flex flex-col items-center justify-center gap-2 text-center">
-                  <img
-                    suppressHydrationWarning
-                    src={resolvedTheme === 'dark' ? '/empty-state.svg' : '/empty-state-light.svg'}
-                    alt="Empty Inbox"
-                    width={200}
-                    height={200}
-                  />
+                  <EmptyStateIcon width={200} height={200} />
                   <div className="mt-5">
                     <p className="text-lg">It's empty here</p>
                     <p className="text-md text-muted-foreground dark:text-white/50">
