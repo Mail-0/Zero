@@ -42,7 +42,7 @@ import { appRouter } from './trpc';
 import { cors } from 'hono/cors';
 import { Hono } from 'hono';
 
-export class RpcDO extends RpcTarget {
+export class DbRpcDO extends RpcTarget {
   constructor(
     private mainDo: ZeroDB,
     private userId: string,
@@ -177,7 +177,7 @@ class ZeroDB extends DurableObject<Env> {
   db: DB = createDb(env.HYPERDRIVE.connectionString).db;
 
   async setMetaData(userId: string) {
-    return new RpcDO(this, userId);
+    return new DbRpcDO(this, userId);
   }
 
   async findUser(userId: string): Promise<typeof user.$inferSelect | undefined> {
@@ -228,10 +228,15 @@ class ZeroDB extends DurableObject<Env> {
   }
 
   async createNote(userId: string, payload: typeof note.$inferInsert) {
-    return await this.db.insert(note).values({
-      ...payload,
-      userId,
-    });
+    return await this.db
+      .insert(note)
+      .values({
+        ...payload,
+        userId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
   }
 
   async updateNote(
@@ -241,7 +246,10 @@ class ZeroDB extends DurableObject<Env> {
   ): Promise<typeof note.$inferSelect | undefined> {
     const [updated] = await this.db
       .update(note)
-      .set(payload)
+      .set({
+        ...payload,
+        updatedAt: new Date(),
+      })
       .where(and(eq(note.id, noteId), eq(note.userId, userId)))
       .returning();
     return updated;
@@ -659,8 +667,8 @@ export default class extends WorkerEntrypoint<typeof env> {
   }
 
   async queue(batch: MessageBatch<ISubscribeBatch>) {
-    switch (batch.queue) {
-      case 'subscribe-queue': {
+    switch (true) {
+      case batch.queue.startsWith('subscribe-queue'): {
         console.log('batch', batch);
         try {
           await Promise.all(
@@ -689,9 +697,9 @@ export default class extends WorkerEntrypoint<typeof env> {
   }
 
   async scheduled() {
-    console.log('Checking for expired subscriptions...');
+    console.log('[SCHEDULED] Checking for expired subscriptions...');
     const allAccounts = await env.subscribed_accounts.list();
-    console.log('allAccounts', allAccounts.keys);
+    console.log('[SCHEDULED] allAccounts', allAccounts.keys);
     const now = new Date();
     const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
 
@@ -705,7 +713,9 @@ export default class extends WorkerEntrypoint<typeof env> {
         if (lastSubscribed) {
           const subscriptionDate = new Date(lastSubscribed);
           if (subscriptionDate < fiveDaysAgo) {
-            console.log(`Found expired Google subscription for connection: ${connectionId}`);
+            console.log(
+              `[SCHEDULED] Found expired Google subscription for connection: ${connectionId}`,
+            );
             expiredSubscriptions.push({ connectionId, providerId: providerId as EProviders });
           }
         }
@@ -714,7 +724,9 @@ export default class extends WorkerEntrypoint<typeof env> {
 
     // Send expired subscriptions to queue for renewal
     if (expiredSubscriptions.length > 0) {
-      console.log(`Sending ${expiredSubscriptions.length} expired subscriptions to renewal queue`);
+      console.log(
+        `[SCHEDULED] Sending ${expiredSubscriptions.length} expired subscriptions to renewal queue`,
+      );
       await Promise.all(
         expiredSubscriptions.map(async ({ connectionId, providerId }) => {
           await env.subscribe_queue.send({ connectionId, providerId });
@@ -723,7 +735,7 @@ export default class extends WorkerEntrypoint<typeof env> {
     }
 
     console.log(
-      `Processed ${allAccounts.keys.length} accounts, found ${expiredSubscriptions.length} expired subscriptions`,
+      `[SCHEDULED] Processed ${allAccounts.keys.length} accounts, found ${expiredSubscriptions.length} expired subscriptions`,
     );
   }
 }

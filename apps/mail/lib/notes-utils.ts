@@ -1,18 +1,26 @@
+import { m } from '@/paraglide/messages';
+import { formatDate } from './utils';
 import type { Note } from '@/types';
 import React from 'react';
 
 export const NOTE_COLORS = [
-  { value: 'default', label: 'Default', class: 'border-transparent', bgClass: '', style: {} },
+  {
+    value: 'default',
+    label: m['common.notes.colors.default'](),
+    class: 'border-transparent',
+    bgClass: '',
+    style: {},
+  },
   {
     value: 'red',
-    label: 'Red',
+    label: m['common.notes.colors.red'](),
     class: 'border-l-red-500',
     bgClass: 'hover:bg-red-50 dark:hover:bg-red-950/20',
     style: { borderLeftColor: 'rgb(239, 68, 68)' },
   },
   {
     value: 'orange',
-    label: 'Orange',
+    label: m['common.notes.colors.orange'](),
     class: 'border-l-orange-500',
     bgClass: 'hover:bg-orange-50 dark:hover:bg-orange-950/20',
     style: { borderLeftColor: 'rgb(249, 115, 22)' },
@@ -26,28 +34,28 @@ export const NOTE_COLORS = [
   },
   {
     value: 'green',
-    label: 'Green',
+    label: m['common.notes.colors.green'](),
     class: 'border-l-green-500',
     bgClass: 'hover:bg-green-50 dark:hover:bg-green-950/20',
     style: { borderLeftColor: 'rgb(34, 197, 94)' },
   },
   {
     value: 'blue',
-    label: 'Blue',
+    label: m['common.notes.colors.blue'](),
     class: 'border-l-blue-500',
     bgClass: 'hover:bg-blue-50 dark:hover:bg-blue-950/20',
     style: { borderLeftColor: 'rgb(59, 130, 246)' },
   },
   {
     value: 'purple',
-    label: 'Purple',
+    label: m['common.notes.colors.purple'](),
     class: 'border-l-purple-500',
     bgClass: 'hover:bg-purple-50 dark:hover:bg-purple-950/20',
     style: { borderLeftColor: 'rgb(168, 85, 247)' },
   },
   {
     value: 'pink',
-    label: 'Pink',
+    label: m['common.notes.colors.pink'](),
     class: 'border-l-pink-500',
     bgClass: 'hover:bg-pink-50 dark:hover:bg-pink-950/20',
     style: { borderLeftColor: 'rgb(236, 72, 153)' },
@@ -65,10 +73,6 @@ export const NOTE_COLOR_TRANSLATION_KEYS: Record<string, string> = {
   pink: 'common.notes.colors.pink',
 };
 
-export function getNoteColorTranslationKey(colorValue: string): string {
-  return NOTE_COLOR_TRANSLATION_KEYS[colorValue] || colorValue;
-}
-
 export function getNoteColorClass(color: string): string {
   const colorInfo = NOTE_COLORS.find((c) => c.value === color);
   return colorInfo?.class || 'border-transparent';
@@ -83,17 +87,10 @@ export function borderToBackgroundColorClass(borderClass: string): string {
   return borderClass.replace('border-l-', 'bg-');
 }
 
-export function formatRelativeTime(dateInput: string | Date, formatter?: any): string {
+export function formatRelativeTime(dateInput: string | Date): string {
   const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-  if (formatter) {
-    return formatter.relativeTime(date, {
-      now,
-      style: 'long',
-    });
-  }
 
   if (diffInSeconds < 60) {
     return 'just now';
@@ -109,25 +106,6 @@ export function formatRelativeTime(dateInput: string | Date, formatter?: any): s
   } else {
     return formatDate(date);
   }
-}
-
-export function formatDate(dateInput: string | Date, formatter?: any): string {
-  const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
-
-  if (formatter) {
-    return formatter.dateTime(date, {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    });
-  }
-
-  return date.toLocaleString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 }
 
 export function sortNotes(notes: Note[]): Note[] {

@@ -8,7 +8,7 @@ export const getServerTrpc = (req: Request) =>
   createTRPCClient<AppRouter>({
     links: [
       httpBatchLink({
-        maxItems: 1,
+        maxItems: 8,
         url: getUrl(),
         transformer: superjson,
         headers: req.headers,

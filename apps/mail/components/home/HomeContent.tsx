@@ -33,12 +33,12 @@ import { PixelatedBackground, PixelatedLeft, PixelatedRight } from '@/components
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Balancer } from 'react-wrap-balancer';
-import { signIn } from '@/lib/auth-client';
+import { signIn, useSession } from '@/lib/auth-client';
 import { Navigation } from '../navigation';
 import { useTheme } from 'next-themes';
 import { use, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import Footer from './footer';
 import React from 'react';
@@ -62,6 +62,8 @@ const tabs = [
 
 export default function HomeContent() {
   const { setTheme } = useTheme();
+  const navigate = useNavigate();
+  const { data: session } = useSession();
 
   useEffect(() => {
     setTheme('dark');
@@ -80,6 +82,25 @@ export default function HomeContent() {
       <Navigation />
 
       <section className="z-10 mt-32 flex flex-col items-center px-4">
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="text-center text-4xl font-medium md:text-6xl"
+        >
+          <Balancer className="mb-3 max-w-[1130px]">
+            AI Powered Email, Built to Save You Time
+          </Balancer>
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="mx-auto mb-4 max-w-2xl text-center text-base font-medium text-[#B7B7B7] md:text-lg"
+        >
+          Zero is an AI-native email client that manages your inbox, so you don't have to.
+        </motion.p>
+        <p className="mb-4 ml-0.5 text-xs text-[#B7B7B7]/60">No credit card required.</p>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -100,61 +121,34 @@ export default function HomeContent() {
             Combinator
           </Link>
         </motion.div>
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-center text-4xl font-medium md:text-6xl"
-        >
-          <Balancer className="mb-3 max-w-[1130px]">
-            AI Powered Email, Built to Save You Time
-          </Balancer>
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="mx-auto mb-4 max-w-2xl text-center text-base font-medium text-[#B7B7B7] md:text-lg"
-        >
-          Zero is an AI-native email client that manages your inbox, so you don't have to.
-        </motion.p>
-
+        
+        {/* Get Started button only visible for mobile screens */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.6 }}
+          className="mb-6 md:hidden"
         >
           <Button
             onClick={() => {
-              toast.promise(
-                signIn.social({
-                  provider: 'google',
-                  callbackURL: `${window.location.origin}/mail`,
-                }),
-                {
-                  error: 'Login redirect failed',
-                },
-              );
+              if (session) {
+                navigate('/mail/inbox');
+              } else {
+                toast.promise(
+                  signIn.social({
+                    provider: 'google',
+                    callbackURL: `${window.location.origin}/mail`,
+                  }),
+                  {
+                    error: 'Login redirect failed',
+                  },
+                );
+              }
             }}
-            className="h-8"
           >
             Get Started
           </Button>
         </motion.div>
-        <p className="ml-0.5 mt-2 text-xs text-[#B7B7B7]/60">No credit card required. </p>
-        <a
-          href="https://www.producthunt.com/posts/zero-8?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-zero&#0045;8"
-          target="_blank"
-        >
-          <img
-            src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=970417&theme=light&period=daily&t=1748467771181"
-            alt="Zero - AI&#0032;Native&#0032;Email&#0032;Client | Product Hunt"
-            style={{ width: '250px', height: '54px' }}
-            width="250"
-            height="54"
-            className="mt-2"
-          />
-        </a>
       </section>
 
       <section className="relative mt-10 hidden flex-col justify-center md:flex">
@@ -226,7 +220,7 @@ export default function HomeContent() {
           <h1 className="text-center text-4xl font-medium text-white md:text-6xl">
             Speed Is Everything
           </h1>
-          <h1 className="text-center text-4xl font-medium mb-3 text-white/40 md:text-6xl">
+          <h1 className="mb-3 text-center text-4xl font-medium text-white/40 md:text-6xl">
             Reply in seconds
           </h1>
         </motion.div>
@@ -236,7 +230,7 @@ export default function HomeContent() {
           transition={{ duration: 0.5, delay: 0.4 }}
           className="relative bottom-3 mx-12 flex items-center justify-center bg-[#0F0F0F] md:mx-0"
         >
-          <div className="bg-panelDark mx-auto inline-flex max-w-[600px] flex-col items-center justify-center overflow-hidden rounded-2xl shadow-md mt-10">
+          <div className="bg-panelDark mx-auto mt-10 inline-flex max-w-[600px] flex-col items-center justify-center overflow-hidden rounded-2xl shadow-md">
             <div className="inline-flex h-12 items-center justify-start gap-2 self-stretch border-b-[0.50px] p-4">
               <div className="text-base-gray-500/50 justify-start text-sm leading-none">To:</div>
               <div className="flex flex-1 items-center justify-start gap-1">
@@ -1068,7 +1062,9 @@ export default function HomeContent() {
             className="mt-2 flex flex-col items-center justify-center md:mt-8"
           >
             <h1 className="text-4xl font-medium text-white md:text-6xl">Ask away</h1>
-            <h1 className="text-4xl font-medium text-white/40 md:text-6xl mb-4">Get your answers</h1>
+            <h1 className="mb-4 text-4xl font-medium text-white/40 md:text-6xl">
+              Get your answers
+            </h1>
           </motion.div>
 
           <motion.div

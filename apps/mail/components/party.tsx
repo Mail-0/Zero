@@ -6,6 +6,23 @@ import { funnel } from 'remeda';
 
 const DEBOUNCE_DELAY = 10_000; // 10 seconds is appropriate for real-time notifications
 
+export enum IncomingMessageType {
+  UseChatRequest = 'cf_agent_use_chat_request',
+  ChatClear = 'cf_agent_chat_clear',
+  ChatMessages = 'cf_agent_chat_messages',
+  ChatRequestCancel = 'cf_agent_chat_request_cancel',
+  Mail_List = 'zero_mail_list_threads',
+  Mail_Get = 'zero_mail_get_thread',
+}
+
+export enum OutgoingMessageType {
+  ChatMessages = 'cf_agent_chat_messages',
+  UseChatResponse = 'cf_agent_use_chat_response',
+  ChatClear = 'cf_agent_chat_clear',
+  Mail_List = 'zero_mail_list_threads',
+  Mail_Get = 'zero_mail_get_thread',
+}
+
 export const NotificationProvider = () => {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -28,29 +45,10 @@ export const NotificationProvider = () => {
     host: import.meta.env.VITE_PUBLIC_BACKEND_URL!,
     onMessage: async (message: MessageEvent<string>) => {
       try {
-        console.warn('party message', message);
         const { threadIds, type } = JSON.parse(message.data);
-        if (type === 'refresh') {
-          labelsDebouncer.call();
-          await Promise.all(
-            threadIds.map(async (threadId: string) => {
-              await queryClient.invalidateQueries({
-                queryKey: trpc.mail.get.queryKey({ id: threadId }),
-              });
-            }),
-          );
-          console.warn('refetched labels & threads', threadIds);
-        } else if (type === 'list') {
-          threadsDebouncer.call();
-          labelsDebouncer.call();
-          await Promise.all(
-            threadIds.map(async (threadId: string) => {
-              await queryClient.invalidateQueries({
-                queryKey: trpc.mail.get.queryKey({ id: threadId }),
-              });
-            }),
-          );
-          console.warn('refetched threads, added', threadIds);
+        if (type === IncomingMessageType.Mail_Get) {
+          const { threadId, result } = JSON.parse(message.data);
+          //   queryClient.setQueryData(trpc.mail.get.queryKey({ id: threadId }), result);
         }
       } catch (error) {
         console.error('error parsing party message', error);

@@ -1,4 +1,5 @@
 import type { Context } from 'hono';
+import { z } from 'zod';
 
 export enum EProviders {
   'google' = 'google',
@@ -101,40 +102,46 @@ export interface Sender {
   email: string;
 }
 
-export interface ParsedMessage {
-  id: string;
-  connectionId?: string;
-  title: string;
-  subject: string;
-  tags: Label[];
-  sender: Sender;
-  to: Sender[];
-  cc: Sender[] | null;
-  bcc: Sender[] | null;
-  tls: boolean;
-  listUnsubscribe?: string;
-  listUnsubscribePost?: string;
-  receivedOn: string;
-  unread: boolean;
-  body: string;
-  processedHtml: string;
-  blobUrl: string;
-  decodedBody?: string;
-  references?: string;
-  inReplyTo?: string;
-  replyTo?: string;
-  messageId?: string;
-  threadId?: string;
-  attachments?: Attachment[];
-  isDraft?: boolean;
-}
+export const ParsedMessageSchema = z.object({
+  id: z.string(),
+  connectionId: z.string().optional(),
+  title: z.string(),
+  subject: z.string(),
+  tags: z.array(z.object({ id: z.string(), name: z.string(), type: z.string() })),
+  sender: z.object({ name: z.string().optional(), email: z.string() }),
+  to: z.array(z.object({ name: z.string().optional(), email: z.string() })),
+  cc: z.array(z.object({ name: z.string().optional(), email: z.string() })).nullable(),
+  bcc: z.array(z.object({ name: z.string().optional(), email: z.string() })).nullable(),
+  tls: z.boolean(),
+  listUnsubscribe: z.string().optional(),
+  listUnsubscribePost: z.string().optional(),
+  receivedOn: z.string(),
+  unread: z.boolean(),
+  body: z.string(),
+  processedHtml: z.string(),
+  blobUrl: z.string(),
+  decodedBody: z.string().optional(),
+  references: z.string().optional(),
+  inReplyTo: z.string().optional(),
+  replyTo: z.string().optional(),
+  messageId: z.string().optional(),
+  threadId: z.string().optional(),
+  attachments: z
+    .array(
+      z.object({
+        attachmentId: z.string(),
+        filename: z.string(),
+        mimeType: z.string(),
+        size: z.number(),
+        body: z.string(),
+        headers: z.array(z.object({ name: z.string().nullable(), value: z.string().nullable() })),
+      }),
+    )
+    .optional(),
+  isDraft: z.boolean().optional(),
+});
 
-export interface IConnection {
-  id: string;
-  email: string;
-  name?: string;
-  picture?: string;
-}
+export type ParsedMessage = z.infer<typeof ParsedMessageSchema>;
 
 export interface Attachment {
   attachmentId: string;
@@ -176,7 +183,13 @@ export interface IOutgoingMessage {
   bcc?: Sender[];
   subject: string;
   message: string;
-  attachments: File[];
+  attachments: {
+    name: string;
+    type: string;
+    size: number;
+    lastModified: number;
+    base64: string;
+  }[];
   headers: Record<string, string>;
   threadId?: string;
   fromEmail?: string;

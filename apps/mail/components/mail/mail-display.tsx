@@ -31,13 +31,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
+import { cn, getEmailLogo, formatDate, formatTime, shouldShowSeparateTime } from '@/lib/utils';
 import { Dialog, DialogTitle, DialogHeader, DialogContent } from '../ui/dialog';
 import { memo, useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import type { Sender, ParsedMessage, Attachment } from '@/types';
 import { useActiveConnection } from '@/hooks/use-connections';
-import { cn, getEmailLogo, formatDate } from '@/lib/utils';
 import { useBrainState } from '../../hooks/use-summary';
 import { useTRPC } from '@/providers/query-provider';
 import { useThreadLabels } from '@/hooks/use-labels';
@@ -46,18 +46,17 @@ import { Markdown } from '@react-email/components';
 import { useSummary } from '@/hooks/use-summary';
 import { TextShimmer } from '../ui/text-shimmer';
 import { RenderLabels } from './render-labels';
-import { MailIframe } from './mail-iframe';
-import { useTranslations } from 'use-intl';
+import { MailContent } from './mail-content';
+import { m } from '@/paraglide/messages';
 import { useParams } from 'react-router';
 import { FileText } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Badge } from '../ui/badge';
-import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
-
+import { toast } from 'sonner';
 
 function escapeHtml(text: string): string {
   if (!text) return text;
@@ -302,7 +301,6 @@ type Props = {
 };
 
 const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
-  const t = useTranslations();
   const visibleLabels = labels.filter(
     (label) => !['unread', 'inbox'].includes(label.toLowerCase()),
   );
@@ -322,42 +320,42 @@ const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
           case 'important':
             icon = <Lightning className="h-3.5 w-3.5 fill-white" />;
             bgColor = 'bg-[#F59E0D]';
-            labelText = t('common.mailCategories.important');
+            labelText = m['common.mailCategories.important']();
             break;
           case 'promotions':
             icon = <Tag className="h-3.5 w-3.5 fill-white" />;
             bgColor = 'bg-[#F43F5E]';
-            labelText = t('common.mailCategories.promotions');
+            labelText = m['common.mailCategories.promotions']();
             break;
           case 'personal':
             icon = <User className="h-3.5 w-3.5 fill-white" />;
             bgColor = 'bg-[#39AE4A]';
-            labelText = t('common.mailCategories.personal');
+            labelText = m['common.mailCategories.personal']();
             break;
           case 'updates':
             icon = <Bell className="h-3.5 w-3.5 fill-white" />;
             bgColor = 'bg-[#8B5CF6]';
-            labelText = t('common.mailCategories.updates');
+            labelText = m['common.mailCategories.updates']();
             break;
           case 'work':
             icon = <Briefcase className="h-3.5 w-3.5 text-white" />;
             bgColor = '';
-            labelText = t('common.mailCategories.work');
+            labelText = m['common.mailCategories.work']();
             break;
           case 'forums':
             icon = <Users className="h-3.5 w-3.5 text-white" />;
             bgColor = 'bg-blue-600';
-            labelText = t('common.mailCategories.forums');
+            labelText = m['common.mailCategories.forums']();
             break;
           case 'notes':
             icon = <StickyNote className="h-3.5 w-3.5 text-white" />;
             bgColor = 'bg-amber-500';
-            labelText = t('common.mailCategories.notes');
+            labelText = m['common.mailCategories.notes']();
             break;
           case 'starred':
             icon = <Star className="h-3.5 w-3.5 fill-white text-white" />;
             bgColor = 'bg-yellow-500';
-            labelText = t('common.mailCategories.starred');
+            labelText = m['common.mailCategories.starred']();
             break;
           default:
             return null;
@@ -787,7 +785,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
   const [openDetailsPopover, setOpenDetailsPopover] = useState<boolean>(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const t = useTranslations();
+
   const [activeReplyId, setActiveReplyId] = useQueryState('activeReplyId');
   const { labels: threadLabels } = useThreadLabels(
     emailData.tags ? emailData.tags.map((l) => l.id) : [],
@@ -1180,7 +1178,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             <!-- Email Body -->
             <div class="email-body">
               <div class="email-content">
-                ${escapeHtml(emailData.decodedBody) || '<p><em>No email content available</em></p>'}
+                ${escapeHtml(emailData?.decodedBody || '') || '<p><em>No email content available</em></p>'}
               </div>
             </div>
 
@@ -1269,8 +1267,8 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             </div>
           </div>
         </PopoverTrigger>
-        <PopoverContent className="text-sm min-w-fit">
-          <div className='flex items-center gap-2'>
+        <PopoverContent className="min-w-fit text-sm">
+          <div className="flex items-center gap-2">
             <Avatar className="h-12 w-12">
               <AvatarImage src={getEmailLogo(person.email)} className="rounded-full" />
               <AvatarFallback className="bg-offsetLight rounded-full text-sm font-bold dark:bg-[#373737]">
@@ -1278,14 +1276,14 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className='font-medium'>{person.name || 'Unknown'}</p>
-              <div className="flex gap-2 items-center group">
+              <p className="font-medium">{person.name || 'Unknown'}</p>
+              <div className="group flex items-center gap-2">
                 <p>{person.email || 'No email'}</p>
-                <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                <span className="opacity-0 transition-opacity duration-150 group-hover:opacity-100">
                   <CopyIcon
-                  size={14}
-                  className="cursor-pointer"
-                  onClick={() => handleCopySenderEmail(person.email)}
+                    size={14}
+                    className="cursor-pointer"
+                    onClick={() => handleCopySenderEmail(person.email)}
                   />
                 </span>
               </div>
@@ -1294,7 +1292,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
         </PopoverContent>
       </Popover>
     ),
-    []
+    [],
   );
 
   const people = useMemo(() => {
@@ -1454,12 +1452,12 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 ref={triggerRef}
                               >
                                 <p className="text-muted-foreground text-xs underline dark:text-[#8C8C8C]">
-                                  Details
+                                  {m['common.mailDisplay.details']()}
                                 </p>
                               </button>
                             </PopoverTrigger>
                             <PopoverContent
-                              className="flex dark:bg-panelDark w-[420px] rounded-lg border p-4  text-left shadow-lg overflow-auto"
+                              className="dark:bg-panelDark flex w-[420px] overflow-auto rounded-lg border p-4 text-left shadow-lg"
                               onBlur={(e) => {
                                 if (!triggerRef.current?.contains(e.relatedTarget)) {
                                   setOpenDetailsPopover(false);
@@ -1470,7 +1468,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                               <div className="space-y-1 text-sm">
                                 <div className="flex">
                                   <span className="w-24 text-end text-gray-500">
-                                    {t('common.mailDisplay.from')}:
+                                    {m['common.mailDisplay.from']()}:
                                   </span>
                                   <div className="ml-3">
                                     <span className="text-muted-foreground text-nowrap pr-1 font-bold">
@@ -1485,7 +1483,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 </div>
                                 <div className="flex">
                                   <span className="w-24 text-nowrap text-end text-gray-500">
-                                    {t('common.mailDisplay.to')}:
+                                    {m['common.mailDisplay.to']()}:
                                   </span>
                                   <span className="text-muted-foreground ml-3 text-nowrap">
                                     {emailData?.to
@@ -1496,7 +1494,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 {emailData?.replyTo && emailData.replyTo.length > 0 && (
                                   <div className="flex">
                                     <span className="w-24 text-nowrap text-end text-gray-500">
-                                      {t('common.mailDisplay.replyTo')}:
+                                      {m['common.mailDisplay.replyTo']()}:
                                     </span>
                                     <span className="text-muted-foreground ml-3 text-nowrap">
                                       {cleanEmailDisplay(emailData?.replyTo)}
@@ -1506,7 +1504,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 {emailData?.cc && emailData.cc.length > 0 && (
                                   <div className="flex">
                                     <span className="shrink-0text-nowrap w-24 text-end text-gray-500">
-                                      {t('common.mailDisplay.cc')}:
+                                      {m['common.mailDisplay.cc']()}:
                                     </span>
                                     <span className="text-muted-foreground ml-3 text-nowrap">
                                       {emailData?.cc
@@ -1518,7 +1516,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 {emailData?.bcc && emailData.bcc.length > 0 && (
                                   <div className="flex">
                                     <span className="w-24 text-end text-gray-500">
-                                      {t('common.mailDisplay.bcc')}:
+                                      {m['common.mailDisplay.bcc']()}:
                                     </span>
                                     <span className="text-muted-foreground ml-3 text-nowrap">
                                       {emailData?.bcc
@@ -1529,7 +1527,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 )}
                                 <div className="flex">
                                   <span className="w-24 text-end text-gray-500">
-                                    {t('common.mailDisplay.date')}:
+                                    {m['common.mailDisplay.date']()}:
                                   </span>
                                   <span className="text-muted-foreground ml-3 text-nowrap">
                                     {emailData?.receivedOn &&
@@ -1540,7 +1538,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 </div>
                                 <div className="flex">
                                   <span className="w-24 text-end text-gray-500">
-                                    {t('common.mailDisplay.mailedBy')}:
+                                    {m['common.mailDisplay.mailedBy']()}:
                                   </span>
                                   <span className="text-muted-foreground ml-3 text-nowrap">
                                     {cleanEmailDisplay(emailData?.sender?.email)}
@@ -1548,7 +1546,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 </div>
                                 <div className="flex">
                                   <span className="w-24 text-end text-gray-500">
-                                    {t('common.mailDisplay.signedBy')}:
+                                    {m['common.mailDisplay.signedBy']()}:
                                   </span>
                                   <span className="text-muted-foreground ml-3 text-nowrap">
                                     {cleanEmailDisplay(emailData?.sender?.email)}
@@ -1557,11 +1555,11 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 {emailData.tls && (
                                   <div className="flex items-center">
                                     <span className="w-24 text-end text-gray-500">
-                                      {t('common.mailDisplay.security')}:
+                                      {m['common.mailDisplay.security']()}:
                                     </span>
                                     <div className="text-muted-foreground ml-3 flex items-center gap-1">
                                       <Lock className="h-4 w-4 text-green-600" />{' '}
-                                      {t('common.mailDisplay.standardEncryption')}
+                                      {m['common.mailDisplay.standardEncryption']()}
                                     </div>
                                   </div>
                                 )}
@@ -1571,9 +1569,16 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                         </div>
 
                         <div className="flex items-center justify-center">
-                          <time className="text-muted-foreground mr-2 text-sm font-medium dark:text-[#8C8C8C]">
-                            {formatDate(emailData?.receivedOn)}
-                          </time>
+                          <div className="text-muted-foreground mr-2 flex flex-col items-end text-sm font-medium dark:text-[#8C8C8C]">
+                            <time>
+                              {emailData?.receivedOn ? formatDate(emailData.receivedOn) : ''}
+                            </time>
+                            {shouldShowSeparateTime(emailData?.receivedOn) && (
+                              <time className="text-xs opacity-75">
+                                {emailData?.receivedOn && formatTime(emailData.receivedOn)}
+                              </time>
+                            )}
+                          </div>
 
                           {/* options menu */}
                           <DropdownMenu>
@@ -1597,7 +1602,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 }}
                               >
                                 <Printer className="fill-iconLight dark:fill-iconDark mr-2 h-4 w-4" />
-                                Print
+                                {m['common.mailDisplay.print']()}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 disabled={!emailData.attachments?.length}
@@ -1620,7 +1625,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                       <div className="flex justify-between">
                         <div className="flex gap-1">
                           <p className="text-muted-foreground text-sm font-medium dark:text-[#8C8C8C]">
-                            To:{' '}
+                            {m['common.mailDisplay.to']()}:{' '}
                             {(() => {
                               // Combine to and cc recipients
                               const allRecipients = [
@@ -1736,7 +1741,11 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
               <div className="h-fit w-full p-0">
                 {/* mail main body */}
                 {emailData?.decodedBody ? (
-                  <MailIframe html={emailData?.decodedBody} senderEmail={emailData.sender.email} />
+                  <MailContent
+                    id={emailData.id}
+                    html={emailData?.decodedBody}
+                    senderEmail={emailData.sender.email}
+                  />
                 ) : null}
                 {/* mail attachments */}
                 {emailData?.attachments && emailData?.attachments.length > 0 ? (
@@ -1777,7 +1786,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                       setActiveReplyId(emailData.id);
                     }}
                     icon={<Reply className="fill-muted-foreground dark:fill-[#9B9B9B]" />}
-                    text={t('common.mail.reply')}
+                    text={m['common.mail.reply']()}
                     shortcut={isLastEmail ? 'r' : undefined}
                   />
                   <ActionButton
@@ -1788,7 +1797,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                       setActiveReplyId(emailData.id);
                     }}
                     icon={<ReplyAll className="fill-muted-foreground dark:fill-[#9B9B9B]" />}
-                    text={t('common.mail.replyAll')}
+                    text={m['common.mail.replyAll']()}
                     shortcut={isLastEmail ? 'a' : undefined}
                   />
                   <ActionButton
@@ -1799,7 +1808,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                       setActiveReplyId(emailData.id);
                     }}
                     icon={<Forward className="fill-muted-foreground dark:fill-[#9B9B9B]" />}
-                    text={t('common.mail.forward')}
+                    text={m['common.mail.forward']()}
                     shortcut={isLastEmail ? 'f' : undefined}
                   />
                 </div>

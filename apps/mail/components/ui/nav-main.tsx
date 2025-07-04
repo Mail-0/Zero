@@ -1,7 +1,6 @@
 import { SidebarGroup, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from './sidebar';
 import { Collapsible, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useActiveConnection, useConnections } from '@/hooks/use-connections';
-import { type MessageKey, type NavItem } from '@/config/navigation';
 import { LabelDialog } from '@/components/labels/label-dialog';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Link, useLocation, useNavigate } from 'react-router';
@@ -9,7 +8,9 @@ import Intercom, { show } from '@intercom/messenger-js-sdk';
 import { MessageSquare, OldPhone } from '../icons/icons';
 import { useSidebar } from '../context/sidebar-context';
 import { useTRPC } from '@/providers/query-provider';
+import { type NavItem } from '@/config/navigation';
 import type { Label as LabelType } from '@/types';
+import { m } from '../../paraglide/messages.js';
 import { Button } from '@/components/ui/button';
 import { useLabels } from '@/hooks/use-labels';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +18,6 @@ import { useStats } from '@/hooks/use-stats';
 import SidebarLabels from './sidebar-labels';
 import { useCallback, useRef } from 'react';
 import { BASE_URL } from '@/lib/constants';
-import { useTranslations } from 'use-intl';
 import { useQueryState } from 'nuqs';
 import { Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -171,7 +171,6 @@ export function NavMain({ items }: NavMainProps) {
     },
     [pathname, searchParams],
   );
-  const t = useTranslations();
 
   const onSubmit = async (data: LabelType) => {
     toast.promise(createLabel(data), {
@@ -188,7 +187,7 @@ export function NavMain({ items }: NavMainProps) {
           <>
             <SidebarMenuButton
               onClick={() => show()}
-              tooltip={state === 'collapsed' ? t('help' as MessageKey) : undefined}
+              tooltip={state === 'collapsed' ? m['common.commandPalette.groups.help']() : undefined}
               className="hover:bg-subtleWhite flex cursor-pointer items-center dark:hover:bg-[#202020]"
             >
               <OldPhone className="relative mr-2.5 h-2 w-2 fill-[#8F8F8F]" />
@@ -201,7 +200,7 @@ export function NavMain({ items }: NavMainProps) {
               url={'https://feedback.0.email'}
               icon={MessageSquare}
               target={'_blank'}
-              title={'navigation.sidebar.feedback'}
+              title={m['navigation.sidebar.feedback']()}
             />
           </>
         ) : null}
@@ -260,11 +259,9 @@ export function NavMain({ items }: NavMainProps) {
                 ) : activeAccount?.providerId === 'microsoft' ? null : null}
               </div>
 
-              <SidebarLabels
-                data={data ?? []}
-                activeAccount={activeAccount ?? null}
-                stats={stats}
-              />
+              {activeAccount ? (
+                <SidebarLabels data={data ?? []} activeAccount={activeAccount} stats={stats} />
+              ) : null}
             </SidebarMenuItem>
           </Collapsible>
         )}
@@ -276,19 +273,17 @@ export function NavMain({ items }: NavMainProps) {
 function NavItem(item: NavItemProps & { href: string }) {
   const iconRef = useRef<IconRefType>(null);
   const { data: stats } = useStats();
-  const t = useTranslations();
+
   const { state, setOpenMobile } = useSidebar();
 
   if (item.disabled) {
     return (
       <SidebarMenuButton
-        tooltip={state === 'collapsed' ? t(item.title as MessageKey) : undefined}
+        tooltip={state === 'collapsed' ? item.title : undefined}
         className="flex cursor-not-allowed items-center opacity-50"
       >
         {item.icon && <item.icon ref={iconRef} className="relative mr-2.5 h-3 w-3.5" />}
-        <p className="relative bottom-[1px] mt-0.5 truncate text-[13px]">
-          {t(item.title as MessageKey)}
-        </p>
+        <p className="relative bottom-[1px] mt-0.5 truncate text-[13px]">{item.title}</p>
       </SidebarMenuButton>
     );
   }
@@ -305,7 +300,7 @@ function NavItem(item: NavItemProps & { href: string }) {
       <CollapsibleTrigger asChild>
         <SidebarMenuButton
           asChild
-          tooltip={state === 'collapsed' ? t(item.title as MessageKey) : undefined}
+          tooltip={state === 'collapsed' ? item.title : undefined}
           className={cn(
             'hover:bg-subtleWhite flex items-center dark:hover:bg-[#202020]',
             item.isActive && 'bg-subtleWhite text-accent-foreground dark:bg-[#202020]',
@@ -315,7 +310,7 @@ function NavItem(item: NavItemProps & { href: string }) {
           <Link target={item.target} to={item.href}>
             {item.icon && <item.icon ref={iconRef} className="mr-2 shrink-0" />}
             <p className="relative bottom-[1px] mt-0.5 min-w-0 flex-1 truncate text-[13px]">
-              {t(item.title as MessageKey)}
+              {item.title}
             </p>
             {stats &&
               item.id?.toLowerCase() !== 'sent' &&

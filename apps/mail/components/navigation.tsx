@@ -127,7 +127,7 @@ export function Navigation() {
                     Company
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-1 lg:w-[600px]">
+                    <ul className="grid w-[300px] gap-3 p-4 md:w-[300px] md:grid-cols-1 lg:w-[400px]">
                       {aboutLinks.map((link) => (
                         <ListItem key={link.title} title={link.title} href={link.href}>
                           {link.description}
@@ -171,13 +171,13 @@ export function Navigation() {
               target="_blank"
               rel="noopener noreferrer"
               className={cn(
-                'group inline-flex h-8 items-center gap-2 rounded-lg bg-black px-3 text-sm text-white transition-colors hover:bg-black/90',
+                'group inline-flex h-8 items-center gap-2 rounded-lg bg-black px-2 text-sm text-white transition-colors hover:bg-black/90',
               )}
             >
               <div className="flex items-center text-white">
                 <GitHub className="mr-1 size-4 fill-white" />
                 <span className="ml-1 lg:hidden">Star</span>
-                <span className="ml-1 hidden lg:inline">Stars on GitHub</span>
+                <span className="ml-1 hidden lg:inline">GitHub</span>
               </div>
               <div className="flex items-center gap-1 text-sm">
                 <Star className="relative top-[1px] size-4 fill-gray-400 transition-all duration-300 group-hover:fill-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" />
@@ -202,7 +202,7 @@ export function Navigation() {
                 }
               }}
             >
-              Sign in
+              Get Started
             </Button>
           </div>
         </nav>
@@ -236,9 +236,6 @@ export function Navigation() {
                   />
                 </Link>
               </SheetTitle>
-              <a href="/login">
-                <Button className="w-full">Sign in</Button>
-              </a>
             </SheetHeader>
             <div className="mt-8 flex flex-col space-y-3">
               <div className="flex flex-col space-y-3">

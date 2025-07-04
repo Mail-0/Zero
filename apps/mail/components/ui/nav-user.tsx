@@ -36,7 +36,7 @@ import { useThreads } from '@/hooks/use-threads';
 import { useBilling } from '@/hooks/use-billing';
 import { SunIcon } from '../icons/animated/sun';
 import { clear as idbClear } from 'idb-keyval';
-import { useTranslations } from 'use-intl';
+import { m } from '@/paraglide/messages';
 import { useTheme } from 'next-themes';
 import { useQueryState } from 'nuqs';
 import { Button } from './button';
@@ -48,7 +48,6 @@ export function NavUser() {
   const { data, refetch: refetchConnections } = useConnections();
   const [isRendered, setIsRendered] = useState(false);
   const { theme, setTheme } = useTheme();
-  const t = useTranslations();
   const { state } = useSidebar();
   const trpc = useTRPC();
   const [, setThreadId] = useQueryState('threadId');
@@ -90,7 +89,7 @@ export function NavUser() {
     if (connectionId === activeConnection?.id) return;
 
     try {
-      setLoading(true, t('common.navUser.switchingAccounts'));
+      setLoading(true, m['common.navUser.switchingAccounts']());
 
       setThreadId(null);
 
@@ -139,7 +138,7 @@ export function NavUser() {
       ]);
     } catch (error) {
       console.error('Error switching accounts:', error);
-      toast.error(t('common.navUser.failedToSwitchAccount'));
+      toast.error(m['common.navUser.failedToSwitchAccount']());
 
       await refetchActiveConnection();
     } finally {
@@ -247,7 +246,7 @@ export function NavUser() {
                 <div className="space-y-1">
                   <>
                     <p className="text-muted-foreground px-2 py-1 text-[11px] font-medium">
-                      {t('common.navUser.accounts')}
+                      {m['common.navUser.accounts']()}
                     </p>
 
                     {data?.connections
@@ -296,23 +295,23 @@ export function NavUser() {
                         ) : (
                           <SunIcon className="size-4 opacity-60" />
                         )}
-                        <p className="text-[13px] opacity-60">{t('common.navUser.appTheme')}</p>
+                        <p className="text-[13px] opacity-60">{m['common.navUser.appTheme']()}</p>
                       </div>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <a href={getSettingsHref()} className="cursor-pointer">
                         <div className="flex items-center gap-2">
                           <Settings size={16} className="opacity-60" />
-                          <p className="text-[13px] opacity-60">{t('common.actions.settings')}</p>
+                          <p className="text-[13px] opacity-60">{m['common.actions.settings']()}</p>
                         </div>
                       </a>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                      <a href="https://discord.gg/0email" target="_blank" className="w-full">
+                      <a href="https://discord.gg/mail0" target="_blank" className="w-full">
                         <div className="flex items-center gap-2">
                           <HelpCircle size={16} className="opacity-60" />
                           <p className="text-[13px] opacity-60">
-                            {t('common.navUser.customerSupport')}
+                            {m['common.navUser.customerSupport']()}
                           </p>
                         </div>
                       </a>
@@ -320,7 +319,7 @@ export function NavUser() {
                     <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
                       <div className="flex items-center gap-2">
                         <LogOut size={16} className="opacity-60" />
-                        <p className="text-[13px] opacity-60">{t('common.actions.logout')}</p>
+                        <p className="text-[13px] opacity-60">{m['common.actions.logout']()}</p>
                       </div>
                     </DropdownMenuItem>
                   </>
@@ -522,15 +521,15 @@ export function NavUser() {
                         ) : (
                           <SunIcon className="size-4 opacity-60" />
                         )}
-                        <p className="text-[13px] opacity-60">{t('common.navUser.appTheme')}</p>
+                        <p className="text-[13px] opacity-60">{m['common.navUser.appTheme']()}</p>
                       </div>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                      <a href="https://discord.gg/0email" target="_blank" className="w-full">
+                      <a href="https://discord.gg/mail0" target="_blank" className="w-full">
                         <div className="flex items-center gap-2">
                           <HelpCircle size={16} className="opacity-60" />
                           <p className="text-[13px] opacity-60">
-                            {t('common.navUser.customerSupport')}
+                            {m['common.navUser.customerSupport']()}
                           </p>
                         </div>
                       </a>
@@ -538,7 +537,7 @@ export function NavUser() {
                     <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
                       <div className="flex items-center gap-2">
                         <LogOut size={16} className="opacity-60" />
-                        <p className="text-[13px] opacity-60">{t('common.actions.logout')}</p>
+                        <p className="text-[13px] opacity-60">{m['common.actions.logout']()}</p>
                       </div>
                     </DropdownMenuItem>
                   </div>
@@ -575,27 +574,28 @@ export function NavUser() {
       </div>
 
       {state !== 'collapsed' && (
-        <div className="flex items-center justify-between gap-2">
+        <div className="mt-2 flex items-center justify-between gap-2">
           <div className="mt-[2px] flex flex-col items-start gap-1 space-y-1">
             <div className="flex items-center gap-1 text-[13px] leading-none text-black dark:text-white">
-              <p className={cn('truncate text-[13px]', isPro ? 'max-w-[14.5ch]' : 'max-w-[8.5ch]')}>
+              <p className={cn('max-w-[14.5ch] truncate text-[13px]')}>
                 {activeAccount?.name || session.user.name || 'User'}
               </p>
               {isPro ? (
                 <BadgeCheck className="h-4 w-4 text-white dark:text-[#141414]" fill="#1D9BF0" />
-              ) : (
-                <button
-                  onClick={() => setPricingDialog('true')}
-                  className="flex h-5 items-center gap-1 rounded-full border px-1 pr-1.5 hover:bg-transparent"
-                >
-                  <BadgeCheck className="h-4 w-4 text-white dark:text-[#141414]" fill="#1D9BF0" />
-                  <span className="text-muted-foreground text-[10px] uppercase">Get verified</span>
-                </button>
-              )}
+              ) : null}
             </div>
             <div className="h-5 max-w-[200px] overflow-hidden truncate text-xs font-normal leading-none text-[#898989]">
               {activeAccount?.email || session.user.email}
             </div>
+            {!isPro && (
+              <button
+                onClick={() => setPricingDialog('true')}
+                className="flex h-5 items-center gap-1 rounded-full border px-1 pr-1.5 hover:bg-transparent"
+              >
+                <BadgeCheck className="h-4 w-4 text-white dark:text-[#141414]" fill="#1D9BF0" />
+                <span className="text-muted-foreground text-[10px] uppercase">Get verified</span>
+              </button>
+            )}
           </div>
 
           <div className="ml-2">{/* Gauge component removed */}</div>

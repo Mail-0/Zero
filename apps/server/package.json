@@ -32,7 +32,7 @@
     "@microsoft/microsoft-graph-types": "^2.40.0",
     "@modelcontextprotocol/sdk": "1.12.0",
     "@react-email/components": "^0.0.41",
-    "@react-email/render": "^1.1.0",
+    "@react-email/render": "1.1.0",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
     "@tsndr/cloudflare-worker-jwt": "3.2.0",
@@ -68,13 +68,16 @@
     "superjson": "catalog:",
     "twilio": "5.7.0",
     "wrangler": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "uuid": "11.1.0",
+    "mime-types": "3.0.1"
   },
   "devDependencies": {
     "@types/he": "1.2.3",
     "@types/node": "^22.9.0",
     "@types/react": "19.1.6",
     "@types/sanitize-html": "2.13.0",
+    "@types/uuid": "10.0.0",
     "@zero/eslint-config": "workspace:*",
     "@zero/tsconfig": "workspace:*",
     "drizzle-kit": "catalog:",

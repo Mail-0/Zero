@@ -1,14 +1,23 @@
 import type { IOutgoingMessage, ParsedMessage, Label, DeleteAllSpamResponse } from '../../types';
+import { ParsedMessageSchema } from '../../types';
 import type { CreateDraftData } from '../schemas';
-import type { HonoContext } from '../../ctx';
+import { z } from 'zod';
 
 export interface IGetThreadResponse {
   messages: ParsedMessage[];
-  latest: ParsedMessage | undefined;
+  latest?: ParsedMessage;
   hasUnread: boolean;
   totalReplies: number;
   labels: { id: string; name: string }[];
 }
+
+export const IGetThreadResponseSchema = z.object({
+  messages: z.array(ParsedMessageSchema),
+  latest: ParsedMessageSchema.optional(),
+  hasUnread: z.boolean(),
+  totalReplies: z.number(),
+  labels: z.array(z.object({ id: z.string(), name: z.string() })),
+});
 
 export interface ParsedDraft<T = unknown> {
   id: string;

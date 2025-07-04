@@ -51,8 +51,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { EditorView } from 'prosemirror-view';
 import { Markdown } from 'tiptap-markdown';
-import { useTranslations } from 'use-intl';
 import { Slice } from 'prosemirror-model';
+import { m } from '@/paraglide/messages';
 import { useState } from 'react';
 import React from 'react';
 
@@ -131,7 +131,7 @@ interface MenuBarProps {
 
 const MenuBar = () => {
   const { editor } = useCurrentEditor();
-  const t = useTranslations();
+
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
 
@@ -193,7 +193,7 @@ const MenuBar = () => {
                     <Bold className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{t('pages.createEmail.editor.menuBar.bold')}</TooltipContent>
+                <TooltipContent>{m.pages.createEmail.editor.menuBar.bold()}</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -209,7 +209,7 @@ const MenuBar = () => {
                     <Italic className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{t('pages.createEmail.editor.menuBar.italic')}</TooltipContent>
+                <TooltipContent>{m.pages.createEmail.editor.menuBar.italic()}</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -226,7 +226,7 @@ const MenuBar = () => {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  {t('pages.createEmail.editor.menuBar.strikethrough')}
+                  {m.pages.createEmail.editor.menuBar.strikethrough()}
                 </TooltipContent>
               </Tooltip>
               <Tooltip>
@@ -242,7 +242,7 @@ const MenuBar = () => {
                     <Underline className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{t('pages.createEmail.editor.menuBar.underline')}</TooltipContent>
+                <TooltipContent>{m.pages.createEmail.editor.menuBar.underline()}</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -257,7 +257,7 @@ const MenuBar = () => {
                     <LinkIcon className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{t('pages.createEmail.editor.menuBar.link')}</TooltipContent>
+                <TooltipContent>{m.pages.createEmail.editor.menuBar.link()}</TooltipContent>
               </Tooltip>
             </div>
 
@@ -277,7 +277,7 @@ const MenuBar = () => {
                     <List className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{t('pages.createEmail.editor.menuBar.bulletList')}</TooltipContent>
+                <TooltipContent>{m.pages.createEmail.editor.menuBar.bulletList()}</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -292,7 +292,7 @@ const MenuBar = () => {
                     <ListOrdered className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{t('pages.createEmail.editor.menuBar.orderedList')}</TooltipContent>
+                <TooltipContent>{m.pages.createEmail.editor.menuBar.orderedList()}</TooltipContent>
               </Tooltip>
             </div>
           </div>
@@ -302,8 +302,8 @@ const MenuBar = () => {
       <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{t('pages.createEmail.addLink')}</DialogTitle>
-            <DialogDescription>{t('pages.createEmail.addUrlToCreateALink')}</DialogDescription>
+            <DialogTitle>{m.pages.createEmail.addLink()}</DialogTitle>
+            <DialogDescription>{m.pages.createEmail.addUrlToCreateALink()}</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-2">
             <div className="flex flex-col gap-2">
@@ -320,10 +320,10 @@ const MenuBar = () => {
           </div>
           <DialogFooter className="flex justify-between sm:justify-between">
             <Button variant="outline" onClick={handleRemoveLink} type="button">
-              {t('common.actions.cancel')}
+              {m.common.actions.cancel()}
             </Button>
             <Button onClick={handleSaveLink} type="button">
-              {t('common.actions.save')}
+              {m.common.actions.save()}
             </Button>
           </DialogFooter>
         </DialogContent>
