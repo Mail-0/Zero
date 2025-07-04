@@ -47,7 +47,7 @@ import { Markdown } from '@react-email/components';
 import { useSummary } from '@/hooks/use-summary';
 import { TextShimmer } from '../ui/text-shimmer';
 import { RenderLabels } from './render-labels';
-import { MailIframe } from './mail-iframe';
+import { MailContent } from './mail-content';
 import { m } from '@/paraglide/messages';
 import { useParams } from 'react-router';
 import { FileText } from 'lucide-react';
@@ -1206,7 +1206,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             <!-- Email Body -->
             <div class="email-body">
               <div class="email-content">
-                ${cleanHtml(emailData.decodedBody ?? '<p><em>No email content available</em></p>' ) }
+                ${escapeHtml(emailData?.decodedBody || '') || '<p><em>No email content available</em></p>'}
               </div>
             </div>
 
@@ -1632,8 +1632,10 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 <Printer className="fill-iconLight dark:fill-iconDark mr-2 h-4 w-4" />
                                 {m['common.mailDisplay.print']()}
                               </DropdownMenuItem>
+                              {(emailData.attachments?.length ?? 0) > 0 && (
                               <DropdownMenuItem
                                 disabled={!emailData.attachments?.length}
+                                className={!emailData.attachments?.length ? "data-[disabled]:pointer-events-auto" : ""}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   e.preventDefault();
@@ -1646,6 +1648,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 <HardDriveDownload className="fill-iconLight dark:text-iconDark dark:fill-iconLight mr-2 h-4 w-4" />
                                 Download All Attachments
                               </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -1769,7 +1772,11 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
               <div className="h-fit w-full p-0">
                 {/* mail main body */}
                 {emailData?.decodedBody ? (
-                  <MailIframe html={emailData?.decodedBody} senderEmail={emailData.sender.email} />
+                  <MailContent
+                    id={emailData.id}
+                    html={emailData?.decodedBody}
+                    senderEmail={emailData.sender.email}
+                  />
                 ) : null}
                 {/* mail attachments */}
                 {emailData?.attachments && emailData?.attachments.length > 0 ? (
