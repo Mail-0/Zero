@@ -84,7 +84,7 @@ const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => voi
   const secondRowQueries = ['Find all work meetings', 'What projects do i have coming up'];
 
   return (
-    <div className="mt-6 flex w-full flex-col items-center gap-2">
+    <div className="horizontal-fade-mask mt-6 flex w-full flex-col items-center gap-2">
       {/* First row */}
       <div className="no-scrollbar relative flex w-full justify-center overflow-x-auto">
         <div className="flex gap-4 px-4">
@@ -98,10 +98,6 @@ const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => voi
             </button>
           ))}
         </div>
-        {/* Left mask */}
-        <div className="from-panelLight dark:from-panelDark pointer-events-none absolute bottom-0 left-0 top-0 w-12 bg-gradient-to-r to-transparent"></div>
-        {/* Right mask */}
-        <div className="from-panelLight dark:from-panelDark pointer-events-none absolute bottom-0 right-0 top-0 w-12 bg-gradient-to-l to-transparent"></div>
       </div>
 
       {/* Second row */}
@@ -117,10 +113,6 @@ const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => voi
             </button>
           ))}
         </div>
-        {/* Left mask */}
-        <div className="from-panelLight dark:from-panelDark pointer-events-none absolute bottom-0 left-0 top-0 w-12 bg-gradient-to-r to-transparent"></div>
-        {/* Right mask */}
-        <div className="from-panelLight dark:from-panelDark pointer-events-none absolute bottom-0 right-0 top-0 w-12 bg-gradient-to-l to-transparent"></div>
       </div>
     </div>
   );
