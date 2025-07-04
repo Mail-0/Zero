@@ -104,15 +104,15 @@ export class MainWorkflow extends WorkflowEntrypoint<Env, Params> {
               });
             } else {
               log('[MAIN_WORKFLOW] Creating workflow instance with current history');
-              const existingInstance = await env.ZERO_WORKFLOW.get(
-                `${connectionId}__${historyId}`,
-              ).catch(() => null);
-              if (existingInstance && (await existingInstance.status()).status === 'running') {
-                log('[MAIN_WORKFLOW] History already processing:', existingInstance.id);
-                return;
-              }
+              //   const existingInstance = await env.ZERO_WORKFLOW.get(
+              //     `${connectionId}__${historyId}`,
+              //   ).catch(() => null);
+              //   if (existingInstance && (await existingInstance.status()).status === 'running') {
+              //     log('[MAIN_WORKFLOW] History already processing:', existingInstance.id);
+              //     return;
+              //   }
               const instance = await env.ZERO_WORKFLOW.create({
-                id: `${connectionId}__${historyId}`,
+                // id: `${connectionId}__${historyId}`,
                 params: {
                   connectionId,
                   historyId: historyId,
@@ -282,19 +282,19 @@ export class ZeroWorkflow extends WorkflowEntrypoint<Env, Params> {
           },
         );
 
-        const lastPage = await step.do(
-          `[ZERO_WORKFLOW] Get last page ${connectionId}`,
-          async () => {
-            log('[ZERO_WORKFLOW] Getting last page of threads');
-            const lastThreads = await driver.list({
-              folder: 'inbox',
-              query: 'NOT is:spam',
-              maxResults: 10,
-            });
-            log('[ZERO_WORKFLOW] Found threads in last page:', lastThreads.threads.length);
-            return lastThreads.threads.map((thread) => thread.id);
-          },
-        );
+        // const lastPage = await step.do(
+        //   `[ZERO_WORKFLOW] Get last page ${connectionId}`,
+        //   async () => {
+        //     log('[ZERO_WORKFLOW] Getting last page of threads');
+        //     const lastThreads = await driver.list({
+        //       folder: 'inbox',
+        //       query: 'NOT is:spam',
+        //       maxResults: 10,
+        //     });
+        //     log('[ZERO_WORKFLOW] Found threads in last page:', lastThreads.threads.length);
+        //     return lastThreads.threads.map((thread) => thread.id);
+        //   },
+        // );
 
         const threadsToProcess = await step.do(
           `[ZERO_WORKFLOW] Get threads to process ${connectionId}`,
@@ -303,7 +303,7 @@ export class ZeroWorkflow extends WorkflowEntrypoint<Env, Params> {
             const threadsToProcess = [
               ...new Set([
                 ...threadsAdded,
-                ...lastPage,
+                // ...lastPage,
                 ...threadsAddLabels,
                 ...threadsRemoveLabels,
               ]),
@@ -335,19 +335,19 @@ export class ZeroWorkflow extends WorkflowEntrypoint<Env, Params> {
                     await env.gmail_processing_threads.put(threadId.toString(), 'true', {
                       expirationTtl: 1800,
                     });
-                    const existingInstance = await env.THREAD_WORKFLOW.get(
-                      `${threadId.toString()}__${connectionId.toString()}`,
-                    ).catch(() => null);
-                    if (
-                      existingInstance &&
-                      (await existingInstance.status()).status === 'running'
-                    ) {
-                      log('[ZERO_WORKFLOW] Thread already processing:', isProcessing, threadId);
-                      await env.gmail_processing_threads.delete(threadId.toString());
-                      return;
-                    }
+                    // const existingInstance = await env.THREAD_WORKFLOW.get(
+                    //   `${threadId.toString()}__${connectionId.toString()}`,
+                    // ).catch(() => null);
+                    // if (
+                    //   existingInstance &&
+                    //   (await existingInstance.status()).status === 'running'
+                    // ) {
+                    //   log('[ZERO_WORKFLOW] Thread already processing:', isProcessing, threadId);
+                    //   await env.gmail_processing_threads.delete(threadId.toString());
+                    //   return;
+                    // }
                     const instance = await env.THREAD_WORKFLOW.create({
-                      id: `${threadId.toString()}__${connectionId.toString()}`,
+                      //   id: `${threadId.toString()}__${connectionId.toString()}`,
                       params: { connectionId, threadId, providerId: foundConnection.providerId },
                     });
                     log('[ZERO_WORKFLOW] Created instance:', {
