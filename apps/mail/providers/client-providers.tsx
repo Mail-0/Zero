@@ -1,7 +1,8 @@
+import { ThemeProvider as CustomThemeProvider } from '@/components/theme/theme-provider';
+import { LoadingProvider } from '@/components/context/loading-context';
 import { NuqsAdapter } from 'nuqs/adapters/react-router/v7';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { PostHogProvider } from '@/lib/posthog-provider';
-import { LoadingProvider } from '@/components/context/loading-context';
 import { useSettings } from '@/hooks/use-settings';
 import { Provider as JotaiProvider } from 'jotai';
 import type { PropsWithChildren } from 'react';
@@ -22,14 +23,16 @@ export function ClientProviders({ children }: PropsWithChildren) {
           disableTransitionOnChange
           defaultTheme={theme}
         >
-          <SidebarProvider>
-            <PostHogProvider>
-              <LoadingProvider>
-                {children}
-                <Toaster />
-              </LoadingProvider>
-            </PostHogProvider>
-          </SidebarProvider>
+          <CustomThemeProvider>
+            <SidebarProvider>
+              <PostHogProvider>
+                <LoadingProvider>
+                  {children}
+                  <Toaster />
+                </LoadingProvider>
+              </PostHogProvider>
+            </SidebarProvider>
+          </CustomThemeProvider>
         </ThemeProvider>
       </JotaiProvider>
     </NuqsAdapter>

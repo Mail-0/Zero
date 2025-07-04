@@ -13,6 +13,8 @@ import {
   userHotkeys,
   userSettings,
   writingStyleMatrix,
+  theme,
+  connectionTheme,
 } from './db/schema';
 import { env, WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
 import { getZeroAgent, getZeroDB, verifyToken } from './lib/server-utils';
@@ -165,11 +167,53 @@ export class DbRpcDO extends RpcTarget {
     return await this.mainDo.deleteActiveConnection(this.userId, connectionId);
   }
 
-  async updateConnection(
+  // Theme management methods
+  async findManyThemes(): Promise<(typeof theme.$inferSelect)[]> {
+    return await this.mainDo.findManyThemes(this.userId);
+  }
+
+  async findPublicThemes(): Promise<(typeof theme.$inferSelect)[]> {
+    return await this.mainDo.findPublicThemes();
+  }
+
+  async findThemeById(themeId: string): Promise<typeof theme.$inferSelect | undefined> {
+    return await this.mainDo.findThemeById(themeId);
+  }
+
+  async findUserTheme(themeId: string): Promise<typeof theme.$inferSelect | undefined> {
+    return await this.mainDo.findUserTheme(this.userId, themeId);
+  }
+
+  async findConnectionTheme(
     connectionId: string,
-    updatingInfo: Partial<typeof connection.$inferInsert>,
-  ) {
-    return await this.mainDo.updateConnection(connectionId, updatingInfo);
+  ): Promise<typeof connectionTheme.$inferSelect | undefined> {
+    return await this.mainDo.findConnectionTheme(connectionId);
+  }
+
+  async createTheme(themeData: typeof theme.$inferInsert): Promise<typeof theme.$inferSelect> {
+    return await this.mainDo.createTheme({
+      ...themeData,
+      userId: this.userId,
+    });
+  }
+
+  async updateTheme(
+    themeId: string,
+    themeData: Partial<typeof theme.$inferInsert>,
+  ): Promise<typeof theme.$inferSelect> {
+    return await this.mainDo.updateTheme(themeId, themeData);
+  }
+
+  async deleteTheme(themeId: string): Promise<void> {
+    return await this.mainDo.deleteTheme(themeId);
+  }
+
+  async setConnectionTheme(connectionId: string, themeId: string): Promise<void> {
+    return await this.mainDo.setConnectionTheme(connectionId, themeId);
+  }
+
+  async removeConnectionTheme(connectionId: string): Promise<void> {
+    return await this.mainDo.removeConnectionTheme(connectionId);
   }
 }
 
@@ -487,6 +531,91 @@ class ZeroDB extends DurableObject<Env> {
       .update(connection)
       .set(updatingInfo)
       .where(eq(connection.id, connectionId));
+  }
+
+  // Theme management methods
+  async findManyThemes(userId: string): Promise<(typeof theme.$inferSelect)[]> {
+    return await this.db.query.theme.findMany({
+      where: eq(theme.userId, userId),
+      orderBy: [desc(theme.createdAt)],
+    });
+  }
+
+  async findPublicThemes(): Promise<(typeof theme.$inferSelect)[]> {
+    return await this.db.query.theme.findMany({
+      where: eq(theme.isPublic, true),
+      orderBy: [desc(theme.createdAt)],
+    });
+  }
+
+  async findThemeById(themeId: string): Promise<typeof theme.$inferSelect | undefined> {
+    return await this.db.query.theme.findFirst({
+      where: eq(theme.id, themeId),
+    });
+  }
+
+  async findUserTheme(
+    userId: string,
+    themeId: string,
+  ): Promise<typeof theme.$inferSelect | undefined> {
+    return await this.db.query.theme.findFirst({
+      where: and(eq(theme.id, themeId), eq(theme.userId, userId)),
+    });
+  }
+
+  async findConnectionTheme(
+    connectionId: string,
+  ): Promise<typeof connectionTheme.$inferSelect | undefined> {
+    return await this.db.query.connectionTheme.findFirst({
+      where: eq(connectionTheme.connectionId, connectionId),
+      with: {
+        theme: true,
+      },
+    });
+  }
+
+  async createTheme(themeData: typeof theme.$inferInsert): Promise<typeof theme.$inferSelect> {
+    const [newTheme] = await this.db.insert(theme).values(themeData).returning();
+    return newTheme;
+  }
+
+  async updateTheme(
+    themeId: string,
+    themeData: Partial<typeof theme.$inferInsert>,
+  ): Promise<typeof theme.$inferSelect> {
+    const [updatedTheme] = await this.db
+      .update(theme)
+      .set({
+        ...themeData,
+        updatedAt: new Date(),
+      })
+      .where(eq(theme.id, themeId))
+      .returning();
+    return updatedTheme;
+  }
+
+  async deleteTheme(themeId: string): Promise<void> {
+    await this.db.delete(theme).where(eq(theme.id, themeId));
+  }
+
+  async setConnectionTheme(connectionId: string, themeId: string): Promise<void> {
+    await this.db
+      .insert(connectionTheme)
+      .values({
+        connectionId,
+        themeId,
+      })
+      .onConflictDoUpdate({
+        target: connectionTheme.connectionId,
+        set: {
+          themeId,
+          updatedAt: new Date(),
+        },
+      });
+  }
+
+  async removeConnectionTheme(connectionId: string): Promise<void> {
+    await this.db.delete(connectionTheme).where(eq(connectionTheme.connectionId, connectionId));
   }
 }
 
