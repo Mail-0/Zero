@@ -76,17 +76,24 @@ export function MailContent({ id, html, senderEmail }: MailContentProps) {
         theme: (resolvedTheme as 'light' | 'dark') || 'light',
       });
 
-      if (result.hasBlockedImages) {
-        setCspViolation(true);
-      }
-
-      return result.processedHtml;
+      return {
+        html: result.processedHtml,
+        hasBlockedImages: result.hasBlockedImages,
+      };
     },
     staleTime: 30 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
+
+  useEffect(() => {
+    if (processedData) {
+      if (processedData.hasBlockedImages) {
+        setCspViolation(true);
+      }
+    }
+  }, [processedData]);
 
   useEffect(() => {
     if (!hostRef.current || shadowRootRef.current) return;
@@ -97,7 +104,7 @@ export function MailContent({ id, html, senderEmail }: MailContentProps) {
   useEffect(() => {
     if (!shadowRootRef.current || !processedData) return;
 
-    shadowRootRef.current.innerHTML = processedData;
+    shadowRootRef.current.innerHTML = processedData.html;
   }, [processedData]);
 
   useEffect(() => {
