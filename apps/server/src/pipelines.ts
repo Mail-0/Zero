@@ -156,7 +156,7 @@ export class ZeroWorkflow extends WorkflowEntrypoint<Env, Params> {
 
       const historyProcessingKey = `history_${connectionId}__${historyId}`;
       const isProcessing = await env.gmail_processing_threads.get(historyProcessingKey);
-      if (isProcessing) {
+      if (isProcessing === 'true') {
         return log('[ZERO_WORKFLOW] History already being processed:', {
           connectionId,
           historyId,
@@ -164,7 +164,7 @@ export class ZeroWorkflow extends WorkflowEntrypoint<Env, Params> {
         });
       }
 
-      await env.gmail_processing_threads.put(historyProcessingKey, 'true');
+      await env.gmail_processing_threads.put(historyProcessingKey, 'true', { expirationTtl: 3600 });
       log('[ZERO_WORKFLOW] Set processing flag for history:', historyProcessingKey);
 
       const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
@@ -332,7 +332,7 @@ export class ZeroWorkflow extends WorkflowEntrypoint<Env, Params> {
                       log('[ZERO_WORKFLOW] Thread already processing:', isProcessing, threadId);
                       return;
                     }
-                    await env.gmail_processing_threads.put(threadId.toString(), 'true');
+                    await env.gmail_processing_threads.put(threadId.toString(), 'true', { expirationTtl: 1800 });
                     const existingInstance = await env.THREAD_WORKFLOW.get(
                       `${threadId.toString()}__${connectionId.toString()}`,
                     ).catch(() => null);
