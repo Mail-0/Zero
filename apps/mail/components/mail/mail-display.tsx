@@ -1768,7 +1768,11 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
               <div className="h-fit w-full p-0">
                 {/* mail main body */}
                 {emailData?.decodedBody ? (
-                  <MailContent html={emailData?.decodedBody} senderEmail={emailData.sender.email} />
+                  <MailContent
+                    id={emailData.id}
+                    html={emailData?.decodedBody}
+                    senderEmail={emailData.sender.email}
+                  />
                 ) : null}
                 {/* mail attachments */}
                 {emailData?.attachments && emailData?.attachments.length > 0 ? (

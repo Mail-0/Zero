@@ -11,11 +11,12 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 interface MailContentProps {
+  id: string;
   html: string;
   senderEmail: string;
 }
 
-export function MailContent({ html, senderEmail }: MailContentProps) {
+export function MailContent({ id, html, senderEmail }: MailContentProps) {
   const { data, refetch } = useSettings();
   const queryClient = useQueryClient();
   const isTrustedSender = useMemo(
@@ -67,7 +68,7 @@ export function MailContent({ html, senderEmail }: MailContentProps) {
   );
 
   const { data: processedData } = useQuery({
-    queryKey: ['email-content', html, isTrustedSender || temporaryImagesEnabled, resolvedTheme],
+    queryKey: ['email-content', id, isTrustedSender || temporaryImagesEnabled, resolvedTheme],
     queryFn: async () => {
       const result = await processEmailContent({
         html,
