@@ -52,18 +52,23 @@ export default function EmptyFolderButton({ folder }: Props) {
         }
 
         // Fetch mails in pages of 100 until there is no nextPageToken
-        const page = await trpcClient.mail.listThreads.query({
-          folder,
-          q: '',
-          max: MAX_PER_PAGE,
-          cursor,
-        } satisfies ListThreadsParams);
-        
-        if (page?.threads?.length) {
-          ids.push(...page.threads.map((t: { id: string }) => t.id));
+        try {
+          const page = await trpcClient.mail.listThreads.query({
+            folder,
+            q: '',
+            max: MAX_PER_PAGE,
+            cursor,
+          } satisfies ListThreadsParams);
+          
+          if (page?.threads?.length) {
+            ids.push(...page.threads.map((t: { id: string }) => t.id));
+          }
+          if (!page?.nextPageToken) break;
+          cursor = page.nextPageToken;
+        } catch (error) {
+          console.error('Pagination failed', error);
+          break;
         }
-        if (!page?.nextPageToken) break;
-        cursor = page.nextPageToken;
       }
 
       if (!ids.length) {
