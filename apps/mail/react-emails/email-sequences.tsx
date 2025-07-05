@@ -98,7 +98,7 @@ export const WelcomeEmail = ({ name }: EmailProps) => {
             </Text>
             <Text style={text}>
               Want to chat about email and get a $20 gift card to anywhere you like?{' '}
-              <Link href="https://cal.com/nizzy" style={link}>
+              <Link href="https://cal.com/team/0/chat?overlayCalendar=true" style={link}>
                 Book some time with me here
               </Link>
             </Text>
@@ -150,7 +150,7 @@ export const Mail0ProEmail = ({ name }: EmailProps) => {
             </Text>
             <Text style={text}>
               Have questions or want help deciding if Pro is right for you?{' '}
-              <Link href="https://cal.com/nizzy" style={link}>
+              <Link href="https://cal.com/team/0/chat?overlayCalendar=true" style={link}>
                 Book a quick call and I'll send you a $20 gift card of your choice
               </Link>
             </Text>
@@ -192,7 +192,7 @@ export const AutoLabelingEmail = ({ name }: EmailProps) => {
             </Text>
             <Text style={text}>
               Curious how labeling works behind the scenes?{' '}
-              <Link href="https://cal.com/nizzy" style={link}>
+              <Link href="https://cal.com/team/0/chat?overlayCalendar=true" style={link}>
                 Book a quick chat and I'll send you a $20 gift card as a thank you
               </Link>
             </Text>
@@ -237,14 +237,14 @@ export const AIWritingAssistantEmail = ({ name }: EmailProps) => {
             </Text>
             <Text style={text}>
               Want to see it in action or share your thoughts?{' '}
-              <Link href="https://cal.com/nizzy" style={link}>
+              <Link href="https://cal.com/team/0/chat?overlayCalendar=true" style={link}>
                 I'll send you a $20 gift card just for booking a quick call
               </Link>
             </Text>
             <Text style={text}>
               Talk soon,
             </Text>
-            <Text style={signature}>Nizzy</Text>
+            <Text style={signature}>Adam</Text>
           </Section>
         </Container>
       </Body>
@@ -284,14 +284,14 @@ export const ShortcutsEmail = ({ name }: EmailProps) => {
             </Text>
             <Text style={text}>
               Got feedback or shortcut ideas?{' '}
-              <Link href="https://cal.com/nizzy" style={link}>
+              <Link href="https://cal.com/team/0/chat?overlayCalendar=true" style={link}>
                 Let's talk and I'll send you a $20 gift card for your time
               </Link>
             </Text>
             <Text style={text}>
               Let's make your inbox feel like second nature.
             </Text>
-            <Text style={signature}>Nizzy</Text>
+            <Text style={signature}>Adam</Text>
           </Section>
         </Container>
       </Body>
@@ -329,14 +329,14 @@ export const CategoriesEmail = ({ name }: EmailProps) => {
             </Text>
             <Text style={text}>
               Want to customize categories or suggest improvements?{' '}
-              <Link href="https://cal.com/nizzy" style={link}>
+              <Link href="https://cal.com/team/0/chat?overlayCalendar=true" style={link}>
                 Book a quick chat with me and I'll send you a $20 gift card
               </Link>
             </Text>
             <Text style={text}>
               Talk soon,
             </Text>
-            <Text style={signature}>Nizzy</Text>
+            <Text style={signature}>Adam</Text>
           </Section>
         </Container>
       </Body>
@@ -377,14 +377,14 @@ export const SuperSearchEmail = ({ name }: EmailProps) => {
             </Text>
             <Text style={text}>
               Let's nerd out about how Super Search works.{' '}
-              <Link href="https://cal.com/nizzy" style={link}>
+              <Link href="https://cal.com/team/0/chat?overlayCalendar=true" style={link}>
                 I'll send you a $20 gift card just for booking a time
               </Link>
             </Text>
             <Text style={text}>
               See you in the future,
             </Text>
-            <Text style={signature}>Nizzy</Text>
+            <Text style={signature}>Adam</Text>
           </Section>
         </Container>
       </Body>
@@ -419,7 +419,7 @@ export const Mail0ProWelcomeEmail = ({ name }: EmailProps) => {
             </Text>
             <Text style={text}>
               Need help getting the most out of Pro?{' '}
-              <Link href="https://cal.com/nizzy" style={link}>
+              <Link href="https://cal.com/team/0/chat?overlayCalendar=true" style={link}>
                 I'd love to chat and send you a $20 gift card for your time
               </Link>
             </Text>
@@ -454,7 +454,7 @@ export const Mail0CancellationEmail = ({ name }: EmailProps) => {
             </Text>
             <Text style={text}>
               I'd love to hear what could have been better.{' '}
-              <Link href="https://cal.com/nizzy" style={link}>
+              <Link href="https://cal.com/team/0/chat?overlayCalendar=true" style={link}>
                 Book a quick call and I'll send you a $20 gift card of your choice
               </Link>
             </Text>
