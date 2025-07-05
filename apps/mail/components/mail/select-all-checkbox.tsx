@@ -3,20 +3,24 @@ import { useMail } from '@/components/mail/use-mail';
 import { useThreads } from '@/hooks/use-threads';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { trpcClient } from '@/providers/query-provider';
+import useSearchLabels from '@/hooks/use-labels-search';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useParams } from 'react-router';
 import { toast } from 'sonner';
 import React, { useCallback, useMemo, useRef, useState, useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 
 export default function SelectAllCheckbox({ className }: { className?: string }) {
   const [mail, setMail] = useMail();
   const [, loadedThreads] = useThreads();
   const [{ value: query }] = useSearchValue();
+  const { labels } = useSearchLabels();
   const { folder = 'inbox' } = useParams<{ folder: string }>() ?? {};
 
   const [isFetchingIds, setIsFetchingIds] = useState(false);
   const allIdsCache = useRef<string[] | null>(null);
-
+  const [fetchProgress, setFetchProgress] = useState({ fetched: 0, total: 0 });
   const checkboxRef = useRef<HTMLButtonElement>(null);
 
   const loadedIds = useMemo(() => loadedThreads.map((t) => t.id), [loadedThreads]);
@@ -35,6 +39,8 @@ export default function SelectAllCheckbox({ className }: { className?: string })
     let cursor = '';
     const MAX_PER_PAGE = 500;
 
+    setFetchProgress({ fetched: 0, total: 0 });
+
     try {
       while (true) {
         const page = await trpcClient.mail.listThreads.query({
@@ -42,9 +48,11 @@ export default function SelectAllCheckbox({ className }: { className?: string })
           q: query,
           max: MAX_PER_PAGE,
           cursor,
+          labelIds: labels,
         });
         if (page?.threads?.length) {
           ids.push(...page.threads.map((t: { id: string }) => t.id));
+          setFetchProgress(prev => ({ ...prev, fetched: ids.length }));
         }
         if (!page?.nextPageToken) break;
         cursor = page.nextPageToken;
@@ -55,7 +63,7 @@ export default function SelectAllCheckbox({ className }: { className?: string })
     }
 
     return ids;
-  }, [folder, query]);
+  }, [folder, query, labels]);
 
   const handleToggle = useCallback(() => {
     if (isFetchingIds) return;
@@ -97,12 +105,31 @@ export default function SelectAllCheckbox({ className }: { className?: string })
   }, [folder, query]);
 
   return (
-    <Checkbox
-      ref={checkboxRef}
-      disabled={isFetchingIds}
-      checked={isIndeterminate ? 'indeterminate' : isAllLoadedSelected}
-      onCheckedChange={handleToggle}
-      className={cn('h-4 w-4', className)}
-    />
+    <span className={cn("inline-block", className)}>
+      {isFetchingIds ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="h-4 w-4 flex items-center justify-center relative">
+              <div className="absolute inset-0 rounded-sm bg-muted-foreground/10 animate-pulse" />
+              <Loader2 className="h-3 w-3 animate-spin text-muted-foreground relative z-10" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="text-xs">
+            {fetchProgress.fetched > 0 
+              ? `Loading emails... (${fetchProgress.fetched} found)`
+              : 'Loading emails...'
+            }
+          </TooltipContent>
+        </Tooltip>
+      ) : (
+        <Checkbox
+          ref={checkboxRef}
+          disabled={isFetchingIds}
+          checked={isIndeterminate ? 'indeterminate' : isAllLoadedSelected}
+          onCheckedChange={handleToggle}
+          className="h-4 w-4 transition-all duration-200 hover:scale-105"
+        />
+      )}
+    </span>
   );
 }
