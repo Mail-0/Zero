@@ -15,7 +15,11 @@ export function processEmailHtml({ html, shouldLoadImages, theme }: ProcessEmail
 
   const sanitizeConfig: sanitizeHtml.IOptions = {
     allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'title']),
-    allowedAttributes: false,
+    allowedAttributes: {
+      img: ['src', 'alt'],
+      a: ['href', 'target', 'rel'],
+      '*': ['style', 'class', 'width', 'height', 'colspan', 'rowspan'],
+    },
     allowedSchemes: shouldLoadImages
       ? ['http', 'https', 'mailto', 'tel', 'data', 'cid', 'blob']
       : ['http', 'https', 'mailto', 'tel', 'cid'],
@@ -112,12 +116,6 @@ export function processEmailHtml({ html, shouldLoadImages, theme }: ProcessEmail
 
       table {
         border-collapse: collapse;
-      }
-
-      .gmail_quote {
-        margin: 1em 0;
-        padding-left: 1em;
-        border-left: 1px solid ${theme === 'dark' ? '#666' : '#ccc'};
       }
 
       ::selection {
