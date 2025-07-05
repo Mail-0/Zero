@@ -152,7 +152,7 @@ export function NavUser() {
       success: () => 'Signed out successfully!',
       error: 'Error signing out',
       async finally() {
-        await handleClearCache();
+        // await handleClearCache();
         window.location.href = '/login';
       },
     });

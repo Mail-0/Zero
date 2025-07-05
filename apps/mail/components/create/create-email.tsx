@@ -18,6 +18,7 @@ import { X } from '../icons/icons';
 import posthog from 'posthog-js';
 import { toast } from 'sonner';
 import './prosemirror.css';
+import type { Attachment } from '@/types';
 
 // Define the draft type to include CC and BCC fields
 type DraftType = {
@@ -27,7 +28,10 @@ type DraftType = {
   to?: string[];
   cc?: string[];
   bcc?: string[];
+  attachments?: File[]
 };
+
+
 
 // Define the connection type
 type Connection = {
@@ -101,9 +105,9 @@ export function CreateEmail({
       : '';
 
     await sendEmail({
-      to: data.to.map((email) => ({ email, name: email.split('@')[0] || email })),
-      cc: data.cc?.map((email) => ({ email, name: email.split('@')[0] || email })),
-      bcc: data.bcc?.map((email) => ({ email, name: email.split('@')[0] || email })),
+      to: data.to.map((email) => ({ email, name: email?.split('@')[0] || email })),
+      cc: data.cc?.map((email) => ({ email, name: email?.split('@')[0] || email })),
+      bcc: data.bcc?.map((email) => ({ email, name: email?.split('@')[0] || email })),
       subject: data.subject,
       message: data.message + zeroSignature,
       attachments: await serializeFiles(data.attachments),
@@ -144,12 +148,33 @@ export function CreateEmail({
   // Cast draft to our extended type that includes CC and BCC
   const typedDraft = draft as unknown as DraftType;
 
+
   const handleDialogClose = (open: boolean) => {
     setIsComposeOpen(open ? 'true' : null);
     if (!open) {
       setDraftId(null);
     }
   };
+
+  const base64ToFile = (base64: string, filename: string, mimeType: string): File | null => {
+    try {
+      const byteString = atob(base64);
+      const byteArray = new Uint8Array(byteString.length);
+      for (let i = 0; i < byteString.length; i++) {
+        byteArray[i] = byteString.charCodeAt(i);
+      }
+      return new File([byteArray], filename, { type: mimeType });
+    } catch (error) {
+      console.error('Failed to convert base64 to file', error)
+      return null;
+    }
+  }
+
+  // convert the attachments into File[]
+  const files: File[] = ((typedDraft?.attachments as Attachment[] | undefined) || [])
+  .map((att: Attachment) => base64ToFile(att.body, att.filename, att.mimeType))
+  .filter((file): file is File => file !== null);
+
 
   return (
     <>
@@ -196,6 +221,7 @@ export function CreateEmail({
                 setIsComposeOpen(null);
                 setDraftId(null);
               }}
+              initialAttachments={files}
               initialSubject={typedDraft?.subject || initialSubject}
               autofocus={false}
               settingsLoading={settingsLoading}

@@ -56,6 +56,7 @@ import { Badge } from '../ui/badge';
 import { format } from 'date-fns';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
+import { cleanHtml } from '@/lib/email-utils';
 import { toast } from 'sonner';
 
 function escapeHtml(text: string): string {
@@ -1604,8 +1605,10 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 <Printer className="fill-iconLight dark:fill-iconDark mr-2 h-4 w-4" />
                                 {m['common.mailDisplay.print']()}
                               </DropdownMenuItem>
+                              {(emailData.attachments?.length ?? 0) > 0 && (
                               <DropdownMenuItem
                                 disabled={!emailData.attachments?.length}
+                                className={!emailData.attachments?.length ? "data-[disabled]:pointer-events-auto" : ""}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   e.preventDefault();
@@ -1618,6 +1621,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 <HardDriveDownload className="fill-iconLight dark:text-iconDark dark:fill-iconLight mr-2 h-4 w-4" />
                                 Download All Attachments
                               </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>

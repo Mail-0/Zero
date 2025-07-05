@@ -104,12 +104,12 @@ const horizontalRule = HorizontalRule.configure({
 const starterKit = StarterKit.configure({
   bulletList: {
     HTMLAttributes: {
-      class: cx('list-disc list-outside leading-3 -mt-2'),
+      class: cx('list-disc list-outside leading-2 -mt-2'),
     },
   },
   orderedList: {
     HTMLAttributes: {
-      class: cx('list-decimal list-outside leading-3 -mt-2'),
+      class: cx('list-decimal list-outside leading-2 -mt-2'),
     },
   },
   listItem: {
@@ -119,7 +119,13 @@ const starterKit = StarterKit.configure({
   },
   blockquote: {
     HTMLAttributes: {
-      class: cx('border-l-4 border-primary'),
+      class: cx('border-l-2 border-primary'),
+    },
+  },
+  heading: {
+    levels: [1, 2, 3],
+    HTMLAttributes: {
+      class: cx('text-primary'),
     },
   },
   codeBlock: {

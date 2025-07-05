@@ -13,7 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Check, Command, Loader, Paperclip, Plus, X as XIcon } from 'lucide-react';
+
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { Check, Command, Loader, Paperclip, Plus, Type, X as XIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TextEffect } from '@/components/motion-primitives/text-effect';
 import { ImageCompressionSettings } from './image-compression-settings';
@@ -40,9 +42,11 @@ import { EditorContent } from '@tiptap/react';
 import { useForm } from 'react-hook-form';
 import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
+import { Toolbar } from './toolbar';
 import pluralize from 'pluralize';
 import { toast } from 'sonner';
 import { z } from 'zod';
+const shortcodeRegex = /:([a-zA-Z0-9_+-]+):/g;
 
 type ThreadContent = {
   from: string;
@@ -77,8 +81,13 @@ interface EmailComposerProps {
 }
 
 const isValidEmail = (email: string): boolean => {
-  const emailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  return emailRegex.test(email);
+  // for format like test@example.com
+  const simpleEmailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+  // for format like name <test@example.com>
+  const displayNameEmailRegex = /^.+\s*<\s*[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\s*>$/;
+
+  return simpleEmailRegex.test(email) || displayNameEmailRegex.test(email);
 };
 
 const schema = z.object({
@@ -142,7 +151,7 @@ export function EmailComposer({
   const [imageQuality, setImageQuality] = useState<ImageQuality>(
     settings?.settings?.imageCompression || 'medium',
   );
-
+  const [toggleToolbar, setToggleToolbar] = useState(false);
   const processAndSetAttachments = async (
     filesToProcess: File[],
     quality: ImageQuality,
@@ -691,8 +700,7 @@ export function EmailComposer({
   };
 
   const replaceEmojiShortcodes = (text: string): string => {
-    const shortcodeRegex = /:([a-zA-Z0-9_+-]+):/g;
-
+    if (!text.trim().length || !text.includes(':')) return text;
     return text.replace(shortcodeRegex, (match, shortcode): string => {
       const emoji = gitHubEmojis.find(
         (e) => e.shortcodes.includes(shortcode) || e.name === shortcode,
@@ -737,7 +745,9 @@ export function EmailComposer({
                             {email.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        {email}
+                        <span className="max-w-[50vw] overflow-hidden text-ellipsis whitespace-nowrap md:max-w-[30vw]">
+                          {email}
+                        </span>
                       </span>
                       <button
                         onClick={() => {
@@ -869,7 +879,10 @@ export function EmailComposer({
                                 {email.charAt(0).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
-                            {email}
+                            <span className="max-w-[50vw] overflow-hidden text-ellipsis whitespace-nowrap md:max-w-[30vw]">
+                              {/* for email format: "Display Name" <email@example.com> */}
+                              {email.match(/^"?(.*?)"?\s*<[^>]+>$/)?.[1] ?? email}
+                            </span>
                           </span>
                           <button
                             onClick={() => {
@@ -1289,14 +1302,15 @@ export function EmailComposer({
               aiGeneratedMessage !== null ? 'blur-sm' : '',
             )}
           >
-            <EditorContent editor={editor} className="h-full w-full" />
+            <EditorContent editor={editor} className="h-full w-full max-w-full overflow-x-auto" />
           </div>
         </div>
       </div>
 
       {/* Bottom Actions */}
-      <div className="inline-flex w-full shrink-0 items-center justify-between self-stretch rounded-b-2xl bg-[#FFFFFF] px-3 py-3 outline-white/5 dark:bg-[#202020]">
-        <div className="flex items-center justify-start gap-2">
+      <div className="inline-flex w-full shrink-0 items-end justify-between self-stretch rounded-b-2xl bg-[#FFFFFF] px-3 py-3 outline-white/5 dark:bg-[#202020]">
+        <div className="flex flex-col items-start justify-start gap-2">
+          {toggleToolbar && <Toolbar editor={editor} />}
           <div className="flex items-center justify-start gap-2">
             <Button size={'xs'} onClick={handleSend} disabled={isLoading || settingsLoading}>
               <div className="flex items-center justify-center">
@@ -1442,6 +1456,23 @@ export function EmailComposer({
                 </PopoverContent>
               </Popover>
             )}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    tabIndex={-1}
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setToggleToolbar(!toggleToolbar)}
+                    className={`h-auto w-auto rounded p-1.5 ${toggleToolbar ? 'bg-muted' : 'bg-background'} border`}
+                  >
+                    <Type className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Formatting options</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
         <div className="flex items-start justify-start gap-2">
