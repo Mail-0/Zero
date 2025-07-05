@@ -385,14 +385,11 @@ export function MailLayout() {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { data: session, isPending } = useSession();
-  const { data: connections } = useConnections();
   const prevFolderRef = useRef(folder);
   const { enableScope, disableScope } = useHotkeysContext();
   const { data: activeConnection } = useActiveConnection();
   const { activeFilters, clearAllFilters } = useCommandPalette();
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useQueryState('isCommandPaletteOpen');
-
-  const { data: activeAccount } = useActiveConnection();
+  const [, setIsCommandPaletteOpen] = useQueryState('isCommandPaletteOpen');
 
   useEffect(() => {
     if (prevFolderRef.current !== folder && mail.bulkSelected.length > 0) {
@@ -632,8 +629,8 @@ export function MailLayout() {
             </div>
           )}
 
-          <AISidebar />
-          <AIToggleButton />
+          {activeConnection?.id ? <AISidebar /> : null}
+          {activeConnection?.id ? <AIToggleButton /> : null}
         </ResizablePanelGroup>
       </div>
     </TooltipProvider>

@@ -18,6 +18,7 @@ import type { IGetThreadResponse, MailManager } from '../lib/driver/types';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createSimpleAuth, type SimpleAuth } from '../lib/auth';
 import { connectionToDriver } from '../lib/server-utils';
+import { ToolOrchestrator } from './agent/orchestrator';
 import type { CreateDraftData } from '../lib/schemas';
 import { FOLDERS, parseHeaders } from '../lib/utils';
 import { env, RpcTarget } from 'cloudflare:workers';
@@ -352,7 +353,12 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
             throw new Error('Unauthorized no driver or connectionId [2]');
           }
         }
-        const tools = { ...authTools(this.driver, connectionId), buildGmailSearchQuery };
+        const orchestrator = new ToolOrchestrator(dataStream);
+        const rawTools = {
+          ...(await authTools(this.driver, connectionId, dataStream)),
+          buildGmailSearchQuery,
+        };
+        const tools = orchestrator.processTools(rawTools);
         const processedMessages = await processToolCalls(
           {
             messages: this.messages,
