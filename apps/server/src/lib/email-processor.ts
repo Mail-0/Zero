@@ -47,6 +47,8 @@ export function processEmailHtml({ html, shouldLoadImages, theme }: ProcessEmail
 
   const $ = cheerio.load(sanitized);
 
+  $('title').remove();
+
   $('img[width="1"][height="1"]').remove();
   $('img[width="0"][height="0"]').remove();
 
