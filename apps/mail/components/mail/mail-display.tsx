@@ -77,25 +77,42 @@ function TextSelectionPopover({
   const [selectedText, setSelectedText] = useState('');
   const popoverTriggerRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
+  const selectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { copyToClipboard } = useCopyToClipboard();
 
   const handleSelectionChange = useCallback(() => {
-    const selection = window.getSelection();
-    if (!selection || selection.isCollapsed) {
-      return;
+    if (selectionTimeoutRef.current) {
+      clearTimeout(selectionTimeoutRef.current);
     }
-    try {
-      const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
-      const x = rect.left + rect.width / 2;
-      const y = rect.top;
-      setSelectionCoords({ x, y });
-      setSelectedText(selection.toString().trim());
-    } catch (error) {
-      console.error('Error handling text selection:', error);
-      setSelectionCoords(null);
-      setSelectedText('');
-    }
+
+    selectionTimeoutRef.current = setTimeout(() => {
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed) {
+        setSelectionCoords(null);
+        setSelectedText('');
+        return;
+      }
+      
+      const text = selection.toString().trim();
+      if (!text) {
+        setSelectionCoords(null);
+        setSelectedText('');
+        return;
+      }
+
+      try {
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        const x = rect.left + rect.width / 2;
+        const y = rect.top;
+        setSelectionCoords({ x, y });
+        setSelectedText(text);
+      } catch (error) {
+        console.error('Error handling text selection:', error);
+        setSelectionCoords(null);
+        setSelectedText('');
+      }
+    }, 50); 
   }, []);
 
   //   const handleClickOutside = useCallback((event: MouseEvent) => {
@@ -111,7 +128,6 @@ function TextSelectionPopover({
 
   useEffect(() => {
     document.addEventListener('mouseup', handleSelectionChange);
-    // document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         setSelectionCoords(null);
@@ -120,7 +136,9 @@ function TextSelectionPopover({
     });
     return () => {
       document.removeEventListener('mouseup', handleSelectionChange);
-      //   document.removeEventListener('mousedown', handleClickOutside);
+      if (selectionTimeoutRef.current) {
+        clearTimeout(selectionTimeoutRef.current);
+      }
     };
   }, [handleSelectionChange]);
 
