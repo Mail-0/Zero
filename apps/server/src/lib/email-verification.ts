@@ -41,10 +41,61 @@ const extractIPFromReceived = (received: string): string | null => {
   return null;
 };
 
+// Default timeout for DNS TXT look-ups (in milliseconds)
+const DNS_TIMEOUT_MS = 5000;
+
+// Resolve TXT records with a timeout so that slow DNS responses don't hang the verification pipeline.
+
+const resolveTxtSafe = (hostname: string, timeout = DNS_TIMEOUT_MS): Promise<string[][]> => {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`DNS resolveTxt timeout for ${hostname}`)), timeout);
+    dns.resolveTxt(hostname)
+      .then((records) => {
+        clearTimeout(timer);
+        resolve(records);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
+};
+
+// IPv6 utils
+
+// Expand an IPv6 address to its full 8×16-bit segment representation
+const parseIPv6 = (ip: string): number[] => {
+  // Split around the double-colon (can appear at most once)
+  const [head, tail] = ip.split('::');
+  const headParts = head ? head.split(':') : [];
+  const tailParts = tail ? tail.split(':') : [];
+  const missing = 8 - (headParts.length + tailParts.length);
+  const zeros = Array(Math.max(0, missing)).fill('0');
+  const parts = [...headParts, ...zeros, ...tailParts].map((p) => parseInt(p || '0', 16));
+  if (parts.length !== 8 || parts.some((n) => Number.isNaN(n) || n < 0 || n > 0xffff)) {
+    throw new Error(`Invalid IPv6 address: ${ip}`);
+  }
+  return parts;
+};
+
+const ipv6ToBigInt = (ip: string): bigint => {
+  return parseIPv6(ip).reduce<bigint>((acc, part) => (acc << 16n) + BigInt(part), 0n);
+};
+
+// Check if an IPv6 address belongs to the supplied CIDR range.
+const ipv6CidrMatch = (ip: string, rangeIp: string, prefix = 128): boolean => {
+  if (prefix < 0 || prefix > 128) return false;
+  const ipBig = ipv6ToBigInt(ip);
+  const rangeBig = ipv6ToBigInt(rangeIp);
+  // Build a network mask with the first `prefix` bits set to 1
+  const networkMask = prefix === 0 ? 0n : (((1n << BigInt(prefix)) - 1n) << BigInt(128 - prefix));
+  return (ipBig & networkMask) === (rangeBig & networkMask);
+};
+
 // SPF Validation
 async function validateSPF(domain: string, ip: string): Promise<boolean> {
   try {
-    const txtRecords = await dns.resolveTxt(domain);
+    const txtRecords = await resolveTxtSafe(domain);
     const spfRecord = txtRecords.flat().find(record => record.startsWith('v=spf1'));
     
     if (!spfRecord) return false;
@@ -53,8 +104,9 @@ async function validateSPF(domain: string, ip: string): Promise<boolean> {
     const visited = new Set<string>();
     
     const checkMechanism = async (mech: string, currentDomain: string): Promise<boolean> => {
-      if (visited.has(currentDomain)) return false;
-      visited.add(currentDomain);
+      const visitKey = `${currentDomain}:${mech}`;
+      if (visited.has(visitKey)) return false;
+      visited.add(visitKey);
       
       if (mech === 'all' || mech === '-all' || mech === '~all') return false;
       if (mech === '+all') return true;
@@ -74,16 +126,21 @@ async function validateSPF(domain: string, ip: string): Promise<boolean> {
       }
       
       if (mech.startsWith('ip6:')) {
-        const [ipRange] = mech.slice(4).split('/');
+        const [ipRange, cidr] = mech.slice(4).split('/');
         if (ip.includes(':')) {
-          return ip.toLowerCase().startsWith(ipRange.toLowerCase());
+          const prefix = cidr ? parseInt(cidr, 10) : 128;
+          try {
+            return ipv6CidrMatch(ip, ipRange, prefix);
+          } catch {
+            return false;
+          }
         }
       }
       
       if (mech.startsWith('include:')) {
         const includeDomain = mech.slice(8);
         try {
-          const includeRecords = await dns.resolveTxt(includeDomain);
+          const includeRecords = await resolveTxtSafe(includeDomain);
           const includeSpf = includeRecords.flat().find(r => r.startsWith('v=spf1'));
           if (includeSpf) {
             const includeMechs = includeSpf.split(/\s+/).slice(1);
@@ -127,7 +184,7 @@ async function validateDKIM(rawEmail: string): Promise<boolean> {
     if (algorithm !== 'rsa-sha256') return false;
     
     // Get public key
-    const keyRecord = await dns.resolveTxt(`${selector}._domainkey.${domain}`);
+    const keyRecord = await resolveTxtSafe(`${selector}._domainkey.${domain}`);
     const keyString = keyRecord.flat().join('');
     const pubKeyMatch = keyString.match(/p=([^;]+)/);
     if (!pubKeyMatch) return false;
@@ -167,7 +224,7 @@ async function validateDKIM(rawEmail: string): Promise<boolean> {
 // DMARC Validation
 async function validateDMARC(domain: string): Promise<boolean> {
   try {
-    const txtRecords = await dns.resolveTxt(`_dmarc.${domain}`);
+    const txtRecords = await resolveTxtSafe(`_dmarc.${domain}`);
     const dmarcRecord = txtRecords.flat().find(record => record.startsWith('v=DMARC1'));
     
     if (!dmarcRecord) return false;
@@ -191,7 +248,7 @@ async function validateBIMI(domain: string): Promise<boolean> {
     // Try exact domain first
     console.log(`[BIMI_DEBUG] Checking default._bimi.${domain}`);
     try {
-      const txtRecords = await dns.resolveTxt(`default._bimi.${domain}`);
+      const txtRecords = await resolveTxtSafe(`default._bimi.${domain}`);
       const bimiRecord = txtRecords.flat().find(record => record.includes('v=BIMI1'));
       
       if (bimiRecord) {
@@ -209,7 +266,7 @@ async function validateBIMI(domain: string): Promise<boolean> {
       const parentDomain = domainParts.slice(-2).join('.');
       console.log(`[BIMI_DEBUG] Checking parent domain: default._bimi.${parentDomain}`);
       try {
-        const parentTxtRecords = await dns.resolveTxt(`default._bimi.${parentDomain}`);
+        const parentTxtRecords = await resolveTxtSafe(`default._bimi.${parentDomain}`);
         const parentBimiRecord = parentTxtRecords.flat().find(record => record.includes('v=BIMI1'));
         
         if (parentBimiRecord) {
@@ -344,7 +401,7 @@ async function validateLogo(logoUrl: string, domain: string): Promise<boolean> {
 async function getBIMILogo(domain: string): Promise<string | undefined> {
   try {
     // Try exact domain first
-    const txtRecords = await dns.resolveTxt(`default._bimi.${domain}`);
+    const txtRecords = await resolveTxtSafe(`default._bimi.${domain}`);
     const bimiRecord = txtRecords.flat().find(record => record.includes('v=BIMI1'));
     
     if (bimiRecord) {
@@ -360,7 +417,7 @@ async function getBIMILogo(domain: string): Promise<string | undefined> {
     const domainParts = domain.split('.');
     if (domainParts.length > 2) {
       const parentDomain = domainParts.slice(-2).join('.');
-      const parentTxtRecords = await dns.resolveTxt(`default._bimi.${parentDomain}`);
+      const parentTxtRecords = await resolveTxtSafe(`default._bimi.${parentDomain}`);
       const parentBimiRecord = parentTxtRecords.flat().find(record => record.includes('v=BIMI1'));
       
       if (parentBimiRecord) {
