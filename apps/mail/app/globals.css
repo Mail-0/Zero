@@ -9,6 +9,36 @@
   .text-balance {
     text-wrap: balance;
   }
+  .horizontal-fade-mask {
+    @apply overflow-x-auto;
+    position: relative;
+  }
+  @supports (mask-image: linear-gradient(to right, transparent, black)) or
+    (-webkit-mask-image: linear-gradient(to right, transparent, black)) {
+    .horizontal-fade-mask::before,
+    .horizontal-fade-mask::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      height: 100%;
+      width: 15%;
+      pointer-events: none;
+      background: hsl(var(--panel));
+      z-index: 1;
+    }
+
+    .horizontal-fade-mask::before {
+      left: 0;
+      -webkit-mask-image: linear-gradient(to right, white, transparent);
+      mask-image: linear-gradient(to right, white, transparent);
+    }
+
+    .horizontal-fade-mask::after {
+      right: 0;
+      -webkit-mask-image: linear-gradient(to left, white, transparent);
+      mask-image: linear-gradient(to left, white, transparent);
+    }
+  }
 }
 
 @layer base {
@@ -53,6 +83,7 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
     --icon-color: currentColor;
+    --panel: 0 0% 100%;
   }
 
   .dark {
@@ -89,6 +120,7 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
     --icon-color: currentColor;
+    --panel: 240 3.7% 10.2%;
   }
 }
 

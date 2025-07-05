@@ -14,6 +14,7 @@ import {
   Trash,
   X,
 } from '../icons/icons';
+import { EmptyStateIcon } from '../icons/empty-state-svg';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,6 +39,7 @@ import type { ParsedMessage, Attachment } from '@/types';
 import { MailDisplaySkeleton } from './mail-skeleton';
 import { useTRPC } from '@/providers/query-provider';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { cleanHtml } from '@/lib/email-utils';
 import { Button } from '@/components/ui/button';
 import { useStats } from '@/hooks/use-stats';
 import ReplyCompose from './reply-composer';
@@ -610,7 +612,7 @@ export function ThreadDisplay() {
 
               <div class="email-body">
                 <div class="email-content">
-                  ${escapeHtml(message.decodedBody ?? '') || '<p><em>No email content available</em></p>'}
+                  ${cleanHtml(message.decodedBody ?? '<p><em>No email content available</em></p>')}
                 </div>
               </div>
 
@@ -752,12 +754,7 @@ export function ThreadDisplay() {
         {!id ? (
           <div className="flex h-full items-center justify-center">
             <div className="flex flex-col items-center justify-center gap-2 text-center">
-              <img
-                src={resolvedTheme === 'dark' ? '/empty-state.svg' : '/empty-state-light.svg'}
-                alt="Empty Thread"
-                width={200}
-                height={200}
-              />
+              <EmptyStateIcon width={200} height={200} />
               <div className="mt-5">
                 <p className="text-lg">It's empty here</p>
                 <p className="text-md text-muted-foreground dark:text-white/50">

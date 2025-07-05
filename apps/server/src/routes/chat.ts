@@ -18,6 +18,7 @@ import type { IGetThreadResponse, MailManager } from '../lib/driver/types';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createSimpleAuth, type SimpleAuth } from '../lib/auth';
 import { connectionToDriver } from '../lib/server-utils';
+import { ToolOrchestrator } from './agent/orchestrator';
 import type { CreateDraftData } from '../lib/schemas';
 import { FOLDERS, parseHeaders } from '../lib/utils';
 import { env, RpcTarget } from 'cloudflare:workers';
@@ -352,7 +353,12 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
             throw new Error('Unauthorized no driver or connectionId [2]');
           }
         }
-        const tools = { ...authTools(this.driver, connectionId), buildGmailSearchQuery };
+        const orchestrator = new ToolOrchestrator(dataStream);
+        const rawTools = {
+          ...(await authTools(this.driver, connectionId, dataStream)),
+          buildGmailSearchQuery,
+        };
+        const tools = orchestrator.processTools(rawTools);
         const processedMessages = await processToolCalls(
           {
             messages: this.messages,
@@ -363,7 +369,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
         );
 
         const result = streamText({
-          model: openai('gpt-4o'),
+          model: openai(env.OPENAI_MODEL || 'gpt-4o'),
           messages: processedMessages,
           tools,
           onFinish,
@@ -689,7 +695,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
 
   async buildGmailSearchQuery(query: string) {
     const result = await generateText({
-      model: openai('gpt-4o'),
+      model: openai(env.OPENAI_MODEL || 'gpt-4o'),
       system: GmailSearchAssistantSystemPrompt(),
       prompt: query,
     });
@@ -1242,7 +1248,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
       },
       async (s) => {
         const result = await generateText({
-          model: openai('gpt-4o'),
+          model: openai(env.OPENAI_MODEL || 'gpt-4o'),
           system: GmailSearchAssistantSystemPrompt(),
           prompt: s.query,
         });
@@ -1587,7 +1593,7 @@ const buildGmailSearchQuery = tool({
   }),
   execute: async ({ query }) => {
     const result = await generateObject({
-      model: openai('gpt-4o'),
+      model: openai(env.OPENAI_MODEL || 'gpt-4o'),
       system: GmailSearchAssistantSystemPrompt(),
       prompt: query,
       schema: z.object({

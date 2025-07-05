@@ -24,7 +24,9 @@ export interface ParsedDraft<T = unknown> {
   to?: string[];
   subject?: string;
   content?: string;
-  rawMessage?: T;
+  rawMessage?: {
+    internalDate?: string;
+  };
   cc?: string[];
   bcc?: string[];
 }

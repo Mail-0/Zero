@@ -115,7 +115,7 @@ export function processEmailHtml({ html, shouldLoadImages, theme }: ProcessEmail
       .gmail_quote {
         margin: 1em 0;
         padding-left: 1em;
-        border-left: 1px solid ${theme === 'dark' ? '#000' : '#ccc'};
+        border-left: 1px solid ${theme === 'dark' ? '#666' : '#ccc'};
       }
 
       ::selection {
