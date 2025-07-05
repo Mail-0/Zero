@@ -229,12 +229,15 @@ class ZeroDB extends DurableObject<Env> {
   }
 
   async createNote(userId: string, payload: typeof note.$inferInsert) {
-    return await this.db.insert(note).values({
-      ...payload,
-      userId,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }).returning();
+    return await this.db
+      .insert(note)
+      .values({
+        ...payload,
+        userId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
   }
 
   async updateNote(
@@ -667,7 +670,7 @@ export default class extends WorkerEntrypoint<typeof env> {
   async queue(batch: MessageBatch<any>) {
     const queueName = typeof batch.queue === 'string' ? batch.queue : '';
 
-    if (queueName === 'subscribe-queue') {
+    if (queueName.startsWith('subscribe-queue')) {
       try {
         await Promise.all(
           batch.messages.map(async (msg) => {
@@ -675,7 +678,10 @@ export default class extends WorkerEntrypoint<typeof env> {
             try {
               await enableBrainFunction({ id: connectionId, providerId });
             } catch (error) {
-              console.error(`Failed to enable brain function for connection ${connectionId}:`, error);
+              console.error(
+                `Failed to enable brain function for connection ${connectionId}:`,
+                error,
+              );
             }
           }),
         );
@@ -685,7 +691,7 @@ export default class extends WorkerEntrypoint<typeof env> {
       return;
     }
 
-    if (queueName === 'send-email-queue') {
+    if (queueName.startsWith('send-email-queue')) {
       try {
         await Promise.all(
           batch.messages.map(async (msg) => {
@@ -709,13 +715,12 @@ export default class extends WorkerEntrypoint<typeof env> {
                 console.error(`No payload found for scheduled email ${messageId}`);
                 return;
               }
-              const parsedPayload = JSON.parse(stored);
-              payload = parsedPayload;
+              payload = JSON.parse(stored);
             }
 
             const agent = await getZeroAgent(connectionId);
             try {
-              if ((payload as any).attachments && Array.isArray((payload as any).attachments)) {
+              if (Array.isArray((payload as any).attachments)) {
                 (payload as any).attachments = (payload as any).attachments.map((att: any) =>
                   typeof att?.arrayBuffer === 'function' ? att : toAttachmentFiles([att])[0],
                 );

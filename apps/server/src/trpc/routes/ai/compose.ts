@@ -11,6 +11,7 @@ import { stripHtml } from 'string-strip-html';
 import { openai } from '@ai-sdk/openai';
 import { generateText } from 'ai';
 import { z } from 'zod';
+import { env } from 'cloudflare:workers';
 
 type ComposeEmailInput = {
   prompt: string;
@@ -84,7 +85,7 @@ export async function composeEmail(input: ComposeEmailInput) {
         ];
 
   const { text } = await generateText({
-    model: openai('gpt-4o-mini'),
+    model: openai(env.OPENAI_MINI_MODEL || 'gpt-4o-mini'),
     messages: [
       {
         role: 'system',
@@ -273,7 +274,7 @@ const generateSubject = async (message: string, styleProfile?: WritingStyleMatri
   );
 
   const { text } = await generateText({
-    model: openai('gpt-4o'),
+    model: openai(env.OPENAI_MODEL || 'gpt-4o'),
     messages: [
       {
         role: 'system',

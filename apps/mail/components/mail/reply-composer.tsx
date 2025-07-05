@@ -11,7 +11,7 @@ import { useSession } from '@/lib/auth-client';
 import { serializeFiles } from '@/lib/schemas';
 import { useDraft } from '@/hooks/use-drafts';
 import { useEffect, useState } from 'react';
-import { useTranslations } from 'use-intl';
+import { m } from '@/paraglide/messages';
 import type { Sender } from '@/types';
 import { useQueryState } from 'nuqs';
 import posthog from 'posthog-js';
@@ -37,7 +37,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
   const [mode, setMode] = useQueryState('mode');
   const { enableScope, disableScope } = useHotkeysContext();
   const { data: aliases, isLoading: isLoadingAliases } = useEmailAliases();
-  const t = useTranslations();
+
   const [draftId, setDraftId] = useQueryState('draftId');
   const [threadId] = useQueryState('threadId');
   const [, setActiveReplyId] = useQueryState('activeReplyId');
@@ -226,7 +226,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
       // Reset states
       setMode(null);
       await refetch();
-      toast.success(t('pages.createEmail.emailSent'));
+      toast.success(m['pages.createEmail.emailSent']());
 
       if (isQueuedSendResult(result) && settings?.settings?.undoSendEnabled) {
         const { messageId, sendAt } = result;
@@ -251,7 +251,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
       }
     } catch (error) {
       console.error('Error sending email:', error);
-      toast.error(t('pages.createEmail.failedToSendEmail'));
+      toast.error(m['pages.createEmail.failedToSendEmail']());
     }
   };
 

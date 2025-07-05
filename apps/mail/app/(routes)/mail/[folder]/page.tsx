@@ -1,11 +1,10 @@
-import { Navigate, useLoaderData, useNavigate } from 'react-router';
+import { useLoaderData, useNavigate } from 'react-router';
 import { useTRPC } from '@/providers/query-provider';
 import { MailLayout } from '@/components/mail/mail';
-import { useQuery } from '@tanstack/react-query';
+import { useLabels } from '@/hooks/use-labels';
 import { authProxy } from '@/lib/auth-proxy';
 import { useEffect, useState } from 'react';
 import type { Route } from './+types/page';
-import { Loader2 } from 'lucide-react';
 
 const ALLOWED_FOLDERS = ['inbox', 'draft', 'sent', 'spam', 'bin', 'archive'];
 
@@ -23,20 +22,15 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
 export default function MailPage() {
   const { folder } = useLoaderData<typeof clientLoader>();
   const navigate = useNavigate();
-  const trpc = useTRPC();
-  const [isLabelValid, setIsLabelValid] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLabelValid, setIsLabelValid] = useState<boolean | null>(true);
 
   const isStandardFolder = ALLOWED_FOLDERS.includes(folder);
 
-  const { data: userLabels, isLoading: isLoadingLabels } = useQuery(
-    trpc.labels.list.queryOptions(void 0),
-  );
+  const { data: userLabels, isLoading: isLoadingLabels } = useLabels();
 
   useEffect(() => {
     if (isStandardFolder) {
       setIsLabelValid(true);
-      setIsLoading(false);
       return;
     }
 
@@ -55,7 +49,6 @@ export default function MailPage() {
 
       const labelExists = checkLabelExists(userLabels);
       setIsLabelValid(labelExists);
-      setIsLoading(false);
 
       if (!labelExists) {
         const timer = setTimeout(() => {
@@ -65,17 +58,8 @@ export default function MailPage() {
       }
     } else {
       setIsLabelValid(false);
-      setIsLoading(false);
     }
   }, [folder, userLabels, isLoadingLabels, isStandardFolder, navigate]);
-
-  if (isLoading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <Loader2 className="text-primary h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
 
   if (!isLabelValid) {
     return (

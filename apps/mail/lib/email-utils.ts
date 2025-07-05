@@ -1,8 +1,13 @@
 import * as emailAddresses from 'email-addresses';
 import type { Sender } from '@/types';
+import DOMPurify from 'dompurify';
 import Color from 'color';
 
-export const fixNonReadableColors = (rootElement: HTMLElement, minContrast = 3.5) => {
+export const fixNonReadableColors = (
+  rootElement: HTMLElement,
+  options?: { minContrast?: number; defaultBackground?: string },
+) => {
+  const { minContrast = 3.5, defaultBackground = '#ffffff' } = options || {};
   const elements = Array.from<HTMLElement>(rootElement.querySelectorAll('*'));
   elements.unshift(rootElement);
 
@@ -21,7 +26,7 @@ export const fixNonReadableColors = (rootElement: HTMLElement, minContrast = 3.5
 
     try {
       const textColor = Color(style.color);
-      const effectiveBg = getEffectiveBackgroundColor(el);
+      const effectiveBg = getEffectiveBackgroundColor(el, defaultBackground);
 
       const blendedText =
         textColor.alpha() < 1 ? effectiveBg.mix(textColor, effectiveBg.alpha()) : textColor;
@@ -38,14 +43,14 @@ export const fixNonReadableColors = (rootElement: HTMLElement, minContrast = 3.5
   }
 };
 
-const getEffectiveBackgroundColor = (element: HTMLElement) => {
+const getEffectiveBackgroundColor = (element: HTMLElement, defaultBackground: string) => {
   let current: HTMLElement | null = element;
   while (current) {
     const bg = Color(getComputedStyle(current).backgroundColor);
     if (bg.alpha() >= 1) return bg.rgb();
     current = current.parentElement;
   }
-  return Color('#ffffff');
+  return Color(defaultBackground);
 };
 
 type ListUnsubscribeAction =
@@ -202,4 +207,16 @@ export const wasSentWithTLS = (receivedHeaders: string[]) => {
   }
 
   return false;
+};
+
+// cleans up html string for xss attacks and returns html
+export const cleanHtml = (html: string) => {
+  if (!html) return '<p><em>No email content available</em></p>';
+
+  try {
+    return DOMPurify.sanitize(html);
+  } catch (error) {
+    console.warn('DOMPurify Failed or not Available, falling back to Default HTML ', error);
+    return '<p><em>No email content available</em></p>';
+  }
 };

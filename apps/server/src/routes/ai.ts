@@ -145,7 +145,7 @@ aiRouter.post('/call', async (c) => {
   const driver = connectionToDriver(connection);
 
   const { text } = await generateText({
-    model: openai('gpt-4o'),
+    model: openai(env.OPENAI_MODEL || 'gpt-4o'),
     system: systemPrompt,
     prompt: data.query,
     tools: {
@@ -158,7 +158,7 @@ aiRouter.post('/call', async (c) => {
           console.log('[DEBUG] buildGmailSearchQuery', params);
 
           const result = await generateText({
-            model: openai('gpt-4o'),
+            model: openai(env.OPENAI_MODEL || 'gpt-4o'),
             system: GmailSearchAssistantSystemPrompt(),
             prompt: params.query,
           });

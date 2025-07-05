@@ -1,11 +1,18 @@
-import { activeDriverProcedure, createRateLimiterMiddleware, router } from '../trpc';
+import {
+  activeDriverProcedure,
+  createRateLimiterMiddleware,
+  router,
+  privateProcedure,
+} from '../trpc';
 import { updateWritingStyleMatrix } from '../../services/writing-style-service';
 import { serializedFileSchema } from '../../lib/schemas';
 import { defaultPageSize, FOLDERS, LABELS } from '../../lib/utils';
 import type { DeleteAllSpamResponse, IEmailSendBatch } from '../../types';
 import { getZeroAgent, getZeroDB } from '../../lib/server-utils';
 import { IGetThreadResponseSchema } from '../../lib/driver/types';
+import { processEmailHtml } from '../../lib/email-processor';
 import { env } from 'cloudflare:workers';
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { toAttachmentFiles } from '../../lib/attachments';
 
@@ -38,7 +45,7 @@ export const mailRouter = router({
     .query(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
       const agent = await getZeroAgent(activeConnection.id);
-      return await agent.getThreadFromDB(input.id);
+      return await agent.getThread(input.id);
     }),
   count: activeDriverProcedure
     .output(
@@ -77,24 +84,24 @@ export const mailRouter = router({
         });
         return drafts;
       }
-      if (q) {
-        const threadsResponse = await agent.listThreads({
-          labelIds: labelIds,
-          maxResults: max,
-          pageToken: cursor,
-          query: q,
-          folder,
-        });
-        return threadsResponse;
-      }
-      const folderLabelId = getFolderLabelId(folder);
-      const labelIdsToUse = folderLabelId ? [...labelIds, folderLabelId] : labelIds;
-      const threadsResponse = await agent.getThreadsFromDB({
-        labelIds: labelIdsToUse,
-        max: max,
-        cursor: cursor,
+      //   if (q) {
+      const threadsResponse = await agent.listThreads({
+        labelIds: labelIds,
+        maxResults: max,
+        pageToken: cursor,
+        query: q,
+        folder,
       });
       return threadsResponse;
+      //   }
+      //   const folderLabelId = getFolderLabelId(folder);
+      //   const labelIdsToUse = folderLabelId ? [...labelIds, folderLabelId] : labelIds;
+      //   const threadsResponse = await agent.getThreadsFromDB({
+      //     labelIds: labelIdsToUse,
+      //     max: max,
+      //     cursor: cursor,
+      //   });
+      //   return threadsResponse;
     }),
   markAsRead: activeDriverProcedure
     .input(
@@ -175,8 +182,7 @@ export const mailRouter = router({
       }
 
       const threadResults: PromiseSettledResult<{ messages: { tags: { name: string }[] }[] }>[] =
-
-        await Promise.allSettled(threadIds.map((id) => agent.getThreadFromDB(id)));
+        await Promise.allSettled(threadIds.map((id) => agent.getThread(id)));
 
       let anyStarred = false;
       let processedThreads = 0;
@@ -220,9 +226,7 @@ export const mailRouter = router({
       }
 
       const threadResults: PromiseSettledResult<{ messages: { tags: { name: string }[] }[] }>[] =
-
-        await Promise.allSettled(threadIds.map((id) => agent.getThreadFromDB(id)));
-
+        await Promise.allSettled(threadIds.map((id) => agent.getThread(id)));
 
       let anyImportant = false;
       let processedThreads = 0;
@@ -522,4 +526,32 @@ export const mailRouter = router({
     const agent = await getZeroAgent(activeConnection.id);
     return agent.getEmailAliases();
   }),
+  processEmailContent: privateProcedure
+    .input(
+      z.object({
+        html: z.string(),
+        shouldLoadImages: z.boolean(),
+        theme: z.enum(['light', 'dark']),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const { processedHtml, hasBlockedImages } = processEmailHtml({
+          html: input.html,
+          shouldLoadImages: input.shouldLoadImages,
+          theme: input.theme,
+        });
+
+        return {
+          processedHtml,
+          hasBlockedImages,
+        };
+      } catch (error) {
+        console.error('Error processing email content:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to process email content',
+        });
+      }
+    }),
 });
