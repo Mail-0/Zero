@@ -60,6 +60,7 @@ import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Categories } from './mail';
 import { useAtom } from 'jotai';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const Thread = memo(
   function Thread({
@@ -411,6 +412,26 @@ const Thread = memo(
             <div
               className={`relative flex w-full items-center justify-between gap-4 px-4 ${displayUnread ? '' : 'opacity-60'}`}
             >
+              {/* Selection checkbox */}
+              <Checkbox
+                className="mr-2 h-4 w-4"
+                checked={isMailBulkSelected}
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+                onCheckedChange={() => {
+                  if (!idToUse) return;
+                  setMail((prev) => {
+                    const already = prev.bulkSelected.includes(idToUse);
+                    return {
+                      ...prev,
+                      bulkSelected: already
+                        ? prev.bulkSelected.filter((id) => id !== idToUse)
+                        : [...prev.bulkSelected, idToUse],
+                    };
+                  });
+                }}
+              />
               <div>
                 <Avatar
                   className={cn(
