@@ -52,7 +52,7 @@ const CommandDialog = ({
           {/* ESC Button */}
           <div className="flex w-full justify-start sm:max-w-2xl md:max-w-3xl">
             <button
-              onClick={onEscClick}
+              onClick={showEscButton && onEscClick ? onEscClick : undefined}
               className="dark:bg-panelDark flex items-center gap-1 rounded-lg bg-[#F0F0F0] px-2 py-1.5 hover:bg-[#E0E0E0] dark:hover:bg-[#202020]"
             >
               {currentView === 'main' ? (
@@ -69,7 +69,7 @@ const CommandDialog = ({
           </div>
 
           {/* Command Palette Content */}
-          <div className="dark:bg-panelDark w-full overflow-hidden rounded-xl border-none bg-white p-0 max-w-md sm:max-w-lg lg:max-w-[750px]">
+          <div className="dark:bg-panelDark w-full max-w-md overflow-hidden rounded-xl border-none bg-white p-0 sm:max-w-lg lg:max-w-[750px]">
             <Command
               shouldFilter={shouldFilter}
               className="[&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]]:px-2 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-3 [&_[cmdk-item]]:py-2"
@@ -81,7 +81,7 @@ const CommandDialog = ({
       ) : (
         <DialogContent
           showOverlay={true}
-          className="dark:bg-panelDark w-full overflow-hidden rounded-xl border-none bg-white p-0 max-w-md sm:max-w-lg lg:max-w-[750px] [&>button:last-child]:hidden"
+          className="dark:bg-panelDark w-full max-w-md overflow-hidden rounded-xl border-none bg-white p-0 sm:max-w-lg lg:max-w-[750px] [&>button:last-child]:hidden"
         >
           <Command
             shouldFilter={shouldFilter}
@@ -99,7 +99,7 @@ const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
-  <div className="border-input flex w-full items-center border-none px-5" cmdk-input-wrapper="">
+  <div className="border-input flex w-full items-center border-none px-5">
     <Search className="fill-iconLight text-muted-foreground/80 relative top-0.5 me-3 h-4 w-4" />
     <CommandPrimitive.Input
       ref={ref}

@@ -611,6 +611,7 @@ export function MailLayout() {
                             <button
                               onClick={() => removeFilter(filter.id)}
                               className="ml-1 hover:text-red-500"
+                              aria-label={`Remove ${filter.display} filter`}
                             >
                               <XIcon className="h-3 w-3 text-neutral-400" />
                             </button>
@@ -634,6 +635,7 @@ export function MailLayout() {
                         clearAllFilters();
                       }}
                       className="flex-shrink-0 text-xs text-neutral-500 transition-colors duration-200 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                      aria-label="Clear all filters"
                     >
                       Clear
                     </button>

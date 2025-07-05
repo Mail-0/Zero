@@ -11,6 +11,7 @@
   float: left;
   height: 0;
   pointer-events: none;
+  position: fixed; /* Ensure multiline placeholder works */
 }
 
 /* Custom image styles */

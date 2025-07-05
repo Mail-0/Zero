@@ -1480,7 +1480,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 ref={triggerRef}
                               >
                                 <p className="text-muted-foreground text-xs underline hover:text-neutral-900 dark:text-[#8C8C8C] dark:hover:text-neutral-300">
-                                  {"Details"}
+                                  {m['common.mailDisplay.details']()} 
                                 </p>
                               </button>
                             </PopoverTrigger>

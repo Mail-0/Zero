@@ -188,7 +188,6 @@ const useComposeEditor = ({
   autofocus?: boolean;
 }) => {
   const extensions = [
-    ...defaultExtensions.filter((ext: any) => ext?.name !== 'placeholder'),
     Markdown,
     Image,
     FileHandler.configure({
@@ -272,6 +271,7 @@ const useComposeEditor = ({
     //       }),
     //     ]
     //   : []),
+    ...defaultExtensions, // Dont move this up. TipTap is not replacing the defaultExtensions, it applies the first occurrence of an extension with the same name
   ];
 
   return useEditor({

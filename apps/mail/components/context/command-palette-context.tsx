@@ -935,7 +935,6 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           groupTitle = (m as any)[translationKey]() || groupKey;
         } catch {}
 
-        console.log(items);
         result.push({
           group: groupTitle,
           items,
