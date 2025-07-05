@@ -6,7 +6,6 @@ import {
   getMainSearchTerm,
   parseNaturalLanguageSearch,
 } from '@/lib/utils';
-import { EmptyStateIcon } from '../icons/empty-state-svg';
 import {
   Archive2,
   ExclamationCircle,
@@ -24,18 +23,20 @@ import {
   useState,
   type ComponentProps,
 } from 'react';
+import { useIsFetching, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
 import { focusedIndexAtom, useMailNavigation } from '@/hooks/use-mail-navigation';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { MailSelectMode, ParsedMessage, ThreadProps } from '@/types';
+import type { ParsedDraft } from '../../../server/src/lib/driver/types';
 import { ThreadContextMenu } from '@/components/context/thread-context';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
-import { useIsFetching, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useMail, type Config } from '@/components/mail/use-mail';
 import { type ThreadDestination } from '@/lib/thread-actions';
 import { useThread, useThreads } from '@/hooks/use-threads';
 import { useSearchValue } from '@/hooks/use-search-value';
+import { EmptyStateIcon } from '../icons/empty-state-svg';
 import { highlightText } from '@/lib/email-utils.client';
 import { useHotkeysContext } from 'react-hotkeys-hook';
 import { AnimatePresence, motion } from 'motion/react';
@@ -59,7 +60,6 @@ import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Categories } from './mail';
 import { useAtom } from 'jotai';
-import type { ParsedDraft } from '../../../server/src/lib/driver/types';
 
 const Thread = memo(
   function Thread({
@@ -81,85 +81,76 @@ const Thread = memo(
     const [, setActiveReplyId] = useQueryState('activeReplyId');
     const [focusedIndex, setFocusedIndex] = useAtom(focusedIndexAtom);
 
-    // const latestReceivedMessage = useMemo(() => {
-    //   if (!getThreadData?.messages) return getThreadData?.latest;
+    const { latestMessage, idToUse, cleanName } = useMemo(() => {
+      const latestMessage = getThreadData?.latest;
+      const idToUse = latestMessage?.threadId ?? latestMessage?.id;
+      const cleanName = latestMessage?.sender?.name
+        ? latestMessage.sender.name.trim().replace(/^['"]|['"]$/g, '')
+        : '';
 
-    //   const nonDraftMessages = getThreadData.messages.filter((msg) => !msg.isDraft);
-    //   if (nonDraftMessages.length === 0) return getThreadData?.latest;
-
-    //   return (
-    //     nonDraftMessages.sort((a, b) => {
-    //       const dateA = new Date(a.receivedOn).getTime();
-    //       const dateB = new Date(b.receivedOn).getTime();
-    //       return dateB - dateA;
-    //     })[0] || getThreadData?.latest
-    //   );
-    // }, [getThreadData?.messages, getThreadData?.latest]);
-
-    const latestMessage = getThreadData?.latest;
-    const idToUse = useMemo(() => latestMessage?.threadId ?? latestMessage?.id, [latestMessage]);
+      return { latestMessage, idToUse, cleanName };
+    }, [getThreadData?.latest]);
     const { data: settingsData } = useSettings();
     const queryClient = useQueryClient();
 
-    // Check if thread has notes
-    const { data: threadNotes } = useThreadNotes(idToUse || '');
-    const hasNotes = useMemo(() => {
-      return (threadNotes?.notes && threadNotes.notes.length > 0) || false;
-    }, [threadNotes?.notes]);
+    // // Check if thread has notes
+    // const { data: threadNotes } = useThreadNotes(idToUse || '');
+    // const hasNotes = useMemo(() => {
+    //   return (threadNotes?.notes && threadNotes.notes.length > 0) || false;
+    // }, [threadNotes?.notes]);
 
     const optimisticState = useOptimisticThreadState(idToUse ?? '');
 
-    const displayStarred = useMemo(() => {
-      if (optimisticState.optimisticStarred !== null) {
-        return optimisticState.optimisticStarred;
-      }
-      return getThreadData?.latest?.tags?.some((tag) => tag.name === 'STARRED') ?? false;
-    }, [optimisticState.optimisticStarred, getThreadData?.latest?.tags]);
+    const { displayStarred, displayImportant, displayUnread, optimisticLabels } = useMemo(() => {
+      const displayStarred =
+        optimisticState.optimisticStarred !== null
+          ? optimisticState.optimisticStarred
+          : (getThreadData?.latest?.tags?.some((tag) => tag.name === 'STARRED') ?? false);
 
-    const displayImportant = useMemo(() => {
-      if (optimisticState.optimisticImportant !== null) {
-        return optimisticState.optimisticImportant;
-      }
-      return getThreadData?.latest?.tags?.some((tag) => tag.name === 'IMPORTANT') ?? false;
-    }, [optimisticState.optimisticImportant, getThreadData?.latest?.tags]);
+      const displayImportant =
+        optimisticState.optimisticImportant !== null
+          ? optimisticState.optimisticImportant
+          : (getThreadData?.latest?.tags?.some((tag) => tag.name === 'IMPORTANT') ?? false);
 
-    const displayUnread = useMemo(() => {
-      if (optimisticState.optimisticRead !== null) {
-        return !optimisticState.optimisticRead;
-      }
-      return getThreadData?.hasUnread ?? false;
-    }, [optimisticState.optimisticRead, getThreadData?.hasUnread]);
+      const displayUnread =
+        optimisticState.optimisticRead !== null
+          ? !optimisticState.optimisticRead
+          : (getThreadData?.hasUnread ?? false);
 
-    const optimisticLabels = useMemo(() => {
-      if (!getThreadData?.labels) return [];
+      let labels: { id: string; name: string }[] = [];
+      if (getThreadData?.labels) {
+        labels = [...getThreadData.labels];
+        const hasStarredLabel = labels.some((label) => label.name === 'STARRED');
 
-      let labels = [...getThreadData.labels];
-      const hasStarredLabel = labels.some((label) => label.name === 'STARRED');
+        if (optimisticState.optimisticStarred !== null) {
+          if (optimisticState.optimisticStarred && !hasStarredLabel) {
+            labels.push({ id: 'starred-optimistic', name: 'STARRED' });
+          } else if (!optimisticState.optimisticStarred && hasStarredLabel) {
+            labels = labels.filter((label) => label.name !== 'STARRED');
+          }
+        }
 
-      if (optimisticState.optimisticStarred !== null) {
-        if (optimisticState.optimisticStarred && !hasStarredLabel) {
-          labels.push({ id: 'starred-optimistic', name: 'STARRED' });
-        } else if (!optimisticState.optimisticStarred && hasStarredLabel) {
-          labels = labels.filter((label) => label.name !== 'STARRED');
+        if (optimisticState.optimisticLabels) {
+          labels = labels.filter(
+            (label) => !optimisticState.optimisticLabels.removedLabelIds.includes(label.id),
+          );
+
+          optimisticState.optimisticLabels.addedLabelIds.forEach((labelId) => {
+            if (!labels.some((label) => label.id === labelId)) {
+              labels.push({ id: labelId, name: labelId });
+            }
+          });
         }
       }
 
-      if (optimisticState.optimisticLabels) {
-        labels = labels.filter(
-          (label) => !optimisticState.optimisticLabels.removedLabelIds.includes(label.id),
-        );
-
-        optimisticState.optimisticLabels.addedLabelIds.forEach((labelId) => {
-          if (!labels.some((label) => label.id === labelId)) {
-            labels.push({ id: labelId, name: labelId });
-          }
-        });
-      }
-
-      return labels;
+      return { displayStarred, displayImportant, displayUnread, optimisticLabels: labels };
     }, [
-      getThreadData?.labels,
       optimisticState.optimisticStarred,
+      optimisticState.optimisticImportant,
+      optimisticState.optimisticRead,
+      getThreadData?.latest?.tags,
+      getThreadData?.hasUnread,
+      getThreadData?.labels,
       optimisticState.optimisticLabels,
     ]);
 
@@ -276,15 +267,15 @@ const Thread = memo(
 
     const isMailBulkSelected = idToUse ? mailState.bulkSelected.includes(idToUse) : false;
 
-    const isFolderInbox = folder === FOLDERS.INBOX || !folder;
-    const isFolderSpam = folder === FOLDERS.SPAM;
-    const isFolderSent = folder === FOLDERS.SENT;
-    const isFolderBin = folder === FOLDERS.BIN;
-
-    const cleanName = useMemo(() => {
-      if (!latestMessage?.sender?.name) return '';
-      return latestMessage.sender.name.trim().replace(/^['"]|['"]$/g, '');
-    }, [latestMessage?.sender?.name]);
+    const { isFolderInbox, isFolderSpam, isFolderSent, isFolderBin } = useMemo(
+      () => ({
+        isFolderInbox: folder === FOLDERS.INBOX || !folder,
+        isFolderSpam: folder === FOLDERS.SPAM,
+        isFolderSent: folder === FOLDERS.SENT,
+        isFolderBin: folder === FOLDERS.BIN,
+      }),
+      [folder],
+    );
 
     // Check if thread has a draft
     const hasDraft = useMemo(() => {
@@ -294,9 +285,7 @@ const Thread = memo(
     const content =
       latestMessage && getThreadData ? (
         <div
-          className={cn(
-            'select-none border-b md:my-1 md:border-none',
-          )}
+          className={cn('select-none border-b md:my-1 md:border-none')}
           onClick={onClick ? onClick(latestMessage) : undefined}
           onMouseEnter={() => {
             window.dispatchEvent(new CustomEvent('emailHover', { detail: { id: idToUse } }));
@@ -419,7 +408,9 @@ const Thread = memo(
               ) : null}
             </div>
 
-            <div className={`relative flex w-full items-center justify-between gap-4 px-4 ${displayUnread ? '' : 'opacity-60'}`}>
+            <div
+              className={`relative flex w-full items-center justify-between gap-4 px-4 ${displayUnread ? '' : 'opacity-60'}`}
+            >
               <div>
                 <Avatar
                   className={cn(
@@ -539,11 +530,11 @@ const Thread = memo(
                           <TooltipContent className="p-1 text-xs">Draft</TooltipContent>
                         </Tooltip>
                       ) : null}
-                      {hasNotes ? (
+                      {/* {hasNotes ? (
                         <span className="inline-flex items-center">
                           <StickyNote className="h-3 w-3 fill-amber-500 stroke-amber-500 dark:fill-amber-400 dark:stroke-amber-400" />
                         </span>
-                      ) : null}
+                      ) : null} */}
                       <MailLabels labels={optimisticLabels} />
                     </div>
                     {latestMessage.receivedOn ? (
@@ -740,8 +731,10 @@ export const MailList = memo(
       useThreads();
     const trpc = useTRPC();
     const isFetchingMail = useIsFetching({ queryKey: trpc.mail.get.queryKey() }) > 0;
-
     const itemsRef = useRef(items);
+    const parentRef = useRef<HTMLDivElement>(null);
+    const vListRef = useRef<VListHandle>(null);
+
     useEffect(() => {
       itemsRef.current = items;
     }, [items]);
@@ -777,9 +770,6 @@ export const MailList = memo(
       window.addEventListener('refreshMailList', handleRefresh);
       return () => window.removeEventListener('refreshMailList', handleRefresh);
     }, [refetch]);
-
-    const parentRef = useRef<HTMLDivElement>(null);
-    const vListRef = useRef<VListHandle>(null);
 
     const handleNavigateToThread = useCallback(
       (threadId: string | null) => {
@@ -931,7 +921,7 @@ export const MailList = memo(
 
     const filteredItems = useMemo(() => items.filter((item) => item.id), [items]);
 
-    const Comp = folder === FOLDERS.DRAFT ? Draft : Thread;
+    const Comp = useMemo(() => (folder === FOLDERS.DRAFT ? Draft : Thread), [folder]);
 
     const vListRenderer = useCallback(
       (index: number) => {
@@ -956,6 +946,7 @@ export const MailList = memo(
         );
       },
       [
+        folder,
         filteredItems,
         focusedIndex,
         keyboardActive,

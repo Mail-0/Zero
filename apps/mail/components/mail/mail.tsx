@@ -388,12 +388,11 @@ export function MailLayout() {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { data: session, isPending } = useSession();
-  const { data: connections } = useConnections();
   const prevFolderRef = useRef(folder);
   const { enableScope, disableScope } = useHotkeysContext();
   const { data: activeConnection } = useActiveConnection();
   const { activeFilters, clearAllFilters, removeFilter } = useCommandPalette();
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useQueryState('isCommandPaletteOpen');
+  const [, setIsCommandPaletteOpen] = useQueryState('isCommandPaletteOpen');
   const [, setCommandPaletteView] = useQueryState('commandPaletteView');
 
   const { data: activeAccount } = useActiveConnection();
@@ -689,8 +688,8 @@ export function MailLayout() {
             </div>
           )}
 
-          <AISidebar />
-          <AIToggleButton />
+          {activeConnection?.id ? <AISidebar /> : null}
+          {activeConnection?.id ? <AIToggleButton /> : null}
         </ResizablePanelGroup>
       </div>
     </TooltipProvider>

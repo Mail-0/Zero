@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Check, Command, Loader, Paperclip, Plus, Type, X as XIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Check, Command, Loader, Paperclip, X as XIcon } from 'lucide-react';
@@ -46,8 +47,7 @@ import { Toolbar } from './toolbar';
 import pluralize from 'pluralize';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-
+const shortcodeRegex = /:([a-zA-Z0-9_+-]+):/g;
 
 type ThreadContent = {
   from: string;
@@ -83,10 +83,10 @@ interface EmailComposerProps {
 
 const isValidEmail = (email: string): boolean => {
   // for format like test@example.com
-  const simpleEmailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/; 
+  const simpleEmailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
   // for format like name <test@example.com>
-  const displayNameEmailRegex = /^.+\s*<\s*[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\s*>$/; 
+  const displayNameEmailRegex = /^.+\s*<\s*[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\s*>$/;
 
   return simpleEmailRegex.test(email) || displayNameEmailRegex.test(email);
 };
@@ -701,8 +701,7 @@ export function EmailComposer({
   };
 
   const replaceEmojiShortcodes = (text: string): string => {
-    const shortcodeRegex = /:([a-zA-Z0-9_+-]+):/g;
-
+    if (!text.trim().length || !text.includes(':')) return text;
     return text.replace(shortcodeRegex, (match, shortcode): string => {
       const emoji = gitHubEmojis.find(
         (e) => e.shortcodes.includes(shortcode) || e.name === shortcode,
@@ -747,7 +746,7 @@ export function EmailComposer({
                             {email.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="max-w-[50vw] md:max-w-[30vw] overflow-hidden text-ellipsis whitespace-nowrap">
+                        <span className="max-w-[50vw] overflow-hidden text-ellipsis whitespace-nowrap md:max-w-[30vw]">
                           {email}
                         </span>
                       </span>
@@ -881,7 +880,7 @@ export function EmailComposer({
                                 {email.charAt(0).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="max-w-[50vw] md:max-w-[30vw] overflow-hidden text-ellipsis whitespace-nowrap">
+                            <span className="max-w-[50vw] overflow-hidden text-ellipsis whitespace-nowrap md:max-w-[30vw]">
                               {/* for email format: "Display Name" <email@example.com> */}
                               {email.match(/^"?(.*?)"?\s*<[^>]+>$/)?.[1] ?? email}
                             </span>
@@ -1413,10 +1412,10 @@ export function EmailComposer({
                                     {file.type.includes('pdf')
                                       ? '📄'
                                       : file.type.includes('excel') ||
-                                        file.type.includes('spreadsheetml')
+                                          file.type.includes('spreadsheetml')
                                         ? '📊'
                                         : file.type.includes('word') ||
-                                          file.type.includes('wordprocessingml')
+                                            file.type.includes('wordprocessingml')
                                           ? '📝'
                                           : '📎'}
                                   </span>
@@ -1475,13 +1474,12 @@ export function EmailComposer({
                     onClick={() => setToggleToolbar(!toggleToolbar)}
                     className={`h-auto w-auto rounded p-1.5 ${toggleToolbar ? 'bg-muted' : 'bg-background'} border`}
                   >
-                  <Type className="h-4 w-4" />
+                    <Type className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Formatting options</TooltipContent>
               </Tooltip>
             </TooltipProvider>
-           
           </div>
         </div>
         <div className="flex items-start justify-start gap-2">

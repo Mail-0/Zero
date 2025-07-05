@@ -8,7 +8,6 @@ import type { Route } from './+types/layout';
 
 export default function MailLayout() {
   return (
-    // <VoiceProvider>
     <HotkeyProviderWrapper>
       <AppSidebar />
       <div className="bg-sidebar dark:bg-sidebar w-full">
@@ -17,6 +16,5 @@ export default function MailLayout() {
       <OnboardingWrapper />
       <NotificationProvider />
     </HotkeyProviderWrapper>
-    // </VoiceProvider>
   );
 }

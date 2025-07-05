@@ -1,6 +1,8 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useAIFullScreen, useAISidebar } from '../ui/ai-sidebar';
+import { VoiceProvider } from '@/providers/voice-provider';
 import useComposeEditor from '@/hooks/use-compose-editor';
 import { useRef, useCallback, useEffect } from 'react';
 import { Markdown } from '@react-email/components';
@@ -9,6 +11,7 @@ import { TextShimmer } from '../ui/text-shimmer';
 import { useThread } from '@/hooks/use-threads';
 import { MailLabels } from '../mail/mail-list';
 import { cn, getEmailLogo } from '@/lib/utils';
+import { VoiceButton } from '../voice-button';
 import { EditorContent } from '@tiptap/react';
 import { CurvedArrow } from '../icons/icons';
 import { Tools } from '../../types/tools';
@@ -185,15 +188,6 @@ const ToolResponse = ({ toolName, result, args }: { toolName: string; result: an
           </div>
         ) : null;
 
-      case Tools.WebSearch:
-        return (
-          <div className="rounded-lg border border-purple-200/40 p-2 dark:border-purple-800/20">
-            <div className="prose dark:prose-invert max-w-none text-sm">
-              <p className="text-sm">{result}</p>
-            </div>
-          </div>
-        );
-
       case Tools.ComposeEmail:
         return result?.newBody ? (
           <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
@@ -204,13 +198,6 @@ const ToolResponse = ({ toolName, result, args }: { toolName: string; result: an
         ) : null;
 
       default:
-        if (result?.success) {
-          return (
-            <div className="text-sm text-green-600 dark:text-green-400">
-              Operation completed successfully
-            </div>
-          );
-        }
         return null;
     }
   };
@@ -262,19 +249,22 @@ export function AIChat({
     }
   }, []);
 
+  useEffect(() => {
+    if (!['submitted', 'streaming'].includes(status)) {
+      scrollToBottom();
+    }
+  }, [status, scrollToBottom]);
+
   const editor = useComposeEditor({
     placeholder: 'Ask Zero to do anything...',
     onLengthChange: () => setInput(editor.getText()),
     onKeydown(event) {
-      // Cmd+0 to toggle the AI sidebar (Added explicitly since TipTap editor doesn't bubble up the event)
       if (event.key === '0' && event.metaKey) {
         return toggleOpen();
       }
 
       if (event.key === 'Enter' && !event.metaKey && !event.shiftKey) {
-        event.preventDefault();
-        handleSubmit(event as unknown as React.FormEvent<HTMLFormElement>);
-        editor.commands.clearContent(true);
+        onSubmit(event as unknown as React.FormEvent<HTMLFormElement>);
       }
     },
   });
@@ -283,11 +273,10 @@ export function AIChat({
     e.preventDefault();
     handleSubmit(e);
     editor.commands.clearContent(true);
+    setTimeout(() => {
+      scrollToBottom();
+    }, 100);
   };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
 
   useEffect(() => {
     if (aiSidebarOpen === 'true') {
@@ -298,7 +287,7 @@ export function AIChat({
   return (
     <div className={cn('flex h-full flex-col', isFullScreen ? 'mx-auto max-w-xl' : '')}>
       <div className="no-scrollbar flex-1 overflow-y-auto" ref={messagesContainerRef}>
-        <div className="min-h-full space-y-4 px-2 py-4">
+        <div className="min-h-full px-2 py-4">
           {chatMessages && !chatMessages.enabled ? (
             <div
               onClick={() => setPricingDialog('true')}
@@ -334,14 +323,18 @@ export function AIChat({
             messages.map((message, index) => {
               const textParts = message.parts.filter((part) => part.type === 'text');
               const toolParts = message.parts.filter((part) => part.type === 'tool-invocation');
-              const toolResultOnlyTools = [Tools.WebSearch];
-              const doesIncludeToolResult = toolParts.some((part) =>
-                toolResultOnlyTools.includes(part.toolInvocation?.toolName as Tools),
+              const streamingTools = [Tools.WebSearch];
+              const doesIncludeStreamingTool = toolParts.some(
+                (part) =>
+                  streamingTools.includes(part.toolInvocation?.toolName as Tools) &&
+                  part.toolInvocation?.result,
               );
               return (
-                <div key={`${message.id}-${index}`} className="flex flex-col gap-2">
+                <div key={`${message.id}-${index}`} className="flex flex-col">
                   {toolParts.map((part, idx) =>
-                    part.toolInvocation && part.toolInvocation.result ? (
+                    part.toolInvocation &&
+                    part.toolInvocation.result &&
+                    !streamingTools.includes(part.toolInvocation.toolName as Tools) ? (
                       <ToolResponse
                         key={idx}
                         toolName={part.toolInvocation.toolName}
@@ -350,7 +343,7 @@ export function AIChat({
                       />
                     ) : null,
                   )}
-                  {!doesIncludeToolResult && textParts.length > 0 && (
+                  {!doesIncludeStreamingTool && textParts.length > 0 && (
                     <p
                       className={cn(
                         'flex w-fit flex-col gap-2 rounded-lg text-sm',
@@ -360,7 +353,37 @@ export function AIChat({
                       )}
                     >
                       {textParts.map(
-                        (part) => part.text && <span key={part.text}>{part.text || ' '}</span>,
+                        (part) =>
+                          part.text && (
+                            <Markdown
+                              markdownCustomStyles={{
+                                h1: {
+                                  fontSize: '1rem',
+                                },
+                                h2: {
+                                  fontSize: '1rem',
+                                },
+                                h3: {
+                                  fontSize: '1rem',
+                                },
+                                h4: {
+                                  fontSize: '1rem',
+                                },
+                                h5: {
+                                  fontSize: '1rem',
+                                },
+                                h6: {
+                                  fontSize: '1rem',
+                                },
+                                p: {
+                                  fontSize: '1rem',
+                                },
+                              }}
+                              key={part.text}
+                            >
+                              {part.text || ' '}
+                            </Markdown>
+                          ),
                       )}
                     </p>
                   )}
@@ -368,7 +391,6 @@ export function AIChat({
               );
             })
           )}
-          <div ref={messagesEndRef} />
 
           {(status === 'submitted' || status === 'streaming') && (
             <div className="flex flex-col gap-2 rounded-lg">
@@ -382,6 +404,7 @@ export function AIChat({
           {(status === 'error' || !!error) && (
             <div className="text-sm text-red-500">Error, please try again later</div>
           )}
+          <div className="h-0 w-0" ref={messagesEndRef} />
         </div>
       </div>
 
@@ -405,7 +428,9 @@ export function AIChat({
             </div>
             <div className="grid">
               <div className="flex justify-end gap-1">
-                {/* <VoiceButton /> */}
+                <VoiceProvider>
+                  <VoiceButton />
+                </VoiceProvider>
                 <button
                   form="ai-chat-form"
                   type="submit"

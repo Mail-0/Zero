@@ -69,8 +69,8 @@ export const useThread = (threadId: string | null, historyId?: string | null) =>
   const [_threadId] = useQueryState('threadId');
   const id = threadId ? threadId : _threadId;
   const trpc = useTRPC();
-  const { data } = useSettings();
-  const { resolvedTheme } = useTheme();
+  //   const { data } = useSettings();
+  //   const { resolvedTheme } = useTheme();
 
   const previousHistoryId = usePrevious(historyId ?? null);
   const queryClient = useQueryClient();
@@ -92,44 +92,44 @@ export const useThread = (threadId: string | null, historyId?: string | null) =>
     ),
   );
 
-  const isTrustedSender = useMemo(
-    () =>
-      !!data?.settings?.externalImages ||
-      !!data?.settings?.trustedSenders?.includes(threadQuery.data?.latest?.sender.email ?? ''),
-    [data?.settings, threadQuery.data?.latest?.sender.email],
-  );
+  //   const isTrustedSender = useMemo(
+  //     () =>
+  //       !!data?.settings?.externalImages ||
+  //       !!data?.settings?.trustedSenders?.includes(threadQuery.data?.latest?.sender.email ?? ''),
+  //     [data?.settings, threadQuery.data?.latest?.sender.email],
+  //   );
 
   const latestDraft = useMemo(() => {
     if (!threadQuery.data?.latest?.id) return undefined;
     return threadQuery.data.messages.findLast((e) => e.isDraft);
   }, [threadQuery]);
 
-  const { mutateAsync: processEmailContent } = useMutation(
-    trpc.mail.processEmailContent.mutationOptions(),
-  );
+  //   const { mutateAsync: processEmailContent } = useMutation(
+  //     trpc.mail.processEmailContent.mutationOptions(),
+  //   );
 
-  const prefetchEmailContent = async (message: ParsedMessage) => {
-    return queryClient.prefetchQuery({
-      queryKey: ['email-content', message.id, isTrustedSender, resolvedTheme],
-      queryFn: async () => {
-        const result = await processEmailContent({
-          html: message.decodedBody ?? '',
-          shouldLoadImages: isTrustedSender,
-          theme: (resolvedTheme as 'light' | 'dark') || 'light',
-        });
+  //   const prefetchEmailContent = async (message: ParsedMessage) => {
+  //     return queryClient.prefetchQuery({
+  //       queryKey: ['email-content', message.id, isTrustedSender, resolvedTheme],
+  //       queryFn: async () => {
+  //         const result = await processEmailContent({
+  //           html: message.decodedBody ?? '',
+  //           shouldLoadImages: isTrustedSender,
+  //           theme: (resolvedTheme as 'light' | 'dark') || 'light',
+  //         });
 
-        return {
-          html: result.processedHtml,
-          hasBlockedImages: result.hasBlockedImages,
-        };
-      },
-    });
-  };
+  //         return {
+  //           html: result.processedHtml,
+  //           hasBlockedImages: result.hasBlockedImages,
+  //         };
+  //       },
+  //     });
+  //   };
 
-  useEffect(() => {
-    if (!threadQuery.data?.latest?.id) return;
-    prefetchEmailContent(threadQuery.data.latest);
-  }, [threadQuery.data?.latest]);
+  //   useEffect(() => {
+  //     if (!threadQuery.data?.latest?.id) return;
+  //     prefetchEmailContent(threadQuery.data.latest);
+  //   }, [threadQuery.data?.latest]);
 
   const isGroupThread = useMemo(() => {
     if (!threadQuery.data?.latest?.id) return false;

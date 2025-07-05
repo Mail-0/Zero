@@ -15,7 +15,7 @@ interface VoiceContextType {
 
   startConversation: (context?: any) => Promise<void>;
   endConversation: () => Promise<void>;
-  requestPermission: () => Promise<void>;
+  requestPermission: () => Promise<boolean>;
   sendContext: (context: any) => void;
 }
 
@@ -29,18 +29,6 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
   const [lastToolCall, setLastToolCall] = useState<string | null>(null);
   const [isOpen, setOpen] = useState(false);
   const [currentContext, setCurrentContext] = useState<any>(null);
-
-  useEffect(() => {
-    if (!session) return;
-
-    navigator.mediaDevices
-      .getUserMedia({ audio: true })
-      .then((stream) => {
-        setHasPermission(true);
-        stream.getTracks().forEach((track) => track.stop());
-      })
-      .catch(() => setHasPermission(false));
-  }, [session]);
 
   const conversation = useConversation({
     onConnect: () => {
@@ -87,15 +75,17 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
       stream.getTracks().forEach((track) => track.stop());
       setHasPermission(true);
       setErrorMessage('');
+      return true;
     } catch {
       setErrorMessage('Microphone access denied. Please enable microphone permissions.');
+      return false;
     }
   };
 
   const startConversation = async (context?: any) => {
     if (!hasPermission) {
-      await requestPermission();
-      if (!hasPermission) return;
+      const result = await requestPermission();
+      if (!result) return;
     }
 
     try {
@@ -110,6 +100,10 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
 
       await conversation.startSession({
         agentId: agentId,
+        onMessage: (message) => {
+          // TODO: Handle message, ideally send it to ai chat agent or show it somewhere on the screen?
+          console.log('message', message);
+        },
         dynamicVariables: {
           user_name: session?.user.name.split(' ')[0] || 'User',
           user_email: session?.user.email || '',
