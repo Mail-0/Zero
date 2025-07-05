@@ -12,11 +12,11 @@
       "vectorize": [
         {
           "binding": "VECTORIZE",
-          "index_name": "threads-vector",
+          "index_name": "threads-vector-staging",
         },
         {
           "binding": "VECTORIZE_MESSAGE",
-          "index_name": "messages-vector",
+          "index_name": "messages-vector-staging",
         },
       ],
       "r2_buckets": [
@@ -157,11 +157,11 @@
       "vectorize": [
         {
           "binding": "VECTORIZE",
-          "index_name": "threads-vector",
+          "index_name": "threads-vector-staging",
         },
         {
           "binding": "VECTORIZE_MESSAGE",
-          "index_name": "messages-vector",
+          "index_name": "messages-vector-staging",
         },
       ],
       "limits": {
