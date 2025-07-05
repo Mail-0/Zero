@@ -1,17 +1,14 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { backgroundQueueAtom, isThreadInBackgroundQueueAtom } from '@/store/backgroundQueue';
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { IGetThreadResponse } from '../../server/src/lib/driver/types';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useTRPC } from '@/providers/query-provider';
 import useSearchLabels from './use-labels-search';
 import { useSession } from '@/lib/auth-client';
 import { useAtom, useAtomValue } from 'jotai';
-import { useSettings } from './use-settings';
 import { usePrevious } from './use-previous';
-import type { ParsedMessage } from '@/types';
 import { useEffect, useMemo } from 'react';
 import { useParams } from 'react-router';
-import { useTheme } from 'next-themes';
 import { useQueryState } from 'nuqs';
 
 export const useThreads = () => {
@@ -32,7 +29,7 @@ export const useThreads = () => {
       {
         initialCursor: '',
         getNextPageParam: (lastPage) => lastPage?.nextPageToken ?? null,
-        staleTime: 60 * 1000 * 60, // 1 minute
+        staleTime: 1000 * 60 * 60, // 1 hour
         refetchOnMount: true,
         refetchIntervalInBackground: true,
       },
