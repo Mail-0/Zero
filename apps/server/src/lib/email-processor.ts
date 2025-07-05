@@ -14,7 +14,7 @@ export function processEmailHtml({ html, shouldLoadImages, theme }: ProcessEmail
   let hasBlockedImages = false;
 
   const sanitizeConfig: sanitizeHtml.IOptions = {
-    allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
+    allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'title']),
     allowedAttributes: false,
     allowedSchemes: shouldLoadImages
       ? ['http', 'https', 'mailto', 'tel', 'data', 'cid', 'blob']
