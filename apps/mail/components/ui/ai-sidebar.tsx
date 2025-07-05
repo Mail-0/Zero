@@ -348,11 +348,10 @@ function AISidebar({ className }: AISidebarProps) {
   const { isPro, track, refetch: refetchBilling } = useBilling();
   const queryClient = useQueryClient();
   const trpc = useTRPC();
-  const [threadId, setThreadId] = useQueryState('threadId');
+  const [threadId] = useQueryState('threadId');
   const { folder } = useParams<{ folder: string }>();
   const { refetch: refetchLabels } = useLabels();
   const [searchValue] = useSearchValue();
-  const { data: session } = useSession();
   const { data: activeConnection } = useActiveConnection();
 
   const agent = useAgent({
@@ -363,7 +362,6 @@ function AISidebar({ className }: AISidebarProps) {
 
   const chatState = useAgentChat({
     agent,
-    initialMessages: [],
     maxSteps: 5,
     body: {
       threadId: threadId ?? undefined,

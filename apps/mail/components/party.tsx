@@ -48,7 +48,7 @@ export const NotificationProvider = () => {
         const { threadIds, type } = JSON.parse(message.data);
         if (type === IncomingMessageType.Mail_Get) {
           const { threadId, result } = JSON.parse(message.data);
-          queryClient.setQueryData(trpc.mail.get.queryKey({ id: threadId }), result);
+          //   queryClient.setQueryData(trpc.mail.get.queryKey({ id: threadId }), result);
         }
       } catch (error) {
         console.error('error parsing party message', error);

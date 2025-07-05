@@ -128,6 +128,7 @@ export const userSettingsSchema = z.object({
   zeroSignature: z.boolean().default(true),
   categories: categoriesSchema.optional(),
   defaultEmailAlias: z.string().optional(),
+  imageCompression: z.enum(['low', 'medium', 'original']).default('medium'),
   autoRead: z.boolean().default(true),
 });
 
@@ -146,4 +147,5 @@ export const defaultUserSettings: UserSettings = {
   autoRead: true,
   defaultEmailAlias: '',
   categories: defaultMailCategories,
+  imageCompression: 'medium',
 };

@@ -16,7 +16,6 @@ import {
   getNoteColorClass,
   getNoteColorStyle,
   formatRelativeTime,
-  formatDate,
   borderToBackgroundColorClass,
   assignOrdersAfterPinnedReorder,
   assignOrdersAfterUnpinnedReorder,
@@ -67,7 +66,6 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useTranslations, useFormatter } from 'use-intl';
 import { useTRPC } from '@/providers/query-provider';
 import { Textarea } from '@/components/ui/textarea';
 import { useMutation } from '@tanstack/react-query';
@@ -75,6 +73,7 @@ import { useThreadNotes } from '@/hooks/use-notes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { m } from '@/paraglide/messages';
 import { CSS } from '@dnd-kit/utilities';
 import type { Note } from '@/types';
 import { cn } from '@/lib/utils';
@@ -103,9 +102,6 @@ function SortableNote({
     useSortable({
       id: note.id,
     });
-
-  const t = useTranslations();
-  const format = useFormatter();
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -138,7 +134,7 @@ function SortableNote({
 
           <div className="mt-2 flex cursor-default items-center text-xs text-[#8C8C8C]">
             <Clock className="mr-1 h-3 w-3" />
-            <span>{formatRelativeTime(note.createdAt, format)}</span>
+            <span>{formatRelativeTime(note.createdAt)}</span>
           </div>
         </div>
 
@@ -168,14 +164,14 @@ function SortableNote({
                 className="text-black focus:bg-white focus:text-black dark:text-white/90 dark:focus:bg-[#202020] dark:focus:text-white"
               >
                 <Edit className="mr-2 h-4 w-4" />
-                <span>{t('common.notes.actions.edit')}</span>
+                <span>{m['common.notes.actions.edit']()}</span>
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={onCopy}
                 className="text-black focus:bg-white focus:text-black dark:text-white/90 dark:focus:bg-[#202020] dark:focus:text-white"
               >
                 <Copy className="mr-2 h-4 w-4" />
-                <span>{t('common.notes.actions.copy')}</span>
+                <span>{m['common.notes.actions.copy']()}</span>
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={onTogglePin}
@@ -184,19 +180,19 @@ function SortableNote({
                 {note.isPinned ? (
                   <>
                     <PinOff className="mr-2 h-4 w-4" />
-                    <span>{t('common.notes.actions.unpin')}</span>
+                    <span>{m['common.notes.actions.unpin']()}</span>
                   </>
                 ) : (
                   <>
                     <Pin className="mr-2 h-4 w-4" />
-                    <span>{t('common.notes.actions.pin')}</span>
+                    <span>{m['common.notes.actions.pin']()}</span>
                   </>
                 )}
               </DropdownMenuItem>
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="text-black focus:bg-white focus:text-black dark:text-white/90 dark:focus:bg-[#202020] dark:focus:text-white">
                   <PaintBucket className="mr-2 h-4 w-4" />
-                  <span>{t('common.notes.actions.changeColor')}</span>
+                  <span>{m['common.notes.actions.changeColor']()}</span>
                 </DropdownMenuSubTrigger>
                 <DropdownMenuPortal>
                   <DropdownMenuSubContent className="dark:bg-panelDark w-48 border-[#E7E7E7] bg-[#FAFAFA] dark:border-[#252525]">
@@ -217,7 +213,7 @@ function SortableNote({
                                     : 'border-border border bg-transparent',
                                 )}
                               />
-                              <span>{t(`common.notes.colors.${color.value}` as any)}</span>
+                              <span>{color.label}</span>
                             </div>
                           </DropdownMenuRadioItem>
                         );
@@ -232,7 +228,7 @@ function SortableNote({
                 className="text-red-600 focus:bg-white focus:text-red-600 dark:text-red-400 dark:focus:bg-[#202020] dark:focus:text-red-400"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                <span>{t('common.notes.actions.delete')}</span>
+                <span>{m['common.notes.actions.delete']()}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -259,7 +255,6 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const t = useTranslations();
   const trpc = useTRPC();
   const { mutateAsync: createNote } = useMutation(trpc.notes.create.mutationOptions());
   const { mutateAsync: updateNote } = useMutation(trpc.notes.update.mutationOptions());
@@ -311,9 +306,9 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
       };
 
       toast.promise(promise(), {
-        loading: t('common.actions.loading'),
-        success: t('common.notes.noteAdded'),
-        error: t('common.notes.errors.failedToAddNote'),
+        loading: m['common.actions.loading'](),
+        success: m['common.notes.noteAdded'](),
+        error: m['common.notes.errors.failedToAddNote'](),
       });
     }
   };
@@ -348,9 +343,9 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
       };
 
       toast.promise(promise(), {
-        loading: t('common.actions.saving'),
-        success: t('common.notes.noteUpdated'),
-        error: t('common.notes.errors.failedToUpdateNote'),
+        loading: m['common.actions.saving'](),
+        success: m['common.notes.noteUpdated'](),
+        error: m['common.notes.errors.failedToUpdateNote'](),
       });
     }
   };
@@ -374,15 +369,15 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
     // TODO: Dialog is bugged? needs to be fixed then implement a confirmation dialog
     const promise = handleDeleteNote(noteId);
     toast.promise(promise, {
-      loading: t('common.actions.loading'),
-      success: t('common.notes.noteDeleted'),
-      error: t('common.notes.errors.failedToDeleteNote'),
+      loading: m['common.actions.loading'](),
+      success: m['common.notes.noteDeleted'](),
+      error: m['common.notes.errors.failedToDeleteNote'](),
     });
   };
 
   const handleCopyNote = (content: string) => {
     navigator.clipboard.writeText(content);
-    toast.success(t('common.notes.noteCopied'));
+    toast.success(m['common.notes.noteCopied']());
   };
 
   const togglePinNote = async (noteId: string, isPinned: boolean) => {
@@ -392,9 +387,9 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
     });
 
     toast.promise(action, {
-      loading: t('common.actions.loading'),
-      success: isPinned ? t('common.notes.noteUnpinned') : t('common.notes.notePinned'),
-      error: t('common.notes.errors.failedToUpdateNote'),
+      loading: m['common.actions.loading'](),
+      success: isPinned ? m['common.notes.noteUnpinned']() : m['common.notes.notePinned'](),
+      error: m['common.notes.errors.failedToUpdateNote'](),
     });
 
     await action;
@@ -410,9 +405,9 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
     });
 
     toast.promise(action, {
-      loading: t('common.actions.loading'),
-      success: t('common.notes.colorChanged'),
-      error: t('common.notes.errors.failedToUpdateNoteColor'),
+      loading: m['common.actions.loading'](),
+      success: m['common.notes.colorChanged'](),
+      error: m['common.notes.errors.failedToUpdateNoteColor'](),
     });
 
     await action;
@@ -449,9 +444,9 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
         const action = reorderNotes({ notes: newNotes });
 
         toast.promise(action, {
-          loading: t('common.actions.loading'),
-          success: t('common.notes.notesReordered'),
-          error: t('common.notes.errors.failedToReorderNotes'),
+          loading: m['common.actions.loading'](),
+          success: m['common.notes.notesReordered'](),
+          error: m['common.notes.errors.failedToReorderNotes'](),
         });
 
         await action;
@@ -470,9 +465,9 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
         const action = reorderNotes({ notes: newNotes });
 
         toast.promise(action, {
-          loading: t('common.actions.loading'),
-          success: t('common.notes.notesReordered'),
-          error: t('common.notes.errors.failedToReorderNotes'),
+          loading: m['common.actions.loading'](),
+          success: m['common.notes.notesReordered'](),
+          error: m['common.notes.errors.failedToReorderNotes'](),
         });
 
         await action;
@@ -531,11 +526,11 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                 {notes.length}
               </span>
             )}
-            <span className="sr-only">{t('common.notes.title')}</span>
+            <span className="sr-only">{m['common.notes.title']()}</span>
           </Button>
         </TooltipTrigger>
         <TooltipContent side="bottom" className="bg-white dark:bg-[#313131]">
-          <p>{t('common.notes.noteCount', { count: notes.length })}</p>
+          <p>{m['common.notes.noteCount']({ count: notes.length })}</p>
         </TooltipContent>
       </Tooltip>
 
@@ -547,7 +542,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
           <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E7E7E7] p-3 dark:border-[#252525]">
             <h3 className="flex items-center text-sm font-medium text-black dark:text-white">
               <StickyNote className="mr-2 h-4 w-4" />
-              {t('common.notes.title')}{' '}
+              {m['common.notes.title']()}{' '}
               {notes.length > 0 && (
                 <Badge variant="outline" className="ml-2">
                   {notes.length}
@@ -561,7 +556,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
               onClick={() => setIsOpen(false)}
             >
               <X className="h-4 w-4 fill-[#9A9A9A]" />
-              <span className="sr-only">{t('common.actions.close')}</span>
+              <span className="sr-only">{m['common.actions.close']()}</span>
             </Button>
           </div>
 
@@ -570,7 +565,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-[#9A9A9A]" />
                 <Input
-                  placeholder={t('common.notes.search')}
+                  placeholder={m['common.notes.search']()}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="border-[#E7E7E7] bg-white pl-8 text-sm text-black placeholder:text-[#797979] focus:outline-none dark:border-[#252525] dark:bg-[#202020] dark:text-white"
@@ -592,10 +587,10 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                     <div className="flex flex-col items-center justify-center py-8 text-center">
                       <StickyNote className="mb-2 h-12 w-12 text-[#8C8C8C] opacity-50" />
                       <p className="text-sm text-black dark:text-white/90">
-                        {t('common.notes.empty')}
+                        {m['common.notes.empty']()}
                       </p>
                       <p className="mb-4 mt-1 max-w-[80%] text-xs text-[#8C8C8C]">
-                        {t('common.notes.emptyDescription')}
+                        {m['common.notes.emptyDescription']()}
                       </p>
                       <Button
                         variant="default"
@@ -604,7 +599,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                         onClick={() => setIsAddingNewNote(true)}
                       >
                         <PlusCircle className="mr-1 h-4 w-4" />
-                        {t('common.notes.addNote')}
+                        {m['common.notes.addNote']()}
                       </Button>
                     </div>
                   ) : (
@@ -613,7 +608,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                         <div className="flex flex-col items-center justify-center py-6 text-center">
                           <AlertCircle className="mb-2 h-10 w-10 text-[#8C8C8C] opacity-50" />
                           <p className="text-sm text-black dark:text-white/90">
-                            {t('common.notes.noMatchingNotes', { query: searchQuery })}
+                            {m['common.notes.noMatchingNotes']({ query: searchQuery })}
                           </p>
                           <Button
                             variant="outline"
@@ -621,7 +616,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                             className="mt-4 border-[#E7E7E7] bg-white text-black dark:border-[#252525] dark:bg-[#313131] dark:text-white/90"
                             onClick={() => setSearchQuery('')}
                           >
-                            {t('common.notes.clearSearch')}
+                            {m['common.notes.clearSearch']()}
                           </Button>
                         </div>
                       ) : (
@@ -631,7 +626,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                               <div className="mb-2 flex items-center">
                                 <Pin className="mr-1 h-3 w-3 text-amber-500" />
                                 <span className="text-muted-foreground text-xs font-medium">
-                                  {t('common.notes.pinnedNotes')}
+                                  {m['common.notes.pinnedNotes']()}
                                 </span>
                               </div>
 
@@ -659,7 +654,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                               {sortedPinnedNotes.length > 0 && sortedUnpinnedNotes.length > 0 && (
                                 <div className="mb-2 flex items-center">
                                   <span className="text-muted-foreground text-xs font-medium">
-                                    {t('common.notes.otherNotes')}
+                                    {m['common.notes.otherNotes']()}
                                   </span>
                                 </div>
                               )}
@@ -706,13 +701,13 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                               onChange={(e) => setNewNoteContent(e.target.value)}
                               onKeyDown={(e) => handleKeyDown(e, 'add')}
                               className="min-h-[20px] resize-none border-none bg-transparent text-black focus:outline-none dark:text-white/90"
-                              placeholder={t('common.notes.addYourNote')}
+                              placeholder={m['common.notes.addYourNote']()}
                             />
 
                             <div className="mt-2 flex flex-wrap items-center justify-between gap-y-2 px-3 py-2">
                               <div className="flex items-center gap-2">
                                 <span className="text-xs text-[#8C8C8C]">
-                                  {t('common.notes.label')}
+                                  {m['common.notes.label']()}
                                 </span>
                                 <div className="flex flex-wrap gap-1.5">
                                   {NOTE_COLORS.map((color) => (
@@ -733,16 +728,14 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                                             selectedColor === color.value &&
                                               'ring-primary ring-2 ring-offset-1',
                                           )}
-                                          aria-label={t(
-                                            `common.notes.colors.${color.value}` as any,
-                                          )}
+                                          aria-label={color.label}
                                         />
                                       </TooltipTrigger>
                                       <TooltipContent
                                         side="bottom"
                                         className="bg-white dark:bg-[#313131]"
                                       >
-                                        {t(`common.notes.colors.${color.value}` as any)}
+                                        {color.label}
                                       </TooltipContent>
                                     </Tooltip>
                                   ))}
@@ -760,7 +753,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                                   setNewNoteContent('');
                                 }}
                               >
-                                {t('common.notes.cancel')}
+                                {m['common.notes.cancel']()}
                               </Button>
                               <Button
                                 variant="default"
@@ -768,7 +761,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                                 onClick={() => void handleAddNote()}
                                 disabled={!newNoteContent.trim()}
                               >
-                                {t('common.notes.save')}
+                                {m['common.notes.save']()}
                               </Button>
                             </div>
                           </div>
@@ -783,7 +776,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                           onClick={() => setIsAddingNewNote(true)}
                         >
                           <PlusCircle className="mr-2 h-4 w-4" />
-                          {t('common.notes.addNote')}
+                          {m['common.notes.addNote']()}
                         </Button>
                       )}
                     </>
@@ -808,7 +801,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
               <div className="dark:bg-panelDark border-t border-[#E7E7E7] bg-[#FAFAFA] p-3 dark:border-[#252525]">
                 <div className="space-y-2">
                   <div className="mb-1 text-xs font-medium text-[#8C8C8C]">
-                    {t('common.notes.editNote')}:
+                    {m['common.notes.editNote']()}:
                   </div>
                   <Textarea
                     ref={textareaRef}
@@ -816,7 +809,7 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                     onChange={(e) => setEditContent(e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e, 'edit')}
                     className="min-h-[100px] resize-none border-[#E7E7E7] bg-[#FFFFFF] text-sm text-black dark:border-[#252525] dark:bg-[#202020] dark:text-white/90"
-                    placeholder={t('common.notes.addYourNote')}
+                    placeholder={m['common.notes.addYourNote']()}
                   />
 
                   <div className="flex justify-end gap-2">
@@ -829,10 +822,10 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
                         setEditContent('');
                       }}
                     >
-                      {t('common.notes.cancel')}
+                      {m['common.notes.cancel']()}
                     </Button>
                     <Button variant="default" size="xs" onClick={() => void handleEditNote()}>
-                      {t('common.actions.saveChanges')}
+                      {m['common.actions.saveChanges']()}
                     </Button>
                   </div>
                 </div>

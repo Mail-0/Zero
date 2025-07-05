@@ -1,11 +1,18 @@
-import { activeDriverProcedure, createRateLimiterMiddleware, router } from '../trpc';
+import {
+  activeDriverProcedure,
+  createRateLimiterMiddleware,
+  router,
+  privateProcedure,
+} from '../trpc';
 import { updateWritingStyleMatrix } from '../../services/writing-style-service';
 import { deserializeFiles, serializedFileSchema } from '../../lib/schemas';
 import { defaultPageSize, FOLDERS, LABELS } from '../../lib/utils';
 import { IGetThreadResponseSchema } from '../../lib/driver/types';
+import { processEmailHtml } from '../../lib/email-processor';
 import type { DeleteAllSpamResponse } from '../../types';
 import { getZeroAgent } from '../../lib/server-utils';
 import { env } from 'cloudflare:workers';
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
 const senderSchema = z.object({
@@ -36,7 +43,7 @@ export const mailRouter = router({
     .query(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
       const agent = await getZeroAgent(activeConnection.id);
-      return await agent.getThreadFromDB(input.id);
+      return await agent.getThread(input.id);
     }),
   count: activeDriverProcedure
     .output(
@@ -75,25 +82,26 @@ export const mailRouter = router({
         });
         return drafts;
       }
+
       type ThreadItem = { id: string; historyId: string | null; $raw?: unknown };
 
-      const threadsResponse: {
-        threads: ThreadItem[];
-        nextPageToken: string | null;
-      } = await agent.listThreads({
+      const threadsResponse = (await agent.listThreads({
         folder,
         query: q,
         maxResults: max,
         pageToken: cursor,
-        labelIds: labelIds,
-      });
+        labelIds,
+      })) as {
+        threads: ThreadItem[];
+        nextPageToken: string | null;
+      };
 
       if (folder === FOLDERS.SNOOZED) {
         const nowTs = Date.now();
         const filtered: ThreadItem[] = [];
 
         await Promise.all(
-          threadsResponse.threads.map(async (t) => {
+          threadsResponse.threads.map(async (t: ThreadItem) => {
             const keyName = `${t.id}__${activeConnection.id}`;
             try {
               const wakeAtIso = await env.snoozed_emails.get(keyName);
@@ -205,7 +213,7 @@ export const mailRouter = router({
       }
 
       const threadResults: PromiseSettledResult<{ messages: { tags: { name: string }[] }[] }>[] =
-        await Promise.allSettled(threadIds.map((id) => agent.getThreadFromDB(id)));
+        await Promise.allSettled(threadIds.map((id) => agent.getThread(id)));
 
       let anyStarred = false;
       let processedThreads = 0;
@@ -249,7 +257,7 @@ export const mailRouter = router({
       }
 
       const threadResults: PromiseSettledResult<{ messages: { tags: { name: string }[] }[] }>[] =
-        await Promise.allSettled(threadIds.map((id) => agent.getThreadFromDB(id)));
+        await Promise.allSettled(threadIds.map((id) => agent.getThread(id)));
 
       let anyImportant = false;
       let processedThreads = 0;
@@ -469,5 +477,33 @@ export const mailRouter = router({
         input.ids.map((threadId) => env.snoozed_emails.delete(`${threadId}__${activeConnection.id}`)),
       );
       return { success: true };
+    }),
+  processEmailContent: privateProcedure
+    .input(
+      z.object({
+        html: z.string(),
+        shouldLoadImages: z.boolean(),
+        theme: z.enum(['light', 'dark']),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const { processedHtml, hasBlockedImages } = processEmailHtml({
+          html: input.html,
+          shouldLoadImages: input.shouldLoadImages,
+          theme: input.theme,
+        });
+
+        return {
+          processedHtml,
+          hasBlockedImages,
+        };
+      } catch (error) {
+        console.error('Error processing email content:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to process email content',
+        });
+      }
     }),
 });

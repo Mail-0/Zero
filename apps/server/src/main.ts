@@ -228,10 +228,15 @@ class ZeroDB extends DurableObject<Env> {
   }
 
   async createNote(userId: string, payload: typeof note.$inferInsert) {
-    return await this.db.insert(note).values({
-      ...payload,
-      userId,
-    });
+    return await this.db
+      .insert(note)
+      .values({
+        ...payload,
+        userId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
   }
 
   async updateNote(
@@ -241,7 +246,10 @@ class ZeroDB extends DurableObject<Env> {
   ): Promise<typeof note.$inferSelect | undefined> {
     const [updated] = await this.db
       .update(note)
-      .set(payload)
+      .set({
+        ...payload,
+        updatedAt: new Date(),
+      })
       .where(and(eq(note.id, noteId), eq(note.userId, userId)))
       .returning();
     return updated;
@@ -659,8 +667,8 @@ export default class extends WorkerEntrypoint<typeof env> {
   }
 
   async queue(batch: MessageBatch<ISubscribeBatch>) {
-    switch (batch.queue) {
-      case 'subscribe-queue': {
+    switch (true) {
+      case batch.queue.startsWith('subscribe-queue'): {
         console.log('batch', batch);
         try {
           await Promise.all(

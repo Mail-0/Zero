@@ -19,15 +19,12 @@ import {
   LockIcon,
   Clock,
 } from '@/components/icons/icons';
-import type { NestedKeyOf, MessageKeys } from 'use-intl';
-import type { IntlMessages } from '@/i18n/config';
 import { MessageSquareIcon } from 'lucide-react';
-
-export type MessageKey = MessageKeys<IntlMessages, NestedKeyOf<IntlMessages>>;
+import { m } from '@/paraglide/messages';
 
 export interface NavItem {
   id?: string;
-  title: MessageKey | (string & {});
+  title: string;
   url: string;
   icon: React.ComponentType<any>;
   badge?: number;
@@ -58,21 +55,21 @@ export const navigationConfig: Record<string, NavConfig> = {
         items: [
           {
             id: 'inbox',
-            title: 'navigation.sidebar.inbox',
+            title: m['navigation.sidebar.inbox'](),
             url: '/mail/inbox',
             icon: Inbox,
             shortcut: 'g + i',
           },
           {
             id: 'drafts',
-            title: 'navigation.sidebar.drafts',
+            title: m['navigation.sidebar.drafts'](),
             url: '/mail/draft',
             icon: Folder,
             shortcut: 'g + d',
           },
           {
             id: 'sent',
-            title: 'navigation.sidebar.sent',
+            title: m['navigation.sidebar.sent'](),
             url: '/mail/sent',
             icon: Plane2,
             shortcut: 'g + t',
@@ -84,27 +81,27 @@ export const navigationConfig: Record<string, NavConfig> = {
         items: [
           {
             id: 'archive',
-            title: 'navigation.sidebar.archive',
+            title: m['navigation.sidebar.archive'](),
             url: '/mail/archive',
             icon: Archive,
             shortcut: 'g + a',
           },
           {
             id: 'snoozed',
-            title: 'navigation.sidebar.snoozed',
+            title: m['navigation.sidebar.snoozed'](),
             url: '/mail/snoozed',
             icon: Clock,
             shortcut: 'g + z',
           },
           {
             id: 'spam',
-            title: 'navigation.sidebar.spam',
+            title: m['navigation.sidebar.spam'](),
             url: '/mail/spam',
             icon: ExclamationCircle,
           },
           {
             id: 'trash',
-            title: 'navigation.sidebar.bin',
+            title: m['navigation.sidebar.bin'](),
             url: '/mail/bin',
             icon: Bin,
           },
@@ -148,51 +145,51 @@ export const navigationConfig: Record<string, NavConfig> = {
         title: 'Settings',
         items: [
           {
-            title: 'common.actions.back',
+            title: m['common.actions.back'](),
             url: '/mail',
             icon: ArrowLeft,
             isBackButton: true,
           },
 
           {
-            title: 'navigation.settings.general',
+            title: m['navigation.settings.general'](),
             url: '/settings/general',
             icon: SettingsGear,
             shortcut: 'g + s',
           },
           {
-            title: 'navigation.settings.connections',
+            title: m['navigation.settings.connections'](),
             url: '/settings/connections',
             icon: Users,
           },
           {
-            title: 'navigation.settings.privacy',
+            title: m['navigation.settings.privacy'](),
             url: '/settings/privacy',
             icon: LockIcon,
           },
           {
-            title: 'navigation.settings.appearance',
+            title: m['navigation.settings.appearance'](),
             url: '/settings/appearance',
             icon: Stars,
           },
           {
-            title: 'navigation.settings.labels',
+            title: m['navigation.settings.labels'](),
             url: '/settings/labels',
             icon: Sheet,
           },
           {
-            title: 'navigation.settings.categories',
+            title: m['navigation.settings.categories'](),
             url: '/settings/categories',
             icon: Tabs,
           },
           {
-            title: 'navigation.settings.signatures',
+            title: m['navigation.settings.signatures'](),
             url: '/settings/signatures',
             icon: MessageSquareIcon,
             disabled: true,
           },
           {
-            title: 'navigation.settings.shortcuts',
+            title: m['navigation.settings.shortcuts'](),
             url: '/settings/shortcuts',
             icon: Tabs,
             shortcut: '?',
@@ -215,7 +212,7 @@ export const navigationConfig: Record<string, NavConfig> = {
           //   icon: BellIcon,
           // },
           {
-            title: 'navigation.settings.deleteAccount',
+            title: m['navigation.settings.deleteAccount'](),
             url: '/settings/danger-zone',
             icon: Danger,
           },
@@ -234,7 +231,7 @@ export const bottomNavItems = [
     items: [
       {
         id: 'settings',
-        title: 'navigation.sidebar.settings',
+        title: m['navigation.sidebar.settings'](),
         url: '/settings/general',
         icon: SettingsGear,
         isSettingsButton: true,
