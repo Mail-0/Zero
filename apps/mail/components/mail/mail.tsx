@@ -594,7 +594,16 @@ export function MailLayout() {
                   isFetching ? 'opacity-100' : 'opacity-0',
                 )}
               />
-              <div className="relative z-[1] h-[calc(100dvh-(2px+88px+2px))] overflow-hidden pt-0 md:h-[calc(100dvh-7rem)]">
+              {/* 
+                Height calculation breakdown for clarity:
+                2px   - top border
+                88px  - header height
+                49px  - footer or bottom bar height
+                2px   - bottom border
+                Total = 141px
+                Subtracted from 100dvh to fill remaining space
+              */}
+              <div className="relative z-[1] h-[calc(100dvh-(2px+88px+49px+2px))] overflow-hidden pt-0 md:h-[calc(100dvh-7rem)]">
                 <MailList />
               </div>
             </div>
