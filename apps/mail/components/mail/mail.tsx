@@ -546,7 +546,7 @@ export function MailLayout() {
                   <span className="inline-block truncate pr-20 lg:hidden">
                     {activeFilters.length > 0
                       ? `${activeFilters.length} filter${activeFilters.length > 1 ? 's' : ''}`
-                      : 'Search...'}
+                      : 'Search & Filter'}
                   </span>
 
                   <span className="absolute right-[0.1rem] flex items-center gap-1">
