@@ -61,15 +61,15 @@ const TimezoneSelect = memo(
               variant="outline"
               role="combobox"
               aria-expanded={open}
-              className="w-46 flex !h-9 items-center justify-start rounded-md hover:bg-transparent"
+              className="w-full md:w-46 flex items-center justify-start mt-2 py-1 h-9"
             >
               <Clock className="mr-2 h-4 w-4 flex-shrink-0" />
               <span className="truncate">{field.value}</span>
             </Button>
           </FormControl>
         </PopoverTrigger>
-        <PopoverContent className="w-[300px] p-0" align="start">
-          <div className="px-3 py-2">
+        <PopoverContent className="w-[300px] p-0 max-w-[calc(100vw-2rem)] md:max-w-none">
+          <div className="px-3 py-1">
             <input
               className="border-input bg-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-1 disabled:cursor-not-allowed disabled:opacity-50"
               placeholder={m['pages.settings.general.selectTimezone']()}
@@ -77,7 +77,7 @@ const TimezoneSelect = memo(
               onChange={(e) => setTimezoneSearch(e.target.value)}
             />
           </div>
-          <ScrollArea className="h-[300px]">
+          <ScrollArea className="h-[250px]">
             <div className="p-1">
               {filteredTimezones.length === 0 && (
                 <div className="text-muted-foreground p-2 text-center text-sm">
@@ -190,7 +190,7 @@ export default function GeneralPage() {
       >
         <Form {...form}>
           <form id="general-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="flex w-full items-center gap-4">
+            <div className="flex flex-col md:flex-row w-full items-start md:items-end gap-6 md:gap-4">
               <FormField
                 control={form.control}
                 name="language"
@@ -199,7 +199,7 @@ export default function GeneralPage() {
                     <FormLabel className='flex'>{m['pages.settings.general.language']()}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger className="w-36 justify-start hover:bg-transparent">
+                        <SelectTrigger className="w-full md:w-36 justify-start mt-2">
                           <Globe className="mr-2 h-4 w-4" />
                           <SelectValue placeholder={m['pages.settings.general.selectLanguage']()} />
                         </SelectTrigger>
@@ -231,11 +231,11 @@ export default function GeneralPage() {
                   name="defaultEmailAlias"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="!mb-1">
+                      <FormLabel className="!mb-1 flex items-center gap-1">
                         {m['pages.settings.general.defaultEmailAlias']()}{' '}
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <InfoIcon className="h-[1em] w-[1em]" />
+                            <InfoIcon className="ml-1 h-4 w-4" />
                           </TooltipTrigger>
                           <TooltipContent>
                             {m['pages.settings.general.defaultEmailDescription']()}
@@ -276,7 +276,7 @@ export default function GeneralPage() {
               control={form.control}
               name="zeroSignature"
               render={({ field }) => (
-                <FormItem className="flex max-w-xl flex-row items-center justify-between rounded-lg border px-4 py-2">
+                <FormItem className="flex flex-col sm:flex-row max-w-xl items-start sm:items-center justify-between rounded-lg border px-3 py-3 gap-3">
                   <div className="space-y-0.5">
                     <FormLabel>{m['pages.settings.general.zeroSignature']()}</FormLabel>
                     <FormDescription>
@@ -284,7 +284,11 @@ export default function GeneralPage() {
                     </FormDescription>
                   </div>
                   <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    <Switch 
+                      className="mt-1 sm:mt-0"
+                      checked={field.value} 
+                      onCheckedChange={field.onChange} 
+                    />
                   </FormControl>
                 </FormItem>
               )}
@@ -293,7 +297,7 @@ export default function GeneralPage() {
               control={form.control}
               name="autoRead"
               render={({ field }) => (
-                <FormItem className="flex max-w-xl flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                <FormItem className="flex flex-col sm:flex-row max-w-xl items-start sm:items-center justify-between rounded-lg border px-3 py-3 gap-3 shadow-sm">
                   <div className="space-y-0.5">
                     <FormLabel>{m['pages.settings.general.autoRead']()}</FormLabel>
                     <FormDescription>
@@ -301,7 +305,11 @@ export default function GeneralPage() {
                     </FormDescription>
                   </div>
                   <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    <Switch 
+                      className="mt-1 sm:mt-0"
+                      checked={field.value} 
+                      onCheckedChange={field.onChange} 
+                    />
                   </FormControl>
                 </FormItem>
               )}
