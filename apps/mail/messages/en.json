@@ -253,8 +253,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "Add notes",
-            "countPlural=one": "# note",
-            "countPlural=other": "# notes"
+            "countPlural=one": "{count} note",
+            "countPlural=other": "{count} notes"
           }
         }
       ],
@@ -316,8 +316,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "replies",
-            "countPlural=one": "# reply",
-            "countPlural=other": "# replies"
+            "countPlural=one": "{count} reply",
+            "countPlural=other": "{count} replies"
           }
         }
       ],
