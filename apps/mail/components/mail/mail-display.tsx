@@ -1769,7 +1769,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             onClick={(e) => e.stopPropagation()}
           >
             <div className="min-h-0 overflow-hidden">
-              <div className="h-fit w-full p-0">
+              <div className="h-fit w-full px-4">
                 {/* mail main body */}
                 {emailData?.decodedBody ? (
                   <MailContent
