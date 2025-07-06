@@ -61,14 +61,14 @@ const TimezoneSelect = memo(
               variant="outline"
               role="combobox"
               aria-expanded={open}
-              className="w-full md:w-46 flex items-center justify-start mt-2 py-1 h-9"
+              className="w-full md:w-48 flex items-center justify-start mt-2 py-1 h-9"
             >
               <Clock className="mr-2 h-4 w-4 flex-shrink-0" />
               <span className="truncate">{field.value}</span>
             </Button>
           </FormControl>
         </PopoverTrigger>
-        <PopoverContent className="w-[300px] p-0 max-w-[calc(100vw-2rem)] md:max-w-none">
+        <PopoverContent className="w-[300px] p-0 max-w-[calc(100vw-2rem)] md:max-w-none z-50">
           <div className="px-3 py-1">
             <input
               className="border-input bg-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-1 disabled:cursor-not-allowed disabled:opacity-50"
@@ -204,7 +204,7 @@ export default function GeneralPage() {
                           <SelectValue placeholder={m['pages.settings.general.selectLanguage']()} />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="z-50">
                         {locales.map((locale) => (
                           <SelectItem key={locale} value={locale}>
                             {localesData[locale as keyof typeof localesData]}
@@ -251,7 +251,7 @@ export default function GeneralPage() {
                             />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="z-50">
                           {aliases.map((alias) => (
                             <SelectItem key={alias.email} value={alias.email}>
                               <div className="flex flex-row items-center gap-1">
