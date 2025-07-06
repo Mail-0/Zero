@@ -14,14 +14,38 @@ export function processEmailHtml({ html, shouldLoadImages, theme }: ProcessEmail
   let hasBlockedImages = false;
 
   const sanitizeConfig: sanitizeHtml.IOptions = {
-    allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
-    allowedAttributes: false,
+    allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'style']),
+
+    allowedAttributes: {
+      '*': [
+        'class',
+        'style',
+        'align',
+        'valign',
+        'width',
+        'height',
+        'cellpadding',
+        'cellspacing',
+        'border',
+        'bgcolor',
+      ],
+      a: ['href', 'name', 'target', 'rel', 'class', 'style'],
+      img: ['src', 'alt', 'width', 'height', 'class', 'style'],
+    },
+
+    allowedStyles: {
+      '*': {
+        '*': [/^.*$/],
+      },
+    },
+
     allowedSchemes: shouldLoadImages
       ? ['http', 'https', 'mailto', 'tel', 'data', 'cid', 'blob']
       : ['http', 'https', 'mailto', 'tel', 'cid'],
     allowedSchemesByTag: {
       img: shouldLoadImages ? ['http', 'https', 'data', 'cid', 'blob'] : ['cid'],
     },
+
     transformTags: {
       img: (tagName, attribs) => {
         if (!shouldLoadImages && attribs.src && !attribs.src.startsWith('cid:')) {
