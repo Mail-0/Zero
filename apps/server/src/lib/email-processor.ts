@@ -14,8 +14,12 @@ export function processEmailHtml({ html, shouldLoadImages, theme }: ProcessEmail
   let hasBlockedImages = false;
 
   const sanitizeConfig: sanitizeHtml.IOptions = {
-    allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
-    allowedAttributes: false,
+    allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'title']),
+    allowedAttributes: {
+      img: ['src', 'alt'],
+      a: ['href', 'target', 'rel'],
+      '*': ['style', 'class', 'width', 'height', 'colspan', 'rowspan'],
+    },
     allowedSchemes: shouldLoadImages
       ? ['http', 'https', 'mailto', 'tel', 'data', 'cid', 'blob']
       : ['http', 'https', 'mailto', 'tel', 'cid'],
@@ -46,6 +50,8 @@ export function processEmailHtml({ html, shouldLoadImages, theme }: ProcessEmail
   const sanitized = sanitizeHtml(html, sanitizeConfig);
 
   const $ = cheerio.load(sanitized);
+
+  $('title').remove();
 
   $('img[width="1"][height="1"]').remove();
   $('img[width="0"][height="0"]').remove();
@@ -110,12 +116,6 @@ export function processEmailHtml({ html, shouldLoadImages, theme }: ProcessEmail
 
       table {
         border-collapse: collapse;
-      }
-
-      .gmail_quote {
-        margin: 1em 0;
-        padding-left: 1em;
-        border-left: 1px solid ${theme === 'dark' ? '#666' : '#ccc'};
       }
 
       ::selection {
