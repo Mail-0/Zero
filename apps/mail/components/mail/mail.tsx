@@ -392,6 +392,18 @@ export function MailLayout() {
   const [, setIsCommandPaletteOpen] = useQueryState('isCommandPaletteOpen');
 
   useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
+        event.preventDefault();
+        setIsCommandPaletteOpen('true');
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [setIsCommandPaletteOpen]);
+
+  useEffect(() => {
     if (prevFolderRef.current !== folder && mail.bulkSelected.length > 0) {
       clearBulkSelection();
     }
