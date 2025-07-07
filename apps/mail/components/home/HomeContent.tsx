@@ -89,7 +89,7 @@ export default function HomeContent() {
           className="text-center text-4xl font-medium md:text-6xl"
         >
           <Balancer className="mb-3 max-w-[1130px]">
-            AI Powered Email, Built to Save You Time Ahmet
+            AI Powered Email, Built to Save You Time
           </Balancer>
         </motion.h1>
         <motion.p
