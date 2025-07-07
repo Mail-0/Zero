@@ -235,6 +235,12 @@ export default function OrganizationPage() {
     }
   };
 
+  // DEBUG BYPASS VERIFICATION
+  const handleDebugBypass = () => {
+    setDomainVerified(true);
+    toast.success('DEBUG: Domain verification bypassed!');
+  };
+
   return (
     <div className="grid gap-6">
       <SettingsCard
@@ -310,6 +316,9 @@ export default function OrganizationPage() {
                       </Button>
                     </div>
                   )}
+                  <Button variant="outline" onClick={handleDebugBypass} style={{ marginLeft: 8 }}>
+                    DEBUG: Bypass Verification
+                  </Button>
                 </div>
               )}
               <Button

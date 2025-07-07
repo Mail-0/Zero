@@ -4,9 +4,11 @@ import { organizationDomain } from '../db/schema';
 import { nanoid } from 'nanoid';
 import { eq, and } from 'drizzle-orm';
 import dns from 'node:dns/promises';
+import type { HonoContext } from '../ctx';
+
 
 const { db } = createDb(process.env.DATABASE_URL!);
-const orgRouter = new Hono();
+const orgRouter = new Hono<HonoContext>();
 
 // Verify domain ownership (without organization ID)
 orgRouter.post('/verify-domain', async (c) => {
@@ -121,6 +123,24 @@ orgRouter.post('/:id/domains/verify', async (c) => {
     }
   } catch (err) {
     return c.json({ success: false, error: 'DNS lookup failed', details: String(err) });
+  }
+});
+
+// Invite a member to the organization
+orgRouter.post('/:id/invite', async (c) => {
+  const orgId = c.req.param('id');
+  const { email, role = 'member', teamId } = await c.req.json();
+  // Get the inviter's user ID from the session
+  const inviterId = c.get('sessionUser')?.id;
+  if (!inviterId) return c.json({ error: 'Unauthorized' }, 401);
+  if (!email) return c.json({ error: 'Email required' }, 400);
+
+  try {
+    // our logic, blank for now pending better-auth plugin to work.
+    return c.json({ success: true });
+  } catch (err) {
+    console.error('Failed to invite member:', err);
+    return c.json({ error: 'Failed to invite member', details: String(err) }, 500);
   }
 });
 

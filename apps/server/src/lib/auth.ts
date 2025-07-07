@@ -104,15 +104,24 @@ export const createAuth = () => {
               // await setupDefaultResources(organization.id)
               console.log('organization created', organization, member, user, request);
           },
-          async sendInvitationEmail(data) {
-            const inviteLink = `https://example.com/accept-invitation/${data.id}`
+          async sendInvitationEmail(data: {
+            id: string;
+            email: string;
+            inviter: { user: { name: string; email: string } };
+            organization: { name: string };
+          }) {
+            console.log('[INVITE] sendInvitationEmail HOOK TRIGGERED');
+            console.log('[INVITE] Invitation Data:', JSON.stringify(data, null, 2));
+            const inviteLink = `${env.VITE_PUBLIC_APP_URL}/accept-invitation/${data.id}`;
+            console.log('[INVITE] Generated invite link:', inviteLink);
             await sendOrganizationInvitation({
-                email: data.email,
-                invitedByUsername: data.inviter.user.name,
-                invitedByEmail: data.inviter.user.email,
-                teamName: data.organization.name,
-                inviteLink
-            })
+              email: data.email,
+              invitedByUsername: data.inviter.user.name,
+              invitedByEmail: data.inviter.user.email,
+              teamName: data.organization.name,
+              inviteLink
+            });
+            console.log('[INVITE] sendInvitationEmail HOOK COMPLETED');
           },
       }
       }),
@@ -338,7 +347,7 @@ export const createSimpleAuth = () => {
 export type Auth = ReturnType<typeof createAuth>;
 export type SimpleAuth = ReturnType<typeof createSimpleAuth>;
 
-// Add this helper function for sending organization invites
+
 async function sendOrganizationInvitation({ email, invitedByUsername, invitedByEmail, teamName, inviteLink }: {
   email: string;
   invitedByUsername: string;
@@ -346,16 +355,24 @@ async function sendOrganizationInvitation({ email, invitedByUsername, invitedByE
   teamName: string;
   inviteLink: string;
 }) {
-  await resend().emails.send({
-    from: '0.email <no-reply@0.email>',
-    to: email,
-    subject: `You have been invited to join ${teamName} on 0.email`,
-    html: `
-      <h2>You've been invited to join <b>${teamName}</b>!</h2>
-      <p><b>${invitedByUsername}</b> (${invitedByEmail}) has invited you to join their team on 0.email.</p>
-      <p>Click the link below to accept your invitation:</p>
-      <a href="${inviteLink}">${inviteLink}</a>
-      <p>If you did not expect this invitation, you can safely ignore this email.</p>
-    `,
-  });
+  console.log('[INVITE] sendOrganizationInvitation CALLED');
+  console.log('[INVITE] Email Params:', { email, invitedByUsername, invitedByEmail, teamName, inviteLink });
+  try {
+    await resend().emails.send({
+      from: '0.email <no-reply@0.email>',
+      to: email,
+      subject: `You have been invited to join ${teamName} on 0.email`,
+      html: `
+        <h2>You've been invited to join <b>${teamName}</b>!</h2>
+        <p><b>${invitedByUsername}</b> (${invitedByEmail}) has invited you to join their team on 0.email.</p>
+        <p>Click the link below to accept your invitation:</p>
+        <a href="${inviteLink}">${inviteLink}</a>
+        <p>If you did not expect this invitation, you can safely ignore this email.</p>
+      `,
+    });
+    console.log('[INVITE] Email sent successfully to', email);
+  } catch (err) {
+    console.error('[INVITE] Failed to send invite email:', err);
+    throw err;
+  }
 }
