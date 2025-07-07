@@ -73,11 +73,6 @@ export class MainWorkflow extends WorkflowEntrypoint<Env, Params> {
           return connectionId;
         },
       );
-      const status = await env.subscribed_accounts.get(`${connectionId}__${providerId}`);
-      if (!status || status === 'pending') {
-        log('[MAIN_WORKFLOW] Connection id is missing or not enabled %s', connectionId);
-        return 'Connection is not enabled';
-      }
       if (!isValidUUID(connectionId)) {
         log('[MAIN_WORKFLOW] Invalid connection id format:', connectionId);
         return 'Invalid connection id';
@@ -326,6 +321,14 @@ export class ZeroWorkflow extends WorkflowEntrypoint<Env, Params> {
             }
           }
         });
+
+        const status = await env.subscribed_accounts.get(
+          `${connectionId}__${foundConnection.providerId}`,
+        );
+        if (!status || status === 'pending') {
+          log('[MAIN_WORKFLOW] Connection id is missing or not enabled %s', connectionId);
+          return 'Connection is not enabled, not processing threads';
+        }
 
         await step.do(
           `[ZERO_WORKFLOW] Send Thread Workflow Instances ${connectionId}`,
