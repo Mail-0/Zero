@@ -78,7 +78,6 @@ const Thread = memo(
       latestDraft,
     } = useThread(message.id, message.historyId);
     const [id, setThreadId] = useQueryState('threadId');
-    const [, setActiveReplyId] = useQueryState('activeReplyId');
     const [focusedIndex, setFocusedIndex] = useAtom(focusedIndexAtom);
 
     const { latestMessage, idToUse, cleanName } = useMemo(() => {
@@ -90,69 +89,69 @@ const Thread = memo(
 
       return { latestMessage, idToUse, cleanName };
     }, [getThreadData?.latest]);
-    const { data: settingsData } = useSettings();
-    const queryClient = useQueryClient();
-
-    // // Check if thread has notes
-    // const { data: threadNotes } = useThreadNotes(idToUse || '');
-    // const hasNotes = useMemo(() => {
-    //   return (threadNotes?.notes && threadNotes.notes.length > 0) || false;
-    // }, [threadNotes?.notes]);
 
     const optimisticState = useOptimisticThreadState(idToUse ?? '');
 
-    const { displayStarred, displayImportant, displayUnread, optimisticLabels } = useMemo(() => {
-      const displayStarred =
-        optimisticState.optimisticStarred !== null
-          ? optimisticState.optimisticStarred
-          : (getThreadData?.latest?.tags?.some((tag) => tag.name === 'STARRED') ?? false);
+    const { displayStarred, displayImportant, displayUnread, optimisticLabels, emailContent } =
+      useMemo(() => {
+        const emailContent = getThreadData?.latest?.body;
+        const displayStarred =
+          optimisticState.optimisticStarred !== null
+            ? optimisticState.optimisticStarred
+            : (getThreadData?.latest?.tags?.some((tag) => tag.name === 'STARRED') ?? false);
 
-      const displayImportant =
-        optimisticState.optimisticImportant !== null
-          ? optimisticState.optimisticImportant
-          : (getThreadData?.latest?.tags?.some((tag) => tag.name === 'IMPORTANT') ?? false);
+        const displayImportant =
+          optimisticState.optimisticImportant !== null
+            ? optimisticState.optimisticImportant
+            : (getThreadData?.latest?.tags?.some((tag) => tag.name === 'IMPORTANT') ?? false);
 
-      const displayUnread =
-        optimisticState.optimisticRead !== null
-          ? !optimisticState.optimisticRead
-          : (getThreadData?.hasUnread ?? false);
+        const displayUnread =
+          optimisticState.optimisticRead !== null
+            ? !optimisticState.optimisticRead
+            : (getThreadData?.hasUnread ?? false);
 
-      let labels: { id: string; name: string }[] = [];
-      if (getThreadData?.labels) {
-        labels = [...getThreadData.labels];
-        const hasStarredLabel = labels.some((label) => label.name === 'STARRED');
+        let labels: { id: string; name: string }[] = [];
+        if (getThreadData?.labels) {
+          labels = [...getThreadData.labels];
+          const hasStarredLabel = labels.some((label) => label.name === 'STARRED');
 
-        if (optimisticState.optimisticStarred !== null) {
-          if (optimisticState.optimisticStarred && !hasStarredLabel) {
-            labels.push({ id: 'starred-optimistic', name: 'STARRED' });
-          } else if (!optimisticState.optimisticStarred && hasStarredLabel) {
-            labels = labels.filter((label) => label.name !== 'STARRED');
+          if (optimisticState.optimisticStarred !== null) {
+            if (optimisticState.optimisticStarred && !hasStarredLabel) {
+              labels.push({ id: 'starred-optimistic', name: 'STARRED' });
+            } else if (!optimisticState.optimisticStarred && hasStarredLabel) {
+              labels = labels.filter((label) => label.name !== 'STARRED');
+            }
+          }
+
+          if (optimisticState.optimisticLabels) {
+            labels = labels.filter(
+              (label) => !optimisticState.optimisticLabels.removedLabelIds.includes(label.id),
+            );
+
+            optimisticState.optimisticLabels.addedLabelIds.forEach((labelId) => {
+              if (!labels.some((label) => label.id === labelId)) {
+                labels.push({ id: labelId, name: labelId });
+              }
+            });
           }
         }
 
-        if (optimisticState.optimisticLabels) {
-          labels = labels.filter(
-            (label) => !optimisticState.optimisticLabels.removedLabelIds.includes(label.id),
-          );
-
-          optimisticState.optimisticLabels.addedLabelIds.forEach((labelId) => {
-            if (!labels.some((label) => label.id === labelId)) {
-              labels.push({ id: labelId, name: labelId });
-            }
-          });
-        }
-      }
-
-      return { displayStarred, displayImportant, displayUnread, optimisticLabels: labels };
-    }, [
-      optimisticState.optimisticStarred,
-      optimisticState.optimisticImportant,
-      optimisticState.optimisticRead,
-      getThreadData?.latest?.tags,
-      getThreadData?.hasUnread,
-      getThreadData?.labels,
-      optimisticState.optimisticLabels,
-    ]);
+        return {
+          displayStarred,
+          displayImportant,
+          displayUnread,
+          optimisticLabels: labels,
+          emailContent,
+        };
+      }, [
+        optimisticState.optimisticStarred,
+        optimisticState.optimisticImportant,
+        optimisticState.optimisticRead,
+        getThreadData?.latest?.tags,
+        getThreadData?.hasUnread,
+        getThreadData?.labels,
+        optimisticState.optimisticLabels,
+      ]);
 
     const { optimisticToggleStar, optimisticToggleImportant, optimisticMoveThreadsTo } =
       useOptimisticActions();
@@ -203,69 +202,18 @@ const Thread = memo(
       [idToUse, folder, optimisticMoveThreadsTo, handleNext],
     );
 
-    const emailContent = getThreadData?.latest?.body;
-
-    // Prefetch email template processing for better performance
-    useEffect(() => {
-      if (!latestMessage?.body || !latestMessage?.sender?.email) return;
-
-      const senderEmail = latestMessage.sender.email;
-      const isTrustedSender =
-        settingsData?.settings?.externalImages ||
-        settingsData?.settings?.trustedSenders?.includes(senderEmail);
-
-      // Prefetch with both trusted and untrusted states for instant switching
-      queryClient.prefetchQuery({
-        queryKey: ['email-template', latestMessage.body, isTrustedSender],
-        queryFn: () => template(latestMessage.body, isTrustedSender),
-        staleTime: 30 * 60 * 1000,
-        gcTime: 60 * 60 * 1000,
-      });
-
-      // Also prefetch the opposite state for instant image toggle
-      queryClient.prefetchQuery({
-        queryKey: ['email-template', latestMessage.body, !isTrustedSender],
-        queryFn: () => template(latestMessage.body, !isTrustedSender),
-        staleTime: 30 * 60 * 1000,
-        gcTime: 60 * 60 * 1000,
-      });
-    }, [latestMessage?.body, latestMessage?.sender?.email, settingsData?.settings, queryClient]);
-
     const { labels: threadLabels } = useThreadLabels(
       optimisticLabels ? optimisticLabels.map((l) => l.id) : [],
     );
 
-    const mainSearchTerm = useMemo(() => {
-      if (!searchValue.highlight) return '';
-      return getMainSearchTerm(searchValue.highlight);
-    }, [searchValue.highlight]);
-
-    const semanticSearchQuery = useMemo(() => {
-      if (!searchValue.value) return '';
-      return parseNaturalLanguageSearch(searchValue.value);
-    }, [searchValue.value]);
-
-    // Use semanticSearchQuery when filtering/searching emails
-    useEffect(() => {
-      if (semanticSearchQuery && semanticSearchQuery !== searchValue.value) {
-        // Update the search value with our semantic query
-        setSearchValue({
-          ...searchValue,
-          value: semanticSearchQuery,
-          isAISearching: true,
-        });
-      }
-    }, [semanticSearchQuery]);
-
     const [mailState, setMail] = useMail();
+    const { isMailSelected, isMailBulkSelected } = useMemo(() => {
+      const isSelected =
+        !threadId || !idToUse ? false : idToUse === threadId || threadId === mailState.selected;
+      const isBulkSelected = idToUse ? mailState.bulkSelected.includes(idToUse) : false;
 
-    const isMailSelected = useMemo(() => {
-      if (!threadId || !idToUse) return false;
-      const _threadId = idToUse;
-      return _threadId === threadId || threadId === mailState.selected;
-    }, [threadId, idToUse, mailState.selected]);
-
-    const isMailBulkSelected = idToUse ? mailState.bulkSelected.includes(idToUse) : false;
+      return { isMailSelected: isSelected, isMailBulkSelected: isBulkSelected };
+    }, [threadId, idToUse, mailState.selected, mailState.bulkSelected]);
 
     const { isFolderInbox, isFolderSpam, isFolderSent, isFolderBin } = useMemo(
       () => ({
@@ -282,8 +230,10 @@ const Thread = memo(
       return !!latestDraft;
     }, [latestDraft]);
 
-    const content =
-      latestMessage && getThreadData ? (
+    const content = useMemo(() => {
+      if (!latestMessage || !getThreadData) return null;
+
+      return (
         <div
           className={cn('select-none border-b md:my-1 md:border-none')}
           onClick={onClick ? onClick(latestMessage) : undefined}
@@ -593,7 +543,26 @@ const Thread = memo(
             </div>
           </div>
         </div>
-      ) : null;
+      );
+    }, [
+      latestMessage,
+      getThreadData,
+      optimisticState,
+      idToUse,
+      folder,
+      isFolderBin,
+      isFolderSent,
+      isFolderSpam,
+      isFolderInbox,
+      onClick,
+      searchValue,
+      displayUnread,
+      isMailSelected,
+      isMailBulkSelected,
+      threadLabels,
+      optimisticLabels,
+      emailContent,
+    ]);
 
     return latestMessage ? (
       !optimisticState.shouldHide && idToUse ? (
@@ -917,8 +886,6 @@ export const MailList = memo(
       });
     };
 
-    const { resolvedTheme } = useTheme();
-
     const filteredItems = useMemo(() => items.filter((item) => item.id), [items]);
 
     const Comp = useMemo(() => (folder === FOLDERS.DRAFT ? Draft : Thread), [folder]);
@@ -993,8 +960,9 @@ export const MailList = memo(
                 <VList
                   ref={vListRef}
                   count={filteredItems.length}
-                  overscan={20}
-                  keepMounted={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
+                  overscan={5}
+                  itemSize={100}
+                  //   keepMounted={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
                   className="scrollbar-none flex-1 overflow-x-hidden"
                   children={vListRenderer}
                   onScroll={() => {
@@ -1002,7 +970,7 @@ export const MailList = memo(
                     const endIndex = vListRef.current.findEndIndex();
                     if (
                       // if the shown items are last 5 items, load more
-                      Math.abs(filteredItems.length - 1 - endIndex) < 5 &&
+                      Math.abs(filteredItems.length - 1 - endIndex) < 7 &&
                       !isLoading &&
                       !isFetchingNextPage &&
                       !isFetchingMail &&
