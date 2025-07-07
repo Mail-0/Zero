@@ -1073,7 +1073,6 @@ export default function HomeContent() {
             transition={{ duration: 0.5, delay: 0.5 }}
             className="relative flex w-full items-center justify-center"
           >
-            {/* 96:125 */}
             <div className="relative mx-auto flex h-[587px] w-full max-w-[894px] items-center justify-center rounded-xl">
               <div className="absolute left-0 top-[319px] mx-auto inline-flex w-full max-w-[894px] flex-col items-start justify-start overflow-hidden rounded-xl bg-zinc-900 opacity-30">
                 <div className="inline-flex items-center justify-start gap-1.5 self-stretch px-5 pb-4 pt-7">
