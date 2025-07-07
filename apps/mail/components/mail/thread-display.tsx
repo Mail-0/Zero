@@ -14,13 +14,13 @@ import {
   Trash,
   X,
 } from '../icons/icons';
-import { EmptyStateIcon } from '../icons/empty-state-svg';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { EmptyStateIcon } from '../icons/empty-state-svg';
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
@@ -39,13 +39,13 @@ import type { ParsedMessage, Attachment } from '@/types';
 import { MailDisplaySkeleton } from './mail-skeleton';
 import { useTRPC } from '@/providers/query-provider';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { cleanHtml } from '@/lib/email-utils';
 import { Button } from '@/components/ui/button';
+import { cleanHtml } from '@/lib/email-utils';
 import { useStats } from '@/hooks/use-stats';
 import ReplyCompose from './reply-composer';
-import { m } from '@/paraglide/messages';
 import { NotesPanel } from './note-panel';
 import { cn, FOLDERS } from '@/lib/utils';
+import { m } from '@/paraglide/messages';
 import MailDisplay from './mail-display';
 import { useTheme } from 'next-themes';
 import { Inbox } from 'lucide-react';
@@ -799,7 +799,7 @@ export function ThreadDisplay() {
           <>
             <div
               className={cn(
-                'flex flex-shrink-0 items-center px-1 pb-1 md:px-3 md:pb-[11px] md:pt-[12px]',
+                'flex flex-shrink-0 items-center px-1 pb-[10px] md:px-3 md:pb-[11px] md:pt-[12px]',
                 isMobile && 'bg-panelLight dark:bg-panelDark sticky top-0 z-10 mt-2',
               )}
             >
@@ -883,7 +883,7 @@ export function ThreadDisplay() {
                 >
                   <Reply className="fill-muted-foreground dark:fill-[#9B9B9B]" />
                   <div className="flex items-center justify-center gap-2.5 pl-0.5 pr-1">
-                    <div className="justify-start text-sm leading-none text-black dark:text-white">
+                    <div className="justify-start whitespace-nowrap text-sm leading-none text-black dark:text-white">
                       {m['common.threadDisplay.replyAll']()}
                     </div>
                   </div>
