@@ -118,7 +118,12 @@ export const createAuth = () => {
           const db = getZeroDB(user.id);
           const connections = await db.findManyConnections();
           const context = getContext<HonoContext>();
-          await context.var.autumn.customers.delete(user.id);
+          try {
+            await context.var.autumn.customers.delete(user.id);
+          } catch (error) {
+            console.error('Failed to delete Autumn customer:', error);
+            // Continue with deletion process despite Autumn failure
+          }
 
           const revokedAccounts = (
             await Promise.allSettled(
