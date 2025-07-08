@@ -34,15 +34,16 @@ import {
 import { cn, getEmailLogo, formatDate, formatTime, shouldShowSeparateTime } from '@/lib/utils';
 import { Dialog, DialogTitle, DialogHeader, DialogContent } from '../ui/dialog';
 import { memo, useEffect, useMemo, useState, useRef, useCallback } from 'react';
+import { BimiAvatar, getFirstLetterCharacter } from '../ui/bimi-avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import type { Sender, ParsedMessage, Attachment } from '@/types';
 import { useActiveConnection } from '@/hooks/use-connections';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useBrainState } from '../../hooks/use-summary';
 import { useTRPC } from '@/providers/query-provider';
 import { useThreadLabels } from '@/hooks/use-labels';
-import { useMutation } from '@tanstack/react-query';
 import { Markdown } from '@react-email/components';
 import { useSummary } from '@/hooks/use-summary';
 import { TextShimmer } from '../ui/text-shimmer';
@@ -381,13 +382,6 @@ const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
       })}
     </div>
   );
-};
-
-// Helper function to get first letter character
-const getFirstLetterCharacter = (name?: string) => {
-  if (!name) return '';
-  const match = name.match(/[a-zA-Z]/);
-  return match ? match[0].toUpperCase() : '';
 };
 
 // Helper function to clean email display
@@ -1294,12 +1288,11 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             key={person.email}
             className="dark:bg-panelDark inline-flex items-center justify-start gap-1.5 overflow-hidden rounded-full border bg-white p-1 pr-2"
           >
-            <Avatar className="h-5 w-5">
-              <AvatarImage src={getEmailLogo(person.email)} className="rounded-full" />
-              <AvatarFallback className="bg-offsetLight rounded-full text-xs font-bold dark:bg-[#373737]">
-                {getFirstLetterCharacter(person.name || person.email)}
-              </AvatarFallback>
-            </Avatar>
+            <BimiAvatar
+              email={person.email}
+              name={person.name || person.email}
+              className="h-5 w-5"
+            />
             <div className="text-panelDark justify-start text-sm font-medium leading-none dark:text-white">
               {person.name || person.email}
             </div>
@@ -1307,12 +1300,11 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
         </PopoverTrigger>
         <PopoverContent className="min-w-fit text-sm">
           <div className="flex items-center gap-2">
-            <Avatar className="h-12 w-12">
-              <AvatarImage src={getEmailLogo(person.email)} className="rounded-full" />
-              <AvatarFallback className="bg-offsetLight rounded-full text-sm font-bold dark:bg-[#373737]">
-                {getFirstLetterCharacter(person.name || person.email)}
-              </AvatarFallback>
-            </Avatar>
+            <BimiAvatar
+              email={person.email}
+              name={person.name || person.email}
+              className="h-12 w-12"
+            />
             <div>
               <p className="font-medium">{person.name || 'Unknown'}</p>
               <div className="group flex items-center gap-2">
@@ -1448,15 +1440,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
           >
             <div className="mt-3 flex w-full items-start justify-between gap-4 px-4">
               <div className="flex w-full justify-center gap-4">
-                <Avatar className="mt-3 h-8 w-8 rounded-full border dark:border-none">
-                  <AvatarImage
-                    className="rounded-full"
-                    src={getEmailLogo(emailData?.sender?.email)}
-                  />
-                  <AvatarFallback className="rounded-full bg-[#FFFFFF] font-bold text-[#9F9F9F] dark:bg-[#373737]">
-                    {getFirstLetterCharacter(emailData?.sender?.name)}
-                  </AvatarFallback>
-                </Avatar>
+                <BimiAvatar email={emailData?.sender?.email} name={emailData?.sender?.name} />
 
                 <div className="flex w-full items-center justify-between">
                   <div className="flex w-full items-center justify-start">

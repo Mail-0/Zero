@@ -47,6 +47,7 @@ import { useSettings } from '@/hooks/use-settings';
 import { useThreadNotes } from '@/hooks/use-notes';
 import { useKeyState } from '@/hooks/use-hot-key';
 import { VList, type VListHandle } from 'virtua';
+import { BimiAvatar } from '../ui/bimi-avatar';
 import { RenderLabels } from './render-labels';
 import { Badge } from '@/components/ui/badge';
 import { useDraft } from '@/hooks/use-drafts';
@@ -362,55 +363,47 @@ const Thread = memo(
               className={`relative flex w-full items-center justify-between gap-4 px-4 ${displayUnread ? '' : 'opacity-60'}`}
             >
               <div>
-                <Avatar
-                  className={cn(
-                    'h-8 w-8 rounded-full',
-                    displayUnread && !isMailSelected && !isFolderSent ? '' : 'border',
-                  )}
-                >
-                  <div
+                {isMailBulkSelected ? (
+                  <Avatar
                     className={cn(
-                      'flex h-full w-full items-center justify-center rounded-full bg-[#006FFE] p-2 dark:bg-[#006FFE]',
-                      {
-                        hidden: !isMailBulkSelected,
-                      },
+                      'h-8 w-8 rounded-full',
+                      displayUnread && !isMailSelected && !isFolderSent ? '' : 'border',
                     )}
-                    onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation();
-                      setMail((prev: Config) => ({
-                        ...prev,
-                        bulkSelected: prev.bulkSelected.filter((id: string) => id !== idToUse),
-                      }));
-                    }}
                   >
-                    <Check className="h-4 w-4 text-white" />
-                  </div>
-                  {isGroupThread ? (
+                    <div
+                      className="flex h-full w-full items-center justify-center rounded-full bg-[#006FFE] p-2 dark:bg-[#006FFE]"
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        setMail((prev: Config) => ({
+                          ...prev,
+                          bulkSelected: prev.bulkSelected.filter((id: string) => id !== idToUse),
+                        }));
+                      }}
+                    >
+                      <Check className="h-4 w-4 text-white" />
+                    </div>
+                  </Avatar>
+                ) : isGroupThread ? (
+                  <Avatar
+                    className={cn(
+                      'h-8 w-8 rounded-full',
+                      displayUnread && !isMailSelected && !isFolderSent ? '' : 'border',
+                    )}
+                  >
                     <div className="flex h-full w-full items-center justify-center rounded-full bg-[#FFFFFF] p-2 dark:bg-[#373737]">
                       <GroupPeople className="h-4 w-4" />
                     </div>
-                  ) : (
-                    <>
-                      <AvatarImage
-                        className="rounded-full bg-[#FFFFFF] dark:bg-[#373737]"
-                        src={getEmailLogo(latestMessage.sender.email)}
-                        alt={cleanName || latestMessage.sender.email}
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                        }}
-                      />
-                      <AvatarFallback
-                        className="rounded-full bg-[#FFFFFF] font-bold text-[#9F9F9F] dark:bg-[#373737]"
-                        delayMs={0}
-                      >
-                        {cleanName
-                          ? cleanName[0]?.toUpperCase()
-                          : latestMessage.sender.email[0]?.toUpperCase()}
-                      </AvatarFallback>
-                    </>
-                  )}
-                </Avatar>
+                  </Avatar>
+                ) : (
+                  <BimiAvatar
+                    email={latestMessage.sender.email}
+                    name={cleanName || latestMessage.sender.email}
+                    className={cn(
+                      'h-8 w-8 rounded-full',
+                      displayUnread && !isMailSelected && !isFolderSent ? '' : 'border',
+                    )}
+                  />
+                )}
                 {/* {displayUnread && !isMailSelected && !isFolderSent ? (
                   <>
                     <span className="absolute left-2 top-2 size-1.5 rounded bg-[#006FFE]" />
