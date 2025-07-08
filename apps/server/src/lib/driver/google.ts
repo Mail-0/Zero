@@ -182,7 +182,7 @@ export class GoogleMailManager implements MailManager {
               name: h.name ?? '',
               value: h.value ?? '',
             })) ?? [],
-            body: attachmentData
+            body: attachmentData,
           };
         } catch (error) {
           // Log the error but don't fail the entire operation
