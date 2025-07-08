@@ -197,6 +197,10 @@ export class AgentRpcDO extends RpcTarget {
     return result;
   }
 
+  async syncThread(threadId: string) {
+    return await this.mainDo.syncThread(threadId);
+  }
+
   async markThreadsUnread(threadIds: string[]) {
     const result = await this.mainDo.markThreadsUnread(threadIds);
     await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
@@ -848,6 +852,10 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
   }
 
   async syncThread(threadId: string) {
+    if (!this.driver) {
+      await this.setupAuth(this.name);
+    }
+
     if (!this.driver) {
       console.error('No driver available for syncThread');
       throw new Error('No driver available');
