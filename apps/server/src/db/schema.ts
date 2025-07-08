@@ -8,6 +8,7 @@ import {
   primaryKey,
   unique,
   index,
+  pgEnum,
 } from 'drizzle-orm/pg-core';
 import { defaultUserSettings } from '../lib/schemas';
 
@@ -40,7 +41,7 @@ export const session = createTable(
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
-  activeOrganizationId: text('active_organization_id'),
+    activeOrganizationId: text('active_organization_id').references(() => organization.id),
   },
   (t) => [
     index('session_user_id_idx').on(t.userId),
@@ -243,9 +244,12 @@ export const organization = createTable('organization', {
   name: text('name').notNull(),
   slug: text('slug').notNull().unique(),
   logo: text('logo'),
-  metadata: text('metadata'),
+  metadata: jsonb('metadata'),
   createdAt: timestamp('created_at').notNull(),
 });
+
+export const roleEnum = pgEnum('role', ['owner', 'admin', 'member']);
+export type Role = 'owner' | 'admin' | 'member';
 
 export const member = createTable('member', {
   id: text('id').primaryKey(),
@@ -255,8 +259,8 @@ export const member = createTable('member', {
   organizationId: text('organizationId')
     .notNull()
     .references(() => organization.id),
-  teamId: text('teamId'),
-  role: text('role').notNull().default('member'),
+  teamId: text('teamId').references(() => team.id),
+  role: roleEnum('role').notNull().default('member'),
   createdAt: timestamp('createdAt').notNull(),
 });
 
@@ -270,7 +274,7 @@ export const invitation = createTable('invitation', {
     .notNull()
     .references(() => organization.id),
   teamId: text('teamId'),
-  role: text('role').notNull().default('member'),
+  role: roleEnum('role').notNull().default('member'),
   status: text('status').notNull().default('pending'),
   expiresAt: timestamp('expiresAt'),
   createdAt: timestamp('createdAt').defaultNow(),
@@ -279,9 +283,9 @@ export const invitation = createTable('invitation', {
 export const team = createTable('team', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
-  organizationId: text('organizationId'),
-  createdAt: timestamp('createdAt').notNull(),
-  updatedAt: timestamp('updatedAt'),
+  organizationId: text('organizationId').references(() => organization.id),
+  created_at: timestamp('createdAt').notNull(),
+  updated_at: timestamp('updatedAt'),
 });
 
 export const oauthApplication = createTable(
