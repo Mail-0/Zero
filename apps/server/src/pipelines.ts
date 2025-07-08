@@ -308,8 +308,9 @@ export class ZeroWorkflow extends WorkflowEntrypoint<Env, Params> {
           },
         );
 
+        const agent = await getZeroAgent(connectionId.toString());
+
         await step.do(`[ZERO_WORKFLOW] Sync Threads ${historyProcessingKey}`, async () => {
-          const agent = await getZeroAgent(connectionId.toString());
           for (const threadId of threadsToProcess) {
             try {
               await agent.syncThread(threadId.toString());

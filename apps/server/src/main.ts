@@ -635,24 +635,29 @@ export default class extends WorkerEntrypoint<typeof env> {
     .get('/', (c) => c.redirect(`${env.VITE_PUBLIC_APP_URL}`))
     .post('/a8n/notify/:providerId', async (c) => {
       if (!c.req.header('Authorization')) return c.json({ error: 'Unauthorized' }, { status: 401 });
-      const providerId = c.req.param('providerId');
-      if (providerId === EProviders.google) {
-        const body = await c.req.json<{ historyId: string }>();
-        const subHeader = c.req.header('x-goog-pubsub-subscription-name');
-        const isValid = await verifyToken(c.req.header('Authorization')!.split(' ')[1]);
-        if (!isValid) {
-          console.log('[GOOGLE] invalid request', body);
-          return c.json({}, { status: 200 });
+      try {
+        const providerId = c.req.param('providerId');
+        if (providerId === EProviders.google) {
+          const body = await c.req.json<{ historyId: string }>();
+          const subHeader = c.req.header('x-goog-pubsub-subscription-name');
+          const isValid = await verifyToken(c.req.header('Authorization')!.split(' ')[1]);
+          if (!isValid) {
+            console.log('[GOOGLE] invalid request', body);
+            return c.json({}, { status: 200 });
+          }
+          const instance = await env.MAIN_WORKFLOW.create({
+            params: {
+              providerId,
+              historyId: body.historyId,
+              subscriptionName: subHeader,
+            },
+          });
+          console.log('[GOOGLE] created instance', instance.id, instance.status);
+          return c.json({ message: 'OK' }, { status: 200 });
         }
-        const instance = await env.MAIN_WORKFLOW.create({
-          params: {
-            providerId,
-            historyId: body.historyId,
-            subscriptionName: subHeader,
-          },
-        });
-        console.log('[GOOGLE] created instance', instance.id, instance.status);
-        return c.json({ message: 'OK' }, { status: 200 });
+      } catch (error) {
+        console.error('Error in Hono handler:', error);
+        return c.json({ error: 'Internal Server Error' }, 200);
       }
     });
 
