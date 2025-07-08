@@ -924,7 +924,7 @@ export function EmailComposer({
               >
                 <span>Bcc</span>
               </button>
-              {onClose && isMobile && (
+              {onClose && (
                 <button
                   tabIndex={-1}
                   className="flex h-full items-center gap-2 text-sm font-medium text-[#8C8C8C] hover:text-[#A8A8A8]"
