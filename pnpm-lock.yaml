@@ -54,10 +54,6 @@ patchedDependencies:
 importers:
 
   .:
-    dependencies:
-      '@tiptap/extension-file-handler':
-        specifier: 2.22.3
-        version: 2.22.3(@tiptap/core@2.25.0(@tiptap/pm@2.25.0))(@tiptap/extension-text-style@2.25.0(@tiptap/core@2.25.0(@tiptap/pm@2.25.0)))
     devDependencies:
       '@types/node':
         specifier: 22.15.29
@@ -3785,12 +3781,6 @@ packages:
       '@tiptap/core': ^2.7.0
       '@tiptap/pm': ^2.7.0
       '@tiptap/suggestion': ^2.7.0
-
-  '@tiptap/extension-file-handler@2.22.3':
-    resolution: {integrity: sha512-SiIUUAWgYw6CO3OB5ADgOVEzeLQQR5sKyNzoccbM58Cy1Jy1gSYPKlRAPIlxmgHc98Ke8abcHqgt37p+s74o3A==}
-    peerDependencies:
-      '@tiptap/core': ^2.7.0
-      '@tiptap/extension-text-style': ^2.7.0
 
   '@tiptap/extension-file-handler@2.25.0':
     resolution: {integrity: sha512-8qALTIz8rRumHP1vXYwCJ8IflfWJ8b9PMc/pcTOmyMfpUzwSn9tO6iVjuvWr5VgrcSgWErJB3YUq/1JiyxiCDA==}
@@ -11080,11 +11070,6 @@ snapshots:
       is-emoji-supported: 0.0.5
     transitivePeerDependencies:
       - emojibase
-
-  '@tiptap/extension-file-handler@2.22.3(@tiptap/core@2.25.0(@tiptap/pm@2.25.0))(@tiptap/extension-text-style@2.25.0(@tiptap/core@2.25.0(@tiptap/pm@2.25.0)))':
-    dependencies:
-      '@tiptap/core': 2.25.0(@tiptap/pm@2.25.0)
-      '@tiptap/extension-text-style': 2.25.0(@tiptap/core@2.25.0(@tiptap/pm@2.25.0))
 
   '@tiptap/extension-file-handler@2.25.0(@tiptap/core@2.25.0(@tiptap/pm@2.25.0))(@tiptap/extension-text-style@2.25.0(@tiptap/core@2.25.0(@tiptap/pm@2.25.0)))':
     dependencies:
