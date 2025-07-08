@@ -3,6 +3,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useTRPC } from '@/providers/query-provider';
 import { useQuery } from '@tanstack/react-query';
 import { getEmailLogo } from '@/lib/utils';
+import DOMPurify from 'dompurify';
 
 export const getFirstLetterCharacter = (name?: string) => {
   if (!name) return '';
@@ -65,7 +66,7 @@ export const BimiAvatar = ({
       {bimiData?.logo?.svgContent && !isLoading ? (
         <div
           className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white dark:bg-[#373737]"
-          dangerouslySetInnerHTML={{ __html: bimiData.logo.svgContent }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(bimiData.logo.svgContent) }}
         />
       ) : fallbackImageSrc && !useDefaultFallback ? (
         <AvatarImage

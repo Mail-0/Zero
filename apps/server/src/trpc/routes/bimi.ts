@@ -1,5 +1,6 @@
 import { router, privateProcedure, createRateLimiterMiddleware } from '../trpc';
 import { Ratelimit } from '@upstash/ratelimit';
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
 const parseBimiRecord = (record: string) => {
@@ -121,7 +122,10 @@ export const bimiRouter = router({
       const domain = input.email.split('@')[1];
 
       if (!domain) {
-        throw new Error('Invalid email address');
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Unable to extract domain from email address',
+        });
       }
 
       const bimiRecordText = await fetchDnsRecord(domain);
