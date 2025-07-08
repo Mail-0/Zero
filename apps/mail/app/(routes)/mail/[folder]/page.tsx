@@ -26,7 +26,7 @@ export default function MailPage() {
 
   const isStandardFolder = ALLOWED_FOLDERS.includes(folder);
 
-  const { data: userLabels, isLoading: isLoadingLabels } = useLabels();
+  const { userLabels, isLoading: isLoadingLabels } = useLabels();
 
   useEffect(() => {
     if (isStandardFolder) {

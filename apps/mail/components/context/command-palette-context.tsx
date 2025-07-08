@@ -197,7 +197,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
-  const { data: userLabels = [] } = useLabels();
+  const { userLabels = [] } = useLabels();
   const trpc = useTRPC();
   const { mutateAsync: generateSearchQuery, isPending } = useMutation(
     trpc.ai.generateSearchQuery.mutationOptions(),

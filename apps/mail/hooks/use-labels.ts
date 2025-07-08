@@ -9,11 +9,20 @@ export function useLabels() {
       staleTime: 1000 * 60 * 60, // 1 hour
     }),
   );
-  return labelQuery;
+
+  const { userLabels, systemLabels } = useMemo(() => {
+    if (!labelQuery.data) return { userLabels: [], systemLabels: [] };
+    return {
+      userLabels: labelQuery.data.filter((label) => label.type === 'user'),
+      systemLabels: labelQuery.data.filter((label) => label.type === 'system'),
+    };
+  }, [labelQuery.data]);
+
+  return { userLabels, systemLabels, ...labelQuery };
 }
 
 export function useThreadLabels(ids: string[]) {
-  const { data: labels = [] } = useLabels();
+  const { userLabels: labels = [] } = useLabels();
 
   const threadLabels = useMemo(() => {
     if (!labels) return [];

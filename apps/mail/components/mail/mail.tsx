@@ -22,6 +22,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
@@ -29,6 +35,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useActiveConnection, useConnections } from '@/hooks/use-connections';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCommandPalette } from '../context/command-palette-context';
+import { Check, ChevronDown, Command, RefreshCcw } from 'lucide-react';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { ThreadDisplay } from '@/components/mail/thread-display';
 import { trpcClient, useTRPC } from '@/providers/query-provider';
@@ -36,6 +43,7 @@ import { backgroundQueueAtom } from '@/store/backgroundQueue';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
 import { useMediaQuery } from '../../hooks/use-media-query';
 import { useSearchValue } from '@/hooks/use-search-value';
+import useSearchLabels from '@/hooks/use-labels-search';
 import * as CustomIcons from '@/components/icons/icons';
 import { isMac } from '@/lib/hotkeys/use-hotkey-utils';
 import { MailList } from '@/components/mail/mail-list';
@@ -49,7 +57,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { useBrainState } from '@/hooks/use-summary';
 import { clearBulkSelectionAtom } from './use-mail';
 import AISidebar from '@/components/ui/ai-sidebar';
-import { Command, RefreshCcw } from 'lucide-react';
 import { cleanSearchValue, cn } from '@/lib/utils';
 import { useThreads } from '@/hooks/use-threads';
 import { useBilling } from '@/hooks/use-billing';
@@ -57,6 +64,7 @@ import AIToggleButton from '../ai-toggle-button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
+import { useLabels } from '@/hooks/use-labels';
 import { useSession } from '@/lib/auth-client';
 import { ScrollArea } from '../ui/scroll-area';
 import { Label } from '@/components/ui/label';
@@ -111,9 +119,17 @@ export const defaultLabels = [
 const AutoLabelingSettings = () => {
   const trpc = useTRPC();
   const [open, setOpen] = useState(false);
-  const { data: storedLabels } = useQuery(trpc.brain.getLabels.queryOptions());
+  const { data: storedLabels, refetch: refetchStoredLabels } = useQuery(
+    trpc.brain.getLabels.queryOptions(void 0, {
+      staleTime: 1000 * 60 * 60, // 1 hour
+    }),
+  );
   const { mutateAsync: updateLabels, isPending } = useMutation(
-    trpc.brain.updateLabels.mutationOptions(),
+    trpc.brain.updateLabels.mutationOptions({
+      onSuccess: () => {
+        refetchStoredLabels();
+      },
+    }),
   );
   const [, setPricingDialog] = useQueryState('pricingDialog');
   const [labels, setLabels] = useState<ITag[]>([]);
@@ -482,7 +498,7 @@ export function MailLayout() {
             <div className="w-full md:h-[calc(100dvh-10px)]">
               <div
                 className={cn(
-                  'sticky top-0 z-[15] flex items-center justify-between gap-1.5 p-2 px-[20px] transition-colors md:min-h-14',
+                  'sticky top-0 z-[15] flex items-center justify-between gap-1.5 p-2 transition-colors md:min-h-14',
                 )}
               >
                 <div className="flex w-full items-center justify-between gap-2">
@@ -528,11 +544,11 @@ export function MailLayout() {
                   </div>
                 </div>
               </div>
-              <div className="p-2 px-[22px]">
+              <div className="flex gap-2 p-2">
                 <Button
                   variant="outline"
                   className={cn(
-                    'text-muted-foreground relative flex h-8 w-full select-none items-center justify-start overflow-hidden rounded-lg border bg-white pl-2 text-left text-sm font-normal shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-none dark:bg-[#141414]',
+                    'text-muted-foreground relative flex h-[1.875rem] w-full select-none items-center justify-start overflow-hidden rounded-lg border bg-white pl-2 text-left text-sm font-normal shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-none dark:bg-[#141414]',
                   )}
                   onClick={() => setIsCommandPaletteOpen('true')}
                 >
@@ -549,7 +565,7 @@ export function MailLayout() {
                       : 'Search...'}
                   </span>
 
-                  <span className="absolute right-[0.1rem] flex items-center gap-1">
+                  <span className="absolute right-[0rem] flex items-center gap-1">
                     {/* {activeFilters.length > 0 && (
                       <Badge variant="secondary" className="ml-2 h-5 rounded px-1">
                         {activeFilters.length}
@@ -568,7 +584,7 @@ export function MailLayout() {
                         Clear
                       </Button>
                     )}
-                    <kbd className="bg-muted text-md pointer-events-none hidden h-7 select-none flex-row items-center gap-1 rounded-md border-none px-2 font-medium !leading-[0] opacity-100 sm:flex dark:bg-[#262626] dark:text-[#929292]">
+                    <kbd className="bg-muted text-md pointer-events-none hidden h-[1.875rem] select-none flex-row items-center gap-1 rounded-md border-none px-2 font-medium !leading-[0] opacity-100 sm:flex dark:bg-[#262626] dark:text-[#929292]">
                       <span
                         className={cn(
                           'h-min !leading-[0.2]',
@@ -581,11 +597,9 @@ export function MailLayout() {
                     </kbd>
                   </span>
                 </Button>
-                {/* <div className="mt-2">
-                  {activeAccount?.providerId === 'google' && folder === 'inbox' && (
-                    <CategorySelect isMultiSelectMode={mail.bulkSelected.length > 0} />
-                  )}
-                </div> */}
+                {activeConnection?.providerId === 'google' && folder === 'inbox' && (
+                  <CategoryDropdown isMultiSelectMode={mail.bulkSelected.length > 0} />
+                )}
               </div>
               <div
                 className={cn(
@@ -946,9 +960,81 @@ function getCategoryColor(categoryId: string): string {
   }
 }
 
+interface CategoryDropdownProps {
+  isMultiSelectMode?: boolean;
+}
+
+function CategoryDropdown({ isMultiSelectMode }: CategoryDropdownProps) {
+  const { systemLabels } = useLabels();
+  const { setLabels, labels } = useSearchLabels();
+  const params = useParams<{ folder: string }>();
+  const folder = params?.folder ?? 'inbox';
+  const [isOpen, setIsOpen] = useState(false);
+
+  if (folder !== 'inbox' || isMultiSelectMode) return null;
+
+  const handleLabelChange = (labelId: string) => {
+    const index = labels.indexOf(labelId);
+    if (index !== -1) {
+      const newLabels = [...labels];
+      newLabels.splice(index, 1);
+      setLabels(newLabels);
+    } else {
+      setLabels([...labels, labelId]);
+    }
+  };
+
+  return (
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          className={cn(
+            'flex h-7 min-w-fit items-center gap-1 rounded-md border-none bg-[#006FFE] px-2 text-white',
+          )}
+          aria-label="Filter by labels"
+          aria-expanded={isOpen}
+          aria-haspopup="menu"
+        >
+          <div className="relative overflow-visible">
+            <Mail className="h-4 w-4 fill-white dark:fill-white" />
+          </div>
+          <span className="text-xs font-medium">Labels</span>
+          <ChevronDown
+            className={`h-2 w-2 text-white transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
+          />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        className="bg-muted w-48 font-medium dark:bg-[#2C2C2C]"
+        align="start"
+        role="menu"
+        aria-label="Label filter options"
+      >
+        {systemLabels.map((label) => (
+          <DropdownMenuItem
+            key={label.id}
+            className="flex cursor-pointer items-center gap-2 hover:bg-white/10"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleLabelChange(label.id);
+            }}
+            role="menuitemcheckbox"
+            aria-checked={labels.includes(label.id)}
+          >
+            <span className="text-muted-foreground capitalize">{label.name.toLowerCase()}</span>
+            {labels.includes(label.id) && <Check className="ml-auto h-3 w-3" />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
   const [mail, setMail] = useMail();
-  const [searchValue, setSearchValue] = useSearchValue();
+  const { setLabels } = useSearchLabels();
   const categories = Categories();
   const params = useParams<{ folder: string }>();
   const folder = params?.folder ?? 'inbox';
@@ -962,59 +1048,61 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
   const [textSize, setTextSize] = useState<'normal' | 'small' | 'xs' | 'hidden'>('normal');
   const isDesktop = useMediaQuery('(min-width: 1024px)');
 
+  // const categories
+
   if (folder !== 'inbox') return <div className="h-8"></div>;
 
-  useEffect(() => {
-    const checkTextSize = () => {
-      const container = containerRef.current;
-      if (!container) return;
+  // useEffect(() => {
+  //     const checkTextSize = () => {
+  //       const container = containerRef.current;
+  //       if (!container) return;
 
-      const containerWidth = container.offsetWidth;
-      const selectedCategory = categories.find((cat) => cat.id === category);
+  //       const containerWidth = container.offsetWidth;
+  //       const selectedCategory = categories.find((cat) => cat.id === category);
 
-      // Calculate approximate widths needed for different text sizes
-      const baseIconWidth = (categories.length - 1) * 40; // unselected icons + gaps
-      const selectedTextLength = selectedCategory ? selectedCategory.name.length : 10;
+  //       // Calculate approximate widths needed for different text sizes
+  //       const baseIconWidth = (categories.length - 1) * 40; // unselected icons + gaps
+  //       const selectedTextLength = selectedCategory ? selectedCategory.name.length : 10;
 
-      // Estimate width needed for different text sizes
-      const normalTextWidth = selectedTextLength * 8 + 60; // normal text
-      const smallTextWidth = selectedTextLength * 7 + 50; // smaller text
-      const xsTextWidth = selectedTextLength * 6 + 40; // extra small text
-      const minIconWidth = 40; // minimum width for icon-only selected button
+  //       // Estimate width needed for different text sizes
+  //       const normalTextWidth = selectedTextLength * 8 + 60; // normal text
+  //       const smallTextWidth = selectedTextLength * 7 + 50; // smaller text
+  //       const xsTextWidth = selectedTextLength * 6 + 40; // extra small text
+  //       const minIconWidth = 40; // minimum width for icon-only selected button
 
-      const totalNormal = baseIconWidth + normalTextWidth;
-      const totalSmall = baseIconWidth + smallTextWidth;
-      const totalXs = baseIconWidth + xsTextWidth;
-      const totalIconOnly = baseIconWidth + minIconWidth;
+  //       const totalNormal = baseIconWidth + normalTextWidth;
+  //       const totalSmall = baseIconWidth + smallTextWidth;
+  //       const totalXs = baseIconWidth + xsTextWidth;
+  //       const totalIconOnly = baseIconWidth + minIconWidth;
 
-      if (containerWidth >= totalNormal) {
-        setTextSize('normal');
-      } else if (containerWidth >= totalSmall) {
-        setTextSize('small');
-      } else if (containerWidth >= totalXs) {
-        setTextSize('xs');
-      } else if (containerWidth >= totalIconOnly) {
-        setTextSize('hidden'); // Hide text but keep button wide
-      } else {
-        setTextSize('hidden'); // Hide text in very tight spaces
-      }
-    };
+  //       if (containerWidth >= totalNormal) {
+  //         setTextSize('normal');
+  //       } else if (containerWidth >= totalSmall) {
+  //         setTextSize('small');
+  //       } else if (containerWidth >= totalXs) {
+  //         setTextSize('xs');
+  //       } else if (containerWidth >= totalIconOnly) {
+  //         setTextSize('hidden'); // Hide text but keep button wide
+  //       } else {
+  //         setTextSize('hidden'); // Hide text in very tight spaces
+  //       }
+  //     };
 
-    checkTextSize();
+  //     checkTextSize();
 
-    // Use ResizeObserver to handle container size changes
-    const resizeObserver = new ResizeObserver(() => {
-      checkTextSize();
-    });
+  //     // Use ResizeObserver to handle container size changes
+  //     const resizeObserver = new ResizeObserver(() => {
+  //       checkTextSize();
+  //     });
 
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current);
-    }
+  //     if (containerRef.current) {
+  //       resizeObserver.observe(containerRef.current);
+  //     }
 
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, [category, categories]);
+  //     return () => {
+  //       resizeObserver.disconnect();
+  //     };
+  //   }, [category, categories]);
 
   const renderCategoryButton = (cat: CategoryType, isOverlay = false, idx: number) => {
     const isSelected = cat.id === (category || 'Primary');
@@ -1059,11 +1147,11 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
         ref={!isOverlay ? activeTabElementRef : null}
         onClick={() => {
           setCategory(cat.id);
-          setSearchValue({
-            value: `${cat.searchValue} ${cleanSearchValue(searchValue.value).trim().length ? `AND ${cleanSearchValue(searchValue.value)}` : ''}`,
-            highlight: searchValue.highlight,
-            folder: '',
-          });
+          //   setSearchValue({
+          //     value: `${cat.searchValue} ${cleanSearchValue(searchValue.value).trim().length ? `AND ${cleanSearchValue(searchValue.value)}` : ''}`,
+          //     highlight: searchValue.highlight,
+          //     folder: '',
+          //   });
         }}
         className={cn(
           'flex h-8 items-center justify-center gap-1 overflow-hidden rounded-lg border transition-all duration-300 ease-out dark:border-none',
@@ -1110,22 +1198,22 @@ function CategorySelect({ isMultiSelectMode }: { isMultiSelectMode: boolean }) {
   };
 
   // Update clip path when category changes
-  useEffect(() => {
-    const container = overlayContainerRef.current;
-    const activeTabElement = activeTabElementRef.current;
+  //   useEffect(() => {
+  //     const container = overlayContainerRef.current;
+  //     const activeTabElement = activeTabElementRef.current;
 
-    if (category && container && activeTabElement) {
-      setMail({ ...mail, bulkSelected: [] });
-      const { offsetLeft, offsetWidth } = activeTabElement;
-      const clipLeft = Math.max(0, offsetLeft - 2);
-      const clipRight = Math.min(container.offsetWidth, offsetLeft + offsetWidth + 2);
-      const containerWidth = container.offsetWidth;
+  //     if (category && container && activeTabElement) {
+  //       setMail({ ...mail, bulkSelected: [] });
+  //       const { offsetLeft, offsetWidth } = activeTabElement;
+  //       const clipLeft = Math.max(0, offsetLeft - 2);
+  //       const clipRight = Math.min(container.offsetWidth, offsetLeft + offsetWidth + 2);
+  //       const containerWidth = container.offsetWidth;
 
-      if (containerWidth) {
-        container.style.clipPath = `inset(0 ${Number(100 - (clipRight / containerWidth) * 100).toFixed(2)}% 0 ${Number((clipLeft / containerWidth) * 100).toFixed(2)}%)`;
-      }
-    }
-  }, [category, textSize]); // Changed from showText to textSize
+  //       if (containerWidth) {
+  //         container.style.clipPath = `inset(0 ${Number(100 - (clipRight / containerWidth) * 100).toFixed(2)}% 0 ${Number((clipLeft / containerWidth) * 100).toFixed(2)}%)`;
+  //       }
+  //     }
+  //   }, [category, textSize]); // Changed from showText to textSize
 
   if (isMultiSelectMode) {
     return <BulkSelectActions />;

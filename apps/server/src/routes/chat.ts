@@ -672,7 +672,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     if (!this.driver) {
       throw new Error('No driver available');
     }
-    return (await this.driver.getUserLabels()).filter((label) => label.type === 'user');
+    return await this.driver.getUserLabels();
   }
 
   async getLabel(id: string) {
