@@ -58,17 +58,11 @@ export const NotificationProvider = () => {
             exact: true,
             predicate: (query) => {
               const queryAge = Date.now() - (query.state.dataUpdatedAt || 0);
-              console.log({ queryAge, query: query.queryKey });
               return queryAge > 60000; // 1 minute in milliseconds
             },
           });
         } else if (type === IncomingMessageType.Mail_List) {
           const { folder } = JSON.parse(message.data);
-          console.log({
-            folder,
-            labelIds: labels,
-            q: searchValue.value,
-          });
           queryClient.invalidateQueries({
             queryKey: trpc.mail.listThreads.infiniteQueryKey({
               folder,

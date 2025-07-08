@@ -404,9 +404,9 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
       if (_connection) this.driver = connectionToDriver(_connection);
       this.ctx.waitUntil(conn.end());
       this.ctx.waitUntil(this.syncThreads('inbox'));
-      //   this.ctx.waitUntil(this.syncThreads('sent'));
-      //   this.ctx.waitUntil(this.syncThreads('spam'));
-      //   this.ctx.waitUntil(this.syncThreads('archive'));
+      this.ctx.waitUntil(this.syncThreads('sent'));
+      this.ctx.waitUntil(this.syncThreads('spam'));
+      this.ctx.waitUntil(this.syncThreads('archive'));
     }
   }
 
