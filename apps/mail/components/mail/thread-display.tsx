@@ -755,7 +755,7 @@ export function ThreadDisplay() {
           <div className="flex h-full items-center justify-center">
             <div className="flex flex-col items-center justify-center gap-2 text-center">
               <EmptyStateIcon width={200} height={200} />
-              <div className="mt-5">
+              <div className="mt-4">
                 <p className="text-lg">It's empty here</p>
                 <p className="text-md text-muted-foreground dark:text-white/50">
                   Choose an email to view details
