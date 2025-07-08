@@ -14,7 +14,7 @@ export function processEmailHtml({ html, shouldLoadImages, theme }: ProcessEmail
   let hasBlockedImages = false;
 
   const sanitizeConfig: sanitizeHtml.IOptions = {
-    allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'style', 'title']),
+    allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'title']),
 
     allowedAttributes: {
       '*': [
@@ -95,6 +95,26 @@ export function processEmailHtml({ html, shouldLoadImages, theme }: ProcessEmail
 
   const $ = cheerio.load(sanitized);
 
+  const collapseQuoted = (selector: string) => {
+    $(selector).each((_, el) => {
+      const $el = $(el);
+      if ($el.parents('details.quoted-toggle').length) return;
+
+      const innerHtml = $el.html();
+      const detailsHtml = `<details class="quoted-toggle" style="margin-top:1em;">
+          <summary style="cursor:pointer; color:${theme === 'dark' ? '#9CA3AF' : '#6B7280'};">
+            Show quoted text
+          </summary>
+          ${innerHtml}
+        </details>`;
+
+      $el.replaceWith(detailsHtml);
+    });
+  };
+
+  collapseQuoted('blockquote');
+  collapseQuoted('.gmail_quote');
+
   $('title').remove();
 
   $('img[width="1"][height="1"]').remove();
@@ -165,6 +185,24 @@ export function processEmailHtml({ html, shouldLoadImages, theme }: ProcessEmail
       ::selection {
         background: #b3d4fc;
         text-shadow: none;
+      }
+
+      /* Styling for collapsed quoted text */
+      details.quoted-toggle {
+        border-left: 2px solid ${theme === 'dark' ? '#374151' : '#d1d5db'};
+        padding-left: 8px;
+        margin-top: 0.75rem;
+      }
+
+      details.quoted-toggle summary {
+        cursor: pointer;
+        color: ${theme === 'dark' ? '#9CA3AF' : '#6B7280'};
+        list-style: none;
+        user-select: none;
+      }
+
+      details.quoted-toggle summary::-webkit-details-marker {
+        display: none;
       }
     </style>
   `;
