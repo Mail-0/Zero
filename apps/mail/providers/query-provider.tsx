@@ -51,7 +51,7 @@ export const makeQueryClient = (connectionId: string | null) =>
         retry: false,
         refetchOnWindowFocus: false,
         queryKeyHashFn: (queryKey) => hashKey([{ connectionId }, ...queryKey]),
-        gcTime: 1000 * 60 * 60 * 24,
+        gcTime: 1000 * 60 * 1,
       },
       mutations: {
         onError: (err) => console.error(err.message),
