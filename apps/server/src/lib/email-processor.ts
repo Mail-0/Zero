@@ -13,6 +13,9 @@ export function processEmailHtml({ html, shouldLoadImages, theme }: ProcessEmail
 } {
   let hasBlockedImages = false;
 
+  const validatedTheme: 'light' | 'dark' = theme === 'dark' ? 'dark' : 'light';
+  const isDarkTheme = validatedTheme === 'dark';
+
   const sanitizeConfig: sanitizeHtml.IOptions = {
     allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'title']),
 
@@ -101,8 +104,9 @@ export function processEmailHtml({ html, shouldLoadImages, theme }: ProcessEmail
       if ($el.parents('details.quoted-toggle').length) return;
 
       const innerHtml = $el.html();
+      if (typeof innerHtml !== 'string') return;
       const detailsHtml = `<details class="quoted-toggle" style="margin-top:1em;">
-          <summary style="cursor:pointer; color:${theme === 'dark' ? '#9CA3AF' : '#6B7280'};">
+          <summary style="cursor:pointer; color:${isDarkTheme ? '#9CA3AF' : '#6B7280'};">
             Show quoted text
           </summary>
           ${innerHtml}
@@ -149,8 +153,8 @@ export function processEmailHtml({ html, shouldLoadImages, theme }: ProcessEmail
         overflow: auto;
         font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
         line-height: 1.5;
-        background-color: ${theme === 'dark' ? '#1A1A1A' : '#ffffff'};
-        color: ${theme === 'dark' ? '#ffffff' : '#000000'};
+        background-color: ${isDarkTheme ? '#1A1A1A' : '#ffffff'};
+        color: ${isDarkTheme ? '#ffffff' : '#000000'};
       }
 
       *, *::before, *::after {
@@ -164,12 +168,12 @@ export function processEmailHtml({ html, shouldLoadImages, theme }: ProcessEmail
 
       a {
         cursor: pointer;
-        color: ${theme === 'dark' ? '#60a5fa' : '#2563eb'};
+        color: ${isDarkTheme ? '#60a5fa' : '#2563eb'};
         text-decoration: underline;
       }
 
       a:hover {
-        color: ${theme === 'dark' ? '#93bbfc' : '#1d4ed8'};
+        color: ${isDarkTheme ? '#93bbfc' : '#1d4ed8'};
       }
 
       img {
@@ -189,14 +193,14 @@ export function processEmailHtml({ html, shouldLoadImages, theme }: ProcessEmail
 
       /* Styling for collapsed quoted text */
       details.quoted-toggle {
-        border-left: 2px solid ${theme === 'dark' ? '#374151' : '#d1d5db'};
+        border-left: 2px solid ${isDarkTheme ? '#374151' : '#d1d5db'};
         padding-left: 8px;
         margin-top: 0.75rem;
       }
 
       details.quoted-toggle summary {
         cursor: pointer;
-        color: ${theme === 'dark' ? '#9CA3AF' : '#6B7280'};
+        color: ${isDarkTheme ? '#9CA3AF' : '#6B7280'};
         list-style: none;
         user-select: none;
       }
