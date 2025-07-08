@@ -16,9 +16,9 @@ import { getContext } from 'hono/context-storage';
 import { defaultUserSettings } from './schemas';
 import { getMigrations } from 'better-auth/db';
 import { disableBrainFunction } from './brain';
+import { type EProviders } from '../types';
 import { APIError } from 'better-auth/api';
 import { getZeroDB } from './server-utils';
-import type { EProviders } from '../types';
 import type { HonoContext } from '../ctx';
 import { env } from 'cloudflare:workers';
 import { createDriver } from './driver';
@@ -117,6 +117,8 @@ export const createAuth = () => {
           if (!request) throw new APIError('BAD_REQUEST', { message: 'Request object is missing' });
           const db = getZeroDB(user.id);
           const connections = await db.findManyConnections();
+          const context = getContext<HonoContext>();
+          await context.var.autumn.customers.delete(user.id);
 
           const revokedAccounts = (
             await Promise.allSettled(
