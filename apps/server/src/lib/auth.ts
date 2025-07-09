@@ -115,9 +115,12 @@ export const createAuth = () => {
             }
           },
           afterCreate: async ({ organization, member, user }, request) => {
-            console.log('organization created', organization, member, user, request);
-          },
-        }
+              // Run custom logic after organization is created
+              // e.g., create default resources, send notifications
+              // await setupDefaultResources(organization.id)
+              console.log('organization created', organization, member, user, request);
+          },     
+      }
       }),
       mcp({
         loginPage: env.VITE_PUBLIC_APP_URL + '/login',
@@ -353,7 +356,7 @@ async function sendOrganizationInvitation({ email, invitedByUsername, invitedByE
   console.log('[INVITE] Email Params:', { email, invitedByUsername, invitedByEmail, teamName, inviteLink });
   try {
     await resend().emails.send({
-      from: '0.email <no-reply@0.email>',
+      from: '0.email <me@amritwt.me>',
       to: email,
       subject: `You have been invited to join ${teamName} on 0.email`,
       html: `

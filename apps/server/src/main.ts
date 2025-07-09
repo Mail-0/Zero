@@ -43,6 +43,7 @@ import { appRouter } from './trpc';
 import { cors } from 'hono/cors';
 import { Hono } from 'hono';
 import { orgRouter } from './routes/organization';
+import { invitationRouter } from './routes/invitation';
 
 export class DbRpcDO extends RpcTarget {
   constructor(
@@ -585,6 +586,7 @@ export default class extends WorkerEntrypoint<typeof env> {
     .route('/autumn', autumnApi)
     .route('/public', publicRouter)
     .route('/organization', orgRouter)
+    .route('/invitations', invitationRouter)
     .on(['GET', 'POST', 'OPTIONS'], '/auth/*', (c) => {
       return c.var.auth.handler(c.req.raw);
     })
