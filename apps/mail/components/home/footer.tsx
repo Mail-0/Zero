@@ -3,6 +3,7 @@ import { motion, useInView } from 'motion/react';
 import { Button } from '../ui/button';
 import { Link } from 'react-router';
 import { useRef } from 'react';
+import React from 'react';
 
 const socialLinks = [
   {
@@ -61,7 +62,7 @@ export default function Footer() {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="hidden flex-col items-center justify-start md:flex"
               >
-                <div className="justify-start text-center text-lg font-normal leading-7 text-white lg:text-2xl">
+                <div className="justify-start text-center text-lg leading-7 font-normal text-white lg:text-2xl">
                   Get started and see how 0.email helps you process your inbox in a fraction of the
                   time.
                 </div>
@@ -80,7 +81,7 @@ export default function Footer() {
           </div>
         </div>
       </div>
-      <div className="relative z-50 mx-auto mb-12 mt-52 flex max-w-[2900px] flex-col items-start justify-start gap-10 self-stretch px-4">
+      <div className="relative z-50 mx-auto mt-52 mb-12 flex max-w-[2900px] flex-col items-start justify-start gap-10 self-stretch px-4">
         <div className="flex w-full items-start justify-between lg:w-[900px]">
           <div className="inline-flex flex-col items-start justify-between self-stretch">
             <div className="inline-flex w-8 items-center justify-start gap-3">
@@ -104,7 +105,7 @@ export default function Footer() {
               ))}
             </div>
             <div className="flex items-center justify-start gap-3">
-              <div className="justify-start text-base font-normal leading-none text-white opacity-80">
+              <div className="justify-start text-base leading-none font-normal text-white opacity-80">
                 Backed by
               </div>
               <a href="https://www.ycombinator.com" target="_blank" rel="noopener noreferrer">
@@ -121,26 +122,21 @@ export default function Footer() {
             </div>
           </div>
           <div className="flex flex-1 items-start justify-end gap-10 opacity-0 md:opacity-100">
-          <div className="inline-flex flex-col items-start justify-start gap-5">
+            <div className="inline-flex flex-col items-start justify-start gap-5">
               <div className="justify-start self-stretch text-sm font-normal text-white/40">
                 Resources
               </div>
               <div className="flex flex-col items-start justify-start gap-4 self-stretch">
                 <a target="_blank" href="https://trust.inc/zero" className="w-full">
-                  <div className="justify-start self-stretch text-base font-normal leading-none text-white opacity-80 transition-opacity hover:opacity-100">
+                  <div className="justify-start self-stretch text-base leading-none font-normal text-white opacity-80 transition-opacity hover:opacity-100">
                     SOC2
                   </div>
                 </a>
-                <a
-                  href="/privacy"
-                  className="w-full"
-                  target="_blank"
-                >
+                <a href="/privacy" className="w-full" target="_blank">
                   <div className="justify-start self-stretch text-base leading-none text-white opacity-80 transition-opacity hover:opacity-100">
                     Privacy Policy
                   </div>
                 </a>
-                
               </div>
             </div>
             <div className="inline-flex flex-col items-start justify-start gap-5">
@@ -182,36 +178,35 @@ export default function Footer() {
                 Company
               </div>
               <div className="flex flex-col items-start justify-start gap-4 self-stretch">
-                <a target="_blank" href="/contributors" className="w-full">
-                  <div className="justify-start self-stretch text-base font-normal leading-none text-white opacity-80 transition-opacity hover:opacity-100">
+                <a target="_self" href="/contributors" className="w-full">
+                  <div className="justify-start self-stretch text-base leading-none font-normal text-white opacity-80 transition-opacity hover:opacity-100">
                     Contributors
                   </div>
                 </a>
-                <a target="_blank" href="/about" className="w-full">
-                  <div className="justify-start self-stretch text-base font-normal leading-none text-white opacity-80 transition-opacity hover:opacity-100">
+                <a target="_self" href="/about" className="w-full">
+                  <div className="justify-start self-stretch text-base leading-none font-normal text-white opacity-80 transition-opacity hover:opacity-100">
                     About
                   </div>
                 </a>
                 <a target="_blank" href="https://github.com/Mail-0/Zero" className="w-full">
-                  <div className="justify-start self-stretch text-base font-normal leading-none text-white opacity-80 transition-opacity hover:opacity-100">
+                  <div className="justify-start self-stretch text-base leading-none font-normal text-white opacity-80 transition-opacity hover:opacity-100">
                     Github
                   </div>
                 </a>
               </div>
             </div>
-            
           </div>
         </div>
         <div className="h-0.5 self-stretch bg-white/20" />
         <div className="flex flex-col items-start justify-start gap-6 self-stretch">
           <div className="inline-flex items-center justify-between self-stretch">
-            <div className="justify-start text-xs font-medium leading-tight text-white opacity-80 sm:text-sm">
+            <div className="justify-start text-xs leading-tight font-medium text-white opacity-80 sm:text-sm">
               © 2025 Zero Email Inc, All Rights Reserved
             </div>
             <div className="flex items-center justify-start gap-4">
               <Link
                 to="/about"
-                className="justify-start text-sm font-normal leading-tight text-white/70 opacity-80 transition-opacity hover:opacity-100"
+                className="justify-start text-sm leading-tight font-normal text-white/70 opacity-80 transition-opacity hover:opacity-100"
               >
                 About
               </Link>
@@ -219,14 +214,14 @@ export default function Footer() {
 
               <Link
                 to="/terms"
-                className="justify-start text-sm font-normal leading-tight text-white/70 opacity-80 transition-opacity hover:opacity-100"
+                className="justify-start text-sm leading-tight font-normal text-white/70 opacity-80 transition-opacity hover:opacity-100"
               >
                 Terms & Conditions
               </Link>
               <div className="h-5 w-0 outline outline-1 outline-offset-[-0.50px] outline-white/20" />
               <Link
                 to="/privacy"
-                className="justify-start text-sm font-normal leading-tight text-white/70 opacity-80 transition-opacity hover:opacity-100"
+                className="justify-start text-sm leading-tight font-normal text-white/70 opacity-80 transition-opacity hover:opacity-100"
               >
                 Privacy Policy
               </Link>

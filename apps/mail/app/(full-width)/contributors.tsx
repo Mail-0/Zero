@@ -8,6 +8,7 @@ import {
   GitPullRequest,
   LayoutGrid,
   FileCode,
+  ArrowLeft,
 } from 'lucide-react';
 import {
   Area,
@@ -29,6 +30,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import React from 'react';
 
 interface Contributor {
   login: string;
@@ -372,8 +374,22 @@ export default function OpenPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-white text-black dark:bg-neutral-950 dark:text-white">
+    <div className="relative min-h-screen w-full bg-white text-black dark:bg-neutral-950 dark:text-white">
       <Navigation />
+
+      <div className="absolute top-6 right-4 md:top-8 md:right-auto md:left-8">
+        <a href="/">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-2 text-gray-600 hover:text-gray-900 dark:text-white dark:hover:text-white/80"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+        </a>
+      </div>
+
       <div className="container mx-auto max-w-6xl px-4 py-8">
         {/* Header with theme toggle */}
         <div className="mb-6 flex justify-end">
@@ -1007,7 +1023,7 @@ export default function OpenPage() {
           </div>
         </div>
 
-        <div className="mb-6 mt-2 flex items-center justify-center gap-4">
+        <div className="mt-2 mb-6 flex items-center justify-center gap-4">
           <a
             href="https://discord.gg/mail0"
             target="_blank"
