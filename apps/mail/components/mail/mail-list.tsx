@@ -70,7 +70,7 @@ const Thread = memo(
   }: ThreadProps & { index?: number }) {
     const [searchValue, setSearchValue] = useSearchValue();
     const { folder } = useParams<{ folder: string }>();
-    const [{ }, threads] = useThreads();
+    const [{}, threads] = useThreads();
     const [threadId] = useQueryState('threadId');
     const {
       data: getThreadData,
@@ -250,7 +250,7 @@ const Thread = memo(
             className={cn(
               'hover:bg-offsetLight hover:bg-primary/5 group relative mx-1 flex cursor-pointer flex-col items-start rounded-lg py-2 text-left text-sm transition-all hover:opacity-100',
               (isMailSelected || isMailBulkSelected || isKeyboardFocused) &&
-              'border-border bg-primary/5 opacity-100',
+                'border-border bg-primary/5 opacity-100',
               isKeyboardFocused && 'ring-primary/50',
               'relative',
               'group',

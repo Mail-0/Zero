@@ -74,9 +74,9 @@ export function Layout({ children }: PropsWithChildren) {
         <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
         <link rel="manifest" href="/manifest.json" />
         <Meta />
-        {/* {import.meta.env.REACT_SCAN && ( */}
-        <script crossOrigin="anonymous" src="//unpkg.com/react-scan/dist/auto.global.js" />
-        {/* )} */}
+        {import.meta.env.REACT_SCAN && (
+          <script crossOrigin="anonymous" src="//unpkg.com/react-scan/dist/auto.global.js" />
+        )}
         <Links />
       </head>
       <body className="antialiased">
