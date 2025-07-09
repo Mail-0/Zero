@@ -15,7 +15,7 @@ import { m } from '@/paraglide/messages';
 export function MailListHotkeys() {
   const scope = 'mail-list';
   const [mail, setMail] = useMail();
-  const [{}, items] = useThreads();
+  const [{ }, items] = useThreads();
   const hoveredEmailId = useRef<string | null>(null);
   const categories = Categories();
   const [, setCategory] = useQueryState('category');

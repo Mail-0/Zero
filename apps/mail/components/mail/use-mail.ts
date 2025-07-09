@@ -1,5 +1,12 @@
 import { atom, useAtom } from 'jotai';
 
+export const selectedAtom = atom<string | null>(null);
+export const bulkSelectedAtom = atom<string[]>([]);
+export const replyComposerOpenAtom = atom<boolean>(false);
+export const replyAllComposerOpenAtom = atom<boolean>(false);
+export const forwardComposerOpenAtom = atom<boolean>(false);
+export const showImagesAtom = atom<boolean>(false);
+
 export type Config = {
   selected: string | null;
   bulkSelected: string[];
@@ -23,6 +30,5 @@ export function useMail() {
 }
 
 export const clearBulkSelectionAtom = atom(null, (get, set) => {
-  const current = get(configAtom);
-  set(configAtom, { ...current, bulkSelected: [] });
+  set(bulkSelectedAtom, []);
 });
