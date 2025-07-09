@@ -84,6 +84,25 @@ export const createAuth = () => {
           // return subscription.plan === "pro"
           return true;
         },
+        async sendInvitationEmail(data: {
+          id: string;
+          email: string;
+          inviter: { user: { name: string; email: string } };
+          organization: { name: string };
+        }) {
+          console.log('[INVITE] sendInvitationEmail HOOK TRIGGERED');
+          console.log('[INVITE] Invitation Data:', JSON.stringify(data, null, 2));
+          const inviteLink = `${env.VITE_PUBLIC_APP_URL}/accept-invitation/${data.id}`;
+          console.log('[INVITE] Generated invite link:', inviteLink);
+          await sendOrganizationInvitation({
+            email: data.email,
+            invitedByUsername: data.inviter.user.name,
+            invitedByEmail: data.inviter.user.email,
+            teamName: data.organization.name,
+            inviteLink
+          });
+          console.log('[INVITE] sendInvitationEmail HOOK COMPLETED');
+        },
         organizationCreation: {
           beforeCreate: async ({ organization, user }, request) => {
             return {
@@ -97,25 +116,6 @@ export const createAuth = () => {
           },
           afterCreate: async ({ organization, member, user }, request) => {
             console.log('organization created', organization, member, user, request);
-          },
-          async sendInvitationEmail(data: {
-            id: string;
-            email: string;
-            inviter: { user: { name: string; email: string } };
-            organization: { name: string };
-          }) {
-            console.log('[INVITE] sendInvitationEmail HOOK TRIGGERED');
-            console.log('[INVITE] Invitation Data:', JSON.stringify(data, null, 2));
-            const inviteLink = `${env.VITE_PUBLIC_APP_URL}/accept-invitation/${data.id}`;
-            console.log('[INVITE] Generated invite link:', inviteLink);
-            await sendOrganizationInvitation({
-              email: data.email,
-              invitedByUsername: data.inviter.user.name,
-              invitedByEmail: data.inviter.user.email,
-              teamName: data.organization.name,
-              inviteLink
-            });
-            console.log('[INVITE] sendInvitationEmail HOOK COMPLETED');
           },
         }
       }),
