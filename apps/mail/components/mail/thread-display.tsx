@@ -514,24 +514,23 @@ export function ThreadDisplay() {
         </head>
         <body>
           ${emailData?.messages
-            ?.map(
-              (message, index) => `
+          ?.map(
+            (message, index) => `
             <div class="email-container">
               <div class="email-header">
                 ${index === 0 ? `<h1 class="email-title">${message.subject || 'No Subject'}</h1>` : ''}
 
 
-                ${
-                  message?.tags && message.tags.length > 0
-                    ? `
+                ${message?.tags && message.tags.length > 0
+                ? `
                   <div class="labels-section">
                     ${message.tags
-                      .map((tag) => `<span class="label-badge">${tag.name}</span>`)
-                      .join('')}
+                  .map((tag) => `<span class="label-badge">${tag.name}</span>`)
+                  .join('')}
                   </div>
                 `
-                    : ''
-                }
+                : ''
+              }
 
 
                 <div class="email-meta">
@@ -544,61 +543,58 @@ export function ThreadDisplay() {
                   </div>
 
 
-                  ${
-                    message.to && message.to.length > 0
-                      ? `
+                  ${message.to && message.to.length > 0
+                ? `
                     <div class="meta-row">
                       <span class="meta-label">To:</span>
                       <span class="meta-value">
                         ${message.to
-                          .map(
-                            (recipient) =>
-                              `${cleanNameDisplay(recipient.name)} <${recipient.email}>`,
-                          )
-                          .join(', ')}
+                  .map(
+                    (recipient) =>
+                      `${cleanNameDisplay(recipient.name)} <${recipient.email}>`,
+                  )
+                  .join(', ')}
                       </span>
                     </div>
                   `
-                      : ''
-                  }
+                : ''
+              }
 
 
-                  ${
-                    message.cc && message.cc.length > 0
-                      ? `
+                  ${message.cc && message.cc.length > 0
+                ? `
                     <div class="meta-row">
                       <span class="meta-label">CC:</span>
                       <span class="meta-value">
                         ${message.cc
-                          .map(
-                            (recipient) =>
-                              `${cleanNameDisplay(recipient.name)} <${recipient.email}>`,
-                          )
-                          .join(', ')}
+                  .map(
+                    (recipient) =>
+                      `${cleanNameDisplay(recipient.name)} <${recipient.email}>`,
+                  )
+                  .join(', ')}
                       </span>
                     </div>
                   `
-                      : ''
-                  }
+                : ''
+              }
 
 
-                  ${
-                    message.bcc && message.bcc.length > 0
-                      ? `
+                  ${message.bcc && message.bcc.length > 0
+                ? `
                     <div class="meta-row">
                       <span class="meta-label">BCC:</span>
                       <span class="meta-value">
                         ${message.bcc
-                          .map(
-                            (recipient) =>
-                              `${cleanNameDisplay(recipient.name)} <${recipient.email}>`,
-                          )
-                          .join(', ')}
+                  .map(
+                    (recipient) =>
+                      `${cleanNameDisplay(recipient.name)} <${recipient.email}>`,
+                  )
+                  .join(', ')}
                       </span>
                     </div>
                   `
-                      : ''
-                  }
+                : ''
+              }
 
 
                   <div class="meta-row">
@@ -617,30 +613,29 @@ export function ThreadDisplay() {
               </div>
 
 
-              ${
-                message.attachments && message.attachments.length > 0
-                  ? `
+              ${message.attachments && message.attachments.length > 0
+                ? `
                 <div class="attachments-section">
                   <h2 class="attachments-title">Attachments (${message.attachments.length})</h2>
                   ${message.attachments
-                    .map(
-                      (attachment, index) => `
+                  .map(
+                    (attachment, index) => `
                     <div class="attachment-item">
                       <span class="attachment-name">${attachment.filename}</span>
                       ${formatFileSize(attachment.size) ? ` - <span class="attachment-size">${formatFileSize(attachment.size)}</span>` : ''}
                     </div>
                   `,
-                    )
-                    .join('')}
+                  )
+                  .join('')}
                 </div>
               `
-                  : ''
+                : ''
               }
             </div>
             ${index < emailData.messages.length - 1 ? '<div class="separator"></div>' : ''}
           `,
-            )
-            .join('')}
+          )
+          .join('')}
         </body>
       </html>
     `;
@@ -985,7 +980,7 @@ export function ThreadDisplay() {
                           <span>{m['common.threadDisplay.moveToSpam']()}</span>
                         </DropdownMenuItem>
                         {emailData.latest?.listUnsubscribe ||
-                        emailData.latest?.listUnsubscribePost ? (
+                          emailData.latest?.listUnsubscribePost ? (
                           <DropdownMenuItem onClick={handleUnsubscribeProcess}>
                             <Folders className="fill-iconLight dark:fill-iconDark mr-2" />
                             <span>{m['common.mailDisplay.unsubscribe']()}</span>

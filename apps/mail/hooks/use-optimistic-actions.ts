@@ -182,33 +182,36 @@ export function useOptimisticActions() {
     return pendingActionId;
   }
 
-  function optimisticMarkAsRead(threadIds: string[], silent = false) {
-    if (!threadIds.length) return;
+  const optimisticMarkAsRead = useCallback(
+    (threadIds: string[], silent = false) => {
+      if (!threadIds.length) return;
 
-    const optimisticId = addOptimisticAction({
-      type: 'READ',
-      threadIds,
-      read: true,
-    });
+      const optimisticId = addOptimisticAction({
+        type: 'READ',
+        threadIds,
+        read: true,
+      });
 
-    createPendingAction({
-      type: 'READ',
-      threadIds,
-      params: { read: true },
-      optimisticId,
-      execute: async () => {
-        await markAsRead({ ids: threadIds });
+      createPendingAction({
+        type: 'READ',
+        threadIds,
+        params: { read: true },
+        optimisticId,
+        execute: async () => {
+          await markAsRead({ ids: threadIds });
 
-        if (mail.bulkSelected.length > 0) {
-          setMail({ ...mail, bulkSelected: [] });
-        }
-      },
-      undo: () => {
-        removeOptimisticAction(optimisticId);
-      },
-      toastMessage: silent ? '' : 'Marked as read',
-    });
-  }
+          if (mail.bulkSelected.length > 0) {
+            setMail((prev) => ({ ...prev, bulkSelected: [] }));
+          }
+        },
+        undo: () => {
+          removeOptimisticAction(optimisticId);
+        },
+        toastMessage: silent ? '' : 'Marked as read',
+      });
+    },
+    [queryClient, addOptimisticAction, removeOptimisticAction, markAsRead, setMail],
+  );
 
   function optimisticMarkAsUnread(threadIds: string[]) {
     if (!threadIds.length) return;
@@ -238,31 +241,34 @@ export function useOptimisticActions() {
     });
   }
 
-  function optimisticToggleStar(threadIds: string[], starred: boolean) {
-    if (!threadIds.length) return;
+  const optimisticToggleStar = useCallback(
+    (threadIds: string[], starred: boolean) => {
+      if (!threadIds.length) return;
 
-    const optimisticId = addOptimisticAction({
-      type: 'STAR',
-      threadIds,
-      starred,
-    });
+      const optimisticId = addOptimisticAction({
+        type: 'STAR',
+        threadIds,
+        starred,
+      });
 
-    createPendingAction({
-      type: 'STAR',
-      threadIds,
-      params: { starred },
-      optimisticId,
-      execute: async () => {
-        await toggleStar({ ids: threadIds });
-      },
-      undo: () => {
-        removeOptimisticAction(optimisticId);
-      },
-      toastMessage: starred
-        ? m['common.actions.addedToFavorites']()
-        : m['common.actions.removedFromFavorites'](),
-    });
-  }
+      createPendingAction({
+        type: 'STAR',
+        threadIds,
+        params: { starred },
+        optimisticId,
+        execute: async () => {
+          await toggleStar({ ids: threadIds });
+        },
+        undo: () => {
+          removeOptimisticAction(optimisticId);
+        },
+        toastMessage: starred
+          ? m['common.actions.addedToFavorites']()
+          : m['common.actions.removedFromFavorites'](),
+      });
+    },
+    [queryClient, addOptimisticAction, removeOptimisticAction, toggleStar, setMail],
+  );
 
   function optimisticMoveThreadsTo(
     threadIds: string[],
@@ -373,33 +379,36 @@ export function useOptimisticActions() {
     });
   }
 
-  function optimisticToggleImportant(threadIds: string[], isImportant: boolean) {
-    if (!threadIds.length) return;
+  const optimisticToggleImportant = useCallback(
+    (threadIds: string[], isImportant: boolean) => {
+      if (!threadIds.length) return;
 
-    const optimisticId = addOptimisticAction({
-      type: 'IMPORTANT',
-      threadIds,
-      important: isImportant,
-    });
+      const optimisticId = addOptimisticAction({
+        type: 'IMPORTANT',
+        threadIds,
+        important: isImportant,
+      });
 
-    createPendingAction({
-      type: 'IMPORTANT',
-      threadIds,
-      params: { important: isImportant },
-      optimisticId,
-      execute: async () => {
-        await toggleImportant({ ids: threadIds });
+      createPendingAction({
+        type: 'IMPORTANT',
+        threadIds,
+        params: { important: isImportant },
+        optimisticId,
+        execute: async () => {
+          await toggleImportant({ ids: threadIds });
 
-        if (mail.bulkSelected.length > 0) {
-          setMail({ ...mail, bulkSelected: [] });
-        }
-      },
-      undo: () => {
-        removeOptimisticAction(optimisticId);
-      },
-      toastMessage: isImportant ? 'Marked as important' : 'Unmarked as important',
-    });
-  }
+          if (mail.bulkSelected.length > 0) {
+            setMail((prev) => ({ ...prev, bulkSelected: [] }));
+          }
+        },
+        undo: () => {
+          removeOptimisticAction(optimisticId);
+        },
+        toastMessage: isImportant ? 'Marked as important' : 'Unmarked as important',
+      });
+    },
+    [queryClient, addOptimisticAction, removeOptimisticAction, toggleImportant, setMail],
+  );
 
   function optimisticToggleLabel(threadIds: string[], labelId: string, add: boolean) {
     if (!threadIds.length || !labelId) return;
