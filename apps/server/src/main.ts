@@ -635,6 +635,7 @@ export default class extends WorkerEntrypoint<typeof env> {
     .get('/', (c) => c.redirect(`${env.VITE_PUBLIC_APP_URL}`))
     .post('/a8n/notify/:providerId', async (c) => {
       if (!c.req.header('Authorization')) return c.json({ error: 'Unauthorized' }, { status: 401 });
+      return c.json({ message: 'OK' }, { status: 200 });
       const providerId = c.req.param('providerId');
       if (providerId === EProviders.google) {
         const body = await c.req.json<{ historyId: string }>();
