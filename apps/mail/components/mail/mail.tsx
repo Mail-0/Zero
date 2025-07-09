@@ -443,14 +443,6 @@ export function MailLayout() {
     };
   }, [threadId, enableScope, disableScope]);
 
-  const handleMailListMouseEnter = useCallback(() => {
-    enableScope('mail-list');
-  }, [enableScope]);
-
-  const handleMailListMouseLeave = useCallback(() => {
-    disableScope('mail-list');
-  }, [disableScope]);
-
   const [, setActiveReplyId] = useQueryState('activeReplyId');
 
   // Add mailto protocol handler registration
@@ -492,8 +484,6 @@ export function MailLayout() {
               `bg-panelLight dark:bg-panelDark mb-1 w-fit shadow-sm md:mr-[3px] md:rounded-2xl lg:flex lg:h-[calc(100dvh-8px)] lg:shadow-sm`,
               isDesktop && threadId && 'hidden lg:block',
             )}
-            onMouseEnter={handleMailListMouseEnter}
-            onMouseLeave={handleMailListMouseLeave}
           >
             <div className="w-full md:h-[calc(100dvh-10px)]">
               <div
