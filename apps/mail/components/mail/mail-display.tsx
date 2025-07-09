@@ -131,7 +131,7 @@ function TextSelectionPopover({
   return (
     <div className="relative" ref={popoverTriggerRef}>
       {children}
-      {selectionCoords && (
+      {/* {selectionCoords && (
         <div
           ref={popoverRef}
           className="absolute z-50"
@@ -190,7 +190,7 @@ function TextSelectionPopover({
             </PopoverContent>
           </Popover>
         </div>
-      )}
+      )} */}
     </div>
   );
 }
