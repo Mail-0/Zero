@@ -465,6 +465,8 @@ export function EmailComposer({
 
       setIsLoading(true);
       setAiGeneratedMessage(null);
+      // Save draft before sending, we want to send drafts instead of sending new emails
+      if (hasUnsavedChanges) await saveDraft();
 
       await onSendEmail({
         to: values.to,
@@ -556,19 +558,11 @@ export function EmailComposer({
 
     if (!hasUnsavedChanges) return;
     const messageText = editor.getText();
-    console.log({
-      messageText,
-      editorText: editor.getText(),
-      initialMessage,
-      editorHTML: editor.getHTML(),
-    });
 
     if (messageText.trim() === initialMessage.trim()) return;
     if (editor.getHTML() === initialMessage.trim()) return;
     if (!values.to.length || !values.subject.length || !messageText.length) return;
     if (aiGeneratedMessage || aiIsLoading || isGeneratingSubject) return;
-
-    console.log('editor.getHTML()', editor.getHTML());
 
     try {
       setIsSavingDraft(true);

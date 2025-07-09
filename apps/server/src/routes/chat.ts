@@ -28,9 +28,9 @@ import {
 import { type Connection, type ConnectionContext, type WSMessage } from 'agents';
 import { EPrompts, type IOutgoingMessage, type ParsedMessage } from '../types';
 import type { IGetThreadResponse, MailManager } from '../lib/driver/types';
+import { connectionToDriver, getZeroAgent } from '../lib/server-utils';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createSimpleAuth, type SimpleAuth } from '../lib/auth';
-import { connectionToDriver } from '../lib/server-utils';
 import { ToolOrchestrator } from './agent/orchestrator';
 import type { CreateDraftData } from '../lib/schemas';
 import { FOLDERS, parseHeaders } from '../lib/utils';
@@ -1209,9 +1209,9 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
 
       return {
         messages,
-        latest: messages.length > 0 ? messages[messages.length - 1] : undefined,
+        latest: messages.findLast((e) => e.isDraft !== true),
         hasUnread: latestLabelIds.includes('UNREAD'),
-        totalReplies: messages.length,
+        totalReplies: messages.filter((e) => e.isDraft !== true).length,
         labels: latestLabelIds.map((id: string) => ({ id, name: id })),
       } satisfies IGetThreadResponse;
     } catch (error) {
@@ -1243,7 +1243,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
       throw new Error('Unauthorized');
     }
     this.activeConnectionId = _connection.id;
-    const driver = connectionToDriver(_connection);
+    const agent = await getZeroAgent(_connection.id);
 
     this.server.tool('getConnections', async () => {
       const connections = await db.query.connection.findMany({
@@ -1333,7 +1333,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
         pageToken: z.string().optional(),
       },
       async (s) => {
-        const result = await driver.list({
+        const result = await agent.listThreads({
           folder: s.folder,
           query: s.query,
           maxResults: s.maxResults,
@@ -1341,8 +1341,8 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
           pageToken: s.pageToken,
         });
         const content = await Promise.all(
-          result.threads.map(async (thread) => {
-            const loadedThread = await driver.get(thread.id);
+          result.threads.map(async (thread: any) => {
+            const loadedThread = await agent.getThread(thread.id);
             return [
               {
                 type: 'text' as const,
@@ -1374,7 +1374,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
         threadId: z.string(),
       },
       async (s) => {
-        const thread = await driver.get(s.threadId);
+        const thread = await agent.getThread(s.threadId);
         const initialResponse = [
           {
             type: 'text' as const,
@@ -1433,10 +1433,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
         threadIds: z.array(z.string()),
       },
       async (s) => {
-        await driver.modifyLabels(s.threadIds, {
-          addLabels: [],
-          removeLabels: ['UNREAD'],
-        });
+        await agent.modifyLabels(s.threadIds, [], ['UNREAD']);
         return {
           content: [
             {
@@ -1454,10 +1451,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
         threadIds: z.array(z.string()),
       },
       async (s) => {
-        await driver.modifyLabels(s.threadIds, {
-          addLabels: ['UNREAD'],
-          removeLabels: [],
-        });
+        await agent.modifyLabels(s.threadIds, ['UNREAD'], []);
         return {
           content: [
             {
@@ -1477,10 +1471,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
         removeLabelIds: z.array(z.string()),
       },
       async (s) => {
-        await driver.modifyLabels(s.threadIds, {
-          addLabels: s.addLabelIds,
-          removeLabels: s.removeLabelIds,
-        });
+        await agent.modifyLabels(s.threadIds, s.addLabelIds, s.removeLabelIds);
         return {
           content: [
             {
@@ -1504,7 +1495,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
     });
 
     this.server.tool('getUserLabels', async () => {
-      const labels = await driver.getUserLabels();
+      const labels = await agent.getUserLabels();
       return {
         content: [
           {
@@ -1523,7 +1514,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
         id: z.string(),
       },
       async (s) => {
-        const label = await driver.getLabel(s.id);
+        const label = await agent.getLabel(s.id);
         return {
           content: [
             {
@@ -1548,7 +1539,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
       },
       async (s) => {
         try {
-          await driver.createLabel({
+          await agent.createLabel({
             name: s.name,
             color:
               s.backgroundColor && s.textColor
@@ -1586,10 +1577,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
       },
       async (s) => {
         try {
-          await driver.modifyLabels(s.threadIds, {
-            addLabels: ['TRASH'],
-            removeLabels: ['INBOX'],
-          });
+          await agent.modifyLabels(s.threadIds, ['TRASH'], ['INBOX']);
           return {
             content: [
               {
@@ -1618,10 +1606,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
       },
       async (s) => {
         try {
-          await driver.modifyLabels(s.threadIds, {
-            addLabels: [],
-            removeLabels: ['INBOX'],
-          });
+          await agent.modifyLabels(s.threadIds, [], ['INBOX']);
           return {
             content: [
               {

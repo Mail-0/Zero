@@ -1297,4 +1297,7 @@ export class OutlookMailManager implements MailManager {
       throw new StandardizedError(error, operation, context);
     }
   }
+  listHistory<T>(historyId: string): Promise<{ history: T[]; historyId: string }> {
+    return Promise.resolve({ history: [], historyId });
+  }
 }

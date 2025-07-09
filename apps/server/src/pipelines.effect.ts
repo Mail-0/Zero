@@ -18,8 +18,8 @@ import {
   ThreadLabels,
 } from './lib/brain.fallback.prompts';
 import { defaultLabels, EPrompts, EProviders, type ParsedMessage, type Sender } from './types';
-import { connectionToDriver, getZeroAgent, notifyUser } from './lib/server-utils';
 import { Effect, Console, pipe, Match, Option } from 'effect';
+import { getZeroAgent } from './lib/server-utils';
 import { type gmail_v1 } from '@googleapis/gmail';
 import { getPromptName } from './pipelines';
 import { env } from 'cloudflare:workers';

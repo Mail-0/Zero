@@ -95,47 +95,7 @@ export function NavUser() {
 
       await setDefaultConnection({ connectionId });
 
-      const targetConnection = data?.connections?.find((conn: any) => conn.id === connectionId);
-      if (targetConnection) {
-        queryClient.setQueryData(trpc.connections.getDefault.queryKey(), targetConnection);
-      }
-
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: trpc.connections.getDefault.queryKey(),
-        }),
-        queryClient.invalidateQueries({
-          queryKey: trpc.connections.list.queryKey(),
-        }),
-
-        queryClient.removeQueries({
-          queryKey: [['mail']],
-        }),
-
-        queryClient.removeQueries({
-          queryKey: [['labels']],
-        }),
-
-        queryClient.removeQueries({
-          queryKey: [['stats']],
-        }),
-
-        queryClient.removeQueries({
-          queryKey: [['notes']],
-        }),
-
-        queryClient.removeQueries({
-          queryKey: [['brain']],
-        }),
-
-        queryClient.removeQueries({
-          queryKey: [['settings']],
-        }),
-
-        queryClient.removeQueries({
-          queryKey: [['drafts']],
-        }),
-      ]);
+      queryClient.clear();
     } catch (error) {
       console.error('Error switching accounts:', error);
       toast.error(m['common.navUser.failedToSwitchAccount']());

@@ -12,6 +12,7 @@ import {
 import {
   Archive,
   ArchiveX,
+  ExternalLink,
   Forward,
   Inbox,
   MailOpen,
@@ -264,8 +265,19 @@ export function ThreadContextMenu({
     if (threadData?.latest) setActiveReplyId(threadData?.latest?.id);
   };
 
+  const handleOpenInNewTab = () => {
+    window.open(`/mail/${folder}?threadId=${threadId}`, '_blank');
+  };
+
   const primaryActions: EmailAction[] = useMemo(
     () => [
+      {
+        id: 'open-in-new-tab',
+        label: m['common.mail.openInNewTab'](),
+        icon: <ExternalLink className="mr-2.5 h-4 w-4" />,
+        action: handleOpenInNewTab,
+        disabled: false,
+      },
       {
         id: 'reply',
         label: m['common.mail.reply'](),
@@ -428,7 +440,7 @@ export function ThreadContextMenu({
         label: isImportant
           ? m['common.mail.removeFromImportant']()
           : m['common.mail.markAsImportant'](),
-        icon: <ExclamationCircle className="mr-2.5 h-4 w-4 opacity-60" />,
+        icon: <ExclamationCircle className="mr-2.5 h-4 w-4 fill-[#9D9D9D] dark:fill-[#9D9D9D]" />,
         action: handleToggleImportant,
       },
       {

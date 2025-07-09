@@ -34,7 +34,10 @@ export const makeQueryClient = (connectionId: string | null) =>
       onError: (err, { meta }) => {
         if (meta && meta.noGlobalError === true) return;
         if (meta && typeof meta.customError === 'string') console.error(meta.customError);
-        else if (err.message === 'Required scopes missing') {
+        else if (
+          err.message === 'Required scopes missing' ||
+          err.message.includes('Invalid connection')
+        ) {
           signOut({
             fetchOptions: {
               onSuccess: () => {
@@ -121,29 +124,6 @@ export function QueryProvider({
         persister,
         buster: CACHE_BURST_KEY,
         maxAge: 1000 * 60 * 1, // 1 minute, we're storing in DOs,
-        dehydrateOptions: {
-          shouldDehydrateQuery(query) {
-            return (query.queryKey[0] as string[]).some((e) => e === 'listThreads');
-          },
-        },
-      }}
-      onSuccess={() => {
-        const threadQueryKey = [['mail', 'listThreads'], { type: 'infinite' }];
-        queryClient.setQueriesData(
-          { queryKey: threadQueryKey },
-          (data: InfiniteData<TrpcHook['mail']['listThreads']['~types']['output']>) => {
-            if (!data) return data;
-            // We only keep few pages of threads in the cache before we invalidate them
-            // invalidating will attempt to refetch every page that was in cache, if someone have too many pages in cache, it will refetch every page every time
-            // We don't want that, just keep like 3 pages (20 * 3 = 60 threads) in cache
-            return {
-              pages: data.pages.slice(0, 3),
-              pageParams: data.pageParams.slice(0, 3),
-            };
-          },
-        );
-        // invalidate the query, it will refetch when the data is it is being accessed
-        queryClient.invalidateQueries({ queryKey: threadQueryKey });
       }}
     >
       <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>

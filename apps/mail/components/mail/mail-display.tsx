@@ -46,6 +46,7 @@ import { useMutation } from '@tanstack/react-query';
 import { Markdown } from '@react-email/components';
 import { useSummary } from '@/hooks/use-summary';
 import { TextShimmer } from '../ui/text-shimmer';
+import { useThread } from '@/hooks/use-threads';
 import { RenderLabels } from './render-labels';
 import { cleanHtml } from '@/lib/email-utils';
 import { MailContent } from './mail-content';
@@ -78,7 +79,12 @@ function TextSelectionPopover({
   const popoverTriggerRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
 
-  const handleSelectionChange = useCallback(() => {
+  const handleSelectionChange = useCallback((e: MouseEvent) => {
+    if (window.getSelection()?.toString().trim()) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed) {
       setSelectionCoords(null);
@@ -776,6 +782,7 @@ const MoreAboutQuery = ({
 
 const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }: Props) => {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+  const { data: threadData } = useThread(emailData.threadId);
   //   const [unsubscribed, setUnsubscribed] = useState(false);
   //   const [isUnsubscribing, setIsUnsubscribing] = useState(false);
   const [preventCollapse, setPreventCollapse] = useState(false);
@@ -799,7 +806,10 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
   const [researchSender, setResearchSender] = useState<Sender | null>(null);
   const [searchQuery, setSearchQuery] = useState<string | null>(null);
 
-  const isLastEmail = totalEmails && index === totalEmails - 1;
+  const isLastEmail = useMemo(
+    () => emailData.id === threadData?.latest?.id,
+    [emailData.id, threadData?.latest?.id],
+  );
 
   const [, setMode] = useQueryState('mode');
 
@@ -1350,7 +1360,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
         }
       }}
     >
-      <TextSelectionPopover onSearch={setSearchQuery}>
+      <>
         {searchQuery && (
           <MoreAboutQuery
             query={searchQuery}
@@ -1851,7 +1861,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             </div>
           </div>
         </div>
-      </TextSelectionPopover>
+      </>
     </div>
   );
 };

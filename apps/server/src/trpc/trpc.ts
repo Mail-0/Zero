@@ -1,4 +1,4 @@
-import { connectionToDriver, getActiveConnection, getZeroDB } from '../lib/server-utils';
+import { getActiveConnection, getZeroDB } from '../lib/server-utils';
 import { Ratelimit, type RatelimitConfig } from '@upstash/ratelimit';
 import type { HonoContext, HonoVariables } from '../ctx';
 import { getConnInfo } from 'hono/cloudflare-workers';
