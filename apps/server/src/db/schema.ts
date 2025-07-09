@@ -251,18 +251,24 @@ export const organization = createTable('organization', {
 export const roleEnum = pgEnum('role', ['owner', 'admin', 'member']);
 export type Role = 'owner' | 'admin' | 'member';
 
-export const member = createTable('member', {
-  id: text('id').primaryKey(),
-  userId: text('userId')
-    .notNull()
-    .references(() => user.id),
-  organizationId: text('organizationId')
-    .notNull()
-    .references(() => organization.id),
-  teamId: text('teamId').references(() => team.id),
-  role: roleEnum('role').notNull().default('member'),
-  createdAt: timestamp('createdAt').notNull(),
-});
+export const member = createTable(
+  'member',
+  {
+    id: text('id').primaryKey(),
+    userId: text('userId')
+      .notNull()
+      .references(() => user.id),
+    organizationId: text('organizationId')
+      .notNull()
+      .references(() => organization.id),
+    teamId: text('teamId').references(() => team.id),
+    role: roleEnum('role').notNull().default('member'),
+    createdAt: timestamp('createdAt').notNull(),
+  },
+  (t) => [
+    unique().on(t.userId, t.organizationId),
+  ],
+);
 
 export const invitation = createTable('invitation', {
   id: text('id').primaryKey(),
@@ -358,5 +364,17 @@ export const organizationDomain = createTable('organization_domain', {
   createdAt: timestamp('createdAt').notNull(),
   verified: boolean('verified').notNull().default(false),
   verificationToken: text('verificationToken'),
+});
+
+export const organizationConnection = createTable('organization_connection', {
+  id: text('id').primaryKey(),
+  organizationId: text('organizationId')
+    .notNull()
+    .references(() => organization.id, { onDelete: 'cascade' }),
+  connectionId: text('connectionId')
+    .notNull()
+    .references(() => connection.id, { onDelete: 'cascade' }),
+  alias: text('alias'),
+  createdAt: timestamp('createdAt').notNull(),
 });
 

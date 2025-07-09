@@ -6,10 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { authClient } from '@/lib/auth-client';
 import { toast } from 'sonner';
 import { Loader2, Users, UserPlus, Building2, Mail } from 'lucide-react';
+import { TeamManager } from '@/components/organization/team-manager';
+import { MemberList } from '@/components/organization/member-list';
+import { ReceivedInvites } from '@/components/organization/received-invites';
+import { SettingsEditor } from '@/components/organization/settings-editor';
 
 type Role = 'member' | 'admin' | 'owner';
 
@@ -33,6 +36,9 @@ export default function OrganizationPage() {
   const [domains, setDomains] = useState<Domain[]>([]);
   const [newDomain, setNewDomain] = useState('');
   const [loadingDomains, setLoadingDomains] = useState(false);
+  // Invitations state
+  const [invites, setInvites] = useState<any[]>([]);
+  const [loadingInvites, setLoadingInvites] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [verifyMsg, setVerifyMsg] = useState<string | null>(null);
   const [domainVerificationToken, setDomainVerificationToken] = useState<string | null>(null);
@@ -84,7 +90,7 @@ export default function OrganizationPage() {
         role: inviteRole,
         organizationId: activeOrg.id,
       });
-
+      
       toast.success(`Invitation sent to ${inviteEmail}!`);
       setInviteEmail('');
     } catch (error: any) {
@@ -101,7 +107,7 @@ export default function OrganizationPage() {
       await authClient.organization.setActive({
         organizationId: org.id,
       });
-
+      
       setActiveOrg(org);
       toast.success(`Active organization set to "${org.name}"`);
     } catch (error: any) {
@@ -159,9 +165,47 @@ export default function OrganizationPage() {
     setVerifying(false);
   }
 
+  // Fetch pending invitations for the active organization
+  async function fetchInvites() {
+    if (!activeOrg?.id) return;
+    setLoadingInvites(true);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/invitations?organizationId=${activeOrg.id}&status=pending`,
+        { credentials: 'include' },
+      );
+      const data = (await res.json()) as { invitations: any[] };
+      setInvites(data.invitations || []);
+    } catch (error) {
+      console.error('Failed to fetch invitations:', error);
+    } finally {
+      setLoadingInvites(false);
+    }
+  }
+
+  // Cancel an invitation
+  async function cancelInvite(inviteId: string) {
+    if (!inviteId) return;
+    try {
+      await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/invitations/${inviteId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      toast.success('Invitation cancelled');
+      fetchInvites();
+    } catch (error: any) {
+      toast.error(`Failed to cancel invite: ${error.message}`);
+    }
+  }
+
   // Fetch domains when org changes
   useEffect(() => {
     if (activeOrg?.id) fetchDomains();
+  }, [activeOrg?.id]);
+
+  // Fetch invitations when org changes
+  useEffect(() => {
+    if (activeOrg?.id) fetchInvites();
   }, [activeOrg?.id]);
 
   // Load organizations on mount
@@ -170,7 +214,7 @@ export default function OrganizationPage() {
       try {
         const orgs = await authClient.organization.list();
         setOrganizations(orgs.data || []);
-
+        
         // Set first org as active if available
         if (orgs.data && orgs.data.length > 0) {
           setActiveOrg(orgs.data[0]);
@@ -179,7 +223,7 @@ export default function OrganizationPage() {
         console.error('Failed to load organizations:', error);
       }
     };
-
+    
     loadOrganizations();
   }, []);
 
@@ -191,7 +235,7 @@ export default function OrganizationPage() {
     }
     setVerifying(true);
     setVerifyMsg(null);
-
+    
     try {
       // Check if slug is available
       const orgs = await authClient.organization.list();
@@ -200,28 +244,28 @@ export default function OrganizationPage() {
         toast.error('Organization slug already exists. Please choose a different one.');
         return;
       }
-
+      
       // Check domain verification directly
       const res = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/verify-domain`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: JSON.stringify({ 
           domain: orgDomain,
-          verificationToken: verificationToken
+          verificationToken: verificationToken 
         }),
       });
-      const data = (await res.json()) as {
-        verified: boolean;
-        message?: string;
+      const data = (await res.json()) as { 
+        verified: boolean; 
+        message?: string; 
         error?: string;
         verificationToken?: string;
       };
-
+      
       // Store the verification token for reuse
       if (data.verificationToken) {
         setVerificationToken(data.verificationToken);
       }
-
+      
       if (data.verified) {
         setDomainVerified(true);
         setVerifyMsg('Domain verified! You can now create your organization.');
@@ -356,13 +400,24 @@ export default function OrganizationPage() {
                   {organizations.map((org) => (
                     <div
                       key={org.id}
-                      className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${activeOrg?.id === org.id
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:bg-accent'
-                        }`}
+                      className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
+                        activeOrg?.id === org.id
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:bg-accent'
+                      }`}
                       onClick={() => handleSetActiveOrg(org)}
                     >
                       <div className="flex items-center gap-3">
+                        {org.logo && (
+                          <img
+                            src={org.logo}
+                            alt={`${org.name} logo`}
+                            className="h-6 w-6 rounded"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        )}
                         <div>
                           <p className="font-medium">{org.name}</p>
                           <p className="text-sm text-muted-foreground">@{org.slug}</p>
@@ -417,8 +472,8 @@ export default function OrganizationPage() {
                     </Select>
                   </div>
                 </div>
-                <Button
-                  onClick={handleInviteMember}
+                <Button 
+                  onClick={handleInviteMember} 
                   disabled={loading || !inviteEmail}
                   className="w-full"
                 >
@@ -434,6 +489,49 @@ export default function OrganizationPage() {
                     </>
                   )}
                 </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Pending Invitations */}
+          {activeOrg && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mail className="h-5 w-5" />
+                  Pending Invitations
+                </CardTitle>
+                <CardDescription>
+                  Manage outgoing invitations for "{activeOrg.name}"
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {loadingInvites ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  </div>
+                ) : invites.length > 0 ? (
+                  invites.map((invite) => (
+                    <div
+                      key={invite.id}
+                      className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors"
+                    >
+                      <div>
+                        <p className="font-medium">{invite.email}</p>
+                        <p className="text-sm text-muted-foreground">{invite.role}</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => cancelInvite(invite.id)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No pending invitations.</p>
+                )}
               </CardContent>
             </Card>
           )}
@@ -457,6 +555,14 @@ export default function OrganizationPage() {
           </Card>
         </div>
       </SettingsCard>
+
+      <ReceivedInvites />
+
+      {activeOrg && <TeamManager orgId={activeOrg.id} />}
+
+      {activeOrg && <MemberList orgId={activeOrg.id} />}
+
+      {activeOrg && <SettingsEditor orgId={activeOrg.id} />}
     </div>
   );
 } 
