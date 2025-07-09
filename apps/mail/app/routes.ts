@@ -23,6 +23,7 @@ export default [
 
   layout('(routes)/layout.tsx', [
     route('/developer', '(routes)/developer/page.tsx'),
+    route('/accept-invitation/:invitationToken', '(organizations)/accept-invitation/page.tsx'),
     layout(
       '(routes)/mail/layout.tsx',
       prefix('/mail', [
