@@ -19,7 +19,7 @@ import {
 } from './lib/brain.fallback.prompts';
 import { defaultLabels, EPrompts, EProviders, type ParsedMessage, type Sender } from './types';
 import { WorkflowEntrypoint, WorkflowStep, type WorkflowEvent } from 'cloudflare:workers';
-import { connectionToDriver, notifyUser } from './lib/server-utils';
+import { connectionToDriver, getZeroAgent, notifyUser } from './lib/server-utils';
 import { type gmail_v1 } from '@googleapis/gmail';
 import { env } from 'cloudflare:workers';
 import { connection } from './db/schema';
@@ -73,11 +73,6 @@ export class MainWorkflow extends WorkflowEntrypoint<Env, Params> {
           return connectionId;
         },
       );
-      const status = await env.subscribed_accounts.get(`${connectionId}__${providerId}`);
-      if (!status || status === 'pending') {
-        log('[MAIN_WORKFLOW] Connection id is missing or not enabled %s', connectionId);
-        return 'Connection is not enabled';
-      }
       if (!isValidUUID(connectionId)) {
         log('[MAIN_WORKFLOW] Invalid connection id format:', connectionId);
         return 'Invalid connection id';
@@ -313,6 +308,29 @@ export class ZeroWorkflow extends WorkflowEntrypoint<Env, Params> {
           },
         );
 
+        const agent = await getZeroAgent(connectionId.toString());
+
+        await step.do(`[ZERO_WORKFLOW] Sync Threads ${historyProcessingKey}`, async () => {
+          for (const threadId of threadsToProcess) {
+            try {
+              await agent.syncThread(threadId.toString());
+            } catch (error) {
+              log('[ZERO_WORKFLOW] Failed to sync thread:', {
+                threadId,
+                error: error instanceof Error ? error.message : String(error),
+              });
+            }
+          }
+        });
+
+        const status = await env.subscribed_accounts.get(
+          `${connectionId}__${foundConnection.providerId}`,
+        );
+        if (!status || status === 'pending') {
+          log('[MAIN_WORKFLOW] Connection id is missing or not enabled %s', connectionId);
+          return 'Connection is not enabled, not processing threads';
+        }
+
         await step.do(
           `[ZERO_WORKFLOW] Send Thread Workflow Instances ${connectionId}`,
           async () => {
@@ -462,11 +480,11 @@ export class ThreadWorkflow extends WorkflowEntrypoint<Env, Params> {
           async () => {
             log('[THREAD_WORKFLOW] Getting thread:', threadId);
             const thread = await driver.get(threadId.toString());
-            await notifyUser({
-              connectionId: connectionId.toString(),
-              result: thread,
-              threadId: threadId.toString(),
-            });
+            // await notifyUser({
+            //   connectionId: connectionId.toString(),
+            //   result: thread,
+            //   threadId: threadId.toString(),
+            // });
             log('[THREAD_WORKFLOW] Found thread with messages:', thread.messages.length);
             return thread;
           },

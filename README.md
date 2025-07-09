@@ -193,6 +193,7 @@ You can set up Zero in two ways:
    - Go to the [Twilio](https://www.twilio.com/)
    - Create a Twilio account if you don’t already have one
    - From the dashboard, locate your:
+
      - Account SID
      - Auth Token
      - Phone Number
@@ -264,6 +265,15 @@ Zero uses PostgreSQL for storing data. Here's how to set it up:
      pnpm db:studio
      ```
      > If you run `pnpm dev` in your terminal, the studio command should be automatically running with the app.
+
+### Sync
+
+Background: https://x.com/cmdhaus/status/1940886269950902362
+We're now storing the user's emails in their Durable Object & an R2 bucket. This allow us to speed things up, a lot.
+This also introduces 3 environment variables, `DROP_AGENT_TABLES`,`THREAD_SYNC_MAX_COUNT`, `THREAD_SYNC_LOOP`.
+`DROP_AGENT_TABLES`: should the durable object drop the threads table before starting a sync
+`THREAD_SYNC_MAX_COUNT`: how many threads should we sync? max `500` because it's using the same number for the maxResults number from the driver. i.e 500 results per page.
+`THREAD_SYNC_LOOP`: should make sure to sync all of the items inside a folder? i.e if THREAD_SYNC_MAX_COUNT=500 it will sync 500 threads per request until the folder is fully synced. (should be true in production)
 
 ## Contribute
 

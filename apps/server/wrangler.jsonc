@@ -116,7 +116,7 @@
         "DISABLE_CALLS": "true",
         "VOICE_SECRET": "1234567890",
         "GOOGLE_S_ACCOUNT": "{}",
-        "DROP_AGENT_TABLES": "false",
+        "DROP_AGENT_TABLES": "true",
         "THREAD_SYNC_MAX_COUNT": "40",
         "THREAD_SYNC_LOOP": "false",
       },
@@ -262,7 +262,7 @@
         "DISABLE_CALLS": "",
         "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "40",
-        "THREAD_SYNC_LOOP": "false",
+        "THREAD_SYNC_LOOP": "true",
       },
       "kv_namespaces": [
         {
@@ -403,7 +403,7 @@
         "DISABLE_CALLS": "true",
         "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "40",
-        "THREAD_SYNC_LOOP": "false",
+        "THREAD_SYNC_LOOP": "true",
       },
       "kv_namespaces": [
         {

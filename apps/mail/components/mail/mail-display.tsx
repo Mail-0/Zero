@@ -47,6 +47,7 @@ import { Markdown } from '@react-email/components';
 import { useSummary } from '@/hooks/use-summary';
 import { TextShimmer } from '../ui/text-shimmer';
 import { RenderLabels } from './render-labels';
+import { cleanHtml } from '@/lib/email-utils';
 import { MailContent } from './mail-content';
 import { m } from '@/paraglide/messages';
 import { useParams } from 'react-router';
@@ -55,7 +56,6 @@ import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Badge } from '../ui/badge';
 import { format } from 'date-fns';
-import { cleanHtml } from '@/lib/email-utils';
 import { toast } from 'sonner';
 
 // HTML escaping function to prevent XSS attacks
@@ -1463,7 +1463,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 //   extra: emailData?.sender?.extra || '',
                               });
                             }}
-                            className="hover:bg-muted font-semibold"
+                            className="hover:bg-muted max-w-36 truncate whitespace-nowrap font-semibold md:max-w-none"
                           >
                             {cleanNameDisplay(emailData?.sender?.name)}
                           </span>
@@ -1597,12 +1597,12 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                         </div>
 
                         <div className="flex items-center justify-center">
-                          <div className="text-muted-foreground mr-2 flex flex-col items-end text-sm font-medium dark:text-[#8C8C8C]">
-                            <time>
+                          <div className="text-muted-foreground mr-2 flex flex-col !flex-nowrap items-end text-sm font-medium dark:text-[#8C8C8C]">
+                            <time className="whitespace-nowrap">
                               {emailData?.receivedOn ? formatDate(emailData.receivedOn) : ''}
                             </time>
                             {shouldShowSeparateTime(emailData?.receivedOn) && (
-                              <time className="text-xs opacity-75">
+                              <time className="whitespace-nowrap text-xs opacity-75">
                                 {emailData?.receivedOn && formatTime(emailData.receivedOn)}
                               </time>
                             )}
@@ -1633,21 +1633,25 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 {m['common.mailDisplay.print']()}
                               </DropdownMenuItem>
                               {(emailData.attachments?.length ?? 0) > 0 && (
-                              <DropdownMenuItem
-                                disabled={!emailData.attachments?.length}
-                                className={!emailData.attachments?.length ? "data-[disabled]:pointer-events-auto" : ""}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  e.preventDefault();
-                                  handleDownloadAllAttachments(
-                                    emailData.subject || 'email',
-                                    emailData.attachments || [],
-                                  )();
-                                }}
-                              >
-                                <HardDriveDownload className="fill-iconLight dark:text-iconDark dark:fill-iconLight mr-2 h-4 w-4" />
-                                Download All Attachments
-                              </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  disabled={!emailData.attachments?.length}
+                                  className={
+                                    !emailData.attachments?.length
+                                      ? 'data-[disabled]:pointer-events-auto'
+                                      : ''
+                                  }
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    handleDownloadAllAttachments(
+                                      emailData.subject || 'email',
+                                      emailData.attachments || [],
+                                    )();
+                                  }}
+                                >
+                                  <HardDriveDownload className="fill-iconLight dark:text-iconDark dark:fill-iconLight mr-2 h-4 w-4" />
+                                  Download All Attachments
+                                </DropdownMenuItem>
                               )}
                             </DropdownMenuContent>
                           </DropdownMenu>

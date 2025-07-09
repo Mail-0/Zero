@@ -51,7 +51,7 @@ export const makeQueryClient = (connectionId: string | null) =>
         retry: false,
         refetchOnWindowFocus: false,
         queryKeyHashFn: (queryKey) => hashKey([{ connectionId }, ...queryKey]),
-        gcTime: 1000 * 60 * 60 * 24,
+        gcTime: 1000 * 60 * 1,
       },
       mutations: {
         onError: (err) => console.error(err.message),
@@ -120,7 +120,7 @@ export function QueryProvider({
       persistOptions={{
         persister,
         buster: CACHE_BURST_KEY,
-        maxAge: 1000 * 60 * 60 * 24 * 3, // 3 days
+        maxAge: 1000 * 60 * 1, // 1 minute, we're storing in DOs
       }}
       onSuccess={() => {
         const threadQueryKey = [['mail', 'listThreads'], { type: 'infinite' }];
