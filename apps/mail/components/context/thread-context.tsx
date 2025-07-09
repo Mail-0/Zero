@@ -58,7 +58,7 @@ interface EmailContextMenuProps {
 }
 
 const LabelsList = ({ threadId, bulkSelected }: { threadId: string; bulkSelected: string[] }) => {
-  const { data: labels } = useLabels();
+  const { userLabels: labels } = useLabels();
   const { optimisticToggleLabel } = useOptimisticActions();
   const targetThreadIds = bulkSelected.length > 0 ? bulkSelected : [threadId];
 
@@ -141,35 +141,40 @@ export function ThreadContextMenu({
   const [, setMode] = useQueryState('mode');
   const [, setThreadId] = useQueryState('threadId');
   const { data: threadData } = useThread(threadId);
+  const [, setActiveReplyId] = useQueryState('activeReplyId');
   const optimisticState = useOptimisticThreadState(threadId);
+  const {
+    optimisticMoveThreadsTo,
+    optimisticToggleStar,
+    optimisticToggleImportant,
+    optimisticMarkAsRead,
+    optimisticMarkAsUnread,
+    optimisticDeleteThreads,
+  } = useOptimisticActions();
 
-  const isUnread = useMemo(() => {
-    return threadData?.hasUnread ?? false;
-  }, [threadData]);
+  const { isUnread, isStarred, isImportant } = useMemo(() => {
+    const unread = threadData?.hasUnread ?? false;
 
-  const isStarred = useMemo(() => {
+    let starred;
     if (optimisticState.optimisticStarred !== null) {
-      return optimisticState.optimisticStarred;
+      starred = optimisticState.optimisticStarred;
+    } else {
+      starred = threadData?.messages.some((message) =>
+        message.tags?.some((tag) => tag.name.toLowerCase() === 'starred'),
+      );
     }
-    return threadData?.messages.some((message) =>
-      message.tags?.some((tag) => tag.name.toLowerCase() === 'starred'),
-    );
-  }, [threadData, optimisticState.optimisticStarred]);
 
-  const isImportant = useMemo(() => {
+    let important;
     if (optimisticState.optimisticImportant !== null) {
-      return optimisticState.optimisticImportant;
+      important = optimisticState.optimisticImportant;
+    } else {
+      important = threadData?.messages.some((message) =>
+        message.tags?.some((tag) => tag.name.toLowerCase() === 'important'),
+      );
     }
-    return threadData?.messages.some((message) =>
-      message.tags?.some((tag) => tag.name.toLowerCase() === 'important'),
-    );
-  }, [threadData]);
 
-  const noopAction = () => async () => {
-    toast.info(m['common.actions.featureNotImplemented']());
-  };
-
-  const { optimisticMoveThreadsTo } = useOptimisticActions();
+    return { isUnread: unread, isStarred: starred, isImportant: important };
+  }, [threadData, optimisticState.optimisticStarred, optimisticState.optimisticImportant]);
 
   const handleMove = (from: string, to: string) => () => {
     try {
@@ -197,8 +202,6 @@ export function ThreadContextMenu({
     }
   };
 
-  const { optimisticToggleStar } = useOptimisticActions();
-
   const handleFavorites = () => {
     const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
 
@@ -210,8 +213,6 @@ export function ThreadContextMenu({
       setMail((prev) => ({ ...prev, bulkSelected: [] }));
     }
   };
-
-  const { optimisticToggleImportant } = useOptimisticActions();
 
   const handleToggleImportant = () => {
     const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
@@ -225,8 +226,6 @@ export function ThreadContextMenu({
       setMail((prev) => ({ ...prev, bulkSelected: [] }));
     }
   };
-
-  const { optimisticMarkAsRead, optimisticMarkAsUnread } = useOptimisticActions();
 
   const handleReadUnread = () => {
     const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
@@ -246,7 +245,6 @@ export function ThreadContextMenu({
       setMail((prev) => ({ ...prev, bulkSelected: [] }));
     }
   };
-  const [, setActiveReplyId] = useQueryState('activeReplyId');
 
   const handleThreadReply = () => {
     setMode('reply');
@@ -266,30 +264,32 @@ export function ThreadContextMenu({
     if (threadData?.latest) setActiveReplyId(threadData?.latest?.id);
   };
 
-  const primaryActions: EmailAction[] = [
-    {
-      id: 'reply',
-      label: m['common.mail.reply'](),
-      icon: <Reply className="mr-2.5 h-4 w-4 opacity-60" />,
-      action: handleThreadReply,
-      disabled: false,
-    },
-    {
-      id: 'reply-all',
-      label: m['common.mail.replyAll'](),
-      icon: <ReplyAll className="mr-2.5 h-4 w-4 opacity-60" />,
-      action: handleThreadReplyAll,
-      disabled: false,
-    },
-    {
-      id: 'forward',
-      label: m['common.mail.forward'](),
-      icon: <Forward className="mr-2.5 h-4 w-4 opacity-60" />,
-      action: handleThreadForward,
-      disabled: false,
-    },
-  ];
-  const { optimisticDeleteThreads } = useOptimisticActions();
+  const primaryActions: EmailAction[] = useMemo(
+    () => [
+      {
+        id: 'reply',
+        label: m['common.mail.reply'](),
+        icon: <Reply className="mr-2.5 h-4 w-4 opacity-60" />,
+        action: handleThreadReply,
+        disabled: false,
+      },
+      {
+        id: 'reply-all',
+        label: m['common.mail.replyAll'](),
+        icon: <ReplyAll className="mr-2.5 h-4 w-4 opacity-60" />,
+        action: handleThreadReplyAll,
+        disabled: false,
+      },
+      {
+        id: 'forward',
+        label: m['common.mail.forward'](),
+        icon: <Forward className="mr-2.5 h-4 w-4 opacity-60" />,
+        action: handleThreadForward,
+        disabled: false,
+      },
+    ],
+    [m, handleThreadReply, handleThreadReplyAll, handleThreadForward],
+  );
 
   const handleDelete = () => () => {
     const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
@@ -308,7 +308,7 @@ export function ThreadContextMenu({
     // }
   };
 
-  const getActions = () => {
+  const getActions = useMemo(() => {
     if (isSpam) {
       return [
         {
@@ -408,39 +408,42 @@ export function ThreadContextMenu({
         disabled: false,
       },
     ];
-  };
+  }, [isSpam, isBin, isArchiveFolder, isInbox, isSent, handleMove, handleDelete]);
 
-  const otherActions: EmailAction[] = [
-    {
-      id: 'toggle-read',
-      label: isUnread ? m['common.mail.markAsRead']() : m['common.mail.markAsUnread'](),
-      icon: !isUnread ? (
-        <Mail className="mr-2.5 h-4 w-4 fill-[#9D9D9D] dark:fill-[#9D9D9D]" />
-      ) : (
-        <MailOpen className="mr-2.5 h-4 w-4 opacity-60" />
-      ),
-      action: handleReadUnread,
-      disabled: false,
-    },
-    {
-      id: 'toggle-important',
-      label: isImportant
-        ? m['common.mail.removeFromImportant']()
-        : m['common.mail.markAsImportant'](),
-      icon: <ExclamationCircle className="mr-2.5 h-4 w-4 opacity-60" />,
-      action: handleToggleImportant,
-    },
-    {
-      id: 'favorite',
-      label: isStarred ? m['common.mail.removeFavorite']() : m['common.mail.addFavorite'](),
-      icon: isStarred ? (
-        <StarOff className="mr-2.5 h-4 w-4 opacity-60" />
-      ) : (
-        <Star className="mr-2.5 h-4 w-4 opacity-60" />
-      ),
-      action: handleFavorites,
-    },
-  ];
+  const otherActions: EmailAction[] = useMemo(
+    () => [
+      {
+        id: 'toggle-read',
+        label: isUnread ? m['common.mail.markAsRead']() : m['common.mail.markAsUnread'](),
+        icon: !isUnread ? (
+          <Mail className="mr-2.5 h-4 w-4 fill-[#9D9D9D] dark:fill-[#9D9D9D]" />
+        ) : (
+          <MailOpen className="mr-2.5 h-4 w-4 opacity-60" />
+        ),
+        action: handleReadUnread,
+        disabled: false,
+      },
+      {
+        id: 'toggle-important',
+        label: isImportant
+          ? m['common.mail.removeFromImportant']()
+          : m['common.mail.markAsImportant'](),
+        icon: <ExclamationCircle className="mr-2.5 h-4 w-4 opacity-60" />,
+        action: handleToggleImportant,
+      },
+      {
+        id: 'favorite',
+        label: isStarred ? m['common.mail.removeFavorite']() : m['common.mail.addFavorite'](),
+        icon: isStarred ? (
+          <StarOff className="mr-2.5 h-4 w-4 opacity-60" />
+        ) : (
+          <Star className="mr-2.5 h-4 w-4 opacity-60" />
+        ),
+        action: handleFavorites,
+      },
+    ],
+    [isUnread, isImportant, isStarred, m, handleReadUnread, handleToggleImportant, handleFavorites],
+  );
 
   const renderAction = (action: EmailAction) => {
     return (
@@ -482,7 +485,7 @@ export function ThreadContextMenu({
 
         <ContextMenuSeparator className="bg-[#E7E7E7] dark:bg-[#252525]" />
 
-        {getActions().map(renderAction as any)}
+        {getActions.map(renderAction)}
 
         <ContextMenuSeparator className="bg-[#E7E7E7] dark:bg-[#252525]" />
 

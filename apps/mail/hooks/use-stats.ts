@@ -9,7 +9,6 @@ export const useStats = () => {
   const statsQuery = useQuery(
     trpc.mail.count.queryOptions(void 0, {
       enabled: !!session?.user.id,
-      staleTime: 1000 * 60 * 60, // 1 hour
     }),
   );
 

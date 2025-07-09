@@ -1,20 +1,17 @@
 import type { IConnection, Label as LabelType } from '@/types';
+import { useActiveConnection } from '@/hooks/use-connections';
 import { RecursiveFolder } from './recursive-folder';
+import { useStats } from '@/hooks/use-stats';
 import { Tree } from '../magicui/file-tree';
 import { useCallback } from 'react';
 
 type Props = {
   data: LabelType[];
-  activeAccount: IConnection | null | undefined;
-  stats:
-    | {
-        count?: number;
-        label?: string;
-      }[]
-    | undefined;
 };
 
-const SidebarLabels = ({ data, activeAccount, stats }: Props) => {
+const SidebarLabels = ({ data }: Props) => {
+  const { data: stats } = useStats();
+  const { data: activeAccount } = useActiveConnection();
   const getLabelCount = useCallback(
     (labelName: string | undefined): number => {
       if (!stats || !labelName) return 0;
