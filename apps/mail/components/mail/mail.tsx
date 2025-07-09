@@ -999,7 +999,7 @@ function CategoryDropdown({ isMultiSelectMode }: CategoryDropdownProps) {
           <div className="relative overflow-visible">
             <Mail className="h-4 w-4 fill-white dark:fill-white" />
           </div>
-          <span className="text-xs font-medium">Labels</span>
+          <span className="text-xs font-medium">Categories</span>
           <ChevronDown
             className={`h-2 w-2 text-white transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
           />

@@ -1,3 +1,16 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 import {
   streamText,
   generateObject,
@@ -301,6 +314,10 @@ export class AgentRpcDO extends RpcTarget {
   //     return await this.mainDo.getThreadFromDB(id);
   //   }
 
+  async listHistory<T>(historyId: string) {
+    return await this.mainDo.listHistory<T>(historyId);
+  }
+
   async syncThreads(folder: string) {
     return await this.mainDo.syncThreads(folder);
   }
@@ -354,6 +371,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     const dataStreamResponse = createDataStreamResponse({
       execute: async (dataStream) => {
         const connectionId = this.name;
+        if (connectionId === 'general') return;
         if (!connectionId || !this.driver) {
           console.log('Unauthorized no driver or connectionId [1]', connectionId, this.driver);
           await this.setupAuth(connectionId);
@@ -396,6 +414,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
   }
 
   public async setupAuth(connectionId: string) {
+    if (connectionId === 'general') return;
     if (!this.driver) {
       const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
       const _connection = await db.query.connection.findFirst({
@@ -668,6 +687,13 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     });
   }
 
+  async listHistory<T>(historyId: string) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.listHistory<T>(historyId);
+  }
+
   async getUserLabels() {
     if (!this.driver) {
       throw new Error('No driver available');
@@ -852,7 +878,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
   }
 
   async syncThread(threadId: string) {
-    if (!this.driver) {
+    if (!this.driver && this.name !== 'general') {
       await this.setupAuth(this.name);
     }
 
@@ -1147,7 +1173,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     }
   }
 
-  async getThreadFromDB(id: string): Promise<IGetThreadResponse> {
+  async getThreadFromDB(id: string, lastAttempt = false): Promise<IGetThreadResponse> {
     try {
       const result = this.sql`
           SELECT
@@ -1165,17 +1191,13 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
           LIMIT 1
         `;
 
-      if (result.length === 0) {
-        this.ctx.waitUntil(this.syncThread(id));
-        return {
-          messages: [],
-          latest: undefined,
-          hasUnread: false,
-          totalReplies: 0,
-          labels: [],
-        } satisfies IGetThreadResponse;
+      if (!result || result.length === 0) {
+        if (lastAttempt) {
+          throw new Error('Thread not found in database, Sync Failed once');
+        }
+        await this.syncThread(id);
+        return this.getThreadFromDB(id, true);
       }
-
       const row = result[0] as any;
       const storedThread = await env.THREADS_BUCKET.get(this.getThreadKey(id));
 

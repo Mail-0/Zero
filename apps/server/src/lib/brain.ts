@@ -1,7 +1,8 @@
 import { ReSummarizeThread, SummarizeMessage, SummarizeThread } from './brain.fallback.prompts';
-import { AiChatPrompt, StyledEmailAssistantSystemPrompt } from './prompts';
 import { getSubscriptionFactory } from './factories/subscription-factory.registry';
+import { AiChatPrompt, StyledEmailAssistantSystemPrompt } from './prompts';
 import { EPrompts, EProviders } from '../types';
+import { getPromptName } from '../pipelines';
 import { env } from 'cloudflare:workers';
 
 export const enableBrainFunction = async (connection: { id: string; providerId: EProviders }) => {
@@ -22,10 +23,6 @@ export const disableBrainFunction = async (connection: { id: string; providerId:
   } catch (error) {
     console.error(`Failed to disable brain function: ${error}`);
   }
-};
-
-const getPromptName = (connectionId: string, prompt: EPrompts) => {
-  return `${connectionId}-${prompt}`;
 };
 
 export const getPrompt = async (promptName: string, fallback: string) => {

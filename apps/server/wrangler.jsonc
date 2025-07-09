@@ -79,23 +79,7 @@
           "new_classes": ["ZeroDB"],
         },
       ],
-      "workflows": [
-        {
-          "name": "main-workflow-staging",
-          "binding": "MAIN_WORKFLOW",
-          "class_name": "MainWorkflow",
-        },
-        {
-          "name": "zero-workflow-staging",
-          "binding": "ZERO_WORKFLOW",
-          "class_name": "ZeroWorkflow",
-        },
-        {
-          "name": "thread-workflow-staging",
-          "binding": "THREAD_WORKFLOW",
-          "class_name": "ThreadWorkflow",
-        },
-      ],
+
       "observability": {
         "enabled": true,
       },
@@ -227,23 +211,6 @@
           "new_classes": ["ZeroDB"],
         },
       ],
-      "workflows": [
-        {
-          "name": "main-workflow-staging",
-          "binding": "MAIN_WORKFLOW",
-          "class_name": "MainWorkflow",
-        },
-        {
-          "name": "zero-workflow-staging",
-          "binding": "ZERO_WORKFLOW",
-          "class_name": "ZeroWorkflow",
-        },
-        {
-          "name": "thread-workflow-staging",
-          "binding": "THREAD_WORKFLOW",
-          "class_name": "ThreadWorkflow",
-        },
-      ],
       "observability": {
         "enabled": true,
       },
@@ -312,23 +279,6 @@
         {
           "binding": "VECTORIZE_MESSAGE",
           "index_name": "messages-vector",
-        },
-      ],
-      "workflows": [
-        {
-          "name": "main-workflow-prod",
-          "binding": "MAIN_WORKFLOW",
-          "class_name": "MainWorkflow",
-        },
-        {
-          "name": "zero-workflow-prod",
-          "binding": "ZERO_WORKFLOW",
-          "class_name": "ZeroWorkflow",
-        },
-        {
-          "name": "thread-workflow-prod",
-          "binding": "THREAD_WORKFLOW",
-          "class_name": "ThreadWorkflow",
         },
       ],
       "observability": {

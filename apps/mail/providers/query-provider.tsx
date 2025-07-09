@@ -120,7 +120,12 @@ export function QueryProvider({
       persistOptions={{
         persister,
         buster: CACHE_BURST_KEY,
-        maxAge: 1000 * 60 * 1, // 1 minute, we're storing in DOs
+        maxAge: 1000 * 60 * 1, // 1 minute, we're storing in DOs,
+        dehydrateOptions: {
+          shouldDehydrateQuery(query) {
+            return (query.queryKey[0] as string[]).some((e) => e === 'listThreads');
+          },
+        },
       }}
       onSuccess={() => {
         const threadQueryKey = [['mail', 'listThreads'], { type: 'infinite' }];

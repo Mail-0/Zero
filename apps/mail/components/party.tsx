@@ -54,13 +54,8 @@ export const NotificationProvider = () => {
           const { threadId } = JSON.parse(message.data);
           queryClient.invalidateQueries({
             queryKey: trpc.mail.get.queryKey({ id: threadId }),
-            refetchType: 'active',
-            exact: true,
-            predicate: (query) => {
-              const queryAge = Date.now() - (query.state.dataUpdatedAt || 0);
-              return queryAge > 60000; // 1 minute in milliseconds
-            },
           });
+          console.log('invalidated mail get', threadId);
         } else if (type === IncomingMessageType.Mail_List) {
           const { folder } = JSON.parse(message.data);
           queryClient.invalidateQueries({
