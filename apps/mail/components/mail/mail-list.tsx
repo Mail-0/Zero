@@ -70,7 +70,7 @@ const Thread = memo(
   }: ThreadProps & { index?: number }) {
     const [searchValue, setSearchValue] = useSearchValue();
     const { folder } = useParams<{ folder: string }>();
-    const [{ }, threads] = useThreads();
+    const [, threads] = useThreads();
     const [threadId] = useQueryState('threadId');
     const {
       data: getThreadData,
