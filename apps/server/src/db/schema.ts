@@ -244,7 +244,7 @@ export const organization = createTable('organization', {
   name: text('name').notNull(),
   slug: text('slug').notNull().unique(),
   logo: text('logo'),
-  metadata: jsonb('metadata'),
+  metadata: text('metadata'),
   createdAt: timestamp('created_at').notNull(),
 });
 

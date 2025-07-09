@@ -84,7 +84,7 @@ export default function OrganizationPage() {
         role: inviteRole,
         organizationId: activeOrg.id,
       });
-      
+
       toast.success(`Invitation sent to ${inviteEmail}!`);
       setInviteEmail('');
     } catch (error: any) {
@@ -101,7 +101,7 @@ export default function OrganizationPage() {
       await authClient.organization.setActive({
         organizationId: org.id,
       });
-      
+
       setActiveOrg(org);
       toast.success(`Active organization set to "${org.name}"`);
     } catch (error: any) {
@@ -170,7 +170,7 @@ export default function OrganizationPage() {
       try {
         const orgs = await authClient.organization.list();
         setOrganizations(orgs.data || []);
-        
+
         // Set first org as active if available
         if (orgs.data && orgs.data.length > 0) {
           setActiveOrg(orgs.data[0]);
@@ -179,7 +179,7 @@ export default function OrganizationPage() {
         console.error('Failed to load organizations:', error);
       }
     };
-    
+
     loadOrganizations();
   }, []);
 
@@ -191,7 +191,7 @@ export default function OrganizationPage() {
     }
     setVerifying(true);
     setVerifyMsg(null);
-    
+
     try {
       // Check if slug is available
       const orgs = await authClient.organization.list();
@@ -200,28 +200,28 @@ export default function OrganizationPage() {
         toast.error('Organization slug already exists. Please choose a different one.');
         return;
       }
-      
+
       // Check domain verification directly
       const res = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/verify-domain`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           domain: orgDomain,
-          verificationToken: verificationToken 
+          verificationToken: verificationToken
         }),
       });
-      const data = (await res.json()) as { 
-        verified: boolean; 
-        message?: string; 
+      const data = (await res.json()) as {
+        verified: boolean;
+        message?: string;
         error?: string;
         verificationToken?: string;
       };
-      
+
       // Store the verification token for reuse
       if (data.verificationToken) {
         setVerificationToken(data.verificationToken);
       }
-      
+
       if (data.verified) {
         setDomainVerified(true);
         setVerifyMsg('Domain verified! You can now create your organization.');
@@ -356,11 +356,10 @@ export default function OrganizationPage() {
                   {organizations.map((org) => (
                     <div
                       key={org.id}
-                      className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
-                        activeOrg?.id === org.id
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:bg-accent'
-                      }`}
+                      className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${activeOrg?.id === org.id
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:bg-accent'
+                        }`}
                       onClick={() => handleSetActiveOrg(org)}
                     >
                       <div className="flex items-center gap-3">
@@ -418,8 +417,8 @@ export default function OrganizationPage() {
                     </Select>
                   </div>
                 </div>
-                <Button 
-                  onClick={handleInviteMember} 
+                <Button
+                  onClick={handleInviteMember}
                   disabled={loading || !inviteEmail}
                   className="w-full"
                 >

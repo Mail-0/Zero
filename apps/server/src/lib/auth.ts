@@ -79,30 +79,24 @@ export const createAuth = () => {
   return betterAuth({
     plugins: [
       organization({
-        allowUserToCreateOrganization: async (user) => { 
+        allowUserToCreateOrganization: async (user) => {
           // const subscription = await getSubscription(user.id) 
           // return subscription.plan === "pro"
           return true;
         },
         organizationCreation: {
-          disabled: false, // Set to true to disable organization creation
           beforeCreate: async ({ organization, user }, request) => {
-              // Run custom logic before organization is created
-              // Optionally modify the organization data
-              return {
-                  data: {
-                      ...organization,
-                      metadata: {
-                          customField: "value"
-                      }
-                  }
+            return {
+              data: {
+                ...organization,
+                metadata: {
+                  customField: "value"
+                }
               }
+            }
           },
           afterCreate: async ({ organization, member, user }, request) => {
-              // Run custom logic after organization is created
-              // e.g., create default resources, send notifications
-              // await setupDefaultResources(organization.id)
-              console.log('organization created', organization, member, user, request);
+            console.log('organization created', organization, member, user, request);
           },
           async sendInvitationEmail(data: {
             id: string;
@@ -123,7 +117,7 @@ export const createAuth = () => {
             });
             console.log('[INVITE] sendInvitationEmail HOOK COMPLETED');
           },
-      }
+        }
       }),
       mcp({
         loginPage: env.VITE_PUBLIC_APP_URL + '/login',
