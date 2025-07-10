@@ -191,6 +191,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
         message: emailBody,
         attachments: await serializeFiles(data.attachments),
         fromEmail: fromEmail,
+        draftId: draftId ?? undefined,
         headers: {
           'In-Reply-To': replyToMessage?.messageId ?? '',
           References: [
@@ -253,9 +254,9 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
         className="w-full !max-w-none border pb-1"
         onSendEmail={handleSendEmail}
         onClose={async () => {
-          await setMode(null);
-          await setDraftId(null);
-          await setActiveReplyId(null);
+          setMode(null);
+          setDraftId(null);
+          setActiveReplyId(null);
         }}
         initialMessage={draft?.content ?? latestDraft?.decodedBody}
         initialTo={ensureEmailArray(draft?.to)}

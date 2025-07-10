@@ -1,8 +1,7 @@
 import { getCurrentDateContext, GmailSearchAssistantSystemPrompt } from '../lib/prompts';
-import { getDriverFromConnectionId } from '../services/mcp-service/mcp';
 import { systemPrompt } from '../services/call-service/system-prompt';
 import { composeEmail } from '../trpc/routes/ai/compose';
-import { connectionToDriver } from '../lib/server-utils';
+import { getZeroAgent } from '../lib/server-utils';
 import { env } from 'cloudflare:workers';
 import { openai } from '@ai-sdk/openai';
 import { FOLDERS } from '../lib/utils';
@@ -40,14 +39,17 @@ aiRouter.post('/do/:action', async (c) => {
     const action = c.req.param('action') as Tools;
     const body = await c.req.json();
     console.log('[DEBUG] action', action, body);
-    const driver = await getDriverFromConnectionId(connection.id);
+    const agent = await getZeroAgent(connection.id);
     switch (action) {
       case Tools.ListThreads:
         const threads = await Promise.all(
           (
-            await driver.list({ folder: body.folder ?? 'inbox', maxResults: body.maxResults ?? 5 })
-          ).threads.map((thread) =>
-            driver.get(thread.id).then((thread) => ({
+            await agent.listThreads({
+              folder: body.folder ?? 'inbox',
+              maxResults: body.maxResults ?? 5,
+            })
+          ).threads.map((thread: any) =>
+            agent.getThread(thread.id).then((thread) => ({
               id: thread.latest?.id,
               subject: thread.latest?.subject,
               sender: thread.latest?.sender,
@@ -65,7 +67,7 @@ aiRouter.post('/do/:action', async (c) => {
         });
         return c.json({ success: true, result: newBody });
       case Tools.SendEmail:
-        const result = await driver.create({
+        const result = await agent.create({
           to: body.to.map((to: any) => ({
             name: to.name ?? to.email,
             email: to.email ?? 'founders@0.email',
@@ -142,7 +144,7 @@ aiRouter.post('/call', async (c) => {
   }
 
   console.log('[DEBUG] Creating driver for connection:', connection.id);
-  const driver = connectionToDriver(connection);
+  const agent = await getZeroAgent(connection.id);
 
   const { text } = await generateText({
     model: openai(env.OPENAI_MODEL || 'gpt-4o'),
@@ -188,7 +190,7 @@ aiRouter.post('/call', async (c) => {
         execute: async (params) => {
           console.log('[DEBUG] listThreads', params);
 
-          const result = await driver.list({
+          const result = await agent.listThreads({
             folder: params.folder,
             query: params.query,
             maxResults: params.maxResults,
@@ -196,12 +198,12 @@ aiRouter.post('/call', async (c) => {
             pageToken: params.pageToken,
           });
           const content = await Promise.all(
-            result.threads.map(async (thread) => {
-              const loadedThread = await driver.get(thread.id);
+            result.threads.map(async (thread: any) => {
+              const loadedThread = await agent.getThread(thread.id);
               return [
                 {
                   type: 'text' as const,
-                  text: `Subject: ${loadedThread.latest?.subject} | ID: ${thread.id} | Received: ${loadedThread.latest?.receivedOn}`,
+                  text: `Subject: ${loadedThread.latest?.subject} | Received: ${loadedThread.latest?.receivedOn}`,
                 },
               ];
             }),
@@ -227,7 +229,7 @@ aiRouter.post('/call', async (c) => {
           console.log('[DEBUG] getThread', params);
 
           try {
-            const thread = await driver.get(params.threadId);
+            const thread = await agent.getThread(params.threadId);
 
             const content = thread.messages.at(-1)?.body;
 
@@ -260,10 +262,7 @@ aiRouter.post('/call', async (c) => {
         execute: async (params) => {
           console.log('[DEBUG] markThreadsRead', params);
 
-          await driver.modifyLabels(params.threadIds, {
-            addLabels: [],
-            removeLabels: ['UNREAD'],
-          });
+          await agent.modifyLabels(params.threadIds, [], ['UNREAD']);
           return {
             content: [
               {
@@ -282,10 +281,7 @@ aiRouter.post('/call', async (c) => {
         execute: async (params) => {
           console.log('[DEBUG] markThreadsUnread', params);
 
-          await driver.modifyLabels(params.threadIds, {
-            addLabels: ['UNREAD'],
-            removeLabels: [],
-          });
+          await agent.modifyLabels(params.threadIds, ['UNREAD'], []);
           return {
             content: [
               {
@@ -306,10 +302,7 @@ aiRouter.post('/call', async (c) => {
         execute: async (params) => {
           console.log('[DEBUG] modifyLabels', params);
 
-          await driver.modifyLabels(params.threadIds, {
-            addLabels: params.addLabelIds,
-            removeLabels: params.removeLabelIds,
-          });
+          await agent.modifyLabels(params.threadIds, params.addLabelIds, params.removeLabelIds);
           return {
             content: [
               {
@@ -342,7 +335,7 @@ aiRouter.post('/call', async (c) => {
         execute: async () => {
           console.log('[DEBUG] getUserLabels');
 
-          const labels = await driver.getUserLabels();
+          const labels = await agent.getUserLabels();
           return {
             content: [
               {
@@ -363,7 +356,7 @@ aiRouter.post('/call', async (c) => {
         execute: async (s) => {
           console.log('[DEBUG] getLabel', s);
 
-          const label = await driver.getLabel(s.id);
+          const label = await agent.getLabel(s.id);
           return {
             content: [
               {
@@ -389,7 +382,7 @@ aiRouter.post('/call', async (c) => {
           console.log('[DEBUG] createLabel', params);
 
           try {
-            await driver.createLabel({
+            await agent.createLabel({
               name: params.name,
               color:
                 params.backgroundColor && params.textColor
@@ -430,10 +423,7 @@ aiRouter.post('/call', async (c) => {
           console.log('[DEBUG] bulkDelete', params);
 
           try {
-            await driver.modifyLabels(params.threadIds, {
-              addLabels: ['TRASH'],
-              removeLabels: ['INBOX'],
-            });
+            await agent.modifyLabels(params.threadIds, ['TRASH'], ['INBOX']);
             return {
               content: [
                 {
@@ -465,10 +455,7 @@ aiRouter.post('/call', async (c) => {
           console.log('[DEBUG] bulkArchive', params);
 
           try {
-            await driver.modifyLabels(params.threadIds, {
-              addLabels: [],
-              removeLabels: ['INBOX'],
-            });
+            await agent.modifyLabels(params.threadIds, [], ['INBOX']);
             return {
               content: [
                 {

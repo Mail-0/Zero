@@ -34,19 +34,22 @@ import {
 import { cn, getEmailLogo, formatDate, formatTime, shouldShowSeparateTime } from '@/lib/utils';
 import { Dialog, DialogTitle, DialogHeader, DialogContent } from '../ui/dialog';
 import { memo, useEffect, useMemo, useState, useRef, useCallback } from 'react';
+import { BimiAvatar, getFirstLetterCharacter } from '../ui/bimi-avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import type { Sender, ParsedMessage, Attachment } from '@/types';
 import { useActiveConnection } from '@/hooks/use-connections';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useBrainState } from '../../hooks/use-summary';
 import { useTRPC } from '@/providers/query-provider';
 import { useThreadLabels } from '@/hooks/use-labels';
-import { useMutation } from '@tanstack/react-query';
 import { Markdown } from '@react-email/components';
 import { useSummary } from '@/hooks/use-summary';
 import { TextShimmer } from '../ui/text-shimmer';
+import { useThread } from '@/hooks/use-threads';
 import { RenderLabels } from './render-labels';
+import { cleanHtml } from '@/lib/email-utils';
 import { MailContent } from './mail-content';
 import { m } from '@/paraglide/messages';
 import { useParams } from 'react-router';
@@ -55,7 +58,6 @@ import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Badge } from '../ui/badge';
 import { format } from 'date-fns';
-import { cleanHtml } from '@/lib/email-utils';
 import { toast } from 'sonner';
 
 // HTML escaping function to prevent XSS attacks
@@ -78,7 +80,12 @@ function TextSelectionPopover({
   const popoverTriggerRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
 
-  const handleSelectionChange = useCallback(() => {
+  const handleSelectionChange = useCallback((e: MouseEvent) => {
+    if (window.getSelection()?.toString().trim()) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed) {
       setSelectionCoords(null);
@@ -375,13 +382,6 @@ const MailDisplayLabels = ({ labels }: { labels: string[] }) => {
       })}
     </div>
   );
-};
-
-// Helper function to get first letter character
-const getFirstLetterCharacter = (name?: string) => {
-  if (!name) return '';
-  const match = name.match(/[a-zA-Z]/);
-  return match ? match[0].toUpperCase() : '';
 };
 
 // Helper function to clean email display
@@ -776,6 +776,7 @@ const MoreAboutQuery = ({
 
 const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }: Props) => {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+  const { data: threadData } = useThread(emailData.threadId);
   //   const [unsubscribed, setUnsubscribed] = useState(false);
   //   const [isUnsubscribing, setIsUnsubscribing] = useState(false);
   const [preventCollapse, setPreventCollapse] = useState(false);
@@ -799,7 +800,10 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
   const [researchSender, setResearchSender] = useState<Sender | null>(null);
   const [searchQuery, setSearchQuery] = useState<string | null>(null);
 
-  const isLastEmail = totalEmails && index === totalEmails - 1;
+  const isLastEmail = useMemo(
+    () => emailData.id === threadData?.latest?.id,
+    [emailData.id, threadData?.latest?.id],
+  );
 
   const [, setMode] = useQueryState('mode');
 
@@ -1284,12 +1288,11 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             key={person.email}
             className="dark:bg-panelDark inline-flex items-center justify-start gap-1.5 overflow-hidden rounded-full border bg-white p-1 pr-2"
           >
-            <Avatar className="h-5 w-5">
-              <AvatarImage src={getEmailLogo(person.email)} className="rounded-full" />
-              <AvatarFallback className="bg-offsetLight rounded-full text-xs font-bold dark:bg-[#373737]">
-                {getFirstLetterCharacter(person.name || person.email)}
-              </AvatarFallback>
-            </Avatar>
+            <BimiAvatar
+              email={person.email}
+              name={person.name || person.email}
+              className="h-5 w-5"
+            />
             <div className="text-panelDark justify-start text-sm font-medium leading-none dark:text-white">
               {person.name || person.email}
             </div>
@@ -1297,12 +1300,11 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
         </PopoverTrigger>
         <PopoverContent className="min-w-fit text-sm">
           <div className="flex items-center gap-2">
-            <Avatar className="h-12 w-12">
-              <AvatarImage src={getEmailLogo(person.email)} className="rounded-full" />
-              <AvatarFallback className="bg-offsetLight rounded-full text-sm font-bold dark:bg-[#373737]">
-                {getFirstLetterCharacter(person.name || person.email)}
-              </AvatarFallback>
-            </Avatar>
+            <BimiAvatar
+              email={person.email}
+              name={person.name || person.email}
+              className="h-12 w-12"
+            />
             <div>
               <p className="font-medium">{person.name || 'Unknown'}</p>
               <div className="group flex items-center gap-2">
@@ -1350,7 +1352,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
         }
       }}
     >
-      <TextSelectionPopover onSearch={setSearchQuery}>
+      <>
         {searchQuery && (
           <MoreAboutQuery
             query={searchQuery}
@@ -1438,15 +1440,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
           >
             <div className="mt-3 flex w-full items-start justify-between gap-4 px-4">
               <div className="flex w-full justify-center gap-4">
-                <Avatar className="mt-3 h-8 w-8 rounded-full border dark:border-none">
-                  <AvatarImage
-                    className="rounded-full"
-                    src={getEmailLogo(emailData?.sender?.email)}
-                  />
-                  <AvatarFallback className="rounded-full bg-[#FFFFFF] font-bold text-[#9F9F9F] dark:bg-[#373737]">
-                    {getFirstLetterCharacter(emailData?.sender?.name)}
-                  </AvatarFallback>
-                </Avatar>
+                <BimiAvatar email={emailData?.sender?.email} name={emailData?.sender?.name} />
 
                 <div className="flex w-full items-center justify-between">
                   <div className="flex w-full items-center justify-start">
@@ -1463,7 +1457,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 //   extra: emailData?.sender?.extra || '',
                               });
                             }}
-                            className="hover:bg-muted font-semibold"
+                            className="hover:bg-muted max-w-36 truncate whitespace-nowrap font-semibold md:max-w-none"
                           >
                             {cleanNameDisplay(emailData?.sender?.name)}
                           </span>
@@ -1597,12 +1591,12 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                         </div>
 
                         <div className="flex items-center justify-center">
-                          <div className="text-muted-foreground mr-2 flex flex-col items-end text-sm font-medium dark:text-[#8C8C8C]">
-                            <time>
+                          <div className="text-muted-foreground mr-2 flex flex-col !flex-nowrap items-end text-sm font-medium dark:text-[#8C8C8C]">
+                            <time className="whitespace-nowrap">
                               {emailData?.receivedOn ? formatDate(emailData.receivedOn) : ''}
                             </time>
                             {shouldShowSeparateTime(emailData?.receivedOn) && (
-                              <time className="text-xs opacity-75">
+                              <time className="whitespace-nowrap text-xs opacity-75">
                                 {emailData?.receivedOn && formatTime(emailData.receivedOn)}
                               </time>
                             )}
@@ -1633,21 +1627,25 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 {m['common.mailDisplay.print']()}
                               </DropdownMenuItem>
                               {(emailData.attachments?.length ?? 0) > 0 && (
-                              <DropdownMenuItem
-                                disabled={!emailData.attachments?.length}
-                                className={!emailData.attachments?.length ? "data-[disabled]:pointer-events-auto" : ""}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  e.preventDefault();
-                                  handleDownloadAllAttachments(
-                                    emailData.subject || 'email',
-                                    emailData.attachments || [],
-                                  )();
-                                }}
-                              >
-                                <HardDriveDownload className="fill-iconLight dark:text-iconDark dark:fill-iconLight mr-2 h-4 w-4" />
-                                Download All Attachments
-                              </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  disabled={!emailData.attachments?.length}
+                                  className={
+                                    !emailData.attachments?.length
+                                      ? 'data-[disabled]:pointer-events-auto'
+                                      : ''
+                                  }
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    handleDownloadAllAttachments(
+                                      emailData.subject || 'email',
+                                      emailData.attachments || [],
+                                    )();
+                                  }}
+                                >
+                                  <HardDriveDownload className="fill-iconLight dark:text-iconDark dark:fill-iconLight mr-2 h-4 w-4" />
+                                  Download All Attachments
+                                </DropdownMenuItem>
                               )}
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -1847,7 +1845,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             </div>
           </div>
         </div>
-      </TextSelectionPopover>
+      </>
     </div>
   );
 };

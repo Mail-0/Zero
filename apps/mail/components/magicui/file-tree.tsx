@@ -195,7 +195,7 @@ type FolderProps = {
   isSelect?: boolean;
   onFolderClick?: (id: string) => void;
   hasChildren?: boolean;
-  color?: number;
+  color?: string;
 } & FolderComponentProps;
 
 const Folder = forwardRef<HTMLDivElement, FolderProps & React.HTMLAttributes<HTMLDivElement>>(
@@ -265,7 +265,7 @@ const Folder = forwardRef<HTMLDivElement, FolderProps & React.HTMLAttributes<HTM
             </Accordion.Trigger>
           ) : (
             <div className="flex items-center">
-              <Bookmark className={cn(`relative mr-3 size-4 text-[${color}]`)} />
+              <Bookmark className={cn(`relative mr-3 size-4`)} />
             </div>
           )}
           <span

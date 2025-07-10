@@ -14,13 +14,13 @@ import {
   Trash,
   X,
 } from '../icons/icons';
-import { EmptyStateIcon } from '../icons/empty-state-svg';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { EmptyStateIcon } from '../icons/empty-state-svg';
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
@@ -39,13 +39,13 @@ import type { ParsedMessage, Attachment } from '@/types';
 import { MailDisplaySkeleton } from './mail-skeleton';
 import { useTRPC } from '@/providers/query-provider';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { cleanHtml } from '@/lib/email-utils';
 import { Button } from '@/components/ui/button';
+import { cleanHtml } from '@/lib/email-utils';
 import { useStats } from '@/hooks/use-stats';
 import ReplyCompose from './reply-composer';
-import { m } from '@/paraglide/messages';
 import { NotesPanel } from './note-panel';
 import { cn, FOLDERS } from '@/lib/utils';
+import { m } from '@/paraglide/messages';
 import MailDisplay from './mail-display';
 import { useTheme } from 'next-themes';
 import { Inbox } from 'lucide-react';
@@ -514,24 +514,23 @@ export function ThreadDisplay() {
         </head>
         <body>
           ${emailData?.messages
-            ?.map(
-              (message, index) => `
+          ?.map(
+            (message, index) => `
             <div class="email-container">
               <div class="email-header">
                 ${index === 0 ? `<h1 class="email-title">${message.subject || 'No Subject'}</h1>` : ''}
 
 
-                ${
-                  message?.tags && message.tags.length > 0
-                    ? `
+                ${message?.tags && message.tags.length > 0
+                ? `
                   <div class="labels-section">
                     ${message.tags
-                      .map((tag) => `<span class="label-badge">${tag.name}</span>`)
-                      .join('')}
+                  .map((tag) => `<span class="label-badge">${tag.name}</span>`)
+                  .join('')}
                   </div>
                 `
-                    : ''
-                }
+                : ''
+              }
 
 
                 <div class="email-meta">
@@ -544,61 +543,58 @@ export function ThreadDisplay() {
                   </div>
 
 
-                  ${
-                    message.to && message.to.length > 0
-                      ? `
+                  ${message.to && message.to.length > 0
+                ? `
                     <div class="meta-row">
                       <span class="meta-label">To:</span>
                       <span class="meta-value">
                         ${message.to
-                          .map(
-                            (recipient) =>
-                              `${cleanNameDisplay(recipient.name)} <${recipient.email}>`,
-                          )
-                          .join(', ')}
+                  .map(
+                    (recipient) =>
+                      `${cleanNameDisplay(recipient.name)} <${recipient.email}>`,
+                  )
+                  .join(', ')}
                       </span>
                     </div>
                   `
-                      : ''
-                  }
+                : ''
+              }
 
 
-                  ${
-                    message.cc && message.cc.length > 0
-                      ? `
+                  ${message.cc && message.cc.length > 0
+                ? `
                     <div class="meta-row">
                       <span class="meta-label">CC:</span>
                       <span class="meta-value">
                         ${message.cc
-                          .map(
-                            (recipient) =>
-                              `${cleanNameDisplay(recipient.name)} <${recipient.email}>`,
-                          )
-                          .join(', ')}
+                  .map(
+                    (recipient) =>
+                      `${cleanNameDisplay(recipient.name)} <${recipient.email}>`,
+                  )
+                  .join(', ')}
                       </span>
                     </div>
                   `
-                      : ''
-                  }
+                : ''
+              }
 
 
-                  ${
-                    message.bcc && message.bcc.length > 0
-                      ? `
+                  ${message.bcc && message.bcc.length > 0
+                ? `
                     <div class="meta-row">
                       <span class="meta-label">BCC:</span>
                       <span class="meta-value">
                         ${message.bcc
-                          .map(
-                            (recipient) =>
-                              `${cleanNameDisplay(recipient.name)} <${recipient.email}>`,
-                          )
-                          .join(', ')}
+                  .map(
+                    (recipient) =>
+                      `${cleanNameDisplay(recipient.name)} <${recipient.email}>`,
+                  )
+                  .join(', ')}
                       </span>
                     </div>
                   `
-                      : ''
-                  }
+                : ''
+              }
 
 
                   <div class="meta-row">
@@ -617,30 +613,29 @@ export function ThreadDisplay() {
               </div>
 
 
-              ${
-                message.attachments && message.attachments.length > 0
-                  ? `
+              ${message.attachments && message.attachments.length > 0
+                ? `
                 <div class="attachments-section">
                   <h2 class="attachments-title">Attachments (${message.attachments.length})</h2>
                   ${message.attachments
-                    .map(
-                      (attachment, index) => `
+                  .map(
+                    (attachment, index) => `
                     <div class="attachment-item">
                       <span class="attachment-name">${attachment.filename}</span>
                       ${formatFileSize(attachment.size) ? ` - <span class="attachment-size">${formatFileSize(attachment.size)}</span>` : ''}
                     </div>
                   `,
-                    )
-                    .join('')}
+                  )
+                  .join('')}
                 </div>
               `
-                  : ''
+                : ''
               }
             </div>
             ${index < emailData.messages.length - 1 ? '<div class="separator"></div>' : ''}
           `,
-            )
-            .join('')}
+          )
+          .join('')}
         </body>
       </html>
     `;
@@ -755,7 +750,7 @@ export function ThreadDisplay() {
           <div className="flex h-full items-center justify-center">
             <div className="flex flex-col items-center justify-center gap-2 text-center">
               <EmptyStateIcon width={200} height={200} />
-              <div className="mt-5">
+              <div className="mt-4">
                 <p className="text-lg">It's empty here</p>
                 <p className="text-md text-muted-foreground dark:text-white/50">
                   Choose an email to view details
@@ -799,7 +794,7 @@ export function ThreadDisplay() {
           <>
             <div
               className={cn(
-                'flex flex-shrink-0 items-center px-1 pb-1 md:px-3 md:pb-[11px] md:pt-[12px]',
+                'flex flex-shrink-0 items-center px-1 pb-[10px] md:px-3 md:pb-[11px] md:pt-[12px]',
                 isMobile && 'bg-panelLight dark:bg-panelDark sticky top-0 z-10 mt-2',
               )}
             >
@@ -883,7 +878,7 @@ export function ThreadDisplay() {
                 >
                   <Reply className="fill-muted-foreground dark:fill-[#9B9B9B]" />
                   <div className="flex items-center justify-center gap-2.5 pl-0.5 pr-1">
-                    <div className="justify-start text-sm leading-none text-black dark:text-white">
+                    <div className="justify-start whitespace-nowrap text-sm leading-none text-black dark:text-white">
                       {m['common.threadDisplay.replyAll']()}
                     </div>
                   </div>
@@ -985,7 +980,7 @@ export function ThreadDisplay() {
                           <span>{m['common.threadDisplay.moveToSpam']()}</span>
                         </DropdownMenuItem>
                         {emailData.latest?.listUnsubscribe ||
-                        emailData.latest?.listUnsubscribePost ? (
+                          emailData.latest?.listUnsubscribePost ? (
                           <DropdownMenuItem onClick={handleUnsubscribeProcess}>
                             <Folders className="fill-iconLight dark:fill-iconDark mr-2" />
                             <span>{m['common.mailDisplay.unsubscribe']()}</span>

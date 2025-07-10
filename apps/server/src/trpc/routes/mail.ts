@@ -82,24 +82,26 @@ export const mailRouter = router({
         });
         return drafts;
       }
-      //   if (q) {
+      if (q) {
+        const threadsResponse = await agent.rawListThreads({
+          labelIds: labelIds,
+          maxResults: max,
+          pageToken: cursor,
+          query: q,
+          folder,
+        });
+        return threadsResponse;
+      }
+      const folderLabelId = getFolderLabelId(folder);
+      const labelIdsToUse = folderLabelId ? [...labelIds, folderLabelId] : labelIds;
       const threadsResponse = await agent.listThreads({
-        labelIds: labelIds,
+        labelIds: labelIdsToUse,
         maxResults: max,
         pageToken: cursor,
         query: q,
         folder,
       });
       return threadsResponse;
-      //   }
-      //   const folderLabelId = getFolderLabelId(folder);
-      //   const labelIdsToUse = folderLabelId ? [...labelIds, folderLabelId] : labelIds;
-      //   const threadsResponse = await agent.getThreadsFromDB({
-      //     labelIds: labelIdsToUse,
-      //     max: max,
-      //     cursor: cursor,
-      //   });
-      //   return threadsResponse;
     }),
   markAsRead: activeDriverProcedure
     .input(

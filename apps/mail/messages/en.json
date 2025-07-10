@@ -370,7 +370,8 @@
       "failedToMute": "Failed to mute",
       "failedToUnmute": "Failed to unmute",
       "archived": "Archived",
-      "failedToArchive": "Failed to archive"
+      "failedToArchive": "Failed to archive",
+      "openInNewTab": "Open in new tab"
     },
     "units": {
       "mb": "{amount} MB"

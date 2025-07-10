@@ -15,11 +15,11 @@ import {
   writingStyleMatrix,
 } from './db/schema';
 import { env, WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
+import { EProviders, type ISubscribeBatch, type IThreadBatch } from './types';
 import { getZeroAgent, getZeroDB, verifyToken } from './lib/server-utils';
-import { MainWorkflow, ThreadWorkflow, ZeroWorkflow } from './pipelines';
 import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
-import { EProviders, type ISubscribeBatch } from './types';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
+import { EWorkflowType, runWorkflow } from './pipelines';
 import { contextStorage } from 'hono/context-storage';
 import { defaultUserSettings } from './lib/schemas';
 import { createLocalJWKSet, jwtVerify } from 'jose';
@@ -40,6 +40,7 @@ import { aiRouter } from './routes/ai';
 import { Autumn } from 'autumn-js';
 import { appRouter } from './trpc';
 import { cors } from 'hono/cors';
+import { Effect } from 'effect';
 import { Hono } from 'hono';
 
 export class DbRpcDO extends RpcTarget {
@@ -567,12 +568,20 @@ export default class extends WorkerEntrypoint<typeof env> {
     .use(
       '*',
       cors({
-        origin: (c) => {
-          if (c.includes(env.COOKIE_DOMAIN)) {
-            return c;
-          } else {
+        origin: (origin) => {
+          if (!origin) return null;
+          let hostname: string;
+          try {
+            hostname = new URL(origin).hostname;
+          } catch {
             return null;
           }
+          const cookieDomain = env.COOKIE_DOMAIN;
+          if (!cookieDomain) return null;
+          if (hostname === cookieDomain || hostname.endsWith('.' + cookieDomain)) {
+            return origin;
+          }
+          return null;
         },
         credentials: true,
         allowHeaders: ['Content-Type', 'Authorization'],
@@ -639,19 +648,28 @@ export default class extends WorkerEntrypoint<typeof env> {
       if (providerId === EProviders.google) {
         const body = await c.req.json<{ historyId: string }>();
         const subHeader = c.req.header('x-goog-pubsub-subscription-name');
+        if (!subHeader) {
+          console.log('[GOOGLE] no subscription header', body);
+          return c.json({}, { status: 200 });
+        }
         const isValid = await verifyToken(c.req.header('Authorization')!.split(' ')[1]);
         if (!isValid) {
           console.log('[GOOGLE] invalid request', body);
           return c.json({}, { status: 200 });
         }
-        const instance = await env.MAIN_WORKFLOW.create({
-          params: {
+        try {
+          await env.thread_queue.send({
+            providerId,
+            historyId: body.historyId,
+            subscriptionName: subHeader!,
+          });
+        } catch (error) {
+          console.error('Error sending to thread queue', error, {
             providerId,
             historyId: body.historyId,
             subscriptionName: subHeader,
-          },
-        });
-        console.log('[GOOGLE] created instance', instance.id, instance.status);
+          });
+        }
         return c.json({ message: 'OK' }, { status: 200 });
       }
     });
@@ -666,13 +684,13 @@ export default class extends WorkerEntrypoint<typeof env> {
     return this.app.fetch(request, this.env, this.ctx);
   }
 
-  async queue(batch: MessageBatch<ISubscribeBatch>) {
+  async queue(batch: MessageBatch<any>) {
     switch (true) {
       case batch.queue.startsWith('subscribe-queue'): {
         console.log('batch', batch);
         try {
           await Promise.all(
-            batch.messages.map(async (msg) => {
+            batch.messages.map(async (msg: Message<ISubscribeBatch>) => {
               const connectionId = msg.body.connectionId;
               const providerId = msg.body.providerId;
               console.log('connectionId', connectionId);
@@ -687,11 +705,38 @@ export default class extends WorkerEntrypoint<typeof env> {
               }
             }),
           );
-          console.log('batch done');
+          console.log('[SUBSCRIBE_QUEUE] batch done');
         } finally {
           batch.ackAll();
         }
         return;
+      }
+      case batch.queue.startsWith('thread-queue'): {
+        console.log('batch', batch);
+        try {
+          await Promise.all(
+            batch.messages.map(async (msg: Message<IThreadBatch>) => {
+              const providerId = msg.body.providerId;
+              const historyId = msg.body.historyId;
+              const subscriptionName = msg.body.subscriptionName;
+              const workflow = runWorkflow(EWorkflowType.MAIN, {
+                providerId,
+                historyId,
+                subscriptionName,
+              });
+
+              try {
+                const result = await Effect.runPromise(workflow);
+                console.log('[THREAD_QUEUE] result', result);
+              } catch (error) {
+                console.error('Error running workflow', error);
+              }
+            }),
+          );
+        } finally {
+          batch.ackAll();
+        }
+        break;
       }
     }
   }
@@ -740,4 +785,4 @@ export default class extends WorkerEntrypoint<typeof env> {
   }
 }
 
-export { DurableMailbox, ZeroAgent, ZeroMCP, MainWorkflow, ZeroWorkflow, ThreadWorkflow, ZeroDB };
+export { DurableMailbox, ZeroAgent, ZeroMCP, ZeroDB };

@@ -16,6 +16,9 @@ export const useThreadNotes = (threadId: string) => {
       {
         enabled: !!activeConnection?.id && !!threadId,
         staleTime: 1000 * 60 * 5, // 5 minutes
+        refetchOnMount: false,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
         initialData: { notes: [] as Note[] },
         meta: {
           customError: m['common.notes.errors.failedToLoadNotes'](),

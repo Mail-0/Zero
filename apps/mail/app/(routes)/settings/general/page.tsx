@@ -61,7 +61,7 @@ const TimezoneSelect = memo(
               variant="outline"
               role="combobox"
               aria-expanded={open}
-              className="w-46 flex !h-9 items-center justify-start rounded-md hover:bg-transparent"
+              className="md:w-46 flex !h-9 w-full items-center justify-start rounded-md hover:bg-transparent"
             >
               <Clock className="mr-2 h-4 w-4 flex-shrink-0" />
               <span className="truncate">{field.value}</span>
@@ -190,16 +190,16 @@ export default function GeneralPage() {
       >
         <Form {...form}>
           <form id="general-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="flex w-full items-center gap-4">
+            <div className="flex w-full flex-col items-start gap-4 md:flex-row md:items-center">
               <FormField
                 control={form.control}
                 name="language"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className='flex'>{m['pages.settings.general.language']()}</FormLabel>
+                  <FormItem className="w-full">
+                    <FormLabel className="flex">{m['pages.settings.general.language']()}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger className="w-36 justify-start hover:bg-transparent">
+                        <SelectTrigger className="flex w-full flex-row justify-start hover:bg-transparent md:w-36">
                           <Globe className="mr-2 h-4 w-4" />
                           <SelectValue placeholder={m['pages.settings.general.selectLanguage']()} />
                         </SelectTrigger>
@@ -219,8 +219,8 @@ export default function GeneralPage() {
                 control={form.control}
                 name="timezone"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className='flex'>{m['pages.settings.general.timezone']()}</FormLabel>
+                  <FormItem className="w-full">
+                    <FormLabel className="flex">{m['pages.settings.general.timezone']()}</FormLabel>
                     <TimezoneSelect field={field} />
                   </FormItem>
                 )}
@@ -230,8 +230,8 @@ export default function GeneralPage() {
                   control={form.control}
                   name="defaultEmailAlias"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="!mb-1">
+                    <FormItem className="w-full">
+                      <FormLabel className="!mb-1 flex flex-row items-center gap-1">
                         {m['pages.settings.general.defaultEmailAlias']()}{' '}
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -244,7 +244,7 @@ export default function GeneralPage() {
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value || ''}>
                         <FormControl>
-                          <SelectTrigger className="w-[300px] justify-start hover:bg-transparent">
+                          <SelectTrigger className="flex w-full flex-row justify-start hover:bg-transparent md:w-[300px]">
                             <Mail className="mr-2 h-4 w-4" />
                             <SelectValue
                               placeholder={m['pages.settings.general.selectDefaultEmail']()}

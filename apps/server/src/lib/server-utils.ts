@@ -57,36 +57,6 @@ export const connectionToDriver = (activeConnection: typeof connection.$inferSel
   });
 };
 
-export const notifyUser = async ({
-  connectionId,
-  result,
-  threadId,
-}: {
-  connectionId: string;
-  result: IGetThreadResponse;
-  threadId: string;
-}) => {
-  const mailbox = await getZeroAgent(connectionId);
-
-  try {
-    await mailbox.broadcast(
-      JSON.stringify({
-        type: OutgoingMessageType.Mail_Get,
-        threadId,
-        result,
-      } as OutgoingMessage),
-    );
-  } catch (error) {
-    console.error(`[notifyUser] Failed to broadcast message`, {
-      connectionId,
-      threadId,
-      result,
-      error,
-    });
-    throw error;
-  }
-};
-
 export const verifyToken = async (token: string) => {
   const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${token}`, {
     method: 'GET',

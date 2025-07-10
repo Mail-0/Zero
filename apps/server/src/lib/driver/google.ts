@@ -389,7 +389,7 @@ export class GoogleMailManager implements MailManager {
         return {
           labels: Array.from(labels).map((id) => ({ id, name: id })),
           messages,
-          latest: messages.findLast((e) => !e.isDraft),
+          latest: messages.findLast((e) => e.isDraft !== true),
           hasUnread,
           totalReplies: messages.filter((e) => !e.isDraft).length,
         };
@@ -1124,12 +1124,12 @@ export class GoogleMailManager implements MailManager {
         .filter(Boolean) || [];
 
     const subject = headers.find((h) => h.name === 'Subject')?.value;
-   
+
     const cc =
       draft.message.payload?.headers?.find((h) => h.name === 'Cc')?.value?.split(',') || [];
     const bcc =
       draft.message.payload?.headers?.find((h) => h.name === 'Bcc')?.value?.split(',') || [];
-      
+
     const payload = draft.message.payload;
     let content = '';
     let attachments: {
@@ -1150,13 +1150,16 @@ export class GoogleMailManager implements MailManager {
 
       //  Get attachments
       const attachmentParts = payload.parts.filter(
-        (part) => !!part.filename && !!part.body?.attachmentId
+        (part) => !!part.filename && !!part.body?.attachmentId,
       );
 
       attachments = await Promise.all(
         attachmentParts.map(async (part) => {
           try {
-            const attachmentData = await this.getAttachment(draft.message!.id!, part.body!.attachmentId!);
+            const attachmentData = await this.getAttachment(
+              draft.message!.id!,
+              part.body!.attachmentId!,
+            );
             return {
               filename: part.filename || '',
               mimeType: part.mimeType || '',
@@ -1172,7 +1175,7 @@ export class GoogleMailManager implements MailManager {
           } catch (e) {
             return null;
           }
-        })
+        }),
       ).then((a) => a.filter((a): a is NonNullable<typeof a> => a !== null));
     } else if (payload?.body?.data) {
       content = fromBinary(payload.body.data);

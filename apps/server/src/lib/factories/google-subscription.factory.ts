@@ -31,13 +31,14 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
   private getServiceAccount(): GoogleServiceAccount {
     if (!this.serviceAccount) {
       const serviceAccountJson = env.GOOGLE_S_ACCOUNT;
-      if (!serviceAccountJson) {
+      if (!serviceAccountJson || serviceAccountJson === '{}') {
         throw new Error('GOOGLE_S_ACCOUNT environment variable is required');
       }
 
       try {
         this.serviceAccount = JSON.parse(serviceAccountJson);
       } catch (error) {
+        console.log('Invalid GOOGLE_S_ACCOUNT JSON format', serviceAccountJson);
         throw new Error('Invalid GOOGLE_S_ACCOUNT JSON format');
       }
       return this.serviceAccount as GoogleServiceAccount;

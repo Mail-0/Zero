@@ -330,19 +330,7 @@ const deleteLabel = (driver: MailManager) =>
     },
   });
 
-const getGoogleTools = async (connectionId: string) => {
-  const arcade = new Arcade();
-  const googleToolkit = await arcade.tools.list({ toolkit: 'google', limit: 30 });
-  const googleTools = toZodToolSet({
-    tools: googleToolkit.items,
-    client: arcade,
-    userId: connectionId, // Your app's internal ID for the user (an email, UUID, etc). It's used internally to identify your user in Arcade
-    executeFactory: executeOrAuthorizeZodTool, // Checks if tool is authorized and executes it, or returns authorization URL if needed
-  });
-  return googleTools;
-};
-
-export const webSearch = (dataStream: DataStreamWriter) =>
+export const webSearch = (dataStream?: DataStreamWriter) =>
   tool({
     description: 'Search the web for information using Perplexity AI',
     parameters: z.object({
@@ -350,7 +338,23 @@ export const webSearch = (dataStream: DataStreamWriter) =>
     }),
     execute: async ({ query }) => {
       try {
-        const response = streamText({
+        if (dataStream) {
+          const response = streamText({
+            model: perplexity('sonar'),
+            messages: [
+              { role: 'system', content: 'Be precise and concise.' },
+              { role: 'system', content: 'Do not include sources in your response.' },
+              { role: 'system', content: 'Do not use markdown formatting in your response.' },
+              { role: 'user', content: query },
+            ],
+            maxTokens: 1024,
+          });
+          response.mergeIntoDataStream(dataStream);
+
+          return { type: 'streaming_response', query };
+        }
+
+        const response = await generateText({
           model: perplexity('sonar'),
           messages: [
             { role: 'system', content: 'Be precise and concise.' },
@@ -361,9 +365,7 @@ export const webSearch = (dataStream: DataStreamWriter) =>
           maxTokens: 1024,
         });
 
-        response.mergeIntoDataStream(dataStream);
-
-        return { type: 'streaming_response', query };
+        return response.text;
       } catch (error) {
         console.error('Error searching the web:', error);
         throw new Error('Failed to search the web');
