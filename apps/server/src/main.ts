@@ -16,8 +16,8 @@ import {
 } from './db/schema';
 import { env, WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
 import { EProviders, type ISubscribeBatch, type IThreadBatch } from './types';
-import { getZeroDB, verifyToken } from './lib/server-utils';
 import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
+import { getZeroDB, verifyToken } from './lib/server-utils';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
 import { EWorkflowType, runWorkflow } from './pipelines';
 import { contextStorage } from 'hono/context-storage';
@@ -644,6 +644,7 @@ export default class extends WorkerEntrypoint<typeof env> {
     .get('/', (c) => c.redirect(`${env.VITE_PUBLIC_APP_URL}`))
     .post('/a8n/notify/:providerId', async (c) => {
       if (!c.req.header('Authorization')) return c.json({ error: 'Unauthorized' }, { status: 401 });
+      if (env.DISABLE_WORKFLOWS === 'true') return c.json({ message: 'OK' }, { status: 200 });
       const providerId = c.req.param('providerId');
       if (providerId === EProviders.google) {
         const body = await c.req.json<{ historyId: string }>();

@@ -103,6 +103,7 @@
         "DROP_AGENT_TABLES": "true",
         "THREAD_SYNC_MAX_COUNT": "40",
         "THREAD_SYNC_LOOP": "false",
+        "DISABLE_WORKFLOWS": "true",
       },
       "kv_namespaces": [
         {
@@ -230,6 +231,7 @@
         "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "40",
         "THREAD_SYNC_LOOP": "true",
+        "DISABLE_WORKFLOWS": "true",
       },
       "kv_namespaces": [
         {
@@ -354,6 +356,7 @@
         "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "40",
         "THREAD_SYNC_LOOP": "true",
+        "DISABLE_WORKFLOWS": "true",
       },
       "kv_namespaces": [
         {
