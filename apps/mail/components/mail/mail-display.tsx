@@ -1301,7 +1301,11 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
           >
             <div className="mt-3 flex w-full items-start justify-between gap-4 px-4">
               <div className="flex w-full justify-center gap-4">
-                <BimiAvatar email={emailData?.sender?.email} name={emailData?.sender?.name} />
+                <BimiAvatar
+                  email={emailData?.sender?.email}
+                  name={emailData?.sender?.name}
+                  className="mt-3 h-8 w-8"
+                />
 
                 <div className="flex w-full items-center justify-between">
                   <div className="flex w-full items-center justify-start">
