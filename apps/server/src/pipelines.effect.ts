@@ -18,16 +18,15 @@ import {
   ThreadLabels,
 } from './lib/brain.fallback.prompts';
 import { defaultLabels, EPrompts, EProviders, type ParsedMessage, type Sender } from './types';
-import { Effect, Console, pipe, Match, Option } from 'effect';
 import { getZeroAgent } from './lib/server-utils';
 import { type gmail_v1 } from '@googleapis/gmail';
 import { getPromptName } from './pipelines';
 import { env } from 'cloudflare:workers';
 import { connection } from './db/schema';
+import { Effect, Console } from 'effect';
 import * as cheerio from 'cheerio';
 import { eq } from 'drizzle-orm';
 import { createDb } from './db';
-import { z } from 'zod';
 
 const showLogs = true;
 
@@ -89,7 +88,7 @@ export const runMainWorkflow = (
   Effect.gen(function* () {
     yield* Console.log('[MAIN_WORKFLOW] Starting workflow with payload:', params);
 
-    const { providerId, historyId, subscriptionName } = params;
+    const { providerId, historyId } = params;
 
     let serviceAccount = null;
     if (override) {
@@ -725,11 +724,13 @@ export const runThreadWorkflow = (
                 // Check delta - only modify if there are actual changes
                 const currentLabelIds = thread.labels?.map((l) => l.id) || [];
                 const labelsToAdd = validLabelIds.filter((id) => !currentLabelIds.includes(id));
-                const aiLabelIds = userAccountLabels
-                  .filter((l) => userLabels.some((ul) => ul.name === l.name))
-                  .map((l) => l.id);
+                const aiLabelIds = new Set(
+                  userAccountLabels
+                    .filter((l) => userLabels.some((ul) => ul.name === l.name))
+                    .map((l) => l.id),
+                );
                 const labelsToRemove = currentLabelIds.filter(
-                  (id) => aiLabelIds.includes(id) && !validLabelIds.includes(id),
+                  (id) => aiLabelIds.has(id) && !validLabelIds.includes(id),
                 );
 
                 if (labelsToAdd.length > 0 || labelsToRemove.length > 0) {
@@ -836,9 +837,9 @@ export const runThreadWorkflow = (
     }),
   );
 
-// Helper functions for vectorization and AI processing
-type VectorizeVectorMetadata = 'connection' | 'thread' | 'summary';
-type IThreadSummaryMetadata = Record<VectorizeVectorMetadata, VectorizeVectorMetadata>;
+// // Helper functions for vectorization and AI processing
+// type VectorizeVectorMetadata = 'connection' | 'thread' | 'summary';
+// type IThreadSummaryMetadata = Record<VectorizeVectorMetadata, VectorizeVectorMetadata>;
 
 export async function htmlToText(decodedBody: string): Promise<string> {
   try {

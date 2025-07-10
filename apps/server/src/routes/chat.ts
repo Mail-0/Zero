@@ -25,15 +25,13 @@ import {
   GmailSearchAssistantSystemPrompt,
   AiChatPrompt,
 } from '../lib/prompts';
-import { type Connection, type ConnectionContext, type WSMessage } from 'agents';
 import { EPrompts, type IOutgoingMessage, type ParsedMessage } from '../types';
 import type { IGetThreadResponse, MailManager } from '../lib/driver/types';
 import { connectionToDriver, getZeroAgent } from '../lib/server-utils';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { createSimpleAuth, type SimpleAuth } from '../lib/auth';
+import { type Connection, type WSMessage } from 'agents';
 import { ToolOrchestrator } from './agent/orchestrator';
 import type { CreateDraftData } from '../lib/schemas';
-import { FOLDERS, parseHeaders } from '../lib/utils';
 import { env, RpcTarget } from 'cloudflare:workers';
 import { AIChatAgent } from 'agents/ai-chat-agent';
 import { tools as authTools } from './agent/tools';
@@ -43,26 +41,14 @@ import { getPromptName } from '../pipelines';
 import { connection } from '../db/schema';
 import { getPrompt } from '../lib/brain';
 import { openai } from '@ai-sdk/openai';
+import { FOLDERS } from '../lib/utils';
 import { and, eq } from 'drizzle-orm';
 import { McpAgent } from 'agents/mcp';
-import { groq } from '@ai-sdk/groq';
+
 import { createDb } from '../db';
 import { z } from 'zod';
 
 const decoder = new TextDecoder();
-
-interface ThreadRow {
-  id: string;
-  thread_id: string;
-  provider_id: string;
-  messages: string;
-  latest_sender: string;
-  latest_received_on: string;
-  latest_subject: string;
-  latest_label_ids: string;
-  created_at: string;
-  updated_at: string;
-}
 
 export enum IncomingMessageType {
   UseChatRequest = 'cf_agent_use_chat_request',
@@ -364,7 +350,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
 
   private getDataStreamResponse(
     onFinish: StreamTextOnFinishCallback<{}>,
-    options?: {
+    _?: {
       abortSignal: AbortSignal | undefined;
     },
   ) {
@@ -474,6 +460,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
       try {
         data = JSON.parse(message) as IncomingMessage;
       } catch (error) {
+        console.warn(error);
         // silently ignore invalid messages for now
         // TODO: log errors with log levels
         return;
@@ -969,10 +956,10 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
       let totalSynced = 0;
       let pageToken: string | null = null;
       let hasMore = true;
-      let pageCount = 0;
+      let _pageCount = 0;
 
       while (hasMore) {
-        pageCount++;
+        _pageCount++;
 
         const result = await this.driver.list({
           folder,
@@ -1558,6 +1545,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
             ],
           };
         } catch (e) {
+          console.error(e);
           return {
             content: [
               {
@@ -1587,6 +1575,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
             ],
           };
         } catch (e) {
+          console.error(e);
           return {
             content: [
               {
@@ -1616,6 +1605,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
             ],
           };
         } catch (e) {
+          console.error(e);
           return {
             content: [
               {

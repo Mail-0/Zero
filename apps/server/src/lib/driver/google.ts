@@ -8,9 +8,9 @@ import {
   sanitizeContext,
   StandardizedError,
 } from './utils';
-import type { IOutgoingMessage, Label, ParsedMessage, DeleteAllSpamResponse } from '../../types';
 import { mapGoogleLabelColor, mapToGoogleLabelColor } from './google-label-color-map';
 import { parseAddressList, parseFrom, wasSentWithTLS } from '../email-utils';
+import type { IOutgoingMessage, Label, ParsedMessage } from '../../types';
 import { sanitizeTipTapHtml } from '../sanitize-tip-tap-html';
 import type { MailManager, ManagerConfig } from './types';
 import { type gmail_v1, gmail } from '@googleapis/gmail';
@@ -197,7 +197,7 @@ export class GoogleMailManager implements MailManager {
             });
             return {
               label: res.data.name ?? res.data.id ?? '',
-              count: Number(res.data.threadsUnread) ?? undefined,
+              count: Number(res.data.threadsUnread),
             };
           }),
         );
@@ -949,7 +949,6 @@ export class GoogleMailManager implements MailManager {
     cc,
     bcc,
     fromEmail,
-    isForward = false,
     originalMessage = null,
   }: IOutgoingMessage) {
     const msg = createMimeMessage();
@@ -1173,6 +1172,7 @@ export class GoogleMailManager implements MailManager {
               body: attachmentData ?? '',
             };
           } catch (e) {
+            console.error('Failed to get attachment', e);
             return null;
           }
         }),

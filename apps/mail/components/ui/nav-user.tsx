@@ -1,41 +1,35 @@
 import {
-  HelpCircle,
-  LogIn,
-  LogOut,
-  MoonIcon,
-  Settings,
-  Plus,
-  BrainIcon,
-  CopyCheckIcon,
-  BadgeCheck,
-  BanknoteIcon,
-} from 'lucide-react';
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  HelpCircle,
+  LogOut,
+  MoonIcon,
+  Settings,
+  Plus,
+  CopyCheckIcon,
+  BadgeCheck,
+  BanknoteIcon,
+} from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useActiveConnection, useConnections } from '@/hooks/use-connections';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useLocation, useRevalidator, useSearchParams } from 'react-router';
-import { CircleCheck, Danger, OldPhone, ThreeDots } from '../icons/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Popover, PopoverContent, PopoverTrigger } from './popover';
-import { CallInboxDialog, SetupInboxDialog } from '../setup-phone';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLoading } from '../context/loading-context';
 import { signOut, useSession } from '@/lib/auth-client';
 import { AddConnectionDialog } from '../connection/add';
+import { CircleCheck, ThreeDots } from '../icons/icons';
 import { useTRPC } from '@/providers/query-provider';
 import { useSidebar } from '@/components/ui/sidebar';
-import { useBrainState } from '@/hooks/use-summary';
-import { useThreads } from '@/hooks/use-threads';
 import { useBilling } from '@/hooks/use-billing';
 import { SunIcon } from '../icons/animated/sun';
 import { clear as idbClear } from 'idb-keyval';
+import { useLocation } from 'react-router';
 import { m } from '@/paraglide/messages';
 import { useTheme } from 'next-themes';
 import { useQueryState } from 'nuqs';
@@ -44,8 +38,8 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export function NavUser() {
-  const { data: session, refetch: refetchSession, isPending: isSessionPending } = useSession();
-  const { data, refetch: refetchConnections } = useConnections();
+  const { data: session } = useSession();
+  const { data } = useConnections();
   const [isRendered, setIsRendered] = useState(false);
   const { theme, setTheme } = useTheme();
   const { state } = useSidebar();
@@ -56,7 +50,6 @@ export function NavUser() {
   );
   const { openBillingPortal, customer: billingCustomer, isPro } = useBilling();
   const pathname = useLocation().pathname;
-  const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const { data: activeConnection, refetch: refetchActiveConnection } = useActiveConnection();
   const [, setPricingDialog] = useQueryState('pricingDialog');
@@ -147,9 +140,9 @@ export function NavUser() {
                       />
 
                       <AvatarFallback className="rounded-[5px] text-[10px]">
-                        {(activeAccount?.name || activeAccount?.email)
+                        {(activeAccount?.name || activeAccount?.email || '')
                           .split(' ')
-                          .map((n) => n[0])
+                          .map((n: string) => n[0])
                           .join('')
                           .toUpperCase()
                           .slice(0, 2)}
@@ -267,7 +260,12 @@ export function NavUser() {
                       </a>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                      <a href="https://discord.gg/mail0" target="_blank" className="w-full">
+                      <a
+                        href="https://discord.gg/mail0"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="w-full"
+                      >
                         <div className="flex items-center gap-2">
                           <HelpCircle size={16} className="opacity-60" />
                           <p className="text-[13px] opacity-60">
@@ -485,7 +483,12 @@ export function NavUser() {
                       </div>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                      <a href="https://discord.gg/mail0" target="_blank" className="w-full">
+                      <a
+                        href="https://discord.gg/mail0"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="w-full"
+                      >
                         <div className="flex items-center gap-2">
                           <HelpCircle size={16} className="opacity-60" />
                           <p className="text-[13px] opacity-60">

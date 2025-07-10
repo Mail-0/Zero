@@ -19,16 +19,6 @@ import {
   X as XIcon,
 } from 'lucide-react';
 import {
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-  CommandShortcut,
-} from '@/components/ui/command';
-import {
   createContext,
   Fragment,
   Suspense,
@@ -39,6 +29,14 @@ import {
   useState,
   type ComponentType,
 } from 'react';
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import { getMainSearchTerm, parseNaturalLanguageSearch } from '@/lib/utils';
 import { DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { useSearchValue } from '@/hooks/use-search-value';
@@ -188,7 +186,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
   const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
-  const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
+  //   const [selectedLabels] = useState<string[]>([]);
   const [filterBuilderState, setFilterBuilderState] = useState<Record<string, string>>({});
   const [saveSearchName, setSaveSearchName] = useState('');
   const [emailSuggestions, setEmailSuggestions] = useState<string[]>([]);
@@ -199,7 +197,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
 
   const { userLabels = [] } = useLabels();
   const trpc = useTRPC();
-  const { mutateAsync: generateSearchQuery, isPending } = useMutation(
+  const { mutateAsync: generateSearchQuery } = useMutation(
     trpc.ai.generateSearchQuery.mutationOptions(),
   );
 
@@ -845,7 +843,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           )}
         </CommandEmpty>
         {allCommands.map((group, groupIndex) => (
-          <Fragment key={groupIndex}>
+          <Fragment key={group.group}>
             {group.items.length > 0 && (
               <CommandGroup heading={group.group}>
                 {group.items.map((item) => (
@@ -1460,9 +1458,9 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                       />
                     )}
                     <span className="text-sm">{label.name || 'Unnamed Label'}</span>
-                    {selectedLabels.includes(label.id || '') && (
+                    {/* {selectedLabels.includes(label.id || '') && (
                       <Check className="ml-auto h-4 w-4" />
-                    )}
+                    )} */}
                   </div>
                 ))}
             </div>

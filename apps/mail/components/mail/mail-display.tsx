@@ -23,7 +23,6 @@ import {
   HardDriveDownload,
   Loader2,
   CopyIcon,
-  SearchIcon,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -31,30 +30,27 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
-import { cn, getEmailLogo, formatDate, formatTime, shouldShowSeparateTime } from '@/lib/utils';
+import { cn, formatDate, formatTime, shouldShowSeparateTime } from '@/lib/utils';
 import { Dialog, DialogTitle, DialogHeader, DialogContent } from '../ui/dialog';
 import { memo, useEffect, useMemo, useState, useRef, useCallback } from 'react';
-import { BimiAvatar, getFirstLetterCharacter } from '../ui/bimi-avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import type { Sender, ParsedMessage, Attachment } from '@/types';
 import { useActiveConnection } from '@/hooks/use-connections';
-import { useMutation, useQuery } from '@tanstack/react-query';
 import { useBrainState } from '../../hooks/use-summary';
 import { useTRPC } from '@/providers/query-provider';
 import { useThreadLabels } from '@/hooks/use-labels';
+import { useMutation } from '@tanstack/react-query';
 import { Markdown } from '@react-email/components';
 import { useSummary } from '@/hooks/use-summary';
 import { TextShimmer } from '../ui/text-shimmer';
 import { useThread } from '@/hooks/use-threads';
+import { BimiAvatar } from '../ui/bimi-avatar';
 import { RenderLabels } from './render-labels';
-import { cleanHtml } from '@/lib/email-utils';
 import { MailContent } from './mail-content';
 import { m } from '@/paraglide/messages';
 import { useParams } from 'react-router';
 import { FileText } from 'lucide-react';
-import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Badge } from '../ui/badge';
 import { format } from 'date-fns';
@@ -66,140 +62,6 @@ function escapeHtml(text: string): string {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
-}
-
-function TextSelectionPopover({
-  children,
-  onSearch,
-}: {
-  children: React.ReactNode;
-  onSearch: (query: string) => void;
-}) {
-  const [selectionCoords, setSelectionCoords] = useState<{ x: number; y: number } | null>(null);
-  const [selectedText, setSelectedText] = useState('');
-  const popoverTriggerRef = useRef<HTMLDivElement>(null);
-  const popoverRef = useRef<HTMLDivElement>(null);
-
-  const handleSelectionChange = useCallback((e: MouseEvent) => {
-    if (window.getSelection()?.toString().trim()) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-
-    const selection = window.getSelection();
-    if (!selection || selection.isCollapsed) {
-      setSelectionCoords(null);
-      setSelectedText('');
-      return;
-    }
-
-    try {
-      const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2 + window.scrollX - window.innerWidth / 2;
-      const y = rect.top + window.scrollY;
-
-      setSelectionCoords({ x: centerX, y });
-      setSelectedText(selection.toString().trim());
-    } catch (error) {
-      console.error('Error handling text selection:', error);
-      setSelectionCoords(null);
-      setSelectedText('');
-    }
-  }, []);
-
-  //   const handleClickOutside = useCallback((event: MouseEvent) => {
-  //     if (
-  //       popoverRef.current &&
-  //       !popoverRef.current.contains(event.target as Node) &&
-  //       !popoverTriggerRef.current?.contains(event.target as Node)
-  //     ) {
-  //       setSelectionCoords(null);
-  //       setSelectedText('');
-  //     }
-  //   }, []);
-
-  useEffect(() => {
-    document.addEventListener('mouseup', handleSelectionChange);
-    // document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        setSelectionCoords(null);
-        setSelectedText('');
-      }
-    });
-
-    return () => {
-      document.removeEventListener('mouseup', handleSelectionChange);
-      //   document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [handleSelectionChange]);
-
-  return (
-    <div className="relative" ref={popoverTriggerRef}>
-      {children}
-      {selectionCoords && (
-        <div
-          ref={popoverRef}
-          className="absolute z-50"
-          style={{
-            top: selectionCoords.y,
-            left: selectionCoords.x,
-          }}
-          role="dialog"
-          aria-label="Text selection options"
-        >
-          <Popover
-            open={!!selectedText.trim().length}
-            onOpenChange={(open) => (open ? undefined : setSelectedText(''))}
-          >
-            <PopoverTrigger asChild>
-              <button className="invisible h-0 w-0" aria-label="Text selection options" />
-            </PopoverTrigger>
-            <PopoverContent
-              side="top"
-              className="break-words rounded-lg p-0"
-              onInteractOutside={() => {
-                setSelectionCoords(null);
-                setSelectedText('');
-              }}
-            >
-              <div className="flex items-center justify-between gap-2 px-2">
-                <p className="text-muted-foreground max-w-[200px] truncate text-sm">
-                  {selectedText}
-                </p>
-                <div className="flex">
-                  <Button
-                    size="icon"
-                    className="scale-75 rounded-full"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      onSearch(selectedText);
-                    }}
-                  >
-                    <SearchIcon />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="scale-75 rounded-full"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      navigator.clipboard.writeText(selectedText);
-                    }}
-                  >
-                    <CopyIcon />
-                  </Button>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-      )}
-    </div>
-  );
 }
 
 // Add formatFileSize utility function
@@ -404,7 +266,7 @@ const ThreadAttachments = ({ attachments }: { attachments: Attachment[] }) => {
     try {
       // Convert base64 to blob
       const byteCharacters = atob(attachment.body);
-      const byteNumbers = new Array(byteCharacters.length);
+      const byteNumbers: number[] = Array(byteCharacters.length);
       for (let i = 0; i < byteCharacters.length; i++) {
         byteNumbers[i] = byteCharacters.charCodeAt(i);
       }
@@ -519,7 +381,7 @@ const ActionButton = ({ onClick, icon, text, shortcut }: ActionButtonProps) => {
 const downloadAttachment = (attachment: { body: string; mimeType: string; filename: string }) => {
   try {
     const byteCharacters = atob(attachment.body);
-    const byteNumbers = new Array(byteCharacters.length);
+    const byteNumbers: number[] = Array(byteCharacters.length);
     for (let i = 0; i < byteCharacters.length; i++) {
       byteNumbers[i] = byteCharacters.charCodeAt(i);
     }
@@ -551,7 +413,7 @@ const handleDownloadAllAttachments =
     attachments.forEach((attachment) => {
       try {
         const byteCharacters = atob(attachment.body);
-        const byteNumbers = new Array(byteCharacters.length);
+        const byteNumbers: number[] = Array(byteCharacters.length);
         for (let i = 0; i < byteCharacters.length; i++) {
           byteNumbers[i] = byteCharacters.charCodeAt(i);
         }
@@ -596,7 +458,7 @@ const handleDownloadAllAttachments =
 const openAttachment = (attachment: { body: string; mimeType: string; filename: string }) => {
   try {
     const byteCharacters = atob(attachment.body);
-    const byteNumbers = new Array(byteCharacters.length);
+    const byteNumbers: number[] = Array(byteCharacters.length);
     for (let i = 0; i < byteCharacters.length; i++) {
       byteNumbers[i] = byteCharacters.charCodeAt(i);
     }
@@ -627,7 +489,6 @@ const openAttachment = (attachment: { body: string; mimeType: string; filename: 
 
 const MoreAboutPerson = ({
   person,
-  extra,
   open,
   onOpenChange,
 }: {
@@ -776,7 +637,7 @@ const MoreAboutQuery = ({
 
 const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }: Props) => {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
-  const { data: threadData } = useThread(emailData.threadId);
+  const { data: threadData } = useThread(emailData.threadId ?? null);
   //   const [unsubscribed, setUnsubscribed] = useState(false);
   //   const [isUnsubscribing, setIsUnsubscribing] = useState(false);
   const [preventCollapse, setPreventCollapse] = useState(false);
@@ -1276,7 +1137,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
       }
     } catch (error) {
       console.error('Error printing email:', error);
-      alert('Failed to print email. Please try again.');
+      toast.error('Failed to print email. Please try again.');
     }
   };
 
@@ -1414,8 +1275,8 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent className="flex flex-col gap-1">
-                                {people.slice(2).map((person, index) => (
-                                  <div key={index}>{renderPerson(person)}</div>
+                                {people.slice(2).map((person) => (
+                                  <div key={person.email}>{renderPerson(person)}</div>
                                 ))}
                               </TooltipContent>
                             </Tooltip>
@@ -1779,8 +1640,8 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                 {/* mail attachments */}
                 {emailData?.attachments && emailData?.attachments.length > 0 ? (
                   <div className="mb-4 flex flex-wrap items-center gap-2 px-4 pt-4">
-                    {emailData?.attachments.map((attachment, index) => (
-                      <div key={index} className="flex">
+                    {emailData?.attachments.map((attachment) => (
+                      <div key={attachment.filename} className="flex">
                         <button
                           className="flex cursor-pointer items-center gap-1 rounded-[5px] bg-[#FAFAFA] px-1.5 py-1 text-sm font-medium hover:bg-[#F0F0F0] dark:bg-[#262626] dark:hover:bg-[#303030]"
                           onClick={() => openAttachment(attachment)}

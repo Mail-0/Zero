@@ -1,7 +1,4 @@
 import { trpcClient } from '@/providers/query-provider';
-import { perplexity } from '@ai-sdk/perplexity';
-import { generateText, tool } from 'ai';
-
 const getCurrentThreadId = () => {
   if (typeof window !== 'undefined') {
     const params = new URLSearchParams(window.location.search);
@@ -130,7 +127,7 @@ export const toolExecutors = {
       return { success: false, error: error.message };
     }
   },
-  deleteEmail: async (params: any) => {
+  deleteEmail: async () => {
     const threadId = getCurrentThreadId();
     if (!threadId) {
       return {
@@ -338,11 +335,12 @@ export const toolExecutors = {
             senderName: senderName,
             messageCount: messageCount,
             hasUnread: thread.hasUnread,
-            summary: 'this is a fake summary',
+            summary: text,
             message: `Successfully summarized email thread: ${threadId}`,
           },
         };
       } catch (error) {
+        console.error(error);
         return {
           success: false,
           error: 'Failed to fetch email for summarization',

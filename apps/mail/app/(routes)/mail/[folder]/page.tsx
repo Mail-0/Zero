@@ -1,12 +1,12 @@
 import { useLoaderData, useNavigate } from 'react-router';
-import { useTRPC } from '@/providers/query-provider';
+
 import { MailLayout } from '@/components/mail/mail';
 import { useLabels } from '@/hooks/use-labels';
 import { authProxy } from '@/lib/auth-proxy';
 import { useEffect, useState } from 'react';
 import type { Route } from './+types/page';
 
-const ALLOWED_FOLDERS = ['inbox', 'draft', 'sent', 'spam', 'bin', 'archive'];
+const ALLOWED_FOLDERS = new Set(['inbox', 'draft', 'sent', 'spam', 'bin', 'archive']);
 
 export async function clientLoader({ params, request }: Route.ClientLoaderArgs) {
   if (!params.folder) return Response.redirect(`${import.meta.env.VITE_PUBLIC_APP_URL}/mail/inbox`);
@@ -24,7 +24,7 @@ export default function MailPage() {
   const navigate = useNavigate();
   const [isLabelValid, setIsLabelValid] = useState<boolean | null>(true);
 
-  const isStandardFolder = ALLOWED_FOLDERS.includes(folder);
+  const isStandardFolder = ALLOWED_FOLDERS.has(folder);
 
   const { userLabels, isLoading: isLoadingLabels } = useLabels();
 

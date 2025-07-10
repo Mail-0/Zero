@@ -1,9 +1,8 @@
-import { toZodToolSet, executeOrAuthorizeZodTool } from '@arcadeai/arcadejs/lib';
 import { generateText, streamText, tool, type DataStreamWriter } from 'ai';
 import { composeEmail } from '../../trpc/routes/ai/compose';
 import type { MailManager } from '../../lib/driver/types';
 import { perplexity } from '@ai-sdk/perplexity';
-import { Arcade } from '@arcadeai/arcadejs';
+
 import { colors } from '../../lib/prompts';
 import { env } from 'cloudflare:workers';
 import { Tools } from '../../types';
@@ -40,69 +39,69 @@ export const getEmbeddingVector = async (
   }
 };
 
-const askZeroMailbox = (connectionId: string) =>
-  tool({
-    description: 'Ask Zero a question about the mailbox',
-    parameters: z.object({
-      question: z.string().describe('The question to ask Zero'),
-      topK: z.number().describe('The number of results to return').max(9).min(1).default(3),
-    }),
-    execute: async ({ question, topK = 3 }) => {
-      const embedding = await getEmbeddingVector(question, 'vectorize-load');
-      if (!embedding) {
-        return { error: 'Failed to get embedding' };
-      }
-      const threadResults = await env.VECTORIZE.query(embedding, {
-        topK,
-        returnMetadata: 'all',
-        filter: {
-          connection: connectionId,
-        },
-      });
+// const askZeroMailbox = (connectionId: string) =>
+//   tool({
+//     description: 'Ask Zero a question about the mailbox',
+//     parameters: z.object({
+//       question: z.string().describe('The question to ask Zero'),
+//       topK: z.number().describe('The number of results to return').max(9).min(1).default(3),
+//     }),
+//     execute: async ({ question, topK = 3 }) => {
+//       const embedding = await getEmbeddingVector(question, 'vectorize-load');
+//       if (!embedding) {
+//         return { error: 'Failed to get embedding' };
+//       }
+//       const threadResults = await env.VECTORIZE.query(embedding, {
+//         topK,
+//         returnMetadata: 'all',
+//         filter: {
+//           connection: connectionId,
+//         },
+//       });
 
-      if (!threadResults.matches.length) {
-        return {
-          response: [],
-          success: false,
-        };
-      }
-      return {
-        response: threadResults.matches.map((e) => e.metadata?.['summary'] ?? 'no content'),
-        success: true,
-      };
-    },
-  });
+//       if (!threadResults.matches.length) {
+//         return {
+//           response: [],
+//           success: false,
+//         };
+//       }
+//       return {
+//         response: threadResults.matches.map((e) => e.metadata?.['summary'] ?? 'no content'),
+//         success: true,
+//       };
+//     },
+//   });
 
-const askZeroThread = (connectionId: string) =>
-  tool({
-    description: 'Ask Zero a question about a specific thread',
-    parameters: z.object({
-      threadId: z.string().describe('The ID of the thread to ask Zero about'),
-      question: z.string().describe('The question to ask Zero'),
-    }),
-    execute: async ({ threadId, question }) => {
-      const response = await env.VECTORIZE.getByIds([threadId]);
-      if (!response.length) return { response: "I don't know, no threads found", success: false };
-      const embedding = await getEmbeddingVector(question, 'vectorize-load');
-      if (!embedding) {
-        return { error: 'Failed to get embedding' };
-      }
-      const threadResults = await env.VECTORIZE.query(embedding, {
-        topK: 1,
-        returnMetadata: 'all',
-        filter: {
-          thread: threadId,
-          connection: connectionId,
-        },
-      });
-      const topThread = threadResults.matches[0];
-      if (!topThread) return { response: "I don't know, no threads found", success: false };
-      return {
-        response: topThread.metadata?.['summary'] ?? 'no content',
-        success: true,
-      };
-    },
-  });
+// const askZeroThread = (connectionId: string) =>
+//   tool({
+//     description: 'Ask Zero a question about a specific thread',
+//     parameters: z.object({
+//       threadId: z.string().describe('The ID of the thread to ask Zero about'),
+//       question: z.string().describe('The question to ask Zero'),
+//     }),
+//     execute: async ({ threadId, question }) => {
+//       const response = await env.VECTORIZE.getByIds([threadId]);
+//       if (!response.length) return { response: "I don't know, no threads found", success: false };
+//       const embedding = await getEmbeddingVector(question, 'vectorize-load');
+//       if (!embedding) {
+//         return { error: 'Failed to get embedding' };
+//       }
+//       const threadResults = await env.VECTORIZE.query(embedding, {
+//         topK: 1,
+//         returnMetadata: 'all',
+//         filter: {
+//           thread: threadId,
+//           connection: connectionId,
+//         },
+//       });
+//       const topThread = threadResults.matches[0];
+//       if (!topThread) return { response: "I don't know, no threads found", success: false };
+//       return {
+//         response: topThread.metadata?.['summary'] ?? 'no content',
+//         success: true,
+//       };
+//     },
+//   });
 
 const getEmail = (driver: MailManager) =>
   tool({

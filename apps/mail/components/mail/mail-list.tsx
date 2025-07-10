@@ -1,12 +1,4 @@
 import {
-  cn,
-  FOLDERS,
-  formatDate,
-  getEmailLogo,
-  getMainSearchTerm,
-  parseNaturalLanguageSearch,
-} from '@/lib/utils';
-import {
   Archive2,
   ExclamationCircle,
   GroupPeople,
@@ -14,37 +6,29 @@ import {
   Trash,
   PencilCompose,
 } from '../icons/icons';
-import {
-  memo,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ComponentProps,
-} from 'react';
-import { useIsFetching, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
+import { memo, useCallback, useEffect, useMemo, useRef, type ComponentProps } from 'react';
 import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
 import { focusedIndexAtom, useMailNavigation } from '@/hooks/use-mail-navigation';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useIsFetching, type UseQueryResult } from '@tanstack/react-query';
 import type { MailSelectMode, ParsedMessage, ThreadProps } from '@/types';
 import type { ParsedDraft } from '../../../server/src/lib/driver/types';
 import { ThreadContextMenu } from '@/components/context/thread-context';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useMail, type Config } from '@/components/mail/use-mail';
 import { type ThreadDestination } from '@/lib/thread-actions';
 import { useThread, useThreads } from '@/hooks/use-threads';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { EmptyStateIcon } from '../icons/empty-state-svg';
 import { highlightText } from '@/lib/email-utils.client';
-import { useHotkeysContext } from 'react-hotkeys-hook';
-import { AnimatePresence, motion } from 'motion/react';
+import { cn, FOLDERS, formatDate } from '@/lib/utils';
+import { Avatar } from '../ui/avatar';
+
 import { useTRPC } from '@/providers/query-provider';
 import { useThreadLabels } from '@/hooks/use-labels';
-import { template } from '@/lib/email-utils.client';
+
 import { useSettings } from '@/hooks/use-settings';
-import { useThreadNotes } from '@/hooks/use-notes';
+
 import { useKeyState } from '@/hooks/use-hot-key';
 import { VList, type VListHandle } from 'virtua';
 import { BimiAvatar } from '../ui/bimi-avatar';
@@ -53,10 +37,10 @@ import { Badge } from '@/components/ui/badge';
 import { useDraft } from '@/hooks/use-drafts';
 import { Check, Star } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
-import { StickyNote } from 'lucide-react';
+
 import { m } from '@/paraglide/messages';
 import { useParams } from 'react-router';
-import { useTheme } from 'next-themes';
+
 import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Categories } from './mail';
@@ -69,15 +53,11 @@ const Thread = memo(
     isKeyboardFocused,
     index,
   }: ThreadProps & { index?: number }) {
-    const [searchValue, setSearchValue] = useSearchValue();
+    const [searchValue] = useSearchValue();
     const { folder } = useParams<{ folder: string }>();
     const [, threads] = useThreads();
     const [threadId] = useQueryState('threadId');
-    const {
-      data: getThreadData,
-      isGroupThread,
-      latestDraft,
-    } = useThread(message.id, message.historyId);
+    const { data: getThreadData, isGroupThread, latestDraft } = useThread(message.id);
     const [id, setThreadId] = useQueryState('threadId');
     const [focusedIndex, setFocusedIndex] = useAtom(focusedIndexAtom);
 
@@ -251,7 +231,7 @@ const Thread = memo(
             className={cn(
               'hover:bg-offsetLight hover:bg-primary/5 group relative mx-1 flex cursor-pointer flex-col items-start rounded-lg py-2 text-left text-sm transition-all hover:opacity-100',
               (isMailSelected || isMailBulkSelected || isKeyboardFocused) &&
-              'border-border bg-primary/5 opacity-100',
+                'border-border bg-primary/5 opacity-100',
               isKeyboardFocused && 'ring-primary/50',
               'relative',
               'group',
@@ -956,7 +936,6 @@ export const MailList = memo(
                   overscan={5}
                   itemSize={100}
                   className="scrollbar-none flex-1 overflow-x-hidden"
-                  children={vListRenderer}
                   onScroll={() => {
                     if (!vListRef.current) return;
                     const endIndex = vListRef.current.findEndIndex();
@@ -971,7 +950,9 @@ export const MailList = memo(
                       void loadMore();
                     }
                   }}
-                />
+                >
+                  {vListRenderer}
+                </VList>
               </div>
             )}
           </>
@@ -1037,14 +1018,6 @@ export const MailLabels = memo(
     return JSON.stringify(prev.labels) === JSON.stringify(next.labels);
   },
 );
-
-function getNormalizedLabelKey(label: string) {
-  return label.toLowerCase().replace(/^category_/i, '');
-}
-
-function capitalize(str: string) {
-  return str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase();
-}
 
 function getLabelIcon(label: string) {
   const normalizedLabel = label.toLowerCase().replace(/^category_/i, '');

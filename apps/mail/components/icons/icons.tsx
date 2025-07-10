@@ -308,7 +308,7 @@ export const Inbox = ({ className }: { className?: string }) => (
   </svg>
 );
 
-export const PaperPlane = ({ className }: { className?: string }) => (
+export const PaperPlane = () => (
   <svg
     width="24"
     height="24"

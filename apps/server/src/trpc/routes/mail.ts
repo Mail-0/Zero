@@ -1,17 +1,16 @@
 import {
   activeDriverProcedure,
-  createRateLimiterMiddleware,
   router,
   privateProcedure,
 } from '../trpc';
 import { updateWritingStyleMatrix } from '../../services/writing-style-service';
-import { deserializeFiles, serializedFileSchema } from '../../lib/schemas';
-import { defaultPageSize, FOLDERS, LABELS } from '../../lib/utils';
+import { serializedFileSchema } from '../../lib/schemas';
+import { defaultPageSize, FOLDERS, } from '../../lib/utils';
 import { IGetThreadResponseSchema } from '../../lib/driver/types';
 import { processEmailHtml } from '../../lib/email-processor';
 import type { DeleteAllSpamResponse } from '../../types';
 import { getZeroAgent } from '../../lib/server-utils';
-import { env } from 'cloudflare:workers';
+
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 

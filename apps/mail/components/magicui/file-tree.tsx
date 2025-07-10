@@ -198,125 +198,119 @@ type FolderProps = {
   color?: string;
 } & FolderComponentProps;
 
-const Folder = forwardRef<HTMLDivElement, FolderProps & React.HTMLAttributes<HTMLDivElement>>(
-  (
-    {
-      className,
-      element,
-      count,
-      value,
-      isSelectable = true,
-      isSelect,
-      children,
-      onFolderClick,
-      hasChildren,
-      color,
-      ...props
-    },
-    ref,
-  ) => {
-    const childrenCount = React.Children.count(children);
-    const canExpand = hasChildren !== undefined ? hasChildren : childrenCount > 0;
-    const {
-      direction,
-      handleExpand,
-      expandedItems,
-      indicator,
-      setExpandedItems,
-      openIcon,
-      closeIcon,
-    } = useTree();
+const Folder = ({
+  className,
+  element,
+  count,
+  value,
+  isSelectable = true,
+  isSelect,
+  children,
+  onFolderClick,
+  hasChildren,
+  ...props
+}: FolderProps) => {
+  const childrenCount = React.Children.count(children);
+  const canExpand = hasChildren !== undefined ? hasChildren : childrenCount > 0;
+  const {
+    direction,
+    handleExpand,
+    expandedItems,
+    indicator,
+    setExpandedItems,
+    openIcon,
+    closeIcon,
+  } = useTree();
 
-    return (
-      <Accordion.Item {...props} value={value} className="relative h-full overflow-hidden">
-        <div
-          className={cn(
-            `flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm hover:bg-black/10 dark:hover:bg-[#202020]`,
-            className,
-            {
-              'bg-sidebar-accent rounded-md': isSelect && isSelectable,
-              'cursor-pointer': isSelectable,
-              'cursor-not-allowed opacity-50': !isSelectable,
-            },
-          )}
-          {...(!canExpand && isSelectable && onFolderClick
+  return (
+    <Accordion.Item {...props} value={value} className="relative h-full overflow-hidden">
+      <div
+        className={cn(
+          `flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm hover:bg-black/10 dark:hover:bg-[#202020]`,
+          className,
+          {
+            'bg-sidebar-accent rounded-md': isSelect && isSelectable,
+            'cursor-pointer': isSelectable,
+            'cursor-not-allowed opacity-50': !isSelectable,
+          },
+        )}
+        {...(!canExpand && isSelectable && onFolderClick
+          ? {
+              onClick: (e) => {
+                e.stopPropagation();
+                onFolderClick(value);
+              },
+              role: 'button',
+              tabIndex: 0,
+            }
+          : {})}
+      >
+        {canExpand ? (
+          <Accordion.Trigger
+            className="flex cursor-[ns-resize] items-center"
+            disabled={!isSelectable}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleExpand(value);
+            }}
+          >
+            {expandedItems?.includes(value)
+              ? (openIcon ?? <FolderOpenIcon className="relative mr-3 size-4" />)
+              : (closeIcon ?? <FolderIcon className="relative mr-3 size-4" />)}
+          </Accordion.Trigger>
+        ) : (
+          <div className="flex items-center">
+            <Bookmark className={cn(`relative mr-3 size-4`)} />
+          </div>
+        )}
+        <span
+          className={cn('max-w-[124px] flex-1 truncate', {
+            'cursor-pointer': canExpand && isSelectable && onFolderClick,
+            'font-bold': isSelect,
+          })}
+          {...(canExpand && isSelectable && onFolderClick
             ? {
                 onClick: (e) => {
                   e.stopPropagation();
-                  onFolderClick(value);
+                  if (onFolderClick) {
+                    onFolderClick(value);
+                  }
                 },
                 role: 'button',
                 tabIndex: 0,
               }
             : {})}
         >
-          {canExpand ? (
-            <Accordion.Trigger
-              className="flex cursor-[ns-resize] items-center"
-              disabled={!isSelectable}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleExpand(value);
-              }}
-            >
-              {expandedItems?.includes(value)
-                ? (openIcon ?? <FolderOpenIcon className="relative mr-3 size-4" />)
-                : (closeIcon ?? <FolderIcon className="relative mr-3 size-4" />)}
-            </Accordion.Trigger>
-          ) : (
-            <div className="flex items-center">
-              <Bookmark className={cn(`relative mr-3 size-4`)} />
-            </div>
-          )}
+          {element}
+        </span>
+        {count > 0 && (
           <span
-            className={cn('max-w-[124px] flex-1 truncate', {
-              'cursor-pointer': canExpand && isSelectable && onFolderClick,
-              'font-bold': isSelect,
-            })}
-            {...(canExpand && isSelectable && onFolderClick
-              ? {
-                  onClick: (e) => {
-                    e.stopPropagation();
-                    if (onFolderClick) {
-                      onFolderClick(value);
-                    }
-                  },
-                  role: 'button',
-                  tabIndex: 0,
-                }
-              : {})}
+            className={cn(
+              'text-muted-foreground ml-auto shrink-0 rounded-full bg-transparent px-2 py-0.5 text-xs font-medium',
+            )}
           >
-            {element}
+            {count}
           </span>
-          {count > 0 && (
-            <span
-              className={cn(
-                'text-muted-foreground ml-auto shrink-0 rounded-full bg-transparent px-2 py-0.5 text-xs font-medium',
-              )}
-            >
-              {count}
-            </span>
-          )}
-        </div>
-        <Accordion.Content className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down relative h-full overflow-hidden text-sm">
-          {element && indicator && <TreeIndicator aria-hidden="true" />}
-          <Accordion.Root
-            dir={direction}
-            type="multiple"
-            className="ml-5 flex flex-col gap-1 py-1 rtl:mr-5"
-            defaultValue={expandedItems}
-            value={expandedItems}
-            onValueChange={(value) => {
-              setExpandedItems?.((prev) => [...(prev ?? []), value[0]]);
-            }}
-          >
-            {children}
-          </Accordion.Root>
-        </Accordion.Content>
-      </Accordion.Item>
-    );
-  },
-);
+        )}
+      </div>
+      <Accordion.Content className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down relative h-full overflow-hidden text-sm">
+        {element && indicator && <TreeIndicator aria-hidden="true" />}
+        <Accordion.Root
+          dir={direction}
+          type="multiple"
+          className="ml-5 flex flex-col gap-1 py-1 rtl:mr-5"
+          defaultValue={expandedItems}
+          value={expandedItems}
+          onValueChange={(value) => {
+            setExpandedItems?.((prev) => [...(prev ?? []), value[0]]);
+          }}
+        >
+          {children}
+        </Accordion.Root>
+      </Accordion.Content>
+    </Accordion.Item>
+  );
+};
 
 Folder.displayName = 'Folder';
 
@@ -329,36 +323,31 @@ const File = forwardRef<
     isSelect?: boolean;
     fileIcon?: React.ReactNode;
   } & React.ButtonHTMLAttributes<HTMLButtonElement>
->(
-  (
-    { value, className, handleSelect, isSelectable = true, isSelect, fileIcon, children, ...props },
-    ref,
-  ) => {
-    const { direction, selectedId, selectItem } = useTree();
-    const isSelected = isSelect ?? selectedId === value;
-    return (
-      <button
-        ref={ref}
-        type="button"
-        disabled={!isSelectable}
-        className={cn(
-          'flex w-fit items-center gap-1 rounded-md pr-1 text-sm duration-200 ease-in-out rtl:pl-1 rtl:pr-0',
-          {
-            'bg-muted': isSelected && isSelectable,
-          },
-          isSelectable ? 'cursor-pointer' : 'cursor-not-allowed opacity-50',
-          direction === 'rtl' ? 'rtl' : 'ltr',
-          className,
-        )}
-        onClick={() => selectItem(value)}
-        {...props}
-      >
-        {fileIcon ?? <FileIcon className="size-4" />}
-        {children}
-      </button>
-    );
-  },
-);
+>(({ value, className, isSelectable = true, isSelect, fileIcon, children, ...props }, ref) => {
+  const { direction, selectedId, selectItem } = useTree();
+  const isSelected = isSelect ?? selectedId === value;
+  return (
+    <button
+      ref={ref}
+      type="button"
+      disabled={!isSelectable}
+      className={cn(
+        'flex w-fit items-center gap-1 rounded-md pr-1 text-sm duration-200 ease-in-out rtl:pl-1 rtl:pr-0',
+        {
+          'bg-muted': isSelected && isSelectable,
+        },
+        isSelectable ? 'cursor-pointer' : 'cursor-not-allowed opacity-50',
+        direction === 'rtl' ? 'rtl' : 'ltr',
+        className,
+      )}
+      onClick={() => selectItem(value)}
+      {...props}
+    >
+      {fileIcon ?? <FileIcon className="size-4" />}
+      {children}
+    </button>
+  );
+});
 
 File.displayName = 'File';
 
@@ -368,7 +357,7 @@ const CollapseButton = forwardRef<
     elements: TreeViewElement[];
     expandAll?: boolean;
   } & React.HTMLAttributes<HTMLButtonElement>
->(({ className, elements, expandAll = false, children, ...props }, ref) => {
+>(({ elements, expandAll = false, children, ...props }, ref) => {
   const { expandedItems, setExpandedItems } = useTree();
 
   const expendAllTree = useCallback((elements: TreeViewElement[]) => {

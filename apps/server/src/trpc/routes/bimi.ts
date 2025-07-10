@@ -1,5 +1,4 @@
-import { router, privateProcedure, createRateLimiterMiddleware } from '../trpc';
-import { Ratelimit } from '@upstash/ratelimit';
+import { router, privateProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
@@ -89,12 +88,6 @@ const fetchLogoContent = async (logoUrl: string): Promise<string | null> => {
 
 export const bimiRouter = router({
   getByEmail: privateProcedure
-    .use(
-      createRateLimiterMiddleware({
-        generatePrefix: ({ sessionUser }) => `ratelimit:bimi-${sessionUser?.id}`,
-        limiter: Ratelimit.slidingWindow(30, '1m'),
-      }),
-    )
     .input(
       z.object({
         email: z.string().email(),
@@ -159,12 +152,6 @@ export const bimiRouter = router({
     }),
 
   getByDomain: privateProcedure
-    .use(
-      createRateLimiterMiddleware({
-        generatePrefix: ({ sessionUser }) => `ratelimit:bimi-domain-${sessionUser?.id}`,
-        limiter: Ratelimit.slidingWindow(30, '1m'),
-      }),
-    )
     .input(
       z.object({
         domain: z.string().min(1),

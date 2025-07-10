@@ -1,5 +1,3 @@
-import { OutgoingMessageType, type OutgoingMessage } from '../routes/chat';
-import type { IGetThreadResponse } from './driver/types';
 import { getContext } from 'hono/context-storage';
 import { connection } from '../db/schema';
 import type { HonoContext } from '../ctx';

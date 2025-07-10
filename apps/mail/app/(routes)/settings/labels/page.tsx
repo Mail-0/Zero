@@ -1,40 +1,29 @@
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+  } from '@/components/ui/dialog';
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+  } from '@/components/ui/form';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { SettingsCard } from '@/components/settings/settings-card';
 import { LabelDialog } from '@/components/labels/label-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CurvedArrow } from '@/components/icons/icons';
+
 import { Separator } from '@/components/ui/separator';
 import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
-import { Check, Plus, Pencil } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { type Label as LabelType } from '@/types';
 import { Button } from '@/components/ui/button';
-import { HexColorPicker } from 'react-colorful';
+
 import { Bin } from '@/components/icons/icons';
 import { useLabels } from '@/hooks/use-labels';
-import { GMAIL_COLORS } from '@/lib/constants';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+
+
+
 import { Badge } from '@/components/ui/badge';
-import { useForm } from 'react-hook-form';
+
 import { m } from '@/paraglide/messages';
-import { Command } from 'lucide-react';
-import { COLORS } from './colors';
+
+
 import { useState } from 'react';
 import { toast } from 'sonner';
 

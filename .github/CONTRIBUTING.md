@@ -79,6 +79,8 @@ Thank you for your interest in contributing to 0.email! We're excited to have yo
    - Make sure the app runs without errors
    - Test your feature thoroughly
 
+   - Please lint using `pnpm dlx oxlint@latest` or by downloading an IDE extension here: https://oxc.rs/docs/guide/usage/linter.html#vscode-extension
+
 5. **Commit Your Changes**
 
    - Use clear, descriptive commit messages

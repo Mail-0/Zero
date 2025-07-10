@@ -1,17 +1,17 @@
-import { useActiveConnection, useConnections } from '@/hooks/use-connections';
+import { useActiveConnection } from '@/hooks/use-connections';
 import { Dialog, DialogClose } from '@/components/ui/dialog';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
 import { cleanEmailAddresses } from '@/lib/email-utils';
-import { useHotkeysContext } from 'react-hotkeys-hook';
+
 import { useTRPC } from '@/providers/query-provider';
-import { useEffect, useMemo, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useSettings } from '@/hooks/use-settings';
 import { EmailComposer } from './email-composer';
 import { useSession } from '@/lib/auth-client';
 import { serializeFiles } from '@/lib/schemas';
 import { useDraft } from '@/hooks/use-drafts';
-import { useNavigate } from 'react-router';
+import { useEffect, useState } from 'react';
+
 import type { Attachment } from '@/types';
 import { m } from '@/paraglide/messages';
 import { useQueryState } from 'nuqs';
@@ -31,15 +31,6 @@ type DraftType = {
   attachments?: File[];
 };
 
-// Define the connection type
-type Connection = {
-  id: string;
-  email: string;
-  name: string | null;
-  picture: string | null;
-  createdAt: Date;
-};
-
 export function CreateEmail({
   initialTo = '',
   initialSubject = '',
@@ -56,7 +47,7 @@ export function CreateEmail({
   draftId?: string | null;
 }) {
   const { data: session } = useSession();
-  const { data: connections } = useConnections();
+
   const { data: aliases } = useEmailAliases();
   const [draftId, setDraftId] = useQueryState('draftId');
   const {

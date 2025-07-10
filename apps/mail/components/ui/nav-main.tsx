@@ -1,9 +1,9 @@
 import { SidebarGroup, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from './sidebar';
 import { Collapsible, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { useActiveConnection, useConnections } from '@/hooks/use-connections';
+import { useActiveConnection, } from '@/hooks/use-connections';
 import { LabelDialog } from '@/components/labels/label-dialog';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Link, useLocation, useNavigate } from 'react-router';
+import { Link, useLocation, } from 'react-router';
 import Intercom, { show } from '@intercom/messenger-js-sdk';
 import { MessageSquare, OldPhone } from '../icons/icons';
 import { useSidebar } from '../context/sidebar-context';
@@ -55,9 +55,9 @@ export function NavMain({ items }: NavMainProps) {
   const pathname = location.pathname;
   const searchParams = new URLSearchParams();
   const [category] = useQueryState('category');
-  const { data: connections } = useConnections();
-  const { data: stats } = useStats();
-  const { data: activeConnection } = useActiveConnection();
+  
+  
+  
   const trpc = useTRPC();
   const { data: intercomToken } = useQuery(trpc.user.getIntercomToken.queryOptions());
 

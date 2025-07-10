@@ -1,8 +1,4 @@
-import {
-  BaseSubscriptionFactory,
-  type SubscriptionData,
-  type UnsubscriptionData,
-} from './base-subscription.factory';
+import { BaseSubscriptionFactory, type SubscriptionData } from './base-subscription.factory';
 import { c, getNotificationsUrl } from '../../lib/utils';
 import jwt from '@tsndr/cloudflare-worker-jwt';
 import { env } from 'cloudflare:workers';
@@ -38,7 +34,7 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
       try {
         this.serviceAccount = JSON.parse(serviceAccountJson);
       } catch (error) {
-        console.log('Invalid GOOGLE_S_ACCOUNT JSON format', serviceAccountJson);
+        console.log('Invalid GOOGLE_S_ACCOUNT JSON format', serviceAccountJson, error);
         throw new Error('Invalid GOOGLE_S_ACCOUNT JSON format');
       }
       return this.serviceAccount as GoogleServiceAccount;

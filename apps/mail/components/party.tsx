@@ -4,9 +4,9 @@ import useSearchLabels from '@/hooks/use-labels-search';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTRPC } from '@/providers/query-provider';
 import { usePartySocket } from 'partysocket/react';
-import { funnel } from 'remeda';
 
-const DEBOUNCE_DELAY = 10_000; // 10 seconds is appropriate for real-time notifications
+
+ // 10 seconds is appropriate for real-time notifications
 
 export enum IncomingMessageType {
   UseChatRequest = 'cf_agent_use_chat_request',
@@ -32,14 +32,8 @@ export const NotificationProvider = () => {
   const [searchValue] = useSearchValue();
   const { labels } = useSearchLabels();
 
-  const labelsDebouncer = funnel(
-    () => queryClient.invalidateQueries({ queryKey: trpc.labels.list.queryKey() }),
-    { minQuietPeriodMs: DEBOUNCE_DELAY },
-  );
-  const threadsDebouncer = funnel(
-    () => queryClient.invalidateQueries({ queryKey: trpc.mail.listThreads.queryKey() }),
-    { minQuietPeriodMs: DEBOUNCE_DELAY },
-  );
+  
+  
 
   usePartySocket({
     party: 'zero-agent',
