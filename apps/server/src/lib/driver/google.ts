@@ -8,6 +8,7 @@ import {
   sanitizeContext,
   StandardizedError,
 } from './utils';
+import { Effect } from 'effect';
 import { mapGoogleLabelColor, mapToGoogleLabelColor } from './google-label-color-map';
 import { parseAddressList, parseFrom, wasSentWithTLS } from '../email-utils';
 import type { IOutgoingMessage, Label, ParsedMessage } from '../../types';
@@ -189,18 +190,25 @@ export class GoogleMailManager implements MailManager {
         if (!userLabels.data.labels) {
           return [];
         }
-        return Promise.all(
-          userLabels.data.labels.map(async (label) => {
-            const res = await this.gmail.users.labels.get({
+        
+        const labelRequests = userLabels.data.labels.map((label) =>
+          Effect.tryPromise({
+            try: () => this.gmail.users.labels.get({
               userId: 'me',
               id: label.id ?? undefined,
-            });
-            return {
-              label: res.data.name ?? res.data.id ?? '',
-              count: Number(res.data.threadsUnread),
-            };
-          }),
+            }),
+            catch: (error) => ({ _tag: 'LabelFetchFailed' as const, error }),
+          })
         );
+
+        const results = await Effect.runPromise(
+          Effect.all(labelRequests, { concurrency: 'unbounded' })
+        );
+
+        return results.map((res) => ({
+          label: res.data.name ?? res.data.id ?? '',
+          count: Number(res.data.threadsUnread),
+        }));
       },
       { email: this.config.auth?.email },
     );

@@ -1,7 +1,6 @@
 import {
   ArrowRight,
   Calendar as CalendarIcon,
-  Check,
   Clock,
   FileText,
   Filter,
