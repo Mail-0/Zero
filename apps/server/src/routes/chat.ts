@@ -969,9 +969,14 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
           pageToken: pageToken || undefined,
         });
 
+        // Need delay to avoid rate limiting
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
         for (const thread of result.threads) {
           try {
             await this.syncThread(thread.id);
+            // Need delay to avoid rate limiting
+            await new Promise((resolve) => setTimeout(resolve, 2000));
           } catch (error) {
             console.error(`Failed to sync thread ${thread.id}:`, error);
           }
