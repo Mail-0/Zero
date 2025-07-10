@@ -1,21 +1,26 @@
 import { evalite } from "evalite";
-import { openai } from "@ai-sdk/openai";
+import { perplexity } from "@ai-sdk/perplexity";
 import { streamText } from "ai";
 import { traceAISDKModel } from "evalite/ai-sdk";
 import { Factuality, Levenshtein } from "autoevals";
+import { AiChatPrompt, GmailSearchAssistantSystemPrompt, StyledEmailAssistantSystemPrompt } from "../src/lib/prompts";
 
-/**
- * Comprehensive AI Chat evaluation for ZeroMail's email management assistant.
- * 
- * Tests cover all major capabilities:
- * - Email search and filtering
- * - Label management and organization  
- * - Bulk operations (archive, delete, mark read/unread)
- * - Email composition and sending
- * - Smart categorization (subscriptions, newsletters, meetings)
- * - Web search integration
- * - User interaction patterns
+// add ur own model here 
+const model = traceAISDKModel(perplexity("sonar"));
+
+/** 
+ * basic tests to cover all major capabilities, avg score is 30%, anything above is goated:
+ * - mail search and filtering
+ * - label management and organization  
+ * - bulk operations (archive, delete, mark read/unread)
+ * - email composition and sending
+ * - smart categorization (subscriptions, newsletters, meetings)
+ * - web search integration
+ * - user interaction patterns
  */
+
+
+// forever todo: make the expected output autistically specific 
 
 evalite("AI Chat – Basic Responses", {
   data: async () => [
@@ -26,8 +31,8 @@ evalite("AI Chat – Basic Responses", {
   ],
   task: async (input) => {
     const result = await streamText({
-      model: traceAISDKModel(openai(process.env.OPENAI_MODEL || "gpt-4o-mini")),
-      system: `You are ZeroMail's AI assistant. You help users manage their email efficiently with advanced Gmail operations like searching, labeling, archiving, and composing emails.`,
+      model: model,
+      system: AiChatPrompt("test-thread-id", "inbox", ""),
       prompt: input,
     });
     return result.textStream;
@@ -47,8 +52,8 @@ evalite("AI Chat – Email Search & Discovery", {
   ],
   task: async (input) => {
     const result = await streamText({
-      model: traceAISDKModel(openai(process.env.OPENAI_MODEL || "gpt-4o-mini")),
-      system: `You are ZeroMail's email assistant. When users ask to find or search emails, explain that you would use the listThreads tool to search their emails. Be helpful and specific about what you would search for.`,
+      model: model,
+      system: AiChatPrompt("test-thread-id", "inbox", ""),
       prompt: input,
     });
     return result.textStream;
@@ -67,8 +72,8 @@ evalite("AI Chat – Label Management", {
   ],
   task: async (input) => {
     const result = await streamText({
-      model: traceAISDKModel(openai(process.env.OPENAI_MODEL || "gpt-4o-mini")),
-      system: `You are ZeroMail's email assistant. You can create, apply, and manage Gmail labels. When users ask about labels, explain what actions you would take using tools like createLabel, modifyLabels, or getUserLabels.`,
+      model: model,
+      system: AiChatPrompt("test-thread-id", "inbox", ""),
       prompt: input,
     });
     return result.textStream;
@@ -86,8 +91,8 @@ evalite("AI Chat – Email Organization", {
   ],
   task: async (input) => {
     const result = await streamText({
-      model: traceAISDKModel(openai(process.env.OPENAI_MODEL || "gpt-4o-mini")),
-      system: `You are ZeroMail's email assistant. You can perform bulk operations like archiving, deleting, and marking emails as read/unread. Explain what tools you would use for organization tasks.`,
+      model: model,
+      system: AiChatPrompt("test-thread-id", "inbox", ""),
       prompt: input,
     });
     return result.textStream;
@@ -105,8 +110,8 @@ evalite("AI Chat – Email Composition", {
   ],
   task: async (input) => {
     const result = await streamText({
-      model: traceAISDKModel(openai(process.env.OPENAI_MODEL || "gpt-4o-mini")),
-      system: `You are ZeroMail's email assistant. You can compose and send emails using AI assistance. When users ask to write emails, explain that you would use the composeEmail or sendEmail tools.`,
+      model: model,
+      system: AiChatPrompt("test-thread-id", "inbox", ""),
       prompt: input,
     });
     return result.textStream;
@@ -125,8 +130,8 @@ evalite("AI Chat – Smart Categorization", {
   ],
   task: async (input) => {
     const result = await streamText({
-      model: traceAISDKModel(openai(process.env.OPENAI_MODEL || "gpt-4o-mini")),
-      system: `You are ZeroMail's email assistant. You can categorize emails by type (subscriptions, newsletters, meetings, bills, receipts, projects). Explain how you would search for and categorize these email types.`,
+      model: model,
+      system: AiChatPrompt("test-thread-id", "inbox", ""),
       prompt: input,
     });
     return result.textStream;
@@ -144,8 +149,8 @@ evalite("AI Chat – Information Queries", {
   ],
   task: async (input) => {
     const result = await streamText({
-      model: traceAISDKModel(openai(process.env.OPENAI_MODEL || "gpt-4o-mini")),
-      system: `You are ZeroMail's email assistant. You can search the web for information and summarize email activity. When users ask for information or summaries, explain what you would do to help them.`,
+      model: model,
+      system: AiChatPrompt("test-thread-id", "inbox", ""),
       prompt: input,
     });
     return result.textStream;
@@ -163,8 +168,8 @@ evalite("AI Chat – Complex Workflows", {
   ],
   task: async (input) => {
     const result = await streamText({
-      model: traceAISDKModel(openai(process.env.OPENAI_MODEL || "gpt-4o-mini")),
-      system: `You are ZeroMail's email assistant. You can handle complex multi-step email organization workflows involving searching, labeling, archiving, and bulk operations. Break down complex requests into clear steps.`,
+      model: model,
+      system: AiChatPrompt("test-thread-id", "inbox", ""),
       prompt: input,
     });
     return result.textStream;
@@ -183,8 +188,8 @@ evalite("AI Chat – User Intent Recognition", {
   ],
   task: async (input) => {
     const result = await streamText({
-      model: traceAISDKModel(openai(process.env.OPENAI_MODEL || "gpt-4o-mini")),
-      system: `You are ZeroMail's email assistant. You understand user frustrations and needs around email management. Provide empathetic, helpful responses that offer concrete solutions using your email management capabilities.`,
+      model: model,
+      system: AiChatPrompt("test-thread-id", "inbox", ""),
       prompt: input,
     });
     return result.textStream;
@@ -202,8 +207,49 @@ evalite("AI Chat – Error Handling & Edge Cases", {
   ],
   task: async (input) => {
     const result = await streamText({
-      model: traceAISDKModel(openai(process.env.OPENAI_MODEL || "gpt-4o-mini")),
-      system: `You are ZeroMail's email assistant. Handle potentially problematic requests carefully. For destructive actions, ask for confirmation. For invalid requests, explain what's wrong and suggest alternatives.`,
+      model: model,
+      system: AiChatPrompt("test-thread-id", "inbox", ""),
+      prompt: input,
+    });
+    return result.textStream;
+  },
+  scorers: [Factuality, Levenshtein],
+});
+
+evalite("Gmail Search Query Building", {
+  data: async () => [
+    { input: "emails from last week", expected: "after:" },
+    { input: "unread messages", expected: "is:unread" },
+    { input: "emails with attachments", expected: "has:attachment" },
+    { input: "emails from john@example.com", expected: "from:john@example.com" },
+    { input: "emails about meetings", expected: "meeting" },
+    { input: "emails in spam folder", expected: "in:spam" },
+    { input: "emails with subject invoice", expected: "subject:invoice" },
+    { input: "emails from canva", expected: "from:canva.com OR from:canva OR canva" },
+  ],
+  task: async (input) => {
+    const result = await streamText({
+      model: model,
+      system: GmailSearchAssistantSystemPrompt(),
+      prompt: input,
+    });
+    return result.textStream;
+  },
+  scorers: [Factuality, Levenshtein],
+});
+
+evalite("Email Composition with Style Matching", {
+  data: async () => [
+    { input: "Write a professional follow-up email", expected: "follow-up" },
+    { input: "Compose a thank you email", expected: "thank you" },
+    { input: "Draft a meeting request", expected: "meeting" },
+    { input: "Write a casual check-in email", expected: "check-in" },
+    { input: "Compose an apology email", expected: "apology" },
+  ],
+  task: async (input) => {
+    const result = await streamText({
+      model: model,
+      system: StyledEmailAssistantSystemPrompt(),
       prompt: input,
     });
     return result.textStream;
