@@ -8,6 +8,17 @@ import { AiChatPrompt, GmailSearchAssistantSystemPrompt, StyledEmailAssistantSys
 // add ur own model here 
 const model = traceAISDKModel(perplexity("sonar"));
 
+// error handling incase llm fails 
+const safeStreamText = async (config: Parameters<typeof streamText>[0]) => {
+  try {
+    const res = await streamText(config);
+    return res.textStream;
+  } catch (err) {
+    console.error("LLM call failed", err);
+    return "ERROR";
+  }
+};
+
 /** 
  * basic tests to cover all major capabilities, avg score is 30%, anything above is goated:
  * - mail search and filtering
@@ -30,12 +41,11 @@ evalite("AI Chat – Basic Responses", {
     { input: "What can you do?", expected: "email" },
   ],
   task: async (input) => {
-    const result = await streamText({
+    return safeStreamText({
       model: model,
       system: AiChatPrompt("test-thread-id", "inbox", ""),
       prompt: input,
     });
-    return result.textStream;
   },
   scorers: [Factuality, Levenshtein],
 });
@@ -51,12 +61,11 @@ evalite("AI Chat – Email Search & Discovery", {
     { input: "Find emails with the subject 'invoice'", expected: "invoice" },
   ],
   task: async (input) => {
-    const result = await streamText({
+    return safeStreamText({
       model: model,
       system: AiChatPrompt("test-thread-id", "inbox", ""),
       prompt: input,
     });
-    return result.textStream;
   },
   scorers: [Factuality, Levenshtein],
 });
@@ -71,12 +80,11 @@ evalite("AI Chat – Label Management", {
     { input: "Organize my newsletters with labels", expected: "newsletter" },
   ],
   task: async (input) => {
-    const result = await streamText({
+    return safeStreamText({
       model: model,
       system: AiChatPrompt("test-thread-id", "inbox", ""),
       prompt: input,
     });
-    return result.textStream;
   },
   scorers: [Factuality, Levenshtein],
 });
@@ -90,12 +98,11 @@ evalite("AI Chat – Email Organization", {
     { input: "Bulk archive old notifications", expected: "bulk" },
   ],
   task: async (input) => {
-    const result = await streamText({
+    return safeStreamText({
       model: model,
       system: AiChatPrompt("test-thread-id", "inbox", ""),
       prompt: input,
     });
-    return result.textStream;
   },
   scorers: [Factuality, Levenshtein],
 });
@@ -109,12 +116,11 @@ evalite("AI Chat – Email Composition", {
     { input: "Reply to this email thread", expected: "reply" },
   ],
   task: async (input) => {
-    const result = await streamText({
+    return safeStreamText({
       model: model,
       system: AiChatPrompt("test-thread-id", "inbox", ""),
       prompt: input,
     });
-    return result.textStream;
   },
   scorers: [Factuality, Levenshtein],
 });
@@ -129,12 +135,11 @@ evalite("AI Chat – Smart Categorization", {
     { input: "Show me project updates", expected: "project" },
   ],
   task: async (input) => {
-    const result = await streamText({
+    return safeStreamText({
       model: model,
       system: AiChatPrompt("test-thread-id", "inbox", ""),
       prompt: input,
     });
-    return result.textStream;
   },
   scorers: [Factuality, Levenshtein],
 });
@@ -148,12 +153,11 @@ evalite("AI Chat – Information Queries", {
     { input: "Summarize my unread emails", expected: "summarize" },
   ],
   task: async (input) => {
-    const result = await streamText({
+    return safeStreamText({
       model: model,
       system: AiChatPrompt("test-thread-id", "inbox", ""),
       prompt: input,
     });
-    return result.textStream;
   },
   scorers: [Factuality, Levenshtein],
 });
@@ -167,12 +171,11 @@ evalite("AI Chat – Complex Workflows", {
     { input: "Create a workflow to automatically label bills and receipts", expected: "workflow" },
   ],
   task: async (input) => {
-    const result = await streamText({
+    return safeStreamText({
       model: model,
       system: AiChatPrompt("test-thread-id", "inbox", ""),
       prompt: input,
     });
-    return result.textStream;
   },
   scorers: [Factuality, Levenshtein],
 });
@@ -187,12 +190,11 @@ evalite("AI Chat – User Intent Recognition", {
     { input: "Help me achieve inbox zero", expected: "inbox zero" },
   ],
   task: async (input) => {
-    const result = await streamText({
+    return safeStreamText({
       model: model,
       system: AiChatPrompt("test-thread-id", "inbox", ""),
       prompt: input,
     });
-    return result.textStream;
   },
   scorers: [Factuality, Levenshtein],
 });
@@ -206,12 +208,11 @@ evalite("AI Chat – Error Handling & Edge Cases", {
     { input: "Label this email but I don't have any emails", expected: "no emails" },
   ],
   task: async (input) => {
-    const result = await streamText({
+    return safeStreamText({
       model: model,
       system: AiChatPrompt("test-thread-id", "inbox", ""),
       prompt: input,
     });
-    return result.textStream;
   },
   scorers: [Factuality, Levenshtein],
 });
@@ -228,12 +229,11 @@ evalite("Gmail Search Query Building", {
     { input: "emails from canva", expected: "from:canva.com OR from:canva OR canva" },
   ],
   task: async (input) => {
-    const result = await streamText({
+    return safeStreamText({
       model: model,
       system: GmailSearchAssistantSystemPrompt(),
       prompt: input,
     });
-    return result.textStream;
   },
   scorers: [Factuality, Levenshtein],
 });
@@ -247,12 +247,11 @@ evalite("Email Composition with Style Matching", {
     { input: "Compose an apology email", expected: "apology" },
   ],
   task: async (input) => {
-    const result = await streamText({
+    return safeStreamText({
       model: model,
       system: StyledEmailAssistantSystemPrompt(),
       prompt: input,
     });
-    return result.textStream;
   },
   scorers: [Factuality, Levenshtein],
 }); 
