@@ -920,10 +920,12 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
         this.syncThreadsInProgress.delete(threadId);
         return { success: true, threadId, threadData };
       } else {
+        this.syncThreadsInProgress.delete(threadId);
         console.log(`Skipping thread ${threadId} - no latest message`);
         return { success: false, threadId, reason: 'No latest message' };
       }
     } catch (error) {
+      this.syncThreadsInProgress.delete(threadId);
       console.error(`Failed to sync thread ${threadId}:`, error);
       throw error;
     }

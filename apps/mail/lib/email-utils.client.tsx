@@ -69,6 +69,7 @@ export const highlightText = (text: string, highlight: string) => {
     const regex = new RegExp(`(${escapedHighlight})`, 'gi');
 
     if (!regex.test(text)) return text;
+    regex.lastIndex = 0;
 
     const parts = text.split(regex);
 

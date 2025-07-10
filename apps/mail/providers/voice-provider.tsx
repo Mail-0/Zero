@@ -83,6 +83,7 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
     if (!hasPermission) {
       const result = await requestPermission();
       if (!result) return;
+      setHasPermission(result);
     }
 
     try {
