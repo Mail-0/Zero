@@ -370,7 +370,8 @@
       "failedToMute": "Stummschaltung fehlgeschlagen",
       "failedToUnmute": "Aufhebung der Stummschaltung fehlgeschlagen",
       "archived": "Archiviert",
-      "failedToArchive": "Archivierung fehlgeschlagen"
+      "failedToArchive": "Archivierung fehlgeschlagen",
+      "openInNewTab": "In neuem Tab öffnen"
     },
     "units": {
       "mb": "{amount} MB"

@@ -370,7 +370,8 @@
       "failedToMute": "Neizdevās apklusināt",
       "failedToUnmute": "Neizdevās atjaunot skaņu",
       "archived": "Arhivēts",
-      "failedToArchive": "Neizdevās arhivēt"
+      "failedToArchive": "Neizdevās arhivēt",
+      "openInNewTab": "Atvērt jaunā cilnē"
     },
     "units": {
       "mb": "{amount} MB"

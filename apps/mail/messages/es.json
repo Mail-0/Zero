@@ -370,7 +370,8 @@
       "failedToMute": "Error al silenciar",
       "failedToUnmute": "Error al activar sonido",
       "archived": "Archivado",
-      "failedToArchive": "Error al archivar"
+      "failedToArchive": "Error al archivar",
+      "openInNewTab": "Abrir en nueva pestaña"
     },
     "units": {
       "mb": "{amount} MB"

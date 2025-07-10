@@ -370,7 +370,8 @@
       "failedToMute": "No s'ha pogut silenciar",
       "failedToUnmute": "No s'ha pogut activar el so",
       "archived": "Arxivat",
-      "failedToArchive": "No s'ha pogut arxivar"
+      "failedToArchive": "No s'ha pogut arxivar",
+      "openInNewTab": "Obre en una pestanya nova"
     },
     "units": {
       "mb": "{amount} MB"
