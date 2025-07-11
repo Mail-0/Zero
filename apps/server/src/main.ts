@@ -201,6 +201,10 @@ class ZeroDB extends DurableObject<Env> {
   }
 
   async deleteConnection(connectionId: string, userId: string) {
+    const connections = await this.findManyConnections(userId);
+    if (connections.length <= 1) {
+      throw new Error('Cannot delete the last connection. At least one connection is required.');
+    }
     return await this.db
       .delete(connection)
       .where(and(eq(connection.id, connectionId), eq(connection.userId, userId)));
