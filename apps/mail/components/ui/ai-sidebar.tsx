@@ -13,12 +13,12 @@ import { PromptsDialog } from './prompts-dialog';
 import { Button } from '@/components/ui/button';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useLabels } from '@/hooks/use-labels';
-import { useSession } from '@/lib/auth-client';
+
 import { useAgentChat } from 'agents/ai-react';
 import { X, Expand, Plus } from 'lucide-react';
 import { Gauge } from '@/components/ui/gauge';
 import { useParams } from 'react-router';
-import { useChat } from '@ai-sdk/react';
+
 import { useAgent } from 'agents/react';
 import { useQueryState } from 'nuqs';
 import { cn } from '@/lib/utils';
@@ -279,9 +279,9 @@ export function useAISidebar() {
 
   // Update query parameter and localStorage when viewMode changes
   const setViewMode = useCallback(
-    async (mode: ViewMode) => {
+    (mode: ViewMode) => {
       setViewModeState(mode);
-      await setViewModeQuery(mode === 'popup' ? null : mode);
+      setViewModeQuery(mode === 'popup' ? null : mode);
 
       // Save to localStorage for persistence across sessions
       if (typeof window !== 'undefined') {
@@ -337,8 +337,6 @@ function AISidebar({ className }: AISidebarProps) {
   const {
     open,
     setOpen,
-    viewMode,
-    setViewMode,
     isFullScreen,
     setIsFullScreen,
     toggleViewMode,
@@ -348,11 +346,10 @@ function AISidebar({ className }: AISidebarProps) {
   const { isPro, track, refetch: refetchBilling } = useBilling();
   const queryClient = useQueryClient();
   const trpc = useTRPC();
-  const [threadId, setThreadId] = useQueryState('threadId');
+  const [threadId] = useQueryState('threadId');
   const { folder } = useParams<{ folder: string }>();
   const { refetch: refetchLabels } = useLabels();
   const [searchValue] = useSearchValue();
-  const { data: session } = useSession();
   const { data: activeConnection } = useActiveConnection();
 
   const agent = useAgent({
@@ -363,7 +360,6 @@ function AISidebar({ className }: AISidebarProps) {
 
   const chatState = useAgentChat({
     agent,
-    initialMessages: [],
     maxSteps: 5,
     body: {
       threadId: threadId ?? undefined,

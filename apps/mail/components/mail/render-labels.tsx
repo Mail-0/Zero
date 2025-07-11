@@ -1,5 +1,4 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { useSearchValue } from '@/hooks/use-search-value';
 import type { Label } from '@/types';
 import { cn } from '@/lib/utils';

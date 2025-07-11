@@ -1,5 +1,5 @@
 import { mailNavigationCommandAtom } from '@/hooks/use-mail-navigation';
-import { useThread, useThreads } from '@/hooks/use-threads';
+import { useThread, } from '@/hooks/use-threads';
 import { keyboardShortcuts } from '@/config/shortcuts';
 import useMoveTo from '@/hooks/driver/use-move-to';
 import useDelete from '@/hooks/driver/use-delete';

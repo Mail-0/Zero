@@ -370,7 +370,8 @@
       "failedToMute": "فشل الكتم",
       "failedToUnmute": "فشل إلغاء الكتم",
       "archived": "تمت الأرشفة",
-      "failedToArchive": "فشلت الأرشفة"
+      "failedToArchive": "فشلت الأرشفة",
+      "openInNewTab": "فتح في علامة تبويب جديدة"
     },
     "units": {
       "mb": "{amount} ميجابايت"

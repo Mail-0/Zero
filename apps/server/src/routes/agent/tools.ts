@@ -1,9 +1,10 @@
+import { generateText, streamText, tool, type DataStreamWriter } from 'ai';
 import { composeEmail } from '../../trpc/routes/ai/compose';
 import type { MailManager } from '../../lib/driver/types';
 import { perplexity } from '@ai-sdk/perplexity';
+
 import { colors } from '../../lib/prompts';
 import { env } from 'cloudflare:workers';
-import { generateText, tool } from 'ai';
 import { Tools } from '../../types';
 import { z } from 'zod';
 
@@ -38,69 +39,69 @@ export const getEmbeddingVector = async (
   }
 };
 
-const askZeroMailbox = (connectionId: string) =>
-  tool({
-    description: 'Ask Zero a question about the mailbox',
-    parameters: z.object({
-      question: z.string().describe('The question to ask Zero'),
-      topK: z.number().describe('The number of results to return').max(9).min(1).default(3),
-    }),
-    execute: async ({ question, topK = 3 }) => {
-      const embedding = await getEmbeddingVector(question, 'vectorize-load');
-      if (!embedding) {
-        return { error: 'Failed to get embedding' };
-      }
-      const threadResults = await env.VECTORIZE.query(embedding, {
-        topK,
-        returnMetadata: 'all',
-        filter: {
-          connection: connectionId,
-        },
-      });
+// const askZeroMailbox = (connectionId: string) =>
+//   tool({
+//     description: 'Ask Zero a question about the mailbox',
+//     parameters: z.object({
+//       question: z.string().describe('The question to ask Zero'),
+//       topK: z.number().describe('The number of results to return').max(9).min(1).default(3),
+//     }),
+//     execute: async ({ question, topK = 3 }) => {
+//       const embedding = await getEmbeddingVector(question, 'vectorize-load');
+//       if (!embedding) {
+//         return { error: 'Failed to get embedding' };
+//       }
+//       const threadResults = await env.VECTORIZE.query(embedding, {
+//         topK,
+//         returnMetadata: 'all',
+//         filter: {
+//           connection: connectionId,
+//         },
+//       });
 
-      if (!threadResults.matches.length) {
-        return {
-          response: [],
-          success: false,
-        };
-      }
-      return {
-        response: threadResults.matches.map((e) => e.metadata?.['summary'] ?? 'no content'),
-        success: true,
-      };
-    },
-  });
+//       if (!threadResults.matches.length) {
+//         return {
+//           response: [],
+//           success: false,
+//         };
+//       }
+//       return {
+//         response: threadResults.matches.map((e) => e.metadata?.['summary'] ?? 'no content'),
+//         success: true,
+//       };
+//     },
+//   });
 
-const askZeroThread = (connectionId: string) =>
-  tool({
-    description: 'Ask Zero a question about a specific thread',
-    parameters: z.object({
-      threadId: z.string().describe('The ID of the thread to ask Zero about'),
-      question: z.string().describe('The question to ask Zero'),
-    }),
-    execute: async ({ threadId, question }) => {
-      const response = await env.VECTORIZE.getByIds([threadId]);
-      if (!response.length) return { response: "I don't know, no threads found", success: false };
-      const embedding = await getEmbeddingVector(question, 'vectorize-load');
-      if (!embedding) {
-        return { error: 'Failed to get embedding' };
-      }
-      const threadResults = await env.VECTORIZE.query(embedding, {
-        topK: 1,
-        returnMetadata: 'all',
-        filter: {
-          thread: threadId,
-          connection: connectionId,
-        },
-      });
-      const topThread = threadResults.matches[0];
-      if (!topThread) return { response: "I don't know, no threads found", success: false };
-      return {
-        response: topThread.metadata?.['summary'] ?? 'no content',
-        success: true,
-      };
-    },
-  });
+// const askZeroThread = (connectionId: string) =>
+//   tool({
+//     description: 'Ask Zero a question about a specific thread',
+//     parameters: z.object({
+//       threadId: z.string().describe('The ID of the thread to ask Zero about'),
+//       question: z.string().describe('The question to ask Zero'),
+//     }),
+//     execute: async ({ threadId, question }) => {
+//       const response = await env.VECTORIZE.getByIds([threadId]);
+//       if (!response.length) return { response: "I don't know, no threads found", success: false };
+//       const embedding = await getEmbeddingVector(question, 'vectorize-load');
+//       if (!embedding) {
+//         return { error: 'Failed to get embedding' };
+//       }
+//       const threadResults = await env.VECTORIZE.query(embedding, {
+//         topK: 1,
+//         returnMetadata: 'all',
+//         filter: {
+//           thread: threadId,
+//           connection: connectionId,
+//         },
+//       });
+//       const topThread = threadResults.matches[0];
+//       if (!topThread) return { response: "I don't know, no threads found", success: false };
+//       return {
+//         response: topThread.metadata?.['summary'] ?? 'no content',
+//         success: true,
+//       };
+//     },
+//   });
 
 const getEmail = (driver: MailManager) =>
   tool({
@@ -328,33 +329,54 @@ const deleteLabel = (driver: MailManager) =>
     },
   });
 
-export const webSearch = tool({
-  description: 'Search the web for information using Perplexity AI',
-  parameters: z.object({
-    query: z.string().describe('The query to search the web for'),
-  }),
-  execute: async ({ query }) => {
-    try {
-      const { text } = await generateText({
-        model: perplexity('sonar'),
-        messages: [
-          { role: 'system', content: 'Be precise and concise.' },
-          { role: 'system', content: 'Do not include sources in your response.' },
-          { role: 'system', content: 'Do not use markdown formatting in your response.' },
-          { role: 'user', content: query },
-        ],
-        maxTokens: 1024,
-      });
+export const webSearch = (dataStream?: DataStreamWriter) =>
+  tool({
+    description: 'Search the web for information using Perplexity AI',
+    parameters: z.object({
+      query: z.string().describe('The query to search the web for'),
+    }),
+    execute: async ({ query }) => {
+      try {
+        if (dataStream) {
+          const response = streamText({
+            model: perplexity('sonar'),
+            messages: [
+              { role: 'system', content: 'Be precise and concise.' },
+              { role: 'system', content: 'Do not include sources in your response.' },
+              { role: 'system', content: 'Do not use markdown formatting in your response.' },
+              { role: 'user', content: query },
+            ],
+            maxTokens: 1024,
+          });
+          response.mergeIntoDataStream(dataStream);
 
-      return text;
-    } catch (error) {
-      console.error('Error searching the web:', error);
-      throw new Error('Failed to search the web');
-    }
-  },
-});
+          return { type: 'streaming_response', query };
+        }
 
-export const tools = (driver: MailManager, connectionId: string) => {
+        const response = await generateText({
+          model: perplexity('sonar'),
+          messages: [
+            { role: 'system', content: 'Be precise and concise.' },
+            { role: 'system', content: 'Do not include sources in your response.' },
+            { role: 'system', content: 'Do not use markdown formatting in your response.' },
+            { role: 'user', content: query },
+          ],
+          maxTokens: 1024,
+        });
+
+        return response.text;
+      } catch (error) {
+        console.error('Error searching the web:', error);
+        throw new Error('Failed to search the web');
+      }
+    },
+  });
+
+export const tools = async (
+  driver: MailManager,
+  connectionId: string,
+  dataStream: DataStreamWriter,
+) => {
   return {
     [Tools.GetThread]: getEmail(driver),
     [Tools.ComposeEmail]: composeEmailTool(connectionId),
@@ -368,8 +390,9 @@ export const tools = (driver: MailManager, connectionId: string) => {
     [Tools.BulkDelete]: bulkDelete(driver),
     [Tools.BulkArchive]: bulkArchive(driver),
     [Tools.DeleteLabel]: deleteLabel(driver),
-    [Tools.AskZeroMailbox]: askZeroMailbox(connectionId),
-    [Tools.AskZeroThread]: askZeroThread(connectionId),
-    [Tools.WebSearch]: webSearch,
+    // [Tools.AskZeroMailbox]: askZeroMailbox(connectionId),
+    // [Tools.AskZeroThread]: askZeroThread(connectionId),
+    [Tools.WebSearch]: webSearch(dataStream),
+    // ...(await getGoogleTools(connectionId)),
   };
 };

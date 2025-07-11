@@ -7,7 +7,6 @@ import {
   ChartAreaIcon,
   GitPullRequest,
   LayoutGrid,
-  FileCode,
 } from 'lucide-react';
 import {
   Area,
@@ -52,13 +51,13 @@ interface ActivityData {
   pullRequests: number;
 }
 
-const excludedUsernames = [
+const excludedUsernames = new Set([
   'bot1',
   'dependabot',
   'github-actions',
   'zerodotemail',
   'autofix-ci[bot]',
-];
+]);
 const coreTeamMembers = [
   'nizzyabi',
   'ahmetskilinc',
@@ -142,7 +141,7 @@ export default function OpenPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [allContributors, setAllContributors] = useState<Contributor[]>([]);
-  const [isRendered, setIsRendered] = useState(false);
+  const [, setIsRendered] = useState(false);
 
   useEffect(() => setIsRendered(true), []);
 
@@ -199,7 +198,7 @@ export default function OpenPage() {
     return allContributors
       ?.filter(
         (contributor) =>
-          !excludedUsernames.includes(contributor.login) &&
+          !excludedUsernames.has(contributor.login) &&
           coreTeamMembers.some(
             (member) => member.toLowerCase() === contributor.login.toLowerCase(),
           ),
@@ -216,7 +215,7 @@ export default function OpenPage() {
       allContributors
         ?.filter(
           (contributor) =>
-            !excludedUsernames.includes(contributor.login) &&
+            !excludedUsernames.has(contributor.login) &&
             !coreTeamMembers.some(
               (member) => member.toLowerCase() === contributor.login.toLowerCase(),
             ),
@@ -1011,6 +1010,7 @@ export default function OpenPage() {
           <a
             href="https://discord.gg/mail0"
             target="_blank"
+            rel="noreferrer"
             className="text-neutral-500 transition-colors hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
             aria-label="Join our Discord"
           >
@@ -1019,6 +1019,7 @@ export default function OpenPage() {
           <a
             href="https://x.com/mail0dotcom"
             target="_blank"
+            rel="noreferrer"
             className="text-neutral-500 transition-colors hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
             aria-label="Follow us on X (Twitter)"
           >

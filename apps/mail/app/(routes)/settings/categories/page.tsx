@@ -10,16 +10,11 @@ import { useTRPC } from '@/providers/query-provider';
 import { toast } from 'sonner';
 import type { CategorySetting } from '@/hooks/use-categories';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import * as Icons from '@/components/icons/icons';
+
 import { Sparkles } from '@/components/icons/icons';
 import { Loader, GripVertical } from 'lucide-react';
 import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '@/components/ui/select';
+  } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import {
   DndContext,

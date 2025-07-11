@@ -4,11 +4,7 @@ import {
   ExclamationCircle,
   Folder,
   Inbox,
-  MessageSquare,
-  NotesList,
-  PaperPlane,
   SettingsGear,
-  Sparkles,
   Stars,
   Tabs,
   Users,
@@ -169,11 +165,11 @@ export const navigationConfig: Record<string, NavConfig> = {
             url: '/settings/labels',
             icon: Sheet,
           },
-          {
-            title: m['navigation.settings.categories'](),
-            url: '/settings/categories',
-            icon: Tabs,
-          },
+          //   {
+          //     title: m['navigation.settings.categories'](),
+          //     url: '/settings/categories',
+          //     icon: Tabs,
+          //   },
           {
             title: m['navigation.settings.signatures'](),
             url: '/settings/signatures',

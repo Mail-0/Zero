@@ -1,7 +1,6 @@
 import {
   NavigationMenu,
   NavigationMenuItem,
-  NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
   NavigationMenuContent,
@@ -251,7 +250,12 @@ export function Navigation() {
                   </a>
                 ))}
               </div>
-              <a target="_blank" href="https://cal.com/team/0" className="font-medium">
+              <a
+                target="_blank"
+                rel="noreferrer"
+                href="https://cal.com/team/0"
+                className="font-medium"
+              >
                 Contact Us
               </a>
             </div>

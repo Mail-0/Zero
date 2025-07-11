@@ -14,22 +14,20 @@ import {
   Trash,
   X,
 } from '../icons/icons';
-import { EmptyStateIcon } from '../icons/empty-state-svg';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { EmptyStateIcon } from '../icons/empty-state-svg';
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { focusedIndexAtom } from '@/hooks/use-mail-navigation';
-import { backgroundQueueAtom } from '@/store/backgroundQueue';
+
 import { type ThreadDestination } from '@/lib/thread-actions';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
 import { useThread, useThreads } from '@/hooks/use-threads';
@@ -38,16 +36,18 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import type { ParsedMessage, Attachment } from '@/types';
 import { MailDisplaySkeleton } from './mail-skeleton';
 import { useTRPC } from '@/providers/query-provider';
+import { useMutation } from '@tanstack/react-query';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { cleanHtml } from '@/lib/email-utils';
 import { Button } from '@/components/ui/button';
-import { useStats } from '@/hooks/use-stats';
+import { cleanHtml } from '@/lib/email-utils';
+import { useParams } from 'react-router';
+
 import ReplyCompose from './reply-composer';
-import { m } from '@/paraglide/messages';
 import { NotesPanel } from './note-panel';
 import { cn, FOLDERS } from '@/lib/utils';
+import { m } from '@/paraglide/messages';
 import MailDisplay from './mail-display';
-import { useTheme } from 'next-themes';
+
 import { Inbox } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { format } from 'date-fns';
@@ -62,14 +62,6 @@ const formatFileSize = (size: number) => {
 const cleanNameDisplay = (name?: string) => {
   if (!name) return '';
   return name.replace(/["<>]/g, '');
-};
-
-// HTML escaping function to prevent XSS attacks
-const escapeHtml = (text: string): string => {
-  if (!text) return text;
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
 };
 
 interface ThreadDisplayProps {
@@ -165,18 +157,16 @@ function ThreadActionButton({
     </TooltipProvider>
   );
 }
-
+const isFullscreen = false;
 export function ThreadDisplay() {
   const isMobile = useIsMobile();
-  const { toggleOpen: toggleAISidebar, open: isSidebarOpen } = useAISidebar();
+  const { toggleOpen: toggleAISidebar } = useAISidebar();
   const params = useParams<{ folder: string }>();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+
   const folder = params?.folder ?? 'inbox';
   const [id, setThreadId] = useQueryState('threadId');
-  const { data: emailData, isLoading, refetch: refetchThread, latestDraft } = useThread(id ?? null);
-  const [{ refetch: mutateThreads }, items] = useThreads();
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const { data: emailData, isLoading, refetch: refetchThread } = useThread(id ?? null);
+  const [, items] = useThreads();
   const [isStarred, setIsStarred] = useState(false);
   const [isImportant, setIsImportant] = useState(false);
 
@@ -185,18 +175,16 @@ export function ThreadDisplay() {
     if (!emailData?.messages) return [];
     return emailData.messages.reduce<Attachment[]>((acc, message) => {
       if (message.attachments && message.attachments.length > 0) {
-        return [...acc, ...message.attachments];
+        acc.push(...message.attachments);
       }
       return acc;
     }, []);
   }, [emailData?.messages]);
 
-  const { refetch: refetchStats } = useStats();
   const [mode, setMode] = useQueryState('mode');
-  const [, setBackgroundQueue] = useAtom(backgroundQueueAtom);
   const [activeReplyId, setActiveReplyId] = useQueryState('activeReplyId');
   const [, setDraftId] = useQueryState('draftId');
-  const { resolvedTheme } = useTheme();
+
   const [focusedIndex, setFocusedIndex] = useAtom(focusedIndexAtom);
   const trpc = useTRPC();
   const { mutateAsync: toggleImportant } = useMutation(trpc.mail.toggleImportant.mutationOptions());
@@ -624,7 +612,7 @@ export function ThreadDisplay() {
                   <h2 class="attachments-title">Attachments (${message.attachments.length})</h2>
                   ${message.attachments
                     .map(
-                      (attachment, index) => `
+                      (attachment) => `
                     <div class="attachment-item">
                       <span class="attachment-name">${attachment.filename}</span>
                       ${formatFileSize(attachment.size) ? ` - <span class="attachment-size">${formatFileSize(attachment.size)}</span>` : ''}
@@ -679,7 +667,7 @@ export function ThreadDisplay() {
       };
     } catch (error) {
       console.error('Error printing thread:', error);
-      alert('Failed to print thread. Please try again.');
+      toast.error('Failed to print thread. Please try again.');
     }
   };
 
@@ -755,7 +743,7 @@ export function ThreadDisplay() {
           <div className="flex h-full items-center justify-center">
             <div className="flex flex-col items-center justify-center gap-2 text-center">
               <EmptyStateIcon width={200} height={200} />
-              <div className="mt-5">
+              <div className="mt-4">
                 <p className="text-lg">It's empty here</p>
                 <p className="text-md text-muted-foreground dark:text-white/50">
                   Choose an email to view details
@@ -799,7 +787,7 @@ export function ThreadDisplay() {
           <>
             <div
               className={cn(
-                'flex flex-shrink-0 items-center px-1 pb-1 md:px-3 md:pb-[11px] md:pt-[12px]',
+                'flex flex-shrink-0 items-center px-1 pb-[10px] md:px-3 md:pb-[11px] md:pt-[12px]',
                 isMobile && 'bg-panelLight dark:bg-panelDark sticky top-0 z-10 mt-2',
               )}
             >
@@ -883,7 +871,7 @@ export function ThreadDisplay() {
                 >
                   <Reply className="fill-muted-foreground dark:fill-[#9B9B9B]" />
                   <div className="flex items-center justify-center gap-2.5 pl-0.5 pr-1">
-                    <div className="justify-start text-sm leading-none text-black dark:text-white">
+                    <div className="justify-start whitespace-nowrap text-sm leading-none text-black dark:text-white">
                       {m['common.threadDisplay.replyAll']()}
                     </div>
                   </div>
