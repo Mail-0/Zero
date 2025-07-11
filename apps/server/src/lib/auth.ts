@@ -1,12 +1,11 @@
 import {
-  connection,
-  user as _user,
-  account,
-  userSettings,
-  session,
-  userHotkeys,
-} from '../db/schema';
-import { createAuthMiddleware, phoneNumber, jwt, bearer, mcp, organization } from 'better-auth/plugins';
+  bearer,
+  createAuthMiddleware,
+  jwt,
+  mcp,
+  organization,
+  phoneNumber,
+} from 'better-auth/plugins';
 import { type Account, betterAuth, type BetterAuthOptions } from 'better-auth';
 import { getBrowserTimezone, isValidTimezone } from './timezones';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
@@ -14,15 +13,13 @@ import { getSocialProviders } from './auth-providers';
 import { redis, resend, twilio } from './services';
 import { getContext } from 'hono/context-storage';
 import { defaultUserSettings } from './schemas';
-import { getMigrations } from 'better-auth/db';
 import { disableBrainFunction } from './brain';
-import { type EProviders } from '../types';
 import { APIError } from 'better-auth/api';
 import { getZeroDB } from './server-utils';
+import { type EProviders } from '../types';
 import type { HonoContext } from '../ctx';
 import { env } from 'cloudflare:workers';
 import { createDriver } from './driver';
-import { eq } from 'drizzle-orm';
 import { createDb } from '../db';
 
 const connectionHandlerHook = async (account: Account) => {
@@ -79,8 +76,8 @@ export const createAuth = () => {
   return betterAuth({
     plugins: [
       organization({
-        allowUserToCreateOrganization: async (user) => {
-          // const subscription = await getSubscription(user.id) 
+        allowUserToCreateOrganization: async () => {
+          // const subscription = await getSubscription(user.id)
           // return subscription.plan === "pro"
           return true;
         },
@@ -99,28 +96,28 @@ export const createAuth = () => {
             invitedByUsername: data.inviter.user.name,
             invitedByEmail: data.inviter.user.email,
             teamName: data.organization.name,
-            inviteLink
+            inviteLink,
           });
           console.log('[INVITE] sendInvitationEmail HOOK COMPLETED');
         },
         organizationCreation: {
-          beforeCreate: async ({ organization, user }, request) => {
+          beforeCreate: async ({ organization }) => {
             return {
               data: {
                 ...organization,
                 metadata: {
-                  customField: "value"
-                }
-              }
-            }
+                  customField: 'value',
+                },
+              },
+            };
           },
           afterCreate: async ({ organization, member, user }, request) => {
-              // Run custom logic after organization is created
-              // e.g., create default resources, send notifications
-              // await setupDefaultResources(organization.id)
-              console.log('organization created', organization, member, user, request);
-          },     
-      }
+            // Run custom logic after organization is created
+            // e.g., create default resources, send notifications
+            // await setupDefaultResources(organization.id)
+            console.log('organization created', organization, member, user, request);
+          },
+        },
       }),
       mcp({
         loginPage: env.VITE_PUBLIC_APP_URL + '/login',
@@ -284,7 +281,7 @@ export const createAuth = () => {
 
 const createAuthConfig = () => {
   const cache = redis();
-  const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
+  const { db } = createDb(env.HYPERDRIVE.connectionString);
   return {
     database: drizzleAdapter(db, { provider: 'pg' }),
     secondaryStorage: {
@@ -335,7 +332,7 @@ const createAuthConfig = () => {
       },
     },
     onAPIError: {
-      onError: (error, ctx) => {
+      onError: (error) => {
         console.error('API Error', error);
       },
       errorURL: `${env.VITE_PUBLIC_APP_URL}/login`,
@@ -351,8 +348,13 @@ export const createSimpleAuth = () => {
 export type Auth = ReturnType<typeof createAuth>;
 export type SimpleAuth = ReturnType<typeof createSimpleAuth>;
 
-
-async function sendOrganizationInvitation({ email, invitedByUsername, invitedByEmail, teamName, inviteLink }: {
+async function sendOrganizationInvitation({
+  email,
+  invitedByUsername,
+  invitedByEmail,
+  teamName,
+  inviteLink,
+}: {
   email: string;
   invitedByUsername: string;
   invitedByEmail: string;
@@ -360,10 +362,16 @@ async function sendOrganizationInvitation({ email, invitedByUsername, invitedByE
   inviteLink: string;
 }) {
   console.log('[INVITE] sendOrganizationInvitation CALLED');
-  console.log('[INVITE] Email Params:', { email, invitedByUsername, invitedByEmail, teamName, inviteLink });
+  console.log('[INVITE] Email Params:', {
+    email,
+    invitedByUsername,
+    invitedByEmail,
+    teamName,
+    inviteLink,
+  });
   try {
     await resend().emails.send({
-      from: '0.email <me@amritwt.me>',
+      from: '0.email <onboarding@0.email>',
       to: email,
       subject: `You have been invited to join ${teamName} on 0.email`,
       html: `
