@@ -1,4 +1,4 @@
-import { GmailColor, OutlookColor } from '../components/icons/icons';
+import { GmailColor, } from '../components/icons/icons';
 
 export const I18N_LOCALE_COOKIE_NAME = 'i18n:locale';
 export const SIDEBAR_COOKIE_NAME = 'sidebar:state';
@@ -10,7 +10,7 @@ export const SIDEBAR_WIDTH_ICON = '3rem';
 export const SIDEBAR_KEYBOARD_SHORTCUT = 'b';
 export const BASE_URL = import.meta.env.VITE_PUBLIC_APP_URL;
 export const MAX_URL_LENGTH = 2000;
-export const CACHE_BURST_KEY = 'cache-burst:v0.0.3';
+export const CACHE_BURST_KEY = 'cache-burst:v0.0.5';
 
 export const emailProviders = [
   {

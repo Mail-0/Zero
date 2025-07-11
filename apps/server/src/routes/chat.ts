@@ -1,3 +1,16 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 import {
   streamText,
   generateObject,
@@ -12,15 +25,13 @@ import {
   GmailSearchAssistantSystemPrompt,
   AiChatPrompt,
 } from '../lib/prompts';
-import { type Connection, type ConnectionContext, type WSMessage } from 'agents';
 import { EPrompts, type IOutgoingMessage, type ParsedMessage } from '../types';
 import type { IGetThreadResponse, MailManager } from '../lib/driver/types';
+import { connectionToDriver, getZeroAgent } from '../lib/server-utils';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { createSimpleAuth, type SimpleAuth } from '../lib/auth';
-import { connectionToDriver } from '../lib/server-utils';
+import { type Connection, type WSMessage } from 'agents';
 import { ToolOrchestrator } from './agent/orchestrator';
 import type { CreateDraftData } from '../lib/schemas';
-import { FOLDERS, parseHeaders } from '../lib/utils';
 import { env, RpcTarget } from 'cloudflare:workers';
 import { AIChatAgent } from 'agents/ai-chat-agent';
 import { tools as authTools } from './agent/tools';
@@ -30,26 +41,16 @@ import { getPromptName } from '../pipelines';
 import { connection } from '../db/schema';
 import { getPrompt } from '../lib/brain';
 import { openai } from '@ai-sdk/openai';
+import { FOLDERS } from '../lib/utils';
 import { and, eq } from 'drizzle-orm';
 import { McpAgent } from 'agents/mcp';
-import { groq } from '@ai-sdk/groq';
+
+import { withGmailRetry } from '../lib/gmail-rate-limit';
 import { createDb } from '../db';
+import { Effect } from 'effect';
 import { z } from 'zod';
 
 const decoder = new TextDecoder();
-
-interface ThreadRow {
-  id: string;
-  thread_id: string;
-  provider_id: string;
-  messages: string;
-  latest_sender: string;
-  latest_received_on: string;
-  latest_subject: string;
-  latest_label_ids: string;
-  created_at: string;
-  updated_at: string;
-}
 
 export enum IncomingMessageType {
   UseChatRequest = 'cf_agent_use_chat_request',
@@ -114,17 +115,10 @@ export type OutgoingMessage =
     }
   | {
       type: OutgoingMessageType.Mail_List;
-      result: {
-        threads: {
-          id: string;
-          historyId: string | null;
-        }[];
-        nextPageToken: string | null;
-      };
+      folder: string;
     }
   | {
       type: OutgoingMessageType.Mail_Get;
-      result: IGetThreadResponse;
       threadId: string;
     };
 
@@ -174,6 +168,16 @@ export class AgentRpcDO extends RpcTarget {
     return await this.mainDo.buildGmailSearchQuery(query);
   }
 
+  async rawListThreads(params: {
+    folder: string;
+    query?: string;
+    maxResults?: number;
+    labelIds?: string[];
+    pageToken?: string;
+  }) {
+    return await this.mainDo.rawListThreads(params);
+  }
+
   async listThreads(params: {
     folder: string;
     query?: string;
@@ -190,19 +194,23 @@ export class AgentRpcDO extends RpcTarget {
 
   async markThreadsRead(threadIds: string[]) {
     const result = await this.mainDo.markThreadsRead(threadIds);
-    // await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
+    await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
     return result;
+  }
+
+  async syncThread(threadId: string) {
+    return await this.mainDo.syncThread(threadId);
   }
 
   async markThreadsUnread(threadIds: string[]) {
     const result = await this.mainDo.markThreadsUnread(threadIds);
-    // await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
+    await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
     return result;
   }
 
   async modifyLabels(threadIds: string[], addLabelIds: string[], removeLabelIds: string[]) {
     const result = await this.mainDo.modifyLabels(threadIds, addLabelIds, removeLabelIds);
-    // await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
+    await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
     return result;
   }
 
@@ -234,13 +242,13 @@ export class AgentRpcDO extends RpcTarget {
 
   async markAsRead(threadIds: string[]) {
     const result = await this.mainDo.markAsRead(threadIds);
-    // await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
+    await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
     return result;
   }
 
   async markAsUnread(threadIds: string[]) {
     const result = await this.mainDo.markAsUnread(threadIds);
-    // await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
+    await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
     return result;
   }
 
@@ -294,6 +302,10 @@ export class AgentRpcDO extends RpcTarget {
   //     return await this.mainDo.getThreadFromDB(id);
   //   }
 
+  async listHistory<T>(historyId: string) {
+    return await this.mainDo.listHistory<T>(historyId);
+  }
+
   async syncThreads(folder: string) {
     return await this.mainDo.syncThreads(folder);
   }
@@ -305,25 +317,27 @@ const shouldLoop = env.THREAD_SYNC_LOOP !== 'false';
 
 export class ZeroAgent extends AIChatAgent<typeof env> {
   private chatMessageAbortControllers: Map<string, AbortController> = new Map();
-  private foldersInSync: string[] = [];
+  private foldersInSync: Map<string, boolean> = new Map();
+  private syncThreadsInProgress: Map<string, boolean> = new Map();
   private currentFolder: string | null = 'inbox';
   driver: MailManager | null = null;
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
     if (shouldDropTables) this.dropTables();
-    // this.sql`
-    //     CREATE TABLE IF NOT EXISTS threads (
-    //         id TEXT PRIMARY KEY,
-    //         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    //         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    //         thread_id TEXT NOT NULL,
-    //         provider_id TEXT NOT NULL,
-    //         latest_sender TEXT,
-    //         latest_received_on TEXT,
-    //         latest_subject TEXT,
-    //         latest_label_ids TEXT
-    //     );
-    // `;
+    this.sql`
+        CREATE TABLE IF NOT EXISTS threads (
+            id TEXT PRIMARY KEY,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            thread_id TEXT NOT NULL,
+            provider_id TEXT NOT NULL,
+            latest_sender TEXT,
+            latest_received_on TEXT,
+            latest_subject TEXT,
+            latest_label_ids TEXT,
+            categories TEXT
+        );
+    `;
   }
 
   async dropTables() {
@@ -338,13 +352,14 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
 
   private getDataStreamResponse(
     onFinish: StreamTextOnFinishCallback<{}>,
-    options?: {
+    _?: {
       abortSignal: AbortSignal | undefined;
     },
   ) {
     const dataStreamResponse = createDataStreamResponse({
       execute: async (dataStream) => {
         const connectionId = this.name;
+        if (connectionId === 'general') return;
         if (!connectionId || !this.driver) {
           console.log('Unauthorized no driver or connectionId [1]', connectionId, this.driver);
           await this.setupAuth(connectionId);
@@ -387,6 +402,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
   }
 
   public async setupAuth(connectionId: string) {
+    if (connectionId === 'general') return;
     if (!this.driver) {
       const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
       const _connection = await db.query.connection.findFirst({
@@ -394,10 +410,10 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
       });
       if (_connection) this.driver = connectionToDriver(_connection);
       this.ctx.waitUntil(conn.end());
-      //   this.ctx.waitUntil(this.syncThreads('inbox'));
-      //   this.ctx.waitUntil(this.syncThreads('sent'));
-      //   this.ctx.waitUntil(this.syncThreads('spam'));
-      //   this.ctx.waitUntil(this.syncThreads('archive'));
+      this.ctx.waitUntil(this.syncThreads('inbox'));
+      this.ctx.waitUntil(this.syncThreads('sent'));
+      this.ctx.waitUntil(this.syncThreads('spam'));
+      this.ctx.waitUntil(this.syncThreads('archive'));
     }
   }
 
@@ -446,6 +462,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
       try {
         data = JSON.parse(message) as IncomingMessage;
       } catch (error) {
+        console.warn(error);
         // silently ignore invalid messages for now
         // TODO: log errors with log levels
         return;
@@ -606,6 +623,19 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     if (!this.driver) {
       throw new Error('No driver available');
     }
+    return await this.getThreadsFromDB(params);
+  }
+
+  async rawListThreads(params: {
+    folder: string;
+    query?: string;
+    maxResults?: number;
+    labelIds?: string[];
+    pageToken?: string;
+  }) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
     return await this.driver.list(params);
   }
 
@@ -613,7 +643,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     if (!this.driver) {
       throw new Error('No driver available');
     }
-    return await this.driver.get(threadId);
+    return await this.getThreadFromDB(threadId);
   }
 
   async markThreadsRead(threadIds: string[]) {
@@ -646,11 +676,18 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     });
   }
 
+  async listHistory<T>(historyId: string) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.listHistory<T>(historyId);
+  }
+
   async getUserLabels() {
     if (!this.driver) {
       throw new Error('No driver available');
     }
-    return (await this.driver.getUserLabels()).filter((label) => label.type === 'user');
+    return await this.driver.getUserLabels();
   }
 
   async getLabel(id: string) {
@@ -758,7 +795,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     if (!this.driver) {
       throw new Error('No driver available');
     }
-    return await this.driver.list(params);
+    return await this.getThreadsFromDB(params);
   }
 
   async markAsRead(threadIds: string[]) {
@@ -786,7 +823,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     if (!this.driver) {
       throw new Error('No driver available');
     }
-    return await this.driver.get(id);
+    return await this.getThreadFromDB(id);
   }
 
   async sendDraft(id: string, data: IOutgoingMessage) {
@@ -830,23 +867,30 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
   }
 
   async syncThread(threadId: string) {
+    if (!this.driver && this.name !== 'general') {
+      await this.setupAuth(this.name);
+    }
+
     if (!this.driver) {
       console.error('No driver available for syncThread');
       throw new Error('No driver available');
     }
 
+    if (this.syncThreadsInProgress.has(threadId)) {
+      console.log(`Sync already in progress for thread ${threadId}, skipping...`);
+      return;
+    }
+    this.syncThreadsInProgress.set(threadId, true);
+
     try {
-      const threadData = await this.driver.get(threadId);
+      const threadData = await this.getWithRetry(threadId);
       const latest = threadData.latest;
 
       if (latest) {
         // Convert receivedOn to ISO format for proper sorting
         const normalizedReceivedOn = new Date(latest.receivedOn).toISOString();
 
-        await env.THREADS_BUCKET.put(
-          this.getThreadKey(threadId),
-          JSON.stringify(threadData.messages),
-        );
+        await env.THREADS_BUCKET.put(this.getThreadKey(threadId), JSON.stringify(threadData));
 
         this.sql`
           INSERT OR REPLACE INTO threads (
@@ -872,23 +916,37 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
         if (this.currentFolder === 'inbox') {
           this.broadcastChatMessage({
             type: OutgoingMessageType.Mail_Get,
-            result: threadData,
             threadId,
           });
         }
+        this.syncThreadsInProgress.delete(threadId);
         return { success: true, threadId, threadData };
       } else {
+        this.syncThreadsInProgress.delete(threadId);
         console.log(`Skipping thread ${threadId} - no latest message`);
         return { success: false, threadId, reason: 'No latest message' };
       }
     } catch (error) {
+      this.syncThreadsInProgress.delete(threadId);
       console.error(`Failed to sync thread ${threadId}:`, error);
       throw error;
     }
   }
 
   getThreadKey(threadId: string) {
-    return `${this.name}/${threadId}`;
+    return `${this.name}/${threadId}.json`;
+  }
+
+  private async listWithRetry(params: Parameters<MailManager['list']>[0]) {
+    if (!this.driver) throw new Error('No driver available');
+
+    return Effect.runPromise(withGmailRetry(Effect.tryPromise(() => this.driver!.list(params))));
+  }
+
+  private async getWithRetry(threadId: string): Promise<IGetThreadResponse> {
+    if (!this.driver) throw new Error('No driver available');
+
+    return Effect.runPromise(withGmailRetry(Effect.tryPromise(() => this.driver!.get(threadId))));
   }
 
   async syncThreads(folder: string) {
@@ -897,7 +955,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
       throw new Error('No driver available');
     }
 
-    if (this.foldersInSync.includes(folder)) {
+    if (this.foldersInSync.has(folder)) {
       console.log('Sync already in progress, skipping...');
       return { synced: 0, message: 'Sync already in progress' };
     }
@@ -908,30 +966,42 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
       return { synced: 0, message: 'Threads already synced' };
     }
 
-    this.foldersInSync.push(folder);
+    this.foldersInSync.set(folder, true);
 
     try {
       let totalSynced = 0;
       let pageToken: string | null = null;
       let hasMore = true;
-      let pageCount = 0;
+      let _pageCount = 0;
 
       while (hasMore) {
-        pageCount++;
+        _pageCount++;
 
-        const result = await this.driver.list({
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        const result = await this.listWithRetry({
           folder,
           maxResults: maxCount,
           pageToken: pageToken || undefined,
         });
 
+        // Need delay to avoid rate limiting
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
         for (const thread of result.threads) {
           try {
             await this.syncThread(thread.id);
+            // Need delay to avoid rate limiting
+            await new Promise((resolve) => setTimeout(resolve, 2000));
           } catch (error) {
             console.error(`Failed to sync thread ${thread.id}:`, error);
           }
         }
+
+        this.broadcastChatMessage({
+          type: OutgoingMessageType.Mail_List,
+          folder,
+        });
 
         totalSynced += result.threads.length;
         pageToken = result.nextPageToken;
@@ -944,221 +1014,221 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
       throw error;
     } finally {
       console.log('Setting isSyncing to false');
-      this.foldersInSync = this.foldersInSync.filter((f) => f !== folder);
+      this.foldersInSync.delete(folder);
+      this.broadcastChatMessage({
+        type: OutgoingMessageType.Mail_List,
+        folder,
+      });
     }
   }
 
-  //   async getThreadsFromDB(params: {
-  //     labelIds?: string[];
-  //     folder?: string;
-  //     q?: string;
-  //     max?: number;
-  //     cursor?: string;
-  //   }) {
-  //     const { labelIds = [], folder, q, max = 50, cursor } = params;
+  async getThreadsFromDB(params: {
+    labelIds?: string[];
+    folder?: string;
+    q?: string;
+    max?: number;
+    pageToken?: string;
+  }) {
+    const { labelIds = [], folder, q, max = 50, pageToken } = params;
 
-  //     try {
-  //       // Build WHERE conditions
-  //       const whereConditions: string[] = [];
+    try {
+      // Build WHERE conditions
+      const whereConditions: string[] = [];
 
-  //       // Add folder condition (maps to specific label)
-  //       if (folder) {
-  //         const folderLabel = folder.toUpperCase();
-  //         whereConditions.push(`EXISTS (
-  //           SELECT 1 FROM json_each(latest_label_ids) WHERE value = '${folderLabel}'
-  //         )`);
-  //       }
+      // Add folder condition (maps to specific label)
+      if (folder) {
+        const folderLabel = folder.toUpperCase();
+        whereConditions.push(`EXISTS (
+            SELECT 1 FROM json_each(latest_label_ids) WHERE value = '${folderLabel}'
+          )`);
+      }
 
-  //       // Add label conditions (OR logic for multiple labels)
-  //       if (labelIds.length > 0) {
-  //         if (labelIds.length === 1) {
-  //           whereConditions.push(`EXISTS (
-  //             SELECT 1 FROM json_each(latest_label_ids) WHERE value = '${labelIds[0]}'
-  //           )`);
-  //         } else {
-  //           // Multiple labels with OR logic
-  //           const multiLabelCondition = labelIds
-  //             .map(
-  //               (labelId) =>
-  //                 `EXISTS (SELECT 1 FROM json_each(latest_label_ids) WHERE value = '${labelId}')`,
-  //             )
-  //             .join(' OR ');
-  //           whereConditions.push(`(${multiLabelCondition})`);
-  //         }
-  //       }
+      // Add label conditions (OR logic for multiple labels)
+      if (labelIds.length > 0) {
+        if (labelIds.length === 1) {
+          whereConditions.push(`EXISTS (
+              SELECT 1 FROM json_each(latest_label_ids) WHERE value = '${labelIds[0]}'
+            )`);
+        } else {
+          // Multiple labels with OR logic
+          const multiLabelCondition = labelIds
+            .map(
+              (labelId) =>
+                `EXISTS (SELECT 1 FROM json_each(latest_label_ids) WHERE value = '${labelId}')`,
+            )
+            .join(' OR ');
+          whereConditions.push(`(${multiLabelCondition})`);
+        }
+      }
 
-  //       //   // Add search query condition
-  //       //   if (q) {
-  //       //     const searchTerm = q.replace(/'/g, "''"); // Escape single quotes
-  //       //     whereConditions.push(`(
-  //       //       latest_subject LIKE '%${searchTerm}%' OR
-  //       //       latest_sender LIKE '%${searchTerm}%' OR
-  //       //       messages LIKE '%${searchTerm}%'
-  //       //     )`);
-  //       //   }
+      //   // Add search query condition
+      if (q) {
+        const searchTerm = q.replace(/'/g, "''"); // Escape single quotes
+        whereConditions.push(`(
+            latest_subject LIKE '%${searchTerm}%' OR
+            latest_sender LIKE '%${searchTerm}%'
+          )`);
+      }
 
-  //       // Add cursor condition
-  //       if (cursor) {
-  //         whereConditions.push(`latest_received_on < '${cursor}'`);
-  //       }
+      // Add cursor condition
+      if (pageToken) {
+        whereConditions.push(`latest_received_on < '${pageToken}'`);
+      }
 
-  //       // Execute query based on conditions
-  //       let result;
+      // Execute query based on conditions
+      let result;
 
-  //       if (whereConditions.length === 0) {
-  //         // No conditions
-  //         result = await this.sql`
-  //           SELECT id, latest_received_on
-  //           FROM threads
-  //           ORDER BY latest_received_on DESC
-  //           LIMIT ${max}
-  //         `;
-  //       } else if (whereConditions.length === 1) {
-  //         // Single condition
-  //         const condition = whereConditions[0];
-  //         if (condition.includes('latest_received_on <')) {
-  //           const cursorValue = cursor!;
-  //           result = await this.sql`
-  //             SELECT id, latest_received_on
-  //             FROM threads
-  //             WHERE latest_received_on < ${cursorValue}
-  //             ORDER BY latest_received_on DESC
-  //             LIMIT ${max}
-  //           `;
-  //         } else if (folder) {
-  //           // Folder condition
-  //           const folderLabel = folder.toUpperCase();
-  //           result = await this.sql`
-  //             SELECT id, latest_received_on
-  //             FROM threads
-  //             WHERE EXISTS (
-  //               SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${folderLabel}
-  //             )
-  //             ORDER BY latest_received_on DESC
-  //             LIMIT ${max}
-  //           `;
-  //         } else {
-  //           // Single label condition
-  //           const labelId = labelIds[0];
-  //           result = await this.sql`
-  //             SELECT id, latest_received_on
-  //             FROM threads
-  //             WHERE EXISTS (
-  //               SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${labelId}
-  //             )
-  //             ORDER BY latest_received_on DESC
-  //             LIMIT ${max}
-  //           `;
-  //         }
-  //       } else {
-  //         // Multiple conditions - handle combinations
-  //         if (folder && labelIds.length === 0 && cursor) {
-  //           // Folder + cursor
-  //           const folderLabel = folder.toUpperCase();
-  //           result = await this.sql`
-  //             SELECT id, latest_received_on
-  //             FROM threads
-  //             WHERE EXISTS (
-  //               SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${folderLabel}
-  //             ) AND latest_received_on < ${cursor}
-  //             ORDER BY latest_received_on DESC
-  //             LIMIT ${max}
-  //           `;
-  //         } else if (labelIds.length === 1 && cursor && !folder) {
-  //           // Single label + cursor
-  //           const labelId = labelIds[0];
-  //           result = await this.sql`
-  //             SELECT id, latest_received_on
-  //             FROM threads
-  //             WHERE EXISTS (
-  //               SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${labelId}
-  //             ) AND latest_received_on < ${cursor}
-  //             ORDER BY latest_received_on DESC
-  //             LIMIT ${max}
-  //           `;
-  //         } else {
-  //           // For now, fallback to just cursor if complex combinations
-  //           const cursorValue = cursor || '';
-  //           result = await this.sql`
-  //             SELECT id, latest_received_on
-  //             FROM threads
-  //             WHERE latest_received_on < ${cursorValue}
-  //             ORDER BY latest_received_on DESC
-  //             LIMIT ${max}
-  //           `;
-  //         }
-  //       }
+      if (whereConditions.length === 0) {
+        // No conditions
+        result = await this.sql`
+            SELECT id, latest_received_on
+            FROM threads
+            ORDER BY latest_received_on DESC
+            LIMIT ${max}
+          `;
+      } else if (whereConditions.length === 1) {
+        // Single condition
+        const condition = whereConditions[0];
+        if (condition.includes('latest_received_on <')) {
+          const cursorValue = pageToken!;
+          result = await this.sql`
+              SELECT id, latest_received_on
+              FROM threads
+              WHERE latest_received_on < ${cursorValue}
+              ORDER BY latest_received_on DESC
+              LIMIT ${max}
+            `;
+        } else if (folder) {
+          // Folder condition
+          const folderLabel = folder.toUpperCase();
+          result = await this.sql`
+              SELECT id, latest_received_on
+              FROM threads
+              WHERE EXISTS (
+                SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${folderLabel}
+              )
+              ORDER BY latest_received_on DESC
+              LIMIT ${max}
+            `;
+        } else {
+          // Single label condition
+          const labelId = labelIds[0];
+          result = await this.sql`
+              SELECT id, latest_received_on
+              FROM threads
+              WHERE EXISTS (
+                SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${labelId}
+              )
+              ORDER BY latest_received_on DESC
+              LIMIT ${max}
+            `;
+        }
+      } else {
+        // Multiple conditions - handle combinations
+        if (folder && labelIds.length === 0 && pageToken) {
+          // Folder + cursor
+          const folderLabel = folder.toUpperCase();
+          result = await this.sql`
+              SELECT id, latest_received_on
+              FROM threads
+              WHERE EXISTS (
+                SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${folderLabel}
+              ) AND latest_received_on < ${pageToken}
+              ORDER BY latest_received_on DESC
+              LIMIT ${max}
+            `;
+        } else if (labelIds.length === 1 && pageToken && !folder) {
+          // Single label + cursor
+          const labelId = labelIds[0];
+          result = await this.sql`
+              SELECT id, latest_received_on
+              FROM threads
+              WHERE EXISTS (
+                SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${labelId}
+              ) AND latest_received_on < ${pageToken}
+              ORDER BY latest_received_on DESC
+              LIMIT ${max}
+            `;
+        } else {
+          // For now, fallback to just cursor if complex combinations
+          const cursorValue = pageToken || '';
+          result = await this.sql`
+              SELECT id, latest_received_on
+              FROM threads
+              WHERE latest_received_on < ${cursorValue}
+              ORDER BY latest_received_on DESC
+              LIMIT ${max}
+            `;
+        }
+      }
 
-  //       const threads = result.map((row: any) => ({
-  //         id: row.id,
-  //         historyId: null,
-  //       }));
+      const threads = result.map((row: any) => ({
+        id: row.id,
+        historyId: null,
+      }));
 
-  //       // Use latest_received_on for pagination cursor
-  //       const nextPageToken =
-  //         threads.length === max && result.length > 0
-  //           ? result[result.length - 1].latest_received_on
-  //           : null;
+      // Use latest_received_on for pagination cursor
+      const nextPageToken =
+        threads.length === max && result.length > 0
+          ? result[result.length - 1].latest_received_on
+          : null;
 
-  //       return {
-  //         threads,
-  //         nextPageToken,
-  //       };
-  //     } catch (error) {
-  //       console.error('Failed to get threads from database:', error);
-  //       throw error;
-  //     }
-  //   }
+      return {
+        threads,
+        nextPageToken,
+      };
+    } catch (error) {
+      console.error('Failed to get threads from database:', error);
+      throw error;
+    }
+  }
 
-  //   async getThreadFromDB(id: string): Promise<IGetThreadResponse> {
-  //     try {
-  //       const result = this.sql`
-  //         SELECT
-  //           id,
-  //           thread_id,
-  //           provider_id,
-  //           latest_sender,
-  //           latest_received_on,
-  //           latest_subject,
-  //           latest_label_ids,
-  //           created_at,
-  //           updated_at
-  //         FROM threads
-  //         WHERE id = ${id}
-  //         LIMIT 1
-  //       `;
+  async getThreadFromDB(id: string, lastAttempt = false): Promise<IGetThreadResponse> {
+    try {
+      const result = this.sql`
+          SELECT
+            id,
+            thread_id,
+            provider_id,
+            latest_sender,
+            latest_received_on,
+            latest_subject,
+            latest_label_ids,
+            created_at,
+            updated_at
+          FROM threads
+          WHERE id = ${id}
+          LIMIT 1
+        `;
 
-  //       if (result.length === 0) {
-  //         this.ctx.waitUntil(this.syncThread(id));
-  //         return {
-  //           messages: [],
-  //           latest: undefined,
-  //           hasUnread: false,
-  //           totalReplies: 0,
-  //           labels: [],
-  //         } satisfies IGetThreadResponse;
-  //       }
+      if (!result || result.length === 0) {
+        if (lastAttempt) {
+          throw new Error('Thread not found in database, Sync Failed once');
+        }
+        await this.syncThread(id);
+        return this.getThreadFromDB(id, true);
+      }
+      const row = result[0] as any;
+      const storedThread = await env.THREADS_BUCKET.get(this.getThreadKey(id));
 
-  //       const row = result[0] as any;
-  //       const storedMessages = await env.THREADS_BUCKET.get(this.getThreadKey(id));
-  //       const latestLabelIds = JSON.parse(row.latest_label_ids || '[]');
+      const messages: ParsedMessage[] = storedThread
+        ? (JSON.parse(await storedThread.text()) as IGetThreadResponse).messages
+        : [];
 
-  //       const messages: ParsedMessage[] = storedMessages
-  //         ? JSON.parse(await storedMessages.text())
-  //         : [];
+      const latestLabelIds = JSON.parse(row.latest_label_ids || '[]');
 
-  //       return {
-  //         messages,
-  //         latest: messages.length > 0 ? messages[messages.length - 1] : undefined,
-  //         hasUnread: latestLabelIds.includes('UNREAD'),
-  //         totalReplies: messages.length,
-  //         labels: latestLabelIds.map((id: string) => ({ id, name: id })),
-  //       } satisfies IGetThreadResponse;
-  //     } catch (error) {
-  //       console.error('Failed to get thread from database:', error);
-  //       throw error;
-  //     }
-  //   }
+      return {
+        messages,
+        latest: messages.findLast((e) => e.isDraft !== true),
+        hasUnread: latestLabelIds.includes('UNREAD'),
+        totalReplies: messages.filter((e) => e.isDraft !== true).length,
+        labels: latestLabelIds.map((id: string) => ({ id, name: id })),
+      } satisfies IGetThreadResponse;
+    } catch (error) {
+      console.error('Failed to get thread from database:', error);
+      throw error;
+    }
+  }
 }
 
 export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
@@ -1183,7 +1253,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
       throw new Error('Unauthorized');
     }
     this.activeConnectionId = _connection.id;
-    const driver = connectionToDriver(_connection);
+    const agent = await getZeroAgent(_connection.id);
 
     this.server.tool('getConnections', async () => {
       const connections = await db.query.connection.findMany({
@@ -1273,7 +1343,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
         pageToken: z.string().optional(),
       },
       async (s) => {
-        const result = await driver.list({
+        const result = await agent.listThreads({
           folder: s.folder,
           query: s.query,
           maxResults: s.maxResults,
@@ -1281,8 +1351,8 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
           pageToken: s.pageToken,
         });
         const content = await Promise.all(
-          result.threads.map(async (thread) => {
-            const loadedThread = await driver.get(thread.id);
+          result.threads.map(async (thread: any) => {
+            const loadedThread = await agent.getThread(thread.id);
             return [
               {
                 type: 'text' as const,
@@ -1314,7 +1384,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
         threadId: z.string(),
       },
       async (s) => {
-        const thread = await driver.get(s.threadId);
+        const thread = await agent.getThread(s.threadId);
         const initialResponse = [
           {
             type: 'text' as const,
@@ -1373,10 +1443,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
         threadIds: z.array(z.string()),
       },
       async (s) => {
-        await driver.modifyLabels(s.threadIds, {
-          addLabels: [],
-          removeLabels: ['UNREAD'],
-        });
+        await agent.modifyLabels(s.threadIds, [], ['UNREAD']);
         return {
           content: [
             {
@@ -1394,10 +1461,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
         threadIds: z.array(z.string()),
       },
       async (s) => {
-        await driver.modifyLabels(s.threadIds, {
-          addLabels: ['UNREAD'],
-          removeLabels: [],
-        });
+        await agent.modifyLabels(s.threadIds, ['UNREAD'], []);
         return {
           content: [
             {
@@ -1417,10 +1481,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
         removeLabelIds: z.array(z.string()),
       },
       async (s) => {
-        await driver.modifyLabels(s.threadIds, {
-          addLabels: s.addLabelIds,
-          removeLabels: s.removeLabelIds,
-        });
+        await agent.modifyLabels(s.threadIds, s.addLabelIds, s.removeLabelIds);
         return {
           content: [
             {
@@ -1444,7 +1505,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
     });
 
     this.server.tool('getUserLabels', async () => {
-      const labels = await driver.getUserLabels();
+      const labels = await agent.getUserLabels();
       return {
         content: [
           {
@@ -1463,7 +1524,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
         id: z.string(),
       },
       async (s) => {
-        const label = await driver.getLabel(s.id);
+        const label = await agent.getLabel(s.id);
         return {
           content: [
             {
@@ -1488,7 +1549,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
       },
       async (s) => {
         try {
-          await driver.createLabel({
+          await agent.createLabel({
             name: s.name,
             color:
               s.backgroundColor && s.textColor
@@ -1507,6 +1568,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
             ],
           };
         } catch (e) {
+          console.error(e);
           return {
             content: [
               {
@@ -1526,10 +1588,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
       },
       async (s) => {
         try {
-          await driver.modifyLabels(s.threadIds, {
-            addLabels: ['TRASH'],
-            removeLabels: ['INBOX'],
-          });
+          await agent.modifyLabels(s.threadIds, ['TRASH'], ['INBOX']);
           return {
             content: [
               {
@@ -1539,6 +1598,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
             ],
           };
         } catch (e) {
+          console.error(e);
           return {
             content: [
               {
@@ -1558,10 +1618,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
       },
       async (s) => {
         try {
-          await driver.modifyLabels(s.threadIds, {
-            addLabels: [],
-            removeLabels: ['INBOX'],
-          });
+          await agent.modifyLabels(s.threadIds, [], ['INBOX']);
           return {
             content: [
               {
@@ -1571,6 +1628,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
             ],
           };
         } catch (e) {
+          console.error(e);
           return {
             content: [
               {

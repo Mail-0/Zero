@@ -5,15 +5,15 @@ import { Navigation } from '@/components/navigation';
 import { Button } from '@/components/ui/button';
 import Footer from '@/components/home/footer';
 import { createSectionId } from '@/lib/utils';
-import { useNavigate } from 'react-router';
-import { toast } from 'sonner';
+
+
 import React from 'react';
 
 const LAST_UPDATED = 'February 13, 2025';
 
 export default function TermsOfService() {
   const { copiedValue: copiedSection, copyToClipboard } = useCopyToClipboard();
-  const navigate = useNavigate();
+  
 
   const handleCopyLink = (sectionId: string) => {
     const url = `${window.location.origin}${window.location.pathname}#${sectionId}`;

@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
-import { getBrowserTimezone } from '@/lib/timezones';
+
 import { Plus, Trash2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -145,7 +145,7 @@ export default function HRPage() {
     },
   ]);
   // Company timezone
-  const [userTimezone, setUserTimezone] = useState('America/Los_Angeles');
+  const [userTimezone] = useState('America/Los_Angeles');
   const [userWorkingHours, setUserWorkingHours] = useState<WorkingHours>({
     startTime: '09:00',
     endTime: '17:00',

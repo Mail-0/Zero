@@ -370,7 +370,8 @@
       "failedToMute": "Sessize alınamadı",
       "failedToUnmute": "Ses açılamadı",
       "archived": "Arşivlendi",
-      "failedToArchive": "Arşivlenemedi"
+      "failedToArchive": "Arşivlenemedi",
+      "openInNewTab": "Yeni sekmede aç"
     },
     "units": {
       "mb": "{amount} MB"

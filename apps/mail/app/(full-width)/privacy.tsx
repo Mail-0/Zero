@@ -5,14 +5,14 @@ import { Navigation } from '@/components/navigation';
 import { Button } from '@/components/ui/button';
 import Footer from '@/components/home/footer';
 import { createSectionId } from '@/lib/utils';
-import { useNavigate } from 'react-router';
-import { toast } from 'sonner';
+
+
 import React from 'react';
 
 const LAST_UPDATED = 'May 16, 2025';
 
 export default function PrivacyPolicy() {
-  const navigate = useNavigate();
+  
   const { copiedValue: copiedSection, copyToClipboard } = useCopyToClipboard();
 
   const handleCopyLink = (sectionId: string) => {

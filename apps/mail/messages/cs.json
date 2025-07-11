@@ -370,7 +370,8 @@
       "failedToMute": "Ztlumení se nezdařilo",
       "failedToUnmute": "Zrušení ztlumení se nezdařilo",
       "archived": "Archivováno",
-      "failedToArchive": "Archivace se nezdařila"
+      "failedToArchive": "Archivace se nezdařila",
+      "openInNewTab": "Otevřít v nové záložce"
     },
     "units": {
       "mb": "{amount} MB"

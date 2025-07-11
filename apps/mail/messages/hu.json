@@ -370,7 +370,8 @@
       "failedToMute": "Némítás sikertelen",
       "failedToUnmute": "Némítás feloldása sikertelen",
       "archived": "Archiválva",
-      "failedToArchive": "Archiválás sikertelen"
+      "failedToArchive": "Archiválás sikertelen",
+      "openInNewTab": "Megnyitás új lapon"
     },
     "units": {
       "mb": "{amount} MB"

@@ -1,13 +1,11 @@
 'use client';
 
-import { Mic, MicOff, Volume2, VolumeX, X, Loader2, WavesIcon } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { AnimatePresence, motion } from 'motion/react';
+import { Mic, MicOff, Loader2, WavesIcon } from 'lucide-react';
 import { useVoice } from '@/providers/voice-provider';
-import { Button } from '@/components/ui/button';
+import { motion } from 'motion/react';
+
 import { useSession } from '@/lib/auth-client';
 import { useQueryState } from 'nuqs';
-import { cn } from '@/lib/utils';
 
 export function VoiceButton() {
   const { data: session } = useSession();

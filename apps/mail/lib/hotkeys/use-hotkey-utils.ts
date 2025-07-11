@@ -3,7 +3,7 @@ import { type Shortcut, keyboardShortcuts } from '@/config/shortcuts';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useCallback, useMemo } from 'react';
 
-export const useShortcutCache = (userId?: string) => {
+export const useShortcutCache = () => {
   // const { data: shortcuts, mutate } = useSWR<Shortcut[]>(
   //   userId ? `/hotkeys/${userId}` : null,
   //   () => axios.get('/api/v1/shortcuts').then((res) => res.data),
@@ -97,8 +97,11 @@ const dvorakToQwerty: Record<string, string> = {
 };
 
 const qwertyToDvorak: Record<string, string> = Object.entries(dvorakToQwerty).reduce(
-  (acc, [dvorak, qwerty]) => ({ ...acc, [qwerty]: dvorak }),
-  {},
+  (acc, [dvorak, qwerty]) => {
+    acc[qwerty] = dvorak;
+    return acc;
+  },
+  {} as Record<string, string>,
 );
 
 export const formatKeys = (keys: string[] | undefined): string => {

@@ -370,7 +370,8 @@
       "failedToMute": "Dempen mislukt",
       "failedToUnmute": "Dempen opheffen mislukt",
       "archived": "Gearchiveerd",
-      "failedToArchive": "Archiveren mislukt"
+      "failedToArchive": "Archiveren mislukt",
+      "openInNewTab": "Openen in nieuw tabblad"
     },
     "units": {
       "mb": "{amount} MB"

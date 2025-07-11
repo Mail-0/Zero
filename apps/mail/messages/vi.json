@@ -370,7 +370,8 @@
       "failedToMute": "Không thể tắt tiếng",
       "failedToUnmute": "Không thể bật tiếng",
       "archived": "Đã lưu trữ",
-      "failedToArchive": "Không thể lưu trữ"
+      "failedToArchive": "Không thể lưu trữ",
+      "openInNewTab": "Mở trong tab mới"
     },
     "units": {
       "mb": "{amount} MB"
