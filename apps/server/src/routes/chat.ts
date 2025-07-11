@@ -45,10 +45,10 @@ import { FOLDERS } from '../lib/utils';
 import { and, eq } from 'drizzle-orm';
 import { McpAgent } from 'agents/mcp';
 
-import { createDb } from '../db';
-import { z } from 'zod';
-import { Effect } from 'effect';
 import { withGmailRetry } from '../lib/gmail-rate-limit';
+import { createDb } from '../db';
+import { Effect } from 'effect';
+import { z } from 'zod';
 
 const decoder = new TextDecoder();
 
@@ -940,21 +940,13 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
   private async listWithRetry(params: Parameters<MailManager['list']>[0]) {
     if (!this.driver) throw new Error('No driver available');
 
-    return Effect.runPromise(
-      withGmailRetry(
-        Effect.tryPromise(() => this.driver!.list(params))
-      ),
-    );
+    return Effect.runPromise(withGmailRetry(Effect.tryPromise(() => this.driver!.list(params))));
   }
 
   private async getWithRetry(threadId: string): Promise<IGetThreadResponse> {
     if (!this.driver) throw new Error('No driver available');
 
-    return Effect.runPromise(
-      withGmailRetry(
-        Effect.tryPromise(() => this.driver!.get(threadId))
-      ),
-    );
+    return Effect.runPromise(withGmailRetry(Effect.tryPromise(() => this.driver!.get(threadId))));
   }
 
   async syncThreads(folder: string) {
@@ -984,6 +976,8 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
 
       while (hasMore) {
         _pageCount++;
+
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
         const result = await this.listWithRetry({
           folder,
