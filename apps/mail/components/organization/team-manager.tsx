@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { Loader2, Plus, Trash2, Save, Users, ChevronDown, UserPlus, UserMinus } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { Loader2, Plus, Trash2, Save, Users, ChevronDown, UserPlus, UserMinus } from 'lucide-react';
+import { z } from 'zod';
 
 const schema = z.object({
   name: z.string().min(2, 'Team name is required'),
@@ -62,7 +62,12 @@ export function TeamManager({ orgId }: TeamManagerProps) {
   async function fetchTeams() {
     if (!orgId) return;
     setLoading(true);
-    const res = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/teams`);
+    const res = await fetch(
+      `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/teams`,
+      {
+        credentials: 'include',
+      },
+    );
     const data = (await res.json()) as { teams: Team[] };
     setTeams(data.teams || []);
     setLoading(false);
@@ -70,7 +75,12 @@ export function TeamManager({ orgId }: TeamManagerProps) {
 
   async function fetchMembers() {
     if (!orgId) return;
-    const res = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/members`);
+    const res = await fetch(
+      `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/members`,
+      {
+        credentials: 'include',
+      },
+    );
     const data = (await res.json()) as { members: Member[] };
     setMembers(data.members || []);
   }
@@ -83,76 +93,121 @@ export function TeamManager({ orgId }: TeamManagerProps) {
 
   async function onSubmit(values: z.infer<typeof schema>) {
     if (!orgId) return;
-    const res = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/teams`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(values),
-    });
+    const res = await fetch(
+      `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/teams`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+        credentials: 'include',
+      },
+    );
     if (res.ok) {
       toast.success('Team created');
       reset();
       fetchTeams();
     } else {
-      toast.error('Failed to create team');
+      try {
+        const error = (await res.json()) as { error?: string };
+        toast.error(error.error || 'Failed to create team');
+      } catch {
+        toast.error('Failed to create team');
+      }
     }
   }
 
   async function onMemberSubmit(values: z.infer<typeof memberSchema>) {
     if (!orgId) return;
-    const res = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/members`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(values),
-    });
+    const res = await fetch(
+      `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/members`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+        credentials: 'include',
+      },
+    );
     if (res.ok) {
       toast.success('Member added');
       resetMember();
       fetchMembers();
     } else {
-      toast.error('Failed to add member');
+      try {
+        const error = (await res.json()) as { error?: string };
+        toast.error(error.error || 'Failed to add member');
+      } catch {
+        toast.error('Failed to add member');
+      }
     }
   }
 
   async function deleteTeam(teamId: string) {
     if (!orgId) return;
-    const res = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/teams/${teamId}`, {
-      method: 'DELETE',
-    });
+    const res = await fetch(
+      `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/teams/${teamId}`,
+      {
+        method: 'DELETE',
+        credentials: 'include',
+      },
+    );
     if (res.ok) {
       toast.success('Team deleted');
       fetchTeams();
     } else {
-      toast.error('Failed to delete team');
+      try {
+        const error = (await res.json()) as { error?: string };
+        toast.error(error.error || 'Failed to delete team');
+      } catch {
+        toast.error('Failed to delete team');
+      }
     }
   }
 
   async function assignMemberToTeam(memberId: string, teamId: string) {
     if (!orgId) return;
-    const res = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/members/${memberId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ teamId }),
-    });
+    const res = await fetch(
+      `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/members/${memberId}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teamId }),
+        credentials: 'include',
+      },
+    );
     if (res.ok) {
       toast.success('Member assigned to team');
       fetchMembers();
     } else {
-      toast.error('Failed to assign member');
+      try {
+        const error = (await res.json()) as { error?: string };
+        toast.error(error.error || 'Failed to assign member');
+      } catch {
+        toast.error('Failed to assign member');
+      }
     }
   }
 
   async function removeMemberFromTeam(memberId: string) {
     if (!orgId) return;
-    const res = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/members/${memberId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ teamId: null }),
-    });
+    const res = await fetch(
+      `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/members/${memberId}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teamId: null }),
+        credentials: 'include',
+      },
+    );
     if (res.ok) {
       toast.success('Member removed from team');
       fetchMembers();
     } else {
-      toast.error('Failed to remove member');
+      try {
+        const error = (await res.json()) as { error?: string };
+        toast.error(error.error || 'Failed to remove member');
+      } catch {
+        toast.error('Failed to remove member');
+      }
     }
   }
 
@@ -167,11 +222,11 @@ export function TeamManager({ orgId }: TeamManagerProps) {
   }
 
   function getTeamMembers(teamId: string) {
-    return members.filter(m => m.teamId === teamId);
+    return members.filter((m) => m.teamId === teamId);
   }
 
   function getUnassignedMembers() {
-    return members.filter(m => !m.teamId);
+    return members.filter((m) => !m.teamId);
   }
 
   function EditableRow({ team }: { team: Team }) {
@@ -183,16 +238,25 @@ export function TeamManager({ orgId }: TeamManagerProps) {
         setEditing(false);
         return;
       }
-      const res = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/teams/${team.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name }),
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/teams/${team.id}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name }),
+          credentials: 'include',
+        },
+      );
       if (res.ok) {
         toast.success('Team updated');
         fetchTeams();
       } else {
-        toast.error('Failed to update team');
+        try {
+          const error = (await res.json()) as { error?: string };
+          toast.error(error.error || 'Failed to update team');
+        } catch {
+          toast.error('Failed to update team');
+        }
       }
       setEditing(false);
     }
@@ -204,35 +268,47 @@ export function TeamManager({ orgId }: TeamManagerProps) {
       <Collapsible open={isExpanded} onOpenChange={() => toggleTeamExpansion(team.id)}>
         <div className="flex items-center gap-3 py-1">
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="sm" className="p-0 h-auto">
-              <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+            <Button variant="ghost" size="sm" className="h-auto p-0">
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+              />
             </Button>
           </CollapsibleTrigger>
-          
+
           {editing ? (
             <Input value={name} onChange={(e) => setName(e.target.value)} className="h-8 flex-1" />
           ) : (
             <span className="flex-1">{team.name}</span>
           )}
-          
+
           <Badge variant="secondary">{teamMembers.length} members</Badge>
-          
+
           <div className="flex gap-2">
             {editing ? (
               <Button size="icon" variant="ghost" onClick={save} aria-label="Save">
                 <Save className="h-4 w-4" />
               </Button>
             ) : (
-              <Button size="icon" variant="ghost" onClick={() => setEditing(true)} aria-label="Edit">
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setEditing(true)}
+                aria-label="Edit"
+              >
                 <Save className="h-4 w-4 opacity-0 group-hover:opacity-100" />
               </Button>
             )}
-            <Button size="icon" variant="ghost" onClick={() => deleteTeam(team.id)} aria-label="Delete">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => deleteTeam(team.id)}
+              aria-label="Delete"
+            >
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         </div>
-        
+
         <CollapsibleContent className="ml-6 mt-2 space-y-2">
           {teamMembers.map((member) => (
             <div key={member.id} className="flex items-center gap-2 text-sm">
@@ -240,9 +316,9 @@ export function TeamManager({ orgId }: TeamManagerProps) {
                 {member.name?.split(' ')[0] || member.email?.split('@')[0] || member.userId}
               </span>
               <Badge variant="outline">{member.role}</Badge>
-              <Button 
-                size="icon" 
-                variant="ghost" 
+              <Button
+                size="icon"
+                variant="ghost"
                 className="h-6 w-6"
                 onClick={() => removeMemberFromTeam(member.id)}
                 aria-label="Remove from team"
@@ -251,7 +327,7 @@ export function TeamManager({ orgId }: TeamManagerProps) {
               </Button>
             </div>
           ))}
-          
+
           {/* Add unassigned members to this team */}
           {getUnassignedMembers().map((member) => (
             <div key={member.id} className="flex items-center gap-2 text-sm opacity-60">
@@ -259,9 +335,9 @@ export function TeamManager({ orgId }: TeamManagerProps) {
                 {member.name?.split(' ')[0] || member.email?.split('@')[0] || member.userId}
               </span>
               <Badge variant="outline">{member.role}</Badge>
-              <Button 
-                size="icon" 
-                variant="ghost" 
+              <Button
+                size="icon"
+                variant="ghost"
                 className="h-6 w-6"
                 onClick={() => assignMemberToTeam(member.id, team.id)}
                 aria-label="Add to team"
@@ -287,7 +363,11 @@ export function TeamManager({ orgId }: TeamManagerProps) {
           <form onSubmit={handleSubmit(onSubmit)} className="flex gap-2">
             <Input placeholder="New team name" {...register('name')} />
             <Button type="submit" size="sm" disabled={loading}>
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
             </Button>
           </form>
           {errors.name && <p className="text-destructive text-sm">{errors.name.message}</p>}
@@ -303,7 +383,6 @@ export function TeamManager({ orgId }: TeamManagerProps) {
           )}
         </CardContent>
       </Card>
-
     </div>
   );
-} 
+}
