@@ -47,6 +47,8 @@ import { McpAgent } from 'agents/mcp';
 
 import { createDb } from '../db';
 import { z } from 'zod';
+import { Effect } from 'effect';
+import { withGmailRetry } from '../lib/gmail-rate-limit';
 
 const decoder = new TextDecoder();
 
@@ -881,7 +883,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     this.syncThreadsInProgress.set(threadId, true);
 
     try {
-      const threadData = await this.driver.get(threadId);
+      const threadData = await this.getWithRetry(threadId);
       const latest = threadData.latest;
 
       if (latest) {
@@ -935,6 +937,26 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     return `${this.name}/${threadId}.json`;
   }
 
+  private async listWithRetry(params: Parameters<MailManager['list']>[0]) {
+    if (!this.driver) throw new Error('No driver available');
+
+    return Effect.runPromise(
+      withGmailRetry(
+        Effect.tryPromise(() => this.driver!.list(params))
+      ),
+    );
+  }
+
+  private async getWithRetry(threadId: string): Promise<IGetThreadResponse> {
+    if (!this.driver) throw new Error('No driver available');
+
+    return Effect.runPromise(
+      withGmailRetry(
+        Effect.tryPromise(() => this.driver!.get(threadId))
+      ),
+    );
+  }
+
   async syncThreads(folder: string) {
     if (!this.driver) {
       console.error('No driver available for syncThreads');
@@ -963,7 +985,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
       while (hasMore) {
         _pageCount++;
 
-        const result = await this.driver.list({
+        const result = await this.listWithRetry({
           folder,
           maxResults: maxCount,
           pageToken: pageToken || undefined,
