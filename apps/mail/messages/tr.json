@@ -94,7 +94,7 @@
         "commandPalette": "Komut Paleti"
       },
       "quickResults": "Hızlı Sonuçlar",
-      "searchPlaceholder": "Ara...",
+      "searchPlaceholder": "Ara & Filtrele",
       "noSearchResults": "Arama sonucu bulunamadı",
       "actions": "İşlemler",
       "addFilters": "Filtre ekle",
@@ -253,8 +253,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "Not ekle",
-            "countPlural=one": "# not",
-            "countPlural=other": "# notlar"
+            "countPlural=one": "{count} not",
+            "countPlural=other": "{count} not"
           }
         }
       ],
@@ -316,8 +316,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "cevaplar",
-            "countPlural=one": "# cevap",
-            "countPlural=other": "# cevaplar"
+            "countPlural=one": "{count} yanıt",
+            "countPlural=other": "{count} yanıt"
           }
         }
       ],

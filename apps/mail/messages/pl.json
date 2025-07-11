@@ -94,7 +94,7 @@
         "commandPalette": "Paleta poleceń"
       },
       "quickResults": "Szybkie wyniki",
-      "searchPlaceholder": "Szukaj...",
+      "searchPlaceholder": "Szukaj i filtruj",
       "noSearchResults": "Brak wyników wyszukiwania",
       "actions": "Akcje",
       "addFilters": "Dodaj filtry",
@@ -253,8 +253,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "Dodaj notatki",
-            "countPlural=one": "# notatka",
-            "countPlural=other": "# notatek"
+            "countPlural=one": "{count} notatka",
+            "countPlural=other": "{count} notatki"
           }
         }
       ],
@@ -316,8 +316,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "odpowiedzi",
-            "countPlural=one": "# odpowiedź",
-            "countPlural=other": "# odpowiedzi"
+            "countPlural=one": "{count} odpowiedź",
+            "countPlural=other": "{count} odpowiedzi"
           }
         }
       ],

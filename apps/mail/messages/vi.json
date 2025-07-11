@@ -94,7 +94,7 @@
         "commandPalette": "Bảng lệnh"
       },
       "quickResults": "Kết quả nhanh",
-      "searchPlaceholder": "Tìm kiếm...",
+      "searchPlaceholder": "Tìm kiếm & Lọc",
       "noSearchResults": "Không có kết quả tìm kiếm",
       "actions": "Hành động",
       "addFilters": "Thêm bộ lọc",
@@ -253,8 +253,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "Thêm ghi chú",
-            "countPlural=one": "# ghi chú",
-            "countPlural=other": "# ghi chú"
+            "countPlural=one": "{count} ghi chú",
+            "countPlural=other": "{count} ghi chú"
           }
         }
       ],
@@ -316,8 +316,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "phản hồi",
-            "countPlural=one": "# phản hồi",
-            "countPlural=other": "# phản hồi"
+            "countPlural=one": "{count} phản hồi",
+            "countPlural=other": "{count} phản hồi"
           }
         }
       ],

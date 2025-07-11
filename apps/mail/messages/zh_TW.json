@@ -94,7 +94,7 @@
         "commandPalette": "指令面板"
       },
       "quickResults": "快速結果",
-      "searchPlaceholder": "搜尋...",
+      "searchPlaceholder": "搜尋與篩選",
       "noSearchResults": "沒有搜尋結果",
       "actions": "操作",
       "addFilters": "新增篩選條件",
@@ -253,8 +253,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "添加筆記",
-            "countPlural=one": "# 則筆記",
-            "countPlural=other": "# 則筆記"
+            "countPlural=one": "{count} 則筆記",
+            "countPlural=other": "{count} 則筆記"
           }
         }
       ],
@@ -316,8 +316,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "回覆",
-            "countPlural=one": "# 則回覆",
-            "countPlural=other": "# 則回覆"
+            "countPlural=one": "{count} 則回覆",
+            "countPlural=other": "{count} 則回覆"
           }
         }
       ],
