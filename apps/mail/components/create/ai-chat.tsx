@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useAIFullScreen, useAISidebar } from '../ui/ai-sidebar';
 import { VoiceProvider } from '@/providers/voice-provider';
 import useComposeEditor from '@/hooks/use-compose-editor';
-import { useRef, useCallback, useEffect, useState } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import { Markdown } from '@react-email/components';
 import { useBilling } from '@/hooks/use-billing';
 import { TextShimmer } from '../ui/text-shimmer';
@@ -241,7 +241,6 @@ export function AIChat({
   const [, setPricingDialog] = useQueryState('pricingDialog');
   const [aiSidebarOpen] = useQueryState('aiSidebar');
   const { toggleOpen } = useAISidebar();
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
