@@ -329,7 +329,7 @@ export const runZeroWorkflow = (
               );
             }),
           ),
-          { concurrency: 5 }, // Process up to 5 threads concurrently
+          { concurrency: 1 }, // Process up to 5 threads concurrently
         );
 
         yield* Console.log('[ZERO_WORKFLOW] All thread workflows completed:', threadResults.length);
