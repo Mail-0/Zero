@@ -180,11 +180,6 @@ export const navigationConfig: Record<string, NavConfig> = {
             icon: Users,
           },
           {
-            title: m['navigation.settings.organization'](),
-            url: '/settings/organization',
-            icon: Users,
-          },
-          {
             title: m['navigation.settings.signatures'](),
             url: '/settings/signatures',
             icon: MessageSquareIcon,
