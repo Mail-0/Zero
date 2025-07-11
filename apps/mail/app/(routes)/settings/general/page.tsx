@@ -18,8 +18,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useForm, type ControllerRenderProps } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { SettingsCard } from '@/components/settings/settings-card';
-import { Globe, Clock, XIcon, Mail, InfoIcon } from 'lucide-react';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
+import { Globe, Clock, Mail, InfoIcon } from 'lucide-react';
 import { getLocale, setLocale } from '@/paraglide/runtime';
 import { useState, useEffect, useMemo, memo } from 'react';
 import { userSettingsSchema } from '@zero/server/schemas';
@@ -28,7 +28,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTRPC } from '@/providers/query-provider';
 import { getBrowserTimezone } from '@/lib/timezones';
-import { Textarea } from '@/components/ui/textarea';
+
 import { useSettings } from '@/hooks/use-settings';
 import { locales as localesData } from '@/locales';
 import { Switch } from '@/components/ui/switch';
@@ -167,6 +167,7 @@ export default function GeneralPage() {
 
       toast.success(m['common.settings.saved']());
     } catch (error) {
+      console.error(error);
       toast.error(m['common.settings.failedToSave']());
       queryClient.setQueryData(trpc.settings.get.queryKey(), (updater) => {
         if (!updater) return;

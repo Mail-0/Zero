@@ -1,58 +1,29 @@
 import {
-  Bold,
-  Italic,
-  Strikethrough,
-  Underline,
-  Code,
-  Link as LinkIcon,
-  List,
-  ListOrdered,
-  Heading1,
-  Heading2,
-  Heading3,
-  Paperclip,
-  Plus,
-} from 'lucide-react';
-import {
   EditorCommand,
   EditorCommandEmpty,
   EditorCommandItem,
   EditorCommandList,
   EditorContent,
   EditorRoot,
-  useEditor,
   type JSONContent,
 } from 'novel';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useEditor as useEditorContext } from '@/components/providers/editor-provider';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Editor as TiptapEditor, useCurrentEditor } from '@tiptap/react';
+
 import { suggestionItems } from '@/components/create/slash-command';
 import { defaultExtensions } from '@/components/create/extensions';
-import { ImageResizer, handleCommandNavigation } from 'novel';
-import { handleImageDrop, handleImagePaste } from 'novel';
 import EditorMenu from '@/components/create/editor-menu';
-import { UploadedFileIcon } from './uploaded-file-icon';
-import { Separator } from '@/components/ui/separator';
-import { useReducer, useRef, useEffect } from 'react';
+import { Editor as TiptapEditor } from '@tiptap/react';
+import { handleCommandNavigation } from 'novel';
+import { handleImageDrop } from 'novel';
+
 import { AutoComplete } from './editor-autocomplete';
-import { Editor as CoreEditor } from '@tiptap/core';
-import { cn, truncateFileName } from '@/lib/utils';
+import { useReducer, useRef } from 'react';
+
 import { TextSelection } from 'prosemirror-state';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { EditorView } from 'prosemirror-view';
+
+import { cn } from '@/lib/utils';
+
 import { Markdown } from 'tiptap-markdown';
-import { Slice } from 'prosemirror-model';
-import { m } from '@/paraglide/messages';
+
 import { useState } from 'react';
 import React from 'react';
 
@@ -121,217 +92,6 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
   }
 }
 
-// Update the MenuBar component with icons
-interface MenuBarProps {
-  onAttachmentsChange?: (attachments: File[]) => void;
-  includeSignature?: boolean;
-  onSignatureToggle?: (include: boolean) => void;
-  hasSignature?: boolean;
-}
-
-const MenuBar = () => {
-  const { editor } = useCurrentEditor();
-
-  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
-  const [linkUrl, setLinkUrl] = useState('');
-
-  if (!editor) {
-    return null;
-  }
-
-  // Replace the old setLink function with this new implementation
-  const handleLinkDialogOpen = () => {
-    // If a link is already active, pre-fill the input with the current URL
-    if (editor.isActive('link')) {
-      const attrs = editor.getAttributes('link');
-      setLinkUrl(attrs.href || '');
-    } else {
-      setLinkUrl('');
-    }
-    setLinkDialogOpen(true);
-  };
-
-  const handleSaveLink = () => {
-    // empty
-    if (linkUrl === '') {
-      editor.chain().focus().unsetLink().run();
-    } else {
-      // Format the URL with proper protocol if missing
-      let formattedUrl = linkUrl;
-      if (formattedUrl && !/^https?:\/\//i.test(formattedUrl)) {
-        formattedUrl = `https://${formattedUrl}`;
-      }
-      // set link
-      editor.chain().focus().setLink({ href: formattedUrl }).run();
-    }
-    setLinkDialogOpen(false);
-  };
-
-  const handleRemoveLink = () => {
-    editor.chain().focus().unsetLink().run();
-    setLinkDialogOpen(false);
-  };
-
-  return (
-    <>
-      <TooltipProvider>
-        <div className="control-group mb-2 overflow-x-auto">
-          <div className="button-group ml-0 mt-1 flex flex-wrap gap-1 border-b pb-2">
-            <div className="mr-2 flex items-center gap-1">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    tabIndex={-1}
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => editor.chain().focus().toggleBold().run()}
-                    disabled={!editor.can().chain().focus().toggleBold().run()}
-                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('bold') ? 'bg-muted' : 'bg-background'}`}
-                    title="Bold"
-                  >
-                    <Bold className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{m.pages.createEmail.editor.menuBar.bold()}</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    tabIndex={-1}
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => editor.chain().focus().toggleItalic().run()}
-                    disabled={!editor.can().chain().focus().toggleItalic().run()}
-                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('italic') ? 'bg-muted' : 'bg-background'}`}
-                  >
-                    <Italic className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{m.pages.createEmail.editor.menuBar.italic()}</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    tabIndex={-1}
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => editor.chain().focus().toggleStrike().run()}
-                    disabled={!editor.can().chain().focus().toggleStrike().run()}
-                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('strike') ? 'bg-muted' : 'bg-background'}`}
-                  >
-                    <Strikethrough className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {m.pages.createEmail.editor.menuBar.strikethrough()}
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    tabIndex={-1}
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => editor.chain().focus().toggleUnderline().run()}
-                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('underline') ? 'bg-muted' : 'bg-background'}`}
-                  >
-                    <Underline className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{m.pages.createEmail.editor.menuBar.underline()}</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    tabIndex={-1}
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleLinkDialogOpen}
-                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('link') ? 'bg-muted' : 'bg-background'}`}
-                  >
-                    <LinkIcon className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{m.pages.createEmail.editor.menuBar.link()}</TooltipContent>
-              </Tooltip>
-            </div>
-
-            <Separator orientation="vertical" className="relative right-1 top-0.5 h-6" />
-
-            <div className="flex items-center gap-1">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    tabIndex={-1}
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => editor.chain().focus().toggleBulletList().run()}
-                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('bulletList') ? 'bg-muted' : 'bg-background'}`}
-                  >
-                    <List className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{m.pages.createEmail.editor.menuBar.bulletList()}</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    tabIndex={-1}
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => editor.chain().focus().toggleOrderedList().run()}
-                    className={`h-auto w-auto rounded p-1.5 ${editor.isActive('orderedList') ? 'bg-muted' : 'bg-background'}`}
-                  >
-                    <ListOrdered className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{m.pages.createEmail.editor.menuBar.orderedList()}</TooltipContent>
-              </Tooltip>
-            </div>
-          </div>
-        </div>
-      </TooltipProvider>
-
-      <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{m.pages.createEmail.addLink()}</DialogTitle>
-            <DialogDescription>{m.pages.createEmail.addUrlToCreateALink()}</DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col gap-4 py-2">
-            <div className="flex flex-col gap-2">
-              <label htmlFor="url" className="text-sm font-medium">
-                URL
-              </label>
-              <Input
-                id="url"
-                value={linkUrl}
-                onChange={(e) => setLinkUrl(e.target.value)}
-                placeholder="https://example.com"
-              />
-            </div>
-          </div>
-          <DialogFooter className="flex justify-between sm:justify-between">
-            <Button variant="outline" onClick={handleRemoveLink} type="button">
-              {m.common.actions.cancel()}
-            </Button>
-            <Button onClick={handleSaveLink} type="button">
-              {m.common.actions.save()}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-};
-
 export default function Editor({
   initialValue,
   onChange,
@@ -345,7 +105,6 @@ export default function Editor({
   senderInfo,
   myInfo,
   readOnly,
-  hideToolbar,
 }: EditorProps) {
   const [state, dispatch] = useReducer(editorReducer, {
     openNode: false,
@@ -358,7 +117,7 @@ export default function Editor({
   const [editor, setEditor] = useState<TiptapEditor | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { openNode, openColor, openLink, openAI } = state;
+  const { openAI } = state;
 
   // Function to focus the editor
   const focusEditor = () => {

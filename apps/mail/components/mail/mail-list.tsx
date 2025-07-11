@@ -1,12 +1,4 @@
 import {
-  cn,
-  FOLDERS,
-  formatDate,
-  getEmailLogo,
-  getMainSearchTerm,
-  parseNaturalLanguageSearch,
-} from '@/lib/utils';
-import {
   Archive2,
   ExclamationCircle,
   GroupPeople,
@@ -14,48 +6,41 @@ import {
   Trash,
   PencilCompose,
 } from '../icons/icons';
-import {
-  memo,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ComponentProps,
-} from 'react';
-import { useIsFetching, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
+import { memo, useCallback, useEffect, useMemo, useRef, type ComponentProps } from 'react';
 import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
 import { focusedIndexAtom, useMailNavigation } from '@/hooks/use-mail-navigation';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useIsFetching, type UseQueryResult } from '@tanstack/react-query';
 import type { MailSelectMode, ParsedMessage, ThreadProps } from '@/types';
 import type { ParsedDraft } from '../../../server/src/lib/driver/types';
 import { ThreadContextMenu } from '@/components/context/thread-context';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useMail, type Config } from '@/components/mail/use-mail';
 import { type ThreadDestination } from '@/lib/thread-actions';
 import { useThread, useThreads } from '@/hooks/use-threads';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { EmptyStateIcon } from '../icons/empty-state-svg';
 import { highlightText } from '@/lib/email-utils.client';
-import { useHotkeysContext } from 'react-hotkeys-hook';
-import { AnimatePresence, motion } from 'motion/react';
+import { cn, FOLDERS, formatDate } from '@/lib/utils';
+import { Avatar } from '../ui/avatar';
+
 import { useTRPC } from '@/providers/query-provider';
 import { useThreadLabels } from '@/hooks/use-labels';
-import { template } from '@/lib/email-utils.client';
+
 import { useSettings } from '@/hooks/use-settings';
-import { useThreadNotes } from '@/hooks/use-notes';
+
 import { useKeyState } from '@/hooks/use-hot-key';
 import { VList, type VListHandle } from 'virtua';
+import { BimiAvatar } from '../ui/bimi-avatar';
 import { RenderLabels } from './render-labels';
 import { Badge } from '@/components/ui/badge';
 import { useDraft } from '@/hooks/use-drafts';
 import { Check, Star } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
-import { StickyNote } from 'lucide-react';
+
 import { m } from '@/paraglide/messages';
 import { useParams } from 'react-router';
-import { useTheme } from 'next-themes';
+
 import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Categories } from './mail';
@@ -68,15 +53,11 @@ const Thread = memo(
     isKeyboardFocused,
     index,
   }: ThreadProps & { index?: number }) {
-    const [searchValue, setSearchValue] = useSearchValue();
+    const [searchValue] = useSearchValue();
     const { folder } = useParams<{ folder: string }>();
-    const [{}, threads] = useThreads();
+    const [, threads] = useThreads();
     const [threadId] = useQueryState('threadId');
-    const {
-      data: getThreadData,
-      isGroupThread,
-      latestDraft,
-    } = useThread(message.id, message.historyId);
+    const { data: getThreadData, isGroupThread, latestDraft } = useThread(message.id);
     const [id, setThreadId] = useQueryState('threadId');
     const [focusedIndex, setFocusedIndex] = useAtom(focusedIndexAtom);
 
@@ -362,55 +343,47 @@ const Thread = memo(
               className={`relative flex w-full items-center justify-between gap-4 px-4 ${displayUnread ? '' : 'opacity-60'}`}
             >
               <div>
-                <Avatar
-                  className={cn(
-                    'h-8 w-8 rounded-full',
-                    displayUnread && !isMailSelected && !isFolderSent ? '' : 'border',
-                  )}
-                >
-                  <div
+                {isMailBulkSelected ? (
+                  <Avatar
                     className={cn(
-                      'flex h-full w-full items-center justify-center rounded-full bg-[#006FFE] p-2 dark:bg-[#006FFE]',
-                      {
-                        hidden: !isMailBulkSelected,
-                      },
+                      'h-8 w-8 rounded-full',
+                      displayUnread && !isMailSelected && !isFolderSent ? '' : 'border',
                     )}
-                    onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation();
-                      setMail((prev: Config) => ({
-                        ...prev,
-                        bulkSelected: prev.bulkSelected.filter((id: string) => id !== idToUse),
-                      }));
-                    }}
                   >
-                    <Check className="h-4 w-4 text-white" />
-                  </div>
-                  {isGroupThread ? (
+                    <div
+                      className="flex h-full w-full items-center justify-center rounded-full bg-[#006FFE] p-2 dark:bg-[#006FFE]"
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        setMail((prev: Config) => ({
+                          ...prev,
+                          bulkSelected: prev.bulkSelected.filter((id: string) => id !== idToUse),
+                        }));
+                      }}
+                    >
+                      <Check className="h-4 w-4 text-white" />
+                    </div>
+                  </Avatar>
+                ) : isGroupThread ? (
+                  <Avatar
+                    className={cn(
+                      'h-8 w-8 rounded-full',
+                      displayUnread && !isMailSelected && !isFolderSent ? '' : 'border',
+                    )}
+                  >
                     <div className="flex h-full w-full items-center justify-center rounded-full bg-[#FFFFFF] p-2 dark:bg-[#373737]">
                       <GroupPeople className="h-4 w-4" />
                     </div>
-                  ) : (
-                    <>
-                      <AvatarImage
-                        className="rounded-full bg-[#FFFFFF] dark:bg-[#373737]"
-                        src={getEmailLogo(latestMessage.sender.email)}
-                        alt={cleanName || latestMessage.sender.email}
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                        }}
-                      />
-                      <AvatarFallback
-                        className="rounded-full bg-[#FFFFFF] font-bold text-[#9F9F9F] dark:bg-[#373737]"
-                        delayMs={0}
-                      >
-                        {cleanName
-                          ? cleanName[0]?.toUpperCase()
-                          : latestMessage.sender.email[0]?.toUpperCase()}
-                      </AvatarFallback>
-                    </>
-                  )}
-                </Avatar>
+                  </Avatar>
+                ) : (
+                  <BimiAvatar
+                    email={latestMessage.sender.email}
+                    name={cleanName || latestMessage.sender.email}
+                    className={cn(
+                      'h-8 w-8 rounded-full',
+                      displayUnread && !isMailSelected && !isFolderSent ? '' : 'border',
+                    )}
+                  />
+                )}
                 {/* {displayUnread && !isMailSelected && !isFolderSent ? (
                   <>
                     <span className="absolute left-2 top-2 size-1.5 rounded bg-[#006FFE]" />
@@ -849,8 +822,8 @@ export const MailList = memo(
         const clickedIndex = itemsRef.current.findIndex((item) => item.id === messageThreadId);
         setFocusedIndex(clickedIndex);
         if (message.unread && autoRead) optimisticMarkAsRead([messageThreadId], true);
-        await setThreadId(messageThreadId);
-        await setDraftId(null);
+        setThreadId(messageThreadId);
+        setDraftId(null);
         // Don't clear activeReplyId - let ThreadDisplay handle Reply All auto-opening
       },
       [
@@ -963,7 +936,6 @@ export const MailList = memo(
                   overscan={5}
                   itemSize={100}
                   className="scrollbar-none flex-1 overflow-x-hidden"
-                  children={vListRenderer}
                   onScroll={() => {
                     if (!vListRef.current) return;
                     const endIndex = vListRef.current.findEndIndex();
@@ -978,7 +950,9 @@ export const MailList = memo(
                       void loadMore();
                     }
                   }}
-                />
+                >
+                  {vListRenderer}
+                </VList>
               </div>
             )}
           </>
@@ -1044,14 +1018,6 @@ export const MailLabels = memo(
     return JSON.stringify(prev.labels) === JSON.stringify(next.labels);
   },
 );
-
-function getNormalizedLabelKey(label: string) {
-  return label.toLowerCase().replace(/^category_/i, '');
-}
-
-function capitalize(str: string) {
-  return str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase();
-}
 
 function getLabelIcon(label: string) {
   const normalizedLabel = label.toLowerCase().replace(/^category_/i, '');

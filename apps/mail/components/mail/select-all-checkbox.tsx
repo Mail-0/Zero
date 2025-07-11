@@ -83,6 +83,7 @@ export default function SelectAllCheckbox({ className }: { className?: string })
               const allIds = allIdsCache.current ?? [];
               setMail((prev) => ({ ...prev, bulkSelected: allIds }));
             } catch (err) {
+              console.error(err);
               setIsFetchingIds(false);
               toast.error('Failed to select all conversations');
             }

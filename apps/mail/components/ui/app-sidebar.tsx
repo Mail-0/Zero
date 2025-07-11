@@ -1,37 +1,15 @@
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
-  DialogFooter,
-  DialogOverlay,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarHeader,
-  SidebarMenu,
-} from '@/components/ui/sidebar';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { SquarePenIcon, type SquarePenIconHandle } from '../icons/animated/square-pen';
-import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from './input-otp';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar';
 import { navigationConfig, bottomNavItems } from '@/config/navigation';
-import { useSession, authClient } from '@/lib/auth-client';
-import React, { useMemo, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { zodResolver } from '@hookform/resolvers/zod';
+import React, { useMemo, useState } from 'react';
+import { useSession } from '@/lib/auth-client';
+
 import { useSidebar } from '@/components/ui/sidebar';
 import { CreateEmail } from '../create/create-email';
 import { PencilCompose, X } from '../icons/icons';
@@ -41,15 +19,12 @@ import { Button } from '@/components/ui/button';
 import { useAIFullScreen } from './ai-sidebar';
 import { useStats } from '@/hooks/use-stats';
 import { useLocation } from 'react-router';
-import { useForm } from 'react-hook-form';
+
 import { m } from '@/paraglide/messages';
 import { FOLDERS } from '@/lib/utils';
 import { NavUser } from './nav-user';
 import { NavMain } from './nav-main';
 import { useQueryState } from 'nuqs';
-import { Input } from './input';
-import { toast } from 'sonner';
-import { z } from 'zod';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { isPro, isLoading } = useBilling();
@@ -66,7 +41,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: stats } = useStats();
 
   const location = useLocation();
-  const { data: session, isPending: isSessionPending } = useSession();
+  const { data: session } = useSession();
   const { currentSection, navItems } = useMemo(() => {
     // Find which section we're in based on the pathname
     const section = Object.entries(navigationConfig).find(([, config]) =>
@@ -157,7 +132,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 className="mt-3 inline-flex h-7 w-full items-center justify-center gap-0.5 overflow-hidden rounded-lg bg-[#8B5CF6] px-2"
               >
                 <div className="flex items-center justify-center gap-2.5 px-0.5">
-                  <div className="justify-start md:text-sm leading-none text-white whitespace-nowrap text-xs">
+                  <div className="justify-start whitespace-nowrap text-xs leading-none text-white md:text-sm">
                     Start 7 day free trial
                   </div>
                 </div>
@@ -186,11 +161,14 @@ function ComposeButton() {
 
   const handleOpenChange = async (open: boolean) => {
     if (!open) {
-      await setDialogOpen(null);
+      setDialogOpen(null);
     } else {
-      await setDialogOpen('true');
+      setDialogOpen('true');
     }
-    await Promise.all([setDraftId(null), setTo(null), setActiveReplyId(null), setMode(null)]);
+    setDraftId(null);
+    setTo(null);
+    setActiveReplyId(null);
+    setMode(null);
   };
   return (
     <Dialog open={!!dialogOpen} onOpenChange={handleOpenChange}>

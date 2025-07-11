@@ -1,6 +1,6 @@
 import { streamText, tool, type DataStreamWriter, type ToolSet } from 'ai';
 import { perplexity } from '@ai-sdk/perplexity';
-import { env } from 'cloudflare:workers';
+
 import { Tools } from '../../types';
 import { z } from 'zod';
 

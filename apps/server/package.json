@@ -48,6 +48,7 @@
     "date-fns": "^4.1.0",
     "dedent": "^1.6.0",
     "drizzle-orm": "catalog:",
+    "effect": "3.16.12",
     "elevenlabs": "1.59.0",
     "email-addresses": "^5.0.0",
     "google-auth-library": "9.15.1",

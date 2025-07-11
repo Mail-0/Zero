@@ -1,4 +1,4 @@
-import { GmailColor, OutlookColor } from '../components/icons/icons';
+import { GmailColor, } from '../components/icons/icons';
 
 export const I18N_LOCALE_COOKIE_NAME = 'i18n:locale';
 export const SIDEBAR_COOKIE_NAME = 'sidebar:state';

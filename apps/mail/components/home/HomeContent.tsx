@@ -1,11 +1,7 @@
 import {
-  ArrowRight,
   ChevronDown,
   CurvedArrow,
-  Discord,
   GitHub,
-  LinkedIn,
-  Twitter,
   Plus,
   Cube,
   MediumStack,
@@ -30,15 +26,15 @@ import {
   Expand,
 } from '../icons/icons';
 import { PixelatedBackground, PixelatedLeft, PixelatedRight } from '@/components/home/pixelated-bg';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { signIn, useSession } from '@/lib/auth-client';
 import { Link, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Balancer } from 'react-wrap-balancer';
 import { Navigation } from '../navigation';
 import { useTheme } from 'next-themes';
-import { use, useEffect } from 'react';
 import { motion } from 'motion/react';
+import { useEffect } from 'react';
 import { toast } from 'sonner';
 import Footer from './footer';
 import React from 'react';
@@ -1221,9 +1217,9 @@ export default function HomeContent() {
                     {/* First row */}
                     <div className="no-scrollbar relative flex w-full justify-center">
                       <div className="flex items-center justify-start gap-2 whitespace-nowrap">
-                        {firstRowQueries.map((query, i) => (
+                        {firstRowQueries.map((query) => (
                           <div
-                            key={i}
+                            key={query}
                             className="flex h-7 flex-shrink-0 items-center justify-start gap-1.5 overflow-hidden rounded-md bg-[#303030] px-2 py-1.5"
                           >
                             <div className="flex items-center justify-start gap-1 px-0.5">
@@ -1241,9 +1237,9 @@ export default function HomeContent() {
                     {/* Second row */}
                     <div className="no-scrollbar relative flex w-full justify-center">
                       <div className="flex items-center justify-start gap-2 whitespace-nowrap">
-                        {secondRowQueries.map((query, i) => (
+                        {secondRowQueries.map((query) => (
                           <div
-                            key={i}
+                            key={query}
                             className="flex h-7 flex-shrink-0 items-center justify-start gap-1.5 overflow-hidden rounded-md bg-[#303030] px-2 py-1.5"
                           >
                             <div className="flex items-center justify-start gap-1 px-0.5">
@@ -1334,24 +1330,3 @@ export default function HomeContent() {
     </main>
   );
 }
-const CustomTabGlow = ({ glowStyle }: { glowStyle: { left: number; width: number } }) => {
-  return (
-    <div
-      className="absolute w-1/3 transition-all duration-300 ease-in-out"
-      style={{
-        left: `${glowStyle.left}px`,
-      }}
-    >
-      <div
-        style={{
-          width: `${glowStyle.width}px`,
-        }}
-        className="bottom-0 h-12 translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.3)_0%,_transparent_70%)] blur-md"
-      />
-      <div
-        style={{ width: `${glowStyle.width}px` }}
-        className="bottom-0 h-px rounded-full bg-gradient-to-r from-transparent via-white/90 to-transparent"
-      />
-    </div>
-  );
-};

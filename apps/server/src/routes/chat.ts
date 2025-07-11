@@ -1,3 +1,16 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 import {
   streamText,
   generateObject,
@@ -12,15 +25,13 @@ import {
   GmailSearchAssistantSystemPrompt,
   AiChatPrompt,
 } from '../lib/prompts';
-import { type Connection, type ConnectionContext, type WSMessage } from 'agents';
 import { EPrompts, type IOutgoingMessage, type ParsedMessage } from '../types';
 import type { IGetThreadResponse, MailManager } from '../lib/driver/types';
+import { connectionToDriver, getZeroAgent } from '../lib/server-utils';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { createSimpleAuth, type SimpleAuth } from '../lib/auth';
-import { connectionToDriver } from '../lib/server-utils';
+import { type Connection, type WSMessage } from 'agents';
 import { ToolOrchestrator } from './agent/orchestrator';
 import type { CreateDraftData } from '../lib/schemas';
-import { FOLDERS, parseHeaders } from '../lib/utils';
 import { env, RpcTarget } from 'cloudflare:workers';
 import { AIChatAgent } from 'agents/ai-chat-agent';
 import { tools as authTools } from './agent/tools';
@@ -30,26 +41,16 @@ import { getPromptName } from '../pipelines';
 import { connection } from '../db/schema';
 import { getPrompt } from '../lib/brain';
 import { openai } from '@ai-sdk/openai';
+import { FOLDERS } from '../lib/utils';
 import { and, eq } from 'drizzle-orm';
 import { McpAgent } from 'agents/mcp';
-import { groq } from '@ai-sdk/groq';
+
+import { withGmailRetry } from '../lib/gmail-rate-limit';
 import { createDb } from '../db';
+import { Effect } from 'effect';
 import { z } from 'zod';
 
 const decoder = new TextDecoder();
-
-interface ThreadRow {
-  id: string;
-  thread_id: string;
-  provider_id: string;
-  messages: string;
-  latest_sender: string;
-  latest_received_on: string;
-  latest_subject: string;
-  latest_label_ids: string;
-  created_at: string;
-  updated_at: string;
-}
 
 export enum IncomingMessageType {
   UseChatRequest = 'cf_agent_use_chat_request',
@@ -301,6 +302,10 @@ export class AgentRpcDO extends RpcTarget {
   //     return await this.mainDo.getThreadFromDB(id);
   //   }
 
+  async listHistory<T>(historyId: string) {
+    return await this.mainDo.listHistory<T>(historyId);
+  }
+
   async syncThreads(folder: string) {
     return await this.mainDo.syncThreads(folder);
   }
@@ -347,13 +352,14 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
 
   private getDataStreamResponse(
     onFinish: StreamTextOnFinishCallback<{}>,
-    options?: {
+    _?: {
       abortSignal: AbortSignal | undefined;
     },
   ) {
     const dataStreamResponse = createDataStreamResponse({
       execute: async (dataStream) => {
         const connectionId = this.name;
+        if (connectionId === 'general') return;
         if (!connectionId || !this.driver) {
           console.log('Unauthorized no driver or connectionId [1]', connectionId, this.driver);
           await this.setupAuth(connectionId);
@@ -396,6 +402,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
   }
 
   public async setupAuth(connectionId: string) {
+    if (connectionId === 'general') return;
     if (!this.driver) {
       const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
       const _connection = await db.query.connection.findFirst({
@@ -455,6 +462,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
       try {
         data = JSON.parse(message) as IncomingMessage;
       } catch (error) {
+        console.warn(error);
         // silently ignore invalid messages for now
         // TODO: log errors with log levels
         return;
@@ -668,6 +676,13 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     });
   }
 
+  async listHistory<T>(historyId: string) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.listHistory<T>(historyId);
+  }
+
   async getUserLabels() {
     if (!this.driver) {
       throw new Error('No driver available');
@@ -852,7 +867,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
   }
 
   async syncThread(threadId: string) {
-    if (!this.driver) {
+    if (!this.driver && this.name !== 'general') {
       await this.setupAuth(this.name);
     }
 
@@ -868,7 +883,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     this.syncThreadsInProgress.set(threadId, true);
 
     try {
-      const threadData = await this.driver.get(threadId);
+      const threadData = await this.getWithRetry(threadId);
       const latest = threadData.latest;
 
       if (latest) {
@@ -907,10 +922,12 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
         this.syncThreadsInProgress.delete(threadId);
         return { success: true, threadId, threadData };
       } else {
+        this.syncThreadsInProgress.delete(threadId);
         console.log(`Skipping thread ${threadId} - no latest message`);
         return { success: false, threadId, reason: 'No latest message' };
       }
     } catch (error) {
+      this.syncThreadsInProgress.delete(threadId);
       console.error(`Failed to sync thread ${threadId}:`, error);
       throw error;
     }
@@ -918,6 +935,18 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
 
   getThreadKey(threadId: string) {
     return `${this.name}/${threadId}.json`;
+  }
+
+  private async listWithRetry(params: Parameters<MailManager['list']>[0]) {
+    if (!this.driver) throw new Error('No driver available');
+
+    return Effect.runPromise(withGmailRetry(Effect.tryPromise(() => this.driver!.list(params))));
+  }
+
+  private async getWithRetry(threadId: string): Promise<IGetThreadResponse> {
+    if (!this.driver) throw new Error('No driver available');
+
+    return Effect.runPromise(withGmailRetry(Effect.tryPromise(() => this.driver!.get(threadId))));
   }
 
   async syncThreads(folder: string) {
@@ -943,20 +972,27 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
       let totalSynced = 0;
       let pageToken: string | null = null;
       let hasMore = true;
-      let pageCount = 0;
+      let _pageCount = 0;
 
       while (hasMore) {
-        pageCount++;
+        _pageCount++;
 
-        const result = await this.driver.list({
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        const result = await this.listWithRetry({
           folder,
           maxResults: maxCount,
           pageToken: pageToken || undefined,
         });
 
+        // Need delay to avoid rate limiting
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
         for (const thread of result.threads) {
           try {
             await this.syncThread(thread.id);
+            // Need delay to avoid rate limiting
+            await new Promise((resolve) => setTimeout(resolve, 2000));
           } catch (error) {
             console.error(`Failed to sync thread ${thread.id}:`, error);
           }
@@ -1147,7 +1183,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     }
   }
 
-  async getThreadFromDB(id: string): Promise<IGetThreadResponse> {
+  async getThreadFromDB(id: string, lastAttempt = false): Promise<IGetThreadResponse> {
     try {
       const result = this.sql`
           SELECT
@@ -1165,17 +1201,13 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
           LIMIT 1
         `;
 
-      if (result.length === 0) {
-        this.ctx.waitUntil(this.syncThread(id));
-        return {
-          messages: [],
-          latest: undefined,
-          hasUnread: false,
-          totalReplies: 0,
-          labels: [],
-        } satisfies IGetThreadResponse;
+      if (!result || result.length === 0) {
+        if (lastAttempt) {
+          throw new Error('Thread not found in database, Sync Failed once');
+        }
+        await this.syncThread(id);
+        return this.getThreadFromDB(id, true);
       }
-
       const row = result[0] as any;
       const storedThread = await env.THREADS_BUCKET.get(this.getThreadKey(id));
 
@@ -1187,9 +1219,9 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
 
       return {
         messages,
-        latest: messages.length > 0 ? messages[messages.length - 1] : undefined,
+        latest: messages.findLast((e) => e.isDraft !== true),
         hasUnread: latestLabelIds.includes('UNREAD'),
-        totalReplies: messages.length,
+        totalReplies: messages.filter((e) => e.isDraft !== true).length,
         labels: latestLabelIds.map((id: string) => ({ id, name: id })),
       } satisfies IGetThreadResponse;
     } catch (error) {
@@ -1221,7 +1253,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
       throw new Error('Unauthorized');
     }
     this.activeConnectionId = _connection.id;
-    const driver = connectionToDriver(_connection);
+    const agent = await getZeroAgent(_connection.id);
 
     this.server.tool('getConnections', async () => {
       const connections = await db.query.connection.findMany({
@@ -1311,7 +1343,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
         pageToken: z.string().optional(),
       },
       async (s) => {
-        const result = await driver.list({
+        const result = await agent.listThreads({
           folder: s.folder,
           query: s.query,
           maxResults: s.maxResults,
@@ -1319,8 +1351,8 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
           pageToken: s.pageToken,
         });
         const content = await Promise.all(
-          result.threads.map(async (thread) => {
-            const loadedThread = await driver.get(thread.id);
+          result.threads.map(async (thread: any) => {
+            const loadedThread = await agent.getThread(thread.id);
             return [
               {
                 type: 'text' as const,
@@ -1352,7 +1384,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
         threadId: z.string(),
       },
       async (s) => {
-        const thread = await driver.get(s.threadId);
+        const thread = await agent.getThread(s.threadId);
         const initialResponse = [
           {
             type: 'text' as const,
@@ -1411,10 +1443,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
         threadIds: z.array(z.string()),
       },
       async (s) => {
-        await driver.modifyLabels(s.threadIds, {
-          addLabels: [],
-          removeLabels: ['UNREAD'],
-        });
+        await agent.modifyLabels(s.threadIds, [], ['UNREAD']);
         return {
           content: [
             {
@@ -1432,10 +1461,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
         threadIds: z.array(z.string()),
       },
       async (s) => {
-        await driver.modifyLabels(s.threadIds, {
-          addLabels: ['UNREAD'],
-          removeLabels: [],
-        });
+        await agent.modifyLabels(s.threadIds, ['UNREAD'], []);
         return {
           content: [
             {
@@ -1455,10 +1481,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
         removeLabelIds: z.array(z.string()),
       },
       async (s) => {
-        await driver.modifyLabels(s.threadIds, {
-          addLabels: s.addLabelIds,
-          removeLabels: s.removeLabelIds,
-        });
+        await agent.modifyLabels(s.threadIds, s.addLabelIds, s.removeLabelIds);
         return {
           content: [
             {
@@ -1482,7 +1505,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
     });
 
     this.server.tool('getUserLabels', async () => {
-      const labels = await driver.getUserLabels();
+      const labels = await agent.getUserLabels();
       return {
         content: [
           {
@@ -1501,7 +1524,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
         id: z.string(),
       },
       async (s) => {
-        const label = await driver.getLabel(s.id);
+        const label = await agent.getLabel(s.id);
         return {
           content: [
             {
@@ -1526,7 +1549,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
       },
       async (s) => {
         try {
-          await driver.createLabel({
+          await agent.createLabel({
             name: s.name,
             color:
               s.backgroundColor && s.textColor
@@ -1545,6 +1568,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
             ],
           };
         } catch (e) {
+          console.error(e);
           return {
             content: [
               {
@@ -1564,10 +1588,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
       },
       async (s) => {
         try {
-          await driver.modifyLabels(s.threadIds, {
-            addLabels: ['TRASH'],
-            removeLabels: ['INBOX'],
-          });
+          await agent.modifyLabels(s.threadIds, ['TRASH'], ['INBOX']);
           return {
             content: [
               {
@@ -1577,6 +1598,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
             ],
           };
         } catch (e) {
+          console.error(e);
           return {
             content: [
               {
@@ -1596,10 +1618,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
       },
       async (s) => {
         try {
-          await driver.modifyLabels(s.threadIds, {
-            addLabels: [],
-            removeLabels: ['INBOX'],
-          });
+          await agent.modifyLabels(s.threadIds, [], ['INBOX']);
           return {
             content: [
               {
@@ -1609,6 +1628,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
             ],
           };
         } catch (e) {
+          console.error(e);
           return {
             content: [
               {

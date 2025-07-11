@@ -370,7 +370,8 @@
       "failedToMute": "ミュートに失敗しました",
       "failedToUnmute": "ミュート解除に失敗しました",
       "archived": "アーカイブしました",
-      "failedToArchive": "アーカイブに失敗しました"
+      "failedToArchive": "アーカイブに失敗しました",
+      "openInNewTab": "新しいタブで開く"
     },
     "units": {
       "mb": "{amount} MB"

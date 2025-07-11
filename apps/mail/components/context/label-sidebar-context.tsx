@@ -22,15 +22,6 @@ import { Trash } from '../icons/icons';
 import { Button } from '../ui/button';
 import { toast } from 'sonner';
 
-interface LabelAction {
-  id: string;
-  label: string | ReactNode;
-  icon?: ReactNode;
-  shortcut?: string;
-  action: () => void;
-  disabled?: boolean;
-}
-
 interface LabelSidebarContextMenuProps {
   children: ReactNode;
   labelId: string;

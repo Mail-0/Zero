@@ -11,6 +11,12 @@ export interface ISubscribeBatch {
   providerId: EProviders;
 }
 
+export interface IThreadBatch {
+  providerId: EProviders;
+  historyId: string;
+  subscriptionName: string;
+}
+
 export const defaultLabels = [
   {
     name: 'to respond',

@@ -1,6 +1,6 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { backgroundQueueAtom, isThreadInBackgroundQueueAtom } from '@/store/backgroundQueue';
 import type { IGetThreadResponse } from '../../server/src/lib/driver/types';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { useTRPC } from '@/providers/query-provider';
 import useSearchLabels from './use-labels-search';
@@ -16,7 +16,7 @@ export const useThreads = () => {
   const [backgroundQueue] = useAtom(backgroundQueueAtom);
   const isInQueue = useAtomValue(isThreadInBackgroundQueueAtom);
   const trpc = useTRPC();
-  const { labels, setLabels } = useSearchLabels();
+  const { labels } = useSearchLabels();
 
   const threadsQuery = useInfiniteQuery(
     trpc.mail.listThreads.infiniteQueryOptions(
@@ -60,7 +60,7 @@ export const useThreads = () => {
   return [threadsQuery, threads, isReachingEnd, loadMore] as const;
 };
 
-export const useThread = (threadId: string | null, historyId?: string | null) => {
+export const useThread = (threadId: string | null) => {
   const { data: session } = useSession();
   const [_threadId] = useQueryState('threadId');
   const id = threadId ? threadId : _threadId;
