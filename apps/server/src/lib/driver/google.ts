@@ -216,7 +216,7 @@ export class GoogleMailManager implements MailManager {
   }
 
   private getQuotaUser() {
-    return this.config.auth?.email + `-${env.NODE_ENV}`;
+    return this.config.auth?.email ? `${this.config.auth.email}-${env.NODE_ENV}` : undefined;
   }
   public list(params: {
     folder: string;
