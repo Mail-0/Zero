@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { useThread } from '@/hooks/use-threads';
 import { cn } from '@/lib/utils';
 import { MailContent } from './mail-content';
@@ -19,6 +19,14 @@ export const MailPreview = memo(
     const { data: threadData, isLoading, error } = useThread(messageId);
     const latestMessage = threadData?.latest;
 
+    const style = useMemo(
+      () => ({
+        top: `${position.top}px`,
+        left: `${position.left}px`,
+      }),
+      [position.top, position.left],
+    );
+
     if (!isVisible || !messageId) return null;
 
     return (
@@ -28,10 +36,7 @@ export const MailPreview = memo(
           'transition-opacity duration-200 dark:border-gray-700 dark:bg-[#262626]',
           isVisible ? 'opacity-100' : 'pointer-events-none opacity-0',
         )}
-        style={{
-          top: `${position.top}px`,
-          left: `${position.left}px`,
-        }}
+        style={style}
         role="dialog"
         aria-modal="true"
         aria-labelledby="mail-preview-heading"

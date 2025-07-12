@@ -86,6 +86,14 @@ const Thread = memo(
       return { latestMessage, idToUse, cleanName };
     }, [getThreadData?.latest]);
 
+    const handleMouseEnter = useCallback(() => {
+      if (idToUse && threadRef.current) onMouseEnter?.(idToUse, threadRef);
+    }, [idToUse, onMouseEnter]);
+
+    const handleMouseLeave = useCallback(() => {
+      onMouseLeave?.();
+    }, [onMouseLeave]);
+
     const optimisticState = useOptimisticThreadState(idToUse ?? '');
 
     const { displayStarred, displayImportant, displayUnread, optimisticLabels, emailContent } =
@@ -246,10 +254,8 @@ const Thread = memo(
               'relative',
               'group',
             )}
-            onMouseEnter={() => {
-              if (idToUse && threadRef.current) onMouseEnter?.(idToUse, threadRef);
-            }}
-            onMouseLeave={() => onMouseLeave?.()}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
           >
             <div
               className={cn(
@@ -549,6 +555,8 @@ const Thread = memo(
       threadLabels,
       optimisticLabels,
       emailContent,
+      handleMouseEnter,
+      handleMouseLeave,
     ]);
 
     return latestMessage ? (
