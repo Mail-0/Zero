@@ -6,7 +6,7 @@ import {
   Trash,
   PencilCompose,
 } from '../icons/icons';
-import { memo, useCallback, useEffect, useMemo, useRef, type ComponentProps } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from 'react';
 import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
 import { focusedIndexAtom, useMailNavigation } from '@/hooks/use-mail-navigation';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -37,6 +37,7 @@ import { Badge } from '@/components/ui/badge';
 import { useDraft } from '@/hooks/use-drafts';
 import { Check, Star } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
+import { MailPreview } from './mail-preview';
 
 import { m } from '@/paraglide/messages';
 import { useParams } from 'react-router';
@@ -52,7 +53,13 @@ const Thread = memo(
     onClick,
     isKeyboardFocused,
     index,
-  }: ThreadProps & { index?: number }) {
+    onMouseEnter,
+    onMouseLeave,
+  }: ThreadProps & {
+    index?: number;
+    onMouseEnter?: (id: string, ref: React.RefObject<HTMLDivElement | null>) => void;
+    onMouseLeave?: () => void;
+  }) {
     const [searchValue] = useSearchValue();
     const { folder } = useParams<{ folder: string }>();
     const [, threads] = useThreads();
@@ -60,6 +67,7 @@ const Thread = memo(
     const { data: getThreadData, isGroupThread, latestDraft } = useThread(message.id);
     const [id, setThreadId] = useQueryState('threadId');
     const [focusedIndex, setFocusedIndex] = useAtom(focusedIndexAtom);
+    const threadRef = useRef<HTMLDivElement>(null);
 
     const { latestMessage, idToUse, cleanName } = useMemo(() => {
       const latestMessage = getThreadData?.latest;
@@ -218,14 +226,9 @@ const Thread = memo(
         <div
           className={cn('select-none border-b md:my-1 md:border-none')}
           onClick={onClick ? onClick(latestMessage) : undefined}
-          onMouseEnter={() => {
-            window.dispatchEvent(new CustomEvent('emailHover', { detail: { id: idToUse } }));
-          }}
-          onMouseLeave={() => {
-            window.dispatchEvent(new CustomEvent('emailHover', { detail: { id: null } }));
-          }}
         >
           <div
+            ref={threadRef}
             data-thread-id={idToUse}
             key={idToUse}
             className={cn(
@@ -236,6 +239,10 @@ const Thread = memo(
               'relative',
               'group',
             )}
+            onMouseEnter={() => {
+              if (idToUse && threadRef.current) onMouseEnter?.(idToUse, threadRef);
+            }}
+            onMouseLeave={() => onMouseLeave?.()}
           >
             <div
               className={cn(
@@ -676,6 +683,58 @@ export const MailList = memo(
     const itemsRef = useRef(items);
     const parentRef = useRef<HTMLDivElement>(null);
     const vListRef = useRef<VListHandle>(null);
+    const [hoveredId, setHoveredId] = useState<string | null>(null);
+    const [previewPosition, setPreviewPosition] = useState({ top: 0, left: 0 });
+    const hoverTimer = useRef<NodeJS.Timeout | null>(null);
+
+    const handleMouseEnter = useCallback((id: string, ref: React.RefObject<HTMLDivElement | null>) => {
+      if (hoverTimer.current) clearTimeout(hoverTimer.current);
+
+      hoverTimer.current = setTimeout(() => {
+        if (ref.current) {
+          const rect = ref.current.getBoundingClientRect();
+          const viewportHeight = window.innerHeight;
+          const viewportWidth = window.innerWidth;
+          const previewMaxHeight = viewportHeight * 0.8;
+          const previewWidth = 450; 
+          const margin = 16;
+
+          let top = rect.top;
+          let left = rect.right + 20;
+          if (top + previewMaxHeight > viewportHeight - margin) {
+            top = viewportHeight - previewMaxHeight - margin;
+          }
+          if (top < margin) {
+            top = margin;
+          }
+
+          if (left + previewWidth > viewportWidth - margin) {
+            left = rect.left - previewWidth - 20;
+          }
+
+          setPreviewPosition({
+            top: top,
+            left: left,
+          });
+          setHoveredId(id);
+        }
+      }, 500);
+    }, []);
+
+    const handleMouseLeave = useCallback(() => {
+      if (hoverTimer.current) clearTimeout(hoverTimer.current);
+
+      hoverTimer.current = setTimeout(() => {
+        setHoveredId(null);
+      }, 300);
+    }, []);
+
+    // Clean up timer on unmount
+    useEffect(() => {
+      return () => {
+        if (hoverTimer.current) clearTimeout(hoverTimer.current);
+      };
+    }, []);
 
     useEffect(() => {
       itemsRef.current = items;
@@ -721,7 +780,7 @@ export const MailList = memo(
       [setThreadId],
     );
 
-    const { focusedIndex, handleMouseEnter, keyboardActive } = useMailNavigation({
+    const { focusedIndex, keyboardActive } = useMailNavigation({
       items,
       containerRef: parentRef,
       onNavigate: handleNavigateToThread,
@@ -816,8 +875,6 @@ export const MailList = memo(
           return handleSelectMail(message);
         }
 
-        handleMouseEnter(message.id);
-
         const messageThreadId = message.threadId ?? message.id;
         const clickedIndex = itemsRef.current.findIndex((item) => item.id === messageThreadId);
         setFocusedIndex(clickedIndex);
@@ -829,8 +886,6 @@ export const MailList = memo(
       [
         getSelectMode,
         handleSelectMail,
-        handleMouseEnter,
-        setFocusedIndex,
         optimisticMarkAsRead,
         setThreadId,
         setDraftId,
@@ -874,6 +929,8 @@ export const MailList = memo(
               isKeyboardFocused={focusedIndex === index && keyboardActive}
               index={index}
               onClick={handleMailClick}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
             />
             {index === filteredItems.length - 1 && (isFetchingNextPage || isFetchingMail) ? (
               <div className="flex w-full justify-center py-4">
@@ -896,6 +953,8 @@ export const MailList = memo(
         isLoading,
         isFetching,
         hasNextPage,
+        handleMouseEnter,
+        handleMouseLeave,
       ],
     );
 
@@ -966,6 +1025,11 @@ export const MailList = memo(
             <div className="h-2" />
           )}
         </div>
+        <MailPreview
+          messageId={hoveredId}
+          isVisible={!!hoveredId}
+          position={previewPosition}
+        />
       </>
     );
   },
