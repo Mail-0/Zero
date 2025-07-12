@@ -60,3 +60,6 @@ worker-configuration.d.ts
 tsx-0/
 
 tools.json
+
+node-compile-cache/*
+update-check/*
