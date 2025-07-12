@@ -46,6 +46,13 @@ import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Categories } from './mail';
 import { useAtom } from 'jotai';
+import {
+  PREVIEW_WIDTH,
+  PREVIEW_SHOW_DELAY,
+  PREVIEW_HIDE_DELAY,
+  PREVIEW_MARGIN,
+  PREVIEW_OFFSET,
+} from '@/lib/constants';
 
 const Thread = memo(
   function Thread({
@@ -696,11 +703,13 @@ export const MailList = memo(
           const viewportHeight = window.innerHeight;
           const viewportWidth = window.innerWidth;
           const previewMaxHeight = viewportHeight * 0.8;
-          const previewWidth = 450; 
-          const margin = 16;
+          const previewWidth = PREVIEW_WIDTH;
+          const margin = PREVIEW_MARGIN;
 
           let top = rect.top;
-          let left = rect.right + 20;
+          let left = rect.right + PREVIEW_OFFSET;
+
+          // Adjust vertical position
           if (top + previewMaxHeight > viewportHeight - margin) {
             top = viewportHeight - previewMaxHeight - margin;
           }
@@ -708,8 +717,9 @@ export const MailList = memo(
             top = margin;
           }
 
+          // Adjust horizontal position
           if (left + previewWidth > viewportWidth - margin) {
-            left = rect.left - previewWidth - 20;
+            left = rect.left - previewWidth - PREVIEW_OFFSET;
           }
 
           setPreviewPosition({
@@ -718,7 +728,7 @@ export const MailList = memo(
           });
           setHoveredId(id);
         }
-      }, 500);
+      }, PREVIEW_SHOW_DELAY);
     }, []);
 
     const handleMouseLeave = useCallback(() => {
@@ -726,15 +736,15 @@ export const MailList = memo(
 
       hoverTimer.current = setTimeout(() => {
         setHoveredId(null);
-      }, 300);
+      }, PREVIEW_HIDE_DELAY);
     }, []);
 
-    // Clean up timer on unmount
+    // Clean up timer on unmount and when hoveredId changes
     useEffect(() => {
       return () => {
         if (hoverTimer.current) clearTimeout(hoverTimer.current);
       };
-    }, []);
+    }, [hoveredId]);
 
     useEffect(() => {
       itemsRef.current = items;

@@ -12,6 +12,12 @@ export const BASE_URL = import.meta.env.VITE_PUBLIC_APP_URL;
 export const MAX_URL_LENGTH = 2000;
 export const CACHE_BURST_KEY = 'cache-burst:v0.0.5';
 
+export const PREVIEW_WIDTH = 450;
+export const PREVIEW_SHOW_DELAY = 500;
+export const PREVIEW_HIDE_DELAY = 300;
+export const PREVIEW_MARGIN = 16;
+export const PREVIEW_OFFSET = 20;
+
 export const emailProviders = [
   {
     name: 'Gmail',
