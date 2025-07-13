@@ -173,9 +173,14 @@ export function NavMain({ items }: NavMainProps) {
   );
 
   const onSubmit = async (data: LabelType) => {
-    await createLabel(data);
-    toast.success('Label created successfully');
-    setTimeout(() => refetch(), 200);
+    try {
+      await createLabel(data);
+      toast.success('Label created successfully');
+      setTimeout(() => refetch(), 200);
+    } catch (error) {
+      toast.error('Failed to create label. Please try again.');
+      console.error('Label creation failed:', error);
+    }
   };
 
   return (
