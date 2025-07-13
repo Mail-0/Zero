@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Trash } from '@/components/icons/icons';
 import { trpcClient } from '@/providers/query-provider';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
+import { useSearchValue } from '@/hooks/use-search-value';
 
 interface Props {
   folder: string;
@@ -20,6 +20,7 @@ interface ListThreadsParams {
 export default function EmptyFolderButton({ folder }: Props) {
   const { optimisticDeleteThreads, optimisticMoveThreadsTo } = useOptimisticActions();
   const [isLoading, setIsLoading] = useState(false);
+  const [searchValue] = useSearchValue();
 
   const handleEmptyFolder = useCallback(async () => {
     // Add input validation and rate limiting
@@ -38,7 +39,7 @@ export default function EmptyFolderButton({ folder }: Props) {
 
     setIsLoading(true);
     try {
-      const ids: string[] = [];
+      const ids = new Set<string>();
       let cursor = '';
       const MAX_PER_PAGE = 100;
       const MAX_PAGES = 1000; // Safety limit
@@ -54,37 +55,40 @@ export default function EmptyFolderButton({ folder }: Props) {
         // Fetch mails in pages of 100 until there is no nextPageToken
         const page = await trpcClient.mail.listThreads.query({
           folder,
-          q: '',
+          q: searchValue.value,
           max: MAX_PER_PAGE,
           cursor,
         } satisfies ListThreadsParams);
         
         if (page?.threads?.length) {
-          ids.push(...page.threads.map((t: { id: string }) => t.id));
+          page.threads.forEach((t: { id: string }) => ids.add(t.id));
         }
         if (!page?.nextPageToken) break;
         cursor = page.nextPageToken;
       }
 
-      if (!ids.length) {
+      if (!ids.size) {
         toast.success('Folder already empty');
+        setIsLoading(false);
         return;
       }
 
+      const idsArray = Array.from(ids);
       if (folder === 'spam') {
         // Move all spam to bin
-        optimisticMoveThreadsTo(ids, folder, 'bin');
+        optimisticMoveThreadsTo(idsArray, folder, 'bin');
       } else {
         // Permanently delete everything from bin
-        optimisticDeleteThreads(ids, folder);
+        optimisticDeleteThreads(idsArray, folder);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to empty folder', error);
-      toast.error(error?.message ?? 'Failed to empty folder');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to empty folder';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
-  }, [folder, isLoading, optimisticDeleteThreads, optimisticMoveThreadsTo]);
+  }, [folder, isLoading, optimisticDeleteThreads, optimisticMoveThreadsTo, searchValue.value]);
 
   return (
     <Button
