@@ -55,6 +55,7 @@ export function LabelDialog({
       },
     },
   });
+  const formColor = form.watch('color');
 
   // Reset form when editingLabel changes or dialog opens
   useEffect(() => {
@@ -130,8 +131,8 @@ export function LabelDialog({
                         key={color.backgroundColor}
                         type="button"
                         className={`h-10 w-10 rounded-[4px] border-[0.5px] border-white/10 transition-all ${
-                          form.watch('color')?.backgroundColor === color.backgroundColor &&
-                          form.watch('color')?.textColor === color.textColor
+                          formColor?.backgroundColor.toString() === color.backgroundColor &&
+                          formColor.textColor.toString() === color.textColor
                             ? 'scale-110 ring-2 ring-blue-500 ring-offset-1'
                             : 'hover:scale-105'
                         }`}
