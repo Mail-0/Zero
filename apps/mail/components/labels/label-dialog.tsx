@@ -50,13 +50,11 @@ export function LabelDialog({
     defaultValues: {
       name: '',
       color: {
-        backgroundColor: '',
-        textColor: '',
+        backgroundColor: '#202020',
+        textColor: '#FFFFFF',
       },
     },
   });
-
-  const formColor = form.watch('color');
 
   // Reset form when editingLabel changes or dialog opens
   useEffect(() => {
@@ -64,12 +62,12 @@ export function LabelDialog({
       if (editingLabel) {
         form.reset({
           name: editingLabel.name,
-          color: editingLabel.color || { backgroundColor: '#E2E2E2', textColor: '#000000' },
+          color: editingLabel.color || { backgroundColor: '#202020', textColor: '#FFFFFF' },
         });
       } else {
         form.reset({
           name: '',
-          color: { backgroundColor: '#E2E2E2', textColor: '#000000' },
+          color: { backgroundColor: '#202020', textColor: '#FFFFFF' },
         });
       }
     }
@@ -85,7 +83,7 @@ export function LabelDialog({
     setDialogOpen(false);
     form.reset({
       name: '',
-      color: { backgroundColor: '#E2E2E2', textColor: '#000000' },
+      color: { backgroundColor: '#202020', textColor: '#FFFFFF' },
     });
   };
 
@@ -132,8 +130,8 @@ export function LabelDialog({
                         key={color.backgroundColor}
                         type="button"
                         className={`h-10 w-10 rounded-[4px] border-[0.5px] border-white/10 transition-all ${
-                          formColor?.backgroundColor.toString() === color.backgroundColor &&
-                          formColor.textColor.toString() === color.textColor
+                          form.watch('color')?.backgroundColor === color.backgroundColor &&
+                          form.watch('color')?.textColor === color.textColor
                             ? 'scale-110 ring-2 ring-blue-500 ring-offset-1'
                             : 'hover:scale-105'
                         }`}

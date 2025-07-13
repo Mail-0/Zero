@@ -47,19 +47,15 @@ export const labelsRouter = router({
             textColor: z.string(),
           })
           .default({
-            backgroundColor: '',
-            textColor: '',
+            backgroundColor: '#202020',
+            textColor: '#FFFFFF',
           }),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const { activeConnection } = ctx;
       const agent = await getZeroAgent(activeConnection.id);
-      const label = {
-        ...input,
-        type: 'user',
-      };
-      return await agent.createLabel(label);
+      return await agent.createLabel(input);
     }),
   update: activeDriverProcedure
     .use(
