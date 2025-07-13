@@ -290,8 +290,7 @@ export function AIChat({
                 <div key={`${message.id}-${index}`} className="mb-2 flex flex-col">
                   {toolParts.map(
                     (part, index) =>
-                      part.toolInvocation &&
-                      part.toolInvocation.result && (
+                      part.toolInvocation?.result && (
                         <ToolResponse
                           key={`${part.toolInvocation.toolName}-${index}`}
                           toolName={part.toolInvocation.toolName}
