@@ -41,7 +41,7 @@ export default function SelectAllCheckbox({ className }: { className?: string })
         const page = await trpcClient.mail.listThreads.query({
           folder,
           q: query,
-          max: MAX_PER_PAGE,
+          maxResults: MAX_PER_PAGE,
           cursor,
         });
         if (page?.threads?.length) {

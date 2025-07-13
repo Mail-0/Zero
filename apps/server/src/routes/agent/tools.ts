@@ -1,10 +1,10 @@
-import { generateText, streamText, tool, type DataStreamWriter } from 'ai';
 import { composeEmail } from '../../trpc/routes/ai/compose';
-import type { MailManager } from '../../lib/driver/types';
 import { perplexity } from '@ai-sdk/perplexity';
+import { generateText, tool } from 'ai';
 
 import { colors } from '../../lib/prompts';
 import { env } from 'cloudflare:workers';
+import type { ZeroAgent } from '../chat';
 import { Tools } from '../../types';
 import { z } from 'zod';
 
@@ -103,14 +103,23 @@ export const getEmbeddingVector = async (
 //     },
 //   });
 
-const getEmail = (driver: MailManager) =>
+/**
+ * ⚠️  IMPORTANT
+ * Do NOT return the full thread here – it bloats the conversation state and
+ * may hit the 128 MB cap in Cloudflare Workers. We only hand back a lightweight
+ * tag that the front-end can interpret.
+ *
+ * The tag format must be exactly: <thread id="{id}"/>
+ */
+const getEmail = (_: ZeroAgent) =>
   tool({
-    description: 'Get a specific email thread by ID',
+    description: 'Return a placeholder tag for a specific email thread by ID',
     parameters: z.object({
       id: z.string().describe('The ID of the email thread to retrieve'),
     }),
     execute: async ({ id }) => {
-      return await driver.get(id);
+      /* nothing to fetch server-side any more */
+      return `<thread id="${id}"/>`;
     },
   });
 
@@ -145,46 +154,61 @@ const composeEmailTool = (connectionId: string) =>
     },
   });
 
-const listEmails = (driver: MailManager) =>
-  tool({
-    description: 'List emails in a specific folder',
-    parameters: z.object({
-      folder: z.string().describe('The folder to list emails from'),
-      query: z.string().optional().describe('The query to filter emails'),
-      maxResults: z.number().optional().describe('The maximum number of results to return'),
-      labelIds: z.array(z.string()).optional().describe('The labels to filter emails'),
-      pageToken: z.string().optional().describe('The page token to continue listing emails'),
-    }),
-    execute: async (params) => {
-      return await driver.list(params);
-    },
-  });
+// const listEmails = (agent: ZeroAgent) =>
+//   tool({
+//     description: 'List emails in a specific folder',
+//     parameters: z.object({
+//       folder: z.string().describe('The folder to list emails from').default('inbox'),
+//       maxResults: z
+//         .number()
+//         .optional()
+//         .describe('The maximum number of results to return')
+//         .default(5),
+//       labelIds: z.array(z.string()).optional().describe('The labels to filter emails'),
+//       pageToken: z.string().optional().describe('The page token to continue listing emails'),
+//     }),
+//     execute: async (params) => {
+//       return await agent.list(params);
+//     },
+//   });
 
-const markAsRead = (driver: MailManager) =>
+const markAsRead = (agent: ZeroAgent) =>
   tool({
     description: 'Mark emails as read',
     parameters: z.object({
       threadIds: z.array(z.string()).describe('The IDs of the threads to mark as read'),
     }),
     execute: async ({ threadIds }) => {
-      await driver.markAsRead(threadIds);
+      await agent.markAsRead(threadIds);
       return { threadIds, success: true };
     },
   });
 
-const markAsUnread = (driver: MailManager) =>
+// const inboxRag = (agent: ZeroAgent, dataStream?: DataStreamWriter) =>
+//   tool({
+//     description: 'Search the inbox for emails',
+//     parameters: z.object({
+//       query: z.string().describe('The query to search the inbox for'),
+//     }),
+//     execute: async ({ query }) => {
+//       console.log('inboxRag', query);
+//       return await agent.inboxRag(query, dataStream);
+//     },
+//   });
+
+const markAsUnread = (agent: ZeroAgent) =>
   tool({
     description: 'Mark emails as unread',
     parameters: z.object({
       threadIds: z.array(z.string()).describe('The IDs of the threads to mark as unread'),
     }),
     execute: async ({ threadIds }) => {
-      await driver.markAsUnread(threadIds);
+      await agent.markAsUnread(threadIds);
       return { threadIds, success: true };
     },
   });
 
-const modifyLabels = (driver: MailManager) =>
+const modifyLabels = (agent: ZeroAgent) =>
   tool({
     description: 'Modify labels on emails',
     parameters: z.object({
@@ -195,21 +219,21 @@ const modifyLabels = (driver: MailManager) =>
       }),
     }),
     execute: async ({ threadIds, options }) => {
-      await driver.modifyLabels(threadIds, options);
+      await agent.modifyLabels(threadIds, options.addLabels, options.removeLabels);
       return { threadIds, options, success: true };
     },
   });
 
-const getUserLabels = (driver: MailManager) =>
+const getUserLabels = (agent: ZeroAgent) =>
   tool({
     description: 'Get all user labels',
     parameters: z.object({}),
     execute: async () => {
-      return await driver.getUserLabels();
+      return await agent.getUserLabels();
     },
   });
 
-const sendEmail = (driver: MailManager) =>
+const sendEmail = (agent: ZeroAgent) =>
   tool({
     description: 'Send a new email',
     parameters: z.object({
@@ -246,13 +270,13 @@ const sendEmail = (driver: MailManager) =>
         const { draftId, ...mail } = data;
 
         if (draftId) {
-          await driver.sendDraft(draftId, {
+          await agent.sendDraft(draftId, {
             ...mail,
             attachments: [],
             headers: {},
           });
         } else {
-          await driver.create({
+          await agent.create({
             ...mail,
             attachments: [],
             headers: {},
@@ -269,7 +293,7 @@ const sendEmail = (driver: MailManager) =>
     },
   });
 
-const createLabel = (driver: MailManager) =>
+const createLabel = (agent: ZeroAgent) =>
   tool({
     description: 'Create a new label with custom colors, if it does nto exist already',
     parameters: z.object({
@@ -288,48 +312,48 @@ const createLabel = (driver: MailManager) =>
         }),
     }),
     execute: async ({ name, backgroundColor, textColor }) => {
-      await driver.createLabel({ name, color: { backgroundColor, textColor } });
+      await agent.createLabel({ name, color: { backgroundColor, textColor } });
       return { name, backgroundColor, textColor, success: true };
     },
   });
 
-const bulkDelete = (driver: MailManager) =>
+const bulkDelete = (agent: ZeroAgent) =>
   tool({
     description: 'Move multiple emails to trash by adding the TRASH label',
     parameters: z.object({
       threadIds: z.array(z.string()).describe('Array of email IDs to move to trash'),
     }),
     execute: async ({ threadIds }) => {
-      await driver.modifyLabels(threadIds, { addLabels: ['TRASH'], removeLabels: [] });
+      await agent.modifyLabels(threadIds, ['TRASH'], []);
       return { threadIds, success: true };
     },
   });
 
-const bulkArchive = (driver: MailManager) =>
+const bulkArchive = (agent: ZeroAgent) =>
   tool({
     description: 'Move multiple emails to the archive by removing the INBOX label',
     parameters: z.object({
       threadIds: z.array(z.string()).describe('Array of email IDs to move to archive'),
     }),
     execute: async ({ threadIds }) => {
-      await driver.modifyLabels(threadIds, { addLabels: [], removeLabels: ['INBOX'] });
+      await agent.modifyLabels(threadIds, [], ['INBOX']);
       return { threadIds, success: true };
     },
   });
 
-const deleteLabel = (driver: MailManager) =>
+const deleteLabel = (agent: ZeroAgent) =>
   tool({
     description: "Delete a label from the user's account",
     parameters: z.object({
       id: z.string().describe('The ID of the label to delete'),
     }),
     execute: async ({ id }) => {
-      await driver.deleteLabel(id);
+      await agent.deleteLabel(id);
       return { id, success: true };
     },
   });
 
-export const webSearch = (dataStream?: DataStreamWriter) =>
+export const webSearch = () =>
   tool({
     description: 'Search the web for information using Perplexity AI',
     parameters: z.object({
@@ -337,22 +361,6 @@ export const webSearch = (dataStream?: DataStreamWriter) =>
     }),
     execute: async ({ query }) => {
       try {
-        if (dataStream) {
-          const response = streamText({
-            model: perplexity('sonar'),
-            messages: [
-              { role: 'system', content: 'Be precise and concise.' },
-              { role: 'system', content: 'Do not include sources in your response.' },
-              { role: 'system', content: 'Do not use markdown formatting in your response.' },
-              { role: 'user', content: query },
-            ],
-            maxTokens: 1024,
-          });
-          response.mergeIntoDataStream(dataStream);
-
-          return { type: 'streaming_response', query };
-        }
-
         const response = await generateText({
           model: perplexity('sonar'),
           messages: [
@@ -372,27 +380,32 @@ export const webSearch = (dataStream?: DataStreamWriter) =>
     },
   });
 
-export const tools = async (
-  driver: MailManager,
-  connectionId: string,
-  dataStream: DataStreamWriter,
-) => {
+export const tools = async (agent: ZeroAgent, connectionId: string) => {
   return {
-    [Tools.GetThread]: getEmail(driver),
+    [Tools.GetThread]: getEmail(agent),
     [Tools.ComposeEmail]: composeEmailTool(connectionId),
-    [Tools.ListThreads]: listEmails(driver),
-    [Tools.MarkThreadsRead]: markAsRead(driver),
-    [Tools.MarkThreadsUnread]: markAsUnread(driver),
-    [Tools.ModifyLabels]: modifyLabels(driver),
-    [Tools.GetUserLabels]: getUserLabels(driver),
-    [Tools.SendEmail]: sendEmail(driver),
-    [Tools.CreateLabel]: createLabel(driver),
-    [Tools.BulkDelete]: bulkDelete(driver),
-    [Tools.BulkArchive]: bulkArchive(driver),
-    [Tools.DeleteLabel]: deleteLabel(driver),
-    // [Tools.AskZeroMailbox]: askZeroMailbox(connectionId),
-    // [Tools.AskZeroThread]: askZeroThread(connectionId),
-    [Tools.WebSearch]: webSearch(dataStream),
+    [Tools.MarkThreadsRead]: markAsRead(agent),
+    [Tools.MarkThreadsUnread]: markAsUnread(agent),
+    [Tools.ModifyLabels]: modifyLabels(agent),
+    [Tools.GetUserLabels]: getUserLabels(agent),
+    [Tools.SendEmail]: sendEmail(agent),
+    [Tools.CreateLabel]: createLabel(agent),
+    [Tools.BulkDelete]: bulkDelete(agent),
+    [Tools.BulkArchive]: bulkArchive(agent),
+    [Tools.DeleteLabel]: deleteLabel(agent),
+    [Tools.WebSearch]: tool({
+      description: 'Search the web for information using Perplexity AI',
+      parameters: z.object({
+        query: z.string().describe('The query to search the web for'),
+      }),
+    }),
+    [Tools.InboxRag]: tool({
+      description:
+        'Search the inbox for emails using natural language. Returns only an array of threadIds.',
+      parameters: z.object({
+        query: z.string().describe('The query to search the inbox for'),
+      }),
+    }),
     // ...(await getGoogleTools(connectionId)),
   };
 };

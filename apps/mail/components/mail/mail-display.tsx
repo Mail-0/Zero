@@ -297,7 +297,7 @@ const ThreadAttachments = ({ attachments }: { attachments: Attachment[] }) => {
       <div className="mt-2 flex flex-wrap gap-2">
         {attachments.map((attachment) => (
           <button
-            key={attachment.attachmentId}
+            key={`${attachment.attachmentId}-${attachment.filename}`}
             onClick={() => handleDownload(attachment)}
             className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-sm hover:bg-[#F0F0F0] dark:bg-[#262626] dark:hover:bg-[#303030]"
           >
@@ -1641,7 +1641,10 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                 {emailData?.attachments && emailData?.attachments.length > 0 ? (
                   <div className="mb-4 flex flex-wrap items-center gap-2 px-4 pt-4">
                     {emailData?.attachments.map((attachment) => (
-                      <div key={attachment.filename} className="flex">
+                      <div
+                        key={`${attachment.filename}-${attachment.attachmentId}`}
+                        className="flex"
+                      >
                         <button
                           className="flex cursor-pointer items-center gap-1 rounded-[5px] bg-[#FAFAFA] px-1.5 py-1 text-sm font-medium hover:bg-[#F0F0F0] dark:bg-[#262626] dark:hover:bg-[#303030]"
                           onClick={() => openAttachment(attachment)}

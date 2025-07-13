@@ -15,4 +15,5 @@ export enum Tools {
   AskZeroMailbox = 'askZeroMailbox',
   AskZeroThread = 'askZeroThread',
   WebSearch = 'webSearch',
+  InboxRag = 'inboxRag',
 }

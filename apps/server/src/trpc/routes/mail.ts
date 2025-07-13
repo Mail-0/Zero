@@ -1,13 +1,9 @@
-import {
-  activeDriverProcedure,
-  router,
-  privateProcedure,
-} from '../trpc';
+import { activeDriverProcedure, router, privateProcedure } from '../trpc';
 import { updateWritingStyleMatrix } from '../../services/writing-style-service';
-import { serializedFileSchema } from '../../lib/schemas';
-import { defaultPageSize, FOLDERS, } from '../../lib/utils';
 import { IGetThreadResponseSchema } from '../../lib/driver/types';
 import { processEmailHtml } from '../../lib/email-processor';
+import { defaultPageSize, FOLDERS } from '../../lib/utils';
+import { serializedFileSchema } from '../../lib/schemas';
 import type { DeleteAllSpamResponse } from '../../types';
 import { getZeroAgent } from '../../lib/server-utils';
 
@@ -63,20 +59,20 @@ export const mailRouter = router({
       z.object({
         folder: z.string().optional().default('inbox'),
         q: z.string().optional().default(''),
-        max: z.number().optional().default(defaultPageSize),
+        maxResults: z.number().optional().default(defaultPageSize),
         cursor: z.string().optional().default(''),
         labelIds: z.array(z.string()).optional().default([]),
       }),
     )
     .query(async ({ ctx, input }) => {
-      const { folder, max, cursor, q, labelIds } = input;
+      const { folder, maxResults, cursor, q, labelIds } = input;
       const { activeConnection } = ctx;
       const agent = await getZeroAgent(activeConnection.id);
 
       if (folder === FOLDERS.DRAFT) {
         const drafts = await agent.listDrafts({
           q,
-          maxResults: max,
+          maxResults,
           pageToken: cursor,
         });
         return drafts;
@@ -84,7 +80,7 @@ export const mailRouter = router({
       if (q) {
         const threadsResponse = await agent.rawListThreads({
           labelIds: labelIds,
-          maxResults: max,
+          maxResults,
           pageToken: cursor,
           query: q,
           folder,
@@ -95,7 +91,7 @@ export const mailRouter = router({
       const labelIdsToUse = folderLabelId ? [...labelIds, folderLabelId] : labelIds;
       const threadsResponse = await agent.listThreads({
         labelIds: labelIdsToUse,
-        maxResults: max,
+        maxResults,
         pageToken: cursor,
         query: q,
         folder,

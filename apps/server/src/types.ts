@@ -212,7 +212,6 @@ export interface DeleteAllSpamResponse {
 export enum Tools {
   GetThread = 'getThread',
   ComposeEmail = 'composeEmail',
-  ListThreads = 'listThreads',
   DeleteEmail = 'deleteEmail',
   MarkThreadsRead = 'markThreadsRead',
   MarkThreadsUnread = 'markThreadsUnread',
@@ -226,6 +225,7 @@ export enum Tools {
   AskZeroMailbox = 'askZeroMailbox',
   AskZeroThread = 'askZeroThread',
   WebSearch = 'webSearch',
+  InboxRag = 'inboxRag',
 }
 
 export type AppContext = Context<{ Bindings: Env }>;

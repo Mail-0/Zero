@@ -37,10 +37,10 @@ import { AIChatAgent } from 'agents/ai-chat-agent';
 import { tools as authTools } from './agent/tools';
 import { processToolCalls } from './agent/utils';
 import type { Message as ChatMessage } from 'ai';
+import { anthropic } from '@ai-sdk/anthropic';
 import { getPromptName } from '../pipelines';
 import { connection } from '../db/schema';
 import { getPrompt } from '../lib/brain';
-import { openai } from '@ai-sdk/openai';
 import { FOLDERS } from '../lib/utils';
 import { and, eq } from 'drizzle-orm';
 import { McpAgent } from 'agents/mcp';
@@ -309,6 +309,20 @@ export class AgentRpcDO extends RpcTarget {
   async syncThreads(folder: string) {
     return await this.mainDo.syncThreads(folder);
   }
+
+  async inboxRag(query: string) {
+    return await this.mainDo.inboxRag(query);
+  }
+
+  async searchThreads(params: {
+    query: string;
+    folder?: string;
+    maxResults?: number;
+    labelIds?: string[];
+    pageToken?: string;
+  }) {
+    return await this.mainDo.searchThreads(params);
+  }
 }
 
 const shouldDropTables = env.DROP_AGENT_TABLES === 'true';
@@ -368,9 +382,9 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
             throw new Error('Unauthorized no driver or connectionId [2]');
           }
         }
-        const orchestrator = new ToolOrchestrator(dataStream);
+        const orchestrator = new ToolOrchestrator(dataStream, connectionId);
         const rawTools = {
-          ...(await authTools(this.driver, connectionId, dataStream)),
+          ...(await authTools(this, connectionId)),
           buildGmailSearchQuery,
         };
         const tools = orchestrator.processTools(rawTools);
@@ -384,14 +398,12 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
         );
 
         const result = streamText({
-          model: openai(env.OPENAI_MODEL || 'gpt-4o'),
+          model: anthropic(env.OPENAI_MODEL || 'claude-3-5-haiku-latest'),
+          maxSteps: 10,
           messages: processedMessages,
           tools,
           onFinish,
-          system: await getPrompt(
-            getPromptName(connectionId, EPrompts.Chat),
-            AiChatPrompt('', '', ''),
-          ),
+          system: await getPrompt(getPromptName(connectionId, EPrompts.Chat), AiChatPrompt('')),
         });
 
         result.mergeIntoDataStream(dataStream);
@@ -575,6 +587,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     return this.tryCatchChat(async () => {
       for await (const chunk of response.body!) {
         const body = decoder.decode(chunk);
+        console.log('reply', body);
 
         this.broadcastChatMessage({
           id,
@@ -732,7 +745,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
 
   async buildGmailSearchQuery(query: string) {
     const result = await generateText({
-      model: openai(env.OPENAI_MODEL || 'gpt-4o'),
+      model: anthropic(env.OPENAI_MODEL || 'claude-3-5-haiku-latest'),
       system: GmailSearchAssistantSystemPrompt(),
       prompt: query,
     });
@@ -890,7 +903,11 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
         // Convert receivedOn to ISO format for proper sorting
         const normalizedReceivedOn = new Date(latest.receivedOn).toISOString();
 
-        await env.THREADS_BUCKET.put(this.getThreadKey(threadId), JSON.stringify(threadData));
+        await env.THREADS_BUCKET.put(this.getThreadKey(threadId), JSON.stringify(threadData), {
+          customMetadata: {
+            threadId,
+          },
+        });
 
         this.sql`
           INSERT OR REPLACE INTO threads (
@@ -1022,14 +1039,86 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     }
   }
 
+  async inboxRag(query: string) {
+    if (!env.AUTORAG_ID) return { result: 'Not enabled', data: [] };
+    const answer = await env.AI.autorag(env.AUTORAG_ID).aiSearch({
+      query: query,
+      //   rewrite_query: true,
+      max_num_results: 3,
+      ranking_options: {
+        score_threshold: 0.3,
+      },
+      //   stream: true,
+      filters: {
+        type: 'eq',
+        key: 'folder',
+        value: `${this.name}/`,
+      },
+    });
+    return { result: answer.response, data: answer.data };
+  }
+
+  async searchThreads(params: {
+    query: string;
+    folder?: string;
+    maxResults?: number;
+    labelIds?: string[];
+    pageToken?: string;
+  }) {
+    const { query, folder = 'inbox', maxResults = 50, labelIds = [], pageToken } = params;
+
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+
+    // Create parallel Effect operations
+    const ragEffect = Effect.tryPromise(() =>
+      this.inboxRag(query).then((rag) => {
+        const ids = rag?.data?.map((d) => d.attributes.threadId).filter(Boolean) ?? [];
+        return ids.slice(0, maxResults);
+      }),
+    ).pipe(Effect.catchAll(() => Effect.succeed([])));
+
+    const rawEffect = Effect.tryPromise(() =>
+      this.driver!.list({
+        folder,
+        query,
+        labelIds,
+        maxResults,
+        pageToken,
+      }).then((r) => r.threads.map((t) => t.id)),
+    ).pipe(Effect.catchAll(() => Effect.succeed([])));
+
+    // Run both in parallel and wait for results
+    const results = await Effect.runPromise(
+      Effect.all([ragEffect, rawEffect], { concurrency: 'unbounded' }),
+    );
+
+    const [ragIds, rawIds] = results;
+
+    // Return InboxRag results if found, otherwise fallback to raw
+    if (ragIds.length > 0) {
+      return {
+        threadIds: ragIds,
+        source: 'autorag' as const,
+      };
+    }
+
+    return {
+      threadIds: rawIds,
+      source: 'raw' as const,
+      nextPageToken: pageToken,
+    };
+  }
+
   async getThreadsFromDB(params: {
     labelIds?: string[];
     folder?: string;
     q?: string;
-    max?: number;
+    maxResults?: number;
     pageToken?: string;
   }) {
-    const { labelIds = [], folder, q, max = 50, pageToken } = params;
+    const { labelIds = [], folder, q, maxResults = 50, pageToken } = params;
 
     try {
       // Build WHERE conditions
@@ -1084,7 +1173,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
             SELECT id, latest_received_on
             FROM threads
             ORDER BY latest_received_on DESC
-            LIMIT ${max}
+            LIMIT ${maxResults}
           `;
       } else if (whereConditions.length === 1) {
         // Single condition
@@ -1096,7 +1185,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
               FROM threads
               WHERE latest_received_on < ${cursorValue}
               ORDER BY latest_received_on DESC
-              LIMIT ${max}
+              LIMIT ${maxResults}
             `;
         } else if (folder) {
           // Folder condition
@@ -1108,7 +1197,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
                 SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${folderLabel}
               )
               ORDER BY latest_received_on DESC
-              LIMIT ${max}
+              LIMIT ${maxResults}
             `;
         } else {
           // Single label condition
@@ -1120,7 +1209,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
                 SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${labelId}
               )
               ORDER BY latest_received_on DESC
-              LIMIT ${max}
+              LIMIT ${maxResults}
             `;
         }
       } else {
@@ -1135,7 +1224,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
                 SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${folderLabel}
               ) AND latest_received_on < ${pageToken}
               ORDER BY latest_received_on DESC
-              LIMIT ${max}
+              LIMIT ${maxResults}
             `;
         } else if (labelIds.length === 1 && pageToken && !folder) {
           // Single label + cursor
@@ -1147,7 +1236,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
                 SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${labelId}
               ) AND latest_received_on < ${pageToken}
               ORDER BY latest_received_on DESC
-              LIMIT ${max}
+              LIMIT ${maxResults}
             `;
         } else {
           // For now, fallback to just cursor if complex combinations
@@ -1157,7 +1246,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
               FROM threads
               WHERE latest_received_on < ${cursorValue}
               ORDER BY latest_received_on DESC
-              LIMIT ${max}
+              LIMIT ${maxResults}
             `;
         }
       }
@@ -1169,7 +1258,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
 
       // Use latest_received_on for pagination cursor
       const nextPageToken =
-        threads.length === max && result.length > 0
+        threads.length === maxResults && result.length > 0
           ? result[result.length - 1].latest_received_on
           : null;
 
@@ -1318,7 +1407,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
       },
       async (s) => {
         const result = await generateText({
-          model: openai(env.OPENAI_MODEL || 'gpt-4o'),
+          model: anthropic(env.OPENAI_MODEL || 'claude-3-5-haiku-latest'),
           system: GmailSearchAssistantSystemPrompt(),
           prompt: s.query,
         });

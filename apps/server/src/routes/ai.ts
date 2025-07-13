@@ -4,7 +4,6 @@ import { composeEmail } from '../trpc/routes/ai/compose';
 import { getZeroAgent } from '../lib/server-utils';
 import { env } from 'cloudflare:workers';
 import { openai } from '@ai-sdk/openai';
-import { FOLDERS } from '../lib/utils';
 import { generateText } from 'ai';
 import { Tools } from '../types';
 import { createDb } from '../db';
@@ -41,23 +40,6 @@ aiRouter.post('/do/:action', async (c) => {
     console.log('[DEBUG] action', action, body);
     const agent = await getZeroAgent(connection.id);
     switch (action) {
-      case Tools.ListThreads:
-        const threads = await Promise.all(
-          (
-            await agent.listThreads({
-              folder: body.folder ?? 'inbox',
-              maxResults: body.maxResults ?? 5,
-            })
-          ).threads.map((thread: any) =>
-            agent.getThread(thread.id).then((thread) => ({
-              id: thread.latest?.id,
-              subject: thread.latest?.subject,
-              sender: thread.latest?.sender,
-              date: thread.latest?.receivedOn,
-            })),
-          ),
-        );
-        return c.json({ success: true, result: threads });
       case Tools.ComposeEmail:
         const newBody = await composeEmail({
           prompt: body.prompt,
@@ -174,52 +156,51 @@ aiRouter.post('/call', async (c) => {
           };
         },
       }),
-      [Tools.ListThreads]: tool({
-        description: 'List threads',
-        parameters: z.object({
-          folder: z.string().default(FOLDERS.INBOX).describe('The folder to list threads from'),
-          query: z.string().optional().describe('The query to filter threads by'),
-          maxResults: z
-            .number()
-            .optional()
-            .default(5)
-            .describe('The maximum number of threads to return'),
-          labelIds: z.array(z.string()).optional().describe('The label IDs to filter threads by'),
-          pageToken: z.string().optional().describe('The page token to use for pagination'),
-        }),
-        execute: async (params) => {
-          console.log('[DEBUG] listThreads', params);
+      //     description: 'List threads',
+      //     parameters: z.object({
+      //       folder: z.string().default(FOLDERS.INBOX).describe('The folder to list threads from'),
+      //       query: z.string().optional().describe('The query to filter threads by'),
+      //       maxResults: z
+      //         .number()
+      //         .optional()
+      //         .default(5)
+      //         .describe('The maximum number of threads to return'),
+      //       labelIds: z.array(z.string()).optional().describe('The label IDs to filter threads by'),
+      //       pageToken: z.string().optional().describe('The page token to use for pagination'),
+      //     }),
+      //     execute: async (params) => {
+      //       console.log('[DEBUG] listThreads', params);
 
-          const result = await agent.listThreads({
-            folder: params.folder,
-            query: params.query,
-            maxResults: params.maxResults,
-            labelIds: params.labelIds,
-            pageToken: params.pageToken,
-          });
-          const content = await Promise.all(
-            result.threads.map(async (thread: any) => {
-              const loadedThread = await agent.getThread(thread.id);
-              return [
-                {
-                  type: 'text' as const,
-                  text: `Subject: ${loadedThread.latest?.subject} | Received: ${loadedThread.latest?.receivedOn}`,
-                },
-              ];
-            }),
-          );
-          return {
-            content: content.length
-              ? content.flat()
-              : [
-                  {
-                    type: 'text' as const,
-                    text: 'No threads found',
-                  },
-                ],
-          };
-        },
-      }),
+      //       const result = await agent.listThreads({
+      //         folder: params.folder,
+      //         query: params.query,
+      //         maxResults: params.maxResults,
+      //         labelIds: params.labelIds,
+      //         pageToken: params.pageToken,
+      //       });
+      //       const content = await Promise.all(
+      //         result.threads.map(async (thread: any) => {
+      //           const loadedThread = await agent.getThread(thread.id);
+      //           return [
+      //             {
+      //               type: 'text' as const,
+      //               text: `Subject: ${loadedThread.latest?.subject} | Received: ${loadedThread.latest?.receivedOn}`,
+      //             },
+      //           ];
+      //         }),
+      //       );
+      //       return {
+      //         content: content.length
+      //           ? content.flat()
+      //           : [
+      //               {
+      //                 type: 'text' as const,
+      //                 text: 'No threads found',
+      //               },
+      //             ],
+      //       };
+      //     },
+      //   }),
       [Tools.GetThread]: tool({
         description: 'Get a thread',
         parameters: z.object({
