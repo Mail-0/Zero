@@ -68,7 +68,7 @@ export function LabelDialog({
       } else {
         form.reset({
           name: '',
-          color: { backgroundColor: '#E2E2E2', textColor: '#000000' },
+          color: { backgroundColor: '#202020', textColor: '#FFFFFF' },
         });
       }
     }
@@ -84,7 +84,7 @@ export function LabelDialog({
     setDialogOpen(false);
     form.reset({
       name: '',
-      color: { backgroundColor: '#E2E2E2', textColor: '#000000' },
+      color: { backgroundColor: '#202020', textColor: '#FFFFFF' },
     });
   };
 
