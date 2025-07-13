@@ -50,7 +50,11 @@ export const labelsRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { activeConnection } = ctx;
       const agent = await getZeroAgent(activeConnection.id);
-      return await agent.createLabel(input);
+      const label = {
+        ...input,
+        type: 'user',
+      };
+      return await agent.createLabel(label);
     }),
   update: activeDriverProcedure
     .use(
