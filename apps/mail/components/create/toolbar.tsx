@@ -3,8 +3,6 @@ import {
   Italic,
   Strikethrough,
   Underline,
-  Code,
-  Link as LinkIcon,
   List,
   ListOrdered,
   Heading1,

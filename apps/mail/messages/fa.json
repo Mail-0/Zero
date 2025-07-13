@@ -370,7 +370,8 @@
       "failedToMute": "بی‌صدا کردن ناموفق بود",
       "failedToUnmute": "فعال کردن صدا ناموفق بود",
       "archived": "بایگانی شد",
-      "failedToArchive": "بایگانی کردن ناموفق بود"
+      "failedToArchive": "بایگانی کردن ناموفق بود",
+      "openInNewTab": "باز کردن در زبانه جدید"
     },
     "units": {
       "mb": "{amount} مگابایت"

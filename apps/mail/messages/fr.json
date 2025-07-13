@@ -370,7 +370,8 @@
       "failedToMute": "Échec de la coupure du son",
       "failedToUnmute": "Échec de la réactivation du son",
       "archived": "Archivé",
-      "failedToArchive": "Échec de l'archivage"
+      "failedToArchive": "Échec de l'archivage",
+      "openInNewTab": "Ouvrir dans un nouvel onglet"
     },
     "units": {
       "mb": "{amount} Mo"

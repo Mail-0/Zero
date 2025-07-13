@@ -370,7 +370,8 @@
       "failedToMute": "Falha ao silenciar",
       "failedToUnmute": "Falha ao ativar som",
       "archived": "Arquivado",
-      "failedToArchive": "Falha ao arquivar"
+      "failedToArchive": "Falha ao arquivar",
+      "openInNewTab": "Abrir em nova aba"
     },
     "units": {
       "mb": "{amount} MB"

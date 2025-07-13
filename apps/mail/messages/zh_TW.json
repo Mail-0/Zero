@@ -370,7 +370,8 @@
       "failedToMute": "靜音失敗",
       "failedToUnmute": "取消靜音失敗",
       "archived": "已封存",
-      "failedToArchive": "封存失敗"
+      "failedToArchive": "封存失敗",
+      "openInNewTab": "在新分頁中開啟"
     },
     "units": {
       "mb": "{amount} MB"

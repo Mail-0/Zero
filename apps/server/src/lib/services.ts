@@ -9,7 +9,7 @@ export const resend = () =>
 
 export const redis = () => new Redis({ url: env.REDIS_URL, token: env.REDIS_TOKEN });
 
-export const twilio = (forceUseRealService = false) => {
+export const twilio = () => {
   //   if (env.NODE_ENV === 'development' && !forceUseRealService) {
   //     return {
   //       messages: {

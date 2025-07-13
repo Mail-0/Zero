@@ -8,7 +8,7 @@ export const labelsRouter = router({
     .use(
       createRateLimiterMiddleware({
         generatePrefix: ({ sessionUser }) => `ratelimit:get-labels-${sessionUser?.id}`,
-        limiter: Ratelimit.slidingWindow(60, '1m'),
+        limiter: Ratelimit.slidingWindow(120, '1m'),
       }),
     )
     .output(

@@ -830,6 +830,7 @@ checksums:
     common/mail/failedToUnmute: 9a9c946ac9980a7845122a5c3bae8f13
     common/mail/archived: cf5127ecfd7e43a35466a1ba5fe16450
     common/mail/failedToArchive: e844b73a518542027803b7ff97e82b89
+    common/mail/openInNewTab: 6844e4922a7a40a7ee25c10ea109cdeb
     common/units/mb: ed9c3b369a1ac40741b182458b69143a
     common/labels/color: 9d53d1d120e8b8954bcae9a322573748
     common/labels/labelName: 682eade7443c047bc680664f821c9e0d

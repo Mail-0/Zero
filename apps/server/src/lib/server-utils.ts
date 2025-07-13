@@ -1,5 +1,3 @@
-import { OutgoingMessageType, type OutgoingMessage } from '../routes/chat';
-import type { IGetThreadResponse } from './driver/types';
 import { getContext } from 'hono/context-storage';
 import { connection } from '../db/schema';
 import type { HonoContext } from '../ctx';
@@ -55,36 +53,6 @@ export const connectionToDriver = (activeConnection: typeof connection.$inferSel
       email: activeConnection.email,
     },
   });
-};
-
-export const notifyUser = async ({
-  connectionId,
-  result,
-  threadId,
-}: {
-  connectionId: string;
-  result: IGetThreadResponse;
-  threadId: string;
-}) => {
-  const mailbox = await getZeroAgent(connectionId);
-
-  try {
-    await mailbox.broadcast(
-      JSON.stringify({
-        type: OutgoingMessageType.Mail_Get,
-        threadId,
-        result,
-      } as OutgoingMessage),
-    );
-  } catch (error) {
-    console.error(`[notifyUser] Failed to broadcast message`, {
-      connectionId,
-      threadId,
-      result,
-      error,
-    });
-    throw error;
-  }
 };
 
 export const verifyToken = async (token: string) => {

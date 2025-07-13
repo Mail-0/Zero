@@ -1,5 +1,4 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useAIFullScreen, useAISidebar } from '../ui/ai-sidebar';
 import { VoiceProvider } from '@/providers/voice-provider';
@@ -91,9 +90,9 @@ const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => voi
       {/* First row */}
       <div className="no-scrollbar relative flex w-full justify-center overflow-x-auto">
         <div className="flex gap-4 px-4">
-          {firstRowQueries.map((query, index) => (
+          {firstRowQueries.map((query) => (
             <button
-              key={index}
+              key={query}
               onClick={() => onQueryClick(query)}
               className="flex-shrink-0 whitespace-nowrap rounded-md bg-[#f0f0f0] p-1 px-2 text-sm text-[#555555] dark:bg-[#262626] dark:text-[#929292]"
             >
@@ -106,9 +105,9 @@ const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => voi
       {/* Second row */}
       <div className="no-scrollbar relative flex w-full justify-center overflow-x-auto">
         <div className="flex gap-4 px-4">
-          {secondRowQueries.map((query, index) => (
+          {secondRowQueries.map((query) => (
             <button
-              key={index}
+              key={query}
               onClick={() => onQueryClick(query)}
               className="flex-shrink-0 whitespace-nowrap rounded-md bg-[#f0f0f0] p-1 px-2 text-sm text-[#555555] dark:bg-[#262626] dark:text-[#929292]"
             >
@@ -227,12 +226,10 @@ const ToolResponse = ({ toolName, result, args }: { toolName: string; result: an
 
 export function AIChat({
   messages,
-  input,
   setInput,
   error,
   handleSubmit,
   status,
-  stop,
 }: AIChatProps): React.ReactElement {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -323,20 +320,20 @@ export function AIChat({
             messages.map((message, index) => {
               const textParts = message.parts.filter((part) => part.type === 'text');
               const toolParts = message.parts.filter((part) => part.type === 'tool-invocation');
-              const streamingTools = [Tools.WebSearch];
+              const streamingTools = new Set([Tools.WebSearch]);
               const doesIncludeStreamingTool = toolParts.some(
                 (part) =>
-                  streamingTools.includes(part.toolInvocation?.toolName as Tools) &&
+                  streamingTools.has(part.toolInvocation?.toolName as Tools) &&
                   part.toolInvocation?.result,
               );
               return (
                 <div key={`${message.id}-${index}`} className="flex flex-col">
-                  {toolParts.map((part, idx) =>
+                  {toolParts.map((part) =>
                     part.toolInvocation &&
                     part.toolInvocation.result &&
-                    !streamingTools.includes(part.toolInvocation.toolName as Tools) ? (
+                    !streamingTools.has(part.toolInvocation.toolName as Tools) ? (
                       <ToolResponse
-                        key={idx}
+                        key={part.toolInvocation.toolName}
                         toolName={part.toolInvocation.toolName}
                         result={part.toolInvocation.result}
                         args={part.toolInvocation.args}

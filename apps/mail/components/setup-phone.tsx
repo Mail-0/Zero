@@ -89,6 +89,7 @@ export const SetupInboxDialog = () => {
         toast.error('Please enter a valid OTP');
       }
     } catch (error) {
+      console.error(error);
       toast.error(
         showOtpInput ? 'Failed to verify phone number' : 'Failed to send verification code',
       );

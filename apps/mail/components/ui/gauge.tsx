@@ -9,8 +9,8 @@ export const Gauge = ({
   value: number;
   size: 'small' | 'medium' | 'large';
   showValue: boolean;
-  color?: String;
-  bgcolor?: String;
+  color?: string;
+  bgcolor?: string;
   max?: number;
 }) => {
   const circumference = 332; //2 * Math.PI * 53; // 2 * pi * radius

@@ -370,7 +370,8 @@
       "failedToMute": "음소거 실패",
       "failedToUnmute": "음소거 해제 실패",
       "archived": "보관됨",
-      "failedToArchive": "보관 실패"
+      "failedToArchive": "보관 실패",
+      "openInNewTab": "새 탭에서 열기"
     },
     "units": {
       "mb": "{amount} MB"

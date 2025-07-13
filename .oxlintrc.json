@@ -1,0 +1,18 @@
+{
+  "plugins": ["react", "unicorn", "typescript", "oxc"],
+  "rules": {
+    "no-alert": "error", // Emit an error message when a call to `alert()` is found
+    "oxc/approx-constant": "warn", // Show a warning when you write a number close to a known constant
+    "no-plusplus": "off", // Allow using the `++` and `--` operators
+    "no-useless-call": "error",
+    "no-accumulating-spread": "error",
+    "no-array-index-key": "error",
+    "jsx-no-jsx-as-prop": "error",
+    "jsx-no-new-array-as-prop": "error",
+    "jsx-no-new-function-as-prop": "error",
+    "jsx-no-new-object-as-prop": "error",
+    "prefer-array-find": "error",
+    "prefer-set-has": "error",
+    "exhaustive-deps": "off"
+  }
+}

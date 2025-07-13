@@ -370,7 +370,8 @@
       "failedToMute": "Nie udało się wyciszyć",
       "failedToUnmute": "Nie udało się wyłączyć wyciszenia",
       "archived": "Zarchiwizowano",
-      "failedToArchive": "Nie udało się zarchiwizować"
+      "failedToArchive": "Nie udało się zarchiwizować",
+      "openInNewTab": "Otwórz w nowej karcie"
     },
     "units": {
       "mb": "{amount} MB"

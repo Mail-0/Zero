@@ -79,6 +79,8 @@ Thank you for your interest in contributing to 0.email! We're excited to have yo
    - Make sure the app runs without errors
    - Test your feature thoroughly
 
+   - Please lint using `pnpm dlx oxlint@latest` or by downloading an IDE extension here: https://oxc.rs/docs/guide/usage/linter.html#vscode-extension
+
 5. **Commit Your Changes**
 
    - Use clear, descriptive commit messages
@@ -193,7 +195,7 @@ When implementing new features, follow these guidelines:
 
 1. **Add English Source Strings**
 
-   - Place all user-facing text in `apps/mail/locales/en.json`
+   - Place all user-facing text in `apps/mail/messages/en.json`
    - Organize strings according to the existing structure
    - Use descriptive, hierarchical keys that identify the feature and context
    - Example: `"pages.settings.connections.disconnectSuccess": "Account disconnected successfully"`

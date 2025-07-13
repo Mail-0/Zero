@@ -370,7 +370,8 @@
       "failedToMute": "म्यूट करने में विफल",
       "failedToUnmute": "अनम्यूट करने में विफल",
       "archived": "आर्काइव किया गया",
-      "failedToArchive": "आर्काइव करने में विफल"
+      "failedToArchive": "आर्काइव करने में विफल",
+      "openInNewTab": "नए टैब में खोलें"
     },
     "units": {
       "mb": "{amount} MB"
