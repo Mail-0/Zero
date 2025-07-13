@@ -16,6 +16,11 @@ import {
 import { CurvedArrow } from '@/components/icons/icons';
 import { LABEL_COLORS } from '@/lib/label-colors';
 import type { Label as LabelType } from '@/types';
+
+const DEFAULT_LABEL_COLORS = {
+  backgroundColor: '#202020',
+  textColor: '#FFFFFF',
+} as const;
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -49,10 +54,7 @@ export function LabelDialog({
   const form = useForm<LabelType>({
     defaultValues: {
       name: '',
-      color: {
-        backgroundColor: '#202020',
-        textColor: '#FFFFFF',
-      },
+      color: DEFAULT_LABEL_COLORS,
     },
   });
   const formColor = form.watch('color');
@@ -68,7 +70,7 @@ export function LabelDialog({
       } else {
         form.reset({
           name: '',
-          color: { backgroundColor: '#202020', textColor: '#FFFFFF' },
+          color: DEFAULT_LABEL_COLORS,
         });
       }
     }
@@ -84,7 +86,7 @@ export function LabelDialog({
     setDialogOpen(false);
     form.reset({
       name: '',
-      color: { backgroundColor: '#202020', textColor: '#FFFFFF' },
+      color: DEFAULT_LABEL_COLORS,
     });
   };
 

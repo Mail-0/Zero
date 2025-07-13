@@ -3,6 +3,11 @@ import { getZeroAgent } from '../../lib/server-utils';
 import { Ratelimit } from '@upstash/ratelimit';
 import { z } from 'zod';
 
+const DEFAULT_LABEL_COLORS = {
+  backgroundColor: '#202020',
+  textColor: '#FFFFFF',
+} as const;
+
 export const labelsRouter = router({
   list: activeDriverProcedure
     .use(
@@ -42,8 +47,8 @@ export const labelsRouter = router({
       z.object({
         name: z.string(),
         color: z.object({
-          backgroundColor: z.string().default('#202020'),
-          textColor: z.string().default('#FFFFFF'),
+          backgroundColor: z.string().regex(/^#[0-9A-F]{6}$/i, 'Must be a valid hex color').default(DEFAULT_LABEL_COLORS.backgroundColor),
+          textColor: z.string().regex(/^#[0-9A-F]{6}$/i, 'Must be a valid hex color').default(DEFAULT_LABEL_COLORS.textColor),
         }),
       }),
     )
