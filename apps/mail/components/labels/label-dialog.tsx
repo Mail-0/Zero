@@ -63,12 +63,12 @@ export function LabelDialog({
       if (editingLabel) {
         form.reset({
           name: editingLabel.name,
-          color: editingLabel.color || { backgroundColor: '#202020', textColor: '#FFFFFF' },
+          color: editingLabel.color || { backgroundColor: '#E2E2E2', textColor: '#000000' },
         });
       } else {
         form.reset({
           name: '',
-          color: { backgroundColor: '#202020', textColor: '#FFFFFF' },
+          color: { backgroundColor: '#E2E2E2', textColor: '#000000' },
         });
       }
     }
@@ -84,7 +84,7 @@ export function LabelDialog({
     setDialogOpen(false);
     form.reset({
       name: '',
-      color: { backgroundColor: '#202020', textColor: '#FFFFFF' },
+      color: { backgroundColor: '#E2E2E2', textColor: '#000000' },
     });
   };
 
