@@ -41,15 +41,10 @@ export const labelsRouter = router({
     .input(
       z.object({
         name: z.string(),
-        color: z
-          .object({
-            backgroundColor: z.string(),
-            textColor: z.string(),
-          })
-          .default({
-            backgroundColor: '#202020',
-            textColor: '#FFFFFF',
-          }),
+        color: z.object({
+          backgroundColor: z.string().default('#202020'),
+          textColor: z.string().default('#FFFFFF'),
+        }),
       }),
     )
     .mutation(async ({ ctx, input }) => {
