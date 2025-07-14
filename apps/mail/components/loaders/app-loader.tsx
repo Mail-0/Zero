@@ -26,28 +26,28 @@ const AppLoader = () => {
       <div className="flex flex-col items-center justify-center">
         <div className="relative min-h-[40px] min-w-[40px]">
           <img
-            alt="AI Assistant Ping"
+            alt="Mail0 Logo Ping"
             width="40"
             height="40"
             className="absolute hidden animate-ping dark:block"
             src="/white-icon.svg"
           />
           <img
-            alt="AI Assistant"
+            alt="Mail0 Logo"
             width="40"
             height="40"
             className="absolute hidden dark:block"
             src="/white-icon.svg"
           />
           <img
-            alt="AI Assistant Ping"
+            alt="Mail0 Logo Ping"
             width="40"
             height="40"
             className="absolute block animate-ping dark:hidden"
             src="/black-icon.svg"
           />
           <img
-            alt="AI Assistant"
+            alt="Mail0 Logo"
             width="40"
             height="40"
             className="absolute block dark:hidden"
