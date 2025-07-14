@@ -49,7 +49,7 @@ export const labelsRouter = router({
         color: z.object({
           backgroundColor: z.string().regex(/^#[0-9A-F]{6}$/i, 'Must be a valid hex color').default(DEFAULT_LABEL_COLORS.backgroundColor),
           textColor: z.string().regex(/^#[0-9A-F]{6}$/i, 'Must be a valid hex color').default(DEFAULT_LABEL_COLORS.textColor),
-        }),
+        }).default(DEFAULT_LABEL_COLORS),
       }),
     )
     .mutation(async ({ ctx, input }) => {
