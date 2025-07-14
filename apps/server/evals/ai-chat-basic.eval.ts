@@ -1,12 +1,18 @@
 import { evalite } from "evalite";
-import { perplexity } from "@ai-sdk/perplexity";
+import { openai } from "@ai-sdk/openai";
 import { streamText } from "ai";
 import { traceAISDKModel } from "evalite/ai-sdk";
 import { Factuality, Levenshtein } from "autoevals";
 import { AiChatPrompt, GmailSearchAssistantSystemPrompt, StyledEmailAssistantSystemPrompt } from "../src/lib/prompts";
+import { generateObject } from "ai";
+import { z } from "zod";
 
+// base model (untraced) for internal helpers to avoid trace errors
 // add ur own model here 
-const model = traceAISDKModel(perplexity("sonar"));
+const baseModel = openai("gpt-4o-mini");
+
+// traced model for the actual task under test
+const model = traceAISDKModel(baseModel);
 
 // error handling incase llm fails 
 const safeStreamText = async (config: Parameters<typeof streamText>[0]) => {
@@ -33,13 +39,64 @@ const safeStreamText = async (config: Parameters<typeof streamText>[0]) => {
 
 // forever todo: make the expected output autistically specific 
 
+// Dynamically builds a list of natural-language queries and their minimal expected Gmail-syntax 
+const buildGmailSearchTestCases = async (): Promise<{ input: string; expected: string }[]> => {
+  const { object } = await generateObject({
+    model: baseModel,
+    system: `You are a JSON test-case generator for Gmail search query conversions.
+Return ONLY a JSON object with a single key "cases" mapping to an array. Each array element has exactly the keys {input, expected}.
+Guidelines:
+  • input – natural-language requests about searching/filtering email.
+  • expected – a short Gmail-syntax fragment (e.g., "is:unread", "has:attachment", "after:") that MUST appear in a correct answer.
+  • Cover diverse filters: sender, subject, attachments, labels, dates, read/unread.
+  • Array length: 8-12.
+  • No comments or additional keys.`,
+    prompt: "Generate Gmail search conversion test cases",
+    schema: z.object({
+      cases: z.array(
+        z.object({
+          input: z.string().min(5),
+          expected: z.string().min(3),
+        }),
+      ),
+    }),
+  });
+
+  return object.cases;
+};
+
+// generic dynamic testcase builder 
+
+type TestCase = { input: string; expected: string };
+
+const makeAiChatTestCaseBuilder = (topic: string): (() => Promise<TestCase[]>) => {
+  return async () => {
+    const { object } = await generateObject({
+      model: baseModel,
+      system: `You are a JSON test-case generator for the topic: ${topic}.
+      Return ONLY a JSON object with key "cases" whose value is an array of objects {input, expected}.
+      Guidelines:
+      • input – natural-language request related to ${topic}.
+      • expected – short keyword (≤3 words) expected in correct assistant reply.
+      • Array length: 6-10.
+      • No extra keys or comments.`,
+      prompt: `Generate ${topic} test cases`,
+      schema: z.object({
+        cases: z.array(
+          z.object({
+            input: z.string().min(5),
+            expected: z.string().min(2),
+          }),
+        ),
+      }),
+    });
+
+    return object.cases;
+  };
+};
+
 evalite("AI Chat – Basic Responses", {
-  data: async () => [
-    { input: "Hello!", expected: "Hello" },
-    { input: "What is ZeroMail?", expected: "email" },
-    { input: "Help me organize my inbox", expected: "organize" },
-    { input: "What can you do?", expected: "email" },
-  ],
+  data: makeAiChatTestCaseBuilder("basic responses (greetings, capabilities, quick help)"),
   task: async (input) => {
     return safeStreamText({
       model: model,
@@ -50,20 +107,12 @@ evalite("AI Chat – Basic Responses", {
   scorers: [Factuality, Levenshtein],
 });
 
-evalite("AI Chat – Email Search & Discovery", {
-  data: async () => [
-    { input: "Find emails from last week", expected: "search" },
-    { input: "Show me unread messages", expected: "unread" },
-    { input: "Find emails about meetings", expected: "meetings" },
-    { input: "Search for emails with attachments", expected: "attachments" },
-    { input: "Find emails from john@example.com", expected: "john" },
-    { input: "Show me emails in the spam folder", expected: "spam" },
-    { input: "Find emails with the subject 'invoice'", expected: "invoice" },
-  ],
+evalite("Gmail Search Query – Natural Language", {
+  data: buildGmailSearchTestCases, 
   task: async (input) => {
     return safeStreamText({
       model: model,
-      system: AiChatPrompt("test-thread-id", "inbox", ""),
+      system: GmailSearchAssistantSystemPrompt(),
       prompt: input,
     });
   },
@@ -71,14 +120,7 @@ evalite("AI Chat – Email Search & Discovery", {
 });
 
 evalite("AI Chat – Label Management", {
-  data: async () => [
-    { input: "Create a label called 'Work Projects'", expected: "label" },
-    { input: "Label this email as urgent", expected: "urgent" },
-    { input: "Show me all my labels", expected: "labels" },
-    { input: "Delete the 'Old Projects' label", expected: "delete" },
-    { input: "Add a follow-up label to these emails", expected: "follow" },
-    { input: "Organize my newsletters with labels", expected: "newsletter" },
-  ],
+  data: makeAiChatTestCaseBuilder("label management (create, delete, list, apply labels)"),
   task: async (input) => {
     return safeStreamText({
       model: model,
@@ -90,13 +132,7 @@ evalite("AI Chat – Label Management", {
 });
 
 evalite("AI Chat – Email Organization", {
-  data: async () => [
-    { input: "Archive all newsletters from last month", expected: "archive" },
-    { input: "Mark all promotional emails as read", expected: "read" },
-    { input: "Delete all emails from spam-domain.com", expected: "delete" },
-    { input: "Mark important emails as unread", expected: "unread" },
-    { input: "Bulk archive old notifications", expected: "bulk" },
-  ],
+  data: makeAiChatTestCaseBuilder("email organization (archive, mark read/unread, bulk actions)"),
   task: async (input) => {
     return safeStreamText({
       model: model,
@@ -108,13 +144,7 @@ evalite("AI Chat – Email Organization", {
 });
 
 evalite("AI Chat – Email Composition", {
-  data: async () => [
-    { input: "Compose a follow-up email to John", expected: "compose" },
-    { input: "Write a thank you email", expected: "thank" },
-    { input: "Draft a meeting request email", expected: "meeting" },
-    { input: "Send an email to team@company.com", expected: "send" },
-    { input: "Reply to this email thread", expected: "reply" },
-  ],
+  data: makeAiChatTestCaseBuilder("email composition tasks (compose, reply, send, draft)"),
   task: async (input) => {
     return safeStreamText({
       model: model,
@@ -126,14 +156,7 @@ evalite("AI Chat – Email Composition", {
 });
 
 evalite("AI Chat – Smart Categorization", {
-  data: async () => [
-    { input: "What subscriptions do I have?", expected: "subscription" },
-    { input: "Show me all my newsletters", expected: "newsletter" },
-    { input: "Find meeting invites for this week", expected: "meeting" },
-    { input: "List all my recurring bills", expected: "bill" },
-    { input: "Find emails with receipts", expected: "receipt" },
-    { input: "Show me project updates", expected: "project" },
-  ],
+  data: makeAiChatTestCaseBuilder("smart categorization (subscriptions, newsletters, meetings, bills)"),
   task: async (input) => {
     return safeStreamText({
       model: model,
@@ -145,13 +168,7 @@ evalite("AI Chat – Smart Categorization", {
 });
 
 evalite("AI Chat – Information Queries", {
-  data: async () => [
-    { input: "Search the web for email best practices", expected: "search" },
-    { input: "What happened in my inbox this week?", expected: "summary" },
-    { input: "Find the tax document from my accountant", expected: "tax" },
-    { input: "Show me emails from the last 3 days", expected: "recent" },
-    { input: "Summarize my unread emails", expected: "summarize" },
-  ],
+  data: makeAiChatTestCaseBuilder("information queries (summaries, web search, tax docs, recent activity)"),
   task: async (input) => {
     return safeStreamText({
       model: model,
@@ -163,13 +180,7 @@ evalite("AI Chat – Information Queries", {
 });
 
 evalite("AI Chat – Complex Workflows", {
-  data: async () => [
-    { input: "Find all promotional emails and archive them with a 'Promotions' label", expected: "promotional" },
-    { input: "Organize my inbox by creating labels for work, personal, and newsletters", expected: "organize" },
-    { input: "Find emails from my boss and mark them as high priority", expected: "priority" },
-    { input: "Delete all emails from marketing domains and unsubscribe", expected: "marketing" },
-    { input: "Create a workflow to automatically label bills and receipts", expected: "workflow" },
-  ],
+  data: makeAiChatTestCaseBuilder("complex workflows (multi-step actions, automation)"),
   task: async (input) => {
     return safeStreamText({
       model: model,
@@ -181,14 +192,7 @@ evalite("AI Chat – Complex Workflows", {
 });
 
 evalite("AI Chat – User Intent Recognition", {
-  data: async () => [
-    { input: "I'm overwhelmed with my inbox", expected: "help" },
-    { input: "My email is a mess", expected: "organize" },
-    { input: "I can't find that important email", expected: "search" },
-    { input: "Too many newsletters cluttering my inbox", expected: "newsletter" },
-    { input: "I need to clean up old emails", expected: "cleanup" },
-    { input: "Help me achieve inbox zero", expected: "inbox zero" },
-  ],
+  data: makeAiChatTestCaseBuilder("user intent recognition (help, overwhelm, search, cleanup)"),
   task: async (input) => {
     return safeStreamText({
       model: model,
@@ -200,13 +204,7 @@ evalite("AI Chat – User Intent Recognition", {
 });
 
 evalite("AI Chat – Error Handling & Edge Cases", {
-  data: async () => [
-    { input: "Delete everything in my inbox", expected: "careful" },
-    { input: "Send email to invalid-email", expected: "invalid" },
-    { input: "Create 100 new labels", expected: "many" },
-    { input: "Find emails from 1990", expected: "old" },
-    { input: "Label this email but I don't have any emails", expected: "no emails" },
-  ],
+  data: makeAiChatTestCaseBuilder("error handling & edge cases (invalid, bulk actions, very old queries)"),
   task: async (input) => {
     return safeStreamText({
       model: model,
@@ -218,16 +216,7 @@ evalite("AI Chat – Error Handling & Edge Cases", {
 });
 
 evalite("Gmail Search Query Building", {
-  data: async () => [
-    { input: "emails from last week", expected: "after:" },
-    { input: "unread messages", expected: "is:unread" },
-    { input: "emails with attachments", expected: "has:attachment" },
-    { input: "emails from john@example.com", expected: "from:john@example.com" },
-    { input: "emails about meetings", expected: "meeting" },
-    { input: "emails in spam folder", expected: "in:spam" },
-    { input: "emails with subject invoice", expected: "subject:invoice" },
-    { input: "emails from canva", expected: "from:canva.com OR from:canva OR canva" },
-  ],
+  data: buildGmailSearchTestCases,
   task: async (input) => {
     return safeStreamText({
       model: model,
@@ -239,13 +228,7 @@ evalite("Gmail Search Query Building", {
 });
 
 evalite("Email Composition with Style Matching", {
-  data: async () => [
-    { input: "Write a professional follow-up email", expected: "follow-up" },
-    { input: "Compose a thank you email", expected: "thank you" },
-    { input: "Draft a meeting request", expected: "meeting" },
-    { input: "Write a casual check-in email", expected: "check-in" },
-    { input: "Compose an apology email", expected: "apology" },
-  ],
+  data: makeAiChatTestCaseBuilder("styled email composition (follow-up, thank you, meeting, apology)"),
   task: async (input) => {
     return safeStreamText({
       model: model,
