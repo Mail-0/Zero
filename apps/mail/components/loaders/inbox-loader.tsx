@@ -9,7 +9,7 @@ const loaderLines = [
   'Loading your spam...',
 ];
 
-const AppLoader = () => {
+const InboxLoader = () => {
   const [currentLine, setCurrentLine] = useState(loaderLines[0]);
 
   useEffect(() => {
@@ -60,4 +60,4 @@ const AppLoader = () => {
   );
 };
 
-export default AppLoader;
+export default InboxLoader;
