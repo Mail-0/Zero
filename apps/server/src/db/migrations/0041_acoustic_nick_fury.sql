@@ -1,0 +1,2 @@
+ALTER TABLE "mail0_user" ADD COLUMN "default_organization_id" text;--> statement-breakpoint
+ALTER TABLE "mail0_user" ADD CONSTRAINT "mail0_user_default_organization_id_mail0_organization_id_fk" FOREIGN KEY ("default_organization_id") REFERENCES "public"."mail0_organization"("id") ON DELETE no action ON UPDATE no action;

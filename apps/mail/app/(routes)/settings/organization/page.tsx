@@ -12,6 +12,8 @@ import { Building2, Loader2, Mail, UserPlus, Users } from 'lucide-react';
 import { TeamManager } from '@/components/organization/team-manager';
 import { MemberList } from '@/components/organization/member-list';
 import { SettingsCard } from '@/components/settings/settings-card';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useTRPC } from '@/providers/query-provider';
 import { Button } from '@/components/ui/button';
 import { authClient } from '@/lib/auth-client';
 import { Label } from '@/components/ui/label';
@@ -25,7 +27,7 @@ type Role = 'member' | 'admin' | 'owner';
 type Domain = {
   domain: string;
   verified: boolean;
-  verificationToken: string;
+  verificationToken: string | null;
 };
 
 export default function OrganizationPage() {
@@ -39,7 +41,6 @@ export default function OrganizationPage() {
   const [activeOrg, setActiveOrg] = useState<any>(null);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [newDomain, setNewDomain] = useState('');
-  const [loadingDomains, setLoadingDomains] = useState(false);
   // Invitations state
   const [invites, setInvites] = useState<any[]>([]);
   const [loadingInvites, setLoadingInvites] = useState(false);
@@ -50,6 +51,34 @@ export default function OrganizationPage() {
   const [creatingOrg, setCreatingOrg] = useState(false);
   const [verificationToken, setVerificationToken] = useState<string | null>(null);
 
+  const trpc = useTRPC();
+
+  // TRPC queries
+  const { data: domainsData, refetch: refetchDomains } = useQuery({
+    ...trpc.organization.listDomains.queryOptions({ organizationId: activeOrg?.id || '' }),
+    enabled: !!activeOrg?.id,
+  });
+
+  // TRPC mutations
+  const verifyDomainMutation = useMutation(trpc.organization.verifyDomain.mutationOptions());
+  const addDomainMutation = useMutation(trpc.organization.addDomain.mutationOptions());
+  const removeDomainMutation = useMutation(trpc.organization.removeDomain.mutationOptions());
+  const verifyDomainForOrgMutation = useMutation(
+    trpc.organization.verifyDomainForOrg.mutationOptions(),
+  );
+
+  // Update domains when data changes
+  useEffect(() => {
+    if (domainsData?.domains) {
+      setDomains(
+        domainsData.domains.map((d) => ({
+          ...d,
+          verificationToken: d.verificationToken || null,
+        })),
+      );
+    }
+  }, [domainsData]);
+
   // Test organization creation
   const handleCreateOrganization = async () => {
     if (!orgName || !orgSlug || !orgDomain || !domainVerified) {
@@ -58,7 +87,7 @@ export default function OrganizationPage() {
     }
     setCreatingOrg(true);
     try {
-      const result = await authClient.organization.create({
+      await authClient.organization.create({
         name: orgName,
         slug: orgSlug,
       });
@@ -121,66 +150,67 @@ export default function OrganizationPage() {
     }
   };
 
-  // Fetch domains for the active org
-  async function fetchDomains() {
-    setLoadingDomains(true);
-    const res = await fetch(
-      `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${activeOrg?.id}/domains`,
-    );
-    const data = (await res.json()) as { domains: Domain[] };
-    setDomains(data.domains || []);
-    setLoadingDomains(false);
-  }
-
   async function addDomain(e?: React.FormEvent) {
     if (e) e.preventDefault();
-    if (!newDomain) return;
-    await fetch(
-      `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${activeOrg?.id}/domains`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ domain: newDomain }),
-      },
-    );
-    setNewDomain('');
-    fetchDomains();
+    if (!newDomain || !activeOrg?.id) return;
+
+    try {
+      await addDomainMutation.mutateAsync({
+        organizationId: activeOrg.id,
+        domain: newDomain,
+      });
+      setNewDomain('');
+      refetchDomains();
+      toast.success('Domain added successfully');
+    } catch (error: any) {
+      toast.error('Failed to add domain');
+    }
   }
 
   async function removeDomain(domain: string) {
-    await fetch(
-      `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${activeOrg?.id}/domains`,
-      {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ domain }),
-      },
-    );
-    fetchDomains();
+    if (!activeOrg?.id) return;
+
+    try {
+      await removeDomainMutation.mutateAsync({
+        organizationId: activeOrg.id,
+        domain,
+      });
+      refetchDomains();
+      toast.success('Domain removed successfully');
+    } catch (error: any) {
+      toast.error('Failed to remove domain');
+    }
   }
 
   async function verifyDomain(domain: string) {
+    if (!activeOrg?.id) return;
     setVerifying(true);
     setVerifyMsg(null);
-    const res = await fetch(
-      `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${activeOrg?.id}/domains/verify`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ domain }),
-      },
-    );
-    const data = (await res.json()) as { verified: boolean; message?: string; error?: string };
-    if (data.verified) {
-      setVerifyMsg('Domain verified!');
-      fetchDomains();
-    } else {
-      setVerifyMsg(data.message || data.error || 'Verification failed');
+
+    try {
+      const result = await verifyDomainForOrgMutation.mutateAsync({
+        organizationId: activeOrg.id,
+        domain,
+      });
+
+      if ('verified' in result && result.verified) {
+        setVerifyMsg('Domain verified!');
+        refetchDomains();
+      } else if ('message' in result && result.message) {
+        setVerifyMsg(result.message);
+      } else if ('error' in result && result.error) {
+        setVerifyMsg(result.error);
+      } else {
+        setVerifyMsg('Verification failed');
+      }
+    } catch (error: any) {
+      setVerifyMsg('Verification failed');
+    } finally {
+      setVerifying(false);
     }
-    setVerifying(false);
   }
 
-  // Fetch pending invitations for the active organization
+  // Fetch pending invitations - TODO: Convert to TRPC when invitation router is available
   async function fetchInvites() {
     if (!activeOrg?.id) return;
     setLoadingInvites(true);
@@ -198,7 +228,7 @@ export default function OrganizationPage() {
     }
   }
 
-  // Cancel an invitation
+  // Cancel an invitation - TODO: Convert to TRPC when invitation router is available
   async function cancelInvite(inviteId: string) {
     if (!inviteId) return;
     try {
@@ -212,11 +242,6 @@ export default function OrganizationPage() {
       toast.error(`Failed to cancel invite: ${error.message}`);
     }
   }
-
-  // Fetch domains when org changes
-  useEffect(() => {
-    if (activeOrg?.id) fetchDomains();
-  }, [activeOrg?.id]);
 
   // Fetch invitations when org changes
   useEffect(() => {
@@ -257,41 +282,27 @@ export default function OrganizationPage() {
       const slugExists = orgs.data?.some((org) => org.slug === orgSlug);
       if (slugExists) {
         toast.error('Organization slug already exists. Please choose a different one.');
+        setVerifying(false);
         return;
       }
 
       // Check domain verification directly
-      const res = await fetch(
-        `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/verify-domain`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            domain: orgDomain,
-            verificationToken: verificationToken,
-          }),
-        },
-      );
-      const data = (await res.json()) as {
-        verified: boolean;
-        message?: string;
-        error?: string;
-        verificationToken?: string;
-      };
+      const result = await verifyDomainMutation.mutateAsync({
+        domain: orgDomain,
+        verificationToken: verificationToken ?? undefined,
+      });
 
       // Store the verification token for reuse
-      if (data.verificationToken) {
-        setVerificationToken(data.verificationToken);
+      if (result.verificationToken) {
+        setVerificationToken(result.verificationToken);
       }
 
-      if (data.verified) {
+      if (result.verified) {
         setDomainVerified(true);
         setVerifyMsg('Domain verified! You can now create your organization.');
       } else {
         setVerifyMsg(
-          data.message ||
-            data.error ||
-            'Domain verification failed. Please add the TXT record to your DNS.',
+          result.message || 'Domain verification failed. Please add the TXT record to your DNS.',
         );
       }
     } catch (error: any) {

@@ -1,11 +1,13 @@
-import { Loader2, Plus, Trash2, Save, Users, ChevronDown, UserPlus, UserMinus } from 'lucide-react';
+import { ChevronDown, Loader2, Plus, Save, Trash2, UserMinus, UserPlus, Users } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTRPC } from '@/providers/query-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -14,10 +16,10 @@ const schema = z.object({
   name: z.string().min(2, 'Team name is required'),
 });
 
-const memberSchema = z.object({
-  userId: z.string().min(1, 'User ID is required'),
-  role: z.enum(['member', 'admin', 'owner']).default('member'),
-});
+// const memberSchema = z.object({
+//   userId: z.string().min(1, 'User ID is required'),
+//   role: z.enum(['member', 'admin', 'owner']).default('member'),
+// });
 
 interface TeamManagerProps {
   orgId: string | undefined;
@@ -26,7 +28,9 @@ interface TeamManagerProps {
 interface Team {
   id: string;
   name: string;
-  createdAt: string;
+  organizationId: string | null;
+  created_at: Date;
+  updated_at: Date | null;
 }
 
 interface Member {
@@ -43,6 +47,8 @@ export function TeamManager({ orgId }: TeamManagerProps) {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(false);
   const [expandedTeams, setExpandedTeams] = useState<Set<string>>(new Set());
+  const trpc = useTRPC();
+
   const {
     register,
     handleSubmit,
@@ -50,164 +56,125 @@ export function TeamManager({ orgId }: TeamManagerProps) {
     formState: { errors },
   } = useForm<z.infer<typeof schema>>({ resolver: zodResolver(schema) });
 
-  const {
-    register: registerMember,
-    handleSubmit: handleMemberSubmit,
-    reset: resetMember,
-    setValue: setMemberValue,
-    watch: watchMember,
-    formState: { errors: memberErrors },
-  } = useForm<z.infer<typeof memberSchema>>({ resolver: zodResolver(memberSchema) });
+  // const {
+  //   register: registerMember,
+  //   handleSubmit: handleMemberSubmit,
+  //   reset: resetMember,
+  //   setValue: setMemberValue,
+  //   watch: watchMember,
+  //   formState: { errors: memberErrors },
+  // } = useForm<z.infer<typeof memberSchema>>({ resolver: zodResolver(memberSchema) });
 
-  async function fetchTeams() {
-    if (!orgId) return;
-    setLoading(true);
-    const res = await fetch(
-      `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/teams`,
-      {
-        credentials: 'include',
-      },
-    );
-    const data = (await res.json()) as { teams: Team[] };
-    setTeams(data.teams || []);
-    setLoading(false);
-  }
+  // TRPC queries
+  const { data: teamsData, refetch: refetchTeams } = useQuery({
+    ...trpc.organization.listTeams.queryOptions({ organizationId: orgId || '' }),
+    enabled: !!orgId,
+  });
 
-  async function fetchMembers() {
-    if (!orgId) return;
-    const res = await fetch(
-      `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/members`,
-      {
-        credentials: 'include',
-      },
-    );
-    const data = (await res.json()) as { members: Member[] };
-    setMembers(data.members || []);
-  }
+  const { data: membersData, refetch: refetchMembers } = useQuery({
+    ...trpc.organization.listMembers.queryOptions({ organizationId: orgId || '' }),
+    enabled: !!orgId,
+  });
+
+  // TRPC mutations
+  const createTeamMutation = useMutation(trpc.organization.createTeam.mutationOptions());
+  const updateTeamMutation = useMutation(trpc.organization.updateTeam.mutationOptions());
+  const deleteTeamMutation = useMutation(trpc.organization.deleteTeam.mutationOptions());
+  // const upsertMemberMutation = useMutation(trpc.organization.upsertMember.mutationOptions());
+  const updateMemberMutation = useMutation(trpc.organization.updateMember.mutationOptions());
+
+  // Update local state when data changes
+  useEffect(() => {
+    if (teamsData?.teams) {
+      setTeams(teamsData.teams);
+    }
+  }, [teamsData]);
 
   useEffect(() => {
-    fetchTeams();
-    fetchMembers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orgId]);
+    if (membersData?.members) {
+      setMembers(membersData.members);
+    }
+  }, [membersData]);
 
   async function onSubmit(values: z.infer<typeof schema>) {
     if (!orgId) return;
-    const res = await fetch(
-      `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/teams`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-        credentials: 'include',
-      },
-    );
-    if (res.ok) {
+
+    setLoading(true);
+    try {
+      await createTeamMutation.mutateAsync({
+        organizationId: orgId,
+        name: values.name,
+      });
       toast.success('Team created');
       reset();
-      fetchTeams();
-    } else {
-      try {
-        const error = (await res.json()) as { error?: string };
-        toast.error(error.error || 'Failed to create team');
-      } catch {
-        toast.error('Failed to create team');
-      }
+      refetchTeams();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create team');
+    } finally {
+      setLoading(false);
     }
   }
 
-  async function onMemberSubmit(values: z.infer<typeof memberSchema>) {
-    if (!orgId) return;
-    const res = await fetch(
-      `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/members`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-        credentials: 'include',
-      },
-    );
-    if (res.ok) {
-      toast.success('Member added');
-      resetMember();
-      fetchMembers();
-    } else {
-      try {
-        const error = (await res.json()) as { error?: string };
-        toast.error(error.error || 'Failed to add member');
-      } catch {
-        toast.error('Failed to add member');
-      }
-    }
-  }
+  // async function onMemberSubmit(values: z.infer<typeof memberSchema>) {
+  //   if (!orgId) return;
+
+  //   try {
+  //     await upsertMemberMutation.mutateAsync({
+  //       organizationId: orgId,
+  //       ...values,
+  //     });
+  //     toast.success('Member added');
+  //     resetMember();
+  //     refetchMembers();
+  //   } catch (error: any) {
+  //     toast.error(error.message || 'Failed to add member');
+  //   }
+  // }
 
   async function deleteTeam(teamId: string) {
     if (!orgId) return;
-    const res = await fetch(
-      `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/teams/${teamId}`,
-      {
-        method: 'DELETE',
-        credentials: 'include',
-      },
-    );
-    if (res.ok) {
+
+    try {
+      await deleteTeamMutation.mutateAsync({
+        organizationId: orgId,
+        teamId,
+      });
       toast.success('Team deleted');
-      fetchTeams();
-    } else {
-      try {
-        const error = (await res.json()) as { error?: string };
-        toast.error(error.error || 'Failed to delete team');
-      } catch {
-        toast.error('Failed to delete team');
-      }
+      refetchTeams();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete team');
     }
   }
 
   async function assignMemberToTeam(memberId: string, teamId: string) {
     if (!orgId) return;
-    const res = await fetch(
-      `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/members/${memberId}`,
-      {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teamId }),
-        credentials: 'include',
-      },
-    );
-    if (res.ok) {
+
+    try {
+      await updateMemberMutation.mutateAsync({
+        organizationId: orgId,
+        memberId,
+        teamId,
+      });
       toast.success('Member assigned to team');
-      fetchMembers();
-    } else {
-      try {
-        const error = (await res.json()) as { error?: string };
-        toast.error(error.error || 'Failed to assign member');
-      } catch {
-        toast.error('Failed to assign member');
-      }
+      refetchMembers();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to assign member');
     }
   }
 
   async function removeMemberFromTeam(memberId: string) {
     if (!orgId) return;
-    const res = await fetch(
-      `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/members/${memberId}`,
-      {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teamId: null }),
-        credentials: 'include',
-      },
-    );
-    if (res.ok) {
+
+    try {
+      await updateMemberMutation.mutateAsync({
+        organizationId: orgId,
+        memberId,
+        teamId: null,
+      });
       toast.success('Member removed from team');
-      fetchMembers();
-    } else {
-      try {
-        const error = (await res.json()) as { error?: string };
-        toast.error(error.error || 'Failed to remove member');
-      } catch {
-        toast.error('Failed to remove member');
-      }
+      refetchMembers();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to remove member');
     }
   }
 
@@ -234,31 +201,23 @@ export function TeamManager({ orgId }: TeamManagerProps) {
     const [name, setName] = useState(team.name);
 
     async function save() {
-      if (!name.trim() || name === team.name) {
+      if (!name.trim() || name === team.name || !orgId) {
         setEditing(false);
         return;
       }
-      const res = await fetch(
-        `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/teams/${team.id}`,
-        {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name }),
-          credentials: 'include',
-        },
-      );
-      if (res.ok) {
+
+      try {
+        await updateTeamMutation.mutateAsync({
+          organizationId: orgId,
+          teamId: team.id,
+          name,
+        });
         toast.success('Team updated');
-        fetchTeams();
-      } else {
-        try {
-          const error = (await res.json()) as { error?: string };
-          toast.error(error.error || 'Failed to update team');
-        } catch {
-          toast.error('Failed to update team');
-        }
+        refetchTeams();
+        setEditing(false);
+      } catch (error: any) {
+        toast.error(error.message || 'Failed to update team');
       }
-      setEditing(false);
     }
 
     const teamMembers = getTeamMembers(team.id);

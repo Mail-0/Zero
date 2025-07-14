@@ -1,12 +1,23 @@
+import {
+  organization,
+  organizationDomain,
+  member,
+  team,
+  organizationConnection,
+  connection as connectionTable,
+  user,
+  invitation,
+  session,
+} from '../../db/schema';
 import { router, publicProcedure, privateProcedure } from '../trpc';
-import { createDb } from '../../db';
-import { nanoid } from 'nanoid';
-import dns from 'node:dns/promises';
-import { z } from 'zod';
-import { organization, organizationDomain, member, team, organizationConnection, connection as connectionTable, user } from '../../db/schema';
 import { eq, and } from 'drizzle-orm';
+import dns from 'node:dns/promises';
+import { createDb } from '../../db';
+import { sql } from 'drizzle-orm';
+import { nanoid } from 'nanoid';
+import { z } from 'zod';
 
-async function isOwner(db: ReturnType<typeof createDb>["db"], orgId: string, userId: string) {
+async function isOwner(db: ReturnType<typeof createDb>['db'], orgId: string, userId: string) {
   const [row] = await db
     .select()
     .from(member)
@@ -15,6 +26,107 @@ async function isOwner(db: ReturnType<typeof createDb>["db"], orgId: string, use
 }
 
 export const organizationRouter = router({
+  leave: privateProcedure
+    .input(z.object({ organizationId: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const { organizationId } = input;
+      const { sessionUser } = ctx;
+      const { db, conn } = createDb(ctx.c.env.HYPERDRIVE.connectionString);
+      try {
+        // Check if this is the last member
+        const memberCount = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(member)
+          .where(eq(member.organizationId, organizationId));
+
+        const isLastMember = memberCount[0].count === 1;
+
+        if (isLastMember) {
+          // If last member, check if they're the owner
+          const isOwnerCheck = await isOwner(db, organizationId, sessionUser.id);
+          if (!isOwnerCheck) {
+            return {
+              error: 'Cannot leave organization - you must transfer ownership first',
+            } as const;
+          }
+
+          // Delete the entire organization
+          await db.transaction(async (tx) => {
+            // First, update users who have this as their defaultOrganizationId
+            await tx
+              .update(user)
+              .set({ defaultOrganizationId: null })
+              .where(eq(user.defaultOrganizationId, organizationId));
+
+            // Update sessions that have this as activeOrganizationId
+            await tx
+              .update(session)
+              .set({ activeOrganizationId: null })
+              .where(eq(session.activeOrganizationId, organizationId));
+
+            // Delete all invitations
+            await tx.delete(invitation).where(eq(invitation.organizationId, organizationId));
+
+            // Delete all organization connections
+            await tx
+              .delete(organizationConnection)
+              .where(eq(organizationConnection.organizationId, organizationId));
+
+            // Delete all organization domains
+            await tx
+              .delete(organizationDomain)
+              .where(eq(organizationDomain.organizationId, organizationId));
+
+            // Delete all members (must be before teams due to FK constraint)
+            await tx.delete(member).where(eq(member.organizationId, organizationId));
+
+            // Delete all teams (after members since members reference teams)
+            await tx.delete(team).where(eq(team.organizationId, organizationId));
+
+            // Finally, delete the organization itself
+            await tx.delete(organization).where(eq(organization.id, organizationId));
+          });
+        } else {
+          // If not last member, just remove them
+          await db.transaction(async (tx) => {
+            // Remove user from organization
+            await tx
+              .delete(member)
+              .where(
+                and(eq(member.organizationId, organizationId), eq(member.userId, sessionUser.id)),
+              );
+
+            // Update user's defaultOrganizationId if it was this org
+            const userRecord = await tx
+              .select()
+              .from(user)
+              .where(eq(user.id, sessionUser.id))
+              .limit(1);
+            if (userRecord[0]?.defaultOrganizationId === organizationId) {
+              await tx
+                .update(user)
+                .set({ defaultOrganizationId: null })
+                .where(eq(user.id, sessionUser.id));
+            }
+
+            // Update session's activeOrganizationId if it was this org
+            await tx
+              .update(session)
+              .set({ activeOrganizationId: null })
+              .where(
+                and(
+                  eq(session.userId, sessionUser.id),
+                  eq(session.activeOrganizationId, organizationId),
+                ),
+              );
+          });
+        }
+
+        return { success: true } as const;
+      } finally {
+        await conn.end();
+      }
+    }),
   verifyDomain: publicProcedure
     .input(
       z.object({
@@ -134,7 +246,10 @@ export const organizationRouter = router({
           .select()
           .from(organizationDomain)
           .where(
-            and(eq(organizationDomain.organizationId, organizationId), eq(organizationDomain.domain, domain)),
+            and(
+              eq(organizationDomain.organizationId, organizationId),
+              eq(organizationDomain.domain, domain),
+            ),
           );
         if (!row) return { error: 'Domain not found' } as const;
         if (row.verified) return { success: true, verified: true } as const;
@@ -148,7 +263,10 @@ export const organizationRouter = router({
               .update(organizationDomain)
               .set({ verified: true })
               .where(
-                and(eq(organizationDomain.organizationId, organizationId), eq(organizationDomain.domain, domain)),
+                and(
+                  eq(organizationDomain.organizationId, organizationId),
+                  eq(organizationDomain.domain, domain),
+                ),
               );
             return { success: true, verified: true } as const;
           }
@@ -187,7 +305,12 @@ export const organizationRouter = router({
       const { db, conn } = createDb(ctx.c.env.HYPERDRIVE.connectionString);
       try {
         const id = nanoid();
-        const finalSlug = slug || name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
+        const finalSlug =
+          slug ||
+          name
+            .toLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^a-z0-9\-]/g, '');
         await db.insert(organization).values({
           id,
           name,
@@ -271,7 +394,44 @@ export const organizationRouter = router({
         if (!(await isOwner(db, organizationId, sessionUser.id))) {
           return { error: 'Only owners can delete organization' } as const;
         }
-        await db.delete(organization).where(eq(organization.id, organizationId));
+
+        // Start transaction for cascading deletes
+        await db.transaction(async (tx) => {
+          // First, update users who have this as their defaultOrganizationId
+          await tx
+            .update(user)
+            .set({ defaultOrganizationId: null })
+            .where(eq(user.defaultOrganizationId, organizationId));
+
+          // Update sessions that have this as activeOrganizationId
+          await tx
+            .update(session)
+            .set({ activeOrganizationId: null })
+            .where(eq(session.activeOrganizationId, organizationId));
+
+          // Delete all invitations
+          await tx.delete(invitation).where(eq(invitation.organizationId, organizationId));
+
+          // Delete all organization connections
+          await tx
+            .delete(organizationConnection)
+            .where(eq(organizationConnection.organizationId, organizationId));
+
+          // Delete all organization domains
+          await tx
+            .delete(organizationDomain)
+            .where(eq(organizationDomain.organizationId, organizationId));
+
+          // Delete all members (must be before teams due to FK constraint)
+          await tx.delete(member).where(eq(member.organizationId, organizationId));
+
+          // Delete all teams (after members since members reference teams)
+          await tx.delete(team).where(eq(team.organizationId, organizationId));
+
+          // Finally, delete the organization itself
+          await tx.delete(organization).where(eq(organization.id, organizationId));
+        });
+
         return { success: true } as const;
       } finally {
         await conn.end();
@@ -296,7 +456,7 @@ export const organizationRouter = router({
           .leftJoin(user, eq(member.userId, user.id))
           .where(eq(member.organizationId, organizationId));
         const rolePriority: Record<string, number> = { owner: 3, admin: 2, member: 1 };
-        const map = new Map<string, typeof rows[0]>();
+        const map = new Map<string, (typeof rows)[0]>();
         for (const r of rows) {
           const existing = map.get(r.userId);
           if (!existing || rolePriority[r.role] > rolePriority[existing.role]) {
@@ -441,10 +601,7 @@ export const organizationRouter = router({
       const { organizationId } = input;
       const { db, conn } = createDb(ctx.c.env.HYPERDRIVE.connectionString);
       try {
-        const teams = await db
-          .select()
-          .from(team)
-          .where(eq(team.organizationId, organizationId));
+        const teams = await db.select().from(team).where(eq(team.organizationId, organizationId));
         return { teams } as const;
       } finally {
         await conn.end();
@@ -559,7 +716,13 @@ export const organizationRouter = router({
       }
     }),
   addEmail: privateProcedure
-    .input(z.object({ organizationId: z.string(), connectionId: z.string(), alias: z.string().optional().nullable() }))
+    .input(
+      z.object({
+        organizationId: z.string(),
+        connectionId: z.string(),
+        alias: z.string().optional().nullable(),
+      }),
+    )
     .mutation(async ({ input, ctx }) => {
       const { organizationId, connectionId, alias } = input;
       const { db, conn } = createDb(ctx.c.env.HYPERDRIVE.connectionString);
@@ -578,7 +741,13 @@ export const organizationRouter = router({
       }
     }),
   updateEmail: privateProcedure
-    .input(z.object({ organizationId: z.string(), emailId: z.string(), alias: z.string().optional().nullable() }))
+    .input(
+      z.object({
+        organizationId: z.string(),
+        emailId: z.string(),
+        alias: z.string().optional().nullable(),
+      }),
+    )
     .mutation(async ({ input, ctx }) => {
       const { organizationId, emailId, alias } = input;
       const { db, conn } = createDb(ctx.c.env.HYPERDRIVE.connectionString);
@@ -586,7 +755,12 @@ export const organizationRouter = router({
         await db
           .update(organizationConnection)
           .set({ alias })
-          .where(and(eq(organizationConnection.id, emailId), eq(organizationConnection.organizationId, organizationId)));
+          .where(
+            and(
+              eq(organizationConnection.id, emailId),
+              eq(organizationConnection.organizationId, organizationId),
+            ),
+          );
         return { success: true } as const;
       } finally {
         await conn.end();
@@ -600,10 +774,15 @@ export const organizationRouter = router({
       try {
         await db
           .delete(organizationConnection)
-          .where(and(eq(organizationConnection.id, emailId), eq(organizationConnection.organizationId, organizationId)));
+          .where(
+            and(
+              eq(organizationConnection.id, emailId),
+              eq(organizationConnection.organizationId, organizationId),
+            ),
+          );
         return { success: true } as const;
       } finally {
         await conn.end();
       }
     }),
-}); 
+});

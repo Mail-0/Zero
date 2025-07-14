@@ -1,4 +1,4 @@
-CREATE TABLE "mail0_account" (
+CREATE TABLE IF NOT EXISTS "mail0_account" (
 	"id" text PRIMARY KEY NOT NULL,
 	"account_id" text NOT NULL,
 	"provider_id" text NOT NULL,

@@ -1,7 +1,9 @@
-import { Loader2, Settings as SettingsIcon, Palette, Users } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2, Palette, Settings as SettingsIcon } from 'lucide-react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Separator } from '@/components/ui/separator';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTRPC } from '@/providers/query-provider';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -33,8 +35,9 @@ const defaultValues = {
 };
 
 export function SettingsEditor({ orgId }: SettingsEditorProps) {
+  const trpc = useTRPC();
+
   const {
-    register,
     handleSubmit,
     reset,
     watch,
@@ -47,52 +50,49 @@ export function SettingsEditor({ orgId }: SettingsEditorProps) {
 
   const watchedValues = watch();
 
-  useEffect(() => {
-    async function fetchSettings() {
-      if (!orgId) return;
-      try {
-        const res = await fetch(
-          `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/settings`,
-        );
-        const data = (await res.json()) as { settings: any };
+  // TRPC query for fetching settings
+  const { data: settingsData } = useQuery({
+    ...trpc.organization.getSettings.queryOptions({ organizationId: orgId || '' }),
+    enabled: !!orgId,
+  });
 
-        // Merge with defaults to handle missing fields
-        const settings = { ...defaultValues, ...data.settings };
-        reset(settings);
-      } catch (error) {
-        console.error('Failed to fetch settings:', error);
-        reset(defaultValues);
-      }
+  // TRPC mutations
+  const updateSettingsMutation = useMutation(trpc.organization.updateSettings.mutationOptions());
+  const updateOrgMutation = useMutation(trpc.organization.update.mutationOptions());
+
+  useEffect(() => {
+    if (settingsData?.settings) {
+      // Merge with defaults to handle missing fields
+      const settings = { ...defaultValues, ...settingsData.settings };
+      reset(settings);
     }
-    fetchSettings();
-  }, [orgId]);
+  }, [settingsData, reset]);
 
   async function onSubmit(values: z.infer<typeof schema>) {
     if (!orgId) return;
 
-    const res = await fetch(
-      `${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/settings`,
-      {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ settings: values }),
-      },
-    );
+    try {
+      await updateSettingsMutation.mutateAsync({
+        organizationId: orgId,
+        settings: values,
+      });
 
-    if (res.ok) {
       // Also persist the logo URL at the organization level so it can be displayed everywhere
-      try {
-        await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ logo: values.branding.logoUrl }),
-        });
-      } catch (err) {
-        console.error('Failed to update organization logo:', err);
+      if (values.branding.logoUrl) {
+        try {
+          await updateOrgMutation.mutateAsync({
+            organizationId: orgId,
+            logo: values.branding.logoUrl,
+          });
+        } catch (err) {
+          console.error('Failed to update organization logo:', err);
+        }
       }
+
       toast.success('Settings saved successfully');
-    } else {
+    } catch (error) {
       toast.error('Failed to save settings');
+      console.error(error);
     }
   }
 

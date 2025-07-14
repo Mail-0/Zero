@@ -1,11 +1,3 @@
-import React, { useEffect, useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { Users, Trash2, LogOut } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useSession } from '@/lib/auth-client';
-import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -15,6 +7,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { useTRPC } from '@/providers/query-provider';
+import { Users, Trash2, LogOut } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { useSession } from '@/lib/auth-client';
+import { Badge } from '@/components/ui/badge';
+import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface MemberListProps {
   orgId: string | undefined;
@@ -31,63 +33,55 @@ interface Member {
 
 export function MemberList({ orgId }: MemberListProps) {
   const [members, setMembers] = useState<Member[]>([]);
-  const [loading, setLoading] = useState(false);
   const [removing, setRemoving] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState<string | null>(null);
   const { data: session } = useSession();
+  const trpc = useTRPC();
 
-  async function fetchMembers() {
-    if (!orgId) return;
-    setLoading(true);
-    try {
-      const res = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/members`, {
-        credentials: 'include',
-      });
-      const data = (await res.json()) as { members: Member[] };
-      setMembers(data.members || []);
-    } finally {
-      setLoading(false);
+  // TRPC queries and mutations
+  const {
+    data: membersData,
+    isLoading: loading,
+    refetch: refetchMembers,
+  } = useQuery({
+    ...trpc.organization.listMembers.queryOptions({ organizationId: orgId || '' }),
+    enabled: !!orgId,
+  });
+
+  const removeMemberMutation = useMutation(trpc.organization.removeMember.mutationOptions());
+  const leaveOrgMutation = useMutation(trpc.organization.leave.mutationOptions());
+  const deleteOrgMutation = useMutation(trpc.organization.delete.mutationOptions());
+
+  // Update members when data changes
+  useEffect(() => {
+    if (membersData?.members) {
+      setMembers(membersData.members);
     }
-  }
+  }, [membersData]);
 
   async function removeMember(memberId: string, isSelf: boolean) {
     if (!orgId) return;
     setRemoving(memberId);
+
     try {
-      let res: Response;
       if (isSelf) {
         if (members.length === 1) {
           // last member, delete org
-          res = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}`, {
-            method: 'DELETE',
-            credentials: 'include',
-          });
-        } else {
-          res = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/leave`, {
-            method: 'POST',
-            credentials: 'include',
-          });
-        }
-      } else {
-        res = await fetch(`${import.meta.env.VITE_PUBLIC_BACKEND_URL}/api/organization/${orgId}/members/${memberId}`, {
-          method: 'DELETE',
-          credentials: 'include',
-        });
-      }
-      
-      if (res.ok) {
-        if (isSelf && members.length === 1) {
+          await deleteOrgMutation.mutateAsync({ organizationId: orgId });
           toast.success('Organization deleted successfully');
-        } else if (isSelf) {
-          toast.success('Left organization successfully');
         } else {
-          toast.success('Member removed successfully');
+          await leaveOrgMutation.mutateAsync({ organizationId: orgId });
+          toast.success('Left organization successfully');
         }
-        fetchMembers();
       } else {
-        const err = (await res.json()) as any;
-        toast.error(err?.error || 'Failed to remove member');
+        await removeMemberMutation.mutateAsync({
+          organizationId: orgId,
+          memberId,
+        });
+        toast.success('Member removed successfully');
       }
+
+      refetchMembers();
     } catch (error: any) {
       toast.error(error.message || 'Failed to remove member');
     } finally {
@@ -95,10 +89,6 @@ export function MemberList({ orgId }: MemberListProps) {
       setDialogOpen(null);
     }
   }
-
-  useEffect(() => {
-    fetchMembers();
-  }, [orgId]);
 
   return (
     <Card>
@@ -114,23 +104,27 @@ export function MemberList({ orgId }: MemberListProps) {
             <Loader2 className="h-4 w-4 animate-spin" />
           </div>
         ) : members.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No members yet.</p>
+          <p className="text-muted-foreground text-sm">No members yet.</p>
         ) : (
           <ul className="space-y-2">
             {members.map((m) => {
               const isSelf = session?.user?.id === m.userId;
               const selfRole = members.find((x) => x.userId === session?.user?.id)?.role;
-              const canRemove = isSelf || selfRole === 'owner' || (selfRole === 'admin' && m.role === 'member');
+              const canRemove =
+                isSelf || selfRole === 'owner' || (selfRole === 'admin' && m.role === 'member');
               const isLastMember = members.length === 1;
-              
+
               return (
                 <li key={m.id} className="flex items-center gap-2">
-                  <span className="break-all flex-1">
+                  <span className="flex-1 break-all">
                     {m.name?.split(' ')[0] || m.email?.split('@')[0] || m.userId}
                   </span>
                   <Badge variant="outline">{m.role}</Badge>
                   {canRemove && (
-                    <Dialog open={dialogOpen === m.id} onOpenChange={(open) => setDialogOpen(open ? m.id : null)}>
+                    <Dialog
+                      open={dialogOpen === m.id}
+                      onOpenChange={(open) => setDialogOpen(open ? m.id : null)}
+                    >
                       <DialogTrigger asChild>
                         <Button
                           size="icon"
@@ -153,15 +147,15 @@ export function MemberList({ orgId }: MemberListProps) {
                             {isSelf && isLastMember
                               ? 'Delete Organization'
                               : isSelf
-                              ? 'Leave Organization'
-                              : 'Remove Member'}
+                                ? 'Leave Organization'
+                                : 'Remove Member'}
                           </DialogTitle>
                           <DialogDescription>
                             {isSelf && isLastMember
                               ? 'You are the last member. This will permanently delete the organization and cannot be undone.'
                               : isSelf
-                              ? 'Are you sure you want to leave this organization?'
-                              : `Are you sure you want to remove ${m.name?.split(' ')[0] || m.email?.split('@')[0] || 'this member'} from the organization?`}
+                                ? 'Are you sure you want to leave this organization?'
+                                : `Are you sure you want to remove ${m.name?.split(' ')[0] || m.email?.split('@')[0] || 'this member'} from the organization?`}
                           </DialogDescription>
                         </DialogHeader>
                         <DialogFooter>
@@ -176,15 +170,19 @@ export function MemberList({ orgId }: MemberListProps) {
                             {removing === m.id ? (
                               <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                {isSelf && isLastMember ? 'Deleting...' : isSelf ? 'Leaving...' : 'Removing...'}
+                                {isSelf && isLastMember
+                                  ? 'Deleting...'
+                                  : isSelf
+                                    ? 'Leaving...'
+                                    : 'Removing...'}
                               </>
                             ) : (
                               <>
                                 {isSelf && isLastMember
                                   ? 'Delete Organization'
                                   : isSelf
-                                  ? 'Leave'
-                                  : 'Remove'}
+                                    ? 'Leave'
+                                    : 'Remove'}
                               </>
                             )}
                           </Button>
@@ -200,4 +198,4 @@ export function MemberList({ orgId }: MemberListProps) {
       </CardContent>
     </Card>
   );
-} 
+}
