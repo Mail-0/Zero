@@ -1,4 +1,14 @@
 import {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentProps,
+  type ReactNode,
+} from 'react';
+import {
   Archive2,
   ExclamationCircle,
   GroupPeople,
@@ -6,7 +16,6 @@ import {
   Trash,
   PencilCompose,
 } from '../icons/icons';
-import { memo, useCallback, useEffect, useMemo, useRef, type ComponentProps } from 'react';
 import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
 import { focusedIndexAtom, useMailNavigation } from '@/hooks/use-mail-navigation';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -420,7 +429,7 @@ const Thread = memo(
                             </span>
                             {displayUnread && !isMailSelected && !isFolderSent ? (
                               <>
-                                <span className="ml-0.5 size-2 rounded-full bg-[#006FFE]" />
+                                <span className="ml-0.5 size-1.5 rounded-full bg-[#006FFE]" />
                               </>
                             ) : null}
                           </div>
@@ -561,6 +570,41 @@ const Thread = memo(
   },
 );
 
+const RowRenderer = memo(
+  ({
+    index,
+    setSize,
+    children,
+  }: {
+    index: number;
+    setSize: (index: number, height: number) => void;
+    children: ReactNode;
+  }) => {
+    const rowRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+      const element = rowRef.current;
+      if (!element) return;
+
+      const observer = new ResizeObserver((entries) => {
+        const entry = entries[0];
+        if (entry) {
+          const height = entry.contentRect.height;
+          if (height > 0) {
+            setSize(index, height);
+          }
+        }
+      });
+
+      observer.observe(element);
+      return () => observer.disconnect();
+    }, [index, setSize]);
+
+    return <div ref={rowRef}>{children}</div>;
+  },
+);
+RowRenderer.displayName = 'RowRenderer';
+
 const Draft = memo(({ message }: { message: { id: string } }) => {
   const draftQuery = useDraft(message.id) as UseQueryResult<ParsedDraft>;
   const draft = draftQuery.data;
@@ -676,6 +720,26 @@ export const MailList = memo(
     const itemsRef = useRef(items);
     const parentRef = useRef<HTMLDivElement>(null);
     const vListRef = useRef<VListHandle>(null);
+    const [sizeMap, setSizeMap] = useState<Record<number, number>>({});
+
+    const averageHeight = useMemo(() => {
+      const heights = Object.values(sizeMap);
+      if (heights.length === 0) return 100; // a reasonable default
+      const sum = heights.reduce((a, b) => a + b, 0);
+      return sum / heights.length;
+    }, [sizeMap]);
+
+    const setSize = useCallback((index: number, height: number) => {
+      setSizeMap((prev) => {
+        const currentHeight = prev[index];
+        if (currentHeight && Math.abs(currentHeight - height) < 1) return prev;
+
+        return {
+          ...prev,
+          [index]: height,
+        };
+      });
+    }, []);
 
     useEffect(() => {
       itemsRef.current = items;
@@ -867,7 +931,7 @@ export const MailList = memo(
       (index: number) => {
         const item = filteredItems[index];
         return item ? (
-          <>
+          <RowRenderer index={index} setSize={setSize}>
             <Comp
               key={item.id}
               message={item}
@@ -880,7 +944,7 @@ export const MailList = memo(
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
               </div>
             ) : null}
-          </>
+          </RowRenderer>
         ) : (
           <></>
         );
@@ -896,6 +960,7 @@ export const MailList = memo(
         isLoading,
         isFetching,
         hasNextPage,
+        setSize,
       ],
     );
 
@@ -933,8 +998,8 @@ export const MailList = memo(
                 <VList
                   ref={vListRef}
                   count={filteredItems.length}
-                  overscan={5}
-                  itemSize={100}
+                  overscan={50}
+                  itemSize={averageHeight}
                   className="scrollbar-none flex-1 overflow-x-hidden"
                   onScroll={() => {
                     if (!vListRef.current) return;

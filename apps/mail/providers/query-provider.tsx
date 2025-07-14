@@ -6,7 +6,6 @@ import {
 import { createTRPCClient, httpBatchLink, loggerLink } from '@trpc/client';
 import { QueryCache, QueryClient, hashKey } from '@tanstack/react-query';
 import { createTRPCContext } from '@trpc/tanstack-react-query';
-import { ConnectionProvider } from './connection-provider';
 import { useMemo, type PropsWithChildren } from 'react';
 import type { AppRouter } from '@zero/server/trpc';
 import { CACHE_BURST_KEY } from '@/lib/constants';

@@ -5,7 +5,6 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  useLoaderData,
   useNavigate,
   type LoaderFunctionArgs,
   type MetaFunction,
@@ -14,8 +13,8 @@ import { ServerProviders } from '@/providers/server-providers';
 import { ClientProviders } from '@/providers/client-providers';
 import { createTRPCClient, httpBatchLink } from '@trpc/client';
 import { useEffect, type PropsWithChildren } from 'react';
+import AppLoader from '@/components/loaders/app-loader';
 import { connectionIdAtom } from '@/store/connection';
-import { AlertCircle, Loader2 } from 'lucide-react';
 import type { AppRouter } from '@zero/server/trpc';
 import { Button } from '@/components/ui/button';
 import { getLocale } from '@/paraglide/runtime';
@@ -55,7 +54,7 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader({ request: _request }: LoaderFunctionArgs) {
   // COMMENTED OUT: Blocking data fetch that was preventing instant render
   // const trpc = getServerTrpc(request);
   // const defaultConnection = await trpc.connections.getDefault
@@ -91,9 +90,7 @@ export function Layout({ children }: PropsWithChildren) {
       </head>
       <body className="antialiased">
         <ServerProviders connectionId={connectionId}>
-          <ClientProviders>
-            {children}
-          </ClientProviders>
+          <ClientProviders>{children}</ClientProviders>
         </ServerProviders>
         <ScrollRestoration />
         <Scripts />
@@ -103,11 +100,7 @@ export function Layout({ children }: PropsWithChildren) {
 }
 
 export function HydrateFallback() {
-  return (
-    <div className="flex h-screen w-full items-center justify-center">
-      <Loader2 className="h-10 w-10 animate-spin" />
-    </div>
-  );
+  return <AppLoader />;
 }
 
 export default function App() {

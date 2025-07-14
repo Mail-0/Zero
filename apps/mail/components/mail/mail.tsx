@@ -592,13 +592,7 @@ export function MailLayout() {
                 )}
               />
               <div className="relative z-[1] h-[calc(100dvh-(2px+88px+49px+2px))] overflow-hidden pt-0 md:h-[calc(100dvh-7rem)]">
-                {isFetching ? (
-                  <div className="flex h-full w-full items-center justify-center">
-                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
-                  </div>
-                ) : (
-                  <MailList />
-                )}
+                <MailList />
               </div>
             </div>
           </ResizablePanel>

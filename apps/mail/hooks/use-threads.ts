@@ -16,7 +16,6 @@ import { useSession } from "@/lib/auth-client";
 import { useAtom, useAtomValue } from "jotai";
 import { useSettings } from "./use-settings";
 import { usePrevious } from "./use-previous";
-import type { ParsedMessage } from "@/types";
 import { useEffect, useMemo } from "react";
 import { useParams } from "react-router";
 import { useTheme } from "next-themes";

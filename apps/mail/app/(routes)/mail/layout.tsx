@@ -1,11 +1,10 @@
 import { HotkeyProviderWrapper } from '@/components/providers/hotkey-provider-wrapper';
 import { OnboardingWrapper } from '@/components/onboarding';
 
+import MailLoader from '@/components/loaders/mail-loader';
 import { NotificationProvider } from '@/components/party';
 import { AppSidebar } from '@/components/ui/app-sidebar';
-import { Outlet, useLoaderData } from 'react-router';
-import type { Route } from './+types/layout';
-import { Loader2 } from 'lucide-react';
+import { Outlet } from 'react-router';
 import { Suspense } from 'react';
 
 export default function MailLayout() {
@@ -13,13 +12,7 @@ export default function MailLayout() {
     <HotkeyProviderWrapper>
       <AppSidebar />
       <div className="bg-sidebar dark:bg-sidebar w-full">
-        <Suspense
-          fallback={
-            <div className="flex h-full w-full items-center justify-center">
-              <Loader2 className="h-10 w-10 animate-spin" />
-            </div>
-          }
-        >
+        <Suspense fallback={<MailLoader />}>
           <Outlet />
         </Suspense>
       </div>
