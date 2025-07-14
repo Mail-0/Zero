@@ -470,7 +470,7 @@ function AISidebar({ className }: AISidebarProps) {
           <div
             tabIndex={0}
             className={cn(
-              'fixed inset-0 z-50 flex items-center justify-center bg-transparent p-4 opacity-40 backdrop-blur-sm transition-opacity duration-150 hover:opacity-100 sm:inset-auto sm:bottom-4 sm:right-4 sm:flex-col sm:items-end sm:justify-end sm:p-0',
+              'fixed inset-0 z-50 flex items-center justify-center bg-transparent p-4 lg:opacity-40 backdrop-blur-sm transition-opacity duration-150 lg:hover:opacity-100 sm:inset-auto sm:bottom-4 sm:right-4 sm:flex-col sm:items-end sm:justify-end sm:p-0',
               'md:hidden',
               isPopup && !isFullScreen && 'md:flex',
               isFullScreen && '!inset-0 !flex !p-0 !opacity-100 !backdrop-blur-none',

@@ -69,6 +69,7 @@ const ThreadPreview = ({ threadId }: { threadId: string }) => {
 };
 
 const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => void }) => {
+  
   const firstRowQueries = [
     'Find invoice from Stripe',
     'Show unpaid invoices',
@@ -78,7 +79,7 @@ const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => voi
   const secondRowQueries = ['Find all work meetings', 'What projects do i have coming up'];
 
   return (
-    <div className="horizontal-fade-mask mt-6 flex w-full flex-col items-center gap-2">
+    <div className="mt-6 flex w-full max-w-xl relative flex-col items-center gap-2">
       {/* First row */}
       <div className="no-scrollbar relative flex w-full justify-center overflow-x-auto">
         <div className="flex gap-4 px-4">
@@ -86,14 +87,12 @@ const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => voi
             <button
               key={query}
               onClick={() => onQueryClick(query)}
-              className="flex-shrink-0 whitespace-nowrap rounded-md bg-[#f0f0f0] p-1 px-2 text-sm text-[#555555] dark:bg-[#262626] dark:text-[#929292]"
-            >
+              className="flex-shrink-0 whitespace-nowrap rounded-md bg-[#f0f0f0] p-1 px-2 text-sm text-[#555555] dark:bg-[#262626] dark:text-[#929292]">
               {query}
             </button>
           ))}
         </div>
       </div>
-
       {/* Second row */}
       <div className="no-scrollbar relative flex w-full justify-center overflow-x-auto">
         <div className="flex gap-4 px-4">
@@ -108,6 +107,10 @@ const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => voi
           ))}
         </div>
       </div>
+      {/* Left mask */}
+      <div className="from-panelLight dark:from-panelDark pointer-events-none absolute bottom-0 left-0 top-0 w-12 bg-gradient-to-r to-transparent"></div>
+      {/* Right mask */}
+      <div className="from-panelLight dark:from-panelDark pointer-events-none absolute bottom-0 right-0 top-0 w-12 bg-gradient-to-l to-transparent"></div>
     </div>
   );
 };
@@ -198,7 +201,6 @@ export function AIChat({
 }: AIChatProps): React.ReactElement {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const { chatMessages } = useBilling();
   const { isFullScreen } = useAIFullScreen();
   const [, setPricingDialog] = useQueryState('pricingDialog');
@@ -240,6 +242,12 @@ export function AIChat({
     }, 100);
   };
 
+  const handleQueryClick = (query: string) => {
+    editor.commands.setContent(query);
+    setInput(query);
+    editor.commands.focus();
+  };
+
   useEffect(() => {
     if (aiSidebarOpen === 'true') {
       editor.commands.focus();
@@ -252,13 +260,13 @@ export function AIChat({
         <div className="min-h-full px-2 py-4">
           {chatMessages && !chatMessages.enabled ? (
             <div
-              onClick={() => setPricingDialog('true')}
-              className="absolute inset-0 flex flex-col items-center justify-center"
-            >
-              <TextShimmer className="text-center text-xl font-medium">
-                Upgrade to Zero Pro for unlimited AI chat
-              </TextShimmer>
-              <Button className="mt-2 h-8 w-52">Start 7 day free trial</Button>
+            onClick={() => setPricingDialog('true')}
+            className="absolute inset-0 flex flex-col items-center justify-center"
+          >
+            <TextShimmer className="text-center text-xl font-medium">
+              Upgrade to Zero Pro for unlimited AI chat
+            </TextShimmer>
+            <Button className="mt-2 h-8 w-52">Start 7 day free trial</Button>
             </div>
           ) : !messages.length ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -274,12 +282,7 @@ export function AIChat({
               </p>
 
               {/* Example Thread */}
-              <ExampleQueries
-                onQueryClick={(query) => {
-                  setInput(query);
-                  inputRef.current?.focus();
-                }}
-              />
+              <ExampleQueries onQueryClick={handleQueryClick} />
             </div>
           ) : (
             messages.map((message, index) => {
@@ -399,7 +402,7 @@ export function AIChat({
           </div>
         </div>
 
-        {/* <div className="flex items-center justify-end gap-1">
+     {/* <div className="flex items-center justify-end gap-1">
         <div className="mt-1 flex items-center justify-end relative z-10">
           <Select
 
