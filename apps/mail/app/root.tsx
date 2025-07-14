@@ -9,13 +9,15 @@ import {
   type LoaderFunctionArgs,
   type MetaFunction,
 } from 'react-router';
+import { connectionIdAtom, connectionLoadingAtom } from '@/store/connection';
+import { ConnectionProvider } from '@/providers/connection-provider';
 import { ServerProviders } from '@/providers/server-providers';
 import { ClientProviders } from '@/providers/client-providers';
 import { createTRPCClient, httpBatchLink } from '@trpc/client';
 import { useEffect, type PropsWithChildren } from 'react';
 import AppLoader from '@/components/loaders/app-loader';
-import { connectionIdAtom } from '@/store/connection';
 import type { AppRouter } from '@zero/server/trpc';
+import { Provider as JotaiProvider } from 'jotai';
 import { Button } from '@/components/ui/button';
 import { getLocale } from '@/paraglide/runtime';
 import { siteConfig } from '@/lib/site-config';
@@ -68,14 +70,21 @@ export async function loader({ request: _request }: LoaderFunctionArgs) {
 }
 
 export function Layout({ children }: PropsWithChildren) {
-  // COMMENTED OUT: Using loader data (blocking approach)
-  // const { connectionId } = useLoaderData<typeof loader>();
+  return (
+    <JotaiProvider>
+      <ConnectionProvider>
+        <RootLayout>{children}</RootLayout>
+      </ConnectionProvider>
+    </JotaiProvider>
+  );
+}
 
-  // NEW: Using Jotai atom for reactive connectionId
+function RootLayout({ children }: PropsWithChildren) {
   const connectionId = useAtomValue(connectionIdAtom);
+  const isConnectionLoading = useAtomValue(connectionLoadingAtom);
 
   return (
-    <html lang={getLocale()} suppressHydrationWarning>
+    <html lang={getLocale()} className="dark" style={{ colorScheme: 'dark' }} suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -90,7 +99,11 @@ export function Layout({ children }: PropsWithChildren) {
       </head>
       <body className="antialiased">
         <ServerProviders connectionId={connectionId}>
-          <ClientProviders>{children}</ClientProviders>
+          {isConnectionLoading ? (
+            <AppLoader theme="dark" />
+          ) : (
+            <ClientProviders>{children}</ClientProviders>
+          )}
         </ServerProviders>
         <ScrollRestoration />
         <Scripts />

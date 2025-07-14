@@ -998,7 +998,7 @@ export const MailList = memo(
                 <VList
                   ref={vListRef}
                   count={filteredItems.length}
-                  overscan={50}
+                  overscan={20}
                   itemSize={averageHeight}
                   className="scrollbar-none flex-1 overflow-x-hidden"
                   onScroll={() => {

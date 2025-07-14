@@ -3,23 +3,23 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
-} from "@tanstack/react-query";
+} from '@tanstack/react-query';
 import {
   backgroundQueueAtom,
   isThreadInBackgroundQueueAtom,
-} from "@/store/backgroundQueue";
-import type { IGetThreadResponse } from "../../server/src/lib/driver/types";
-import { useSearchValue } from "@/hooks/use-search-value";
-import { useTRPC } from "@/providers/query-provider";
-import useSearchLabels from "./use-labels-search";
-import { useSession } from "@/lib/auth-client";
-import { useAtom, useAtomValue } from "jotai";
-import { useSettings } from "./use-settings";
-import { usePrevious } from "./use-previous";
-import { useEffect, useMemo } from "react";
-import { useParams } from "react-router";
-import { useTheme } from "next-themes";
-import { useQueryState } from "nuqs";
+} from '@/store/backgroundQueue';
+import type { IGetThreadResponse } from '../../server/src/lib/driver/types';
+import { useSearchValue } from '@/hooks/use-search-value';
+import { useTRPC } from '@/providers/query-provider';
+import useSearchLabels from './use-labels-search';
+import { useSession } from '@/lib/auth-client';
+import { useAtom, useAtomValue } from 'jotai';
+import { useSettings } from './use-settings';
+import { usePrevious } from './use-previous';
+import { useEffect, useMemo } from 'react';
+import { useParams } from 'react-router';
+import { useTheme } from 'next-themes';
+import { useQueryState } from 'nuqs';
 
 export const useThreads = () => {
   const { folder } = useParams<{ folder: string }>();

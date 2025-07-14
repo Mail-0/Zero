@@ -13,8 +13,8 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
-import { Bell, Lightning, Mail, ScanEye, Tag, Trash, User, X, Search } from '../icons/icons';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Bell, Lightning, Mail, ScanEye, Tag, Trash, User, X, Search } from '../icons/icons';
 import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
 import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -610,15 +610,7 @@ export function MailLayout() {
               minSize={30}
             >
               <div className="relative flex-1">
-                <React.Suspense
-                  fallback={
-                    <div className="flex h-full w-full items-center justify-center">
-                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
-                    </div>
-                  }
-                >
-                  <ThreadDisplay />
-                </React.Suspense>
+                <ThreadDisplay />
               </div>
             </ResizablePanel>
           )}
@@ -628,15 +620,7 @@ export function MailLayout() {
             <div className="bg-panelLight dark:bg-panelDark fixed inset-0 z-50">
               <div className="flex h-full flex-col">
                 <div className="h-full overflow-y-auto outline-none">
-                  <React.Suspense
-                    fallback={
-                      <div className="flex h-full w-full items-center justify-center">
-                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
-                      </div>
-                    }
-                  >
-                    <ThreadDisplay />
-                  </React.Suspense>
+                  <ThreadDisplay />
                 </div>
               </div>
             </div>

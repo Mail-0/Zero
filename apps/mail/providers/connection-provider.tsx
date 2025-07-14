@@ -1,37 +1,58 @@
+import { connectionErrorAtom, connectionIdAtom, connectionLoadingAtom } from '@/store/connection';
 import { useEffect, type PropsWithChildren } from 'react';
-import { connectionIdAtom } from '@/store/connection';
-// REMOVED: import { useTRPC } from './query-provider';
-// ADDED: Import the raw client
 import { trpcClient } from './query-provider';
-import { useSetAtom } from 'jotai';
+import { useAtom } from 'jotai';
+import { toast } from 'sonner';
 
 export function ConnectionProvider({ children }: PropsWithChildren) {
-  const setConnectionId = useSetAtom(connectionIdAtom);
+  const [connectionId, setConnectionId] = useAtom(connectionIdAtom);
+  const [, setLoading] = useAtom(connectionLoadingAtom);
+  const [, setError] = useAtom(connectionErrorAtom);
 
-  // REMOVED: const trpc = useTRPC();
-  /*
-  // REMOVED: Hook-based fetching which caused the circular dependency
-  const { data: defaultConnection } = trpc.connections.getDefault.useQuery(
-    undefined,
-    {
-      staleTime: Infinity,
-      gcTime: Infinity,
-    },
-  );
-  */
-
-  // ADDED: Client-side fetch using the raw tRPC client inside useEffect
   useEffect(() => {
     let isCancelled = false;
+    let retries = 0;
+    const maxRetries = 5;
 
     const fetchConnection = async () => {
+      if (connectionId) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+
       try {
         const connection = await trpcClient.connections.getDefault.query();
-        if (!isCancelled && connection?.id) {
-          setConnectionId(connection.id);
+        if (!isCancelled) {
+          if (connection?.id) {
+            setConnectionId(connection.id);
+          } else {
+            throw new Error('No default connection found');
+          }
+          setError(null);
         }
       } catch (error) {
-        console.error('Failed to fetch default connection:', error);
+        if (!isCancelled) {
+          console.error('Failed to fetch default connection:', error);
+          setError(error as Error);
+
+          if (retries < maxRetries) {
+            const delay = Math.pow(2, retries) * 1000;
+            retries++;
+            toast.error(
+              `Failed to connect. Retrying in ${delay / 1000}s... (${retries}/${maxRetries})`,
+            );
+            setTimeout(fetchConnection, delay);
+          } else {
+            toast.error(
+              'Could not connect to the server after multiple retries. Please try again later.',
+            );
+          }
+        }
+      } finally {
+        if (!isCancelled) {
+          setLoading(false);
+        }
       }
     };
 
@@ -40,8 +61,7 @@ export function ConnectionProvider({ children }: PropsWithChildren) {
     return () => {
       isCancelled = true;
     };
-  }, [setConnectionId]);
+  }, [setConnectionId, setLoading, setError, connectionId]);
 
-  // This provider renders its children immediately, without waiting for the query.
   return <>{children}</>;
 }
