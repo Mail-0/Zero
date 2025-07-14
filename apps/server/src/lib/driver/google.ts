@@ -214,6 +214,10 @@ export class GoogleMailManager implements MailManager {
       { email: this.config.auth?.email },
     );
   }
+
+  private getQuotaUser() {
+    return this.config.auth?.email ? `${this.config.auth.email}-${env.NODE_ENV}` : undefined;
+  }
   public list(params: {
     folder: string;
     query?: string;
@@ -235,7 +239,7 @@ export class GoogleMailManager implements MailManager {
           labelIds: folder === 'inbox' ? labelIds : [],
           maxResults,
           pageToken: pageToken ? pageToken : undefined,
-          quotaUser: this.config.auth?.email,
+          quotaUser: this.getQuotaUser(),
         });
 
         const threads = res.data.threads ?? [];
@@ -263,7 +267,7 @@ export class GoogleMailManager implements MailManager {
           userId: 'me',
           id,
           format: 'full',
-          quotaUser: this.config.auth?.email,
+          quotaUser: this.getQuotaUser(),
         });
 
         if (!res.data.messages)
@@ -787,7 +791,7 @@ export class GoogleMailManager implements MailManager {
           userId: 'me',
           id: threadId,
           format: 'metadata', // Fetch only metadata,
-          quotaUser: this.config.auth?.email,
+          quotaUser: this.getQuotaUser(),
         });
         // Process res.data.messages to extract id and labelIds
         return {

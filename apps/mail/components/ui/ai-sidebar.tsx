@@ -334,15 +334,8 @@ export function useAISidebar() {
 }
 
 function AISidebar({ className }: AISidebarProps) {
-  const {
-    open,
-    setOpen,
-    isFullScreen,
-    setIsFullScreen,
-    toggleViewMode,
-    isSidebar,
-    isPopup,
-  } = useAISidebar();
+  const { open, setOpen, isFullScreen, setIsFullScreen, toggleViewMode, isSidebar, isPopup } =
+    useAISidebar();
   const { isPro, track, refetch: refetchBilling } = useBilling();
   const queryClient = useQueryClient();
   const trpc = useTRPC();
@@ -360,7 +353,7 @@ function AISidebar({ className }: AISidebarProps) {
 
   const chatState = useAgentChat({
     agent,
-    maxSteps: 5,
+    maxSteps: 10,
     body: {
       threadId: threadId ?? undefined,
       currentFolder: folder ?? undefined,

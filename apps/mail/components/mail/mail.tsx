@@ -545,7 +545,7 @@ export function MailLayout() {
                   <span className="inline-block truncate pr-20 lg:hidden">
                     {activeFilters.length > 0
                       ? `${activeFilters.length} filter${activeFilters.length > 1 ? 's' : ''}`
-                      : 'Search...'}
+                      : 'Search & Filter'}
                   </span>
 
                   <span className="absolute right-[0rem] flex items-center gap-1">
@@ -591,8 +591,7 @@ export function MailLayout() {
                   isFetching ? 'opacity-100' : 'opacity-0',
                 )}
               />
-              {/* removed 88px because there is no category picker add it back in height dvh calc when category picker is added */}
-              <div className="relative z-[1] h-[calc(100dvh-(2px+49px+2px))] overflow-hidden pt-0 md:h-[calc(100dvh-7rem)]">
+              <div className="relative z-[1] h-[calc(100dvh-(2px+2px))] overflow-hidden pt-0 md:h-[calc(100dvh-7rem)]">
                 <MailList />
               </div>
             </div>

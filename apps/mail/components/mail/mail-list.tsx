@@ -957,13 +957,13 @@ export const MailList = memo(
             )}
           </>
         </div>
-        <div className="w-full pt-4 text-center">
+        <div className="w-full pt-2 text-center">
           {isFetching ? (
             <div className="text-center">
               <div className="mx-auto h-4 w-4 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
             </div>
           ) : (
-            <div className="h-4" />
+            <div className="h-2" />
           )}
         </div>
       </>

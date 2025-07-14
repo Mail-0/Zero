@@ -94,7 +94,7 @@
         "commandPalette": "コマンド パレット"
       },
       "quickResults": "クイック結果",
-      "searchPlaceholder": "検索...",
+      "searchPlaceholder": "検索とフィルター",
       "noSearchResults": "検索結果がありません",
       "actions": "アクション",
       "addFilters": "フィルターを追加",
@@ -253,8 +253,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "Add notes",
-            "countPlural=one": "# note",
-            "countPlural=other": "# notes"
+            "countPlural=one": "{count}件のノート",
+            "countPlural=other": "{count}件のノート"
           }
         }
       ],
@@ -316,8 +316,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "返信",
-            "countPlural=one": "返信 #個",
-            "countPlural=other": "返信 #個"
+            "countPlural=one": "{count}件の返信",
+            "countPlural=other": "{count}件の返信"
           }
         }
       ],

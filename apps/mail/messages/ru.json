@@ -94,7 +94,7 @@
         "commandPalette": "Командная палитра"
       },
       "quickResults": "Быстрые результаты",
-      "searchPlaceholder": "Поиск...",
+      "searchPlaceholder": "Поиск и фильтр",
       "noSearchResults": "Результаты не найдены",
       "actions": "Действия",
       "addFilters": "Добавить фильтры",
@@ -253,8 +253,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "Добавьте заметки",
-            "countPlural=one": "# заметка",
-            "countPlural=other": "# заметки"
+            "countPlural=one": "{count} заметка",
+            "countPlural=other": "{count} заметок"
           }
         }
       ],
@@ -316,8 +316,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "ответы",
-            "countPlural=one": "# ответ",
-            "countPlural=other": "# ответы"
+            "countPlural=one": "{count} ответ",
+            "countPlural=other": "{count} ответов"
           }
         }
       ],

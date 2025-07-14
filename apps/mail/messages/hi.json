@@ -94,7 +94,7 @@
         "commandPalette": "कमांड पैलेट"
       },
       "quickResults": "त्वरित परिणाम",
-      "searchPlaceholder": "खोजें...",
+      "searchPlaceholder": "खोजें और फ़िल्टर करें",
       "noSearchResults": "कोई खोज परिणाम नहीं",
       "actions": "एक्शन",
       "addFilters": "फ़िल्टर जोड़ें",
@@ -253,8 +253,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "नोट्स जोड़ें",
-            "countPlural=one": "# नोट",
-            "countPlural=other": "# नोट्स"
+            "countPlural=one": "{count} नोट",
+            "countPlural=other": "{count} नोट्स"
           }
         }
       ],
@@ -316,8 +316,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "जवाब",
-            "countPlural=one": "# जवाब",
-            "countPlural=other": "# जवाब"
+            "countPlural=one": "{count} जवाब",
+            "countPlural=other": "{count} जवाब"
           }
         }
       ],
