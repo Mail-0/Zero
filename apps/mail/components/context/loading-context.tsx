@@ -19,21 +19,23 @@ export function LoadingProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <LoadingContext.Provider value={{ isLoading, loadingMessage, setLoading }}>
-      {children}
-      {isLoading && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-panelLight dark:bg-panelDark flex flex-col items-center gap-4 rounded-xl border p-6 shadow-xl">
-            <Spinner size={32} />
-            <div className="text-center">
-              <p className="text-sm font-medium text-black dark:text-white">
-                {loadingMessage || 'Loading...'}
-              </p>
+    <>
+      <LoadingContext.Provider value={{ isLoading, loadingMessage, setLoading }}>
+        {children}
+        {isLoading && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="bg-panelLight dark:bg-panelDark flex flex-col items-center gap-4 rounded-xl border p-6 shadow-xl">
+              <Spinner size={32} />
+              <div className="text-center">
+                <p className="text-sm font-medium text-black dark:text-white">
+                  {loadingMessage || 'Loading...'}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </LoadingContext.Provider>
+        )}
+      </LoadingContext.Provider>
+    </>
   );
 }
 
@@ -43,4 +45,4 @@ export function useLoading() {
     throw new Error('useLoading must be used within a LoadingProvider');
   }
   return context;
-} 
+}

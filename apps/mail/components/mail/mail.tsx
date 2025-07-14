@@ -591,8 +591,14 @@ export function MailLayout() {
                   isFetching ? 'opacity-100' : 'opacity-0',
                 )}
               />
-              <div className="relative z-[1] h-[calc(100dvh-(2px+2px))] overflow-hidden pt-0 md:h-[calc(100dvh-7rem)]">
-                <MailList />
+              <div className="relative z-[1] h-[calc(100dvh-(2px+88px+49px+2px))] overflow-hidden pt-0 md:h-[calc(100dvh-7rem)]">
+                {isFetching ? (
+                  <div className="flex h-full w-full items-center justify-center">
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
+                  </div>
+                ) : (
+                  <MailList />
+                )}
               </div>
             </div>
           </ResizablePanel>
@@ -610,7 +616,15 @@ export function MailLayout() {
               minSize={30}
             >
               <div className="relative flex-1">
-                <ThreadDisplay />
+                <React.Suspense
+                  fallback={
+                    <div className="flex h-full w-full items-center justify-center">
+                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
+                    </div>
+                  }
+                >
+                  <ThreadDisplay />
+                </React.Suspense>
               </div>
             </ResizablePanel>
           )}
@@ -620,7 +634,15 @@ export function MailLayout() {
             <div className="bg-panelLight dark:bg-panelDark fixed inset-0 z-50">
               <div className="flex h-full flex-col">
                 <div className="h-full overflow-y-auto outline-none">
-                  <ThreadDisplay />
+                  <React.Suspense
+                    fallback={
+                      <div className="flex h-full w-full items-center justify-center">
+                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-neutral-900 border-t-transparent dark:border-white dark:border-t-transparent" />
+                      </div>
+                    }
+                  >
+                    <ThreadDisplay />
+                  </React.Suspense>
                 </div>
               </div>
             </div>

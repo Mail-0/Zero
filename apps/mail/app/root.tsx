@@ -14,6 +14,7 @@ import { ServerProviders } from '@/providers/server-providers';
 import { ClientProviders } from '@/providers/client-providers';
 import { createTRPCClient, httpBatchLink } from '@trpc/client';
 import { useEffect, type PropsWithChildren } from 'react';
+import { connectionIdAtom } from '@/store/connection';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import type { AppRouter } from '@zero/server/trpc';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,7 @@ import { signOut } from '@/lib/auth-client';
 import type { Route } from './+types/root';
 import { m } from '@/paraglide/messages';
 import { ArrowLeft } from 'lucide-react';
+import { useAtomValue } from 'jotai';
 import superjson from 'superjson';
 import './globals.css';
 
@@ -54,16 +56,24 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const trpc = getServerTrpc(request);
-  const defaultConnection = await trpc.connections.getDefault
-    .query()
-    .then((res) => (res?.id as string) ?? null)
-    .catch(() => null);
-  return { connectionId: defaultConnection };
+  // COMMENTED OUT: Blocking data fetch that was preventing instant render
+  // const trpc = getServerTrpc(request);
+  // const defaultConnection = await trpc.connections.getDefault
+  //   .query()
+  //   .then((res) => (res?.id as string) ?? null)
+  //   .catch(() => null);
+  // return { connectionId: defaultConnection };
+
+  // NEW: Return null immediately to allow instant rendering
+  return { connectionId: null };
 }
 
 export function Layout({ children }: PropsWithChildren) {
-  const { connectionId } = useLoaderData<typeof loader>();
+  // COMMENTED OUT: Using loader data (blocking approach)
+  // const { connectionId } = useLoaderData<typeof loader>();
+
+  // NEW: Using Jotai atom for reactive connectionId
+  const connectionId = useAtomValue(connectionIdAtom);
 
   return (
     <html lang={getLocale()} suppressHydrationWarning>
@@ -81,7 +91,9 @@ export function Layout({ children }: PropsWithChildren) {
       </head>
       <body className="antialiased">
         <ServerProviders connectionId={connectionId}>
-          <ClientProviders>{children}</ClientProviders>
+          <ClientProviders>
+            {children}
+          </ClientProviders>
         </ServerProviders>
         <ScrollRestoration />
         <Scripts />
@@ -166,9 +178,9 @@ function NotFound() {
       <div className="flex-col items-center justify-center md:flex dark:text-gray-100">
         <div className="relative">
           <h1 className="text-muted-foreground/20 select-none text-[150px] font-bold">404</h1>
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          {/* <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             <AlertCircle className="text-muted-foreground h-20 w-20" />
-          </div>
+          </div> */}
         </div>
 
         {/* Message */}
