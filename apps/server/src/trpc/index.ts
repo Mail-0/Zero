@@ -15,6 +15,7 @@ import { bimiRouter } from './routes/bimi';
 import type { HonoContext } from '../ctx';
 import { aiRouter } from './routes/ai';
 import { router } from './trpc';
+import { organizationRouter } from './routes/organization';
 
 export const appRouter = router({
   ai: aiRouter,
@@ -27,6 +28,7 @@ export const appRouter = router({
   labels: labelsRouter,
   mail: mailRouter,
   notes: notesRouter,
+  organization: organizationRouter,
   shortcut: shortcutRouter,
   settings: settingsRouter,
   user: userRouter,
