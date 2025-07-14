@@ -368,7 +368,7 @@ export const SuperSearchEmail = ({ name }: EmailProps) => {
             <Text style={listItem}>➡️ emails from last week</Text>
             <Text style={listItem}>➡️ unread emails with attachments</Text>
             <Text style={listItem}>➡️ emails about meeting</Text>
-            <Text style={listItem}>➡️ emails from December 2023</Text>
+            <Text style={listItem}>➡️ emails from last month</Text>
             <Text style={text}>
               No weird syntax or advanced filters. Just write what you're looking for and let the AI handle the rest.
             </Text>
