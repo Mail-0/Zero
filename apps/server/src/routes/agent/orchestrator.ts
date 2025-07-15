@@ -1,6 +1,7 @@
 import { streamText, tool, type DataStreamWriter, type ToolSet } from 'ai';
 import { perplexity } from '@ai-sdk/perplexity';
 
+import { getZeroAgent } from '../../lib/server-utils';
 import { Tools } from '../../types';
 import { z } from 'zod';
 
@@ -10,10 +11,12 @@ import { z } from 'zod';
  */
 export class ToolOrchestrator {
   private dataStream: DataStreamWriter;
-  private streamingTools: Set<string> = new Set([Tools.WebSearch]);
+  private streamingTools: Set<string> = new Set([Tools.WebSearch, Tools.InboxRag]);
+  private connectionId: string;
 
-  constructor(dataStream: DataStreamWriter) {
+  constructor(dataStream: DataStreamWriter, connectionId: string) {
     this.dataStream = dataStream;
+    this.connectionId = connectionId;
   }
 
   /**
@@ -38,7 +41,7 @@ export class ToolOrchestrator {
         parameters: z.object({
           query: z.string().describe('The query to search the web for'),
         }),
-        execute: async ({ query }) => {
+        execute: async ({ query }, { toolCallId }) => {
           try {
             const response = streamText({
               model: perplexity('sonar'),
@@ -55,11 +58,26 @@ export class ToolOrchestrator {
             response.mergeIntoDataStream(this.dataStream);
 
             // Return a placeholder result since the actual streaming happens above
-            return { type: 'streaming_response', toolName };
+            return { type: 'streaming_response', toolName, toolCallId };
           } catch (error) {
             console.error('Error searching the web:', error);
             throw new Error('Failed to search the web');
           }
+        },
+      });
+    }
+
+    if (toolName === Tools.InboxRag) {
+      return tool({
+        description:
+          'Search the inbox for emails using natural language. Returns only an array of threadIds.',
+        parameters: z.object({
+          query: z.string().describe('The query to search the inbox for'),
+        }),
+        execute: async ({ query }) => {
+          const agent = await getZeroAgent(this.connectionId);
+          const res = await agent.searchThreads({ query, maxResults: 10 });
+          return res.threadIds;
         },
       });
     }

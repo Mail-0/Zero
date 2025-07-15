@@ -94,7 +94,7 @@
         "commandPalette": "Paleta de Comandos"
       },
       "quickResults": "Resultados rápidos",
-      "searchPlaceholder": "Pesquisar...",
+      "searchPlaceholder": "Pesquisar e filtrar",
       "noSearchResults": "Sem resultados de pesquisa",
       "actions": "Ações",
       "addFilters": "Adicionar filtros",
@@ -253,8 +253,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "Adicione notas",
-            "countPlural=one": "# nota",
-            "countPlural=other": "# notas"
+            "countPlural=one": "{count} nota",
+            "countPlural=other": "{count} notas"
           }
         }
       ],
@@ -316,8 +316,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "arquivos",
-            "countPlural=one": "arquivo",
-            "countPlural=other": "arquivos"
+            "countPlural=one": "{count} resposta",
+            "countPlural=other": "{count} respostas"
           }
         }
       ],

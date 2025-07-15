@@ -94,7 +94,7 @@
         "commandPalette": "Parancspaletta"
       },
       "quickResults": "Gyors eredmények",
-      "searchPlaceholder": "Keresés...",
+      "searchPlaceholder": "Keresés és szűrés",
       "noSearchResults": "Nincs találat",
       "actions": "Műveletek",
       "addFilters": "Szűrők hozzáadása",
@@ -253,8 +253,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "Jegyzetek hozzáadása",
-            "countPlural=one": "# jegyzet",
-            "countPlural=other": "# jegyzet"
+            "countPlural=one": "{count} jegyzet",
+            "countPlural=other": "{count} jegyzet"
           }
         }
       ],
@@ -316,8 +316,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "válasz",
-            "countPlural=one": "# válasz",
-            "countPlural=other": "# válasz"
+            "countPlural=one": "{count} válasz",
+            "countPlural=other": "{count} válasz"
           }
         }
       ],

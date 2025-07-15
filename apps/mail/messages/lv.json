@@ -94,7 +94,7 @@
         "commandPalette": "Komandu palete"
       },
       "quickResults": "Ātrie rezultāti",
-      "searchPlaceholder": "Meklēt...",
+      "searchPlaceholder": "Meklēt un filtrēt",
       "noSearchResults": "Nav meklēšanas rezultātu",
       "actions": "Darbības",
       "addFilters": "Pievienot filtrus",
@@ -253,8 +253,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "Pievienot piezīmes",
-            "countPlural=one": "# piezīme",
-            "countPlural=other": "# piezīmes"
+            "countPlural=one": "{count} piezīme",
+            "countPlural=other": "{count} piezīmes"
           }
         }
       ],
@@ -316,8 +316,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "atbildes",
-            "countPlural=one": "# atbilde",
-            "countPlural=other": "# atbildes"
+            "countPlural=one": "{count} atbilde",
+            "countPlural=other": "{count} atbildes"
           }
         }
       ],

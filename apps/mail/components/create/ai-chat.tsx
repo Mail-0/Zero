@@ -1,4 +1,3 @@
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useAIFullScreen, useAISidebar } from '../ui/ai-sidebar';
 import { VoiceProvider } from '@/providers/voice-provider';
@@ -14,25 +13,26 @@ import { VoiceButton } from '../voice-button';
 import { EditorContent } from '@tiptap/react';
 import { CurvedArrow } from '../icons/icons';
 import { Tools } from '../../types/tools';
-import { InfoIcon } from 'lucide-react';
 import { Button } from '../ui/button';
 import { format } from 'date-fns-tz';
 import { useQueryState } from 'nuqs';
 
-const renderThread = (thread: { id: string; title: string; snippet: string }) => {
+const ThreadPreview = ({ threadId }: { threadId: string }) => {
   const [, setThreadId] = useQueryState('threadId');
-  const { data: getThread } = useThread(thread.id);
+  const { data: getThread } = useThread(threadId);
   const [, setIsFullScreen] = useQueryState('isFullScreen');
 
   const handleClick = () => {
-    setThreadId(thread.id);
+    setThreadId(threadId);
     setIsFullScreen(null);
   };
 
-  return getThread?.latest ? (
+  if (!getThread?.latest) return null;
+
+  return (
     <div
       onClick={handleClick}
-      key={thread.id}
+      key={threadId}
       className="hover:bg-offsetLight/30 dark:hover:bg-offsetDark/30 cursor-pointer rounded-lg"
     >
       <div className="flex cursor-pointer items-center justify-between p-2">
@@ -65,18 +65,11 @@ const renderThread = (thread: { id: string; title: string; snippet: string }) =>
         </div>
       </div>
     </div>
-  ) : null;
-};
-
-const RenderThreads = ({
-  threads,
-}: {
-  threads: { id: string; title: string; snippet: string }[];
-}) => {
-  return <div className="flex flex-col gap-2">{threads.map(renderThread)}</div>;
+  );
 };
 
 const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => void }) => {
+  
   const firstRowQueries = [
     'Find invoice from Stripe',
     'Show unpaid invoices',
@@ -86,7 +79,7 @@ const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => voi
   const secondRowQueries = ['Find all work meetings', 'What projects do i have coming up'];
 
   return (
-    <div className="horizontal-fade-mask mt-6 flex w-full flex-col items-center gap-2">
+    <div className="mt-6 flex w-full max-w-xl relative flex-col items-center gap-2">
       {/* First row */}
       <div className="no-scrollbar relative flex w-full justify-center overflow-x-auto">
         <div className="flex gap-4 px-4">
@@ -94,14 +87,12 @@ const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => voi
             <button
               key={query}
               onClick={() => onQueryClick(query)}
-              className="flex-shrink-0 whitespace-nowrap rounded-md bg-[#f0f0f0] p-1 px-2 text-sm text-[#555555] dark:bg-[#262626] dark:text-[#929292]"
-            >
+              className="flex-shrink-0 whitespace-nowrap rounded-md bg-[#f0f0f0] p-1 px-2 text-sm text-[#555555] dark:bg-[#262626] dark:text-[#929292]">
               {query}
             </button>
           ))}
         </div>
       </div>
-
       {/* Second row */}
       <div className="no-scrollbar relative flex w-full justify-center overflow-x-auto">
         <div className="flex gap-4 px-4">
@@ -116,6 +107,10 @@ const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => voi
           ))}
         </div>
       </div>
+      {/* Left mask */}
+      <div className="from-panelLight dark:from-panelDark pointer-events-none absolute bottom-0 left-0 top-0 w-12 bg-gradient-to-r to-transparent"></div>
+      {/* Right mask */}
+      <div className="from-panelLight dark:from-panelDark pointer-events-none absolute bottom-0 right-0 top-0 w-12 bg-gradient-to-l to-transparent"></div>
     </div>
   );
 };
@@ -148,80 +143,53 @@ export interface AIChatProps {
   onModelChange?: (model: string) => void;
 }
 
-declare global {
-  var DEBUG: boolean;
-}
+// Subcomponents for ToolResponse
+const GetThreadToolResponse = ({ result, args }: { result: any; args: any }) => {
+  // Extract threadId from result or args
+  let threadId: string | null = null;
+  if (typeof result === 'string') {
+    const match = result.match(/<thread id="([^"]+)" ?\/>/);
+    if (match?.[1]) threadId = match[1];
+  }
+  if (!threadId && args?.id && typeof args.id === 'string') threadId = args.id;
+  if (!threadId) return null;
+  return <ThreadPreview threadId={threadId} />;
+};
 
-const ToolResponse = ({ toolName, result, args }: { toolName: string; result: any; args: any }) => {
-  const renderContent = () => {
-    switch (toolName) {
-      case Tools.ListThreads:
-      case Tools.AskZeroMailbox:
-        return result?.threads ? <RenderThreads threads={result.threads} /> : null;
-
-      case Tools.GetThread:
-        return result?.thread ? (
-          <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
-            <div className="mb-2 flex items-center gap-2">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={getEmailLogo(result.thread.sender?.email)} />
-                <AvatarFallback>{result.thread.sender?.name?.[0]?.toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-medium">{result.thread.sender?.name}</p>
-                <p className="text-sm text-gray-500">{result.thread.subject}</p>
-              </div>
-            </div>
-            <div className="prose dark:prose-invert max-w-none">
-              <Markdown>{result.thread.body}</Markdown>
-            </div>
-          </div>
-        ) : null;
-
-      case Tools.GetUserLabels:
-        return result?.labels ? (
-          <div className="flex flex-wrap gap-2">
-            {result.labels.map((label: any) => (
-              <MailLabels key={label.id} labels={[label]} />
-            ))}
-          </div>
-        ) : null;
-
-      case Tools.ComposeEmail:
-        return result?.newBody ? (
-          <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
-            <div className="prose dark:prose-invert max-w-none">
-              <Markdown>{result.newBody}</Markdown>
-            </div>
-          </div>
-        ) : null;
-
-      default:
-        return null;
-    }
-  };
-
-  const content = renderContent();
-  if (!content) return null;
-
+const GetUserLabelsToolResponse = ({ result }: { result: any }) => {
+  if (!result?.labels) return null;
   return (
-    <div className="group relative space-y-2">
-      {globalThis.DEBUG ? (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <InfoIcon className="fill-subtleWhite text-subtleBlack dark:fill-subtleBlack h-4 w-4 dark:text-[#373737]" />
-          </TooltipTrigger>
-          <TooltipContent>
-            <div className="text-xs">
-              <p className="mb-1 font-medium">Tool Arguments:</p>
-              <pre className="whitespace-pre-wrap break-words">{JSON.stringify(args, null, 2)}</pre>
-            </div>
-          </TooltipContent>
-        </Tooltip>
-      ) : null}
-      {content}
+    <div className="flex flex-wrap gap-2">
+      {result.labels.map((label: any) => (
+        <MailLabels key={label.id} labels={[label]} />
+      ))}
     </div>
   );
+};
+
+const ComposeEmailToolResponse = ({ result }: { result: any }) => {
+  if (!result?.newBody) return null;
+  return (
+    <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+      <div className="prose dark:prose-invert max-w-none">
+        <Markdown>{result.newBody}</Markdown>
+      </div>
+    </div>
+  );
+};
+
+// Main ToolResponse switcher
+const ToolResponse = ({ toolName, result, args }: { toolName: string; result: any; args: any }) => {
+  switch (toolName) {
+    case Tools.GetThread:
+      return <GetThreadToolResponse result={result} args={args} />;
+    case Tools.GetUserLabels:
+      return <GetUserLabelsToolResponse result={result} />;
+    case Tools.ComposeEmail:
+      return <ComposeEmailToolResponse result={result} />;
+    default:
+      return null;
+  }
 };
 
 export function AIChat({
@@ -233,7 +201,6 @@ export function AIChat({
 }: AIChatProps): React.ReactElement {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const { chatMessages } = useBilling();
   const { isFullScreen } = useAIFullScreen();
   const [, setPricingDialog] = useQueryState('pricingDialog');
@@ -275,6 +242,12 @@ export function AIChat({
     }, 100);
   };
 
+  const handleQueryClick = (query: string) => {
+    editor.commands.setContent(query);
+    setInput(query);
+    editor.commands.focus();
+  };
+
   useEffect(() => {
     if (aiSidebarOpen === 'true') {
       editor.commands.focus();
@@ -287,13 +260,13 @@ export function AIChat({
         <div className="min-h-full px-2 py-4">
           {chatMessages && !chatMessages.enabled ? (
             <div
-              onClick={() => setPricingDialog('true')}
-              className="absolute inset-0 flex flex-col items-center justify-center"
-            >
-              <TextShimmer className="text-center text-xl font-medium">
-                Upgrade to Zero Pro for unlimited AI chat
-              </TextShimmer>
-              <Button className="mt-2 h-8 w-52">Start 7 day free trial</Button>
+            onClick={() => setPricingDialog('true')}
+            className="absolute inset-0 flex flex-col items-center justify-center"
+          >
+            <TextShimmer className="text-center text-xl font-medium">
+              Upgrade to Zero Pro for unlimited AI chat
+            </TextShimmer>
+            <Button className="mt-2 h-8 w-52">Start 7 day free trial</Button>
             </div>
           ) : !messages.length ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -309,39 +282,28 @@ export function AIChat({
               </p>
 
               {/* Example Thread */}
-              <ExampleQueries
-                onQueryClick={(query) => {
-                  setInput(query);
-                  inputRef.current?.focus();
-                }}
-              />
+              <ExampleQueries onQueryClick={handleQueryClick} />
             </div>
           ) : (
             messages.map((message, index) => {
               const textParts = message.parts.filter((part) => part.type === 'text');
               const toolParts = message.parts.filter((part) => part.type === 'tool-invocation');
-              const streamingTools = new Set([Tools.WebSearch]);
-              const doesIncludeStreamingTool = toolParts.some(
-                (part) =>
-                  streamingTools.has(part.toolInvocation?.toolName as Tools) &&
-                  part.toolInvocation?.result,
-              );
+
               return (
-                <div key={`${message.id}-${index}`} className="flex flex-col">
-                  {toolParts.map((part) =>
-                    part.toolInvocation &&
-                    part.toolInvocation.result &&
-                    !streamingTools.has(part.toolInvocation.toolName as Tools) ? (
-                      <ToolResponse
-                        key={part.toolInvocation.toolName}
-                        toolName={part.toolInvocation.toolName}
-                        result={part.toolInvocation.result}
-                        args={part.toolInvocation.args}
-                      />
-                    ) : null,
+                <div key={`${message.id}-${index}`} className="mb-2 flex flex-col">
+                  {toolParts.map(
+                    (part, index) =>
+                      part.toolInvocation?.result && (
+                        <ToolResponse
+                          key={`${part.toolInvocation.toolName}-${index}`}
+                          toolName={part.toolInvocation.toolName}
+                          result={part.toolInvocation.result}
+                          args={part.toolInvocation.args}
+                        />
+                      ),
                   )}
-                  {!doesIncludeStreamingTool && textParts.length > 0 && (
-                    <p
+                  {textParts.length > 0 && (
+                    <div
                       className={cn(
                         'flex w-fit flex-col gap-2 rounded-lg text-sm',
                         message.role === 'user'
@@ -354,27 +316,26 @@ export function AIChat({
                           part.text && (
                             <Markdown
                               markdownCustomStyles={{
-                                h1: {
+                                h1: { fontSize: '1rem' },
+                                h2: { fontSize: '1rem' },
+                                h3: { fontSize: '1rem' },
+                                h4: { fontSize: '1rem' },
+                                h5: { fontSize: '1rem' },
+                                h6: { fontSize: '1rem' },
+                                p: { fontSize: '1rem' },
+                                li: {
                                   fontSize: '1rem',
+                                  marginBottom: '0.25rem',
+                                  listStyleType: 'disc',
+                                  listStylePosition: 'inside',
                                 },
-                                h2: {
-                                  fontSize: '1rem',
-                                },
-                                h3: {
-                                  fontSize: '1rem',
-                                },
-                                h4: {
-                                  fontSize: '1rem',
-                                },
-                                h5: {
-                                  fontSize: '1rem',
-                                },
-                                h6: {
-                                  fontSize: '1rem',
-                                },
-                                p: {
-                                  fontSize: '1rem',
-                                },
+                                ul: { fontSize: '1rem' },
+                                ol: { fontSize: '1rem' },
+                                blockQuote: { fontSize: '1rem' },
+                                codeBlock: { fontSize: '1rem' },
+                                codeInline: { fontSize: '1rem' },
+                                link: { fontSize: '1rem' },
+                                image: { fontSize: '1rem' },
                               }}
                               key={part.text}
                             >
@@ -382,7 +343,7 @@ export function AIChat({
                             </Markdown>
                           ),
                       )}
-                    </p>
+                    </div>
                   )}
                 </div>
               );
@@ -390,12 +351,10 @@ export function AIChat({
           )}
 
           {(status === 'submitted' || status === 'streaming') && (
-            <div className="flex flex-col gap-2 rounded-lg">
-              <div className="flex items-center gap-2">
-                <TextShimmer className="text-muted-foreground text-sm">
-                  zero is thinking...
-                </TextShimmer>
-              </div>
+            <div className="absolute bottom-0 ml-2 flex items-center gap-2">
+              <TextShimmer className="text-muted-foreground text-xs">
+                zero is thinking...
+              </TextShimmer>
             </div>
           )}
           {(status === 'error' || !!error) && (
@@ -443,7 +402,7 @@ export function AIChat({
           </div>
         </div>
 
-        {/* <div className="flex items-center justify-end gap-1">
+     {/* <div className="flex items-center justify-end gap-1">
         <div className="mt-1 flex items-center justify-end relative z-10">
           <Select
 
