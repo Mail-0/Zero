@@ -20,17 +20,6 @@ import {
   X as XIcon,
 } from 'lucide-react';
 import {
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-  CommandShortcut,
-  Command,
-} from '@/components/ui/command';
-import {
   createContext,
   Fragment,
   Suspense,
@@ -41,13 +30,20 @@ import {
   useState,
   type ComponentType,
 } from 'react';
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import { cn, getMainSearchTerm, parseNaturalLanguageSearch } from '@/lib/utils';
 import { DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useLocation, useNavigate } from 'react-router';
 import { isMac } from '@/lib/hotkeys/use-hotkey-utils';
-import { SettingsGear } from '../icons/icons';
 import { navigationConfig } from '@/config/navigation';
 import { Separator } from '@/components/ui/separator';
 import { useTRPC } from '@/providers/query-provider';
@@ -58,6 +54,7 @@ import { useLabels } from '@/hooks/use-labels';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { SettingsGear } from '../icons/icons';
 import { format, subDays } from 'date-fns';
 import { VisuallyHidden } from 'radix-ui';
 import { m } from '@/paraglide/messages';
@@ -694,6 +691,8 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           setCurrentView('search');
         },
         description: 'Search across your emails',
+        keywords: ['search', 'search emails', 'search emails'],
+        url: '',
       },
       {
         key: 'f',
@@ -702,18 +701,24 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           setCurrentView('filter');
         },
         description: 'Filter emails by criteria',
+        keywords: ['filter', 'filter emails', 'filter emails'],
+        url: '',
       },
       {
         key: 'c',
         title: 'Compose Email',
         action: () => setIsComposeOpen('true'),
         description: 'Create a new email',
+        keywords: ['compose', 'compose email', 'compose email'],
+        url: '',
       },
       {
         key: 't',
         title: 'Settings',
         action: () => navigate('/settings/general'),
         description: 'Go to settings',
+        keywords: ['settings'],
+        url: '',
       },
       {
         key: 'h',
@@ -722,6 +727,8 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           setCurrentView('help');
         },
         description: 'View help and keyboard shortcuts',
+        keywords: ['help'],
+        url: '',
       },
     ],
     [navigate, setIsComposeOpen, setCurrentView],
@@ -811,6 +818,8 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           shortcut: `/${cmd.key}`,
           onClick: cmd.action,
           description: cmd.description,
+          keywords: cmd.keywords || [],
+          url: cmd.url || '',
         }));
 
       return [
