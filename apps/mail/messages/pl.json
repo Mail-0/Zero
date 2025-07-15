@@ -94,7 +94,7 @@
         "commandPalette": "Paleta poleceń"
       },
       "quickResults": "Szybkie wyniki",
-      "searchPlaceholder": "Szukaj i filtruj",
+      "searchPlaceholder": "Szukaj...",
       "noSearchResults": "Brak wyników wyszukiwania",
       "actions": "Akcje",
       "addFilters": "Dodaj filtry",
@@ -165,8 +165,13 @@
       "attachments": "Załączniki",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "załączników",
             "countPlural=one": "załącznik",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "plików",
             "countPlural=one": "plik",
@@ -249,12 +259,17 @@
       "search": "Szukaj notatek...",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "Dodaj notatki",
-            "countPlural=one": "{count} notatka",
-            "countPlural=other": "{count} notatki"
+            "countPlural=one": "# notatka",
+            "countPlural=other": "# notatek"
           }
         }
       ],
@@ -312,12 +327,17 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "odpowiedzi",
-            "countPlural=one": "{count} odpowiedź",
-            "countPlural=other": "{count} odpowiedzi"
+            "countPlural=one": "# odpowiedź",
+            "countPlural=other": "# odpowiedzi"
           }
         }
       ],

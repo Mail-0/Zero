@@ -94,7 +94,7 @@
         "commandPalette": "Paleta de Comandos"
       },
       "quickResults": "Resultados rápidos",
-      "searchPlaceholder": "Pesquisar e filtrar",
+      "searchPlaceholder": "Pesquisar...",
       "noSearchResults": "Sem resultados de pesquisa",
       "actions": "Ações",
       "addFilters": "Adicionar filtros",
@@ -165,8 +165,13 @@
       "attachments": "Anexos",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "anexos",
             "countPlural=one": "anexo",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "arquivos",
             "countPlural=one": "arquivo",
@@ -249,12 +259,17 @@
       "search": "Pesquisar notas...",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "Adicione notas",
-            "countPlural=one": "{count} nota",
-            "countPlural=other": "{count} notas"
+            "countPlural=one": "# nota",
+            "countPlural=other": "# notas"
           }
         }
       ],
@@ -312,12 +327,17 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "arquivos",
-            "countPlural=one": "{count} resposta",
-            "countPlural=other": "{count} respostas"
+            "countPlural=one": "arquivo",
+            "countPlural=other": "arquivos"
           }
         }
       ],
@@ -370,8 +390,7 @@
       "failedToMute": "Falha ao silenciar",
       "failedToUnmute": "Falha ao ativar som",
       "archived": "Arquivado",
-      "failedToArchive": "Falha ao arquivar",
-      "openInNewTab": "Abrir em nova aba"
+      "failedToArchive": "Falha ao arquivar"
     },
     "units": {
       "mb": "{amount} MB"

@@ -94,7 +94,7 @@
         "commandPalette": "Komandu palete"
       },
       "quickResults": "Ātrie rezultāti",
-      "searchPlaceholder": "Meklēt un filtrēt",
+      "searchPlaceholder": "Meklēt...",
       "noSearchResults": "Nav meklēšanas rezultātu",
       "actions": "Darbības",
       "addFilters": "Pievienot filtrus",
@@ -165,8 +165,13 @@
       "attachments": "Pielikumi",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "pielikumi",
             "countPlural=one": "pielikums",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "faili",
             "countPlural=one": "fails",
@@ -249,12 +259,17 @@
       "search": "Meklēt piezīmes...",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "Pievienot piezīmes",
-            "countPlural=one": "{count} piezīme",
-            "countPlural=other": "{count} piezīmes"
+            "countPlural=one": "# piezīme",
+            "countPlural=other": "# piezīmes"
           }
         }
       ],
@@ -312,12 +327,17 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "atbildes",
-            "countPlural=one": "{count} atbilde",
-            "countPlural=other": "{count} atbildes"
+            "countPlural=one": "# atbilde",
+            "countPlural=other": "# atbildes"
           }
         }
       ],
@@ -370,8 +390,7 @@
       "failedToMute": "Neizdevās apklusināt",
       "failedToUnmute": "Neizdevās atjaunot skaņu",
       "archived": "Arhivēts",
-      "failedToArchive": "Neizdevās arhivēt",
-      "openInNewTab": "Atvērt jaunā cilnē"
+      "failedToArchive": "Neizdevās arhivēt"
     },
     "units": {
       "mb": "{amount} MB"

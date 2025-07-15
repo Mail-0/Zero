@@ -94,7 +94,7 @@
         "commandPalette": "لوحة الأوامر"
       },
       "quickResults": "نتائج سريعة",
-      "searchPlaceholder": "بحث وتصفية",
+      "searchPlaceholder": "بحث...",
       "noSearchResults": "لا توجد نتائج بحث",
       "actions": "الإجراءات",
       "addFilters": "إضافة عوامل تصفية",
@@ -165,8 +165,13 @@
       "attachments": "المرفقات",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "مرفقات",
             "countPlural=one": "مرفق",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "ملفات",
             "countPlural=one": "ملف",
@@ -249,12 +259,17 @@
       "search": "البحث في الملاحظات...",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "إضافة ملاحظات",
-            "countPlural=one": "ملاحظة واحدة ({count})",
-            "countPlural=other": "{count} ملاحظات"
+            "countPlural=one": "ملاحظة واحدة",
+            "countPlural=other": "# ملاحظة"
           }
         }
       ],
@@ -312,12 +327,17 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "ردود",
-            "countPlural=one": "رد واحد ({count})",
-            "countPlural=other": "{count} ردود"
+            "countPlural=one": "رد واحد",
+            "countPlural=other": "# رد"
           }
         }
       ],
@@ -370,8 +390,7 @@
       "failedToMute": "فشل الكتم",
       "failedToUnmute": "فشل إلغاء الكتم",
       "archived": "تمت الأرشفة",
-      "failedToArchive": "فشلت الأرشفة",
-      "openInNewTab": "فتح في علامة تبويب جديدة"
+      "failedToArchive": "فشلت الأرشفة"
     },
     "units": {
       "mb": "{amount} ميجابايت"

@@ -94,7 +94,7 @@
         "commandPalette": "命令面板"
       },
       "quickResults": "快速结果",
-      "searchPlaceholder": "搜索和筛选",
+      "searchPlaceholder": "搜索...",
       "noSearchResults": "没有搜索结果",
       "actions": "操作",
       "addFilters": "添加筛选器",
@@ -165,8 +165,13 @@
       "attachments": "附件",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "附件",
             "countPlural=one": "个附件",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "文件",
             "countPlural=one": "个文件",
@@ -249,12 +259,17 @@
       "search": "搜索笔记...",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "添加笔记",
-            "countPlural=one": "{count} 条笔记",
-            "countPlural=other": "{count} 条笔记"
+            "countPlural=one": "# 条笔记",
+            "countPlural=other": "# 条笔记"
           }
         }
       ],
@@ -312,12 +327,17 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "回复",
-            "countPlural=one": "{count} 条回复",
-            "countPlural=other": "{count} 条回复"
+            "countPlural=one": "# 条回复",
+            "countPlural=other": "# 条回复"
           }
         }
       ],
@@ -370,8 +390,7 @@
       "failedToMute": "静音失败",
       "failedToUnmute": "取消静音失败",
       "archived": "已归档",
-      "failedToArchive": "归档失败",
-      "openInNewTab": "在新标签页中打开"
+      "failedToArchive": "归档失败"
     },
     "units": {
       "mb": "{amount} MB"
