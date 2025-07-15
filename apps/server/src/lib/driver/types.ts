@@ -19,13 +19,13 @@ export const IGetThreadResponseSchema = z.object({
   labels: z.array(z.object({ id: z.string(), name: z.string() })),
 });
 
-export interface ParsedDraft<T = unknown> {
+export interface ParsedDraft {
   id: string;
   to?: string[];
   subject?: string;
   content?: string;
   rawMessage?: {
-    internalDate?: string;
+    internalDate?: string | null;
   };
   cc?: string[];
   bcc?: string[];

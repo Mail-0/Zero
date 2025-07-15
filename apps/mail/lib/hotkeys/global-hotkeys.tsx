@@ -1,6 +1,6 @@
 import { useCommandPalette } from '@/components/context/command-palette-context';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
-import { keyboardShortcuts } from '@/config/shortcuts';
+import { enhancedKeyboardShortcuts } from '@/config/shortcuts';
 import { useShortcuts } from './use-hotkey-utils';
 import { useQueryState } from 'nuqs';
 
@@ -22,7 +22,7 @@ export function GlobalHotkeys() {
     // in the command palette context to avoid conflicts and ensure proper preventDefault
   };
 
-  const globalShortcuts = keyboardShortcuts.filter((shortcut) => shortcut.scope === scope);
+  const globalShortcuts = enhancedKeyboardShortcuts.filter((shortcut) => shortcut.scope === scope);
 
   useShortcuts(globalShortcuts, handlers, { scope });
 

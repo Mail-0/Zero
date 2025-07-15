@@ -2,13 +2,12 @@ import { createRateLimiterMiddleware, privateProcedure, publicProcedure, router 
 import { defaultUserSettings, userSettingsSchema, type UserSettings } from '../../lib/schemas';
 import { getZeroDB } from '../../lib/server-utils';
 import { Ratelimit } from '@upstash/ratelimit';
-import { env } from 'cloudflare:workers';
 
 export const settingsRouter = router({
   get: publicProcedure
     .use(
       createRateLimiterMiddleware({
-        limiter: Ratelimit.slidingWindow(60, '1m'),
+        limiter: Ratelimit.slidingWindow(120, '1m'),
         generatePrefix: ({ sessionUser }) => `ratelimit:get-settings-${sessionUser?.id}`,
       }),
     )

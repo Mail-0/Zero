@@ -1,7 +1,6 @@
 import {
   ArrowRight,
   Calendar as CalendarIcon,
-  Check,
   Clock,
   FileText,
   Filter,
@@ -54,7 +53,6 @@ import { useLabels } from '@/hooks/use-labels';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { SettingsGear } from '../icons/icons';
 import { format, subDays } from 'date-fns';
 import { VisuallyHidden } from 'radix-ui';
 import { m } from '@/paraglide/messages';
@@ -191,7 +189,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
   const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
-  const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
+  //   const [selectedLabels] = useState<string[]>([]);
   const [filterBuilderState, setFilterBuilderState] = useState<Record<string, string>>({});
   const [saveSearchName, setSaveSearchName] = useState('');
   const [emailSuggestions, setEmailSuggestions] = useState<string[]>([]);
@@ -200,9 +198,9 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
-  const { data: userLabels = [] } = useLabels();
+  const { userLabels = [] } = useLabels();
   const trpc = useTRPC();
-  const { mutateAsync: generateSearchQuery, isPending } = useMutation(
+  const { mutateAsync: generateSearchQuery } = useMutation(
     trpc.ai.generateSearchQuery.mutationOptions(),
   );
 
@@ -1038,7 +1036,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           )}
         </CommandEmpty>
         {allCommands.map((group, groupIndex) => (
-          <Fragment key={groupIndex}>
+          <Fragment key={group.group}>
             {group.items.length > 0 && (
               <CommandGroup heading={group.group}>
                 {group.items.map((item) => (
@@ -1645,9 +1643,9 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                       />
                     )}
                     <span className="text-sm">{label.name || 'Unnamed Label'}</span>
-                    {selectedLabels.includes(label.id || '') && (
+                    {/* {selectedLabels.includes(label.id || '') && (
                       <Check className="ml-auto h-4 w-4" />
-                    )}
+                    )} */}
                   </div>
                 ))}
             </div>
@@ -2000,7 +1998,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                 <span className="bg-muted pointer-events-none flex h-6 select-none flex-row items-center gap-0.5 rounded-md border border-none px-2 py-1 text-xs !leading-[0] opacity-100">
                   <span className="text-xs">⌘</span>
                   <span className="text-xs">⇧</span>
-                  <span className="text-xs">F</span>
+                  <span className="text-xs">E</span>
                 </span>
                 <span className="text-muted-foreground">Open filters</span>
               </div>

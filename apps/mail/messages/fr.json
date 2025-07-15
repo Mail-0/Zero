@@ -94,7 +94,7 @@
         "commandPalette": "Palette de commandes"
       },
       "quickResults": "Résultats rapides",
-      "searchPlaceholder": "Rechercher...",
+      "searchPlaceholder": "Rechercher et filtrer",
       "noSearchResults": "Aucun résultat de recherche",
       "actions": "Actions",
       "addFilters": "Ajouter des filtres",
@@ -253,8 +253,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "Ajoutez des notes",
-            "countPlural=one": "# note",
-            "countPlural=other": "# notes"
+            "countPlural=one": "{count} note",
+            "countPlural=other": "{count} notes"
           }
         }
       ],
@@ -316,8 +316,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "réponses",
-            "countPlural=one": "# réponse",
-            "countPlural=other": "# réponses"
+            "countPlural=one": "{count} réponse",
+            "countPlural=other": "{count} réponses"
           }
         }
       ],
@@ -370,7 +370,8 @@
       "failedToMute": "Échec de la coupure du son",
       "failedToUnmute": "Échec de la réactivation du son",
       "archived": "Archivé",
-      "failedToArchive": "Échec de l'archivage"
+      "failedToArchive": "Échec de l'archivage",
+      "openInNewTab": "Ouvrir dans un nouvel onglet"
     },
     "units": {
       "mb": "{amount} Mo"

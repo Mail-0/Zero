@@ -1,19 +1,17 @@
-import { keyboardShortcuts, type Shortcut } from '@/config/shortcuts';
 import { SettingsCard } from '@/components/settings/settings-card';
 import { formatDisplayKeys } from '@/lib/hotkeys/use-hotkey-utils';
 import { useShortcutCache } from '@/lib/hotkeys/use-hotkey-utils';
 import { useCategorySettings } from '@/hooks/use-categories';
-import { useState, type ReactNode, useEffect } from 'react';
-import { useSession } from '@/lib/auth-client';
+import { type Shortcut } from '@/config/shortcuts';
 import { m } from '@/paraglide/messages';
+import { type ReactNode } from 'react';
 
 export default function ShortcutsPage() {
-  const { data: session } = useSession();
   const {
     shortcuts,
     // TODO: Implement shortcuts syncing and caching
     // updateShortcut,
-  } = useShortcutCache(session?.user?.id);
+  } = useShortcutCache();
   const categorySettings = useCategorySettings();
 
   return (
@@ -77,13 +75,13 @@ export default function ShortcutsPage() {
                   }
 
                   return (
-                    <Shortcut
+                    <ShortcutItem
                       key={`${scope}-${index}`}
                       keys={shortcut.keys}
-                      action={shortcut.action}
+                      //   action={shortcut.action}
                     >
                       {label}
-                    </Shortcut>
+                    </ShortcutItem>
                   );
                 })}
               </div>
@@ -95,18 +93,10 @@ export default function ShortcutsPage() {
   );
 }
 
-function Shortcut({
-  children,
-  keys,
-  action,
-}: {
-  children: ReactNode;
-  keys: string[];
-  action: string;
-}) {
+function ShortcutItem({ children, keys }: { children: ReactNode; keys: string[] }) {
   // const [isRecording, setIsRecording] = useState(false);
   const displayKeys = formatDisplayKeys(keys);
-  const { data: session } = useSession();
+
   // const { updateShortcut } = useShortcutCache(session?.user?.id);
 
   // const handleHotkeyRecorded = async (newKeys: string[]) => {

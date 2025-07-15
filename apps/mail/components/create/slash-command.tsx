@@ -1,15 +1,11 @@
 import {
-  CheckSquare,
-  Code,
   Heading1,
   Heading2,
   Heading3,
-  ImageIcon,
   List,
   ListOrdered,
   Text,
-  TextQuote,
-} from 'lucide-react';
+  } from 'lucide-react';
 import { createSuggestionItems } from 'novel';
 
 export const suggestionItems = createSuggestionItems([

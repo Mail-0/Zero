@@ -1,4 +1,4 @@
-import { Check, Plus, PurpleThickCheck, ThickCheck } from '../icons/icons';
+import { Plus, PurpleThickCheck, ThickCheck } from '../icons/icons';
 import { useSession, signIn } from '@/lib/auth-client';
 import { useBilling } from '@/hooks/use-billing';
 import { useNavigate } from 'react-router';

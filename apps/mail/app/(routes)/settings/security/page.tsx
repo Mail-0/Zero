@@ -12,7 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { m } from '@/paraglide/messages';
 import { useForm } from 'react-hook-form';
-import { KeyRound } from 'lucide-react';
+
 import { useState } from 'react';
 import * as z from 'zod';
 

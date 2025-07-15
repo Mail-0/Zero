@@ -1,15 +1,15 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useState } from 'react';
 import { toolExecutors } from '@/lib/elevenlabs-tools';
 import { useConversation } from '@elevenlabs/react';
 import { useSession } from '@/lib/auth-client';
 import type { ReactNode } from 'react';
+import { toast } from 'sonner';
 
 interface VoiceContextType {
   status: string;
   isInitializing: boolean;
   isSpeaking: boolean;
   hasPermission: boolean;
-  errorMessage: string;
   lastToolCall: string | null;
   isOpen: boolean;
 
@@ -24,7 +24,6 @@ const VoiceContext = createContext<VoiceContextType | undefined>(undefined);
 export function VoiceProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
   const [hasPermission, setHasPermission] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
   const [isInitializing, setIsInitializing] = useState(false);
   const [lastToolCall, setLastToolCall] = useState<string | null>(null);
   const [isOpen, setOpen] = useState(false);
@@ -40,31 +39,29 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
       setLastToolCall(null);
     },
     onError: (error: string | Error) => {
-      setErrorMessage(typeof error === 'string' ? error : error.message);
+      toast.error(typeof error === 'string' ? error : error.message);
       setIsInitializing(false);
     },
-    clientTools: {
-      ...Object.entries(toolExecutors).reduce(
-        (acc, [name, executor]) => ({
-          ...acc,
-          [name]: async (params: any) => {
-            console.log(`[Voice Tool] ${name} called with params:`, params);
-            setLastToolCall(`Executing: ${name}`);
+    clientTools: Object.entries(toolExecutors).reduce(
+      (acc: Record<string, any>, [name, executor]) => {
+        acc[name] = async (params: any) => {
+          console.log(`[Voice Tool] ${name} called with params:`, params);
+          setLastToolCall(`Executing: ${name}`);
 
-            const paramsWithContext = {
-              ...params,
-              _context: currentContext,
-            };
+          const paramsWithContext = {
+            ...params,
+            _context: currentContext,
+          };
 
-            const result = await executor(paramsWithContext);
-            console.log(`[Voice Tool] ${name} result:`, result);
-            setLastToolCall(null);
-            return result;
-          },
-        }),
-        {},
-      ),
-    },
+          const result = await executor(paramsWithContext);
+          console.log(`[Voice Tool] ${name} result:`, result);
+          setLastToolCall(null);
+          return result;
+        };
+        return acc;
+      },
+      {},
+    ),
   });
 
   const { status, isSpeaking } = conversation;
@@ -74,10 +71,10 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((track) => track.stop());
       setHasPermission(true);
-      setErrorMessage('');
       return true;
     } catch {
-      setErrorMessage('Microphone access denied. Please enable microphone permissions.');
+      toast.error('Microphone access denied. Please enable microphone permissions.');
+      setHasPermission(false);
       return false;
     }
   };
@@ -86,11 +83,11 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
     if (!hasPermission) {
       const result = await requestPermission();
       if (!result) return;
+      setHasPermission(result);
     }
 
     try {
       setIsInitializing(true);
-      setErrorMessage('');
       if (context) {
         setCurrentContext(context);
       }
@@ -113,13 +110,13 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
           email_context_info: context?.hasOpenEmail
             ? `The user currently has an email open (thread ID: ${context.currentThreadId}). When the user refers to "this email" or "the current email", you can use the getEmail or summarizeEmail tools WITHOUT providing a threadId parameter - the tools will automatically use the currently open email.`
             : 'No email is currently open. If the user asks about an email, you will need to ask them to open it first or provide a specific thread ID.',
-          ...(context || {}),
+          ...context,
         },
       });
 
       setOpen(true);
     } catch {
-      setErrorMessage('Failed to start conversation. Please try again.');
+      toast.error('Failed to start conversation. Please try again.');
     }
   };
 
@@ -128,7 +125,7 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
       await conversation.endSession();
       setCurrentContext(null);
     } catch {
-      setErrorMessage('Failed to end conversation');
+      toast.error('Failed to end conversation');
     }
   };
 
@@ -141,7 +138,6 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
     isInitializing,
     isSpeaking,
     hasPermission,
-    errorMessage,
     lastToolCall,
     isOpen,
     startConversation,

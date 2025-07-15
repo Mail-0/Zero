@@ -1,45 +1,34 @@
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+  } from '@/components/ui/dialog';
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+  } from '@/components/ui/form';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { SettingsCard } from '@/components/settings/settings-card';
 import { LabelDialog } from '@/components/labels/label-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CurvedArrow } from '@/components/icons/icons';
+
 import { Separator } from '@/components/ui/separator';
 import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
-import { Check, Plus, Pencil } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { type Label as LabelType } from '@/types';
 import { Button } from '@/components/ui/button';
-import { HexColorPicker } from 'react-colorful';
+
 import { Bin } from '@/components/icons/icons';
 import { useLabels } from '@/hooks/use-labels';
-import { GMAIL_COLORS } from '@/lib/constants';
+
+
+
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+
 import { m } from '@/paraglide/messages';
-import { useForm } from 'react-hook-form';
-import { Command } from 'lucide-react';
-import { COLORS } from './colors';
+
+
 import { useState } from 'react';
 import { toast } from 'sonner';
 
 export default function LabelsPage() {
-  const { data: labels, isLoading, error, refetch } = useLabels();
+  const { userLabels: labels, isLoading, error, refetch } = useLabels();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingLabel, setEditingLabel] = useState<LabelType | null>(null);
 
@@ -63,7 +52,7 @@ export default function LabelsPage() {
 
   const handleDelete = async (id: string) => {
     toast.promise(deleteLabel({ id }), {
-      loading:  m['common.labels.deletingLabel'](),
+      loading: m['common.labels.deletingLabel'](),
       success: m['common.labels.deleteLabelSuccess'](),
       error: m['common.labels.failedToDeleteLabel'](),
       finally: async () => {
@@ -113,7 +102,7 @@ export default function LabelsPage() {
                 <p className="text-muted-foreground py-4 text-center text-sm">{error.message}</p>
               ) : labels?.length === 0 ? (
                 <p className="text-muted-foreground py-4 text-center text-sm">
-                 {m['common.mail.noLabelsAvailable']()}
+                  {m['common.mail.noLabelsAvailable']()}
                 </p>
               ) : (
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-6">
@@ -147,7 +136,7 @@ export default function LabelsPage() {
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent className="dark:bg-panelDark mb-1 bg-white">
-                            {m['common.labels.editLabel']()}
+                              {m['common.labels.editLabel']()}
                             </TooltipContent>
                           </Tooltip>
                           <Tooltip>
@@ -162,7 +151,7 @@ export default function LabelsPage() {
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent className="dark:bg-panelDark mb-1 bg-white">
-                            {m['common.labels.deleteLabel']()}
+                              {m['common.labels.deleteLabel']()}
                             </TooltipContent>
                           </Tooltip>
                         </div>

@@ -13,7 +13,7 @@ const useDelete = () => {
   const [mail, setMail] = useMail();
   const [{ refetch: refetchThreads }] = useThreads();
   const { refetch: refetchStats } = useStats();
-  const { addToQueue, deleteFromQueue } = useBackgroundQueue();
+  const { addToQueue, } = useBackgroundQueue();
   const trpc = useTRPC();
   const { mutateAsync: deleteThread } = useMutation(trpc.mail.delete.mutationOptions());
 

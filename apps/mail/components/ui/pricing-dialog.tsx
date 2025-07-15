@@ -1,17 +1,16 @@
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { CircleCheck, PurpleThickCheck } from '@/components/icons/icons';
+import { PurpleThickCheck } from '@/components/icons/icons';
 import { useBilling } from '@/hooks/use-billing';
 import { PricingSwitch } from './pricing-switch';
-import { Button } from '@/components/ui/button';
-import { useState, useEffect } from 'react';
+
+import { useState, } from 'react';
 import { useQueryState } from 'nuqs';
-import { cn } from '@/lib/utils';
+
 import { Badge } from './badge';
 import { toast } from 'sonner';
 

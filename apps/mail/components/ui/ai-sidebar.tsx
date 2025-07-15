@@ -13,12 +13,12 @@ import { PromptsDialog } from './prompts-dialog';
 import { Button } from '@/components/ui/button';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useLabels } from '@/hooks/use-labels';
-import { useSession } from '@/lib/auth-client';
+
 import { useAgentChat } from 'agents/ai-react';
 import { X, Expand, Plus } from 'lucide-react';
 import { Gauge } from '@/components/ui/gauge';
 import { useParams } from 'react-router';
-import { useChat } from '@ai-sdk/react';
+
 import { useAgent } from 'agents/react';
 import { useQueryState } from 'nuqs';
 import { cn } from '@/lib/utils';
@@ -279,9 +279,9 @@ export function useAISidebar() {
 
   // Update query parameter and localStorage when viewMode changes
   const setViewMode = useCallback(
-    async (mode: ViewMode) => {
+    (mode: ViewMode) => {
       setViewModeState(mode);
-      await setViewModeQuery(mode === 'popup' ? null : mode);
+      setViewModeQuery(mode === 'popup' ? null : mode);
 
       // Save to localStorage for persistence across sessions
       if (typeof window !== 'undefined') {
@@ -334,17 +334,8 @@ export function useAISidebar() {
 }
 
 function AISidebar({ className }: AISidebarProps) {
-  const {
-    open,
-    setOpen,
-    viewMode,
-    setViewMode,
-    isFullScreen,
-    setIsFullScreen,
-    toggleViewMode,
-    isSidebar,
-    isPopup,
-  } = useAISidebar();
+  const { open, setOpen, isFullScreen, setIsFullScreen, toggleViewMode, isSidebar, isPopup } =
+    useAISidebar();
   const { isPro, track, refetch: refetchBilling } = useBilling();
   const queryClient = useQueryClient();
   const trpc = useTRPC();
@@ -362,7 +353,7 @@ function AISidebar({ className }: AISidebarProps) {
 
   const chatState = useAgentChat({
     agent,
-    maxSteps: 5,
+    maxSteps: 10,
     body: {
       threadId: threadId ?? undefined,
       currentFolder: folder ?? undefined,
@@ -479,7 +470,7 @@ function AISidebar({ className }: AISidebarProps) {
           <div
             tabIndex={0}
             className={cn(
-              'fixed inset-0 z-50 flex items-center justify-center bg-transparent p-4 opacity-40 backdrop-blur-sm transition-opacity duration-150 hover:opacity-100 sm:inset-auto sm:bottom-4 sm:right-4 sm:flex-col sm:items-end sm:justify-end sm:p-0',
+              'fixed inset-0 z-50 flex items-center justify-center bg-transparent p-4 lg:opacity-40 backdrop-blur-sm transition-opacity duration-150 lg:hover:opacity-100 sm:inset-auto sm:bottom-4 sm:right-4 sm:flex-col sm:items-end sm:justify-end sm:p-0',
               'md:hidden',
               isPopup && !isFullScreen && 'md:flex',
               isFullScreen && '!inset-0 !flex !p-0 !opacity-100 !backdrop-blur-none',

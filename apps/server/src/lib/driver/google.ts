@@ -8,9 +8,9 @@ import {
   sanitizeContext,
   StandardizedError,
 } from './utils';
-import type { IOutgoingMessage, Label, ParsedMessage, DeleteAllSpamResponse } from '../../types';
 import { mapGoogleLabelColor, mapToGoogleLabelColor } from './google-label-color-map';
 import { parseAddressList, parseFrom, wasSentWithTLS } from '../email-utils';
+import type { IOutgoingMessage, Label, ParsedMessage } from '../../types';
 import { sanitizeTipTapHtml } from '../sanitize-tip-tap-html';
 import type { MailManager, ManagerConfig } from './types';
 import { type gmail_v1, gmail } from '@googleapis/gmail';
@@ -20,6 +20,7 @@ import { createMimeMessage } from 'mimetext';
 import { people } from '@googleapis/people';
 import { cleanSearchValue } from '../utils';
 import { env } from 'cloudflare:workers';
+import { Effect } from 'effect';
 import * as he from 'he';
 
 export class GoogleMailManager implements MailManager {
@@ -189,21 +190,66 @@ export class GoogleMailManager implements MailManager {
         if (!userLabels.data.labels) {
           return [];
         }
-        return Promise.all(
-          userLabels.data.labels.map(async (label) => {
-            const res = await this.gmail.users.labels.get({
-              userId: 'me',
-              id: label.id ?? undefined,
-            });
-            return {
-              label: res.data.name ?? res.data.id ?? '',
-              count: Number(res.data.threadsUnread) ?? undefined,
-            };
+
+        const labelRequests = userLabels.data.labels.map((label) =>
+          Effect.tryPromise({
+            try: () =>
+              this.gmail.users.labels.get({
+                userId: 'me',
+                id: label.id ?? undefined,
+              }),
+            catch: (error) => ({ _tag: 'LabelFetchFailed' as const, error }),
           }),
         );
+
+        const results = await Effect.runPromise(
+          Effect.all(labelRequests, { concurrency: 'unbounded' }),
+        );
+
+        type LabelCount = { label: string; count: number };
+
+        const mapped: LabelCount[] = (
+          await Promise.all(
+            results.map(async (res) => {
+              if ('_tag' in res && res._tag === 'LabelFetchFailed') {
+                return null;
+              }
+              let labelName = (res.data.name ?? res.data.id ?? '').toLowerCase();
+              if (labelName === 'draft') {
+                labelName = 'drafts';
+              }
+              const isTotalLabel = labelName === 'drafts' || labelName === 'sent';
+              return {
+                label: labelName,
+                count: Number(isTotalLabel ? res.data.threadsTotal : res.data.threadsUnread),
+              };
+            }),
+          )
+        ).filter((item): item is LabelCount => item !== null);
+
+        // Get archive count
+        try {
+          const archiveRes = await this.gmail.users.threads.list({
+            userId: 'me',
+            q: 'in:archive',
+            maxResults: 1,
+          });
+          mapped.push({
+            label: 'archive',
+            count: Number(archiveRes.data.resultSizeEstimate ?? 0),
+          });
+        } catch (error: unknown) {
+          console.error('Failed to fetch archive count:', error);
+        }
+
+        return mapped;
       },
       { email: this.config.auth?.email },
     );
+  }
+
+  private getQuotaUser() {
+    return this.config.auth?.email ? `${this.config.auth.email}-${env.NODE_ENV}` : undefined;
   }
   public list(params: {
     folder: string;
@@ -226,7 +272,7 @@ export class GoogleMailManager implements MailManager {
           labelIds: folder === 'inbox' ? labelIds : [],
           maxResults,
           pageToken: pageToken ? pageToken : undefined,
-          quotaUser: this.config.auth?.email,
+          quotaUser: this.getQuotaUser(),
         });
 
         const threads = res.data.threads ?? [];
@@ -254,7 +300,7 @@ export class GoogleMailManager implements MailManager {
           userId: 'me',
           id,
           format: 'full',
-          quotaUser: this.config.auth?.email,
+          quotaUser: this.getQuotaUser(),
         });
 
         if (!res.data.messages)
@@ -389,7 +435,7 @@ export class GoogleMailManager implements MailManager {
         return {
           labels: Array.from(labels).map((id) => ({ id, name: id })),
           messages,
-          latest: messages.findLast((e) => !e.isDraft),
+          latest: messages.findLast((e) => e.isDraft !== true),
           hasUnread,
           totalReplies: messages.filter((e) => !e.isDraft).length,
         };
@@ -777,7 +823,8 @@ export class GoogleMailManager implements MailManager {
         const res = await this.gmail.users.threads.get({
           userId: 'me',
           id: threadId,
-          format: 'metadata', // Fetch only metadata
+          format: 'metadata', // Fetch only metadata,
+          quotaUser: this.getQuotaUser(),
         });
         // Process res.data.messages to extract id and labelIds
         return {
@@ -802,27 +849,36 @@ export class GoogleMailManager implements MailManager {
 
     const chunkSize = 15;
     const delayBetweenChunks = 100;
-    const allResults = [];
+    const allResults: Array<{
+      threadId: string;
+      status: 'fulfilled' | 'rejected';
+      value?: unknown;
+      reason?: unknown;
+    }> = [];
 
     for (let i = 0; i < threadIds.length; i += chunkSize) {
       const chunk = threadIds.slice(i, i + chunkSize);
 
-      const promises = chunk.map(async (threadId) => {
-        try {
-          const response = await this.gmail.users.threads.modify({
-            userId: 'me',
-            id: threadId,
-            requestBody: requestBody,
-          });
-          return { threadId, status: 'fulfilled' as const, value: response.data };
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (error: any) {
-          const errorMessage = error?.errors?.[0]?.message || error.message || error;
-          return { threadId, status: 'rejected' as const, reason: { error: errorMessage } };
-        }
-      });
+      const effects = chunk.map((threadId) =>
+        Effect.tryPromise({
+          try: async () => {
+            const response = await this.gmail.users.threads.modify({
+              userId: 'me',
+              id: threadId,
+              requestBody,
+            });
+            return { threadId, status: 'fulfilled' as const, value: response.data };
+          },
+          catch: (error: any) => {
+            const errorMessage = error?.errors?.[0]?.message || error.message || error;
+            return { threadId, status: 'rejected' as const, reason: { error: errorMessage } };
+          },
+        }),
+      );
 
-      const chunkResults = await Promise.all(promises);
+      const chunkResults = await Effect.runPromise(
+        Effect.all(effects, { concurrency: 'unbounded' }),
+      );
       allResults.push(...chunkResults);
 
       if (i + chunkSize < threadIds.length) {
@@ -949,7 +1005,6 @@ export class GoogleMailManager implements MailManager {
     cc,
     bcc,
     fromEmail,
-    isForward = false,
     originalMessage = null,
   }: IOutgoingMessage) {
     const msg = createMimeMessage();
@@ -1124,12 +1179,12 @@ export class GoogleMailManager implements MailManager {
         .filter(Boolean) || [];
 
     const subject = headers.find((h) => h.name === 'Subject')?.value;
-   
+
     const cc =
       draft.message.payload?.headers?.find((h) => h.name === 'Cc')?.value?.split(',') || [];
     const bcc =
       draft.message.payload?.headers?.find((h) => h.name === 'Bcc')?.value?.split(',') || [];
-      
+
     const payload = draft.message.payload;
     let content = '';
     let attachments: {
@@ -1150,13 +1205,16 @@ export class GoogleMailManager implements MailManager {
 
       //  Get attachments
       const attachmentParts = payload.parts.filter(
-        (part) => !!part.filename && !!part.body?.attachmentId
+        (part) => !!part.filename && !!part.body?.attachmentId,
       );
 
       attachments = await Promise.all(
         attachmentParts.map(async (part) => {
           try {
-            const attachmentData = await this.getAttachment(draft.message!.id!, part.body!.attachmentId!);
+            const attachmentData = await this.getAttachment(
+              draft.message!.id!,
+              part.body!.attachmentId!,
+            );
             return {
               filename: part.filename || '',
               mimeType: part.mimeType || '',
@@ -1170,9 +1228,10 @@ export class GoogleMailManager implements MailManager {
               body: attachmentData ?? '',
             };
           } catch (e) {
+            console.error('Failed to get attachment', e);
             return null;
           }
-        })
+        }),
       ).then((a) => a.filter((a): a is NonNullable<typeof a> => a !== null));
     } else if (payload?.body?.data) {
       content = fromBinary(payload.body.data);

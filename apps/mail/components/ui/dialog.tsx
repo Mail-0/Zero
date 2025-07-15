@@ -1,5 +1,5 @@
 import { Dialog as DialogPrimitive } from 'radix-ui';
-import { X } from '../icons/icons';
+
 import { cn } from '@/lib/utils';
 import * as React from 'react';
 

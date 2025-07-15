@@ -1,12 +1,11 @@
-import { useActiveConnection, useConnections } from '@/hooks/use-connections';
 import { LabelSidebarContextMenu } from '../context/label-sidebar-context';
-import { useSearchValue } from '@/hooks/use-search-value';
+
 import type { Label, Label as LabelType } from '@/types';
 import { useSidebar } from '../context/sidebar-context';
 import useSearchLabels from '@/hooks/use-labels-search';
 import { Folder } from '../magicui/file-tree';
 import { useNavigate } from 'react-router';
-import { useQueryState } from 'nuqs';
+
 import { useCallback } from 'react';
 import * as React from 'react';
 

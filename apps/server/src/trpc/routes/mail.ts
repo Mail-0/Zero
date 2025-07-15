@@ -1,17 +1,12 @@
-import {
-  activeDriverProcedure,
-  createRateLimiterMiddleware,
-  router,
-  privateProcedure,
-} from '../trpc';
 import { updateWritingStyleMatrix } from '../../services/writing-style-service';
-import { deserializeFiles, serializedFileSchema } from '../../lib/schemas';
-import { defaultPageSize, FOLDERS, LABELS } from '../../lib/utils';
+import { activeDriverProcedure, router, privateProcedure } from '../trpc';
 import { IGetThreadResponseSchema } from '../../lib/driver/types';
 import { processEmailHtml } from '../../lib/email-processor';
+import { defaultPageSize, FOLDERS } from '../../lib/utils';
+import { serializedFileSchema } from '../../lib/schemas';
 import type { DeleteAllSpamResponse } from '../../types';
 import { getZeroAgent } from '../../lib/server-utils';
-import { env } from 'cloudflare:workers';
+
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
@@ -64,42 +59,44 @@ export const mailRouter = router({
       z.object({
         folder: z.string().optional().default('inbox'),
         q: z.string().optional().default(''),
-        max: z.number().optional().default(defaultPageSize),
+        maxResults: z.number().optional().default(defaultPageSize),
         cursor: z.string().optional().default(''),
         labelIds: z.array(z.string()).optional().default([]),
       }),
     )
     .query(async ({ ctx, input }) => {
-      const { folder, max, cursor, q, labelIds } = input;
+      const { folder, maxResults, cursor, q, labelIds } = input;
       const { activeConnection } = ctx;
       const agent = await getZeroAgent(activeConnection.id);
 
       if (folder === FOLDERS.DRAFT) {
         const drafts = await agent.listDrafts({
           q,
-          maxResults: max,
+          maxResults,
           pageToken: cursor,
         });
         return drafts;
       }
-      //   if (q) {
+      if (q) {
+        const threadsResponse = await agent.rawListThreads({
+          labelIds: labelIds,
+          maxResults,
+          pageToken: cursor,
+          query: q,
+          folder,
+        });
+        return threadsResponse;
+      }
+      const folderLabelId = getFolderLabelId(folder);
+      const labelIdsToUse = folderLabelId ? [...labelIds, folderLabelId] : labelIds;
       const threadsResponse = await agent.listThreads({
-        labelIds: labelIds,
-        maxResults: max,
+        labelIds: labelIdsToUse,
+        maxResults,
         pageToken: cursor,
         query: q,
         folder,
       });
       return threadsResponse;
-      //   }
-      //   const folderLabelId = getFolderLabelId(folder);
-      //   const labelIdsToUse = folderLabelId ? [...labelIds, folderLabelId] : labelIds;
-      //   const threadsResponse = await agent.getThreadsFromDB({
-      //     labelIds: labelIdsToUse,
-      //     max: max,
-      //     cursor: cursor,
-      //   });
-      //   return threadsResponse;
     }),
   markAsRead: activeDriverProcedure
     .input(
@@ -156,7 +153,6 @@ export const mailRouter = router({
 
       if (threadIds.length) {
         await agent.modifyLabels(threadIds, addLabels, removeLabels);
-        console.log('Server: Successfully updated thread labels');
         return { success: true };
       }
 

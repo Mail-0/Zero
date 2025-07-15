@@ -28,7 +28,11 @@
     "db:push": "dotenv -- pnpm run -C apps/server db:push",
     "db:studio": "dotenv -- pnpm run -C apps/server db:studio",
     "sentry:sourcemaps": "sentry-cli sourcemaps inject --org zero-7y --project nextjs ./apps/mail/.next && sentry-cli sourcemaps upload --org zero-7y --project nextjs ./apps/mail/.next",
-    "scripts": "dotenv -- pnpx tsx ./scripts/run.ts"
+    "scripts": "dotenv -- pnpx tsx ./scripts/run.ts",
+    "test:ai": "dotenv -- pnpm --filter=@zero/server run test:ai",
+    "eval": "dotenv -- pnpm --filter=@zero/server run eval",
+    "eval:dev": "dotenv -- pnpm --filter=@zero/server run eval:dev",
+    "eval:ci": "dotenv -- pnpm --filter=@zero/server run eval:ci"
   },
   "devDependencies": {
     "@types/node": "22.15.29",
