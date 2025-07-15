@@ -11,6 +11,7 @@ export function ConnectionProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     let isCancelled = false;
+    let timeoutId: NodeJS.Timeout;
     let retries = 0;
     const maxRetries = 5;
 
@@ -42,7 +43,7 @@ export function ConnectionProvider({ children }: PropsWithChildren) {
             toast.error(
               `Failed to connect. Retrying in ${delay / 1000}s... (${retries}/${maxRetries})`,
             );
-            setTimeout(fetchConnection, delay);
+            timeoutId = setTimeout(fetchConnection, delay);
           } else {
             toast.error(
               'Could not connect to the server after multiple retries. Please try again later.',
@@ -52,6 +53,9 @@ export function ConnectionProvider({ children }: PropsWithChildren) {
       } finally {
         if (!isCancelled) {
           setLoading(false);
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+          }
         }
       }
     };
