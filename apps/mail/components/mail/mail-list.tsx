@@ -231,7 +231,7 @@ const Thread = memo(
             className={cn(
               'hover:bg-offsetLight hover:bg-primary/5 group relative mx-1 flex cursor-pointer flex-col items-start rounded-lg py-2 text-left text-sm transition-all hover:opacity-100',
               (isMailSelected || isMailBulkSelected || isKeyboardFocused) &&
-                'border-border bg-primary/5 opacity-100',
+              'border-border bg-primary/5 opacity-100',
               isKeyboardFocused && 'ring-primary/50',
               'relative',
               'group',
@@ -363,26 +363,47 @@ const Thread = memo(
                       <Check className="h-4 w-4 text-white" />
                     </div>
                   </Avatar>
-                ) : isGroupThread ? (
-                  <Avatar
-                    className={cn(
-                      'h-8 w-8 rounded-full',
-                      displayUnread && !isMailSelected && !isFolderSent ? '' : 'border',
-                    )}
-                  >
-                    <div className="flex h-full w-full items-center justify-center rounded-full bg-[#FFFFFF] p-2 dark:bg-[#373737]">
-                      <GroupPeople className="h-4 w-4" />
-                    </div>
-                  </Avatar>
                 ) : (
-                  <BimiAvatar
-                    email={latestMessage.sender.email}
-                    name={cleanName || latestMessage.sender.email}
-                    className={cn(
-                      'h-8 w-8 rounded-full',
-                      displayUnread && !isMailSelected && !isFolderSent ? '' : 'border',
-                    )}
-                  />
+                  <div
+                    className="rounded-full"
+                    onClick={(e) => {
+                      if(mailState.bulkSelected.length === 0) return;
+
+                      e.stopPropagation();
+
+                      setMail((prev: Config) => ({
+                        ...prev,
+                        bulkSelected: [
+                          ...prev.bulkSelected,
+                          latestMessage.id
+                        ]
+                      }))
+                    }}
+                  >
+                    {
+                      isGroupThread ? (
+                        <Avatar
+                          className={cn(
+                            'h-8 w-8 rounded-full',
+                            displayUnread && !isMailSelected && !isFolderSent ? '' : 'border',
+                          )}
+                        >
+                          <div className="flex h-full w-full items-center justify-center rounded-full bg-[#FFFFFF] p-2 dark:bg-[#373737]">
+                            <GroupPeople className="h-4 w-4" />
+                          </div>
+                        </Avatar>
+                      ) : (
+                        <BimiAvatar
+                          email={latestMessage.sender.email}
+                          name={cleanName || latestMessage.sender.email}
+                          className={cn(
+                            'h-8 w-8 rounded-full',
+                            displayUnread && !isMailSelected && !isFolderSent ? '' : 'border',
+                          )}
+                        />
+                      )
+                    }
+                  </div>
                 )}
                 {/* {displayUnread && !isMailSelected && !isFolderSent ? (
                   <>
