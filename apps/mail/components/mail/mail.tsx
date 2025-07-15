@@ -13,8 +13,8 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
-import { Bell, Lightning, Mail, ScanEye, Tag, Trash, User, X, Search } from '../icons/icons';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Bell, Lightning, Mail, ScanEye, Tag, Trash, User, X, Search } from '../icons/icons';
 import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
 import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import React, { useCallback, useEffect, useRef, useState } from 'react';

@@ -208,22 +208,24 @@ export class GoogleMailManager implements MailManager {
 
         type LabelCount = { label: string; count: number };
 
-        const mapped: LabelCount[] = (await Promise.all(
-          results.map(async (res) => {
-            if ('_tag' in res && res._tag === 'LabelFetchFailed') {
-              return null;
-            }
-            let labelName = (res.data.name ?? res.data.id ?? '').toLowerCase();
-            if (labelName === 'draft') {
-              labelName = 'drafts';
-            }
-            const isTotalLabel = labelName === 'drafts' || labelName === 'sent';
-            return {
-              label: labelName,
-              count: Number(isTotalLabel ? res.data.threadsTotal : res.data.threadsUnread),
-            };
-          }),
-        )).filter((item): item is LabelCount => item !== null);
+        const mapped: LabelCount[] = (
+          await Promise.all(
+            results.map(async (res) => {
+              if ('_tag' in res && res._tag === 'LabelFetchFailed') {
+                return null;
+              }
+              let labelName = (res.data.name ?? res.data.id ?? '').toLowerCase();
+              if (labelName === 'draft') {
+                labelName = 'drafts';
+              }
+              const isTotalLabel = labelName === 'drafts' || labelName === 'sent';
+              return {
+                label: labelName,
+                count: Number(isTotalLabel ? res.data.threadsTotal : res.data.threadsUnread),
+              };
+            }),
+          )
+        ).filter((item): item is LabelCount => item !== null);
 
         // Get archive count
         try {
@@ -847,27 +849,36 @@ export class GoogleMailManager implements MailManager {
 
     const chunkSize = 15;
     const delayBetweenChunks = 100;
-    const allResults = [];
+    const allResults: Array<{
+      threadId: string;
+      status: 'fulfilled' | 'rejected';
+      value?: unknown;
+      reason?: unknown;
+    }> = [];
 
     for (let i = 0; i < threadIds.length; i += chunkSize) {
       const chunk = threadIds.slice(i, i + chunkSize);
 
-      const promises = chunk.map(async (threadId) => {
-        try {
-          const response = await this.gmail.users.threads.modify({
-            userId: 'me',
-            id: threadId,
-            requestBody: requestBody,
-          });
-          return { threadId, status: 'fulfilled' as const, value: response.data };
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (error: any) {
-          const errorMessage = error?.errors?.[0]?.message || error.message || error;
-          return { threadId, status: 'rejected' as const, reason: { error: errorMessage } };
-        }
-      });
+      const effects = chunk.map((threadId) =>
+        Effect.tryPromise({
+          try: async () => {
+            const response = await this.gmail.users.threads.modify({
+              userId: 'me',
+              id: threadId,
+              requestBody,
+            });
+            return { threadId, status: 'fulfilled' as const, value: response.data };
+          },
+          catch: (error: any) => {
+            const errorMessage = error?.errors?.[0]?.message || error.message || error;
+            return { threadId, status: 'rejected' as const, reason: { error: errorMessage } };
+          },
+        }),
+      );
 
-      const chunkResults = await Promise.all(promises);
+      const chunkResults = await Effect.runPromise(
+        Effect.all(effects, { concurrency: 'unbounded' }),
+      );
       allResults.push(...chunkResults);
 
       if (i + chunkSize < threadIds.length) {

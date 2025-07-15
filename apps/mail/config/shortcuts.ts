@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { keyboardLayoutMapper } from '../utils/keyboard-layout-map';
+import { getKeyCodeFromKey } from '../utils/keyboard-utils';
 
 export const shortcutSchema = z.object({
   keys: z.array(z.string()),
@@ -12,6 +14,70 @@ export const shortcutSchema = z.object({
 
 export type Shortcut = z.infer<typeof shortcutSchema>;
 export type ShortcutType = Shortcut['type'];
+
+/**
+ * Enhanced shortcut type with keyboard layout mapping support
+ */
+export interface EnhancedShortcut extends Shortcut {
+  mappedKeys?: string[];
+  displayKeys?: string[];
+}
+
+/**
+ * Convert key codes to user-friendly display keys using keyboard layout mapping
+ */
+export function getDisplayKeysForShortcut(shortcut: Shortcut): string[] {
+  const detectedLayout = keyboardLayoutMapper.getDetectedLayout();
+  
+  return shortcut.keys.map(key => {
+    // Handle special modifiers first
+    switch (key.toLowerCase()) {
+      case 'mod':
+        return navigator.platform.includes('Mac') ? '⌘' : 'Ctrl';
+      case 'meta':
+        return '⌘';
+      case 'ctrl':
+      case 'control':
+        return 'Ctrl';
+      case 'alt':
+        return navigator.platform.includes('Mac') ? '⌥' : 'Alt';
+      case 'shift':
+        return '⇧';
+      case 'escape':
+        return 'Esc';
+      case 'backspace':
+        return '⌫';
+      case 'enter':
+        return '↵';
+      case 'space':
+        return 'Space';
+      default:
+        // Use enhanced keyboard layout mapping
+        if (detectedLayout?.layout && detectedLayout.layout !== 'qwerty') {
+          const keyCode = getKeyCodeFromKey(key);
+          const mappedKey = keyboardLayoutMapper.getKeyForCode(keyCode);
+          return mappedKey.length === 1 ? mappedKey.toUpperCase() : mappedKey;
+        }
+        return key.length === 1 ? key.toUpperCase() : key;
+    }
+  });
+}
+
+/**
+ * Convert a key string to its corresponding KeyCode
+ */
+
+
+/**
+ * Enhance shortcuts with keyboard layout mapping
+ */
+export function enhanceShortcutsWithMapping(shortcuts: Shortcut[]): EnhancedShortcut[] {
+  return shortcuts.map(shortcut => ({
+    ...shortcut,
+    displayKeys: getDisplayKeysForShortcut(shortcut),
+    mappedKeys: keyboardLayoutMapper.mapKeys(shortcut.keys.map(getKeyCodeFromKey)),
+  }));
+}
 
 const threadDisplayShortcuts: Shortcut[] = [
   // {
@@ -363,3 +429,8 @@ export const keyboardShortcuts: Shortcut[] = [
   ...mailListShortcuts,
   ...composeShortcuts,
 ];
+
+/**
+ * Enhanced keyboard shortcuts with layout mapping
+ */
+export const enhancedKeyboardShortcuts: EnhancedShortcut[] = enhanceShortcutsWithMapping(keyboardShortcuts);
