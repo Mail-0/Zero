@@ -206,10 +206,36 @@ export class GoogleMailManager implements MailManager {
           Effect.all(labelRequests, { concurrency: 'unbounded' }),
         );
 
-        return results.map((res) => ({
-          label: res.data.name ?? res.data.id ?? '',
-          count: Number(res.data.threadsUnread),
-        }));
+        type LabelCount = { label: string; count: number };
+
+        const mapped: LabelCount[] = await Promise.all(
+          results.map(async (res) => {
+            let labelName = (res.data.name ?? res.data.id ?? '').toLowerCase();
+            if (labelName === 'draft') labelName = 'drafts';
+            const isTotalLabel = labelName === 'drafts' || labelName === 'sent';
+            return {
+              label: labelName,
+              count: Number(isTotalLabel ? res.data.threadsTotal : res.data.threadsUnread),
+            };
+          }),
+        );
+
+        // Get archive count
+        try {
+          const archiveRes = await this.gmail.users.threads.list({
+            userId: 'me',
+            q: 'in:archive',
+            maxResults: 1,
+          });
+          mapped.push({
+            label: 'archive',
+            count: Number(archiveRes.data.resultSizeEstimate ?? 0),
+          });
+        } catch (error: unknown) {
+          console.error('Failed to fetch archive count:', error);
+        }
+
+        return mapped;
       },
       { email: this.config.auth?.email },
     );
