@@ -1,7 +1,7 @@
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { enhancedKeyboardShortcuts } from '@/config/shortcuts';
 import { useSearchValue } from '@/hooks/use-search-value';
-import { keyboardShortcuts } from '@/config/shortcuts';
 import { useLocation, useParams } from 'react-router';
 import { useMail } from '@/components/mail/use-mail';
 import { Categories } from '@/components/mail/mail';
@@ -239,7 +239,9 @@ export function MailListHotkeys() {
     ],
   );
 
-  const mailListShortcuts = keyboardShortcuts.filter((shortcut) => shortcut.scope === scope);
+  const mailListShortcuts = enhancedKeyboardShortcuts.filter(
+    (shortcut) => shortcut.scope === scope,
+  );
 
   useShortcuts(mailListShortcuts, handlers, { scope });
 
