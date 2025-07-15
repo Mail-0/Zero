@@ -208,17 +208,22 @@ export class GoogleMailManager implements MailManager {
 
         type LabelCount = { label: string; count: number };
 
-        const mapped: LabelCount[] = await Promise.all(
+        const mapped: LabelCount[] = (await Promise.all(
           results.map(async (res) => {
+            if ('_tag' in res && res._tag === 'LabelFetchFailed') {
+              return null;
+            }
             let labelName = (res.data.name ?? res.data.id ?? '').toLowerCase();
-            if (labelName === 'draft') labelName = 'drafts';
+            if (labelName === 'draft') {
+              labelName = 'drafts';
+            }
             const isTotalLabel = labelName === 'drafts' || labelName === 'sent';
             return {
               label: labelName,
               count: Number(isTotalLabel ? res.data.threadsTotal : res.data.threadsUnread),
             };
           }),
-        );
+        )).filter((item): item is LabelCount => item !== null);
 
         // Get archive count
         try {
