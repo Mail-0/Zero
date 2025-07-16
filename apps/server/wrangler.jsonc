@@ -234,8 +234,8 @@
         "VITE_PUBLIC_APP_URL": "https://staging.0.email",
         "DISABLE_CALLS": "",
         "DROP_AGENT_TABLES": "false",
-        "THREAD_SYNC_MAX_COUNT": "40",
-        "THREAD_SYNC_LOOP": "true",
+        "THREAD_SYNC_MAX_COUNT": "20",
+        "THREAD_SYNC_LOOP": "false",
         "DISABLE_WORKFLOWS": "true",
       },
       "kv_namespaces": [
