@@ -226,6 +226,7 @@ export enum Tools {
   AskZeroThread = 'askZeroThread',
   WebSearch = 'webSearch',
   InboxRag = 'inboxRag',
+  BuildGmailSearchQuery = 'buildGmailSearchQuery',
 }
 
 export type AppContext = Context<{ Bindings: Env }>;

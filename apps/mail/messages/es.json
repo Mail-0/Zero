@@ -94,7 +94,7 @@
         "commandPalette": "Paleta de comandos"
       },
       "quickResults": "Resultados rápidos",
-      "searchPlaceholder": "Buscar y filtrar",
+      "searchPlaceholder": "Buscar...",
       "noSearchResults": "Sin resultados de búsqueda",
       "actions": "Acciones",
       "addFilters": "Añadir filtros",
@@ -165,8 +165,13 @@
       "attachments": "Adjuntos",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "sin adjuntos",
             "countPlural=one": "adjunto",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "archivos",
             "countPlural=one": "archivo",
@@ -249,12 +259,17 @@
       "search": "Buscar notas...",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "Añade notas",
-            "countPlural=one": "{count} nota",
-            "countPlural=other": "{count} notas"
+            "countPlural=one": "# nota",
+            "countPlural=other": "# notas"
           }
         }
       ],
@@ -312,12 +327,17 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "respuestas",
-            "countPlural=one": "{count} respuesta",
-            "countPlural=other": "{count} respuestas"
+            "countPlural=one": "# respuesta",
+            "countPlural=other": "# respuestas"
           }
         }
       ],
@@ -370,8 +390,7 @@
       "failedToMute": "Error al silenciar",
       "failedToUnmute": "Error al activar sonido",
       "archived": "Archivado",
-      "failedToArchive": "Error al archivar",
-      "openInNewTab": "Abrir en nueva pestaña"
+      "failedToArchive": "Error al archivar"
     },
     "units": {
       "mb": "{amount} MB"
