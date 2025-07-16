@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/select';
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-import { Check, Command, Loader, Paperclip, Plus, Type, X as XIcon } from 'lucide-react';
+import { Check, Command, Loader, Paperclip, Type, X as XIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TextEffect } from '@/components/motion-primitives/text-effect';
 import { ImageCompressionSettings } from './image-compression-settings';

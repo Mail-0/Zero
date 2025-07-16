@@ -1,19 +1,13 @@
 import {
-  Archive2,
   Bell,
-  CurvedArrow,
-  Eye,
   Lightning,
   Mail,
   ScanEye,
-  Star2,
   Tag,
   Trash,
   User,
   X,
   Search,
-  Plus,
-  Filter,
 } from '../icons/icons';
 import {
   Dialog,
@@ -408,8 +402,6 @@ export function MailLayout() {
   const { activeFilters, clearAllFilters, removeFilter } = useCommandPalette();
   const [, setIsCommandPaletteOpen] = useQueryState('isCommandPaletteOpen');
   const [, setCommandPaletteView] = useQueryState('commandPaletteView');
-
-  const { data: activeAccount } = useActiveConnection();
 
   useEffect(() => {
     if (prevFolderRef.current !== folder && mail.bulkSelected.length > 0) {

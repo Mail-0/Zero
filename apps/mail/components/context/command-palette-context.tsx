@@ -1091,9 +1091,9 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                           item.shortcut.toLowerCase().includes('⌘') ||
                           item.shortcut.toLowerCase().includes('ctrl') ? (
                           <span className="bg-muted text-md pointer-events-none flex h-6 select-none flex-row items-center gap-1 rounded-md border border-none px-1.5 text-xs font-medium !leading-[0] opacity-100 dark:bg-[#000000] dark:text-[#929292]">
-                            {item.shortcut.split('+').map((key, index) => (
+                            {item.shortcut.split('+').map((key) => (
                               <span
-                                key={index}
+                                key={key}
                                 className={cn(
                                   'h-min text-sm !leading-[0.2]',
                                   key === (isMac ? '⌘' : 'Ctrl') ? (isMac ? 'mt-[1px]' : '') : '',
