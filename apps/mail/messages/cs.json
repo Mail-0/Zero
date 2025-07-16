@@ -94,7 +94,7 @@
         "commandPalette": "Paleta příkazů"
       },
       "quickResults": "Rychlé výsledky",
-      "searchPlaceholder": "Hledat a filtrovat",
+      "searchPlaceholder": "Hledat...",
       "noSearchResults": "Žádné výsledky vyhledávání",
       "actions": "Akce",
       "addFilters": "Přidat filtry",
@@ -165,13 +165,8 @@
       "attachments": "Přílohy",
       "attachmentCount": [
         {
-          "declarations": [
-            "input count",
-            "local countPlural = count: plural"
-          ],
-          "selectors": [
-            "countPlural"
-          ],
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "příloh",
             "countPlural=one": "příloha",
@@ -181,13 +176,8 @@
       ],
       "fileCount": [
         {
-          "declarations": [
-            "input count",
-            "local countPlural = count: plural"
-          ],
-          "selectors": [
-            "countPlural"
-          ],
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "souborů",
             "countPlural=one": "soubor",
@@ -259,17 +249,12 @@
       "search": "Hledat poznámky...",
       "noteCount": [
         {
-          "declarations": [
-            "input count",
-            "local countPlural = count: plural"
-          ],
-          "selectors": [
-            "countPlural"
-          ],
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "Přidat poznámku",
-            "countPlural=one": "{count} poznámka",
-            "countPlural=other": "{count} poznámek"
+            "countPlural=one": "# poznámka",
+            "countPlural=other": "# poznámek"
           }
         }
       ],
@@ -327,17 +312,12 @@
     "mail": {
       "replies": [
         {
-          "declarations": [
-            "input count",
-            "local countPlural = count: plural"
-          ],
-          "selectors": [
-            "countPlural"
-          ],
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "odpovědí",
-            "countPlural=one": "{count} odpověď",
-            "countPlural=other": "{count} odpovědí"
+            "countPlural=one": "# odpověď",
+            "countPlural=other": "# odpovědí"
           }
         }
       ],
@@ -390,8 +370,7 @@
       "failedToMute": "Ztlumení se nezdařilo",
       "failedToUnmute": "Zrušení ztlumení se nezdařilo",
       "archived": "Archivováno",
-      "failedToArchive": "Archivace se nezdařila",
-      "openInNewTab": "Otevřít v nové záložce"
+      "failedToArchive": "Archivace se nezdařila"
     },
     "units": {
       "mb": "{amount} MB"

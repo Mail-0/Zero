@@ -94,7 +94,7 @@
         "commandPalette": "指令面板"
       },
       "quickResults": "快速結果",
-      "searchPlaceholder": "搜尋與篩選",
+      "searchPlaceholder": "搜尋...",
       "noSearchResults": "沒有搜尋結果",
       "actions": "操作",
       "addFilters": "新增篩選條件",
@@ -165,13 +165,8 @@
       "attachments": "附件",
       "attachmentCount": [
         {
-          "declarations": [
-            "input count",
-            "local countPlural = count: plural"
-          ],
-          "selectors": [
-            "countPlural"
-          ],
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "附件",
             "countPlural=one": "附件",
@@ -181,13 +176,8 @@
       ],
       "fileCount": [
         {
-          "declarations": [
-            "input count",
-            "local countPlural = count: plural"
-          ],
-          "selectors": [
-            "countPlural"
-          ],
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "檔案",
             "countPlural=one": "檔案",
@@ -259,17 +249,12 @@
       "search": "搜尋筆記...",
       "noteCount": [
         {
-          "declarations": [
-            "input count",
-            "local countPlural = count: plural"
-          ],
-          "selectors": [
-            "countPlural"
-          ],
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "添加筆記",
-            "countPlural=one": "{count} 則筆記",
-            "countPlural=other": "{count} 則筆記"
+            "countPlural=one": "# 筆記",
+            "countPlural=other": "# 筆記"
           }
         }
       ],
@@ -327,17 +312,12 @@
     "mail": {
       "replies": [
         {
-          "declarations": [
-            "input count",
-            "local countPlural = count: plural"
-          ],
-          "selectors": [
-            "countPlural"
-          ],
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "回覆",
-            "countPlural=one": "{count} 則回覆",
-            "countPlural=other": "{count} 則回覆"
+            "countPlural=one": "# 則回覆",
+            "countPlural=other": "# 則回覆"
           }
         }
       ],
@@ -390,8 +370,7 @@
       "failedToMute": "靜音失敗",
       "failedToUnmute": "取消靜音失敗",
       "archived": "已封存",
-      "failedToArchive": "封存失敗",
-      "openInNewTab": "在新分頁中開啟"
+      "failedToArchive": "封存失敗"
     },
     "units": {
       "mb": "{amount} MB"

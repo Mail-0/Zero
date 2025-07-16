@@ -165,13 +165,8 @@
       "attachments": "المرفقات",
       "attachmentCount": [
         {
-          "declarations": [
-            "input count",
-            "local countPlural = count: plural"
-          ],
-          "selectors": [
-            "countPlural"
-          ],
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "مرفقات",
             "countPlural=one": "مرفق",
@@ -181,13 +176,8 @@
       ],
       "fileCount": [
         {
-          "declarations": [
-            "input count",
-            "local countPlural = count: plural"
-          ],
-          "selectors": [
-            "countPlural"
-          ],
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "ملفات",
             "countPlural=one": "ملف",
@@ -259,17 +249,12 @@
       "search": "البحث في الملاحظات...",
       "noteCount": [
         {
-          "declarations": [
-            "input count",
-            "local countPlural = count: plural"
-          ],
-          "selectors": [
-            "countPlural"
-          ],
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "إضافة ملاحظات",
             "countPlural=one": "ملاحظة واحدة",
-            "countPlural=other": "# ملاحظة"
+            "countPlural=other": "# ملاحظات"
           }
         }
       ],
@@ -327,17 +312,12 @@
     "mail": {
       "replies": [
         {
-          "declarations": [
-            "input count",
-            "local countPlural = count: plural"
-          ],
-          "selectors": [
-            "countPlural"
-          ],
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "ردود",
             "countPlural=one": "رد واحد",
-            "countPlural=other": "# رد"
+            "countPlural=other": "# ردود"
           }
         }
       ],
