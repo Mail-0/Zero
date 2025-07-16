@@ -463,7 +463,9 @@ export const mailRouter = router({
       const wakeAtIso = new Date(input.wakeAt).toISOString();
       await Promise.all(
         input.ids.map((threadId) =>
-          env.snoozed_emails.put(`${threadId}__${activeConnection.id}`, wakeAtIso),
+          env.snoozed_emails.put(`${threadId}__${activeConnection.id}`, wakeAtIso, {
+            metadata: { wakeAt: wakeAtIso },
+          }),
         ),
       );
 

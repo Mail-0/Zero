@@ -16,7 +16,7 @@ import {
 } from './db/schema';
 import { getZeroAgent } from './lib/server-utils';
 import { env, WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
-import { EProviders, type ISubscribeBatch, type IThreadBatch } from './types';
+import { EProviders, type ISubscribeBatch, type IThreadBatch, type ISnoozeBatch } from './types';
 import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
 import { getZeroDB, verifyToken } from './lib/server-utils';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
@@ -744,6 +744,30 @@ export default class extends WorkerEntrypoint<typeof env> {
         }
         break;
       }
+      case batch.queue.startsWith('unsnooze-queue'): {
+        console.log('[UNSNOOZE_QUEUE] batch', batch);
+        try {
+          await Promise.all(
+            batch.messages.map(async (msg: Message<ISnoozeBatch>) => {
+              const { connectionId, threadIds, keyNames } = msg.body;
+              try {
+                const agent = await getZeroAgent(connectionId);
+                if (threadIds.length) {
+                  await agent.modifyLabels(threadIds, ['INBOX'], ['SNOOZED']);
+                }
+                if (keyNames.length) {
+                  await Promise.all(keyNames.map((k) => env.snoozed_emails.delete(k)));
+                }
+              } catch (error) {
+                console.error('[UNSNOOZE_QUEUE] Failed to process', { connectionId, threadIds, error });
+              }
+            }),
+          );
+        } finally {
+          batch.ackAll();
+        }
+        return;
+      }
     }
   }
 
@@ -756,25 +780,45 @@ export default class extends WorkerEntrypoint<typeof env> {
 
     const expiredSubscriptions: Array<{ connectionId: string; providerId: EProviders }> = [];
 
-    const snoozedKeys = await env.snoozed_emails.list();
     const nowTs = Date.now();
 
-    await Promise.all(
-      snoozedKeys.keys.map(async (key: { name: string }) => {
+    const unsnoozeMap: Record<string, { threadIds: string[]; keyNames: string[] }> = {};
+
+    let cursor: string | undefined = undefined;
+    do {
+      const listResp: {
+        keys: { name: string; metadata?: { wakeAt?: string } }[];
+        cursor?: string;
+      } = await env.snoozed_emails.list({ cursor, limit: 1000 });
+      cursor = listResp.cursor;
+
+      for (const key of listResp.keys) {
         try {
-          const wakeAtIso = await env.snoozed_emails.get(key.name);
-          if (!wakeAtIso) return;
+          const wakeAtIso = (key as any).metadata?.wakeAt as string | undefined;
+          if (!wakeAtIso) continue;
           const wakeAt = new Date(wakeAtIso).getTime();
-          if (wakeAt > nowTs) return;
+          if (wakeAt > nowTs) continue;
 
           const [threadId, connectionId] = key.name.split('__');
-          if (!threadId || !connectionId) return;
+          if (!threadId || !connectionId) continue;
 
-          const agent = await getZeroAgent(connectionId);
-          await agent.modifyLabels([threadId], ['INBOX'], ['SNOOZED']);
-          await env.snoozed_emails.delete(key.name);
+          if (!unsnoozeMap[connectionId]) {
+            unsnoozeMap[connectionId] = { threadIds: [], keyNames: [] };
+          }
+          unsnoozeMap[connectionId].threadIds.push(threadId);
+          unsnoozeMap[connectionId].keyNames.push(key.name);
         } catch (error) {
-          console.error('Failed to unsnooze thread from key', key.name, error);
+          console.error('Failed to prepare unsnooze for key', key.name, error);
+        }
+      }
+    } while (cursor);
+
+    await Promise.all(
+      Object.entries(unsnoozeMap).map(async ([connectionId, { threadIds, keyNames }]) => {
+        try {
+          await env.unsnooze_queue.send({ connectionId, threadIds, keyNames });
+        } catch (error) {
+          console.error('Failed to enqueue unsnooze tasks', { connectionId, threadIds, error });
         }
       }),
     );
