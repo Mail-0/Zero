@@ -94,7 +94,7 @@
         "commandPalette": "پالت فرمان"
       },
       "quickResults": "نتایج سریع",
-      "searchPlaceholder": "جستجو و فیلتر",
+      "searchPlaceholder": "جستجو...",
       "noSearchResults": "نتیجه‌ای یافت نشد",
       "actions": "اقدامات",
       "addFilters": "افزودن فیلترها",
@@ -165,8 +165,13 @@
       "attachments": "پیوست‌ها",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "پیوست",
             "countPlural=one": "پیوست",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "فایل",
             "countPlural=one": "فایل",
@@ -249,12 +259,17 @@
       "search": "جستجوی یادداشت‌ها...",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "افزودن یادداشت‌ها",
-            "countPlural=one": "{count} یادداشت",
-            "countPlural=other": "{count} یادداشت"
+            "countPlural=one": "# یادداشت",
+            "countPlural=other": "# یادداشت"
           }
         }
       ],
@@ -312,12 +327,17 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "پاسخ‌ها",
-            "countPlural=one": "{count} پاسخ",
-            "countPlural=other": "{count} پاسخ"
+            "countPlural=one": "# پاسخ",
+            "countPlural=other": "# پاسخ"
           }
         }
       ],
@@ -370,8 +390,7 @@
       "failedToMute": "بی‌صدا کردن ناموفق بود",
       "failedToUnmute": "فعال کردن صدا ناموفق بود",
       "archived": "بایگانی شد",
-      "failedToArchive": "بایگانی کردن ناموفق بود",
-      "openInNewTab": "باز کردن در زبانه جدید"
+      "failedToArchive": "بایگانی کردن ناموفق بود"
     },
     "units": {
       "mb": "{amount} مگابایت"

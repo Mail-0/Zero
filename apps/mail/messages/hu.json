@@ -94,7 +94,7 @@
         "commandPalette": "Parancspaletta"
       },
       "quickResults": "Gyors eredmények",
-      "searchPlaceholder": "Keresés és szűrés",
+      "searchPlaceholder": "Keresés...",
       "noSearchResults": "Nincs találat",
       "actions": "Műveletek",
       "addFilters": "Szűrők hozzáadása",
@@ -165,8 +165,13 @@
       "attachments": "Csatolmányok",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "csatolmány",
             "countPlural=one": "csatolmány",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "fájl",
             "countPlural=one": "fájl",
@@ -249,12 +259,17 @@
       "search": "Jegyzetek keresése...",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "Jegyzetek hozzáadása",
-            "countPlural=one": "{count} jegyzet",
-            "countPlural=other": "{count} jegyzet"
+            "countPlural=one": "# jegyzet",
+            "countPlural=other": "# jegyzet"
           }
         }
       ],
@@ -312,12 +327,17 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "válasz",
-            "countPlural=one": "{count} válasz",
-            "countPlural=other": "{count} válasz"
+            "countPlural=one": "# válasz",
+            "countPlural=other": "# válasz"
           }
         }
       ],
@@ -370,8 +390,7 @@
       "failedToMute": "Némítás sikertelen",
       "failedToUnmute": "Némítás feloldása sikertelen",
       "archived": "Archiválva",
-      "failedToArchive": "Archiválás sikertelen",
-      "openInNewTab": "Megnyitás új lapon"
+      "failedToArchive": "Archiválás sikertelen"
     },
     "units": {
       "mb": "{amount} MB"

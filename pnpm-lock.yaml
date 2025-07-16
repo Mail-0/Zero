@@ -54,6 +54,16 @@ patchedDependencies:
 importers:
 
   .:
+    dependencies:
+      '@dub/analytics':
+        specifier: 0.0.27
+        version: 0.0.27
+      '@dub/better-auth':
+        specifier: 0.0.3
+        version: 0.0.3
+      dub:
+        specifier: 0.63.7
+        version: 0.63.7(zod@3.25.67)
     devDependencies:
       '@types/node':
         specifier: 22.15.29
@@ -1050,6 +1060,12 @@ packages:
 
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
+
+  '@dub/analytics@0.0.27':
+    resolution: {integrity: sha512-TbLr+sKWiBsMw1GOLpduZI7skXmrLwZlEoVoHyxq66RvMk/5Fl84QoenlhjdxaX1rlHAkWCcjcbAYcCN7skoKw==}
+
+  '@dub/better-auth@0.0.3':
+    resolution: {integrity: sha512-5haJGPt8Xab1L4De6naqEwC8k2KJrxI2iAfs5t9u6iNob3DNBTsbSZGb2godIigg9ZsS2J+joKKG5hDK6jT0UQ==}
 
   '@egjs/agent@2.4.4':
     resolution: {integrity: sha512-cvAPSlUILhBBOakn2krdPnOGv5hAZq92f1YHxYcfu0p7uarix2C6Ia3AVizpS1SGRZGiEkIS5E+IVTLg1I2Iog==}
@@ -4869,6 +4885,16 @@ packages:
       sqlite3:
         optional: true
 
+  dub@0.63.7:
+    resolution: {integrity: sha512-DhMF4ceWIPjMGA4ZU8L1pySJFtwdXRjcwchRLLWReN5t3C/MZohrLvrqbeJOBfdOE4VKGtqI8uYD3kBT+4nMSQ==}
+    hasBin: true
+    peerDependencies:
+      '@modelcontextprotocol/sdk': '>=1.5.0 <1.10.0'
+      zod: '>= 3'
+    peerDependenciesMeta:
+      '@modelcontextprotocol/sdk':
+        optional: true
+
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
     engines: {node: '>= 0.4'}
@@ -7421,6 +7447,9 @@ packages:
     resolution: {integrity: sha512-61g9pCh0Vnh7IutZjtLGGpTA355+OPn2TyDv/6ivP2h/AdAVX9azsoxmg2/M6nZeQZNYBEwIcsne1mJd9oQItQ==}
     engines: {node: '>= 18'}
 
+  server-only@0.0.1:
+    resolution: {integrity: sha512-qepMx2JxAa5jjfzxG79yPPq+8BuFToHd1hm7kI+Z4zAq1ftQiP7HcxMhDDItrbtwVeLg/cY2JnKnrcFkmiswNA==}
+
   set-cookie-parser@2.7.1:
     resolution: {integrity: sha512-IOc8uWeOZgnb3ptbCURJWNjWUPcO3ZnTTdzsurqERrP6nPyv+paC55vJM0LpOlT2ne+Ix+9+CRG1MNLlyZ4GjQ==}
 
@@ -8787,6 +8816,14 @@ snapshots:
       tslib: 2.8.1
 
   '@drizzle-team/brocli@0.10.2': {}
+
+  '@dub/analytics@0.0.27':
+    dependencies:
+      server-only: 0.0.1
+
+  '@dub/better-auth@0.0.3':
+    dependencies:
+      zod: 3.25.67
 
   '@egjs/agent@2.4.4': {}
 
@@ -12538,6 +12575,10 @@ snapshots:
       kysely: 0.28.2
       postgres: 3.4.5
 
+  dub@0.63.7(zod@3.25.67):
+    dependencies:
+      zod: 3.25.67
+
   dunder-proto@1.0.1:
     dependencies:
       call-bind-apply-helpers: 1.0.2
@@ -15662,6 +15703,8 @@ snapshots:
       send: 1.2.0
     transitivePeerDependencies:
       - supports-color
+
+  server-only@0.0.1: {}
 
   set-cookie-parser@2.7.1: {}
 

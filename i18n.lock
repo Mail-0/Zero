@@ -597,7 +597,7 @@ checksums:
     common/commandPalette/commands/helpWithShortcuts: f8b89d2e465e3a93ff9c5397a114a094
     common/commandPalette/commands/commandPalette: 27374fec801ecad6a2a5c58d98c7f531
     common/commandPalette/quickResults: 7edcae7952feb7fbb89ddb6c774fddcd
-    common/commandPalette/searchPlaceholder: 1c65d0255e0c94df9099f961513304bd
+    common/commandPalette/searchPlaceholder: fe877a75eac472fc5b188c135c78a558
     common/commandPalette/noSearchResults: 622e132be46733cb640c78d62c8041ba
     common/commandPalette/actions: c46571856723b03262fd33f511116298
     common/commandPalette/addFilters: 54a0a9e1e7e5f5082186da23ca60c647
@@ -730,8 +730,8 @@ checksums:
     common/notes/noteCount/0/declarations/1: b65b792281f6c606eb95b21bd2da44ac
     common/notes/noteCount/0/selectors/0: 4206517b68ca230406fe826568921689
     common/notes/noteCount/0/match/countPlural%3D0: 2e162d880384fd0e3438311f8f8931b3
-    common/notes/noteCount/0/match/countPlural%3Done: 9af13ee2743c5ef2edf3f1d857386c59
-    common/notes/noteCount/0/match/countPlural%3Dother: 531b2cc34700266aeb5799cde779a169
+    common/notes/noteCount/0/match/countPlural%3Done: a513f458fdfe98ef846cc11186f24558
+    common/notes/noteCount/0/match/countPlural%3Dother: a781cd44d959c189b285d940506ac68e
     common/notes/notePinned: a94078d0939ef0b72fff4e0fb2227dd9
     common/notes/noteUnpinned: 4ca3023fe22a27ec118baa24c1a45ccc
     common/notes/colorChanged: fc4d8c2c42673be1b4af09be42f4784d
@@ -778,8 +778,8 @@ checksums:
     common/mail/replies/0/declarations/1: b65b792281f6c606eb95b21bd2da44ac
     common/mail/replies/0/selectors/0: 4206517b68ca230406fe826568921689
     common/mail/replies/0/match/countPlural%3D0: a787a6c9cb22ad1ea7be33c56ceb70ba
-    common/mail/replies/0/match/countPlural%3Done: cc9aa09dc65fe2d95a50d75b4e6c2105
-    common/mail/replies/0/match/countPlural%3Dother: 99c4b93b407b0a56335b9641d770e8cf
+    common/mail/replies/0/match/countPlural%3Done: f502c63daacea0c9429cd03e91f87d2b
+    common/mail/replies/0/match/countPlural%3Dother: 6bd4863d8e8882188009a083d2791fbe
     common/mail/deselectAll: d06b551a6d60cdc4dfc51c7683644bad
     common/mail/selectedEmails: 8070ccaf317cb4216c364b2cb1223fd7
     common/mail/noEmailsToSelect: a797578836d0bf18e69a2537429b119a
@@ -830,7 +830,6 @@ checksums:
     common/mail/failedToUnmute: 9a9c946ac9980a7845122a5c3bae8f13
     common/mail/archived: cf5127ecfd7e43a35466a1ba5fe16450
     common/mail/failedToArchive: e844b73a518542027803b7ff97e82b89
-    common/mail/openInNewTab: 6844e4922a7a40a7ee25c10ea109cdeb
     common/units/mb: ed9c3b369a1ac40741b182458b69143a
     common/labels/color: 9d53d1d120e8b8954bcae9a322573748
     common/labels/labelName: 682eade7443c047bc680664f821c9e0d

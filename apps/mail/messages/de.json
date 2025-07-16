@@ -94,7 +94,7 @@
         "commandPalette": "Befehlspalette"
       },
       "quickResults": "Schnelle Ergebnisse",
-      "searchPlaceholder": "Suchen & Filtern",
+      "searchPlaceholder": "Suchen...",
       "noSearchResults": "Keine Suchergebnisse",
       "actions": "Aktionen",
       "addFilters": "Filter hinzufügen",
@@ -165,8 +165,13 @@
       "attachments": "Anhänge",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "Anhänge",
             "countPlural=one": "Anhang",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "Dateien",
             "countPlural=one": "Datei",
@@ -249,12 +259,17 @@
       "search": "Notizen durchsuchen...",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "Füge Notizen hinzu",
-            "countPlural=one": "{count} Notiz",
-            "countPlural=other": "{count} Notizen"
+            "countPlural=one": "# Notiz",
+            "countPlural=other": "# Notizen"
           }
         }
       ],
@@ -312,12 +327,17 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "Antworten",
-            "countPlural=one": "{count} Antwort",
-            "countPlural=other": "{count} Antworten"
+            "countPlural=one": "# Antwort",
+            "countPlural=other": "# Antworten"
           }
         }
       ],
@@ -370,8 +390,7 @@
       "failedToMute": "Stummschaltung fehlgeschlagen",
       "failedToUnmute": "Aufhebung der Stummschaltung fehlgeschlagen",
       "archived": "Archiviert",
-      "failedToArchive": "Archivierung fehlgeschlagen",
-      "openInNewTab": "In neuem Tab öffnen"
+      "failedToArchive": "Archivierung fehlgeschlagen"
     },
     "units": {
       "mb": "{amount} MB"
