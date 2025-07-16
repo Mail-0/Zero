@@ -1,4 +1,4 @@
-import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import type { PropsWithChildren } from 'react';
 import { trpcClient } from './query-provider';
 import { toast } from 'sonner';
@@ -12,8 +12,6 @@ export function ConnectionProvider({ children }: PropsWithChildren) {
 
 // Use this hook to initialize the connection query
 export function useConnectionQuery() {
-  const queryClient = useQueryClient();
-
   return useQuery({
     queryKey: CONNECTION_KEY,
     queryFn: async () => {
@@ -23,7 +21,7 @@ export function useConnectionQuery() {
       }
       return connection.id;
     },
-    retry: (failureCount, error) => {
+    retry: (failureCount) => {
       // Calculate exponential backoff delay
       const delay = Math.pow(2, failureCount) * 1000;
       const maxRetries = 5;

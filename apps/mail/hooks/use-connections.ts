@@ -9,8 +9,6 @@ export const useConnections = () => {
 };
 
 export const useActiveConnection = () => {
-  const trpc = useTRPC();
-
   // Get the connection directly from the getDefault query
   const connectionQuery = useQuery({
     queryKey: CONNECTION_KEY,
