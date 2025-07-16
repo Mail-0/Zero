@@ -1,11 +1,3 @@
-import {
-  connection,
-  user as _user,
-  account,
-  userSettings,
-  session,
-  userHotkeys,
-} from '../db/schema';
 import { createAuthMiddleware, phoneNumber, jwt, bearer, mcp } from 'better-auth/plugins';
 import { type Account, betterAuth, type BetterAuthOptions } from 'better-auth';
 import { getBrowserTimezone, isValidTimezone } from './timezones';
@@ -13,17 +5,20 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { getSocialProviders } from './auth-providers';
 import { redis, resend, twilio } from './services';
 import { getContext } from 'hono/context-storage';
+import { user as _user } from '../db/schema';
 import { defaultUserSettings } from './schemas';
-import { getMigrations } from 'better-auth/db';
+
 import { disableBrainFunction } from './brain';
 import { APIError } from 'better-auth/api';
 import { getZeroDB } from './server-utils';
-import type { EProviders } from '../types';
+import { type EProviders } from '../types';
 import type { HonoContext } from '../ctx';
 import { env } from 'cloudflare:workers';
 import { createDriver } from './driver';
-import { eq } from 'drizzle-orm';
+
 import { createDb } from '../db';
+import { dubAnalytics } from "@dub/better-auth";
+import { Dub } from "dub";
 
 const connectionHandlerHook = async (account: Account) => {
   if (!account.accessToken || !account.refreshToken) {
@@ -43,6 +38,7 @@ const connectionHandlerHook = async (account: Account) => {
   const userInfo = await driver.getUserInfo().catch(() => {
     throw new APIError('UNAUTHORIZED', { message: 'Failed to get user info' });
   });
+
 
   if (!userInfo?.address) {
     console.error('Missing email in user info:', { userInfo });
@@ -75,9 +71,13 @@ const connectionHandlerHook = async (account: Account) => {
 
 export const createAuth = () => {
   const twilioClient = twilio();
+  const dub = new Dub();
 
   return betterAuth({
     plugins: [
+      dubAnalytics({
+        dubClient: dub,
+      }),
       mcp({
         loginPage: env.VITE_PUBLIC_APP_URL + '/login',
       }),
@@ -117,6 +117,13 @@ export const createAuth = () => {
           if (!request) throw new APIError('BAD_REQUEST', { message: 'Request object is missing' });
           const db = getZeroDB(user.id);
           const connections = await db.findManyConnections();
+          const context = getContext<HonoContext>();
+          try {
+            await context.var.autumn.customers.delete(user.id);
+          } catch (error) {
+            console.error('Failed to delete Autumn customer:', error);
+            // Continue with deletion process despite Autumn failure
+          }
 
           const revokedAccounts = (
             await Promise.allSettled(
@@ -233,7 +240,7 @@ export const createAuth = () => {
 
 const createAuthConfig = () => {
   const cache = redis();
-  const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
+  const { db } = createDb(env.HYPERDRIVE.connectionString);
   return {
     database: drizzleAdapter(db, { provider: 'pg' }),
     secondaryStorage: {
@@ -284,7 +291,7 @@ const createAuthConfig = () => {
       },
     },
     onAPIError: {
-      onError: (error, ctx) => {
+      onError: (error) => {
         console.error('API Error', error);
       },
       errorURL: `${env.VITE_PUBLIC_APP_URL}/login`,

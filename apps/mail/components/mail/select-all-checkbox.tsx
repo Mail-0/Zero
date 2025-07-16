@@ -1,12 +1,13 @@
-import { Checkbox } from '@/components/ui/checkbox';
-import { useMail } from '@/components/mail/use-mail';
-import { useThreads } from '@/hooks/use-threads';
+import React, { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 import { useSearchValue } from '@/hooks/use-search-value';
 import { trpcClient } from '@/providers/query-provider';
-import { cn } from '@/lib/utils';
+import { useMail } from '@/components/mail/use-mail';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useThreads } from '@/hooks/use-threads';
 import { useParams } from 'react-router';
+import { Check } from '../icons/icons';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import React, { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 
 export default function SelectAllCheckbox({ className }: { className?: string }) {
   const [mail, setMail] = useMail();
@@ -40,7 +41,7 @@ export default function SelectAllCheckbox({ className }: { className?: string })
         const page = await trpcClient.mail.listThreads.query({
           folder,
           q: query,
-          max: MAX_PER_PAGE,
+          maxResults: MAX_PER_PAGE,
           cursor,
         });
         if (page?.threads?.length) {
@@ -82,6 +83,7 @@ export default function SelectAllCheckbox({ className }: { className?: string })
               const allIds = allIdsCache.current ?? [];
               setMail((prev) => ({ ...prev, bulkSelected: allIds }));
             } catch (err) {
+              console.error(err);
               setIsFetchingIds(false);
               toast.error('Failed to select all conversations');
             }
@@ -97,12 +99,38 @@ export default function SelectAllCheckbox({ className }: { className?: string })
   }, [folder, query]);
 
   return (
-    <Checkbox
-      ref={checkboxRef}
-      disabled={isFetchingIds}
-      checked={isIndeterminate ? 'indeterminate' : isAllLoadedSelected}
-      onCheckedChange={handleToggle}
-      className={cn('h-4 w-4', className)}
-    />
+    <div className="flex items-center gap-2">
+      <Checkbox
+        ref={checkboxRef}
+        disabled={isFetchingIds}
+        checked={isIndeterminate ? 'indeterminate' : isAllLoadedSelected}
+        onCheckedChange={handleToggle}
+        className={cn('hidden', className)}
+        id="select-all"
+      />
+      <label
+        htmlFor="select-all"
+        className={cn(
+          'text-muted-foreground flex items-center gap-1 text-xs font-medium transition-colors',
+          isIndeterminate && 'text-primary',
+        )}
+      >
+        <span
+          className={cn(
+            'border-muted-foreground flex items-center justify-center rounded border p-0.5 transition-colors',
+            {
+              'border-primary bg-primary': isAllLoadedSelected,
+            },
+          )}
+        >
+          <Check
+            className={cn('text-muted-foreground/30 h-2 w-2 transition-colors', {
+              'text-black': isAllLoadedSelected,
+            })}
+          />
+        </span>
+        Select all
+      </label>
+    </div>
   );
 }

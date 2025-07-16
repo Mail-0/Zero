@@ -1,9 +1,9 @@
-import { connectionToDriver, getActiveConnection, getZeroDB } from '../lib/server-utils';
+import { getActiveConnection, getZeroDB } from '../lib/server-utils';
 import { Ratelimit, type RatelimitConfig } from '@upstash/ratelimit';
 import type { HonoContext, HonoVariables } from '../ctx';
 import { getConnInfo } from 'hono/cloudflare-workers';
 import { initTRPC, TRPCError } from '@trpc/server';
-import { env } from 'cloudflare:workers';
+
 import { redis } from '../lib/services';
 import type { Context } from 'hono';
 import superjson from 'superjson';

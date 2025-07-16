@@ -1,20 +1,17 @@
-import type { IConnection, Label as LabelType } from '@/types';
+import type { Label as LabelType } from '@/types';
+import { useActiveConnection } from '@/hooks/use-connections';
 import { RecursiveFolder } from './recursive-folder';
+import { useStats } from '@/hooks/use-stats';
 import { Tree } from '../magicui/file-tree';
 import { useCallback } from 'react';
 
 type Props = {
   data: LabelType[];
-  activeAccount: IConnection | null | undefined;
-  stats:
-    | {
-        count?: number;
-        label?: string;
-      }[]
-    | undefined;
 };
 
-const SidebarLabels = ({ data, activeAccount, stats }: Props) => {
+const SidebarLabels = ({ data }: Props) => {
+  const { data: stats } = useStats();
+  const { data: activeAccount } = useActiveConnection();
   const getLabelCount = useCallback(
     (labelName: string | undefined): number => {
       if (!stats || !labelName) return 0;
@@ -49,7 +46,19 @@ const SidebarLabels = ({ data, activeAccount, stats }: Props) => {
               folders: {} as Record<string, typeof data>,
             };
 
+            const folderNames = new Set<string>();
             data.forEach((label) => {
+              if (/[^/]+\/[^/]+/.test(label.name)) {
+                const [folderName] = label.name.split('/') as [string];
+                folderNames.add(folderName);
+              }
+            });
+
+            data.forEach((label) => {
+              if (folderNames.has(label.name)) {
+                return;
+              }
+
               if (/\[.*\]/.test(label.name)) {
                 groups.brackets.push(label);
               } else if (/[^/]+\/[^/]+/.test(label.name)) {
@@ -68,14 +77,18 @@ const SidebarLabels = ({ data, activeAccount, stats }: Props) => {
             Object.entries(groups.folders)
               .sort(([a], [b]) => a.localeCompare(b))
               .forEach(([groupName, labels]) => {
+                const folderLabel = data.find((label) => label.name === groupName);
+
                 const groupFolder = {
-                  id: `group-${groupName}`,
+                  id: folderLabel?.id || `group-${groupName}`,
                   name: groupName,
-                  type: 'folder',
+                  type: folderLabel?.type || 'folder',
+                  color: folderLabel?.color,
                   labels: labels.map((label) => ({
                     id: label.id,
                     name: label.name.split('/').slice(1).join('/'),
                     type: label.type,
+                    color: label.color,
                     originalLabel: label,
                   })),
                 };
@@ -98,6 +111,7 @@ const SidebarLabels = ({ data, activeAccount, stats }: Props) => {
                       id: label.id,
                       name: label.name,
                       type: label.type,
+                      color: label.color,
                       originalLabel: label,
                     }}
                     count={getLabelCount(label.name)}
@@ -116,6 +130,7 @@ const SidebarLabels = ({ data, activeAccount, stats }: Props) => {
                   id: label.id,
                   name: label.name.replace(/\[|\]/g, ''),
                   type: label.type,
+                  color: label.color,
                   originalLabel: label,
                 })),
               };

@@ -1,9 +1,4 @@
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { EditorProvider, useCurrentEditor } from '@tiptap/react';
-import { UploadedFileIcon } from './uploaded-file-icon';
-import { Separator } from '@/components/ui/separator';
-import { truncateFileName } from '@/lib/utils';
-import { Paperclip } from 'lucide-react';
 import React from 'react';
 
 const MenuBar = () => {
@@ -135,88 +130,6 @@ const MenuBar = () => {
           Purple
         </button>
       </div>
-    </div>
-  );
-};
-
-// Define props interface for AttachmentButtons
-interface AttachmentButtonsProps {
-  attachments?: File[];
-  onAttachmentAdd?: () => void;
-  onAttachmentRemove?: (index: number) => void;
-}
-
-const AttachmentButtons = ({
-  attachments = [],
-  onAttachmentAdd,
-  onAttachmentRemove,
-}: AttachmentButtonsProps) => {
-  return (
-    <div className="flex items-center gap-2">
-      {/* Attachment Counter Button */}
-      {attachments.length > 0 && (
-        <Popover>
-          <PopoverTrigger asChild>
-            <button
-              className="bg-background hover:bg-muted rounded p-1.5"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 'bold',
-              }}
-            >
-              {attachments.length} Files
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80 touch-auto" align="end">
-            <div className="space-y-2">
-              <div className="px-1">
-                <h4 className="font-medium leading-none">Attachments</h4>
-                <p className="text-muted-foreground text-sm">
-                  {attachments.length} {attachments.length === 1 ? 'file' : 'files'}
-                </p>
-              </div>
-              <Separator />
-              <div className="h-[300px] touch-auto overflow-y-auto overscroll-contain px-1 py-1">
-                <div className="grid grid-cols-2 gap-2">
-                  {attachments.map((file, index) => (
-                    <div key={index} className="group relative overflow-hidden rounded-md border">
-                      <UploadedFileIcon
-                        removeAttachment={(index) =>
-                          onAttachmentRemove && onAttachmentRemove(index)
-                        }
-                        index={index}
-                        file={file}
-                      />
-                      <div className="bg-muted/10 p-2">
-                        <p className="text-xs font-medium">{truncateFileName(file.name, 20)}</p>
-                        <p className="text-muted-foreground text-xs">
-                          {(file.size / (1024 * 1024)).toFixed(2)} MB
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
-      )}
-
-      {/* Add Attachment Button */}
-      <button
-        onClick={onAttachmentAdd}
-        className="bg-background hover:bg-muted rounded p-1.5"
-        title="Add attachment"
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Paperclip className="h-4 w-4" />
-      </button>
     </div>
   );
 };

@@ -1,15 +1,15 @@
 import { addOptimisticActionAtom, removeOptimisticActionAtom } from '@/store/optimistic-updates';
 import { optimisticActionsManager, type PendingAction } from '@/lib/optimistic-actions-manager';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { focusedIndexAtom } from '@/hooks/use-mail-navigation';
+
 import { backgroundQueueAtom } from '@/store/backgroundQueue';
 import type { ThreadDestination } from '@/lib/thread-actions';
 import { useTRPC } from '@/providers/query-provider';
 import { useMail } from '@/components/mail/use-mail';
 import { moveThreadsTo } from '@/lib/thread-actions';
-import { useCallback, useRef } from 'react';
 import { m } from '@/paraglide/messages';
 import { useQueryState } from 'nuqs';
+import { useCallback } from 'react';
 import posthog from 'posthog-js';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
@@ -43,15 +43,13 @@ export function useOptimisticActions() {
   const [, removeOptimisticAction] = useAtom(removeOptimisticActionAtom);
   const [threadId, setThreadId] = useQueryState('threadId');
   const [, setActiveReplyId] = useQueryState('activeReplyId');
-  const [, setFocusedIndex] = useAtom(focusedIndexAtom);
   const [mail, setMail] = useMail();
   const { mutateAsync: markAsRead } = useMutation(trpc.mail.markAsRead.mutationOptions());
   const { mutateAsync: markAsUnread } = useMutation(trpc.mail.markAsUnread.mutationOptions());
-  const { mutateAsync: markAsImportant } = useMutation(trpc.mail.markAsImportant.mutationOptions());
+
   const { mutateAsync: toggleStar } = useMutation(trpc.mail.toggleStar.mutationOptions());
   const { mutateAsync: toggleImportant } = useMutation(trpc.mail.toggleImportant.mutationOptions());
-  const { mutateAsync: bulkArchive } = useMutation(trpc.mail.bulkArchive.mutationOptions());
-  const { mutateAsync: bulkStar } = useMutation(trpc.mail.bulkStar.mutationOptions());
+
   const { mutateAsync: bulkDeleteThread } = useMutation(trpc.mail.bulkDelete.mutationOptions());
   const { mutateAsync: snoozeThreads } = useMutation(trpc.mail.snoozeThreads.mutationOptions());
   const { mutateAsync: unsnoozeThreads } = useMutation(trpc.mail.unsnoozeThreads.mutationOptions());
@@ -60,25 +58,12 @@ export function useOptimisticActions() {
   const generatePendingActionId = () =>
     `pending_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
-  const refreshData = useCallback(
-    async (threadIds: string[], folders?: string[]) => {
-      return await Promise.all([
-        queryClient.refetchQueries({ queryKey: trpc.mail.count.queryKey() }),
-        ...(folders?.map((folder) =>
-          queryClient.refetchQueries({
-            queryKey: trpc.mail.listThreads.infiniteQueryKey({ folder }),
-          }),
-        ) ?? []),
-        ...threadIds.map((id) =>
-          queryClient.refetchQueries({
-            queryKey: trpc.mail.get.queryKey({ id }),
-          }),
-        ),
-        queryClient.refetchQueries({ queryKey: trpc.labels.list.queryKey() }),
-      ]);
-    },
-    [queryClient, trpc.mail.get, trpc.labels.list],
-  );
+  const refreshData = useCallback(async () => {
+    return await Promise.all([
+      queryClient.refetchQueries({ queryKey: trpc.mail.count.queryKey() }),
+      queryClient.refetchQueries({ queryKey: trpc.labels.list.queryKey() }),
+    ]);
+  }, [queryClient]);
 
   function createPendingAction({
     type,
@@ -88,7 +73,6 @@ export function useOptimisticActions() {
     execute,
     undo,
     toastMessage,
-    folders,
   }: {
     type: keyof typeof ActionType;
     threadIds: string[];
@@ -149,7 +133,7 @@ export function useOptimisticActions() {
         optimisticActionsManager.pendingActions.delete(pendingActionId);
         optimisticActionsManager.pendingActionsByType.get(type)?.delete(pendingActionId);
         if (typeActions?.size === 1) {
-          await refreshData(threadIds, folders);
+          await refreshData();
           removeOptimisticAction(optimisticId);
         }
       } catch (error) {
@@ -157,11 +141,9 @@ export function useOptimisticActions() {
         removeOptimisticAction(optimisticId);
         optimisticActionsManager.pendingActions.delete(pendingActionId);
         optimisticActionsManager.pendingActionsByType.get(type)?.delete(pendingActionId);
-        showToast.error('Action failed');
+        toast.error('Action failed');
       }
     }
-
-    const showToast = toast;
 
     if (toastMessage.trim().length) {
       toast(bulkActionMessage, {
@@ -188,33 +170,36 @@ export function useOptimisticActions() {
     return pendingActionId;
   }
 
-  function optimisticMarkAsRead(threadIds: string[], silent = false) {
-    if (!threadIds.length) return;
+  const optimisticMarkAsRead = useCallback(
+    (threadIds: string[], silent = false) => {
+      if (!threadIds.length) return;
 
-    const optimisticId = addOptimisticAction({
-      type: 'READ',
-      threadIds,
-      read: true,
-    });
+      const optimisticId = addOptimisticAction({
+        type: 'READ',
+        threadIds,
+        read: true,
+      });
 
-    createPendingAction({
-      type: 'READ',
-      threadIds,
-      params: { read: true },
-      optimisticId,
-      execute: async () => {
-        await markAsRead({ ids: threadIds });
+      createPendingAction({
+        type: 'READ',
+        threadIds,
+        params: { read: true },
+        optimisticId,
+        execute: async () => {
+          await markAsRead({ ids: threadIds });
 
-        if (mail.bulkSelected.length > 0) {
-          setMail({ ...mail, bulkSelected: [] });
-        }
-      },
-      undo: () => {
-        removeOptimisticAction(optimisticId);
-      },
-      toastMessage: silent ? '' : 'Marked as read',
-    });
-  }
+          if (mail.bulkSelected.length > 0) {
+            setMail((prev) => ({ ...prev, bulkSelected: [] }));
+          }
+        },
+        undo: () => {
+          removeOptimisticAction(optimisticId);
+        },
+        toastMessage: silent ? '' : 'Marked as read',
+      });
+    },
+    [queryClient, addOptimisticAction, removeOptimisticAction, markAsRead, setMail],
+  );
 
   function optimisticMarkAsUnread(threadIds: string[]) {
     if (!threadIds.length) return;
@@ -244,31 +229,34 @@ export function useOptimisticActions() {
     });
   }
 
-  function optimisticToggleStar(threadIds: string[], starred: boolean) {
-    if (!threadIds.length) return;
+  const optimisticToggleStar = useCallback(
+    (threadIds: string[], starred: boolean) => {
+      if (!threadIds.length) return;
 
-    const optimisticId = addOptimisticAction({
-      type: 'STAR',
-      threadIds,
-      starred,
-    });
+      const optimisticId = addOptimisticAction({
+        type: 'STAR',
+        threadIds,
+        starred,
+      });
 
-    createPendingAction({
-      type: 'STAR',
-      threadIds,
-      params: { starred },
-      optimisticId,
-      execute: async () => {
-        await toggleStar({ ids: threadIds });
-      },
-      undo: () => {
-        removeOptimisticAction(optimisticId);
-      },
-      toastMessage: starred
-        ? m['common.actions.addedToFavorites']()
-        : m['common.actions.removedFromFavorites'](),
-    });
-  }
+      createPendingAction({
+        type: 'STAR',
+        threadIds,
+        params: { starred },
+        optimisticId,
+        execute: async () => {
+          await toggleStar({ ids: threadIds });
+        },
+        undo: () => {
+          removeOptimisticAction(optimisticId);
+        },
+        toastMessage: starred
+          ? m['common.actions.addedToFavorites']()
+          : m['common.actions.removedFromFavorites'](),
+      });
+    },
+    [queryClient, addOptimisticAction, removeOptimisticAction, toggleStar, setMail],
+  );
 
   function optimisticMoveThreadsTo(
     threadIds: string[],
@@ -379,33 +367,36 @@ export function useOptimisticActions() {
     });
   }
 
-  function optimisticToggleImportant(threadIds: string[], isImportant: boolean) {
-    if (!threadIds.length) return;
+  const optimisticToggleImportant = useCallback(
+    (threadIds: string[], isImportant: boolean) => {
+      if (!threadIds.length) return;
 
-    const optimisticId = addOptimisticAction({
-      type: 'IMPORTANT',
-      threadIds,
-      important: isImportant,
-    });
+      const optimisticId = addOptimisticAction({
+        type: 'IMPORTANT',
+        threadIds,
+        important: isImportant,
+      });
 
-    createPendingAction({
-      type: 'IMPORTANT',
-      threadIds,
-      params: { important: isImportant },
-      optimisticId,
-      execute: async () => {
-        await toggleImportant({ ids: threadIds });
+      createPendingAction({
+        type: 'IMPORTANT',
+        threadIds,
+        params: { important: isImportant },
+        optimisticId,
+        execute: async () => {
+          await toggleImportant({ ids: threadIds });
 
-        if (mail.bulkSelected.length > 0) {
-          setMail({ ...mail, bulkSelected: [] });
-        }
-      },
-      undo: () => {
-        removeOptimisticAction(optimisticId);
-      },
-      toastMessage: isImportant ? 'Marked as important' : 'Unmarked as important',
-    });
-  }
+          if (mail.bulkSelected.length > 0) {
+            setMail((prev) => ({ ...prev, bulkSelected: [] }));
+          }
+        },
+        undo: () => {
+          removeOptimisticAction(optimisticId);
+        },
+        toastMessage: isImportant ? 'Marked as important' : 'Unmarked as important',
+      });
+    },
+    [queryClient, addOptimisticAction, removeOptimisticAction, toggleImportant, setMail],
+  );
 
   function optimisticToggleLabel(threadIds: string[], labelId: string, add: boolean) {
     if (!threadIds.length || !labelId) return;

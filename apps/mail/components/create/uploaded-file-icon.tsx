@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { FileIcon, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import React from 'react';
 
 const getLogo = (mimetype: string): string => {

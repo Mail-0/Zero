@@ -1,24 +1,24 @@
-import { useActiveConnection, useConnections } from '@/hooks/use-connections';
+import { useActiveConnection } from '@/hooks/use-connections';
 import { Dialog, DialogClose } from '@/components/ui/dialog';
 import { useEmailAliases } from '@/hooks/use-email-aliases';
 import { cleanEmailAddresses } from '@/lib/email-utils';
-import { useHotkeysContext } from 'react-hotkeys-hook';
+
 import { useTRPC } from '@/providers/query-provider';
-import { useEffect, useMemo, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useSettings } from '@/hooks/use-settings';
 import { EmailComposer } from './email-composer';
 import { useSession } from '@/lib/auth-client';
 import { serializeFiles } from '@/lib/schemas';
 import { useDraft } from '@/hooks/use-drafts';
-import { useNavigate } from 'react-router';
+import { useEffect, useState } from 'react';
+
+import type { Attachment } from '@/types';
 import { m } from '@/paraglide/messages';
 import { useQueryState } from 'nuqs';
 import { X } from '../icons/icons';
 import posthog from 'posthog-js';
 import { toast } from 'sonner';
 import './prosemirror.css';
-import type { Attachment } from '@/types';
 
 // Define the draft type to include CC and BCC fields
 type DraftType = {
@@ -28,18 +28,7 @@ type DraftType = {
   to?: string[];
   cc?: string[];
   bcc?: string[];
-  attachments?: File[]
-};
-
-
-
-// Define the connection type
-type Connection = {
-  id: string;
-  email: string;
-  name: string | null;
-  picture: string | null;
-  createdAt: Date;
+  attachments?: File[];
 };
 
 export function CreateEmail({
@@ -58,7 +47,7 @@ export function CreateEmail({
   draftId?: string | null;
 }) {
   const { data: session } = useSession();
-  const { data: connections } = useConnections();
+
   const { data: aliases } = useEmailAliases();
   const [draftId, setDraftId] = useQueryState('draftId');
   const {
@@ -116,7 +105,7 @@ export function CreateEmail({
     });
 
     // Clear draft ID from URL
-    await setDraftId(null);
+    setDraftId(null);
 
     // Track different email sending scenarios
     if (data.cc && data.cc.length > 0 && data.bcc && data.bcc.length > 0) {
@@ -148,7 +137,6 @@ export function CreateEmail({
   // Cast draft to our extended type that includes CC and BCC
   const typedDraft = draft as unknown as DraftType;
 
-
   const handleDialogClose = (open: boolean) => {
     setIsComposeOpen(open ? 'true' : null);
     if (!open) {
@@ -165,16 +153,15 @@ export function CreateEmail({
       }
       return new File([byteArray], filename, { type: mimeType });
     } catch (error) {
-      console.error('Failed to convert base64 to file', error)
+      console.error('Failed to convert base64 to file', error);
       return null;
     }
-  }
+  };
 
   // convert the attachments into File[]
   const files: File[] = ((typedDraft?.attachments as Attachment[] | undefined) || [])
-  .map((att: Attachment) => base64ToFile(att.body, att.filename, att.mimeType))
-  .filter((file): file is File => file !== null);
-
+    .map((att: Attachment) => base64ToFile(att.body, att.filename, att.mimeType))
+    .filter((file): file is File => file !== null);
 
   return (
     <>

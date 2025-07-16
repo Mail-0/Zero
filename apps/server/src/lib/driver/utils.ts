@@ -2,8 +2,8 @@ import { getActiveConnection, getZeroDB } from '../server-utils';
 import { getContext } from 'hono/context-storage';
 import type { gmail_v1 } from '@googleapis/gmail';
 import type { HonoContext } from '../../ctx';
-import { env } from 'cloudflare:workers';
-import { createDriver } from '../driver';
+
+
 import { toByteArray } from 'base64-js';
 export const FatalErrors = ['invalid_grant'];
 

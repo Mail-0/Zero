@@ -33,7 +33,7 @@ import { Avatar, AvatarFallback } from '../ui/avatar';
 import { useTRPC } from '@/providers/query-provider';
 import { useMutation } from '@tanstack/react-query';
 import { useSettings } from '@/hooks/use-settings';
-import { useIsMobile } from '@/hooks/use-mobile';
+
 import { cn, formatFileSize } from '@/lib/utils';
 import { useThread } from '@/hooks/use-threads';
 import { serializeFiles } from '@/lib/schemas';
@@ -114,10 +114,8 @@ export function EmailComposer({
   className,
   autofocus = false,
   settingsLoading = false,
-  replyingTo,
   editorClassName,
 }: EmailComposerProps) {
-  const isMobile = useIsMobile();
   const { data: aliases } = useEmailAliases();
   const { data: settings } = useSettings();
   const [showCc, setShowCc] = useState(initialCc.length > 0);
@@ -465,6 +463,8 @@ export function EmailComposer({
 
       setIsLoading(true);
       setAiGeneratedMessage(null);
+      // Save draft before sending, we want to send drafts instead of sending new emails
+      if (hasUnsavedChanges) await saveDraft();
 
       await onSendEmail({
         to: values.to,
@@ -556,19 +556,11 @@ export function EmailComposer({
 
     if (!hasUnsavedChanges) return;
     const messageText = editor.getText();
-    console.log({
-      messageText,
-      editorText: editor.getText(),
-      initialMessage,
-      editorHTML: editor.getHTML(),
-    });
 
     if (messageText.trim() === initialMessage.trim()) return;
     if (editor.getHTML() === initialMessage.trim()) return;
     if (!values.to.length || !values.subject.length || !messageText.length) return;
     if (aiGeneratedMessage || aiIsLoading || isGeneratingSubject) return;
-
-    console.log('editor.getHTML()', editor.getHTML());
 
     try {
       setIsSavingDraft(true);
@@ -736,7 +728,7 @@ export function EmailComposer({
                 <div ref={toWrapperRef} className="flex flex-wrap items-center gap-2">
                   {toEmails.map((email, index) => (
                     <div
-                      key={index}
+                      key={email}
                       className="flex items-center gap-1 rounded-full border px-1 py-0.5 pr-2"
                     >
                       <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
@@ -870,7 +862,7 @@ export function EmailComposer({
                     <div className="flex flex-wrap items-center gap-1">
                       {toEmails.slice(0, 3).map((email, index) => (
                         <div
-                          key={index}
+                          key={email}
                           className="flex items-center gap-1 rounded-full border px-1 py-0.5 pr-2"
                         >
                           <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
@@ -924,7 +916,7 @@ export function EmailComposer({
               >
                 <span>Bcc</span>
               </button>
-              {onClose && isMobile && (
+              {onClose && (
                 <button
                   tabIndex={-1}
                   className="flex h-full items-center gap-2 text-sm font-medium text-[#8C8C8C] hover:text-[#A8A8A8]"
@@ -955,7 +947,7 @@ export function EmailComposer({
                   <div ref={ccWrapperRef} className="flex flex-1 flex-wrap items-center gap-2">
                     {ccEmails?.map((email, index) => (
                       <div
-                        key={index}
+                        key={email}
                         className="flex items-center gap-1 rounded-full border px-2 py-0.5"
                       >
                         <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
@@ -1046,7 +1038,7 @@ export function EmailComposer({
                       <div className="flex flex-wrap items-center gap-1">
                         {ccEmails.slice(0, 3).map((email, index) => (
                           <div
-                            key={index}
+                            key={email}
                             className="flex items-center gap-1 rounded-full border px-1 py-0.5 pr-2"
                           >
                             <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
@@ -1101,7 +1093,7 @@ export function EmailComposer({
                   <div ref={bccWrapperRef} className="flex flex-1 flex-wrap items-center gap-2">
                     {bccEmails?.map((email, index) => (
                       <div
-                        key={index}
+                        key={email}
                         className="flex items-center gap-1 rounded-full border px-2 py-0.5"
                       >
                         <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">
@@ -1192,7 +1184,7 @@ export function EmailComposer({
                       <div className="flex flex-wrap items-center gap-1">
                         {bccEmails.slice(0, 3).map((email, index) => (
                           <div
-                            key={index}
+                            key={email}
                             className="flex items-center gap-1 rounded-full border px-1 py-0.5 pr-2"
                           >
                             <span className="flex gap-1 py-0.5 text-sm text-black dark:text-white">

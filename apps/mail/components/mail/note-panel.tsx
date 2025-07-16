@@ -55,14 +55,6 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -250,8 +242,6 @@ export function NotesPanel({ threadId }: NotesPanelProps) {
   const [isAddingNewNote, setIsAddingNewNote] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedColor, setSelectedColor] = useState('default');
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
