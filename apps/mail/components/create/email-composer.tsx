@@ -1661,7 +1661,7 @@ const ContentPreview = ({
     initial="initial"
     animate="animate"
     exit="exit"
-    className="dark:bg-subtleBlack absolute bottom-full right-0 z-30 z-50 w-[400px] overflow-hidden rounded-xl border bg-white p-1 shadow-md"
+    className="dark:bg-subtleBlack absolute bottom-full right-0 z-50 w-[400px] overflow-hidden rounded-xl border bg-white p-1 shadow-md"
   >
     <div
       className="max-h-60 min-h-[150px] overflow-auto rounded-md p-1 text-sm"

@@ -11,6 +11,7 @@ import {
 } from 'react-router';
 import { connectionIdAtom, connectionLoadingAtom } from '@/store/connection';
 import { ConnectionProvider } from '@/providers/connection-provider';
+import { Analytics as DubAnalytics } from '@dub/analytics/react';
 import { ServerProviders } from '@/providers/server-providers';
 import { ClientProviders } from '@/providers/client-providers';
 import { createTRPCClient, httpBatchLink } from '@trpc/client';
@@ -84,7 +85,12 @@ function RootLayout({ children }: PropsWithChildren) {
   const isConnectionLoading = useAtomValue(connectionLoadingAtom);
 
   return (
-    <html lang={getLocale()} className="dark" style={{ colorScheme: 'dark' }} suppressHydrationWarning>
+    <html
+      lang={getLocale()}
+      className="dark"
+      style={{ colorScheme: 'dark' }}
+      suppressHydrationWarning
+    >
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -102,7 +108,14 @@ function RootLayout({ children }: PropsWithChildren) {
           {isConnectionLoading ? (
             <AppLoader theme="dark" />
           ) : (
-            <ClientProviders>{children}</ClientProviders>
+            <>
+              <ClientProviders>{children}</ClientProviders>
+              <DubAnalytics
+                domainsConfig={{
+                  refer: 'mail0.com',
+                }}
+              />
+            </>
           )}
         </ServerProviders>
         <ScrollRestoration />

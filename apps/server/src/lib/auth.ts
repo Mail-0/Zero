@@ -17,6 +17,8 @@ import { env } from 'cloudflare:workers';
 import { createDriver } from './driver';
 
 import { createDb } from '../db';
+import { dubAnalytics } from "@dub/better-auth";
+import { Dub } from "dub";
 
 const connectionHandlerHook = async (account: Account) => {
   if (!account.accessToken || !account.refreshToken) {
@@ -36,6 +38,7 @@ const connectionHandlerHook = async (account: Account) => {
   const userInfo = await driver.getUserInfo().catch(() => {
     throw new APIError('UNAUTHORIZED', { message: 'Failed to get user info' });
   });
+
 
   if (!userInfo?.address) {
     console.error('Missing email in user info:', { userInfo });
@@ -68,9 +71,13 @@ const connectionHandlerHook = async (account: Account) => {
 
 export const createAuth = () => {
   const twilioClient = twilio();
+  const dub = new Dub();
 
   return betterAuth({
     plugins: [
+      dubAnalytics({
+        dubClient: dub,
+      }),
       mcp({
         loginPage: env.VITE_PUBLIC_APP_URL + '/login',
       }),
