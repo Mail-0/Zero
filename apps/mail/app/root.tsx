@@ -9,8 +9,8 @@ import {
   type LoaderFunctionArgs,
   type MetaFunction,
 } from 'react-router';
-import { connectionIdAtom, connectionLoadingAtom } from '@/store/connection';
-import { ConnectionProvider } from '@/providers/connection-provider';
+import { ConnectionProvider, useConnectionQuery } from '@/providers/connection-provider';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Analytics as DubAnalytics } from '@dub/analytics/react';
 import { ServerProviders } from '@/providers/server-providers';
 import { ClientProviders } from '@/providers/client-providers';
@@ -26,11 +26,13 @@ import { signOut } from '@/lib/auth-client';
 import type { Route } from './+types/root';
 import { m } from '@/paraglide/messages';
 import { ArrowLeft } from 'lucide-react';
-import { useAtomValue } from 'jotai';
 import superjson from 'superjson';
 import './globals.css';
 
 const getUrl = () => import.meta.env.VITE_PUBLIC_BACKEND_URL + '/api/trpc';
+
+// Create a React Query client for the root layout
+const rootQueryClient = new QueryClient();
 
 export const getServerTrpc = (req: Request) =>
   createTRPCClient<AppRouter>({
@@ -73,16 +75,18 @@ export async function loader({ request: _request }: LoaderFunctionArgs) {
 export function Layout({ children }: PropsWithChildren) {
   return (
     <JotaiProvider>
-      <ConnectionProvider>
-        <RootLayout>{children}</RootLayout>
-      </ConnectionProvider>
+      <QueryClientProvider client={rootQueryClient}>
+        <ConnectionProvider>
+          <RootLayout>{children}</RootLayout>
+        </ConnectionProvider>
+      </QueryClientProvider>
     </JotaiProvider>
   );
 }
 
 function RootLayout({ children }: PropsWithChildren) {
-  const connectionId = useAtomValue(connectionIdAtom);
-  const isConnectionLoading = useAtomValue(connectionLoadingAtom);
+  // Use the connection query hook to fetch the connection ID
+  const { data: connectionId, isLoading } = useConnectionQuery();
 
   return (
     <html
@@ -105,7 +109,7 @@ function RootLayout({ children }: PropsWithChildren) {
       </head>
       <body className="antialiased">
         <ServerProviders connectionId={connectionId}>
-          {isConnectionLoading ? (
+          {isLoading ? (
             <AppLoader theme="dark" />
           ) : (
             <>
