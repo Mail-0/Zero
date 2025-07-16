@@ -38,7 +38,6 @@ import { useParams } from 'react-router';
 import { useQueryState } from 'nuqs';
 import { toast } from 'sonner';
 import { SnoozeDialog } from '@/components/mail/snooze-dialog';
-import type { Label } from '@/types';
 
 interface EmailAction {
   id: string;

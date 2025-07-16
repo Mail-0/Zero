@@ -14,6 +14,7 @@ import {
   userSettings,
   writingStyleMatrix,
 } from './db/schema';
+import { getZeroAgent } from './lib/server-utils';
 import { env, WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
 import { EProviders, type ISubscribeBatch, type IThreadBatch } from './types';
 import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
