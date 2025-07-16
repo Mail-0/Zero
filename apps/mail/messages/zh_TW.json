@@ -165,13 +165,8 @@
       "attachments": "附件",
       "attachmentCount": [
         {
-          "declarations": [
-            "input count",
-            "local countPlural = count: plural"
-          ],
-          "selectors": [
-            "countPlural"
-          ],
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "附件",
             "countPlural=one": "附件",
@@ -181,13 +176,8 @@
       ],
       "fileCount": [
         {
-          "declarations": [
-            "input count",
-            "local countPlural = count: plural"
-          ],
-          "selectors": [
-            "countPlural"
-          ],
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "檔案",
             "countPlural=one": "檔案",
@@ -259,13 +249,8 @@
       "search": "搜尋筆記...",
       "noteCount": [
         {
-          "declarations": [
-            "input count",
-            "local countPlural = count: plural"
-          ],
-          "selectors": [
-            "countPlural"
-          ],
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "添加筆記",
             "countPlural=one": "# 筆記",
@@ -327,13 +312,8 @@
     "mail": {
       "replies": [
         {
-          "declarations": [
-            "input count",
-            "local countPlural = count: plural"
-          ],
-          "selectors": [
-            "countPlural"
-          ],
+          "declarations": ["input count", "local countPlural = count: plural"],
+          "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "回覆",
             "countPlural=one": "# 則回覆",
@@ -390,7 +370,8 @@
       "failedToMute": "靜音失敗",
       "failedToUnmute": "取消靜音失敗",
       "archived": "已封存",
-      "failedToArchive": "封存失敗"
+      "failedToArchive": "封存失敗",
+      "openInNewTab": "在新分頁中開啟"
     },
     "units": {
       "mb": "{amount} MB"
