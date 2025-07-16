@@ -94,7 +94,7 @@
         "commandPalette": "Paleta příkazů"
       },
       "quickResults": "Rychlé výsledky",
-      "searchPlaceholder": "Hledat a filtrovat",
+      "searchPlaceholder": "Hledat...",
       "noSearchResults": "Žádné výsledky vyhledávání",
       "actions": "Akce",
       "addFilters": "Přidat filtry",
@@ -253,8 +253,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "Přidat poznámku",
-            "countPlural=one": "{count} poznámka",
-            "countPlural=other": "{count} poznámek"
+            "countPlural=one": "# poznámka",
+            "countPlural=other": "# poznámek"
           }
         }
       ],
@@ -316,8 +316,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "odpovědí",
-            "countPlural=one": "{count} odpověď",
-            "countPlural=other": "{count} odpovědí"
+            "countPlural=one": "# odpověď",
+            "countPlural=other": "# odpovědí"
           }
         }
       ],

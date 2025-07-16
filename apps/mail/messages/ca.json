@@ -94,7 +94,7 @@
         "commandPalette": "Paleta de comandes"
       },
       "quickResults": "Resultats ràpids",
-      "searchPlaceholder": "Cerca i filtra",
+      "searchPlaceholder": "Cerca...",
       "noSearchResults": "Sense resultats de cerca",
       "actions": "Accions",
       "addFilters": "Afegir filtres",
@@ -253,8 +253,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "Afegeix notes",
-            "countPlural=one": "{count} nota",
-            "countPlural=other": "{count} notes"
+            "countPlural=one": "# nota",
+            "countPlural=other": "# notes"
           }
         }
       ],
@@ -316,8 +316,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "respostes",
-            "countPlural=one": "{count} resposta",
-            "countPlural=other": "{count} respostes"
+            "countPlural=one": "# resposta",
+            "countPlural=other": "# respostes"
           }
         }
       ],

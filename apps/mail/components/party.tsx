@@ -5,8 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useTRPC } from '@/providers/query-provider';
 import { usePartySocket } from 'partysocket/react';
 
-
- // 10 seconds is appropriate for real-time notifications
+// 10 seconds is appropriate for real-time notifications
 
 export enum IncomingMessageType {
   UseChatRequest = 'cf_agent_use_chat_request',
@@ -31,9 +30,6 @@ export const NotificationProvider = () => {
   const { data: activeConnection } = useActiveConnection();
   const [searchValue] = useSearchValue();
   const { labels } = useSearchLabels();
-
-  
-  
 
   usePartySocket({
     party: 'zero-agent',

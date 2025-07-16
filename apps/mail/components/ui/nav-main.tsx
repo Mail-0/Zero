@@ -311,7 +311,6 @@ function NavItem(item: NavItemProps & { href: string }) {
               {item.title}
             </p>
             {stats &&
-              item.id?.toLowerCase() !== 'sent' &&
               stats.some((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase()) && (
                 <Badge className="text-muted-foreground ml-auto shrink-0 rounded-full border-none bg-transparent">
                   {stats
