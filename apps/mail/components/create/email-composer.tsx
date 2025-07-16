@@ -586,22 +586,27 @@ export function EmailComposer({
       };
 
       if(draftId){
-        const response = await updateDraft(draftData);
-        if(response?.id){
-          setDraftId(response?.id);
-          onDraftUpdate?.();
-          toast.success("Your Draft has been Successfully Saved")
-        }
-        else{
-          const response = await createDraft(draftData);
+        try {
+          const response = await updateDraft(draftData);
           if(response?.id){
-          setDraftId(response?.id);
-          toast.success("Your Draft has been Successfully Saved")
+            setDraftId(response.id);
+            onDraftUpdate?.();
+            toast.success("Your Draft has been Successfully Saved")
+          }
+        } catch (error) {
+          console.error("Failed to update draft:", error);
+          toast.error("Failed to update draft");
         }
+      } else {
+        const response = await createDraft(draftData);
+        if(response?.id){
+          setDraftId(response.id);
+          toast.success("Your Draft has been Successfully Saved")
+        } else {
           console.error("Failed Setting up Draft Id")
           toast.error("Failed Setting up Draft Id")
         }
-      } else {
+      }
       const response = await createDraft(draftData);
       if(response?.id){
         setDraftId(response?.id);
