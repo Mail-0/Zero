@@ -316,8 +316,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "odpovědí",
-            "countPlural=one": "#odpověď",
-            "countPlural=other": "#odpovědí"
+            "countPlural=one": "# odpověď",
+            "countPlural=other": "# odpovědí"
           }
         }
       ],

@@ -164,7 +164,8 @@ export default function ConnectionsPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-muted-foreground hover:text-primary ml-4 shrink-0"
+                            className="text-muted-foreground hover:text-primary ml-4 shrink-0" 
+                            disabled={data.connections.length === 1}
                           >
                             <Trash className="h-4 w-4" />
                           </Button>

@@ -253,8 +253,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "添加筆記",
-            "countPlural=one": "# 則筆記",
-            "countPlural=other": "# 則筆記"
+            "countPlural=one": "# 筆記",
+            "countPlural=other": "# 筆記"
           }
         }
       ],

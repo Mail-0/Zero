@@ -78,10 +78,6 @@
           "tag": "v3",
           "new_classes": ["ZeroDB"],
         },
-        {
-          "tag": "v4",
-          "new_sqlite_classes": ["ZeroAgent"],
-        },
       ],
 
       "observability": {
@@ -104,10 +100,11 @@
         "DISABLE_CALLS": "true",
         "VOICE_SECRET": "1234567890",
         "GOOGLE_S_ACCOUNT": "{}",
-        "DROP_AGENT_TABLES": "true",
-        "THREAD_SYNC_MAX_COUNT": "40",
+        "DROP_AGENT_TABLES": "false",
+        "THREAD_SYNC_MAX_COUNT": "5",
         "THREAD_SYNC_LOOP": "false",
         "DISABLE_WORKFLOWS": "true",
+        "AUTORAG_ID": "",
       },
       "kv_namespaces": [
         {
@@ -237,8 +234,8 @@
         "VITE_PUBLIC_APP_URL": "https://staging.0.email",
         "DISABLE_CALLS": "",
         "DROP_AGENT_TABLES": "false",
-        "THREAD_SYNC_MAX_COUNT": "40",
-        "THREAD_SYNC_LOOP": "true",
+        "THREAD_SYNC_MAX_COUNT": "20",
+        "THREAD_SYNC_LOOP": "false",
         "DISABLE_WORKFLOWS": "true",
       },
       "kv_namespaces": [

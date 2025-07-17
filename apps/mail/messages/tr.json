@@ -254,7 +254,7 @@
           "match": {
             "countPlural=0": "Not ekle",
             "countPlural=one": "# not",
-            "countPlural=other": "# notlar"
+            "countPlural=other": "# not"
           }
         }
       ],
@@ -316,8 +316,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "cevaplar",
-            "countPlural=one": "# cevap",
-            "countPlural=other": "# cevaplar"
+            "countPlural=one": "# yanıt",
+            "countPlural=other": "# yanıt"
           }
         }
       ],

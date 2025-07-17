@@ -25,6 +25,8 @@ import { m } from '@/paraglide/messages';
 import { ArrowLeft } from 'lucide-react';
 import superjson from 'superjson';
 import './globals.css';
+import { Analytics as DubAnalytics } from '@dub/analytics/react';
+
 
 const getUrl = () => import.meta.env.VITE_PUBLIC_BACKEND_URL + '/api/trpc';
 
@@ -82,6 +84,9 @@ export function Layout({ children }: PropsWithChildren) {
       <body className="antialiased">
         <ServerProviders connectionId={connectionId}>
           <ClientProviders>{children}</ClientProviders>
+          <DubAnalytics domainsConfig={{
+        refer: "mail0.com"
+      }} />
         </ServerProviders>
         <ScrollRestoration />
         <Scripts />

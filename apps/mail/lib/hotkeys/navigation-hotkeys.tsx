@@ -1,4 +1,4 @@
-import { keyboardShortcuts } from '@/config/shortcuts';
+import { enhancedKeyboardShortcuts } from '@/config/shortcuts';
 import { useShortcuts } from './use-hotkey-utils';
 import { useNavigate } from 'react-router';
 
@@ -16,7 +16,7 @@ export function NavigationHotkeys() {
     helpWithShortcuts: () => navigate('/settings/shortcuts'),
   };
 
-  const globalShortcuts = keyboardShortcuts.filter((shortcut) => shortcut.scope === scope);
+  const globalShortcuts = enhancedKeyboardShortcuts.filter((shortcut) => shortcut.scope === scope);
 
   useShortcuts(globalShortcuts, handlers, { scope });
 

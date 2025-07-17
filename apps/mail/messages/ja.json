@@ -253,8 +253,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "Add notes",
-            "countPlural=one": "# note",
-            "countPlural=other": "# notes"
+            "countPlural=one": "# 件のメモ",
+            "countPlural=other": "# 件のメモ"
           }
         }
       ],
@@ -316,8 +316,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "返信",
-            "countPlural=one": "返信 #個",
-            "countPlural=other": "返信 #個"
+            "countPlural=one": "# 件の返信",
+            "countPlural=other": "# 件の返信"
           }
         }
       ],

@@ -195,7 +195,7 @@ When implementing new features, follow these guidelines:
 
 1. **Add English Source Strings**
 
-   - Place all user-facing text in `apps/mail/locales/en.json`
+   - Place all user-facing text in `apps/mail/messages/en.json`
    - Organize strings according to the existing structure
    - Use descriptive, hierarchical keys that identify the feature and context
    - Example: `"pages.settings.connections.disconnectSuccess": "Account disconnected successfully"`

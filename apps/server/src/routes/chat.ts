@@ -13,8 +13,6 @@
  */
 import {
   streamText,
-  generateObject,
-  tool,
   type StreamTextOnFinishCallback,
   createDataStreamResponse,
   generateText,
@@ -25,6 +23,7 @@ import {
   GmailSearchAssistantSystemPrompt,
   AiChatPrompt,
 } from '../lib/prompts';
+import { DurableObjectOAuthClientProvider } from 'agents/mcp/do-oauth-client-provider';
 import { EPrompts, type IOutgoingMessage, type ParsedMessage } from '../types';
 import type { IGetThreadResponse, MailManager } from '../lib/driver/types';
 import { connectionToDriver, getZeroAgent } from '../lib/server-utils';
@@ -32,20 +31,19 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { type Connection, type WSMessage } from 'agents';
 import { ToolOrchestrator } from './agent/orchestrator';
 import type { CreateDraftData } from '../lib/schemas';
+import { withRetry } from '../lib/gmail-rate-limit';
 import { env, RpcTarget } from 'cloudflare:workers';
 import { AIChatAgent } from 'agents/ai-chat-agent';
 import { tools as authTools } from './agent/tools';
 import { processToolCalls } from './agent/utils';
 import type { Message as ChatMessage } from 'ai';
+import { anthropic } from '@ai-sdk/anthropic';
 import { getPromptName } from '../pipelines';
 import { connection } from '../db/schema';
 import { getPrompt } from '../lib/brain';
-import { openai } from '@ai-sdk/openai';
 import { FOLDERS } from '../lib/utils';
 import { and, eq } from 'drizzle-orm';
 import { McpAgent } from 'agents/mcp';
-
-import { withGmailRetry } from '../lib/gmail-rate-limit';
 import { createDb } from '../db';
 import { Effect } from 'effect';
 import { z } from 'zod';
@@ -162,10 +160,6 @@ export class AgentRpcDO extends RpcTarget {
 
   async bulkArchive(threadIds: string[]) {
     return await this.mainDo.bulkArchive(threadIds);
-  }
-
-  async buildGmailSearchQuery(query: string) {
-    return await this.mainDo.buildGmailSearchQuery(query);
   }
 
   async rawListThreads(params: {
@@ -309,6 +303,20 @@ export class AgentRpcDO extends RpcTarget {
   async syncThreads(folder: string) {
     return await this.mainDo.syncThreads(folder);
   }
+
+  async inboxRag(query: string) {
+    return await this.mainDo.inboxRag(query);
+  }
+
+  async searchThreads(params: {
+    query: string;
+    folder?: string;
+    maxResults?: number;
+    labelIds?: string[];
+    pageToken?: string;
+  }) {
+    return await this.mainDo.searchThreads(params);
+  }
 }
 
 const shouldDropTables = env.DROP_AGENT_TABLES === 'true';
@@ -350,6 +358,22 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     return new AgentRpcDO(this, connectionId);
   }
 
+  async registerZeroMCP() {
+    await this.mcp.connect(env.VITE_PUBLIC_BACKEND_URL + '/sse', {
+      transport: {
+        authProvider: new DurableObjectOAuthClientProvider(
+          this.ctx.storage,
+          'zero-mcp',
+          env.VITE_PUBLIC_BACKEND_URL,
+        ),
+      },
+    });
+  }
+
+  onStart(): void | Promise<void> {
+    // this.registerZeroMCP();
+  }
+
   private getDataStreamResponse(
     onFinish: StreamTextOnFinishCallback<{}>,
     _?: {
@@ -368,12 +392,13 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
             throw new Error('Unauthorized no driver or connectionId [2]');
           }
         }
-        const orchestrator = new ToolOrchestrator(dataStream);
+        const orchestrator = new ToolOrchestrator(dataStream, connectionId);
+        // const mcpTools = await this.mcp.unstable_getAITools();
+
         const rawTools = {
-          ...(await authTools(this.driver, connectionId, dataStream)),
-          buildGmailSearchQuery,
+          ...(await authTools(this, connectionId)),
         };
-        const tools = orchestrator.processTools(rawTools);
+        const tools = orchestrator.processTools({});
         const processedMessages = await processToolCalls(
           {
             messages: this.messages,
@@ -384,14 +409,15 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
         );
 
         const result = streamText({
-          model: openai(env.OPENAI_MODEL || 'gpt-4o'),
+          model: anthropic(env.OPENAI_MODEL || 'claude-3-5-haiku-latest'),
+          maxSteps: 10,
           messages: processedMessages,
-          tools,
+          tools: rawTools,
           onFinish,
-          system: await getPrompt(
-            getPromptName(connectionId, EPrompts.Chat),
-            AiChatPrompt('', '', ''),
-          ),
+          onError: (error) => {
+            console.error('Error in streamText', error);
+          },
+          system: await getPrompt(getPromptName(connectionId, EPrompts.Chat), AiChatPrompt('')),
         });
 
         result.mergeIntoDataStream(dataStream);
@@ -730,15 +756,6 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     });
   }
 
-  async buildGmailSearchQuery(query: string) {
-    const result = await generateText({
-      model: openai(env.OPENAI_MODEL || 'gpt-4o'),
-      system: GmailSearchAssistantSystemPrompt(),
-      prompt: query,
-    });
-    return result.text;
-  }
-
   async updateLabel(
     id: string,
     label: { name: string; color?: { backgroundColor: string; textColor: string } },
@@ -882,6 +899,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     }
     this.syncThreadsInProgress.set(threadId, true);
 
+    console.log('Server: syncThread called for thread', threadId);
     try {
       const threadData = await this.getWithRetry(threadId);
       const latest = threadData.latest;
@@ -890,7 +908,11 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
         // Convert receivedOn to ISO format for proper sorting
         const normalizedReceivedOn = new Date(latest.receivedOn).toISOString();
 
-        await env.THREADS_BUCKET.put(this.getThreadKey(threadId), JSON.stringify(threadData));
+        await env.THREADS_BUCKET.put(this.getThreadKey(threadId), JSON.stringify(threadData), {
+          customMetadata: {
+            threadId,
+          },
+        });
 
         this.sql`
           INSERT OR REPLACE INTO threads (
@@ -920,6 +942,10 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
           });
         }
         this.syncThreadsInProgress.delete(threadId);
+        console.log('Server: syncThread result', {
+          threadId,
+          labels: threadData.labels,
+        });
         return { success: true, threadId, threadData };
       } else {
         this.syncThreadsInProgress.delete(threadId);
@@ -940,13 +966,13 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
   private async listWithRetry(params: Parameters<MailManager['list']>[0]) {
     if (!this.driver) throw new Error('No driver available');
 
-    return Effect.runPromise(withGmailRetry(Effect.tryPromise(() => this.driver!.list(params))));
+    return Effect.runPromise(withRetry(Effect.tryPromise(() => this.driver!.list(params))));
   }
 
   private async getWithRetry(threadId: string): Promise<IGetThreadResponse> {
     if (!this.driver) throw new Error('No driver available');
 
-    return Effect.runPromise(withGmailRetry(Effect.tryPromise(() => this.driver!.get(threadId))));
+    return Effect.runPromise(withRetry(Effect.tryPromise(() => this.driver!.get(threadId))));
   }
 
   async syncThreads(folder: string) {
@@ -1022,14 +1048,86 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     }
   }
 
+  async inboxRag(query: string) {
+    if (!env.AUTORAG_ID) return { result: 'Not enabled', data: [] };
+    const answer = await env.AI.autorag(env.AUTORAG_ID).aiSearch({
+      query: query,
+      //   rewrite_query: true,
+      max_num_results: 3,
+      ranking_options: {
+        score_threshold: 0.3,
+      },
+      //   stream: true,
+      filters: {
+        type: 'eq',
+        key: 'folder',
+        value: `${this.name}/`,
+      },
+    });
+    return { result: answer.response, data: answer.data };
+  }
+
+  async searchThreads(params: {
+    query: string;
+    folder?: string;
+    maxResults?: number;
+    labelIds?: string[];
+    pageToken?: string;
+  }) {
+    const { query, folder = 'inbox', maxResults = 50, labelIds = [], pageToken } = params;
+
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+
+    // Create parallel Effect operations
+    const ragEffect = Effect.tryPromise(() =>
+      this.inboxRag(query).then((rag) => {
+        const ids = rag?.data?.map((d) => d.attributes.threadId).filter(Boolean) ?? [];
+        return ids.slice(0, maxResults);
+      }),
+    ).pipe(Effect.catchAll(() => Effect.succeed([])));
+
+    const rawEffect = Effect.tryPromise(() =>
+      this.driver!.list({
+        folder,
+        query,
+        labelIds,
+        maxResults,
+        pageToken,
+      }).then((r) => r.threads.map((t) => t.id)),
+    ).pipe(Effect.catchAll(() => Effect.succeed([])));
+
+    // Run both in parallel and wait for results
+    const results = await Effect.runPromise(
+      Effect.all([ragEffect, rawEffect], { concurrency: 'unbounded' }),
+    );
+
+    const [ragIds, rawIds] = results;
+
+    // Return InboxRag results if found, otherwise fallback to raw
+    if (ragIds.length > 0) {
+      return {
+        threadIds: ragIds,
+        source: 'autorag' as const,
+      };
+    }
+
+    return {
+      threadIds: rawIds,
+      source: 'raw' as const,
+      nextPageToken: pageToken,
+    };
+  }
+
   async getThreadsFromDB(params: {
     labelIds?: string[];
     folder?: string;
     q?: string;
-    max?: number;
+    maxResults?: number;
     pageToken?: string;
   }) {
-    const { labelIds = [], folder, q, max = 50, pageToken } = params;
+    const { labelIds = [], folder, q, maxResults = 50, pageToken } = params;
 
     try {
       // Build WHERE conditions
@@ -1084,7 +1182,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
             SELECT id, latest_received_on
             FROM threads
             ORDER BY latest_received_on DESC
-            LIMIT ${max}
+            LIMIT ${maxResults}
           `;
       } else if (whereConditions.length === 1) {
         // Single condition
@@ -1096,7 +1194,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
               FROM threads
               WHERE latest_received_on < ${cursorValue}
               ORDER BY latest_received_on DESC
-              LIMIT ${max}
+              LIMIT ${maxResults}
             `;
         } else if (folder) {
           // Folder condition
@@ -1108,7 +1206,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
                 SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${folderLabel}
               )
               ORDER BY latest_received_on DESC
-              LIMIT ${max}
+              LIMIT ${maxResults}
             `;
         } else {
           // Single label condition
@@ -1120,7 +1218,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
                 SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${labelId}
               )
               ORDER BY latest_received_on DESC
-              LIMIT ${max}
+              LIMIT ${maxResults}
             `;
         }
       } else {
@@ -1135,7 +1233,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
                 SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${folderLabel}
               ) AND latest_received_on < ${pageToken}
               ORDER BY latest_received_on DESC
-              LIMIT ${max}
+              LIMIT ${maxResults}
             `;
         } else if (labelIds.length === 1 && pageToken && !folder) {
           // Single label + cursor
@@ -1147,7 +1245,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
                 SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${labelId}
               ) AND latest_received_on < ${pageToken}
               ORDER BY latest_received_on DESC
-              LIMIT ${max}
+              LIMIT ${maxResults}
             `;
         } else {
           // For now, fallback to just cursor if complex combinations
@@ -1157,7 +1255,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
               FROM threads
               WHERE latest_received_on < ${cursorValue}
               ORDER BY latest_received_on DESC
-              LIMIT ${max}
+              LIMIT ${maxResults}
             `;
         }
       }
@@ -1169,7 +1267,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
 
       // Use latest_received_on for pagination cursor
       const nextPageToken =
-        threads.length === max && result.length > 0
+        threads.length === maxResults && result.length > 0
           ? result[result.length - 1].latest_received_on
           : null;
 
@@ -1253,44 +1351,59 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
       throw new Error('Unauthorized');
     }
     this.activeConnectionId = _connection.id;
-    const agent = await getZeroAgent(_connection.id);
+    this.server.registerTool(
+      'getConnections',
+      {
+        description:
+          'Use this tool to get all connections for the user. This helps you know what accounts(connections) the user has available.',
+        inputSchema: {},
+      },
+      async () => {
+        const connections = await db.query.connection.findMany({
+          where: eq(connection.userId, this.props.userId),
+        });
+        return {
+          content: connections.map((c) => ({
+            type: 'text',
+            text: `Email: ${c.email} | Provider: ${c.providerId}`,
+          })),
+        };
+      },
+    );
 
-    this.server.tool('getConnections', async () => {
-      const connections = await db.query.connection.findMany({
-        where: eq(connection.userId, this.props.userId),
-      });
-      return {
-        content: connections.map((c) => ({
-          type: 'text',
-          text: `Email: ${c.email} | Provider: ${c.providerId}`,
-        })),
-      };
-    });
+    this.server.registerTool(
+      'getActiveConnection',
+      {
+        description: 'Get the currently active email connection',
+      },
+      async () => {
+        if (!this.activeConnectionId) {
+          throw new Error('No active connection');
+        }
+        const _connection = await db.query.connection.findFirst({
+          where: eq(connection.id, this.activeConnectionId),
+        });
+        if (!_connection) {
+          throw new Error('Connection not found');
+        }
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: `Email: ${_connection.email} | Provider: ${_connection.providerId}`,
+            },
+          ],
+        };
+      },
+    );
 
-    this.server.tool('getActiveConnection', async () => {
-      if (!this.activeConnectionId) {
-        throw new Error('No active connection');
-      }
-      const _connection = await db.query.connection.findFirst({
-        where: eq(connection.id, this.activeConnectionId),
-      });
-      if (!_connection) {
-        throw new Error('Connection not found');
-      }
-      return {
-        content: [
-          {
-            type: 'text' as const,
-            text: `Email: ${_connection.email} | Provider: ${_connection.providerId}`,
-          },
-        ],
-      };
-    });
-
-    this.server.tool(
+    this.server.registerTool(
       'setActiveConnection',
       {
-        email: z.string(),
+        description: 'Set the active email connection by email address',
+        inputSchema: {
+          email: z.string(),
+        },
       },
       async (s) => {
         const _connection = await db.query.connection.findFirst({
@@ -1311,14 +1424,17 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
       },
     );
 
-    this.server.tool(
+    this.server.registerTool(
       'buildGmailSearchQuery',
       {
-        query: z.string(),
+        description: 'Build Gmail search query using AI assistance',
+        inputSchema: {
+          query: z.string(),
+        },
       },
       async (s) => {
         const result = await generateText({
-          model: openai(env.OPENAI_MODEL || 'gpt-4o'),
+          model: anthropic(env.OPENAI_MODEL || 'claude-3-5-haiku-latest'),
           system: GmailSearchAssistantSystemPrompt(),
           prompt: s.query,
         });
@@ -1333,14 +1449,19 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
       },
     );
 
-    this.server.tool(
+    const agent = await getZeroAgent(_connection.id);
+
+    this.server.registerTool(
       'listThreads',
       {
-        folder: z.string().default(FOLDERS.INBOX),
-        query: z.string().optional(),
-        maxResults: z.number().optional().default(5),
-        labelIds: z.array(z.string()).optional(),
-        pageToken: z.string().optional(),
+        description: 'List email threads with optional filters and pagination',
+        inputSchema: {
+          folder: z.string().default(FOLDERS.INBOX),
+          query: z.string().optional(),
+          maxResults: z.number().optional().default(5),
+          labelIds: z.array(z.string()).optional(),
+          pageToken: z.string().optional(),
+        },
       },
       async (s) => {
         const result = await agent.listThreads({
@@ -1378,10 +1499,13 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
       },
     );
 
-    this.server.tool(
+    this.server.registerTool(
       'getThread',
       {
-        threadId: z.string(),
+        description: 'Get detailed information about a specific email thread',
+        inputSchema: {
+          threadId: z.string(),
+        },
       },
       async (s) => {
         const thread = await agent.getThread(s.threadId);
@@ -1396,7 +1520,7 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
           },
           {
             type: 'text' as const,
-            text: `Latest Message Sender: ${thread.latest?.sender}`,
+            text: `Latest Message Sender: ${thread.latest?.sender.name} <${thread.latest?.sender.email}>`,
           },
           {
             type: 'text' as const,
@@ -1407,40 +1531,19 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
             text: `Thread ID: ${s.threadId}`,
           },
         ];
-        const response = await env.VECTORIZE.getByIds([s.threadId]);
-        if (response.length && response?.[0]?.metadata?.['summary']) {
-          const content = response[0].metadata['summary'] as string;
-          const shortResponse = await env.AI.run('@cf/facebook/bart-large-cnn', {
-            input_text: content,
-          });
-          return {
-            content: [
-              ...initialResponse,
-              {
-                type: 'text',
-                text: `Subject: ${thread.latest?.subject}`,
-              },
-              {
-                type: 'text',
-                text: `Long Summary: ${content}`,
-              },
-              {
-                type: 'text',
-                text: `Short Summary: ${shortResponse.summary}`,
-              },
-            ],
-          };
-        }
         return {
           content: initialResponse,
         };
       },
     );
 
-    this.server.tool(
+    this.server.registerTool(
       'markThreadsRead',
       {
-        threadIds: z.array(z.string()),
+        description: 'Mark email threads as read',
+        inputSchema: {
+          threadIds: z.array(z.string()),
+        },
       },
       async (s) => {
         await agent.modifyLabels(s.threadIds, [], ['UNREAD']);
@@ -1455,10 +1558,13 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
       },
     );
 
-    this.server.tool(
+    this.server.registerTool(
       'markThreadsUnread',
       {
-        threadIds: z.array(z.string()),
+        description: 'Mark email threads as unread',
+        inputSchema: {
+          threadIds: z.array(z.string()),
+        },
       },
       async (s) => {
         await agent.modifyLabels(s.threadIds, ['UNREAD'], []);
@@ -1473,12 +1579,15 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
       },
     );
 
-    this.server.tool(
+    this.server.registerTool(
       'modifyLabels',
       {
-        threadIds: z.array(z.string()),
-        addLabelIds: z.array(z.string()),
-        removeLabelIds: z.array(z.string()),
+        description: 'Add or remove labels from email threads',
+        inputSchema: {
+          threadIds: z.array(z.string()),
+          addLabelIds: z.array(z.string()),
+          removeLabelIds: z.array(z.string()),
+        },
       },
       async (s) => {
         await agent.modifyLabels(s.threadIds, s.addLabelIds, s.removeLabelIds);
@@ -1493,35 +1602,49 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
       },
     );
 
-    this.server.tool('getCurrentDate', async () => {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: getCurrentDateContext(),
-          },
-        ],
-      };
-    });
+    this.server.registerTool(
+      'getCurrentDate',
+      {
+        description: 'Get the current date and time',
+        inputSchema: z.object({}).shape,
+      },
+      async () => {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: getCurrentDateContext(),
+            },
+          ],
+        };
+      },
+    );
 
-    this.server.tool('getUserLabels', async () => {
-      const labels = await agent.getUserLabels();
-      return {
-        content: [
-          {
-            type: 'text',
-            text: labels
-              .map((label) => `Name: ${label.name} ID: ${label.id} Color: ${label.color}`)
-              .join('\n'),
-          },
-        ],
-      };
-    });
+    this.server.registerTool(
+      'getUserLabels',
+      { description: 'Get all available labels for the user' },
+      async () => {
+        const labels = await agent.getUserLabels();
+        return {
+          content: [
+            {
+              type: 'text',
+              text: labels
+                .map((label) => `Name: ${label.name} ID: ${label.id} Color: ${label.color}`)
+                .join('\n'),
+            },
+          ],
+        };
+      },
+    );
 
-    this.server.tool(
+    this.server.registerTool(
       'getLabel',
       {
-        id: z.string(),
+        description: 'Get details about a specific label',
+        inputSchema: {
+          id: z.string(),
+        },
       },
       async (s) => {
         const label = await agent.getLabel(s.id);
@@ -1540,12 +1663,15 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
       },
     );
 
-    this.server.tool(
+    this.server.registerTool(
       'createLabel',
       {
-        name: z.string(),
-        backgroundColor: z.string().optional(),
-        textColor: z.string().optional(),
+        description: 'Create a new email label',
+        inputSchema: {
+          name: z.string(),
+          backgroundColor: z.string().optional(),
+          textColor: z.string().optional(),
+        },
       },
       async (s) => {
         try {
@@ -1581,83 +1707,71 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
       },
     );
 
-    this.server.tool(
-      'bulkDelete',
-      {
-        threadIds: z.array(z.string()),
-      },
-      async (s) => {
-        try {
-          await agent.modifyLabels(s.threadIds, ['TRASH'], ['INBOX']);
-          return {
-            content: [
-              {
-                type: 'text',
-                text: 'Threads moved to trash',
-              },
-            ],
-          };
-        } catch (e) {
-          console.error(e);
-          return {
-            content: [
-              {
-                type: 'text',
-                text: 'Failed to move threads to trash',
-              },
-            ],
-          };
-        }
-      },
-    );
+    // this.server.registerTool(
+    //   'bulkDelete',
+    //   {
+    //     description: 'Move multiple threads to trash',
+    //     inputSchema: {
+    //       threadIds: z.array(z.string()),
+    //     },
+    //   },
+    //   async (s) => {
+    //     try {
+    //       await agent.modifyLabels(s.threadIds, ['TRASH'], ['INBOX']);
+    //       return {
+    //         content: [
+    //           {
+    //             type: 'text',
+    //             text: 'Threads moved to trash',
+    //           },
+    //         ],
+    //       };
+    //     } catch (e) {
+    //       console.error(e);
+    //       return {
+    //         content: [
+    //           {
+    //             type: 'text',
+    //             text: 'Failed to move threads to trash',
+    //           },
+    //         ],
+    //       };
+    //     }
+    //   },
+    // );
 
-    this.server.tool(
-      'bulkArchive',
-      {
-        threadIds: z.array(z.string()),
-      },
-      async (s) => {
-        try {
-          await agent.modifyLabels(s.threadIds, [], ['INBOX']);
-          return {
-            content: [
-              {
-                type: 'text',
-                text: 'Threads archived',
-              },
-            ],
-          };
-        } catch (e) {
-          console.error(e);
-          return {
-            content: [
-              {
-                type: 'text',
-                text: 'Failed to archive threads',
-              },
-            ],
-          };
-        }
-      },
-    );
+    // this.server.registerTool(
+    //   'bulkArchive',
+    //   {
+    //     description: 'Archive multiple email threads',
+    //     inputSchema: {
+    //       threadIds: z.array(z.string()),
+    //     },
+    //   },
+    //   async (s) => {
+    //     try {
+    //       await agent.modifyLabels(s.threadIds, [], ['INBOX']);
+    //       return {
+    //         content: [
+    //           {
+    //             type: 'text',
+    //             text: 'Threads archived',
+    //           },
+    //         ],
+    //       };
+    //     } catch (e) {
+    //       console.error(e);
+    //       return {
+    //         content: [
+    //           {
+    //             type: 'text',
+    //             text: 'Failed to archive threads',
+    //           },
+    //         ],
+    //       };
+    //     }
+    //   },
+    // );
     this.ctx.waitUntil(conn.end());
   }
 }
-
-const buildGmailSearchQuery = tool({
-  description: 'Build a Gmail search query',
-  parameters: z.object({
-    query: z.string().describe('The search query to build, provided in natural language'),
-  }),
-  execute: async ({ query }) => {
-    const result = await generateObject({
-      model: openai(env.OPENAI_MODEL || 'gpt-4o'),
-      system: GmailSearchAssistantSystemPrompt(),
-      prompt: query,
-      schema: z.object({
-        query: z.string(),
-      }),
-    });
-    return result.object;
-  },
-});

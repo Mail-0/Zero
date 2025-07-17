@@ -254,7 +254,7 @@
           "match": {
             "countPlural=0": "Добавьте заметки",
             "countPlural=one": "# заметка",
-            "countPlural=other": "# заметки"
+            "countPlural=other": "# заметок"
           }
         }
       ],
@@ -317,7 +317,7 @@
           "match": {
             "countPlural=0": "ответы",
             "countPlural=one": "# ответ",
-            "countPlural=other": "# ответы"
+            "countPlural=other": "# ответов"
           }
         }
       ],

@@ -254,7 +254,7 @@
           "match": {
             "countPlural=0": "إضافة ملاحظات",
             "countPlural=one": "ملاحظة واحدة",
-            "countPlural=other": "# ملاحظة"
+            "countPlural=other": "# ملاحظات"
           }
         }
       ],
@@ -317,7 +317,7 @@
           "match": {
             "countPlural=0": "ردود",
             "countPlural=one": "رد واحد",
-            "countPlural=other": "# رد"
+            "countPlural=other": "# ردود"
           }
         }
       ],
