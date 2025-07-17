@@ -428,8 +428,6 @@ export function MailLayout() {
     };
   }, [threadId, enableScope, disableScope]);
 
-  const [, setActiveReplyId] = useQueryState('activeReplyId');
-
   // Add mailto protocol handler registration
   useEffect(() => {
     // Register as a mailto protocol handler if browser supports it
