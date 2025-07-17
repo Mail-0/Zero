@@ -94,7 +94,7 @@
         "commandPalette": "پالت فرمان"
       },
       "quickResults": "نتایج سریع",
-      "searchPlaceholder": "جستجو و فیلتر",
+      "searchPlaceholder": "جستجو...",
       "noSearchResults": "نتیجه‌ای یافت نشد",
       "actions": "اقدامات",
       "addFilters": "افزودن فیلترها",
@@ -253,8 +253,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "افزودن یادداشت‌ها",
-            "countPlural=one": "{count} یادداشت",
-            "countPlural=other": "{count} یادداشت"
+            "countPlural=one": "# یادداشت",
+            "countPlural=other": "# یادداشت"
           }
         }
       ],
@@ -316,8 +316,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "پاسخ‌ها",
-            "countPlural=one": "{count} پاسخ",
-            "countPlural=other": "{count} پاسخ"
+            "countPlural=one": "# پاسخ",
+            "countPlural=other": "# پاسخ"
           }
         }
       ],

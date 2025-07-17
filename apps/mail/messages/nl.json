@@ -94,7 +94,7 @@
         "commandPalette": "Opdrachtenpalet"
       },
       "quickResults": "Snelle resultaten",
-      "searchPlaceholder": "Zoeken & filteren",
+      "searchPlaceholder": "Zoeken...",
       "noSearchResults": "Geen zoekresultaten",
       "actions": "Acties",
       "addFilters": "Filters toevoegen",
@@ -253,8 +253,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "Notities toevoegen",
-            "countPlural=one": "{count} notitie",
-            "countPlural=other": "{count} notities"
+            "countPlural=one": "# notitie",
+            "countPlural=other": "# notities"
           }
         }
       ],
@@ -316,8 +316,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "reacties",
-            "countPlural=one": "{count} antwoord",
-            "countPlural=other": "{count} antwoorden"
+            "countPlural=one": "# antwoord",
+            "countPlural=other": "# antwoorden"
           }
         }
       ],

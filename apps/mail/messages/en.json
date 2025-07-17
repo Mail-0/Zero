@@ -94,7 +94,7 @@
         "commandPalette": "Command Palette"
       },
       "quickResults": "Quick Results",
-      "searchPlaceholder": "Search & Filter",
+      "searchPlaceholder": "Search...",
       "noSearchResults": "No search results",
       "actions": "Actions",
       "addFilters": "Add filters",
@@ -253,8 +253,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "Add notes",
-            "countPlural=one": "{count} note",
-            "countPlural=other": "{count} notes"
+            "countPlural=one": "# note",
+            "countPlural=other": "# notes"
           }
         }
       ],
@@ -316,8 +316,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "replies",
-            "countPlural=one": "{count} reply",
-            "countPlural=other": "{count} replies"
+            "countPlural=one": "# reply",
+            "countPlural=other": "# replies"
           }
         }
       ],

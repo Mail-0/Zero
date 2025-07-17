@@ -8,8 +8,8 @@ import { useTRPC } from '@/providers/query-provider';
 import { useMail } from '@/components/mail/use-mail';
 import { moveThreadsTo } from '@/lib/thread-actions';
 import { m } from '@/paraglide/messages';
-import { useCallback } from 'react';
 import { useQueryState } from 'nuqs';
+import { useCallback } from 'react';
 import posthog from 'posthog-js';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
@@ -52,25 +52,12 @@ export function useOptimisticActions() {
   const generatePendingActionId = () =>
     `pending_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
-  const refreshData = useCallback(
-    async (threadIds: string[], folders?: string[]) => {
-      return await Promise.all([
-        queryClient.refetchQueries({ queryKey: trpc.mail.count.queryKey() }),
-        ...(folders?.map((folder) =>
-          queryClient.refetchQueries({
-            queryKey: trpc.mail.listThreads.infiniteQueryKey({ folder }),
-          }),
-        ) ?? []),
-        ...threadIds.map((id) =>
-          queryClient.refetchQueries({
-            queryKey: trpc.mail.get.queryKey({ id }),
-          }),
-        ),
-        queryClient.refetchQueries({ queryKey: trpc.labels.list.queryKey() }),
-      ]);
-    },
-    [queryClient, trpc.mail.get, trpc.labels.list],
-  );
+  const refreshData = useCallback(async () => {
+    return await Promise.all([
+      queryClient.refetchQueries({ queryKey: trpc.mail.count.queryKey() }),
+      queryClient.refetchQueries({ queryKey: trpc.labels.list.queryKey() }),
+    ]);
+  }, [queryClient]);
 
   function createPendingAction({
     type,
@@ -80,7 +67,6 @@ export function useOptimisticActions() {
     execute,
     undo,
     toastMessage,
-    folders,
   }: {
     type: keyof typeof ActionType;
     threadIds: string[];
@@ -141,7 +127,7 @@ export function useOptimisticActions() {
         optimisticActionsManager.pendingActions.delete(pendingActionId);
         optimisticActionsManager.pendingActionsByType.get(type)?.delete(pendingActionId);
         if (typeActions?.size === 1) {
-          await refreshData(threadIds, folders);
+          await refreshData();
           removeOptimisticAction(optimisticId);
         }
       } catch (error) {
@@ -149,11 +135,9 @@ export function useOptimisticActions() {
         removeOptimisticAction(optimisticId);
         optimisticActionsManager.pendingActions.delete(pendingActionId);
         optimisticActionsManager.pendingActionsByType.get(type)?.delete(pendingActionId);
-        showToast.error('Action failed');
+        toast.error('Action failed');
       }
     }
-
-    const showToast = toast;
 
     if (toastMessage.trim().length) {
       toast(bulkActionMessage, {

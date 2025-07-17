@@ -2,7 +2,8 @@ import { composeEmail } from '../../trpc/routes/ai/compose';
 import { perplexity } from '@ai-sdk/perplexity';
 import { generateText, tool } from 'ai';
 
-import { colors } from '../../lib/prompts';
+import { colors, GmailSearchAssistantSystemPrompt } from '../../lib/prompts';
+import { anthropic } from '@ai-sdk/anthropic';
 import { env } from 'cloudflare:workers';
 import type { ZeroAgent } from '../chat';
 import { Tools } from '../../types';
@@ -380,6 +381,22 @@ export const webSearch = () =>
     },
   });
 
+const buildGmailSearchQuery = () =>
+  tool({
+    description: 'Build Gmail search query using AI assistance',
+    parameters: z.object({
+      query: z.string(),
+    }),
+    execute: async ({ query }) => {
+      const result = await generateText({
+        model: anthropic(env.OPENAI_MODEL || 'claude-3-5-haiku-latest'),
+        system: GmailSearchAssistantSystemPrompt(),
+        prompt: query,
+      });
+      return result.text;
+    },
+  });
+
 export const tools = async (agent: ZeroAgent, connectionId: string) => {
   return {
     [Tools.GetThread]: getEmail(agent),
@@ -399,6 +416,7 @@ export const tools = async (agent: ZeroAgent, connectionId: string) => {
         query: z.string().describe('The query to search the web for'),
       }),
     }),
+    [Tools.BuildGmailSearchQuery]: buildGmailSearchQuery(),
     [Tools.InboxRag]: tool({
       description:
         'Search the inbox for emails using natural language. Returns only an array of threadIds.',
@@ -406,6 +424,5 @@ export const tools = async (agent: ZeroAgent, connectionId: string) => {
         query: z.string().describe('The query to search the inbox for'),
       }),
     }),
-    // ...(await getGoogleTools(connectionId)),
   };
 };

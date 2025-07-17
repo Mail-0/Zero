@@ -94,7 +94,7 @@
         "commandPalette": "لوحة الأوامر"
       },
       "quickResults": "نتائج سريعة",
-      "searchPlaceholder": "بحث وتصفية",
+      "searchPlaceholder": "بحث...",
       "noSearchResults": "لا توجد نتائج بحث",
       "actions": "الإجراءات",
       "addFilters": "إضافة عوامل تصفية",
@@ -253,8 +253,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "إضافة ملاحظات",
-            "countPlural=one": "ملاحظة واحدة ({count})",
-            "countPlural=other": "{count} ملاحظات"
+            "countPlural=one": "ملاحظة واحدة",
+            "countPlural=other": "# ملاحظات"
           }
         }
       ],
@@ -316,8 +316,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "ردود",
-            "countPlural=one": "رد واحد ({count})",
-            "countPlural=other": "{count} ردود"
+            "countPlural=one": "رد واحد",
+            "countPlural=other": "# ردود"
           }
         }
       ],

@@ -10,7 +10,9 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "eval": "evalite",
+    "eval:dev": "evalite watch"
   },
   "exports": {
     "./trpc": "./src/trpc/index.ts",
@@ -83,9 +85,13 @@
     "@types/uuid": "10.0.0",
     "@zero/eslint-config": "workspace:*",
     "@zero/tsconfig": "workspace:*",
+    "autoevals": "0.0.130",
     "drizzle-kit": "catalog:",
     "eslint": "^9.27.0",
+    "evalite": "0.11.4",
     "jiti": "2.4.2",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vite": "^6.3.5",
+    "vitest": "3.2.4"
   }
 }

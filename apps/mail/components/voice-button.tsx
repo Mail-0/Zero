@@ -1,5 +1,3 @@
-'use client';
-
 import { Mic, MicOff, Loader2, WavesIcon } from 'lucide-react';
 import { useVoice } from '@/providers/voice-provider';
 import { motion } from 'motion/react';
