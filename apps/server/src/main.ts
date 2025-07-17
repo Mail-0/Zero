@@ -28,13 +28,12 @@ import { routePartykitRequest } from 'partyserver';
 import { enableBrainFunction } from './lib/brain';
 import { trpcServer } from '@hono/trpc-server';
 import { agentsMiddleware } from 'hono-agents';
+import { ZeroMCP } from './routes/agent/mcp';
 import { publicRouter } from './routes/auth';
-import { DurableMailbox } from './lib/party';
 import { autumnApi } from './routes/autumn';
-import { ZeroAgent } from './routes/chat';
+import { ZeroAgent } from './routes/agent';
 import type { HonoContext } from './ctx';
 import { createDb, type DB } from './db';
-import { ZeroMCP } from './routes/chat';
 import { createAuth } from './lib/auth';
 import { aiRouter } from './routes/ai';
 import { Autumn } from 'autumn-js';
@@ -790,4 +789,4 @@ export default class extends WorkerEntrypoint<typeof env> {
   }
 }
 
-export { DurableMailbox, ZeroAgent, ZeroMCP, ZeroDB };
+export { ZeroAgent, ZeroMCP, ZeroDB };

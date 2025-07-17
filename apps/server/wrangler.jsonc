@@ -39,10 +39,6 @@
             "name": "ZERO_DB",
             "class_name": "ZeroDB",
           },
-          {
-            "class_name": "DurableMailbox",
-            "name": "DURABLE_MAILBOX",
-          },
         ],
       },
       "queues": {
@@ -166,10 +162,6 @@
           {
             "name": "ZERO_DB",
             "class_name": "ZeroDB",
-          },
-          {
-            "class_name": "DurableMailbox",
-            "name": "DURABLE_MAILBOX",
           },
         ],
       },
@@ -312,10 +304,6 @@
             "name": "ZERO_DB",
             "class_name": "ZeroDB",
           },
-          {
-            "class_name": "DurableMailbox",
-            "name": "DURABLE_MAILBOX",
-          },
         ],
       },
       "queues": {
@@ -363,7 +351,7 @@
         "VITE_PUBLIC_APP_URL": "https://0.email",
         "DISABLE_CALLS": "true",
         "DROP_AGENT_TABLES": "false",
-        "THREAD_SYNC_MAX_COUNT": "40",
+        "THREAD_SYNC_MAX_COUNT": "10",
         "THREAD_SYNC_LOOP": "true",
         "DISABLE_WORKFLOWS": "true",
       },

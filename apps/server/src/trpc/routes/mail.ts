@@ -398,6 +398,29 @@ export const mailRouter = router({
     const agent = await getZeroAgent(activeConnection.id);
     return agent.getEmailAliases();
   }),
+  getMessageAttachments: activeDriverProcedure
+    .input(
+      z.object({
+        messageId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { activeConnection } = ctx;
+      const agent = await getZeroAgent(activeConnection.id);
+      return agent.getMessageAttachments(input.messageId) as Promise<
+        {
+          filename: string;
+          mimeType: string;
+          size: number;
+          attachmentId: string;
+          headers: {
+            name: string;
+            value: string;
+          }[];
+          body: string;
+        }[]
+      >;
+    }),
   processEmailContent: privateProcedure
     .input(
       z.object({

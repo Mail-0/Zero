@@ -1,15 +1,17 @@
 import { SidebarGroup, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from './sidebar';
 import { Collapsible, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { useActiveConnection, } from '@/hooks/use-connections';
+import { useCommandPalette } from '../context/command-palette-context.jsx';
 import { LabelDialog } from '@/components/labels/label-dialog';
+import { useActiveConnection } from '@/hooks/use-connections';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Link, useLocation, } from 'react-router';
+import { useSearchValue } from '@/hooks/use-search-value.js';
 import Intercom, { show } from '@intercom/messenger-js-sdk';
 import { MessageSquare, OldPhone } from '../icons/icons';
 import { useSidebar } from '../context/sidebar-context';
 import { useTRPC } from '@/providers/query-provider';
 import { type NavItem } from '@/config/navigation';
 import type { Label as LabelType } from '@/types';
+import { Link, useLocation } from 'react-router';
 import { m } from '../../paraglide/messages.js';
 import { Button } from '@/components/ui/button';
 import { useLabels } from '@/hooks/use-labels';
@@ -55,9 +57,7 @@ export function NavMain({ items }: NavMainProps) {
   const pathname = location.pathname;
   const searchParams = new URLSearchParams();
   const [category] = useQueryState('category');
-  
-  
-  
+
   const trpc = useTRPC();
   const { data: intercomToken } = useQuery(trpc.user.getIntercomToken.queryOptions());
 
@@ -271,6 +271,7 @@ export function NavMain({ items }: NavMainProps) {
 function NavItem(item: NavItemProps & { href: string }) {
   const iconRef = useRef<IconRefType>(null);
   const { data: stats } = useStats();
+  const { clearAllFilters } = useCommandPalette();
 
   const { state, setOpenMobile } = useSidebar();
 
@@ -290,6 +291,7 @@ function NavItem(item: NavItemProps & { href: string }) {
     if (item.onClick) {
       item.onClick(e as React.MouseEvent<HTMLAnchorElement>);
     }
+    clearAllFilters();
     setOpenMobile(false);
   };
 

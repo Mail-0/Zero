@@ -531,7 +531,7 @@ export function MailLayout() {
                 <Button
                   variant="outline"
                   className={cn(
-                    'text-muted-foreground relative flex h-[1.875rem] w-full select-none items-center justify-start overflow-hidden rounded-lg border bg-white pl-2 text-left text-sm font-normal shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-none dark:bg-[#141414]',
+                    'text-muted-foreground relative flex h-7 w-full select-none items-center justify-start overflow-hidden rounded-lg border bg-white pl-2 text-left text-sm font-normal shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:border-none dark:bg-[#141414]',
                   )}
                   onClick={() => setIsCommandPaletteOpen('true')}
                 >
@@ -768,18 +768,15 @@ function CategoryDropdown({ isMultiSelectMode }: CategoryDropdownProps) {
         <Button
           variant="outline"
           className={cn(
-            'flex h-7 min-w-fit items-center gap-1 rounded-md border-none bg-[#006FFE] px-2 text-white',
+            'black:text-white text-muted-foreground flex h-7 min-w-fit items-center gap-1 rounded-md border-none px-2',
           )}
           aria-label="Filter by labels"
           aria-expanded={isOpen}
           aria-haspopup="menu"
         >
-          <div className="relative overflow-visible">
-            <Mail className="h-4 w-4 fill-white dark:fill-white" />
-          </div>
           <span className="text-xs font-medium">Categories</span>
           <ChevronDown
-            className={`h-2 w-2 text-white transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
+            className={`black:text-white text-muted-foreground h-2 w-2 transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
           />
         </Button>
       </DropdownMenuTrigger>
