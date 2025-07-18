@@ -534,39 +534,7 @@ export const runThreadWorkflow = (
           return null;
         },
         catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
-      }).pipe(Effect.orElse(() => Effect.succeed(null)));
-
-      if (autoDraftId) {
-        yield* Effect.tryPromise({
-          try: async () => {
-            const latestMessage = thread.messages[thread.messages.length - 1];
-            await db
-              .insert(summary)
-              .values({
-                messageId: latestMessage.id,
-                content: '',
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                connectionId: connectionId.toString(),
-                saved: false,
-                suggestedReply: autoDraftId,
-              })
-              .onConflictDoUpdate({
-                target: summary.messageId,
-                set: {
-                  suggestedReply: autoDraftId,
-                  updatedAt: new Date(),
-                },
-              });
-
-            console.log('[THREAD_WORKFLOW] Stored draft reference in summary:', {
-              messageId: latestMessage.id,
-              draftId: autoDraftId,
-            });
-          },
-          catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
-        }).pipe(Effect.orElse(() => Effect.succeed(null)));
-      }
+      });
 
       yield* Console.log('[THREAD_WORKFLOW] Processing thread messages and vectorization');
 
