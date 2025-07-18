@@ -4,6 +4,7 @@ import { keyboardLayoutMapper, type KeyboardLayout } from '@/utils/keyboard-layo
 import { getKeyCodeFromKey } from '@/utils/keyboard-utils';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useCallback, useMemo } from 'react';
+import { IS_MAC } from '@/utils/env';
 
 export const useShortcutCache = () => {
   // const { data: shortcuts, mutate } = useSWR<Shortcut[]>(
@@ -48,11 +49,6 @@ export const useShortcutCache = () => {
     // updateShortcut,
   };
 };
-
-export const isMac =
-  typeof window !== 'undefined' &&
-  (/macintosh|mac os x/i.test(navigator.userAgent) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
 
 const dvorakToQwerty: Record<string, string> = {
   a: 'a',
@@ -121,7 +117,7 @@ export const formatKeys = (keys: string[] | undefined): string => {
 
     switch (mappedKey) {
       case 'mod':
-        return isMac ? 'meta' : 'control';
+        return IS_MAC ? 'meta' : 'control';
       case '⌘':
         return 'meta';
       case '#':
@@ -165,7 +161,7 @@ export const formatDisplayKeys = (keys: string[]): string[] => {
 
     switch (mappedKey) {
       case 'mod':
-        return isMac ? '⌘' : 'Ctrl';
+        return IS_MAC ? '⌘' : 'Ctrl';
       case 'meta':
         return '⌘';
       case 'control':
@@ -173,7 +169,7 @@ export const formatDisplayKeys = (keys: string[]): string[] => {
       case 'shift':
         return '⇧';
       case 'alt':
-        return isMac ? '⌥' : 'Alt';
+        return IS_MAC ? '⌥' : 'Alt';
       case 'enter':
         return '↵';
       case 'escape':

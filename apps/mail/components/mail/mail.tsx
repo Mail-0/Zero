@@ -30,7 +30,6 @@ import { useMediaQuery } from '../../hooks/use-media-query';
 
 import useSearchLabels from '@/hooks/use-labels-search';
 import * as CustomIcons from '@/components/icons/icons';
-import { isMac } from '@/lib/hotkeys/use-hotkey-utils';
 import { MailList } from '@/components/mail/mail-list';
 import { useHotkeysContext } from 'react-hotkeys-hook';
 import SelectAllCheckbox from './select-all-checkbox';
@@ -57,6 +56,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 import { m } from '@/paraglide/messages';
+import { IS_MAC } from '@/utils/env';
 import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
@@ -571,10 +571,10 @@ export function MailLayout() {
                       <span
                         className={cn(
                           'h-min !leading-[0.2]',
-                          isMac ? 'mt-[1px] text-lg' : 'text-sm',
+                          IS_MAC ? 'mt-[1px] text-lg' : 'text-sm',
                         )}
                       >
-                        {isMac ? '⌘' : 'Ctrl'}{' '}
+                        {IS_MAC ? '⌘' : 'Ctrl'}{' '}
                       </span>
                       <span className="h-min text-sm !leading-[0.2]"> K</span>
                     </kbd>
