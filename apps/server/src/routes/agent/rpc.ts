@@ -90,7 +90,7 @@ export class AgentRpcDO extends RpcTarget {
     return result;
   }
 
-  async syncThread(threadId: string) {
+  async syncThread({ threadId }: { threadId: string }) {
     return await this.mainDo.syncThread({ threadId });
   }
 

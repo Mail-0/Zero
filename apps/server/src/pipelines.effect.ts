@@ -739,7 +739,7 @@ export const runThreadWorkflow = (
                     remove: labelsToRemove,
                   });
                   await agent.modifyLabels([threadId.toString()], labelsToAdd, labelsToRemove);
-                  await agent.syncThread(threadId.toString());
+                  await agent.syncThread({ threadId: threadId.toString() });
                   console.log('[THREAD_WORKFLOW] Successfully modified thread labels');
                 } else {
                   console.log('[THREAD_WORKFLOW] No label changes needed - labels already match');

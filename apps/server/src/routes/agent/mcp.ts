@@ -27,7 +27,7 @@ import { createDb } from '../../db';
 import { generateText } from 'ai';
 import z from 'zod';
 
-export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
+export class ZeroMCP extends McpAgent<typeof env, Record<string, unknown>, { userId: string }> {
   server = new McpServer({
     name: 'zero-mcp',
     version: '1.0.0',
@@ -35,10 +35,6 @@ export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
   });
 
   activeConnectionId: string | undefined;
-
-  constructor(ctx: DurableObjectState, env: Env) {
-    super(ctx, env);
-  }
 
   async init(): Promise<void> {
     const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
