@@ -149,6 +149,7 @@ export function EmailComposer({
   const [imageQuality, setImageQuality] = useState<ImageQuality>(
     settings?.settings?.imageCompression || 'medium',
   );
+  const [activeReplyId] = useQueryState('activeReplyId');
   const [toggleToolbar, setToggleToolbar] = useState(false);
   const processAndSetAttachments = async (
     filesToProcess: File[],
@@ -1224,33 +1225,35 @@ export function EmailComposer({
         </div>
 
         {/* Subject */}
-        <div className="flex items-center gap-2 border-b p-3">
-          <p className="text-sm font-medium text-[#8C8C8C]">Subject:</p>
-          <input
-            className="h-4 w-full bg-transparent text-sm font-normal leading-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white/90"
-            placeholder="Re: Design review feedback"
-            value={subjectInput}
-            onChange={(e) => {
-              const value = replaceEmojiShortcodes(e.target.value);
-              setValue('subject', value);
-              setHasUnsavedChanges(true);
-            }}
-          />
-          <button
-            onClick={handleGenerateSubject}
-            disabled={isLoading || isGeneratingSubject || messageLength < 1}
-          >
-            <div className="flex items-center justify-center gap-2.5 pl-0.5">
-              <div className="flex h-5 items-center justify-center gap-1 rounded-sm">
-                {isGeneratingSubject ? (
-                  <Loader className="h-3.5 w-3.5 animate-spin fill-black dark:fill-white" />
-                ) : (
-                  <Sparkles className="h-3.5 w-3.5 fill-black dark:fill-white" />
-                )}
+        {!activeReplyId ? (
+          <div className="flex items-center gap-2 border-b p-3">
+            <p className="text-sm font-medium text-[#8C8C8C]">Subject:</p>
+            <input
+              className="h-4 w-full bg-transparent text-sm font-normal leading-normal text-black placeholder:text-[#797979] focus:outline-none dark:text-white/90"
+              placeholder="Re: Design review feedback"
+              value={subjectInput}
+              onChange={(e) => {
+                const value = replaceEmojiShortcodes(e.target.value);
+                setValue('subject', value);
+                setHasUnsavedChanges(true);
+              }}
+            />
+            <button
+              onClick={handleGenerateSubject}
+              disabled={isLoading || isGeneratingSubject || messageLength < 1}
+            >
+              <div className="flex items-center justify-center gap-2.5 pl-0.5">
+                <div className="flex h-5 items-center justify-center gap-1 rounded-sm">
+                  {isGeneratingSubject ? (
+                    <Loader className="h-3.5 w-3.5 animate-spin fill-black dark:fill-white" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5 fill-black dark:fill-white" />
+                  )}
+                </div>
               </div>
-            </div>
-          </button>
-        </div>
+            </button>
+          </div>
+        ) : null}
 
         {/* From */}
         {aliases && aliases.length > 1 ? (

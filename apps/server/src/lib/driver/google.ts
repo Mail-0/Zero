@@ -81,6 +81,51 @@ export class GoogleMailManager implements MailManager {
       { messageId, attachmentId },
     );
   }
+
+  public async getMessageAttachments(messageId: string) {
+    return this.withErrorHandler(
+      'getMessageAttachments',
+      async () => {
+        const res = await this.gmail.users.messages.get({
+          userId: 'me',
+          id: messageId,
+        });
+        const attachmentParts = res.data.payload?.parts
+          ? this.findAttachments(res.data.payload.parts)
+          : [];
+
+        const attachments = await Promise.all(
+          attachmentParts.map(async (part) => {
+            const attachmentId = part.body?.attachmentId;
+            if (!attachmentId) {
+              return null;
+            }
+
+            try {
+              const attachmentData = await this.getAttachment(messageId, attachmentId);
+              return {
+                filename: part.filename || '',
+                mimeType: part.mimeType || '',
+                size: Number(part.body?.size || 0),
+                attachmentId: attachmentId,
+                headers:
+                  part.headers?.map((h) => ({
+                    name: h.name ?? '',
+                    value: h.value ?? '',
+                  })) ?? [],
+                body: attachmentData ?? '',
+              };
+            } catch {
+              return null;
+            }
+          }),
+        ).then((attachments) => attachments.filter((a): a is NonNullable<typeof a> => a !== null));
+
+        return attachments;
+      },
+      { messageId },
+    );
+  }
   public getEmailAliases() {
     return this.withErrorHandler('getEmailAliases', async () => {
       const profile = await this.gmail.users.getProfile({
@@ -378,44 +423,23 @@ export class GoogleMailManager implements MailManager {
               });
             }
 
+            // Only store attachment metadata, not the actual attachment data
             const attachmentParts = message.payload?.parts
               ? this.findAttachments(message.payload.parts)
               : [];
 
-            const attachments = await Promise.all(
-              attachmentParts.map(async (part) => {
-                const attachmentId = part.body?.attachmentId;
-                if (!attachmentId) {
-                  return null;
-                }
-
-                try {
-                  if (!message.id) {
-                    return null;
-                  }
-                  const attachmentData = await this.getAttachment(message.id, attachmentId);
-                  return {
-                    filename: part.filename || '',
-                    mimeType: part.mimeType || '',
-                    size: Number(part.body?.size || 0),
-                    attachmentId: attachmentId,
-                    headers:
-                      part.headers?.map((h) => ({
-                        name: h.name ?? '',
-                        value: h.value ?? '',
-                      })) ?? [],
-                    body: attachmentData ?? '',
-                    replyTo: message.payload?.headers?.find(
-                      (h) => h.name?.toLowerCase() === 'reply-to',
-                    )?.value,
-                  };
-                } catch {
-                  return null;
-                }
-              }),
-            ).then((attachments) =>
-              attachments.filter((a): a is NonNullable<typeof a> => a !== null),
-            );
+            const attachments = attachmentParts.map((part) => ({
+              filename: part.filename || '',
+              mimeType: part.mimeType || '',
+              size: Number(part.body?.size || 0),
+              attachmentId: part.body?.attachmentId || '',
+              headers:
+                part.headers?.map((h) => ({
+                  name: h.name ?? '',
+                  value: h.value ?? '',
+                })) ?? [],
+              body: '', // Empty body - fetch on demand with getMessageAttachments
+            }));
 
             const fullEmailData = {
               ...parsedData,

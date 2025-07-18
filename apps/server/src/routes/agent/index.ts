@@ -1,6 +1,6 @@
 /*
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ * Licensed to Zero Email Inc. under one or more contributor license agreements.
+ * You may not use this file except in compliance with the Apache License, Version 2.0 (the "License").
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
@@ -10,317 +10,47 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Reuse or distribution of this file requires a license from Zero Email Inc.
  */
+
 import {
-  streamText,
   type StreamTextOnFinishCallback,
   createDataStreamResponse,
-  generateText,
+  streamText,
   appendResponseMessages,
 } from 'ai';
 import {
-  getCurrentDateContext,
-  GmailSearchAssistantSystemPrompt,
-  AiChatPrompt,
-} from '../lib/prompts';
+  IncomingMessageType,
+  OutgoingMessageType,
+  type IncomingMessage,
+  type OutgoingMessage,
+} from './types';
 import { DurableObjectOAuthClientProvider } from 'agents/mcp/do-oauth-client-provider';
-import { EPrompts, type IOutgoingMessage, type ParsedMessage } from '../types';
-import type { IGetThreadResponse, MailManager } from '../lib/driver/types';
-import { connectionToDriver, getZeroAgent } from '../lib/server-utils';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { type Connection, type WSMessage } from 'agents';
-import { ToolOrchestrator } from './agent/orchestrator';
-import type { CreateDraftData } from '../lib/schemas';
-import { withRetry } from '../lib/gmail-rate-limit';
-import { env, RpcTarget } from 'cloudflare:workers';
+import { EPrompts, type IOutgoingMessage, type ParsedMessage } from '../../types';
+import type { MailManager, IGetThreadResponse } from '../../lib/driver/types';
+import { connectionToDriver } from '../../lib/server-utils';
+import type { CreateDraftData } from '../../lib/schemas';
+import type { Connection, WSMessage } from 'partyserver';
+import { withRetry } from '../../lib/gmail-rate-limit';
+import { getPrompt } from '../../pipelines.effect';
 import { AIChatAgent } from 'agents/ai-chat-agent';
-import { tools as authTools } from './agent/tools';
-import { processToolCalls } from './agent/utils';
-import type { Message as ChatMessage } from 'ai';
+import { ToolOrchestrator } from './orchestrator';
+import { AiChatPrompt } from '../../lib/prompts';
+import { getPromptName } from '../../pipelines';
 import { anthropic } from '@ai-sdk/anthropic';
-import { getPromptName } from '../pipelines';
-import { connection } from '../db/schema';
-import { getPrompt } from '../lib/brain';
-import { FOLDERS } from '../lib/utils';
-import { and, eq } from 'drizzle-orm';
-import { McpAgent } from 'agents/mcp';
-import { createDb } from '../db';
+import { connection } from '../../db/schema';
+import { tools as authTools } from './tools';
+import { processToolCalls } from './utils';
+import { env } from 'cloudflare:workers';
+import { createDb } from '../../db';
+import { AgentRpcDO } from './rpc';
+import { eq } from 'drizzle-orm';
 import { Effect } from 'effect';
-import { z } from 'zod';
-
 const decoder = new TextDecoder();
 
-export enum IncomingMessageType {
-  UseChatRequest = 'cf_agent_use_chat_request',
-  ChatClear = 'cf_agent_chat_clear',
-  ChatMessages = 'cf_agent_chat_messages',
-  ChatRequestCancel = 'cf_agent_chat_request_cancel',
-  Mail_List = 'zero_mail_list_threads',
-  Mail_Get = 'zero_mail_get_thread',
-}
-
-export enum OutgoingMessageType {
-  ChatMessages = 'cf_agent_chat_messages',
-  UseChatResponse = 'cf_agent_use_chat_response',
-  ChatClear = 'cf_agent_chat_clear',
-  Mail_List = 'zero_mail_list_threads',
-  Mail_Get = 'zero_mail_get_thread',
-}
-
-export type IncomingMessage =
-  | {
-      type: IncomingMessageType.UseChatRequest;
-      id: string;
-      init: Pick<RequestInit, 'method' | 'headers' | 'body'>;
-    }
-  | {
-      type: IncomingMessageType.ChatClear;
-    }
-  | {
-      type: IncomingMessageType.ChatMessages;
-      messages: ChatMessage[];
-    }
-  | {
-      type: IncomingMessageType.ChatRequestCancel;
-      id: string;
-    }
-  | {
-      type: IncomingMessageType.Mail_List;
-      folder: string;
-      query: string;
-      maxResults: number;
-      labelIds: string[];
-      pageToken: string;
-    }
-  | {
-      type: IncomingMessageType.Mail_Get;
-      threadId: string;
-    };
-
-export type OutgoingMessage =
-  | {
-      type: OutgoingMessageType.ChatMessages;
-      messages: ChatMessage[];
-    }
-  | {
-      type: OutgoingMessageType.UseChatResponse;
-      id: string;
-      body: string;
-      done: boolean;
-    }
-  | {
-      type: OutgoingMessageType.ChatClear;
-    }
-  | {
-      type: OutgoingMessageType.Mail_List;
-      folder: string;
-    }
-  | {
-      type: OutgoingMessageType.Mail_Get;
-      threadId: string;
-    };
-
-export class AgentRpcDO extends RpcTarget {
-  constructor(
-    private mainDo: ZeroAgent,
-    private connectionId: string,
-  ) {
-    super();
-  }
-
-  async getUserLabels() {
-    return await this.mainDo.getUserLabels();
-  }
-
-  async getLabel(id: string) {
-    return await this.mainDo.getLabel(id);
-  }
-
-  async createLabel(label: {
-    name: string;
-    color?: { backgroundColor: string; textColor: string };
-  }) {
-    return await this.mainDo.createLabel(label);
-  }
-
-  async updateLabel(
-    id: string,
-    label: { name: string; color?: { backgroundColor: string; textColor: string } },
-  ) {
-    return await this.mainDo.updateLabel(id, label);
-  }
-
-  async deleteLabel(id: string) {
-    return await this.mainDo.deleteLabel(id);
-  }
-
-  async bulkDelete(threadIds: string[]) {
-    return await this.mainDo.bulkDelete(threadIds);
-  }
-
-  async bulkArchive(threadIds: string[]) {
-    return await this.mainDo.bulkArchive(threadIds);
-  }
-
-  async rawListThreads(params: {
-    folder: string;
-    query?: string;
-    maxResults?: number;
-    labelIds?: string[];
-    pageToken?: string;
-  }) {
-    return await this.mainDo.rawListThreads(params);
-  }
-
-  async listThreads(params: {
-    folder: string;
-    query?: string;
-    maxResults?: number;
-    labelIds?: string[];
-    pageToken?: string;
-  }) {
-    return await this.mainDo.list(params);
-  }
-
-  async getThread(threadId: string) {
-    return await this.mainDo.get(threadId);
-  }
-
-  async markThreadsRead(threadIds: string[]) {
-    const result = await this.mainDo.markThreadsRead(threadIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
-    return result;
-  }
-
-  async syncThread(threadId: string) {
-    return await this.mainDo.syncThread(threadId);
-  }
-
-  async markThreadsUnread(threadIds: string[]) {
-    const result = await this.mainDo.markThreadsUnread(threadIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
-    return result;
-  }
-
-  async modifyLabels(threadIds: string[], addLabelIds: string[], removeLabelIds: string[]) {
-    const result = await this.mainDo.modifyLabels(threadIds, addLabelIds, removeLabelIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
-    return result;
-  }
-
-  async createDraft(draftData: CreateDraftData) {
-    return await this.mainDo.createDraft(draftData);
-  }
-
-  async getDraft(id: string) {
-    return await this.mainDo.getDraft(id);
-  }
-
-  async listDrafts(params: { q?: string; maxResults?: number; pageToken?: string }) {
-    return await this.mainDo.listDrafts(params);
-  }
-
-  async count() {
-    return await this.mainDo.count();
-  }
-
-  //   async list(params: {
-  //     folder: string;
-  //     query?: string;
-  //     maxResults?: number;
-  //     labelIds?: string[];
-  //     pageToken?: string;
-  //   }) {
-  //     return await this.mainDo.list(params);
-  //   }
-
-  async markAsRead(threadIds: string[]) {
-    const result = await this.mainDo.markAsRead(threadIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
-    return result;
-  }
-
-  async markAsUnread(threadIds: string[]) {
-    const result = await this.mainDo.markAsUnread(threadIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread(id)));
-    return result;
-  }
-
-  async normalizeIds(ids: string[]) {
-    return await this.mainDo.normalizeIds(ids);
-  }
-
-  //   async get(id: string) {
-  //     return await this.mainDo.get(id);
-  //   }
-
-  async sendDraft(id: string, data: IOutgoingMessage) {
-    return await this.mainDo.sendDraft(id, data);
-  }
-
-  async create(data: IOutgoingMessage) {
-    return await this.mainDo.create(data);
-  }
-
-  async delete(id: string) {
-    return await this.mainDo.delete(id);
-  }
-
-  async deleteAllSpam() {
-    return await this.mainDo.deleteAllSpam();
-  }
-
-  async getEmailAliases() {
-    return await this.mainDo.getEmailAliases();
-  }
-
-  async setupAuth(connectionId: string) {
-    return await this.mainDo.setupAuth(connectionId);
-  }
-
-  async broadcast(message: string) {
-    return this.mainDo.broadcast(message);
-  }
-
-  //   async getThreadsFromDB(params: {
-  //     labelIds?: string[];
-  //     folder?: string;
-  //     q?: string;
-  //     max?: number;
-  //     cursor?: string;
-  //   }) {
-  //     return await this.mainDo.getThreadsFromDB(params);
-  //   }
-
-  //   async getThreadFromDB(id: string) {
-  //     return await this.mainDo.getThreadFromDB(id);
-  //   }
-
-  async listHistory<T>(historyId: string) {
-    return await this.mainDo.listHistory<T>(historyId);
-  }
-
-  async syncThreads(folder: string) {
-    return await this.mainDo.syncThreads(folder);
-  }
-
-  async inboxRag(query: string) {
-    return await this.mainDo.inboxRag(query);
-  }
-
-  async searchThreads(params: {
-    query: string;
-    folder?: string;
-    maxResults?: number;
-    labelIds?: string[];
-    pageToken?: string;
-  }) {
-    return await this.mainDo.searchThreads(params);
-  }
-}
-
 const shouldDropTables = env.DROP_AGENT_TABLES === 'true';
-const maxCount = parseInt(env.THREAD_SYNC_MAX_COUNT || '40', 10);
+const maxCount = parseInt(env.THREAD_SYNC_MAX_COUNT || '10', 10);
 const shouldLoop = env.THREAD_SYNC_LOOP !== 'false';
 
 export class ZeroAgent extends AIChatAgent<typeof env> {
@@ -878,13 +608,21 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     return await this.driver.getEmailAliases();
   }
 
+  async getMessageAttachments(messageId: string) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
+    return await this.driver.getMessageAttachments(messageId);
+  }
+
   async getThreadCount() {
     const count = this.sql`SELECT COUNT(*) FROM threads`;
     return count[0]['COUNT(*)'] as number;
   }
 
-  async syncThread(threadId: string) {
-    if (!this.driver && this.name !== 'general') {
+  async syncThread({ threadId }: { threadId: string }) {
+    if (this.name === 'general') return;
+    if (!this.driver) {
       await this.setupAuth(this.name);
     }
 
@@ -975,6 +713,33 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     return Effect.runPromise(withRetry(Effect.tryPromise(() => this.driver!.get(threadId))));
   }
 
+  async *streamThreads(folder: string) {
+    let pageToken: string | null = null;
+    let hasMore = true;
+    let _pageCount = 0;
+
+    while (hasMore) {
+      _pageCount++;
+
+      // Rate limiting delay
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      const result = await this.listWithRetry({
+        folder,
+        maxResults: maxCount, // Smaller batches for streaming
+        pageToken: pageToken || undefined,
+      });
+
+      // Stream each thread individually
+      for (const thread of result.threads) {
+        yield thread;
+      }
+
+      pageToken = result.nextPageToken;
+      hasMore = pageToken !== null && shouldLoop;
+    }
+  }
+
   async syncThreads(folder: string) {
     if (!this.driver) {
       console.error('No driver available for syncThreads');
@@ -996,42 +761,22 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
 
     try {
       let totalSynced = 0;
-      let pageToken: string | null = null;
-      let hasMore = true;
-      let _pageCount = 0;
 
-      while (hasMore) {
-        _pageCount++;
-
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        const result = await this.listWithRetry({
-          folder,
-          maxResults: maxCount,
-          pageToken: pageToken || undefined,
-        });
-
-        // Need delay to avoid rate limiting
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        for (const thread of result.threads) {
-          try {
-            await this.syncThread(thread.id);
-            // Need delay to avoid rate limiting
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-          } catch (error) {
-            console.error(`Failed to sync thread ${thread.id}:`, error);
-          }
+      // Process threads one by one without buffering
+      for await (const thread of this.streamThreads(folder)) {
+        try {
+          const id = await this.queue('syncThread', thread.id);
+          console.log(`Synced thread ${thread.id} to queue ${id}`);
+          totalSynced++;
+        } catch (error) {
+          console.error(`Failed to sync thread ${thread.id}:`, error);
         }
 
-        this.broadcastChatMessage({
-          type: OutgoingMessageType.Mail_List,
-          folder,
-        });
-
-        totalSynced += result.threads.length;
-        pageToken = result.nextPageToken;
-        hasMore = pageToken !== null && shouldLoop;
+        // // Broadcast progress after each thread
+        // this.broadcastChatMessage({
+        //   type: OutgoingMessageType.Mail_List,
+        //   folder,
+        // });
       }
 
       return { synced: totalSynced };
@@ -1303,7 +1048,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
         if (lastAttempt) {
           throw new Error('Thread not found in database, Sync Failed once');
         }
-        await this.syncThread(id);
+        await this.syncThread({ threadId: id });
         return this.getThreadFromDB(id, true);
       }
       const row = result[0] as any;
@@ -1326,452 +1071,5 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
       console.error('Failed to get thread from database:', error);
       throw error;
     }
-  }
-}
-
-export class ZeroMCP extends McpAgent<typeof env, {}, { userId: string }> {
-  server = new McpServer({
-    name: 'zero-mcp',
-    version: '1.0.0',
-    description: 'Zero MCP',
-  });
-
-  activeConnectionId: string | undefined;
-
-  constructor(ctx: DurableObjectState, env: Env) {
-    super(ctx, env);
-  }
-
-  async init(): Promise<void> {
-    const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
-    const _connection = await db.query.connection.findFirst({
-      where: eq(connection.userId, this.props.userId),
-    });
-    if (!_connection) {
-      throw new Error('Unauthorized');
-    }
-    this.activeConnectionId = _connection.id;
-    this.server.registerTool(
-      'getConnections',
-      {
-        description:
-          'Use this tool to get all connections for the user. This helps you know what accounts(connections) the user has available.',
-        inputSchema: {},
-      },
-      async () => {
-        const connections = await db.query.connection.findMany({
-          where: eq(connection.userId, this.props.userId),
-        });
-        return {
-          content: connections.map((c) => ({
-            type: 'text',
-            text: `Email: ${c.email} | Provider: ${c.providerId}`,
-          })),
-        };
-      },
-    );
-
-    this.server.registerTool(
-      'getActiveConnection',
-      {
-        description: 'Get the currently active email connection',
-      },
-      async () => {
-        if (!this.activeConnectionId) {
-          throw new Error('No active connection');
-        }
-        const _connection = await db.query.connection.findFirst({
-          where: eq(connection.id, this.activeConnectionId),
-        });
-        if (!_connection) {
-          throw new Error('Connection not found');
-        }
-        return {
-          content: [
-            {
-              type: 'text' as const,
-              text: `Email: ${_connection.email} | Provider: ${_connection.providerId}`,
-            },
-          ],
-        };
-      },
-    );
-
-    this.server.registerTool(
-      'setActiveConnection',
-      {
-        description: 'Set the active email connection by email address',
-        inputSchema: {
-          email: z.string(),
-        },
-      },
-      async (s) => {
-        const _connection = await db.query.connection.findFirst({
-          where: and(eq(connection.userId, this.props.userId), eq(connection.email, s.email)),
-        });
-        if (!_connection) {
-          throw new Error('Connection not found');
-        }
-        this.activeConnectionId = _connection.id;
-        return {
-          content: [
-            {
-              type: 'text' as const,
-              text: `Active connection set to ${_connection.email}`,
-            },
-          ],
-        };
-      },
-    );
-
-    this.server.registerTool(
-      'buildGmailSearchQuery',
-      {
-        description: 'Build Gmail search query using AI assistance',
-        inputSchema: {
-          query: z.string(),
-        },
-      },
-      async (s) => {
-        const result = await generateText({
-          model: anthropic(env.OPENAI_MODEL || 'claude-3-5-haiku-latest'),
-          system: GmailSearchAssistantSystemPrompt(),
-          prompt: s.query,
-        });
-        return {
-          content: [
-            {
-              type: 'text',
-              text: result.text,
-            },
-          ],
-        };
-      },
-    );
-
-    const agent = await getZeroAgent(_connection.id);
-
-    this.server.registerTool(
-      'listThreads',
-      {
-        description: 'List email threads with optional filters and pagination',
-        inputSchema: {
-          folder: z.string().default(FOLDERS.INBOX),
-          query: z.string().optional(),
-          maxResults: z.number().optional().default(5),
-          labelIds: z.array(z.string()).optional(),
-          pageToken: z.string().optional(),
-        },
-      },
-      async (s) => {
-        const result = await agent.listThreads({
-          folder: s.folder,
-          query: s.query,
-          maxResults: s.maxResults,
-          labelIds: s.labelIds,
-          pageToken: s.pageToken,
-        });
-        const content = await Promise.all(
-          result.threads.map(async (thread: any) => {
-            const loadedThread = await agent.getThread(thread.id);
-            return [
-              {
-                type: 'text' as const,
-                text: `Subject: ${loadedThread.latest?.subject} | ID: ${thread.id} | Latest Message Received: ${loadedThread.latest?.receivedOn}`,
-              },
-              {
-                type: 'text' as const,
-                text: `Latest Message Sender: ${loadedThread.latest?.sender}`,
-              },
-            ];
-          }),
-        );
-        return {
-          content: content.length
-            ? content.flat()
-            : [
-                {
-                  type: 'text' as const,
-                  text: 'No threads found',
-                },
-              ],
-        };
-      },
-    );
-
-    this.server.registerTool(
-      'getThread',
-      {
-        description: 'Get detailed information about a specific email thread',
-        inputSchema: {
-          threadId: z.string(),
-        },
-      },
-      async (s) => {
-        const thread = await agent.getThread(s.threadId);
-        const initialResponse = [
-          {
-            type: 'text' as const,
-            text: `Subject: ${thread.latest?.subject}`,
-          },
-          {
-            type: 'text' as const,
-            text: `Latest Message Received: ${thread.latest?.receivedOn}`,
-          },
-          {
-            type: 'text' as const,
-            text: `Latest Message Sender: ${thread.latest?.sender.name} <${thread.latest?.sender.email}>`,
-          },
-          {
-            type: 'text' as const,
-            text: `Latest Message Raw Content: ${thread.latest?.decodedBody}`,
-          },
-          {
-            type: 'text' as const,
-            text: `Thread ID: ${s.threadId}`,
-          },
-        ];
-        return {
-          content: initialResponse,
-        };
-      },
-    );
-
-    this.server.registerTool(
-      'markThreadsRead',
-      {
-        description: 'Mark email threads as read',
-        inputSchema: {
-          threadIds: z.array(z.string()),
-        },
-      },
-      async (s) => {
-        await agent.modifyLabels(s.threadIds, [], ['UNREAD']);
-        return {
-          content: [
-            {
-              type: 'text',
-              text: 'Threads marked as read',
-            },
-          ],
-        };
-      },
-    );
-
-    this.server.registerTool(
-      'markThreadsUnread',
-      {
-        description: 'Mark email threads as unread',
-        inputSchema: {
-          threadIds: z.array(z.string()),
-        },
-      },
-      async (s) => {
-        await agent.modifyLabels(s.threadIds, ['UNREAD'], []);
-        return {
-          content: [
-            {
-              type: 'text',
-              text: 'Threads marked as unread',
-            },
-          ],
-        };
-      },
-    );
-
-    this.server.registerTool(
-      'modifyLabels',
-      {
-        description: 'Add or remove labels from email threads',
-        inputSchema: {
-          threadIds: z.array(z.string()),
-          addLabelIds: z.array(z.string()),
-          removeLabelIds: z.array(z.string()),
-        },
-      },
-      async (s) => {
-        await agent.modifyLabels(s.threadIds, s.addLabelIds, s.removeLabelIds);
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Successfully modified ${s.threadIds.length} thread(s)`,
-            },
-          ],
-        };
-      },
-    );
-
-    this.server.registerTool(
-      'getCurrentDate',
-      {
-        description: 'Get the current date and time',
-        inputSchema: z.object({}).shape,
-      },
-      async () => {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: getCurrentDateContext(),
-            },
-          ],
-        };
-      },
-    );
-
-    this.server.registerTool(
-      'getUserLabels',
-      { description: 'Get all available labels for the user' },
-      async () => {
-        const labels = await agent.getUserLabels();
-        return {
-          content: [
-            {
-              type: 'text',
-              text: labels
-                .map((label) => `Name: ${label.name} ID: ${label.id} Color: ${label.color}`)
-                .join('\n'),
-            },
-          ],
-        };
-      },
-    );
-
-    this.server.registerTool(
-      'getLabel',
-      {
-        description: 'Get details about a specific label',
-        inputSchema: {
-          id: z.string(),
-        },
-      },
-      async (s) => {
-        const label = await agent.getLabel(s.id);
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Name: ${label.name}`,
-            },
-            {
-              type: 'text',
-              text: `ID: ${label.id}`,
-            },
-          ],
-        };
-      },
-    );
-
-    this.server.registerTool(
-      'createLabel',
-      {
-        description: 'Create a new email label',
-        inputSchema: {
-          name: z.string(),
-          backgroundColor: z.string().optional(),
-          textColor: z.string().optional(),
-        },
-      },
-      async (s) => {
-        try {
-          await agent.createLabel({
-            name: s.name,
-            color:
-              s.backgroundColor && s.textColor
-                ? {
-                    backgroundColor: s.backgroundColor,
-                    textColor: s.textColor,
-                  }
-                : undefined,
-          });
-          return {
-            content: [
-              {
-                type: 'text',
-                text: 'Label has been created',
-              },
-            ],
-          };
-        } catch (e) {
-          console.error(e);
-          return {
-            content: [
-              {
-                type: 'text',
-                text: 'Failed to create label',
-              },
-            ],
-          };
-        }
-      },
-    );
-
-    // this.server.registerTool(
-    //   'bulkDelete',
-    //   {
-    //     description: 'Move multiple threads to trash',
-    //     inputSchema: {
-    //       threadIds: z.array(z.string()),
-    //     },
-    //   },
-    //   async (s) => {
-    //     try {
-    //       await agent.modifyLabels(s.threadIds, ['TRASH'], ['INBOX']);
-    //       return {
-    //         content: [
-    //           {
-    //             type: 'text',
-    //             text: 'Threads moved to trash',
-    //           },
-    //         ],
-    //       };
-    //     } catch (e) {
-    //       console.error(e);
-    //       return {
-    //         content: [
-    //           {
-    //             type: 'text',
-    //             text: 'Failed to move threads to trash',
-    //           },
-    //         ],
-    //       };
-    //     }
-    //   },
-    // );
-
-    // this.server.registerTool(
-    //   'bulkArchive',
-    //   {
-    //     description: 'Archive multiple email threads',
-    //     inputSchema: {
-    //       threadIds: z.array(z.string()),
-    //     },
-    //   },
-    //   async (s) => {
-    //     try {
-    //       await agent.modifyLabels(s.threadIds, [], ['INBOX']);
-    //       return {
-    //         content: [
-    //           {
-    //             type: 'text',
-    //             text: 'Threads archived',
-    //           },
-    //         ],
-    //       };
-    //     } catch (e) {
-    //       console.error(e);
-    //       return {
-    //         content: [
-    //           {
-    //             type: 'text',
-    //             text: 'Failed to archive threads',
-    //           },
-    //         ],
-    //       };
-    //     }
-    //   },
-    // );
-    this.ctx.waitUntil(conn.end());
   }
 }

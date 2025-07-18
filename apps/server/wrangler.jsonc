@@ -39,10 +39,6 @@
             "name": "ZERO_DB",
             "class_name": "ZeroDB",
           },
-          {
-            "class_name": "DurableMailbox",
-            "name": "DURABLE_MAILBOX",
-          },
         ],
       },
       "queues": {
@@ -77,6 +73,10 @@
         {
           "tag": "v3",
           "new_classes": ["ZeroDB"],
+        },
+        {
+          "tag": "v4",
+          "deleted_classes": ["DurableMailbox"],
         },
       ],
 
@@ -167,10 +167,6 @@
             "name": "ZERO_DB",
             "class_name": "ZeroDB",
           },
-          {
-            "class_name": "DurableMailbox",
-            "name": "DURABLE_MAILBOX",
-          },
         ],
       },
       "r2_buckets": [
@@ -215,6 +211,10 @@
         {
           "tag": "v4",
           "new_sqlite_classes": ["ZeroAgent"],
+        },
+        {
+          "tag": "v5",
+          "deleted_classes": ["DurableMailbox"],
         },
       ],
       "observability": {
@@ -312,10 +312,6 @@
             "name": "ZERO_DB",
             "class_name": "ZeroDB",
           },
-          {
-            "class_name": "DurableMailbox",
-            "name": "DURABLE_MAILBOX",
-          },
         ],
       },
       "queues": {
@@ -355,6 +351,10 @@
           "tag": "v4",
           "new_sqlite_classes": ["ZeroAgent"],
         },
+        {
+          "tag": "v5",
+          "deleted_classes": ["DurableMailbox"],
+        },
       ],
       "vars": {
         "NODE_ENV": "production",
@@ -363,7 +363,7 @@
         "VITE_PUBLIC_APP_URL": "https://0.email",
         "DISABLE_CALLS": "true",
         "DROP_AGENT_TABLES": "false",
-        "THREAD_SYNC_MAX_COUNT": "40",
+        "THREAD_SYNC_MAX_COUNT": "10",
         "THREAD_SYNC_LOOP": "true",
         "DISABLE_WORKFLOWS": "true",
       },

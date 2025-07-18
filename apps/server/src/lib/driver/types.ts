@@ -51,6 +51,18 @@ export type ManagerConfig = {
 
 export interface MailManager {
   config: ManagerConfig;
+  getMessageAttachments(
+    id: string,
+  ): Promise<
+    {
+      filename: string;
+      mimeType: string;
+      size: number;
+      attachmentId: string;
+      headers: { name: string; value: string }[];
+      body: string;
+    }[]
+  >;
   get(id: string): Promise<IGetThreadResponse>;
   create(data: IOutgoingMessage): Promise<{ id?: string | null }>;
   sendDraft(id: string, data: IOutgoingMessage): Promise<void>;
