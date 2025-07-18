@@ -74,6 +74,10 @@
           "tag": "v3",
           "new_classes": ["ZeroDB"],
         },
+        {
+          "tag": "v4",
+          "deleted_classes": ["DurableMailbox"],
+        },
       ],
 
       "observability": {
@@ -207,6 +211,10 @@
         {
           "tag": "v4",
           "new_sqlite_classes": ["ZeroAgent"],
+        },
+        {
+          "tag": "v5",
+          "deleted_classes": ["DurableMailbox"],
         },
       ],
       "observability": {
@@ -342,6 +350,10 @@
         {
           "tag": "v4",
           "new_sqlite_classes": ["ZeroAgent"],
+        },
+        {
+          "tag": "v5",
+          "deleted_classes": ["DurableMailbox"],
         },
       ],
       "vars": {
