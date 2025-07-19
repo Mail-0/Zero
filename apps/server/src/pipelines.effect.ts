@@ -17,12 +17,17 @@ import {
   SummarizeThread,
   ThreadLabels,
 } from './lib/brain.fallback.prompts';
+import {
+  generateAutomaticDraft,
+  shouldGenerateDraft,
+  analyzeEmailIntent,
+} from './thread-workflow-utils';
 import { defaultLabels, EPrompts, EProviders, type ParsedMessage, type Sender } from './types';
 import { getZeroAgent } from './lib/server-utils';
 import { type gmail_v1 } from '@googleapis/gmail';
+import { connection, summary } from './db/schema';
 import { getPromptName } from './pipelines';
 import { env } from 'cloudflare:workers';
-import { connection } from './db/schema';
 import { Effect, Console } from 'effect';
 import * as cheerio from 'cheerio';
 import { eq } from 'drizzle-orm';
@@ -30,7 +35,7 @@ import { createDb } from './db';
 
 const showLogs = true;
 
-const log = (message: string, ...args: any[]) => {
+export const log = (message: string, ...args: any[]) => {
   if (showLogs) {
     console.log(message, ...args);
     return message;
@@ -415,7 +420,6 @@ export const runThreadWorkflow = (
             .select()
             .from(connection)
             .where(eq(connection.id, connectionId.toString()));
-          await conn.end();
           if (!foundConnection) {
             throw new Error(`Connection not found ${connectionId}`);
           }
@@ -447,6 +451,90 @@ export const runThreadWorkflow = (
         yield* Console.log('[THREAD_WORKFLOW] Thread has no messages, skipping processing');
         return 'Thread has no messages';
       }
+
+      const autoDraftId = yield* Effect.tryPromise({
+        try: async () => {
+          if (!shouldGenerateDraft(thread, foundConnection)) {
+            console.log('[THREAD_WORKFLOW] Skipping draft generation for thread:', threadId);
+            return null;
+          }
+
+          const latestMessage = thread.messages[thread.messages.length - 1];
+          const emailIntent = analyzeEmailIntent(latestMessage);
+
+          console.log('[THREAD_WORKFLOW] Analyzed email intent:', {
+            threadId,
+            isQuestion: emailIntent.isQuestion,
+            isRequest: emailIntent.isRequest,
+            isMeeting: emailIntent.isMeeting,
+            isUrgent: emailIntent.isUrgent,
+          });
+
+          if (
+            !emailIntent.isQuestion &&
+            !emailIntent.isRequest &&
+            !emailIntent.isMeeting &&
+            !emailIntent.isUrgent
+          ) {
+            console.log(
+              '[THREAD_WORKFLOW] Email does not require a response, skipping draft generation',
+            );
+            return null;
+          }
+
+          console.log('[THREAD_WORKFLOW] Generating automatic draft for thread:', threadId);
+          const draftContent = await generateAutomaticDraft(
+            connectionId.toString(),
+            thread,
+            foundConnection,
+          );
+
+          if (draftContent) {
+            const latestMessage = thread.messages[thread.messages.length - 1];
+
+            const replyTo = latestMessage.sender?.email || '';
+            const cc =
+              latestMessage.cc
+                ?.map((r) => r.email)
+                .filter((email) => email && email !== foundConnection.email) || [];
+
+            const originalSubject = latestMessage.subject || '';
+            const replySubject = originalSubject.startsWith('Re: ')
+              ? originalSubject
+              : `Re: ${originalSubject}`;
+
+            const draftData = {
+              to: replyTo,
+              cc: cc.join(', '),
+              bcc: '',
+              subject: replySubject,
+              message: draftContent,
+              attachments: [],
+              id: null,
+              threadId: threadId.toString(),
+              fromEmail: foundConnection.email,
+            };
+
+            try {
+              const createdDraft = await agent.createDraft(draftData);
+              console.log('[THREAD_WORKFLOW] Created automatic draft:', {
+                threadId,
+                draftId: createdDraft?.id,
+              });
+              return createdDraft?.id || null;
+            } catch (error) {
+              console.log('[THREAD_WORKFLOW] Failed to create automatic draft:', {
+                threadId,
+                error: error instanceof Error ? error.message : String(error),
+              });
+              return null;
+            }
+          }
+
+          return null;
+        },
+        catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
+      });
 
       yield* Console.log('[THREAD_WORKFLOW] Processing thread messages and vectorization');
 
@@ -801,6 +889,14 @@ export const runThreadWorkflow = (
         try: () => {
           console.log('[THREAD_WORKFLOW] Clearing processing flag for thread:', threadId);
           return env.gmail_processing_threads.delete(threadId.toString());
+        },
+        catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
+      }).pipe(Effect.orElse(() => Effect.succeed(null)));
+
+      yield* Effect.tryPromise({
+        try: async () => {
+          await conn.end();
+          console.log('[THREAD_WORKFLOW] Closed database connection');
         },
         catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
       }).pipe(Effect.orElse(() => Effect.succeed(null)));
