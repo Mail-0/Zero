@@ -220,4 +220,10 @@ export class AgentRpcDO extends RpcTarget {
   }) {
     return await this.mainDo.searchThreads(params);
   }
+
+  async queue(callbackName: string, payload: unknown): Promise<unknown> {
+    type QueueFunc = (name: string, payload: unknown) => Promise<unknown>;
+    const queueFn: QueueFunc = (this.mainDo as unknown as { queue: QueueFunc }).queue;
+    return queueFn(callbackName, payload);
+  }
 }

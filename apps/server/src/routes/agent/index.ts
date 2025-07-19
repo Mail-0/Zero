@@ -27,7 +27,7 @@ import {
   type OutgoingMessage,
 } from './types';
 import { DurableObjectOAuthClientProvider } from 'agents/mcp/do-oauth-client-provider';
-import { EPrompts, type IOutgoingMessage, type ParsedMessage } from '../../types';
+import { EPrompts, type IOutgoingMessage, type ParsedMessage, type ISnoozeBatch } from '../../types';
 import type { MailManager, IGetThreadResponse } from '../../lib/driver/types';
 import { connectionToDriver } from '../../lib/server-utils';
 import type { CreateDraftData } from '../../lib/schemas';
@@ -1069,6 +1069,24 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
       } satisfies IGetThreadResponse;
     } catch (error) {
       console.error('Failed to get thread from database:', error);
+      throw error;
+    }
+  }
+
+  async unsnoozeThreadsHandler(payload: ISnoozeBatch) {
+    const { connectionId, threadIds, keyNames } = payload;
+    try {
+      await this.setupAuth(connectionId);
+
+      if (threadIds.length) {
+        await this.modifyLabels(threadIds, ['INBOX'], ['SNOOZED']);
+      }
+
+      if (keyNames.length) {
+        await Promise.all(keyNames.map((k: string) => env.snoozed_emails.delete(k)));
+      }
+    } catch (error) {
+      console.error('[AGENT][unsnoozeThreadsHandler] Failed', { connectionId, threadIds, error });
       throw error;
     }
   }
