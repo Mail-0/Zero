@@ -8,13 +8,10 @@ import {
   FileText,
   Filter,
   Hash,
-  Info,
   Loader2,
   Mail,
-  MailIcon,
   Paperclip,
   Search,
-  SettingsIcon,
   Star,
   Tag,
   Trash2,
@@ -129,6 +126,7 @@ export function useCommandPalette() {
 const RECENT_SEARCHES_KEY = 'mail-recent-searches';
 const SAVED_SEARCHES_KEY = 'mail-saved-searches';
 const ACTIVE_FILTERS_KEY = 'mail-active-filters';
+const RECENT_COMMANDS_KEY = 'mail-recent-commands';
 
 const getRecentSearches = (): string[] => {
   try {
@@ -178,6 +176,25 @@ const deleteSavedSearch = (id: string) => {
   }
 };
 
+const getRecentCommands = (): string[] => {
+  try {
+    const commands = localStorage.getItem(RECENT_COMMANDS_KEY);
+    return commands ? JSON.parse(commands) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveRecentCommand = (commandTitle: string) => {
+  try {
+    const commands = getRecentCommands();
+    const updated = [commandTitle, ...commands.filter((c) => c !== commandTitle)].slice(0, 3);
+    localStorage.setItem(RECENT_COMMANDS_KEY, JSON.stringify(updated));
+  } catch (error) {
+    console.error('Failed to save recent command:', error);
+  }
+};
+
 export function CommandPalette({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useQueryState('isCommandPaletteOpen');
   const [, setIsComposeOpen] = useQueryState('isComposeOpen');
@@ -201,6 +218,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
   const [selectedTab, setSelectedTab] = useState('all');
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const [recentCommands, setRecentCommands] = useState<string[]>([]);
 
   const { userLabels = [] } = useLabels();
   const trpc = useTRPC();
@@ -211,6 +229,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setRecentSearches(getRecentSearches());
     setSavedSearches(getSavedSearches());
+    setRecentCommands(getRecentCommands());
 
     try {
       const saved = localStorage.getItem(ACTIVE_FILTERS_KEY);
@@ -290,8 +309,12 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     return () => document.removeEventListener('keydown', down, { capture: true });
   }, [open, currentView]);
 
-  const runCommand = useCallback((command: () => unknown) => {
+  const runCommand = useCallback((command: () => unknown, commandTitle?: string) => {
     setOpen(null);
+    if (commandTitle) {
+      saveRecentCommand(commandTitle);
+      setRecentCommands(getRecentCommands());
+    }
     command();
   }, []);
 
@@ -856,6 +879,43 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             </>
           )}
         </CommandEmpty>
+        {selectedTab === 'all' && recentCommands.length > 0 && (
+          <CommandGroup heading="Recent">
+            {recentCommands.map((title) => {
+              const item = allCommands.flatMap((g) => g.items).find((i) => i.title === title);
+              if (!item) return null;
+              return (
+                <CommandItem
+                  key={item.title}
+                  onSelect={() => {
+                    runCommand(() => {
+                      if (item.onClick) {
+                        item.onClick();
+                      } else if (item.url) {
+                        navigate(item.url);
+                      }
+                    }, item.title);
+                  }}
+                >
+                  {item.icon && (
+                    <item.icon
+                      size={16}
+                      strokeWidth={2}
+                      className="h-4 w-4 opacity-60"
+                      aria-hidden="true"
+                    />
+                  )}
+                  <div className="ml-2 flex flex-1 flex-col">
+                    <span>{item.title}</span>
+                    {item.description && (
+                      <span className="text-muted-foreground text-xs">{item.description}</span>
+                    )}
+                  </div>
+                </CommandItem>
+              );
+            })}
+          </CommandGroup>
+        )}
         {allCommands
           .filter((group) => {
             if (selectedTab === 'all') return true;
@@ -890,7 +950,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                             } else if (item.url) {
                               navigate(item.url);
                             }
-                          });
+                          }, item.title);
                         }
                       }}
                     >
@@ -1727,14 +1787,14 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
 
   const renderHelpView = () => (
     <>
-      <div className="flex items-center border-b px-3">
+      <div className="flex items-center border-b p-3">
         <button
           className="text-muted-foreground hover:text-foreground mr-2"
           onClick={() => setCurrentView('main')}
         >
           ←
         </button>
-        <h3 className="font-medium">Filter Syntax Help</h3>
+        <h3 className="font-semibold">Filter Syntax Help</h3>
       </div>
 
       <ScrollArea className="h-[400px]">

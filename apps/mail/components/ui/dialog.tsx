@@ -1,5 +1,6 @@
 import { Dialog as DialogPrimitive } from 'radix-ui';
 
+import { AnimatedSizeContainer } from '../resize-container';
 import { cn } from '@/lib/utils';
 import * as React from 'react';
 
@@ -58,7 +59,15 @@ const DialogContent = React.forwardRef<
       )}
       {...props}
     >
-      {children}
+      <AnimatedSizeContainer
+        height
+        transition={{
+          duration: 0.26,
+          ease: [0.165, 0.84, 0.44, 1],
+        }}
+      >
+        {children}
+      </AnimatedSizeContainer>
     </DialogPrimitive.Content>
   </DialogPortal>
 ));

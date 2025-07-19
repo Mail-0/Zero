@@ -5,9 +5,9 @@ import {
   DialogTitle,
   type DialogProps,
 } from '@/components/ui/dialog';
-import { isMac } from '@/lib/hotkeys/use-hotkey-utils';
 import { Command as CommandPrimitive } from 'cmdk';
 import { Search } from '../icons/icons';
+import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import * as React from 'react';
 
@@ -68,13 +68,84 @@ CommandInput.displayName = CommandPrimitive.Input.displayName;
 const CommandList = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.List>
->(({ className, ...props }, ref) => (
-  <CommandPrimitive.List
-    ref={ref}
-    className={cn('max-h-80 overflow-y-auto overflow-x-hidden', className)}
-    {...props}
-  />
-));
+>(({ className, ...props }, ref) => {
+  const [selectedItemTop, setSelectedItemTop] = React.useState<number | null>(null);
+  const [selectedItemHeight, setSelectedItemHeight] = React.useState<number>(80); // default height
+  const [showGradient, setShowGradient] = React.useState(false);
+  const listRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const updateSelectedItemPosition = () => {
+      if (!listRef.current) return;
+
+      const selectedItem = listRef.current.querySelector('[data-selected="true"]');
+      if (selectedItem) {
+        const listRect = listRef.current.getBoundingClientRect();
+        const itemRect = selectedItem.getBoundingClientRect();
+
+        const relativeTop = itemRect.top - listRect.top + listRef.current.scrollTop;
+
+        setSelectedItemTop(relativeTop);
+        setSelectedItemHeight(itemRect.height);
+        setShowGradient(true);
+      } else {
+        setShowGradient(false);
+        setSelectedItemTop(null);
+      }
+    };
+
+    updateSelectedItemPosition();
+
+    const observer = new MutationObserver(updateSelectedItemPosition);
+    if (listRef.current) {
+      observer.observe(listRef.current, {
+        attributes: true,
+        subtree: true,
+        attributeFilter: ['data-selected'],
+        childList: true,
+      });
+    }
+
+    const handleScroll = () => updateSelectedItemPosition();
+    if (listRef.current) {
+      listRef.current.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      observer.disconnect();
+      if (listRef.current) {
+        listRef.current.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, []);
+
+  return (
+    <div className="group relative" ref={listRef}>
+      {showGradient && selectedItemTop !== null && (
+        <motion.span
+          className="absolute left-0 w-px bg-gradient-to-b from-transparent via-neutral-500 to-transparent"
+          animate={{
+            top: selectedItemTop,
+            height: selectedItemHeight,
+            opacity: 1,
+          }}
+          initial={{ opacity: 0 }}
+          transition={{
+            type: 'spring',
+            stiffness: 400,
+            damping: 30,
+            mass: 0.5,
+          }}
+        />
+      )}
+      <CommandPrimitive.List
+        ref={ref}
+        className={cn('max-h-80 overflow-y-auto overflow-x-hidden', className)}
+        {...props}
+      />
+    </div>
+  );
+});
 
 CommandList.displayName = CommandPrimitive.List.displayName;
 

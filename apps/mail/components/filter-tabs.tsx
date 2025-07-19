@@ -69,6 +69,14 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
   const [focusedIndex, setFocusedIndex] = useState(0);
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
+  useEffect(() => {
+    const current = onFilterChange ? activeFilter : internalActiveFilter;
+    const idx = options.findIndex((option) => option.id === current);
+    if (idx !== -1 && idx !== focusedIndex) {
+      setFocusedIndex(idx);
+    }
+  }, [activeFilter, internalActiveFilter, options, onFilterChange]);
+
   const handleFilterClick = useCallback(
     (filterId: string) => {
       if (filterId === 'help' && onHelpClick) {
@@ -84,75 +92,49 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
     [onFilterChange, onHelpClick],
   );
 
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === 'Tab') {
-        e.preventDefault();
-        const direction = e.shiftKey ? -1 : 1;
-        const nextIndex = (focusedIndex + direction + options.length) % options.length;
-        setFocusedIndex(nextIndex);
-        buttonRefs.current[nextIndex]?.focus();
-        handleFilterClick(options[nextIndex].id);
-      }
-    },
-    [focusedIndex, options, handleFilterClick],
-  );
-
-  useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyDown]);
-
   const currentActiveFilter = onFilterChange ? activeFilter : internalActiveFilter;
 
   return (
-    <div className={cn('flex items-center justify-between', className)}>
-      <div className="text-muted-foreground flex gap-2 px-3 py-2 text-xs">
-        {options.map((option, index) => {
-          const isActive = currentActiveFilter === option.id;
-          const isFocused = focusedIndex === index;
-          const IconComponent = option.icon;
+    <div className={cn('text-muted-foreground flex gap-2 px-3 py-2 text-xs', className)}>
+      {options.map((option, index) => {
+        const isActive = currentActiveFilter === option.id;
+        const isFocused = focusedIndex === index;
+        const IconComponent = option.icon;
 
-          const customStyles =
-            isActive && option.activeColors
-              ? { backgroundColor: option.activeColors.bg, color: option.activeColors.text }
-              : {};
+        const customStyles =
+          isActive && option.activeColors
+            ? { backgroundColor: option.activeColors.bg, color: option.activeColors.text }
+            : {};
 
-          return (
-            <button
-              key={option.id}
-              ref={(el) => {
-                buttonRefs.current[index] = el;
-              }}
-              className={cn(
-                'rounded-md px-2 py-1 outline-none transition-colors duration-200 focus:outline-none',
-                isFocused || isActive ? 'bg-[#333]' : 'bg-[#222] hover:bg-[#333]',
-                isActive ? '' : 'text-muted-foreground',
-              )}
-              style={customStyles}
-              onClick={() => {
-                handleFilterClick(option.id);
-                setFocusedIndex(index);
-              }}
-              onFocus={() => setFocusedIndex(index)}
-            >
-              {IconComponent ? (
-                <span className="flex items-center gap-1">
-                  <IconComponent className="size-3" />
-                  <span>{option.label}</span>
-                </span>
-              ) : (
-                option.label
-              )}
-            </button>
-          );
-        })}
-      </div>
-      <kbd className="flex items-center gap-1 px-3">
-        <span className="bg-muted pointer-events-none hidden h-[1.375rem] select-none flex-row items-center gap-1 rounded-md border-none px-1 text-xs font-medium !leading-[0] opacity-100 sm:flex dark:bg-[#262626] dark:text-[#929292]">
-          {'tab'}
-        </span>
-      </kbd>
+        return (
+          <button
+            key={option.id}
+            ref={(el) => {
+              buttonRefs.current[index] = el;
+            }}
+            className={cn(
+              'rounded-md px-2 py-1 outline-none transition-colors duration-200 focus:outline-none',
+              isFocused || isActive ? 'bg-[#333]' : 'bg-[#222] hover:bg-[#333]',
+              isActive ? '' : 'text-muted-foreground',
+            )}
+            style={customStyles}
+            onClick={() => {
+              handleFilterClick(option.id);
+              setFocusedIndex(index);
+            }}
+            onFocus={() => setFocusedIndex(index)}
+          >
+            {IconComponent ? (
+              <span className="flex items-center gap-1">
+                <IconComponent className="size-3" />
+                <span>{option.label}</span>
+              </span>
+            ) : (
+              option.label
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 };
