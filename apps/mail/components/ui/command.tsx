@@ -18,7 +18,7 @@ const Command = React.forwardRef<
   <CommandPrimitive
     ref={ref}
     className={cn(
-      'bg-popover text-popover-foreground bg-cmdkDark flex h-full w-full flex-col overflow-hidden rounded-lg',
+      'bg-popover text-popover-foreground dark:bg-cmdkDark flex h-full w-full flex-col overflow-hidden rounded-lg bg-white',
       className,
     )}
     {...props}
@@ -33,10 +33,10 @@ const CommandDialog = ({ children, ...props }: DialogProps) => {
       <DialogDescription className="sr-only">Command</DialogDescription>
       <DialogContent
         showOverlay={true}
-        className="w-full overflow-hidden rounded-xl border border-zinc-800 p-0 sm:max-w-xl [&>button:last-child]:hidden"
+        className="w-full overflow-hidden rounded-xl border border-zinc-400 p-0 sm:max-w-xl dark:border-zinc-800 [&>button:last-child]:hidden"
       >
         <div className="relative">
-          <span className="absolute inset-x-0 top-0 mx-auto h-px w-[50%] bg-gradient-to-r from-transparent via-neutral-500 to-transparent"></span>
+          <span className="absolute inset-x-0 top-0 mx-auto h-px w-[50%] bg-gradient-to-r from-transparent via-neutral-900 to-transparent"></span>
           <Command className="[&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]]:px-2 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-3 [&_[cmdk-item]]:py-2">
             {children}
           </Command>
@@ -193,7 +193,7 @@ const CommandItem = React.forwardRef<
   <CommandPrimitive.Item
     ref={ref}
     className={cn(
-      'data-[selected=true]:text-accent-foreground relative flex cursor-default select-none items-center gap-4 rounded-md px-2 py-1.5 text-sm outline-none data-[disabled=true]:pointer-events-none data-[selected=true]:bg-[#222222] data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0',
+      'data-[selected=true]:text-accent-foreground data-[selected=true]:bg-subtleWhite relative flex cursor-default select-none items-center gap-4 rounded-md px-2 py-1.5 text-sm outline-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 dark:data-[selected=true]:bg-[#222222] [&_svg]:pointer-events-none [&_svg]:shrink-0',
       className,
     )}
     {...props}

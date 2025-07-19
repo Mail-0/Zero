@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Info, MailIcon, SettingsIcon } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 
 interface FilterOption {
@@ -7,8 +8,8 @@ interface FilterOption {
   label: string;
   icon?: React.ComponentType<{ className?: string }>;
   activeColors?: {
-    bg: string;
-    text: string;
+    light: { bg: string; text: string };
+    dark: { bg: string; text: string };
   };
 }
 
@@ -25,8 +26,8 @@ const DEFAULT_FILTERS: FilterOption[] = [
     id: 'all',
     label: 'All',
     activeColors: {
-      bg: '#10243E',
-      text: '#52A9FF',
+      light: { bg: '#E3F0FF', text: '#175CD3' },
+      dark: { bg: '#10243E', text: '#52A9FF' },
     },
   },
   {
@@ -34,8 +35,8 @@ const DEFAULT_FILTERS: FilterOption[] = [
     label: 'Mail',
     icon: MailIcon,
     activeColors: {
-      bg: '#0F2C17',
-      text: '#63C174',
+      light: { bg: '#E6F5EC', text: '#039855' },
+      dark: { bg: '#0F2C17', text: '#63C174' },
     },
   },
   {
@@ -43,8 +44,8 @@ const DEFAULT_FILTERS: FilterOption[] = [
     label: 'Settings',
     icon: SettingsIcon,
     activeColors: {
-      bg: '#432155',
-      text: '#BF7AF0',
+      light: { bg: '#F3E8FF', text: '#7F56D9' },
+      dark: { bg: '#432155', text: '#BF7AF0' },
     },
   },
   {
@@ -52,8 +53,8 @@ const DEFAULT_FILTERS: FilterOption[] = [
     label: 'Help',
     icon: Info,
     activeColors: {
-      bg: '#FFFFFF16',
-      text: '#FFFFFF9C',
+      light: { bg: '#F9FAFB', text: '#667085' },
+      dark: { bg: '#FFFFFF16', text: '#FFFFFF9C' },
     },
   },
 ];
@@ -68,6 +69,7 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
   const [internalActiveFilter, setInternalActiveFilter] = useState(activeFilter);
   const [focusedIndex, setFocusedIndex] = useState(0);
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     const current = onFilterChange ? activeFilter : internalActiveFilter;
@@ -101,10 +103,14 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
         const isFocused = focusedIndex === index;
         const IconComponent = option.icon;
 
-        const customStyles =
-          isActive && option.activeColors
-            ? { backgroundColor: option.activeColors.bg, color: option.activeColors.text }
-            : {};
+        let customStyles = {};
+        if (isActive && option.activeColors) {
+          const mode = resolvedTheme === 'dark' ? 'dark' : 'light';
+          customStyles = {
+            backgroundColor: option.activeColors[mode].bg,
+            color: option.activeColors[mode].text,
+          };
+        }
 
         return (
           <button
@@ -114,7 +120,9 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
             }}
             className={cn(
               'rounded-md px-2 py-1 outline-none transition-colors duration-200 focus:outline-none',
-              isFocused || isActive ? 'bg-[#333]' : 'bg-[#222] hover:bg-[#333]',
+              isFocused || isActive
+                ? 'dark:bg-[#333]'
+                : 'bg-offsetLight hover:bg-subtleWhite dark:bg-[#222] dark:hover:bg-[#333]',
               isActive ? '' : 'text-muted-foreground',
             )}
             style={customStyles}
