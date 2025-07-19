@@ -683,12 +683,9 @@ export const MailList = memo(
 
     const allCategories = Categories();
 
-    // Skip category filtering for drafts, spam, sent, archive, and bin pages
-    const shouldFilter = !['draft', 'spam', 'sent', 'archive', 'bin'].includes(folder || '');
 
-    // Set initial category search value only if not in special folders
+    // Set initial category search value
     useEffect(() => {
-      if (!shouldFilter) return;
 
       const currentCategory = category
         ? allCategories.find((cat) => cat.id === category)
@@ -701,7 +698,7 @@ export const MailList = memo(
           folder: '',
         });
       }
-    }, [allCategories, category, shouldFilter, searchValue.value, setSearchValue]);
+    }, [allCategories, category, searchValue.value, setSearchValue]);
 
     // Add event listener for refresh
     useEffect(() => {
