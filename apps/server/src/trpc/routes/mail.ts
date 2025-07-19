@@ -474,7 +474,7 @@ export const mailRouter = router({
   unsnoozeThreads: activeDriverProcedure
     .input(
       z.object({
-        ids: z.string().array(),
+        ids: z.array(z.string().min(1)).nonempty(),
       }),
     )
     .mutation(async ({ input, ctx }) => {

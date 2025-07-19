@@ -17,6 +17,7 @@ import type { CreateDraftData } from '../../lib/schemas';
 import type { IOutgoingMessage } from '../../types';
 import { RpcTarget } from 'cloudflare:workers';
 import { ZeroAgent } from '.';
+import type { QueueFunc } from './types';
 
 export class AgentRpcDO extends RpcTarget {
   constructor(
@@ -222,8 +223,10 @@ export class AgentRpcDO extends RpcTarget {
   }
 
   async queue(callbackName: string, payload: unknown): Promise<unknown> {
-    type QueueFunc = (name: string, payload: unknown) => Promise<unknown>;
-    const queueFn: QueueFunc = (this.mainDo as unknown as { queue: QueueFunc }).queue;
+    const queueFn = this.mainDo.queue;
+    if (typeof queueFn !== 'function') {
+      throw new Error('queue method not implemented on mainDo');
+    }
     return queueFn(callbackName, payload);
   }
 }

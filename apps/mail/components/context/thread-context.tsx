@@ -272,7 +272,7 @@ export function ThreadContextMenu({
     () => [
       {
         id: 'open-in-new-tab',
-        label: 'Open in new tab',
+        label: m['common.mail.openInNewTab'](),
         icon: <ExternalLink className="mr-2.5 h-4 w-4" />,
         action: handleOpenInNewTab,
         disabled: false,

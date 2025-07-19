@@ -47,6 +47,7 @@ import { createDb } from '../../db';
 import { AgentRpcDO } from './rpc';
 import { eq } from 'drizzle-orm';
 import { Effect } from 'effect';
+import type { QueueFunc } from './types';
 const decoder = new TextDecoder();
 
 const shouldDropTables = env.DROP_AGENT_TABLES === 'true';
@@ -1090,4 +1091,8 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
       throw error;
     }
   }
+}
+
+export interface ZeroAgent {
+  queue: QueueFunc;
 }
