@@ -1,15 +1,20 @@
 import {
+  ArrowDownIcon,
   ArrowRight,
+  ArrowUpIcon,
   Calendar as CalendarIcon,
   Clock,
+  CornerDownLeftIcon,
   FileText,
   Filter,
   Hash,
   Info,
   Loader2,
   Mail,
+  MailIcon,
   Paperclip,
   Search,
+  SettingsIcon,
   Star,
   Tag,
   Trash2,
@@ -17,6 +22,15 @@ import {
   Users,
   X as XIcon,
 } from 'lucide-react';
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandFooter,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import {
   createContext,
   Fragment,
@@ -28,14 +42,6 @@ import {
   useState,
   type ComponentType,
 } from 'react';
-import {
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
 import { getMainSearchTerm, parseNaturalLanguageSearch } from '@/lib/utils';
 import { DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { useSearchValue } from '@/hooks/use-search-value';
@@ -55,6 +61,7 @@ import { format, subDays } from 'date-fns';
 import { VisuallyHidden } from 'radix-ui';
 import { m } from '@/paraglide/messages';
 import { Pencil2 } from '../icons/icons';
+import FilterTabs from '../filter-tabs';
 import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { toast } from 'sonner';
@@ -191,6 +198,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
   const [emailSuggestions, setEmailSuggestions] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [commandInputValue, setCommandInputValue] = useState('');
+  const [selectedTab, setSelectedTab] = useState('all');
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
@@ -830,6 +838,13 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         }}
       />
       <Separator />
+
+      <FilterTabs
+        activeFilter={selectedTab}
+        onFilterChange={setSelectedTab}
+        onHelpClick={() => setCurrentView('help')}
+      />
+
       <CommandList>
         <CommandEmpty>
           {isProcessing ? (
@@ -841,52 +856,59 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
             </>
           )}
         </CommandEmpty>
-        {allCommands.map((group, groupIndex) => (
-          <Fragment key={group.group}>
-            {group.items.length > 0 && (
-              <CommandGroup heading={group.group}>
-                {group.items.map((item) => (
-                  <CommandItem
-                    key={item.url || item.title}
-                    onSelect={() => {
-                      if (
-                        [
-                          'Search Emails',
-                          'Filter Emails',
-                          'Saved Searches',
-                          'Filter Builder',
-                        ].includes(item.title)
-                      ) {
-                        if (item.onClick) {
-                          item.onClick();
-                          return false;
-                        }
-                      } else {
-                        runCommand(() => {
+        {allCommands
+          .filter((group) => {
+            if (selectedTab === 'all') return true;
+            if (selectedTab === 'mail') return group.group === 'Mail';
+            if (selectedTab === 'settings') return group.group === 'Settings';
+            return false;
+          })
+          .map((group, groupIndex) => (
+            <Fragment key={group.group}>
+              {group.items.length > 0 && (
+                <CommandGroup heading={group.group}>
+                  {group.items.map((item) => (
+                    <CommandItem
+                      key={item.url || item.title}
+                      onSelect={() => {
+                        if (
+                          [
+                            'Search Emails',
+                            'Filter Emails',
+                            'Saved Searches',
+                            'Filter Builder',
+                          ].includes(item.title)
+                        ) {
                           if (item.onClick) {
                             item.onClick();
-                          } else if (item.url) {
-                            navigate(item.url);
+                            return false;
                           }
-                        });
-                      }
-                    }}
-                  >
-                    {item.icon && (
-                      <item.icon
-                        size={16}
-                        strokeWidth={2}
-                        className="h-4 w-4 opacity-60"
-                        aria-hidden="true"
-                      />
-                    )}
-                    <div className="ml-2 flex flex-1 flex-col">
-                      <span>{item.title}</span>
-                      {item.description && (
-                        <span className="text-muted-foreground text-xs">{item.description}</span>
+                        } else {
+                          runCommand(() => {
+                            if (item.onClick) {
+                              item.onClick();
+                            } else if (item.url) {
+                              navigate(item.url);
+                            }
+                          });
+                        }
+                      }}
+                    >
+                      {item.icon && (
+                        <item.icon
+                          size={16}
+                          strokeWidth={2}
+                          className="h-4 w-4 opacity-60"
+                          aria-hidden="true"
+                        />
                       )}
-                    </div>
-                    {/* {item.shortcut && (
+                      <div className="ml-2 flex flex-1 flex-col">
+                        <span>{item.title}</span>
+                        {item.description && (
+                          <span className="text-muted-foreground text-xs">{item.description}</span>
+                        )}
+                      </div>
+                      {/* {item.shortcut && (
                       <CommandShortcut>
                         {item.shortcut === 'arrowUp'
                           ? '↑'
@@ -895,21 +917,13 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                             : item.shortcut}
                       </CommandShortcut>
                     )} */}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            )}
-            {groupIndex < allCommands.length - 1 && group.items.length > 0 && <Separator />}
-          </Fragment>
-        ))}
-
-        <CommandGroup heading="Help">
-          <CommandItem onSelect={() => setCurrentView('help')}>
-            <Info className="h-4 w-4 opacity-60" />
-            <span className="ml-2">Filter Syntax Help</span>
-            {/* <CommandShortcut>?</CommandShortcut> */}
-          </CommandItem>
-        </CommandGroup>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+              {groupIndex < allCommands.length - 1 && group.items.length > 0 && <Separator />}
+            </Fragment>
+          ))}
       </CommandList>
     </>
   );
@@ -1889,6 +1903,34 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
           <DialogDescription>{m['common.commandPalette.description']()}</DialogDescription>
         </VisuallyHidden.VisuallyHidden>
         {renderView()}
+        <CommandFooter className="flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            Use{' '}
+            <span className="bg-muted text-md dark:text-[#929292 pointer-events-none hidden h-[1.375rem] select-none flex-row items-center gap-1 rounded-md border-none px-1 font-medium !leading-[0] opacity-100 sm:flex dark:bg-[#262626]">
+              <ArrowUpIcon className="size-4" />
+            </span>
+            <span className="bg-muted text-md dark:text-[#929292 pointer-events-none hidden h-[1.375rem] select-none flex-row items-center gap-1 rounded-md border-none px-1 font-medium !leading-[0] opacity-100 sm:flex dark:bg-[#262626]">
+              <ArrowDownIcon className="size-4" />
+            </span>
+            to navigate
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <span className="bg-muted text-md dark:text-[#929292 pointer-events-none hidden h-[1.375rem] select-none flex-row items-center gap-1 rounded-md border-none px-1 font-medium !leading-[0] opacity-100 sm:flex dark:bg-[#262626]">
+                <CornerDownLeftIcon className="size-4" />
+              </span>
+              Open
+            </div>
+
+            <div className="flex items-center gap-1">
+              <span className="bg-muted text-md dark:text-[#929292 pointer-events-none hidden h-[1.375rem] select-none flex-row items-center gap-1 rounded-md border-none px-1 font-medium !leading-[0] opacity-100 sm:flex dark:bg-[#262626]">
+                {'esc'}
+              </span>
+              Close
+            </div>
+          </div>
+        </CommandFooter>
       </CommandDialog>
       {children}
     </CommandPaletteContext.Provider>

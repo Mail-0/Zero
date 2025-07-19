@@ -23,6 +23,7 @@ export default {
         offsetLight: '#F5F5F5',
         panelDark: '#1A1A1A',
         panelLight: '#FFFFFF',
+        cmdkDark: "#161616",
         iconDark: '#898989',
         iconLight: '#6D6D6D',
         logout: '#D93036',
