@@ -28,7 +28,11 @@ import {
 } from './types';
 import { DurableObjectOAuthClientProvider } from 'agents/mcp/do-oauth-client-provider';
 import { EPrompts, type IOutgoingMessage, type ParsedMessage, type ISnoozeBatch } from '../../types';
-import type { MailManager, IGetThreadResponse } from '../../lib/driver/types';
+import type {
+  MailManager,
+  IGetThreadResponse,
+  IGetThreadsResponse,
+} from '../../lib/driver/types';
 import { connectionToDriver } from '../../lib/server-utils';
 import type { CreateDraftData } from '../../lib/schemas';
 import type { Connection, WSMessage } from 'partyserver';
@@ -376,7 +380,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     maxResults?: number;
     labelIds?: string[];
     pageToken?: string;
-  }) {
+  }): Promise<IGetThreadsResponse> {
     if (!this.driver) {
       throw new Error('No driver available');
     }
@@ -389,7 +393,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     maxResults?: number;
     labelIds?: string[];
     pageToken?: string;
-  }) {
+  }): Promise<IGetThreadsResponse> {
     if (!this.driver) {
       throw new Error('No driver available');
     }
@@ -872,7 +876,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     q?: string;
     maxResults?: number;
     pageToken?: string;
-  }) {
+  }): Promise<IGetThreadsResponse> {
     const { labelIds = [], folder, q, maxResults = 50, pageToken } = params;
 
     try {

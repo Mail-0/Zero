@@ -1,6 +1,10 @@
 import { updateWritingStyleMatrix } from '../../services/writing-style-service';
 import { activeDriverProcedure, router, privateProcedure } from '../trpc';
-import { IGetThreadResponseSchema } from '../../lib/driver/types';
+import {
+  IGetThreadResponseSchema,
+  IGetThreadsResponseSchema,
+  type IGetThreadsResponse,
+} from '../../lib/driver/types';
 import { processEmailHtml } from '../../lib/email-processor';
 import { defaultPageSize, FOLDERS } from '../../lib/utils';
 import { serializedFileSchema } from '../../lib/schemas';
@@ -65,6 +69,7 @@ export const mailRouter = router({
         labelIds: z.array(z.string()).optional().default([]),
       }),
     )
+    .output(IGetThreadsResponseSchema)
     .query(async ({ ctx, input }) => {
       const { folder, maxResults, cursor, q, labelIds } = input;
       const { activeConnection } = ctx;
@@ -81,28 +86,28 @@ export const mailRouter = router({
 
       type ThreadItem = { id: string; historyId: string | null; $raw?: unknown };
 
-      let threadsResponse: { threads: ThreadItem[]; nextPageToken: string | null };
+      let threadsResponse: IGetThreadsResponse;
 
       if (q) {
         // When searching, leverage the driver's raw search for best accuracy
-        threadsResponse = (await agent.rawListThreads({
+        threadsResponse = await agent.rawListThreads({
           folder,
           query: q,
           maxResults,
           labelIds,
           pageToken: cursor,
-        })) as unknown as { threads: ThreadItem[]; nextPageToken: string | null };
+        });
       } else {
         // Normal listing – include explicit folder label so that label filters work together
         const folderLabelId = getFolderLabelId(folder);
         const labelIdsToUse = folderLabelId ? [...labelIds, folderLabelId] : labelIds;
 
-        threadsResponse = (await agent.listThreads({
+        threadsResponse = await agent.listThreads({
           folder,
           labelIds: labelIdsToUse,
           maxResults,
           pageToken: cursor,
-        })) as unknown as { threads: ThreadItem[]; nextPageToken: string | null };
+        });
       }
 
       if (folder === FOLDERS.SNOOZED) {
