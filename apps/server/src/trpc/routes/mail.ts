@@ -463,9 +463,14 @@ export const mailRouter = router({
         return { success: false, error: 'No thread IDs provided' };
       }
 
+      const wakeAtDate = new Date(input.wakeAt);
+      if (wakeAtDate <= new Date()) {
+        return { success: false, error: 'Snooze time must be in the future' };
+      }
+
       await agent.modifyLabels(input.ids, ['SNOOZED'], ['INBOX']);
 
-      const wakeAtIso = new Date(input.wakeAt).toISOString();
+      const wakeAtIso = wakeAtDate.toISOString();
       await Promise.all(
         input.ids.map((threadId) =>
           env.snoozed_emails.put(`${threadId}__${activeConnection.id}`, wakeAtIso, {
