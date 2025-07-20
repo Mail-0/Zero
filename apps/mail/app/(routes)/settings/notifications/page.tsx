@@ -38,7 +38,7 @@ export default function NotificationsPage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit() {
     setIsSaving(true);
     setTimeout(() => {
       setIsSaving(false);

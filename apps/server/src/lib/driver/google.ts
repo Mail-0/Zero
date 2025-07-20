@@ -228,37 +228,33 @@ export class GoogleMailManager implements MailManager {
     return this.withErrorHandler(
       'count',
       async () => {
-        const userLabels = await this.gmail.users.labels.list({
-          userId: 'me',
-        });
-
-        if (!userLabels.data.labels) {
-          return [];
-        }
-
-        const labelRequests = userLabels.data.labels.map((label) =>
-          Effect.tryPromise({
-            try: () =>
-              this.gmail.users.labels.get({
-                userId: 'me',
-                id: label.id ?? undefined,
-              }),
-            catch: (error) => ({ _tag: 'LabelFetchFailed' as const, error }),
-          }),
-        );
-
-        const results = await Effect.runPromise(
-          Effect.all(labelRequests, { concurrency: 'unbounded' }),
-        );
-
         type LabelCount = { label: string; count: number };
 
-        const mapped: LabelCount[] = (
-          await Promise.all(
-            results.map(async (res) => {
-              if ('_tag' in res && res._tag === 'LabelFetchFailed') {
-                return null;
-              }
+        const getUserLabelsEffect = Effect.tryPromise({
+          try: () => this.gmail.users.labels.list({ userId: 'me' }),
+          catch: (error) => ({ _tag: 'LabelListFailed' as const, error }),
+        });
+
+        const getArchiveCountEffect = Effect.tryPromise({
+          try: () => this.gmail.users.threads.list({
+            userId: 'me',
+            q: 'in:archive',
+            maxResults: 1,
+          }),
+          catch: (error) => ({ _tag: 'ArchiveFetchFailed' as const, error }),
+        });
+
+        const processLabelEffect = (label: any) =>
+          Effect.tryPromise({
+            try: () => this.gmail.users.labels.get({
+              userId: 'me',
+              id: label.id ?? undefined,
+            }),
+            catch: (error) => ({ _tag: 'LabelFetchFailed' as const, error, labelId: label.id }),
+          }).pipe(
+            Effect.map((res) => {
+              if ('_tag' in res) return null;
+              
               let labelName = (res.data.name ?? res.data.id ?? '').toLowerCase();
               if (labelName === 'draft') {
                 labelName = 'drafts';
@@ -269,25 +265,44 @@ export class GoogleMailManager implements MailManager {
                 count: Number(isTotalLabel ? res.data.threadsTotal : res.data.threadsUnread),
               };
             }),
-          )
-        ).filter((item): item is LabelCount => item !== null);
+          );
 
-        // Get archive count
-        try {
-          const archiveRes = await this.gmail.users.threads.list({
-            userId: 'me',
-            q: 'in:archive',
-            maxResults: 1,
-          });
-          mapped.push({
-            label: 'archive',
-            count: Number(archiveRes.data.resultSizeEstimate ?? 0),
-          });
-        } catch (error: unknown) {
-          console.error('Failed to fetch archive count:', error);
-        }
+        const mainEffect = Effect.gen(function* () {
+          // Fetch user labels and archive count concurrently
+          const [userLabelsResult, archiveResult] = yield* Effect.all([
+            getUserLabelsEffect,
+            getArchiveCountEffect,
+          ], { concurrency: 'unbounded' });
 
-        return mapped;
+          // Handle label list failure
+          if ('_tag' in userLabelsResult && userLabelsResult._tag === 'LabelListFailed') {
+            return [];
+          }
+
+          const labels = userLabelsResult.data.labels || [];
+          if (labels.length === 0) {
+            return [];
+          }
+
+          // Process all labels concurrently
+          const labelEffects = labels.map(processLabelEffect);
+          const labelResults = yield* Effect.all(labelEffects, { concurrency: 'unbounded' });
+
+          // Filter and collect results
+          const mapped: LabelCount[] = labelResults.filter((item): item is LabelCount => item !== null);
+
+          // Add archive count if successful
+          if (!('_tag' in archiveResult)) {
+            mapped.push({
+              label: 'archive',
+              count: Number(archiveResult.data.resultSizeEstimate ?? 0),
+            });
+          }
+
+          return mapped;
+        });
+
+        return await Effect.runPromise(mainEffect);
       },
       { email: this.config.auth?.email },
     );
