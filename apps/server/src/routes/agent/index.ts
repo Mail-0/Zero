@@ -53,10 +53,6 @@ const decoder = new TextDecoder();
 const shouldDropTables = env.DROP_AGENT_TABLES === 'true';
 const maxCount = parseInt(env.THREAD_SYNC_MAX_COUNT || '10', 10);
 const shouldLoop = env.THREAD_SYNC_LOOP !== 'false';
-
-export const getZeroDriver = (connectionId: string) =>
-  env.ZERO_DRIVER.get(env.ZERO_DRIVER.idFromName(connectionId));
-
 export class ZeroDriver extends AIChatAgent<typeof env> {
   private foldersInSync: Map<string, boolean> = new Map();
   private syncThreadsInProgress: Map<string, boolean> = new Map();
@@ -821,7 +817,6 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
 export class ZeroAgent extends AIChatAgent<typeof env> {
   private chatMessageAbortControllers: Map<string, AbortController> = new Map();
-  private driver: DurableObjectStub<ZeroDriver> = getZeroDriver(this.name);
 
   async registerZeroMCP() {
     await this.mcp.connect(env.VITE_PUBLIC_BACKEND_URL + '/sse', {
