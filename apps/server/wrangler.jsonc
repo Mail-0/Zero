@@ -39,6 +39,10 @@
             "name": "ZERO_DB",
             "class_name": "ZeroDB",
           },
+          {
+            "name": "ZERO_DRIVER",
+            "class_name": "ZeroDriver",
+          },
         ],
       },
       "queues": {
@@ -77,6 +81,10 @@
         {
           "tag": "v4",
           "deleted_classes": ["DurableMailbox"],
+        },
+        {
+          "tag": "v5",
+          "new_sqlite_classes": ["ZeroDriver"],
         },
       ],
 
@@ -167,6 +175,10 @@
             "name": "ZERO_DB",
             "class_name": "ZeroDB",
           },
+          {
+            "name": "ZERO_DRIVER",
+            "class_name": "ZeroDriver",
+          },
         ],
       },
       "r2_buckets": [
@@ -215,6 +227,10 @@
         {
           "tag": "v5",
           "deleted_classes": ["DurableMailbox"],
+        },
+        {
+          "tag": "v6",
+          "new_sqlite_classes": ["ZeroDriver"],
         },
       ],
       "observability": {
@@ -312,6 +328,10 @@
             "name": "ZERO_DB",
             "class_name": "ZeroDB",
           },
+          {
+            "name": "ZERO_DRIVER",
+            "class_name": "ZeroDriver",
+          },
         ],
       },
       "queues": {
@@ -354,6 +374,10 @@
         {
           "tag": "v5",
           "deleted_classes": ["DurableMailbox"],
+        },
+        {
+          "tag": "v6",
+          "new_sqlite_classes": ["ZeroDriver"],
         },
       ],
       "vars": {
