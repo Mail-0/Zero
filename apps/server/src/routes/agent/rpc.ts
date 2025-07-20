@@ -16,11 +16,11 @@
 import type { CreateDraftData } from '../../lib/schemas';
 import type { IOutgoingMessage } from '../../types';
 import { RpcTarget } from 'cloudflare:workers';
-import { ZeroAgent } from '.';
+import { ZeroDriver } from '.';
 
-export class AgentRpcDO extends RpcTarget {
+export class DriverRpcDO extends RpcTarget {
   constructor(
-    private mainDo: ZeroAgent,
+    private mainDo: ZeroDriver,
     private connectionId: string,
   ) {
     super();
@@ -176,9 +176,8 @@ export class AgentRpcDO extends RpcTarget {
     return await this.mainDo.getMessageAttachments(messageId);
   }
 
-  async setupAuth(connectionId: string) {
-    if (connectionId !== this.connectionId) console.warn('Oops, something doesnt add up.');
-    return await this.mainDo.setupAuth(connectionId);
+  async setupAuth() {
+    return await this.mainDo.setupAuth();
   }
 
   async broadcast(message: string) {

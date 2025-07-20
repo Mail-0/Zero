@@ -25,9 +25,9 @@ import {
 import { defaultLabels, EPrompts, EProviders, type ParsedMessage, type Sender } from './types';
 import { getZeroAgent } from './lib/server-utils';
 import { type gmail_v1 } from '@googleapis/gmail';
-import { connection, summary } from './db/schema';
 import { getPromptName } from './pipelines';
 import { env } from 'cloudflare:workers';
+import { connection } from './db/schema';
 import { Effect, Console } from 'effect';
 import * as cheerio from 'cheerio';
 import { eq } from 'drizzle-orm';

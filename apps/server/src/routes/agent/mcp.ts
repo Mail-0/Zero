@@ -166,7 +166,7 @@ export class ZeroMCP extends McpAgent<typeof env, Record<string, unknown>, { use
           pageToken: s.pageToken,
         });
         const content = await Promise.all(
-          result.threads.map(async (thread: any) => {
+          result.threads.map(async (thread) => {
             const loadedThread = await agent.getThread(thread.id);
             return [
               {

@@ -25,13 +25,13 @@ import { defaultUserSettings } from './lib/schemas';
 import { createLocalJWKSet, jwtVerify } from 'jose';
 import { routePartykitRequest } from 'partyserver';
 
+import { ZeroAgent, ZeroDriver } from './routes/agent';
 import { enableBrainFunction } from './lib/brain';
 import { trpcServer } from '@hono/trpc-server';
 import { agentsMiddleware } from 'hono-agents';
 import { ZeroMCP } from './routes/agent/mcp';
 import { publicRouter } from './routes/auth';
 import { autumnApi } from './routes/autumn';
-import { ZeroAgent } from './routes/agent';
 import type { HonoContext } from './ctx';
 import { createDb, type DB } from './db';
 import { createAuth } from './lib/auth';
@@ -789,4 +789,4 @@ export default class extends WorkerEntrypoint<typeof env> {
   }
 }
 
-export { ZeroAgent, ZeroMCP, ZeroDB };
+export { ZeroAgent, ZeroMCP, ZeroDB, ZeroDriver };

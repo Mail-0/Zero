@@ -386,7 +386,7 @@ const downloadAttachment = async (attachment: {
   attachmentId: string;
 }) => {
   try {
-    let attachmentData = attachment.body;
+    const attachmentData = attachment.body;
 
     if (!attachmentData) {
       throw new Error('Attachment data not found');
@@ -475,7 +475,7 @@ const openAttachment = async (attachment: {
   attachmentId: string;
 }) => {
   try {
-    let attachmentData = attachment.body;
+    const attachmentData = attachment.body;
 
     if (!attachmentData) {
       throw new Error('Attachment data not found');
