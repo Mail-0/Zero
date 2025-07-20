@@ -278,8 +278,8 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
       }
     };
 
-    document.addEventListener('keydown', down);
-    return () => document.removeEventListener('keydown', down);
+    document.addEventListener('keydown', down, { capture: true });
+    return () => document.removeEventListener('keydown', down, { capture: true });
   }, [open, currentView]);
 
   const runCommand = useCallback((command: () => unknown) => {
