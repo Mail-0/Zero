@@ -5,30 +5,35 @@ import { useMail } from './use-mail';
 import { useParams } from 'react-router';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { type ThreadDestination } from '@/lib/thread-actions';
-
-const LABELS = {
-  SPAM: 'spam',
-  TRASH: 'bin',
-};
+import { FOLDERS, type Folder } from '@/lib/utils';
+import { toast } from 'sonner';
 
 export function BulkSelectActions() {
   const [mail, setMail] = useMail();
-  const { folder } = useParams<{ folder?: string }>();
+  const { folder: rawFolder } = useParams<{ folder?: string }>();
   const { optimisticMoveThreadsTo } = useOptimisticActions();
+
+  const currentFolder: Folder =
+    rawFolder && Object.values(FOLDERS).includes(rawFolder as Folder)
+      ? (rawFolder as Folder)
+      : FOLDERS.INBOX;
 
   const handleMove = (to: ThreadDestination) => () => {
     if (mail.bulkSelected.length === 0) return;
-    // Assume we move from the current folder. Default to 'inbox' if no folder is present.
-    optimisticMoveThreadsTo(mail.bulkSelected, folder || 'inbox', to);
-    // Clear selection after action
-    setMail((prev) => ({ ...prev, selected: null, bulkSelected: [] }));
+
+    try {
+      optimisticMoveThreadsTo(mail.bulkSelected, currentFolder, to);
+      setMail((prev) => ({ ...prev, selected: null, bulkSelected: [] }));
+    } catch (error) {
+      console.error('Failed to move emails:', error);
+      toast.error('Failed to move emails.');
+    }
   };
 
   if (mail.bulkSelected.length === 0) {
     return null;
   }
 
-  // Simplified actions based on your feedback.
   const actions = [
     {
       id: 'archive',

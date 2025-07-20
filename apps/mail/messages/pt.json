@@ -335,9 +335,9 @@
             "countPlural"
           ],
           "match": {
-            "countPlural=0": "arquivos",
-            "countPlural=one": "arquivo",
-            "countPlural=other": "arquivos"
+            "countPlural=0": "respostas",
+            "countPlural=one": "# resposta",
+            "countPlural=other": "# respostas"
           }
         }
       ],

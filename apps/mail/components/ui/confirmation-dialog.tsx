@@ -29,14 +29,16 @@ export default function ConfirmationDialog({ title, description, onConfirm, trig
           <DialogTrigger asChild>
             <Button variant="outline">Cancel</Button>
           </DialogTrigger>
-          <Button
-            variant="destructive"
-            onClick={() => {
-              onConfirm();
-            }}
-          >
-            Confirm
-          </Button>
+          <DialogTrigger asChild>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                onConfirm();
+              }}
+            >
+              Confirm
+            </Button>
+          </DialogTrigger>
         </DialogFooter>
       </DialogContent>
     </Dialog>

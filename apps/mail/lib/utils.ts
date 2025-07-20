@@ -8,13 +8,15 @@ import type { Sender } from '@/types';
 import LZString from 'lz-string';
 
 export const FOLDERS = {
-  SPAM: 'spam',
   INBOX: 'inbox',
-  ARCHIVE: 'archive',
+  SPAM: 'spam',
   BIN: 'bin',
+  ARCHIVE: 'archive',
   DRAFT: 'draft',
   SENT: 'sent',
 } as const;
+
+export type Folder = (typeof FOLDERS)[keyof typeof FOLDERS];
 
 export const LABELS = {
   SPAM: 'SPAM',
@@ -620,3 +622,7 @@ export const withExponentialBackoff = async <T>(
     }
   }
 };
+
+export function isCommandPaletteOpen(searchParams: URLSearchParams) {
+  return searchParams.get('commandPalette') === 'true';
+}

@@ -390,7 +390,16 @@
       "failedToMute": "Không thể tắt tiếng",
       "failedToUnmute": "Không thể bật tiếng",
       "archived": "Đã lưu trữ",
-      "failedToArchive": "Không thể lưu trữ"
+      "failedToArchive": "Không thể lưu trữ",
+      "replyCount": {
+        "match": {
+          "countPlural=0": "Không có phản hồi",
+          "countPlural=one": "# phản hồi",
+          "countPlural=other": "# phản hồi"
+        }
+      },
+      "people": "Mọi người",
+      "person": "Người"
     },
     "units": {
       "mb": "{amount} MB"
