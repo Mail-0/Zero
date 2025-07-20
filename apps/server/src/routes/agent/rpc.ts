@@ -17,7 +17,6 @@ import type { CreateDraftData } from '../../lib/schemas';
 import type { IOutgoingMessage } from '../../types';
 import { RpcTarget } from 'cloudflare:workers';
 import { ZeroAgent } from '.';
-import type { QueueFunc } from './types';
 
 export class AgentRpcDO extends RpcTarget {
   constructor(

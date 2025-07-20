@@ -64,6 +64,9 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
   private syncThreadsInProgress: Map<string, boolean> = new Map();
   private currentFolder: string | null = 'inbox';
   driver: MailManager | null = null;
+  queue: QueueFunc = async () => {
+    throw new Error('queue method not implemented');
+  };
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
     if (shouldDropTables) this.dropTables();
@@ -1095,8 +1098,4 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
       throw error;
     }
   }
-}
-
-export interface ZeroAgent {
-  queue: QueueFunc;
 }
