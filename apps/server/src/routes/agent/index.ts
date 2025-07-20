@@ -19,6 +19,7 @@ import {
   createDataStreamResponse,
   streamText,
   appendResponseMessages,
+  generateText,
 } from 'ai';
 import {
   IncomingMessageType,
@@ -27,6 +28,7 @@ import {
   type OutgoingMessage,
 } from './types';
 import { DurableObjectOAuthClientProvider } from 'agents/mcp/do-oauth-client-provider';
+import { AiChatPrompt, GmailSearchAssistantSystemPrompt } from '../../lib/prompts';
 import { EPrompts, type IOutgoingMessage, type ParsedMessage } from '../../types';
 import type { MailManager, IGetThreadResponse } from '../../lib/driver/types';
 import { connectionToDriver } from '../../lib/server-utils';
@@ -35,7 +37,6 @@ import { withRetry } from '../../lib/gmail-rate-limit';
 import { getPrompt } from '../../pipelines.effect';
 import { AIChatAgent } from 'agents/ai-chat-agent';
 import { ToolOrchestrator } from './orchestrator';
-import { AiChatPrompt } from '../../lib/prompts';
 import { getPromptName } from '../../pipelines';
 import { anthropic } from '@ai-sdk/anthropic';
 import { connection } from '../../db/schema';
@@ -44,6 +45,7 @@ import { tools as authTools } from './tools';
 import { processToolCalls } from './utils';
 import { env } from 'cloudflare:workers';
 import type { Connection } from 'agents';
+import { openai } from '@ai-sdk/openai';
 import { createDb } from '../../db';
 import { DriverRpcDO } from './rpc';
 import { eq } from 'drizzle-orm';
@@ -493,22 +495,48 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
   }
 
   async inboxRag(query: string) {
-    if (!env.AUTORAG_ID) return { result: 'Not enabled', data: [] };
-    const answer = await env.AI.autorag(env.AUTORAG_ID).aiSearch({
-      query: query,
-      //   rewrite_query: true,
-      max_num_results: 3,
-      ranking_options: {
+    if (!env.AUTORAG_ID) {
+      console.warn('[inboxRag] AUTORAG_ID not configured - RAG search disabled');
+      return { result: 'Not enabled', data: [] };
+    }
+
+    try {
+      const startTime = Date.now();
+      console.log(`[inboxRag] Executing AI search with parameters:`, {
+        query,
+        max_num_results: 3,
         score_threshold: 0.3,
-      },
-      //   stream: true,
-      filters: {
-        type: 'eq',
-        key: 'folder',
-        value: `${this.name}/`,
-      },
-    });
-    return { result: answer.response, data: answer.data };
+        folder_filter: `${this.name}/`,
+      });
+
+      const answer = await env.AI.autorag(env.AUTORAG_ID).aiSearch({
+        query: query,
+        //   rewrite_query: true,
+        max_num_results: 3,
+        ranking_options: {
+          score_threshold: 0.3,
+        },
+        //   stream: true,
+        filters: {
+          type: 'eq',
+          key: 'folder',
+          value: `${this.name}/`,
+        },
+      });
+
+      const duration = Date.now() - startTime;
+
+      return { result: answer.response, data: answer.data };
+    } catch (error) {
+      console.error(`[inboxRag] Search failed for query: "${query}"`, {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        user: this.name,
+      });
+
+      // Return empty result on error to prevent breaking the flow
+      return { result: 'Search failed', data: [] };
+    }
   }
 
   async searchThreads(params: {
@@ -532,10 +560,20 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
       }),
     ).pipe(Effect.catchAll(() => Effect.succeed([])));
 
+    const genQueryEffect = Effect.tryPromise(() =>
+      generateText({
+        model: openai(env.OPENAI_MODEL || 'gpt-4o'),
+        system: GmailSearchAssistantSystemPrompt(),
+        prompt: params.query,
+      }).then((response) => response.text),
+    ).pipe(Effect.catchAll(() => Effect.succeed(query)));
+
+    const genQueryResult = await Effect.runPromise(genQueryEffect);
+
     const rawEffect = Effect.tryPromise(() =>
       this.driver!.list({
         folder,
-        query,
+        query: genQueryResult,
         labelIds,
         maxResults,
         pageToken,
@@ -847,7 +885,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
         const rawTools = {
           ...(await authTools(connectionId)),
         };
-        const tools = orchestrator.processTools({});
+        const tools = orchestrator.processTools(rawTools);
         const processedMessages = await processToolCalls(
           {
             messages: this.messages,
@@ -861,7 +899,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
           model: anthropic(env.OPENAI_MODEL || 'claude-3-5-haiku-latest'),
           maxSteps: 10,
           messages: processedMessages,
-          tools: rawTools,
+          tools,
           onFinish,
           onError: (error) => {
             console.error('Error in streamText', error);
