@@ -13,25 +13,22 @@ interface Props {
 interface ListThreadsParams {
   folder: string;
   q: string;
-  max: number;
+  maxResults: number;
   cursor: string;
 }
 
 // A small utility component to permanently delete all emails in the currently opened folder (spam / bin)
 export default function EmptyFolderButton({ folder }: Props) {
   const { optimisticDeleteThreads, optimisticMoveThreadsTo } = useOptimisticActions();
-  const [isLoading, setIsLoading] = useState(false);
   const [searchValue] = useSearchValue();
 
   const handleEmptyFolder = useCallback(async () => {
     // Add input validation and rate limiting
-    if (isLoading) return;
     if (!['spam', 'bin'].includes(folder)) {
       toast.error('Invalid folder. Only spam and bin folders can be emptied.');
       return;
     }
 
-    setIsLoading(true);
     try {
       const ids = new Set<string>();
       let cursor = '';
@@ -51,9 +48,9 @@ export default function EmptyFolderButton({ folder }: Props) {
           const page = await trpcClient.mail.listThreads.query({
             folder,
             q: searchValue.value,
-            max: MAX_PER_PAGE,
+            maxResults: MAX_PER_PAGE,
             cursor,
-          } satisfies ListThreadsParams);
+          });
           
           if (page?.threads?.length) {
             page.threads.forEach((t: { id: string }) => ids.add(t.id));
@@ -68,7 +65,6 @@ export default function EmptyFolderButton({ folder }: Props) {
 
       if (!ids.size) {
         toast.success('Folder already empty');
-        setIsLoading(false);
         return;
       }
 
@@ -84,10 +80,8 @@ export default function EmptyFolderButton({ folder }: Props) {
       console.error('Failed to empty folder', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to empty folder';
       toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
-  }, [folder, isLoading, optimisticDeleteThreads, optimisticMoveThreadsTo, searchValue.value]);
+  }, [folder, optimisticDeleteThreads, optimisticMoveThreadsTo, searchValue.value]);
 
   const confirmText =
     folder === 'spam'
@@ -104,7 +98,6 @@ export default function EmptyFolderButton({ folder }: Props) {
         <Button
           size="sm"
           variant="destructive"
-          disabled={isLoading}
           className="px-4 flex items-center justify-center"
         >
           {folder === 'spam' ? 'Empty Spam' : 'Empty Bin'}
