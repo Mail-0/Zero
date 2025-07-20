@@ -526,8 +526,8 @@ importers:
         specifier: ^2.40.0
         version: 2.40.0
       '@modelcontextprotocol/sdk':
-        specifier: 1.12.0
-        version: 1.12.0
+        specifier: 1.15.1
+        version: 1.15.1
       '@react-email/components':
         specifier: ^0.0.41
         version: 0.0.41(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -550,8 +550,8 @@ importers:
         specifier: ^1.34.9
         version: 1.35.0
       agents:
-        specifier: 0.0.93
-        version: 0.0.93(@cloudflare/workers-types@4.20250628.0)(react@19.1.0)
+        specifier: 0.0.106
+        version: 0.0.106(@cloudflare/workers-types@4.20250628.0)(react@19.1.0)
       ai:
         specifier: ^4.3.13
         version: 4.3.16(react@19.1.0)(zod@3.25.67)
@@ -596,7 +596,7 @@ importers:
         version: 4.8.3
       hono-agents:
         specifier: 0.0.83
-        version: 0.0.83(agents@0.0.93(@cloudflare/workers-types@4.20250628.0)(react@19.1.0))(hono@4.8.3)
+        version: 0.0.83(agents@0.0.106(@cloudflare/workers-types@4.20250628.0)(react@19.1.0))(hono@4.8.3)
       hono-party:
         specifier: ^0.0.12
         version: 0.0.12(@cloudflare/workers-types@4.20250628.0)(hono@4.8.3)(partyserver@0.0.71(@cloudflare/workers-types@4.20250628.0))
@@ -1870,6 +1870,10 @@ packages:
 
   '@modelcontextprotocol/sdk@1.12.0':
     resolution: {integrity: sha512-m//7RlINx1F3sz3KqwY1WWzVgTcYX52HYk4bJ1hkBXV3zccAEth+jRvG8DBRrdaQuRsPAJOx2MH3zaHNCKL7Zg==}
+    engines: {node: '>=18'}
+
+  '@modelcontextprotocol/sdk@1.15.1':
+    resolution: {integrity: sha512-W/XlN9c528yYn+9MQkVjxiTPgPxoxt+oczfjHBDsJx0+59+O7B75Zhsp0B16Xbwbz8ANISDajh6+V7nIcPMc5w==}
     engines: {node: '>=18'}
 
   '@noble/ciphers@0.6.0':
@@ -4057,6 +4061,11 @@ packages:
   agentkeepalive@4.6.0:
     resolution: {integrity: sha512-kja8j7PjmncONqaTsB8fQ+wE2mSU2DJ9D4XKoJ5PFWIdRMa6SLSN1ff4mOr4jCbfRSsxR4keIiySJU0N9T5hIQ==}
     engines: {node: '>= 8.0.0'}
+
+  agents@0.0.106:
+    resolution: {integrity: sha512-HthmK2Dm++heO/6wrm8IlL4B7sHSlbW+EVB4BS3hjOskm3Exjpt4M+SjPwEOfRtokLlGKf8dA8wRAXgxPk+RJw==}
+    peerDependencies:
+      react: '*'
 
   agents@0.0.93:
     resolution: {integrity: sha512-W25kx492Txn5XYY9gx2YBhGmfC8C/N3JQzfjbmq9GjhYtAFCsJdIw6C5xbLt/ev2x3Uor/8XMHXYiw/2YbTSkQ==}
@@ -6653,6 +6662,11 @@ packages:
 
   partyserver@0.0.71:
     resolution: {integrity: sha512-PJZoX08tyNcNJVXqWJedZ6Jzj8EOFGBA/PJ37KhAnWmTkq6A8SqA4u2ol+zq8zwSfRy9FPvVgABCY0yLpe62Dg==}
+    peerDependencies:
+      '@cloudflare/workers-types': ^4.20240729.0
+
+  partyserver@0.0.72:
+    resolution: {integrity: sha512-mYkCQ6Q4KBIy4lFFuA6upmvNeD/FC+CQVTd4V3DYU6nsitKVI3NXxBrNNvmIxJLSwk3JQzYcEOPBkebB7ITVpQ==}
     peerDependencies:
       '@cloudflare/workers-types': ^4.20240729.0
 
@@ -9426,6 +9440,23 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@modelcontextprotocol/sdk@1.15.1':
+    dependencies:
+      ajv: 6.12.6
+      content-type: 1.0.5
+      cors: 2.8.5
+      cross-spawn: 7.0.6
+      eventsource: 3.0.7
+      eventsource-parser: 3.0.3
+      express: 5.1.0
+      express-rate-limit: 7.5.1(express@5.1.0)
+      pkce-challenge: 5.0.0
+      raw-body: 3.0.0
+      zod: 3.25.67
+      zod-to-json-schema: 3.24.6(zod@3.25.67)
+    transitivePeerDependencies:
+      - supports-color
+
   '@noble/ciphers@0.6.0': {}
 
   '@noble/hashes@1.8.0': {}
@@ -11756,6 +11787,21 @@ snapshots:
     dependencies:
       humanize-ms: 1.2.1
 
+  agents@0.0.106(@cloudflare/workers-types@4.20250628.0)(react@19.1.0):
+    dependencies:
+      '@modelcontextprotocol/sdk': 1.15.1
+      ai: 4.3.16(react@19.1.0)(zod@3.25.67)
+      cron-schedule: 5.0.4
+      mimetext: 3.0.27
+      nanoid: 5.1.5
+      partyserver: 0.0.72(@cloudflare/workers-types@4.20250628.0)
+      partysocket: 1.1.4
+      react: 19.1.0
+      zod: 3.25.67
+    transitivePeerDependencies:
+      - '@cloudflare/workers-types'
+      - supports-color
+
   agents@0.0.93(@cloudflare/workers-types@4.20250628.0)(react@19.1.0):
     dependencies:
       '@modelcontextprotocol/sdk': 1.12.0
@@ -13534,9 +13580,9 @@ snapshots:
     dependencies:
       react-is: 16.13.1
 
-  hono-agents@0.0.83(agents@0.0.93(@cloudflare/workers-types@4.20250628.0)(react@19.1.0))(hono@4.8.3):
+  hono-agents@0.0.83(agents@0.0.106(@cloudflare/workers-types@4.20250628.0)(react@19.1.0))(hono@4.8.3):
     dependencies:
-      agents: 0.0.93(@cloudflare/workers-types@4.20250628.0)(react@19.1.0)
+      agents: 0.0.106(@cloudflare/workers-types@4.20250628.0)(react@19.1.0)
       hono: 4.8.3
 
   hono-party@0.0.12(@cloudflare/workers-types@4.20250628.0)(hono@4.8.3)(partyserver@0.0.71(@cloudflare/workers-types@4.20250628.0)):
@@ -14763,6 +14809,11 @@ snapshots:
   parseurl@1.3.3: {}
 
   partyserver@0.0.71(@cloudflare/workers-types@4.20250628.0):
+    dependencies:
+      '@cloudflare/workers-types': 4.20250628.0
+      nanoid: 5.1.5
+
+  partyserver@0.0.72(@cloudflare/workers-types@4.20250628.0):
     dependencies:
       '@cloudflare/workers-types': 4.20250628.0
       nanoid: 5.1.5

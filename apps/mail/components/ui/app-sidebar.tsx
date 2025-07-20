@@ -176,13 +176,13 @@ function ComposeButton() {
       <DialogDescription></DialogDescription>
 
       <DialogTrigger asChild>
-        <button className="relative mb-1.5 inline-flex h-8 w-full items-center justify-center gap-1 self-stretch overflow-hidden rounded-lg border border-gray-200 bg-white text-black dark:border-none dark:bg-[#2C2C2C] dark:text-white">
+        <button className="relative mb-1.5 inline-flex h-8 w-full items-center justify-center gap-1 self-stretch overflow-hidden rounded-lg border border-gray-200 bg-[#006FFE] text-black dark:border-none dark:text-white">
           {state === 'collapsed' && !isMobile ? (
-            <PencilCompose className="fill-iconLight dark:fill-iconDark mt-0.5 text-black" />
+            <PencilCompose className="mt-0.5 fill-white text-black" />
           ) : (
             <div className="flex items-center justify-center gap-2.5 pl-0.5 pr-1">
-              <PencilCompose className="fill-iconLight dark:fill-iconDark" />
-              <div className="justify-start text-sm leading-none">
+              <PencilCompose className="fill-white" />
+              <div className="justify-start text-sm leading-none text-white">
                 {m['common.commandPalette.commands.newEmail']()}
               </div>
             </div>
