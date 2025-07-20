@@ -57,9 +57,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
   private foldersInSync: Map<string, boolean> = new Map();
   private syncThreadsInProgress: Map<string, boolean> = new Map();
   private driver: MailManager | null = null;
-  private agent: DurableObjectStub<ZeroAgent> = env.ZERO_AGENT.get(
-    env.ZERO_AGENT.idFromName(this.name),
-  );
+  private agent: DurableObjectStub<ZeroAgent> | null = null;
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
     if (shouldDropTables) this.dropTables();
@@ -161,9 +159,6 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
       if (_connection) this.driver = connectionToDriver(_connection);
       this.ctx.waitUntil(conn.end());
       this.ctx.waitUntil(this.syncThreads('inbox'));
-      // this.ctx.waitUntil(this.syncThreads('sent'));
-      // this.ctx.waitUntil(this.syncThreads('spam'));
-      // this.ctx.waitUntil(this.syncThreads('archive'));
     }
   }
 
@@ -415,10 +410,11 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
             CURRENT_TIMESTAMP
           )
         `;
-        this.agent.broadcastChatMessage({
-          type: OutgoingMessageType.Mail_Get,
-          threadId,
-        });
+        if (this.agent)
+          this.agent.broadcastChatMessage({
+            type: OutgoingMessageType.Mail_Get,
+            threadId,
+          });
         this.syncThreadsInProgress.delete(threadId);
         console.log('Server: syncThread result', {
           threadId,
@@ -488,10 +484,11 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     } finally {
       console.log('Setting isSyncing to false');
       this.foldersInSync.delete(folder);
-      this.agent.broadcastChatMessage({
-        type: OutgoingMessageType.Mail_List,
-        folder,
-      });
+      if (this.agent)
+        this.agent.broadcastChatMessage({
+          type: OutgoingMessageType.Mail_List,
+          folder,
+        });
     }
   }
 
