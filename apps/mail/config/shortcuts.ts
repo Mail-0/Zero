@@ -33,14 +33,14 @@ export function getDisplayKeysForShortcut(shortcut: Shortcut): string[] {
     // Handle special modifiers first
     switch (key.toLowerCase()) {
       case 'mod':
-        return navigator.platform.includes('Mac') ? '⌘' : 'Ctrl';
+        return typeof navigator !== 'undefined' && navigator.platform.includes('Mac') ? '⌘' : 'Ctrl';
       case 'meta':
         return '⌘';
       case 'ctrl':
       case 'control':
         return 'Ctrl';
       case 'alt':
-        return navigator.platform.includes('Mac') ? '⌥' : 'Alt';
+        return typeof navigator !== 'undefined' && navigator.platform.includes('Mac') ? '⌥' : 'Alt';
       case 'shift':
         return '⇧';
       case 'escape':

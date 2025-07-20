@@ -165,8 +165,13 @@
       "attachments": "Anexos",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "anexos",
             "countPlural=one": "anexo",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "arquivos",
             "countPlural=one": "arquivo",
@@ -249,8 +259,13 @@
       "search": "Pesquisar notas...",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "Adicione notas",
             "countPlural=one": "# nota",
@@ -312,12 +327,17 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "arquivos",
-            "countPlural=one": "# resposta",
-            "countPlural=other": "# respostas"
+            "countPlural=one": "arquivo",
+            "countPlural=other": "arquivos"
           }
         }
       ],
@@ -370,8 +390,7 @@
       "failedToMute": "Falha ao silenciar",
       "failedToUnmute": "Falha ao ativar som",
       "archived": "Arquivado",
-      "failedToArchive": "Falha ao arquivar",
-      "openInNewTab": "Abrir em nova aba"
+      "failedToArchive": "Falha ao arquivar"
     },
     "units": {
       "mb": "{amount} MB"

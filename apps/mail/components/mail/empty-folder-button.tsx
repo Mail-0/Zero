@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { trpcClient } from '@/providers/query-provider';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { useSearchValue } from '@/hooks/use-search-value';
+import ConfirmationDialog from '../ui/confirmation-dialog';
 
 interface Props {
   folder: string;
@@ -29,13 +30,6 @@ export default function EmptyFolderButton({ folder }: Props) {
       toast.error('Invalid folder. Only spam and bin folders can be emptied.');
       return;
     }
-
-    const confirmText =
-      folder === 'spam'
-        ? 'This will delete all emails in the Spam folder and move them to Bin. Continue?'
-        : 'This will permanently delete all emails in the Bin folder. Continue?';
-
-    if (!window.confirm(confirmText)) return;
 
     setIsLoading(true);
     try {
@@ -95,15 +89,27 @@ export default function EmptyFolderButton({ folder }: Props) {
     }
   }, [folder, isLoading, optimisticDeleteThreads, optimisticMoveThreadsTo, searchValue.value]);
 
+  const confirmText =
+    folder === 'spam'
+      ? 'This will delete all emails in the Spam folder and move them to Bin. Continue?'
+      : 'This will permanently delete all emails in the Bin folder. Continue?';
+  const title = folder === 'spam' ? 'Empty Spam?' : 'Empty Bin?';
+
   return (
-    <Button
-      size="sm"
-      variant="destructive"
-      disabled={isLoading}
-      onClick={handleEmptyFolder}
-      className="px-4 flex items-center justify-center"
-    >
-      {folder === 'spam' ? 'Empty Spam' : 'Empty Bin'}
-    </Button>
+    <ConfirmationDialog
+      title={title}
+      description={confirmText}
+      onConfirm={handleEmptyFolder}
+      trigger={
+        <Button
+          size="sm"
+          variant="destructive"
+          disabled={isLoading}
+          className="px-4 flex items-center justify-center"
+        >
+          {folder === 'spam' ? 'Empty Spam' : 'Empty Bin'}
+        </Button>
+      }
+    />
   );
 } 

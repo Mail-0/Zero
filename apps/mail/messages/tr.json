@@ -165,8 +165,13 @@
       "attachments": "Ekler",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "ekler",
             "countPlural=one": "ek",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "dosyalar",
             "countPlural=one": "dosya",
@@ -249,12 +259,17 @@
       "search": "Notlarda ara...",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "Not ekle",
             "countPlural=one": "# not",
-            "countPlural=other": "# not"
+            "countPlural=other": "# notlar"
           }
         }
       ],
@@ -312,12 +327,17 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "cevaplar",
-            "countPlural=one": "# yanıt",
-            "countPlural=other": "# yanıt"
+            "countPlural=one": "# cevap",
+            "countPlural=other": "# cevaplar"
           }
         }
       ],
@@ -370,8 +390,7 @@
       "failedToMute": "Sessize alınamadı",
       "failedToUnmute": "Ses açılamadı",
       "archived": "Arşivlendi",
-      "failedToArchive": "Arşivlenemedi",
-      "openInNewTab": "Yeni sekmede aç"
+      "failedToArchive": "Arşivlenemedi"
     },
     "units": {
       "mb": "{amount} MB"

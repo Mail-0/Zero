@@ -61,6 +61,7 @@ import { useQueryState } from 'nuqs';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
 import EmptyFolderButton from './empty-folder-button';
+import { BulkSelectActions } from './bulk-select-actions';
 
 interface ITag {
   id: string;

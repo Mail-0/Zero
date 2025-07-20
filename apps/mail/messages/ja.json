@@ -165,8 +165,13 @@
       "attachments": "添付ファイル",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "添付ファイル",
             "countPlural=one": "添付ファイル",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "ファイル",
             "countPlural=one": "ファイル",
@@ -249,12 +259,17 @@
       "search": "メモを検索…",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "Add notes",
-            "countPlural=one": "# 件のメモ",
-            "countPlural=other": "# 件のメモ"
+            "countPlural=one": "# note",
+            "countPlural=other": "# notes"
           }
         }
       ],
@@ -312,12 +327,17 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "返信",
-            "countPlural=one": "# 件の返信",
-            "countPlural=other": "# 件の返信"
+            "countPlural=one": "返信 #個",
+            "countPlural=other": "返信 #個"
           }
         }
       ],
@@ -370,8 +390,7 @@
       "failedToMute": "ミュートに失敗しました",
       "failedToUnmute": "ミュート解除に失敗しました",
       "archived": "アーカイブしました",
-      "failedToArchive": "アーカイブに失敗しました",
-      "openInNewTab": "新しいタブで開く"
+      "failedToArchive": "アーカイブに失敗しました"
     },
     "units": {
       "mb": "{amount} MB"

@@ -165,8 +165,13 @@
       "attachments": "Bijlagen",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "bijlagen",
             "countPlural=one": "bijlage",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "bestanden",
             "countPlural=one": "bestand",
@@ -249,8 +259,13 @@
       "search": "Notities zoeken...",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "Notities toevoegen",
             "countPlural=one": "# notitie",
@@ -312,12 +327,17 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "reacties",
-            "countPlural=one": "# antwoord",
-            "countPlural=other": "# antwoorden"
+            "countPlural=one": "# reactie",
+            "countPlural=other": "# reacties"
           }
         }
       ],
@@ -370,8 +390,7 @@
       "failedToMute": "Dempen mislukt",
       "failedToUnmute": "Dempen opheffen mislukt",
       "archived": "Gearchiveerd",
-      "failedToArchive": "Archiveren mislukt",
-      "openInNewTab": "Openen in nieuw tabblad"
+      "failedToArchive": "Archiveren mislukt"
     },
     "units": {
       "mb": "{amount} MB"

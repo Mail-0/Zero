@@ -165,8 +165,13 @@
       "attachments": "Приложения",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "вложений",
             "countPlural=one": "вложение",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "файлов",
             "countPlural=one": "файл",
@@ -249,12 +259,17 @@
       "search": "Найти заметки...",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "Добавьте заметки",
             "countPlural=one": "# заметка",
-            "countPlural=other": "# заметок"
+            "countPlural=other": "# заметки"
           }
         }
       ],
@@ -312,12 +327,17 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "ответы",
             "countPlural=one": "# ответ",
-            "countPlural=other": "# ответов"
+            "countPlural=other": "# ответы"
           }
         }
       ],
@@ -370,8 +390,7 @@
       "failedToMute": "Не удалось заглушить",
       "failedToUnmute": "Не удалось включить звук",
       "archived": "В архиве",
-      "failedToArchive": "Не удалось архивировать",
-      "openInNewTab": "Открыть в новой вкладке"
+      "failedToArchive": "Не удалось архивировать"
     },
     "units": {
       "mb": "{amount} МБ"

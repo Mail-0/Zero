@@ -165,8 +165,13 @@
       "attachments": "첨부 파일",
       "attachmentCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "첨부 파일",
             "countPlural=one": "첨부 파일",
@@ -176,8 +181,13 @@
       ],
       "fileCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "파일",
             "countPlural=one": "파일",
@@ -249,12 +259,17 @@
       "search": "노트 검색...",
       "noteCount": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "메모 추가",
-            "countPlural=one": "노트 #개",
-            "countPlural=other": "노트 #개"
+            "countPlural=one": "메모 #개",
+            "countPlural=other": "메모 #개"
           }
         }
       ],
@@ -312,8 +327,13 @@
     "mail": {
       "replies": [
         {
-          "declarations": ["input count", "local countPlural = count: plural"],
-          "selectors": ["countPlural"],
+          "declarations": [
+            "input count",
+            "local countPlural = count: plural"
+          ],
+          "selectors": [
+            "countPlural"
+          ],
           "match": {
             "countPlural=0": "답장",
             "countPlural=one": "답장 #개",
@@ -370,8 +390,7 @@
       "failedToMute": "음소거 실패",
       "failedToUnmute": "음소거 해제 실패",
       "archived": "보관됨",
-      "failedToArchive": "보관 실패",
-      "openInNewTab": "새 탭에서 열기"
+      "failedToArchive": "보관 실패"
     },
     "units": {
       "mb": "{amount} MB"
