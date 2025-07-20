@@ -17,11 +17,11 @@ import {
   SummarizeThread,
   ThreadLabels,
 } from './lib/brain.fallback.prompts';
-import {
-  generateAutomaticDraft,
-  shouldGenerateDraft,
-  analyzeEmailIntent,
-} from './thread-workflow-utils';
+// import {
+//   generateAutomaticDraft,
+//   shouldGenerateDraft,
+//   analyzeEmailIntent,
+// } from './thread-workflow-utils';
 import { defaultLabels, EPrompts, EProviders, type ParsedMessage, type Sender } from './types';
 import { getZeroAgent } from './lib/server-utils';
 import { type gmail_v1 } from '@googleapis/gmail';
