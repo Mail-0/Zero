@@ -11,9 +11,9 @@ export const getZeroDB = (userId: string) => {
 };
 
 export const getZeroAgent = async (connectionId: string) => {
-  const stub = env.ZERO_AGENT.get(env.ZERO_AGENT.idFromName(connectionId));
+  const stub = env.ZERO_DRIVER.get(env.ZERO_DRIVER.idFromName(connectionId));
   const rpcTarget = await stub.setMetaData(connectionId);
-  await rpcTarget.setupAuth(connectionId);
+  await rpcTarget.setupAuth();
   return rpcTarget;
 };
 
