@@ -14,19 +14,18 @@ import {
   userSettings,
   writingStyleMatrix,
 } from './db/schema';
-import { getZeroAgent } from './lib/server-utils';
 import { env, WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
 import { EProviders, type ISubscribeBatch, type IThreadBatch } from './types';
 import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
 import { getZeroDB, verifyToken } from './lib/server-utils';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
 import { EWorkflowType, runWorkflow } from './pipelines';
+import { ZeroAgent, ZeroDriver } from './routes/agent';
 import { contextStorage } from 'hono/context-storage';
 import { defaultUserSettings } from './lib/schemas';
 import { createLocalJWKSet, jwtVerify } from 'jose';
 import { routePartykitRequest } from 'partyserver';
-
-import { ZeroAgent, ZeroDriver } from './routes/agent';
+import { getZeroAgent } from './lib/server-utils';
 import { enableBrainFunction } from './lib/brain';
 import { trpcServer } from '@hono/trpc-server';
 import { agentsMiddleware } from 'hono-agents';
@@ -42,6 +41,9 @@ import { appRouter } from './trpc';
 import { cors } from 'hono/cors';
 import { Effect } from 'effect';
 import { Hono } from 'hono';
+
+const SENTRY_HOST = 'o4509328786915328.ingest.us.sentry.io';
+const SENTRY_PROJECT_IDS = new Set(['4509328795303936']);
 
 export class DbRpcDO extends RpcTarget {
   constructor(
@@ -518,7 +520,6 @@ export default class extends WorkerEntrypoint<typeof env> {
           if (userId) {
             const db = getZeroDB(userId);
             c.set('sessionUser', await db.findUser());
-            (await db)[Symbol.dispose]?.();
           }
         }
       }
@@ -527,11 +528,6 @@ export default class extends WorkerEntrypoint<typeof env> {
       c.set('autumn', autumn);
 
       await next();
-
-      if (c.var.sessionUser?.id) {
-        const db = getZeroDB(c.var.sessionUser.id);
-        (await db)[Symbol.dispose]?.();
-      }
 
       c.set('sessionUser', undefined);
       c.set('autumn', undefined as any);
@@ -646,6 +642,35 @@ export default class extends WorkerEntrypoint<typeof env> {
     )
     .get('/health', (c) => c.json({ message: 'Zero Server is Up!' }))
     .get('/', (c) => c.redirect(`${env.VITE_PUBLIC_APP_URL}`))
+    .post('/monitoring/sentry', async (c) => {
+      try {
+        const envelopeBytes = await c.req.arrayBuffer();
+        const envelope = new TextDecoder().decode(envelopeBytes);
+        const piece = envelope.split('\n')[0];
+        const header = JSON.parse(piece);
+        const dsn = new URL(header['dsn']);
+        const project_id = dsn.pathname?.replace('/', '');
+
+        if (dsn.hostname !== SENTRY_HOST) {
+          throw new Error(`Invalid sentry hostname: ${dsn.hostname}`);
+        }
+
+        if (!project_id || !SENTRY_PROJECT_IDS.has(project_id)) {
+          throw new Error(`Invalid sentry project id: ${project_id}`);
+        }
+
+        const upstream_sentry_url = `https://${SENTRY_HOST}/api/${project_id}/envelope/`;
+        await fetch(upstream_sentry_url, {
+          method: 'POST',
+          body: envelopeBytes,
+        });
+
+        return c.json({}, { status: 200 });
+      } catch (e) {
+        console.error('error tunneling to sentry', e);
+        return c.json({ error: 'error tunneling to sentry' }, { status: 500 });
+      }
+    })
     .post('/a8n/notify/:providerId', async (c) => {
       if (!c.req.header('Authorization')) return c.json({ error: 'Unauthorized' }, { status: 401 });
       if (env.DISABLE_WORKFLOWS === 'true') return c.json({ message: 'OK' }, { status: 200 });

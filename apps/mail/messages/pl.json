@@ -405,7 +405,8 @@
       "livesupport": "Wsparcie na żywo",
       "feedback": "Opinie",
       "settings": "Ustawienia",
-      "voice": "Asystent głosowy"
+      "voice": "Asystent głosowy",
+      "snoozed": "Odłożone"
     },
     "settings": {
       "general": "Ogólne",

@@ -23,7 +23,6 @@ import { env } from 'cloudflare:workers';
 import { eq, and } from 'drizzle-orm';
 import { McpAgent } from 'agents/mcp';
 import { createDb } from '../../db';
-import { generateText } from 'ai';
 import z from 'zod';
 
 export class ZeroMCP extends McpAgent<typeof env, Record<string, unknown>, { userId: string }> {

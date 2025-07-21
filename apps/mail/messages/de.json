@@ -405,7 +405,8 @@
       "livesupport": "Live-Support",
       "feedback": "Rückmeldung",
       "settings": "Einstellungen",
-      "voice": "Sprachassistent"
+      "voice": "Sprachassistent",
+      "snoozed": "Zurückgestellt"
     },
     "settings": {
       "general": "Allgemein",

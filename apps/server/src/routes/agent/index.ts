@@ -27,13 +27,14 @@ import {
   type IncomingMessage,
   type OutgoingMessage,
 } from './types';
+import {
+  EPrompts,
+  type IOutgoingMessage,
+  type ParsedMessage,
+  type ISnoozeBatch,
+} from '../../types';
+import type { MailManager, IGetThreadResponse, IGetThreadsResponse } from '../../lib/driver/types';
 import { DurableObjectOAuthClientProvider } from 'agents/mcp/do-oauth-client-provider';
-import { EPrompts, type IOutgoingMessage, type ParsedMessage, type ISnoozeBatch } from '../../types';
-import type {
-  MailManager,
-  IGetThreadResponse,
-  IGetThreadsResponse,
-} from '../../lib/driver/types';
 import { AiChatPrompt, GmailSearchAssistantSystemPrompt } from '../../lib/prompts';
 import { connectionToDriver } from '../../lib/server-utils';
 import type { CreateDraftData } from '../../lib/schemas';
@@ -63,7 +64,6 @@ const shouldLoop = env.THREAD_SYNC_LOOP !== 'false';
 export class ZeroDriver extends AIChatAgent<typeof env> {
   private foldersInSync: Map<string, boolean> = new Map();
   private syncThreadsInProgress: Map<string, boolean> = new Map();
-  private currentFolder: string | null = 'inbox';
   private driver: MailManager | null = null;
   private agent: DurableObjectStub<ZeroAgent> | null = null;
   constructor(ctx: DurableObjectState, env: Env) {
@@ -167,6 +167,10 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
       if (_connection) this.driver = connectionToDriver(_connection);
       this.ctx.waitUntil(conn.end());
       this.ctx.waitUntil(this.syncThreads('inbox'));
+      if (env.NODE_ENV === 'production') {
+        this.ctx.waitUntil(this.syncThreads('sent'));
+        this.ctx.waitUntil(this.syncThreads('spam'));
+      }
     }
   }
   async rawListThreads(params: {
@@ -506,7 +510,6 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     }
 
     try {
-      const startTime = Date.now();
       console.log(`[inboxRag] Executing AI search with parameters:`, {
         query,
         max_num_results: 3,
@@ -528,8 +531,6 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
           value: `${this.name}/`,
         },
       });
-
-      const duration = Date.now() - startTime;
 
       return { result: answer.response, data: answer.data };
     } catch (error) {
@@ -774,7 +775,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     }
   }
 
-  async getThreadFromDB(id: string, lastAttempt = false): Promise<IGetThreadResponse> {
+  async getThreadFromDB(id: string): Promise<IGetThreadResponse> {
     try {
       const result = this.sql`
           SELECT
@@ -793,11 +794,13 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         `;
 
       if (!result || result.length === 0) {
-        if (lastAttempt) {
-          throw new Error('Thread not found in database, Sync Failed once');
-        }
-        await this.syncThread({ threadId: id });
-        return this.getThreadFromDB(id, true);
+        return {
+          messages: [],
+          latest: undefined,
+          hasUnread: false,
+          totalReplies: 0,
+          labels: [],
+        } satisfies IGetThreadResponse;
       }
       const row = result[0] as { latest_label_ids: string };
       const storedThread = await env.THREADS_BUCKET.get(this.getThreadKey(id));
