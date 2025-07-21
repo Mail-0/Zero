@@ -167,6 +167,10 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
       if (_connection) this.driver = connectionToDriver(_connection);
       this.ctx.waitUntil(conn.end());
       this.ctx.waitUntil(this.syncThreads('inbox'));
+      if (env.NODE_ENV === 'production') {
+        this.ctx.waitUntil(this.syncThreads('sent'));
+        this.ctx.waitUntil(this.syncThreads('spam'));
+      }
     }
   }
   async rawListThreads(params: {
