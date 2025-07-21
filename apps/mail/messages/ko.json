@@ -405,7 +405,8 @@
       "livesupport": "실시간 지원",
       "feedback": "피드백",
       "settings": "설정",
-      "voice": "음성 비서"
+      "voice": "음성 비서",
+      "snoozed": "스누즈됨"
     },
     "settings": {
       "general": "일반",

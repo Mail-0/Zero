@@ -405,7 +405,8 @@
       "livesupport": "Support en direct",
       "feedback": "Vos commentaires",
       "settings": "Paramètres",
-      "voice": "Assistant vocal"
+      "voice": "Assistant vocal",
+      "snoozed": "En sommeil"
     },
     "settings": {
       "general": "Général",

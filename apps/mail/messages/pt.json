@@ -405,7 +405,8 @@
       "livesupport": "Suporte ao vivo",
       "feedback": "Feedback",
       "settings": "Configurações",
-      "voice": "Assistente de voz"
+      "voice": "Assistente de voz",
+      "snoozed": "Adiados"
     },
     "settings": {
       "general": "Geral",
