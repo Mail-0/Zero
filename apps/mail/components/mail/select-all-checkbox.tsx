@@ -103,10 +103,14 @@ export default function SelectAllCheckbox({ className }: { className?: string })
       onClick={handleToggle}
       disabled={isFetchingIds}
       className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+      aria-label="Select all emails"
+      aria-pressed={isAllLoadedSelected}
+      type="button"
     >
       <Checkbox
         checked={isIndeterminate ? 'indeterminate' : isAllLoadedSelected}
         className="h-4 w-4 pointer-events-none"
+        aria-hidden="true"
       />
       Select all
     </button>

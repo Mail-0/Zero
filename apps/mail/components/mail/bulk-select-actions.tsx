@@ -65,6 +65,7 @@ export function BulkSelectActions() {
           onClick={action.action}
           className="h-8 w-8 rounded-full"
           title={action.label}
+          aria-label={action.label}
         >
           {action.icon}
           <span className="sr-only">{action.label}</span>
