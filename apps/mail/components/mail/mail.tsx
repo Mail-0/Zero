@@ -33,7 +33,7 @@ import * as CustomIcons from '@/components/icons/icons';
 import { isMac } from '@/lib/hotkeys/use-hotkey-utils';
 import { MailList } from '@/components/mail/mail-list';
 import { useHotkeysContext } from 'react-hotkeys-hook';
-// import SelectAllCheckbox from './select-all-checkbox';
+import SelectAllCheckbox from './select-all-checkbox';
 import { useNavigate, useParams } from 'react-router';
 import { useMail } from '@/components/mail/use-mail';
 import { SidebarToggle } from '../ui/sidebar-toggle';
@@ -486,11 +486,29 @@ export function MailLayout() {
                   'sticky top-0 z-[15] flex items-center justify-between gap-1.5 p-2 pb-0 transition-colors',
                 )}
               >
-                <div className="w-full">
-                  <div className="grid grid-cols-12 gap-2">
-                    <SidebarToggle className="col-span-1 h-fit px-2" />
+                                  <div className="w-full space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <SidebarToggle className="h-fit px-2" />
+                        <SelectAllCheckbox />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          onClick={() => {
+                            refetchThreads();
+                          }}
+                          variant="ghost"
+                          className="h-fit px-2"
+                        >
+                          <RefreshCcw className="text-muted-foreground h-4 w-4 cursor-pointer" />
+                        </Button>
+                        {['spam', 'bin'].includes(folder) && (
+                          <EmptyFolderButton folder={folder} />
+                        )}
+                      </div>
+                    </div>
                     {mail.bulkSelected.length === 0 ? (
-                      <div className="col-span-10 flex gap-2">
+                      <div className="flex gap-2 items-center">
                         <Button
                           variant="outline"
                           className={cn(
@@ -543,44 +561,29 @@ export function MailLayout() {
                         )}
                       </div>
                     ) : (
-                      <div className="col-span-10 flex items-center gap-2">
-                        <BulkSelectActions />
-                      </div>
-                    )}
-                    <Button
-                      onClick={() => {
-                        refetchThreads();
-                      }}
-                      variant="ghost"
-                      className="md:h-fit md:px-2"
-                    >
-                      <RefreshCcw className="text-muted-foreground h-4 w-4 cursor-pointer" />
-                    </Button>
-                    {mail.bulkSelected.length > 0 ? (
                       <div className="flex items-center gap-2">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              onClick={() => {
-                                setMail({ ...mail, bulkSelected: [] });
-                              }}
-                              className="flex h-6 items-center gap-1 rounded-md bg-[#313131] px-2 text-xs text-[#A0A0A0] hover:bg-[#252525]"
-                            >
-                              <X className="h-3 w-3 fill-[#A0A0A0]" />
-                              <span>esc</span>
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {m['common.actions.exitSelectionModeEsc']()}
-                          </TooltipContent>
-                        </Tooltip>
+                        <BulkSelectActions />
+                        {mail.bulkSelected.length > 0 && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => {
+                                  setMail({ ...mail, bulkSelected: [] });
+                                }}
+                                className="flex h-6 items-center gap-1 rounded-md bg-[#313131] px-2 text-xs text-[#A0A0A0] hover:bg-[#252525]"
+                              >
+                                <X className="h-3 w-3 fill-[#A0A0A0]" />
+                                <span>esc</span>
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {m['common.actions.exitSelectionModeEsc']()}
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
                       </div>
-                    ) : null}
-                    {['spam', 'bin'].includes(folder) && (
-                      <EmptyFolderButton folder={folder} />
                     )}
                   </div>
-                </div>
               </div>
 
               <div

@@ -5,6 +5,7 @@ import { trpcClient } from '@/providers/query-provider';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { useSearchValue } from '@/hooks/use-search-value';
 import ConfirmationDialog from '../ui/confirmation-dialog';
+import { Trash2 } from 'lucide-react';
 
 interface Props {
   folder: string;
@@ -98,7 +99,7 @@ export default function EmptyFolderButton({ folder }: Props) {
         <Button
           size="sm"
           variant="destructive"
-          className="px-4 flex items-center justify-center"
+          className="h-8 px-3 text-xs font-medium"
         >
           {folder === 'spam' ? 'Empty Spam' : 'Empty Bin'}
         </Button>

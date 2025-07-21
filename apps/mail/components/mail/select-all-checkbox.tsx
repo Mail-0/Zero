@@ -99,38 +99,16 @@ export default function SelectAllCheckbox({ className }: { className?: string })
   }, [folder, query]);
 
   return (
-    <div className="flex items-center gap-2">
+    <button
+      onClick={handleToggle}
+      disabled={isFetchingIds}
+      className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+    >
       <Checkbox
-        ref={checkboxRef}
-        disabled={isFetchingIds}
         checked={isIndeterminate ? 'indeterminate' : isAllLoadedSelected}
-        onCheckedChange={handleToggle}
-        className={cn('hidden', className)}
-        id="select-all"
+        className="h-4 w-4 pointer-events-none"
       />
-      <label
-        htmlFor="select-all"
-        className={cn(
-          'text-muted-foreground flex items-center gap-1 text-xs font-medium transition-colors',
-          isIndeterminate && 'text-primary',
-        )}
-      >
-        <span
-          className={cn(
-            'border-muted-foreground flex items-center justify-center rounded border p-0.5 transition-colors',
-            {
-              'border-primary bg-primary': isAllLoadedSelected,
-            },
-          )}
-        >
-          <Check
-            className={cn('text-muted-foreground/30 h-2 w-2 transition-colors', {
-              'text-black': isAllLoadedSelected,
-            })}
-          />
-        </span>
-        Select all
-      </label>
-    </div>
+      Select all
+    </button>
   );
 }
