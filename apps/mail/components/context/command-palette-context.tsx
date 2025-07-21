@@ -739,7 +739,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
 
     const result: CommandGroup[] = [
       {
-        group: 'Search & Filter',
+        group: 'Search',
         items: searchCommands,
       },
       {

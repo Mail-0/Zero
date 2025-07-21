@@ -2,6 +2,7 @@ import type { ThreadDestination } from '@/lib/thread-actions';
 
 type BasePendingAction = {
   id: string;
+  type: 'MOVE' | 'STAR' | 'READ' | 'LABEL' | 'IMPORTANT' | 'SNOOZE' | 'UNSNOOZE';
   threadIds: string[];
   optimisticId: string;
   execute: () => Promise<void>;

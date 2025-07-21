@@ -17,6 +17,13 @@ export interface IThreadBatch {
   subscriptionName: string;
 }
 
+// Batch payload for unsnoozing threads via the queue
+export interface ISnoozeBatch {
+  connectionId: string;
+  threadIds: string[];
+  keyNames: string[];
+}
+
 export const defaultLabels = [
   {
     name: 'to respond',
