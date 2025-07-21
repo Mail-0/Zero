@@ -100,7 +100,7 @@ evalite("AI Chat – Basic Responses", {
   task: async (input) => {
     return safeStreamText({
       model: model,
-      system: AiChatPrompt("test-thread-id", "inbox", ""),
+      system: AiChatPrompt("test-thread-id"),
       prompt: input,
     });
   },
@@ -124,7 +124,7 @@ evalite("AI Chat – Label Management", {
   task: async (input) => {
     return safeStreamText({
       model: model,
-      system: AiChatPrompt("test-thread-id", "inbox", ""),
+      system: AiChatPrompt("test-thread-id"),
       prompt: input,
     });
   },
@@ -136,7 +136,7 @@ evalite("AI Chat – Email Organization", {
   task: async (input) => {
     return safeStreamText({
       model: model,
-      system: AiChatPrompt("test-thread-id", "inbox", ""),
+      system: AiChatPrompt("test-thread-id"),
       prompt: input,
     });
   },
@@ -148,7 +148,7 @@ evalite("AI Chat – Email Composition", {
   task: async (input) => {
     return safeStreamText({
       model: model,
-      system: AiChatPrompt("test-thread-id", "inbox", ""),
+      system: AiChatPrompt("test-thread-id"),
       prompt: input,
     });
   },
@@ -160,7 +160,7 @@ evalite("AI Chat – Smart Categorization", {
   task: async (input) => {
     return safeStreamText({
       model: model,
-      system: AiChatPrompt("test-thread-id", "inbox", ""),
+      system: AiChatPrompt("test-thread-id"),
       prompt: input,
     });
   },
@@ -172,7 +172,7 @@ evalite("AI Chat – Information Queries", {
   task: async (input) => {
     return safeStreamText({
       model: model,
-      system: AiChatPrompt("test-thread-id", "inbox", ""),
+      system: AiChatPrompt("test-thread-id"),
       prompt: input,
     });
   },
@@ -184,7 +184,7 @@ evalite("AI Chat – Complex Workflows", {
   task: async (input) => {
     return safeStreamText({
       model: model,
-      system: AiChatPrompt("test-thread-id", "inbox", ""),
+      system: AiChatPrompt("test-thread-id"),
       prompt: input,
     });
   },
@@ -196,7 +196,7 @@ evalite("AI Chat – User Intent Recognition", {
   task: async (input) => {
     return safeStreamText({
       model: model,
-      system: AiChatPrompt("test-thread-id", "inbox", ""),
+      system: AiChatPrompt("test-thread-id"),
       prompt: input,
     });
   },
@@ -208,7 +208,7 @@ evalite("AI Chat – Error Handling & Edge Cases", {
   task: async (input) => {
     return safeStreamText({
       model: model,
-      system: AiChatPrompt("test-thread-id", "inbox", ""),
+      system: AiChatPrompt("test-thread-id"),
       prompt: input,
     });
   },

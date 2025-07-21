@@ -424,7 +424,8 @@
       "livesupport": "Live Support",
       "feedback": "Feedback",
       "settings": "Settings",
-      "voice": "Voice Assistant"
+      "voice": "Voice Assistant",
+      "snoozed": "Snoozed"
     },
     "settings": {
       "general": "General",

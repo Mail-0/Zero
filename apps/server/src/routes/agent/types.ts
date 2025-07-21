@@ -69,3 +69,5 @@ export type OutgoingMessage =
       type: OutgoingMessageType.Mail_Get;
       threadId: string;
     };
+
+export type QueueFunc = (name: string, payload: unknown) => Promise<unknown>;

@@ -6,7 +6,7 @@ import { authProxy } from '@/lib/auth-proxy';
 import { useEffect, useState } from 'react';
 import type { Route } from './+types/page';
 
-const ALLOWED_FOLDERS = new Set(['inbox', 'draft', 'sent', 'spam', 'bin', 'archive']);
+const ALLOWED_FOLDERS = new Set(['inbox', 'draft', 'sent', 'spam', 'bin', 'archive', 'snoozed']);
 
 export async function clientLoader({ params, request }: Route.ClientLoaderArgs) {
   if (!params.folder) return Response.redirect(`${import.meta.env.VITE_PUBLIC_APP_URL}/mail/inbox`);

@@ -349,6 +349,7 @@ function AISidebar({ className }: AISidebarProps) {
     agent: 'ZeroAgent',
     name: activeConnection?.id ? String(activeConnection.id) : 'general',
     host: `${import.meta.env.VITE_PUBLIC_BACKEND_URL}`,
+    onError: (e) => console.log(e),
   });
 
   const chatState = useAgentChat({

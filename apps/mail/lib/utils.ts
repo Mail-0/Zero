@@ -14,6 +14,7 @@ export const FOLDERS = {
   ARCHIVE: 'archive',
   DRAFT: 'draft',
   SENT: 'sent',
+  SNOOZED: 'snoozed',
 } as const;
 
 export type Folder = (typeof FOLDERS)[keyof typeof FOLDERS];
@@ -25,6 +26,7 @@ export const LABELS = {
   IMPORTANT: 'IMPORTANT',
   SENT: 'SENT',
   TRASH: 'TRASH',
+  SNOOZED: 'SNOOZED',
 } as const;
 
 export const FOLDER_NAMES = [
@@ -36,6 +38,7 @@ export const FOLDER_NAMES = [
   'important',
   'sent',
   'draft',
+  'snoozed',
 ];
 
 export const FOLDER_TAGS: Record<string, string[]> = {
@@ -44,6 +47,7 @@ export const FOLDER_TAGS: Record<string, string[]> = {
   [FOLDERS.ARCHIVE]: [],
   [FOLDERS.SENT]: [LABELS.SENT],
   [FOLDERS.BIN]: [LABELS.TRASH],
+  [FOLDERS.SNOOZED]: [LABELS.SNOOZED],
 };
 
 export const getFolderTags = (folder: string): string[] => {
