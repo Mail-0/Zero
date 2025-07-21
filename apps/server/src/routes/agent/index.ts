@@ -474,7 +474,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
       // Process threads one by one without buffering
       for await (const thread of this.streamThreads(folder)) {
         try {
-          const id = await this.queue('syncThread', thread.id);
+          const id = await this.queue('syncThread', { threadId: thread.id });
           console.log(`Synced thread ${thread.id} to queue ${id}`);
           totalSynced++;
         } catch (error) {
