@@ -536,6 +536,8 @@ export const runThreadWorkflow = (
         catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
       });
 
+      yield* Console.log('[THREAD_WORKFLOW] ' + autoDraftId);
+
       yield* Console.log('[THREAD_WORKFLOW] Processing thread messages and vectorization');
 
       const messagesToVectorize = yield* Effect.tryPromise({

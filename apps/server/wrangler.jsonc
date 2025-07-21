@@ -91,6 +91,9 @@
       "observability": {
         "enabled": true,
       },
+      "triggers": {
+        "crons": ["*/1 * * * *"]
+      },
       "hyperdrive": [
         {
           "binding": "HYPERDRIVE",
@@ -138,6 +141,11 @@
         {
           "binding": "gmail_sub_age",
           "id": "c55e692bb71d4e5bae23dded092b09d5",
+        },
+        {
+          "binding": "snoozed_emails",
+          "id": "11111111111111111111111111111111",
+          "preview_id": "11111111111111111111111111111111"
         },
       ],
     },
@@ -279,6 +287,11 @@
           "binding": "gmail_sub_age",
           "id": "c55e692bb71d4e5bae23dded092b09d5",
         },
+        {
+          "binding": "snoozed_emails",
+          "id": "22222222222222222222222222222222",
+          "preview_id": "22222222222222222222222222222222"
+        },
       ],
     },
     "production": {
@@ -415,6 +428,11 @@
         {
           "binding": "gmail_sub_age",
           "id": "0591e91fffcc4675aaf00f909bee77d2",
+        },
+        {
+          "binding": "snoozed_emails",
+          "id": "11111111111111111111111111111111",
+          "preview_id": "11111111111111111111111111111111"
         },
       ],
     },

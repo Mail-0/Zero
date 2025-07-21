@@ -219,4 +219,12 @@ export class DriverRpcDO extends RpcTarget {
   }) {
     return await this.mainDo.searchThreads(params);
   }
+
+  async queue(callbackName: string, payload: unknown): Promise<unknown> {
+    const queueFn = this.mainDo.queue;
+    if (typeof queueFn !== 'function') {
+      throw new Error('queue method not implemented on mainDo');
+    }
+    return queueFn(callbackName, payload);
+  }
 }

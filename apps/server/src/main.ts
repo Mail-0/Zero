@@ -14,6 +14,7 @@ import {
   userSettings,
   writingStyleMatrix,
 } from './db/schema';
+import { getZeroAgent } from './lib/server-utils';
 import { env, WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
 import { EProviders, type ISubscribeBatch, type IThreadBatch } from './types';
 import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
@@ -753,6 +754,50 @@ export default class extends WorkerEntrypoint<typeof env> {
     const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
 
     const expiredSubscriptions: Array<{ connectionId: string; providerId: EProviders }> = [];
+
+    const nowTs = Date.now();
+
+    const unsnoozeMap: Record<string, { threadIds: string[]; keyNames: string[] }> = {};
+
+    let cursor: string | undefined = undefined;
+    do {
+      const listResp: {
+        keys: { name: string; metadata?: { wakeAt?: string } }[];
+        cursor?: string;
+      } = await env.snoozed_emails.list({ cursor, limit: 1000 });
+      cursor = listResp.cursor;
+
+      for (const key of listResp.keys) {
+        try {
+          const wakeAtIso = (key as any).metadata?.wakeAt as string | undefined;
+          if (!wakeAtIso) continue;
+          const wakeAt = new Date(wakeAtIso).getTime();
+          if (wakeAt > nowTs) continue;
+
+          const [threadId, connectionId] = key.name.split('__');
+          if (!threadId || !connectionId) continue;
+
+          if (!unsnoozeMap[connectionId]) {
+            unsnoozeMap[connectionId] = { threadIds: [], keyNames: [] };
+          }
+          unsnoozeMap[connectionId].threadIds.push(threadId);
+          unsnoozeMap[connectionId].keyNames.push(key.name);
+        } catch (error) {
+          console.error('Failed to prepare unsnooze for key', key.name, error);
+        }
+      }
+    } while (cursor);
+
+    await Promise.all(
+      Object.entries(unsnoozeMap).map(async ([connectionId, { threadIds, keyNames }]) => {
+        try {
+          const agent = await getZeroAgent(connectionId);
+          await agent.queue('unsnoozeThreadsHandler', { connectionId, threadIds, keyNames });
+        } catch (error) {
+          console.error('Failed to enqueue unsnooze tasks', { connectionId, threadIds, error });
+        }
+      }),
+    );
 
     await Promise.all(
       allAccounts.keys.map(async (key) => {

@@ -10,23 +10,22 @@ import {
   type LoaderFunctionArgs,
   type MetaFunction,
 } from 'react-router';
+import { Analytics as DubAnalytics } from '@dub/analytics/react';
 import { ServerProviders } from '@/providers/server-providers';
 import { ClientProviders } from '@/providers/client-providers';
 import { createTRPCClient, httpBatchLink } from '@trpc/client';
 import { useEffect, type PropsWithChildren } from 'react';
-import { AlertCircle, Loader2 } from 'lucide-react';
 import type { AppRouter } from '@zero/server/trpc';
 import { Button } from '@/components/ui/button';
 import { getLocale } from '@/paraglide/runtime';
 import { siteConfig } from '@/lib/site-config';
 import { signOut } from '@/lib/auth-client';
 import type { Route } from './+types/root';
+import { AlertCircle } from 'lucide-react';
 import { m } from '@/paraglide/messages';
 import { ArrowLeft } from 'lucide-react';
 import superjson from 'superjson';
 import './globals.css';
-import { Analytics as DubAnalytics } from '@dub/analytics/react';
-
 
 const getUrl = () => import.meta.env.VITE_PUBLIC_BACKEND_URL + '/api/trpc';
 
@@ -55,13 +54,13 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-export async function loader({ request }: LoaderFunctionArgs) {
-  const trpc = getServerTrpc(request);
-  const defaultConnection = await trpc.connections.getDefault
-    .query()
-    .then((res) => (res?.id as string) ?? null)
-    .catch(() => null);
-  return { connectionId: defaultConnection };
+export async function loader(_: LoaderFunctionArgs) {
+  //   const trpc = getServerTrpc(request);
+  //   const defaultConnection = await trpc.connections.getDefault
+  //     .query()
+  //     .then((res) => (res?.id as string) ?? null)
+  //     .catch(() => null);
+  return { connectionId: 'defaultConnection' };
 }
 
 export function Layout({ children }: PropsWithChildren) {
@@ -84,9 +83,11 @@ export function Layout({ children }: PropsWithChildren) {
       <body className="antialiased">
         <ServerProviders connectionId={connectionId}>
           <ClientProviders>{children}</ClientProviders>
-          <DubAnalytics domainsConfig={{
-        refer: "mail0.com"
-      }} />
+          <DubAnalytics
+            domainsConfig={{
+              refer: 'mail0.com',
+            }}
+          />
         </ServerProviders>
         <ScrollRestoration />
         <Scripts />
@@ -95,13 +96,13 @@ export function Layout({ children }: PropsWithChildren) {
   );
 }
 
-export function HydrateFallback() {
-  return (
-    <div className="flex h-screen w-full items-center justify-center">
-      <Loader2 className="h-10 w-10 animate-spin" />
-    </div>
-  );
-}
+// export function HydrateFallback() {
+//   return (
+//     <div className="flex h-screen w-full items-center justify-center">
+//       <Loader2 className="h-10 w-10 animate-spin" />
+//     </div>
+//   );
+// }
 
 export default function App() {
   return <Outlet />;
