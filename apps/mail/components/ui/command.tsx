@@ -36,7 +36,7 @@ const CommandDialog = ({ children, ...props }: DialogProps) => {
         className="w-full overflow-hidden rounded-xl border border-zinc-200 p-0 sm:max-w-xl dark:border-zinc-800 [&>button:last-child]:hidden"
       >
         <div className="relative">
-          <span className="to-transparen absolute inset-x-0 top-0 mx-auto h-px w-[50%] bg-gradient-to-r from-transparent via-neutral-500"></span>
+          <span className="absolute inset-x-0 top-0 mx-auto h-px w-[50%] bg-gradient-to-r from-transparent via-neutral-500 to-transparent"></span>
           <Command className="[&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]]:px-2 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-3 [&_[cmdk-item]]:py-2">
             {children}
           </Command>
@@ -70,20 +70,55 @@ const CommandList = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.List>
 >(({ className, ...props }, ref) => {
   const [selectedItemTop, setSelectedItemTop] = React.useState<number | null>(null);
-  const [selectedItemHeight, setSelectedItemHeight] = React.useState<number>(80); // default height
+  const [selectedItemHeight, setSelectedItemHeight] = React.useState<number>(80);
   const [showGradient, setShowGradient] = React.useState(false);
-  const listRef = React.useRef<HTMLDivElement>(null);
+  const listScrollableRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     const updateSelectedItemPosition = () => {
-      if (!listRef.current) return;
+      if (!listScrollableRef.current) return;
 
-      const selectedItem = listRef.current.querySelector('[data-selected="true"]');
-      if (selectedItem) {
-        const listRect = listRef.current.getBoundingClientRect();
-        const itemRect = selectedItem.getBoundingClientRect();
+      const selectedItems = listScrollableRef.current.querySelectorAll('[data-selected="true"]');
 
-        const relativeTop = itemRect.top - listRect.top + listRef.current.scrollTop;
+      if (selectedItems.length > 0) {
+        let actualSelectedItem = selectedItems[0];
+
+        selectedItems.forEach((item) => {
+          const rect = item.getBoundingClientRect();
+          const style = window.getComputedStyle(item);
+
+          if (
+            item === document.activeElement ||
+            item.getAttribute('aria-current') === 'true' ||
+            item.closest('[role="option"][aria-selected="true"]') === item
+          ) {
+            actualSelectedItem = item;
+          }
+        });
+
+        if (selectedItems.length > 1) {
+          const mouseY = window.lastMouseY || 0;
+          let closestItem = selectedItems[0];
+          let closestDistance = Infinity;
+
+          selectedItems.forEach((item) => {
+            const rect = item.getBoundingClientRect();
+            const itemCenter = rect.top + rect.height / 2;
+            const distance = Math.abs(mouseY - itemCenter);
+
+            if (distance < closestDistance) {
+              closestDistance = distance;
+              closestItem = item;
+            }
+          });
+
+          actualSelectedItem = closestItem;
+        }
+
+        const listRect = listScrollableRef.current.getBoundingClientRect();
+        const itemRect = actualSelectedItem.getBoundingClientRect();
+
+        const relativeTop = itemRect.top - listRect.top;
 
         setSelectedItemTop(relativeTop);
         setSelectedItemHeight(itemRect.height);
@@ -94,11 +129,17 @@ const CommandList = React.forwardRef<
       }
     };
 
+    const handleMouseMove = (e: MouseEvent) => {
+      (window as any).lastMouseY = e.clientY;
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+
     updateSelectedItemPosition();
 
     const observer = new MutationObserver(updateSelectedItemPosition);
-    if (listRef.current) {
-      observer.observe(listRef.current, {
+    if (listScrollableRef.current) {
+      observer.observe(listScrollableRef.current, {
         attributes: true,
         subtree: true,
         attributeFilter: ['data-selected'],
@@ -107,23 +148,24 @@ const CommandList = React.forwardRef<
     }
 
     const handleScroll = () => updateSelectedItemPosition();
-    if (listRef.current) {
-      listRef.current.addEventListener('scroll', handleScroll);
+    if (listScrollableRef.current) {
+      listScrollableRef.current.addEventListener('scroll', handleScroll);
     }
 
     return () => {
       observer.disconnect();
-      if (listRef.current) {
-        listRef.current.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('mousemove', handleMouseMove);
+      if (listScrollableRef.current) {
+        listScrollableRef.current.removeEventListener('scroll', handleScroll);
       }
     };
   }, []);
 
   return (
-    <div className="group relative" ref={listRef}>
+    <div className="group relative">
       {showGradient && selectedItemTop !== null && (
         <motion.span
-          className="absolute left-0 w-px bg-gradient-to-b from-transparent via-neutral-500 to-transparent"
+          className="pointer-events-none absolute left-0 z-10 w-px bg-gradient-to-b from-transparent via-neutral-500 to-transparent"
           animate={{
             top: selectedItemTop,
             height: selectedItemHeight,
@@ -139,7 +181,11 @@ const CommandList = React.forwardRef<
         />
       )}
       <CommandPrimitive.List
-        ref={ref}
+        ref={(node) => {
+          if (typeof ref === 'function') ref(node);
+          else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+          listScrollableRef.current = node;
+        }}
         className={cn('max-h-80 overflow-y-auto overflow-x-hidden', className)}
         {...props}
       />
@@ -193,7 +239,7 @@ const CommandItem = React.forwardRef<
   <CommandPrimitive.Item
     ref={ref}
     className={cn(
-      'data-[selected=true]:text-accent-foreground data-[selected=true]:bg-subtleWhite relative flex cursor-default select-none items-center gap-4 rounded-md px-2 py-1.5 text-sm outline-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 dark:data-[selected=true]:bg-[#222222] [&_svg]:pointer-events-none [&_svg]:shrink-0',
+      'data-[selected=true]:text-accent-foreground data-[selected=true]:bg-subtleWhite dark:data-[selected=true]:bg-cmdkDarkSelected relative flex cursor-default select-none items-center gap-4 rounded-md px-2 py-1.5 text-sm outline-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0',
       className,
     )}
     {...props}

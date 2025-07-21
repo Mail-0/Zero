@@ -72,6 +72,12 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
   const { resolvedTheme } = useTheme();
 
   useEffect(() => {
+    if (!onFilterChange) {
+      setInternalActiveFilter(activeFilter);
+    }
+  }, [activeFilter, onFilterChange]);
+
+  useEffect(() => {
     const current = onFilterChange ? activeFilter : internalActiveFilter;
     const idx = options.findIndex((option) => option.id === current);
     if (idx !== -1 && idx !== focusedIndex) {

@@ -1,4 +1,10 @@
-import { type ComponentPropsWithoutRef, type PropsWithChildren, forwardRef, useRef } from 'react';
+import {
+  type ComponentPropsWithoutRef,
+  type PropsWithChildren,
+  forwardRef,
+  useRef,
+  useMemo,
+} from 'react';
 import { useResizeObserver } from '@/hooks/ui/use-resize-observer';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -24,14 +30,29 @@ const AnimatedSizeContainer = forwardRef<HTMLDivElement, AnimatedSizeContainerPr
     const containerRef = useRef<HTMLDivElement>(null);
     const resizeObserverEntry = useResizeObserver(containerRef);
 
+    const animateProps = useMemo(
+      () => ({
+        width: width ? (resizeObserverEntry?.contentRect?.width ?? 'auto') : 'auto',
+        height: height ? (resizeObserverEntry?.contentRect?.height ?? 'auto') : 'auto',
+      }),
+      [
+        width,
+        height,
+        resizeObserverEntry?.contentRect?.width,
+        resizeObserverEntry?.contentRect?.height,
+      ],
+    );
+
+    const transitionProps = useMemo(
+      () => transition ?? { type: 'spring', duration: 0.3 },
+      [transition],
+    );
+
     return (
       <motion.div
         ref={forwardedRef}
         className={cn('overflow-hidden', className)}
-        animate={{
-          width: width ? (resizeObserverEntry?.contentRect?.width ?? 'auto') : 'auto',
-          height: height ? (resizeObserverEntry?.contentRect?.height ?? 'auto') : 'auto',
-        }}
+        animate={animateProps}
         transition={transition ?? { type: 'spring', duration: 0.3 }}
         {...rest}
       >

@@ -1966,10 +1966,10 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         <CommandFooter className="flex items-center justify-between">
           <div className="flex items-center gap-1">
             Use{' '}
-            <span className="bg-muted text-md dark:text-[#929292 pointer-events-none hidden h-[1.375rem] select-none flex-row items-center gap-1 rounded-md border-none px-1 font-medium !leading-[0] opacity-100 sm:flex dark:bg-[#262626]">
+            <span className="bg-muted pointer-events-none hidden h-[1.375rem] select-none flex-row items-center gap-1 rounded-md border-none px-1 text-sm font-medium !leading-[0] opacity-100 sm:flex dark:bg-[#262626] dark:text-[#929292]">
               <ArrowUpIcon className="size-4" />
             </span>
-            <span className="bg-muted text-md dark:text-[#929292 pointer-events-none hidden h-[1.375rem] select-none flex-row items-center gap-1 rounded-md border-none px-1 font-medium !leading-[0] opacity-100 sm:flex dark:bg-[#262626]">
+            <span className="bg-muted pointer-events-none hidden h-[1.375rem] select-none flex-row items-center gap-1 rounded-md border-none px-1 text-sm font-medium !leading-[0] opacity-100 sm:flex dark:bg-[#262626] dark:text-[#929292]">
               <ArrowDownIcon className="size-4" />
             </span>
             to navigate
@@ -1977,14 +1977,14 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
 
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
-              <span className="bg-muted text-md dark:text-[#929292 pointer-events-none hidden h-[1.375rem] select-none flex-row items-center gap-1 rounded-md border-none px-1 font-medium !leading-[0] opacity-100 sm:flex dark:bg-[#262626]">
+              <span className="bg-muted pointer-events-none hidden h-[1.375rem] select-none flex-row items-center gap-1 rounded-md border-none px-1 text-sm font-medium !leading-[0] opacity-100 sm:flex dark:bg-[#262626] dark:text-[#929292]">
                 <CornerDownLeftIcon className="size-4" />
               </span>
               Open
             </div>
 
             <div className="flex items-center gap-1">
-              <span className="bg-muted text-md dark:text-[#929292 pointer-events-none hidden h-[1.375rem] select-none flex-row items-center gap-1 rounded-md border-none px-1 font-medium !leading-[0] opacity-100 sm:flex dark:bg-[#262626]">
+              <span className="bg-muted pointer-events-none hidden h-[1.375rem] select-none flex-row items-center gap-1 rounded-md border-none px-1 text-sm font-medium !leading-[0] opacity-100 sm:flex dark:bg-[#262626] dark:text-[#929292]">
                 {'esc'}
               </span>
               Close
