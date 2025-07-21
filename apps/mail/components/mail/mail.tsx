@@ -486,27 +486,27 @@ export function MailLayout() {
                   'sticky top-0 z-[15] flex items-center justify-between gap-1.5 p-2 pb-0 transition-colors',
                 )}
               >
-                                  <div className="w-full space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <SidebarToggle className="h-fit px-2" />
-                        <SelectAllCheckbox />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          onClick={() => {
-                            refetchThreads();
-                          }}
-                          variant="ghost"
-                          className="h-fit px-2"
-                        >
-                          <RefreshCcw className="text-muted-foreground h-4 w-4 cursor-pointer" />
-                        </Button>
-                        {['spam', 'bin'].includes(folder) && (
-                          <EmptyFolderButton folder={folder} />
-                        )}
-                      </div>
+                <div className="w-full space-y-2">
+                  <div className="flex items-center justify-between mt-1">
+                    <div className="flex items-center gap-2">
+                      <SidebarToggle className="h-fit px-2" />
+                      <SelectAllCheckbox />
                     </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={() => {
+                          refetchThreads();
+                        }}
+                        variant="ghost"
+                        className="h-fit px-2"
+                      >
+                        <RefreshCcw className="text-muted-foreground h-4 w-4 cursor-pointer" />
+                      </Button>
+                      {['spam', 'bin'].includes(folder) && (
+                        <EmptyFolderButton folder={folder} />
+                      )}
+                    </div>
+                  </div>
                     {mail.bulkSelected.length === 0 ? (
                       <div className="flex gap-2 items-center">
                         <Button
@@ -583,13 +583,13 @@ export function MailLayout() {
                         )}
                       </div>
                     )}
-                  </div>
+                </div>
               </div>
 
               <div
                 className={cn(
                   `${category === 'Important' ? 'bg-[#F59E0D]' : category === 'All Mail' ? 'bg-[#006FFE]' : category === 'Personal' ? 'bg-[#39ae4a]' : category === 'Updates' ? 'bg-[#8B5CF6]' : category === 'Promotions' ? 'bg-[#F43F5E]' : category === 'Unread' ? 'bg-[#FF4800]' : 'bg-[#F59E0D]'}`,
-                  'relative bottom-0.5 z-[5] h-0.5 w-full transition-opacity',
+                  'relative z-[5] h-0.5 w-full transition-opacity',
                   isFetching ? 'opacity-100' : 'opacity-0',
                 )}
               />
