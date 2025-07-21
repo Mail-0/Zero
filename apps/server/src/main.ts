@@ -14,19 +14,18 @@ import {
   userSettings,
   writingStyleMatrix,
 } from './db/schema';
-import { getZeroAgent } from './lib/server-utils';
 import { env, WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
 import { EProviders, type ISubscribeBatch, type IThreadBatch } from './types';
 import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
 import { getZeroDB, verifyToken } from './lib/server-utils';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
 import { EWorkflowType, runWorkflow } from './pipelines';
+import { ZeroAgent, ZeroDriver } from './routes/agent';
 import { contextStorage } from 'hono/context-storage';
 import { defaultUserSettings } from './lib/schemas';
 import { createLocalJWKSet, jwtVerify } from 'jose';
 import { routePartykitRequest } from 'partyserver';
-
-import { ZeroAgent, ZeroDriver } from './routes/agent';
+import { getZeroAgent } from './lib/server-utils';
 import { enableBrainFunction } from './lib/brain';
 import { trpcServer } from '@hono/trpc-server';
 import { agentsMiddleware } from 'hono-agents';
@@ -518,7 +517,6 @@ export default class extends WorkerEntrypoint<typeof env> {
           if (userId) {
             const db = getZeroDB(userId);
             c.set('sessionUser', await db.findUser());
-            (await db)[Symbol.dispose]?.();
           }
         }
       }
@@ -527,11 +525,6 @@ export default class extends WorkerEntrypoint<typeof env> {
       c.set('autumn', autumn);
 
       await next();
-
-      if (c.var.sessionUser?.id) {
-        const db = getZeroDB(c.var.sessionUser.id);
-        (await db)[Symbol.dispose]?.();
-      }
 
       c.set('sessionUser', undefined);
       c.set('autumn', undefined as any);
