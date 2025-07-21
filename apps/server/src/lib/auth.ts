@@ -1,3 +1,12 @@
+import {
+  AIWritingAssistantEmail,
+  AutoLabelingEmail,
+  CategoriesEmail,
+  Mail0ProEmail,
+  ShortcutsEmail,
+  SuperSearchEmail,
+  WelcomeEmail,
+} from './react-emails/email-sequences';
 import { createAuthMiddleware, phoneNumber, jwt, bearer, mcp } from 'better-auth/plugins';
 import { type Account, betterAuth, type BetterAuthOptions } from 'better-auth';
 import { getBrowserTimezone, isValidTimezone } from './timezones';
@@ -5,9 +14,8 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { getSocialProviders } from './auth-providers';
 import { redis, resend, twilio } from './services';
 import { getContext } from 'hono/context-storage';
-import { user as _user } from '../db/schema';
+import { dubAnalytics } from '@dub/better-auth';
 import { defaultUserSettings } from './schemas';
-
 import { disableBrainFunction } from './brain';
 import { APIError } from 'better-auth/api';
 import { getZeroDB } from './server-utils';
@@ -15,10 +23,71 @@ import { type EProviders } from '../types';
 import type { HonoContext } from '../ctx';
 import { env } from 'cloudflare:workers';
 import { createDriver } from './driver';
-
 import { createDb } from '../db';
-import { dubAnalytics } from "@dub/better-auth";
-import { Dub } from "dub";
+import { Effect } from 'effect';
+import { Dub } from 'dub';
+
+const scheduleCampaign = (userInfo: { address: string; name: string }) =>
+  Effect.gen(function* () {
+    const name = userInfo.name || 'there';
+    const resendService = resend();
+
+    const sendEmail = (subject: string, react: unknown, scheduledAt?: string) =>
+      Effect.promise(() =>
+        resendService.emails
+          .send({
+            from: '0.email <onboarding@0.email>',
+            to: userInfo.address,
+            subject,
+            react: react as any,
+            ...(scheduledAt && { scheduledAt }),
+          })
+          .then(() => void 0),
+      );
+
+    const emails = [
+      {
+        subject: 'Welcome to 0.email',
+        react: WelcomeEmail({ name }),
+        scheduledAt: undefined,
+      },
+      {
+        subject: 'Mail0 Pro is here 🚀💼',
+        react: Mail0ProEmail({ name }),
+        scheduledAt: 'in 1 day',
+      },
+      {
+        subject: 'Auto-labeling is here 🎉📥',
+        react: AutoLabelingEmail({ name }),
+        scheduledAt: 'in 2 days',
+      },
+      {
+        subject: 'AI Writing Assistant is here 🤖💬',
+        react: AIWritingAssistantEmail({ name }),
+        scheduledAt: 'in 3 days',
+      },
+      {
+        subject: 'Shortcuts are here 🔧🚀',
+        react: ShortcutsEmail({ name }),
+        scheduledAt: 'in 4 days',
+      },
+      {
+        subject: 'Categories are here 📂🔍',
+        react: CategoriesEmail({ name }),
+        scheduledAt: 'in 5 days',
+      },
+      {
+        subject: 'Super Search is here 🔍🚀',
+        react: SuperSearchEmail({ name }),
+        scheduledAt: 'in 6 days',
+      },
+    ];
+
+    yield* Effect.all(
+      emails.map((email) => sendEmail(email.subject, email.react, email.scheduledAt)),
+      { concurrency: 'unbounded' },
+    );
+  });
 
 const connectionHandlerHook = async (account: Account) => {
   if (!account.accessToken || !account.refreshToken) {
@@ -38,7 +107,6 @@ const connectionHandlerHook = async (account: Account) => {
   const userInfo = await driver.getUserInfo().catch(() => {
     throw new APIError('UNAUTHORIZED', { message: 'Failed to get user info' });
   });
-
 
   if (!userInfo?.address) {
     console.error('Missing email in user info:', { userInfo });
@@ -60,6 +128,12 @@ const connectionHandlerHook = async (account: Account) => {
     userInfo.address,
     updatingInfo,
   );
+
+  if (env.NODE_ENV === 'production') {
+    await Effect.runPromise(
+      scheduleCampaign({ address: userInfo.address, name: userInfo.name || 'there' }),
+    );
+  }
 
   if (env.GOOGLE_S_ACCOUNT && env.GOOGLE_S_ACCOUNT !== '{}') {
     await env.subscribe_queue.send({

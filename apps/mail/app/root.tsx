@@ -24,6 +24,7 @@ import type { Route } from './+types/root';
 import { AlertCircle } from 'lucide-react';
 import { m } from '@/paraglide/messages';
 import { ArrowLeft } from 'lucide-react';
+import * as Sentry from '@sentry/react';
 import superjson from 'superjson';
 import './globals.css';
 
@@ -128,6 +129,35 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   useEffect(() => {
     console.error(error);
     console.error({ message, details, stack });
+
+    // Report error to Sentry
+    if (isRouteErrorResponse(error)) {
+      Sentry.captureException(new Error(`Route Error ${error.status}: ${error.statusText}`), {
+        tags: {
+          type: 'route_error',
+          status: error.status,
+        },
+        extra: {
+          statusText: error.statusText,
+          data: error.data,
+        },
+      });
+    } else if (error instanceof Error) {
+      Sentry.captureException(error, {
+        tags: {
+          type: 'app_error',
+        },
+      });
+    } else {
+      Sentry.captureException(new Error('Unknown error occurred'), {
+        tags: {
+          type: 'unknown_error',
+        },
+        extra: {
+          error: error,
+        },
+      });
+    }
   }, [error, message, details, stack]);
 
   return (
