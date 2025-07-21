@@ -485,7 +485,7 @@ export function MailLayout() {
                 )}
               >
                 <div className="w-full">
-                  <div className="grid grid-cols-12 gap-2">
+                  <div className="grid grid-cols-12 gap-2 mt-1">
                     <SidebarToggle className="col-span-1 h-fit px-2" />
                     {mail.bulkSelected.length === 0 ? (
                       <div className="col-span-10 flex gap-2">
@@ -582,7 +582,7 @@ export function MailLayout() {
               <div
                 className={cn(
                   `${category === 'Important' ? 'bg-[#F59E0D]' : category === 'All Mail' ? 'bg-[#006FFE]' : category === 'Personal' ? 'bg-[#39ae4a]' : category === 'Updates' ? 'bg-[#8B5CF6]' : category === 'Promotions' ? 'bg-[#F43F5E]' : category === 'Unread' ? 'bg-[#FF4800]' : 'bg-[#F59E0D]'}`,
-                  'relative bottom-0.5 z-[5] h-0.5 w-full transition-opacity',
+                  'relative z-[5] h-0.5 w-full transition-opacity',
                   isFetching ? 'opacity-100' : 'opacity-0',
                 )}
               />
