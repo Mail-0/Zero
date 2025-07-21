@@ -122,7 +122,7 @@ const connectionHandlerHook = async (account: Account) => {
     expiresAt: new Date(Date.now() + (account.accessTokenExpiresAt?.getTime() || 3600000)),
   };
 
-  const db = getZeroDB(account.userId);
+  const db = await getZeroDB(account.userId);
   const [result] = await db.createConnection(
     account.providerId as EProviders,
     userInfo.address,
@@ -189,7 +189,7 @@ export const createAuth = () => {
         },
         beforeDelete: async (user, request) => {
           if (!request) throw new APIError('BAD_REQUEST', { message: 'Request object is missing' });
-          const db = getZeroDB(user.id);
+          const db = await getZeroDB(user.id);
           const connections = await db.findManyConnections();
           const context = getContext<HonoContext>();
           try {
@@ -287,7 +287,7 @@ export const createAuth = () => {
           const newSession = ctx.context.newSession;
           if (newSession) {
             // Check if user already has settings
-            const db = getZeroDB(newSession.user.id);
+            const db = await getZeroDB(newSession.user.id);
             const existingSettings = await db.findUserSettings();
 
             if (!existingSettings) {

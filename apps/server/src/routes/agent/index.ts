@@ -36,7 +36,7 @@ import {
 import type { MailManager, IGetThreadResponse, IGetThreadsResponse } from '../../lib/driver/types';
 import { DurableObjectOAuthClientProvider } from 'agents/mcp/do-oauth-client-provider';
 import { AiChatPrompt, GmailSearchAssistantSystemPrompt } from '../../lib/prompts';
-import { connectionToDriver } from '../../lib/server-utils';
+import { connectionToDriver, getZeroSocketAgent } from '../../lib/server-utils';
 import type { CreateDraftData } from '../../lib/schemas';
 import { withRetry } from '../../lib/gmail-rate-limit';
 import { getPrompt } from '../../pipelines.effect';
@@ -58,8 +58,8 @@ import { Effect } from 'effect';
 
 const decoder = new TextDecoder();
 
-const shouldDropTables = env.DROP_AGENT_TABLES === 'true';
-const maxCount = parseInt(env.THREAD_SYNC_MAX_COUNT || '10', 10);
+const shouldDropTables = false;
+const maxCount = 20;
 const shouldLoop = env.THREAD_SYNC_LOOP !== 'false';
 export class ZeroDriver extends AIChatAgent<typeof env> {
   private foldersInSync: Map<string, boolean> = new Map();
@@ -87,6 +87,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
   async setMetaData(connectionId: string) {
     await this.setName(connectionId);
+    this.agent = await getZeroSocketAgent(connectionId);
     return new DriverRpcDO(this, connectionId);
   }
 
@@ -154,7 +155,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
   }
 
   async onConnect() {
-    await this.setupAuth();
+    if (!this.driver) await this.setupAuth();
   }
 
   public async setupAuth() {
@@ -449,6 +450,13 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     return count[0]['COUNT(*)'] as number;
   }
 
+  async getFolderThreadCount(folder: string) {
+    const count = this.sql`SELECT COUNT(*) FROM threads WHERE EXISTS (
+      SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${folder}
+    )`;
+    return count[0]['COUNT(*)'] as number;
+  }
+
   async syncThreads(folder: string) {
     if (!this.driver) {
       console.error('No driver available for syncThreads');
@@ -618,6 +626,16 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     const { labelIds = [], folder, q, maxResults = 50, pageToken } = params;
 
     try {
+      const folderThreadCount = (await this.count()).find((c) => c.label === folder)?.count;
+      const currentThreadCount = await this.getThreadCount();
+
+      console.log('folderThreadCount', folderThreadCount, folder);
+      console.log('currentThreadCount', currentThreadCount);
+
+      if (folderThreadCount && folderThreadCount > currentThreadCount && folder) {
+        this.ctx.waitUntil(this.syncThreads(folder));
+      }
+
       // Build WHERE conditions
       const whereConditions: string[] = [];
 
@@ -794,6 +812,8 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         `;
 
       if (!result || result.length === 0) {
+        const res = await this.queue('syncThread', { threadId: id });
+        console.log('res', res);
         return {
           messages: [],
           latest: undefined,
@@ -827,7 +847,9 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
   async unsnoozeThreadsHandler(payload: ISnoozeBatch) {
     const { connectionId, threadIds, keyNames } = payload;
     try {
-      await this.setupAuth();
+      if (!this.driver) {
+        await this.setupAuth();
+      }
 
       if (threadIds.length) {
         await this.modifyLabels(threadIds, ['INBOX'], ['SNOOZED']);

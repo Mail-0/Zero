@@ -1,19 +1,19 @@
-import { updateWritingStyleMatrix } from '../../services/writing-style-service';
-import { activeDriverProcedure, router, privateProcedure } from '../trpc';
 import {
   IGetThreadResponseSchema,
   IGetThreadsResponseSchema,
   type IGetThreadsResponse,
 } from '../../lib/driver/types';
+import { updateWritingStyleMatrix } from '../../services/writing-style-service';
+import { activeDriverProcedure, router, privateProcedure } from '../trpc';
 import { processEmailHtml } from '../../lib/email-processor';
 import { defaultPageSize, FOLDERS } from '../../lib/utils';
 import { serializedFileSchema } from '../../lib/schemas';
 import type { DeleteAllSpamResponse } from '../../types';
 import { getZeroAgent } from '../../lib/server-utils';
 
+import { env } from 'cloudflare:workers';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { env } from 'cloudflare:workers';
 
 const senderSchema = z.object({
   name: z.string().optional(),
@@ -75,12 +75,16 @@ export const mailRouter = router({
       const { activeConnection } = ctx;
       const agent = await getZeroAgent(activeConnection.id);
 
+      console.debug('[listThreads] input:', { folder, maxResults, cursor, q, labelIds });
+
       if (folder === FOLDERS.DRAFT) {
+        console.debug('[listThreads] Listing drafts');
         const drafts = await agent.listDrafts({
           q,
           maxResults,
           pageToken: cursor,
         });
+        console.debug('[listThreads] Drafts result:', drafts);
         return drafts;
       }
 
@@ -89,7 +93,7 @@ export const mailRouter = router({
       let threadsResponse: IGetThreadsResponse;
 
       if (q) {
-        // When searching, leverage the driver's raw search for best accuracy
+        console.debug('[listThreads] Performing search with query:', q);
         threadsResponse = await agent.rawListThreads({
           folder,
           query: q,
@@ -97,10 +101,11 @@ export const mailRouter = router({
           labelIds,
           pageToken: cursor,
         });
+        console.debug('[listThreads] Search result:', threadsResponse);
       } else {
-        // Normal listing – include explicit folder label so that label filters work together
         const folderLabelId = getFolderLabelId(folder);
         const labelIdsToUse = folderLabelId ? [...labelIds, folderLabelId] : labelIds;
+        console.debug('[listThreads] Listing with labelIds:', labelIdsToUse, 'for folder:', folder);
 
         threadsResponse = await agent.listThreads({
           folder,
@@ -108,11 +113,14 @@ export const mailRouter = router({
           maxResults,
           pageToken: cursor,
         });
+        console.debug('[listThreads] List result:', threadsResponse);
       }
 
       if (folder === FOLDERS.SNOOZED) {
         const nowTs = Date.now();
         const filtered: ThreadItem[] = [];
+
+        console.debug('[listThreads] Filtering snoozed threads at', new Date(nowTs).toISOString());
 
         await Promise.all(
           threadsResponse.threads.map(async (t: ThreadItem) => {
@@ -130,7 +138,7 @@ export const mailRouter = router({
                 return;
               }
 
-              console.log('[UNSNOOZE_ON_ACCESS] Expired thread', t.id, {
+              console.debug('[UNSNOOZE_ON_ACCESS] Expired thread', t.id, {
                 wakeAtIso,
                 now: new Date(nowTs).toISOString(),
               });
@@ -145,7 +153,9 @@ export const mailRouter = router({
         );
 
         threadsResponse.threads = filtered;
+        console.debug('[listThreads] Snoozed threads after filtering:', filtered);
       }
+      console.debug('[listThreads] Returning threadsResponse:', threadsResponse);
       return threadsResponse;
     }),
   markAsRead: activeDriverProcedure
@@ -494,7 +504,9 @@ export const mailRouter = router({
       await agent.modifyLabels(input.ids, ['INBOX'], ['SNOOZED']);
 
       await Promise.all(
-        input.ids.map((threadId) => env.snoozed_emails.delete(`${threadId}__${activeConnection.id}`)),
+        input.ids.map((threadId) =>
+          env.snoozed_emails.delete(`${threadId}__${activeConnection.id}`),
+        ),
       );
       return { success: true };
     }),
