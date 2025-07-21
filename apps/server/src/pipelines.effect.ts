@@ -17,11 +17,11 @@ import {
   SummarizeThread,
   ThreadLabels,
 } from './lib/brain.fallback.prompts';
-// import {
-//   generateAutomaticDraft,
-//   shouldGenerateDraft,
-//   analyzeEmailIntent,
-// } from './thread-workflow-utils';
+import {
+  generateAutomaticDraft,
+  shouldGenerateDraft,
+  analyzeEmailIntent,
+} from './thread-workflow-utils';
 import { defaultLabels, EPrompts, EProviders, type ParsedMessage, type Sender } from './types';
 import { getZeroAgent } from './lib/server-utils';
 import { type gmail_v1 } from '@googleapis/gmail';
@@ -452,89 +452,91 @@ export const runThreadWorkflow = (
         return 'Thread has no messages';
       }
 
-      // const autoDraftId = yield* Effect.tryPromise({
-      //   try: async () => {
-      //     if (!shouldGenerateDraft(thread, foundConnection)) {
-      //       console.log('[THREAD_WORKFLOW] Skipping draft generation for thread:', threadId);
-      //       return null;
-      //     }
+      const autoDraftId = yield* Effect.tryPromise({
+        try: async () => {
+          if (!shouldGenerateDraft(thread, foundConnection)) {
+            console.log('[THREAD_WORKFLOW] Skipping draft generation for thread:', threadId);
+            return null;
+          }
 
-      //     const latestMessage = thread.messages[thread.messages.length - 1];
-      //     const emailIntent = analyzeEmailIntent(latestMessage);
+          const latestMessage = thread.messages[thread.messages.length - 1];
+          const emailIntent = analyzeEmailIntent(latestMessage);
 
-      //     console.log('[THREAD_WORKFLOW] Analyzed email intent:', {
-      //       threadId,
-      //       isQuestion: emailIntent.isQuestion,
-      //       isRequest: emailIntent.isRequest,
-      //       isMeeting: emailIntent.isMeeting,
-      //       isUrgent: emailIntent.isUrgent,
-      //     });
+          console.log('[THREAD_WORKFLOW] Analyzed email intent:', {
+            threadId,
+            isQuestion: emailIntent.isQuestion,
+            isRequest: emailIntent.isRequest,
+            isMeeting: emailIntent.isMeeting,
+            isUrgent: emailIntent.isUrgent,
+          });
 
-      //     if (
-      //       !emailIntent.isQuestion &&
-      //       !emailIntent.isRequest &&
-      //       !emailIntent.isMeeting &&
-      //       !emailIntent.isUrgent
-      //     ) {
-      //       console.log(
-      //         '[THREAD_WORKFLOW] Email does not require a response, skipping draft generation',
-      //       );
-      //       return null;
-      //     }
+          if (
+            !emailIntent.isQuestion &&
+            !emailIntent.isRequest &&
+            !emailIntent.isMeeting &&
+            !emailIntent.isUrgent
+          ) {
+            console.log(
+              '[THREAD_WORKFLOW] Email does not require a response, skipping draft generation',
+            );
+            return null;
+          }
 
-      //     console.log('[THREAD_WORKFLOW] Generating automatic draft for thread:', threadId);
-      //     const draftContent = await generateAutomaticDraft(
-      //       connectionId.toString(),
-      //       thread,
-      //       foundConnection,
-      //     );
+          console.log('[THREAD_WORKFLOW] Generating automatic draft for thread:', threadId);
+          const draftContent = await generateAutomaticDraft(
+            connectionId.toString(),
+            thread,
+            foundConnection,
+          );
 
-      //     if (draftContent) {
-      //       const latestMessage = thread.messages[thread.messages.length - 1];
+          if (draftContent) {
+            const latestMessage = thread.messages[thread.messages.length - 1];
 
-      //       const replyTo = latestMessage.sender?.email || '';
-      //       const cc =
-      //         latestMessage.cc
-      //           ?.map((r) => r.email)
-      //           .filter((email) => email && email !== foundConnection.email) || [];
+            const replyTo = latestMessage.sender?.email || '';
+            const cc =
+              latestMessage.cc
+                ?.map((r) => r.email)
+                .filter((email) => email && email !== foundConnection.email) || [];
 
-      //       const originalSubject = latestMessage.subject || '';
-      //       const replySubject = originalSubject.startsWith('Re: ')
-      //         ? originalSubject
-      //         : `Re: ${originalSubject}`;
+            const originalSubject = latestMessage.subject || '';
+            const replySubject = originalSubject.startsWith('Re: ')
+              ? originalSubject
+              : `Re: ${originalSubject}`;
 
-      //       const draftData = {
-      //         to: replyTo,
-      //         cc: cc.join(', '),
-      //         bcc: '',
-      //         subject: replySubject,
-      //         message: draftContent,
-      //         attachments: [],
-      //         id: null,
-      //         threadId: threadId.toString(),
-      //         fromEmail: foundConnection.email,
-      //       };
+            const draftData = {
+              to: replyTo,
+              cc: cc.join(', '),
+              bcc: '',
+              subject: replySubject,
+              message: draftContent,
+              attachments: [],
+              id: null,
+              threadId: threadId.toString(),
+              fromEmail: foundConnection.email,
+            };
 
-      //       try {
-      //         const createdDraft = await agent.createDraft(draftData);
-      //         console.log('[THREAD_WORKFLOW] Created automatic draft:', {
-      //           threadId,
-      //           draftId: createdDraft?.id,
-      //         });
-      //         return createdDraft?.id || null;
-      //       } catch (error) {
-      //         console.log('[THREAD_WORKFLOW] Failed to create automatic draft:', {
-      //           threadId,
-      //           error: error instanceof Error ? error.message : String(error),
-      //         });
-      //         return null;
-      //       }
-      //     }
+            try {
+              const createdDraft = await agent.createDraft(draftData);
+              console.log('[THREAD_WORKFLOW] Created automatic draft:', {
+                threadId,
+                draftId: createdDraft?.id,
+              });
+              return createdDraft?.id || null;
+            } catch (error) {
+              console.log('[THREAD_WORKFLOW] Failed to create automatic draft:', {
+                threadId,
+                error: error instanceof Error ? error.message : String(error),
+              });
+              return null;
+            }
+          }
 
-      //     return null;
-      //   },
-      //   catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
-      // });
+          return null;
+        },
+        catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
+      });
+
+      yield* Console.log('[THREAD_WORKFLOW] ' + autoDraftId);
 
       yield* Console.log('[THREAD_WORKFLOW] Processing thread messages and vectorization');
 

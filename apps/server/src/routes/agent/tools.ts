@@ -2,9 +2,8 @@ import { composeEmail } from '../../trpc/routes/ai/compose';
 import { perplexity } from '@ai-sdk/perplexity';
 import { generateText, tool } from 'ai';
 
-import { colors, GmailSearchAssistantSystemPrompt } from '../../lib/prompts';
 import { getZeroAgent } from '../../lib/server-utils';
-import { anthropic } from '@ai-sdk/anthropic';
+import { colors } from '../../lib/prompts';
 import { env } from 'cloudflare:workers';
 import { Tools } from '../../types';
 import { z } from 'zod';
@@ -185,18 +184,6 @@ const markAsRead = (connectionId: string) =>
       return { threadIds, success: true };
     },
   });
-
-// const inboxRag = (connectionId: string, dataStream?: DataStreamWriter) =>
-//   tool({
-//     description: 'Search the inbox for emails',
-//     parameters: z.object({
-//       query: z.string().describe('The query to search the inbox for'),
-//     }),
-//     execute: async ({ query }) => {
-//       console.log('inboxRag', query);
-//       return await agent.inboxRag(query, dataStream);
-//     },
-//   });
 
 const markAsUnread = (connectionId: string) =>
   tool({
@@ -390,22 +377,6 @@ export const webSearch = () =>
     },
   });
 
-const buildGmailSearchQuery = () =>
-  tool({
-    description: 'Build Gmail search query using AI assistance',
-    parameters: z.object({
-      query: z.string(),
-    }),
-    execute: async ({ query }) => {
-      const result = await generateText({
-        model: anthropic(env.OPENAI_MODEL || 'claude-3-5-haiku-latest'),
-        system: GmailSearchAssistantSystemPrompt(),
-        prompt: query,
-      });
-      return result.text;
-    },
-  });
-
 export const tools = async (connectionId: string) => {
   return {
     [Tools.GetThread]: getEmail(),
@@ -425,7 +396,6 @@ export const tools = async (connectionId: string) => {
         query: z.string().describe('The query to search the web for'),
       }),
     }),
-    [Tools.BuildGmailSearchQuery]: buildGmailSearchQuery(),
     [Tools.InboxRag]: tool({
       description:
         'Search the inbox for emails using natural language. Returns only an array of threadIds.',

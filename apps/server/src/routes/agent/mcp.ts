@@ -14,10 +14,9 @@
  * Reuse or distribution of this file requires a license from Zero Email Inc.
  */
 
-import { GmailSearchAssistantSystemPrompt, getCurrentDateContext } from '../../lib/prompts';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { getCurrentDateContext } from '../../lib/prompts';
 import { getZeroAgent } from '../../lib/server-utils';
-import { anthropic } from '@ai-sdk/anthropic';
 import { connection } from '../../db/schema';
 import { FOLDERS } from '../../lib/utils';
 import { env } from 'cloudflare:workers';
@@ -112,31 +111,6 @@ export class ZeroMCP extends McpAgent<typeof env, Record<string, unknown>, { use
             {
               type: 'text' as const,
               text: `Active connection set to ${_connection.email}`,
-            },
-          ],
-        };
-      },
-    );
-
-    this.server.registerTool(
-      'buildGmailSearchQuery',
-      {
-        description: 'Build Gmail search query using AI assistance',
-        inputSchema: {
-          query: z.string(),
-        },
-      },
-      async (s) => {
-        const result = await generateText({
-          model: anthropic(env.OPENAI_MODEL || 'claude-3-5-haiku-latest'),
-          system: GmailSearchAssistantSystemPrompt(),
-          prompt: s.query,
-        });
-        return {
-          content: [
-            {
-              type: 'text',
-              text: result.text,
             },
           ],
         };
