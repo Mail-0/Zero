@@ -215,7 +215,7 @@ export default function Footer() {
             <div className="justify-start text-xs font-medium leading-tight text-white opacity-80 sm:text-sm">
               © 2025 Zero Email Inc, All Rights Reserved
             </div>
-            <div className="flex items-center justif gap-4">
+            <div className="flex items-center gap-4">
               <Link
                 to="/about"
                 className="justify-start text-nowrap text-sm font-normal leading-tight text-white/70 opacity-80 transition-opacity hover:opacity-100"
