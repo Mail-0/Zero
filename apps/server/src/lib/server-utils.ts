@@ -4,9 +4,9 @@ import type { HonoContext } from '../ctx';
 import { env } from 'cloudflare:workers';
 import { createDriver } from './driver';
 
-export const getZeroDB = (userId: string) => {
+export const getZeroDB = async (userId: string) => {
   const stub = env.ZERO_DB.get(env.ZERO_DB.idFromName(userId));
-  const rpcTarget = stub.setMetaData(userId);
+  const rpcTarget = await stub.setMetaData(userId);
   return rpcTarget;
 };
 
@@ -17,12 +17,17 @@ export const getZeroAgent = async (connectionId: string) => {
   return rpcTarget;
 };
 
+export const getZeroSocketAgent = async (connectionId: string) => {
+  const stub = env.ZERO_AGENT.get(env.ZERO_AGENT.idFromName(connectionId));
+  return stub;
+};
+
 export const getActiveConnection = async () => {
   const c = getContext<HonoContext>();
   const { sessionUser } = c.var;
   if (!sessionUser) throw new Error('Session Not Found');
 
-  const db = getZeroDB(sessionUser.id);
+  const db = await getZeroDB(sessionUser.id);
 
   const userData = await db.findUser();
 

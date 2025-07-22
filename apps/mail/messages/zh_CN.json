@@ -405,7 +405,8 @@
       "livesupport": "在线支持",
       "feedback": "反馈",
       "settings": "设置",
-      "voice": "语音助手"
+      "voice": "语音助手",
+      "snoozed": "已延后"
     },
     "settings": {
       "general": "常规",
