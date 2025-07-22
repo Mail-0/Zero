@@ -5,7 +5,7 @@ let args = [];
 if (process.argv.slice(2).length === 0) {
   intro(`Welcome to the Nizzy CLI`);
 
-  const user = process.env.USER || process.env.USERNAME;
+  const user = process.env.USER || process.env.USERNAME || 'there';
 
   const command = await select({
     message: `Hey ${user}, what do you want to do?`,
