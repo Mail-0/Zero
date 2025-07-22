@@ -395,6 +395,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         try {
           normalizedReceivedOn = new Date(latest.receivedOn).toISOString();
         } catch (error) {
+          console.log('Here!', error);
           normalizedReceivedOn = new Date().toISOString();
         }
 
@@ -497,10 +498,10 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         let totalSynced = 0;
         let pageToken: string | null = null;
         let hasMore = true;
-        let _pageCount = 0;
+        // let _pageCount = 0;
 
         while (hasMore) {
-          _pageCount++;
+          // _pageCount++;
 
           // Rate limiting delay between pages
           yield* Effect.sleep(2000);
