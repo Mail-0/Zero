@@ -12,7 +12,8 @@ import { toast } from 'sonner';
 export default function SelectAllCheckbox({ className }: { className?: string }) {
   const [mail, setMail] = useMail();
   const [, loadedThreads] = useThreads();
-  const [{ value: query }] = useSearchValue();
+  const [searchValue] = useSearchValue();
+  const { value: query } = searchValue;
   const { folder = 'inbox' } = useParams<{ folder: string }>() ?? {};
 
   const [isFetchingIds, setIsFetchingIds] = useState(false);
@@ -96,7 +97,7 @@ export default function SelectAllCheckbox({ className }: { className?: string })
 
   useEffect(() => {
     allIdsCache.current = null;
-  }, [folder, query]);
+  }, [folder, query, searchValue]);
 
   return (
     <button

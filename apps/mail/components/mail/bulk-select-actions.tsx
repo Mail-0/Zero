@@ -25,8 +25,9 @@ export function BulkSelectActions() {
       optimisticMoveThreadsTo(mail.bulkSelected, currentFolder, to);
       setMail((prev) => ({ ...prev, selected: null, bulkSelected: [] }));
     } catch (error) {
-      console.error('Failed to move emails:', error);
-      toast.error('Failed to move emails.');
+      console.error(`Failed to ${to} emails:`, error);
+      const actionName = to === 'archive' ? 'archive' : to === 'spam' ? 'move to spam' : 'move to bin';
+      toast.error(`Failed to ${actionName} emails. Please try again.`);
     }
   };
 
@@ -65,7 +66,6 @@ export function BulkSelectActions() {
           onClick={action.action}
           className="h-8 w-8 rounded-full"
           title={action.label}
-          aria-label={action.label}
         >
           {action.icon}
           <span className="sr-only">{action.label}</span>

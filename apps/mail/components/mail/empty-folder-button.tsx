@@ -60,6 +60,7 @@ export default function EmptyFolderButton({ folder }: Props) {
           cursor = page.nextPageToken;
         } catch (error) {
           console.error('Pagination failed', error);
+          toast.error(`Failed to load all emails. ${ids.size} emails will be processed, but some may remain.`);
           break;
         }
       }
