@@ -59,8 +59,15 @@ export default function EmptyFolderButton({ folder }: Props) {
           if (!page?.nextPageToken) break;
           cursor = page.nextPageToken;
         } catch (error) {
-          console.error('Pagination failed', error);
-          toast.error(`Failed to load all emails. ${ids.size} emails will be processed, but some may remain.`);
+          console.error('Failed to fetch emails from server', error);
+          if (ids.size === 0) {
+            // Complete failure - no emails fetched at all
+            toast.error('Failed to connect to server. Please try again.');
+            return;
+          } else {
+            // Partial failure - some emails were fetched
+            toast.error(`Failed to load all emails. ${ids.size} emails will be processed, but some may remain.`);
+          }
           break;
         }
       }

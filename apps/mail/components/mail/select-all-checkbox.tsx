@@ -18,6 +18,7 @@ export default function SelectAllCheckbox({ className }: { className?: string })
 
   const [isFetchingIds, setIsFetchingIds] = useState(false);
   const allIdsCache = useRef<string[] | null>(null);
+  const cacheKey = useRef<string>('');
 
   const checkboxRef = useRef<HTMLButtonElement>(null);
 
@@ -75,11 +76,17 @@ export default function SelectAllCheckbox({ className }: { className?: string })
         action: {
           label: 'Select all conversations',
           onClick: async () => {
+            const currentCacheKey = cacheKey.current;
             try {
               if (!allIdsCache.current) {
                 setIsFetchingIds(true);
                 allIdsCache.current = await fetchAllMatchingThreadIds();
                 setIsFetchingIds(false);
+              }
+              // Check if search parameters changed during fetch - prevent race condition
+              if (currentCacheKey !== cacheKey.current) {
+                console.log('Search changed during fetch, ignoring stale results');
+                return;
               }
               const allIds = allIdsCache.current ?? [];
               setMail((prev) => ({ ...prev, bulkSelected: allIds }));
@@ -96,24 +103,31 @@ export default function SelectAllCheckbox({ className }: { className?: string })
   }, [isFetchingIds, mail.bulkSelected.length, loadedIds, fetchAllMatchingThreadIds, setMail]);
 
   useEffect(() => {
-    allIdsCache.current = null;
+    const newCacheKey = `${folder}-${query}-${JSON.stringify(searchValue)}`;
+    if (cacheKey.current !== newCacheKey) {
+      allIdsCache.current = null;
+      cacheKey.current = newCacheKey;
+      // Reset fetching state if search changes mid-fetch to prevent stale results
+      setIsFetchingIds(false);
+    }
   }, [folder, query, searchValue]);
 
   return (
-    <button
-      onClick={handleToggle}
-      disabled={isFetchingIds}
-      className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
-      aria-label="Select all emails"
-      aria-pressed={isAllLoadedSelected}
-      type="button"
-    >
+    <div className="flex items-center gap-2">
       <Checkbox
+        id="select-all-checkbox"
         checked={isIndeterminate ? 'indeterminate' : isAllLoadedSelected}
-        className="h-4 w-4 pointer-events-none"
-        aria-hidden="true"
+        onCheckedChange={handleToggle}
+        disabled={isFetchingIds}
+        className="h-4 w-4"
+        aria-label="Select all emails"
       />
-      Select all
-    </button>
+      <label 
+        htmlFor="select-all-checkbox"
+        className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors cursor-pointer"
+      >
+        Select all
+      </label>
+    </div>
   );
 }

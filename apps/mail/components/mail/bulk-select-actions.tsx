@@ -26,8 +26,15 @@ export function BulkSelectActions() {
       setMail((prev) => ({ ...prev, selected: null, bulkSelected: [] }));
     } catch (error) {
       console.error(`Failed to ${to} emails:`, error);
-      const actionName = to === 'archive' ? 'archive' : to === 'spam' ? 'move to spam' : 'move to bin';
-      toast.error(`Failed to ${actionName} emails. Please try again.`);
+      let errorMessage = 'Failed to move emails. Please try again.';
+      if (to === 'archive') {
+        errorMessage = 'Failed to archive emails. Please try again.';
+      } else if (to === 'spam') {
+        errorMessage = 'Failed to move emails to spam. Please try again.';
+      } else if (to === 'bin') {
+        errorMessage = 'Failed to move emails to bin. Please try again.';
+      }
+      toast.error(errorMessage);
     }
   };
 
@@ -66,6 +73,7 @@ export function BulkSelectActions() {
           onClick={action.action}
           className="h-8 w-8 rounded-full"
           title={action.label}
+          aria-label={action.label}
         >
           {action.icon}
           <span className="sr-only">{action.label}</span>
