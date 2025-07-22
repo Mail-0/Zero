@@ -487,7 +487,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     const fetchThread = (threadId: string) =>
       Effect.gen(function* () {
         yield* Effect.sleep(500); // Rate limiting delay
-        return yield* withRetry(Effect.tryPromise(() => self.getWithRetry(threadId)));
+        return yield* Effect.tryPromise(() => self.getWithRetry(threadId));
       }).pipe(
         Effect.catchAll((error) => {
           console.error(`Failed to fetch thread ${threadId} in ${folder}:`, error);
