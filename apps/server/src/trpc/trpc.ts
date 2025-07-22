@@ -55,7 +55,7 @@ export const activeDriverProcedure = activeConnectionProcedure.use(async ({ ctx,
 
   if (!res.ok && res.error.message === 'invalid_grant') {
     // Remove the access token and refresh token
-    const db = getZeroDB(sessionUser.id);
+    const db = await getZeroDB(sessionUser.id);
     await db.updateConnection(activeConnection.id, {
       accessToken: null,
       refreshToken: null,

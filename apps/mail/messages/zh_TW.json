@@ -405,7 +405,8 @@
       "livesupport": "即時支援",
       "feedback": "意見反饋",
       "settings": "設定",
-      "voice": "語音助理"
+      "voice": "語音助理",
+      "snoozed": "已延後"
     },
     "settings": {
       "general": "一般",

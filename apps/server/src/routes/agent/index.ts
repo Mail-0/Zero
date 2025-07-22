@@ -27,15 +27,16 @@ import {
   type IncomingMessage,
   type OutgoingMessage,
 } from './types';
+import {
+  EPrompts,
+  type IOutgoingMessage,
+  type ParsedMessage,
+  type ISnoozeBatch,
+} from '../../types';
+import type { MailManager, IGetThreadResponse, IGetThreadsResponse } from '../../lib/driver/types';
 import { DurableObjectOAuthClientProvider } from 'agents/mcp/do-oauth-client-provider';
-import { EPrompts, type IOutgoingMessage, type ParsedMessage, type ISnoozeBatch } from '../../types';
-import type {
-  MailManager,
-  IGetThreadResponse,
-  IGetThreadsResponse,
-} from '../../lib/driver/types';
 import { AiChatPrompt, GmailSearchAssistantSystemPrompt } from '../../lib/prompts';
-import { connectionToDriver } from '../../lib/server-utils';
+import { connectionToDriver, getZeroSocketAgent } from '../../lib/server-utils';
 import type { CreateDraftData } from '../../lib/schemas';
 import { withRetry } from '../../lib/gmail-rate-limit';
 import { getPrompt } from '../../pipelines.effect';
@@ -50,6 +51,7 @@ import { processToolCalls } from './utils';
 import { env } from 'cloudflare:workers';
 import type { Connection } from 'agents';
 import { openai } from '@ai-sdk/openai';
+import { parseISO } from 'date-fns';
 import { createDb } from '../../db';
 import { DriverRpcDO } from './rpc';
 import { eq } from 'drizzle-orm';
@@ -57,13 +59,12 @@ import { Effect } from 'effect';
 
 const decoder = new TextDecoder();
 
-const shouldDropTables = env.DROP_AGENT_TABLES === 'true';
-const maxCount = parseInt(env.THREAD_SYNC_MAX_COUNT || '10', 10);
-const shouldLoop = env.THREAD_SYNC_LOOP !== 'false';
+const shouldDropTables = true;
+const maxCount = 20;
+const shouldLoop = true;
 export class ZeroDriver extends AIChatAgent<typeof env> {
   private foldersInSync: Map<string, boolean> = new Map();
   private syncThreadsInProgress: Map<string, boolean> = new Map();
-  private currentFolder: string | null = 'inbox';
   private driver: MailManager | null = null;
   private agent: DurableObjectStub<ZeroAgent> | null = null;
   constructor(ctx: DurableObjectState, env: Env) {
@@ -87,6 +88,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
   async setMetaData(connectionId: string) {
     await this.setName(connectionId);
+    this.agent = await getZeroSocketAgent(connectionId);
     return new DriverRpcDO(this, connectionId);
   }
 
@@ -154,7 +156,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
   }
 
   async onConnect() {
-    await this.setupAuth();
+    if (!this.driver) await this.setupAuth();
   }
 
   public async setupAuth() {
@@ -167,6 +169,8 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
       if (_connection) this.driver = connectionToDriver(_connection);
       this.ctx.waitUntil(conn.end());
       this.ctx.waitUntil(this.syncThreads('inbox'));
+      this.ctx.waitUntil(this.syncThreads('sent'));
+      this.ctx.waitUntil(this.syncThreads('spam'));
     }
   }
   async rawListThreads(params: {
@@ -388,7 +392,12 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
       if (latest) {
         // Convert receivedOn to ISO format for proper sorting
-        const normalizedReceivedOn = new Date(latest.receivedOn).toISOString();
+        let normalizedReceivedOn: string;
+        try {
+          normalizedReceivedOn = new Date(latest.receivedOn).toISOString();
+        } catch (error) {
+          normalizedReceivedOn = new Date().toISOString();
+        }
 
         await env.THREADS_BUCKET.put(this.getThreadKey(threadId), JSON.stringify(threadData), {
           customMetadata: {
@@ -445,6 +454,13 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     return count[0]['COUNT(*)'] as number;
   }
 
+  async getFolderThreadCount(folder: string) {
+    const count = this.sql`SELECT COUNT(*) FROM threads WHERE EXISTS (
+      SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${folder}
+    )`;
+    return count[0]['COUNT(*)'] as number;
+  }
+
   async syncThreads(folder: string) {
     if (!this.driver) {
       console.error('No driver available for syncThreads');
@@ -464,38 +480,74 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
     this.foldersInSync.set(folder, true);
 
-    try {
-      let totalSynced = 0;
+    const self = this;
 
-      // Process threads one by one without buffering
-      for await (const thread of this.streamThreads(folder)) {
-        try {
-          const id = await this.queue('syncThread', thread.id);
-          console.log(`Synced thread ${thread.id} to queue ${id}`);
-          totalSynced++;
-        } catch (error) {
-          console.error(`Failed to sync thread ${thread.id}:`, error);
+    const syncSingleThread = (threadId: string) =>
+      Effect.gen(function* () {
+        yield* Effect.sleep(500); // Rate limiting delay
+        return yield* withRetry(Effect.tryPromise(() => self.syncThread({ threadId })));
+      }).pipe(
+        Effect.catchAll((error) => {
+          console.error(`Failed to sync thread ${threadId}:`, error);
+          return Effect.succeed(null);
+        }),
+      );
+
+    const syncProgram = Effect.gen(
+      function* () {
+        let totalSynced = 0;
+        let pageToken: string | null = null;
+        let hasMore = true;
+        let _pageCount = 0;
+
+        while (hasMore) {
+          _pageCount++;
+
+          // Rate limiting delay between pages
+          yield* Effect.sleep(2000);
+
+          const result: IGetThreadsResponse = yield* Effect.tryPromise(() =>
+            self.listWithRetry({
+              folder,
+              maxResults: maxCount,
+              pageToken: pageToken || undefined,
+            }),
+          );
+
+          // Process threads with controlled concurrency to avoid rate limits
+          const threadIds = result.threads.map((thread) => thread.id);
+          const syncEffects = threadIds.map(syncSingleThread);
+
+          yield* Effect.all(syncEffects, { concurrency: 1, discard: true });
+
+          totalSynced += result.threads.length;
+          pageToken = result.nextPageToken;
+          hasMore = pageToken !== null && shouldLoop;
         }
 
-        // // Broadcast progress after each thread
-        // this.agent.broadcastChatMessage({
-        //   type: OutgoingMessageType.Mail_List,
-        //   folder,
-        // });
-      }
+        return { synced: totalSynced };
+      }.bind(this),
+    );
 
-      return { synced: totalSynced };
+    try {
+      const result = await Effect.runPromise(
+        syncProgram.pipe(
+          Effect.ensuring(
+            Effect.sync(() => {
+              console.log('Setting isSyncing to false');
+              this.foldersInSync.delete(folder);
+              this.agent?.broadcastChatMessage({
+                type: OutgoingMessageType.Mail_List,
+                folder,
+              });
+            }),
+          ),
+        ),
+      );
+      return result;
     } catch (error) {
       console.error('Failed to sync inbox threads:', error);
       throw error;
-    } finally {
-      console.log('Setting isSyncing to false');
-      this.foldersInSync.delete(folder);
-      if (this.agent)
-        this.agent.broadcastChatMessage({
-          type: OutgoingMessageType.Mail_List,
-          folder,
-        });
     }
   }
 
@@ -506,7 +558,6 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     }
 
     try {
-      const startTime = Date.now();
       console.log(`[inboxRag] Executing AI search with parameters:`, {
         query,
         max_num_results: 3,
@@ -528,8 +579,6 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
           value: `${this.name}/`,
         },
       });
-
-      const duration = Date.now() - startTime;
 
       return { result: answer.response, data: answer.data };
     } catch (error) {
@@ -617,6 +666,16 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     const { labelIds = [], folder, q, maxResults = 50, pageToken } = params;
 
     try {
+      const folderThreadCount = (await this.count()).find((c) => c.label === folder)?.count;
+      const currentThreadCount = await this.getThreadCount();
+
+      console.log('folderThreadCount', folderThreadCount, folder);
+      console.log('currentThreadCount', currentThreadCount);
+
+      if (folderThreadCount && folderThreadCount > currentThreadCount && folder) {
+        this.ctx.waitUntil(this.syncThreads(folder));
+      }
+
       // Build WHERE conditions
       const whereConditions: string[] = [];
 
@@ -774,7 +833,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     }
   }
 
-  async getThreadFromDB(id: string, lastAttempt = false): Promise<IGetThreadResponse> {
+  async getThreadFromDB(id: string): Promise<IGetThreadResponse> {
     try {
       const result = this.sql`
           SELECT
@@ -793,11 +852,15 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         `;
 
       if (!result || result.length === 0) {
-        if (lastAttempt) {
-          throw new Error('Thread not found in database, Sync Failed once');
-        }
-        await this.syncThread({ threadId: id });
-        return this.getThreadFromDB(id, true);
+        const res = await this.queue('syncThread', { threadId: id });
+        console.log('res', res);
+        return {
+          messages: [],
+          latest: undefined,
+          hasUnread: false,
+          totalReplies: 0,
+          labels: [],
+        } satisfies IGetThreadResponse;
       }
       const row = result[0] as { latest_label_ids: string };
       const storedThread = await env.THREADS_BUCKET.get(this.getThreadKey(id));
@@ -824,7 +887,9 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
   async unsnoozeThreadsHandler(payload: ISnoozeBatch) {
     const { connectionId, threadIds, keyNames } = payload;
     try {
-      await this.setupAuth();
+      if (!this.driver) {
+        await this.setupAuth();
+      }
 
       if (threadIds.length) {
         await this.modifyLabels(threadIds, ['INBOX'], ['SNOOZED']);

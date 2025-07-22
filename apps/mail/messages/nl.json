@@ -405,7 +405,8 @@
       "livesupport": "Live ondersteuning",
       "feedback": "Feedback",
       "settings": "Instellingen",
-      "voice": "Spraakassistent"
+      "voice": "Spraakassistent",
+      "snoozed": "Uitgesteld"
     },
     "settings": {
       "general": "Algemeen",
