@@ -462,6 +462,8 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
   }
 
   async syncThreads(folder: string) {
+    const startTime = Date.now();  // Start manual timer
+    console.log(`[DEBUG] Entering syncThreads for folder: ${folder}`);
     if (!this.driver) {
       console.error('No driver available for syncThreads');
       throw new Error('No driver available');
@@ -473,22 +475,24 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     }
 
     const threadCount = await this.getThreadCount();
+    console.log(`[DEBUG] Current threadCount: ${threadCount}, maxCount: ${maxCount}, shouldLoop: ${shouldLoop}`);  // Add this
     if (threadCount >= maxCount && !shouldLoop) {
       console.log('Threads already synced, skipping...');
       return { synced: 0, message: 'Threads already synced' };
     }
 
     this.foldersInSync.set(folder, true);
+    console.log('[DEBUG] Starting sync loop');  // Add this
 
     const self = this;
 
-    const syncSingleThread = (threadId: string) =>
+    const fetchThread = (threadId: string) =>
       Effect.gen(function* () {
         yield* Effect.sleep(500); // Rate limiting delay
-        return yield* withRetry(Effect.tryPromise(() => self.syncThread({ threadId })));
+        return yield* withRetry(Effect.tryPromise(() => self.getWithRetry(threadId)));
       }).pipe(
         Effect.catchAll((error) => {
-          console.error(`Failed to sync thread ${threadId}:`, error);
+          console.error(`Failed to fetch thread ${threadId}:`, error);
           return Effect.succeed(null);
         }),
       );
@@ -498,11 +502,8 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         let totalSynced = 0;
         let pageToken: string | null = null;
         let hasMore = true;
-        let _pageCount = 0;
 
         while (hasMore) {
-          _pageCount++;
-
           // Rate limiting delay between pages
           yield* Effect.sleep(2000);
 
@@ -514,13 +515,62 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
             }),
           );
 
-          // Process threads with controlled concurrency to avoid rate limits
           const threadIds = result.threads.map((thread) => thread.id);
-          const syncEffects = threadIds.map(syncSingleThread);
+          const fetchEffects = threadIds.map(fetchThread);
 
-          yield* Effect.all(syncEffects, { concurrency: 1, discard: true });
+          const threadDatas = (yield* Effect.all(fetchEffects, { concurrency: 3 })) // Limited concurrency for memory safety
+            .filter((data): data is Exclude<typeof data, null> & { latest: NonNullable<IGetThreadResponse['latest']> & { threadId: string } } => data !== null && data.latest !== undefined && data.latest.threadId !== undefined);
 
-          totalSynced += result.threads.length;
+          if (threadDatas.length > 0) {
+            // Batch R2 puts
+            yield* Effect.tryPromise(() =>
+              Promise.all(
+                threadDatas.map((threadData) =>
+                  env.THREADS_BUCKET.put(self.getThreadKey(threadData.latest.threadId), JSON.stringify(threadData), {
+                    customMetadata: { threadId: threadData.latest.threadId },
+                  })
+                )
+              )
+            );
+
+            // Batch SQL inserts with parallel template literal executions
+            yield* Effect.tryPromise(() =>
+              Promise.all(
+                threadDatas.map((threadData) => {
+                  const latest = threadData.latest;
+                  const normalizedReceivedOn = new Date(latest.receivedOn).toISOString();
+                  return self.sql`
+                    INSERT OR REPLACE INTO threads (
+                      id, thread_id, provider_id, latest_sender,
+                      latest_received_on, latest_subject, latest_label_ids, updated_at
+                    ) VALUES (
+                      ${latest.threadId},
+                      ${latest.threadId},
+                      'google',
+                      ${JSON.stringify(latest.sender)},
+                      ${normalizedReceivedOn},
+                      ${latest.subject},
+                      ${JSON.stringify(latest.tags.map((tag) => tag.id))},
+                      CURRENT_TIMESTAMP
+                    )
+                  `;
+                })
+              )
+            );
+
+            // Batch broadcast
+            if (self.agent) {
+              threadDatas.forEach((threadData) => {
+                self.agent?.broadcastChatMessage({
+                  type: OutgoingMessageType.Mail_Get,
+                  threadId: threadData.latest.threadId,
+                });
+              });
+            }
+
+            totalSynced += threadDatas.length;
+          }
+
           pageToken = result.nextPageToken;
           hasMore = pageToken !== null && shouldLoop;
         }
@@ -544,8 +594,15 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
           ),
         ),
       );
+      const duration = Date.now() - startTime;  // Calculate duration
+      console.log(`[TIMING] syncThreads completed in ${duration}ms`);  // Log it
+      console.log('[DEBUG] syncThreads completed successfully');  // Add this
       return result;
     } catch (error) {
+      const duration = Date.now() - startTime;  // Calculate even on error
+      console.log(`[TIMING] syncThreads errored after ${duration}ms`);
+      console.log('[DEBUG] syncThreads errored');  // Add this
+      console.timeEnd('syncThreads');  // End on error
       console.error('Failed to sync inbox threads:', error);
       throw error;
     }
