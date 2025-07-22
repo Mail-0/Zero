@@ -69,6 +69,7 @@ type CommandPaletteContext = {
 };
 
 interface CommandItem {
+  id?: string;
   title: string;
   icon?: ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
   url?: string;
@@ -683,6 +684,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     const otherCommands: Record<string, CommandItem[]> = {};
 
     mailCommands.push({
+      id: 'compose-email',
       title: 'Compose Email',
       icon: Pencil2,
       shortcut: 'c',
@@ -692,6 +694,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     });
 
     searchCommands.push({
+      id: 'search-emails',
       title: 'Search Emails',
       icon: Search,
       shortcut: 's',
@@ -702,6 +705,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
     });
 
     searchCommands.push({
+      id: 'filter-emails',
       title: 'Filter Emails',
       icon: Filter,
       shortcut: 'f',
@@ -731,6 +735,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
 
     quickFilterOptions.forEach((option) => {
       searchCommands.push({
+        id: `quick-filter-${option.title.toLowerCase().replace(/\s+/g, '-')}`,
         title: option.title,
         icon: option.icon,
         onClick: option.onClick,
@@ -744,6 +749,7 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
         group.items.forEach((navItem) => {
           if (navItem.disabled) return;
           const item: CommandItem = {
+            id: `${sectionKey}-${navItem.title.toLowerCase().replace(/\s+/g, '-')}`,
             title: navItem.title,
             icon: navItem.icon,
             url: navItem.url,
@@ -886,7 +892,8 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
               if (!item) return null;
               return (
                 <CommandItem
-                  key={item.title}
+                  key={`recent-${item.id || item.url || item.title}`}
+                  value={`recent-${item.id || item.url || item.title}`}
                   onSelect={() => {
                     runCommand(() => {
                       if (item.onClick) {
@@ -929,7 +936,8 @@ export function CommandPalette({ children }: { children: React.ReactNode }) {
                 <CommandGroup heading={group.group}>
                   {group.items.map((item) => (
                     <CommandItem
-                      key={item.url || item.title}
+                      key={item.id || item.url || item.title}
+                      value={item.id || item.url || item.title}
                       onSelect={() => {
                         if (
                           [

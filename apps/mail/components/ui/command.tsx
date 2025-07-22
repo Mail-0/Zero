@@ -84,9 +84,6 @@ const CommandList = React.forwardRef<
         let actualSelectedItem = selectedItems[0];
 
         selectedItems.forEach((item) => {
-          const rect = item.getBoundingClientRect();
-          const style = window.getComputedStyle(item);
-
           if (
             item === document.activeElement ||
             item.getAttribute('aria-current') === 'true' ||
