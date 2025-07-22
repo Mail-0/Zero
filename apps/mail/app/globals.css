@@ -259,6 +259,15 @@
   transition: transform 0.3s ease;
 }
 
+[cmdk-list] {
+  height: min(300px, var(--cmdk-list-height));
+  max-height: 400px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  transition: 150ms cubic-bezier(0.86, 0, 0.07, 1);
+  transition-property: height;
+}
+
 @keyframes gradient-animation {
   0% {
     background-position: 0% 50%;

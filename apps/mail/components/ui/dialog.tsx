@@ -1,6 +1,5 @@
 import { Dialog as DialogPrimitive } from 'radix-ui';
 
-import { AnimatedSizeContainer } from '../resize-container';
 import { cn } from '@/lib/utils';
 import * as React from 'react';
 
@@ -35,23 +34,28 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 interface DialogContentProps
   extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
   showOverlay?: boolean;
+  positioning?: 'center' | 'custom';
 }
 
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   DialogContentProps
->(({ className, children, showOverlay = false, ...props }, ref) => (
+>(({ className, children, showOverlay = false, positioning = 'center', ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay showOverlay={showOverlay} />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed left-[50%] top-[50%] z-[100] translate-x-[-50%] translate-y-[-50%] duration-200',
+        'fixed z-[100] duration-200',
+        positioning === 'center'
+          ? 'left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]'
+          : 'translate-x-[-50%]',
         'data-[state=open]:animate-in data-[state=closed]:animate-out',
         'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-        'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
-        'data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%]',
-        'data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]',
+        positioning === 'center' && 'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
+        positioning === 'center'
+          ? 'data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]'
+          : 'data-[state=closed]:slide-out-to-left-1/2 data-[state=open]:slide-in-from-left-1/2',
         showOverlay
           ? 'bg-panelLight dark:bg-panelDark w-full max-w-[500px] rounded-xl border border-zinc-800 p-6'
           : '',
@@ -59,15 +63,7 @@ const DialogContent = React.forwardRef<
       )}
       {...props}
     >
-      <AnimatedSizeContainer
-        height
-        transition={{
-          duration: 0.26,
-          ease: [0.165, 0.84, 0.44, 1],
-        }}
-      >
-        {children}
-      </AnimatedSizeContainer>
+      {children}
     </DialogPrimitive.Content>
   </DialogPortal>
 ));

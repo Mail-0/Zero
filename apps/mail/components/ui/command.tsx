@@ -33,7 +33,13 @@ const CommandDialog = ({ children, ...props }: DialogProps) => {
       <DialogDescription className="sr-only">Command</DialogDescription>
       <DialogContent
         showOverlay={true}
-        className="w-full overflow-hidden rounded-xl border border-zinc-200 p-0 sm:max-w-xl dark:border-zinc-800 [&>button:last-child]:hidden"
+        positioning="custom"
+        className={cn(
+          'left-[50%] top-[20%]',
+          'data-[state=closed]:slide-out-to-top-[4%]',
+          'data-[state=open]:slide-in-from-top-[4%]',
+          'w-full overflow-hidden rounded-xl border border-zinc-200 p-0 sm:max-w-xl dark:border-zinc-800 [&>button:last-child]:hidden',
+        )}
       >
         <div className="relative">
           <span className="absolute inset-x-0 top-0 mx-auto h-px w-[50%] bg-gradient-to-r from-transparent via-neutral-500 to-transparent"></span>
@@ -117,9 +123,37 @@ const CommandList = React.forwardRef<
 
         const relativeTop = itemRect.top - listRect.top;
 
-        setSelectedItemTop(relativeTop);
-        setSelectedItemHeight(itemRect.height);
-        setShowGradient(true);
+        const isWithinContainerBounds =
+          itemRect.bottom > listRect.top &&
+          itemRect.top < listRect.bottom &&
+          itemRect.right > listRect.left &&
+          itemRect.left < listRect.right;
+
+        const isItemVisibleInScrollView = relativeTop >= 0;
+
+        const itemCenterX = itemRect.left + itemRect.width / 2;
+        const itemCenterY = itemRect.top + itemRect.height / 2;
+        const elementAtCenter = document.elementFromPoint(itemCenterX, itemCenterY);
+
+        const isActuallyVisible =
+          elementAtCenter &&
+          (elementAtCenter === actualSelectedItem ||
+            actualSelectedItem.contains(elementAtCenter) ||
+            elementAtCenter.closest('[data-selected="true"]') === actualSelectedItem);
+
+        if (isWithinContainerBounds && isItemVisibleInScrollView && isActuallyVisible) {
+          if (relativeTop + itemRect.height > 0 && relativeTop < listRect.height) {
+            setSelectedItemTop(relativeTop);
+            setSelectedItemHeight(itemRect.height);
+            setShowGradient(true);
+          } else {
+            setShowGradient(false);
+            setSelectedItemTop(null);
+          }
+        } else {
+          setShowGradient(false);
+          setSelectedItemTop(null);
+        }
       } else {
         setShowGradient(false);
         setSelectedItemTop(null);
