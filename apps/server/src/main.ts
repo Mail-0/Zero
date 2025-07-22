@@ -24,7 +24,6 @@ import { ZeroAgent, ZeroDriver } from './routes/agent';
 import { contextStorage } from 'hono/context-storage';
 import { defaultUserSettings } from './lib/schemas';
 import { createLocalJWKSet, jwtVerify } from 'jose';
-import { routePartykitRequest } from 'partyserver';
 import { getZeroAgent } from './lib/server-utils';
 import { enableBrainFunction } from './lib/brain';
 import { trpcServer } from '@hono/trpc-server';
