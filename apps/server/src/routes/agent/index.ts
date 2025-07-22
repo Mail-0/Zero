@@ -51,7 +51,6 @@ import { processToolCalls } from './utils';
 import { env } from 'cloudflare:workers';
 import type { Connection } from 'agents';
 import { openai } from '@ai-sdk/openai';
-import { parseISO } from 'date-fns';
 import { createDb } from '../../db';
 import { DriverRpcDO } from './rpc';
 import { eq } from 'drizzle-orm';
@@ -59,9 +58,9 @@ import { Effect } from 'effect';
 
 const decoder = new TextDecoder();
 
-const shouldDropTables = true;
+const shouldDropTables = false;
 const maxCount = 20;
-const shouldLoop = true;
+const shouldLoop = env.THREAD_SYNC_LOOP !== 'false';
 export class ZeroDriver extends AIChatAgent<typeof env> {
   private foldersInSync: Map<string, boolean> = new Map();
   private syncThreadsInProgress: Map<string, boolean> = new Map();
