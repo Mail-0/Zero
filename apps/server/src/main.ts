@@ -518,7 +518,7 @@ export default class extends WorkerEntrypoint<typeof env> {
           const userId = payload.sub;
 
           if (userId) {
-            const db = getZeroDB(userId);
+            const db = await getZeroDB(userId);
             c.set('sessionUser', await db.findUser());
           }
         }
