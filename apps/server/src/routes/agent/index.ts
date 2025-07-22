@@ -367,6 +367,16 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         DROP TABLE IF EXISTS threads;`;
   }
 
+  async deleteThread(id: string) {
+    void this.sql`
+      DELETE FROM threads WHERE thread_id = ${id};
+    `;
+    this.agent?.broadcastChatMessage({
+      type: OutgoingMessageType.Mail_List,
+      folder: 'bin',
+    });
+  }
+
   async syncThread({ threadId }: { threadId: string }) {
     if (this.name === 'general') return;
     if (!this.driver) {
@@ -384,7 +394,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     }
     this.syncThreadsInProgress.set(threadId, true);
 
-    console.log('Server: syncThread called for thread', threadId);
+    // console.log('Server: syncThread called for thread', threadId);
     try {
       const threadData = await this.getWithRetry(threadId);
       const latest = threadData.latest;
@@ -432,10 +442,10 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
             threadId,
           });
         this.syncThreadsInProgress.delete(threadId);
-        console.log('Server: syncThread result', {
-          threadId,
-          labels: threadData.labels,
-        });
+        // console.log('Server: syncThread result', {
+        //   threadId,
+        //   labels: threadData.labels,
+        // });
         return { success: true, threadId, threadData };
       } else {
         this.syncThreadsInProgress.delete(threadId);
@@ -656,6 +666,11 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     };
   }
 
+  normalizeFolderName(folderName: string) {
+    if (folderName === 'bin') return 'trash';
+    return folderName;
+  }
+
   async getThreadsFromDB(params: {
     labelIds?: string[];
     folder?: string;
@@ -663,14 +678,13 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     maxResults?: number;
     pageToken?: string;
   }): Promise<IGetThreadsResponse> {
-    const { labelIds = [], folder, q, maxResults = 50, pageToken } = params;
+    const { labelIds = [], q, maxResults = 50, pageToken } = params;
+    let folder = params.folder ?? 'inbox';
 
     try {
+      folder = this.normalizeFolderName(folder);
       const folderThreadCount = (await this.count()).find((c) => c.label === folder)?.count;
       const currentThreadCount = await this.getThreadCount();
-
-      console.log('folderThreadCount', folderThreadCount, folder);
-      console.log('currentThreadCount', currentThreadCount);
 
       if (folderThreadCount && folderThreadCount > currentThreadCount && folder) {
         this.ctx.waitUntil(this.syncThreads(folder));

@@ -161,7 +161,9 @@ export class DriverRpcDO extends RpcTarget {
   }
 
   async delete(id: string) {
-    return await this.mainDo.delete(id);
+    const result = await this.mainDo.delete(id);
+    await this.mainDo.deleteThread(id);
+    return result;
   }
 
   async deleteAllSpam() {
