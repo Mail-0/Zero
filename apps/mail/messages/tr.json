@@ -424,7 +424,8 @@
       "livesupport": "Canlı Destek",
       "feedback": "Geribildirim",
       "settings": "Ayarlar",
-      "voice": "Sesli Asistan"
+      "voice": "Sesli Asistan",
+      "snoozed": "Ertelendi"
     },
     "settings": {
       "general": "Genel",

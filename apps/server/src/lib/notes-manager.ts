@@ -5,7 +5,7 @@ export class NotesManager {
   constructor() {}
 
   async getThreadNotes(userId: string, threadId: string): Promise<(typeof note.$inferSelect)[]> {
-    const db = getZeroDB(userId);
+    const db = await getZeroDB(userId);
     return await db.findManyNotesByThreadId(threadId);
   }
 
@@ -16,8 +16,8 @@ export class NotesManager {
     color: string = 'default',
     isPinned: boolean = false,
   ): Promise<typeof note.$inferSelect> {
-    try{
-      const db = getZeroDB(userId);
+    try {
+      const db = await getZeroDB(userId);
       const highestOrder = await db.findHighestNoteOrder();
 
       const id = crypto.randomUUID();
@@ -46,7 +46,7 @@ export class NotesManager {
       Omit<typeof note.$inferSelect, 'id' | 'userId' | 'threadId' | 'createdAt' | 'updatedAt'>
     >,
   ): Promise<typeof note.$inferSelect> {
-    const db = getZeroDB(userId);
+    const db = await getZeroDB(userId);
     const existingNote = await db.findNoteById(noteId);
 
     if (!existingNote) {
@@ -62,7 +62,7 @@ export class NotesManager {
   }
 
   async deleteNote(userId: string, noteId: string) {
-    const db = getZeroDB(userId);
+    const db = await getZeroDB(userId);
     try {
       await db.deleteNote(noteId);
       return true;
@@ -82,7 +82,7 @@ export class NotesManager {
 
     const noteIds = notes.map((n) => n.id);
 
-    const db = getZeroDB(userId);
+    const db = await getZeroDB(userId);
     const userNotes = await db.findManyNotesByIds(noteIds);
 
     const foundNoteIds = new Set(userNotes.map((n) => n.id));

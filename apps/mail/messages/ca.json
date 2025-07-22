@@ -424,7 +424,8 @@
       "livesupport": "Suport en directe",
       "feedback": "Feedback",
       "settings": "Configuració",
-      "voice": "Assistent de veu"
+      "voice": "Assistent de veu",
+      "snoozed": "Posposat"
     },
     "settings": {
       "general": "General",
