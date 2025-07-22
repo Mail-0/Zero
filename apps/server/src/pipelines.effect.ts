@@ -226,6 +226,11 @@ export const runZeroWorkflow = (
       catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
     });
 
+    yield* Effect.tryPromise({
+      try: async () => conn.end(),
+      catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
+    });
+
     const agent = yield* Effect.tryPromise({
       try: async () => await getZeroAgent(foundConnection.id),
       catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
