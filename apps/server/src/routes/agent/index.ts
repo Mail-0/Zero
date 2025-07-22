@@ -15,11 +15,11 @@
  */
 
 import {
-  type StreamTextOnFinishCallback,
-  createDataStreamResponse,
-  streamText,
   appendResponseMessages,
+  createDataStreamResponse,
   generateText,
+  streamText,
+  type StreamTextOnFinishCallback,
 } from 'ai';
 import {
   IncomingMessageType,
@@ -30,10 +30,10 @@ import {
 import {
   EPrompts,
   type IOutgoingMessage,
-  type ParsedMessage,
   type ISnoozeBatch,
+  type ParsedMessage,
 } from '../../types';
-import type { MailManager, IGetThreadResponse, IGetThreadsResponse } from '../../lib/driver/types';
+import type { IGetThreadResponse, IGetThreadsResponse, MailManager } from '../../lib/driver/types';
 import { DurableObjectOAuthClientProvider } from 'agents/mcp/do-oauth-client-provider';
 import { AiChatPrompt, GmailSearchAssistantSystemPrompt } from '../../lib/prompts';
 import { connectionToDriver, getZeroSocketAgent } from '../../lib/server-utils';
@@ -852,8 +852,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         `;
 
       if (!result || result.length === 0) {
-        const res = await this.queue('syncThread', { threadId: id });
-        console.log('res', res);
+        await this.queue('syncThread', { threadId: id });
         return {
           messages: [],
           latest: undefined,
