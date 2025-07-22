@@ -83,7 +83,6 @@
     "next-themes": "0.4.4",
     "novel": "1.0.2",
     "nuqs": "2.4.0",
-    "oxlint": "1.6.0",
     "partysocket": "^1.1.4",
     "pluralize": "^8.0.0",
     "posthog-js": "1.256.0",
@@ -113,8 +112,6 @@
     "tiptap-markdown": "0.8.10",
     "vaul": "1.1.2",
     "virtua": "0.41.2",
-    "vite-plugin-babel": "1.3.1",
-    "vite-plugin-oxlint": "1.4.0",
     "workers-og": "0.0.25",
     "zod": "catalog:"
   },
@@ -136,12 +133,15 @@
     "eslint": "9.27.0",
     "jiti": "2.4.2",
     "postcss": "8.5.3",
+    "oxlint": "1.6.0",
     "remeda": "2.21.3",
     "tailwind-scrollbar": "3.1.0",
     "tailwindcss": "3.4.17",
     "typescript": "catalog:",
     "vite": "^6.3.5",
     "vite-tsconfig-paths": "^5.1.4",
+    "vite-plugin-babel": "1.3.1",
+    "vite-plugin-oxlint": "1.4.0",
     "wrangler": "catalog:"
   }
 }
