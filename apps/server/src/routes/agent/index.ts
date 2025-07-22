@@ -500,10 +500,9 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         let totalSynced = 0;
         let pageToken: string | null = null;
         let hasMore = true;
-        let pageCount = 0;
 
         while (hasMore) {
-          pageCount++;
+          // Rate limiting delay between pages
           yield* Effect.sleep(2000);
 
           const result: IGetThreadsResponse = yield* Effect.tryPromise(() =>
@@ -517,28 +516,38 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
           const threadIds = result.threads.map((thread) => thread.id);
           const fetchEffects = threadIds.map(fetchThread);
 
-          const threadDatas = (yield* Effect.all(fetchEffects, { concurrency: 3 })) // Limited concurrency for memory safety
+          const threadDatas = (yield* Effect.all(fetchEffects, { concurrency: 5 })) // Concurrency for memory safety
             .filter((data): data is Exclude<typeof data, null> & { latest: NonNullable<IGetThreadResponse['latest']> & { threadId: string } } => data !== null && data.latest !== undefined && data.latest.threadId !== undefined);
 
           if (threadDatas.length > 0) {
             // Batch R2 puts
-            yield* Effect.tryPromise(() =>
-              Promise.all(
-                threadDatas.map((threadData) =>
-                  env.THREADS_BUCKET.put(self.getThreadKey(threadData.latest.threadId), JSON.stringify(threadData), {
+            const r2PutEffects = threadDatas.map((threadData) =>
+              Effect.tryPromise(() =>
+                env.THREADS_BUCKET.put(
+                  self.getThreadKey(threadData.latest.threadId),
+                  JSON.stringify(threadData),
+                  {
                     customMetadata: { threadId: threadData.latest.threadId },
-                  })
-                )
-              )
+                  },
+                ),
+              ).pipe(
+                Effect.catchAll((error) => {
+                  console.error(
+                    `Failed to put thread ${threadData.latest.threadId} to R2:`,
+                    error,
+                  );
+                  return Effect.succeed(null);
+                }),
+              ),
             );
+            yield* Effect.all(r2PutEffects, { concurrency: 5, discard: true });
 
             // Batch SQL inserts with parallel template literal executions
-            yield* Effect.tryPromise(() =>
-              Promise.all(
-                threadDatas.map((threadData) => {
-                  const latest = threadData.latest;
-                  const normalizedReceivedOn = new Date(latest.receivedOn).toISOString();
-                  return self.sql`
+            const sqlInsertEffects = threadDatas.map((threadData) => {
+              const latest = threadData.latest;
+              const normalizedReceivedOn = new Date(latest.receivedOn).toISOString();
+              return Effect.try(() =>
+                self.sql`
                     INSERT OR REPLACE INTO threads (
                       id, thread_id, provider_id, latest_sender,
                       latest_received_on, latest_subject, latest_label_ids, updated_at
@@ -552,10 +561,16 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
                       ${JSON.stringify(latest.tags.map((tag) => tag.id))},
                       CURRENT_TIMESTAMP
                     )
-                  `;
-                })
-              )
-            );
+                  `,
+              ).pipe(
+                Effect.catchAll((error) => {
+                  console.error(`Failed to insert thread ${latest.threadId} into DB:`, error);
+                  return Effect.succeed(null);
+                }),
+              );
+            });
+
+            yield* Effect.all(sqlInsertEffects, { concurrency: 5, discard: true });
 
             // Batch broadcast
             if (self.agent) {
@@ -574,7 +589,6 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
           hasMore = pageToken !== null && shouldLoop;
         }
 
-        console.log(`Synced ${totalSynced} threads over ${pageCount} pages for ${folder}`);
         return { synced: totalSynced };
       }.bind(this),
     );
