@@ -463,26 +463,24 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
   async syncThreads(folder: string) {
     const startTime = Date.now();  // Start manual timer
-    console.log(`[DEBUG] Entering syncThreads for folder: ${folder}`);
     if (!this.driver) {
       console.error('No driver available for syncThreads');
       throw new Error('No driver available');
     }
 
     if (this.foldersInSync.has(folder)) {
-      console.log('Sync already in progress, skipping...');
+      console.log(`Sync already in progress for ${folder}, skipping...`);
       return { synced: 0, message: 'Sync already in progress' };
     }
 
     const threadCount = await this.getThreadCount();
-    console.log(`[DEBUG] Current threadCount: ${threadCount}, maxCount: ${maxCount}, shouldLoop: ${shouldLoop}`);  // Add this
+    console.log(`Thread count for ${folder}: ${threadCount} (max: ${maxCount}, loop: ${shouldLoop})`);
     if (threadCount >= maxCount && !shouldLoop) {
-      console.log('Threads already synced, skipping...');
+      console.log(`Threads already synced for ${folder}, skipping...`);
       return { synced: 0, message: 'Threads already synced' };
     }
 
     this.foldersInSync.set(folder, true);
-    console.log('[DEBUG] Starting sync loop');  // Add this
 
     const self = this;
 
@@ -492,7 +490,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         return yield* withRetry(Effect.tryPromise(() => self.getWithRetry(threadId)));
       }).pipe(
         Effect.catchAll((error) => {
-          console.error(`Failed to fetch thread ${threadId}:`, error);
+          console.error(`Failed to fetch thread ${threadId} in ${folder}:`, error);
           return Effect.succeed(null);
         }),
       );
@@ -502,9 +500,10 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         let totalSynced = 0;
         let pageToken: string | null = null;
         let hasMore = true;
+        let pageCount = 0;
 
         while (hasMore) {
-          // Rate limiting delay between pages
+          pageCount++;
           yield* Effect.sleep(2000);
 
           const result: IGetThreadsResponse = yield* Effect.tryPromise(() =>
@@ -575,6 +574,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
           hasMore = pageToken !== null && shouldLoop;
         }
 
+        console.log(`Synced ${totalSynced} threads over ${pageCount} pages for ${folder}`);
         return { synced: totalSynced };
       }.bind(this),
     );
@@ -594,15 +594,12 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
           ),
         ),
       );
-      const duration = Date.now() - startTime;  // Calculate duration
-      console.log(`[TIMING] syncThreads completed in ${duration}ms`);  // Log it
-      console.log('[DEBUG] syncThreads completed successfully');  // Add this
+      const duration = Date.now() - startTime;
+      console.log(`[TIMING] syncThreads(${folder}) completed in ${duration}ms`);
       return result;
     } catch (error) {
-      const duration = Date.now() - startTime;  // Calculate even on error
-      console.log(`[TIMING] syncThreads errored after ${duration}ms`);
-      console.log('[DEBUG] syncThreads errored');  // Add this
-      console.timeEnd('syncThreads');  // End on error
+      const duration = Date.now() - startTime;
+      console.log(`[TIMING] syncThreads(${folder}) errored after ${duration}ms`);
       console.error('Failed to sync inbox threads:', error);
       throw error;
     }
