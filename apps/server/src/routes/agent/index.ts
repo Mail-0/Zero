@@ -51,7 +51,6 @@ import { processToolCalls } from './utils';
 import { env } from 'cloudflare:workers';
 import type { Connection } from 'agents';
 import { openai } from '@ai-sdk/openai';
-import { openai } from '@ai-sdk/openai';
 import { createDb } from '../../db';
 import { DriverRpcDO } from './rpc';
 import { eq } from 'drizzle-orm';
