@@ -43,6 +43,10 @@
             "name": "ZERO_DRIVER",
             "class_name": "ZeroDriver",
           },
+          {
+            "name": "THINKING_MCP",
+            "class_name": "ThinkingMCP",
+          },
         ],
       },
       "queues": {
@@ -85,6 +89,10 @@
         {
           "tag": "v5",
           "new_sqlite_classes": ["ZeroDriver"],
+        },
+        {
+          "tag": "v6",
+          "new_sqlite_classes": ["ThinkingMCP"],
         },
       ],
 
@@ -187,6 +195,10 @@
             "name": "ZERO_DRIVER",
             "class_name": "ZeroDriver",
           },
+          {
+            "name": "THINKING_MCP",
+            "class_name": "ThinkingMCP",
+          },
         ],
       },
       "r2_buckets": [
@@ -239,6 +251,10 @@
         {
           "tag": "v6",
           "new_sqlite_classes": ["ZeroDriver"],
+        },
+        {
+          "tag": "v7",
+          "new_sqlite_classes": ["ThinkingMCP"],
         },
       ],
       "observability": {
@@ -344,6 +360,10 @@
             "name": "ZERO_DRIVER",
             "class_name": "ZeroDriver",
           },
+          {
+            "name": "ZERO_THINKING_MCP",
+            "class_name": "ZeroThinkingMCP",
+          },
         ],
       },
       "queues": {
@@ -390,6 +410,10 @@
         {
           "tag": "v6",
           "new_sqlite_classes": ["ZeroDriver"],
+        },
+        {
+          "tag": "v7",
+          "new_sqlite_classes": ["ZeroThinkingMCP"],
         },
       ],
       "vars": {
