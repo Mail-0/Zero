@@ -711,51 +711,43 @@ export default class extends WorkerEntrypoint<typeof env> {
     switch (true) {
       case batch.queue.startsWith('subscribe-queue'): {
         console.log('batch', batch);
-        try {
-          await Promise.all(
-            batch.messages.map(async (msg: Message<ISubscribeBatch>) => {
-              const connectionId = msg.body.connectionId;
-              const providerId = msg.body.providerId;
-              try {
-                await enableBrainFunction({ id: connectionId, providerId });
-              } catch (error) {
-                console.error(
-                  `Failed to enable brain function for connection ${connectionId}:`,
-                  error,
-                );
-              }
-            }),
-          );
-          console.log('[SUBSCRIBE_QUEUE] batch done');
-        } finally {
-          batch.ackAll();
-        }
+        await Promise.all(
+          batch.messages.map(async (msg: Message<ISubscribeBatch>) => {
+            const connectionId = msg.body.connectionId;
+            const providerId = msg.body.providerId;
+            try {
+              await enableBrainFunction({ id: connectionId, providerId });
+            } catch (error) {
+              console.error(
+                `Failed to enable brain function for connection ${connectionId}:`,
+                error,
+              );
+            }
+          }),
+        );
+        console.log('[SUBSCRIBE_QUEUE] batch done');
         return;
       }
       case batch.queue.startsWith('thread-queue'): {
-        try {
-          await Promise.all(
-            batch.messages.map(async (msg: Message<IThreadBatch>) => {
-              const providerId = msg.body.providerId;
-              const historyId = msg.body.historyId;
-              const subscriptionName = msg.body.subscriptionName;
-              const workflow = runWorkflow(EWorkflowType.MAIN, {
-                providerId,
-                historyId,
-                subscriptionName,
-              });
+        await Promise.all(
+          batch.messages.map(async (msg: Message<IThreadBatch>) => {
+            const providerId = msg.body.providerId;
+            const historyId = msg.body.historyId;
+            const subscriptionName = msg.body.subscriptionName;
+            const workflow = runWorkflow(EWorkflowType.MAIN, {
+              providerId,
+              historyId,
+              subscriptionName,
+            });
 
-              try {
-                const result = await Effect.runPromise(workflow);
-                console.log('[THREAD_QUEUE] result', result);
-              } catch (error) {
-                console.error('Error running workflow', error);
-              }
-            }),
-          );
-        } finally {
-          batch.ackAll();
-        }
+            try {
+              const result = await Effect.runPromise(workflow);
+              console.log('[THREAD_QUEUE] result', result);
+            } catch (error) {
+              console.error('Error running workflow', error);
+            }
+          }),
+        );
         break;
       }
     }
