@@ -1,3 +1,3 @@
 interface Window {
-    lastMouseY?: number;
-  }
+  lastMouseY?: number;
+}
