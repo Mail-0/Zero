@@ -80,137 +80,209 @@ const CommandList = React.forwardRef<
   const [showGradient, setShowGradient] = React.useState(false);
   const listScrollableRef = React.useRef<HTMLDivElement>(null);
 
-  React.useEffect(() => {
-    const updateSelectedItemPosition = () => {
-      if (!listScrollableRef.current) return;
+  const mousePositionRef = React.useRef({ x: 0, y: 0 });
 
-      const selectedItems = listScrollableRef.current.querySelectorAll('[data-selected="true"]');
+  const updateTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
-      if (selectedItems.length > 0) {
-        let actualSelectedItem = selectedItems[0];
+  const selectedItemsCache = React.useRef<Element[]>([]);
+  const lastUpdateTime = React.useRef<number>(0);
 
-        selectedItems.forEach((item) => {
-          if (
-            item === document.activeElement ||
-            item.getAttribute('aria-current') === 'true' ||
-            item.closest('[role="option"][aria-selected="true"]') === item
-          ) {
-            actualSelectedItem = item;
-          }
-        });
+  const updateSelectedItemPosition = React.useCallback(() => {
+    const now = Date.now();
 
-        if (selectedItems.length > 1) {
-          const mouseY = window.lastMouseY || 0;
-          let closestItem = selectedItems[0];
-          let closestDistance = Infinity;
+    if (now - lastUpdateTime.current < 16) {
+      if (updateTimeoutRef.current) clearTimeout(updateTimeoutRef.current);
+      updateTimeoutRef.current = setTimeout(updateSelectedItemPosition, 16);
+      return;
+    }
 
-          selectedItems.forEach((item) => {
-            const rect = item.getBoundingClientRect();
-            const itemCenter = rect.top + rect.height / 2;
-            const distance = Math.abs(mouseY - itemCenter);
+    lastUpdateTime.current = now;
 
-            if (distance < closestDistance) {
-              closestDistance = distance;
-              closestItem = item;
-            }
-          });
+    if (!listScrollableRef.current) {
+      setShowGradient(false);
+      setSelectedItemTop(null);
+      return;
+    }
 
-          actualSelectedItem = closestItem;
+    const selectedItems = Array.from(
+      listScrollableRef.current.querySelectorAll('[data-selected="true"]'),
+    );
+
+    if (selectedItems.length === 0) {
+      setShowGradient(false);
+      setSelectedItemTop(null);
+      selectedItemsCache.current = [];
+      return;
+    }
+
+    const itemsChanged =
+      selectedItems.length !== selectedItemsCache.current.length ||
+      selectedItems.some((item, index) => item !== selectedItemsCache.current[index]);
+
+    if (itemsChanged) {
+      selectedItemsCache.current = selectedItems;
+    }
+
+    let actualSelectedItem = selectedItems[0];
+
+    const focusedItem = selectedItems.find(
+      (item) =>
+        item === document.activeElement ||
+        item.getAttribute('aria-current') === 'true' ||
+        item.closest('[role="option"][aria-selected="true"]') === item,
+    );
+
+    if (focusedItem) {
+      actualSelectedItem = focusedItem;
+    } else if (selectedItems.length > 1) {
+      const { y: mouseY } = mousePositionRef.current;
+      let closestItem = selectedItems[0];
+      let closestDistance = Infinity;
+
+      selectedItems.forEach((item) => {
+        const rect = item.getBoundingClientRect();
+        const itemCenter = rect.top + rect.height / 2;
+        const distance = Math.abs(mouseY - itemCenter);
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestItem = item;
         }
+      });
 
-        const listRect = listScrollableRef.current.getBoundingClientRect();
-        const itemRect = actualSelectedItem.getBoundingClientRect();
+      actualSelectedItem = closestItem;
+    }
 
-        const relativeTop = itemRect.top - listRect.top;
+    const listRect = listScrollableRef.current.getBoundingClientRect();
+    const itemRect = actualSelectedItem.getBoundingClientRect();
+    const relativeTop = itemRect.top - listRect.top;
 
-        const isWithinContainerBounds =
-          itemRect.bottom > listRect.top &&
-          itemRect.top < listRect.bottom &&
-          itemRect.right > listRect.left &&
-          itemRect.left < listRect.right;
+    const isWithinVerticalBounds = itemRect.bottom > listRect.top && itemRect.top < listRect.bottom;
+    const isWithinHorizontalBounds =
+      itemRect.right > listRect.left && itemRect.left < listRect.right;
+    const isWithinContainerBounds = isWithinVerticalBounds && isWithinHorizontalBounds;
+    const isItemVisibleInScrollView = relativeTop >= 0;
 
-        const isItemVisibleInScrollView = relativeTop >= 0;
+    if (!isWithinContainerBounds || !isItemVisibleInScrollView) {
+      setShowGradient(false);
+      setSelectedItemTop(null);
+      return;
+    }
 
-        const itemCenterX = itemRect.left + itemRect.width / 2;
-        const itemCenterY = itemRect.top + itemRect.height / 2;
-        const elementAtCenter = document.elementFromPoint(itemCenterX, itemCenterY);
+    const itemCenterY = itemRect.top + itemRect.height / 2;
+    const itemCenterX = itemRect.left + itemRect.width / 2;
 
-        const isActuallyVisible =
-          elementAtCenter &&
-          (elementAtCenter === actualSelectedItem ||
-            actualSelectedItem.contains(elementAtCenter) ||
-            elementAtCenter.closest('[data-selected="true"]') === actualSelectedItem);
+    const isActuallyVisible =
+      itemCenterY >= listRect.top &&
+      itemCenterY <= listRect.bottom &&
+      itemCenterX >= listRect.left &&
+      itemCenterX <= listRect.right;
 
-        if (isWithinContainerBounds && isItemVisibleInScrollView && isActuallyVisible) {
-          if (relativeTop + itemRect.height > 0 && relativeTop < listRect.height) {
-            setSelectedItemTop(relativeTop);
-            setSelectedItemHeight(itemRect.height);
-            setShowGradient(true);
-          } else {
-            setShowGradient(false);
-            setSelectedItemTop(null);
-          }
-        } else {
-          setShowGradient(false);
-          setSelectedItemTop(null);
-        }
-      } else {
+    if (isActuallyVisible && relativeTop + itemRect.height > 0 && relativeTop < listRect.height) {
+      React.startTransition(() => {
+        setSelectedItemTop(relativeTop);
+        setSelectedItemHeight(itemRect.height);
+        setShowGradient(true);
+      });
+    } else {
+      React.startTransition(() => {
         setShowGradient(false);
         setSelectedItemTop(null);
-      }
-    };
+      });
+    }
+  }, []);
 
+  const debouncedUpdate = React.useCallback(() => {
+    if (updateTimeoutRef.current) clearTimeout(updateTimeoutRef.current);
+    updateTimeoutRef.current = setTimeout(updateSelectedItemPosition, 10);
+  }, [updateSelectedItemPosition]);
+
+  React.useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      (window as any).lastMouseY = e.clientY;
+      mousePositionRef.current = { x: e.clientX, y: e.clientY };
+      debouncedUpdate();
     };
 
-    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mousemove', handleMouseMove, { passive: true });
 
     updateSelectedItemPosition();
 
-    const observer = new MutationObserver(updateSelectedItemPosition);
+    const observer = new MutationObserver((mutations) => {
+      const hasRelevantChanges = mutations.some(
+        (mutation) =>
+          (mutation.type === 'attributes' &&
+            (mutation.attributeName === 'data-selected' ||
+              mutation.attributeName === 'aria-selected' ||
+              mutation.attributeName === 'aria-current')) ||
+          mutation.type === 'childList',
+      );
+
+      if (hasRelevantChanges) {
+        debouncedUpdate();
+      }
+    });
+
     if (listScrollableRef.current) {
       observer.observe(listScrollableRef.current, {
         attributes: true,
         subtree: true,
-        attributeFilter: ['data-selected'],
+        attributeFilter: ['data-selected', 'aria-selected', 'aria-current'],
         childList: true,
       });
     }
 
-    const handleScroll = () => updateSelectedItemPosition();
+    let scrollTimeout: NodeJS.Timeout;
+    const handleScroll = () => {
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(updateSelectedItemPosition, 8);
+    };
+
     if (listScrollableRef.current) {
-      listScrollableRef.current.addEventListener('scroll', handleScroll);
+      listScrollableRef.current.addEventListener('scroll', handleScroll, { passive: true });
     }
 
     return () => {
       observer.disconnect();
       document.removeEventListener('mousemove', handleMouseMove);
+
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+
       if (listScrollableRef.current) {
         listScrollableRef.current.removeEventListener('scroll', handleScroll);
       }
     };
-  }, []);
+  }, [updateSelectedItemPosition, debouncedUpdate]);
+
+  const gradientElement = React.useMemo(() => {
+    if (!showGradient || selectedItemTop === null) return null;
+
+    return (
+      <motion.span
+        className="pointer-events-none absolute left-0 z-10 w-px bg-gradient-to-b from-transparent via-neutral-500 to-transparent"
+        animate={{
+          top: selectedItemTop,
+          height: selectedItemHeight,
+          opacity: 1,
+        }}
+        initial={{ opacity: 0 }}
+        transition={{
+          type: 'spring',
+          stiffness: 400,
+          damping: 30,
+          mass: 0.5,
+        }}
+      />
+    );
+  }, [showGradient, selectedItemTop, selectedItemHeight]);
 
   return (
     <div className="group relative">
-      {showGradient && selectedItemTop !== null && (
-        <motion.span
-          className="pointer-events-none absolute left-0 z-10 w-px bg-gradient-to-b from-transparent via-neutral-500 to-transparent"
-          animate={{
-            top: selectedItemTop,
-            height: selectedItemHeight,
-            opacity: 1,
-          }}
-          initial={{ opacity: 0 }}
-          transition={{
-            type: 'spring',
-            stiffness: 400,
-            damping: 30,
-            mass: 0.5,
-          }}
-        />
-      )}
+      {gradientElement}
       <CommandPrimitive.List
         ref={(node) => {
           if (typeof ref === 'function') ref(node);
@@ -223,7 +295,6 @@ const CommandList = React.forwardRef<
     </div>
   );
 });
-
 CommandList.displayName = CommandPrimitive.List.displayName;
 
 const CommandEmpty = React.forwardRef<
