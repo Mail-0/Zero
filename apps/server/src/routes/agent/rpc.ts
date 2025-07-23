@@ -16,11 +16,11 @@
 import type { CreateDraftData } from '../../lib/schemas';
 import type { IOutgoingMessage } from '../../types';
 import { RpcTarget } from 'cloudflare:workers';
-import { ZeroAgent } from '.';
+import { ZeroDriver } from '.';
 
-export class AgentRpcDO extends RpcTarget {
+export class DriverRpcDO extends RpcTarget {
   constructor(
-    private mainDo: ZeroAgent,
+    private mainDo: ZeroDriver,
     private connectionId: string,
   ) {
     super();
@@ -100,9 +100,15 @@ export class AgentRpcDO extends RpcTarget {
     return result;
   }
 
-  async modifyLabels(threadIds: string[], addLabelIds: string[], removeLabelIds: string[]) {
+  async modifyLabels(
+    threadIds: string[],
+    addLabelIds: string[],
+    removeLabelIds: string[],
+    skipSync: boolean = false,
+  ) {
     const result = await this.mainDo.modifyLabels(threadIds, addLabelIds, removeLabelIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
+    if (!skipSync)
+      await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
     return result;
   }
 
@@ -160,8 +166,26 @@ export class AgentRpcDO extends RpcTarget {
     return await this.mainDo.create(data);
   }
 
+  async modifyThreadLabelsByName(
+    threadId: string,
+    addLabelNames: string[],
+    removeLabelNames: string[],
+  ) {
+    return await this.mainDo.modifyThreadLabelsByName(threadId, addLabelNames, removeLabelNames);
+  }
+
+  async modifyThreadLabelsInDB(
+    threadId: string,
+    addLabelNames: string[],
+    removeLabelNames: string[],
+  ) {
+    return await this.mainDo.modifyThreadLabelsInDB(threadId, addLabelNames, removeLabelNames);
+  }
+
   async delete(id: string) {
-    return await this.mainDo.delete(id);
+    const result = await this.mainDo.delete(id);
+    await this.mainDo.deleteThread(id);
+    return result;
   }
 
   async deleteAllSpam() {
@@ -176,9 +200,8 @@ export class AgentRpcDO extends RpcTarget {
     return await this.mainDo.getMessageAttachments(messageId);
   }
 
-  async setupAuth(connectionId: string) {
-    if (connectionId !== this.connectionId) console.warn('Oops, something doesnt add up.');
-    return await this.mainDo.setupAuth(connectionId);
+  async setupAuth() {
+    return await this.mainDo.setupAuth();
   }
 
   async broadcast(message: string) {
@@ -219,5 +242,13 @@ export class AgentRpcDO extends RpcTarget {
     pageToken?: string;
   }) {
     return await this.mainDo.searchThreads(params);
+  }
+
+  async queue(callbackName: keyof ZeroDriver, payload: unknown): Promise<unknown> {
+    const queueFn = this.mainDo.queue;
+    if (typeof queueFn !== 'function') {
+      throw new Error('queue method not implemented on mainDo');
+    }
+    return queueFn(callbackName, payload);
   }
 }

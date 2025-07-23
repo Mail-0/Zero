@@ -117,3 +117,19 @@ export interface MailManager {
   revokeToken(token: string): Promise<boolean>;
   deleteAllSpam(): Promise<DeleteAllSpamResponse>;
 }
+
+export interface IGetThreadsResponse {
+  threads: { id: string; historyId: string | null; $raw?: unknown }[];
+  nextPageToken: string | null;
+}
+
+export const IGetThreadsResponseSchema = z.object({
+  threads: z.array(
+    z.object({
+      id: z.string(),
+      historyId: z.string().nullable(),
+      $raw: z.unknown().optional(),
+    }),
+  ),
+  nextPageToken: z.string().nullable(),
+});

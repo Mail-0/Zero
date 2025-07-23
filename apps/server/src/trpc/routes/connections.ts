@@ -15,7 +15,7 @@ export const connectionsRouter = router({
     )
     .query(async ({ ctx }) => {
       const { sessionUser } = ctx;
-      const db = getZeroDB(sessionUser.id);
+      const db = await getZeroDB(sessionUser.id);
       const connections = await db.findManyConnections();
 
       const disconnectedIds = connections
@@ -41,7 +41,7 @@ export const connectionsRouter = router({
     .mutation(async ({ input, ctx }) => {
       const { connectionId } = input;
       const user = ctx.sessionUser;
-      const db = getZeroDB(user.id);
+      const db = await getZeroDB(user.id);
       const foundConnection = await db.findUserConnection(connectionId);
       if (!foundConnection) throw new TRPCError({ code: 'NOT_FOUND' });
       await db.updateUser({ defaultConnectionId: connectionId });
@@ -51,7 +51,7 @@ export const connectionsRouter = router({
     .mutation(async ({ input, ctx }) => {
       const { connectionId } = input;
       const user = ctx.sessionUser;
-      const db = getZeroDB(user.id);
+      const db = await getZeroDB(user.id);
       await db.deleteConnection(connectionId);
 
       const activeConnection = await getActiveConnection();

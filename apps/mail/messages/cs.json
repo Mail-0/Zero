@@ -405,7 +405,8 @@
       "livesupport": "Živá podpora",
       "feedback": "Zpětná vazba",
       "settings": "Nastavení",
-      "voice": "Hlasový asistent"
+      "voice": "Hlasový asistent",
+      "snoozed": "Odložené"
     },
     "settings": {
       "general": "Obecné",

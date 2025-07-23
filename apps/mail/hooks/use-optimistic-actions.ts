@@ -20,6 +20,8 @@ enum ActionType {
   READ = 'READ',
   LABEL = 'LABEL',
   IMPORTANT = 'IMPORTANT',
+  SNOOZE = 'SNOOZE',
+  UNSNOOZE = 'UNSNOOZE',
 }
 
 const actionEventNames: Record<ActionType, (params: any) => string> = {
@@ -29,6 +31,8 @@ const actionEventNames: Record<ActionType, (params: any) => string> = {
   [ActionType.IMPORTANT]: (params) =>
     params.important ? 'email_marked_important' : 'email_unmarked_important',
   [ActionType.LABEL]: (params) => (params.add ? 'email_label_added' : 'email_label_removed'),
+  [ActionType.SNOOZE]: () => 'email_snoozed',
+  [ActionType.UNSNOOZE]: () => 'email_unsnoozed',
 };
 
 export function useOptimisticActions() {
@@ -47,6 +51,8 @@ export function useOptimisticActions() {
   const { mutateAsync: toggleImportant } = useMutation(trpc.mail.toggleImportant.mutationOptions());
 
   const { mutateAsync: bulkDeleteThread } = useMutation(trpc.mail.bulkDelete.mutationOptions());
+  const { mutateAsync: snoozeThreads } = useMutation(trpc.mail.snoozeThreads.mutationOptions());
+  const { mutateAsync: unsnoozeThreads } = useMutation(trpc.mail.unsnoozeThreads.mutationOptions());
   const { mutateAsync: modifyLabels } = useMutation(trpc.mail.modifyLabels.mutationOptions());
 
   const generatePendingActionId = () =>
@@ -427,6 +433,59 @@ export function useOptimisticActions() {
     });
   }
 
+  function optimisticSnooze(threadIds: string[], currentFolder: string, wakeAt: Date) {
+    if (!threadIds.length) return;
+
+    const optimisticId = addOptimisticAction({
+      type: 'SNOOZE',
+      threadIds,
+      wakeAt: wakeAt.toISOString(),
+    });
+
+    createPendingAction({
+      type: 'SNOOZE',
+      threadIds,
+      params: { currentFolder, wakeAt: wakeAt.toISOString() } as any,
+      optimisticId,
+      execute: async () => {
+        await snoozeThreads({ ids: threadIds, wakeAt: wakeAt.toISOString() });
+
+        if (mail.bulkSelected.length > 0) {
+          setMail({ ...mail, bulkSelected: [] });
+        }
+      },
+      undo: () => {
+        removeOptimisticAction(optimisticId);
+      },
+      toastMessage: `Snoozed until ${wakeAt.toLocaleString()}`,
+      folders: [currentFolder, 'snoozed'],
+    });
+  }
+
+  function optimisticUnsnooze(threadIds: string[], currentFolder: string) {
+    if (!threadIds.length) return;
+
+    const optimisticId = addOptimisticAction({
+      type: 'UNSNOOZE',
+      threadIds,
+    });
+
+    createPendingAction({
+      type: 'UNSNOOZE',
+      threadIds,
+      params: { currentFolder } as any,
+      optimisticId,
+      execute: async () => {
+        await unsnoozeThreads({ ids: threadIds });
+      },
+      undo: () => {
+        removeOptimisticAction(optimisticId);
+      },
+      toastMessage: 'Moved to Inbox',
+      folders: [currentFolder, 'inbox'],
+    });
+  }
+
   function undoLastAction() {
     if (!optimisticActionsManager.lastActionId) return;
 
@@ -457,6 +516,8 @@ export function useOptimisticActions() {
     optimisticDeleteThreads,
     optimisticToggleImportant,
     optimisticToggleLabel,
+    optimisticSnooze,
+    optimisticUnsnooze,
     undoLastAction,
   };
 }

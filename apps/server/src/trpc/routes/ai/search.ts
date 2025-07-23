@@ -3,9 +3,9 @@ import {
   OutlookSearchAssistantSystemPrompt,
 } from '../../../lib/prompts';
 import { activeDriverProcedure } from '../../trpc';
+import { env } from 'cloudflare:workers';
 import { openai } from '@ai-sdk/openai';
 import { generateObject } from 'ai';
-import { env } from 'cloudflare:workers';
 import { z } from 'zod';
 
 export const generateSearchQuery = activeDriverProcedure
@@ -28,6 +28,7 @@ export const generateSearchQuery = activeDriverProcedure
       schema: z.object({
         query: z.string(),
       }),
+      output: 'object',
     });
 
     return result.object;

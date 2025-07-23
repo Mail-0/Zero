@@ -405,7 +405,8 @@
       "livesupport": "الدعم المباشر",
       "feedback": "الملاحظات",
       "settings": "الإعدادات",
-      "voice": "المساعد الصوتي"
+      "voice": "المساعد الصوتي",
+      "snoozed": "مؤجل"
     },
     "settings": {
       "general": "عام",

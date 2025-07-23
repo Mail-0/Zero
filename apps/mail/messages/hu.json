@@ -405,7 +405,8 @@
       "livesupport": "Élő támogatás",
       "feedback": "Visszajelzés",
       "settings": "Beállítások",
-      "voice": "Hangasszisztens"
+      "voice": "Hangasszisztens",
+      "snoozed": "Elhalasztva"
     },
     "settings": {
       "general": "Általános",
