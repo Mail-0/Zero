@@ -462,7 +462,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
   }
 
   async syncThreads(folder: string) {
-    const startTime = Date.now();  // Start manual timer
+    const startTime = Date.now();  
     if (!this.driver) {
       console.error('No driver available for syncThreads');
       throw new Error('No driver available');
@@ -486,12 +486,53 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
     const fetchThread = (threadId: string) =>
       Effect.gen(function* () {
-        yield* Effect.sleep(500); // Rate limiting delay
-        return yield* Effect.tryPromise(() => self.getWithRetry(threadId));
+      
+        yield* Effect.sleep(200);
+      
+        const threadData = yield* Effect.tryPromise(() => self.getWithRetry(threadId));
+
+        if (!threadData || !threadData.latest || !threadData.latest.threadId) {
+          return 0 as const;
+        }
+        const latest = threadData.latest!;
+        const id = latest.threadId as string;
+
+        const serialized = JSON.stringify(threadData);
+        yield* Effect.tryPromise(() =>
+          env.THREADS_BUCKET.put(self.getThreadKey(id), serialized, {
+            customMetadata: { threadId: id },
+          }),
+        );
+
+        const normalizedReceivedOn = new Date(latest.receivedOn).toISOString();
+        yield* Effect.try(() =>
+          self.sql`
+            INSERT OR REPLACE INTO threads (
+              id, thread_id, provider_id, latest_sender,
+              latest_received_on, latest_subject, latest_label_ids, updated_at
+            ) VALUES (
+              ${id},
+              ${id},
+              'google',
+              ${JSON.stringify(latest.sender)},
+              ${normalizedReceivedOn},
+              ${latest.subject},
+              ${JSON.stringify(latest.tags.map((tag) => tag.id))},
+              CURRENT_TIMESTAMP
+            )
+          `,
+        );
+
+        self.agent?.broadcastChatMessage({
+          type: OutgoingMessageType.Mail_Get,
+          threadId: id,
+        });
+
+        return 1 as const;
       }).pipe(
         Effect.catchAll((error) => {
-          console.error(`Failed to fetch thread ${threadId} in ${folder}:`, error);
-          return Effect.succeed(null);
+          console.error(`Failed to process thread ${threadId} in ${folder}:`, error);
+          return Effect.succeed(0 as const);
         }),
       );
 
@@ -502,8 +543,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         let hasMore = true;
 
         while (hasMore) {
-          // Rate limiting delay between pages
-          yield* Effect.sleep(2000);
+          yield* Effect.sleep(1500);
 
           const result: IGetThreadsResponse = yield* Effect.tryPromise(() =>
             self.listWithRetry({
@@ -514,76 +554,13 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
           );
 
           const threadIds = result.threads.map((thread) => thread.id);
-          const fetchEffects = threadIds.map(fetchThread);
 
-          const threadDatas = (yield* Effect.all(fetchEffects, { concurrency: 5 })) // Concurrency for memory safety
-            .filter((data): data is Exclude<typeof data, null> & { latest: NonNullable<IGetThreadResponse['latest']> & { threadId: string } } => data !== null && data.latest !== undefined && data.latest.threadId !== undefined);
+          const processedCounts = yield* Effect.all(threadIds.map(fetchThread), {
+            concurrency: 3,
+          });
 
-          if (threadDatas.length > 0) {
-            // Batch R2 puts
-            const r2PutEffects = threadDatas.map((threadData) =>
-              Effect.tryPromise(() =>
-                env.THREADS_BUCKET.put(
-                  self.getThreadKey(threadData.latest.threadId),
-                  JSON.stringify(threadData),
-                  {
-                    customMetadata: { threadId: threadData.latest.threadId },
-                  },
-                ),
-              ).pipe(
-                Effect.catchAll((error) => {
-                  console.error(
-                    `Failed to put thread ${threadData.latest.threadId} to R2:`,
-                    error,
-                  );
-                  return Effect.succeed(null);
-                }),
-              ),
-            );
-            yield* Effect.all(r2PutEffects, { concurrency: 5, discard: true });
-
-            // Batch SQL inserts with parallel template literal executions
-            const sqlInsertEffects = threadDatas.map((threadData) => {
-              const latest = threadData.latest;
-              const normalizedReceivedOn = new Date(latest.receivedOn).toISOString();
-              return Effect.try(() =>
-                self.sql`
-                    INSERT OR REPLACE INTO threads (
-                      id, thread_id, provider_id, latest_sender,
-                      latest_received_on, latest_subject, latest_label_ids, updated_at
-                    ) VALUES (
-                      ${latest.threadId},
-                      ${latest.threadId},
-                      'google',
-                      ${JSON.stringify(latest.sender)},
-                      ${normalizedReceivedOn},
-                      ${latest.subject},
-                      ${JSON.stringify(latest.tags.map((tag) => tag.id))},
-                      CURRENT_TIMESTAMP
-                    )
-                  `,
-              ).pipe(
-                Effect.catchAll((error) => {
-                  console.error(`Failed to insert thread ${latest.threadId} into DB:`, error);
-                  return Effect.succeed(null);
-                }),
-              );
-            });
-
-            yield* Effect.all(sqlInsertEffects, { concurrency: 5, discard: true });
-
-            // Batch broadcast
-            if (self.agent) {
-              threadDatas.forEach((threadData) => {
-                self.agent?.broadcastChatMessage({
-                  type: OutgoingMessageType.Mail_Get,
-                  threadId: threadData.latest.threadId,
-                });
-              });
-            }
-
-            totalSynced += threadDatas.length;
-          }
+          const batchSynced = processedCounts.filter((c) => c === 1).length;
+          totalSynced += batchSynced;
 
           pageToken = result.nextPageToken;
           hasMore = pageToken !== null && shouldLoop;
