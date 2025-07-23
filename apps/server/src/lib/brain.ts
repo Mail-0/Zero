@@ -47,7 +47,7 @@ export const getPrompts = async ({ connectionId }: { connectionId: string }) => 
     [EPrompts.SummarizeMessage]: SummarizeMessage,
     [EPrompts.ReSummarizeThread]: ReSummarizeThread,
     [EPrompts.SummarizeThread]: SummarizeThread,
-    [EPrompts.Chat]: AiChatPrompt('', '', ''),
+    [EPrompts.Chat]: AiChatPrompt(''),
     [EPrompts.Compose]: StyledEmailAssistantSystemPrompt(),
     // [EPrompts.ThreadLabels]: '',
   };
