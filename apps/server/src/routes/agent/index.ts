@@ -907,7 +907,13 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         throw new Error(`Thread ${threadId} not found in database`);
       }
 
-      const currentLabels = JSON.parse(result[0].latest_label_ids || '[]') as string[];
+      let currentLabels: string[];
+      try {
+        currentLabels = JSON.parse(result[0].latest_label_ids || '[]') as string[];
+      } catch (error) {
+        console.error(`Invalid JSON in latest_label_ids for thread ${threadId}:`, error);
+        currentLabels = [];
+      }
 
       // Apply label modifications
       let updatedLabels = [...currentLabels];
