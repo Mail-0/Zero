@@ -24,7 +24,6 @@ import { ZeroAgent, ZeroDriver } from './routes/agent';
 import { contextStorage } from 'hono/context-storage';
 import { defaultUserSettings } from './lib/schemas';
 import { createLocalJWKSet, jwtVerify } from 'jose';
-import { routePartykitRequest } from 'partyserver';
 import { getZeroAgent } from './lib/server-utils';
 import { enableBrainFunction } from './lib/brain';
 import { trpcServer } from '@hono/trpc-server';
@@ -691,7 +690,7 @@ export default class extends WorkerEntrypoint<typeof env> {
           await env.thread_queue.send({
             providerId,
             historyId: body.historyId,
-            subscriptionName: subHeader!,
+            subscriptionName: subHeader,
           });
         } catch (error) {
           console.error('Error sending to thread queue', error, {
@@ -705,12 +704,6 @@ export default class extends WorkerEntrypoint<typeof env> {
     });
 
   async fetch(request: Request): Promise<Response> {
-    if (request.url.includes('/zero/durable-mailbox')) {
-      const res = await routePartykitRequest(request, env as unknown as Record<string, unknown>, {
-        prefix: 'zero',
-      });
-      if (res) return res;
-    }
     return this.app.fetch(request, this.env, this.ctx);
   }
 
@@ -723,8 +716,6 @@ export default class extends WorkerEntrypoint<typeof env> {
             batch.messages.map(async (msg: Message<ISubscribeBatch>) => {
               const connectionId = msg.body.connectionId;
               const providerId = msg.body.providerId;
-              console.log('connectionId', connectionId);
-              console.log('providerId', providerId);
               try {
                 await enableBrainFunction({ id: connectionId, providerId });
               } catch (error) {
@@ -742,7 +733,6 @@ export default class extends WorkerEntrypoint<typeof env> {
         return;
       }
       case batch.queue.startsWith('thread-queue'): {
-        console.log('batch', batch);
         try {
           await Promise.all(
             batch.messages.map(async (msg: Message<IThreadBatch>) => {
