@@ -10,7 +10,7 @@ interface ProcessEmailOptions {
 // Server-side: Heavy lifting, preference-independent processing
 export function preprocessEmailHtml(html: string): string {
   const sanitizeConfig: sanitizeHtml.IOptions = {
-    allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'title', 'details', 'summary']),
+    allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'title', 'details', 'summary', 'style']),
 
     allowedAttributes: {
       '*': [
