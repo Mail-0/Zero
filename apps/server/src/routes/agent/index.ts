@@ -15,11 +15,11 @@
  */
 
 import {
-  type StreamTextOnFinishCallback,
-  createDataStreamResponse,
-  streamText,
   appendResponseMessages,
+  createDataStreamResponse,
   generateText,
+  streamText,
+  type StreamTextOnFinishCallback,
 } from 'ai';
 import {
   IncomingMessageType,
@@ -30,10 +30,10 @@ import {
 import {
   EPrompts,
   type IOutgoingMessage,
-  type ParsedMessage,
   type ISnoozeBatch,
+  type ParsedMessage,
 } from '../../types';
-import type { MailManager, IGetThreadResponse, IGetThreadsResponse } from '../../lib/driver/types';
+import type { IGetThreadResponse, IGetThreadsResponse, MailManager } from '../../lib/driver/types';
 import { DurableObjectOAuthClientProvider } from 'agents/mcp/do-oauth-client-provider';
 import { AiChatPrompt, GmailSearchAssistantSystemPrompt } from '../../lib/prompts';
 import { connectionToDriver, getZeroSocketAgent } from '../../lib/server-utils';
@@ -51,7 +51,6 @@ import { processToolCalls } from './utils';
 import { env } from 'cloudflare:workers';
 import type { Connection } from 'agents';
 import { openai } from '@ai-sdk/openai';
-import { parseISO } from 'date-fns';
 import { createDb } from '../../db';
 import { DriverRpcDO } from './rpc';
 import { eq } from 'drizzle-orm';
@@ -59,9 +58,9 @@ import { Effect } from 'effect';
 
 const decoder = new TextDecoder();
 
-const shouldDropTables = true;
+const shouldDropTables = false;
 const maxCount = 20;
-const shouldLoop = true;
+const shouldLoop = env.THREAD_SYNC_LOOP !== 'false';
 export class ZeroDriver extends AIChatAgent<typeof env> {
   private foldersInSync: Map<string, boolean> = new Map();
   private syncThreadsInProgress: Map<string, boolean> = new Map();
@@ -368,6 +367,16 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         DROP TABLE IF EXISTS threads;`;
   }
 
+  async deleteThread(id: string) {
+    void this.sql`
+      DELETE FROM threads WHERE thread_id = ${id};
+    `;
+    this.agent?.broadcastChatMessage({
+      type: OutgoingMessageType.Mail_List,
+      folder: 'bin',
+    });
+  }
+
   async syncThread({ threadId }: { threadId: string }) {
     if (this.name === 'general') return;
     if (!this.driver) {
@@ -385,7 +394,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     }
     this.syncThreadsInProgress.set(threadId, true);
 
-    console.log('Server: syncThread called for thread', threadId);
+    // console.log('Server: syncThread called for thread', threadId);
     try {
       const threadData = await this.getWithRetry(threadId);
       const latest = threadData.latest;
@@ -396,6 +405,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         try {
           normalizedReceivedOn = new Date(latest.receivedOn).toISOString();
         } catch (error) {
+          console.log('Here!', error);
           normalizedReceivedOn = new Date().toISOString();
         }
 
@@ -432,10 +442,10 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
             threadId,
           });
         this.syncThreadsInProgress.delete(threadId);
-        console.log('Server: syncThread result', {
-          threadId,
-          labels: threadData.labels,
-        });
+        // console.log('Server: syncThread result', {
+        //   threadId,
+        //   labels: threadData.labels,
+        // });
         return { success: true, threadId, threadData };
       } else {
         this.syncThreadsInProgress.delete(threadId);
@@ -701,6 +711,11 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     };
   }
 
+  normalizeFolderName(folderName: string) {
+    if (folderName === 'bin') return 'trash';
+    return folderName;
+  }
+
   async getThreadsFromDB(params: {
     labelIds?: string[];
     folder?: string;
@@ -708,14 +723,13 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     maxResults?: number;
     pageToken?: string;
   }): Promise<IGetThreadsResponse> {
-    const { labelIds = [], folder, q, maxResults = 50, pageToken } = params;
+    const { labelIds = [], q, maxResults = 50, pageToken } = params;
+    let folder = params.folder ?? 'inbox';
 
     try {
+      folder = this.normalizeFolderName(folder);
       const folderThreadCount = (await this.count()).find((c) => c.label === folder)?.count;
       const currentThreadCount = await this.getThreadCount();
-
-      console.log('folderThreadCount', folderThreadCount, folder);
-      console.log('currentThreadCount', currentThreadCount);
 
       if (folderThreadCount && folderThreadCount > currentThreadCount && folder) {
         this.ctx.waitUntil(this.syncThreads(folder));
@@ -878,6 +892,116 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     }
   }
 
+  async modifyThreadLabelsByName(
+    threadId: string,
+    addLabelNames: string[],
+    removeLabelNames: string[],
+  ) {
+    try {
+      if (!this.driver) {
+        throw new Error('No driver available');
+      }
+
+      // Get all user labels to map names to IDs
+      const userLabels = await this.getUserLabels();
+      const labelMap = new Map(userLabels.map((label) => [label.name.toLowerCase(), label.id]));
+
+      // Convert label names to IDs
+      const addLabelIds: string[] = [];
+      const removeLabelIds: string[] = [];
+
+      // Process add labels
+      for (const labelName of addLabelNames) {
+        const labelId = labelMap.get(labelName.toLowerCase());
+        if (labelId) {
+          addLabelIds.push(labelId);
+        } else {
+          console.warn(`Label "${labelName}" not found in user labels`);
+        }
+      }
+
+      // Process remove labels
+      for (const labelName of removeLabelNames) {
+        const labelId = labelMap.get(labelName.toLowerCase());
+        if (labelId) {
+          removeLabelIds.push(labelId);
+        } else {
+          console.warn(`Label "${labelName}" not found in user labels`);
+        }
+      }
+
+      // Call the existing function with IDs
+      return await this.modifyThreadLabelsInDB(threadId, addLabelIds, removeLabelIds);
+    } catch (error) {
+      console.error('Failed to modify thread labels by name:', error);
+      throw error;
+    }
+  }
+
+  async modifyThreadLabelsInDB(threadId: string, addLabels: string[], removeLabels: string[]) {
+    try {
+      // Get current labels
+      const result = this.sql`
+        SELECT latest_label_ids
+        FROM threads
+        WHERE id = ${threadId}
+        LIMIT 1
+      `;
+
+      if (!result || result.length === 0) {
+        throw new Error(`Thread ${threadId} not found in database`);
+      }
+
+      let currentLabels: string[];
+      try {
+        currentLabels = JSON.parse(result[0].latest_label_ids || '[]') as string[];
+      } catch (error) {
+        console.error(`Invalid JSON in latest_label_ids for thread ${threadId}:`, error);
+        currentLabels = [];
+      }
+
+      // Apply label modifications
+      let updatedLabels = [...currentLabels];
+
+      // Remove labels
+      if (removeLabels.length > 0) {
+        updatedLabels = updatedLabels.filter((label) => !removeLabels.includes(label));
+      }
+
+      // Add labels (avoid duplicates)
+      if (addLabels.length > 0) {
+        for (const label of addLabels) {
+          if (!updatedLabels.includes(label)) {
+            updatedLabels.push(label);
+          }
+        }
+      }
+
+      // Update the database
+      void this.sql`
+        UPDATE threads
+        SET latest_label_ids = ${JSON.stringify(updatedLabels)},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ${threadId}
+      `;
+
+      await this.agent?.broadcastChatMessage({
+        type: OutgoingMessageType.Mail_Get,
+        threadId,
+      });
+
+      return {
+        success: true,
+        threadId,
+        previousLabels: currentLabels,
+        updatedLabels,
+      };
+    } catch (error) {
+      console.error('Failed to modify thread labels in database:', error);
+      throw error;
+    }
+  }
+
   async getThreadFromDB(id: string): Promise<IGetThreadResponse> {
     try {
       const result = this.sql`
@@ -897,8 +1021,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         `;
 
       if (!result || result.length === 0) {
-        const res = await this.queue('syncThread', { threadId: id });
-        console.log('res', res);
+        await this.queue('syncThread', { threadId: id });
         return {
           messages: [],
           latest: undefined,

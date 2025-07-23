@@ -114,7 +114,7 @@
         "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "5",
         "THREAD_SYNC_LOOP": "false",
-        "DISABLE_WORKFLOWS": "true",
+        "DISABLE_WORKFLOWS": "false",
         "AUTORAG_ID": "",
       },
       "kv_namespaces": [
@@ -258,7 +258,7 @@
         "DISABLE_CALLS": "",
         "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "20",
-        "THREAD_SYNC_LOOP": "false",
+        "THREAD_SYNC_LOOP": "true",
         "DISABLE_WORKFLOWS": "true",
       },
       "kv_namespaces": [
