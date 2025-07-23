@@ -116,6 +116,7 @@
         "THREAD_SYNC_LOOP": "false",
         "DISABLE_WORKFLOWS": "false",
         "AUTORAG_ID": "",
+        "USE_OPENAI": "true",
       },
       "kv_namespaces": [
         {

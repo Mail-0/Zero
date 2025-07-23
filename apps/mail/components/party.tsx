@@ -45,7 +45,6 @@ export const NotificationProvider = () => {
           queryClient.invalidateQueries({
             queryKey: trpc.mail.get.queryKey({ id: threadId }),
           });
-          console.log('invalidated mail get', threadId);
         } else if (type === IncomingMessageType.Mail_List) {
           const { folder } = JSON.parse(message.data);
           queryClient.invalidateQueries({
