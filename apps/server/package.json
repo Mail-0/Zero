@@ -28,6 +28,7 @@
     "@ai-sdk/perplexity": "1.1.9",
     "@ai-sdk/ui-utils": "1.2.11",
     "@arcadeai/arcadejs": "1.8.1",
+    "@barkleapp/css-sanitizer": "1.0.0",
     "@coinbase/cookie-manager": "1.1.8",
     "@googleapis/gmail": "12.0.0",
     "@googleapis/people": "3.0.9",
