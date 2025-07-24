@@ -1,0 +1,1 @@
+ALTER TABLE "mail0_connection" ADD COLUMN "calendar_enabled" boolean DEFAULT true NOT NULL;

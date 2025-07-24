@@ -10,6 +10,7 @@ import { draftsRouter } from './routes/drafts';
 import { labelsRouter } from './routes/label';
 import { notesRouter } from './routes/notes';
 import { brainRouter } from './routes/brain';
+import { calendarRouter } from './routes/calendar';
 import { userRouter } from './routes/user';
 import { teamRouter } from './routes/team';
 import { mailRouter } from './routes/mail';
@@ -29,6 +30,7 @@ export const appRouter = router({
   labels: labelsRouter,
   mail: mailRouter,
   notes: notesRouter,
+  calendar: calendarRouter,
   organization: organizationRouter,
   team: teamRouter,
   shortcut: shortcutRouter,

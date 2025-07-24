@@ -154,6 +154,11 @@ export const navigationConfig: Record<string, NavConfig> = {
             shortcut: 'g + s',
           },
           {
+            title: 'Integrations',
+            url: '/settings/integrations',
+            icon: SettingsGear,
+          },
+          {
             title: m['navigation.settings.connections'](),
             url: '/settings/connections',
             icon: Users,

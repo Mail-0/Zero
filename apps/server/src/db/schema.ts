@@ -132,6 +132,7 @@ export const connection = createTable(
     scope: text('scope').notNull(),
     providerId: text('provider_id').$type<'google' | 'microsoft'>().notNull(),
     expiresAt: timestamp('expires_at').notNull(),
+    calendarEnabled: boolean('calendar_enabled').notNull().default(true),
     createdAt: timestamp('created_at').notNull(),
     updatedAt: timestamp('updated_at').notNull(),
   },

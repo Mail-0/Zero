@@ -46,6 +46,7 @@ export default [
         // route('/categories', '(routes)/settings/categories/page.tsx'),
         route('/notifications', '(routes)/settings/notifications/page.tsx'),
         route('/organization', '(routes)/settings/organization/page.tsx'),
+        route('/integrations', '(routes)/settings/integrations/page.tsx'),
         route('/privacy', '(routes)/settings/privacy/page.tsx'),
         route('/security', '(routes)/settings/security/page.tsx'),
         route('/shortcuts', '(routes)/settings/shortcuts/page.tsx'),

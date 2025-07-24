@@ -1,6 +1,10 @@
 import { composeEmail } from '../../trpc/routes/ai/compose';
 import { perplexity } from '@ai-sdk/perplexity';
 import { generateText, tool } from 'ai';
+import { createDb } from '../../db';
+import { connection } from '../../db/schema';
+import { eq } from 'drizzle-orm';
+import { GoogleCalendarManager } from '../../lib/calendar/google-calendar';
 
 import { getZeroAgent } from '../../lib/server-utils';
 import { colors } from '../../lib/prompts';
@@ -350,6 +354,52 @@ const deleteLabel = (connectionId: string) =>
     },
   });
 
+  const createCalendarEventTool = (connectionId: string) =>
+    tool({
+      description: 'Create a Google Calendar event for the authenticated user',
+      parameters: z.object({
+        summary: z.string().describe('The title of the calendar event'),
+        description: z.string().optional().describe('The description of the event'),
+        start: z
+          .string()
+          .describe('Start date-time in ISO 8601 format, e.g., 2025-07-03T10:00:00'),
+        end: z
+          .string()
+          .describe('End date-time in ISO 8601 format, e.g., 2025-07-03T11:00:00'),
+        timeZone: z
+          .string()
+          .optional()
+          .describe('IANA timezone string, defaults to UTC'),
+        attendees: z
+          .array(z.string())
+          .optional()
+          .describe('Emails of attendees to invite'),
+      }),
+      execute: async ({ summary, description, start, end, timeZone = 'UTC', attendees }) => {
+        const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
+        const connData = await db.query.connection.findFirst({
+          where: eq(connection.id, connectionId),
+        });
+        await conn.end();
+        if (!connData?.refreshToken) {
+          throw new Error('Google connection not found or missing refresh token');
+        }
+        const calendarManager = new GoogleCalendarManager({
+          refreshToken: connData.refreshToken,
+          scope: connData.scope,
+        });
+        const event = await calendarManager.createEvent({
+          summary,
+          description,
+          startDateTime: start,
+          endDateTime: end,
+          timeZone,
+          attendees: attendees?.map((email) => ({ email })) ?? [],
+        });
+        return { id: event.id, htmlLink: event.htmlLink };
+      },
+    });
+
 export const webSearch = () =>
   tool({
     description: 'Search the web for information using Perplexity AI',
@@ -388,6 +438,7 @@ export const tools = async (connectionId: string) => {
     [Tools.SendEmail]: sendEmail(connectionId),
     [Tools.CreateLabel]: createLabel(connectionId),
     [Tools.BulkDelete]: bulkDelete(connectionId),
+    [Tools.CreateCalendarEvent]: createCalendarEventTool(connectionId),
     [Tools.BulkArchive]: bulkArchive(connectionId),
     [Tools.DeleteLabel]: deleteLabel(connectionId),
     [Tools.WebSearch]: tool({

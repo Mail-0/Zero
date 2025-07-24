@@ -62,6 +62,7 @@ export class GoogleMailManager implements MailManager {
       'https://www.googleapis.com/auth/gmail.modify',
       'https://www.googleapis.com/auth/userinfo.profile',
       'https://www.googleapis.com/auth/userinfo.email',
+      'https://www.googleapis.com/auth/calendar',
     ].join(' ');
   }
   public async listHistory<T>(historyId: string): Promise<{ history: T[]; historyId: string }> {
