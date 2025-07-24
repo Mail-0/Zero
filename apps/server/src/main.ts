@@ -40,6 +40,8 @@ import { Autumn } from 'autumn-js';
 import { appRouter } from './trpc';
 import { cors } from 'hono/cors';
 import { Effect } from 'effect';
+import { register } from 'prom-client';
+
 import { Hono } from 'hono';
 
 const SENTRY_HOST = 'o4509328786915328.ingest.us.sentry.io';
@@ -652,6 +654,16 @@ export default class extends WorkerEntrypoint<typeof env> {
       }),
     )
     .get('/health', (c) => c.json({ message: 'Zero Server is Up!' }))
+    .get('/metrics', async (c) => {
+      try {
+        const metrics = await register.metrics();
+        return c.text(metrics, 200, {
+          'Content-Type': register.contentType,
+        });
+      } catch (error) {
+        return c.json({ error: 'Failed to collect metrics' }, 500);
+      }
+    })
     .get('/', (c) => c.redirect(`${env.VITE_PUBLIC_APP_URL}`))
     .post('/monitoring/sentry', async (c) => {
       try {

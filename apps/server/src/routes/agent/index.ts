@@ -54,6 +54,8 @@ import { openai } from '@ai-sdk/openai';
 import { createDb } from '../../db';
 import { DriverRpcDO } from './rpc';
 import { eq } from 'drizzle-orm';
+import { zeroDriverOperationDuration, emailOperationTotal, timeOperation } from '../../lib/metrics';
+
 import { Effect } from 'effect';
 
 const decoder = new TextDecoder();
@@ -92,10 +94,17 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
   }
 
   async markAsRead(threadIds: string[]) {
-    if (!this.driver) {
-      throw new Error('No driver available');
-    }
-    return await this.driver.markAsRead(threadIds);
+    return timeOperation(
+      zeroDriverOperationDuration,
+      { operation: 'markAsRead', connection_id: this.name },
+      async () => {
+        if (!this.driver) {
+          throw new Error('No driver available');
+        }
+        emailOperationTotal.inc({ operation: 'markAsRead', provider: 'google', status: 'success' });
+        return await this.driver.markAsRead(threadIds);
+      }
+    );
   }
 
   async markAsUnread(threadIds: string[]) {
@@ -120,10 +129,17 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
   }
 
   async create(data: IOutgoingMessage) {
-    if (!this.driver) {
-      throw new Error('No driver available');
-    }
-    return await this.driver.create(data);
+    return timeOperation(
+      zeroDriverOperationDuration,
+      { operation: 'create', connection_id: this.name },
+      async () => {
+        if (!this.driver) {
+          throw new Error('No driver available');
+        }
+        emailOperationTotal.inc({ operation: 'create', provider: 'google', status: 'success' });
+        return await this.driver.create(data);
+      }
+    );
   }
 
   async delete(id: string) {
@@ -378,10 +394,14 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
   }
 
   async syncThread({ threadId }: { threadId: string }) {
-    if (this.name === 'general') return;
-    if (!this.driver) {
-      await this.setupAuth();
-    }
+    return timeOperation(
+      zeroDriverOperationDuration,
+      { operation: 'syncThread', connection_id: this.name },
+      async () => {
+        if (this.name === 'general') return;
+        if (!this.driver) {
+          await this.setupAuth();
+        }
 
     if (!this.driver) {
       console.error('No driver available for syncThread');
@@ -457,6 +477,8 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
       console.error(`Failed to sync thread ${threadId}:`, error);
       throw error;
     }
+      }
+    );
   }
 
   async getThreadCount() {
