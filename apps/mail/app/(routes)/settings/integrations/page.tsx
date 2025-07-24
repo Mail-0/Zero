@@ -83,7 +83,7 @@ export default function IntegrationsPage() {
       <h1 className="text-2xl font-semibold">Integrations</h1>
 
       {/* Debug Information */}
-      <div className="border border-yellow-500 rounded-lg p-4 bg-yellow-50 text-black dark:text-black">
+      {/* <div className="border border-yellow-500 rounded-lg p-4 bg-yellow-50 text-black dark:text-black">
         <h3 className="font-semibold text-yellow-800 mb-2">🐛 Debug Information</h3>
         <div className="text-sm space-y-1">
           <p><strong>Total Google connections:</strong> {googleConnections.length}</p>
@@ -104,7 +104,7 @@ export default function IntegrationsPage() {
             </div>
           )}
         </div>
-      </div>
+      </div> */}
 
       <div className="border rounded-lg p-6 flex items-center justify-between">
         <div>
@@ -157,7 +157,7 @@ export default function IntegrationsPage() {
           )}
         </div>
       </div>
-      <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-x-auto text-xs">
+      {/* <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-x-auto text-xs">
         {JSON.stringify({
           connections: data?.connections,
           googleConn,
@@ -169,7 +169,7 @@ export default function IntegrationsPage() {
           defaultConnection,
           googleConnections,
         }, null, 2)}
-      </pre>
+      </pre> */}
     </div>
   );
 } 
