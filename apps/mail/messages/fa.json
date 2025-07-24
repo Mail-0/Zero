@@ -405,7 +405,8 @@
       "livesupport": "پشتیبانی زنده",
       "feedback": "بازخورد",
       "settings": "تنظیمات",
-      "voice": "دستیار صوتی"
+      "voice": "دستیار صوتی",
+      "snoozed": "به تعویق افتاده"
     },
     "settings": {
       "general": "عمومی",

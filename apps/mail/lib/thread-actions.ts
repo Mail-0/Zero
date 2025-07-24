@@ -1,7 +1,7 @@
 import { trpcClient } from '@/providers/query-provider';
 import { LABELS, FOLDERS } from '@/lib/utils';
 
-export type ThreadDestination = 'inbox' | 'archive' | 'spam' | 'bin' | null;
+export type ThreadDestination = 'inbox' | 'archive' | 'spam' | 'bin' | 'snoozed' | null;
 export type FolderLocation = 'inbox' | 'archive' | 'spam' | 'sent' | 'bin' | string;
 
 export interface MoveThreadOptions {
@@ -42,7 +42,7 @@ export function isActionAvailable(folder: FolderLocation, action: ThreadDestinat
 }
 
 export function getAvailableActions(folder: FolderLocation): ThreadDestination[] {
-  const allPossibleActions: ThreadDestination[] = ['inbox', 'archive', 'spam', 'bin'];
+  const allPossibleActions: ThreadDestination[] = ['inbox', 'archive', 'spam', 'bin', 'snoozed'];
   return allPossibleActions.filter((action) => isActionAvailable(folder, action));
 }
 
@@ -74,6 +74,16 @@ export async function moveThreadsTo({ threadIds, currentFolder, destination }: M
       case 'spam':
         addLabel = LABELS.SPAM;
         removeLabel = isInInbox ? LABELS.INBOX : isInBin ? LABELS.TRASH : '';
+        break;
+      case 'snoozed':
+        addLabel = LABELS.SNOOZED;
+        removeLabel = isInInbox
+          ? LABELS.INBOX
+          : isInSpam
+            ? LABELS.SPAM
+            : isInBin
+              ? LABELS.TRASH
+              : '';
         break;
       case 'bin':
         addLabel = LABELS.TRASH;

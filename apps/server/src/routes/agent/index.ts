@@ -15,11 +15,11 @@
  */
 
 import {
-  type StreamTextOnFinishCallback,
-  createDataStreamResponse,
-  streamText,
   appendResponseMessages,
+  createDataStreamResponse,
   generateText,
+  streamText,
+  type StreamTextOnFinishCallback,
 } from 'ai';
 import {
   IncomingMessageType,
@@ -27,11 +27,16 @@ import {
   type IncomingMessage,
   type OutgoingMessage,
 } from './types';
+import {
+  EPrompts,
+  type IOutgoingMessage,
+  type ISnoozeBatch,
+  type ParsedMessage,
+} from '../../types';
+import type { IGetThreadResponse, IGetThreadsResponse, MailManager } from '../../lib/driver/types';
 import { DurableObjectOAuthClientProvider } from 'agents/mcp/do-oauth-client-provider';
 import { AiChatPrompt, GmailSearchAssistantSystemPrompt } from '../../lib/prompts';
-import { EPrompts, type IOutgoingMessage, type ParsedMessage } from '../../types';
-import type { MailManager, IGetThreadResponse } from '../../lib/driver/types';
-import { connectionToDriver } from '../../lib/server-utils';
+import { connectionToDriver, getZeroSocketAgent } from '../../lib/server-utils';
 import type { CreateDraftData } from '../../lib/schemas';
 import { withRetry } from '../../lib/gmail-rate-limit';
 import { getPrompt } from '../../pipelines.effect';
@@ -50,10 +55,11 @@ import { createDb } from '../../db';
 import { DriverRpcDO } from './rpc';
 import { eq } from 'drizzle-orm';
 import { Effect } from 'effect';
+
 const decoder = new TextDecoder();
 
-const shouldDropTables = env.DROP_AGENT_TABLES === 'true';
-const maxCount = parseInt(env.THREAD_SYNC_MAX_COUNT || '10', 10);
+const shouldDropTables = false;
+const maxCount = 20;
 const shouldLoop = env.THREAD_SYNC_LOOP !== 'false';
 export class ZeroDriver extends AIChatAgent<typeof env> {
   private foldersInSync: Map<string, boolean> = new Map();
@@ -81,6 +87,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
   async setMetaData(connectionId: string) {
     await this.setName(connectionId);
+    this.agent = await getZeroSocketAgent(connectionId);
     return new DriverRpcDO(this, connectionId);
   }
 
@@ -148,7 +155,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
   }
 
   async onConnect() {
-    await this.setupAuth();
+    if (!this.driver) await this.setupAuth();
   }
 
   public async setupAuth() {
@@ -161,16 +168,17 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
       if (_connection) this.driver = connectionToDriver(_connection);
       this.ctx.waitUntil(conn.end());
       this.ctx.waitUntil(this.syncThreads('inbox'));
+      this.ctx.waitUntil(this.syncThreads('sent'));
+      this.ctx.waitUntil(this.syncThreads('spam'));
     }
   }
-
   async rawListThreads(params: {
     folder: string;
     query?: string;
     maxResults?: number;
     labelIds?: string[];
     pageToken?: string;
-  }) {
+  }): Promise<IGetThreadsResponse> {
     if (!this.driver) {
       throw new Error('No driver available');
     }
@@ -359,6 +367,16 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         DROP TABLE IF EXISTS threads;`;
   }
 
+  async deleteThread(id: string) {
+    void this.sql`
+      DELETE FROM threads WHERE thread_id = ${id};
+    `;
+    this.agent?.broadcastChatMessage({
+      type: OutgoingMessageType.Mail_List,
+      folder: 'bin',
+    });
+  }
+
   async syncThread({ threadId }: { threadId: string }) {
     if (this.name === 'general') return;
     if (!this.driver) {
@@ -376,14 +394,20 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     }
     this.syncThreadsInProgress.set(threadId, true);
 
-    console.log('Server: syncThread called for thread', threadId);
+    // console.log('Server: syncThread called for thread', threadId);
     try {
       const threadData = await this.getWithRetry(threadId);
       const latest = threadData.latest;
 
       if (latest) {
         // Convert receivedOn to ISO format for proper sorting
-        const normalizedReceivedOn = new Date(latest.receivedOn).toISOString();
+        let normalizedReceivedOn: string;
+        try {
+          normalizedReceivedOn = new Date(latest.receivedOn).toISOString();
+        } catch (error) {
+          console.log('Here!', error);
+          normalizedReceivedOn = new Date().toISOString();
+        }
 
         await env.THREADS_BUCKET.put(this.getThreadKey(threadId), JSON.stringify(threadData), {
           customMetadata: {
@@ -418,10 +442,10 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
             threadId,
           });
         this.syncThreadsInProgress.delete(threadId);
-        console.log('Server: syncThread result', {
-          threadId,
-          labels: threadData.labels,
-        });
+        // console.log('Server: syncThread result', {
+        //   threadId,
+        //   labels: threadData.labels,
+        // });
         return { success: true, threadId, threadData };
       } else {
         this.syncThreadsInProgress.delete(threadId);
@@ -437,6 +461,13 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
   async getThreadCount() {
     const count = this.sql`SELECT COUNT(*) FROM threads`;
+    return count[0]['COUNT(*)'] as number;
+  }
+
+  async getFolderThreadCount(folder: string) {
+    const count = this.sql`SELECT COUNT(*) FROM threads WHERE EXISTS (
+      SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${folder}
+    )`;
     return count[0]['COUNT(*)'] as number;
   }
 
@@ -459,38 +490,74 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
     this.foldersInSync.set(folder, true);
 
-    try {
-      let totalSynced = 0;
+    const self = this;
 
-      // Process threads one by one without buffering
-      for await (const thread of this.streamThreads(folder)) {
-        try {
-          const id = await this.queue('syncThread', thread.id);
-          console.log(`Synced thread ${thread.id} to queue ${id}`);
-          totalSynced++;
-        } catch (error) {
-          console.error(`Failed to sync thread ${thread.id}:`, error);
+    const syncSingleThread = (threadId: string) =>
+      Effect.gen(function* () {
+        yield* Effect.sleep(500); // Rate limiting delay
+        return yield* withRetry(Effect.tryPromise(() => self.syncThread({ threadId })));
+      }).pipe(
+        Effect.catchAll((error) => {
+          console.error(`Failed to sync thread ${threadId}:`, error);
+          return Effect.succeed(null);
+        }),
+      );
+
+    const syncProgram = Effect.gen(
+      function* () {
+        let totalSynced = 0;
+        let pageToken: string | null = null;
+        let hasMore = true;
+        // let _pageCount = 0;
+
+        while (hasMore) {
+          // _pageCount++;
+
+          // Rate limiting delay between pages
+          yield* Effect.sleep(2000);
+
+          const result: IGetThreadsResponse = yield* Effect.tryPromise(() =>
+            self.listWithRetry({
+              folder,
+              maxResults: maxCount,
+              pageToken: pageToken || undefined,
+            }),
+          );
+
+          // Process threads with controlled concurrency to avoid rate limits
+          const threadIds = result.threads.map((thread) => thread.id);
+          const syncEffects = threadIds.map(syncSingleThread);
+
+          yield* Effect.all(syncEffects, { concurrency: 1, discard: true });
+
+          totalSynced += result.threads.length;
+          pageToken = result.nextPageToken;
+          hasMore = pageToken !== null && shouldLoop;
         }
 
-        // // Broadcast progress after each thread
-        // this.agent.broadcastChatMessage({
-        //   type: OutgoingMessageType.Mail_List,
-        //   folder,
-        // });
-      }
+        return { synced: totalSynced };
+      }.bind(this),
+    );
 
-      return { synced: totalSynced };
+    try {
+      const result = await Effect.runPromise(
+        syncProgram.pipe(
+          Effect.ensuring(
+            Effect.sync(() => {
+              console.log('Setting isSyncing to false');
+              this.foldersInSync.delete(folder);
+              this.agent?.broadcastChatMessage({
+                type: OutgoingMessageType.Mail_List,
+                folder,
+              });
+            }),
+          ),
+        ),
+      );
+      return result;
     } catch (error) {
       console.error('Failed to sync inbox threads:', error);
       throw error;
-    } finally {
-      console.log('Setting isSyncing to false');
-      this.foldersInSync.delete(folder);
-      if (this.agent)
-        this.agent.broadcastChatMessage({
-          type: OutgoingMessageType.Mail_List,
-          folder,
-        });
     }
   }
 
@@ -501,7 +568,6 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     }
 
     try {
-      const startTime = Date.now();
       console.log(`[inboxRag] Executing AI search with parameters:`, {
         query,
         max_num_results: 3,
@@ -523,8 +589,6 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
           value: `${this.name}/`,
         },
       });
-
-      const duration = Date.now() - startTime;
 
       return { result: answer.response, data: answer.data };
     } catch (error) {
@@ -602,16 +666,30 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     };
   }
 
+  normalizeFolderName(folderName: string) {
+    if (folderName === 'bin') return 'trash';
+    return folderName;
+  }
+
   async getThreadsFromDB(params: {
     labelIds?: string[];
     folder?: string;
     q?: string;
     maxResults?: number;
     pageToken?: string;
-  }) {
-    const { labelIds = [], folder, q, maxResults = 50, pageToken } = params;
+  }): Promise<IGetThreadsResponse> {
+    const { labelIds = [], q, maxResults = 50, pageToken } = params;
+    let folder = params.folder ?? 'inbox';
 
     try {
+      folder = this.normalizeFolderName(folder);
+      const folderThreadCount = (await this.count()).find((c) => c.label === folder)?.count;
+      const currentThreadCount = await this.getThreadCount();
+
+      if (folderThreadCount && folderThreadCount > currentThreadCount && folder) {
+        this.ctx.waitUntil(this.syncThreads(folder));
+      }
+
       // Build WHERE conditions
       const whereConditions: string[] = [];
 
@@ -744,14 +822,14 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
       if (result?.length) {
         const threads = result.map((row) => ({
-          id: row.id,
+          id: String(row.id),
           historyId: null,
         }));
 
         // Use latest_received_on for pagination cursor
         const nextPageToken =
           threads.length === maxResults && result.length > 0
-            ? result[result.length - 1].latest_received_on
+            ? String(result[result.length - 1].latest_received_on)
             : null;
 
         return {
@@ -769,7 +847,117 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     }
   }
 
-  async getThreadFromDB(id: string, lastAttempt = false): Promise<IGetThreadResponse> {
+  async modifyThreadLabelsByName(
+    threadId: string,
+    addLabelNames: string[],
+    removeLabelNames: string[],
+  ) {
+    try {
+      if (!this.driver) {
+        throw new Error('No driver available');
+      }
+
+      // Get all user labels to map names to IDs
+      const userLabels = await this.getUserLabels();
+      const labelMap = new Map(userLabels.map((label) => [label.name.toLowerCase(), label.id]));
+
+      // Convert label names to IDs
+      const addLabelIds: string[] = [];
+      const removeLabelIds: string[] = [];
+
+      // Process add labels
+      for (const labelName of addLabelNames) {
+        const labelId = labelMap.get(labelName.toLowerCase());
+        if (labelId) {
+          addLabelIds.push(labelId);
+        } else {
+          console.warn(`Label "${labelName}" not found in user labels`);
+        }
+      }
+
+      // Process remove labels
+      for (const labelName of removeLabelNames) {
+        const labelId = labelMap.get(labelName.toLowerCase());
+        if (labelId) {
+          removeLabelIds.push(labelId);
+        } else {
+          console.warn(`Label "${labelName}" not found in user labels`);
+        }
+      }
+
+      // Call the existing function with IDs
+      return await this.modifyThreadLabelsInDB(threadId, addLabelIds, removeLabelIds);
+    } catch (error) {
+      console.error('Failed to modify thread labels by name:', error);
+      throw error;
+    }
+  }
+
+  async modifyThreadLabelsInDB(threadId: string, addLabels: string[], removeLabels: string[]) {
+    try {
+      // Get current labels
+      const result = this.sql`
+        SELECT latest_label_ids
+        FROM threads
+        WHERE id = ${threadId}
+        LIMIT 1
+      `;
+
+      if (!result || result.length === 0) {
+        throw new Error(`Thread ${threadId} not found in database`);
+      }
+
+      let currentLabels: string[];
+      try {
+        currentLabels = JSON.parse(result[0].latest_label_ids || '[]') as string[];
+      } catch (error) {
+        console.error(`Invalid JSON in latest_label_ids for thread ${threadId}:`, error);
+        currentLabels = [];
+      }
+
+      // Apply label modifications
+      let updatedLabels = [...currentLabels];
+
+      // Remove labels
+      if (removeLabels.length > 0) {
+        updatedLabels = updatedLabels.filter((label) => !removeLabels.includes(label));
+      }
+
+      // Add labels (avoid duplicates)
+      if (addLabels.length > 0) {
+        for (const label of addLabels) {
+          if (!updatedLabels.includes(label)) {
+            updatedLabels.push(label);
+          }
+        }
+      }
+
+      // Update the database
+      void this.sql`
+        UPDATE threads
+        SET latest_label_ids = ${JSON.stringify(updatedLabels)},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ${threadId}
+      `;
+
+      await this.agent?.broadcastChatMessage({
+        type: OutgoingMessageType.Mail_Get,
+        threadId,
+      });
+
+      return {
+        success: true,
+        threadId,
+        previousLabels: currentLabels,
+        updatedLabels,
+      };
+    } catch (error) {
+      console.error('Failed to modify thread labels in database:', error);
+      throw error;
+    }
+  }
+
+  async getThreadFromDB(id: string): Promise<IGetThreadResponse> {
     try {
       const result = this.sql`
           SELECT
@@ -788,11 +976,14 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         `;
 
       if (!result || result.length === 0) {
-        if (lastAttempt) {
-          throw new Error('Thread not found in database, Sync Failed once');
-        }
-        await this.syncThread({ threadId: id });
-        return this.getThreadFromDB(id, true);
+        await this.queue('syncThread', { threadId: id });
+        return {
+          messages: [],
+          latest: undefined,
+          hasUnread: false,
+          totalReplies: 0,
+          labels: [],
+        } satisfies IGetThreadResponse;
       }
       const row = result[0] as { latest_label_ids: string };
       const storedThread = await env.THREADS_BUCKET.get(this.getThreadKey(id));
@@ -812,6 +1003,26 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
       } satisfies IGetThreadResponse;
     } catch (error) {
       console.error('Failed to get thread from database:', error);
+      throw error;
+    }
+  }
+
+  async unsnoozeThreadsHandler(payload: ISnoozeBatch) {
+    const { connectionId, threadIds, keyNames } = payload;
+    try {
+      if (!this.driver) {
+        await this.setupAuth();
+      }
+
+      if (threadIds.length) {
+        await this.modifyLabels(threadIds, ['INBOX'], ['SNOOZED']);
+      }
+
+      if (keyNames.length) {
+        await Promise.all(keyNames.map((k: string) => env.snoozed_emails.delete(k)));
+      }
+    } catch (error) {
+      console.error('[AGENT][unsnoozeThreadsHandler] Failed', { connectionId, threadIds, error });
       throw error;
     }
   }
@@ -865,8 +1076,20 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     });
   }
 
+  async registerThinkingMCP() {
+    await this.mcp.connect(env.VITE_PUBLIC_BACKEND_URL + '/mcp/thinking/sse', {
+      transport: {
+        authProvider: new DurableObjectOAuthClientProvider(
+          this.ctx.storage,
+          'thinking-mcp',
+          env.VITE_PUBLIC_BACKEND_URL,
+        ),
+      },
+    });
+  }
+
   onStart(): void | Promise<void> {
-    // this.registerZeroMCP();
+    this.registerThinkingMCP();
   }
 
   private getDataStreamResponse(
@@ -880,11 +1103,14 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
         if (this.name === 'general') return;
         const connectionId = this.name;
         const orchestrator = new ToolOrchestrator(dataStream, connectionId);
-        // const mcpTools = await this.mcp.unstable_getAITools();
+
+        const mcpTools = this.mcp.unstable_getAITools();
 
         const rawTools = {
           ...(await authTools(connectionId)),
+          ...mcpTools,
         };
+
         const tools = orchestrator.processTools(rawTools);
         const processedMessages = await processToolCalls(
           {
@@ -895,8 +1121,13 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
           {},
         );
 
+        const model =
+          env.USE_OPENAI === 'true'
+            ? openai(env.OPENAI_MODEL || 'gpt-4o')
+            : anthropic(env.OPENAI_MODEL || 'claude-3-7-sonnet-20250219');
+
         const result = streamText({
-          model: anthropic(env.OPENAI_MODEL || 'claude-3-5-haiku-latest'),
+          model,
           maxSteps: 10,
           messages: processedMessages,
           tools,

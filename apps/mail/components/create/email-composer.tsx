@@ -709,7 +709,7 @@ export function EmailComposer({
         className,
       )}
     >
-      <div className="no-scrollbar dark:bg-panelDark flex min-h-0 flex-1 flex-col overflow-y-auto">
+      <div className="no-scrollbar dark:bg-panelDark flex min-h-0 flex-1 flex-col overflow-y-auto rounded-2xl">
         {/* To, Cc, Bcc */}
         <div className="shrink-0 overflow-y-auto border-b border-[#E7E7E7] pb-2 dark:border-[#252525]">
           <div className="flex justify-between px-3 pt-3">

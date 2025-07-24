@@ -405,7 +405,8 @@
       "livesupport": "Tiešsaistes atbalsts",
       "feedback": "Atsauksmes",
       "settings": "Iestatījumi",
-      "voice": "Balss asistents"
+      "voice": "Balss asistents",
+      "snoozed": "Atlikti"
     },
     "settings": {
       "general": "Vispārīgi",
