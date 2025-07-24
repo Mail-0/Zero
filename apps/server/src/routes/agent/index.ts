@@ -847,6 +847,116 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     }
   }
 
+  async modifyThreadLabelsByName(
+    threadId: string,
+    addLabelNames: string[],
+    removeLabelNames: string[],
+  ) {
+    try {
+      if (!this.driver) {
+        throw new Error('No driver available');
+      }
+
+      // Get all user labels to map names to IDs
+      const userLabels = await this.getUserLabels();
+      const labelMap = new Map(userLabels.map((label) => [label.name.toLowerCase(), label.id]));
+
+      // Convert label names to IDs
+      const addLabelIds: string[] = [];
+      const removeLabelIds: string[] = [];
+
+      // Process add labels
+      for (const labelName of addLabelNames) {
+        const labelId = labelMap.get(labelName.toLowerCase());
+        if (labelId) {
+          addLabelIds.push(labelId);
+        } else {
+          console.warn(`Label "${labelName}" not found in user labels`);
+        }
+      }
+
+      // Process remove labels
+      for (const labelName of removeLabelNames) {
+        const labelId = labelMap.get(labelName.toLowerCase());
+        if (labelId) {
+          removeLabelIds.push(labelId);
+        } else {
+          console.warn(`Label "${labelName}" not found in user labels`);
+        }
+      }
+
+      // Call the existing function with IDs
+      return await this.modifyThreadLabelsInDB(threadId, addLabelIds, removeLabelIds);
+    } catch (error) {
+      console.error('Failed to modify thread labels by name:', error);
+      throw error;
+    }
+  }
+
+  async modifyThreadLabelsInDB(threadId: string, addLabels: string[], removeLabels: string[]) {
+    try {
+      // Get current labels
+      const result = this.sql`
+        SELECT latest_label_ids
+        FROM threads
+        WHERE id = ${threadId}
+        LIMIT 1
+      `;
+
+      if (!result || result.length === 0) {
+        throw new Error(`Thread ${threadId} not found in database`);
+      }
+
+      let currentLabels: string[];
+      try {
+        currentLabels = JSON.parse(result[0].latest_label_ids || '[]') as string[];
+      } catch (error) {
+        console.error(`Invalid JSON in latest_label_ids for thread ${threadId}:`, error);
+        currentLabels = [];
+      }
+
+      // Apply label modifications
+      let updatedLabels = [...currentLabels];
+
+      // Remove labels
+      if (removeLabels.length > 0) {
+        updatedLabels = updatedLabels.filter((label) => !removeLabels.includes(label));
+      }
+
+      // Add labels (avoid duplicates)
+      if (addLabels.length > 0) {
+        for (const label of addLabels) {
+          if (!updatedLabels.includes(label)) {
+            updatedLabels.push(label);
+          }
+        }
+      }
+
+      // Update the database
+      void this.sql`
+        UPDATE threads
+        SET latest_label_ids = ${JSON.stringify(updatedLabels)},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ${threadId}
+      `;
+
+      await this.agent?.broadcastChatMessage({
+        type: OutgoingMessageType.Mail_Get,
+        threadId,
+      });
+
+      return {
+        success: true,
+        threadId,
+        previousLabels: currentLabels,
+        updatedLabels,
+      };
+    } catch (error) {
+      console.error('Failed to modify thread labels in database:', error);
+      throw error;
+    }
+  }
+
   async getThreadFromDB(id: string): Promise<IGetThreadResponse> {
     try {
       const result = this.sql`
@@ -966,8 +1076,20 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     });
   }
 
+  async registerThinkingMCP() {
+    await this.mcp.connect(env.VITE_PUBLIC_BACKEND_URL + '/mcp/thinking/sse', {
+      transport: {
+        authProvider: new DurableObjectOAuthClientProvider(
+          this.ctx.storage,
+          'thinking-mcp',
+          env.VITE_PUBLIC_BACKEND_URL,
+        ),
+      },
+    });
+  }
+
   onStart(): void | Promise<void> {
-    // this.registerZeroMCP();
+    this.registerThinkingMCP();
   }
 
   private getDataStreamResponse(
@@ -981,11 +1103,14 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
         if (this.name === 'general') return;
         const connectionId = this.name;
         const orchestrator = new ToolOrchestrator(dataStream, connectionId);
-        // const mcpTools = await this.mcp.unstable_getAITools();
+
+        const mcpTools = this.mcp.unstable_getAITools();
 
         const rawTools = {
           ...(await authTools(connectionId)),
+          ...mcpTools,
         };
+
         const tools = orchestrator.processTools(rawTools);
         const processedMessages = await processToolCalls(
           {
@@ -996,8 +1121,13 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
           {},
         );
 
+        const model =
+          env.USE_OPENAI === 'true'
+            ? openai(env.OPENAI_MODEL || 'gpt-4o')
+            : anthropic(env.OPENAI_MODEL || 'claude-3-7-sonnet-20250219');
+
         const result = streamText({
-          model: anthropic(env.OPENAI_MODEL || 'claude-3-5-haiku-latest'),
+          model,
           maxSteps: 10,
           messages: processedMessages,
           tools,
