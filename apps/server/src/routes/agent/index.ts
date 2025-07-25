@@ -121,6 +121,9 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
   }
 
   async create(data: IOutgoingMessage) {
+    if (!this.driver) {
+      throw new Error('No driver available');
+    }
     return await this.driver.create(data);
   }
 
