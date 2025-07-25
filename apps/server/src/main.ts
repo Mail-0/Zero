@@ -35,7 +35,6 @@ import { autumnApi } from './routes/autumn';
 import type { HonoContext } from './ctx';
 import { createDb, type DB } from './db';
 import { createAuth } from './lib/auth';
-import { register } from 'prom-client';
 import { aiRouter } from './routes/ai';
 import { Autumn } from 'autumn-js';
 import { appRouter } from './trpc';
