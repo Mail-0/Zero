@@ -125,9 +125,6 @@
         "DISABLE_WORKFLOWS": "false",
         "AUTORAG_ID": "",
         "USE_OPENAI": "true",
-        "GRAFANA_ENDPOINT": "",
-        "GRAFANA_USERNAME": "",
-        "GRAFANA_PASSWORD": "",
       },
       "kv_namespaces": [
         {
