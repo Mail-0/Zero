@@ -280,9 +280,6 @@
         "THREAD_SYNC_MAX_COUNT": "20",
         "THREAD_SYNC_LOOP": "true",
         "DISABLE_WORKFLOWS": "true",
-        "GRAFANA_ENDPOINT": "",
-        "GRAFANA_USERNAME": "",
-        "GRAFANA_PASSWORD": "",
       },
       "kv_namespaces": [
         {
@@ -432,9 +429,6 @@
         "THREAD_SYNC_MAX_COUNT": "10",
         "THREAD_SYNC_LOOP": "true",
         "DISABLE_WORKFLOWS": "true",
-        "GRAFANA_ENDPOINT": "",
-        "GRAFANA_USERNAME": "",
-        "GRAFANA_PASSWORD": "",
       },
       "kv_namespaces": [
         {
