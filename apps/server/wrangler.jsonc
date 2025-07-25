@@ -362,7 +362,7 @@
           },
           {
             "name": "THINKING_MCP",
-            "class_name": "ZeroThinkingMCP",
+            "class_name": "ThinkingMCP",
           },
         ],
       },
@@ -413,7 +413,7 @@
         },
         {
           "tag": "v7",
-          "new_sqlite_classes": ["ZeroThinkingMCP"],
+          "new_sqlite_classes": ["ThinkingMCP"],
         },
       ],
       "vars": {
