@@ -35,12 +35,12 @@ import { autumnApi } from './routes/autumn';
 import type { HonoContext } from './ctx';
 import { createDb, type DB } from './db';
 import { createAuth } from './lib/auth';
+import { register } from 'prom-client';
 import { aiRouter } from './routes/ai';
 import { Autumn } from 'autumn-js';
 import { appRouter } from './trpc';
 import { cors } from 'hono/cors';
 import { Effect } from 'effect';
-import { register } from 'prom-client';
 
 import { Hono } from 'hono';
 
@@ -661,6 +661,7 @@ export default class extends WorkerEntrypoint<typeof env> {
           'Content-Type': register.contentType,
         });
       } catch (error) {
+        console.error('Failed to collect metrics:', error);
         return c.json({ error: 'Failed to collect metrics' }, 500);
       }
     })

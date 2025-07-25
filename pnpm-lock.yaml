@@ -46,6 +46,11 @@ catalogs:
       specifier: ^3.25.42
       version: 3.25.67
 
+patchedDependencies:
+  novel:
+    hash: 4e642d3ebfc8b39cf357dfe855ef6e0f5ebb3f6705776e1d7f2acc7ee8a973ec
+    path: patches/novel.patch
+
 importers:
 
   .:
@@ -302,7 +307,7 @@ importers:
         version: 0.4.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       novel:
         specifier: 1.0.2
-        version: 1.0.2(@tiptap/extension-code-block@2.23.0(@tiptap/core@2.23.0(@tiptap/pm@2.23.0))(@tiptap/pm@2.23.0))(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(highlight.js@11.11.1)(lowlight@3.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 1.0.2(patch_hash=4e642d3ebfc8b39cf357dfe855ef6e0f5ebb3f6705776e1d7f2acc7ee8a973ec)(@tiptap/extension-code-block@2.23.0(@tiptap/core@2.23.0(@tiptap/pm@2.23.0))(@tiptap/pm@2.23.0))(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(highlight.js@11.11.1)(lowlight@3.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       nuqs:
         specifier: 2.4.0
         version: 2.4.0(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
@@ -15439,7 +15444,7 @@ snapshots:
 
   normalize-path@3.0.0: {}
 
-  novel@1.0.2(@tiptap/extension-code-block@2.23.0(@tiptap/core@2.23.0(@tiptap/pm@2.23.0))(@tiptap/pm@2.23.0))(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(highlight.js@11.11.1)(lowlight@3.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  novel@1.0.2(patch_hash=4e642d3ebfc8b39cf357dfe855ef6e0f5ebb3f6705776e1d7f2acc7ee8a973ec)(@tiptap/extension-code-block@2.23.0(@tiptap/core@2.23.0(@tiptap/pm@2.23.0))(@tiptap/pm@2.23.0))(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(highlight.js@11.11.1)(lowlight@3.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       '@radix-ui/react-slot': 1.2.3(@types/react@19.0.10)(react@19.1.0)
       '@tiptap/core': 2.23.0(@tiptap/pm@2.23.0)
