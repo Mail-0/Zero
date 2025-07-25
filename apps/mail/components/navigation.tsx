@@ -161,13 +161,6 @@ export function Navigation() {
                     </Button>
                   </a>
                 </NavigationMenuItem>
-                <NavigationMenuItem className="bg-transparent text-white">
-                  <a href="/privacy">
-                    <Button variant="ghost" className="h-9 bg-transparent ml-1">
-                      Privacy
-                    </Button>
-                  </a>
-                </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
           </div>
