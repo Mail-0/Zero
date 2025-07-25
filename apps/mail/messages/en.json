@@ -406,7 +406,8 @@
       "feedback": "Feedback",
       "settings": "Settings",
       "voice": "Voice Assistant",
-      "snoozed": "Snoozed"
+      "snoozed": "Snoozed",
+      "starred": "Starred"
     },
     "settings": {
       "general": "General",

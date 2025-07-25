@@ -83,6 +83,13 @@ export const navigationConfig: Record<string, NavConfig> = {
             shortcut: 'g + a',
           },
           {
+            id: 'starred',
+            title: m['navigation.sidebar.starred'](),
+            url: '/mail/starred',
+            icon: Stars,
+            shortcut: 'g + s',
+          },
+          {
             id: 'snoozed',
             title: m['navigation.sidebar.snoozed'](),
             url: '/mail/snoozed',

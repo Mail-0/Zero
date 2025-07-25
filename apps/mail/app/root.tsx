@@ -65,7 +65,8 @@ export async function loader(_: LoaderFunctionArgs) {
 }
 
 export function Layout({ children }: PropsWithChildren) {
-  const { connectionId } = useLoaderData<typeof loader>();
+  const loaderData = useLoaderData<typeof loader>();
+  const connectionId = loaderData?.connectionId || 'defaultConnection';
 
   return (
     <html lang={getLocale()} suppressHydrationWarning>
