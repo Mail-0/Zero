@@ -656,10 +656,13 @@ export default class extends WorkerEntrypoint<typeof env> {
     .get('/health', (c) => c.json({ message: 'Zero Server is Up!' }))
     .get('/metrics', async (c) => {
       try {
-        const metrics = await register.metrics();
-        return c.text(metrics, 200, {
-          'Content-Type': register.contentType,
-        });
+        if (c.req.header('Authorization') === `Bearer ${env.GRAFANA_PASSWORD}`) {
+          const metrics = await register.metrics();
+          return c.text(metrics, 200, {
+            'Content-Type': register.contentType,
+          });
+        }
+        return c.json({ error: 'Failed to collect metrics' }, 401);
       } catch (error) {
         console.error('Failed to collect metrics:', error);
         return c.json({ error: 'Failed to collect metrics' }, 500);

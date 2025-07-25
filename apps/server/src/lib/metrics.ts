@@ -1,5 +1,4 @@
-import { register, Counter, Histogram } from 'prom-client';
-import { env } from 'cloudflare:workers';
+import { Counter, Histogram } from 'prom-client';
 
 export const trpcRequestDuration = new Histogram({
   name: 'trpc_request_duration_seconds',
@@ -34,59 +33,10 @@ export const emailOperationTotal = new Counter({
   labelNames: ['operation', 'provider', 'status'],
 });
 
-export class MetricsCollector {
-  private static instance: MetricsCollector;
-  private lastSent = Date.now();
-  private readonly batchInterval = 30000;
-
-  static getInstance(): MetricsCollector {
-    if (!MetricsCollector.instance) {
-      MetricsCollector.instance = new MetricsCollector();
-    }
-    return MetricsCollector.instance;
-  }
-
-  async collectAndSend(): Promise<void> {
-    if (!this.shouldSendMetrics()) return;
-
-    try {
-      const metrics = await register.metrics();
-      await this.sendToGrafana(metrics);
-      this.lastSent = Date.now();
-    } catch (error) {
-      console.error('Failed to send metrics to Grafana:', error);
-    }
-  }
-
-  private shouldSendMetrics(): boolean {
-    return (
-      env.GRAFANA_ENDPOINT &&
-      env.GRAFANA_USERNAME &&
-      env.GRAFANA_PASSWORD &&
-      Date.now() - this.lastSent > this.batchInterval
-    );
-  }
-
-  private async sendToGrafana(metrics: string): Promise<void> {
-    const auth = btoa(`${env.GRAFANA_USERNAME}:${env.GRAFANA_PASSWORD}`);
-    
-    await fetch(env.GRAFANA_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-protobuf',
-        'Content-Encoding': 'snappy',
-        'X-Prometheus-Remote-Write-Version': '0.1.0',
-        'Authorization': `Basic ${auth}`,
-      },
-      body: metrics,
-    });
-  }
-}
-
 export function timeOperation<T>(
   histogram: Histogram<string>,
   labels: Record<string, string>,
-  operation: () => Promise<T>
+  operation: () => Promise<T>,
 ): Promise<T> {
   const end = histogram.startTimer(labels);
   return operation().finally(() => end());

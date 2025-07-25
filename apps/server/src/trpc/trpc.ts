@@ -4,10 +4,10 @@ import type { HonoContext, HonoVariables } from '../ctx';
 import { getConnInfo } from 'hono/cloudflare-workers';
 import { initTRPC, TRPCError } from '@trpc/server';
 
+import { trpcRequestDuration, trpcRequestTotal } from '../lib/metrics';
 import { redis } from '../lib/services';
 import type { Context } from 'hono';
 import superjson from 'superjson';
-import { trpcRequestDuration, trpcRequestTotal, MetricsCollector } from '../lib/metrics';
 
 type TrpcContext = {
   c: Context<HonoContext>;
@@ -18,23 +18,21 @@ const t = initTRPC.context<TrpcContext>().create({ transformer: superjson });
 export const metricsMiddleware = t.middleware(async ({ next, path, type }) => {
   const start = Date.now();
   const procedure = `${type}.${path}`;
-  
+
   try {
     const result = await next();
     const duration = (Date.now() - start) / 1000;
-    
+
     trpcRequestDuration.observe({ procedure, status: 'success' }, duration);
     trpcRequestTotal.inc({ procedure, status: 'success' });
-    
-    MetricsCollector.getInstance().collectAndSend().catch(console.error);
-    
+
     return result;
   } catch (error) {
     const duration = (Date.now() - start) / 1000;
-    
+
     trpcRequestDuration.observe({ procedure, status: 'error' }, duration);
     trpcRequestTotal.inc({ procedure, status: 'error' });
-    
+
     throw error;
   }
 });
