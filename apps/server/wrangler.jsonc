@@ -361,7 +361,7 @@
             "class_name": "ZeroDriver",
           },
           {
-            "name": "ZERO_THINKING_MCP",
+            "name": "THINKING_MCP",
             "class_name": "ZeroThinkingMCP",
           },
         ],
