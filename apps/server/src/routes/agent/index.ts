@@ -34,6 +34,7 @@ import {
   type ParsedMessage,
 } from '../../types';
 import type { IGetThreadResponse, IGetThreadsResponse, MailManager } from '../../lib/driver/types';
+import { generateWhatUserCaresAbout, type UserTopic } from '../../lib/analyze/interests';
 import { DurableObjectOAuthClientProvider } from 'agents/mcp/do-oauth-client-provider';
 import { AiChatPrompt, GmailSearchAssistantSystemPrompt } from '../../lib/prompts';
 import { connectionToDriver, getZeroSocketAgent } from '../../lib/server-utils';
@@ -84,6 +85,78 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
             categories TEXT
         );
     `;
+  }
+
+  getAllSubjects() {
+    const subjects = this.sql`
+      SELECT latest_subject FROM threads
+      WHERE EXISTS (
+        SELECT 1 FROM json_each(latest_label_ids) WHERE value = 'INBOX'
+      );
+    `;
+    return subjects.map((row) => row.latest_subject) as string[];
+  }
+
+  async getUserTopics(): Promise<UserTopic[]> {
+    // Check storage first
+    // await this.ctx.storage.delete('user_topics');
+    const stored = await this.ctx.storage.get('user_topics');
+    if (stored) {
+      try {
+        const { topics, timestamp } = stored as { topics: UserTopic[]; timestamp: number };
+        const cacheAge = Date.now() - timestamp;
+        const ttl = 24 * 60 * 60 * 1000; // 24 hours
+
+        if (cacheAge < ttl) {
+          return topics;
+        }
+      } catch {
+        // Invalid stored data, continue to regenerate
+      }
+    }
+
+    // Generate new topics
+    const subjects = this.getAllSubjects();
+    let existingLabels: { name: string; id: string }[] = [];
+
+    try {
+      existingLabels = await this.getUserLabels();
+    } catch (error) {
+      console.warn('Failed to get existing labels for topic generation:', error);
+    }
+
+    const topics = await generateWhatUserCaresAbout(subjects, { existingLabels });
+
+    if (topics.length > 0) {
+      // Ensure labels exist in user account
+      try {
+        const existingLabelNames = new Set(existingLabels.map((label) => label.name.toLowerCase()));
+
+        for (const topic of topics) {
+          const topicName = topic.topic.toLowerCase();
+          if (!existingLabelNames.has(topicName)) {
+            console.log(`Creating label for topic: ${topic.topic}`);
+            await this.createLabel({
+              name: topic.topic,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Failed to ensure topic labels exist:', error);
+      }
+
+      // Store the result
+      await this.ctx.storage.put('user_topics', {
+        topics,
+        timestamp: Date.now(),
+      });
+
+      await this.agent?.broadcastChatMessage({
+        type: OutgoingMessageType.User_Topics,
+      });
+    }
+
+    return topics;
   }
 
   async setMetaData(connectionId: string) {
@@ -378,6 +451,13 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     });
   }
 
+  async reloadFolder(folder: string) {
+    this.agent?.broadcastChatMessage({
+      type: OutgoingMessageType.Mail_List,
+      folder,
+    });
+  }
+
   async syncThread({ threadId }: { threadId: string }) {
     if (this.name === 'general') return;
     if (!this.driver) {
@@ -473,7 +553,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
   }
 
   async syncThreads(folder: string) {
-    const startTime = Date.now();  
+    const startTime = Date.now();
     if (!this.driver) {
       console.error('No driver available for syncThreads');
       throw new Error('No driver available');
@@ -485,7 +565,9 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     }
 
     const threadCount = await this.getThreadCount();
-    console.log(`Thread count for ${folder}: ${threadCount} (max: ${maxCount}, loop: ${shouldLoop})`);
+    console.log(
+      `Thread count for ${folder}: ${threadCount} (max: ${maxCount}, loop: ${shouldLoop})`,
+    );
     if (threadCount >= maxCount && !shouldLoop) {
       console.log(`Threads already synced for ${folder}, skipping...`);
       return { synced: 0, message: 'Threads already synced' };
@@ -497,9 +579,8 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
     const fetchThread = (threadId: string) =>
       Effect.gen(function* () {
-      
         yield* Effect.sleep(200);
-      
+
         const threadData = yield* Effect.tryPromise(() => self.getWithRetry(threadId));
 
         if (!threadData || !threadData.latest || !threadData.latest.threadId) {
@@ -516,8 +597,9 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         );
 
         const normalizedReceivedOn = new Date(latest.receivedOn).toISOString();
-        yield* Effect.try(() =>
-          self.sql`
+        yield* Effect.try(
+          () =>
+            self.sql`
             INSERT OR REPLACE INTO threads (
               id, thread_id, provider_id, latest_sender,
               latest_received_on, latest_subject, latest_label_ids, updated_at

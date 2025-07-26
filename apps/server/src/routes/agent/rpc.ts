@@ -18,6 +18,8 @@ import type { IOutgoingMessage } from '../../types';
 import { RpcTarget } from 'cloudflare:workers';
 import { ZeroDriver } from '.';
 
+const shouldReSyncThreadsAfterActions = false;
+
 export class DriverRpcDO extends RpcTarget {
   constructor(
     private mainDo: ZeroDriver,
@@ -39,6 +41,10 @@ export class DriverRpcDO extends RpcTarget {
     color?: { backgroundColor: string; textColor: string };
   }) {
     return await this.mainDo.createLabel(label);
+  }
+
+  async getUserTopics() {
+    return await this.mainDo.getUserTopics();
   }
 
   async updateLabel(
@@ -86,7 +92,8 @@ export class DriverRpcDO extends RpcTarget {
 
   async markThreadsRead(threadIds: string[]) {
     const result = await this.mainDo.markThreadsRead(threadIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
+    if (shouldReSyncThreadsAfterActions)
+      await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
     return result;
   }
 
@@ -96,7 +103,8 @@ export class DriverRpcDO extends RpcTarget {
 
   async markThreadsUnread(threadIds: string[]) {
     const result = await this.mainDo.markThreadsUnread(threadIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
+    if (shouldReSyncThreadsAfterActions)
+      await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
     return result;
   }
 
@@ -140,13 +148,15 @@ export class DriverRpcDO extends RpcTarget {
 
   async markAsRead(threadIds: string[]) {
     const result = await this.mainDo.markAsRead(threadIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
+    if (shouldReSyncThreadsAfterActions)
+      await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
     return result;
   }
 
   async markAsUnread(threadIds: string[]) {
     const result = await this.mainDo.markAsUnread(threadIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
+    if (shouldReSyncThreadsAfterActions)
+      await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
     return result;
   }
 
@@ -206,6 +216,10 @@ export class DriverRpcDO extends RpcTarget {
 
   async broadcast(message: string) {
     return this.mainDo.broadcast(message);
+  }
+
+  async reloadFolder(folder: string) {
+    this.mainDo.reloadFolder(folder);
   }
 
   //   async getThreadsFromDB(params: {

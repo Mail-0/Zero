@@ -17,31 +17,26 @@ interface IamPolicy {
   bindings?: { role: string; members: string[] }[];
 }
 
+export const getServiceAccount = (): GoogleServiceAccount => {
+  const serviceAccountJson = env.GOOGLE_S_ACCOUNT;
+  if (!serviceAccountJson || serviceAccountJson === '{}') {
+    throw new Error('GOOGLE_S_ACCOUNT environment variable is required');
+  }
+
+  try {
+    return JSON.parse(serviceAccountJson) as GoogleServiceAccount;
+  } catch (error) {
+    console.error('Invalid GOOGLE_S_ACCOUNT JSON format', serviceAccountJson, error);
+    throw new Error('Invalid GOOGLE_S_ACCOUNT JSON format');
+  }
+};
+
 class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
   readonly providerId = EProviders.google;
   private accessToken: string | null = null;
   private tokenExpiry: number = 0;
   private serviceAccount: GoogleServiceAccount | null = null;
   private pubsubServiceAccount: string = 'serviceAccount:gmail-api-push@system.gserviceaccount.com';
-
-  private getServiceAccount(): GoogleServiceAccount {
-    if (!this.serviceAccount) {
-      const serviceAccountJson = env.GOOGLE_S_ACCOUNT;
-      if (!serviceAccountJson || serviceAccountJson === '{}') {
-        throw new Error('GOOGLE_S_ACCOUNT environment variable is required');
-      }
-
-      try {
-        this.serviceAccount = JSON.parse(serviceAccountJson);
-      } catch (error) {
-        console.log('Invalid GOOGLE_S_ACCOUNT JSON format', serviceAccountJson, error);
-        throw new Error('Invalid GOOGLE_S_ACCOUNT JSON format');
-      }
-      return this.serviceAccount as GoogleServiceAccount;
-    }
-
-    return this.serviceAccount;
-  }
 
   private async getAccessToken(): Promise<string> {
     const now = Math.floor(Date.now() / 1000);
@@ -51,7 +46,11 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
       return this.accessToken;
     }
 
-    const serviceAccount = this.getServiceAccount();
+    if (!this.serviceAccount) {
+      this.serviceAccount = getServiceAccount();
+    }
+
+    const serviceAccount = this.serviceAccount;
 
     const payload = {
       iss: serviceAccount.client_email,
@@ -107,7 +106,7 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
   }
 
   private async setupPubSubTopic(topicName: string): Promise<void> {
-    const serviceAccount = this.getServiceAccount();
+    const serviceAccount = getServiceAccount();
     const baseUrl = `https://pubsub.googleapis.com/v1/projects/${serviceAccount.project_id}`;
     const topicUrl = `${baseUrl}/topics/${topicName}`;
 
@@ -134,7 +133,7 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
   }
 
   private async setTopicIamPolicy(topicName: string): Promise<void> {
-    const serviceAccount = this.getServiceAccount();
+    const serviceAccount = getServiceAccount();
     const baseUrl = `https://pubsub.googleapis.com/v1/projects/${serviceAccount.project_id}/topics/${topicName}`;
 
     // Get current policy
@@ -167,7 +166,7 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
     subscriptionName: string,
     pushEndpoint: string,
   ): Promise<void> {
-    const serviceAccount = this.getServiceAccount();
+    const serviceAccount = getServiceAccount();
     const url = `https://pubsub.googleapis.com/v1/projects/${serviceAccount.project_id}/subscriptions/${subscriptionName}`;
 
     const requestBody = {
@@ -218,7 +217,7 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
 
     // Setup Gmail watch using direct API call instead of heavy googleapis package
     const accessToken = credentials.access_token || auth.credentials.access_token;
-    const serviceAccount = this.getServiceAccount();
+    const serviceAccount = getServiceAccount();
 
     console.log(
       `[SUBSCRIPTION] Setting up Gmail watch for connection: ${connectionData.id} ${topicName} projects/${serviceAccount.project_id}/topics/${topicName}`,
