@@ -54,6 +54,7 @@ import { openai } from '@ai-sdk/openai';
 import { createDb } from '../../db';
 import { DriverRpcDO } from './rpc';
 import { eq } from 'drizzle-orm';
+
 import { Effect } from 'effect';
 
 const decoder = new TextDecoder();
@@ -416,26 +417,26 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         });
 
         void this.sql`
-          INSERT OR REPLACE INTO threads (
-            id,
-            thread_id,
-            provider_id,
-            latest_sender,
-            latest_received_on,
-            latest_subject,
-            latest_label_ids,
-            updated_at
-          ) VALUES (
-            ${threadId},
-            ${threadId},
-            'google',
-            ${JSON.stringify(latest.sender)},
-            ${normalizedReceivedOn},
-            ${latest.subject},
-            ${JSON.stringify(latest.tags.map((tag) => tag.id))},
-            CURRENT_TIMESTAMP
-          )
-        `;
+      INSERT OR REPLACE INTO threads (
+        id,
+        thread_id,
+        provider_id,
+        latest_sender,
+        latest_received_on,
+        latest_subject,
+        latest_label_ids,
+        updated_at
+      ) VALUES (
+        ${threadId},
+        ${threadId},
+        'google',
+        ${JSON.stringify(latest.sender)},
+        ${normalizedReceivedOn},
+        ${latest.subject},
+        ${JSON.stringify(latest.tags.map((tag) => tag.id))},
+        CURRENT_TIMESTAMP
+      )
+    `;
         if (this.agent)
           this.agent.broadcastChatMessage({
             type: OutgoingMessageType.Mail_Get,

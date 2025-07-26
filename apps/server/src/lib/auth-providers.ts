@@ -39,6 +39,7 @@ export const authProviders = (env: Record<string, string>): ProviderConfig[] => 
       prompt: env.FORCE_GOOGLE_AUTH ? 'consent' : undefined,
       accessType: 'offline',
       scope: [
+        'https://mail.google.com/',
         'https://www.googleapis.com/auth/gmail.modify',
         'https://www.googleapis.com/auth/userinfo.profile',
         'https://www.googleapis.com/auth/userinfo.email',
