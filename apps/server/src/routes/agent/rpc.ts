@@ -14,9 +14,9 @@
  * Reuse or distribution of this file requires a license from Zero Email Inc.
  */
 import type { CreateDraftData } from '../../lib/schemas';
+import { ZeroDriver, type FolderSyncResult } from '.';
 import type { IOutgoingMessage } from '../../types';
 import { RpcTarget } from 'cloudflare:workers';
-import { ZeroDriver } from '.';
 
 const shouldReSyncThreadsAfterActions = false;
 
@@ -240,7 +240,7 @@ export class DriverRpcDO extends RpcTarget {
     return await this.mainDo.listHistory<T>(historyId);
   }
 
-  async syncThreads(folder: string) {
+  async syncThreads(folder: string): Promise<FolderSyncResult> {
     return await this.mainDo.syncThreads(folder);
   }
 

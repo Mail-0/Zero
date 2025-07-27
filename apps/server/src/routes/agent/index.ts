@@ -55,7 +55,6 @@ import { openai } from '@ai-sdk/openai';
 import { createDb } from '../../db';
 import { DriverRpcDO } from './rpc';
 import { eq } from 'drizzle-orm';
-
 import { Effect } from 'effect';
 
 const decoder = new TextDecoder();
@@ -63,6 +62,222 @@ const decoder = new TextDecoder();
 const shouldDropTables = false;
 const maxCount = 20;
 const shouldLoop = env.THREAD_SYNC_LOOP !== 'false';
+
+// Error types for getUserTopics
+export class StorageError extends Error {
+  readonly _tag = 'StorageError';
+  constructor(message: string, cause?: unknown) {
+    super(message);
+    this.name = 'StorageError';
+    this.cause = cause;
+  }
+}
+
+export class LabelRetrievalError extends Error {
+  readonly _tag = 'LabelRetrievalError';
+  constructor(message: string, cause?: unknown) {
+    super(message);
+    this.name = 'LabelRetrievalError';
+    this.cause = cause;
+  }
+}
+
+export class TopicGenerationError extends Error {
+  readonly _tag = 'TopicGenerationError';
+  constructor(message: string, cause?: unknown) {
+    super(message);
+    this.name = 'TopicGenerationError';
+    this.cause = cause;
+  }
+}
+
+export class LabelCreationError extends Error {
+  readonly _tag = 'LabelCreationError';
+  constructor(message: string, cause?: unknown) {
+    super(message);
+    this.name = 'LabelCreationError';
+    this.cause = cause;
+  }
+}
+
+export class BroadcastError extends Error {
+  readonly _tag = 'BroadcastError';
+  constructor(message: string, cause?: unknown) {
+    super(message);
+    this.name = 'BroadcastError';
+    this.cause = cause;
+  }
+}
+
+// Error types for syncThread
+export class ThreadSyncError extends Error {
+  readonly _tag = 'ThreadSyncError';
+  constructor(message: string, cause?: unknown) {
+    super(message);
+    this.name = 'ThreadSyncError';
+    this.cause = cause;
+  }
+}
+
+export class DriverUnavailableError extends Error {
+  readonly _tag = 'DriverUnavailableError';
+  constructor(message: string, cause?: unknown) {
+    super(message);
+    this.name = 'DriverUnavailableError';
+    this.cause = cause;
+  }
+}
+
+export class ThreadDataError extends Error {
+  readonly _tag = 'ThreadDataError';
+  constructor(message: string, cause?: unknown) {
+    super(message);
+    this.name = 'ThreadDataError';
+    this.cause = cause;
+  }
+}
+
+export class DateNormalizationError extends Error {
+  readonly _tag = 'DateNormalizationError';
+  constructor(message: string, cause?: unknown) {
+    super(message);
+    this.name = 'DateNormalizationError';
+    this.cause = cause;
+  }
+}
+
+// Error types for syncThreads
+export class FolderSyncError extends Error {
+  readonly _tag = 'FolderSyncError';
+  constructor(message: string, cause?: unknown) {
+    super(message);
+    this.name = 'FolderSyncError';
+    this.cause = cause;
+  }
+}
+
+export class ThreadListError extends Error {
+  readonly _tag = 'ThreadListError';
+  constructor(message: string, cause?: unknown) {
+    super(message);
+    this.name = 'ThreadListError';
+    this.cause = cause;
+  }
+}
+
+export class ConcurrencyError extends Error {
+  readonly _tag = 'ConcurrencyError';
+  constructor(message: string, cause?: unknown) {
+    super(message);
+    this.name = 'ConcurrencyError';
+    this.cause = cause;
+  }
+}
+
+// Union type for all possible errors
+export type TopicGenerationErrors =
+  | StorageError
+  | LabelRetrievalError
+  | TopicGenerationError
+  | LabelCreationError
+  | BroadcastError;
+
+export type ThreadSyncErrors =
+  | ThreadSyncError
+  | DriverUnavailableError
+  | ThreadDataError
+  | DateNormalizationError;
+
+export type FolderSyncErrors =
+  | FolderSyncError
+  | DriverUnavailableError
+  | ThreadListError
+  | ConcurrencyError;
+
+// Success cases and result types
+export interface TopicGenerationResult {
+  topics: UserTopic[];
+  cacheHit: boolean;
+  cacheAge?: number;
+  subjectsAnalyzed: number;
+  existingLabelsCount: number;
+  labelsCreated: number;
+  broadcastSent: boolean;
+}
+
+export interface ThreadSyncResult {
+  success: boolean;
+  threadId: string;
+  threadData?: IGetThreadResponse;
+  reason?: string;
+  normalizedReceivedOn?: string;
+  broadcastSent: boolean;
+}
+
+export interface FolderSyncResult {
+  synced: number;
+  message: string;
+  folder: string;
+  pagesProcessed: number;
+  totalThreads: number;
+  successfulSyncs: number;
+  failedSyncs: number;
+  broadcastSent: boolean;
+}
+
+export interface CachedTopics {
+  topics: UserTopic[];
+  timestamp: number;
+}
+
+// Requirements interface
+export interface TopicGenerationRequirements {
+  readonly storage: DurableObjectStorage;
+  readonly agent?: DurableObjectStub<ZeroAgent>;
+  readonly connectionId: string;
+}
+
+export interface ThreadSyncRequirements {
+  readonly driver: MailManager;
+  readonly agent?: DurableObjectStub<ZeroAgent>;
+  readonly connectionId: string;
+}
+
+export interface FolderSyncRequirements {
+  readonly driver: MailManager;
+  readonly agent?: DurableObjectStub<ZeroAgent>;
+  readonly connectionId: string;
+}
+
+// Constants
+export const TOPIC_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+export const TOPIC_CACHE_KEY = 'user_topics';
+
+// Type aliases for better readability
+export type TopicGenerationEffect = Effect.Effect<
+  TopicGenerationResult,
+  TopicGenerationErrors,
+  TopicGenerationRequirements
+>;
+export type TopicGenerationSuccess = TopicGenerationResult;
+export type TopicGenerationFailure = TopicGenerationErrors;
+
+export type ThreadSyncEffect = Effect.Effect<
+  ThreadSyncResult,
+  ThreadSyncErrors,
+  ThreadSyncRequirements
+>;
+export type ThreadSyncSuccess = ThreadSyncResult;
+export type ThreadSyncFailure = ThreadSyncErrors;
+
+export type FolderSyncEffect = Effect.Effect<
+  FolderSyncResult,
+  FolderSyncErrors,
+  FolderSyncRequirements
+>;
+export type FolderSyncSuccess = FolderSyncResult;
+export type FolderSyncFailure = FolderSyncErrors;
+
 export class ZeroDriver extends AIChatAgent<typeof env> {
   private foldersInSync: Map<string, boolean> = new Map();
   private syncThreadsInProgress: Map<string, boolean> = new Map();
@@ -98,65 +313,220 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
   }
 
   async getUserTopics(): Promise<UserTopic[]> {
-    // Check storage first
-    // await this.ctx.storage.delete('user_topics');
-    const stored = await this.ctx.storage.get('user_topics');
-    if (stored) {
-      try {
-        const { topics, timestamp } = stored as { topics: UserTopic[]; timestamp: number };
-        const cacheAge = Date.now() - timestamp;
-        const ttl = 24 * 60 * 60 * 1000; // 24 hours
+    const self = this;
 
-        if (cacheAge < ttl) {
-          return topics;
-        }
-      } catch {
-        // Invalid stored data, continue to regenerate
-      }
-    }
+    // Create the Effect with proper types - no external requirements needed
+    const topicGenerationEffect = Effect.gen(function* () {
+      console.log(`[getUserTopics] Starting topic generation for connection: ${self.name}`);
 
-    // Generate new topics
-    const subjects = this.getAllSubjects();
-    let existingLabels: { name: string; id: string }[] = [];
+      const result: TopicGenerationResult = {
+        topics: [],
+        cacheHit: false,
+        subjectsAnalyzed: 0,
+        existingLabelsCount: 0,
+        labelsCreated: 0,
+        broadcastSent: false,
+      };
 
-    try {
-      existingLabels = await this.getUserLabels();
-    } catch (error) {
-      console.warn('Failed to get existing labels for topic generation:', error);
-    }
+      // Check storage first
+      const stored = yield* Effect.tryPromise(() => self.ctx.storage.get(TOPIC_CACHE_KEY)).pipe(
+        Effect.tap(() =>
+          Effect.sync(() => console.log(`[getUserTopics] Checking storage for cached topics`)),
+        ),
+        Effect.catchAll((error) => {
+          console.warn(`[getUserTopics] Failed to get cached topics from storage:`, error);
+          return Effect.succeed(null);
+        }),
+      );
 
-    const topics = await generateWhatUserCaresAbout(subjects, { existingLabels });
+      if (stored) {
+        // Type guard to ensure stored is a valid CachedTopics object
+        const isValidCachedTopics = (data: unknown): data is CachedTopics => {
+          return (
+            typeof data === 'object' &&
+            data !== null &&
+            'topics' in data &&
+            'timestamp' in data &&
+            Array.isArray((data as any).topics) &&
+            typeof (data as any).timestamp === 'number'
+          );
+        };
 
-    if (topics.length > 0) {
-      // Ensure labels exist in user account
-      try {
-        const existingLabelNames = new Set(existingLabels.map((label) => label.name.toLowerCase()));
+        const cachedTopicsResult = yield* Effect.try({
+          try: () => {
+            if (!isValidCachedTopics(stored)) {
+              throw new Error('Invalid cached data format');
+            }
+            return stored as CachedTopics;
+          },
+          catch: (error) => new Error(`Invalid cached data: ${error}`),
+        }).pipe(
+          Effect.catchAll((error) => {
+            console.warn(`[getUserTopics] Invalid cached data, regenerating:`, error);
+            return Effect.succeed(null);
+          }),
+        );
 
-        for (const topic of topics) {
-          const topicName = topic.topic.toLowerCase();
-          if (!existingLabelNames.has(topicName)) {
-            console.log(`Creating label for topic: ${topic.topic}`);
-            await this.createLabel({
-              name: topic.topic,
-            });
+        if (cachedTopicsResult) {
+          const cacheAge = Date.now() - cachedTopicsResult.timestamp;
+
+          if (cacheAge < TOPIC_CACHE_TTL) {
+            console.log(
+              `[getUserTopics] Using cached topics (age: ${Math.round(cacheAge / 1000 / 60)} minutes)`,
+            );
+            result.topics = cachedTopicsResult.topics;
+            result.cacheHit = true;
+            result.cacheAge = cacheAge;
+            return result;
+          } else {
+            console.log(
+              `[getUserTopics] Cache expired (age: ${Math.round(cacheAge / 1000 / 60)} minutes), regenerating`,
+            );
           }
         }
-      } catch (error) {
-        console.error('Failed to ensure topic labels exist:', error);
       }
 
-      // Store the result
-      await this.ctx.storage.put('user_topics', {
-        topics,
-        timestamp: Date.now(),
+      // Generate new topics
+      console.log(`[getUserTopics] Generating new topics`);
+      const subjects = self.getAllSubjects();
+      result.subjectsAnalyzed = subjects.length;
+      console.log(`[getUserTopics] Found ${subjects.length} subjects for analysis`);
+
+      let existingLabels: { name: string; id: string }[] = [];
+
+      const existingLabelsResult = yield* Effect.tryPromise(() => self.getUserLabels()).pipe(
+        Effect.tap((labels) =>
+          Effect.sync(() => {
+            result.existingLabelsCount = labels.length;
+            console.log(`[getUserTopics] Retrieved ${labels.length} existing labels`);
+          }),
+        ),
+        Effect.catchAll((error) => {
+          console.warn(
+            `[getUserTopics] Failed to get existing labels for topic generation:`,
+            error,
+          );
+          return Effect.succeed([]);
+        }),
+      );
+
+      existingLabels = existingLabelsResult;
+
+      const topics = yield* Effect.tryPromise(() =>
+        generateWhatUserCaresAbout(subjects, { existingLabels }),
+      ).pipe(
+        Effect.tap((topics) =>
+          Effect.sync(() => {
+            result.topics = topics;
+            console.log(
+              `[getUserTopics] Generated ${topics.length} topics:`,
+              topics.map((t) => t.topic),
+            );
+          }),
+        ),
+        Effect.catchAll((error) => {
+          console.error(`[getUserTopics] Failed to generate topics:`, error);
+          return Effect.succeed([]);
+        }),
+      );
+
+      if (topics.length > 0) {
+        console.log(`[getUserTopics] Processing ${topics.length} topics`);
+
+        // Ensure labels exist in user account
+        yield* Effect.tryPromise(async () => {
+          try {
+            const existingLabelNames = new Set(
+              existingLabels.map((label) => label.name.toLowerCase()),
+            );
+            let createdCount = 0;
+
+            for (const topic of topics) {
+              const topicName = topic.topic.toLowerCase();
+              if (!existingLabelNames.has(topicName)) {
+                console.log(`[getUserTopics] Creating label for topic: ${topic.topic}`);
+                await self.createLabel({
+                  name: topic.topic,
+                });
+                createdCount++;
+              }
+            }
+            result.labelsCreated = createdCount;
+            console.log(`[getUserTopics] Created ${createdCount} new labels`);
+          } catch (error) {
+            console.error(`[getUserTopics] Failed to ensure topic labels exist:`, error);
+            throw error;
+          }
+        }).pipe(
+          Effect.catchAll((error) => {
+            console.error(`[getUserTopics] Error creating labels:`, error);
+            return Effect.succeed(undefined);
+          }),
+        );
+
+        // Store the result
+        yield* Effect.tryPromise(() =>
+          self.ctx.storage.put(TOPIC_CACHE_KEY, {
+            topics,
+            timestamp: Date.now(),
+          }),
+        ).pipe(
+          Effect.tap(() =>
+            Effect.sync(() => console.log(`[getUserTopics] Stored topics in cache`)),
+          ),
+          Effect.catchAll((error) => {
+            console.error(`[getUserTopics] Failed to store topics in cache:`, error);
+            return Effect.succeed(undefined);
+          }),
+        );
+
+        // Broadcast message if agent exists
+        if (self.agent) {
+          yield* Effect.tryPromise(() =>
+            self.agent!.broadcastChatMessage({
+              type: OutgoingMessageType.User_Topics,
+            }),
+          ).pipe(
+            Effect.tap(() =>
+              Effect.sync(() => {
+                result.broadcastSent = true;
+                console.log(`[getUserTopics] Broadcasted topics update`);
+              }),
+            ),
+            Effect.catchAll((error) => {
+              console.warn(`[getUserTopics] Failed to broadcast topics update:`, error);
+              return Effect.succeed(undefined);
+            }),
+          );
+        } else {
+          console.log(`[getUserTopics] No agent available for broadcasting`);
+        }
+      } else {
+        console.log(`[getUserTopics] No topics generated`);
+      }
+
+      console.log(`[getUserTopics] Completed topic generation for connection: ${self.name}`, {
+        topicsCount: result.topics.length,
+        cacheHit: result.cacheHit,
+        subjectsAnalyzed: result.subjectsAnalyzed,
+        existingLabelsCount: result.existingLabelsCount,
+        labelsCreated: result.labelsCreated,
+        broadcastSent: result.broadcastSent,
       });
 
-      await this.agent?.broadcastChatMessage({
-        type: OutgoingMessageType.User_Topics,
-      });
-    }
+      return result;
+    });
 
-    return topics;
+    // Run the Effect and extract just the topics for backward compatibility
+    return Effect.runPromise(
+      topicGenerationEffect.pipe(
+        Effect.map((result) => result.topics),
+        Effect.catchAll((error) => {
+          console.error(`[getUserTopics] Critical error in getUserTopics:`, error);
+          return Effect.succeed([]);
+        }),
+      ),
+    );
   }
 
   async setMetaData(connectionId: string) {
@@ -458,86 +828,189 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     });
   }
 
-  async syncThread({ threadId }: { threadId: string }) {
-    if (this.name === 'general') return;
-    if (!this.driver) {
-      await this.setupAuth();
-    }
+  async syncThread({ threadId }: { threadId: string }): Promise<ThreadSyncResult> {
+    const self = this;
 
-    if (!this.driver) {
-      console.error('No driver available for syncThread');
-      throw new Error('No driver available');
+    if (this.name === 'general') {
+      return { success: true, threadId, broadcastSent: false };
     }
 
     if (this.syncThreadsInProgress.has(threadId)) {
-      console.log(`Sync already in progress for thread ${threadId}, skipping...`);
-      return;
+      console.log(`[syncThread] Sync already in progress for thread ${threadId}, skipping...`);
+      return { success: true, threadId, broadcastSent: false };
     }
-    this.syncThreadsInProgress.set(threadId, true);
 
-    // console.log('Server: syncThread called for thread', threadId);
-    try {
-      const threadData = await this.getWithRetry(threadId);
-      const latest = threadData.latest;
+    return Effect.runPromise(
+      Effect.gen(function* () {
+        console.log(`[syncThread] Starting sync for thread: ${threadId}`);
 
-      if (latest) {
-        // Convert receivedOn to ISO format for proper sorting
-        let normalizedReceivedOn: string;
-        try {
-          normalizedReceivedOn = new Date(latest.receivedOn).toISOString();
-        } catch (error) {
-          console.log('Here!', error);
-          normalizedReceivedOn = new Date().toISOString();
+        const result: ThreadSyncResult = {
+          success: false,
+          threadId,
+          broadcastSent: false,
+        };
+
+        // Setup driver if needed
+        if (!self.driver) {
+          yield* Effect.tryPromise(() => self.setupAuth()).pipe(
+            Effect.tap(() => Effect.sync(() => console.log(`[syncThread] Setup auth completed`))),
+            Effect.catchAll((error) => {
+              console.error(`[syncThread] Failed to setup auth:`, error);
+              return Effect.succeed(undefined);
+            }),
+          );
         }
 
-        await env.THREADS_BUCKET.put(this.getThreadKey(threadId), JSON.stringify(threadData), {
-          customMetadata: {
-            threadId,
-          },
+        if (!self.driver) {
+          console.error(`[syncThread] No driver available for thread ${threadId}`);
+          result.success = false;
+          result.reason = 'No driver available';
+          return result;
+        }
+
+        self.syncThreadsInProgress.set(threadId, true);
+
+        // Get thread data with retry
+        const threadData = yield* Effect.tryPromise(() => self.getWithRetry(threadId)).pipe(
+          Effect.tap(() =>
+            Effect.sync(() => console.log(`[syncThread] Retrieved thread data for ${threadId}`)),
+          ),
+          Effect.catchAll((error) => {
+            console.error(`[syncThread] Failed to get thread data for ${threadId}:`, error);
+            return Effect.fail(
+              new ThreadDataError(`Failed to get thread data for ${threadId}`, error),
+            );
+          }),
+        );
+
+        const latest = threadData.latest;
+
+        if (!latest) {
+          self.syncThreadsInProgress.delete(threadId);
+          console.log(`[syncThread] Skipping thread ${threadId} - no latest message`);
+          result.success = false;
+          result.reason = 'No latest message';
+          return result;
+        }
+
+        // Normalize received date
+        const normalizedReceivedOn = yield* Effect.try({
+          try: () => new Date(latest.receivedOn).toISOString(),
+          catch: (error) =>
+            new DateNormalizationError(`Failed to normalize date for ${threadId}`, error),
+        }).pipe(
+          Effect.catchAll((error) => {
+            console.warn(
+              `[syncThread] Date normalization failed for ${threadId}, using current date:`,
+              error,
+            );
+            return Effect.succeed(new Date().toISOString());
+          }),
+        );
+
+        result.normalizedReceivedOn = normalizedReceivedOn;
+
+        // Store thread data in bucket
+        yield* Effect.tryPromise(() =>
+          env.THREADS_BUCKET.put(self.getThreadKey(threadId), JSON.stringify(threadData), {
+            customMetadata: { threadId },
+          }),
+        ).pipe(
+          Effect.tap(() =>
+            Effect.sync(() =>
+              console.log(`[syncThread] Stored thread data in bucket for ${threadId}`),
+            ),
+          ),
+          Effect.catchAll((error) => {
+            console.error(
+              `[syncThread] Failed to store thread data in bucket for ${threadId}:`,
+              error,
+            );
+            return Effect.succeed(undefined);
+          }),
+        );
+
+        // Update database
+        yield* Effect.tryPromise(() =>
+          Promise.resolve(self.sql`
+          INSERT OR REPLACE INTO threads (
+            id,
+            thread_id,
+            provider_id,
+            latest_sender,
+            latest_received_on,
+            latest_subject,
+            latest_label_ids,
+            updated_at
+          ) VALUES (
+            ${threadId},
+            ${threadId},
+            'google',
+            ${JSON.stringify(latest.sender)},
+            ${normalizedReceivedOn},
+            ${latest.subject},
+            ${JSON.stringify(latest.tags.map((tag) => tag.id))},
+            CURRENT_TIMESTAMP
+          )
+        `),
+        ).pipe(
+          Effect.tap(() =>
+            Effect.sync(() => console.log(`[syncThread] Updated database for ${threadId}`)),
+          ),
+          Effect.catchAll((error) => {
+            console.error(`[syncThread] Failed to update database for ${threadId}:`, error);
+            return Effect.succeed(undefined);
+          }),
+        );
+
+        // Broadcast update if agent exists
+        if (self.agent) {
+          yield* Effect.tryPromise(() =>
+            self.agent!.broadcastChatMessage({
+              type: OutgoingMessageType.Mail_Get,
+              threadId,
+            }),
+          ).pipe(
+            Effect.tap(() =>
+              Effect.sync(() => {
+                result.broadcastSent = true;
+                console.log(`[syncThread] Broadcasted update for ${threadId}`);
+              }),
+            ),
+            Effect.catchAll((error) => {
+              console.warn(`[syncThread] Failed to broadcast update for ${threadId}:`, error);
+              return Effect.succeed(undefined);
+            }),
+          );
+        } else {
+          console.log(`[syncThread] No agent available for broadcasting ${threadId}`);
+        }
+
+        self.syncThreadsInProgress.delete(threadId);
+
+        result.success = true;
+        result.threadData = threadData;
+
+        console.log(`[syncThread] Completed sync for thread: ${threadId}`, {
+          success: result.success,
+          broadcastSent: result.broadcastSent,
+          hasLatestMessage: !!latest,
         });
 
-        void this.sql`
-      INSERT OR REPLACE INTO threads (
-        id,
-        thread_id,
-        provider_id,
-        latest_sender,
-        latest_received_on,
-        latest_subject,
-        latest_label_ids,
-        updated_at
-      ) VALUES (
-        ${threadId},
-        ${threadId},
-        'google',
-        ${JSON.stringify(latest.sender)},
-        ${normalizedReceivedOn},
-        ${latest.subject},
-        ${JSON.stringify(latest.tags.map((tag) => tag.id))},
-        CURRENT_TIMESTAMP
-      )
-    `;
-        if (this.agent)
-          this.agent.broadcastChatMessage({
-            type: OutgoingMessageType.Mail_Get,
+        return result;
+      }).pipe(
+        Effect.catchAll((error) => {
+          self.syncThreadsInProgress.delete(threadId);
+          console.error(`[syncThread] Critical error syncing thread ${threadId}:`, error);
+          return Effect.succeed({
+            success: false,
             threadId,
+            reason: error.message,
+            broadcastSent: false,
           });
-        this.syncThreadsInProgress.delete(threadId);
-        // console.log('Server: syncThread result', {
-        //   threadId,
-        //   labels: threadData.labels,
-        // });
-        return { success: true, threadId, threadData };
-      } else {
-        this.syncThreadsInProgress.delete(threadId);
-        console.log(`Skipping thread ${threadId} - no latest message`);
-        return { success: false, threadId, reason: 'No latest message' };
-      }
-    } catch (error) {
-      this.syncThreadsInProgress.delete(threadId);
-      console.error(`Failed to sync thread ${threadId}:`, error);
-      throw error;
-    }
+        }),
+      ),
+    );
   }
 
   async getThreadCount() {
@@ -552,141 +1025,217 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     return count[0]['COUNT(*)'] as number;
   }
 
-  async syncThreads(folder: string) {
-    const startTime = Date.now();
+  async syncThreads(folder: string): Promise<FolderSyncResult> {
+    const self = this;
+
     if (!this.driver) {
-      console.error('No driver available for syncThreads');
-      throw new Error('No driver available');
+      console.error(`[syncThreads] No driver available for folder ${folder}`);
+      return {
+        synced: 0,
+        message: 'No driver available',
+        folder,
+        pagesProcessed: 0,
+        totalThreads: 0,
+        successfulSyncs: 0,
+        failedSyncs: 0,
+        broadcastSent: false,
+      };
     }
 
     if (this.foldersInSync.has(folder)) {
-      console.log(`Sync already in progress for ${folder}, skipping...`);
-      return { synced: 0, message: 'Sync already in progress' };
+      console.log(`[syncThreads] Sync already in progress for folder ${folder}, skipping...`);
+      return {
+        synced: 0,
+        message: 'Sync already in progress',
+        folder,
+        pagesProcessed: 0,
+        totalThreads: 0,
+        successfulSyncs: 0,
+        failedSyncs: 0,
+        broadcastSent: false,
+      };
     }
 
-    const threadCount = await this.getThreadCount();
-    console.log(
-      `Thread count for ${folder}: ${threadCount} (max: ${maxCount}, loop: ${shouldLoop})`,
-    );
-    if (threadCount >= maxCount && !shouldLoop) {
-      console.log(`Threads already synced for ${folder}, skipping...`);
-      return { synced: 0, message: 'Threads already synced' };
-    }
-
-    this.foldersInSync.set(folder, true);
-
-    const self = this;
-
-    const fetchThread = (threadId: string) =>
+    return Effect.runPromise(
       Effect.gen(function* () {
-        yield* Effect.sleep(200);
+        console.log(`[syncThreads] Starting sync for folder: ${folder}`);
 
-        const threadData = yield* Effect.tryPromise(() => self.getWithRetry(threadId));
+        const result: FolderSyncResult = {
+          synced: 0,
+          message: 'Sync completed',
+          folder,
+          pagesProcessed: 0,
+          totalThreads: 0,
+          successfulSyncs: 0,
+          failedSyncs: 0,
+          broadcastSent: false,
+        };
 
-        if (!threadData || !threadData.latest || !threadData.latest.threadId) {
-          return 0 as const;
-        }
-        const latest = threadData.latest!;
-        const id = latest.threadId as string;
-
-        const serialized = JSON.stringify(threadData);
-        yield* Effect.tryPromise(() =>
-          env.THREADS_BUCKET.put(self.getThreadKey(id), serialized, {
-            customMetadata: { threadId: id },
+        // Check thread count
+        const threadCount = yield* Effect.tryPromise(() => self.getThreadCount()).pipe(
+          Effect.tap((count) =>
+            Effect.sync(() => console.log(`[syncThreads] Current thread count: ${count}`)),
+          ),
+          Effect.catchAll((error) => {
+            console.warn(`[syncThreads] Failed to get thread count:`, error);
+            return Effect.succeed(0);
           }),
         );
 
-        const normalizedReceivedOn = new Date(latest.receivedOn).toISOString();
-        yield* Effect.try(
-          () =>
-            self.sql`
-            INSERT OR REPLACE INTO threads (
-              id, thread_id, provider_id, latest_sender,
-              latest_received_on, latest_subject, latest_label_ids, updated_at
-            ) VALUES (
-              ${id},
-              ${id},
-              'google',
-              ${JSON.stringify(latest.sender)},
-              ${normalizedReceivedOn},
-              ${latest.subject},
-              ${JSON.stringify(latest.tags.map((tag) => tag.id))},
-              CURRENT_TIMESTAMP
-            )
-          `,
-        );
+        if (threadCount >= maxCount && !shouldLoop) {
+          console.log(`[syncThreads] Threads already synced (${threadCount}), skipping...`);
+          result.message = 'Threads already synced';
+          return result;
+        }
 
-        self.agent?.broadcastChatMessage({
-          type: OutgoingMessageType.Mail_Get,
-          threadId: id,
-        });
+        self.foldersInSync.set(folder, true);
 
-        return 1 as const;
-      }).pipe(
-        Effect.catchAll((error) => {
-          console.error(`Failed to process thread ${threadId} in ${folder}:`, error);
-          return Effect.succeed(0 as const);
-        }),
-      );
+        // Sync single thread function
+        const syncSingleThread = (threadId: string) =>
+          Effect.gen(function* () {
+            yield* Effect.sleep(150); // Rate limiting delay
+            const syncResult = yield* Effect.tryPromise(() => self.syncThread({ threadId })).pipe(
+              Effect.tap(() =>
+                Effect.sync(() =>
+                  console.log(`[syncThreads] Successfully synced thread ${threadId}`),
+                ),
+              ),
+              Effect.catchAll((error) => {
+                console.error(`[syncThreads] Failed to sync thread ${threadId}:`, error);
+                return Effect.succeed({
+                  success: false,
+                  threadId,
+                  reason: error.message,
+                  broadcastSent: false,
+                });
+              }),
+            );
 
-    const syncProgram = Effect.gen(
-      function* () {
-        let totalSynced = 0;
+            if (syncResult.success) {
+              result.successfulSyncs++;
+            } else {
+              result.failedSyncs++;
+            }
+
+            return syncResult;
+          });
+
+        // Main sync program
         let pageToken: string | null = null;
         let hasMore = true;
 
         while (hasMore) {
-          yield* Effect.sleep(1500);
+          result.pagesProcessed++;
 
-          const result: IGetThreadsResponse = yield* Effect.tryPromise(() =>
+          // Rate limiting delay between pages
+          yield* Effect.sleep(1000);
+
+          console.log(
+            `[syncThreads] Processing page ${result.pagesProcessed} for folder ${folder}`,
+          );
+
+          const listResult = yield* Effect.tryPromise(() =>
             self.listWithRetry({
               folder,
               maxResults: maxCount,
               pageToken: pageToken || undefined,
             }),
+          ).pipe(
+            Effect.tap((listResult) =>
+              Effect.sync(() => {
+                console.log(
+                  `[syncThreads] Retrieved ${listResult.threads.length} threads from page ${result.pagesProcessed}`,
+                );
+                result.totalThreads += listResult.threads.length;
+              }),
+            ),
+            Effect.catchAll((error) => {
+              console.error(`[syncThreads] Failed to list threads for folder ${folder}:`, error);
+              return Effect.fail(
+                new ThreadListError(`Failed to list threads for folder ${folder}`, error),
+              );
+            }),
           );
 
-          const threadIds = result.threads.map((thread) => thread.id);
+          // Process threads with controlled concurrency to avoid rate limits
+          const threadIds = listResult.threads.map((thread) => thread.id);
+          const syncEffects = threadIds.map(syncSingleThread);
 
-          const processedCounts = yield* Effect.all(threadIds.map(fetchThread), {
-            concurrency: 3,
-          });
+          yield* Effect.all(syncEffects, { concurrency: 1, discard: true }).pipe(
+            Effect.tap(() =>
+              Effect.sync(() =>
+                console.log(`[syncThreads] Completed page ${result.pagesProcessed}`),
+              ),
+            ),
+            Effect.catchAll((error) => {
+              console.error(
+                `[syncThreads] Failed to process threads on page ${result.pagesProcessed}:`,
+                error,
+              );
+              return Effect.succeed(undefined);
+            }),
+          );
 
-          const batchSynced = processedCounts.filter((c) => c === 1).length;
-          totalSynced += batchSynced;
-
-          pageToken = result.nextPageToken;
+          result.synced += listResult.threads.length;
+          pageToken = listResult.nextPageToken;
           hasMore = pageToken !== null && shouldLoop;
         }
 
-        return { synced: totalSynced };
-      }.bind(this),
-    );
-
-    try {
-      const result = await Effect.runPromise(
-        syncProgram.pipe(
-          Effect.ensuring(
-            Effect.sync(() => {
-              console.log('Setting isSyncing to false');
-              this.foldersInSync.delete(folder);
-              this.agent?.broadcastChatMessage({
-                type: OutgoingMessageType.Mail_List,
-                folder,
-              });
+        // Broadcast completion if agent exists
+        if (self.agent) {
+          yield* Effect.tryPromise(() =>
+            self.agent!.broadcastChatMessage({
+              type: OutgoingMessageType.Mail_List,
+              folder,
             }),
-          ),
-        ),
-      );
-      const duration = Date.now() - startTime;
-      console.log(`[TIMING] syncThreads(${folder}) completed in ${duration}ms`);
-      return result;
-    } catch (error) {
-      const duration = Date.now() - startTime;
-      console.log(`[TIMING] syncThreads(${folder}) errored after ${duration}ms`);
-      console.error('Failed to sync inbox threads:', error);
-      throw error;
-    }
+          ).pipe(
+            Effect.tap(() =>
+              Effect.sync(() => {
+                result.broadcastSent = true;
+                console.log(`[syncThreads] Broadcasted completion for folder ${folder}`);
+              }),
+            ),
+            Effect.catchAll((error) => {
+              console.warn(
+                `[syncThreads] Failed to broadcast completion for folder ${folder}:`,
+                error,
+              );
+              return Effect.succeed(undefined);
+            }),
+          );
+        } else {
+          console.log(`[syncThreads] No agent available for broadcasting folder ${folder}`);
+        }
+
+        self.foldersInSync.delete(folder);
+
+        console.log(`[syncThreads] Completed sync for folder: ${folder}`, {
+          synced: result.synced,
+          pagesProcessed: result.pagesProcessed,
+          totalThreads: result.totalThreads,
+          successfulSyncs: result.successfulSyncs,
+          failedSyncs: result.failedSyncs,
+          broadcastSent: result.broadcastSent,
+        });
+
+        return result;
+      }).pipe(
+        Effect.catchAll((error) => {
+          self.foldersInSync.delete(folder);
+          console.error(`[syncThreads] Critical error syncing folder ${folder}:`, error);
+          return Effect.succeed({
+            synced: 0,
+            message: `Sync failed: ${error.message}`,
+            folder,
+            pagesProcessed: 0,
+            totalThreads: 0,
+            successfulSyncs: 0,
+            failedSyncs: 0,
+            broadcastSent: false,
+          });
+        }),
+      ),
+    );
   }
 
   async inboxRag(query: string) {
@@ -1037,7 +1586,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
       let currentLabels: string[];
       try {
-        currentLabels = JSON.parse(result[0].latest_label_ids || '[]') as string[];
+        currentLabels = JSON.parse(String(result[0].latest_label_ids || '[]')) as string[];
       } catch (error) {
         console.error(`Invalid JSON in latest_label_ids for thread ${threadId}:`, error);
         currentLabels = [];
