@@ -34,6 +34,7 @@ import {
   type ParsedMessage,
 } from '../../types';
 import type { IGetThreadResponse, IGetThreadsResponse, MailManager } from '../../lib/driver/types';
+import { generateWhatUserCaresAbout, type UserTopic } from '../../lib/analyze/interests';
 import { DurableObjectOAuthClientProvider } from 'agents/mcp/do-oauth-client-provider';
 import { AiChatPrompt, GmailSearchAssistantSystemPrompt } from '../../lib/prompts';
 import { connectionToDriver, getZeroSocketAgent } from '../../lib/server-utils';
@@ -85,6 +86,78 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
             categories TEXT
         );
     `;
+  }
+
+  getAllSubjects() {
+    const subjects = this.sql`
+      SELECT latest_subject FROM threads
+      WHERE EXISTS (
+        SELECT 1 FROM json_each(latest_label_ids) WHERE value = 'INBOX'
+      );
+    `;
+    return subjects.map((row) => row.latest_subject) as string[];
+  }
+
+  async getUserTopics(): Promise<UserTopic[]> {
+    // Check storage first
+    // await this.ctx.storage.delete('user_topics');
+    const stored = await this.ctx.storage.get('user_topics');
+    if (stored) {
+      try {
+        const { topics, timestamp } = stored as { topics: UserTopic[]; timestamp: number };
+        const cacheAge = Date.now() - timestamp;
+        const ttl = 24 * 60 * 60 * 1000; // 24 hours
+
+        if (cacheAge < ttl) {
+          return topics;
+        }
+      } catch {
+        // Invalid stored data, continue to regenerate
+      }
+    }
+
+    // Generate new topics
+    const subjects = this.getAllSubjects();
+    let existingLabels: { name: string; id: string }[] = [];
+
+    try {
+      existingLabels = await this.getUserLabels();
+    } catch (error) {
+      console.warn('Failed to get existing labels for topic generation:', error);
+    }
+
+    const topics = await generateWhatUserCaresAbout(subjects, { existingLabels });
+
+    if (topics.length > 0) {
+      // Ensure labels exist in user account
+      try {
+        const existingLabelNames = new Set(existingLabels.map((label) => label.name.toLowerCase()));
+
+        for (const topic of topics) {
+          const topicName = topic.topic.toLowerCase();
+          if (!existingLabelNames.has(topicName)) {
+            console.log(`Creating label for topic: ${topic.topic}`);
+            await this.createLabel({
+              name: topic.topic,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Failed to ensure topic labels exist:', error);
+      }
+
+      // Store the result
+      await this.ctx.storage.put('user_topics', {
+        topics,
+        timestamp: Date.now(),
+      });
+
+      await this.agent?.broadcastChatMessage({
+        type: OutgoingMessageType.User_Topics,
+      });
+    }
+
+    return topics;
   }
 
   async setMetaData(connectionId: string) {
@@ -379,6 +452,13 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     });
   }
 
+  async reloadFolder(folder: string) {
+    this.agent?.broadcastChatMessage({
+      type: OutgoingMessageType.Mail_List,
+      folder,
+    });
+  }
+
   async syncThread({ threadId }: { threadId: string }) {
     if (this.name === 'general') return;
     if (!this.driver) {
@@ -484,19 +564,23 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
   }
 
   async syncThreads(folder: string) {
+    const startTime = Date.now();
     if (!this.driver) {
       console.error('No driver available for syncThreads');
       throw new Error('No driver available');
     }
 
     if (this.foldersInSync.has(folder)) {
-      console.log('Sync already in progress, skipping...');
+      console.log(`Sync already in progress for ${folder}, skipping...`);
       return { synced: 0, message: 'Sync already in progress' };
     }
 
     const threadCount = await this.getThreadCount();
+    console.log(
+      `Thread count for ${folder}: ${threadCount} (max: ${maxCount}, loop: ${shouldLoop})`,
+    );
     if (threadCount >= maxCount && !shouldLoop) {
-      console.log('Threads already synced, skipping...');
+      console.log(`Threads already synced for ${folder}, skipping...`);
       return { synced: 0, message: 'Threads already synced' };
     }
 
@@ -504,14 +588,55 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
     const self = this;
 
-    const syncSingleThread = (threadId: string) =>
+    const fetchThread = (threadId: string) =>
       Effect.gen(function* () {
-        yield* Effect.sleep(500); // Rate limiting delay
-        return yield* withRetry(Effect.tryPromise(() => self.syncThread({ threadId })));
+        yield* Effect.sleep(200);
+
+        const threadData = yield* Effect.tryPromise(() => self.getWithRetry(threadId));
+
+        if (!threadData || !threadData.latest || !threadData.latest.threadId) {
+          return 0 as const;
+        }
+        const latest = threadData.latest!;
+        const id = latest.threadId as string;
+
+        const serialized = JSON.stringify(threadData);
+        yield* Effect.tryPromise(() =>
+          env.THREADS_BUCKET.put(self.getThreadKey(id), serialized, {
+            customMetadata: { threadId: id },
+          }),
+        );
+
+        const normalizedReceivedOn = new Date(latest.receivedOn).toISOString();
+        yield* Effect.try(
+          () =>
+            self.sql`
+            INSERT OR REPLACE INTO threads (
+              id, thread_id, provider_id, latest_sender,
+              latest_received_on, latest_subject, latest_label_ids, updated_at
+            ) VALUES (
+              ${id},
+              ${id},
+              'google',
+              ${JSON.stringify(latest.sender)},
+              ${normalizedReceivedOn},
+              ${latest.subject},
+              ${JSON.stringify(latest.tags.map((tag) => tag.id))},
+              CURRENT_TIMESTAMP
+            )
+          `,
+        );
+
+        self.agent?.broadcastChatMessage({
+          type: OutgoingMessageType.Mail_Get,
+          threadId: id,
+        });
+
+        return 1 as const;
       }).pipe(
         Effect.catchAll((error) => {
-          console.error(`Failed to sync thread ${threadId}:`, error);
-          return Effect.succeed(null);
+          console.error(`Failed to process thread ${threadId} in ${folder}:`, error);
+          return Effect.succeed(0 as const);
         }),
       );
 
@@ -520,13 +645,9 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         let totalSynced = 0;
         let pageToken: string | null = null;
         let hasMore = true;
-        // let _pageCount = 0;
 
         while (hasMore) {
-          // _pageCount++;
-
-          // Rate limiting delay between pages
-          yield* Effect.sleep(2000);
+          yield* Effect.sleep(1500);
 
           const result: IGetThreadsResponse = yield* Effect.tryPromise(() =>
             self.listWithRetry({
@@ -536,13 +657,15 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
             }),
           );
 
-          // Process threads with controlled concurrency to avoid rate limits
           const threadIds = result.threads.map((thread) => thread.id);
-          const syncEffects = threadIds.map(syncSingleThread);
 
-          yield* Effect.all(syncEffects, { concurrency: 10 });
+          const processedCounts = yield* Effect.all(threadIds.map(fetchThread), {
+            concurrency: 3,
+          });
 
-          totalSynced += result.threads.length;
+          const batchSynced = processedCounts.filter((c) => c === 1).length;
+          totalSynced += batchSynced;
+
           pageToken = result.nextPageToken;
           hasMore = pageToken !== null && shouldLoop;
         }
@@ -566,8 +689,12 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
           ),
         ),
       );
+      const duration = Date.now() - startTime;
+      console.log(`[TIMING] syncThreads(${folder}) completed in ${duration}ms`);
       return result;
     } catch (error) {
+      const duration = Date.now() - startTime;
+      console.log(`[TIMING] syncThreads(${folder}) errored after ${duration}ms`);
       console.error('Failed to sync inbox threads:', error);
       throw error;
     }

@@ -12,6 +12,9 @@ catalogs:
     '@trpc/server':
       specifier: ^11.1.4
       version: 11.4.3
+    '@trpc/tanstack-react-query':
+      specifier: ^11.1.4
+      version: 11.4.3
     autumn-js:
       specifier: ^0.0.48
       version: 0.0.48
@@ -25,6 +28,9 @@ catalogs:
       specifier: ^0.43.1
       version: 0.43.1
     react:
+      specifier: ^19.1.0
+      version: 19.1.0
+    react-dom:
       specifier: ^19.1.0
       version: 19.1.0
     superjson:
@@ -642,6 +648,9 @@ importers:
       twilio:
         specifier: 5.7.0
         version: 5.7.0
+      ulid:
+        specifier: 3.0.1
+        version: 3.0.1
       uuid:
         specifier: 11.1.0
         version: 11.1.0
@@ -8392,6 +8401,10 @@ packages:
   uint8array-extras@1.4.0:
     resolution: {integrity: sha512-ZPtzy0hu4cZjv3z5NW9gfKnNLjoz4y6uv4HlelAjDK7sY/xOkKZv9xK/WQpcsBB3jEybChz9DPC2U/+cusjJVQ==}
     engines: {node: '>=18'}
+
+  ulid@3.0.1:
+    resolution: {integrity: sha512-dPJyqPzx8preQhqq24bBG1YNkvigm87K8kVEHCD+ruZg24t6IFEFv00xMWfxcC4djmFtiTLdFuADn4+DOz6R7Q==}
+    hasBin: true
 
   unbox-primitive@1.1.0:
     resolution: {integrity: sha512-nWJ91DjeOkej/TA8pXQ3myruKpKEYgqvpw9lz4OPHj/NWFNluYrjbz9j01CJ8yKQd2g4jFoOkINCTW2I5LEEyw==}
@@ -17295,6 +17308,8 @@ snapshots:
   ufo@1.6.1: {}
 
   uint8array-extras@1.4.0: {}
+
+  ulid@3.0.1: {}
 
   unbox-primitive@1.1.0:
     dependencies:

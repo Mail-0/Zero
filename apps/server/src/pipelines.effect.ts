@@ -23,6 +23,7 @@ import {
   analyzeEmailIntent,
 } from './thread-workflow-utils';
 import { defaultLabels, EPrompts, EProviders, type ParsedMessage, type Sender } from './types';
+import { getServiceAccount } from './lib/factories/google-subscription.factory';
 import { EWorkflowType, getPromptName, runWorkflow } from './pipelines';
 import { getZeroAgent } from './lib/server-utils';
 import { type gmail_v1 } from '@googleapis/gmail';
@@ -85,8 +86,6 @@ const validateArguments = (
     return connectionId;
   });
 
-const override = false;
-
 /**
  * This function runs the main workflow. The main workflow is responsible for processing incoming messages from a Pub/Sub subscription and passing them to the appropriate pipeline.
  * It validates the subscription name and extracts the connection ID.
@@ -101,19 +100,7 @@ export const runMainWorkflow = (
 
     const { providerId, historyId } = params;
 
-    let serviceAccount = null;
-    if (override) {
-      serviceAccount = override;
-    } else {
-      if (!env.GOOGLE_S_ACCOUNT || env.GOOGLE_S_ACCOUNT === '{}') {
-        return yield* Effect.fail({
-          _tag: 'MissingEnvironmentVariable' as const,
-          variable: 'GOOGLE_S_ACCOUNT',
-        });
-      }
-
-      serviceAccount = JSON.parse(env.GOOGLE_S_ACCOUNT);
-    }
+    const serviceAccount = getServiceAccount();
 
     const connectionId = yield* validateArguments(params, serviceAccount);
 
@@ -175,7 +162,8 @@ type ZeroWorkflowError =
   | { _tag: 'UnsupportedProvider'; providerId: string }
   | { _tag: 'DatabaseError'; error: unknown }
   | { _tag: 'GmailApiError'; error: unknown }
-  | { _tag: 'WorkflowCreationFailed'; error: unknown };
+  | { _tag: 'WorkflowCreationFailed'; error: unknown }
+  | { _tag: 'LabelModificationFailed'; error: unknown; threadId: string };
 
 export const runZeroWorkflow = (
   params: ZeroWorkflowParams,
@@ -274,37 +262,49 @@ export const runZeroWorkflow = (
         return 'No history found';
       }
 
-      // Extract thread IDs from history
-      const threadsChanged = new Set<string>();
+      // Extract thread IDs from history and track label changes
       const threadsAdded = new Set<string>();
+      const threadLabelChanges = new Map<
+        string,
+        { addLabels: Set<string>; removeLabels: Set<string> }
+      >();
+
+      // Optimal single-pass functional processing
+      const processLabelChange = (
+        labelChange: { message?: gmail_v1.Schema$Message; labelIds?: string[] | null },
+        isAddition: boolean,
+      ) => {
+        const threadId = labelChange.message?.threadId;
+        if (!threadId || !labelChange.labelIds?.length) return;
+
+        let changes = threadLabelChanges.get(threadId);
+        if (!changes) {
+          changes = { addLabels: new Set<string>(), removeLabels: new Set<string>() };
+          threadLabelChanges.set(threadId, changes);
+        }
+
+        const targetSet = isAddition ? changes.addLabels : changes.removeLabels;
+        labelChange.labelIds.forEach((labelId) => targetSet.add(labelId));
+      };
+
       history.forEach((historyItem) => {
-        if (historyItem.messagesAdded) {
-          historyItem.messagesAdded.forEach((messageAdded) => {
-            if (messageAdded.message?.threadId) {
-              // threadsChanged.add(messageAdded.message.threadId);
-              threadsAdded.add(messageAdded.message.threadId);
-            }
-          });
-        }
-        if (historyItem.labelsAdded) {
-          historyItem.labelsAdded.forEach((labelAdded) => {
-            if (labelAdded.message?.threadId) {
-              // threadsChanged.add(labelAdded.message.threadId);
-            }
-          });
-        }
-        if (historyItem.labelsRemoved) {
-          historyItem.labelsRemoved.forEach((labelRemoved) => {
-            if (labelRemoved.message?.threadId) {
-              // threadsChanged.add(labelRemoved.message.threadId);
-            }
-          });
-        }
+        // Extract thread IDs from messages
+        historyItem.messagesAdded?.forEach((msg) => {
+          if (msg.message?.threadId) {
+            threadsAdded.add(msg.message.threadId);
+          }
+        });
+
+        // Process label changes using shared helper
+        historyItem.labelsAdded?.forEach((labelAdded) => processLabelChange(labelAdded, true));
+        historyItem.labelsRemoved?.forEach((labelRemoved) =>
+          processLabelChange(labelRemoved, false),
+        );
       });
 
       yield* Console.log(
         '[ZERO_WORKFLOW] Found unique thread IDs:',
-        Array.from(threadsChanged),
+        Array.from(threadLabelChanges.keys()),
         Array.from(threadsAdded),
       );
 
@@ -346,61 +346,97 @@ export const runZeroWorkflow = (
         }
 
         yield* Console.log('[ZERO_WORKFLOW] Synced threads:', syncResults);
+
+        // Run thread workflow for each successfully synced thread
+        if (syncedCount > 0) {
+          yield* Effect.tryPromise({
+            try: () => agent.reloadFolder('inbox'),
+            catch: (error) => ({ _tag: 'GmailApiError' as const, error }),
+          }).pipe(
+            Effect.tap(() => Console.log('[ZERO_WORKFLOW] Successfully reloaded inbox folder')),
+            Effect.orElse(() =>
+              Effect.gen(function* () {
+                yield* Console.log('[ZERO_WORKFLOW] Failed to reload inbox folder');
+                return undefined;
+              }),
+            ),
+          );
+
+          yield* Console.log(
+            `[ZERO_WORKFLOW] Running thread workflows for ${syncedCount} synced threads`,
+          );
+
+          const threadWorkflowResults = yield* Effect.allSuccesses(
+            syncResults.map(({ threadId }) =>
+              runWorkflow(EWorkflowType.THREAD, {
+                connectionId,
+                threadId,
+                providerId: foundConnection.providerId,
+              }).pipe(
+                Effect.tap(() =>
+                  Console.log(`[ZERO_WORKFLOW] Successfully ran thread workflow for ${threadId}`),
+                ),
+                Effect.tapError((error) =>
+                  Console.log(
+                    `[ZERO_WORKFLOW] Failed to run thread workflow for ${threadId}:`,
+                    error,
+                  ),
+                ),
+              ),
+            ),
+            { concurrency: 1 }, // Limit concurrency to avoid overwhelming the system
+          );
+
+          const threadWorkflowSuccessCount = threadWorkflowResults.length;
+          const threadWorkflowFailedCount = syncedCount - threadWorkflowSuccessCount;
+
+          if (threadWorkflowFailedCount > 0) {
+            yield* Console.log(
+              `[ZERO_WORKFLOW] Warning: ${threadWorkflowFailedCount}/${syncedCount} thread workflows failed. Successfully processed: ${threadWorkflowSuccessCount}`,
+            );
+          } else {
+            yield* Console.log(
+              `[ZERO_WORKFLOW] Successfully ran all ${threadWorkflowSuccessCount} thread workflows`,
+            );
+          }
+        }
       }
 
-      // Process all threads concurrently using Effect.all
-      if (threadsChanged.size > 0) {
-        const threadWorkflowParams = Array.from(threadsChanged).map((threadId) => ({
-          connectionId,
-          threadId,
-          providerId: foundConnection.providerId,
-        }));
-
-        const threadResults = yield* Effect.all(
-          threadWorkflowParams.map((params) =>
-            Effect.gen(function* () {
-              // Check if thread is already processing
-              const isProcessing = yield* Effect.tryPromise({
-                try: () => env.gmail_processing_threads.get(params.threadId.toString()),
-                catch: (error) => ({ _tag: 'WorkflowCreationFailed' as const, error }),
-              });
-
-              if (isProcessing === 'true') {
-                yield* Console.log('[ZERO_WORKFLOW] Thread already processing:', params.threadId);
-                return 'Thread already processing';
-              }
-
-              // Set processing flag for thread
-              yield* Effect.tryPromise({
-                try: () => {
-                  console.log(
-                    '[ZERO_WORKFLOW] Setting processing flag for thread:',
-                    params.threadId,
-                  );
-                  return env.gmail_processing_threads.put(params.threadId.toString(), 'true', {
-                    expirationTtl: 1800,
-                  });
-                },
-                catch: (error) => ({ _tag: 'WorkflowCreationFailed' as const, error }),
-              });
-
-              // Run the thread workflow
-              return yield* runWorkflow(EWorkflowType.THREAD, params).pipe(
-                Effect.mapError(
-                  (error): ZeroWorkflowError => ({
-                    _tag: 'WorkflowCreationFailed' as const,
-                    error,
-                  }),
-                ),
-              );
-            }),
-          ),
-          { concurrency: 1, discard: true }, // Process up to 5 threads concurrently
+      // Process label changes for threads
+      if (threadLabelChanges.size > 0) {
+        yield* Console.log(
+          `[ZERO_WORKFLOW] Processing label changes for ${threadLabelChanges.size} threads`,
         );
 
-        yield* Console.log('[ZERO_WORKFLOW] All thread workflows completed:', threadResults);
+        // Process each thread's label changes
+        for (const [threadId, changes] of threadLabelChanges) {
+          const addLabels = Array.from(changes.addLabels);
+          const removeLabels = Array.from(changes.removeLabels);
+
+          // Only call if there are actual changes to make
+          if (addLabels.length > 0 || removeLabels.length > 0) {
+            yield* Console.log(
+              `[ZERO_WORKFLOW] Modifying labels for thread ${threadId}: +${addLabels.length} -${removeLabels.length}`,
+            );
+            yield* Effect.tryPromise({
+              try: () => agent.modifyThreadLabelsInDB(threadId, addLabels, removeLabels),
+              catch: (error) => ({ _tag: 'LabelModificationFailed' as const, error, threadId }),
+            }).pipe(
+              Effect.orElse(() =>
+                Effect.gen(function* () {
+                  yield* Console.log(
+                    `[ZERO_WORKFLOW] Failed to modify labels for thread ${threadId}`,
+                  );
+                  return undefined;
+                }),
+              ),
+            );
+          }
+        }
+
+        yield* Console.log('[ZERO_WORKFLOW] Completed label modifications');
       } else {
-        yield* Console.log('[ZERO_WORKFLOW] No threads to process');
+        yield* Console.log('[ZERO_WORKFLOW] No threads with label changes to process');
       }
 
       // Clean up processing flag
@@ -802,45 +838,36 @@ export const runThreadWorkflow = (
 
         const userLabels = yield* Effect.tryPromise({
           try: async () => {
-            console.log('[THREAD_WORKFLOW] Getting user labels for connection:', connectionId);
+            console.log('[THREAD_WORKFLOW] Getting user topics for connection:', connectionId);
             let userLabels: { name: string; usecase: string }[] = [];
-            const connectionLabels = await env.connection_labels.get(connectionId.toString());
-            if (connectionLabels) {
-              try {
-                console.log('[THREAD_WORKFLOW] Parsing existing connection labels');
-                const parsed = JSON.parse(connectionLabels);
-                if (
-                  Array.isArray(parsed) &&
-                  parsed.every((label) => typeof label === 'object' && label.name && label.usecase)
-                ) {
-                  userLabels = parsed;
-                } else {
-                  throw new Error('Invalid label format');
-                }
-              } catch {
-                console.log('[THREAD_WORKFLOW] Failed to parse labels, using defaults');
-                await env.connection_labels.put(
-                  connectionId.toString(),
-                  JSON.stringify(defaultLabels),
-                );
+            try {
+              const userTopics = await agent.getUserTopics();
+              if (userTopics.length > 0) {
+                userLabels = userTopics.map((topic) => ({
+                  name: topic.topic,
+                  usecase: topic.usecase,
+                }));
+                console.log('[THREAD_WORKFLOW] Using user topics as labels:', userLabels);
+              } else {
+                console.log('[THREAD_WORKFLOW] No user topics found, using defaults');
                 userLabels = defaultLabels;
               }
-            } else {
-              console.log('[THREAD_WORKFLOW] No labels found, using defaults');
-              await env.connection_labels.put(
-                connectionId.toString(),
-                JSON.stringify(defaultLabels),
-              );
+            } catch (error) {
+              console.log('[THREAD_WORKFLOW] Failed to get user topics, using defaults:', error);
               userLabels = defaultLabels;
             }
-            return userLabels.length ? userLabels : defaultLabels;
+            return userLabels;
           },
           catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
         });
 
         const generatedLabels = yield* Effect.tryPromise({
           try: async () => {
-            console.log('[THREAD_WORKFLOW] Generating labels for thread:', threadId);
+            console.log('[THREAD_WORKFLOW] Generating labels for thread:', {
+              userLabels,
+              threadId,
+              threadLabels: thread.labels,
+            });
             const labelsResponse: any = await env.AI.run(
               '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
               {
@@ -899,12 +926,12 @@ export const runThreadWorkflow = (
                     labelsToAdd,
                     labelsToRemove,
                   );
-                  await agent.modifyLabels(
-                    [threadId.toString()],
-                    labelsToAdd,
-                    labelsToRemove,
-                    true,
-                  );
+                  // await agent.modifyLabels(
+                  //   [threadId.toString()],
+                  //   labelsToAdd,
+                  //   labelsToRemove,
+                  //   true,
+                  // );
                   // await agent.syncThread({ threadId: threadId.toString() });
                   console.log('[THREAD_WORKFLOW] Successfully modified thread labels');
                 } else {
