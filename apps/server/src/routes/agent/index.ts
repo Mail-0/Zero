@@ -483,7 +483,9 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
     // console.log('Server: syncThread called for thread', threadId);
     try {
+      // Get a new ThreadSyncWorker Durable Object stub
       const threadSyncWorker = env.THREAD_SYNC_WORKER.get(env.THREAD_SYNC_WORKER.newUniqueId());
+      // Sync thread with the worker
       const latest = await threadSyncWorker.syncThread(this.name, this._connection, threadId);
 
       if (latest) {
@@ -573,12 +575,12 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
     const self = this;
 
-    // Use the dedicated ThreadSyncWorker durable object
-    const fetchThread = (threadId: string) =>
+    const executeSyncThread = (threadId: string) =>
       Effect.gen(function* () {
-        yield* Effect.sleep(200);
+        yield * Effect.sleep(200);
 
-        const result = yield* Effect.tryPromise(() => self.syncThread({ threadId }));
+        // Uses the dedicated ThreadSyncWorker durable object
+        const result = yield * Effect.tryPromise(() => self.syncThread({ threadId }));
 
         if (result && result.success) {
           return 1 as const;
@@ -612,7 +614,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
           const threadIds = result.threads.map((thread) => thread.id);
 
-          const processedCounts = yield* Effect.all(threadIds.map(fetchThread), {
+          const processedCounts = yield* Effect.all(threadIds.map(executeSyncThread), {
             concurrency: 3,
           });
 
