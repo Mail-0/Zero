@@ -483,12 +483,8 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
     // console.log('Server: syncThread called for thread', threadId);
     try {
-      // const threadData = await this.getWithRetry(threadId);
-      // const latest = threadData.latest;
       const threadSyncWorker = env.THREAD_SYNC_WORKER.get(env.THREAD_SYNC_WORKER.newUniqueId());
       const latest = await threadSyncWorker.syncThread(this.name, this._connection, threadId);
-      // @ts-expect-error
-      threadSyncWorker[Symbol.dispose]?.();
 
       if (latest) {
         // Convert receivedOn to ISO format for proper sorting
@@ -499,12 +495,6 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
           console.log('Here!', error);
           normalizedReceivedOn = new Date().toISOString();
         }
-
-        // await env.THREADS_BUCKET.put(this.getThreadKey(threadId), JSON.stringify(threadData), {
-        //   customMetadata: {
-        //     threadId,
-        //   },
-        // });
 
         void this.sql`
       INSERT OR REPLACE INTO threads (
@@ -533,12 +523,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
             threadId,
           });
         this.syncThreadsInProgress.delete(threadId);
-        // console.log('Server: syncThread result', {
-        //   threadId,
-        //   labels: threadData.labels,
-        // });
-        // return { success: true, threadId, threadData };
-        return { success: true, threadId }; // removed threadData
+        return { success: true, threadId }; // removed threadData from return; seemed to be unused
       } else {
         this.syncThreadsInProgress.delete(threadId);
         console.log(`Skipping thread ${threadId} - no latest message`);
@@ -588,51 +573,19 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
     const self = this;
 
+    // Use the dedicated ThreadSyncWorker durable object
     const fetchThread = (threadId: string) =>
       Effect.gen(function* () {
         yield* Effect.sleep(200);
 
-        const threadData = yield* Effect.tryPromise(() => self.getWithRetry(threadId));
+        const result = yield* Effect.tryPromise(() => self.syncThread({ threadId }));
 
-        if (!threadData || !threadData.latest || !threadData.latest.threadId) {
+        if (result && result.success) {
+          return 1 as const;
+        } else {
+          console.log(`Failed to sync thread ${threadId}:`, result?.reason || 'Unknown error');
           return 0 as const;
         }
-        const latest = threadData.latest!;
-        const id = latest.threadId as string;
-
-        const serialized = JSON.stringify(threadData);
-        yield* Effect.tryPromise(() =>
-          env.THREADS_BUCKET.put(self.getThreadKey(id), serialized, {
-            customMetadata: { threadId: id },
-          }),
-        );
-
-        const normalizedReceivedOn = new Date(latest.receivedOn).toISOString();
-        yield* Effect.try(
-          () =>
-            self.sql`
-            INSERT OR REPLACE INTO threads (
-              id, thread_id, provider_id, latest_sender,
-              latest_received_on, latest_subject, latest_label_ids, updated_at
-            ) VALUES (
-              ${id},
-              ${id},
-              'google',
-              ${JSON.stringify(latest.sender)},
-              ${normalizedReceivedOn},
-              ${latest.subject},
-              ${JSON.stringify(latest.tags.map((tag) => tag.id))},
-              CURRENT_TIMESTAMP
-            )
-          `,
-        );
-
-        self.agent?.broadcastChatMessage({
-          type: OutgoingMessageType.Mail_Get,
-          threadId: id,
-        });
-
-        return 1 as const;
       }).pipe(
         Effect.catchAll((error) => {
           console.error(`Failed to process thread ${threadId} in ${folder}:`, error);
@@ -1048,7 +1001,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
       let currentLabels: string[];
       try {
-        currentLabels = JSON.parse(result[0].latest_label_ids || '[]') as string[];
+        currentLabels = JSON.parse(result[0].latest_label_ids?.toString() || '[]') as string[];
       } catch (error) {
         console.error(`Invalid JSON in latest_label_ids for thread ${threadId}:`, error);
         currentLabels = [];
