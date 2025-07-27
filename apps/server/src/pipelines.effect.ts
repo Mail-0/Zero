@@ -27,22 +27,25 @@ import { getServiceAccount } from './lib/factories/google-subscription.factory';
 import { EWorkflowType, getPromptName, runWorkflow } from './pipelines';
 import { getZeroAgent } from './lib/server-utils';
 import { type gmail_v1 } from '@googleapis/gmail';
+import { Effect, Console, Logger } from 'effect';
 import { env } from 'cloudflare:workers';
 import { connection } from './db/schema';
-import { Effect, Console } from 'effect';
 import * as cheerio from 'cheerio';
 import { eq } from 'drizzle-orm';
 import { createDb } from './db';
 
 const showLogs = true;
 
-export const log = (message: string, ...args: any[]) => {
+const log = (message: string, ...args: any[]) => {
   if (showLogs) {
     console.log(message, ...args);
     return message;
   }
   return 'no message';
 };
+
+// Configure pretty logger to stderr
+export const loggerLayer = Logger.add(Logger.prettyLogger({ stderr: true }));
 
 const isValidUUID = (str: string): boolean => {
   const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -144,7 +147,10 @@ export const runMainWorkflow = (
 
     yield* Console.log('[MAIN_WORKFLOW] Workflow completed successfully');
     return 'Workflow completed successfully';
-  }).pipe(Effect.tapError((error) => Console.log('[MAIN_WORKFLOW] Error in workflow:', error)));
+  }).pipe(
+    Effect.tapError((error) => Console.log('[MAIN_WORKFLOW] Error in workflow:', error)),
+    Effect.provide(loggerLayer),
+  );
 
 // Define the ZeroWorkflow parameters type
 type ZeroWorkflowParams = {
@@ -483,6 +489,7 @@ export const runZeroWorkflow = (
         Effect.flatMap(() => Effect.fail(error)),
       );
     }),
+    Effect.provide(loggerLayer),
   );
 
 // Define the ThreadWorkflow parameters type
@@ -1036,6 +1043,7 @@ export const runThreadWorkflow = (
         Effect.flatMap(() => Effect.fail(error)),
       );
     }),
+    Effect.provide(loggerLayer),
   );
 
 // // Helper functions for vectorization and AI processing

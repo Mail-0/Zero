@@ -1,7 +1,6 @@
 import type { IGetThreadResponse } from '../lib/driver/types';
 import { composeEmail } from '../trpc/routes/ai/compose';
 import { type ParsedMessage } from '../types';
-import { log } from '../pipelines.effect';
 import { connection } from '../db/schema';
 
 const shouldGenerateDraft = (
@@ -100,7 +99,7 @@ const generateAutomaticDraft = async (
 
     return draftContent;
   } catch (error) {
-    log('[THREAD_WORKFLOW] Failed to generate automatic draft:', {
+    console.log('[THREAD_WORKFLOW] Failed to generate automatic draft:', {
       connectionId,
       error: error instanceof Error ? error.message : String(error),
     });
