@@ -64,6 +64,9 @@ export default defineConfig({
   //       include: ['novel', '@tiptap/extension-placeholder'],
   //     },
   //   },
+  esbuild: {
+    pure: ['console.log'],
+  },
   build: {
     sourcemap: false,
   },

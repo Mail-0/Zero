@@ -43,6 +43,10 @@
             "name": "ZERO_DRIVER",
             "class_name": "ZeroDriver",
           },
+          {
+            "name": "THINKING_MCP",
+            "class_name": "ThinkingMCP",
+          },
         ],
       },
       "queues": {
@@ -86,6 +90,10 @@
           "tag": "v5",
           "new_sqlite_classes": ["ZeroDriver"],
         },
+        {
+          "tag": "v6",
+          "new_sqlite_classes": ["ThinkingMCP"],
+        },
       ],
 
       "observability": {
@@ -114,8 +122,9 @@
         "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "5",
         "THREAD_SYNC_LOOP": "false",
-        "DISABLE_WORKFLOWS": "true",
+        "DISABLE_WORKFLOWS": "false",
         "AUTORAG_ID": "",
+        "USE_OPENAI": "true",
       },
       "kv_namespaces": [
         {
@@ -186,6 +195,10 @@
             "name": "ZERO_DRIVER",
             "class_name": "ZeroDriver",
           },
+          {
+            "name": "THINKING_MCP",
+            "class_name": "ThinkingMCP",
+          },
         ],
       },
       "r2_buckets": [
@@ -239,6 +252,10 @@
           "tag": "v6",
           "new_sqlite_classes": ["ZeroDriver"],
         },
+        {
+          "tag": "v7",
+          "new_sqlite_classes": ["ThinkingMCP"],
+        },
       ],
       "observability": {
         "enabled": true,
@@ -258,7 +275,7 @@
         "DISABLE_CALLS": "",
         "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "20",
-        "THREAD_SYNC_LOOP": "false",
+        "THREAD_SYNC_LOOP": "true",
         "DISABLE_WORKFLOWS": "true",
       },
       "kv_namespaces": [
@@ -343,6 +360,10 @@
             "name": "ZERO_DRIVER",
             "class_name": "ZeroDriver",
           },
+          {
+            "name": "THINKING_MCP",
+            "class_name": "ThinkingMCP",
+          },
         ],
       },
       "queues": {
@@ -389,6 +410,10 @@
         {
           "tag": "v6",
           "new_sqlite_classes": ["ZeroDriver"],
+        },
+        {
+          "tag": "v7",
+          "new_sqlite_classes": ["ThinkingMCP"],
         },
       ],
       "vars": {

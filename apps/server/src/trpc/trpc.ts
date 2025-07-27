@@ -40,37 +40,47 @@ export const activeConnectionProcedure = privateProcedure.use(async ({ ctx, next
   }
 });
 
+const permissionErrors = ['precondition check', 'insufficient permission', 'invalid credentials'];
+
 export const activeDriverProcedure = activeConnectionProcedure.use(async ({ ctx, next }) => {
   const { activeConnection, sessionUser } = ctx;
   const res = await next({ ctx: { ...ctx } });
 
-  // This is for when the user has not granted the required scopes for GMail
-  if (!res.ok && res.error.message === 'Precondition check failed.') {
-    throw new TRPCError({
-      code: 'BAD_REQUEST',
-      message: 'Required scopes missing',
-      cause: res.error,
-    });
-  }
+  if (!res.ok) {
+    const errorMessage = res.error.message.toLowerCase();
 
-  if (!res.ok && res.error.message === 'invalid_grant') {
-    // Remove the access token and refresh token
-    const db = await getZeroDB(sessionUser.id);
-    await db.updateConnection(activeConnection.id, {
-      accessToken: null,
-      refreshToken: null,
-    });
-
-    ctx.c.header(
-      'X-Zero-Redirect',
-      `/settings/connections?disconnectedConnectionId=${activeConnection.id}`,
+    const isPermissionError = permissionErrors.some((errorType) =>
+      errorMessage.includes(errorType),
     );
 
-    throw new TRPCError({
-      code: 'UNAUTHORIZED',
-      message: 'Connection expired. Please reconnect.',
-      cause: res.error,
-    });
+    if (isPermissionError) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Required scopes missing',
+        cause: res.error,
+      });
+    }
+
+    // Handle token expiration/refresh issues
+    if (errorMessage.includes('invalid_grant')) {
+      // Remove the access token and refresh token
+      const db = await getZeroDB(sessionUser.id);
+      await db.updateConnection(activeConnection.id, {
+        accessToken: null,
+        refreshToken: null,
+      });
+
+      ctx.c.header(
+        'X-Zero-Redirect',
+        `/settings/connections?disconnectedConnectionId=${activeConnection.id}`,
+      );
+
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'Connection expired. Please reconnect.',
+        cause: res.error,
+      });
+    }
   }
 
   return res;

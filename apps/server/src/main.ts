@@ -20,11 +20,11 @@ import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
 import { getZeroDB, verifyToken } from './lib/server-utils';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
 import { EWorkflowType, runWorkflow } from './pipelines';
+import { ThinkingMCP } from './lib/sequential-thinking';
 import { ZeroAgent, ZeroDriver } from './routes/agent';
 import { contextStorage } from 'hono/context-storage';
 import { defaultUserSettings } from './lib/schemas';
 import { createLocalJWKSet, jwtVerify } from 'jose';
-import { routePartykitRequest } from 'partyserver';
 import { getZeroAgent } from './lib/server-utils';
 import { enableBrainFunction } from './lib/brain';
 import { trpcServer } from '@hono/trpc-server';
@@ -40,6 +40,7 @@ import { Autumn } from 'autumn-js';
 import { appRouter } from './trpc';
 import { cors } from 'hono/cors';
 import { Effect } from 'effect';
+
 import { Hono } from 'hono';
 
 const SENTRY_HOST = 'o4509328786915328.ingest.us.sentry.io';
@@ -612,6 +613,17 @@ export default class extends WorkerEntrypoint<typeof env> {
       { replaceRequest: false },
     )
     .mount(
+      '/mcp/thinking/sse',
+      async (request, env, ctx) => {
+        return ThinkingMCP.serveSSE('/mcp/thinking/sse', { binding: 'THINKING_MCP' }).fetch(
+          request,
+          env,
+          ctx,
+        );
+      },
+      { replaceRequest: false },
+    )
+    .mount(
       '/mcp',
       async (request, env, ctx) => {
         const authBearer = request.headers.get('Authorization');
@@ -691,7 +703,7 @@ export default class extends WorkerEntrypoint<typeof env> {
           await env.thread_queue.send({
             providerId,
             historyId: body.historyId,
-            subscriptionName: subHeader!,
+            subscriptionName: subHeader,
           });
         } catch (error) {
           console.error('Error sending to thread queue', error, {
@@ -705,12 +717,6 @@ export default class extends WorkerEntrypoint<typeof env> {
     });
 
   async fetch(request: Request): Promise<Response> {
-    if (request.url.includes('/zero/durable-mailbox')) {
-      const res = await routePartykitRequest(request, env as unknown as Record<string, unknown>, {
-        prefix: 'zero',
-      });
-      if (res) return res;
-    }
     return this.app.fetch(request, this.env, this.ctx);
   }
 
@@ -718,54 +724,43 @@ export default class extends WorkerEntrypoint<typeof env> {
     switch (true) {
       case batch.queue.startsWith('subscribe-queue'): {
         console.log('batch', batch);
-        try {
-          await Promise.all(
-            batch.messages.map(async (msg: Message<ISubscribeBatch>) => {
-              const connectionId = msg.body.connectionId;
-              const providerId = msg.body.providerId;
-              console.log('connectionId', connectionId);
-              console.log('providerId', providerId);
-              try {
-                await enableBrainFunction({ id: connectionId, providerId });
-              } catch (error) {
-                console.error(
-                  `Failed to enable brain function for connection ${connectionId}:`,
-                  error,
-                );
-              }
-            }),
-          );
-          console.log('[SUBSCRIBE_QUEUE] batch done');
-        } finally {
-          batch.ackAll();
-        }
+        await Promise.all(
+          batch.messages.map(async (msg: Message<ISubscribeBatch>) => {
+            const connectionId = msg.body.connectionId;
+            const providerId = msg.body.providerId;
+            try {
+              await enableBrainFunction({ id: connectionId, providerId });
+            } catch (error) {
+              console.error(
+                `Failed to enable brain function for connection ${connectionId}:`,
+                error,
+              );
+            }
+          }),
+        );
+        console.log('[SUBSCRIBE_QUEUE] batch done');
         return;
       }
       case batch.queue.startsWith('thread-queue'): {
-        console.log('batch', batch);
-        try {
-          await Promise.all(
-            batch.messages.map(async (msg: Message<IThreadBatch>) => {
-              const providerId = msg.body.providerId;
-              const historyId = msg.body.historyId;
-              const subscriptionName = msg.body.subscriptionName;
-              const workflow = runWorkflow(EWorkflowType.MAIN, {
-                providerId,
-                historyId,
-                subscriptionName,
-              });
+        await Promise.all(
+          batch.messages.map(async (msg: Message<IThreadBatch>) => {
+            const providerId = msg.body.providerId;
+            const historyId = msg.body.historyId;
+            const subscriptionName = msg.body.subscriptionName;
+            const workflow = runWorkflow(EWorkflowType.MAIN, {
+              providerId,
+              historyId,
+              subscriptionName,
+            });
 
-              try {
-                const result = await Effect.runPromise(workflow);
-                console.log('[THREAD_QUEUE] result', result);
-              } catch (error) {
-                console.error('Error running workflow', error);
-              }
-            }),
-          );
-        } finally {
-          batch.ackAll();
-        }
+            try {
+              const result = await Effect.runPromise(workflow);
+              console.log('[THREAD_QUEUE] result', result);
+            } catch (error) {
+              console.error('Error running workflow', error);
+            }
+          }),
+        );
         break;
       }
     }
@@ -859,4 +854,4 @@ export default class extends WorkerEntrypoint<typeof env> {
   }
 }
 
-export { ZeroAgent, ZeroMCP, ZeroDB, ZeroDriver };
+export { ZeroAgent, ZeroMCP, ZeroDB, ZeroDriver, ThinkingMCP };

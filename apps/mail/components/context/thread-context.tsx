@@ -25,10 +25,13 @@ import {
 } from 'lucide-react';
 import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
+import { ExclamationCircle, Mail, Clock } from '../icons/icons';
+import { SnoozeDialog } from '@/components/mail/snooze-dialog';
 import { type ThreadDestination } from '@/lib/thread-actions';
 import { useThread, useThreads } from '@/hooks/use-threads';
-import { ExclamationCircle, Mail, Clock } from '../icons/icons';
 import { useMemo, type ReactNode, useState } from 'react';
+import { useTRPC } from '@/providers/query-provider';
+import { useMutation } from '@tanstack/react-query';
 import { useLabels } from '@/hooks/use-labels';
 import { FOLDERS, LABELS } from '@/lib/utils';
 import { useMail } from '../mail/use-mail';
@@ -37,7 +40,6 @@ import { m } from '@/paraglide/messages';
 import { useParams } from 'react-router';
 import { useQueryState } from 'nuqs';
 import { toast } from 'sonner';
-import { SnoozeDialog } from '@/components/mail/snooze-dialog';
 
 interface EmailAction {
   id: string;
@@ -93,10 +95,14 @@ const LabelsList = ({ threadId, bulkSelected }: { threadId: string; bulkSelected
       {labels
         .filter((label) => label.id)
         .map((label) => {
-          let isChecked = label.id ? thread!.labels?.some((l) => l.id === label.id) ?? false : false;
+          let isChecked = label.id
+            ? (thread!.labels?.some((l) => l.id === label.id) ?? false)
+            : false;
 
           if (rightClickedThreadOptimisticState.optimisticLabels) {
-            if (rightClickedThreadOptimisticState.optimisticLabels.addedLabelIds.includes(label.id)) {
+            if (
+              rightClickedThreadOptimisticState.optimisticLabels.addedLabelIds.includes(label.id)
+            ) {
               isChecked = true;
             } else if (
               rightClickedThreadOptimisticState.optimisticLabels.removedLabelIds.includes(label.id)
@@ -141,16 +147,18 @@ export function ThreadContextMenu({
   const { data: threadData } = useThread(threadId);
   const [, setActiveReplyId] = useQueryState('activeReplyId');
   const optimisticState = useOptimisticThreadState(threadId);
+  const trpc = useTRPC();
   const {
     optimisticMoveThreadsTo,
     optimisticToggleStar,
     optimisticToggleImportant,
     optimisticMarkAsRead,
     optimisticMarkAsUnread,
-    optimisticDeleteThreads,
+    // optimisticDeleteThreads,
     optimisticSnooze,
     optimisticUnsnooze,
   } = useOptimisticActions();
+  const { mutateAsync: deleteThread } = useMutation(trpc.mail.delete.mutationOptions());
 
   const { isUnread, isStarred, isImportant } = useMemo(() => {
     const unread = threadData?.hasUnread ?? false;
@@ -305,18 +313,18 @@ export function ThreadContextMenu({
   const handleDelete = () => () => {
     const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
 
-    // Use optimistic update with undo functionality
-    optimisticDeleteThreads(targets, currentFolder);
-
-    // Clear bulk selection after action
-    if (mail.bulkSelected.length) {
-      setMail((prev) => ({ ...prev, bulkSelected: [] }));
-    }
-
-    // Navigation removed to prevent route change on current thread action
-    // if (!mail.bulkSelected.length && threadId) {
-    //   navigate(`/mail/${currentFolder}`);
-    // }
+    toast.promise(
+      Promise.all(
+        targets.map(async (id) => {
+          return deleteThread({ id });
+        }),
+      ),
+      {
+        loading: 'Deleting...',
+        success: 'Deleted',
+        error: 'Failed to delete',
+      },
+    );
   };
 
   const getActions = useMemo(() => {
@@ -353,7 +361,6 @@ export function ThreadContextMenu({
           label: m['common.mail.deleteFromBin'](),
           icon: <Trash className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleDelete(),
-          disabled: true,
         },
       ];
     }
@@ -493,15 +500,7 @@ export function ThreadContextMenu({
         disabled: false,
       },
     ],
-    [
-      isUnread,
-      isImportant,
-      isStarred,
-      m,
-      handleReadUnread,
-      handleToggleImportant,
-      handleFavorites,
-    ],
+    [isUnread, isImportant, isStarred, m, handleReadUnread, handleToggleImportant, handleFavorites],
   );
 
   const renderAction = (action: EmailAction) => {

@@ -18,6 +18,8 @@ import type { IOutgoingMessage } from '../../types';
 import { RpcTarget } from 'cloudflare:workers';
 import { ZeroDriver } from '.';
 
+const shouldReSyncThreadsAfterActions = false;
+
 export class DriverRpcDO extends RpcTarget {
   constructor(
     private mainDo: ZeroDriver,
@@ -39,6 +41,10 @@ export class DriverRpcDO extends RpcTarget {
     color?: { backgroundColor: string; textColor: string };
   }) {
     return await this.mainDo.createLabel(label);
+  }
+
+  async getUserTopics() {
+    return await this.mainDo.getUserTopics();
   }
 
   async updateLabel(
@@ -86,7 +92,8 @@ export class DriverRpcDO extends RpcTarget {
 
   async markThreadsRead(threadIds: string[]) {
     const result = await this.mainDo.markThreadsRead(threadIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
+    if (shouldReSyncThreadsAfterActions)
+      await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
     return result;
   }
 
@@ -96,13 +103,20 @@ export class DriverRpcDO extends RpcTarget {
 
   async markThreadsUnread(threadIds: string[]) {
     const result = await this.mainDo.markThreadsUnread(threadIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
+    if (shouldReSyncThreadsAfterActions)
+      await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
     return result;
   }
 
-  async modifyLabels(threadIds: string[], addLabelIds: string[], removeLabelIds: string[]) {
+  async modifyLabels(
+    threadIds: string[],
+    addLabelIds: string[],
+    removeLabelIds: string[],
+    skipSync: boolean = false,
+  ) {
     const result = await this.mainDo.modifyLabels(threadIds, addLabelIds, removeLabelIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
+    if (!skipSync)
+      await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
     return result;
   }
 
@@ -134,13 +148,15 @@ export class DriverRpcDO extends RpcTarget {
 
   async markAsRead(threadIds: string[]) {
     const result = await this.mainDo.markAsRead(threadIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
+    if (shouldReSyncThreadsAfterActions)
+      await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
     return result;
   }
 
   async markAsUnread(threadIds: string[]) {
     const result = await this.mainDo.markAsUnread(threadIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
+    if (shouldReSyncThreadsAfterActions)
+      await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
     return result;
   }
 
@@ -160,8 +176,26 @@ export class DriverRpcDO extends RpcTarget {
     return await this.mainDo.create(data);
   }
 
+  async modifyThreadLabelsByName(
+    threadId: string,
+    addLabelNames: string[],
+    removeLabelNames: string[],
+  ) {
+    return await this.mainDo.modifyThreadLabelsByName(threadId, addLabelNames, removeLabelNames);
+  }
+
+  async modifyThreadLabelsInDB(
+    threadId: string,
+    addLabelNames: string[],
+    removeLabelNames: string[],
+  ) {
+    return await this.mainDo.modifyThreadLabelsInDB(threadId, addLabelNames, removeLabelNames);
+  }
+
   async delete(id: string) {
-    return await this.mainDo.delete(id);
+    const result = await this.mainDo.delete(id);
+    await this.mainDo.deleteThread(id);
+    return result;
   }
 
   async deleteAllSpam() {
@@ -182,6 +216,10 @@ export class DriverRpcDO extends RpcTarget {
 
   async broadcast(message: string) {
     return this.mainDo.broadcast(message);
+  }
+
+  async reloadFolder(folder: string) {
+    this.mainDo.reloadFolder(folder);
   }
 
   //   async getThreadsFromDB(params: {

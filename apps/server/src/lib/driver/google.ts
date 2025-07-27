@@ -59,6 +59,7 @@ export class GoogleMailManager implements MailManager {
   }
   public getScope(): string {
     return [
+      'https://mail.google.com/',
       'https://www.googleapis.com/auth/gmail.modify',
       'https://www.googleapis.com/auth/userinfo.profile',
       'https://www.googleapis.com/auth/userinfo.email',
@@ -255,25 +256,27 @@ export class GoogleMailManager implements MailManager {
         });
 
         const getArchiveCountEffect = Effect.tryPromise({
-          try: () => this.gmail.users.threads.list({
-            userId: 'me',
-            q: 'in:archive',
-            maxResults: 1,
-          }),
+          try: () =>
+            this.gmail.users.threads.list({
+              userId: 'me',
+              q: 'in:archive',
+              maxResults: 1,
+            }),
           catch: (error) => ({ _tag: 'ArchiveFetchFailed' as const, error }),
         });
 
         const processLabelEffect = (label: any) =>
           Effect.tryPromise({
-            try: () => this.gmail.users.labels.get({
-              userId: 'me',
-              id: label.id ?? undefined,
-            }),
+            try: () =>
+              this.gmail.users.labels.get({
+                userId: 'me',
+                id: label.id ?? undefined,
+              }),
             catch: (error) => ({ _tag: 'LabelFetchFailed' as const, error, labelId: label.id }),
           }).pipe(
             Effect.map((res) => {
               if ('_tag' in res) return null;
-              
+
               let labelName = (res.data.name ?? res.data.id ?? '').toLowerCase();
               if (labelName === 'draft') {
                 labelName = 'drafts';
@@ -288,10 +291,10 @@ export class GoogleMailManager implements MailManager {
 
         const mainEffect = Effect.gen(function* () {
           // Fetch user labels and archive count concurrently
-          const [userLabelsResult, archiveResult] = yield* Effect.all([
-            getUserLabelsEffect,
-            getArchiveCountEffect,
-          ], { concurrency: 'unbounded' });
+          const [userLabelsResult, archiveResult] = yield* Effect.all(
+            [getUserLabelsEffect, getArchiveCountEffect],
+            { concurrency: 'unbounded' },
+          );
 
           // Handle label list failure
           if ('_tag' in userLabelsResult && userLabelsResult._tag === 'LabelListFailed') {
@@ -308,7 +311,9 @@ export class GoogleMailManager implements MailManager {
           const labelResults = yield* Effect.all(labelEffects, { concurrency: 'unbounded' });
 
           // Filter and collect results
-          const mapped: LabelCount[] = labelResults.filter((item): item is LabelCount => item !== null);
+          const mapped: LabelCount[] = labelResults.filter(
+            (item): item is LabelCount => item !== null,
+          );
 
           // Add archive count if successful
           if (!('_tag' in archiveResult)) {
@@ -545,7 +550,6 @@ export class GoogleMailManager implements MailManager {
     addOrOptions: { addLabels: string[]; removeLabels: string[] } | string[],
     maybeRemove?: string[],
   ) {
-
     const options = Array.isArray(addOrOptions)
       ? { addLabels: addOrOptions as string[], removeLabels: maybeRemove ?? [] }
       : addOrOptions;
@@ -1411,9 +1415,7 @@ export class GoogleMailManager implements MailManager {
     }
 
     const userLabels = await this.getUserLabels();
-    const existing = userLabels.find(
-      (l) => l.name?.toLowerCase() === labelName.toLowerCase(),
-    );
+    const existing = userLabels.find((l) => l.name?.toLowerCase() === labelName.toLowerCase());
     if (existing && existing.id) {
       this.labelIdCache[labelName] = existing.id;
       return existing.id;
