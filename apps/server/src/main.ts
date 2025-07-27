@@ -42,6 +42,7 @@ import { cors } from 'hono/cors';
 import { Effect } from 'effect';
 
 import { Hono } from 'hono';
+import { ThreadSyncWorker } from './routes/agent/sync-worker';
 
 const SENTRY_HOST = 'o4509328786915328.ingest.us.sentry.io';
 const SENTRY_PROJECT_IDS = new Set(['4509328795303936']);
@@ -854,4 +855,4 @@ export default class extends WorkerEntrypoint<typeof env> {
   }
 }
 
-export { ZeroAgent, ZeroMCP, ZeroDB, ZeroDriver, ThinkingMCP };
+export { ZeroAgent, ZeroMCP, ZeroDB, ZeroDriver, ThinkingMCP, ThreadSyncWorker };

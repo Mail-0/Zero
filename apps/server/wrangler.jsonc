@@ -47,6 +47,10 @@
             "name": "THINKING_MCP",
             "class_name": "ThinkingMCP",
           },
+          {
+            "name": "THREAD_SYNC_WORKER",
+            "class_name": "ThreadSyncWorker",
+          },
         ],
       },
       "queues": {
@@ -93,6 +97,10 @@
         {
           "tag": "v6",
           "new_sqlite_classes": ["ThinkingMCP"],
+        },
+        {
+          "tag": "v7",
+          "new_classes": ["ThreadSyncWorker"],
         },
       ],
 

@@ -65,6 +65,7 @@ const shouldLoop = env.THREAD_SYNC_LOOP !== 'false';
 export class ZeroDriver extends AIChatAgent<typeof env> {
   private foldersInSync: Map<string, boolean> = new Map();
   private syncThreadsInProgress: Map<string, boolean> = new Map();
+  private _connection: typeof connection.$inferSelect | undefined = undefined;
   private driver: MailManager | null = null;
   private agent: DurableObjectStub<ZeroAgent> | null = null;
   constructor(ctx: DurableObjectState, env: Env) {
@@ -163,10 +164,10 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     if (this.name === 'general') return;
     if (!this.driver) {
       const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
-      const _connection = await db.query.connection.findFirst({
+      this._connection = await db.query.connection.findFirst({
         where: eq(connection.id, this.name),
       });
-      if (_connection) this.driver = connectionToDriver(_connection);
+      if (this._connection) this.driver = connectionToDriver(this._connection);
       this.ctx.waitUntil(conn.end());
       this.ctx.waitUntil(this.syncThreads('inbox'));
       this.ctx.waitUntil(this.syncThreads('sent'));
@@ -389,6 +390,11 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
       throw new Error('No driver available');
     }
 
+    if (!this._connection) {
+      console.error('No connection available for syncThread');
+      throw new Error('No connection available');
+    }
+
     if (this.syncThreadsInProgress.has(threadId)) {
       console.log(`Sync already in progress for thread ${threadId}, skipping...`);
       return;
@@ -397,8 +403,12 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
     // console.log('Server: syncThread called for thread', threadId);
     try {
-      const threadData = await this.getWithRetry(threadId);
-      const latest = threadData.latest;
+      // const threadData = await this.getWithRetry(threadId);
+      // const latest = threadData.latest;
+      const threadSyncWorker = env.THREAD_SYNC_WORKER.get(env.THREAD_SYNC_WORKER.newUniqueId());
+      const latest = await threadSyncWorker.syncThread(this.name, this._connection, threadId);
+      // @ts-expect-error
+      threadSyncWorker[Symbol.dispose]?.();
 
       if (latest) {
         // Convert receivedOn to ISO format for proper sorting
@@ -410,11 +420,11 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
           normalizedReceivedOn = new Date().toISOString();
         }
 
-        await env.THREADS_BUCKET.put(this.getThreadKey(threadId), JSON.stringify(threadData), {
-          customMetadata: {
-            threadId,
-          },
-        });
+        // await env.THREADS_BUCKET.put(this.getThreadKey(threadId), JSON.stringify(threadData), {
+        //   customMetadata: {
+        //     threadId,
+        //   },
+        // });
 
         void this.sql`
       INSERT OR REPLACE INTO threads (
@@ -447,7 +457,8 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         //   threadId,
         //   labels: threadData.labels,
         // });
-        return { success: true, threadId, threadData };
+        // return { success: true, threadId, threadData };
+        return { success: true, threadId }; // removed threadData
       } else {
         this.syncThreadsInProgress.delete(threadId);
         console.log(`Skipping thread ${threadId} - no latest message`);
@@ -529,7 +540,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
           const threadIds = result.threads.map((thread) => thread.id);
           const syncEffects = threadIds.map(syncSingleThread);
 
-          yield* Effect.all(syncEffects, { concurrency: 1, discard: true });
+          yield* Effect.all(syncEffects, { concurrency: 10 });
 
           totalSynced += result.threads.length;
           pageToken = result.nextPageToken;
