@@ -598,11 +598,13 @@ export default class extends WorkerEntrypoint<typeof env> {
       async (request, env, ctx) => {
         const authBearer = request.headers.get('Authorization');
         if (!authBearer) {
+          console.log('No auth provided');
           return new Response('Unauthorized', { status: 401 });
         }
         const auth = createAuth();
         const session = await auth.api.getMcpSession({ headers: request.headers });
         if (!session) {
+          console.log('Invalid auth provided', Array.from(request.headers.entries()));
           return new Response('Unauthorized', { status: 401 });
         }
         ctx.props = {
@@ -632,6 +634,10 @@ export default class extends WorkerEntrypoint<typeof env> {
         }
         const auth = createAuth();
         const session = await auth.api.getMcpSession({ headers: request.headers });
+        if (!session) {
+          console.log('Invalid auth provided', Array.from(request.headers.entries()));
+          return new Response('Unauthorized', { status: 401 });
+        }
         ctx.props = {
           userId: session?.userId,
         };
