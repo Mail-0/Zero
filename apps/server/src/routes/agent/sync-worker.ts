@@ -20,8 +20,7 @@ export class ThreadSyncWorker extends DurableObject<Env> {
     _connection: typeof connection.$inferSelect,
     threadId: string,
   ): Promise<ParsedMessage | undefined> {
-    console.log('THREAD_SYNC_WORKER: Syncing thread', connectionId, threadId);
-
+    // Get driver from connection
     const driver = connectionToDriver(_connection);
     if (!driver) throw new Error('No driver available');
 
@@ -30,6 +29,7 @@ export class ThreadSyncWorker extends DurableObject<Env> {
       withRetry(Effect.tryPromise(() => driver!.get(threadId))),
     );
 
+    // Store thread
     await env.THREADS_BUCKET.put(
       this.getThreadKey(connectionId, threadId),
       JSON.stringify(thread),
@@ -40,8 +40,7 @@ export class ThreadSyncWorker extends DurableObject<Env> {
       },
     );
 
-    console.log('THREAD_SYNC_WORKER: Thread synced', connectionId, threadId);
-
+    // Return latest message in thread
     return thread.latest;
   }
 }
