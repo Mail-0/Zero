@@ -1,7 +1,7 @@
 import { connectionToDriver } from '../../lib/server-utils';
 import { connection } from '../../db/schema';
 
-import { DurableObject, env, RpcTarget } from 'cloudflare:workers';
+import { DurableObject, env } from 'cloudflare:workers';
 import { withRetry } from '../../lib/gmail-rate-limit';
 import type { ParsedMessage } from '../../types';
 import { Effect } from 'effect';
