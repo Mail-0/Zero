@@ -1089,7 +1089,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             <!-- Email Body -->
             <div class="email-body">
               <div class="email-content">
-                ${cleanHtml(emailData?.decodedBody || '') || '<p><em>No email content available</em></p>'}
+                ${cleanHtml(emailData?.decodedBody || '')}
               </div>
             </div>
 
