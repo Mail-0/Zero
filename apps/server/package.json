@@ -80,6 +80,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@effect/language-service": "0.31.1",
     "@types/he": "1.2.3",
     "@types/node": "^22.9.0",
     "@types/react": "19.1.6",

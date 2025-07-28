@@ -598,11 +598,13 @@ export default class extends WorkerEntrypoint<typeof env> {
       async (request, env, ctx) => {
         const authBearer = request.headers.get('Authorization');
         if (!authBearer) {
+          console.log('No auth provided');
           return new Response('Unauthorized', { status: 401 });
         }
         const auth = createAuth();
         const session = await auth.api.getMcpSession({ headers: request.headers });
         if (!session) {
+          console.log('Invalid auth provided', Array.from(request.headers.entries()));
           return new Response('Unauthorized', { status: 401 });
         }
         ctx.props = {
@@ -632,6 +634,10 @@ export default class extends WorkerEntrypoint<typeof env> {
         }
         const auth = createAuth();
         const session = await auth.api.getMcpSession({ headers: request.headers });
+        if (!session) {
+          console.log('Invalid auth provided', Array.from(request.headers.entries()));
+          return new Response('Unauthorized', { status: 401 });
+        }
         ctx.props = {
           userId: session?.userId,
         };
@@ -768,8 +774,13 @@ export default class extends WorkerEntrypoint<typeof env> {
 
   async scheduled() {
     console.log('[SCHEDULED] Checking for expired subscriptions...');
-    const allAccounts = await env.subscribed_accounts.list();
-    console.log('[SCHEDULED] allAccounts', allAccounts.keys);
+    const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
+    const allAccounts = await db.query.connection.findMany({
+      where: (fields, { isNotNull, and }) =>
+        and(isNotNull(fields.accessToken), isNotNull(fields.refreshToken)),
+    });
+    await conn.end();
+    console.log('[SCHEDULED] allAccounts', allAccounts.length);
     const now = new Date();
     const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
 
@@ -820,18 +831,17 @@ export default class extends WorkerEntrypoint<typeof env> {
     );
 
     await Promise.all(
-      allAccounts.keys.map(async (key) => {
-        const [connectionId, providerId] = key.name.split('__');
-        const lastSubscribed = await env.gmail_sub_age.get(key.name);
+      allAccounts.map(async ({ id, providerId }) => {
+        const lastSubscribed = await env.gmail_sub_age.get(`${id}__${providerId}`);
 
         if (lastSubscribed) {
           const subscriptionDate = new Date(lastSubscribed);
           if (subscriptionDate < fiveDaysAgo) {
-            console.log(
-              `[SCHEDULED] Found expired Google subscription for connection: ${connectionId}`,
-            );
-            expiredSubscriptions.push({ connectionId, providerId: providerId as EProviders });
+            console.log(`[SCHEDULED] Found expired Google subscription for connection: ${id}`);
+            expiredSubscriptions.push({ connectionId: id, providerId: providerId as EProviders });
           }
+        } else {
+          expiredSubscriptions.push({ connectionId: id, providerId: providerId as EProviders });
         }
       }),
     );

@@ -661,6 +661,9 @@ importers:
         specifier: 'catalog:'
         version: 3.25.67
     devDependencies:
+      '@effect/language-service':
+        specifier: 0.31.1
+        version: 0.31.1
       '@types/he':
         specifier: 1.2.3
         version: 1.2.3
@@ -1078,6 +1081,10 @@ packages:
 
   '@dub/better-auth@0.0.3':
     resolution: {integrity: sha512-5haJGPt8Xab1L4De6naqEwC8k2KJrxI2iAfs5t9u6iNob3DNBTsbSZGb2godIigg9ZsS2J+joKKG5hDK6jT0UQ==}
+
+  '@effect/language-service@0.31.1':
+    resolution: {integrity: sha512-XnnM1crPsikx/qT5nSkOgmdXBsaucZPa3O5tO63mqqFxqiThkhKb8XTUCrixJmcbcAcGAxm4eUZUQVjXJnXf6g==}
+    hasBin: true
 
   '@egjs/agent@2.4.4':
     resolution: {integrity: sha512-cvAPSlUILhBBOakn2krdPnOGv5hAZq92f1YHxYcfu0p7uarix2C6Ia3AVizpS1SGRZGiEkIS5E+IVTLg1I2Iog==}
@@ -9254,6 +9261,8 @@ snapshots:
   '@dub/better-auth@0.0.3':
     dependencies:
       zod: 3.25.67
+
+  '@effect/language-service@0.31.1': {}
 
   '@egjs/agent@2.4.4': {}
 

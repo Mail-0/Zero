@@ -257,7 +257,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
         initialCc={ensureEmailArray(draft?.cc)}
         initialBcc={ensureEmailArray(draft?.bcc)}
         initialSubject={draft?.subject}
-        autofocus={false}
+        autofocus={true}
         settingsLoading={settingsLoading}
         replyingTo={replyToMessage?.sender.email}
       />
