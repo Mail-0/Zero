@@ -832,7 +832,7 @@ export default class extends WorkerEntrypoint<typeof env> {
 
     await Promise.all(
       allAccounts.map(async ({ id, providerId }) => {
-        const lastSubscribed = await env.gmail_sub_age.get(id);
+        const lastSubscribed = await env.gmail_sub_age.get(`${id}__${providerId}`);
 
         if (lastSubscribed) {
           const subscriptionDate = new Date(lastSubscribed);

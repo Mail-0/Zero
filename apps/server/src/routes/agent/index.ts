@@ -1360,12 +1360,13 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
     try {
       folder = this.normalizeFolderName(folder);
-      const folderThreadCount = (await this.count()).find((c) => c.label === folder)?.count;
-      const currentThreadCount = await this.getThreadCount();
+      // TODO: Sometimes the DO storage is resetting
+      //   const folderThreadCount = (await this.count()).find((c) => c.label === folder)?.count;
+      //   const currentThreadCount = await this.getThreadCount();
 
-      if (folderThreadCount && folderThreadCount > currentThreadCount && folder) {
-        this.ctx.waitUntil(this.syncThreads(folder));
-      }
+      //   if (folderThreadCount && folderThreadCount > currentThreadCount && folder) {
+      //     this.ctx.waitUntil(this.syncThreads(folder));
+      //   }
 
       // Build WHERE conditions
       const whereConditions: string[] = [];
