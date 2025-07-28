@@ -544,6 +544,11 @@ export const runThreadWorkflow = (
         catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
       });
 
+      yield* Effect.tryPromise({
+        try: async () => conn.end(),
+        catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
+      });
+
       const agent = yield* Effect.tryPromise({
         try: async () => await getZeroAgent(foundConnection.id),
         catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
@@ -1006,12 +1011,9 @@ export const runThreadWorkflow = (
       }).pipe(Effect.orElse(() => Effect.succeed(null)));
 
       yield* Effect.tryPromise({
-        try: async () => {
-          await conn.end();
-          console.log('[THREAD_WORKFLOW] Closed database connection');
-        },
+        try: async () => conn.end(),
         catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
-      }).pipe(Effect.orElse(() => Effect.succeed(null)));
+      });
 
       yield* Console.log('[THREAD_WORKFLOW] Thread processing complete');
       return 'Thread workflow completed successfully';

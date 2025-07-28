@@ -774,8 +774,13 @@ export default class extends WorkerEntrypoint<typeof env> {
 
   async scheduled() {
     console.log('[SCHEDULED] Checking for expired subscriptions...');
-    const allAccounts = await env.subscribed_accounts.list();
-    console.log('[SCHEDULED] allAccounts', allAccounts.keys);
+    const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
+    const allAccounts = await db.query.connection.findMany({
+      where: (fields, { isNotNull, and }) =>
+        and(isNotNull(fields.accessToken), isNotNull(fields.refreshToken)),
+    });
+    await conn.end();
+    console.log('[SCHEDULED] allAccounts', allAccounts.length);
     const now = new Date();
     const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
 
@@ -826,17 +831,14 @@ export default class extends WorkerEntrypoint<typeof env> {
     );
 
     await Promise.all(
-      allAccounts.keys.map(async (key) => {
-        const [connectionId, providerId] = key.name.split('__');
-        const lastSubscribed = await env.gmail_sub_age.get(key.name);
+      allAccounts.map(async ({ id, providerId }) => {
+        const lastSubscribed = await env.gmail_sub_age.get(id);
 
         if (lastSubscribed) {
           const subscriptionDate = new Date(lastSubscribed);
           if (subscriptionDate < fiveDaysAgo) {
-            console.log(
-              `[SCHEDULED] Found expired Google subscription for connection: ${connectionId}`,
-            );
-            expiredSubscriptions.push({ connectionId, providerId: providerId as EProviders });
+            console.log(`[SCHEDULED] Found expired Google subscription for connection: ${id}`);
+            expiredSubscriptions.push({ connectionId: id, providerId: providerId as EProviders });
           }
         }
       }),
