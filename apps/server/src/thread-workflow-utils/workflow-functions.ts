@@ -21,6 +21,23 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
     return shouldGenerateDraft(context.thread, context.foundConnection);
   },
 
+  checkWorkflowExecution: async (context) => {
+    const workflowKey = `workflow_${context.threadId}`;
+    const lastExecution = await env.gmail_processing_threads.get(workflowKey);
+
+    if (lastExecution) {
+      console.log('[WORKFLOW_FUNCTIONS] Workflow already executed for thread:', context.threadId);
+      return { alreadyExecuted: true };
+    }
+
+    await env.gmail_processing_threads.put(workflowKey, Date.now().toString(), {
+      expirationTtl: 3600,
+    });
+
+    console.log('[WORKFLOW_FUNCTIONS] Marked workflow as executed for thread:', context.threadId);
+    return { alreadyExecuted: false };
+  },
+
   analyzeEmailIntent: async (context) => {
     if (!context.thread.messages || context.thread.messages.length === 0) {
       throw new Error('Cannot analyze email intent: No messages in thread');
@@ -125,8 +142,33 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
     const messageIds = context.thread.messages.map((message) => message.id);
     console.log('[WORKFLOW_FUNCTIONS] Found message IDs:', messageIds);
 
-    const existingMessages = await env.VECTORIZE_MESSAGE.getByIds(messageIds);
-    console.log('[WORKFLOW_FUNCTIONS] Found existing messages:', existingMessages.length);
+    const batchSize = 20;
+    const batches = [];
+    for (let i = 0; i < messageIds.length; i += batchSize) {
+      batches.push(messageIds.slice(i, i + batchSize));
+    }
+
+    const getExistingMessagesBatch = (batch: string[]): Effect.Effect<any[], never> =>
+      Effect.tryPromise(async () => {
+        console.log('[WORKFLOW_FUNCTIONS] Fetching batch of', batch.length, 'message IDs');
+        return await env.VECTORIZE_MESSAGE.getByIds(batch);
+      }).pipe(
+        Effect.catchAll((error) => {
+          console.log('[WORKFLOW_FUNCTIONS] Failed to fetch batch:', error);
+          return Effect.succeed([]);
+        }),
+      );
+
+    const batchEffects = batches.map(getExistingMessagesBatch);
+    const program = Effect.all(batchEffects, { concurrency: 3 }).pipe(
+      Effect.map((results) => {
+        const allExistingMessages = results.flat();
+        console.log('[WORKFLOW_FUNCTIONS] Found existing messages:', allExistingMessages.length);
+        return allExistingMessages;
+      }),
+    );
+
+    const existingMessages = await Effect.runPromise(program);
 
     const existingMessageIds = new Set(existingMessages.map((message: any) => message.id));
     const messagesToVectorize = context.thread.messages.filter(
@@ -246,6 +288,16 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
     console.log('[WORKFLOW_FUNCTIONS] Successfully upserted message vectors');
 
     return { upserted: vectorizeResult.embeddings.length };
+  },
+
+  cleanupWorkflowExecution: async (context) => {
+    const workflowKey = `workflow_${context.threadId}`;
+    await env.gmail_processing_threads.delete(workflowKey);
+    console.log(
+      '[WORKFLOW_FUNCTIONS] Cleaned up workflow execution tracking for thread:',
+      context.threadId,
+    );
+    return { cleaned: true };
   },
 
   checkExistingSummary: async (context) => {

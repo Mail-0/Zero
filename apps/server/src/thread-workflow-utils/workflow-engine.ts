@@ -82,6 +82,13 @@ export class WorkflowEngine {
 
     return { results, errors };
   }
+
+  clearContext(context: WorkflowContext): void {
+    if (context.results) {
+      context.results.clear();
+    }
+    console.log('[WORKFLOW_ENGINE] Context cleared');
+  }
 }
 
 export const createDefaultWorkflows = (): WorkflowEngine => {
@@ -92,11 +99,22 @@ export const createDefaultWorkflows = (): WorkflowEngine => {
     description: 'Automatically generates drafts for threads that require responses',
     steps: [
       {
+        id: 'check-workflow-execution',
+        name: 'Check Workflow Execution',
+        description: 'Checks if this workflow has already been executed for this thread',
+        enabled: true,
+        action: workflowFunctions.checkWorkflowExecution,
+      },
+      {
         id: 'check-draft-eligibility',
         name: 'Check Draft Eligibility',
         description: 'Determines if a draft should be generated for this thread',
         enabled: true,
         condition: async (context) => {
+          const executionCheck = context.results?.get('check-workflow-execution');
+          if (executionCheck?.alreadyExecuted) {
+            return false;
+          }
           return shouldGenerateDraft(context.thread, context.foundConnection);
         },
         action: async (context) => {
@@ -137,6 +155,14 @@ export const createDefaultWorkflows = (): WorkflowEngine => {
         action: workflowFunctions.createDraft,
         errorHandling: 'continue',
       },
+      {
+        id: 'cleanup-workflow-execution',
+        name: 'Cleanup Workflow Execution',
+        description: 'Removes workflow execution tracking',
+        enabled: true,
+        action: workflowFunctions.cleanupWorkflowExecution,
+        errorHandling: 'continue',
+      },
     ],
   };
 
@@ -145,10 +171,21 @@ export const createDefaultWorkflows = (): WorkflowEngine => {
     description: 'Vectorizes thread messages for search and analysis',
     steps: [
       {
+        id: 'check-workflow-execution',
+        name: 'Check Workflow Execution',
+        description: 'Checks if this workflow has already been executed for this thread',
+        enabled: true,
+        action: workflowFunctions.checkWorkflowExecution,
+      },
+      {
         id: 'find-messages-to-vectorize',
         name: 'Find Messages to Vectorize',
         description: 'Identifies messages that need vectorization',
         enabled: true,
+        condition: async (context) => {
+          const executionCheck = context.results?.get('check-workflow-execution');
+          return !executionCheck?.alreadyExecuted;
+        },
         action: workflowFunctions.findMessagesToVectorize,
       },
       {
@@ -166,6 +203,14 @@ export const createDefaultWorkflows = (): WorkflowEngine => {
         action: workflowFunctions.upsertEmbeddings,
         errorHandling: 'continue',
       },
+      {
+        id: 'cleanup-workflow-execution',
+        name: 'Cleanup Workflow Execution',
+        description: 'Removes workflow execution tracking',
+        enabled: true,
+        action: workflowFunctions.cleanupWorkflowExecution,
+        errorHandling: 'continue',
+      },
     ],
   };
 
@@ -174,10 +219,21 @@ export const createDefaultWorkflows = (): WorkflowEngine => {
     description: 'Generates and stores thread summaries',
     steps: [
       {
+        id: 'check-workflow-execution',
+        name: 'Check Workflow Execution',
+        description: 'Checks if this workflow has already been executed for this thread',
+        enabled: true,
+        action: workflowFunctions.checkWorkflowExecution,
+      },
+      {
         id: 'check-existing-summary',
         name: 'Check Existing Summary',
         description: 'Checks if a thread summary already exists',
         enabled: true,
+        condition: async (context) => {
+          const executionCheck = context.results?.get('check-workflow-execution');
+          return !executionCheck?.alreadyExecuted;
+        },
         action: workflowFunctions.checkExistingSummary,
       },
       {
@@ -196,6 +252,14 @@ export const createDefaultWorkflows = (): WorkflowEngine => {
         action: workflowFunctions.upsertThreadSummary,
         errorHandling: 'continue',
       },
+      {
+        id: 'cleanup-workflow-execution',
+        name: 'Cleanup Workflow Execution',
+        description: 'Removes workflow execution tracking',
+        enabled: true,
+        action: workflowFunctions.cleanupWorkflowExecution,
+        errorHandling: 'continue',
+      },
     ],
   };
 
@@ -204,10 +268,21 @@ export const createDefaultWorkflows = (): WorkflowEngine => {
     description: 'Generates and applies labels to threads',
     steps: [
       {
+        id: 'check-workflow-execution',
+        name: 'Check Workflow Execution',
+        description: 'Checks if this workflow has already been executed for this thread',
+        enabled: true,
+        action: workflowFunctions.checkWorkflowExecution,
+      },
+      {
         id: 'get-user-labels',
         name: 'Get User Labels',
         description: 'Retrieves user-defined labels',
         enabled: true,
+        condition: async (context) => {
+          const executionCheck = context.results?.get('check-workflow-execution');
+          return !executionCheck?.alreadyExecuted;
+        },
         action: workflowFunctions.getUserLabels,
       },
       {
@@ -224,6 +299,14 @@ export const createDefaultWorkflows = (): WorkflowEngine => {
         description: 'Applies generated labels to the thread',
         enabled: true,
         action: workflowFunctions.applyLabels,
+        errorHandling: 'continue',
+      },
+      {
+        id: 'cleanup-workflow-execution',
+        name: 'Cleanup Workflow Execution',
+        description: 'Removes workflow execution tracking',
+        enabled: true,
+        action: workflowFunctions.cleanupWorkflowExecution,
         errorHandling: 'continue',
       },
     ],

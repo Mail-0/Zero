@@ -19,7 +19,6 @@ import { EProviders, type ISubscribeBatch, type IThreadBatch } from './types';
 import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
 import { getZeroDB, verifyToken } from './lib/server-utils';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
-import { EWorkflowType, runWorkflow } from './pipelines';
 import { ThinkingMCP } from './lib/sequential-thinking';
 import { ZeroAgent, ZeroDriver } from './routes/agent';
 import { contextStorage } from 'hono/context-storage';
@@ -31,6 +30,7 @@ import { trpcServer } from '@hono/trpc-server';
 import { agentsMiddleware } from 'hono-agents';
 import { ZeroMCP } from './routes/agent/mcp';
 import { publicRouter } from './routes/auth';
+import { WorkflowRunner } from './pipelines';
 import { autumnApi } from './routes/autumn';
 import type { HonoContext } from './ctx';
 import { createDb, type DB } from './db';
@@ -39,7 +39,6 @@ import { aiRouter } from './routes/ai';
 import { Autumn } from 'autumn-js';
 import { appRouter } from './trpc';
 import { cors } from 'hono/cors';
-import { Effect } from 'effect';
 
 import { Hono } from 'hono';
 
@@ -753,14 +752,14 @@ export default class extends WorkerEntrypoint<typeof env> {
             const providerId = msg.body.providerId;
             const historyId = msg.body.historyId;
             const subscriptionName = msg.body.subscriptionName;
-            const workflow = runWorkflow(EWorkflowType.MAIN, {
-              providerId,
-              historyId,
-              subscriptionName,
-            });
 
             try {
-              const result = await Effect.runPromise(workflow);
+              const workflowRunner = env.WORKFLOW_RUNNER.get(env.WORKFLOW_RUNNER.newUniqueId());
+              const result = await workflowRunner.runMainWorkflow({
+                providerId,
+                historyId,
+                subscriptionName,
+              });
               console.log('[THREAD_QUEUE] result', result);
             } catch (error) {
               console.error('Error running workflow', error);
@@ -864,4 +863,4 @@ export default class extends WorkerEntrypoint<typeof env> {
   }
 }
 
-export { ZeroAgent, ZeroMCP, ZeroDB, ZeroDriver, ThinkingMCP };
+export { ZeroAgent, ZeroMCP, ZeroDB, ZeroDriver, ThinkingMCP, WorkflowRunner };

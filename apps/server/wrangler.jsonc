@@ -47,6 +47,10 @@
             "name": "THINKING_MCP",
             "class_name": "ThinkingMCP",
           },
+          {
+            "name": "WORKFLOW_RUNNER",
+            "class_name": "WorkflowRunner",
+          },
         ],
       },
       "queues": {
@@ -93,6 +97,10 @@
         {
           "tag": "v6",
           "new_sqlite_classes": ["ThinkingMCP"],
+        },
+        {
+          "tag": "v7",
+          "new_sqlite_classes": ["WorkflowRunner"],
         },
       ],
 
@@ -199,6 +207,10 @@
             "name": "THINKING_MCP",
             "class_name": "ThinkingMCP",
           },
+          {
+            "name": "WORKFLOW_RUNNER",
+            "class_name": "WorkflowRunner",
+          },
         ],
       },
       "r2_buckets": [
@@ -255,6 +267,10 @@
         {
           "tag": "v7",
           "new_sqlite_classes": ["ThinkingMCP"],
+        },
+        {
+          "tag": "v8",
+          "new_sqlite_classes": ["WorkflowRunner"],
         },
       ],
       "observability": {
@@ -364,6 +380,10 @@
             "name": "THINKING_MCP",
             "class_name": "ThinkingMCP",
           },
+          {
+            "name": "WORKFLOW_RUNNER",
+            "class_name": "WorkflowRunner",
+          },
         ],
       },
       "queues": {
@@ -414,6 +434,10 @@
         {
           "tag": "v7",
           "new_sqlite_classes": ["ThinkingMCP"],
+        },
+        {
+          "tag": "v8",
+          "new_sqlite_classes": ["WorkflowRunner"],
         },
       ],
       "vars": {
