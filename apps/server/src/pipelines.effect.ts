@@ -11,26 +11,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  ReSummarizeThread,
-  SummarizeMessage,
-  SummarizeThread,
-  ThreadLabels,
-} from './lib/brain.fallback.prompts';
-import {
-  generateAutomaticDraft,
-  shouldGenerateDraft,
-  analyzeEmailIntent,
-} from './thread-workflow-utils';
-import { defaultLabels, EPrompts, EProviders, type ParsedMessage, type Sender } from './types';
+import { createDefaultWorkflows } from './thread-workflow-utils/workflow-engine';
 import { getServiceAccount } from './lib/factories/google-subscription.factory';
-import { EWorkflowType, getPromptName, runWorkflow } from './pipelines';
+import { EWorkflowType, runWorkflow } from './pipelines';
 import { getZeroAgent } from './lib/server-utils';
 import { type gmail_v1 } from '@googleapis/gmail';
 import { Effect, Console, Logger } from 'effect';
 import { env } from 'cloudflare:workers';
 import { connection } from './db/schema';
-import * as cheerio from 'cheerio';
+import { EProviders } from './types';
 import { eq } from 'drizzle-orm';
 import { createDb } from './db';
 
@@ -507,7 +496,8 @@ type ThreadWorkflowError =
   | { _tag: 'UnsupportedProvider'; providerId: string }
   | { _tag: 'DatabaseError'; error: unknown }
   | { _tag: 'GmailApiError'; error: unknown }
-  | { _tag: 'VectorizationError'; error: unknown };
+  | { _tag: 'VectorizationError'; error: unknown }
+  | { _tag: 'WorkflowCreationFailed'; error: unknown };
 
 /**
  * Runs the main workflow for processing a thread. The workflow is responsible for processing incoming messages from a Pub/Sub subscription and passing them to the appropriate pipeline.
@@ -569,436 +559,68 @@ export const runThreadWorkflow = (
         return 'Thread has no messages';
       }
 
-      const autoDraftId = yield* Effect.tryPromise({
+      // Initialize workflow engine with default workflows
+      const workflowEngine = createDefaultWorkflows();
+
+      // Create workflow context
+      const workflowContext = {
+        connectionId: connectionId.toString(),
+        threadId: threadId.toString(),
+        thread,
+        foundConnection,
+        agent,
+        env,
+      };
+
+      // Execute configured workflows using the workflow engine
+      const workflowResults = yield* Effect.tryPromise({
         try: async () => {
-          if (!shouldGenerateDraft(thread, foundConnection)) {
-            console.log('[THREAD_WORKFLOW] Skipping draft generation for thread:', threadId);
-            return null;
-          }
+          const allResults = new Map<string, any>();
+          const allErrors = new Map<string, Error>();
 
-          const latestMessage = thread.messages[thread.messages.length - 1];
-          const emailIntent = analyzeEmailIntent(latestMessage);
+          // Execute all workflows registered in the engine
+          const workflowNames = workflowEngine.getWorkflowNames();
 
-          console.log('[THREAD_WORKFLOW] Analyzed email intent:', {
-            threadId,
-            isQuestion: emailIntent.isQuestion,
-            isRequest: emailIntent.isRequest,
-            isMeeting: emailIntent.isMeeting,
-            isUrgent: emailIntent.isUrgent,
-          });
-
-          if (
-            !emailIntent.isQuestion &&
-            !emailIntent.isRequest &&
-            !emailIntent.isMeeting &&
-            !emailIntent.isUrgent
-          ) {
-            console.log(
-              '[THREAD_WORKFLOW] Email does not require a response, skipping draft generation',
-            );
-            return null;
-          }
-
-          console.log('[THREAD_WORKFLOW] Generating automatic draft for thread:', threadId);
-          const draftContent = await generateAutomaticDraft(
-            connectionId.toString(),
-            thread,
-            foundConnection,
-          );
-
-          if (draftContent) {
-            const latestMessage = thread.messages[thread.messages.length - 1];
-
-            const replyTo = latestMessage.sender?.email || '';
-            const cc =
-              latestMessage.cc
-                ?.map((r) => r.email)
-                .filter((email) => email && email !== foundConnection.email) || [];
-
-            const originalSubject = latestMessage.subject || '';
-            const replySubject = originalSubject.startsWith('Re: ')
-              ? originalSubject
-              : `Re: ${originalSubject}`;
-
-            const draftData = {
-              to: replyTo,
-              cc: cc.join(', '),
-              bcc: '',
-              subject: replySubject,
-              message: draftContent,
-              attachments: [],
-              id: null,
-              threadId: threadId.toString(),
-              fromEmail: foundConnection.email,
-            };
+          for (const workflowName of workflowNames) {
+            console.log(`[THREAD_WORKFLOW] Executing workflow: ${workflowName}`);
 
             try {
-              const createdDraft = await agent.createDraft(draftData);
-              console.log('[THREAD_WORKFLOW] Created automatic draft:', {
-                threadId,
-                draftId: createdDraft?.id,
-              });
-              return createdDraft?.id || null;
-            } catch (error) {
-              console.log('[THREAD_WORKFLOW] Failed to create automatic draft:', {
-                threadId,
-                error: error instanceof Error ? error.message : String(error),
-              });
-              return null;
-            }
-          }
-
-          return null;
-        },
-        catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
-      });
-
-      yield* Console.log('[THREAD_WORKFLOW] ' + autoDraftId);
-
-      yield* Console.log('[THREAD_WORKFLOW] Processing thread messages and vectorization');
-
-      const messagesToVectorize = yield* Effect.tryPromise({
-        try: async () => {
-          console.log('[THREAD_WORKFLOW] Finding messages to vectorize');
-          console.log('[THREAD_WORKFLOW] Getting message IDs from thread');
-          const messageIds = thread.messages.map((message) => message.id);
-          console.log('[THREAD_WORKFLOW] Found message IDs:', messageIds);
-
-          console.log('[THREAD_WORKFLOW] Fetching existing vectorized messages');
-          const existingMessages = await env.VECTORIZE_MESSAGE.getByIds(messageIds);
-          console.log('[THREAD_WORKFLOW] Found existing messages:', existingMessages.length);
-
-          const existingMessageIds = new Set(existingMessages.map((message) => message.id));
-          console.log('[THREAD_WORKFLOW] Existing message IDs:', Array.from(existingMessageIds));
-
-          const messagesToVectorize = thread.messages.filter(
-            (message) => !existingMessageIds.has(message.id),
-          );
-          console.log('[THREAD_WORKFLOW] Messages to vectorize:', messagesToVectorize.length);
-
-          return messagesToVectorize;
-        },
-        catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
-      });
-
-      let finalEmbeddings: VectorizeVector[] = [];
-
-      if (messagesToVectorize.length === 0) {
-        yield* Console.log('[THREAD_WORKFLOW] No messages to vectorize, skipping vectorization');
-      } else {
-        finalEmbeddings = yield* Effect.tryPromise({
-          try: async () => {
-            console.log(
-              '[THREAD_WORKFLOW] Starting message vectorization for',
-              messagesToVectorize.length,
-              'messages',
-            );
-
-            const maxConcurrentMessages = 3;
-            const results: VectorizeVector[] = [];
-
-            for (let i = 0; i < messagesToVectorize.length; i += maxConcurrentMessages) {
-              const batch = messagesToVectorize.slice(i, i + maxConcurrentMessages);
-              const batchResults = await Promise.all(
-                batch.map(async (message) => {
-                  try {
-                    console.log('[THREAD_WORKFLOW] Converting message to XML:', message.id);
-                    const prompt = await messageToXML(message);
-                    if (!prompt) {
-                      console.log('[THREAD_WORKFLOW] Message has no prompt, skipping:', message.id);
-                      return null;
-                    }
-                    console.log('[THREAD_WORKFLOW] Got XML prompt for message:', message.id);
-
-                    console.log(
-                      '[THREAD_WORKFLOW] Getting summarize prompt for connection:',
-                      message.connectionId ?? '',
-                    );
-                    const SummarizeMessagePrompt = await getPrompt(
-                      getPromptName(message.connectionId ?? '', EPrompts.SummarizeMessage),
-                      SummarizeMessage,
-                    );
-                    console.log('[THREAD_WORKFLOW] Got summarize prompt for message:', message.id);
-
-                    console.log('[THREAD_WORKFLOW] Generating summary for message:', message.id);
-                    const messages = [
-                      { role: 'system', content: SummarizeMessagePrompt },
-                      { role: 'user', content: prompt },
-                    ];
-                    const response = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
-                      messages,
-                    });
-                    console.log(
-                      `[THREAD_WORKFLOW] Summary generated for message ${message.id}:`,
-                      response,
-                    );
-                    const summary = 'response' in response ? response.response : response;
-                    if (!summary || typeof summary !== 'string') {
-                      throw new Error(`Invalid summary response for message ${message.id}`);
-                    }
-
-                    console.log(
-                      '[THREAD_WORKFLOW] Getting embedding vector for message:',
-                      message.id,
-                    );
-                    const embeddingVector = await getEmbeddingVector(summary);
-                    console.log('[THREAD_WORKFLOW] Got embedding vector for message:', message.id);
-
-                    if (!embeddingVector)
-                      throw new Error(`Message Embedding vector is null ${message.id}`);
-
-                    return {
-                      id: message.id,
-                      metadata: {
-                        connection: message.connectionId ?? '',
-                        thread: message.threadId ?? '',
-                        summary,
-                      },
-                      values: embeddingVector,
-                    } satisfies VectorizeVector;
-                  } catch (error) {
-                    console.log('[THREAD_WORKFLOW] Failed to vectorize message:', {
-                      messageId: message.id,
-                      error: error instanceof Error ? error.message : String(error),
-                    });
-                    return null;
-                  }
-                }),
+              const { results, errors } = await workflowEngine.executeWorkflow(
+                workflowName,
+                workflowContext,
               );
 
-              const validResults = batchResults.filter(
-                (result): result is NonNullable<typeof result> => result !== null,
-              );
-              results.push(...validResults);
+              // Merge results and errors using efficient Map operations
+              results.forEach((value, key) => allResults.set(key, value));
+              errors.forEach((value, key) => allErrors.set(key, value));
 
-              if (i + maxConcurrentMessages < messagesToVectorize.length) {
-                console.log('[THREAD_WORKFLOW] Sleeping between message batches');
-                await new Promise((resolve) => setTimeout(resolve, 1000));
-              }
-            }
-
-            return results;
-          },
-          catch: (error) => ({ _tag: 'VectorizationError' as const, error }),
-        });
-
-        yield* Console.log('[THREAD_WORKFLOW] Generated embeddings for all messages');
-
-        if (finalEmbeddings.length > 0) {
-          yield* Effect.tryPromise({
-            try: async () => {
-              console.log('[THREAD_WORKFLOW] Upserting message vectors:', finalEmbeddings.length);
-              await env.VECTORIZE_MESSAGE.upsert(finalEmbeddings);
-              console.log('[THREAD_WORKFLOW] Successfully upserted message vectors');
-            },
-            catch: (error) => ({ _tag: 'VectorizationError' as const, error }),
-          });
-        }
-      }
-
-      const existingThreadSummary = yield* Effect.tryPromise({
-        try: async () => {
-          console.log('[THREAD_WORKFLOW] Getting existing thread summary for:', threadId);
-          const threadSummary = await env.VECTORIZE.getByIds([threadId.toString()]);
-          if (!threadSummary.length) {
-            console.log('[THREAD_WORKFLOW] No existing thread summary found');
-            return null;
-          }
-          console.log('[THREAD_WORKFLOW] Found existing thread summary');
-          return threadSummary[0].metadata as { summary: string; lastMsg: string };
-        },
-        catch: (error) => ({ _tag: 'VectorizationError' as const, error }),
-      });
-
-      // Early exit if no new messages (prevents infinite loop from label changes)
-      const newestMessage = thread.messages[thread.messages.length - 1];
-      if (existingThreadSummary && existingThreadSummary.lastMsg === newestMessage?.id) {
-        yield* Console.log(
-          '[THREAD_WORKFLOW] No new messages since last processing, skipping AI processing',
-        );
-        return 'Thread workflow completed - no new messages';
-      }
-
-      const finalSummary = yield* Effect.tryPromise({
-        try: async () => {
-          console.log('[THREAD_WORKFLOW] Generating final thread summary');
-          if (existingThreadSummary) {
-            console.log('[THREAD_WORKFLOW] Using existing summary as context');
-            return await summarizeThread(
-              connectionId.toString(),
-              thread.messages,
-              existingThreadSummary.summary,
-            );
-          } else {
-            console.log('[THREAD_WORKFLOW] Generating new summary without context');
-            return await summarizeThread(connectionId.toString(), thread.messages);
-          }
-        },
-        catch: (error) => ({ _tag: 'VectorizationError' as const, error }),
-      });
-
-      const userAccountLabels = yield* Effect.tryPromise({
-        try: async () => {
-          const userAccountLabels = await agent.getUserLabels();
-          return userAccountLabels;
-        },
-        catch: (error) => ({ _tag: 'GmailApiError' as const, error }),
-      });
-
-      if (finalSummary) {
-        yield* Console.log('[THREAD_WORKFLOW] Got final summary, processing labels');
-
-        const userLabels = yield* Effect.tryPromise({
-          try: async () => {
-            console.log('[THREAD_WORKFLOW] Getting user topics for connection:', connectionId);
-            let userLabels: { name: string; usecase: string }[] = [];
-            try {
-              const userTopics = await agent.getUserTopics();
-              if (userTopics.length > 0) {
-                userLabels = userTopics.map((topic) => ({
-                  name: topic.topic,
-                  usecase: topic.usecase,
-                }));
-                console.log('[THREAD_WORKFLOW] Using user topics as labels:', userLabels);
-              } else {
-                console.log('[THREAD_WORKFLOW] No user topics found, using defaults');
-                userLabels = defaultLabels;
-              }
+              console.log(`[THREAD_WORKFLOW] Completed workflow: ${workflowName}`);
             } catch (error) {
-              console.log('[THREAD_WORKFLOW] Failed to get user topics, using defaults:', error);
-              userLabels = defaultLabels;
+              console.error(`[THREAD_WORKFLOW] Failed to execute workflow ${workflowName}:`, error);
+              const errorObj = error instanceof Error ? error : new Error(String(error));
+              allErrors.set(workflowName, errorObj);
             }
-            return userLabels;
-          },
-          catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
+          }
+
+          return { results: allResults, errors: allErrors };
+        },
+        catch: (error) => ({ _tag: 'WorkflowCreationFailed' as const, error }),
+      });
+
+      // Log workflow results
+      const successfulSteps = Array.from(workflowResults.results.keys());
+      const failedSteps = Array.from(workflowResults.errors.keys());
+
+      if (successfulSteps.length > 0) {
+        yield* Console.log('[THREAD_WORKFLOW] Successfully executed steps:', successfulSteps);
+      }
+
+      if (failedSteps.length > 0) {
+        yield* Console.log('[THREAD_WORKFLOW] Failed steps:', failedSteps);
+        // Log errors efficiently using forEach to avoid nested iteration
+        workflowResults.errors.forEach((error, stepId) => {
+          console.log(`[THREAD_WORKFLOW] Error in step ${stepId}:`, error.message);
         });
-
-        const generatedLabels = yield* Effect.tryPromise({
-          try: async () => {
-            console.log('[THREAD_WORKFLOW] Generating labels for thread:', {
-              userLabels,
-              threadId,
-              threadLabels: thread.labels,
-            });
-            const labelsResponse: any = await env.AI.run(
-              '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
-              {
-                messages: [
-                  { role: 'system', content: ThreadLabels(userLabels, thread.labels) },
-                  { role: 'user', content: finalSummary },
-                ],
-              },
-            );
-            if (labelsResponse?.response?.replaceAll('!', '').trim()?.length) {
-              console.log('[THREAD_WORKFLOW] Labels generated:', labelsResponse.response);
-              const labels: string[] = labelsResponse?.response
-                ?.split(',')
-                .map((e: string) => e.trim())
-                .filter((e: string) => e.length > 0)
-                .filter((e: string) =>
-                  userLabels.find((label) => label.name.toLowerCase() === e.toLowerCase()),
-                );
-              return labels;
-            } else {
-              console.log('[THREAD_WORKFLOW] No labels generated');
-              return [];
-            }
-          },
-          catch: (error) => ({ _tag: 'VectorizationError' as const, error }),
-        }).pipe(Effect.orElse(() => Effect.succeed([])));
-
-        if (generatedLabels && generatedLabels.length > 0) {
-          yield* Effect.tryPromise({
-            try: async () => {
-              console.log('[THREAD_WORKFLOW] Modifying thread labels:', generatedLabels);
-              const validLabelIds = generatedLabels
-                .map((name) => userAccountLabels.find((e) => e.name === name)?.id)
-                .filter((id): id is string => id !== undefined && id !== '');
-
-              if (validLabelIds.length > 0) {
-                // Check delta - only modify if there are actual changes
-                const currentLabelIds = thread.labels?.map((l) => l.id) || [];
-                const labelsToAdd = validLabelIds.filter((id) => !currentLabelIds.includes(id));
-                const aiLabelIds = new Set(
-                  userAccountLabels
-                    .filter((l) => userLabels.some((ul) => ul.name === l.name))
-                    .map((l) => l.id),
-                );
-                const labelsToRemove = currentLabelIds.filter(
-                  (id) => aiLabelIds.has(id) && !validLabelIds.includes(id),
-                );
-
-                if (labelsToAdd.length > 0 || labelsToRemove.length > 0) {
-                  console.log('[THREAD_WORKFLOW] Applying label changes:', {
-                    add: labelsToAdd,
-                    remove: labelsToRemove,
-                  });
-                  await agent.modifyThreadLabelsInDB(
-                    threadId.toString(),
-                    labelsToAdd,
-                    labelsToRemove,
-                  );
-                  // await agent.modifyLabels(
-                  //   [threadId.toString()],
-                  //   labelsToAdd,
-                  //   labelsToRemove,
-                  //   true,
-                  // );
-                  // await agent.syncThread({ threadId: threadId.toString() });
-                  console.log('[THREAD_WORKFLOW] Successfully modified thread labels');
-                } else {
-                  console.log('[THREAD_WORKFLOW] No label changes needed - labels already match');
-                }
-              }
-            },
-            catch: (error) => ({ _tag: 'GmailApiError' as const, error }),
-          });
-        }
-
-        const embeddingVector = yield* Effect.tryPromise({
-          try: async () => {
-            console.log('[THREAD_WORKFLOW] Getting thread embedding vector');
-            const embeddingVector = await getEmbeddingVector(finalSummary);
-            console.log('[THREAD_WORKFLOW] Got thread embedding vector');
-            return embeddingVector;
-          },
-          catch: (error) => ({ _tag: 'VectorizationError' as const, error }),
-        });
-
-        if (!embeddingVector) {
-          yield* Console.log(
-            '[THREAD_WORKFLOW] Thread Embedding vector is null, skipping vector upsert',
-          );
-          return 'Thread workflow completed successfully';
-        }
-
-        yield* Effect.tryPromise({
-          try: async () => {
-            console.log('[THREAD_WORKFLOW] Upserting thread vector');
-            const newestMessage = thread.messages[thread.messages.length - 1];
-            await env.VECTORIZE.upsert([
-              {
-                id: threadId.toString(),
-                metadata: {
-                  connection: connectionId.toString(),
-                  thread: threadId.toString(),
-                  summary: finalSummary,
-                  lastMsg: newestMessage?.id, // Store last message ID to prevent reprocessing
-                },
-                values: embeddingVector,
-              },
-            ]);
-            console.log('[THREAD_WORKFLOW] Successfully upserted thread vector');
-          },
-          catch: (error) => ({ _tag: 'VectorizationError' as const, error }),
-        });
-      } else {
-        yield* Console.log(
-          '[THREAD_WORKFLOW] No summary generated for thread',
-          threadId,
-          'messages count:',
-          thread.messages.length,
-        );
       }
 
       // Clean up thread processing flag
@@ -1048,79 +670,6 @@ export const runThreadWorkflow = (
     Effect.provide(loggerLayer),
   );
 
-// // Helper functions for vectorization and AI processing
-// type VectorizeVectorMetadata = 'connection' | 'thread' | 'summary';
-// type IThreadSummaryMetadata = Record<VectorizeVectorMetadata, VectorizeVectorMetadata>;
-
-export async function htmlToText(decodedBody: string): Promise<string> {
-  try {
-    if (!decodedBody || typeof decodedBody !== 'string') {
-      return '';
-    }
-    const $ = cheerio.load(decodedBody);
-    $('script').remove();
-    $('style').remove();
-    return $('body')
-      .text()
-      .replace(/\r?\n|\r/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-  } catch (error) {
-    log('Error extracting text from HTML:', error);
-    return '';
-  }
-}
-
-const escapeXml = (text: string): string => {
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-};
-
-const messageToXML = async (message: ParsedMessage) => {
-  try {
-    if (!message.decodedBody) return null;
-    const body = await htmlToText(message.decodedBody || '');
-    log('[MESSAGE_TO_XML] Body', body);
-    if (!body || body.length < 10) {
-      log('Skipping message with body length < 10', body);
-      return null;
-    }
-
-    const safeSenderName = escapeXml(message.sender?.name || 'Unknown');
-    const safeSubject = escapeXml(message.subject || '');
-    const safeDate = escapeXml(message.receivedOn || '');
-
-    const toElements = (message.to || [])
-      .map((r) => `<to>${escapeXml(r?.email || '')}</to>`)
-      .join('');
-    const ccElements = (message.cc || [])
-      .map((r) => `<cc>${escapeXml(r?.email || '')}</cc>`)
-      .join('');
-
-    return `
-        <message>
-          <from>${safeSenderName}</from>
-          ${toElements}
-          ${ccElements}
-          <date>${safeDate}</date>
-          <subject>${safeSubject}</subject>
-          <body>${escapeXml(body)}</body>
-        </message>
-        `;
-  } catch (error) {
-    log('[MESSAGE_TO_XML] Failed to convert message to XML:', {
-      messageId: message.id,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return null;
-  }
-};
-
 export const getPrompt = async (promptName: string, fallback: string) => {
   try {
     if (!promptName || typeof promptName !== 'string') {
@@ -1163,150 +712,6 @@ export const getEmbeddingVector = async (text: string) => {
     return embeddingVector ?? null;
   } catch (error) {
     log('[getEmbeddingVector] failed', error);
-    return null;
-  }
-};
-
-const getParticipants = (messages: ParsedMessage[]) => {
-  if (!messages || !Array.isArray(messages) || messages.length === 0) {
-    return [];
-  }
-
-  const result = new Map<Sender['email'], Sender['name'] | ''>();
-  const setIfUnset = (sender: Sender) => {
-    if (sender?.email && !result.has(sender.email)) {
-      result.set(sender.email, sender.name || '');
-    }
-  };
-
-  for (const msg of messages) {
-    if (msg?.sender) {
-      setIfUnset(msg.sender);
-    }
-    if (msg?.cc && Array.isArray(msg.cc)) {
-      for (const ccParticipant of msg.cc) {
-        if (ccParticipant) setIfUnset(ccParticipant);
-      }
-    }
-    if (msg?.to && Array.isArray(msg.to)) {
-      for (const toParticipant of msg.to) {
-        if (toParticipant) setIfUnset(toParticipant);
-      }
-    }
-  }
-  return Array.from(result.entries());
-};
-
-const threadToXML = async (messages: ParsedMessage[], existingSummary?: string) => {
-  if (!messages || !Array.isArray(messages) || messages.length === 0) {
-    throw new Error('No messages provided for thread XML generation');
-  }
-
-  const firstMessage = messages[0];
-  if (!firstMessage) {
-    throw new Error('First message is null or undefined');
-  }
-
-  const { subject = '', title = '' } = firstMessage;
-  const participants = getParticipants(messages);
-  const messagesXML = await Promise.all(messages.map(messageToXML));
-  const validMessagesXML = messagesXML.filter((xml): xml is string => xml !== null);
-
-  if (existingSummary) {
-    return `<thread>
-            <title>${escapeXml(title)}</title>
-            <subject>${escapeXml(subject)}</subject>
-            <participants>
-              ${participants.map(([email, name]) => {
-                return `<participant>${escapeXml(name || email)} ${name ? `< ${escapeXml(email)} >` : ''}</participant>`;
-              })}
-            </participants>
-            <existing_summary>
-              ${escapeXml(existingSummary)}
-            </existing_summary>
-            <new_messages>
-                ${validMessagesXML.map((e) => e + '\n')}
-            </new_messages>
-        </thread>`;
-  }
-  return `<thread>
-          <title>${escapeXml(title)}</title>
-          <subject>${escapeXml(subject)}</subject>
-          <participants>
-            ${participants.map(([email, name]) => {
-              return `<participant>${escapeXml(name || email)} < ${escapeXml(email)} ></participant>`;
-            })}
-          </participants>
-          <messages>
-              ${validMessagesXML.map((e) => e + '\n')}
-          </messages>
-      </thread>`;
-};
-
-const summarizeThread = async (
-  connectionId: string,
-  messages: ParsedMessage[],
-  existingSummary?: string,
-): Promise<string | null> => {
-  try {
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      log('[SUMMARIZE_THREAD] No messages provided for summarization');
-      return null;
-    }
-
-    if (!connectionId || typeof connectionId !== 'string') {
-      log('[SUMMARIZE_THREAD] Invalid connection ID provided');
-      return null;
-    }
-
-    const prompt = await threadToXML(messages, existingSummary);
-    if (!prompt) {
-      log('[SUMMARIZE_THREAD] Failed to generate thread XML');
-      return null;
-    }
-
-    if (existingSummary) {
-      const ReSummarizeThreadPrompt = await getPrompt(
-        getPromptName(connectionId, EPrompts.ReSummarizeThread),
-        ReSummarizeThread,
-      );
-      const promptMessages = [
-        { role: 'system', content: ReSummarizeThreadPrompt },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ];
-      const response: any = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
-        messages: promptMessages,
-      });
-      const summary = response?.response;
-      return typeof summary === 'string' ? summary : null;
-    } else {
-      const SummarizeThreadPrompt = await getPrompt(
-        getPromptName(connectionId, EPrompts.SummarizeThread),
-        SummarizeThread,
-      );
-      const promptMessages = [
-        { role: 'system', content: SummarizeThreadPrompt },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ];
-      const response: any = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
-        messages: promptMessages,
-      });
-      const summary = response?.response;
-      return typeof summary === 'string' ? summary : null;
-    }
-  } catch (error) {
-    log('[SUMMARIZE_THREAD] Failed to summarize thread:', {
-      connectionId,
-      messageCount: messages?.length || 0,
-      hasExistingSummary: !!existingSummary,
-      error: error instanceof Error ? error.message : String(error),
-    });
     return null;
   }
 };

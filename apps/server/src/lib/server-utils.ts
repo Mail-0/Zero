@@ -3,6 +3,8 @@ import { connection } from '../db/schema';
 import type { HonoContext } from '../ctx';
 import { env } from 'cloudflare:workers';
 import { createDriver } from './driver';
+import { eq } from 'drizzle-orm';
+import { createDb } from '../db';
 
 export const getZeroDB = async (userId: string) => {
   const stub = env.ZERO_DB.get(env.ZERO_DB.idFromName(userId));
@@ -74,4 +76,16 @@ export const verifyToken = async (token: string) => {
 
   const data = (await response.json()) as any;
   return !!data;
+};
+
+export const resetConnection = async (connectionId: string) => {
+  const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
+  await db
+    .update(connection)
+    .set({
+      accessToken: null,
+      refreshToken: null,
+    })
+    .where(eq(connection.id, connectionId));
+  await conn.end();
 };

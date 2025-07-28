@@ -636,25 +636,25 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     return await this.getThreadFromDB(threadId);
   }
 
-  async markThreadsRead(threadIds: string[]) {
-    if (!this.driver) {
-      throw new Error('No driver available');
-    }
-    return await this.driver.modifyLabels(threadIds, {
-      addLabels: [],
-      removeLabels: ['UNREAD'],
-    });
-  }
+  //   async markThreadsRead(threadIds: string[]) {
+  //     if (!this.driver) {
+  //       throw new Error('No driver available');
+  //     }
+  //     return await this.driver.modifyLabels(threadIds, {
+  //       addLabels: [],
+  //       removeLabels: ['UNREAD'],
+  //     });
+  //   }
 
-  async markThreadsUnread(threadIds: string[]) {
-    if (!this.driver) {
-      throw new Error('No driver available');
-    }
-    return await this.driver.modifyLabels(threadIds, {
-      addLabels: ['UNREAD'],
-      removeLabels: [],
-    });
-  }
+  //   async markThreadsUnread(threadIds: string[]) {
+  //     if (!this.driver) {
+  //       throw new Error('No driver available');
+  //     }
+  //     return await this.driver.modifyLabels(threadIds, {
+  //       addLabels: ['UNREAD'],
+  //       removeLabels: [],
+  //     });
+  //   }
 
   async modifyLabels(threadIds: string[], addLabelIds: string[], removeLabelIds: string[]) {
     if (!this.driver) {
@@ -807,6 +807,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
   }
 
   async dropTables() {
+    console.log('Dropping tables');
     return this.sql`
         DROP TABLE IF EXISTS threads;`;
   }
@@ -1577,7 +1578,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
       const result = this.sql`
         SELECT latest_label_ids
         FROM threads
-        WHERE id = ${threadId}
+        WHERE thread_id = ${threadId}
         LIMIT 1
       `;
 
@@ -1615,7 +1616,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         UPDATE threads
         SET latest_label_ids = ${JSON.stringify(updatedLabels)},
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = ${threadId}
+        WHERE thread_id = ${threadId}
       `;
 
       await this.agent?.broadcastChatMessage({
@@ -1649,7 +1650,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
             created_at,
             updated_at
           FROM threads
-          WHERE id = ${id}
+          WHERE thread_id = ${id}
           LIMIT 1
         `;
 

@@ -20,16 +20,13 @@ const senderSchema = z.object({
   email: z.string(),
 });
 
-const FOLDER_TO_LABEL_MAP: Record<string, string> = {
-  inbox: 'INBOX',
-  sent: 'SENT',
-  draft: 'DRAFT',
-  spam: 'SPAM',
-  trash: 'TRASH',
-};
-
 const getFolderLabelId = (folder: string) => {
-  return FOLDER_TO_LABEL_MAP[folder];
+  // Handle special cases first
+  if (folder === 'bin') return 'TRASH';
+  if (folder === 'archive') return ''; // Archive doesn't have a specific label
+
+  // For other folders, convert to uppercase (same as database method)
+  return folder.toUpperCase();
 };
 
 export const mailRouter = router({
@@ -92,29 +89,17 @@ export const mailRouter = router({
 
       let threadsResponse: IGetThreadsResponse;
 
-      if (q) {
-        console.debug('[listThreads] Performing search with query:', q);
-        threadsResponse = await agent.rawListThreads({
-          folder,
-          query: q,
-          maxResults,
-          labelIds,
-          pageToken: cursor,
-        });
-        console.debug('[listThreads] Search result:', threadsResponse);
-      } else {
-        const folderLabelId = getFolderLabelId(folder);
-        const labelIdsToUse = folderLabelId ? [...labelIds, folderLabelId] : labelIds;
-        console.debug('[listThreads] Listing with labelIds:', labelIdsToUse, 'for folder:', folder);
+      // Apply folder-to-label mapping when no search query is provided
+      const folderLabelId = getFolderLabelId(folder);
+      const effectiveLabelIds = q ? labelIds : [...labelIds, folderLabelId].filter(Boolean);
 
-        threadsResponse = await agent.listThreads({
-          folder,
-          labelIds: labelIdsToUse,
-          maxResults,
-          pageToken: cursor,
-        });
-        console.debug('[listThreads] List result:', threadsResponse);
-      }
+      threadsResponse = await agent.rawListThreads({
+        folder,
+        query: q,
+        maxResults,
+        labelIds: effectiveLabelIds,
+        pageToken: cursor,
+      });
 
       if (folder === FOLDERS.SNOOZED) {
         const nowTs = Date.now();
