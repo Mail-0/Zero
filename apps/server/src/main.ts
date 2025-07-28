@@ -840,6 +840,8 @@ export default class extends WorkerEntrypoint<typeof env> {
             console.log(`[SCHEDULED] Found expired Google subscription for connection: ${id}`);
             expiredSubscriptions.push({ connectionId: id, providerId: providerId as EProviders });
           }
+        } else {
+          expiredSubscriptions.push({ connectionId: id, providerId: providerId as EProviders });
         }
       }),
     );
