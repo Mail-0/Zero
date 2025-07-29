@@ -14,6 +14,7 @@ import {
   userSettings,
   writingStyleMatrix,
 } from './db/schema';
+import { consoleLoggingIntegration, withSentry, logger as sentryLogger } from '@sentry/cloudflare';
 import { EProviders, type ISubscribeBatch, type IThreadBatch } from './types';
 import { env, DurableObject, RpcTarget } from 'cloudflare:workers';
 import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
@@ -26,7 +27,6 @@ import { defaultUserSettings } from './lib/schemas';
 import { createLocalJWKSet, jwtVerify } from 'jose';
 import { getZeroAgent } from './lib/server-utils';
 import { enableBrainFunction } from './lib/brain';
-import { withSentry } from '@sentry/cloudflare';
 import { trpcServer } from '@hono/trpc-server';
 import { agentsMiddleware } from 'hono-agents';
 import { ZeroMCP } from './routes/agent/mcp';
@@ -500,9 +500,18 @@ class ZeroDB extends DurableObject<Env> {
 const api = new Hono<HonoContext>()
   .use(contextStorage())
   .use('*', async (c, next) => {
+    sentryLogger.info('Starting request', {
+      method: c.req.method,
+      path: c.req.path,
+      headers: Array.from(c.req.raw.headers.entries()),
+    });
     const auth = createAuth();
+    sentryLogger.info('Auth created');
     c.set('auth', auth);
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
+    sentryLogger.info('Session created', {
+      session,
+    });
     c.set('sessionUser', session?.user);
 
     if (c.req.header('Authorization') && !session?.user) {
@@ -524,12 +533,14 @@ const api = new Hono<HonoContext>()
 
     const autumn = new Autumn({ secretKey: env.AUTUMN_SECRET_KEY });
     c.set('autumn', autumn);
+    sentryLogger.info('Autumn created');
 
     await next();
 
     c.set('sessionUser', undefined);
     c.set('autumn', undefined as any);
     c.set('auth', undefined as any);
+    sentryLogger.info('Request completed');
   })
   .route('/ai', aiRouter)
   .route('/autumn', autumnApi)
@@ -546,13 +557,20 @@ const api = new Hono<HonoContext>()
       },
       allowMethodOverride: true,
       onError: (opts) => {
-        console.error('Error in TRPC handler:', opts.error);
+        sentryLogger.error('Error in TRPC handler:', {
+          error: opts.error,
+          path: opts.path,
+          input: opts.input,
+          ctx: opts.ctx,
+        });
       },
     }),
   )
   .onError(async (err, c) => {
     if (err instanceof Response) return err;
-    console.error('Error in Hono handler:', err);
+    sentryLogger.error('Error in Hono handler:', {
+      error: err,
+    });
     return c.json(
       {
         error: 'Internal Server Error',
@@ -595,13 +613,15 @@ const app = new Hono<HonoContext>()
     async (request, env, ctx) => {
       const authBearer = request.headers.get('Authorization');
       if (!authBearer) {
-        console.log('No auth provided');
+        sentryLogger.info('No auth provided');
         return new Response('Unauthorized', { status: 401 });
       }
       const auth = createAuth();
       const session = await auth.api.getMcpSession({ headers: request.headers });
       if (!session) {
-        console.log('Invalid auth provided', Array.from(request.headers.entries()));
+        sentryLogger.info('Invalid auth provided', {
+          headers: Array.from(request.headers.entries()),
+        });
         return new Response('Unauthorized', { status: 401 });
       }
       ctx.props = {
@@ -632,7 +652,9 @@ const app = new Hono<HonoContext>()
       const auth = createAuth();
       const session = await auth.api.getMcpSession({ headers: request.headers });
       if (!session) {
-        console.log('Invalid auth provided', Array.from(request.headers.entries()));
+        sentryLogger.info('Invalid auth provided', {
+          headers: Array.from(request.headers.entries()),
+        });
         return new Response('Unauthorized', { status: 401 });
       }
       ctx.props = {
@@ -682,7 +704,7 @@ const app = new Hono<HonoContext>()
 
       return c.json({}, { status: 200 });
     } catch (e) {
-      console.error('error tunneling to sentry', e);
+      sentryLogger.error('error tunneling to sentry', { error: e });
       return c.json({ error: 'error tunneling to sentry' }, { status: 500 });
     }
   })
@@ -694,12 +716,12 @@ const app = new Hono<HonoContext>()
       const body = await c.req.json<{ historyId: string }>();
       const subHeader = c.req.header('x-goog-pubsub-subscription-name');
       if (!subHeader) {
-        console.log('[GOOGLE] no subscription header', body);
+        sentryLogger.info('[GOOGLE] no subscription header', { body });
         return c.json({}, { status: 200 });
       }
       const isValid = await verifyToken(c.req.header('Authorization')!.split(' ')[1]);
       if (!isValid) {
-        console.log('[GOOGLE] invalid request', body);
+        sentryLogger.info('[GOOGLE] invalid request', { body });
         return c.json({}, { status: 200 });
       }
       try {
@@ -709,7 +731,8 @@ const app = new Hono<HonoContext>()
           subscriptionName: subHeader,
         });
       } catch (error) {
-        console.error('Error sending to thread queue', error, {
+        sentryLogger.error('Error sending to thread queue', {
+          error,
           providerId,
           historyId: body.historyId,
           subscriptionName: subHeader,
@@ -721,6 +744,9 @@ const app = new Hono<HonoContext>()
 export default withSentry(
   () => ({
     dsn: 'https://54d9ec6795f10e5c6d1c4851523d4888@o4509328786915328.ingest.us.sentry.io/4509753563938816',
+    integrations: [
+      consoleLoggingIntegration({ levels: ['log', 'error', 'warn', 'info', 'debug'] }),
+    ],
   }),
   {
     async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -729,7 +755,7 @@ export default withSentry(
     async queue(batch: MessageBatch<any>) {
       switch (true) {
         case batch.queue.startsWith('subscribe-queue'): {
-          console.log('batch', batch);
+          sentryLogger.info('batch', { batch });
           await Promise.all(
             batch.messages.map(async (msg: Message<ISubscribeBatch>) => {
               const connectionId = msg.body.connectionId;
@@ -737,14 +763,14 @@ export default withSentry(
               try {
                 await enableBrainFunction({ id: connectionId, providerId });
               } catch (error) {
-                console.error(
-                  `Failed to enable brain function for connection ${connectionId}:`,
+                sentryLogger.error('Failed to enable brain function for connection', {
+                  connectionId,
                   error,
-                );
+                });
               }
             }),
           );
-          console.log('[SUBSCRIBE_QUEUE] batch done');
+          sentryLogger.info('[SUBSCRIBE_QUEUE] batch done');
           return;
         }
         case batch.queue.startsWith('thread-queue'): {
@@ -761,9 +787,9 @@ export default withSentry(
                   historyId,
                   subscriptionName,
                 });
-                console.log('[THREAD_QUEUE] result', result);
+                sentryLogger.info('[THREAD_QUEUE] result', { result });
               } catch (error) {
-                console.error('Error running workflow', error);
+                sentryLogger.error('Error running workflow', { error });
               }
             }),
           );
@@ -772,14 +798,14 @@ export default withSentry(
       }
     },
     async scheduled() {
-      console.log('[SCHEDULED] Checking for expired subscriptions...');
+      sentryLogger.info('[SCHEDULED] Checking for expired subscriptions...');
       const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
       const allAccounts = await db.query.connection.findMany({
         where: (fields, { isNotNull, and }) =>
           and(isNotNull(fields.accessToken), isNotNull(fields.refreshToken)),
       });
       await conn.end();
-      console.log('[SCHEDULED] allAccounts', allAccounts.length);
+      sentryLogger.info('[SCHEDULED] allAccounts', { allAccounts: allAccounts.length });
       const now = new Date();
       const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
 
@@ -813,7 +839,10 @@ export default withSentry(
             unsnoozeMap[connectionId].threadIds.push(threadId);
             unsnoozeMap[connectionId].keyNames.push(key.name);
           } catch (error) {
-            console.error('Failed to prepare unsnooze for key', key.name, error);
+            sentryLogger.error('Failed to prepare unsnooze for key', {
+              keyName: key.name,
+              error,
+            });
           }
         }
       } while (cursor);
@@ -824,7 +853,11 @@ export default withSentry(
             const agent = await getZeroAgent(connectionId);
             await agent.queue('unsnoozeThreadsHandler', { connectionId, threadIds, keyNames });
           } catch (error) {
-            console.error('Failed to enqueue unsnooze tasks', { connectionId, threadIds, error });
+            sentryLogger.error('Failed to enqueue unsnooze tasks', {
+              connectionId,
+              threadIds,
+              error,
+            });
           }
         }),
       );
@@ -836,7 +869,9 @@ export default withSentry(
           if (lastSubscribed) {
             const subscriptionDate = new Date(lastSubscribed);
             if (subscriptionDate < fiveDaysAgo) {
-              console.log(`[SCHEDULED] Found expired Google subscription for connection: ${id}`);
+              sentryLogger.info(
+                `[SCHEDULED] Found expired Google subscription for connection: ${id}`,
+              );
               expiredSubscriptions.push({ connectionId: id, providerId: providerId as EProviders });
             }
           } else {
@@ -847,7 +882,7 @@ export default withSentry(
 
       // Send expired subscriptions to queue for renewal
       if (expiredSubscriptions.length > 0) {
-        console.log(
+        sentryLogger.info(
           `[SCHEDULED] Sending ${expiredSubscriptions.length} expired subscriptions to renewal queue`,
         );
         await Promise.all(
@@ -857,7 +892,7 @@ export default withSentry(
         );
       }
 
-      console.log(
+      sentryLogger.info(
         `[SCHEDULED] Processed ${allAccounts.keys.length} accounts, found ${expiredSubscriptions.length} expired subscriptions`,
       );
     },
