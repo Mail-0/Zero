@@ -134,6 +134,7 @@ export default function GeneralPage() {
       customPrompt: '',
       zeroSignature: true,
       defaultEmailAlias: '',
+      animations: true,
     },
   });
 
@@ -299,6 +300,23 @@ export default function GeneralPage() {
                     <FormLabel>{m['pages.settings.general.autoRead']()}</FormLabel>
                     <FormDescription>
                       {m['pages.settings.general.autoReadDescription']()}
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="animations"
+              render={({ field }) => (
+                <FormItem className="flex max-w-xl flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <FormLabel>Animations</FormLabel>
+                    <FormDescription>
+                      Enable smooth animations when switching between emails
                     </FormDescription>
                   </div>
                   <FormControl>

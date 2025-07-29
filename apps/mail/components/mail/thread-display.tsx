@@ -54,6 +54,7 @@ import { format } from 'date-fns';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
 import { AnimatePresence, motion } from 'motion/react';
+import { useAnimations } from '@/hooks/use-animations';
 
 const formatFileSize = (size: number) => {
   const sizeInMB = (size / (1024 * 1024)).toFixed(2);
@@ -171,8 +172,9 @@ export function ThreadDisplay() {
   const [isStarred, setIsStarred] = useState(false);
   const [isImportant, setIsImportant] = useState(false);
   
-  // Add navigation direction state for animations
   const [navigationDirection, setNavigationDirection] = useState<'previous' | 'next' | null>(null);
+  
+  const animationsEnabled = useAnimations();
 
   // Collect all attachments from all messages in the thread
   const allThreadAttachments = useMemo(() => {
@@ -208,7 +210,9 @@ export function ThreadDisplay() {
         setDraftId(null);
         setThreadId(prevThread.id);
         setFocusedIndex(focusedIndex - 1);
-        setNavigationDirection('previous');
+        if (animationsEnabled) {
+          setNavigationDirection('previous');
+        }
       }
     }
   }, [
@@ -220,7 +224,7 @@ export function ThreadDisplay() {
     setMode,
     setActiveReplyId,
     setDraftId,
-    setNavigationDirection,
+    animationsEnabled,
   ]);
 
   const handleNext = useCallback(() => {
@@ -236,7 +240,9 @@ export function ThreadDisplay() {
         setDraftId(null);
         setThreadId(nextThread.id);
         setFocusedIndex(focusedIndex + 1);
-        setNavigationDirection('next');
+        if (animationsEnabled) {
+          setNavigationDirection('next');
+        }
       }
     }
   }, [
@@ -248,7 +254,7 @@ export function ThreadDisplay() {
     setMode,
     setActiveReplyId,
     setDraftId,
-    setNavigationDirection,
+    animationsEnabled,
   ]);
 
   const handleUnsubscribeProcess = () => {
@@ -1000,70 +1006,107 @@ export function ThreadDisplay() {
               </div>
             </div>
             <div className={cn('flex min-h-0 flex-1 flex-col', isMobile && 'h-full')}>
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div
-                  key={id} // Key on threadId to trigger animations when switching emails
-                  initial={{
-                    opacity: 0,
-                    x: navigationDirection === 'previous' ? -15 : navigationDirection === 'next' ? 15 : 0,
-                  }}
-                  animate={{
-                    opacity: 1,
-                    x: 0,
-                  }}
-                  exit={{
-                    opacity: 0,
-                    x: navigationDirection === 'previous' ? 15 : navigationDirection === 'next' ? -15 : 0,
-                  }}
-                  transition={{
-                    duration: 0.08, 
-                    ease: [0.4, 0, 0.2, 1],
-                  }}
-                  onAnimationComplete={() => {
-                    // Reset navigation direction after animation completes
-                    setNavigationDirection(null);
-                  }}
-                  className="h-full w-full"
-                >
-                  <ScrollArea
-                    className={cn('flex-1', isMobile ? 'h-[calc(100%-1px)]' : 'h-full')}
-                    type="auto"
+              {animationsEnabled ? (
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={id} 
+                    initial={{
+                      opacity: 0,
+                      x: navigationDirection === 'previous' ? -15 : navigationDirection === 'next' ? 15 : 0,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      x: 0,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      x: navigationDirection === 'previous' ? 15 : navigationDirection === 'next' ? -15 : 0,
+                    }}
+                    transition={{
+                      duration: 0.08, 
+                      ease: [0.4, 0, 0.2, 1],
+                    }}
+                    onAnimationComplete={() => {
+                      setNavigationDirection(null);
+                    }}
+                    className="h-full w-full"
                   >
-                    <div className="pb-4">
-                      {(emailData.messages || []).map((message, index) => {
-                        const isLastMessage = index === emailData.messages.length - 1;
-                        const isReplyingToThisMessage = mode && activeReplyId === message.id;
+                    <ScrollArea
+                      className={cn('flex-1', isMobile ? 'h-[calc(100%-1px)]' : 'h-full')}
+                      type="auto"
+                    >
+                      <div className="pb-4">
+                        {(emailData.messages || []).map((message, index) => {
+                          const isLastMessage = index === emailData.messages.length - 1;
+                          const isReplyingToThisMessage = mode && activeReplyId === message.id;
 
-                        return (
-                          <div
-                            key={message.id}
-                            className={cn(
-                              'transition-all duration-200',
-                              index > 0 && 'border-border border-t',
-                            )}
-                          >
-                            <MailDisplay
-                              emailData={message}
-                              isFullscreen={isFullscreen}
-                              isMuted={false}
-                              isLoading={false}
-                              index={index}
-                              totalEmails={emailData?.totalReplies}
-                              threadAttachments={index === 0 ? allThreadAttachments : undefined}
-                            />
-                            {/* Inline Reply Compose for non-last messages */}
-                            {isReplyingToThisMessage && !isLastMessage && (
-                              <div className="px-4 py-2" id={`reply-composer-${message.id}`}>
-                                <ReplyCompose messageId={message.id} />
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </ScrollArea>
-                </motion.div>
-              </AnimatePresence>
+                          return (
+                            <div
+                              key={message.id}
+                              className={cn(
+                                'transition-all duration-200',
+                                index > 0 && 'border-border border-t',
+                              )}
+                            >
+                              <MailDisplay
+                                emailData={message}
+                                isFullscreen={isFullscreen}
+                                isMuted={false}
+                                isLoading={false}
+                                index={index}
+                                totalEmails={emailData?.totalReplies}
+                                threadAttachments={index === 0 ? allThreadAttachments : undefined}
+                              />
+                              {isReplyingToThisMessage && !isLastMessage && (
+                                <div className="px-4 py-2" id={`reply-composer-${message.id}`}>
+                                  <ReplyCompose messageId={message.id} />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </ScrollArea>
+                  </motion.div>
+                </AnimatePresence>
+              ) : (
+                <ScrollArea
+                  className={cn('flex-1', isMobile ? 'h-[calc(100%-1px)]' : 'h-full')}
+                  type="auto"
+                >
+                  <div className="pb-4">
+                    {(emailData.messages || []).map((message, index) => {
+                      const isLastMessage = index === emailData.messages.length - 1;
+                      const isReplyingToThisMessage = mode && activeReplyId === message.id;
+
+                      return (
+                        <div
+                          key={message.id}
+                          className={cn(
+                            'transition-all duration-200',
+                            index > 0 && 'border-border border-t',
+                          )}
+                        >
+                          <MailDisplay
+                            emailData={message}
+                            isFullscreen={isFullscreen}
+                            isMuted={false}
+                            isLoading={false}
+                            index={index}
+                            totalEmails={emailData?.totalReplies}
+                            threadAttachments={index === 0 ? allThreadAttachments : undefined}
+                          />
+                          {isReplyingToThisMessage && !isLastMessage && (
+                            <div className="px-4 py-2" id={`reply-composer-${message.id}`}>
+                              <ReplyCompose messageId={message.id} />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+              )}
 
               {/* Sticky Reply Compose at Bottom - Only for last message */}
               {mode &&
