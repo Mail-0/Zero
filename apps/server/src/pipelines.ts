@@ -13,7 +13,7 @@
  */
 import { createDefaultWorkflows } from './thread-workflow-utils/workflow-engine';
 import { getServiceAccount } from './lib/factories/google-subscription.factory';
-import { DurableObject, env } from 'cloudflare:workers';
+import { DurableObject } from 'cloudflare:workers';
 import { getZeroAgent } from './lib/server-utils';
 import { type gmail_v1 } from '@googleapis/gmail';
 import { Effect, Console, Logger } from 'effect';
@@ -153,7 +153,7 @@ export class WorkflowRunner extends DurableObject<Env> {
       }
 
       const previousHistoryId = yield* Effect.tryPromise({
-        try: () => env.gmail_history_id.get(connectionId),
+        try: () => this.env.gmail_history_id.get(connectionId),
         catch: () => ({
           _tag: 'WorkflowCreationFailed' as const,
           error: 'Failed to get history ID',
@@ -203,9 +203,13 @@ export class WorkflowRunner extends DurableObject<Env> {
       // Atomic lock acquisition to prevent race conditions
       const lockAcquired = yield* Effect.tryPromise({
         try: async () => {
-          const response = await env.gmail_processing_threads.put(historyProcessingKey, 'true', {
-            expirationTtl: 3600,
-          });
+          const response = await this.env.gmail_processing_threads.put(
+            historyProcessingKey,
+            'true',
+            {
+              expirationTtl: 3600,
+            },
+          );
           return response !== null; // null means key already existed
         },
         catch: (error) => ({ _tag: 'WorkflowCreationFailed' as const, error }),
@@ -228,7 +232,7 @@ export class WorkflowRunner extends DurableObject<Env> {
         historyProcessingKey,
       );
 
-      const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
+      const { db, conn } = createDb(this.env.HYPERDRIVE.connectionString);
 
       const foundConnection = yield* Effect.tryPromise({
         try: async () => {
@@ -278,7 +282,7 @@ export class WorkflowRunner extends DurableObject<Env> {
         yield* Effect.tryPromise({
           try: () => {
             console.log('[ZERO_WORKFLOW] Updating next history ID:', nextHistoryId);
-            return env.gmail_history_id.put(connectionId.toString(), nextHistoryId.toString());
+            return this.env.gmail_history_id.put(connectionId.toString(), nextHistoryId.toString());
           },
           catch: (error) => ({ _tag: 'WorkflowCreationFailed' as const, error }),
         });
@@ -472,7 +476,7 @@ export class WorkflowRunner extends DurableObject<Env> {
               '[ZERO_WORKFLOW] Clearing processing flag for history:',
               historyProcessingKey,
             );
-            return env.gmail_processing_threads.delete(historyProcessingKey);
+            return this.env.gmail_processing_threads.delete(historyProcessingKey);
           },
           catch: (error) => ({ _tag: 'WorkflowCreationFailed' as const, error }),
         }).pipe(Effect.orElse(() => Effect.succeed(null)));
@@ -496,7 +500,7 @@ export class WorkflowRunner extends DurableObject<Env> {
               '[ZERO_WORKFLOW] Clearing processing flag for history after error:',
               `history_${params.connectionId}__${params.historyId}`,
             );
-            return env.gmail_processing_threads.delete(
+            return this.env.gmail_processing_threads.delete(
               `history_${params.connectionId}__${params.historyId}`,
             );
           },
@@ -521,7 +525,7 @@ export class WorkflowRunner extends DurableObject<Env> {
 
       if (providerId === EProviders.google) {
         yield* Console.log('[THREAD_WORKFLOW] Processing Google provider workflow');
-        const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
+        const { db, conn } = createDb(this.env.HYPERDRIVE.connectionString);
 
         const foundConnection = yield* Effect.tryPromise({
           try: async () => {
@@ -577,7 +581,7 @@ export class WorkflowRunner extends DurableObject<Env> {
           thread,
           foundConnection,
           agent,
-          env,
+          env: this.env,
           results: new Map<string, any>(),
         };
 
@@ -642,7 +646,7 @@ export class WorkflowRunner extends DurableObject<Env> {
         yield* Effect.tryPromise({
           try: () => {
             console.log('[THREAD_WORKFLOW] Clearing processing flag for thread:', threadId);
-            return env.gmail_processing_threads.delete(threadId.toString());
+            return this.env.gmail_processing_threads.delete(threadId.toString());
           },
           catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
         }).pipe(Effect.orElse(() => Effect.succeed(null)));
@@ -666,7 +670,7 @@ export class WorkflowRunner extends DurableObject<Env> {
               '[THREAD_WORKFLOW] Clearing processing flag for thread after error:',
               params.threadId,
             );
-            return env.gmail_processing_threads.delete(params.threadId.toString());
+            return this.env.gmail_processing_threads.delete(params.threadId.toString());
           },
           catch: () => ({
             _tag: 'DatabaseError' as const,
