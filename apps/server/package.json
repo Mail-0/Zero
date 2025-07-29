@@ -38,6 +38,7 @@
     "@modelcontextprotocol/sdk": "1.15.1",
     "@react-email/components": "^0.0.41",
     "@react-email/render": "1.1.0",
+    "@sentry/cloudflare": "9.43.0",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
     "@tsndr/cloudflare-worker-jwt": "3.2.0",

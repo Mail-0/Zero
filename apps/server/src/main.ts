@@ -14,8 +14,8 @@ import {
   userSettings,
   writingStyleMatrix,
 } from './db/schema';
-import { env, WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
 import { EProviders, type ISubscribeBatch, type IThreadBatch } from './types';
+import { env, DurableObject, RpcTarget } from 'cloudflare:workers';
 import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
 import { getZeroDB, verifyToken } from './lib/server-utils';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
@@ -26,6 +26,7 @@ import { defaultUserSettings } from './lib/schemas';
 import { createLocalJWKSet, jwtVerify } from 'jose';
 import { getZeroAgent } from './lib/server-utils';
 import { enableBrainFunction } from './lib/brain';
+import { withSentry } from '@sentry/cloudflare';
 import { trpcServer } from '@hono/trpc-server';
 import { agentsMiddleware } from 'hono-agents';
 import { ZeroMCP } from './routes/agent/mcp';
@@ -39,7 +40,6 @@ import { aiRouter } from './routes/ai';
 import { Autumn } from 'autumn-js';
 import { appRouter } from './trpc';
 import { cors } from 'hono/cors';
-
 import { Hono } from 'hono';
 
 const SENTRY_HOST = 'o4509328786915328.ingest.us.sentry.io';
@@ -497,370 +497,371 @@ class ZeroDB extends DurableObject<Env> {
   }
 }
 
-export default class extends WorkerEntrypoint<typeof env> {
-  db: DB | undefined;
-  private api = new Hono<HonoContext>()
-    .use(contextStorage())
-    .use('*', async (c, next) => {
-      const auth = createAuth();
-      c.set('auth', auth);
-      const session = await auth.api.getSession({ headers: c.req.raw.headers });
-      c.set('sessionUser', session?.user);
+const api = new Hono<HonoContext>()
+  .use(contextStorage())
+  .use('*', async (c, next) => {
+    const auth = createAuth();
+    c.set('auth', auth);
+    const session = await auth.api.getSession({ headers: c.req.raw.headers });
+    c.set('sessionUser', session?.user);
 
-      if (c.req.header('Authorization') && !session?.user) {
-        const token = c.req.header('Authorization')?.split(' ')[1];
+    if (c.req.header('Authorization') && !session?.user) {
+      const token = c.req.header('Authorization')?.split(' ')[1];
 
-        if (token) {
-          const localJwks = await auth.api.getJwks();
-          const jwks = createLocalJWKSet(localJwks);
+      if (token) {
+        const localJwks = await auth.api.getJwks();
+        const jwks = createLocalJWKSet(localJwks);
 
-          const { payload } = await jwtVerify(token, jwks);
-          const userId = payload.sub;
+        const { payload } = await jwtVerify(token, jwks);
+        const userId = payload.sub;
 
-          if (userId) {
-            const db = await getZeroDB(userId);
-            c.set('sessionUser', await db.findUser());
-          }
+        if (userId) {
+          const db = await getZeroDB(userId);
+          c.set('sessionUser', await db.findUser());
         }
-      }
-
-      const autumn = new Autumn({ secretKey: env.AUTUMN_SECRET_KEY });
-      c.set('autumn', autumn);
-
-      await next();
-
-      c.set('sessionUser', undefined);
-      c.set('autumn', undefined as any);
-      c.set('auth', undefined as any);
-    })
-    .route('/ai', aiRouter)
-    .route('/autumn', autumnApi)
-    .route('/public', publicRouter)
-    .on(['GET', 'POST', 'OPTIONS'], '/auth/*', (c) => {
-      return c.var.auth.handler(c.req.raw);
-    })
-    .use(
-      trpcServer({
-        endpoint: '/api/trpc',
-        router: appRouter,
-        createContext: (_, c) => {
-          return { c, sessionUser: c.var['sessionUser'], db: c.var['db'] };
-        },
-        allowMethodOverride: true,
-        onError: (opts) => {
-          console.error('Error in TRPC handler:', opts.error);
-        },
-      }),
-    )
-    .onError(async (err, c) => {
-      if (err instanceof Response) return err;
-      console.error('Error in Hono handler:', err);
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: err instanceof Error ? err.message : 'Unknown error',
-        },
-        500,
-      );
-    });
-
-  private app = new Hono<HonoContext>()
-    .use(
-      '*',
-      cors({
-        origin: (origin) => {
-          if (!origin) return null;
-          let hostname: string;
-          try {
-            hostname = new URL(origin).hostname;
-          } catch {
-            return null;
-          }
-          const cookieDomain = env.COOKIE_DOMAIN;
-          if (!cookieDomain) return null;
-          if (hostname === cookieDomain || hostname.endsWith('.' + cookieDomain)) {
-            return origin;
-          }
-          return null;
-        },
-        credentials: true,
-        allowHeaders: ['Content-Type', 'Authorization'],
-        exposeHeaders: ['X-Zero-Redirect'],
-      }),
-    )
-    .get('.well-known/oauth-authorization-server', async (c) => {
-      const auth = createAuth();
-      return oAuthDiscoveryMetadata(auth)(c.req.raw);
-    })
-    .mount(
-      '/sse',
-      async (request, env, ctx) => {
-        const authBearer = request.headers.get('Authorization');
-        if (!authBearer) {
-          console.log('No auth provided');
-          return new Response('Unauthorized', { status: 401 });
-        }
-        const auth = createAuth();
-        const session = await auth.api.getMcpSession({ headers: request.headers });
-        if (!session) {
-          console.log('Invalid auth provided', Array.from(request.headers.entries()));
-          return new Response('Unauthorized', { status: 401 });
-        }
-        ctx.props = {
-          userId: session?.userId,
-        };
-        return ZeroMCP.serveSSE('/sse', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
-      },
-      { replaceRequest: false },
-    )
-    .mount(
-      '/mcp/thinking/sse',
-      async (request, env, ctx) => {
-        return ThinkingMCP.serveSSE('/mcp/thinking/sse', { binding: 'THINKING_MCP' }).fetch(
-          request,
-          env,
-          ctx,
-        );
-      },
-      { replaceRequest: false },
-    )
-    .mount(
-      '/mcp',
-      async (request, env, ctx) => {
-        const authBearer = request.headers.get('Authorization');
-        if (!authBearer) {
-          return new Response('Unauthorized', { status: 401 });
-        }
-        const auth = createAuth();
-        const session = await auth.api.getMcpSession({ headers: request.headers });
-        if (!session) {
-          console.log('Invalid auth provided', Array.from(request.headers.entries()));
-          return new Response('Unauthorized', { status: 401 });
-        }
-        ctx.props = {
-          userId: session?.userId,
-        };
-        return ZeroMCP.serve('/mcp', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
-      },
-      { replaceRequest: false },
-    )
-    .route('/api', this.api)
-    .use(
-      '*',
-      agentsMiddleware({
-        options: {
-          onBeforeConnect: (c) => {
-            if (!c.headers.get('Cookie')) {
-              return new Response('Unauthorized', { status: 401 });
-            }
-          },
-        },
-      }),
-    )
-    .get('/health', (c) => c.json({ message: 'Zero Server is Up!' }))
-    .get('/', (c) => c.redirect(`${env.VITE_PUBLIC_APP_URL}`))
-    .post('/monitoring/sentry', async (c) => {
-      try {
-        const envelopeBytes = await c.req.arrayBuffer();
-        const envelope = new TextDecoder().decode(envelopeBytes);
-        const piece = envelope.split('\n')[0];
-        const header = JSON.parse(piece);
-        const dsn = new URL(header['dsn']);
-        const project_id = dsn.pathname?.replace('/', '');
-
-        if (dsn.hostname !== SENTRY_HOST) {
-          throw new Error(`Invalid sentry hostname: ${dsn.hostname}`);
-        }
-
-        if (!project_id || !SENTRY_PROJECT_IDS.has(project_id)) {
-          throw new Error(`Invalid sentry project id: ${project_id}`);
-        }
-
-        const upstream_sentry_url = `https://${SENTRY_HOST}/api/${project_id}/envelope/`;
-        await fetch(upstream_sentry_url, {
-          method: 'POST',
-          body: envelopeBytes,
-        });
-
-        return c.json({}, { status: 200 });
-      } catch (e) {
-        console.error('error tunneling to sentry', e);
-        return c.json({ error: 'error tunneling to sentry' }, { status: 500 });
-      }
-    })
-    .post('/a8n/notify/:providerId', async (c) => {
-      if (!c.req.header('Authorization')) return c.json({ error: 'Unauthorized' }, { status: 401 });
-      if (env.DISABLE_WORKFLOWS === 'true') return c.json({ message: 'OK' }, { status: 200 });
-      const providerId = c.req.param('providerId');
-      if (providerId === EProviders.google) {
-        const body = await c.req.json<{ historyId: string }>();
-        const subHeader = c.req.header('x-goog-pubsub-subscription-name');
-        if (!subHeader) {
-          console.log('[GOOGLE] no subscription header', body);
-          return c.json({}, { status: 200 });
-        }
-        const isValid = await verifyToken(c.req.header('Authorization')!.split(' ')[1]);
-        if (!isValid) {
-          console.log('[GOOGLE] invalid request', body);
-          return c.json({}, { status: 200 });
-        }
-        try {
-          await env.thread_queue.send({
-            providerId,
-            historyId: body.historyId,
-            subscriptionName: subHeader,
-          });
-        } catch (error) {
-          console.error('Error sending to thread queue', error, {
-            providerId,
-            historyId: body.historyId,
-            subscriptionName: subHeader,
-          });
-        }
-        return c.json({ message: 'OK' }, { status: 200 });
-      }
-    });
-
-  async fetch(request: Request): Promise<Response> {
-    return this.app.fetch(request, this.env, this.ctx);
-  }
-
-  async queue(batch: MessageBatch<any>) {
-    switch (true) {
-      case batch.queue.startsWith('subscribe-queue'): {
-        console.log('batch', batch);
-        await Promise.all(
-          batch.messages.map(async (msg: Message<ISubscribeBatch>) => {
-            const connectionId = msg.body.connectionId;
-            const providerId = msg.body.providerId;
-            try {
-              await enableBrainFunction({ id: connectionId, providerId });
-            } catch (error) {
-              console.error(
-                `Failed to enable brain function for connection ${connectionId}:`,
-                error,
-              );
-            }
-          }),
-        );
-        console.log('[SUBSCRIBE_QUEUE] batch done');
-        return;
-      }
-      case batch.queue.startsWith('thread-queue'): {
-        await Promise.all(
-          batch.messages.map(async (msg: Message<IThreadBatch>) => {
-            const providerId = msg.body.providerId;
-            const historyId = msg.body.historyId;
-            const subscriptionName = msg.body.subscriptionName;
-
-            try {
-              const workflowRunner = env.WORKFLOW_RUNNER.get(env.WORKFLOW_RUNNER.newUniqueId());
-              const result = await workflowRunner.runMainWorkflow({
-                providerId,
-                historyId,
-                subscriptionName,
-              });
-              console.log('[THREAD_QUEUE] result', result);
-            } catch (error) {
-              console.error('Error running workflow', error);
-            }
-          }),
-        );
-        break;
       }
     }
-  }
 
-  async scheduled() {
-    console.log('[SCHEDULED] Checking for expired subscriptions...');
-    const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
-    const allAccounts = await db.query.connection.findMany({
-      where: (fields, { isNotNull, and }) =>
-        and(isNotNull(fields.accessToken), isNotNull(fields.refreshToken)),
-    });
-    await conn.end();
-    console.log('[SCHEDULED] allAccounts', allAccounts.length);
-    const now = new Date();
-    const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
+    const autumn = new Autumn({ secretKey: env.AUTUMN_SECRET_KEY });
+    c.set('autumn', autumn);
 
-    const expiredSubscriptions: Array<{ connectionId: string; providerId: EProviders }> = [];
+    await next();
 
-    const nowTs = Date.now();
+    c.set('sessionUser', undefined);
+    c.set('autumn', undefined as any);
+    c.set('auth', undefined as any);
+  })
+  .route('/ai', aiRouter)
+  .route('/autumn', autumnApi)
+  .route('/public', publicRouter)
+  .on(['GET', 'POST', 'OPTIONS'], '/auth/*', (c) => {
+    return c.var.auth.handler(c.req.raw);
+  })
+  .use(
+    trpcServer({
+      endpoint: '/api/trpc',
+      router: appRouter,
+      createContext: (_, c) => {
+        return { c, sessionUser: c.var['sessionUser'], db: c.var['db'] };
+      },
+      allowMethodOverride: true,
+      onError: (opts) => {
+        console.error('Error in TRPC handler:', opts.error);
+      },
+    }),
+  )
+  .onError(async (err, c) => {
+    if (err instanceof Response) return err;
+    console.error('Error in Hono handler:', err);
+    return c.json(
+      {
+        error: 'Internal Server Error',
+        message: err instanceof Error ? err.message : 'Unknown error',
+      },
+      500,
+    );
+  });
 
-    const unsnoozeMap: Record<string, { threadIds: string[]; keyNames: string[] }> = {};
-
-    let cursor: string | undefined = undefined;
-    do {
-      const listResp: {
-        keys: { name: string; metadata?: { wakeAt?: string } }[];
-        cursor?: string;
-      } = await env.snoozed_emails.list({ cursor, limit: 1000 });
-      cursor = listResp.cursor;
-
-      for (const key of listResp.keys) {
+const app = new Hono<HonoContext>()
+  .use(
+    '*',
+    cors({
+      origin: (origin) => {
+        if (!origin) return null;
+        let hostname: string;
         try {
-          const wakeAtIso = (key as any).metadata?.wakeAt as string | undefined;
-          if (!wakeAtIso) continue;
-          const wakeAt = new Date(wakeAtIso).getTime();
-          if (wakeAt > nowTs) continue;
-
-          const [threadId, connectionId] = key.name.split('__');
-          if (!threadId || !connectionId) continue;
-
-          if (!unsnoozeMap[connectionId]) {
-            unsnoozeMap[connectionId] = { threadIds: [], keyNames: [] };
+          hostname = new URL(origin).hostname;
+        } catch {
+          return null;
+        }
+        const cookieDomain = env.COOKIE_DOMAIN;
+        if (!cookieDomain) return null;
+        if (hostname === cookieDomain || hostname.endsWith('.' + cookieDomain)) {
+          return origin;
+        }
+        return null;
+      },
+      credentials: true,
+      allowHeaders: ['Content-Type', 'Authorization'],
+      exposeHeaders: ['X-Zero-Redirect'],
+    }),
+  )
+  .get('.well-known/oauth-authorization-server', async (c) => {
+    const auth = createAuth();
+    return oAuthDiscoveryMetadata(auth)(c.req.raw);
+  })
+  .mount(
+    '/sse',
+    async (request, env, ctx) => {
+      const authBearer = request.headers.get('Authorization');
+      if (!authBearer) {
+        console.log('No auth provided');
+        return new Response('Unauthorized', { status: 401 });
+      }
+      const auth = createAuth();
+      const session = await auth.api.getMcpSession({ headers: request.headers });
+      if (!session) {
+        console.log('Invalid auth provided', Array.from(request.headers.entries()));
+        return new Response('Unauthorized', { status: 401 });
+      }
+      ctx.props = {
+        userId: session?.userId,
+      };
+      return ZeroMCP.serveSSE('/sse', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
+    },
+    { replaceRequest: false },
+  )
+  .mount(
+    '/mcp/thinking/sse',
+    async (request, env, ctx) => {
+      return ThinkingMCP.serveSSE('/mcp/thinking/sse', { binding: 'THINKING_MCP' }).fetch(
+        request,
+        env,
+        ctx,
+      );
+    },
+    { replaceRequest: false },
+  )
+  .mount(
+    '/mcp',
+    async (request, env, ctx) => {
+      const authBearer = request.headers.get('Authorization');
+      if (!authBearer) {
+        return new Response('Unauthorized', { status: 401 });
+      }
+      const auth = createAuth();
+      const session = await auth.api.getMcpSession({ headers: request.headers });
+      if (!session) {
+        console.log('Invalid auth provided', Array.from(request.headers.entries()));
+        return new Response('Unauthorized', { status: 401 });
+      }
+      ctx.props = {
+        userId: session?.userId,
+      };
+      return ZeroMCP.serve('/mcp', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
+    },
+    { replaceRequest: false },
+  )
+  .route('/api', api)
+  .use(
+    '*',
+    agentsMiddleware({
+      options: {
+        onBeforeConnect: (c) => {
+          if (!c.headers.get('Cookie')) {
+            return new Response('Unauthorized', { status: 401 });
           }
-          unsnoozeMap[connectionId].threadIds.push(threadId);
-          unsnoozeMap[connectionId].keyNames.push(key.name);
-        } catch (error) {
-          console.error('Failed to prepare unsnooze for key', key.name, error);
+        },
+      },
+    }),
+  )
+  .get('/health', (c) => c.json({ message: 'Zero Server is Up!' }))
+  .get('/', (c) => c.redirect(`${env.VITE_PUBLIC_APP_URL}`))
+  .post('/monitoring/sentry', async (c) => {
+    try {
+      const envelopeBytes = await c.req.arrayBuffer();
+      const envelope = new TextDecoder().decode(envelopeBytes);
+      const piece = envelope.split('\n')[0];
+      const header = JSON.parse(piece);
+      const dsn = new URL(header['dsn']);
+      const project_id = dsn.pathname?.replace('/', '');
+
+      if (dsn.hostname !== SENTRY_HOST) {
+        throw new Error(`Invalid sentry hostname: ${dsn.hostname}`);
+      }
+
+      if (!project_id || !SENTRY_PROJECT_IDS.has(project_id)) {
+        throw new Error(`Invalid sentry project id: ${project_id}`);
+      }
+
+      const upstream_sentry_url = `https://${SENTRY_HOST}/api/${project_id}/envelope/`;
+      await fetch(upstream_sentry_url, {
+        method: 'POST',
+        body: envelopeBytes,
+      });
+
+      return c.json({}, { status: 200 });
+    } catch (e) {
+      console.error('error tunneling to sentry', e);
+      return c.json({ error: 'error tunneling to sentry' }, { status: 500 });
+    }
+  })
+  .post('/a8n/notify/:providerId', async (c) => {
+    if (!c.req.header('Authorization')) return c.json({ error: 'Unauthorized' }, { status: 401 });
+    if (env.DISABLE_WORKFLOWS === 'true') return c.json({ message: 'OK' }, { status: 200 });
+    const providerId = c.req.param('providerId');
+    if (providerId === EProviders.google) {
+      const body = await c.req.json<{ historyId: string }>();
+      const subHeader = c.req.header('x-goog-pubsub-subscription-name');
+      if (!subHeader) {
+        console.log('[GOOGLE] no subscription header', body);
+        return c.json({}, { status: 200 });
+      }
+      const isValid = await verifyToken(c.req.header('Authorization')!.split(' ')[1]);
+      if (!isValid) {
+        console.log('[GOOGLE] invalid request', body);
+        return c.json({}, { status: 200 });
+      }
+      try {
+        await env.thread_queue.send({
+          providerId,
+          historyId: body.historyId,
+          subscriptionName: subHeader,
+        });
+      } catch (error) {
+        console.error('Error sending to thread queue', error, {
+          providerId,
+          historyId: body.historyId,
+          subscriptionName: subHeader,
+        });
+      }
+      return c.json({ message: 'OK' }, { status: 200 });
+    }
+  });
+export default withSentry(
+  () => ({
+    dsn: 'https://54d9ec6795f10e5c6d1c4851523d4888@o4509328786915328.ingest.us.sentry.io/4509753563938816',
+  }),
+  {
+    async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+      return app.fetch(request, env, ctx);
+    },
+    async queue(batch: MessageBatch<any>) {
+      switch (true) {
+        case batch.queue.startsWith('subscribe-queue'): {
+          console.log('batch', batch);
+          await Promise.all(
+            batch.messages.map(async (msg: Message<ISubscribeBatch>) => {
+              const connectionId = msg.body.connectionId;
+              const providerId = msg.body.providerId;
+              try {
+                await enableBrainFunction({ id: connectionId, providerId });
+              } catch (error) {
+                console.error(
+                  `Failed to enable brain function for connection ${connectionId}:`,
+                  error,
+                );
+              }
+            }),
+          );
+          console.log('[SUBSCRIBE_QUEUE] batch done');
+          return;
+        }
+        case batch.queue.startsWith('thread-queue'): {
+          await Promise.all(
+            batch.messages.map(async (msg: Message<IThreadBatch>) => {
+              const providerId = msg.body.providerId;
+              const historyId = msg.body.historyId;
+              const subscriptionName = msg.body.subscriptionName;
+
+              try {
+                const workflowRunner = env.WORKFLOW_RUNNER.get(env.WORKFLOW_RUNNER.newUniqueId());
+                const result = await workflowRunner.runMainWorkflow({
+                  providerId,
+                  historyId,
+                  subscriptionName,
+                });
+                console.log('[THREAD_QUEUE] result', result);
+              } catch (error) {
+                console.error('Error running workflow', error);
+              }
+            }),
+          );
+          break;
         }
       }
-    } while (cursor);
+    },
+    async scheduled() {
+      console.log('[SCHEDULED] Checking for expired subscriptions...');
+      const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
+      const allAccounts = await db.query.connection.findMany({
+        where: (fields, { isNotNull, and }) =>
+          and(isNotNull(fields.accessToken), isNotNull(fields.refreshToken)),
+      });
+      await conn.end();
+      console.log('[SCHEDULED] allAccounts', allAccounts.length);
+      const now = new Date();
+      const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
 
-    await Promise.all(
-      Object.entries(unsnoozeMap).map(async ([connectionId, { threadIds, keyNames }]) => {
-        try {
-          const agent = await getZeroAgent(connectionId);
-          await agent.queue('unsnoozeThreadsHandler', { connectionId, threadIds, keyNames });
-        } catch (error) {
-          console.error('Failed to enqueue unsnooze tasks', { connectionId, threadIds, error });
-        }
-      }),
-    );
+      const expiredSubscriptions: Array<{ connectionId: string; providerId: EProviders }> = [];
 
-    await Promise.all(
-      allAccounts.map(async ({ id, providerId }) => {
-        const lastSubscribed = await env.gmail_sub_age.get(`${id}__${providerId}`);
+      const nowTs = Date.now();
 
-        if (lastSubscribed) {
-          const subscriptionDate = new Date(lastSubscribed);
-          if (subscriptionDate < fiveDaysAgo) {
-            console.log(`[SCHEDULED] Found expired Google subscription for connection: ${id}`);
-            expiredSubscriptions.push({ connectionId: id, providerId: providerId as EProviders });
+      const unsnoozeMap: Record<string, { threadIds: string[]; keyNames: string[] }> = {};
+
+      let cursor: string | undefined = undefined;
+      do {
+        const listResp: {
+          keys: { name: string; metadata?: { wakeAt?: string } }[];
+          cursor?: string;
+        } = await env.snoozed_emails.list({ cursor, limit: 1000 });
+        cursor = listResp.cursor;
+
+        for (const key of listResp.keys) {
+          try {
+            const wakeAtIso = (key as any).metadata?.wakeAt as string | undefined;
+            if (!wakeAtIso) continue;
+            const wakeAt = new Date(wakeAtIso).getTime();
+            if (wakeAt > nowTs) continue;
+
+            const [threadId, connectionId] = key.name.split('__');
+            if (!threadId || !connectionId) continue;
+
+            if (!unsnoozeMap[connectionId]) {
+              unsnoozeMap[connectionId] = { threadIds: [], keyNames: [] };
+            }
+            unsnoozeMap[connectionId].threadIds.push(threadId);
+            unsnoozeMap[connectionId].keyNames.push(key.name);
+          } catch (error) {
+            console.error('Failed to prepare unsnooze for key', key.name, error);
           }
-        } else {
-          expiredSubscriptions.push({ connectionId: id, providerId: providerId as EProviders });
         }
-      }),
-    );
+      } while (cursor);
 
-    // Send expired subscriptions to queue for renewal
-    if (expiredSubscriptions.length > 0) {
-      console.log(
-        `[SCHEDULED] Sending ${expiredSubscriptions.length} expired subscriptions to renewal queue`,
-      );
       await Promise.all(
-        expiredSubscriptions.map(async ({ connectionId, providerId }) => {
-          await env.subscribe_queue.send({ connectionId, providerId });
+        Object.entries(unsnoozeMap).map(async ([connectionId, { threadIds, keyNames }]) => {
+          try {
+            const agent = await getZeroAgent(connectionId);
+            await agent.queue('unsnoozeThreadsHandler', { connectionId, threadIds, keyNames });
+          } catch (error) {
+            console.error('Failed to enqueue unsnooze tasks', { connectionId, threadIds, error });
+          }
         }),
       );
-    }
 
-    console.log(
-      `[SCHEDULED] Processed ${allAccounts.keys.length} accounts, found ${expiredSubscriptions.length} expired subscriptions`,
-    );
-  }
-}
+      await Promise.all(
+        allAccounts.map(async ({ id, providerId }) => {
+          const lastSubscribed = await env.gmail_sub_age.get(`${id}__${providerId}`);
+
+          if (lastSubscribed) {
+            const subscriptionDate = new Date(lastSubscribed);
+            if (subscriptionDate < fiveDaysAgo) {
+              console.log(`[SCHEDULED] Found expired Google subscription for connection: ${id}`);
+              expiredSubscriptions.push({ connectionId: id, providerId: providerId as EProviders });
+            }
+          } else {
+            expiredSubscriptions.push({ connectionId: id, providerId: providerId as EProviders });
+          }
+        }),
+      );
+
+      // Send expired subscriptions to queue for renewal
+      if (expiredSubscriptions.length > 0) {
+        console.log(
+          `[SCHEDULED] Sending ${expiredSubscriptions.length} expired subscriptions to renewal queue`,
+        );
+        await Promise.all(
+          expiredSubscriptions.map(async ({ connectionId, providerId }) => {
+            await env.subscribe_queue.send({ connectionId, providerId });
+          }),
+        );
+      }
+
+      console.log(
+        `[SCHEDULED] Processed ${allAccounts.keys.length} accounts, found ${expiredSubscriptions.length} expired subscriptions`,
+      );
+    },
+  } satisfies ExportedHandler<Env>,
+);
 
 export { ZeroAgent, ZeroMCP, ZeroDB, ZeroDriver, ThinkingMCP, WorkflowRunner };
