@@ -441,7 +441,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
       threadLabels: context.thread.labels,
     });
 
-    const labelsResponse: any = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
+    const labelsResponse = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
       messages: [
         { role: 'system', content: ThreadLabels(userLabels, context.thread.labels) },
         { role: 'user', content: summaryResult.summary },
