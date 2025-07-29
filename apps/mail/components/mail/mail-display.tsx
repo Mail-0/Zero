@@ -55,6 +55,7 @@ import { useQueryState } from 'nuqs';
 import { Badge } from '../ui/badge';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { motion } from 'motion/react';
 
 // HTML escaping function to prevent XSS attacks
 function escapeHtml(text: string): string {
@@ -1257,16 +1258,26 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
           <div className={cn('px-4', index === 0 && 'border-b py-4')}>
             {index === 0 && (
               <>
-                <span className="inline-flex items-center gap-2 font-medium text-black dark:text-white">
+                <motion.span
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                  className="inline-flex items-center gap-2 font-medium text-black dark:text-white"
+                >
                   <span>
                     {emailData.subject}{' '}
                     <span className="text-muted-foreground dark:text-[#8C8C8C]">
                       {totalEmails && totalEmails > 1 && `[${totalEmails}]`}
                     </span>
                   </span>
-                </span>
+                </motion.span>
 
-                <div className="mt-2 flex items-center gap-2">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
+                  className="mt-2 flex items-center gap-2"
+                >
                   {emailData?.tags?.length ? (
                     <MailDisplayLabels labels={emailData?.tags.map((t) => t.name) || []} />
                   ) : null}
@@ -1312,11 +1323,17 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                       return null;
                     })()}
                   </div>
-                </div>
-                <AiSummary />
-                {threadAttachments && threadAttachments.length > 0 && (
-                  <ThreadAttachments attachments={threadAttachments} />
-                )}
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
+                >
+                  <AiSummary />
+                  {threadAttachments && threadAttachments.length > 0 && (
+                    <ThreadAttachments attachments={threadAttachments} />
+                  )}
+                </motion.div>
               </>
             )}
           </div>
@@ -1324,7 +1341,12 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
             className="flex cursor-pointer flex-col pb-2 transition-all duration-200"
             onClick={toggleCollapse}
           >
-            <div className="mt-3 flex w-full items-start justify-between gap-4 px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="mt-3 flex w-full items-start justify-between gap-4 px-4"
+            >
               <div className="flex w-full justify-center gap-4">
                 <BimiAvatar
                   email={emailData?.sender?.email}
@@ -1335,7 +1357,12 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                 <div className="flex w-full items-center justify-between">
                   <div className="flex w-full items-center justify-start">
                     <div className="flex w-full flex-col">
-                      <div className="flex w-full items-center justify-between">
+                      <motion.div
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, delay: 0.05 }}
+                        className="flex w-full items-center justify-between"
+                      >
                         <div className="flex items-center gap-1">
                           <span
                             onClick={(e) => {
@@ -1480,7 +1507,12 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                           </Popover>
                         </div>
 
-                        <div className="flex items-center justify-center">
+                        <motion.div
+                          initial={{ opacity: 0, x: 10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.3, delay: 0.1 }}
+                          className="flex items-center justify-center"
+                        >
                           <div className="text-muted-foreground mr-2 flex flex-col !flex-nowrap items-end text-sm font-medium dark:text-[#8C8C8C]">
                             <time className="whitespace-nowrap">
                               {emailData?.receivedOn ? formatDate(emailData.receivedOn) : ''}
@@ -1539,9 +1571,14 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                               )}
                             </DropdownMenuContent>
                           </DropdownMenu>
-                        </div>
-                      </div>
-                      <div className="flex justify-between">
+                        </motion.div>
+                      </motion.div>
+                      <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: 0.15 }}
+                        className="flex justify-between"
+                      >
                         <div className="flex gap-1">
                           <p className="text-muted-foreground text-sm font-medium dark:text-[#8C8C8C]">
                             {m['common.mailDisplay.to']()}:{' '}
@@ -1590,7 +1627,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                             </p>
                           )}
                         </div>
-                      </div>
+                      </motion.div>
                     </div>
 
                     {/* Pending, needs a storage to make the unsubscribe status consitent */}
@@ -1639,7 +1676,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
 
           <div
@@ -1660,15 +1697,26 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
               <div className="h-fit w-full p-0">
                 {/* mail main body */}
                 {emailData?.decodedBody ? (
-                  <MailContent
-                    id={emailData.id}
-                    html={emailData?.decodedBody}
-                    senderEmail={emailData.sender.email}
-                  />
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.1 }}
+                  >
+                    <MailContent
+                      id={emailData.id}
+                      html={emailData?.decodedBody}
+                      senderEmail={emailData.sender.email}
+                    />
+                  </motion.div>
                 ) : null}
                 {/* mail attachments */}
                 {messageAttachments && messageAttachments.length > 0 ? (
-                  <div className="mb-4 flex flex-wrap items-center gap-2 px-4 pt-4">
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.2 }}
+                    className="mb-4 flex flex-wrap items-center gap-2 px-4 pt-4"
+                  >
                     {messageAttachments.map((attachment) => (
                       <div
                         key={`${attachment.filename}-${attachment.attachmentId}`}
@@ -1697,9 +1745,14 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                         )}
                       </div>
                     ))}
-                  </div>
+                  </motion.div>
                 ) : null}
-                <div className="my-2.5 flex gap-2 px-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.3 }}
+                  className="my-2.5 flex gap-2 px-4"
+                >
                   <ActionButton
                     onClick={(e) => {
                       e.stopPropagation();
@@ -1733,7 +1786,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                     text={m['common.mail.forward']()}
                     shortcut={isLastEmail ? 'f' : undefined}
                   />
-                </div>
+                </motion.div>
               </div>
             </div>
           </div>
