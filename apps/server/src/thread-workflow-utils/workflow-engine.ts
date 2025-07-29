@@ -58,7 +58,7 @@ export class WorkflowEngine {
       }
 
       try {
-        const shouldExecute = step.condition ? await step.condition(context) : true;
+        const shouldExecute = step.condition ? await step.condition({ ...context, results }) : true;
         if (!shouldExecute) {
           console.log(`[WORKFLOW_ENGINE] Condition not met for step: ${step.name}`);
           continue;
