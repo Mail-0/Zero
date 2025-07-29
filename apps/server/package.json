@@ -49,6 +49,7 @@
     "base64-js": "1.5.1",
     "better-auth": "catalog:",
     "cheerio": "1.1.0",
+    "cloudflare": "4.5.0",
     "date-fns": "^4.1.0",
     "dedent": "^1.6.0",
     "drizzle-orm": "catalog:",

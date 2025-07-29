@@ -9,6 +9,7 @@ import { EPrompts, defaultLabels, type ParsedMessage } from '../types';
 import { getPrompt, getEmbeddingVector } from '../pipelines.effect';
 import { messageToXML, threadToXML } from './workflow-utils';
 import type { WorkflowContext } from './workflow-engine';
+import { bulkDeleteKeys } from '../lib/bulk-delete';
 import { getZeroAgent } from '../lib/server-utils';
 import { getPromptName } from '../pipelines';
 import { env } from 'cloudflare:workers';
@@ -299,10 +300,12 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
 
   cleanupWorkflowExecution: async (context) => {
     const workflowKey = `workflow_${context.threadId}`;
-    await env.gmail_processing_threads.delete(workflowKey);
+    const result = await bulkDeleteKeys([workflowKey]);
     console.log(
       '[WORKFLOW_FUNCTIONS] Cleaned up workflow execution tracking for thread:',
       context.threadId,
+      'Result:',
+      result,
     );
     return { cleaned: true };
   },

@@ -14,6 +14,7 @@
 import { createDefaultWorkflows } from './thread-workflow-utils/workflow-engine';
 import { getServiceAccount } from './lib/factories/google-subscription.factory';
 import { DurableObject } from 'cloudflare:workers';
+import { bulkDeleteKeys } from './lib/bulk-delete';
 import { getZeroAgent } from './lib/server-utils';
 import { type gmail_v1 } from '@googleapis/gmail';
 import { Effect, Console, Logger } from 'effect';
@@ -199,6 +200,7 @@ export class WorkflowRunner extends DurableObject<Env> {
       const { connectionId, historyId, nextHistoryId } = params;
 
       const historyProcessingKey = `history_${connectionId}__${historyId}`;
+      const keysToDelete: string[] = [];
 
       // Atomic lock acquisition to prevent race conditions
       const lockAcquired = yield* Effect.tryPromise({
@@ -289,6 +291,8 @@ export class WorkflowRunner extends DurableObject<Env> {
 
         if (!history.length) {
           yield* Console.log('[ZERO_WORKFLOW] No history found, skipping');
+          // Add the history processing key to cleanup list
+          keysToDelete.push(historyProcessingKey);
           return 'No history found';
         }
 
@@ -469,17 +473,23 @@ export class WorkflowRunner extends DurableObject<Env> {
           yield* Console.log('[ZERO_WORKFLOW] No threads with label changes to process');
         }
 
-        // Clean up processing flag
-        yield* Effect.tryPromise({
-          try: () => {
-            console.log(
-              '[ZERO_WORKFLOW] Clearing processing flag for history:',
-              historyProcessingKey,
-            );
-            return this.env.gmail_processing_threads.delete(historyProcessingKey);
-          },
-          catch: (error) => ({ _tag: 'WorkflowCreationFailed' as const, error }),
-        }).pipe(Effect.orElse(() => Effect.succeed(null)));
+        // Add history processing key to cleanup list
+        keysToDelete.push(historyProcessingKey);
+
+        // Bulk delete all collected keys
+        if (keysToDelete.length > 0) {
+          yield* Effect.tryPromise({
+            try: async () => {
+              console.log('[ZERO_WORKFLOW] Bulk deleting keys:', keysToDelete);
+              const result = await bulkDeleteKeys(keysToDelete);
+              console.log('[ZERO_WORKFLOW] Bulk delete result:', result);
+              return result;
+            },
+            catch: (error) => ({ _tag: 'WorkflowCreationFailed' as const, error }),
+          }).pipe(
+            Effect.orElse(() => Effect.succeed({ successful: 0, failed: keysToDelete.length })),
+          );
+        }
 
         yield* Console.log('[ZERO_WORKFLOW] Processing complete');
         return 'Zero workflow completed successfully';
@@ -493,23 +503,24 @@ export class WorkflowRunner extends DurableObject<Env> {
     }).pipe(
       Effect.tapError((error) => Console.log('[ZERO_WORKFLOW] Error in workflow:', error)),
       Effect.catchAll((error) => {
-        // Clean up processing flag on error
+        // Clean up processing flag on error using bulk delete
         return Effect.tryPromise({
-          try: () => {
+          try: async () => {
+            const errorCleanupKey = `history_${params.connectionId}__${params.historyId}`;
             console.log(
               '[ZERO_WORKFLOW] Clearing processing flag for history after error:',
-              `history_${params.connectionId}__${params.historyId}`,
+              errorCleanupKey,
             );
-            return this.env.gmail_processing_threads.delete(
-              `history_${params.connectionId}__${params.historyId}`,
-            );
+            const result = await bulkDeleteKeys([errorCleanupKey]);
+            console.log('[ZERO_WORKFLOW] Error cleanup result:', result);
+            return result;
           },
           catch: () => ({
             _tag: 'WorkflowCreationFailed' as const,
             error: 'Failed to cleanup processing flag',
           }),
         }).pipe(
-          Effect.orElse(() => Effect.succeed(null)),
+          Effect.orElse(() => Effect.succeed({ successful: 0, failed: 1 })),
           Effect.flatMap(() => Effect.fail(error)),
         );
       }),
@@ -522,6 +533,7 @@ export class WorkflowRunner extends DurableObject<Env> {
     return Effect.gen(this, function* () {
       yield* Console.log('[THREAD_WORKFLOW] Starting workflow with payload:', params);
       const { connectionId, threadId, providerId } = params;
+      const keysToDelete: string[] = [];
 
       if (providerId === EProviders.google) {
         yield* Console.log('[THREAD_WORKFLOW] Processing Google provider workflow');
@@ -568,6 +580,8 @@ export class WorkflowRunner extends DurableObject<Env> {
 
         if (!thread.messages || thread.messages.length === 0) {
           yield* Console.log('[THREAD_WORKFLOW] Thread has no messages, skipping processing');
+          // Add thread processing key to cleanup list
+          keysToDelete.push(threadId.toString());
           return 'Thread has no messages';
         }
 
@@ -642,14 +656,23 @@ export class WorkflowRunner extends DurableObject<Env> {
           });
         }
 
-        // Clean up thread processing flag
-        yield* Effect.tryPromise({
-          try: () => {
-            console.log('[THREAD_WORKFLOW] Clearing processing flag for thread:', threadId);
-            return this.env.gmail_processing_threads.delete(threadId.toString());
-          },
-          catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
-        }).pipe(Effect.orElse(() => Effect.succeed(null)));
+        // Add thread processing key to cleanup list
+        keysToDelete.push(threadId.toString());
+
+        // Bulk delete all collected keys
+        if (keysToDelete.length > 0) {
+          yield* Effect.tryPromise({
+            try: async () => {
+              console.log('[THREAD_WORKFLOW] Bulk deleting keys:', keysToDelete);
+              const result = await bulkDeleteKeys(keysToDelete);
+              console.log('[THREAD_WORKFLOW] Bulk delete result:', result);
+              return result;
+            },
+            catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
+          }).pipe(
+            Effect.orElse(() => Effect.succeed({ successful: 0, failed: keysToDelete.length })),
+          );
+        }
 
         yield* Console.log('[THREAD_WORKFLOW] Thread processing complete');
         return 'Thread workflow completed successfully';
@@ -663,21 +686,23 @@ export class WorkflowRunner extends DurableObject<Env> {
     }).pipe(
       Effect.tapError((error) => Console.log('[THREAD_WORKFLOW] Error in workflow:', error)),
       Effect.catchAll((error) => {
-        // Clean up thread processing flag on error
+        // Clean up thread processing flag on error using bulk delete
         return Effect.tryPromise({
-          try: () => {
+          try: async () => {
             console.log(
               '[THREAD_WORKFLOW] Clearing processing flag for thread after error:',
               params.threadId,
             );
-            return this.env.gmail_processing_threads.delete(params.threadId.toString());
+            const result = await bulkDeleteKeys([params.threadId.toString()]);
+            console.log('[THREAD_WORKFLOW] Error cleanup result:', result);
+            return result;
           },
           catch: () => ({
             _tag: 'DatabaseError' as const,
             error: 'Failed to cleanup thread processing flag',
           }),
         }).pipe(
-          Effect.orElse(() => Effect.succeed(null)),
+          Effect.orElse(() => Effect.succeed({ successful: 0, failed: 1 })),
           Effect.flatMap(() => Effect.fail(error)),
         );
       }),
