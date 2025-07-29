@@ -18,7 +18,7 @@ export type WorkflowFunction = (context: WorkflowContext) => Promise<any>;
 
 export const workflowFunctions: Record<string, WorkflowFunction> = {
   shouldGenerateDraft: async (context) => {
-    return shouldGenerateDraft(context.thread, context.foundConnection);
+    return await shouldGenerateDraft(context.thread, context.foundConnection);
   },
 
   checkWorkflowExecution: async (context) => {
@@ -80,6 +80,11 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
 
   generateAutomaticDraft: async (context) => {
     console.log('[WORKFLOW_FUNCTIONS] Generating automatic draft for thread:', context.threadId);
+    console.log('[WORKFLOW_FUNCTIONS] Thread has', context.thread.messages.length, 'messages');
+    console.log(
+      '[WORKFLOW_FUNCTIONS] Latest message from:',
+      context.thread.messages[context.thread.messages.length - 1]?.sender?.email,
+    );
 
     const draftContent = await generateAutomaticDraft(
       context.connectionId,

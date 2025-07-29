@@ -1,12 +1,13 @@
 import type { IGetThreadResponse } from '../lib/driver/types';
 import { composeEmail } from '../trpc/routes/ai/compose';
+import { getZeroAgent } from '../lib/server-utils';
 import { type ParsedMessage } from '../types';
 import { connection } from '../db/schema';
 
-const shouldGenerateDraft = (
+const shouldGenerateDraft = async (
   thread: IGetThreadResponse,
   foundConnection: typeof connection.$inferSelect,
-): boolean => {
+): Promise<boolean> => {
   if (!thread.messages || thread.messages.length === 0) return false;
 
   const latestMessage = thread.messages[thread.messages.length - 1];
@@ -35,6 +36,29 @@ const shouldGenerateDraft = (
     if (messageDate < sevenDaysAgo) {
       return false;
     }
+  }
+
+  try {
+    const agent = await getZeroAgent(foundConnection.id);
+
+    const threadId = thread.messages[0]?.threadId;
+    if (!threadId) {
+      console.log('[SHOULD_GENERATE_DRAFT] No thread ID found, skipping draft check');
+      return true;
+    }
+
+    const draftsResponse: any = await agent.listDrafts({ maxResults: 100 });
+
+    const hasDraftForThread = draftsResponse.threads.some((draft: any) => {
+      return draft.id === threadId;
+    });
+
+    if (hasDraftForThread) {
+      console.log(`[SHOULD_GENERATE_DRAFT] Draft already exists for thread ${threadId}, skipping`);
+      return false;
+    }
+  } catch (error) {
+    console.error('[SHOULD_GENERATE_DRAFT] Error checking for existing drafts:', error);
   }
 
   return true;

@@ -115,7 +115,7 @@ export const createDefaultWorkflows = (): WorkflowEngine => {
           if (executionCheck?.alreadyExecuted) {
             return false;
           }
-          return shouldGenerateDraft(context.thread, context.foundConnection);
+          return await shouldGenerateDraft(context.thread, context.foundConnection);
         },
         action: async (context) => {
           console.log('[WORKFLOW_ENGINE] Thread eligible for draft generation', {
