@@ -38,6 +38,7 @@ import { m } from '@/paraglide/messages';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import * as z from 'zod';
+import { useCallback } from 'react';
 
 const TimezoneSelect = memo(
   ({ field }: { field: ControllerRenderProps<z.infer<typeof userSettingsSchema>, 'timezone'> }) => {
@@ -134,7 +135,7 @@ export default function GeneralPage() {
       customPrompt: '',
       zeroSignature: true,
       defaultEmailAlias: '',
-      animations: true,
+      animations: false,
     },
   });
 
@@ -178,6 +179,20 @@ export default function GeneralPage() {
       setIsSaving(false);
     }
   }
+
+  const renderAnimationsField = useCallback(({ field }: { field: any }) => (
+    <FormItem className="flex max-w-xl flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+      <div className="space-y-0.5">
+        <FormLabel>{m['pages.settings.general.animations']()}</FormLabel>
+        <FormDescription>
+          {m['pages.settings.general.animationsDescription']()}
+        </FormDescription>
+      </div>
+      <FormControl>
+        <Switch checked={field.value} onCheckedChange={field.onChange} />
+      </FormControl>
+    </FormItem>
+  ), []);
 
   return (
     <div className="grid gap-6">
@@ -311,19 +326,7 @@ export default function GeneralPage() {
             <FormField
               control={form.control}
               name="animations"
-              render={({ field }) => (
-                <FormItem className="flex max-w-xl flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                  <div className="space-y-0.5">
-                    <FormLabel>Animations</FormLabel>
-                    <FormDescription>
-                      Enable smooth animations when switching between emails
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
-                </FormItem>
-              )}
+              render={renderAnimationsField}
             />
           </form>
         </Form>
