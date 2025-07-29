@@ -737,7 +737,7 @@ export const MailList = memo(
         isKeyPressed('Shift') || isKeyPressed('ShiftLeft') || isKeyPressed('ShiftRight');
       const isCtrlPressed = isKeyPressed('Control') || isKeyPressed('Meta');
 
-      if (isCtrlPressed && isShiftPressed) {
+      if (isShiftPressed && !isCtrlPressed) {
         return 'range';
       }
       if (isCtrlPressed) {
