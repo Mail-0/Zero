@@ -61,13 +61,13 @@ export class WorkflowEngine {
         const shouldExecute = step.condition ? await step.condition({ ...context, results }) : true;
         if (!shouldExecute) {
           console.log(`[WORKFLOW_ENGINE] Condition not met for step: ${step.name}`);
-          continue;
+          break;
         }
 
         console.log(`[WORKFLOW_ENGINE] Executing step: ${step.name}`);
         const result = await step.action({ ...context, results });
         results.set(step.id, result);
-        console.log(`[WORKFLOW_ENGINE] Completed step: ${step.name}`);
+        console.log(`[WORKFLOW_ENGINE] Completed step: ${step.name}`, result);
       } catch (error) {
         const errorObj = error instanceof Error ? error : new Error(String(error));
         console.error(`[WORKFLOW_ENGINE] Error in step ${step.name}:`, errorObj);
@@ -99,30 +99,22 @@ export const createDefaultWorkflows = (): WorkflowEngine => {
     description: 'Automatically generates drafts for threads that require responses',
     steps: [
       {
-        id: 'check-workflow-execution',
-        name: 'Check Workflow Execution',
-        description: 'Checks if this workflow has already been executed for this thread',
-        enabled: true,
-        action: workflowFunctions.checkWorkflowExecution,
-      },
-      {
         id: 'check-draft-eligibility',
         name: 'Check Draft Eligibility',
         description: 'Determines if a draft should be generated for this thread',
         enabled: true,
+        errorHandling: 'fail',
         condition: async (context) => {
-          const executionCheck = context.results?.get('check-workflow-execution');
-          if (executionCheck?.alreadyExecuted) {
-            return false;
-          }
-          return await shouldGenerateDraft(context.thread, context.foundConnection);
-        },
-        action: async (context) => {
-          console.log('[WORKFLOW_ENGINE] Thread eligible for draft generation', {
+          const shouldGenerate = await shouldGenerateDraft(context.thread, context.foundConnection);
+          console.log('[WORKFLOW_ENGINE] Draft eligibility check', {
             threadId: context.threadId,
             connectionId: context.connectionId,
+            shouldGenerate,
           });
-          return { eligible: true };
+          return shouldGenerate;
+        },
+        action: async (context) => {
+          return context;
         },
       },
       {
@@ -171,21 +163,10 @@ export const createDefaultWorkflows = (): WorkflowEngine => {
     description: 'Vectorizes thread messages for search and analysis',
     steps: [
       {
-        id: 'check-workflow-execution',
-        name: 'Check Workflow Execution',
-        description: 'Checks if this workflow has already been executed for this thread',
-        enabled: true,
-        action: workflowFunctions.checkWorkflowExecution,
-      },
-      {
         id: 'find-messages-to-vectorize',
         name: 'Find Messages to Vectorize',
         description: 'Identifies messages that need vectorization',
         enabled: true,
-        condition: async (context) => {
-          const executionCheck = context.results?.get('check-workflow-execution');
-          return !executionCheck?.alreadyExecuted;
-        },
         action: workflowFunctions.findMessagesToVectorize,
       },
       {
@@ -219,21 +200,10 @@ export const createDefaultWorkflows = (): WorkflowEngine => {
     description: 'Generates and stores thread summaries',
     steps: [
       {
-        id: 'check-workflow-execution',
-        name: 'Check Workflow Execution',
-        description: 'Checks if this workflow has already been executed for this thread',
-        enabled: true,
-        action: workflowFunctions.checkWorkflowExecution,
-      },
-      {
         id: 'check-existing-summary',
         name: 'Check Existing Summary',
         description: 'Checks if a thread summary already exists',
         enabled: true,
-        condition: async (context) => {
-          const executionCheck = context.results?.get('check-workflow-execution');
-          return !executionCheck?.alreadyExecuted;
-        },
         action: workflowFunctions.checkExistingSummary,
       },
       {
@@ -252,14 +222,14 @@ export const createDefaultWorkflows = (): WorkflowEngine => {
         action: workflowFunctions.upsertThreadSummary,
         errorHandling: 'continue',
       },
-      {
-        id: 'cleanup-workflow-execution',
-        name: 'Cleanup Workflow Execution',
-        description: 'Removes workflow execution tracking',
-        enabled: true,
-        action: workflowFunctions.cleanupWorkflowExecution,
-        errorHandling: 'continue',
-      },
+      //   {
+      //     id: 'cleanup-workflow-execution',
+      //     name: 'Cleanup Workflow Execution',
+      //     description: 'Removes workflow execution tracking',
+      //     enabled: true,
+      //     action: workflowFunctions.cleanupWorkflowExecution,
+      //     errorHandling: 'continue',
+      //   },
     ],
   };
 
@@ -268,21 +238,10 @@ export const createDefaultWorkflows = (): WorkflowEngine => {
     description: 'Generates and applies labels to threads',
     steps: [
       {
-        id: 'check-workflow-execution',
-        name: 'Check Workflow Execution',
-        description: 'Checks if this workflow has already been executed for this thread',
-        enabled: true,
-        action: workflowFunctions.checkWorkflowExecution,
-      },
-      {
         id: 'get-user-labels',
         name: 'Get User Labels',
         description: 'Retrieves user-defined labels',
         enabled: true,
-        condition: async (context) => {
-          const executionCheck = context.results?.get('check-workflow-execution');
-          return !executionCheck?.alreadyExecuted;
-        },
         action: workflowFunctions.getUserLabels,
       },
       {
@@ -313,7 +272,7 @@ export const createDefaultWorkflows = (): WorkflowEngine => {
   };
 
   engine.registerWorkflow(autoDraftWorkflow);
-  engine.registerWorkflow(vectorizationWorkflow);
+  //   engine.registerWorkflow(vectorizationWorkflow);
   engine.registerWorkflow(threadSummaryWorkflow);
   engine.registerWorkflow(labelGenerationWorkflow);
 

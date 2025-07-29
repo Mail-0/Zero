@@ -609,9 +609,12 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
       });
       if (_connection) this.driver = connectionToDriver(_connection);
       this.ctx.waitUntil(conn.end());
-      this.ctx.waitUntil(this.syncThreads('inbox'));
-      this.ctx.waitUntil(this.syncThreads('sent'));
-      this.ctx.waitUntil(this.syncThreads('spam'));
+      const threadCount = await this.getThreadCount();
+      if (threadCount < maxCount) {
+        this.ctx.waitUntil(this.syncThreads('inbox'));
+        this.ctx.waitUntil(this.syncThreads('sent'));
+        this.ctx.waitUntil(this.syncThreads('spam'));
+      }
     }
   }
   async rawListThreads(params: {
@@ -627,11 +630,11 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     return await this.driver.list(params);
   }
 
-  async getThread(threadId: string) {
+  async getThread(threadId: string, includeDrafts: boolean = false) {
     if (!this.driver) {
       throw new Error('No driver available');
     }
-    return await this.getThreadFromDB(threadId);
+    return await this.getThreadFromDB(threadId, includeDrafts);
   }
 
   //   async markThreadsRead(threadIds: string[]) {
@@ -1630,7 +1633,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     }
   }
 
-  async getThreadFromDB(id: string): Promise<IGetThreadResponse> {
+  async getThreadFromDB(id: string, includeDrafts: boolean = false): Promise<IGetThreadResponse> {
     try {
       const result = this.sql`
           SELECT
@@ -1661,9 +1664,15 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
       const row = result[0] as { latest_label_ids: string };
       const storedThread = await env.THREADS_BUCKET.get(this.getThreadKey(id));
 
-      const messages: ParsedMessage[] = storedThread
+      let messages: ParsedMessage[] = storedThread
         ? (JSON.parse(await storedThread.text()) as IGetThreadResponse).messages
         : [];
+
+      const isLatestDraft = messages.some((e) => e.isDraft === true);
+
+      if (!includeDrafts) {
+        messages = messages.filter((e) => e.isDraft !== true);
+      }
 
       const latestLabelIds = JSON.parse(row.latest_label_ids || '[]');
 
@@ -1673,6 +1682,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         hasUnread: latestLabelIds.includes('UNREAD'),
         totalReplies: messages.filter((e) => e.isDraft !== true).length,
         labels: latestLabelIds.map((id: string) => ({ id, name: id })),
+        isLatestDraft,
       } satisfies IGetThreadResponse;
     } catch (error) {
       console.error('Failed to get thread from database:', error);
@@ -1726,12 +1736,12 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
     return await this.getThreadsFromDB(params);
   }
 
-  async get(id: string) {
-    if (!this.driver) {
-      throw new Error('No driver available');
-    }
-    return await this.getThreadFromDB(id);
-  }
+  //   async get(id: string, includeDrafts: boolean = false) {
+  //     if (!this.driver) {
+  //       throw new Error('No driver available');
+  //     }
+  //     return await this.getThreadFromDB(id, includeDrafts);
+  //   }
 }
 
 export class ZeroAgent extends AIChatAgent<typeof env> {

@@ -4,8 +4,8 @@ import {
   ReSummarizeThread,
   SummarizeThread,
 } from '../lib/brain.fallback.prompts';
-import { analyzeEmailIntent, generateAutomaticDraft, shouldGenerateDraft } from './index';
 import { EPrompts, defaultLabels, type ParsedMessage } from '../types';
+import { analyzeEmailIntent, generateAutomaticDraft } from './index';
 import { getPrompt, getEmbeddingVector } from '../pipelines.effect';
 import { messageToXML, threadToXML } from './workflow-utils';
 import type { WorkflowContext } from './workflow-engine';
@@ -18,29 +18,6 @@ import { Effect } from 'effect';
 export type WorkflowFunction = (context: WorkflowContext) => Promise<any>;
 
 export const workflowFunctions: Record<string, WorkflowFunction> = {
-  shouldGenerateDraft: async (context) => {
-    return await shouldGenerateDraft(context.thread, context.foundConnection);
-  },
-
-  checkWorkflowExecution: async (context) => {
-    const workflowKey = `workflow_${context.threadId}`;
-    const lastExecution = await env.gmail_processing_threads.get(workflowKey);
-
-    if (lastExecution) {
-      console.log('[WORKFLOW_FUNCTIONS] Workflow already executed for thread:', context.threadId);
-      return { alreadyExecuted: true };
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    await env.gmail_processing_threads.put(workflowKey, Date.now().toString(), {
-      expirationTtl: 3600,
-    });
-
-    console.log('[WORKFLOW_FUNCTIONS] Marked workflow as executed for thread:', context.threadId);
-    return { alreadyExecuted: false };
-  },
-
   analyzeEmailIntent: async (context) => {
     if (!context.thread.messages || context.thread.messages.length === 0) {
       throw new Error('Cannot analyze email intent: No messages in thread');
@@ -62,6 +39,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
   validateResponseNeeded: async (context) => {
     const intentResult = context.results?.get('analyze-email-intent');
     if (!intentResult) {
+      console.log('[WORKFLOW_FUNCTIONS] Email intent analysis not available');
       throw new Error('Email intent analysis not available');
     }
 
@@ -77,6 +55,8 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
       );
       return { requiresResponse: false };
     }
+
+    console.log('[WORKFLOW_FUNCTIONS] Email requires a response, continuing with draft generation');
 
     return { requiresResponse: true };
   },
@@ -402,6 +382,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
 
   getUserLabels: async (context) => {
     try {
+      console.log('[WORKFLOW_FUNCTIONS] Getting user labels for connection:', context.results);
       const agent = await getZeroAgent(context.connectionId);
       const userAccountLabels = await agent.getUserLabels();
       return { userAccountLabels };
@@ -413,6 +394,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
 
   generateLabels: async (context) => {
     const summaryResult = context.results?.get('generate-thread-summary');
+    console.log(summaryResult, context.results);
     if (!summaryResult?.summary) {
       console.log('[WORKFLOW_FUNCTIONS] No summary available for label generation');
       return { labels: [] };

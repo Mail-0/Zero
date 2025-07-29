@@ -40,7 +40,7 @@ export const mailRouter = router({
     .query(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
       const agent = await getZeroAgent(activeConnection.id);
-      return await agent.getThread(input.id);
+      return await agent.getThread(input.id, true);
     }),
   count: activeDriverProcedure
     .output(

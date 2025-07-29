@@ -118,7 +118,7 @@
         },
       ],
       "vars": {
-        "NODE_ENV": "development",
+        "NODE_ENV": "local",
         "COOKIE_DOMAIN": "localhost",
         "VITE_PUBLIC_BACKEND_URL": "http://localhost:8787",
         "VITE_PUBLIC_APP_URL": "http://localhost:3000",
@@ -130,9 +130,11 @@
         "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "5",
         "THREAD_SYNC_LOOP": "false",
-        "DISABLE_WORKFLOWS": "false",
+        "DISABLE_WORKFLOWS": "true",
         "AUTORAG_ID": "",
         "USE_OPENAI": "true",
+        "CLOUDFLARE_ACCOUNT_ID": "397b3b4fac213b9b382d0f1fafdbb215",
+        "CLOUDFLARE_API_TOKEN": "wbrJ9McsQhjCxv1pzxLLK8keT-0tM1ab-QbmESg6",
       },
       "kv_namespaces": [
         {
@@ -292,7 +294,7 @@
         "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "20",
         "THREAD_SYNC_LOOP": "true",
-        "DISABLE_WORKFLOWS": "false",
+        "DISABLE_WORKFLOWS": "true",
       },
       "kv_namespaces": [
         {
