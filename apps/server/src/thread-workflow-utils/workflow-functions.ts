@@ -30,6 +30,8 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
       return { alreadyExecuted: true };
     }
 
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     await env.gmail_processing_threads.put(workflowKey, Date.now().toString(), {
       expirationTtl: 3600,
     });
@@ -570,10 +572,10 @@ const summarizeThread = async (
           content: prompt,
         },
       ];
-      const response: any = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
+      const response = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
         messages: promptMessages,
       });
-      const summary = response?.response;
+      const summary = response.response;
       return typeof summary === 'string' ? summary : null;
     } else {
       const SummarizeThreadPrompt = await getPrompt(
@@ -587,10 +589,10 @@ const summarizeThread = async (
           content: prompt,
         },
       ];
-      const response: any = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
+      const response = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
         messages: promptMessages,
       });
-      const summary = response?.response;
+      const summary = response.response;
       return typeof summary === 'string' ? summary : null;
     }
   } catch (error) {
