@@ -45,7 +45,6 @@ import { Button } from '../ui/button';
 import { useQueryState } from 'nuqs';
 import { Categories } from './mail';
 import { useAtom } from 'jotai';
-import { motion } from 'motion/react';
 
 const Thread = memo(
   function Thread({
@@ -226,7 +225,7 @@ const Thread = memo(
             window.dispatchEvent(new CustomEvent('emailHover', { detail: { id: null } }));
           }}
         >
-          <motion.div
+          <div
             data-thread-id={idToUse}
             key={idToUse}
             className={cn(
@@ -237,27 +236,6 @@ const Thread = memo(
               'relative',
               'group',
             )}
-            initial={{
-              opacity: 0,
-              y: 20,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            transition={{
-              duration: 0.4,
-              delay: index ? Math.min(index * 0.05, 0.3) : 0, // Stagger with max delay of 0.3s
-              ease: "easeOut"
-            }}
-            whileHover={{
-              scale: 1.02,
-              transition: { duration: 0.2, ease: "easeOut" }
-            }}
-            whileTap={{
-              scale: 0.98,
-              transition: { duration: 0.1, ease: "easeOut" }
-            }}
           >
             <div
               className={cn(
@@ -536,7 +514,7 @@ const Thread = memo(
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       );
     }, [

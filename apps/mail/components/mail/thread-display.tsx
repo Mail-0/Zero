@@ -1005,25 +1005,19 @@ export function ThreadDisplay() {
                   key={id} // Key on threadId to trigger animations when switching emails
                   initial={{
                     opacity: 0,
-                    x: navigationDirection === 'previous' ? -30 : navigationDirection === 'next' ? 30 : 0,
-                    y: navigationDirection ? 0 : 20,
-                    scale: 0.98,
+                    x: navigationDirection === 'previous' ? -15 : navigationDirection === 'next' ? 15 : 0,
                   }}
                   animate={{
                     opacity: 1,
                     x: 0,
-                    y: 0,
-                    scale: 1,
                   }}
                   exit={{
                     opacity: 0,
-                    x: navigationDirection === 'previous' ? 30 : navigationDirection === 'next' ? -30 : 0,
-                    y: navigationDirection ? 0 : -20,
-                    scale: 0.98,
+                    x: navigationDirection === 'previous' ? 15 : navigationDirection === 'next' ? -15 : 0,
                   }}
                   transition={{
-                    duration: 0.3,
-                    ease: [0.25, 0.1, 0.25, 1], // Smooth easing curve
+                    duration: 0.08, 
+                    ease: [0.4, 0, 0.2, 1],
                   }}
                   onAnimationComplete={() => {
                     // Reset navigation direction after animation completes
