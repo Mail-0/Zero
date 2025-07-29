@@ -25,6 +25,10 @@ export const bulkDeleteKeys = async (
   keys: string[],
   environment: Environment = env.NODE_ENV as Environment,
 ): Promise<BulkDeleteResult> => {
+  if (environment === 'local') {
+    await Promise.all(keys.map((key) => env.gmail_processing_threads.delete(key)));
+    return { successful: keys.length, failed: 0 };
+  }
   if (keys.length === 0) {
     return { successful: 0, failed: 0 };
   }
