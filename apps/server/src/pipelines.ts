@@ -1153,7 +1153,7 @@ export class WorkflowRunner extends DurableObject<Env> {
             try {
               await agent.reloadFolder('inbox');
               console.log('[ZERO_WORKFLOW] Successfully reloaded inbox folder');
-            } catch (error) {
+            } catch {
               console.log('[ZERO_WORKFLOW] Failed to reload inbox folder');
             }
 
@@ -1213,7 +1213,7 @@ export class WorkflowRunner extends DurableObject<Env> {
               );
               try {
                 await agent.modifyThreadLabelsInDB(threadId, addLabels, removeLabels);
-              } catch (error) {
+              } catch {
                 console.log(`[ZERO_WORKFLOW] Failed to modify labels for thread ${threadId}`);
               }
             }
