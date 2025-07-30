@@ -158,7 +158,7 @@ export const createDefaultWorkflows = (): WorkflowEngine => {
     ],
   };
 
-  const vectorizationWorkflow: WorkflowDefinition = {
+  const _vectorizationWorkflow: WorkflowDefinition = {
     name: 'message-vectorization',
     description: 'Vectorizes thread messages for search and analysis',
     steps: [
