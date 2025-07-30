@@ -1746,6 +1746,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
 export class ZeroAgent extends AIChatAgent<typeof env> {
   private chatMessageAbortControllers: Map<string, AbortController> = new Map();
+  private connectionThreadIds: Map<string, string | null> = new Map();
 
   async registerZeroMCP() {
     await this.mcp.connect(env.VITE_PUBLIC_BACKEND_URL + '/sse', {
@@ -1777,10 +1778,13 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
 
   private getDataStreamResponse(
     onFinish: StreamTextOnFinishCallback<{}>,
-    _?: {
+    options?: {
       abortSignal: AbortSignal | undefined;
+      connectionId?: string;
     },
   ) {
+    const connectionId = options?.connectionId || 'general';
+    const currentThreadId = this.connectionThreadIds.get(connectionId) || '';
     const dataStreamResponse = createDataStreamResponse({
       execute: async (dataStream) => {
         if (this.name === 'general') return;
@@ -1818,7 +1822,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
           onError: (error) => {
             console.error('Error in streamText', error);
           },
-          system: await getPrompt(getPromptName(connectionId, EPrompts.Chat), AiChatPrompt('')),
+          system: await getPrompt(getPromptName(connectionId, EPrompts.Chat), AiChatPrompt(currentThreadId)),
         });
 
         result.mergeIntoDataStream(dataStream);
@@ -1908,7 +1912,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
                 await this.persistMessages(finalMessages, [connection.id]);
                 this.removeAbortController(chatMessageId);
               },
-              abortSignal ? { abortSignal } : undefined,
+              abortSignal ? { abortSignal, connectionId: connection.id } : { connectionId: connection.id },
             );
 
             if (response) {
@@ -1947,6 +1951,11 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
         }
         case IncomingMessageType.ChatRequestCancel: {
           this.cancelChatRequest(data.id);
+          break;
+        }
+        case IncomingMessageType.ThreadIdUpdate: {
+          this.connectionThreadIds.set(connection.id, data.threadId);
+          console.log(`[ZeroAgent] Updated threadId for connection ${connection.id}: ${data.threadId}`);
           break;
         }
         // case IncomingMessageType.Mail_List: {
@@ -2015,6 +2024,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     onFinish: StreamTextOnFinishCallback<{}>,
     options?: {
       abortSignal: AbortSignal | undefined;
+      connectionId?: string;
     },
   ) {
     return this.getDataStreamResponse(onFinish, options);
