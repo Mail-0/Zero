@@ -3,29 +3,38 @@ import { composeEmail } from '../trpc/routes/ai/compose';
 import { type ParsedMessage } from '../types';
 import { connection } from '../db/schema';
 
-const shouldGenerateDraft = (
+const shouldGenerateDraft = async (
   thread: IGetThreadResponse,
   foundConnection: typeof connection.$inferSelect,
-): boolean => {
-  if (!thread.messages || thread.messages.length === 0) return false;
+): Promise<boolean> => {
+  if (!thread.messages || thread.messages.length === 0) {
+    console.log('[SHOULD_GENERATE_DRAFT] No messages in thread');
+    return false;
+  }
 
   const latestMessage = thread.messages[thread.messages.length - 1];
 
   if (latestMessage.sender?.email?.toLowerCase() === foundConnection.email?.toLowerCase()) {
+    console.log('[SHOULD_GENERATE_DRAFT] Latest message is from user, skipping draft');
     return false;
   }
 
+  const senderEmail = latestMessage.sender?.email?.toLowerCase() || '';
+  const subject = latestMessage.subject?.toLowerCase() || '';
+  const decodedBody = latestMessage.decodedBody?.toLowerCase() || '';
+
+  const automatedEmailRegex = /(no-?reply|donotreply|do-not-reply)/;
+  const automatedSubjectRegex = /(newsletter|unsubscribe|notification)/;
+  const automatedBodyRegex = /(do not reply|this is an automated)/;
+
   if (
-    latestMessage.sender?.email?.toLowerCase().includes('no-reply') ||
-    latestMessage.sender?.email?.toLowerCase().includes('noreply') ||
-    latestMessage.sender?.email?.toLowerCase().includes('donotreply') ||
-    latestMessage.sender?.email?.toLowerCase().includes('do-not-reply') ||
-    latestMessage.subject?.toLowerCase().includes('newsletter') ||
-    latestMessage.subject?.toLowerCase().includes('unsubscribe') ||
-    latestMessage.subject?.toLowerCase().includes('notification') ||
-    latestMessage.decodedBody?.toLowerCase().includes('do not reply') ||
-    latestMessage.decodedBody?.toLowerCase().includes('this is an automated')
+    automatedEmailRegex.test(senderEmail) ||
+    automatedSubjectRegex.test(subject) ||
+    automatedBodyRegex.test(decodedBody)
   ) {
+    console.log(
+      '[SHOULD_GENERATE_DRAFT] Message is likely automated or not actionable, skipping draft',
+    );
     return false;
   }
 
@@ -33,10 +42,29 @@ const shouldGenerateDraft = (
     const messageDate = new Date(latestMessage.receivedOn);
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     if (messageDate < sevenDaysAgo) {
+      console.log('[SHOULD_GENERATE_DRAFT] Latest message is older than 7 days, skipping draft');
       return false;
     }
   }
 
+  try {
+    const threadId = thread.messages[0]?.threadId;
+    if (!threadId) {
+      console.log('[SHOULD_GENERATE_DRAFT] No thread ID found, skipping draft check');
+      return true;
+    }
+
+    const latestDraft = thread.isLatestDraft;
+
+    if (latestDraft) {
+      console.log('[SHOULD_GENERATE_DRAFT] Draft already exists in thread, skipping draft');
+      return false;
+    }
+  } catch (error) {
+    console.error('[SHOULD_GENERATE_DRAFT] Error checking for existing drafts:', error);
+  }
+
+  console.log('[SHOULD_GENERATE_DRAFT] Draft should be generated for this thread');
   return true;
 };
 

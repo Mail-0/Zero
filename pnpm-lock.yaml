@@ -540,6 +540,9 @@ importers:
       '@react-email/render':
         specifier: 1.1.0
         version: 1.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@sentry/cloudflare':
+        specifier: 9.43.0
+        version: 9.43.0(@cloudflare/workers-types@4.20250628.0)
       '@trpc/client':
         specifier: 'catalog:'
         version: 11.4.3(@trpc/server@11.4.3(typescript@5.8.3))(typescript@5.8.3)
@@ -573,6 +576,9 @@ importers:
       cheerio:
         specifier: 1.1.0
         version: 1.1.0
+      cloudflare:
+        specifier: 4.5.0
+        version: 4.5.0
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -3718,8 +3724,21 @@ packages:
     engines: {node: '>= 10'}
     hasBin: true
 
+  '@sentry/cloudflare@9.43.0':
+    resolution: {integrity: sha512-WZsNP62qPaWGx55tPHPFm7y7kGNAnT89YL6M4fNzqugy2tB5NPKbIxUSdnROnhQ02eHYla6Lc7+Y1YrhJ05UTw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@cloudflare/workers-types': ^4.x
+    peerDependenciesMeta:
+      '@cloudflare/workers-types':
+        optional: true
+
   '@sentry/core@9.40.0':
     resolution: {integrity: sha512-cZkuz6BDna6VXSqvlWnrRsaDx4QBKq1PcfQrqhVz8ljs0M7Gcl+Mtj8dCzUxx12fkYM62hQXG72DEGNlAQpH/Q==}
+    engines: {node: '>=18'}
+
+  '@sentry/core@9.43.0':
+    resolution: {integrity: sha512-xuvERSUkSNBAldIlgihX3fz+JkcaAPvg0HulPtv3BH9qrKqvataeQ8TiTnqiRC7kWzF7EcxhQJ6WJRl/r3aH3w==}
     engines: {node: '>=18'}
 
   '@sentry/node-core@9.40.0':
@@ -4720,6 +4739,9 @@ packages:
 
   class-variance-authority@0.7.1:
     resolution: {integrity: sha512-Ka+9Trutv7G8M6WT6SeiRWz792K5qEqIGEGzXKhAE6xOWAY6pPH8U+9IY3oCMv6kqTmLsv7Xh/2w2RigkePMsg==}
+
+  cloudflare@4.5.0:
+    resolution: {integrity: sha512-fPcbPKx4zF45jBvQ0z7PCdgejVAPBBCZxwqk1k7krQNfpM07Cfj97/Q6wBzvYqlWXx/zt1S9+m8vnfCe06umbQ==}
 
   clsx@2.1.1:
     resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
@@ -11864,7 +11886,16 @@ snapshots:
       - encoding
       - supports-color
 
+  '@sentry/cloudflare@9.43.0(@cloudflare/workers-types@4.20250628.0)':
+    dependencies:
+      '@opentelemetry/api': 1.9.0
+      '@sentry/core': 9.43.0
+    optionalDependencies:
+      '@cloudflare/workers-types': 4.20250628.0
+
   '@sentry/core@9.40.0': {}
+
+  '@sentry/core@9.43.0': {}
 
   '@sentry/node-core@9.40.0(@opentelemetry/api@1.9.0)(@opentelemetry/context-async-hooks@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/core@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/instrumentation@0.57.2(@opentelemetry/api@1.9.0))(@opentelemetry/resources@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/semantic-conventions@1.36.0)':
     dependencies:
@@ -13073,6 +13104,18 @@ snapshots:
   class-variance-authority@0.7.1:
     dependencies:
       clsx: 2.1.1
+
+  cloudflare@4.5.0:
+    dependencies:
+      '@types/node': 18.19.115
+      '@types/node-fetch': 2.6.12
+      abort-controller: 3.0.0
+      agentkeepalive: 4.6.0
+      form-data-encoder: 1.7.2
+      formdata-node: 4.4.1
+      node-fetch: 2.7.0
+    transitivePeerDependencies:
+      - encoding
 
   clsx@2.1.1: {}
 

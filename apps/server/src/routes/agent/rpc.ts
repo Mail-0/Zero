@@ -86,8 +86,8 @@ export class DriverRpcDO extends RpcTarget {
     return await this.mainDo.list(params);
   }
 
-  async getThread(threadId: string) {
-    return await this.mainDo.get(threadId);
+  async getThread(threadId: string, includeDrafts: boolean = false) {
+    return await this.mainDo.getThread(threadId, includeDrafts);
   }
 
   async markThreadsRead(threadIds: string[]) {

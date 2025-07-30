@@ -4,11 +4,12 @@ import {
   ReSummarizeThread,
   SummarizeThread,
 } from '../lib/brain.fallback.prompts';
-import { analyzeEmailIntent, generateAutomaticDraft, shouldGenerateDraft } from './index';
 import { EPrompts, defaultLabels, type ParsedMessage } from '../types';
+import { analyzeEmailIntent, generateAutomaticDraft } from './index';
 import { getPrompt, getEmbeddingVector } from '../pipelines.effect';
 import { messageToXML, threadToXML } from './workflow-utils';
 import type { WorkflowContext } from './workflow-engine';
+import { bulkDeleteKeys } from '../lib/bulk-delete';
 import { getZeroAgent } from '../lib/server-utils';
 import { getPromptName } from '../pipelines';
 import { env } from 'cloudflare:workers';
@@ -17,10 +18,6 @@ import { Effect } from 'effect';
 export type WorkflowFunction = (context: WorkflowContext) => Promise<any>;
 
 export const workflowFunctions: Record<string, WorkflowFunction> = {
-  shouldGenerateDraft: async (context) => {
-    return shouldGenerateDraft(context.thread, context.foundConnection);
-  },
-
   analyzeEmailIntent: async (context) => {
     if (!context.thread.messages || context.thread.messages.length === 0) {
       throw new Error('Cannot analyze email intent: No messages in thread');
@@ -42,6 +39,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
   validateResponseNeeded: async (context) => {
     const intentResult = context.results?.get('analyze-email-intent');
     if (!intentResult) {
+      console.log('[WORKFLOW_FUNCTIONS] Email intent analysis not available');
       throw new Error('Email intent analysis not available');
     }
 
@@ -58,11 +56,18 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
       return { requiresResponse: false };
     }
 
+    console.log('[WORKFLOW_FUNCTIONS] Email requires a response, continuing with draft generation');
+
     return { requiresResponse: true };
   },
 
   generateAutomaticDraft: async (context) => {
     console.log('[WORKFLOW_FUNCTIONS] Generating automatic draft for thread:', context.threadId);
+    console.log('[WORKFLOW_FUNCTIONS] Thread has', context.thread.messages.length, 'messages');
+    console.log(
+      '[WORKFLOW_FUNCTIONS] Latest message from:',
+      context.thread.messages[context.thread.messages.length - 1]?.sender?.email,
+    );
 
     const draftContent = await generateAutomaticDraft(
       context.connectionId,
@@ -125,8 +130,33 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
     const messageIds = context.thread.messages.map((message) => message.id);
     console.log('[WORKFLOW_FUNCTIONS] Found message IDs:', messageIds);
 
-    const existingMessages = await env.VECTORIZE_MESSAGE.getByIds(messageIds);
-    console.log('[WORKFLOW_FUNCTIONS] Found existing messages:', existingMessages.length);
+    const batchSize = 20;
+    const batches = [];
+    for (let i = 0; i < messageIds.length; i += batchSize) {
+      batches.push(messageIds.slice(i, i + batchSize));
+    }
+
+    const getExistingMessagesBatch = (batch: string[]): Effect.Effect<any[], never> =>
+      Effect.tryPromise(async () => {
+        console.log('[WORKFLOW_FUNCTIONS] Fetching batch of', batch.length, 'message IDs');
+        return await env.VECTORIZE_MESSAGE.getByIds(batch);
+      }).pipe(
+        Effect.catchAll((error) => {
+          console.log('[WORKFLOW_FUNCTIONS] Failed to fetch batch:', error);
+          return Effect.succeed([]);
+        }),
+      );
+
+    const batchEffects = batches.map(getExistingMessagesBatch);
+    const program = Effect.all(batchEffects, { concurrency: 3 }).pipe(
+      Effect.map((results) => {
+        const allExistingMessages = results.flat();
+        console.log('[WORKFLOW_FUNCTIONS] Found existing messages:', allExistingMessages.length);
+        return allExistingMessages;
+      }),
+    );
+
+    const existingMessages = await Effect.runPromise(program);
 
     const existingMessageIds = new Set(existingMessages.map((message: any) => message.id));
     const messagesToVectorize = context.thread.messages.filter(
@@ -248,6 +278,18 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
     return { upserted: vectorizeResult.embeddings.length };
   },
 
+  cleanupWorkflowExecution: async (context) => {
+    const workflowKey = `workflow_${context.threadId}`;
+    const result = await bulkDeleteKeys([workflowKey]);
+    console.log(
+      '[WORKFLOW_FUNCTIONS] Cleaned up workflow execution tracking for thread:',
+      context.threadId,
+      'Result:',
+      result,
+    );
+    return { cleaned: true };
+  },
+
   checkExistingSummary: async (context) => {
     console.log('[WORKFLOW_FUNCTIONS] Getting existing thread summary for:', context.threadId);
     const threadSummary = await env.VECTORIZE.getByIds([context.threadId.toString()]);
@@ -340,6 +382,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
 
   getUserLabels: async (context) => {
     try {
+      console.log('[WORKFLOW_FUNCTIONS] Getting user labels for connection:', context.results);
       const agent = await getZeroAgent(context.connectionId);
       const userAccountLabels = await agent.getUserLabels();
       return { userAccountLabels };
@@ -351,6 +394,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
 
   generateLabels: async (context) => {
     const summaryResult = context.results?.get('generate-thread-summary');
+    console.log(summaryResult, context.results);
     if (!summaryResult?.summary) {
       console.log('[WORKFLOW_FUNCTIONS] No summary available for label generation');
       return { labels: [] };
@@ -382,7 +426,7 @@ export const workflowFunctions: Record<string, WorkflowFunction> = {
       threadLabels: context.thread.labels,
     });
 
-    const labelsResponse: any = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
+    const labelsResponse = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
       messages: [
         { role: 'system', content: ThreadLabels(userLabels, context.thread.labels) },
         { role: 'user', content: summaryResult.summary },
@@ -513,10 +557,10 @@ const summarizeThread = async (
           content: prompt,
         },
       ];
-      const response: any = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
+      const response = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
         messages: promptMessages,
       });
-      const summary = response?.response;
+      const summary = response.response;
       return typeof summary === 'string' ? summary : null;
     } else {
       const SummarizeThreadPrompt = await getPrompt(
@@ -530,10 +574,10 @@ const summarizeThread = async (
           content: prompt,
         },
       ];
-      const response: any = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
+      const response = await env.AI.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
         messages: promptMessages,
       });
-      const summary = response?.response;
+      const summary = response.response;
       return typeof summary === 'string' ? summary : null;
     }
   } catch (error) {
