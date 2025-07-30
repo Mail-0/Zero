@@ -34,6 +34,8 @@ export const NotificationProvider = () => {
   const { data: activeConnection } = useActiveConnection();
   const [searchValue] = useSearchValue();
   const { labels } = useSearchLabels();
+  const [threadId] = useQueryState('threadId');
+  const prevThreadIdRef = useRef<string | null>(null);
 
   const socket = usePartySocket({
     party: 'zero-agent',
@@ -69,13 +71,6 @@ export const NotificationProvider = () => {
     },
   });
 
-  return <ThreadIdSyncProvider socket={socket} />;
-};
-
-const ThreadIdSyncProvider = ({ socket }: { socket: any }) => {
-  const [threadId] = useQueryState('threadId');
-  const prevThreadIdRef = useRef<string | null>(null);
-
   useEffect(() => {
     if (socket && prevThreadIdRef.current !== threadId) {
       prevThreadIdRef.current = threadId;
@@ -86,5 +81,5 @@ const ThreadIdSyncProvider = ({ socket }: { socket: any }) => {
     }
   }, [threadId, socket]);
 
-  return null;
+  return <></>;
 };
