@@ -14,6 +14,7 @@ export enum IncomingMessageType {
   ChatRequestCancel = 'cf_agent_chat_request_cancel',
   Mail_List = 'zero_mail_list_threads',
   Mail_Get = 'zero_mail_get_thread',
+  User_Topics = 'zero_user_topics',
 }
 
 export enum OutgoingMessageType {
@@ -53,6 +54,10 @@ export const NotificationProvider = () => {
               labelIds: labels,
               q: searchValue.value,
             }),
+          });
+        } else if (type === IncomingMessageType.User_Topics) {
+          queryClient.invalidateQueries({
+            queryKey: trpc.labels.list.queryKey(),
           });
         }
       } catch (error) {
