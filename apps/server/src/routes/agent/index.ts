@@ -1779,7 +1779,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
   private getDataStreamResponse(
     onFinish: StreamTextOnFinishCallback<{}>,
     options?: {
-      abortSignal: AbortSignal | undefined;
+      abortSignal?: AbortSignal;
       connectionId?: string;
     },
   ) {
@@ -1822,7 +1822,10 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
           onError: (error) => {
             console.error('Error in streamText', error);
           },
-          system: await getPrompt(getPromptName(connectionId, EPrompts.Chat), AiChatPrompt(currentThreadId)),
+          system: await getPrompt(
+            getPromptName(connectionId, EPrompts.Chat),
+            AiChatPrompt(currentThreadId),
+          ),
         });
 
         result.mergeIntoDataStream(dataStream);
@@ -1912,7 +1915,9 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
                 await this.persistMessages(finalMessages, [connection.id]);
                 this.removeAbortController(chatMessageId);
               },
-              abortSignal ? { abortSignal, connectionId: connection.id } : { connectionId: connection.id },
+              abortSignal
+                ? { abortSignal, connectionId: connection.id }
+                : { connectionId: connection.id },
             );
 
             if (response) {
@@ -1955,7 +1960,9 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
         }
         case IncomingMessageType.ThreadIdUpdate: {
           this.connectionThreadIds.set(connection.id, data.threadId);
-          console.log(`[ZeroAgent] Updated threadId for connection ${connection.id}: ${data.threadId}`);
+          console.log(
+            `[ZeroAgent] Updated threadId for connection ${connection.id}: ${data.threadId}`,
+          );
           break;
         }
         // case IncomingMessageType.Mail_List: {
@@ -2023,7 +2030,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
   async onChatMessage(
     onFinish: StreamTextOnFinishCallback<{}>,
     options?: {
-      abortSignal: AbortSignal | undefined;
+      abortSignal?: AbortSignal;
       connectionId?: string;
     },
   ) {

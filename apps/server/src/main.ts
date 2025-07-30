@@ -187,10 +187,7 @@ export class DbRpcDO extends RpcTarget {
     return await this.mainDo.deleteEmailTemplate(this.userId, templateId);
   }
 
-  async updateEmailTemplate(
-    templateId: string,
-    data: Partial<typeof emailTemplate.$inferInsert>,
-  ) {
+  async updateEmailTemplate(templateId: string, data: Partial<typeof emailTemplate.$inferInsert>) {
     return await this.mainDo.updateEmailTemplate(this.userId, templateId, data);
   }
 }
@@ -522,7 +519,10 @@ class ZeroDB extends DurableObject<Env> {
     });
   }
 
-  async createEmailTemplate(userId: string, payload: Omit<typeof emailTemplate.$inferInsert, 'userId'>) {
+  async createEmailTemplate(
+    userId: string,
+    payload: Omit<typeof emailTemplate.$inferInsert, 'userId'>,
+  ) {
     return await this.db
       .insert(emailTemplate)
       .values({

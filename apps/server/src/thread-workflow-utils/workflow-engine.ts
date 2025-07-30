@@ -42,13 +42,14 @@ export class WorkflowEngine {
   async executeWorkflow(
     workflowName: string,
     context: WorkflowContext,
+    existingResults?: Map<string, any>,
   ): Promise<{ results: Map<string, any>; errors: Map<string, Error> }> {
     const workflow = this.workflows.get(workflowName);
     if (!workflow) {
       throw new Error(`Workflow "${workflowName}" not found`);
     }
 
-    const results = new Map<string, any>();
+    const results = new Map<string, any>(existingResults || []);
     const errors = new Map<string, Error>();
 
     for (const step of workflow.steps) {
@@ -81,6 +82,45 @@ export class WorkflowEngine {
     }
 
     return { results, errors };
+  }
+
+  async executeWorkflowChain(
+    workflowNames: string[],
+    context: WorkflowContext,
+  ): Promise<{ results: Map<string, any>; errors: Map<string, Error> }> {
+    let sharedResults = new Map<string, any>();
+    let allErrors = new Map<string, Error>();
+
+    for (const workflowName of workflowNames) {
+      console.log(`[WORKFLOW_ENGINE] Executing workflow in chain: ${workflowName}`);
+      try {
+        const { results, errors } = await this.executeWorkflow(
+          workflowName,
+          context,
+          sharedResults,
+        );
+
+        // Merge results
+        for (const [key, value] of results) {
+          sharedResults.set(key, value);
+        }
+
+        // Merge errors
+        for (const [key, error] of errors) {
+          allErrors.set(key, error);
+        }
+
+        console.log(
+          `[WORKFLOW_ENGINE] Completed workflow: ${workflowName}, total results: ${sharedResults.size}`,
+        );
+      } catch (error) {
+        const errorObj = error instanceof Error ? error : new Error(String(error));
+        console.error(`[WORKFLOW_ENGINE] Failed to execute workflow ${workflowName}:`, errorObj);
+        allErrors.set(workflowName, errorObj);
+      }
+    }
+
+    return { results: sharedResults, errors: allErrors };
   }
 
   clearContext(context: WorkflowContext): void {
@@ -158,7 +198,7 @@ export const createDefaultWorkflows = (): WorkflowEngine => {
     ],
   };
 
-  const _vectorizationWorkflow: WorkflowDefinition = {
+  const vectorizationWorkflow: WorkflowDefinition = {
     name: 'message-vectorization',
     description: 'Vectorizes thread messages for search and analysis',
     steps: [
@@ -272,7 +312,7 @@ export const createDefaultWorkflows = (): WorkflowEngine => {
   };
 
   engine.registerWorkflow(autoDraftWorkflow);
-  //   engine.registerWorkflow(vectorizationWorkflow);
+  engine.registerWorkflow(vectorizationWorkflow);
   engine.registerWorkflow(threadSummaryWorkflow);
   engine.registerWorkflow(labelGenerationWorkflow);
 
