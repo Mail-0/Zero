@@ -1,6 +1,8 @@
 import { BaseSubscriptionFactory, type SubscriptionData } from './base-subscription.factory';
 import { c, getNotificationsUrl } from '../../lib/utils';
+import { resetConnection } from '../server-utils';
 import jwt from '@tsndr/cloudflare-worker-jwt';
+import { connection } from '../../db/schema';
 import { env } from 'cloudflare:workers';
 import { EProviders } from '../../types';
 
@@ -193,7 +195,10 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
     }
   }
 
-  private async setupGmailWatch(connectionData: any, topicName: string): Promise<void> {
+  private async setupGmailWatch(
+    connectionData: typeof connection.$inferSelect,
+    topicName: string,
+  ): Promise<void> {
     // Create Gmail client with OAuth2
     const { OAuth2Client } = await import('google-auth-library');
     const auth = new OAuth2Client({
@@ -271,7 +276,11 @@ class GoogleSubscriptionFactory extends BaseSubscriptionFactory {
         console.log(
           `[SUBSCRIPTION] Setting up Gmail watch for connection: ${connectionData.id} ${pubSubName}`,
         );
-        await this.setupGmailWatch(connectionData, pubSubName);
+        await this.setupGmailWatch(connectionData, pubSubName).catch(async (error) => {
+          console.error('[SUBSCRIPTION] Error setting up Gmail watch:', { error });
+          await resetConnection(connectionData.id);
+          throw error;
+        });
 
         await env.gmail_sub_age.put(
           `${connectionId}__${EProviders.google}`,

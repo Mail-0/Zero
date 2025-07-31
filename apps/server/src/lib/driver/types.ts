@@ -9,6 +9,7 @@ export interface IGetThreadResponse {
   hasUnread: boolean;
   totalReplies: number;
   labels: { id: string; name: string }[];
+  isLatestDraft?: boolean;
 }
 
 export const IGetThreadResponseSchema = z.object({
@@ -51,9 +52,7 @@ export type ManagerConfig = {
 
 export interface MailManager {
   config: ManagerConfig;
-  getMessageAttachments(
-    id: string,
-  ): Promise<
+  getMessageAttachments(id: string): Promise<
     {
       filename: string;
       mimeType: string;

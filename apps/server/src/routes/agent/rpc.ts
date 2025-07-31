@@ -86,12 +86,14 @@ export class DriverRpcDO extends RpcTarget {
     return await this.mainDo.list(params);
   }
 
-  async getThread(threadId: string) {
-    return await this.mainDo.get(threadId);
+  async getThread(threadId: string, includeDrafts: boolean = false) {
+    return await this.mainDo.getThread(threadId, includeDrafts);
   }
 
   async markThreadsRead(threadIds: string[]) {
-    const result = await this.mainDo.markThreadsRead(threadIds);
+    const result = await Promise.all(
+      threadIds.map((id) => this.mainDo.modifyThreadLabelsInDB(id, [], ['UNREAD'])),
+    );
     if (shouldReSyncThreadsAfterActions)
       await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
     return result;
@@ -102,20 +104,19 @@ export class DriverRpcDO extends RpcTarget {
   }
 
   async markThreadsUnread(threadIds: string[]) {
-    const result = await this.mainDo.markThreadsUnread(threadIds);
+    const result = await Promise.all(
+      threadIds.map((id) => this.mainDo.modifyThreadLabelsInDB(id, ['UNREAD'], [])),
+    );
     if (shouldReSyncThreadsAfterActions)
       await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
     return result;
   }
 
-  async modifyLabels(
-    threadIds: string[],
-    addLabelIds: string[],
-    removeLabelIds: string[],
-    skipSync: boolean = false,
-  ) {
-    const result = await this.mainDo.modifyLabels(threadIds, addLabelIds, removeLabelIds);
-    if (!skipSync)
+  async modifyLabels(threadIds: string[], addLabelIds: string[], removeLabelIds: string[]) {
+    const result = await Promise.all(
+      threadIds.map((id) => this.mainDo.modifyThreadLabelsInDB(id, addLabelIds, removeLabelIds)),
+    );
+    if (shouldReSyncThreadsAfterActions)
       await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
     return result;
   }
@@ -147,14 +148,18 @@ export class DriverRpcDO extends RpcTarget {
   //   }
 
   async markAsRead(threadIds: string[]) {
-    const result = await this.mainDo.markAsRead(threadIds);
+    const result = await Promise.all(
+      threadIds.map((id) => this.mainDo.modifyThreadLabelsInDB(id, [], ['UNREAD'])),
+    );
     if (shouldReSyncThreadsAfterActions)
       await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
     return result;
   }
 
   async markAsUnread(threadIds: string[]) {
-    const result = await this.mainDo.markAsUnread(threadIds);
+    const result = await Promise.all(
+      threadIds.map((id) => this.mainDo.modifyThreadLabelsInDB(id, ['UNREAD'], [])),
+    );
     if (shouldReSyncThreadsAfterActions)
       await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
     return result;
