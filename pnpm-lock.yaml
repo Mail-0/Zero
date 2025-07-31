@@ -585,6 +585,9 @@ importers:
       dedent:
         specifier: ^1.6.0
         version: 1.6.0
+      dormroom:
+        specifier: 1.0.1
+        version: 1.0.1
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.43.1(@cloudflare/workers-types@4.20250628.0)(@opentelemetry/api@1.9.0)(@types/pg@8.6.1)(better-sqlite3@11.10.0)(kysely@0.28.2)(postgres@3.4.5)
@@ -5664,6 +5667,9 @@ packages:
   domutils@3.2.2:
     resolution: {integrity: sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==}
 
+  dormroom@1.0.1:
+    resolution: {integrity: sha512-pXD9SSm73YMnNDQDkRgTlQAYthJtfcm6x++epFEIV9Mn6C3+cUZ9XlUSyyMGwc8nQjDERPtTwMeeEAzG9j/QKg==}
+
   dotenv-cli@8.0.0:
     resolution: {integrity: sha512-aLqYbK7xKOiTMIRf1lDPbI+Y+Ip/wo5k3eyp6ePysVaSqbyxjyK3dK35BTxG+rmd7djf5q2UPs4noPNH+cj0Qw==}
     hasBin: true
@@ -7314,6 +7320,9 @@ packages:
     resolution: {integrity: sha512-PXwfBhYu0hBCPw8Dn0E+WDYb7af3dSLVWKi3HGv84IdF4TyFoC0ysxFd0Goxw7nSv4T/PzEJQxsYsEiFCKo2BA==}
     engines: {node: '>=8.6'}
 
+  migratable-object@0.0.12:
+    resolution: {integrity: sha512-CpsSzGNub/HsXg8XCFVtHQAMlrgsmW0Ni4kj/AXLCfE2GrDoWnDU1HE4u9PCgh+IbOlVqBzljqD5GczRakrQ2A==}
+
   mime-db@1.52.0:
     resolution: {integrity: sha512-sPU4uV7dYlvtWJxwwxHD0PuihVNiE7TyAbQ5SWxDCB9mUYvOgroQOwYQQOKPJ8CIbE+1ETVlOoK1UC2nU3gYvg==}
     engines: {node: '>= 0.6'}
@@ -7455,6 +7464,9 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
+
+  multistub@0.0.8:
+    resolution: {integrity: sha512-Tx9GYYNTKEnUSpzCz/p/ooyGgj/bl8ezLFvsU3AX1EjF7ptfqoI9n63na5tsgGX/ZssTy9WY8KiUaMaIu3/CiQ==}
 
   mustache@4.2.0:
     resolution: {integrity: sha512-71ippSywq5Yb7/tVYyGbkBggbU8H3u5Rz56fH60jGFgr8uHwxs+aSKeqmluIVzM0m0kB7xQjKS6qPfd0b2ZoqQ==}
@@ -8180,6 +8192,9 @@ packages:
     resolution: {integrity: sha512-YWWTjgABSKcvs/nWBi9PycY/JiPJqOD4JA6o9Sej2AtvSGarXxKC3OQSk4pAarbdQlKAh5D4FCQkJNkW+GAn3w==}
     engines: {node: '>=0.6'}
 
+  queryable-object@0.0.8:
+    resolution: {integrity: sha512-iJDRf4ra/UV+xO+FblF0cvQJleN2w3Z4mG7QhLVvKNJoyikAhDyfiW4CL/AXK+fNg3nLvBAgzpSjpbFujCh58g==}
+
   querystringify@2.2.0:
     resolution: {integrity: sha512-FIqgj2EUvTa7R50u0rGsyTftzjYmv/a3hO345bZNrqabNqjtgiDMgmo4mkUjd+nzU5oF3dClKqFIPUKybUyqoQ==}
 
@@ -8468,6 +8483,9 @@ packages:
 
   remeda@2.21.3:
     resolution: {integrity: sha512-XXrZdLA10oEOQhLLzEJEiFFSKi21REGAkHdImIb4rt/XXy8ORGXh5HCcpUOsElfPNDb+X6TA/+wkh+p2KffYmg==}
+
+  remote-sql-cursor@0.1.9:
+    resolution: {integrity: sha512-2wwbOiyIkr+McQ45kAZT+x7britqG+cI2NLDNmDDSc+vUlk40UAhpfhJ/jEtM6NQ/GyDvxhNjfm6DTTwseUTpw==}
 
   repeat-string@1.6.1:
     resolution: {integrity: sha512-PV0dzCYDNfRi1jCDbJzpW7jNNDRuCOG/jI5ctQcGKt/clZD+YcPS3yIlWuTJMmESC8aevCFmWJy5wjAFgNqN6w==}
@@ -9098,6 +9116,9 @@ packages:
   tr46@5.1.1:
     resolution: {integrity: sha512-hdF5ZgjTqgAntKkklYw0R03MG2x/bSzTtkxmIRw/sTNV8YXsCJ1tfLAX23lhxhHJlEf3CRCOCGGWw3vI3GaSPw==}
     engines: {node: '>=18'}
+
+  transferable-object@0.0.22:
+    resolution: {integrity: sha512-my5Y2G90U4BBwXEnR6+7zpCBsgPOiF7JEkuNzWwq42YTiCyD1P39JaFoRJEO1tcZ423TdGrLSlW5DzgKZgCTNA==}
 
   trim-lines@3.0.1:
     resolution: {integrity: sha512-kRj8B+YHZCc9kQYdWfJB2/oUl9rA99qbowYYBtr4ui4mZyAQ2JpvVBd/6U2YloATfqBhBTSMhTpgBHtU0Mf3Rg==}
@@ -14919,6 +14940,13 @@ snapshots:
       domelementtype: 2.3.0
       domhandler: 5.0.3
 
+  dormroom@1.0.1:
+    dependencies:
+      migratable-object: 0.0.12
+      multistub: 0.0.8
+      queryable-object: 0.0.8
+      transferable-object: 0.0.22
+
   dotenv-cli@8.0.0:
     dependencies:
       cross-spawn: 7.0.6
@@ -16929,6 +16957,8 @@ snapshots:
       braces: 3.0.3
       picomatch: 2.3.1
 
+  migratable-object@0.0.12: {}
+
   mime-db@1.52.0: {}
 
   mime-db@1.54.0: {}
@@ -17087,6 +17117,8 @@ snapshots:
       typescript: 5.8.3
     transitivePeerDependencies:
       - '@types/node'
+
+  multistub@0.0.8: {}
 
   mustache@4.2.0: {}
 
@@ -17806,6 +17838,8 @@ snapshots:
     dependencies:
       side-channel: 1.1.0
 
+  queryable-object@0.0.8: {}
+
   querystringify@2.2.0: {}
 
   queue-microtask@1.2.3: {}
@@ -18231,6 +18265,8 @@ snapshots:
   remeda@2.21.3:
     dependencies:
       type-fest: 4.41.0
+
+  remote-sql-cursor@0.1.9: {}
 
   repeat-string@1.6.1: {}
 
@@ -18989,6 +19025,10 @@ snapshots:
   tr46@5.1.1:
     dependencies:
       punycode: 2.3.1
+
+  transferable-object@0.0.22:
+    dependencies:
+      remote-sql-cursor: 0.1.9
 
   trim-lines@3.0.1: {}
 

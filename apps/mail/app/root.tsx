@@ -5,9 +5,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  useLoaderData,
   useNavigate,
-  type LoaderFunctionArgs,
   type MetaFunction,
 } from 'react-router';
 import { Analytics as DubAnalytics } from '@dub/analytics/react';

@@ -23,6 +23,7 @@ import { type gmail_v1 } from '@googleapis/gmail';
 import { Effect, Console, Logger } from 'effect';
 import { connection } from './db/schema';
 import { EProviders } from './types';
+import type { ZeroEnv } from './env';
 import { EPrompts } from './types';
 import { eq } from 'drizzle-orm';
 import { createDb } from './db';
@@ -149,8 +150,8 @@ export type WorkflowError =
   | ThreadWorkflowError
   | UnsupportedWorkflowError;
 
-export class WorkflowRunner extends DurableObject<Env> {
-  constructor(state: DurableObjectState, env: Env) {
+export class WorkflowRunner extends DurableObject<ZeroEnv> {
+  constructor(state: DurableObjectState, env: ZeroEnv) {
     super(state, env);
   }
 

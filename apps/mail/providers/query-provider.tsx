@@ -97,7 +97,10 @@ export const trpcClient = createTRPCClient<AppRouter>({
         fetch(url, { ...options, credentials: 'include' }).then((res) => {
           const currentPath = new URL(window.location.href).pathname;
           const redirectPath = res.headers.get('X-Zero-Redirect');
-          if (!!redirectPath && redirectPath !== currentPath) window.location.href = redirectPath;
+          if (!!redirectPath && redirectPath !== currentPath) {
+            window.location.href = redirectPath;
+            res.headers.delete('X-Zero-Redirect');
+          }
           return res;
         }),
     }),

@@ -53,6 +53,7 @@
     "cloudflare": "4.5.0",
     "date-fns": "^4.1.0",
     "dedent": "^1.6.0",
+    "dormroom": "1.0.1",
     "drizzle-orm": "catalog:",
     "effect": "3.16.12",
     "elevenlabs": "1.59.0",
