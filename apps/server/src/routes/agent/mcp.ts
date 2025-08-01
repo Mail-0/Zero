@@ -36,6 +36,7 @@ export class ZeroMCP extends McpAgent<typeof env, Record<string, unknown>, { use
   activeConnectionId: string | undefined;
 
   async init(): Promise<void> {
+    if (!this.props.userId) return;
     const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
     const _connection = await db.query.connection.findFirst({
       where: eq(connection.userId, this.props.userId),

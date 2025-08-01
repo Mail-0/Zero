@@ -672,16 +672,16 @@ const app = new Hono<HonoContext>()
     '/vsse',
     async (request, env, ctx) => {
       const authBearer = request.headers.get('Authorization');
-      const callerId = request.headers.get('X-Caller');
-      if (!callerId) {
-        return new Response('Unauthorized', { status: 401 });
-      }
       if (!authBearer) {
         console.log('No auth provided');
         return new Response('Unauthorized', { status: 401 });
       }
       if (authBearer !== env.VOICE_SECRET) {
         return new Response('Unauthorized', { status: 401 });
+      }
+      const callerId = request.headers.get('X-Caller');
+      if (!callerId) {
+        return ZeroMCP.serveSSE('/vsse', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
       }
       const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
       const foundUser = await db.query.user.findFirst({
