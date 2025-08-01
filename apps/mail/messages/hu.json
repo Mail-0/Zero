@@ -452,7 +452,9 @@
         "selectDefaultEmail": "Alapértelmezett e-mail kiválasztása",
         "defaultEmailDescription": "Ez az e-mail lesz az alapértelmezett 'Feladó' cím új e-mailek írásakor",
         "autoRead": "Automatikus olvasás",
-        "autoReadDescription": "Automatikusan olvasottként jelöli az e-maileket, amikor rájuk kattintasz."
+        "autoReadDescription": "Automatikusan olvasottként jelöli az e-maileket, amikor rájuk kattintasz.",
+        "animations": "Animációk",
+        "animationsDescription": "Sima animációk engedélyezése e-mailek közötti váltáskor"
       },
       "connections": {
         "title": "E-mail kapcsolatok",

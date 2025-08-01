@@ -452,7 +452,9 @@
         "selectDefaultEmail": "Seleccionar correo predeterminado",
         "defaultEmailDescription": "Este correo electrónico se utilizará como dirección predeterminada 'De' al redactar nuevos correos",
         "autoRead": "Lectura automática",
-        "autoReadDescription": "Marcar automáticamente los correos electrónicos como leídos cuando haces clic en ellos."
+        "autoReadDescription": "Marcar automáticamente los correos electrónicos como leídos cuando haces clic en ellos.",
+        "animations": "Animaciones",
+        "animationsDescription": "Activar animaciones suaves al cambiar entre correos electrónicos"
       },
       "connections": {
         "title": "Conexiones de correo",

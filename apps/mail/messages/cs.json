@@ -452,7 +452,9 @@
         "selectDefaultEmail": "Vybrat výchozí e-mail",
         "defaultEmailDescription": "Tento e-mail bude použit jako výchozí adresa 'Od' při psaní nových e-mailů",
         "autoRead": "Automatické přečtení",
-        "autoReadDescription": "Automaticky označit e-maily jako přečtené při kliknutí na ně."
+        "autoReadDescription": "Automaticky označit e-maily jako přečtené při kliknutí na ně.",
+        "animations": "Animace",
+        "animationsDescription": "Povolit plynulé animace při přepínání mezi e-maily"
       },
       "connections": {
         "title": "Propojení emailu",

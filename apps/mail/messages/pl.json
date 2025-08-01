@@ -452,7 +452,9 @@
         "selectDefaultEmail": "Wybierz domyślny e-mail",
         "defaultEmailDescription": "Ten e-mail będzie używany jako domyślny adres 'Od' podczas tworzenia nowych wiadomości e-mail",
         "autoRead": "Auto Read",
-        "autoReadDescription": "Automatycznie oznaczaj e-maile jako przeczytane po ich kliknięciu."
+        "autoReadDescription": "Automatycznie oznaczaj e-maile jako przeczytane po ich kliknięciu.",
+        "animations": "Animacje",
+        "animationsDescription": "Włącz płynne animacje podczas przełączania między e-mailami"
       },
       "connections": {
         "title": "Połączenia e-mail",

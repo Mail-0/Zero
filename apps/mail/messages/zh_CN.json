@@ -452,7 +452,9 @@
         "selectDefaultEmail": "选择默认邮箱",
         "defaultEmailDescription": "此邮箱将作为撰写新邮件时的默认\"发件人\"地址",
         "autoRead": "自动阅读",
-        "autoReadDescription": "点击邮件时自动将其标记为已读。"
+        "autoReadDescription": "点击邮件时自动将其标记为已读。",
+        "animations": "动画效果",
+        "animationsDescription": "启用在切换邮件时的平滑动画效果"
       },
       "connections": {
         "title": "邮箱连接",

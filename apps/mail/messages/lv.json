@@ -452,7 +452,9 @@
         "selectDefaultEmail": "Izvēlieties noklusējuma e-pastu",
         "defaultEmailDescription": "Šis e-pasts tiks izmantots kā noklusējuma 'No' adrese, rakstot jaunus e-pastus",
         "autoRead": "Automātiska lasīšana",
-        "autoReadDescription": "Automātiski atzīmēt e-pastus kā izlasītus, kad uz tiem uzklikšķināt."
+        "autoReadDescription": "Automātiski atzīmēt e-pastus kā izlasītus, kad uz tiem uzklikšķināt.",
+        "animations": "Animācijas",
+        "animationsDescription": "Iespējot plūstošas animācijas, pārslēdzoties starp e-pastiem"
       },
       "connections": {
         "title": "E-pasta savienojumi",
