@@ -217,6 +217,7 @@ export interface DeleteAllSpamResponse {
 }
 
 export enum Tools {
+  GetThreadSummary = 'getThreadSummary',
   GetThread = 'getThread',
   ComposeEmail = 'composeEmail',
   DeleteEmail = 'deleteEmail',

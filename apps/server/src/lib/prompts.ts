@@ -324,7 +324,7 @@ export const OutlookSearchAssistantSystemPrompt = () =>
 
         `;
 
-export const AiChatPrompt = (threadId: string) =>
+export const AiChatPrompt = () =>
   dedent`
     <system_prompt>
       <role>
@@ -346,7 +346,6 @@ export const AiChatPrompt = (threadId: string) =>
       </persona>
 
       <current_date>${getCurrentDateContext()}</current_date>
-      <current_thread_id>${threadId}</current_thread_id>
 
       <thinking_process>
         Before responding, think step-by-step:
@@ -358,6 +357,11 @@ export const AiChatPrompt = (threadId: string) =>
       </thinking_process>
 
       <tools>
+        <tool name="${Tools.GetThreadSummary}">
+          <purpose>Get the summary of a specific email thread</purpose>
+          <returns>Summary of the thread</returns>
+          <example>getThreadSummary({ id: "17c2318b9c1e44f6" })</example>
+        </tool>
         <tool name="${Tools.InboxRag}">
           <purpose>Search inbox using natural language queries</purpose>
           <returns>Array of thread IDs only</returns>

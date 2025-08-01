@@ -3,12 +3,14 @@ import { useAIFullScreen, useAISidebar } from '../ui/ai-sidebar';
 import { VoiceProvider } from '@/providers/voice-provider';
 import useComposeEditor from '@/hooks/use-compose-editor';
 import { useRef, useCallback, useEffect } from 'react';
+import type { useAgentChat } from 'agents/ai-react';
 import { Markdown } from '@react-email/components';
 import { useBilling } from '@/hooks/use-billing';
 import { TextShimmer } from '../ui/text-shimmer';
 import { useThread } from '@/hooks/use-threads';
 import { MailLabels } from '../mail/mail-list';
 import { cn, getEmailLogo } from '@/lib/utils';
+import type { Message as AiMessage } from 'ai';
 import { VoiceButton } from '../voice-button';
 import { EditorContent } from '@tiptap/react';
 import { CurvedArrow } from '../icons/icons';
@@ -69,7 +71,6 @@ const ThreadPreview = ({ threadId }: { threadId: string }) => {
 };
 
 const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => void }) => {
-  
   const firstRowQueries = [
     'Find invoice from Stripe',
     'Show unpaid invoices',
@@ -79,7 +80,7 @@ const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => voi
   const secondRowQueries = ['Find all work meetings', 'What projects do i have coming up'];
 
   return (
-    <div className="mt-6 flex w-full max-w-xl relative flex-col items-center gap-2">
+    <div className="relative mt-6 flex w-full max-w-xl flex-col items-center gap-2">
       {/* First row */}
       <div className="no-scrollbar relative flex w-full justify-center overflow-x-auto">
         <div className="flex gap-4 px-4">
@@ -87,7 +88,8 @@ const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => voi
             <button
               key={query}
               onClick={() => onQueryClick(query)}
-              className="shrink-0 whitespace-nowrap rounded-md bg-[#f0f0f0] p-1 px-2 text-sm text-[#555555] dark:bg-[#262626] dark:text-[#929292]">
+              className="shrink-0 whitespace-nowrap rounded-md bg-[#f0f0f0] p-1 px-2 text-sm text-[#555555] dark:bg-[#262626] dark:text-[#929292]"
+            >
               {query}
             </button>
           ))}
@@ -108,31 +110,31 @@ const ExampleQueries = ({ onQueryClick }: { onQueryClick: (query: string) => voi
         </div>
       </div>
       {/* Left mask */}
-      <div className="from-panelLight dark:from-panelDark pointer-events-none absolute bottom-0 left-0 top-0 w-12 bg-linear-to-r to-transparent"></div>
+      <div className="from-panelLight dark:from-panelDark bg-linear-to-r pointer-events-none absolute bottom-0 left-0 top-0 w-12 to-transparent"></div>
       {/* Right mask */}
-      <div className="from-panelLight dark:from-panelDark pointer-events-none absolute bottom-0 right-0 top-0 w-12 bg-linear-to-l to-transparent"></div>
+      <div className="from-panelLight dark:from-panelDark bg-linear-to-l pointer-events-none absolute bottom-0 right-0 top-0 w-12 to-transparent"></div>
     </div>
   );
 };
 
-interface Message {
-  id: string;
-  role: 'user' | 'assistant' | 'data' | 'system';
-  parts: Array<{
-    type: string;
-    text?: string;
-    toolInvocation?: {
-      toolName: string;
-      result?: {
-        threads?: Array<{ id: string; title: string; snippet: string }>;
-      };
-      args?: any;
-    };
-  }>;
-}
+// interface Message {
+//   id: string;
+//   role: 'user' | 'assistant' | 'data' | 'system';
+//   parts: Array<{
+//     type: string;
+//     text?: string;
+//     toolInvocation?: {
+//       toolName: string;
+//       result?: {
+//         threads?: Array<{ id: string; title: string; snippet: string }>;
+//       };
+//       args?: any;
+//     };
+//   }>;
+// }
 
 export interface AIChatProps {
-  messages: Message[];
+  messages: AiMessage[];
   input: string;
   setInput: (input: string) => void;
   error?: Error;
@@ -141,6 +143,7 @@ export interface AIChatProps {
   stop: () => void;
   className?: string;
   onModelChange?: (model: string) => void;
+  setMessages: (messages: AiMessage[]) => void;
 }
 
 // Subcomponents for ToolResponse
@@ -198,7 +201,8 @@ export function AIChat({
   error,
   handleSubmit,
   status,
-}: AIChatProps): React.ReactElement {
+  append,
+}: ReturnType<typeof useAgentChat>): React.ReactElement {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const { chatMessages } = useBilling();
@@ -206,6 +210,7 @@ export function AIChat({
   const [, setPricingDialog] = useQueryState('pricingDialog');
   const [aiSidebarOpen] = useQueryState('aiSidebar');
   const { toggleOpen } = useAISidebar();
+  const [threadId] = useQueryState('threadId');
 
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
@@ -235,6 +240,11 @@ export function AIChat({
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    append({
+      id: crypto.randomUUID(),
+      role: 'system',
+      content: `The user is on thread: ${threadId}`,
+    });
     handleSubmit(e);
     editor.commands.clearContent(true);
     setTimeout(() => {
@@ -260,13 +270,13 @@ export function AIChat({
         <div className="min-h-full px-2 py-4">
           {chatMessages && !chatMessages.enabled ? (
             <div
-            onClick={() => setPricingDialog('true')}
-            className="absolute inset-0 flex flex-col items-center justify-center"
-          >
-            <TextShimmer className="text-center text-xl font-medium">
-              Upgrade to Zero Pro for unlimited AI chat
-            </TextShimmer>
-            <Button className="mt-2 h-8 w-52">Start 7 day free trial</Button>
+              onClick={() => setPricingDialog('true')}
+              className="absolute inset-0 flex flex-col items-center justify-center"
+            >
+              <TextShimmer className="text-center text-xl font-medium">
+                Upgrade to Zero Pro for unlimited AI chat
+              </TextShimmer>
+              <Button className="mt-2 h-8 w-52">Start 7 day free trial</Button>
             </div>
           ) : !messages.length ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -286,6 +296,7 @@ export function AIChat({
             </div>
           ) : (
             messages.map((message, index) => {
+              if (message.role === 'system') return null;
               const textParts = message.parts.filter((part) => part.type === 'text');
               const toolParts = message.parts.filter((part) => part.type === 'tool-invocation');
 
@@ -402,7 +413,7 @@ export function AIChat({
           </div>
         </div>
 
-     {/* <div className="flex items-center justify-end gap-1">
+        {/* <div className="flex items-center justify-end gap-1">
         <div className="mt-1 flex items-center justify-end relative z-10">
           <Select
 

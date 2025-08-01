@@ -4,8 +4,8 @@ import { generateText, tool } from 'ai';
 
 import { getZeroAgent } from '../../lib/server-utils';
 import { colors } from '../../lib/prompts';
-import { env } from '../../env';
 import { Tools } from '../../types';
+import { env } from '../../env';
 import { z } from 'zod';
 
 type ModelTypes = 'summarize' | 'general' | 'chat' | 'vectorize';
@@ -120,6 +120,33 @@ const getEmail = () =>
     execute: async ({ id }) => {
       /* nothing to fetch server-side any more */
       return `<thread id="${id}"/>`;
+    },
+  });
+
+const getThreadSummary = (connectionId: string) =>
+  tool({
+    description: 'Get the summary of a specific email thread',
+    parameters: z.object({
+      id: z.string().describe('The ID of the email thread to get the summary of'),
+    }),
+    execute: async ({ id }) => {
+      const response = await env.VECTORIZE.getByIds([id]);
+      const driver = await getZeroAgent(connectionId);
+      const thread = await driver.getThread(id);
+      if (response.length && response?.[0]?.metadata?.['summary'] && thread.latest?.subject) {
+        const result = response[0].metadata as { summary: string; connection: string };
+        if (result.connection !== connectionId) return null;
+        const shortResponse = await env.AI.run('@cf/facebook/bart-large-cnn', {
+          input_text: result.summary,
+        });
+        return {
+          short: shortResponse.summary,
+          subject: thread.latest?.subject,
+          sender: thread.latest?.sender,
+          date: thread.latest?.receivedOn,
+        };
+      }
+      return null;
     },
   });
 
@@ -380,6 +407,7 @@ export const webSearch = () =>
 export const tools = async (connectionId: string) => {
   return {
     [Tools.GetThread]: getEmail(),
+    [Tools.GetThreadSummary]: getThreadSummary(connectionId),
     [Tools.ComposeEmail]: composeEmailTool(connectionId),
     [Tools.MarkThreadsRead]: markAsRead(connectionId),
     [Tools.MarkThreadsUnread]: markAsUnread(connectionId),

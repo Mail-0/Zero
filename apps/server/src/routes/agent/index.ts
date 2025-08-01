@@ -1828,15 +1828,7 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
     this.registerThinkingMCP();
   }
 
-  private getDataStreamResponse(
-    onFinish: StreamTextOnFinishCallback<{}>,
-    options?: {
-      abortSignal?: AbortSignal;
-      connectionId?: string;
-    },
-  ) {
-    const connectionId = options?.connectionId || 'general';
-    const currentThreadId = this.connectionThreadIds.get(connectionId) || '';
+  private getDataStreamResponse(onFinish: StreamTextOnFinishCallback<{}>) {
     const dataStreamResponse = createDataStreamResponse({
       execute: async (dataStream) => {
         if (this.name === 'general') return;
@@ -1874,10 +1866,7 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
           onError: (error) => {
             console.error('Error in streamText', error);
           },
-          system: await getPrompt(
-            getPromptName(connectionId, EPrompts.Chat),
-            AiChatPrompt(currentThreadId),
-          ),
+          system: await getPrompt(getPromptName(connectionId, EPrompts.Chat), AiChatPrompt()),
         });
 
         result.mergeIntoDataStream(dataStream);
@@ -1954,23 +1943,18 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
           await this.persistMessages(messages, [connection.id]);
 
           const chatMessageId = data.id;
-          const abortSignal = this.getAbortSignal(chatMessageId);
+          //   const abortSignal = this.getAbortSignal(chatMessageId);
 
           return this.tryCatchChat(async () => {
-            const response = await this.onChatMessage(
-              async ({ response }) => {
-                const finalMessages = appendResponseMessages({
-                  messages,
-                  responseMessages: response.messages,
-                });
+            const response = await this.onChatMessage(async ({ response }) => {
+              const finalMessages = appendResponseMessages({
+                messages,
+                responseMessages: response.messages,
+              });
 
-                await this.persistMessages(finalMessages, [connection.id]);
-                this.removeAbortController(chatMessageId);
-              },
-              abortSignal
-                ? { abortSignal, connectionId: connection.id }
-                : { connectionId: connection.id },
-            );
+              await this.persistMessages(finalMessages, [connection.id]);
+              this.removeAbortController(chatMessageId);
+            });
 
             if (response) {
               await this.reply(data.id, response);
@@ -2011,6 +1995,7 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
           break;
         }
         case IncomingMessageType.ThreadIdUpdate: {
+          console.log('ThreadIdUpdate', data);
           this.connectionThreadIds.set(connection.id, data.threadId);
           console.log(
             `[ZeroAgent] Updated threadId for connection ${connection.id}: ${data.threadId}`,
@@ -2079,13 +2064,7 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
     this.chatMessageAbortControllers.clear();
   }
 
-  async onChatMessage(
-    onFinish: StreamTextOnFinishCallback<{}>,
-    options?: {
-      abortSignal?: AbortSignal;
-      connectionId?: string;
-    },
-  ) {
-    return this.getDataStreamResponse(onFinish, options);
+  async onChatMessage(onFinish: StreamTextOnFinishCallback<{}>) {
+    return this.getDataStreamResponse(onFinish);
   }
 }
