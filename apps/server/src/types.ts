@@ -235,6 +235,7 @@ export enum Tools {
   WebSearch = 'webSearch',
   InboxRag = 'inboxRag',
   BuildGmailSearchQuery = 'buildGmailSearchQuery',
+  GetCurrentDate = 'getCurrentDate',
 }
 
 export type AppContext = Context<{ Bindings: Env }>;

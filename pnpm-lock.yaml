@@ -55,15 +55,12 @@ importers:
 
   .:
     dependencies:
-      '@dub/analytics':
-        specifier: 0.0.27
-        version: 0.0.27
-      '@dub/better-auth':
-        specifier: 0.0.3
-        version: 0.0.3
-      dub:
-        specifier: 0.63.7
-        version: 0.63.7(zod@3.25.67)
+      zod:
+        specifier: 3.25.42
+        version: 3.25.42
+      zod-to-json-schema:
+        specifier: 3.24.6
+        version: 3.24.6(zod@3.25.42)
     devDependencies:
       '@types/node':
         specifier: 22.15.29
@@ -116,6 +113,9 @@ importers:
       '@dnd-kit/utilities':
         specifier: 3.2.2
         version: 3.2.2(react@19.1.0)
+      '@dub/analytics':
+        specifier: 0.0.29
+        version: 0.0.29
       '@elevenlabs/react':
         specifier: 0.1.5
         version: 0.1.5(react@19.1.0)
@@ -310,7 +310,7 @@ importers:
         version: 0.4.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       novel:
         specifier: 1.0.2
-        version: 1.0.2(@tiptap/extension-code-block@2.23.0(@tiptap/core@2.23.0(@tiptap/pm@2.23.0))(@tiptap/pm@2.23.0))(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(highlight.js@11.11.1)(lowlight@3.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 1.0.2(patch_hash=4e642d3ebfc8b39cf357dfe855ef6e0f5ebb3f6705776e1d7f2acc7ee8a973ec)(@tiptap/extension-code-block@2.23.0(@tiptap/core@2.23.0(@tiptap/pm@2.23.0))(@tiptap/pm@2.23.0))(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(highlight.js@11.11.1)(lowlight@3.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       nuqs:
         specifier: 2.4.0
         version: 2.4.0(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
@@ -516,6 +516,9 @@ importers:
       '@coinbase/cookie-manager':
         specifier: 1.1.8
         version: 1.1.8
+      '@dub/better-auth':
+        specifier: 0.0.3
+        version: 0.0.3
       '@googleapis/gmail':
         specifier: 12.0.0
         version: 12.0.0
@@ -591,6 +594,9 @@ importers:
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.43.1(@cloudflare/workers-types@4.20250628.0)(@opentelemetry/api@1.9.0)(@types/pg@8.6.1)(better-sqlite3@11.10.0)(kysely@0.28.2)(postgres@3.4.5)
+      dub:
+        specifier: 0.64.2
+        version: 0.64.2(@modelcontextprotocol/sdk@1.15.1)(zod@3.25.67)
       effect:
         specifier: 3.16.12
         version: 3.16.12
@@ -1225,8 +1231,8 @@ packages:
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
 
-  '@dub/analytics@0.0.27':
-    resolution: {integrity: sha512-TbLr+sKWiBsMw1GOLpduZI7skXmrLwZlEoVoHyxq66RvMk/5Fl84QoenlhjdxaX1rlHAkWCcjcbAYcCN7skoKw==}
+  '@dub/analytics@0.0.29':
+    resolution: {integrity: sha512-/h6KyOdhCFy+pHEOQB/82uCCLU4x9PPtQuw6TZ9iqgaDZXQjL0+M6LZ0B0k4vIQkuLMyRwcvx4Mjl1YPMqoADw==}
 
   '@dub/better-auth@0.0.3':
     resolution: {integrity: sha512-5haJGPt8Xab1L4De6naqEwC8k2KJrxI2iAfs5t9u6iNob3DNBTsbSZGb2godIigg9ZsS2J+joKKG5hDK6jT0UQ==}
@@ -5848,12 +5854,12 @@ packages:
       sqlite3:
         optional: true
 
-  dub@0.63.7:
-    resolution: {integrity: sha512-DhMF4ceWIPjMGA4ZU8L1pySJFtwdXRjcwchRLLWReN5t3C/MZohrLvrqbeJOBfdOE4VKGtqI8uYD3kBT+4nMSQ==}
+  dub@0.64.2:
+    resolution: {integrity: sha512-9Zn+kN1tix/qgPUe+8W4tX3XbcqueUuyHDuW4X+GKG/PDZ+vgXR0aQPk9gy6IWuffaJIaknwXtYslzS+2zfNTg==}
     hasBin: true
     peerDependencies:
       '@modelcontextprotocol/sdk': '>=1.5.0 <1.10.0'
-      zod: '>= 3'
+      zod: ^3
     peerDependenciesMeta:
       '@modelcontextprotocol/sdk':
         optional: true
@@ -9900,6 +9906,9 @@ packages:
   zod@3.22.3:
     resolution: {integrity: sha512-EjIevzuJRiRPbVH4mGc8nApb/lVLKVpmUhAaR5R5doKGfAnGJ6Gr3CViAVjP+4FWSxCsybeWQdcgCtbX+7oZug==}
 
+  zod@3.25.42:
+    resolution: {integrity: sha512-PcALTLskaucbeHc41tU/xfjfhcz8z0GdhhDcSgrCTmSazUuqnYqiXO63M0QUBVwpBlsLsNVn5qHSC5Dw3KZvaQ==}
+
   zod@3.25.67:
     resolution: {integrity: sha512-idA2YXwpCdqUSKRCACDE6ItZD9TZzy3OZMtpfLoh6oPR47lipysRrJfjzMqFxQ3uJuUPyUeWe1r9vLH33xO/Qw==}
 
@@ -10439,13 +10448,13 @@ snapshots:
 
   '@drizzle-team/brocli@0.10.2': {}
 
-  '@dub/analytics@0.0.27':
+  '@dub/analytics@0.0.29':
     dependencies:
       server-only: 0.0.1
 
   '@dub/better-auth@0.0.3':
     dependencies:
-      zod: 3.25.67
+      zod: 3.25.42
 
   '@effect/language-service@0.31.1': {}
 
@@ -11160,8 +11169,8 @@ snapshots:
       express-rate-limit: 7.5.1(express@5.1.0)
       pkce-challenge: 5.0.0
       raw-body: 3.0.0
-      zod: 3.25.67
-      zod-to-json-schema: 3.24.6(zod@3.25.67)
+      zod: 3.25.42
+      zod-to-json-schema: 3.24.6(zod@3.25.42)
     transitivePeerDependencies:
       - supports-color
 
@@ -15135,9 +15144,11 @@ snapshots:
       kysely: 0.28.2
       postgres: 3.4.5
 
-  dub@0.63.7(zod@3.25.67):
+  dub@0.64.2(@modelcontextprotocol/sdk@1.15.1)(zod@3.25.67):
     dependencies:
       zod: 3.25.67
+    optionalDependencies:
+      '@modelcontextprotocol/sdk': 1.15.1
 
   dunder-proto@1.0.1:
     dependencies:
@@ -17390,7 +17401,7 @@ snapshots:
 
   normalize-path@3.0.0: {}
 
-  novel@1.0.2(@tiptap/extension-code-block@2.23.0(@tiptap/core@2.23.0(@tiptap/pm@2.23.0))(@tiptap/pm@2.23.0))(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(highlight.js@11.11.1)(lowlight@3.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  novel@1.0.2(patch_hash=4e642d3ebfc8b39cf357dfe855ef6e0f5ebb3f6705776e1d7f2acc7ee8a973ec)(@tiptap/extension-code-block@2.23.0(@tiptap/core@2.23.0(@tiptap/pm@2.23.0))(@tiptap/pm@2.23.0))(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(highlight.js@11.11.1)(lowlight@3.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       '@radix-ui/react-slot': 1.2.3(@types/react@19.0.10)(react@19.1.0)
       '@tiptap/core': 2.23.0(@tiptap/pm@2.23.0)
@@ -19921,6 +19932,10 @@ snapshots:
       css-what: 6.1.0
       entities: 5.0.0
 
+  zod-to-json-schema@3.24.6(zod@3.25.42):
+    dependencies:
+      zod: 3.25.42
+
   zod-to-json-schema@3.24.6(zod@3.25.67):
     dependencies:
       zod: 3.25.67
@@ -19930,6 +19945,8 @@ snapshots:
       zod: 3.25.67
 
   zod@3.22.3: {}
+
+  zod@3.25.42: {}
 
   zod@3.25.67: {}
 
