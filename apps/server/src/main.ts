@@ -669,6 +669,36 @@ const app = new Hono<HonoContext>()
     { replaceRequest: false },
   )
   .mount(
+    '/vsse',
+    async (request, env, ctx) => {
+      const authBearer = request.headers.get('Authorization');
+      const callerId = request.headers.get('X-Caller');
+      if (!callerId) {
+        return new Response('Unauthorized', { status: 401 });
+      }
+      if (!authBearer) {
+        console.log('No auth provided');
+        return new Response('Unauthorized', { status: 401 });
+      }
+      if (authBearer !== env.VOICE_SECRET) {
+        return new Response('Unauthorized', { status: 401 });
+      }
+      const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
+      const foundUser = await db.query.user.findFirst({
+        where: and(eq(user.phoneNumber, callerId), eq(user.phoneNumberVerified, true)),
+      });
+      await conn.end();
+      if (!foundUser) {
+        return new Response('Unauthorized', { status: 401 });
+      }
+      ctx.props = {
+        userId: foundUser.id,
+      };
+      return ZeroMCP.serveSSE('/vsse', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
+    },
+    { replaceRequest: false },
+  )
+  .mount(
     '/mcp/thinking/sse',
     async (request, env, ctx) => {
       return ThinkingMCP.serveSSE('/mcp/thinking/sse', { binding: 'THINKING_MCP' }).fetch(

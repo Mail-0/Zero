@@ -65,6 +65,75 @@ export class ZeroMCP extends McpAgent<typeof env, Record<string, unknown>, { use
     );
 
     this.server.registerTool(
+      'getThreadSummary',
+      {
+        description: 'Get the summary of a specific email thread',
+        inputSchema: {
+          id: z.string(),
+        },
+      },
+      async (s) => {
+        if (!this.activeConnectionId) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: 'No active connection',
+              },
+            ],
+          };
+        }
+        const response = await env.VECTORIZE.getByIds([s.id]);
+        const driver = await getZeroAgent(this.activeConnectionId);
+        const thread = await driver.getThread(s.id);
+        if (response.length && response?.[0]?.metadata?.['summary'] && thread?.latest?.subject) {
+          const result = response[0].metadata as { summary: string; connection: string };
+          if (result.connection !== this.activeConnectionId) {
+            return {
+              content: [
+                {
+                  type: 'text' as const,
+                  text: 'No summary found for this connection',
+                },
+              ],
+            };
+          }
+          const shortResponse = await env.AI.run('@cf/facebook/bart-large-cnn', {
+            input_text: result.summary,
+          });
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: shortResponse.summary as string,
+              },
+              {
+                type: 'text' as const,
+                text: `Subject: ${thread.latest?.subject}`,
+              },
+              {
+                type: 'text' as const,
+                text: `Sender: ${thread.latest?.sender.name} <${thread.latest?.sender.email}>`,
+              },
+              {
+                type: 'text' as const,
+                text: `Date: ${thread.latest?.receivedOn}`,
+              },
+            ],
+          };
+        }
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: 'No summary found',
+            },
+          ],
+        };
+      },
+    );
+
+    this.server.registerTool(
       'getActiveConnection',
       {
         description: 'Get the currently active email connection',
@@ -249,7 +318,7 @@ export class ZeroMCP extends McpAgent<typeof env, Record<string, unknown>, { use
         },
       },
       async (s) => {
-        const result = await agent.listThreads({
+        const result = await agent.rawListThreads({
           folder: s.folder,
           query: s.query,
           maxResults: s.maxResults,
@@ -266,7 +335,7 @@ export class ZeroMCP extends McpAgent<typeof env, Record<string, unknown>, { use
               },
               {
                 type: 'text' as const,
-                text: `Latest Message Sender: ${loadedThread.latest?.sender}`,
+                text: `Latest Message Sender: ${thread.latest?.sender.name} <${thread.latest?.sender.email}>`,
               },
             ];
           }),
