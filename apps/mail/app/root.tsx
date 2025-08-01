@@ -55,18 +55,7 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-export async function loader(_: LoaderFunctionArgs) {
-  //   const trpc = getServerTrpc(request);
-  //   const defaultConnection = await trpc.connections.getDefault
-  //     .query()
-  //     .then((res) => (res?.id as string) ?? null)
-  //     .catch(() => null);
-  return { connectionId: 'defaultConnection' };
-}
-
 export function Layout({ children }: PropsWithChildren) {
-  const { connectionId } = useLoaderData<typeof loader>();
-
   return (
     <html lang={getLocale()} suppressHydrationWarning>
       <head>
@@ -82,7 +71,7 @@ export function Layout({ children }: PropsWithChildren) {
         <Links />
       </head>
       <body className="antialiased">
-        <ServerProviders connectionId={connectionId}>
+        <ServerProviders connectionId={null}>
           <ClientProviders>{children}</ClientProviders>
           <DubAnalytics
             domainsConfig={{
