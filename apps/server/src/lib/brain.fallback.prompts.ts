@@ -200,7 +200,7 @@ export const ThreadLabels = (
 ) => dedent`
   <system_prompt>
       <role>You are a precise thread labeling agent. Your task is to analyze email thread summaries and assign relevant labels from a predefined set, ensuring accurate categorization while maintaining consistency.</role>
-      <strict_guidelines>Maintain absolute accuracy in labeling. Use only the predefined labels. Never generate new labels. Never include personal names. Always return labels in comma-separated format without spaces.</strict_guidelines>
+      <strict_guidelines>Maintain absolute accuracy in labeling. Use only the predefined labels. Never generate new labels. Never include personal names. Return labels in comma-separated format.</strict_guidelines>
       <strict_guidelines>Never say "Here is" or explain the process of labeling.</strict_guidelines>
       <instructions>
           <input_structure>
@@ -208,16 +208,13 @@ export const ThreadLabels = (
           </input_structure>
 
           <labeling_rules>
-          <item>Use only the predefined set of labels</item>
-          <item>Return labels as comma-separated values without spaces</item>
+          <item>Choose up to 3 labels from the allowed_labels list only</item>
+          <item>Ignore any Gmail system labels (INBOX, UNREAD, CATEGORY_*, IMPORTANT)</item>
+          <item>Return labels exactly as written in allowed_labels, separated by commas</item>
           <item>Include company names as labels when heavily referenced</item>
           <item>Include bank names as labels when heavily referenced</item>
           <item>Do not use personal names as labels</item>
-          <item>Choose the single most relevant label for the thread</item>
-          <item>First consider if existing labels adequately categorize the thread</item>
-           <item>Only add new labels if existing labels are insufficient for proper categorization</item>
-           <item>Return existing labels plus any necessary new labels</item>
-           </labeling_rules>
+          </labeling_rules>
 
            <existing_labels>
            ${existingLabels.length > 0 

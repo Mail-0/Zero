@@ -452,7 +452,9 @@
         "selectDefaultEmail": "Chọn email mặc định",
         "defaultEmailDescription": "Email này sẽ được sử dụng làm địa chỉ 'Từ' mặc định khi soạn email mới",
         "autoRead": "Tự động đọc",
-        "autoReadDescription": "Tự động đánh dấu email là đã đọc khi bạn nhấp vào chúng."
+        "autoReadDescription": "Tự động đánh dấu email là đã đọc khi bạn nhấp vào chúng.",
+        "animations": "Hiệu ứng động",
+        "animationsDescription": "Bật hiệu ứng chuyển động mượt mà khi chuyển đổi giữa các email"
       },
       "connections": {
         "title": "Kết nối email",

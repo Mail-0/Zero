@@ -1,5 +1,9 @@
+// @ts-ignore
+import { CssSanitizer } from '@barkleapp/css-sanitizer';
 import sanitizeHtml from 'sanitize-html';
 import * as cheerio from 'cheerio';
+
+const sanitizer = new CssSanitizer();
 
 interface ProcessEmailOptions {
   html: string;
@@ -10,7 +14,13 @@ interface ProcessEmailOptions {
 // Server-side: Heavy lifting, preference-independent processing
 export function preprocessEmailHtml(html: string): string {
   const sanitizeConfig: sanitizeHtml.IOptions = {
-    allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'title', 'details', 'summary']),
+    allowedTags: sanitizeHtml.defaults.allowedTags.concat([
+      'img',
+      'title',
+      'details',
+      'summary',
+      'style',
+    ]),
 
     allowedAttributes: {
       '*': [
@@ -53,6 +63,25 @@ export function preprocessEmailHtml(html: string): string {
 
   const sanitized = sanitizeHtml(html, sanitizeConfig);
   const $ = cheerio.load(sanitized);
+
+  $('style').each((_, el) => {
+    const css = $(el).html() || '';
+    const safe = sanitizer.sanitizeCss(css, {
+      allowedProperties: [
+        'color',
+        'background-color',
+        'font-size',
+        'margin',
+        'padding',
+        'text-align',
+        'border',
+        'display',
+      ],
+      disallowedAtRules: ['import', 'keyframes'],
+      disallowedFunctions: ['expression', 'url'],
+    });
+    $(el).html(safe);
+  });
 
   // Collapse quoted text (structure only, no theme colors)
   const collapseQuoted = (selector: string) => {
@@ -107,9 +136,9 @@ export function preprocessEmailHtml(html: string): string {
 
 // Client-side: Light styling + image preferences
 export function applyEmailPreferences(
-  preprocessedHtml: string, 
-  theme: 'light' | 'dark', 
-  shouldLoadImages: boolean
+  preprocessedHtml: string,
+  theme: 'light' | 'dark',
+  shouldLoadImages: boolean,
 ): { processedHtml: string; hasBlockedImages: boolean } {
   let hasBlockedImages = false;
   const isDarkTheme = theme === 'dark';
@@ -121,7 +150,7 @@ export function applyEmailPreferences(
     $('img').each((_, el) => {
       const $img = $(el);
       const src = $img.attr('src');
-      
+
       // Allow CID images (inline attachments)
       if (src && !src.startsWith('cid:')) {
         hasBlockedImages = true;

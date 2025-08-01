@@ -1,0 +1,38 @@
+{
+  "name": "@zero/testing",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:headed": "playwright test --headed"
+  },
+  "devDependencies": {
+    "@cloudflare/playwright": "0.0.11",
+    "@playwright/test": "^1.40.0",
+    "@testing-library/jest-dom": "^6.1.4",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/user-event": "^14.5.1",
+    "@types/testing-library__jest-dom": "^6.0.0",
+    "@vitejs/plugin-react": "^4.7.0",
+    "@vitest/coverage-v8": "^1.0.4",
+    "@vitest/ui": "^1.0.4",
+    "happy-dom": "^12.10.3",
+    "jsdom": "^23.0.1",
+    "msw": "^2.0.8",
+    "dotenv": "^16.3.1",
+    "typescript": "^5.4.0",
+    "vitest": "^1.0.4"
+  },
+  "peerDependencies": {
+    "@types/react": "*",
+    "@types/react-dom": "*",
+    "react": "*",
+    "react-dom": "*"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.81.5"
+  }
+}

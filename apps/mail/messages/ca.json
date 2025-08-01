@@ -452,7 +452,9 @@
         "selectDefaultEmail": "Selecciona el correu predeterminat",
         "defaultEmailDescription": "Aquest correu s'utilitzarà com a adreça predeterminada 'De' quan es redactin nous correus",
         "autoRead": "Lectura automàtica",
-        "autoReadDescription": "Marca automàticament els correus electrònics com a llegits quan hi fas clic."
+        "autoReadDescription": "Marca automàticament els correus electrònics com a llegits quan hi fas clic.",
+        "animations": "Animacions",
+        "animationsDescription": "Activa les animacions suaus en canviar entre correus electrònics"
       },
       "connections": {
         "title": "Connexions Correu",

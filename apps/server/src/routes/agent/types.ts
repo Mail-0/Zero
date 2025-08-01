@@ -7,6 +7,7 @@ export enum IncomingMessageType {
   ChatRequestCancel = 'cf_agent_chat_request_cancel',
   Mail_List = 'zero_mail_list_threads',
   Mail_Get = 'zero_mail_get_thread',
+  ThreadIdUpdate = 'zero_thread_id_update',
 }
 
 export enum OutgoingMessageType {
@@ -15,6 +16,7 @@ export enum OutgoingMessageType {
   ChatClear = 'cf_agent_chat_clear',
   Mail_List = 'zero_mail_list_threads',
   Mail_Get = 'zero_mail_get_thread',
+  User_Topics = 'zero_user_topics',
 }
 
 export type IncomingMessage =
@@ -45,6 +47,10 @@ export type IncomingMessage =
   | {
       type: IncomingMessageType.Mail_Get;
       threadId: string;
+    }
+  | {
+      type: IncomingMessageType.ThreadIdUpdate;
+      threadId: string | null;
     };
 
 export type OutgoingMessage =
@@ -68,6 +74,9 @@ export type OutgoingMessage =
   | {
       type: OutgoingMessageType.Mail_Get;
       threadId: string;
+    }
+  | {
+      type: OutgoingMessageType.User_Topics;
     };
 
 export type QueueFunc = (name: string, payload: unknown) => Promise<unknown>;

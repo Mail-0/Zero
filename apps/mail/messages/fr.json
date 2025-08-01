@@ -452,7 +452,9 @@
         "selectDefaultEmail": "Sélectionner l'e-mail par défaut",
         "defaultEmailDescription": "Cette adresse e-mail sera utilisée comme adresse d'expédition par défaut lors de la rédaction de nouveaux e-mails",
         "autoRead": "Lecture automatique",
-        "autoReadDescription": "Marquer automatiquement les emails comme lus lorsque vous cliquez dessus."
+        "autoReadDescription": "Marquer automatiquement les emails comme lus lorsque vous cliquez dessus.",
+        "animations": "Animations",
+        "animationsDescription": "Activer les animations fluides lors du passage d'un e-mail à l'autre"
       },
       "connections": {
         "title": "Connexions de courriels",

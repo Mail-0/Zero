@@ -2,6 +2,7 @@ import {
   getWritingStyleMatrixForConnectionId,
   type WritingStyleMatrix,
 } from '../../../services/writing-style-service';
+import { escapeXml } from '../../../thread-workflow-utils/workflow-utils';
 import { StyledEmailAssistantSystemPrompt } from '../../../lib/prompts';
 import { webSearch } from '../../../routes/agent/tools';
 import { activeConnectionProcedure } from '../../trpc';
@@ -190,14 +191,6 @@ const MessagePrompt = ({
 
   return parts.join('\n');
 };
-
-const escapeXml = (s: string) =>
-  s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
 
 const EmailAssistantPrompt = ({
   currentSubject,
