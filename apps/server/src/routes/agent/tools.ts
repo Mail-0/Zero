@@ -136,7 +136,9 @@ const getThreadSummary = (connectionId: string) =>
       const thread = await driver.getThread(id);
       if (response.length && response?.[0]?.metadata?.['summary'] && thread?.latest?.subject) {
         const result = response[0].metadata as { summary: string; connection: string };
-        if (result.connection !== connectionId) return null;
+        if (result.connection !== connectionId) {
+          return null;
+        }
         const shortResponse = await env.AI.run('@cf/facebook/bart-large-cnn', {
           input_text: result.summary,
         });
@@ -147,7 +149,11 @@ const getThreadSummary = (connectionId: string) =>
           date: thread.latest?.receivedOn,
         };
       }
-      return null;
+      return {
+        subject: thread.latest?.subject,
+        sender: thread.latest?.sender,
+        date: thread.latest?.receivedOn,
+      };
     },
   });
 
@@ -448,8 +454,8 @@ export const webSearch = () =>
     },
   });
 
-export const tools = async (connectionId: string) => {
-  return {
+export const tools = async (connectionId: string, ragEffect: boolean = false) => {
+  const _tools = {
     [Tools.GetThread]: getEmail(),
     [Tools.GetThreadSummary]: getThreadSummary(connectionId),
     [Tools.ComposeEmail]: composeEmailTool(connectionId),
@@ -464,6 +470,23 @@ export const tools = async (connectionId: string) => {
     [Tools.DeleteLabel]: deleteLabel(connectionId),
     [Tools.BuildGmailSearchQuery]: buildGmailSearchQuery(),
     [Tools.GetCurrentDate]: getCurrentDate(),
+    [Tools.InboxRag]: tool({
+      description:
+        'Search the inbox for emails using natural language. Returns only an array of threadIds.',
+      parameters: z.object({
+        query: z.string().describe('The query to search the inbox for'),
+        maxResults: z.number().describe('The maximum number of results to return').default(10),
+      }),
+      execute: async ({ query, maxResults }) => {
+        const agent = await getZeroAgent(connectionId);
+        const res = await agent.searchThreads({ query, maxResults });
+        return res.threadIds;
+      },
+    }),
+  };
+  if (ragEffect) return _tools;
+  return {
+    ..._tools,
     [Tools.InboxRag]: tool({
       description:
         'Search the inbox for emails using natural language. Returns only an array of threadIds.',

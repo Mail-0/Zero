@@ -1371,21 +1371,29 @@ export class ZeroDriver extends Agent<ZeroEnv> {
       }).then((r) => r.threads.map((t) => t.id)),
     ).pipe(Effect.catchAll(() => Effect.succeed([])));
 
+    const effects: Effect.Effect<string[]>[] = [rawEffect];
+    if (this.env.AUTORAG_ID) effects.unshift(ragEffect as Effect.Effect<string[]>);
+
     // Run both in parallel and wait for results
-    const results = await Effect.runPromise(
-      Effect.all([ragEffect, rawEffect], { concurrency: 'unbounded' }),
-    );
+    const results = await Effect.runPromise(Effect.all(effects, { concurrency: 'unbounded' }));
+    if (this.env.AUTORAG_ID) {
+      const [ragIds, rawIds] = results;
 
-    const [ragIds, rawIds] = results;
+      // Return InboxRag results if found, otherwise fallback to raw
+      if (ragIds.length > 0) {
+        return {
+          threadIds: ragIds,
+          source: 'autorag' as const,
+        };
+      }
 
-    // Return InboxRag results if found, otherwise fallback to raw
-    if (ragIds.length > 0) {
       return {
-        threadIds: ragIds,
-        source: 'autorag' as const,
+        threadIds: rawIds,
+        source: 'raw' as const,
+        nextPageToken: pageToken,
       };
     }
-
+    const [rawIds] = results;
     return {
       threadIds: rawIds,
       source: 'raw' as const,

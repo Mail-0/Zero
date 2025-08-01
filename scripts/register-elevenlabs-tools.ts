@@ -40,7 +40,7 @@ export const toolDefinitions: ToolDefinition[] = [
     name: Tools.GetThreadSummary,
     description: 'Get the summary of a specific email thread',
     parameters: z.object({
-      id: z.string().describe('The ID of the email thread to get the summary of'),
+      id: z.string().describe('The threadId of the email thread to get the summary of'),
     }),
   },
   {
@@ -189,6 +189,7 @@ export const toolDefinitions: ToolDefinition[] = [
       'Search the inbox for emails using natural language. Returns only an array of threadIds.',
     parameters: z.object({
       query: z.string().describe('The query to search the inbox for'),
+      maxResults: z.number().describe('The maximum number of results to return').default(10),
     }),
   },
 ];
@@ -206,7 +207,7 @@ interface ElevenLabsToolRequest {
         properties: any;
         required?: string[];
       };
-      request_headers: Record<string, string>;
+      request_headers: Record<string, string | { variable_name: string }>;
     };
   };
 }
@@ -477,7 +478,7 @@ async function updateAgent(apiKey: string, agentId: string, toolIds: string[]): 
 
 async function main() {
   const apiKey = process.env.ELEVENLABS_API_KEY;
-  const serverUrl = process.env.SERVER_URL || 'https://staging.0.email';
+  const serverUrl = process.env.SERVER_URL;
   const voiceSecret = process.env.VOICE_SECRET;
   const agentId = process.env.ELEVENLABS_AGENT_ID;
 
@@ -557,7 +558,9 @@ async function main() {
           request_headers: {
             'Content-Type': 'application/json',
             'X-Voice-Secret': voiceSecret,
-            'X-Caller': 'system__caller_id',
+            'X-Caller': {
+              variable_name: 'system__caller_id',
+            },
           },
         },
       },

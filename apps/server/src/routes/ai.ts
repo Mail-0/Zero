@@ -2,6 +2,7 @@ import { systemPrompt } from '../services/call-service/system-prompt';
 import { openai } from '@ai-sdk/openai';
 import { tools } from './agent/tools';
 import { generateText } from 'ai';
+import { Tools } from '../types';
 import { createDb } from '../db';
 import { env } from '../env';
 import { Hono } from 'hono';
@@ -28,11 +29,12 @@ aiRouter.post('/do/:action', async (c) => {
   //   if (env.DISABLE_CALLS) return c.json({ success: false, error: 'Not implemented' }, 400);
   if (env.VOICE_SECRET !== c.req.header('X-Voice-Secret'))
     return c.json({ success: false, error: 'Unauthorized' }, 401);
-  if (!c.req.header('X-Caller')) return c.json({ success: false, error: 'Unauthorized' }, 401);
+  const caller = c.req.header('X-Caller');
+  if (!caller) return c.json({ success: false, error: 'Unauthorized' }, 401);
   const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
   const user = await db.query.user.findFirst({
     where: (user, { eq, and }) =>
-      and(eq(user.phoneNumber, c.req.header('X-Caller')!), eq(user.phoneNumberVerified, true)),
+      and(eq(user.phoneNumber, caller), eq(user.phoneNumberVerified, true)),
   });
   if (!user) return c.json({ success: false, error: 'Unauthorized' }, 401);
 
@@ -44,12 +46,12 @@ aiRouter.post('/do/:action', async (c) => {
   if (!connection) return c.json({ success: false, error: 'Unauthorized' }, 401);
 
   try {
-    const action = c.req.param('action');
+    const action = c.req.param('action') as keyof ToolsReturnType;
     const body = await c.req.json();
     console.log('[DEBUG] action', action, body);
 
     // Get all tools for this connection
-    const toolset: ToolsReturnType = await tools(connection.id);
+    const toolset: ToolsReturnType = await tools(connection.id, action === Tools.InboxRag);
     const tool = toolset[action as keyof ToolsReturnType];
 
     if (!tool) {
