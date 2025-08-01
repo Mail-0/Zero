@@ -680,7 +680,7 @@ const app = new Hono<HonoContext>()
         return new Response('Unauthorized', { status: 401 });
       }
       const callerId = request.headers.get('X-Caller');
-      if (!callerId) {
+      if (!callerId || callerId === 'system__caller_id') {
         return ZeroMCP.serveSSE('/vsse', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
       }
       const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
