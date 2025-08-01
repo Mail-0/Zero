@@ -405,7 +405,8 @@
       "livesupport": "Live Support",
       "feedback": "Feedback",
       "settings": "Settings",
-      "voice": "Voice Assistant"
+      "voice": "Voice Assistant",
+      "snoozed": "Snoozed"
     },
     "settings": {
       "general": "General",
@@ -451,7 +452,9 @@
         "selectDefaultEmail": "Select default email",
         "defaultEmailDescription": "This email will be used as the default 'From' address when composing new emails",
         "autoRead": "Auto Read",
-        "autoReadDescription": "Automatically mark emails as read when you click on them."
+        "autoReadDescription": "Automatically mark emails as read when you click on them.",
+        "animations": "Animations",
+        "animationsDescription": "Enable smooth animations when switching between emails"
       },
       "connections": {
         "title": "Email Connections",

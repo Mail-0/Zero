@@ -39,6 +39,18 @@
             "name": "ZERO_DB",
             "class_name": "ZeroDB",
           },
+          {
+            "name": "ZERO_DRIVER",
+            "class_name": "ZeroDriver",
+          },
+          {
+            "name": "THINKING_MCP",
+            "class_name": "ThinkingMCP",
+          },
+          {
+            "name": "WORKFLOW_RUNNER",
+            "class_name": "WorkflowRunner",
+          },
         ],
       },
       "queues": {
@@ -78,10 +90,25 @@
           "tag": "v4",
           "deleted_classes": ["DurableMailbox"],
         },
+        {
+          "tag": "v5",
+          "new_sqlite_classes": ["ZeroDriver"],
+        },
+        {
+          "tag": "v6",
+          "new_sqlite_classes": ["ThinkingMCP"],
+        },
+        {
+          "tag": "v7",
+          "new_sqlite_classes": ["WorkflowRunner"],
+        },
       ],
 
       "observability": {
         "enabled": true,
+      },
+      "triggers": {
+        "crons": ["*/1 * * * *"],
       },
       "hyperdrive": [
         {
@@ -91,7 +118,7 @@
         },
       ],
       "vars": {
-        "NODE_ENV": "development",
+        "NODE_ENV": "local",
         "COOKIE_DOMAIN": "localhost",
         "VITE_PUBLIC_BACKEND_URL": "http://localhost:8787",
         "VITE_PUBLIC_APP_URL": "http://localhost:3000",
@@ -105,6 +132,9 @@
         "THREAD_SYNC_LOOP": "false",
         "DISABLE_WORKFLOWS": "true",
         "AUTORAG_ID": "",
+        "USE_OPENAI": "true",
+        "CLOUDFLARE_ACCOUNT_ID": "397b3b4fac213b9b382d0f1fafdbb215",
+        "CLOUDFLARE_API_TOKEN": "wbrJ9McsQhjCxv1pzxLLK8keT-0tM1ab-QbmESg6",
       },
       "kv_namespaces": [
         {
@@ -130,6 +160,10 @@
         {
           "binding": "gmail_sub_age",
           "id": "c55e692bb71d4e5bae23dded092b09d5",
+        },
+        {
+          "binding": "snoozed_emails",
+          "id": "f3a30ed7198542d890db172536bade33",
         },
       ],
     },
@@ -166,6 +200,18 @@
           {
             "name": "ZERO_DB",
             "class_name": "ZeroDB",
+          },
+          {
+            "name": "ZERO_DRIVER",
+            "class_name": "ZeroDriver",
+          },
+          {
+            "name": "THINKING_MCP",
+            "class_name": "ThinkingMCP",
+          },
+          {
+            "name": "WORKFLOW_RUNNER",
+            "class_name": "WorkflowRunner",
           },
         ],
       },
@@ -216,6 +262,18 @@
           "tag": "v5",
           "deleted_classes": ["DurableMailbox"],
         },
+        {
+          "tag": "v6",
+          "new_sqlite_classes": ["ZeroDriver"],
+        },
+        {
+          "tag": "v7",
+          "new_sqlite_classes": ["ThinkingMCP"],
+        },
+        {
+          "tag": "v8",
+          "new_sqlite_classes": ["WorkflowRunner"],
+        },
       ],
       "observability": {
         "enabled": true,
@@ -235,7 +293,7 @@
         "DISABLE_CALLS": "",
         "DROP_AGENT_TABLES": "false",
         "THREAD_SYNC_MAX_COUNT": "20",
-        "THREAD_SYNC_LOOP": "false",
+        "THREAD_SYNC_LOOP": "true",
         "DISABLE_WORKFLOWS": "true",
       },
       "kv_namespaces": [
@@ -262,6 +320,10 @@
         {
           "binding": "gmail_sub_age",
           "id": "c55e692bb71d4e5bae23dded092b09d5",
+        },
+        {
+          "binding": "snoozed_emails",
+          "id": "f3a30ed7198542d890db172536bade33",
         },
       ],
     },
@@ -312,6 +374,18 @@
             "name": "ZERO_DB",
             "class_name": "ZeroDB",
           },
+          {
+            "name": "ZERO_DRIVER",
+            "class_name": "ZeroDriver",
+          },
+          {
+            "name": "THINKING_MCP",
+            "class_name": "ThinkingMCP",
+          },
+          {
+            "name": "WORKFLOW_RUNNER",
+            "class_name": "WorkflowRunner",
+          },
         ],
       },
       "queues": {
@@ -355,6 +429,18 @@
           "tag": "v5",
           "deleted_classes": ["DurableMailbox"],
         },
+        {
+          "tag": "v6",
+          "new_sqlite_classes": ["ZeroDriver"],
+        },
+        {
+          "tag": "v7",
+          "new_sqlite_classes": ["ThinkingMCP"],
+        },
+        {
+          "tag": "v8",
+          "new_sqlite_classes": ["WorkflowRunner"],
+        },
       ],
       "vars": {
         "NODE_ENV": "production",
@@ -391,6 +477,10 @@
         {
           "binding": "gmail_sub_age",
           "id": "0591e91fffcc4675aaf00f909bee77d2",
+        },
+        {
+          "binding": "snoozed_emails",
+          "id": "f0952e9c3b024cb499c4b9dfe8bb603e",
         },
       ],
     },

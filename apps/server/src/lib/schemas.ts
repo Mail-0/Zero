@@ -130,6 +130,7 @@ export const userSettingsSchema = z.object({
   defaultEmailAlias: z.string().optional(),
   imageCompression: z.enum(['low', 'medium', 'original']).default('medium'),
   autoRead: z.boolean().default(true),
+  animations: z.boolean().default(false),
 });
 
 export type UserSettings = z.infer<typeof userSettingsSchema>;
@@ -148,4 +149,5 @@ export const defaultUserSettings: UserSettings = {
   defaultEmailAlias: '',
   categories: defaultMailCategories,
   imageCompression: 'medium',
+  animations: false,
 };

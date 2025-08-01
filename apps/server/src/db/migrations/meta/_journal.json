@@ -257,6 +257,20 @@
     {
       "idx": 35,
       "version": "7",
+      "when": 1751340197573,
+      "tag": "0035_giant_hydra",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1751344587658,
+      "tag": "0036_petite_mole_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
       "when": 1751568728663,
       "tag": "0035_uneven_shiva",
       "breakpoints": true

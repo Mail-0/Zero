@@ -14,13 +14,15 @@
  * Reuse or distribution of this file requires a license from Zero Email Inc.
  */
 import type { CreateDraftData } from '../../lib/schemas';
+import { ZeroDriver, type FolderSyncResult } from '.';
 import type { IOutgoingMessage } from '../../types';
 import { RpcTarget } from 'cloudflare:workers';
-import { ZeroAgent } from '.';
 
-export class AgentRpcDO extends RpcTarget {
+const shouldReSyncThreadsAfterActions = false;
+
+export class DriverRpcDO extends RpcTarget {
   constructor(
-    private mainDo: ZeroAgent,
+    private mainDo: ZeroDriver,
     private connectionId: string,
   ) {
     super();
@@ -39,6 +41,10 @@ export class AgentRpcDO extends RpcTarget {
     color?: { backgroundColor: string; textColor: string };
   }) {
     return await this.mainDo.createLabel(label);
+  }
+
+  async getUserTopics() {
+    return await this.mainDo.getUserTopics();
   }
 
   async updateLabel(
@@ -80,13 +86,16 @@ export class AgentRpcDO extends RpcTarget {
     return await this.mainDo.list(params);
   }
 
-  async getThread(threadId: string) {
-    return await this.mainDo.get(threadId);
+  async getThread(threadId: string, includeDrafts: boolean = false) {
+    return await this.mainDo.getThread(threadId, includeDrafts);
   }
 
   async markThreadsRead(threadIds: string[]) {
-    const result = await this.mainDo.markThreadsRead(threadIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
+    const result = await Promise.all(
+      threadIds.map((id) => this.mainDo.modifyThreadLabelsInDB(id, [], ['UNREAD'])),
+    );
+    if (shouldReSyncThreadsAfterActions)
+      await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
     return result;
   }
 
@@ -95,14 +104,20 @@ export class AgentRpcDO extends RpcTarget {
   }
 
   async markThreadsUnread(threadIds: string[]) {
-    const result = await this.mainDo.markThreadsUnread(threadIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
+    const result = await Promise.all(
+      threadIds.map((id) => this.mainDo.modifyThreadLabelsInDB(id, ['UNREAD'], [])),
+    );
+    if (shouldReSyncThreadsAfterActions)
+      await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
     return result;
   }
 
   async modifyLabels(threadIds: string[], addLabelIds: string[], removeLabelIds: string[]) {
-    const result = await this.mainDo.modifyLabels(threadIds, addLabelIds, removeLabelIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
+    const result = await Promise.all(
+      threadIds.map((id) => this.mainDo.modifyThreadLabelsInDB(id, addLabelIds, removeLabelIds)),
+    );
+    if (shouldReSyncThreadsAfterActions)
+      await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
     return result;
   }
 
@@ -133,14 +148,20 @@ export class AgentRpcDO extends RpcTarget {
   //   }
 
   async markAsRead(threadIds: string[]) {
-    const result = await this.mainDo.markAsRead(threadIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
+    const result = await Promise.all(
+      threadIds.map((id) => this.mainDo.modifyThreadLabelsInDB(id, [], ['UNREAD'])),
+    );
+    if (shouldReSyncThreadsAfterActions)
+      await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
     return result;
   }
 
   async markAsUnread(threadIds: string[]) {
-    const result = await this.mainDo.markAsUnread(threadIds);
-    await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
+    const result = await Promise.all(
+      threadIds.map((id) => this.mainDo.modifyThreadLabelsInDB(id, ['UNREAD'], [])),
+    );
+    if (shouldReSyncThreadsAfterActions)
+      await Promise.all(threadIds.map((id) => this.mainDo.syncThread({ threadId: id })));
     return result;
   }
 
@@ -160,8 +181,26 @@ export class AgentRpcDO extends RpcTarget {
     return await this.mainDo.create(data);
   }
 
+  async modifyThreadLabelsByName(
+    threadId: string,
+    addLabelNames: string[],
+    removeLabelNames: string[],
+  ) {
+    return await this.mainDo.modifyThreadLabelsByName(threadId, addLabelNames, removeLabelNames);
+  }
+
+  async modifyThreadLabelsInDB(
+    threadId: string,
+    addLabelNames: string[],
+    removeLabelNames: string[],
+  ) {
+    return await this.mainDo.modifyThreadLabelsInDB(threadId, addLabelNames, removeLabelNames);
+  }
+
   async delete(id: string) {
-    return await this.mainDo.delete(id);
+    const result = await this.mainDo.delete(id);
+    await this.mainDo.deleteThread(id);
+    return result;
   }
 
   async deleteAllSpam() {
@@ -176,13 +215,16 @@ export class AgentRpcDO extends RpcTarget {
     return await this.mainDo.getMessageAttachments(messageId);
   }
 
-  async setupAuth(connectionId: string) {
-    if (connectionId !== this.connectionId) console.warn('Oops, something doesnt add up.');
-    return await this.mainDo.setupAuth(connectionId);
+  async setupAuth() {
+    return await this.mainDo.setupAuth();
   }
 
   async broadcast(message: string) {
     return this.mainDo.broadcast(message);
+  }
+
+  async reloadFolder(folder: string) {
+    this.mainDo.reloadFolder(folder);
   }
 
   //   async getThreadsFromDB(params: {
@@ -203,7 +245,7 @@ export class AgentRpcDO extends RpcTarget {
     return await this.mainDo.listHistory<T>(historyId);
   }
 
-  async syncThreads(folder: string) {
+  async syncThreads(folder: string): Promise<FolderSyncResult> {
     return await this.mainDo.syncThreads(folder);
   }
 
@@ -219,5 +261,13 @@ export class AgentRpcDO extends RpcTarget {
     pageToken?: string;
   }) {
     return await this.mainDo.searchThreads(params);
+  }
+
+  async queue(callbackName: keyof ZeroDriver, payload: unknown): Promise<unknown> {
+    const queueFn = this.mainDo.queue;
+    if (typeof queueFn !== 'function') {
+      throw new Error('queue method not implemented on mainDo');
+    }
+    return queueFn(callbackName, payload);
   }
 }

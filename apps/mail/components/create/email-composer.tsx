@@ -47,6 +47,7 @@ import pluralize from 'pluralize';
 import { toast } from 'sonner';
 import { z } from 'zod';
 const shortcodeRegex = /:([a-zA-Z0-9_+-]+):/g;
+import { TemplateButton } from './template-button';
 
 type ThreadContent = {
   from: string;
@@ -709,7 +710,7 @@ export function EmailComposer({
         className,
       )}
     >
-      <div className="no-scrollbar dark:bg-panelDark flex min-h-0 flex-1 flex-col overflow-y-auto">
+      <div className="no-scrollbar dark:bg-panelDark flex min-h-0 flex-1 flex-col overflow-y-auto rounded-2xl">
         {/* To, Cc, Bcc */}
         <div className="shrink-0 overflow-y-auto border-b border-[#E7E7E7] pb-2 dark:border-[#252525]">
           <div className="flex justify-between px-3 pt-3">
@@ -1322,6 +1323,15 @@ export function EmailComposer({
               <Plus className="h-3 w-3 fill-[#9A9A9A]" />
               <span className="hidden px-0.5 text-sm md:block">Add</span>
             </Button>
+            <TemplateButton
+              editor={editor}
+              subject={subjectInput}
+              setSubject={(value) => setValue('subject', value)}
+              to={toEmails}
+              cc={ccEmails ?? []}
+              bcc={bccEmails ?? []}
+              setRecipients={(field, val) => setValue(field, val)}
+            />
             <Input
               type="file"
               id="attachment-input"

@@ -405,7 +405,8 @@
       "livesupport": "Hỗ trợ trực tuyến",
       "feedback": "Phản hồi",
       "settings": "Cài đặt",
-      "voice": "Trợ lý giọng nói"
+      "voice": "Trợ lý giọng nói",
+      "snoozed": "Tạm hoãn"
     },
     "settings": {
       "general": "Chung",

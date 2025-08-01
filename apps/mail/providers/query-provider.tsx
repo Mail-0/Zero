@@ -3,9 +3,9 @@ import {
   type PersistedClient,
   type Persister,
 } from '@tanstack/react-query-persist-client';
-import { createTRPCClient, httpBatchLink, loggerLink } from '@trpc/client';
 import { QueryCache, QueryClient, hashKey } from '@tanstack/react-query';
 import { createTRPCContext } from '@trpc/tanstack-react-query';
+import { createTRPCClient, httpBatchLink } from '@trpc/client';
 import { useMemo, type PropsWithChildren } from 'react';
 import type { AppRouter } from '@zero/server/trpc';
 import { CACHE_BURST_KEY } from '@/lib/constants';
@@ -87,7 +87,7 @@ export const { TRPCProvider, useTRPC, useTRPCClient } = createTRPCContext<AppRou
 
 export const trpcClient = createTRPCClient<AppRouter>({
   links: [
-    loggerLink({ enabled: () => true }),
+    // loggerLink({ enabled: () => true }),
     httpBatchLink({
       transformer: superjson,
       url: getUrl(),

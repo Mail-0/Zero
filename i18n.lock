@@ -857,6 +857,7 @@ checksums:
     navigation/sidebar/feedback: 6fac88806e0c269a30777b283988c61c
     navigation/sidebar/settings: 8df6777277469c1fd88cc18dde2f1cc3
     navigation/sidebar/voice: 81a94ad8770dca9c3cbb5a88329b6a6f
+    navigation/sidebar/snoozed: f5f799302325bcc21586e34ea81dd086
     navigation/settings/general: b891e8f15579fc5d97bcaf3637f5ae59
     navigation/settings/connections: e03a59f742f7b798488a69760bf8a603
     navigation/settings/security: 4b34923fef858a2b9a4a914c3e822889

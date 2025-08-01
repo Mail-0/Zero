@@ -25,10 +25,13 @@ import {
 } from 'lucide-react';
 import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
+import { ExclamationCircle, Mail, Clock } from '../icons/icons';
+import { SnoozeDialog } from '@/components/mail/snooze-dialog';
 import { type ThreadDestination } from '@/lib/thread-actions';
 import { useThread, useThreads } from '@/hooks/use-threads';
-import { ExclamationCircle, Mail } from '../icons/icons';
-import { useMemo, type ReactNode } from 'react';
+import { useMemo, type ReactNode, useState } from 'react';
+import { useTRPC } from '@/providers/query-provider';
+import { useMutation } from '@tanstack/react-query';
 import { useLabels } from '@/hooks/use-labels';
 import { FOLDERS, LABELS } from '@/lib/utils';
 import { useMail } from '../mail/use-mail';
@@ -68,12 +71,11 @@ const LabelsList = ({ threadId, bulkSelected }: { threadId: string; bulkSelected
 
   if (!labels || !thread) return null;
 
-  const handleToggleLabel = async (labelId: string) => {
+  const handleToggleLabel = (labelId: string) => {
     if (!labelId) return;
 
-    let shouldAddLabel = false;
-
-    let hasLabel = thread.labels?.map((label) => label.id).includes(labelId) || false;
+    // Determine current label state considering optimistic updates
+    let hasLabel = thread!.labels?.some((l) => l.id === labelId) ?? false;
 
     if (rightClickedThreadOptimisticState.optimisticLabels) {
       if (rightClickedThreadOptimisticState.optimisticLabels.addedLabelIds.includes(labelId)) {
@@ -85,9 +87,7 @@ const LabelsList = ({ threadId, bulkSelected }: { threadId: string; bulkSelected
       }
     }
 
-    shouldAddLabel = !hasLabel;
-
-    optimisticToggleLabel(targetThreadIds, labelId, shouldAddLabel);
+    optimisticToggleLabel(targetThreadIds, labelId, !hasLabel);
   };
 
   return (
@@ -95,14 +95,17 @@ const LabelsList = ({ threadId, bulkSelected }: { threadId: string; bulkSelected
       {labels
         .filter((label) => label.id)
         .map((label) => {
-          let isChecked = label.id ? thread.labels?.map((l) => l.id).includes(label.id) : false;
+          let isChecked = label.id
+            ? (thread!.labels?.some((l) => l.id === label.id) ?? false)
+            : false;
 
-          const checkboxOptimisticState = useOptimisticThreadState(threadId);
-          if (label.id && checkboxOptimisticState.optimisticLabels) {
-            if (checkboxOptimisticState.optimisticLabels.addedLabelIds.includes(label.id)) {
+          if (rightClickedThreadOptimisticState.optimisticLabels) {
+            if (
+              rightClickedThreadOptimisticState.optimisticLabels.addedLabelIds.includes(label.id)
+            ) {
               isChecked = true;
             } else if (
-              checkboxOptimisticState.optimisticLabels.removedLabelIds.includes(label.id)
+              rightClickedThreadOptimisticState.optimisticLabels.removedLabelIds.includes(label.id)
             ) {
               isChecked = false;
             }
@@ -138,20 +141,24 @@ export function ThreadContextMenu({
   const [{ isLoading, isFetching }] = useThreads();
   const currentFolder = folder ?? '';
   const isArchiveFolder = currentFolder === FOLDERS.ARCHIVE;
-
+  const isSnoozedFolder = currentFolder === FOLDERS.SNOOZED;
   const [, setMode] = useQueryState('mode');
   const [, setThreadId] = useQueryState('threadId');
   const { data: threadData } = useThread(threadId);
   const [, setActiveReplyId] = useQueryState('activeReplyId');
   const optimisticState = useOptimisticThreadState(threadId);
+  const trpc = useTRPC();
   const {
     optimisticMoveThreadsTo,
     optimisticToggleStar,
     optimisticToggleImportant,
     optimisticMarkAsRead,
     optimisticMarkAsUnread,
-    optimisticDeleteThreads,
+    // optimisticDeleteThreads,
+    optimisticSnooze,
+    optimisticUnsnooze,
   } = useOptimisticActions();
+  const { mutateAsync: deleteThread } = useMutation(trpc.mail.delete.mutationOptions());
 
   const { isUnread, isStarred, isImportant } = useMemo(() => {
     const unread = threadData?.hasUnread ?? false;
@@ -306,18 +313,18 @@ export function ThreadContextMenu({
   const handleDelete = () => () => {
     const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
 
-    // Use optimistic update with undo functionality
-    optimisticDeleteThreads(targets, currentFolder);
-
-    // Clear bulk selection after action
-    if (mail.bulkSelected.length) {
-      setMail((prev) => ({ ...prev, bulkSelected: [] }));
-    }
-
-    // Navigation removed to prevent route change on current thread action
-    // if (!mail.bulkSelected.length && threadId) {
-    //   navigate(`/mail/${currentFolder}`);
-    // }
+    toast.promise(
+      Promise.all(
+        targets.map(async (id) => {
+          return deleteThread({ id });
+        }),
+      ),
+      {
+        loading: 'Deleting...',
+        success: 'Deleted',
+        error: 'Failed to delete',
+      },
+    );
   };
 
   const getActions = useMemo(() => {
@@ -354,7 +361,31 @@ export function ThreadContextMenu({
           label: m['common.mail.deleteFromBin'](),
           icon: <Trash className="mr-2.5 h-4 w-4 opacity-60" />,
           action: handleDelete(),
-          disabled: true,
+        },
+      ];
+    }
+
+    if (isSnoozedFolder) {
+      return [
+        {
+          id: 'unsnooze',
+          label: 'Unsnooze',
+          icon: <Inbox className="mr-2.5 h-4 w-4 opacity-60" />,
+          action: () => {
+            const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
+            optimisticUnsnooze(targets, currentFolder);
+            if (mail.bulkSelected.length) {
+              setMail({ ...mail, bulkSelected: [] });
+            }
+          },
+          disabled: false,
+        },
+        {
+          id: 'move-to-bin',
+          label: m['common.mail.moveToBin'](),
+          icon: <Trash className="mr-2.5 h-4 w-4 opacity-60" />,
+          action: handleMove(LABELS.SNOOZED, LABELS.TRASH),
+          disabled: false,
         },
       ];
     }
@@ -422,6 +453,14 @@ export function ThreadContextMenu({
     ];
   }, [isSpam, isBin, isArchiveFolder, isInbox, isSent, handleMove, handleDelete]);
 
+  const [snoozeOpen, setSnoozeOpen] = useState(false);
+
+  const handleSnoozeConfirm = (wakeAt: Date) => {
+    const targets = mail.bulkSelected.length ? mail.bulkSelected : [threadId];
+    optimisticSnooze(targets, currentFolder, wakeAt);
+    setSnoozeOpen(false);
+  };
+
   const otherActions: EmailAction[] = useMemo(
     () => [
       {
@@ -453,6 +492,13 @@ export function ThreadContextMenu({
         ),
         action: handleFavorites,
       },
+      {
+        id: 'snooze',
+        label: 'Snooze',
+        icon: <Clock className="mr-2.5 h-4 w-4 opacity-60" />,
+        action: () => setSnoozeOpen(true),
+        disabled: false,
+      },
     ],
     [isUnread, isImportant, isStarred, m, handleReadUnread, handleToggleImportant, handleFavorites],
   );
@@ -473,36 +519,43 @@ export function ThreadContextMenu({
   };
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger disabled={isLoading || isFetching} className="w-full">
-        {children}
-      </ContextMenuTrigger>
-      <ContextMenuContent
-        className="dark:bg-panelDark w-56 overflow-y-auto bg-white"
-        onContextMenu={(e) => e.preventDefault()}
-      >
-        {primaryActions.map(renderAction)}
+    <>
+      <ContextMenu>
+        <ContextMenuTrigger disabled={isLoading || isFetching} className="w-full">
+          {children}
+        </ContextMenuTrigger>
+        <ContextMenuContent
+          className="dark:bg-panelDark w-56 overflow-y-auto bg-white"
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          {primaryActions.map(renderAction)}
 
-        <ContextMenuSeparator className="bg-[#E7E7E7] dark:bg-[#252525]" />
+          <ContextMenuSeparator className="bg-[#E7E7E7] dark:bg-[#252525]" />
 
-        <ContextMenuSub>
-          <ContextMenuSubTrigger className="font-normal">
-            <Tag className="mr-2.5 h-4 w-4 opacity-60" />
-            {m['common.mail.labels']()}
-          </ContextMenuSubTrigger>
-          <ContextMenuSubContent className="dark:bg-panelDark max-h-[520px] w-48 overflow-y-auto bg-white">
-            <LabelsList threadId={threadId} bulkSelected={mail.bulkSelected} />
-          </ContextMenuSubContent>
-        </ContextMenuSub>
+          <ContextMenuSub>
+            <ContextMenuSubTrigger className="font-normal">
+              <Tag className="mr-2.5 h-4 w-4 opacity-60" />
+              {m['common.mail.labels']()}
+            </ContextMenuSubTrigger>
+            <ContextMenuSubContent className="dark:bg-panelDark max-h-[520px] w-48 overflow-y-auto bg-white">
+              <LabelsList threadId={threadId} bulkSelected={mail.bulkSelected} />
+            </ContextMenuSubContent>
+          </ContextMenuSub>
 
-        <ContextMenuSeparator className="bg-[#E7E7E7] dark:bg-[#252525]" />
+          <ContextMenuSeparator className="bg-[#E7E7E7] dark:bg-[#252525]" />
 
-        {getActions.map(renderAction)}
+          {getActions.map(renderAction)}
 
-        <ContextMenuSeparator className="bg-[#E7E7E7] dark:bg-[#252525]" />
+          <ContextMenuSeparator className="bg-[#E7E7E7] dark:bg-[#252525]" />
 
-        {otherActions.map(renderAction)}
-      </ContextMenuContent>
-    </ContextMenu>
+          {otherActions.map(renderAction)}
+        </ContextMenuContent>
+      </ContextMenu>
+      <SnoozeDialog
+        open={snoozeOpen}
+        onOpenChange={setSnoozeOpen}
+        onConfirm={handleSnoozeConfirm}
+      />
+    </>
   );
 }

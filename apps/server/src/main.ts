@@ -13,25 +13,26 @@ import {
   userHotkeys,
   userSettings,
   writingStyleMatrix,
+  emailTemplate,
 } from './db/schema';
-import { env, WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
+import { env, DurableObject, RpcTarget, WorkerEntrypoint } from 'cloudflare:workers';
 import { EProviders, type ISubscribeBatch, type IThreadBatch } from './types';
 import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
 import { getZeroDB, verifyToken } from './lib/server-utils';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
-import { EWorkflowType, runWorkflow } from './pipelines';
+import { ThinkingMCP } from './lib/sequential-thinking';
+import { ZeroAgent, ZeroDriver } from './routes/agent';
 import { contextStorage } from 'hono/context-storage';
 import { defaultUserSettings } from './lib/schemas';
 import { createLocalJWKSet, jwtVerify } from 'jose';
-import { routePartykitRequest } from 'partyserver';
-
+import { getZeroAgent } from './lib/server-utils';
 import { enableBrainFunction } from './lib/brain';
 import { trpcServer } from '@hono/trpc-server';
 import { agentsMiddleware } from 'hono-agents';
 import { ZeroMCP } from './routes/agent/mcp';
 import { publicRouter } from './routes/auth';
+import { WorkflowRunner } from './pipelines';
 import { autumnApi } from './routes/autumn';
-import { ZeroAgent } from './routes/agent';
 import type { HonoContext } from './ctx';
 import { createDb, type DB } from './db';
 import { createAuth } from './lib/auth';
@@ -39,8 +40,10 @@ import { aiRouter } from './routes/ai';
 import { Autumn } from 'autumn-js';
 import { appRouter } from './trpc';
 import { cors } from 'hono/cors';
-import { Effect } from 'effect';
 import { Hono } from 'hono';
+
+const SENTRY_HOST = 'o4509328786915328.ingest.us.sentry.io';
+const SENTRY_PROJECT_IDS = new Set(['4509328795303936']);
 
 export class DbRpcDO extends RpcTarget {
   constructor(
@@ -170,6 +173,22 @@ export class DbRpcDO extends RpcTarget {
     updatingInfo: Partial<typeof connection.$inferInsert>,
   ) {
     return await this.mainDo.updateConnection(connectionId, updatingInfo);
+  }
+
+  async listEmailTemplates(): Promise<(typeof emailTemplate.$inferSelect)[]> {
+    return await this.mainDo.findManyEmailTemplates(this.userId);
+  }
+
+  async createEmailTemplate(payload: Omit<typeof emailTemplate.$inferInsert, 'userId'>) {
+    return await this.mainDo.createEmailTemplate(this.userId, payload);
+  }
+
+  async deleteEmailTemplate(templateId: string) {
+    return await this.mainDo.deleteEmailTemplate(this.userId, templateId);
+  }
+
+  async updateEmailTemplate(templateId: string, data: Partial<typeof emailTemplate.$inferInsert>) {
+    return await this.mainDo.updateEmailTemplate(this.userId, templateId, data);
   }
 }
 
@@ -492,281 +511,389 @@ class ZeroDB extends DurableObject<Env> {
       .set(updatingInfo)
       .where(eq(connection.id, connectionId));
   }
-}
 
-export default class extends WorkerEntrypoint<typeof env> {
-  db: DB | undefined;
-  private api = new Hono<HonoContext>()
-    .use(contextStorage())
-    .use('*', async (c, next) => {
-      const auth = createAuth();
-      c.set('auth', auth);
-      const session = await auth.api.getSession({ headers: c.req.raw.headers });
-      c.set('sessionUser', session?.user);
-
-      if (c.req.header('Authorization') && !session?.user) {
-        const token = c.req.header('Authorization')?.split(' ')[1];
-
-        if (token) {
-          const localJwks = await auth.api.getJwks();
-          const jwks = createLocalJWKSet(localJwks);
-
-          const { payload } = await jwtVerify(token, jwks);
-          const userId = payload.sub;
-
-          if (userId) {
-            const db = getZeroDB(userId);
-            c.set('sessionUser', await db.findUser());
-            (await db)[Symbol.dispose]?.();
-          }
-        }
-      }
-
-      const autumn = new Autumn({ secretKey: env.AUTUMN_SECRET_KEY });
-      c.set('autumn', autumn);
-
-      await next();
-
-      if (c.var.sessionUser?.id) {
-        const db = getZeroDB(c.var.sessionUser.id);
-        (await db)[Symbol.dispose]?.();
-      }
-
-      c.set('sessionUser', undefined);
-      c.set('autumn', undefined as any);
-      c.set('auth', undefined as any);
-    })
-    .route('/ai', aiRouter)
-    .route('/autumn', autumnApi)
-    .route('/public', publicRouter)
-    .on(['GET', 'POST', 'OPTIONS'], '/auth/*', (c) => {
-      return c.var.auth.handler(c.req.raw);
-    })
-    .use(
-      trpcServer({
-        endpoint: '/api/trpc',
-        router: appRouter,
-        createContext: (_, c) => {
-          return { c, sessionUser: c.var['sessionUser'], db: c.var['db'] };
-        },
-        allowMethodOverride: true,
-        onError: (opts) => {
-          console.error('Error in TRPC handler:', opts.error);
-        },
-      }),
-    )
-    .onError(async (err, c) => {
-      if (err instanceof Response) return err;
-      console.error('Error in Hono handler:', err);
-      return c.json(
-        {
-          error: 'Internal Server Error',
-          message: err instanceof Error ? err.message : 'Unknown error',
-        },
-        500,
-      );
+  async findManyEmailTemplates(userId: string): Promise<(typeof emailTemplate.$inferSelect)[]> {
+    return await this.db.query.emailTemplate.findMany({
+      where: eq(emailTemplate.userId, userId),
+      orderBy: desc(emailTemplate.updatedAt),
     });
-
-  private app = new Hono<HonoContext>()
-    .use(
-      '*',
-      cors({
-        origin: (origin) => {
-          if (!origin) return null;
-          let hostname: string;
-          try {
-            hostname = new URL(origin).hostname;
-          } catch {
-            return null;
-          }
-          const cookieDomain = env.COOKIE_DOMAIN;
-          if (!cookieDomain) return null;
-          if (hostname === cookieDomain || hostname.endsWith('.' + cookieDomain)) {
-            return origin;
-          }
-          return null;
-        },
-        credentials: true,
-        allowHeaders: ['Content-Type', 'Authorization'],
-        exposeHeaders: ['X-Zero-Redirect'],
-      }),
-    )
-    .get('.well-known/oauth-authorization-server', async (c) => {
-      const auth = createAuth();
-      return oAuthDiscoveryMetadata(auth)(c.req.raw);
-    })
-    .mount(
-      '/sse',
-      async (request, env, ctx) => {
-        const authBearer = request.headers.get('Authorization');
-        if (!authBearer) {
-          return new Response('Unauthorized', { status: 401 });
-        }
-        const auth = createAuth();
-        const session = await auth.api.getMcpSession({ headers: request.headers });
-        if (!session) {
-          return new Response('Unauthorized', { status: 401 });
-        }
-        ctx.props = {
-          userId: session?.userId,
-        };
-        return ZeroMCP.serveSSE('/sse', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
-      },
-      { replaceRequest: false },
-    )
-    .mount(
-      '/mcp',
-      async (request, env, ctx) => {
-        const authBearer = request.headers.get('Authorization');
-        if (!authBearer) {
-          return new Response('Unauthorized', { status: 401 });
-        }
-        const auth = createAuth();
-        const session = await auth.api.getMcpSession({ headers: request.headers });
-        ctx.props = {
-          userId: session?.userId,
-        };
-        return ZeroMCP.serve('/mcp', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
-      },
-      { replaceRequest: false },
-    )
-    .route('/api', this.api)
-    .use(
-      '*',
-      agentsMiddleware({
-        options: {
-          onBeforeConnect: (c) => {
-            if (!c.headers.get('Cookie')) {
-              return new Response('Unauthorized', { status: 401 });
-            }
-          },
-        },
-      }),
-    )
-    .get('/health', (c) => c.json({ message: 'Zero Server is Up!' }))
-    .get('/', (c) => c.redirect(`${env.VITE_PUBLIC_APP_URL}`))
-    .post('/a8n/notify/:providerId', async (c) => {
-      if (!c.req.header('Authorization')) return c.json({ error: 'Unauthorized' }, { status: 401 });
-      if (env.DISABLE_WORKFLOWS === 'true') return c.json({ message: 'OK' }, { status: 200 });
-      const providerId = c.req.param('providerId');
-      if (providerId === EProviders.google) {
-        const body = await c.req.json<{ historyId: string }>();
-        const subHeader = c.req.header('x-goog-pubsub-subscription-name');
-        if (!subHeader) {
-          console.log('[GOOGLE] no subscription header', body);
-          return c.json({}, { status: 200 });
-        }
-        const isValid = await verifyToken(c.req.header('Authorization')!.split(' ')[1]);
-        if (!isValid) {
-          console.log('[GOOGLE] invalid request', body);
-          return c.json({}, { status: 200 });
-        }
-        try {
-          await env.thread_queue.send({
-            providerId,
-            historyId: body.historyId,
-            subscriptionName: subHeader!,
-          });
-        } catch (error) {
-          console.error('Error sending to thread queue', error, {
-            providerId,
-            historyId: body.historyId,
-            subscriptionName: subHeader,
-          });
-        }
-        return c.json({ message: 'OK' }, { status: 200 });
-      }
-    });
-
-  async fetch(request: Request): Promise<Response> {
-    if (request.url.includes('/zero/durable-mailbox')) {
-      const res = await routePartykitRequest(request, env as unknown as Record<string, unknown>, {
-        prefix: 'zero',
-      });
-      if (res) return res;
-    }
-    return this.app.fetch(request, this.env, this.ctx);
   }
 
+  async createEmailTemplate(
+    userId: string,
+    payload: Omit<typeof emailTemplate.$inferInsert, 'userId'>,
+  ) {
+    return await this.db
+      .insert(emailTemplate)
+      .values({
+        ...payload,
+        userId,
+        id: crypto.randomUUID(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+  }
+
+  async deleteEmailTemplate(userId: string, templateId: string) {
+    return await this.db
+      .delete(emailTemplate)
+      .where(and(eq(emailTemplate.id, templateId), eq(emailTemplate.userId, userId)));
+  }
+
+  async updateEmailTemplate(
+    userId: string,
+    templateId: string,
+    data: Partial<typeof emailTemplate.$inferInsert>,
+  ) {
+    return await this.db
+      .update(emailTemplate)
+      .set({ ...data, updatedAt: new Date() })
+      .where(and(eq(emailTemplate.id, templateId), eq(emailTemplate.userId, userId)))
+      .returning();
+  }
+}
+
+const api = new Hono<HonoContext>()
+  .use(contextStorage())
+  .use('*', async (c, next) => {
+    const auth = createAuth();
+    c.set('auth', auth);
+    const session = await auth.api.getSession({ headers: c.req.raw.headers });
+    c.set('sessionUser', session?.user);
+
+    if (c.req.header('Authorization') && !session?.user) {
+      const token = c.req.header('Authorization')?.split(' ')[1];
+
+      if (token) {
+        const localJwks = await auth.api.getJwks();
+        const jwks = createLocalJWKSet(localJwks);
+
+        const { payload } = await jwtVerify(token, jwks);
+        const userId = payload.sub;
+
+        if (userId) {
+          const db = await getZeroDB(userId);
+          c.set('sessionUser', await db.findUser());
+        }
+      }
+    }
+
+    const autumn = new Autumn({ secretKey: env.AUTUMN_SECRET_KEY });
+    c.set('autumn', autumn);
+
+    await next();
+
+    c.set('sessionUser', undefined);
+    c.set('autumn', undefined as any);
+    c.set('auth', undefined as any);
+  })
+  .route('/ai', aiRouter)
+  .route('/autumn', autumnApi)
+  .route('/public', publicRouter)
+  .on(['GET', 'POST', 'OPTIONS'], '/auth/*', (c) => {
+    return c.var.auth.handler(c.req.raw);
+  })
+  .use(
+    trpcServer({
+      endpoint: '/api/trpc',
+      router: appRouter,
+      createContext: (_, c) => {
+        return { c, sessionUser: c.var['sessionUser'], db: c.var['db'] };
+      },
+      allowMethodOverride: true,
+      onError: (opts) => {
+        console.error('Error in TRPC handler:', opts.error);
+      },
+    }),
+  )
+  .onError(async (err, c) => {
+    if (err instanceof Response) return err;
+    console.error('Error in Hono handler:', err);
+    return c.json(
+      {
+        error: 'Internal Server Error',
+        message: err instanceof Error ? err.message : 'Unknown error',
+      },
+      500,
+    );
+  });
+
+const app = new Hono<HonoContext>()
+  .use(
+    '*',
+    cors({
+      origin: (origin) => {
+        if (!origin) return null;
+        let hostname: string;
+        try {
+          hostname = new URL(origin).hostname;
+        } catch {
+          return null;
+        }
+        const cookieDomain = env.COOKIE_DOMAIN;
+        if (!cookieDomain) return null;
+        if (hostname === cookieDomain || hostname.endsWith('.' + cookieDomain)) {
+          return origin;
+        }
+        return null;
+      },
+      credentials: true,
+      allowHeaders: ['Content-Type', 'Authorization'],
+      exposeHeaders: ['X-Zero-Redirect'],
+    }),
+  )
+  .get('.well-known/oauth-authorization-server', async (c) => {
+    const auth = createAuth();
+    return oAuthDiscoveryMetadata(auth)(c.req.raw);
+  })
+  .mount(
+    '/sse',
+    async (request, env, ctx) => {
+      const authBearer = request.headers.get('Authorization');
+      if (!authBearer) {
+        console.log('No auth provided');
+        return new Response('Unauthorized', { status: 401 });
+      }
+      const auth = createAuth();
+      const session = await auth.api.getMcpSession({ headers: request.headers });
+      if (!session) {
+        console.log('Invalid auth provided', Array.from(request.headers.entries()));
+        return new Response('Unauthorized', { status: 401 });
+      }
+      ctx.props = {
+        userId: session?.userId,
+      };
+      return ZeroMCP.serveSSE('/sse', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
+    },
+    { replaceRequest: false },
+  )
+  .mount(
+    '/mcp/thinking/sse',
+    async (request, env, ctx) => {
+      return ThinkingMCP.serveSSE('/mcp/thinking/sse', { binding: 'THINKING_MCP' }).fetch(
+        request,
+        env,
+        ctx,
+      );
+    },
+    { replaceRequest: false },
+  )
+  .mount(
+    '/mcp',
+    async (request, env, ctx) => {
+      const authBearer = request.headers.get('Authorization');
+      if (!authBearer) {
+        return new Response('Unauthorized', { status: 401 });
+      }
+      const auth = createAuth();
+      const session = await auth.api.getMcpSession({ headers: request.headers });
+      if (!session) {
+        console.log('Invalid auth provided', Array.from(request.headers.entries()));
+        return new Response('Unauthorized', { status: 401 });
+      }
+      ctx.props = {
+        userId: session?.userId,
+      };
+      return ZeroMCP.serve('/mcp', { binding: 'ZERO_MCP' }).fetch(request, env, ctx);
+    },
+    { replaceRequest: false },
+  )
+  .route('/api', api)
+  .use(
+    '*',
+    agentsMiddleware({
+      options: {
+        onBeforeConnect: (c) => {
+          if (!c.headers.get('Cookie')) {
+            return new Response('Unauthorized', { status: 401 });
+          }
+        },
+      },
+    }),
+  )
+  .get('/health', (c) => c.json({ message: 'Zero Server is Up!' }))
+  .get('/', (c) => c.redirect(`${env.VITE_PUBLIC_APP_URL}`))
+  .post('/monitoring/sentry', async (c) => {
+    try {
+      const envelopeBytes = await c.req.arrayBuffer();
+      const envelope = new TextDecoder().decode(envelopeBytes);
+      const piece = envelope.split('\n')[0];
+      const header = JSON.parse(piece);
+      const dsn = new URL(header['dsn']);
+      const project_id = dsn.pathname?.replace('/', '');
+
+      if (dsn.hostname !== SENTRY_HOST) {
+        throw new Error(`Invalid sentry hostname: ${dsn.hostname}`);
+      }
+
+      if (!project_id || !SENTRY_PROJECT_IDS.has(project_id)) {
+        throw new Error(`Invalid sentry project id: ${project_id}`);
+      }
+
+      const upstream_sentry_url = `https://${SENTRY_HOST}/api/${project_id}/envelope/`;
+      await fetch(upstream_sentry_url, {
+        method: 'POST',
+        body: envelopeBytes,
+      });
+
+      return c.json({}, { status: 200 });
+    } catch (e) {
+      console.error('error tunneling to sentry', e);
+      return c.json({ error: 'error tunneling to sentry' }, { status: 500 });
+    }
+  })
+  .post('/a8n/notify/:providerId', async (c) => {
+    if (!c.req.header('Authorization')) return c.json({ error: 'Unauthorized' }, { status: 401 });
+    if (env.DISABLE_WORKFLOWS === 'true') return c.json({ message: 'OK' }, { status: 200 });
+    const providerId = c.req.param('providerId');
+    if (providerId === EProviders.google) {
+      const body = await c.req.json<{ historyId: string }>();
+      const subHeader = c.req.header('x-goog-pubsub-subscription-name');
+      if (!subHeader) {
+        console.log('[GOOGLE] no subscription header', body);
+        return c.json({}, { status: 200 });
+      }
+      const isValid = await verifyToken(c.req.header('Authorization')!.split(' ')[1]);
+      if (!isValid) {
+        console.log('[GOOGLE] invalid request', body);
+        return c.json({}, { status: 200 });
+      }
+      try {
+        await env.thread_queue.send({
+          providerId,
+          historyId: body.historyId,
+          subscriptionName: subHeader,
+        });
+      } catch (error) {
+        console.error('Error sending to thread queue', error, {
+          providerId,
+          historyId: body.historyId,
+          subscriptionName: subHeader,
+        });
+      }
+      return c.json({ message: 'OK' }, { status: 200 });
+    }
+  });
+export default class Entry extends WorkerEntrypoint<Env> {
+  async fetch(request: Request): Promise<Response> {
+    return app.fetch(request, this.env, this.ctx);
+  }
   async queue(batch: MessageBatch<any>) {
     switch (true) {
       case batch.queue.startsWith('subscribe-queue'): {
         console.log('batch', batch);
-        try {
-          await Promise.all(
-            batch.messages.map(async (msg: Message<ISubscribeBatch>) => {
-              const connectionId = msg.body.connectionId;
-              const providerId = msg.body.providerId;
-              console.log('connectionId', connectionId);
-              console.log('providerId', providerId);
-              try {
-                await enableBrainFunction({ id: connectionId, providerId });
-              } catch (error) {
-                console.error(
-                  `Failed to enable brain function for connection ${connectionId}:`,
-                  error,
-                );
-              }
-            }),
-          );
-          console.log('[SUBSCRIBE_QUEUE] batch done');
-        } finally {
-          batch.ackAll();
-        }
+        await Promise.all(
+          batch.messages.map(async (msg: Message<ISubscribeBatch>) => {
+            const connectionId = msg.body.connectionId;
+            const providerId = msg.body.providerId;
+            try {
+              await enableBrainFunction({ id: connectionId, providerId });
+            } catch (error) {
+              console.error(
+                `Failed to enable brain function for connection ${connectionId}:`,
+                error,
+              );
+            }
+          }),
+        );
+        console.log('[SUBSCRIBE_QUEUE] batch done');
         return;
       }
       case batch.queue.startsWith('thread-queue'): {
-        console.log('batch', batch);
-        try {
-          await Promise.all(
-            batch.messages.map(async (msg: Message<IThreadBatch>) => {
-              const providerId = msg.body.providerId;
-              const historyId = msg.body.historyId;
-              const subscriptionName = msg.body.subscriptionName;
-              const workflow = runWorkflow(EWorkflowType.MAIN, {
+        await Promise.all(
+          batch.messages.map(async (msg: Message<IThreadBatch>) => {
+            const providerId = msg.body.providerId;
+            const historyId = msg.body.historyId;
+            const subscriptionName = msg.body.subscriptionName;
+
+            try {
+              const workflowRunner = env.WORKFLOW_RUNNER.get(env.WORKFLOW_RUNNER.newUniqueId());
+              const result = await workflowRunner.runMainWorkflow({
                 providerId,
                 historyId,
                 subscriptionName,
               });
-
-              try {
-                const result = await Effect.runPromise(workflow);
-                console.log('[THREAD_QUEUE] result', result);
-              } catch (error) {
-                console.error('Error running workflow', error);
-              }
-            }),
-          );
-        } finally {
-          batch.ackAll();
-        }
+              console.log('[THREAD_QUEUE] result', result);
+            } catch (error) {
+              console.error('Error running workflow', error);
+            }
+          }),
+        );
         break;
       }
     }
   }
-
   async scheduled() {
     console.log('[SCHEDULED] Checking for expired subscriptions...');
-    const allAccounts = await env.subscribed_accounts.list();
-    console.log('[SCHEDULED] allAccounts', allAccounts.keys);
+    const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
+    const allAccounts = await db.query.connection.findMany({
+      where: (fields, { isNotNull, and }) =>
+        and(isNotNull(fields.accessToken), isNotNull(fields.refreshToken)),
+    });
+    await conn.end();
+    console.log('[SCHEDULED] allAccounts', allAccounts.length);
     const now = new Date();
     const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
 
     const expiredSubscriptions: Array<{ connectionId: string; providerId: EProviders }> = [];
 
+    const nowTs = Date.now();
+
+    const unsnoozeMap: Record<string, { threadIds: string[]; keyNames: string[] }> = {};
+
+    let cursor: string | undefined = undefined;
+    do {
+      const listResp: {
+        keys: { name: string; metadata?: { wakeAt?: string } }[];
+        cursor?: string;
+      } = await env.snoozed_emails.list({ cursor, limit: 1000 });
+      cursor = listResp.cursor;
+
+      for (const key of listResp.keys) {
+        try {
+          const wakeAtIso = (key as any).metadata?.wakeAt as string | undefined;
+          if (!wakeAtIso) continue;
+          const wakeAt = new Date(wakeAtIso).getTime();
+          if (wakeAt > nowTs) continue;
+
+          const [threadId, connectionId] = key.name.split('__');
+          if (!threadId || !connectionId) continue;
+
+          if (!unsnoozeMap[connectionId]) {
+            unsnoozeMap[connectionId] = { threadIds: [], keyNames: [] };
+          }
+          unsnoozeMap[connectionId].threadIds.push(threadId);
+          unsnoozeMap[connectionId].keyNames.push(key.name);
+        } catch (error) {
+          console.error('Failed to prepare unsnooze for key', key.name, error);
+        }
+      }
+    } while (cursor);
+
     await Promise.all(
-      allAccounts.keys.map(async (key) => {
-        const [connectionId, providerId] = key.name.split('__');
-        const lastSubscribed = await env.gmail_sub_age.get(key.name);
+      Object.entries(unsnoozeMap).map(async ([connectionId, { threadIds, keyNames }]) => {
+        try {
+          const agent = await getZeroAgent(connectionId);
+          await agent.queue('unsnoozeThreadsHandler', { connectionId, threadIds, keyNames });
+        } catch (error) {
+          console.error('Failed to enqueue unsnooze tasks', { connectionId, threadIds, error });
+        }
+      }),
+    );
+
+    await Promise.all(
+      allAccounts.map(async ({ id, providerId }) => {
+        const lastSubscribed = await env.gmail_sub_age.get(`${id}__${providerId}`);
 
         if (lastSubscribed) {
           const subscriptionDate = new Date(lastSubscribed);
           if (subscriptionDate < fiveDaysAgo) {
-            console.log(
-              `[SCHEDULED] Found expired Google subscription for connection: ${connectionId}`,
-            );
-            expiredSubscriptions.push({ connectionId, providerId: providerId as EProviders });
+            console.log(`[SCHEDULED] Found expired Google subscription for connection: ${id}`);
+            expiredSubscriptions.push({ connectionId: id, providerId: providerId as EProviders });
           }
+        } else {
+          expiredSubscriptions.push({ connectionId: id, providerId: providerId as EProviders });
         }
       }),
     );
@@ -789,4 +916,4 @@ export default class extends WorkerEntrypoint<typeof env> {
   }
 }
 
-export { ZeroAgent, ZeroMCP, ZeroDB };
+export { ZeroAgent, ZeroMCP, ZeroDB, ZeroDriver, ThinkingMCP, WorkflowRunner };

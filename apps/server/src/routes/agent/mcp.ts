@@ -14,17 +14,16 @@
  * Reuse or distribution of this file requires a license from Zero Email Inc.
  */
 
-import { GmailSearchAssistantSystemPrompt, getCurrentDateContext } from '../../lib/prompts';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { composeEmail } from '../../trpc/routes/ai/compose';
+import { getCurrentDateContext } from '../../lib/prompts';
 import { getZeroAgent } from '../../lib/server-utils';
-import { anthropic } from '@ai-sdk/anthropic';
 import { connection } from '../../db/schema';
 import { FOLDERS } from '../../lib/utils';
 import { env } from 'cloudflare:workers';
 import { eq, and } from 'drizzle-orm';
 import { McpAgent } from 'agents/mcp';
 import { createDb } from '../../db';
-import { generateText } from 'ai';
 import z from 'zod';
 
 export class ZeroMCP extends McpAgent<typeof env, Record<string, unknown>, { userId: string }> {
@@ -118,32 +117,124 @@ export class ZeroMCP extends McpAgent<typeof env, Record<string, unknown>, { use
       },
     );
 
+    const agent = await getZeroAgent(_connection.id);
+
     this.server.registerTool(
-      'buildGmailSearchQuery',
+      'composeEmail',
       {
-        description: 'Build Gmail search query using AI assistance',
+        description: 'Compose an email using AI assistance',
         inputSchema: {
-          query: z.string(),
+          prompt: z.string(),
+          emailSubject: z.string().optional(),
+          to: z.array(z.string()).optional(),
+          cc: z.array(z.string()).optional(),
+          threadMessages: z
+            .array(
+              z.object({
+                from: z.string(),
+                to: z.array(z.string()),
+                cc: z.array(z.string()).optional(),
+                subject: z.string(),
+                body: z.string(),
+              }),
+            )
+            .optional(),
         },
       },
-      async (s) => {
-        const result = await generateText({
-          model: anthropic(env.OPENAI_MODEL || 'claude-3-5-haiku-latest'),
-          system: GmailSearchAssistantSystemPrompt(),
-          prompt: s.query,
+      async (data) => {
+        if (!this.activeConnectionId) {
+          throw new Error('No active connection');
+        }
+        const newBody = await composeEmail({
+          prompt: data.prompt,
+          emailSubject: data.emailSubject,
+          to: data.to,
+          cc: data.cc,
+          threadMessages: data.threadMessages,
+          username: 'AI Assistant',
+          connectionId: this.activeConnectionId,
         });
         return {
           content: [
             {
-              type: 'text',
-              text: result.text,
+              type: 'text' as const,
+              text: newBody,
             },
           ],
         };
       },
     );
 
-    const agent = await getZeroAgent(_connection.id);
+    this.server.registerTool(
+      'sendEmail',
+      {
+        description: 'Send a new email',
+        inputSchema: {
+          to: z.array(
+            z.object({
+              email: z.string(),
+              name: z.string().optional(),
+            }),
+          ),
+          subject: z.string(),
+          message: z.string(),
+          cc: z
+            .array(
+              z.object({
+                email: z.string(),
+                name: z.string().optional(),
+              }),
+            )
+            .optional(),
+          bcc: z
+            .array(
+              z.object({
+                email: z.string(),
+                name: z.string().optional(),
+              }),
+            )
+            .optional(),
+          threadId: z.string().optional(),
+          draftId: z.string().optional(),
+        },
+      },
+      async (data) => {
+        if (!this.activeConnectionId) {
+          throw new Error('No active connection');
+        }
+        try {
+          const { draftId, ...mail } = data;
+
+          if (draftId) {
+            await agent.sendDraft(draftId, {
+              ...mail,
+              attachments: [],
+              headers: {},
+            });
+          } else {
+            await agent.create({
+              ...mail,
+              attachments: [],
+              headers: {},
+            });
+          }
+
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: 'Email sent successfully',
+              },
+            ],
+          };
+        } catch (error) {
+          console.error('Error sending email:', error);
+          throw new Error(
+            'Failed to send email: ' + (error instanceof Error ? error.message : String(error)),
+          );
+        }
+      },
+    );
 
     this.server.registerTool(
       'listThreads',
@@ -166,7 +257,7 @@ export class ZeroMCP extends McpAgent<typeof env, Record<string, unknown>, { use
           pageToken: s.pageToken,
         });
         const content = await Promise.all(
-          result.threads.map(async (thread: any) => {
+          result.threads.map(async (thread) => {
             const loadedThread = await agent.getThread(thread.id);
             return [
               {

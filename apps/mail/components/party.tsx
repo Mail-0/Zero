@@ -4,6 +4,8 @@ import useSearchLabels from '@/hooks/use-labels-search';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTRPC } from '@/providers/query-provider';
 import { usePartySocket } from 'partysocket/react';
+import { useQueryState } from 'nuqs';
+import { useEffect, useRef } from 'react';
 
 // 10 seconds is appropriate for real-time notifications
 
@@ -14,6 +16,7 @@ export enum IncomingMessageType {
   ChatRequestCancel = 'cf_agent_chat_request_cancel',
   Mail_List = 'zero_mail_list_threads',
   Mail_Get = 'zero_mail_get_thread',
+  User_Topics = 'zero_user_topics',
 }
 
 export enum OutgoingMessageType {
@@ -22,6 +25,7 @@ export enum OutgoingMessageType {
   ChatClear = 'cf_agent_chat_clear',
   Mail_List = 'zero_mail_list_threads',
   Mail_Get = 'zero_mail_get_thread',
+  ThreadIdUpdate = 'zero_thread_id_update',
 }
 
 export const NotificationProvider = () => {
@@ -30,8 +34,10 @@ export const NotificationProvider = () => {
   const { data: activeConnection } = useActiveConnection();
   const [searchValue] = useSearchValue();
   const { labels } = useSearchLabels();
+  const [threadId] = useQueryState('threadId');
+  const prevThreadIdRef = useRef<string | null>(null);
 
-  usePartySocket({
+  const socket = usePartySocket({
     party: 'zero-agent',
     room: activeConnection?.id ? String(activeConnection.id) : 'general',
     prefix: 'agents',
@@ -45,7 +51,6 @@ export const NotificationProvider = () => {
           queryClient.invalidateQueries({
             queryKey: trpc.mail.get.queryKey({ id: threadId }),
           });
-          console.log('invalidated mail get', threadId);
         } else if (type === IncomingMessageType.Mail_List) {
           const { folder } = JSON.parse(message.data);
           queryClient.invalidateQueries({
@@ -55,12 +60,26 @@ export const NotificationProvider = () => {
               q: searchValue.value,
             }),
           });
+        } else if (type === IncomingMessageType.User_Topics) {
+          queryClient.invalidateQueries({
+            queryKey: trpc.labels.list.queryKey(),
+          });
         }
       } catch (error) {
         console.error('error parsing party message', error);
       }
     },
   });
+
+  useEffect(() => {
+    if (socket && prevThreadIdRef.current !== threadId) {
+      prevThreadIdRef.current = threadId;
+      socket.send(JSON.stringify({
+        type: OutgoingMessageType.ThreadIdUpdate,
+        threadId: threadId || null,
+      }));
+    }
+  }, [threadId, socket]);
 
   return <></>;
 };
