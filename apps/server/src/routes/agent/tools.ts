@@ -133,7 +133,7 @@ const getThreadSummary = (connectionId: string) =>
       const response = await env.VECTORIZE.getByIds([id]);
       const driver = await getZeroAgent(connectionId);
       const thread = await driver.getThread(id);
-      if (response.length && response?.[0]?.metadata?.['summary'] && thread.latest?.subject) {
+      if (response.length && response?.[0]?.metadata?.['summary'] && thread?.latest?.subject) {
         const result = response[0].metadata as { summary: string; connection: string };
         if (result.connection !== connectionId) return null;
         const shortResponse = await env.AI.run('@cf/facebook/bart-large-cnn', {
