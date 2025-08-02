@@ -1,5 +1,0 @@
-{
-  "extends": "@zero/tsconfig/base",
-  "include": ["."],
-  "exclude": ["dist", "build", "node_modules"]
-}

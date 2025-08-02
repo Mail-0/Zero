@@ -3,7 +3,7 @@ import { defaultLabels, EProviders, } from '../../types';
 import { connection } from '../../db/schema';
 
 
-import { env } from 'cloudflare:workers';
+import { env } from '../../env';
 import { createDb } from '../../db';
 import { eq } from 'drizzle-orm';
 

@@ -25,7 +25,7 @@ const AttachmentDialog = ({ selectedAttachment, setSelectedAttachment }: Props) 
       open={!!selectedAttachment}
       onOpenChange={(open) => !open && setSelectedAttachment(null)}
     >
-      <DialogContent className="!max-w-4xl">
+      <DialogContent className="max-w-4xl!">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>{selectedAttachment?.name}</span>

@@ -805,7 +805,7 @@ export function ThreadDisplay() {
           <>
             <div
               className={cn(
-                'flex flex-shrink-0 items-center px-1 pb-[10px] md:px-3 md:pb-[11px] md:pt-[12px]',
+                'flex shrink-0 items-center px-1 pb-[10px] md:px-3 md:pb-[11px] md:pt-[12px]',
                 isMobile && 'bg-panelLight dark:bg-panelDark sticky top-0 z-10 mt-2',
               )}
             >

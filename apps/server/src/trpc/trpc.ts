@@ -69,12 +69,12 @@ export const activeDriverProcedure = activeConnectionProcedure.use(async ({ ctx,
         accessToken: null,
         refreshToken: null,
       });
-
-      ctx.c.header(
-        'X-Zero-Redirect',
-        `/settings/connections?disconnectedConnectionId=${activeConnection.id}`,
-      );
-
+      if (activeConnection.accessToken) {
+        ctx.c.header(
+          'X-Zero-Redirect',
+          `/settings/connections?disconnectedConnectionId=${activeConnection.id}`,
+        );
+      }
       throw new TRPCError({
         code: 'UNAUTHORIZED',
         message: 'Connection expired. Please reconnect.',

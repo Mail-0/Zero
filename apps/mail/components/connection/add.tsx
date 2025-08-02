@@ -116,7 +116,7 @@ export const AddConnectionDialog = ({
                     })
                   }
                 >
-                  <Icon className="!size-6" />
+                  <Icon className="size-6!" />
                   <span className="text-xs">{provider.name}</span>
                 </Button>
               </motion.div>

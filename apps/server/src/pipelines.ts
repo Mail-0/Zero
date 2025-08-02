@@ -23,6 +23,7 @@ import { type gmail_v1 } from '@googleapis/gmail';
 import { Effect, Console, Logger } from 'effect';
 import { connection } from './db/schema';
 import { EProviders } from './types';
+import type { ZeroEnv } from './env';
 import { EPrompts } from './types';
 import { eq } from 'drizzle-orm';
 import { createDb } from './db';
@@ -149,8 +150,8 @@ export type WorkflowError =
   | ThreadWorkflowError
   | UnsupportedWorkflowError;
 
-export class WorkflowRunner extends DurableObject<Env> {
-  constructor(state: DurableObjectState, env: Env) {
+export class WorkflowRunner extends DurableObject<ZeroEnv> {
+  constructor(state: DurableObjectState, env: ZeroEnv) {
     super(state, env);
   }
 
@@ -393,7 +394,7 @@ export class WorkflowRunner extends DurableObject<Env> {
             { concurrency: 6 }, // Limit concurrency to avoid rate limits
           );
 
-          const syncedCount = syncResults.length;
+          const syncedCount = syncResults.filter((result) => result.result.success).length;
           const failedCount = threadWorkflowParams.length - syncedCount;
 
           if (failedCount > 0) {
@@ -627,37 +628,15 @@ export class WorkflowRunner extends DurableObject<Env> {
         // Execute configured workflows using the workflow engine
         const workflowResults = yield* Effect.tryPromise({
           try: async () => {
-            const allResults = new Map<string, any>();
-            const allErrors = new Map<string, Error>();
-
             // Execute all workflows registered in the engine
             const workflowNames = workflowEngine.getWorkflowNames();
 
-            for (const workflowName of workflowNames) {
-              console.log(`[THREAD_WORKFLOW] Executing workflow: ${workflowName}`);
+            const { results, errors } = await workflowEngine.executeWorkflowChain(
+              workflowNames,
+              workflowContext,
+            );
 
-              try {
-                const { results, errors } = await workflowEngine.executeWorkflow(
-                  workflowName,
-                  workflowContext,
-                );
-
-                // Merge results and errors using efficient Map operations
-                results.forEach((value, key) => allResults.set(key, value));
-                errors.forEach((value, key) => allErrors.set(key, value));
-
-                console.log(`[THREAD_WORKFLOW] Completed workflow: ${workflowName}`);
-              } catch (error) {
-                console.error(
-                  `[THREAD_WORKFLOW] Failed to execute workflow ${workflowName}:`,
-                  error,
-                );
-                const errorObj = error instanceof Error ? error : new Error(String(error));
-                allErrors.set(workflowName, errorObj);
-              }
-            }
-
-            return { results: allResults, errors: allErrors };
+            return { results, errors };
           },
           catch: (error) => ({ _tag: 'WorkflowCreationFailed' as const, error }),
         });

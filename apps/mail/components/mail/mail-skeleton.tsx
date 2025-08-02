@@ -31,7 +31,7 @@ export const MailDisplaySkeleton = ({ isFullscreen }: { isFullscreen?: boolean }
               </div>
               <Skeleton className="h-6 w-6" />
             </div>
-            <Skeleton className="h-[1px] w-full" />
+            <Skeleton className="h-px w-full" />
             <div className="space-y-4">
               <div className="flex flex-col space-y-2">
                 <Skeleton className="h-4 w-full" />
@@ -72,7 +72,7 @@ export const MailDisplaySkeleton = ({ isFullscreen }: { isFullscreen?: boolean }
               </div>
               <Skeleton className="h-6 w-6" />
             </div>
-            <Skeleton className="h-[1px] w-full" />
+            <Skeleton className="h-px w-full" />
             <div className="space-y-4">
               <div className="flex flex-col space-y-2">
                 <Skeleton className="h-4 w-full" />
@@ -113,7 +113,7 @@ export const MailDisplaySkeleton = ({ isFullscreen }: { isFullscreen?: boolean }
               </div>
               <Skeleton className="h-6 w-6" />
             </div>
-            <Skeleton className="h-[1px] w-full" />
+            <Skeleton className="h-px w-full" />
             <div className="space-y-4">
               <div className="flex flex-col space-y-2">
                 <Skeleton className="h-4 w-full" />

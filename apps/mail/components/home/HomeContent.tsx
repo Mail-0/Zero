@@ -123,7 +123,7 @@ export default function HomeContent() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.6 }}
-          className="mb-6 md:hidden"
+          className="mb-6 lg:hidden"
         >
           <Button
             onClick={() => {
@@ -194,7 +194,7 @@ export default function HomeContent() {
         />
       </div>
 
-      <div className="relative -top-3.5 hidden h-[1px] w-full bg-[#313135] md:block" />
+      <div className="relative -top-3.5 hidden h-px w-full bg-[#313135] md:block" />
 
       <div className="relative mt-52">
         <motion.div
@@ -298,7 +298,7 @@ export default function HomeContent() {
                           Send <span className="hidden md:inline">now</span>
                         </div>
                       </div>
-                      <div className="flex h-5 items-center justify-center gap-2.5 rounded bg-[#E7E7E7] px-1 outline outline-1 outline-offset-[-1px] outline-[#D2D2D2]">
+                      <div className="flex h-5 items-center justify-center gap-2.5 rounded bg-[#E7E7E7] px-1 outline outline-1 -outline-offset-1 outline-[#D2D2D2]">
                         <div className="text-tokens-shortcut-primary-symbol justify-start text-center text-sm font-semibold leading-none">
                           ⏎
                         </div>
@@ -374,7 +374,7 @@ export default function HomeContent() {
       </div>
 
       <div className="relative mt-52 flex items-center justify-center">
-        <div className="mx-auto grid !w-full max-w-[1250px] grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mx-auto grid w-full! max-w-[1250px] grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-3">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -581,7 +581,7 @@ export default function HomeContent() {
                           </div>
                         </div>
                         <div className="inline-flex items-start justify-start gap-1 self-stretch">
-                          <Calendar className="relative bottom-[1px] h-2.5 w-2.5 overflow-hidden fill-[#8C8C8C]" />
+                          <Calendar className="relative bottom-px h-2.5 w-2.5 overflow-hidden fill-[#8C8C8C]" />
                           <div className="text-base-gray-500/50 flex-1 justify-start text-[9.92px] font-normal leading-[9.92px]">
                             March 25 - March 29
                           </div>
@@ -721,7 +721,7 @@ export default function HomeContent() {
                     </div>
                   </div>
 
-                  <div className="from-tokens-scroll-overlay-primary to-tokens-scroll-overlay-top/0 absolute left-0 top-[668.98px] h-12 w-[547.09px] bg-gradient-to-l" />
+                  <div className="from-tokens-scroll-overlay-primary to-tokens-scroll-overlay-top/0 absolute left-0 top-[668.98px] h-12 w-[547.09px] bg-linear-to-l" />
                   <div className="bg-tokens-agent-surface/10 border-tokens-agent-stroke absolute left-[498.90px] top-[674.65px] h-8 w-8 rounded-full border-2 px-1 shadow-[0px_8.503936767578125px_17.00787353515625px_0px_rgba(0,0,0,0.15)] backdrop-blur-lg" />
                 </div>
                 <div className="absolute left-0 top-[121px] inline-flex w-[650px] flex-col items-start justify-start gap-4 overflow-hidden rounded-3xl border border-[#8B5CF6] bg-[#2A1D48] p-6 outline outline-[#3F325F]">
@@ -1179,7 +1179,7 @@ export default function HomeContent() {
                   </div>
                 </div>
               </div>
-              <div className="absolute top-0 inline-flex aspect-[96/125] w-full flex-col items-center justify-center overflow-hidden rounded-xl bg-[#252525] md:h-[500px] md:w-96">
+              <div className="absolute top-0 inline-flex aspect-96/125 w-full flex-col items-center justify-center overflow-hidden rounded-xl bg-[#252525] md:h-[500px] md:w-96">
                 <div className="border-tokens-stroke-light/5 inline-flex items-center justify-start gap-2 self-stretch overflow-hidden border-b-[0.50px] py-3.5 pl-5 pr-3.5">
                   <div className="flex flex-1 items-center justify-start gap-3">
                     <div className="text-base-gray-950 flex flex-1 items-center justify-start text-sm leading-none">
@@ -1220,7 +1220,7 @@ export default function HomeContent() {
                         {firstRowQueries.map((query) => (
                           <div
                             key={query}
-                            className="flex h-7 flex-shrink-0 items-center justify-start gap-1.5 overflow-hidden rounded-md bg-[#303030] px-2 py-1.5"
+                            className="flex h-7 shrink-0 items-center justify-start gap-1.5 overflow-hidden rounded-md bg-[#303030] px-2 py-1.5"
                           >
                             <div className="flex items-center justify-start gap-1 px-0.5">
                               <div className="justify-start text-sm leading-none text-[#8B8B8B]">
@@ -1230,8 +1230,8 @@ export default function HomeContent() {
                           </div>
                         ))}
                       </div>
-                      <div className="absolute left-0 top-0 h-7 w-12 bg-gradient-to-l from-neutral-800/0 to-neutral-800" />
-                      <div className="absolute right-0 top-0 h-7 w-12 bg-gradient-to-l from-neutral-800 to-neutral-800/0" />
+                      <div className="absolute left-0 top-0 h-7 w-12 bg-linear-to-l from-neutral-800/0 to-neutral-800" />
+                      <div className="absolute right-0 top-0 h-7 w-12 bg-linear-to-l from-neutral-800 to-neutral-800/0" />
                     </div>
 
                     {/* Second row */}
@@ -1240,7 +1240,7 @@ export default function HomeContent() {
                         {secondRowQueries.map((query) => (
                           <div
                             key={query}
-                            className="flex h-7 flex-shrink-0 items-center justify-start gap-1.5 overflow-hidden rounded-md bg-[#303030] px-2 py-1.5"
+                            className="flex h-7 shrink-0 items-center justify-start gap-1.5 overflow-hidden rounded-md bg-[#303030] px-2 py-1.5"
                           >
                             <div className="flex items-center justify-start gap-1 px-0.5">
                               <div className="justify-start text-sm leading-none text-[#8B8B8B]">
@@ -1250,8 +1250,8 @@ export default function HomeContent() {
                           </div>
                         ))}
                       </div>
-                      <div className="absolute left-0 top-0 h-7 w-12 bg-gradient-to-l from-neutral-800/0 to-neutral-800" />
-                      <div className="absolute right-0 top-0 h-7 w-12 bg-gradient-to-l from-neutral-800 to-neutral-800/0" />
+                      <div className="absolute left-0 top-0 h-7 w-12 bg-linear-to-l from-neutral-800/0 to-neutral-800" />
+                      <div className="absolute right-0 top-0 h-7 w-12 bg-linear-to-l from-neutral-800 to-neutral-800/0" />
                     </div>
                   </div>
                   <div className="inline-flex w-full items-center justify-start gap-4 overflow-hidden p-0 md:w-96 md:p-4 md:pb-0">
@@ -1261,7 +1261,7 @@ export default function HomeContent() {
                         Ask Zero to do anything...
                       </div>
                       <div className="flex h-6 items-center justify-center gap-2.5 rounded bg-[#262626] px-1">
-                        <CurvedArrow className="relative left-[1px] mt-1 h-4 w-4 fill-black dark:fill-[#929292]" />
+                        <CurvedArrow className="relative left-px mt-1 h-4 w-4 fill-black dark:fill-[#929292]" />
                       </div>
                     </div>
                   </div>

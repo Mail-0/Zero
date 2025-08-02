@@ -452,7 +452,9 @@
         "selectDefaultEmail": "デフォルトのメールを選択",
         "defaultEmailDescription": "このメールは新しいメールを作成する際のデフォルトの「差出人」アドレスとして使用されます",
         "autoRead": "自動既読",
-        "autoReadDescription": "メールをクリックすると自動的に既読としてマークします。"
+        "autoReadDescription": "メールをクリックすると自動的に既読としてマークします。",
+        "animations": "アニメーション",
+        "animationsDescription": "メール間の切り替え時にスムーズなアニメーションを有効にする"
       },
       "connections": {
         "title": "メールの接続",

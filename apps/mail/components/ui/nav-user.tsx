@@ -152,7 +152,7 @@ export function NavUser() {
                 </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                className="ml-3 w-[--radix-dropdown-menu-trigger-width] min-w-56 bg-white font-medium dark:bg-[#131313]"
+                className="ml-3 w-(--radix-dropdown-menu-trigger-width) min-w-56 bg-white font-medium dark:bg-[#131313]"
                 align="end"
                 side={'bottom'}
                 sideOffset={8}

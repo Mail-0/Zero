@@ -19,7 +19,7 @@ import type { CreateDraftData } from '../schemas';
 import { createMimeMessage } from 'mimetext';
 import { people } from '@googleapis/people';
 import { cleanSearchValue } from '../utils';
-import { env } from 'cloudflare:workers';
+import { env } from '../../env';
 import { Effect } from 'effect';
 import * as he from 'he';
 

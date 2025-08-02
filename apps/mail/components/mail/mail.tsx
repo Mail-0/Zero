@@ -461,7 +461,7 @@ export function MailLayout() {
   return (
     <TooltipProvider delayDuration={0}>
       <PricingDialog />
-      <div className="rounded-inherit relative z-[5] flex p-0 md:mr-0.5 md:mt-1">
+      <div className="rounded-inherit relative z-5 flex p-0 md:mr-0.5 md:mt-1">
         <ResizablePanelGroup
           direction="horizontal"
           autoSaveId="mail-panel-layout"
@@ -481,7 +481,7 @@ export function MailLayout() {
             <div className="w-full md:h-[calc(100dvh-10px)]">
               <div
                 className={cn(
-                  'sticky top-0 z-[15] flex items-center justify-between gap-1.5 p-2 pb-0 transition-colors',
+                  'sticky top-0 z-15 flex items-center justify-between gap-1.5 p-2 pb-0 transition-colors',
                 )}
               >
                 <div className="w-full">
@@ -528,16 +528,16 @@ export function MailLayout() {
                                 Clear
                               </Button>
                             )}
-                            <kbd className="bg-muted text-md pointer-events-none mr-0.5 hidden h-7 select-none flex-row items-center gap-1 rounded-md border-none px-2 font-medium !leading-[0] opacity-100 sm:flex dark:bg-[#262626] dark:text-[#929292]">
+                            <kbd className="bg-muted text-md pointer-events-none mr-0.5 hidden h-7 select-none flex-row items-center gap-1 rounded-md border-none px-2 font-medium leading-[0]! opacity-100 sm:flex dark:bg-[#262626] dark:text-[#929292]">
                               <span
                                 className={cn(
-                                  'h-min !leading-[0.2]',
-                                  isMac ? 'mt-[1px] text-lg' : 'text-sm',
+                                  'h-min leading-[0.2]!',
+                                  isMac ? 'mt-px text-lg' : 'text-sm',
                                 )}
                               >
                                 {isMac ? '⌘' : 'Ctrl'}{' '}
                               </span>
-                              <span className="h-min text-sm !leading-[0.2]"> K</span>
+                              <span className="h-min text-sm leading-[0.2]!"> K</span>
                             </kbd>
                           </span>
                         </Button>
@@ -582,11 +582,11 @@ export function MailLayout() {
               <div
                 className={cn(
                   `${category === 'Important' ? 'bg-[#F59E0D]' : category === 'All Mail' ? 'bg-[#006FFE]' : category === 'Personal' ? 'bg-[#39ae4a]' : category === 'Updates' ? 'bg-[#8B5CF6]' : category === 'Promotions' ? 'bg-[#F43F5E]' : category === 'Unread' ? 'bg-[#FF4800]' : 'bg-[#F59E0D]'}`,
-                  'relative z-[5] h-0.5 w-full transition-opacity',
+                  'relative z-5 h-0.5 w-full transition-opacity',
                   isFetching ? 'opacity-100' : 'opacity-0',
                 )}
               />
-              <div className="relative z-[1] h-[calc(100dvh-(2px+2px))] overflow-hidden pt-0 md:h-[calc(100dvh-4rem)]">
+              <div className="relative z-1 h-[calc(100dvh-(2px+2px))] overflow-hidden pt-0 md:h-[calc(100dvh-4rem)]">
                 <MailList />
               </div>
             </div>

@@ -380,7 +380,7 @@ export default function OpenPage() {
         </div>
 
         {/* Project Stats */}
-        <div className="mb-8 overflow-hidden rounded-xl border bg-gradient-to-b from-white/50 to-white/10 p-6 backdrop-blur-sm dark:border-neutral-700 dark:from-neutral-900/50 dark:to-neutral-900/30">
+        <div className="mb-8 overflow-hidden rounded-xl border bg-linear-to-b from-white/50 to-white/10 p-6 backdrop-blur-sm dark:border-neutral-700 dark:from-neutral-900/50 dark:to-neutral-900/30">
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
@@ -908,7 +908,7 @@ export default function OpenPage() {
         </div>
 
         <div className="mb-8">
-          <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-neutral-50 to-white shadow-sm dark:border-neutral-800 dark:from-neutral-900/80 dark:to-neutral-900/30">
+          <div className="relative overflow-hidden rounded-xl border bg-linear-to-br from-neutral-50 to-white shadow-sm dark:border-neutral-800 dark:from-neutral-900/80 dark:to-neutral-900/30">
             <div className="absolute inset-0 opacity-20 dark:opacity-20"></div>
 
             <div className="relative p-6">

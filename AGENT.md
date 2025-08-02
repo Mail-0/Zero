@@ -11,7 +11,6 @@ This is a pnpm workspace monorepo with the following structure:
 - `packages/cli/` - CLI tools (`nizzy` command)
 - `packages/db/` - Database schemas and utilities
 - `packages/eslint-config/` - Shared ESLint configuration
-- `packages/tailwind-config/` - Shared Tailwind configuration
 - `packages/tsconfig/` - Shared TypeScript configuration
 
 ## Frequently Used Commands

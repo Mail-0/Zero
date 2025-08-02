@@ -1,6 +1,6 @@
 import { fetchPricingTable } from 'autumn-js';
 import type { HonoContext } from '../ctx';
-import { env } from 'cloudflare:workers';
+import { env } from '../env';
 import { Hono } from 'hono';
 
 const sanitizeCustomerBody = (body: any) => {

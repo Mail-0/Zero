@@ -893,6 +893,8 @@ checksums:
     pages/settings/general/defaultEmailDescription: 0ebf26fceccb4cad99f4b2a20cbcfab0
     pages/settings/general/autoRead: 959803ec8269e00d8407c6c189269640
     pages/settings/general/autoReadDescription: 10de6d8f3040b36a0c4b369172dfe2f7
+    pages/settings/general/animations: d2b12468cc840da8ae0ea961fcb5706c
+    pages/settings/general/animationsDescription: 68d690ede69519e938bcca1fdce79e51
     pages/settings/connections/title: d7bc733cc82ab74c649a4816373a2295
     pages/settings/connections/description: f05d355994f9fe0e089ce2c54d0de381
     pages/settings/connections/disconnectTitle: efecc2354d665e68492fe985af575508

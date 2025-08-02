@@ -4,7 +4,7 @@ import { reactRouter } from '@react-router/dev/vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import oxlintPlugin from 'vite-plugin-oxlint';
 import babel from 'vite-plugin-babel';
-import tailwindcss from 'tailwindcss';
+import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from 'vite';
 import dedent from 'dedent';
 
@@ -25,6 +25,7 @@ export default defineConfig({
       },
     }),
     tsconfigPaths(),
+    tailwindcss(),
     {
       name: 'add-headers',
       applyToEnvironment: (env) => env.name === 'client',
@@ -52,11 +53,6 @@ export default defineConfig({
     port: 3000,
     warmup: {
       clientFiles: ['./app/**/*', './components/**/*'],
-    },
-  },
-  css: {
-    postcss: {
-      plugins: [tailwindcss()],
     },
   },
   //   ssr: {

@@ -133,7 +133,7 @@ const StreamingText = ({ text }: { text: string }) => {
     <div className="flex items-center gap-2">
       <div
         className={cn(
-          'bg-gradient-to-r from-neutral-500 via-neutral-300 to-neutral-500 bg-[length:200%_100%] bg-clip-text text-sm leading-relaxed text-transparent',
+          'bg-linear-to-r from-neutral-500 via-neutral-300 to-neutral-500 bg-size-[200%_100%] bg-clip-text text-sm leading-relaxed text-transparent',
           isComplete ? 'animate-shine-slow' : '',
         )}
       >
@@ -1481,7 +1481,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                         </div>
 
                         <div className="flex items-center justify-center">
-                          <div className="text-muted-foreground mr-2 flex flex-col !flex-nowrap items-end text-sm font-medium dark:text-[#8C8C8C]">
+                          <div className="text-muted-foreground mr-2 flex flex-col flex-nowrap! items-end text-sm font-medium dark:text-[#8C8C8C]">
                             <time className="whitespace-nowrap">
                               {emailData?.receivedOn ? formatDate(emailData.receivedOn) : ''}
                             </time>
@@ -1521,7 +1521,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                                   disabled={!messageAttachments?.length}
                                   className={
                                     !messageAttachments?.length
-                                      ? 'data-[disabled]:pointer-events-auto'
+                                      ? 'data-disabled:pointer-events-auto'
                                       : ''
                                   }
                                   onClick={(e) => {
@@ -1645,7 +1645,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
           <div
             className={cn(
               'h-0 overflow-hidden transition-all duration-200',
-              !isCollapsed && 'h-[1px]',
+              !isCollapsed && 'h-px',
             )}
           ></div>
 
@@ -1693,7 +1693,7 @@ const MailDisplay = ({ emailData, index, totalEmails, demo, threadAttachments }:
                           <HardDriveDownload className="text-muted-foreground dark:text-muted-foreground h-4 w-4 fill-[#FAFAFA] dark:fill-[#262626]" />
                         </button>
                         {index < (messageAttachments?.length || 0) - 1 && (
-                          <div className="m-auto h-2 w-[1px] bg-[#E0E0E0] dark:bg-[#424242]" />
+                          <div className="m-auto h-2 w-px bg-[#E0E0E0] dark:bg-[#424242]" />
                         )}
                       </div>
                     ))}

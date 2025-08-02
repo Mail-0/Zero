@@ -1,4 +1,5 @@
 export enum Tools {
+  GetThreadSummary = 'getThreadSummary',
   GetThread = 'getThread',
   ComposeEmail = 'composeEmail',
   ListThreads = 'listThreads',

@@ -1,5 +1,5 @@
 import type { AppContext, EProviders, Sender } from '../types';
-import { env } from 'cloudflare:workers';
+import { env } from '../env';
 
 export const parseHeaders = (token: string) => {
   const headers = new Headers();

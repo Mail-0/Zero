@@ -73,7 +73,7 @@ export default function DeveloperPage() {
     <div className="bg-background flex min-h-screen w-full flex-col">
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-[1600px] p-4 md:p-6 lg:p-8">
-          <div className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10 mb-8 backdrop-blur">
+          <div className="bg-background/95 supports-backdrop-filter:bg-background/60 sticky top-0 z-10 mb-8 backdrop-blur">
             <Button
               variant="ghost"
               size="sm"

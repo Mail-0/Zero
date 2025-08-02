@@ -440,7 +440,7 @@ function AISidebar({ className }: AISidebarProps) {
           {/* Desktop view - visible on md and larger screens */}
           {isSidebar && !isFullScreen && (
             <>
-              <div className="w-[1px] opacity-0" />
+              <div className="w-px opacity-0" />
               <ResizablePanel
                 defaultSize={24}
                 minSize={24}
@@ -477,7 +477,7 @@ function AISidebar({ className }: AISidebarProps) {
               'fixed inset-0 z-50 flex items-center justify-center bg-transparent p-4 backdrop-blur-sm transition-opacity duration-150 sm:inset-auto sm:bottom-4 sm:right-4 sm:flex-col sm:items-end sm:justify-end sm:p-0 lg:opacity-40 lg:hover:opacity-100',
               'md:hidden',
               isPopup && !isFullScreen && 'md:flex',
-              isFullScreen && '!inset-0 !flex !p-0 !opacity-100 !backdrop-blur-none',
+              isFullScreen && 'inset-0! flex! p-0! opacity-100! backdrop-blur-none!',
               'rounded-2xl focus:opacity-100',
             )}
           >
@@ -486,7 +486,7 @@ function AISidebar({ className }: AISidebarProps) {
                 'bg-panelLight dark:bg-panelDark w-full overflow-hidden rounded-2xl border border-[#E7E7E7] shadow-lg dark:border-[#252525]',
                 'md:hidden',
                 isPopup && !isFullScreen && 'w-[600px] max-w-[90vw] sm:w-[400px] md:block',
-                isFullScreen && '!block !max-w-none !rounded-none !border-none',
+                isFullScreen && 'block! max-w-none! rounded-none! border-none!',
               )}
             >
               <div

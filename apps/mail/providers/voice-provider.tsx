@@ -1,6 +1,6 @@
 import { createContext, useContext, useState } from 'react';
-import { toolExecutors } from '@/lib/elevenlabs-tools';
 import { useConversation } from '@elevenlabs/react';
+// import { callServerTool } from '@/lib/server-tool';
 import { useSession } from '@/lib/auth-client';
 import type { ReactNode } from 'react';
 import { toast } from 'sonner';
@@ -19,6 +19,23 @@ interface VoiceContextType {
   sendContext: (context: any) => void;
 }
 
+const toolNames = [
+  'listEmails',
+  'getEmail',
+  'sendEmail',
+  'markAsRead',
+  'markAsUnread',
+  'archiveEmails',
+  'deleteEmails',
+  'deleteEmail',
+  'createLabel',
+  'applyLabel',
+  'removeLabel',
+  'searchEmails',
+  'webSearch',
+  'summarizeEmail',
+] as const;
+
 const VoiceContext = createContext<VoiceContextType | undefined>(undefined);
 
 export function VoiceProvider({ children }: { children: ReactNode }) {
@@ -27,7 +44,7 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
   const [isInitializing, setIsInitializing] = useState(false);
   const [lastToolCall, setLastToolCall] = useState<string | null>(null);
   const [isOpen, setOpen] = useState(false);
-  const [currentContext, setCurrentContext] = useState<any>(null);
+  const [, setCurrentContext] = useState<any>(null);
 
   const conversation = useConversation({
     onConnect: () => {
@@ -42,26 +59,32 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
       toast.error(typeof error === 'string' ? error : error.message);
       setIsInitializing(false);
     },
-    clientTools: Object.entries(toolExecutors).reduce(
-      (acc: Record<string, any>, [name, executor]) => {
-        acc[name] = async (params: any) => {
-          console.log(`[Voice Tool] ${name} called with params:`, params);
-          setLastToolCall(`Executing: ${name}`);
+    // clientTools: toolNames.reduce(
+    //   (acc, name) => {
+    //     acc[name] = async (params: any) => {
+    //       console.log(`[Voice Tool] ${name} called with params:`, params);
+    //       setLastToolCall(`Executing: ${name}`);
 
-          const paramsWithContext = {
-            ...params,
-            _context: currentContext,
-          };
+    //       try {
+    //         const result = await callServerTool(
+    //           name,
+    //           { ...params, _context: currentContext },
+    //           session?.user.phoneNumber ?? session?.user.email ?? '',
+    //         );
 
-          const result = await executor(paramsWithContext);
-          console.log(`[Voice Tool] ${name} result:`, result);
-          setLastToolCall(null);
-          return result;
-        };
-        return acc;
-      },
-      {},
-    ),
+    //         console.log(`[Voice Tool] ${name} result:`, result);
+    //         setLastToolCall(null);
+    //         return result;
+    //       } catch (err) {
+    //         setLastToolCall(null);
+    //         toast.error(`Tool "${name}" failed: ${(err as Error).message}`);
+    //         throw err;
+    //       }
+    //     };
+    //     return acc;
+    //   },
+    //   {} as Record<string, (params: any) => Promise<any>>,
+    // ),
   });
 
   const { status, isSpeaking } = conversation;

@@ -245,7 +245,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
     <div className="w-full rounded-2xl overflow-visible border">
       <EmailComposer
         editorClassName="min-h-[50px]"
-        className="w-full !max-w-none pb-1 overflow-visible"
+        className="w-full max-w-none! pb-1 overflow-visible"
         onSendEmail={handleSendEmail}
         onClose={async () => {
           setMode(null);

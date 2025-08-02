@@ -123,7 +123,7 @@ export default function LabelsPage() {
                             <span>{label.name}</span>
                           </Badge>
                         </div>
-                        <div className="dark:bg-panelDark absolute right-2 z-[25] flex items-center gap-1 rounded-xl border bg-white p-1 opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
+                        <div className="dark:bg-panelDark absolute right-2 z-25 flex items-center gap-1 rounded-xl border bg-white p-1 opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button

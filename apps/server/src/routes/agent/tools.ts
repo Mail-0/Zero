@@ -1,11 +1,12 @@
+import { getCurrentDateContext, GmailSearchAssistantSystemPrompt } from '../../lib/prompts';
 import { composeEmail } from '../../trpc/routes/ai/compose';
-import { perplexity } from '@ai-sdk/perplexity';
-import { generateText, tool } from 'ai';
-
 import { getZeroAgent } from '../../lib/server-utils';
+import { perplexity } from '@ai-sdk/perplexity';
 import { colors } from '../../lib/prompts';
-import { env } from 'cloudflare:workers';
+import { openai } from '@ai-sdk/openai';
+import { generateText, tool } from 'ai';
 import { Tools } from '../../types';
+import { env } from '../../env';
 import { z } from 'zod';
 
 type ModelTypes = 'summarize' | 'general' | 'chat' | 'vectorize';
@@ -120,6 +121,39 @@ const getEmail = () =>
     execute: async ({ id }) => {
       /* nothing to fetch server-side any more */
       return `<thread id="${id}"/>`;
+    },
+  });
+
+const getThreadSummary = (connectionId: string) =>
+  tool({
+    description: 'Get the summary of a specific email thread',
+    parameters: z.object({
+      id: z.string().describe('The ID of the email thread to get the summary of'),
+    }),
+    execute: async ({ id }) => {
+      const response = await env.VECTORIZE.getByIds([id]);
+      const driver = await getZeroAgent(connectionId);
+      const thread = await driver.getThread(id);
+      if (response.length && response?.[0]?.metadata?.['summary'] && thread?.latest?.subject) {
+        const result = response[0].metadata as { summary: string; connection: string };
+        if (result.connection !== connectionId) {
+          return null;
+        }
+        const shortResponse = await env.AI.run('@cf/facebook/bart-large-cnn', {
+          input_text: result.summary,
+        });
+        return {
+          short: shortResponse.summary,
+          subject: thread.latest?.subject,
+          sender: thread.latest?.sender,
+          date: thread.latest?.receivedOn,
+        };
+      }
+      return {
+        subject: thread.latest?.subject,
+        sender: thread.latest?.sender,
+        date: thread.latest?.receivedOn,
+      };
     },
   });
 
@@ -350,6 +384,49 @@ const deleteLabel = (connectionId: string) =>
     },
   });
 
+const buildGmailSearchQuery = () =>
+  tool({
+    description: 'Build a Gmail search query',
+    parameters: z.object({
+      query: z.string().describe('The search query to build, provided in natural language'),
+    }),
+    execute: async (params) => {
+      console.log('[DEBUG] buildGmailSearchQuery', params);
+
+      const result = await generateText({
+        model: openai(env.OPENAI_MODEL || 'gpt-4o'),
+        system: GmailSearchAssistantSystemPrompt(),
+        prompt: params.query,
+      });
+      return {
+        content: [
+          {
+            type: 'text',
+            text: result.text,
+          },
+        ],
+      };
+    },
+  });
+
+const getCurrentDate = () =>
+  tool({
+    description: 'Get the current date',
+    parameters: z.object({}).default({}),
+    execute: async () => {
+      console.log('[DEBUG] getCurrentDate');
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: getCurrentDateContext(),
+          },
+        ],
+      };
+    },
+  });
+
 export const webSearch = () =>
   tool({
     description: 'Search the web for information using Perplexity AI',
@@ -377,9 +454,10 @@ export const webSearch = () =>
     },
   });
 
-export const tools = async (connectionId: string) => {
-  return {
+export const tools = async (connectionId: string, ragEffect: boolean = false) => {
+  const _tools = {
     [Tools.GetThread]: getEmail(),
+    [Tools.GetThreadSummary]: getThreadSummary(connectionId),
     [Tools.ComposeEmail]: composeEmailTool(connectionId),
     [Tools.MarkThreadsRead]: markAsRead(connectionId),
     [Tools.MarkThreadsUnread]: markAsUnread(connectionId),
@@ -390,12 +468,25 @@ export const tools = async (connectionId: string) => {
     [Tools.BulkDelete]: bulkDelete(connectionId),
     [Tools.BulkArchive]: bulkArchive(connectionId),
     [Tools.DeleteLabel]: deleteLabel(connectionId),
-    [Tools.WebSearch]: tool({
-      description: 'Search the web for information using Perplexity AI',
+    [Tools.BuildGmailSearchQuery]: buildGmailSearchQuery(),
+    [Tools.GetCurrentDate]: getCurrentDate(),
+    [Tools.InboxRag]: tool({
+      description:
+        'Search the inbox for emails using natural language. Returns only an array of threadIds.',
       parameters: z.object({
-        query: z.string().describe('The query to search the web for'),
+        query: z.string().describe('The query to search the inbox for'),
+        maxResults: z.number().describe('The maximum number of results to return').default(10),
       }),
+      execute: async ({ query, maxResults }) => {
+        const agent = await getZeroAgent(connectionId);
+        const res = await agent.searchThreads({ query, maxResults });
+        return res.threadIds;
+      },
     }),
+  };
+  if (ragEffect) return _tools;
+  return {
+    ..._tools,
     [Tools.InboxRag]: tool({
       description:
         'Search the inbox for emails using natural language. Returns only an array of threadIds.',

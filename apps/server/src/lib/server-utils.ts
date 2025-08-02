@@ -1,15 +1,31 @@
 import { getContext } from 'hono/context-storage';
 import { connection } from '../db/schema';
 import type { HonoContext } from '../ctx';
-import { env } from 'cloudflare:workers';
+import { createClient } from 'dormroom';
 import { createDriver } from './driver';
 import { eq } from 'drizzle-orm';
 import { createDb } from '../db';
+import { env } from '../env';
 
 export const getZeroDB = async (userId: string) => {
   const stub = env.ZERO_DB.get(env.ZERO_DB.idFromName(userId));
   const rpcTarget = await stub.setMetaData(userId);
   return rpcTarget;
+};
+
+export const getZeroClient = async (connectionId: string, executionCtx: ExecutionContext) => {
+  const agent = createClient({
+    doNamespace: env.ZERO_DRIVER,
+    ctx: executionCtx,
+    configs: [{ name: connectionId }],
+  }).stub;
+
+  await agent.setName(connectionId);
+  await agent.setupAuth();
+
+  executionCtx.waitUntil(agent.syncFolders());
+
+  return agent;
 };
 
 export const getZeroAgent = async (connectionId: string) => {

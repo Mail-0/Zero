@@ -13,18 +13,18 @@ import {
   userHotkeys,
   userSettings,
   writingStyleMatrix,
+  emailTemplate,
 } from './db/schema';
-import { env, DurableObject, RpcTarget, WorkerEntrypoint } from 'cloudflare:workers';
+import { WorkerEntrypoint, DurableObject, RpcTarget } from 'cloudflare:workers';
 import { EProviders, type ISubscribeBatch, type IThreadBatch } from './types';
+import { getZeroClient, getZeroDB, verifyToken } from './lib/server-utils';
 import { oAuthDiscoveryMetadata } from 'better-auth/plugins';
-import { getZeroDB, verifyToken } from './lib/server-utils';
 import { eq, and, desc, asc, inArray } from 'drizzle-orm';
 import { ThinkingMCP } from './lib/sequential-thinking';
 import { ZeroAgent, ZeroDriver } from './routes/agent';
 import { contextStorage } from 'hono/context-storage';
 import { defaultUserSettings } from './lib/schemas';
 import { createLocalJWKSet, jwtVerify } from 'jose';
-import { getZeroAgent } from './lib/server-utils';
 import { enableBrainFunction } from './lib/brain';
 import { trpcServer } from '@hono/trpc-server';
 import { agentsMiddleware } from 'hono-agents';
@@ -32,6 +32,7 @@ import { ZeroMCP } from './routes/agent/mcp';
 import { publicRouter } from './routes/auth';
 import { WorkflowRunner } from './pipelines';
 import { autumnApi } from './routes/autumn';
+import { env, type ZeroEnv } from './env';
 import type { HonoContext } from './ctx';
 import { createDb, type DB } from './db';
 import { createAuth } from './lib/auth';
@@ -173,10 +174,26 @@ export class DbRpcDO extends RpcTarget {
   ) {
     return await this.mainDo.updateConnection(connectionId, updatingInfo);
   }
+
+  async listEmailTemplates(): Promise<(typeof emailTemplate.$inferSelect)[]> {
+    return await this.mainDo.findManyEmailTemplates(this.userId);
+  }
+
+  async createEmailTemplate(payload: Omit<typeof emailTemplate.$inferInsert, 'userId'>) {
+    return await this.mainDo.createEmailTemplate(this.userId, payload);
+  }
+
+  async deleteEmailTemplate(templateId: string) {
+    return await this.mainDo.deleteEmailTemplate(this.userId, templateId);
+  }
+
+  async updateEmailTemplate(templateId: string, data: Partial<typeof emailTemplate.$inferInsert>) {
+    return await this.mainDo.updateEmailTemplate(this.userId, templateId, data);
+  }
 }
 
-class ZeroDB extends DurableObject<Env> {
-  db: DB = createDb(env.HYPERDRIVE.connectionString).db;
+class ZeroDB extends DurableObject<ZeroEnv> {
+  db: DB = createDb(this.env.HYPERDRIVE.connectionString).db;
 
   async setMetaData(userId: string) {
     return new DbRpcDO(this, userId);
@@ -494,6 +511,47 @@ class ZeroDB extends DurableObject<Env> {
       .set(updatingInfo)
       .where(eq(connection.id, connectionId));
   }
+
+  async findManyEmailTemplates(userId: string): Promise<(typeof emailTemplate.$inferSelect)[]> {
+    return await this.db.query.emailTemplate.findMany({
+      where: eq(emailTemplate.userId, userId),
+      orderBy: desc(emailTemplate.updatedAt),
+    });
+  }
+
+  async createEmailTemplate(
+    userId: string,
+    payload: Omit<typeof emailTemplate.$inferInsert, 'userId'>,
+  ) {
+    return await this.db
+      .insert(emailTemplate)
+      .values({
+        ...payload,
+        userId,
+        id: crypto.randomUUID(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+  }
+
+  async deleteEmailTemplate(userId: string, templateId: string) {
+    return await this.db
+      .delete(emailTemplate)
+      .where(and(eq(emailTemplate.id, templateId), eq(emailTemplate.userId, userId)));
+  }
+
+  async updateEmailTemplate(
+    userId: string,
+    templateId: string,
+    data: Partial<typeof emailTemplate.$inferInsert>,
+  ) {
+    return await this.db
+      .update(emailTemplate)
+      .set({ ...data, updatedAt: new Date() })
+      .where(and(eq(emailTemplate.id, templateId), eq(emailTemplate.userId, userId)))
+      .returning();
+  }
 }
 
 const api = new Hono<HonoContext>()
@@ -717,8 +775,14 @@ const app = new Hono<HonoContext>()
       return c.json({ message: 'OK' }, { status: 200 });
     }
   });
-export default class Entry extends WorkerEntrypoint<Env> {
+export default class Entry extends WorkerEntrypoint<ZeroEnv> {
   async fetch(request: Request): Promise<Response> {
+    // const url = new URL(request.url);
+    // if (url.pathname === '/__studio') {
+    //   return await studio(request, env.ZERO_DRIVER, {
+    //     basicAuth: { username: 'admin', password: 'password' },
+    //   });
+    // }
     return app.fetch(request, this.env, this.ctx);
   }
   async queue(batch: MessageBatch<any>) {
@@ -768,7 +832,7 @@ export default class Entry extends WorkerEntrypoint<Env> {
   }
   async scheduled() {
     console.log('[SCHEDULED] Checking for expired subscriptions...');
-    const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
+    const { db, conn } = createDb(this.env.HYPERDRIVE.connectionString);
     const allAccounts = await db.query.connection.findMany({
       where: (fields, { isNotNull, and }) =>
         and(isNotNull(fields.accessToken), isNotNull(fields.refreshToken)),
@@ -789,7 +853,7 @@ export default class Entry extends WorkerEntrypoint<Env> {
       const listResp: {
         keys: { name: string; metadata?: { wakeAt?: string } }[];
         cursor?: string;
-      } = await env.snoozed_emails.list({ cursor, limit: 1000 });
+      } = await this.env.snoozed_emails.list({ cursor, limit: 1000 });
       cursor = listResp.cursor;
 
       for (const key of listResp.keys) {
@@ -816,7 +880,7 @@ export default class Entry extends WorkerEntrypoint<Env> {
     await Promise.all(
       Object.entries(unsnoozeMap).map(async ([connectionId, { threadIds, keyNames }]) => {
         try {
-          const agent = await getZeroAgent(connectionId);
+          const agent = await getZeroClient(connectionId, this.ctx);
           await agent.queue('unsnoozeThreadsHandler', { connectionId, threadIds, keyNames });
         } catch (error) {
           console.error('Failed to enqueue unsnooze tasks', { connectionId, threadIds, error });
@@ -826,7 +890,7 @@ export default class Entry extends WorkerEntrypoint<Env> {
 
     await Promise.all(
       allAccounts.map(async ({ id, providerId }) => {
-        const lastSubscribed = await env.gmail_sub_age.get(`${id}__${providerId}`);
+        const lastSubscribed = await this.env.gmail_sub_age.get(`${id}__${providerId}`);
 
         if (lastSubscribed) {
           const subscriptionDate = new Date(lastSubscribed);
@@ -847,7 +911,7 @@ export default class Entry extends WorkerEntrypoint<Env> {
       );
       await Promise.all(
         expiredSubscriptions.map(async ({ connectionId, providerId }) => {
-          await env.subscribe_queue.send({ connectionId, providerId });
+          await this.env.subscribe_queue.send({ connectionId, providerId });
         }),
       );
     }

@@ -11,7 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { env } from 'cloudflare:workers';
+
+import { env } from './env';
 
 const showLogs = true;
 

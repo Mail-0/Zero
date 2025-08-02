@@ -281,7 +281,7 @@ function NavItem(item: NavItemProps & { href: string }) {
         className="flex cursor-not-allowed items-center opacity-50"
       >
         {item.icon && <item.icon ref={iconRef} className="relative mr-2.5 h-3 w-3.5" />}
-        <p className="relative bottom-[1px] mt-0.5 truncate text-[13px]">{item.title}</p>
+        <p className="relative bottom-px mt-0.5 truncate text-[13px]">{item.title}</p>
       </SidebarMenuButton>
     );
   }
@@ -308,7 +308,7 @@ function NavItem(item: NavItemProps & { href: string }) {
         >
           <Link target={item.target} to={item.href}>
             {item.icon && <item.icon ref={iconRef} className="mr-2 shrink-0" />}
-            <p className="relative bottom-[1px] mt-0.5 min-w-0 flex-1 truncate text-[13px]">
+            <p className="relative bottom-px mt-0.5 min-w-0 flex-1 truncate text-[13px]">
               {item.title}
             </p>
             {stats &&

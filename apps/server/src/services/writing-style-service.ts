@@ -3,7 +3,7 @@ import { mapToObj, pipe, entries, sortBy, take, fromEntries } from 'remeda';
 import { writingStyleMatrix } from '../db/schema';
 
 
-import { env } from 'cloudflare:workers';
+import { env } from '../env';
 import { google } from '@ai-sdk/google';
 import { jsonrepair } from 'jsonrepair';
 import { generateObject } from 'ai';

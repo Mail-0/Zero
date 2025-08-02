@@ -452,7 +452,9 @@
         "selectDefaultEmail": "Varsayılan e-postayı seç",
         "defaultEmailDescription": "Bu e-posta, yeni e-postalar oluştururken varsayılan 'Kimden' adresi olarak kullanılacaktır",
         "autoRead": "Otomatik Okuma",
-        "autoReadDescription": "E-postalara tıkladığınızda otomatik olarak okundu olarak işaretlenir."
+        "autoReadDescription": "E-postalara tıkladığınızda otomatik olarak okundu olarak işaretlenir.",
+        "animations": "Animasyonlar",
+        "animationsDescription": "E-postalar arasında geçiş yaparken akıcı animasyonları etkinleştir"
       },
       "connections": {
         "title": "E-posta Bağlantıları",

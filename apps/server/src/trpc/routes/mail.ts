@@ -5,12 +5,13 @@ import {
 } from '../../lib/driver/types';
 import { updateWritingStyleMatrix } from '../../services/writing-style-service';
 import { activeDriverProcedure, router, privateProcedure } from '../trpc';
+import { getZeroAgent, getZeroClient } from '../../lib/server-utils';
 import { processEmailHtml } from '../../lib/email-processor';
 import { defaultPageSize, FOLDERS } from '../../lib/utils';
 import { serializedFileSchema } from '../../lib/schemas';
 import type { DeleteAllSpamResponse } from '../../types';
-import { getZeroAgent } from '../../lib/server-utils';
-
+import { getContext } from 'hono/context-storage';
+import { type HonoContext } from '../../ctx';
 import { env } from 'cloudflare:workers';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
@@ -39,7 +40,8 @@ export const mailRouter = router({
     .output(IGetThreadResponseSchema)
     .query(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = await getZeroAgent(activeConnection.id);
+      const executionCtx = getContext<HonoContext>().executionCtx;
+      const agent = await getZeroClient(activeConnection.id, executionCtx);
       return await agent.getThread(input.id, true);
     }),
   count: activeDriverProcedure
@@ -213,7 +215,8 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = await getZeroAgent(activeConnection.id);
+      const executionCtx = getContext<HonoContext>().executionCtx;
+      const agent = await getZeroClient(activeConnection.id, executionCtx);
       const { threadIds } = await agent.normalizeIds(input.ids);
 
       if (!threadIds.length) {
@@ -257,7 +260,8 @@ export const mailRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { activeConnection } = ctx;
-      const agent = await getZeroAgent(activeConnection.id);
+      const executionCtx = getContext<HonoContext>().executionCtx;
+      const agent = await getZeroClient(activeConnection.id, executionCtx);
       const { threadIds } = await agent.normalizeIds(input.ids);
 
       if (!threadIds.length) {

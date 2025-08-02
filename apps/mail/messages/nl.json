@@ -452,7 +452,9 @@
         "selectDefaultEmail": "Selecteer standaard e-mail",
         "defaultEmailDescription": "Dit e-mailadres wordt gebruikt als standaard 'Van'-adres bij het opstellen van nieuwe e-mails",
         "autoRead": "Automatisch lezen",
-        "autoReadDescription": "E-mails automatisch als gelezen markeren wanneer je erop klikt."
+        "autoReadDescription": "E-mails automatisch als gelezen markeren wanneer je erop klikt.",
+        "animations": "Animaties",
+        "animationsDescription": "Schakel vloeiende animaties in bij het wisselen tussen e-mails"
       },
       "connections": {
         "title": "E-mailverbindingen",

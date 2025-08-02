@@ -21,7 +21,7 @@ import { APIError } from 'better-auth/api';
 import { getZeroDB } from './server-utils';
 import { type EProviders } from '../types';
 import type { HonoContext } from '../ctx';
-import { env } from 'cloudflare:workers';
+import { env } from '../env';
 import { createDriver } from './driver';
 import { createDb } from '../db';
 import { Effect } from 'effect';

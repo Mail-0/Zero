@@ -47,6 +47,7 @@ import pluralize from 'pluralize';
 import { toast } from 'sonner';
 import { z } from 'zod';
 const shortcodeRegex = /:([a-zA-Z0-9_+-]+):/g;
+import { TemplateButton } from './template-button';
 
 type ThreadContent = {
   from: string;
@@ -1269,7 +1270,7 @@ export function EmailComposer({
               <SelectTrigger className="h-6 flex-1 border-0 bg-transparent p-0 text-sm font-normal text-black placeholder:text-[#797979] focus:outline-none focus:ring-0 dark:text-white/90">
                 <SelectValue placeholder="Select an email address" />
               </SelectTrigger>
-              <SelectContent className="z-[99999]">
+              <SelectContent className="z-99999">
                 {aliases.map((alias) => (
                   <SelectItem key={alias.email} value={alias.email}>
                     <div className="flex flex-row items-center gap-1">
@@ -1322,6 +1323,15 @@ export function EmailComposer({
               <Plus className="h-3 w-3 fill-[#9A9A9A]" />
               <span className="hidden px-0.5 text-sm md:block">Add</span>
             </Button>
+            <TemplateButton
+              editor={editor}
+              subject={subjectInput}
+              setSubject={(value) => setValue('subject', value)}
+              to={toEmails}
+              cc={ccEmails ?? []}
+              bcc={bccEmails ?? []}
+              setRecipients={(field, val) => setValue(field, val)}
+            />
             <Input
               type="file"
               id="attachment-input"
@@ -1349,7 +1359,7 @@ export function EmailComposer({
                   </button>
                 </PopoverTrigger>
                 <PopoverContent
-                  className="z-[100] w-[340px] rounded-lg p-0 shadow-lg dark:bg-[#202020]"
+                  className="z-100 w-[340px] rounded-lg p-0 shadow-lg dark:bg-[#202020]"
                   align="start"
                   sideOffset={6}
                 >
@@ -1387,7 +1397,7 @@ export function EmailComposer({
                             className="group flex items-center justify-between gap-3 rounded-md px-1.5 py-1.5 hover:bg-black/5 dark:hover:bg-white/10"
                           >
                             <div className="flex min-w-0 flex-1 items-center gap-3">
-                              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded bg-[#F0F0F0] dark:bg-[#2C2C2C]">
+                              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-[#F0F0F0] dark:bg-[#2C2C2C]">
                                 {file.type.startsWith('image/') ? (
                                   <img
                                     src={URL.createObjectURL(file)}
@@ -1416,7 +1426,7 @@ export function EmailComposer({
                                 >
                                   <span className="truncate">{truncatedName}</span>
                                   {extension && (
-                                    <span className="ml-0.5 flex-shrink-0 text-[10px] text-[#8C8C8C] dark:text-[#9A9A9A]">
+                                    <span className="ml-0.5 shrink-0 text-[10px] text-[#8C8C8C] dark:text-[#9A9A9A]">
                                       .{extension}
                                     </span>
                                   )}
@@ -1438,7 +1448,7 @@ export function EmailComposer({
                                   toast.error('Failed to remove attachment');
                                 }
                               }}
-                              className="focus-visible:ring-ring ml-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-transparent hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2"
+                              className="focus-visible:ring-ring ml-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-transparent hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2"
                               aria-label={`Remove ${file.name}`}
                             >
                               <XIcon className="text-muted-foreground h-3.5 w-3.5 hover:text-black dark:text-[#9B9B9B] dark:hover:text-white" />
@@ -1556,7 +1566,7 @@ export function EmailComposer({
       </div>
 
       <Dialog open={showLeaveConfirmation} onOpenChange={setShowLeaveConfirmation}>
-        <DialogContent showOverlay className="z-[99999] sm:max-w-[425px]">
+        <DialogContent showOverlay className="z-99999 sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Discard message?</DialogTitle>
             <DialogDescription>
@@ -1576,7 +1586,7 @@ export function EmailComposer({
       </Dialog>
 
       <Dialog open={showAttachmentWarning} onOpenChange={setShowAttachmentWarning}>
-        <DialogContent showOverlay className="z-[99999] sm:max-w-[425px]">
+        <DialogContent showOverlay className="z-99999 sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Attachment Warning</DialogTitle>
             <DialogDescription>

@@ -62,9 +62,9 @@ const TimezoneSelect = memo(
               variant="outline"
               role="combobox"
               aria-expanded={open}
-              className="flex !h-9 w-full items-center justify-start rounded-md hover:bg-transparent"
+              className="flex h-9! w-full items-center justify-start rounded-md hover:bg-transparent"
             >
-              <Clock className="mr-2 h-4 w-4 flex-shrink-0" />
+              <Clock className="mr-2 h-4 w-4 shrink-0" />
               <span className="truncate">{field.value}</span>
             </Button>
           </FormControl>
@@ -248,7 +248,7 @@ export default function GeneralPage() {
                   name="defaultEmailAlias"
                   render={({ field }) => (
                     <FormItem className="w-full md:w-[280px]">
-                      <FormLabel className="!mb-1 flex flex-row items-center gap-1 text-sm font-medium">
+                      <FormLabel className="mb-1! flex flex-row items-center gap-1 text-sm font-medium">
                         {m['pages.settings.general.defaultEmailAlias']()}{' '}
                         <Tooltip>
                           <TooltipTrigger asChild>

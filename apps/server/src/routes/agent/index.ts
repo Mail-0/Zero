@@ -38,19 +38,20 @@ import { generateWhatUserCaresAbout, type UserTopic } from '../../lib/analyze/in
 import { DurableObjectOAuthClientProvider } from 'agents/mcp/do-oauth-client-provider';
 import { AiChatPrompt, GmailSearchAssistantSystemPrompt } from '../../lib/prompts';
 import { connectionToDriver, getZeroSocketAgent } from '../../lib/server-utils';
+import { Migratable, Queryable, Transfer } from 'dormroom';
 import type { CreateDraftData } from '../../lib/schemas';
 import { withRetry } from '../../lib/gmail-rate-limit';
 import { getPrompt } from '../../pipelines.effect';
 import { AIChatAgent } from 'agents/ai-chat-agent';
 import { ToolOrchestrator } from './orchestrator';
 import { getPromptName } from '../../pipelines';
+import { Agent, type Connection } from 'agents';
 import { anthropic } from '@ai-sdk/anthropic';
+import { env, type ZeroEnv } from '../../env';
 import { connection } from '../../db/schema';
 import type { WSMessage } from 'partyserver';
 import { tools as authTools } from './tools';
 import { processToolCalls } from './utils';
-import { env } from 'cloudflare:workers';
-import type { Connection } from 'agents';
 import { openai } from '@ai-sdk/openai';
 import { createDb } from '../../db';
 import { DriverRpcDO } from './rpc';
@@ -278,16 +279,15 @@ export type FolderSyncEffect = Effect.Effect<
 export type FolderSyncSuccess = FolderSyncResult;
 export type FolderSyncFailure = FolderSyncErrors;
 
-export class ZeroDriver extends AIChatAgent<typeof env> {
-  private foldersInSync: Map<string, boolean> = new Map();
-  private syncThreadsInProgress: Map<string, boolean> = new Map();
-  private driver: MailManager | null = null;
-  private agent: DurableObjectStub<ZeroAgent> | null = null;
-  constructor(ctx: DurableObjectState, env: Env) {
-    super(ctx, env);
-    if (shouldDropTables) this.dropTables();
-    void this.sql`
-        CREATE TABLE IF NOT EXISTS threads (
+@Migratable({
+  migrations: {
+    1: [
+      `CREATE TABLE IF NOT EXISTS tenants (
+        id TEXT PRIMARY KEY
+      )`,
+    ],
+    2: [
+      `CREATE TABLE IF NOT EXISTS threads (
             id TEXT PRIMARY KEY,
             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -298,8 +298,24 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
             latest_subject TEXT,
             latest_label_ids TEXT,
             categories TEXT
-        );
-    `;
+        );`,
+    ],
+  },
+})
+@Queryable()
+export class ZeroDriver extends Agent<ZeroEnv> {
+  transfer = new Transfer(this);
+  private foldersInSync: Map<string, boolean> = new Map();
+  private syncThreadsInProgress: Map<string, boolean> = new Map();
+  private driver: MailManager | null = null;
+  private agent: DurableObjectStub<ZeroAgent> | null = null;
+  constructor(ctx: DurableObjectState, env: ZeroEnv) {
+    super(ctx, env);
+    if (shouldDropTables) this.dropTables();
+  }
+
+  getDatabaseSize() {
+    return this.ctx.storage.sql.databaseSize;
   }
 
   getAllSubjects() {
@@ -603,20 +619,40 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
   public async setupAuth() {
     if (this.name === 'general') return;
     if (!this.driver) {
-      const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
+      this.agent = await getZeroSocketAgent(this.name);
+      const { db, conn } = createDb(this.env.HYPERDRIVE.connectionString);
       const _connection = await db.query.connection.findFirst({
         where: eq(connection.id, this.name),
       });
       if (_connection) this.driver = connectionToDriver(_connection);
       this.ctx.waitUntil(conn.end());
-      const threadCount = await this.getThreadCount();
-      if (threadCount < maxCount) {
-        this.ctx.waitUntil(this.syncThreads('inbox'));
-        this.ctx.waitUntil(this.syncThreads('sent'));
-        this.ctx.waitUntil(this.syncThreads('spam'));
-      }
     }
   }
+
+  async syncFolders() {
+    if (this.name === 'general') return;
+    // Skip sync for aggregate instances - they should only mirror primary operations
+    // The multi-stub pattern ensures aggregate gets operations in background
+    if (this.name.includes('aggregate')) {
+      console.log('[syncFolders] Skipping sync for aggregate instance');
+      return;
+    }
+
+    const threadCount = await this.getThreadCount();
+    if (threadCount < maxCount) {
+      console.log(
+        `[syncFolders] Starting folder sync for ${this.name} (threadCount: ${threadCount})`,
+      );
+      this.ctx.waitUntil(this.syncThreads('inbox'));
+      this.ctx.waitUntil(this.syncThreads('sent'));
+      this.ctx.waitUntil(this.syncThreads('spam'));
+    } else {
+      console.log(
+        `[syncFolders] Skipping sync for ${this.name} - threadCount (${threadCount}) >= maxCount (${maxCount})`,
+      );
+    }
+  }
+
   async rawListThreads(params: {
     folder: string;
     query?: string;
@@ -831,7 +867,8 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
   }
 
   async syncThread({ threadId }: { threadId: string }): Promise<ThreadSyncResult> {
-    if (this.name === 'general') {
+    if (this.name === 'general' || this.name.includes('aggregate')) {
+      console.log(`[syncThread] Skipping sync for ${this.name} instance - thread ${threadId}`);
       return { success: true, threadId, broadcastSent: false };
     }
 
@@ -912,7 +949,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
         // Store thread data in bucket
         yield* Effect.tryPromise(() =>
-          env.THREADS_BUCKET.put(this.getThreadKey(threadId), JSON.stringify(threadData), {
+          this.env.THREADS_BUCKET.put(this.getThreadKey(threadId), JSON.stringify(threadData), {
             customMetadata: { threadId },
           }),
         ).pipe(
@@ -1026,6 +1063,21 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
   }
 
   async syncThreads(folder: string): Promise<FolderSyncResult> {
+    // Skip sync for aggregate instances - they should only mirror primary operations
+    if (this.name.includes('aggregate')) {
+      console.log(`[syncThreads] Skipping sync for aggregate instance - folder ${folder}`);
+      return {
+        synced: 0,
+        message: 'Skipped aggregate instance',
+        folder,
+        pagesProcessed: 0,
+        totalThreads: 0,
+        successfulSyncs: 0,
+        failedSyncs: 0,
+        broadcastSent: false,
+      };
+    }
+
     if (!this.driver) {
       console.error(`[syncThreads] No driver available for folder ${folder}`);
       return {
@@ -1237,7 +1289,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
   }
 
   async inboxRag(query: string) {
-    if (!env.AUTORAG_ID) {
+    if (!this.env.AUTORAG_ID) {
       console.warn('[inboxRag] AUTORAG_ID not configured - RAG search disabled');
       return { result: 'Not enabled', data: [] };
     }
@@ -1250,7 +1302,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         folder_filter: `${this.name}/`,
       });
 
-      const answer = await env.AI.autorag(env.AUTORAG_ID).aiSearch({
+      const answer = await this.env.AI.autorag(this.env.AUTORAG_ID).aiSearch({
         query: query,
         //   rewrite_query: true,
         max_num_results: 3,
@@ -1301,7 +1353,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
 
     const genQueryEffect = Effect.tryPromise(() =>
       generateText({
-        model: openai(env.OPENAI_MODEL || 'gpt-4o'),
+        model: openai(this.env.OPENAI_MODEL || 'gpt-4o'),
         system: GmailSearchAssistantSystemPrompt(),
         prompt: params.query,
       }).then((response) => response.text),
@@ -1319,21 +1371,29 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
       }).then((r) => r.threads.map((t) => t.id)),
     ).pipe(Effect.catchAll(() => Effect.succeed([])));
 
+    const effects: Effect.Effect<string[]>[] = [rawEffect];
+    if (this.env.AUTORAG_ID) effects.unshift(ragEffect as Effect.Effect<string[]>);
+
     // Run both in parallel and wait for results
-    const results = await Effect.runPromise(
-      Effect.all([ragEffect, rawEffect], { concurrency: 'unbounded' }),
-    );
+    const results = await Effect.runPromise(Effect.all(effects, { concurrency: 'unbounded' }));
+    if (this.env.AUTORAG_ID) {
+      const [ragIds, rawIds] = results;
 
-    const [ragIds, rawIds] = results;
+      // Return InboxRag results if found, otherwise fallback to raw
+      if (ragIds.length > 0) {
+        return {
+          threadIds: ragIds,
+          source: 'autorag' as const,
+        };
+      }
 
-    // Return InboxRag results if found, otherwise fallback to raw
-    if (ragIds.length > 0) {
       return {
-        threadIds: ragIds,
-        source: 'autorag' as const,
+        threadIds: rawIds,
+        source: 'raw' as const,
+        nextPageToken: pageToken,
       };
     }
-
+    const [rawIds] = results;
     return {
       threadIds: rawIds,
       source: 'raw' as const,
@@ -1662,7 +1722,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
         } satisfies IGetThreadResponse;
       }
       const row = result[0] as { latest_label_ids: string };
-      const storedThread = await env.THREADS_BUCKET.get(this.getThreadKey(id));
+      const storedThread = await this.env.THREADS_BUCKET.get(this.getThreadKey(id));
 
       let messages: ParsedMessage[] = storedThread
         ? (JSON.parse(await storedThread.text()) as IGetThreadResponse).messages
@@ -1702,7 +1762,7 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
       }
 
       if (keyNames.length) {
-        await Promise.all(keyNames.map((k: string) => env.snoozed_emails.delete(k)));
+        await Promise.all(keyNames.map((k: string) => this.env.snoozed_emails.delete(k)));
       }
     } catch (error) {
       console.error('[AGENT][unsnoozeThreadsHandler] Failed', { connectionId, threadIds, error });
@@ -1744,29 +1804,29 @@ export class ZeroDriver extends AIChatAgent<typeof env> {
   //   }
 }
 
-export class ZeroAgent extends AIChatAgent<typeof env> {
+export class ZeroAgent extends AIChatAgent<ZeroEnv> {
   private chatMessageAbortControllers: Map<string, AbortController> = new Map();
   private connectionThreadIds: Map<string, string | null> = new Map();
 
   async registerZeroMCP() {
-    await this.mcp.connect(env.VITE_PUBLIC_BACKEND_URL + '/sse', {
+    await this.mcp.connect(this.env.VITE_PUBLIC_BACKEND_URL + '/sse', {
       transport: {
         authProvider: new DurableObjectOAuthClientProvider(
           this.ctx.storage,
           'zero-mcp',
-          env.VITE_PUBLIC_BACKEND_URL,
+          this.env.VITE_PUBLIC_BACKEND_URL,
         ),
       },
     });
   }
 
   async registerThinkingMCP() {
-    await this.mcp.connect(env.VITE_PUBLIC_BACKEND_URL + '/mcp/thinking/sse', {
+    await this.mcp.connect(this.env.VITE_PUBLIC_BACKEND_URL + '/mcp/thinking/sse', {
       transport: {
         authProvider: new DurableObjectOAuthClientProvider(
           this.ctx.storage,
           'thinking-mcp',
-          env.VITE_PUBLIC_BACKEND_URL,
+          this.env.VITE_PUBLIC_BACKEND_URL,
         ),
       },
     });
@@ -1776,15 +1836,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     this.registerThinkingMCP();
   }
 
-  private getDataStreamResponse(
-    onFinish: StreamTextOnFinishCallback<{}>,
-    options?: {
-      abortSignal: AbortSignal | undefined;
-      connectionId?: string;
-    },
-  ) {
-    const connectionId = options?.connectionId || 'general';
-    const currentThreadId = this.connectionThreadIds.get(connectionId) || '';
+  private getDataStreamResponse(onFinish: StreamTextOnFinishCallback<{}>) {
     const dataStreamResponse = createDataStreamResponse({
       execute: async (dataStream) => {
         if (this.name === 'general') return;
@@ -1809,9 +1861,9 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
         );
 
         const model =
-          env.USE_OPENAI === 'true'
-            ? openai(env.OPENAI_MODEL || 'gpt-4o')
-            : anthropic(env.OPENAI_MODEL || 'claude-3-7-sonnet-20250219');
+          this.env.USE_OPENAI === 'true'
+            ? openai(this.env.OPENAI_MODEL || 'gpt-4o')
+            : anthropic(this.env.OPENAI_MODEL || 'claude-3-7-sonnet-20250219');
 
         const result = streamText({
           model,
@@ -1822,7 +1874,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
           onError: (error) => {
             console.error('Error in streamText', error);
           },
-          system: await getPrompt(getPromptName(connectionId, EPrompts.Chat), AiChatPrompt(currentThreadId)),
+          system: await getPrompt(getPromptName(connectionId, EPrompts.Chat), AiChatPrompt()),
         });
 
         result.mergeIntoDataStream(dataStream);
@@ -1899,21 +1951,18 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
           await this.persistMessages(messages, [connection.id]);
 
           const chatMessageId = data.id;
-          const abortSignal = this.getAbortSignal(chatMessageId);
+          //   const abortSignal = this.getAbortSignal(chatMessageId);
 
           return this.tryCatchChat(async () => {
-            const response = await this.onChatMessage(
-              async ({ response }) => {
-                const finalMessages = appendResponseMessages({
-                  messages,
-                  responseMessages: response.messages,
-                });
+            const response = await this.onChatMessage(async ({ response }) => {
+              const finalMessages = appendResponseMessages({
+                messages,
+                responseMessages: response.messages,
+              });
 
-                await this.persistMessages(finalMessages, [connection.id]);
-                this.removeAbortController(chatMessageId);
-              },
-              abortSignal ? { abortSignal, connectionId: connection.id } : { connectionId: connection.id },
-            );
+              await this.persistMessages(finalMessages, [connection.id]);
+              this.removeAbortController(chatMessageId);
+            });
 
             if (response) {
               await this.reply(data.id, response);
@@ -1954,8 +2003,11 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
           break;
         }
         case IncomingMessageType.ThreadIdUpdate: {
+          console.log('ThreadIdUpdate', data);
           this.connectionThreadIds.set(connection.id, data.threadId);
-          console.log(`[ZeroAgent] Updated threadId for connection ${connection.id}: ${data.threadId}`);
+          console.log(
+            `[ZeroAgent] Updated threadId for connection ${connection.id}: ${data.threadId}`,
+          );
           break;
         }
         // case IncomingMessageType.Mail_List: {
@@ -2020,13 +2072,7 @@ export class ZeroAgent extends AIChatAgent<typeof env> {
     this.chatMessageAbortControllers.clear();
   }
 
-  async onChatMessage(
-    onFinish: StreamTextOnFinishCallback<{}>,
-    options?: {
-      abortSignal: AbortSignal | undefined;
-      connectionId?: string;
-    },
-  ) {
-    return this.getDataStreamResponse(onFinish, options);
+  async onChatMessage(onFinish: StreamTextOnFinishCallback<{}>) {
+    return this.getDataStreamResponse(onFinish);
   }
 }

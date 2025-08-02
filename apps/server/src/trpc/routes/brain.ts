@@ -2,7 +2,7 @@ import { disableBrainFunction, getPrompts } from '../../lib/brain';
 import { EProviders, EPrompts, type ISubscribeBatch } from '../../types';
 import { activeConnectionProcedure, router } from '../trpc';
 import { setSubscribedState } from '../../lib/utils';
-import { env } from 'cloudflare:workers';
+import { env } from '../../env';
 import { z } from 'zod';
 
 const labelSchema = z.object({

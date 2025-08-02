@@ -247,7 +247,7 @@ const Folder = ({
       >
         {canExpand ? (
           <Accordion.Trigger
-            className="flex cursor-[ns-resize] items-center"
+            className="flex cursor-ns-resize items-center"
             disabled={!isSelectable}
             onClick={(e) => {
               e.stopPropagation();

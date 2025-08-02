@@ -89,7 +89,7 @@ export default function SelectAllCheckbox({ className }: { className?: string })
             }
           },
         },
-        className: '!w-auto whitespace-nowrap',
+        className: 'w-auto! whitespace-nowrap',
       },
     );
   }, [isFetchingIds, mail.bulkSelected.length, loadedIds, fetchAllMatchingThreadIds, setMail]);

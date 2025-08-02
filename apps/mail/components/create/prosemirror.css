@@ -69,23 +69,23 @@ ul[data-type='taskList'] li > label {
 ul[data-type='taskList'] li > label input[type='checkbox'] {
   -webkit-appearance: none;
   appearance: none;
-  background-color: hsl(var(--background));
+  background-color: var(--background);
   cursor: pointer;
   width: 1.2em;
   height: 1.2em;
   position: relative;
   top: 5px;
-  border: 2px solid hsl(var(--border));
+  border: 2px solid var(--border);
   margin-right: 0.3rem;
   display: grid;
   place-content: center;
 
   &:hover {
-    background-color: hsl(var(--accent));
+    background-color: var(--accent);
   }
 
   &:active {
-    background-color: hsl(var(--accent));
+    background-color: var(--accent);
   }
 
   &::before {

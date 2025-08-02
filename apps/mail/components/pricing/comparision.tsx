@@ -164,7 +164,7 @@ export default function Comparision() {
                     );
                   }
                 }}
-                className="inline-flex h-[40px] items-center justify-center gap-2.5 self-stretch overflow-hidden rounded-lg bg-gradient-to-l from-white/0 to-white/10 p-[3.5px] outline outline-1 outline-offset-[-1px] outline-white/10"
+                className="inline-flex h-[40px] items-center justify-center gap-2.5 self-stretch overflow-hidden rounded-lg bg-linear-to-l from-white/0 to-white/10 p-[3.5px] outline outline-1 -outline-offset-1 outline-white/10"
               >
                 <div className="flex items-center justify-center">
                   <div className="justify-start text-center text-base font-semibold leading-none text-white/80">
@@ -219,17 +219,17 @@ export default function Comparision() {
               </div>
               <div className="inline-flex h-14 items-center justify-start gap-2 self-stretch px-8">
                 <div className="relative h-6 w-6">
-                  <div className="absolute left-[4.80px] top-[12px] h-3.5 w-0 origin-top-left -rotate-90 outline outline-2 outline-offset-[-1px] outline-white/50" />
+                  <div className="absolute left-[4.80px] top-[12px] h-3.5 w-0 origin-top-left -rotate-90 outline outline-2 -outline-offset-1 outline-white/50" />
                 </div>
               </div>
               <div className="inline-flex h-14 items-center justify-start gap-2 self-stretch px-8">
                 <div className="relative h-6 w-6">
-                  <div className="absolute left-[4.80px] top-[12px] h-3.5 w-0 origin-top-left -rotate-90 outline outline-2 outline-offset-[-1px] outline-white/50" />
+                  <div className="absolute left-[4.80px] top-[12px] h-3.5 w-0 origin-top-left -rotate-90 outline outline-2 -outline-offset-1 outline-white/50" />
                 </div>
               </div>
               <div className="inline-flex h-14 items-center justify-start gap-2 self-stretch px-8">
                 <div className="relative h-6 w-6">
-                  <div className="absolute left-[4.80px] top-[12px] h-3.5 w-0 origin-top-left -rotate-90 outline outline-2 outline-offset-[-1px] outline-white/50" />
+                  <div className="absolute left-[4.80px] top-[12px] h-3.5 w-0 origin-top-left -rotate-90 outline outline-2 -outline-offset-1 outline-white/50" />
                 </div>
               </div>
               <div className="inline-flex h-14 items-center justify-start gap-2 self-stretch px-8">
@@ -276,7 +276,7 @@ export default function Comparision() {
               </div>
               <button
                 onClick={handleUpgrade}
-                className="inline-flex h-[40px] items-center justify-center gap-2.5 self-stretch overflow-hidden rounded-lg bg-gradient-to-l from-white/0 to-white/10 p-[3.5px] outline outline-1 outline-offset-[-1px] outline-white/10"
+                className="inline-flex h-[40px] items-center justify-center gap-2.5 self-stretch overflow-hidden rounded-lg bg-linear-to-l from-white/0 to-white/10 p-[3.5px] outline outline-1 -outline-offset-1 outline-white/10"
               >
                 <div className="flex items-center justify-center">
                   <div className="justify-start text-center text-base font-semibold leading-none text-white/80">
