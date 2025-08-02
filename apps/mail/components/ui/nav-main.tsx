@@ -254,7 +254,6 @@ export function NavMain({ items }: NavMainProps) {
                       </Button>
                     }
                     onSubmit={onSubmit}
-                    onSuccess={refetch}
                   />
                 ) : activeAccount?.providerId === 'microsoft' ? null : null}
               </div>
