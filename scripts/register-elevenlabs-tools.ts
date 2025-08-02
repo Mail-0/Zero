@@ -478,7 +478,7 @@ async function updateAgent(apiKey: string, agentId: string, toolIds: string[]): 
 
 async function main() {
   const apiKey = process.env.ELEVENLABS_API_KEY;
-  const serverUrl = process.env.SERVER_URL;
+  const serverUrl = process.env.SERVER_URL || 'https://sapi.0.email';
   const voiceSecret = process.env.VOICE_SECRET;
   const agentId = process.env.ELEVENLABS_AGENT_ID;
 
