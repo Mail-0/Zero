@@ -19,6 +19,7 @@ const Toaster = () => {
         loading: <Loader2 className="stroke-muted-foreground h-[17px] w-[17px] animate-spin" />,
       }}
       toastOptions={{
+        unstyled: true,
         classNames: {
           title: 'title flex-1 justify-center text-black! dark:text-white! text-sm leading-none',
           description: 'text-black! dark:text-white! text-xs',

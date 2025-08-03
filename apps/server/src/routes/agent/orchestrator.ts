@@ -73,10 +73,12 @@ export class ToolOrchestrator {
           'Search the inbox for emails using natural language. Returns only an array of threadIds.',
         parameters: z.object({
           query: z.string().describe('The query to search the inbox for'),
+          folder: z.string().describe('The folder to search the inbox for').default('inbox'),
+          maxResults: z.number().describe('The maximum number of results to return').default(10),
         }),
-        execute: async ({ query }) => {
+        execute: async ({ query, folder, maxResults }) => {
           const agent = await getZeroAgent(this.connectionId);
-          const res = await agent.searchThreads({ query, maxResults: 10 });
+          const res = await agent.searchThreads({ query, maxResults, folder });
           return res.threadIds;
         },
       });

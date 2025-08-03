@@ -201,7 +201,6 @@ export function AIChat({
   error,
   handleSubmit,
   status,
-  append,
 }: ReturnType<typeof useAgentChat>): React.ReactElement {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -210,7 +209,6 @@ export function AIChat({
   const [, setPricingDialog] = useQueryState('pricingDialog');
   const [aiSidebarOpen] = useQueryState('aiSidebar');
   const { toggleOpen } = useAISidebar();
-  const [threadId] = useQueryState('threadId');
 
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
@@ -238,13 +236,8 @@ export function AIChat({
     },
   });
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    append({
-      id: crypto.randomUUID(),
-      role: 'system',
-      content: `The user is on thread: ${threadId}`,
-    });
     handleSubmit(e);
     editor.commands.clearContent(true);
     setTimeout(() => {
@@ -296,7 +289,6 @@ export function AIChat({
             </div>
           ) : (
             messages.map((message, index) => {
-              if (message.role === 'system') return null;
               const textParts = message.parts.filter((part) => part.type === 'text');
               const toolParts = message.parts.filter((part) => part.type === 'tool-invocation');
 

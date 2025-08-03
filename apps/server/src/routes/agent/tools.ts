@@ -476,10 +476,11 @@ export const tools = async (connectionId: string, ragEffect: boolean = false) =>
       parameters: z.object({
         query: z.string().describe('The query to search the inbox for'),
         maxResults: z.number().describe('The maximum number of results to return').default(10),
+        folder: z.string().describe('The folder to search the inbox for').default('inbox'),
       }),
-      execute: async ({ query, maxResults }) => {
+      execute: async ({ query, maxResults, folder }) => {
         const agent = await getZeroAgent(connectionId);
-        const res = await agent.searchThreads({ query, maxResults });
+        const res = await agent.searchThreads({ query, maxResults, folder });
         return res.threadIds;
       },
     }),

@@ -21,14 +21,14 @@ const senderSchema = z.object({
   email: z.string(),
 });
 
-const getFolderLabelId = (folder: string) => {
-  // Handle special cases first
-  if (folder === 'bin') return 'TRASH';
-  if (folder === 'archive') return ''; // Archive doesn't have a specific label
+// const getFolderLabelId = (folder: string) => {
+//   // Handle special cases first
+//   if (folder === 'bin') return 'TRASH';
+//   if (folder === 'archive') return ''; // Archive doesn't have a specific label
 
-  // For other folders, convert to uppercase (same as database method)
-  return folder.toUpperCase();
-};
+//   // For other folders, convert to uppercase (same as database method)
+//   return folder.toUpperCase();
+// };
 
 export const mailRouter = router({
   get: activeDriverProcedure
@@ -92,16 +92,25 @@ export const mailRouter = router({
       let threadsResponse: IGetThreadsResponse;
 
       // Apply folder-to-label mapping when no search query is provided
-      const folderLabelId = getFolderLabelId(folder);
-      const effectiveLabelIds = q ? labelIds : [...labelIds, folderLabelId].filter(Boolean);
+      const effectiveLabelIds = labelIds;
 
-      threadsResponse = await agent.rawListThreads({
-        folder,
-        query: q,
-        maxResults,
-        labelIds: effectiveLabelIds,
-        pageToken: cursor,
-      });
+      if (q) {
+        threadsResponse = await agent.rawListThreads({
+          query: q,
+          maxResults,
+          labelIds: effectiveLabelIds,
+          pageToken: cursor,
+          folder,
+        });
+      } else {
+        threadsResponse = await agent.listThreads({
+          folder,
+          // query: q,
+          maxResults,
+          labelIds: effectiveLabelIds,
+          pageToken: cursor,
+        });
+      }
 
       if (folder === FOLDERS.SNOOZED) {
         const nowTs = Date.now();

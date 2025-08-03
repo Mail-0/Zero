@@ -107,7 +107,7 @@
     "react-wrap-balancer": "^1.1.1",
     "recharts": "^2.15.1",
     "resend": "4.1.2",
-    "sonner": "1.7.4",
+    "sonner": "2.0.6",
     "superjson": "catalog:",
     "tailwind-merge": "3.0.2",
     "tailwindcss-animate": "1.0.7",

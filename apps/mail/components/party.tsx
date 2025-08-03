@@ -4,8 +4,6 @@ import useSearchLabels from '@/hooks/use-labels-search';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTRPC } from '@/providers/query-provider';
 import { usePartySocket } from 'partysocket/react';
-import { useQueryState } from 'nuqs';
-import { useEffect, useRef } from 'react';
 
 // 10 seconds is appropriate for real-time notifications
 
@@ -25,7 +23,6 @@ export enum OutgoingMessageType {
   ChatClear = 'cf_agent_chat_clear',
   Mail_List = 'zero_mail_list_threads',
   Mail_Get = 'zero_mail_get_thread',
-  ThreadIdUpdate = 'zero_thread_id_update',
 }
 
 export const NotificationProvider = () => {
@@ -34,10 +31,8 @@ export const NotificationProvider = () => {
   const { data: activeConnection } = useActiveConnection();
   const [searchValue] = useSearchValue();
   const { labels } = useSearchLabels();
-  const [threadId] = useQueryState('threadId');
-  const prevThreadIdRef = useRef<string | null>(null);
 
-  const socket = usePartySocket({
+  usePartySocket({
     party: 'zero-agent',
     room: activeConnection?.id ? String(activeConnection.id) : 'general',
     prefix: 'agents',
@@ -70,16 +65,6 @@ export const NotificationProvider = () => {
       }
     },
   });
-
-  useEffect(() => {
-    if (socket && prevThreadIdRef.current !== threadId) {
-      prevThreadIdRef.current = threadId;
-      socket.send(JSON.stringify({
-        type: OutgoingMessageType.ThreadIdUpdate,
-        threadId: threadId || null,
-      }));
-    }
-  }, [threadId, socket]);
 
   return <></>;
 };

@@ -227,7 +227,7 @@
   --animate-fade-in: fadeIn 3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
-  --animate-gauge-fadeIn: gauge_fadeIn 1s ease forwards;
+  --animate-gauge_fadeIn: gauge_fadeIn 1s ease forwards;
   --animate-gauge-fill: gauge_fill 1s ease forwards;
   --animate-shine: shine 3s linear infinite;
   --animate-shine-slow: shine-slow 8s linear infinite;

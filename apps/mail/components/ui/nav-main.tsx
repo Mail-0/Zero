@@ -176,6 +176,7 @@ export function NavMain({ items }: NavMainProps) {
       loading: 'Creating label...',
       success: 'Label created successfully',
       error: 'Failed to create label',
+      finally: () => {refetch()},
     });
   };
 
@@ -253,7 +254,6 @@ export function NavMain({ items }: NavMainProps) {
                       </Button>
                     }
                     onSubmit={onSubmit}
-                    onSuccess={refetch}
                   />
                 ) : activeAccount?.providerId === 'microsoft' ? null : null}
               </div>

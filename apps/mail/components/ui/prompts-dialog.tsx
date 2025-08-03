@@ -48,7 +48,7 @@ const initialValues: Record<EPrompts, string> = {
 };
 
 const fallbackPrompts = {
-  [EPrompts.Chat]: AiChatPrompt('', '', ''),
+  [EPrompts.Chat]: AiChatPrompt(),
   [EPrompts.Compose]: StyledEmailAssistantSystemPrompt(),
   [EPrompts.SummarizeThread]: SummarizeThread,
   [EPrompts.ReSummarizeThread]: ReSummarizeThread,
@@ -125,7 +125,7 @@ export function PromptsDialog() {
         <Tooltip>
           <TooltipTrigger asChild>
             <DialogTrigger asChild>
-              <Button variant="ghost" className="md:h-fit md:px-2 [&>svg]:size-3">
+              <Button variant="ghost" className="md:h-fit md:px-2">
                 <Paper className="dark:fill-iconDark fill-iconLight h-3.5 w-3.5" />
               </Button>
             </DialogTrigger>

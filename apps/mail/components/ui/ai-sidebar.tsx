@@ -85,7 +85,7 @@ function ChatHeader({
                   <Button
                     onClick={onToggleFullScreen}
                     variant="ghost"
-                    className="hidden md:flex md:h-fit md:px-2 [&>svg]:size-2"
+                    className="hidden md:flex md:h-fit md:px-2"
                   >
                     <Expand className="dark:text-iconDark text-iconLight" />
                     <span className="sr-only">Toggle view mode</span>
