@@ -21,14 +21,14 @@ const senderSchema = z.object({
   email: z.string(),
 });
 
-const getFolderLabelId = (folder: string) => {
-  // Handle special cases first
-  if (folder === 'bin') return 'TRASH';
-  if (folder === 'archive') return ''; // Archive doesn't have a specific label
+// const getFolderLabelId = (folder: string) => {
+//   // Handle special cases first
+//   if (folder === 'bin') return 'TRASH';
+//   if (folder === 'archive') return ''; // Archive doesn't have a specific label
 
-  // For other folders, convert to uppercase (same as database method)
-  return folder.toUpperCase();
-};
+//   // For other folders, convert to uppercase (same as database method)
+//   return folder.toUpperCase();
+// };
 
 export const mailRouter = router({
   get: activeDriverProcedure

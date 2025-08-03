@@ -201,7 +201,6 @@ export function AIChat({
   error,
   handleSubmit,
   status,
-  append,
 }: ReturnType<typeof useAgentChat>): React.ReactElement {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -210,7 +209,6 @@ export function AIChat({
   const [, setPricingDialog] = useQueryState('pricingDialog');
   const [aiSidebarOpen] = useQueryState('aiSidebar');
   const { toggleOpen } = useAISidebar();
-  const [threadId] = useQueryState('threadId');
 
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
