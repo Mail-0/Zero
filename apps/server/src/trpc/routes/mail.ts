@@ -92,7 +92,6 @@ export const mailRouter = router({
       let threadsResponse: IGetThreadsResponse;
 
       // Apply folder-to-label mapping when no search query is provided
-      //   const folderLabelId = getFolderLabelId(folder);
       const effectiveLabelIds = labelIds;
 
       if (q) {
