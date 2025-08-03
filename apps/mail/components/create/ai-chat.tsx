@@ -238,13 +238,8 @@ export function AIChat({
     },
   });
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    append({
-      id: crypto.randomUUID(),
-      role: 'system',
-      content: `The user is on thread: ${threadId}`,
-    });
     handleSubmit(e);
     editor.commands.clearContent(true);
     setTimeout(() => {
@@ -296,7 +291,6 @@ export function AIChat({
             </div>
           ) : (
             messages.map((message, index) => {
-              if (message.role === 'system') return null;
               const textParts = message.parts.filter((part) => part.type === 'text');
               const toolParts = message.parts.filter((part) => part.type === 'tool-invocation');
 

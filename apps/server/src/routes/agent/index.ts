@@ -55,6 +55,7 @@ import { processToolCalls } from './utils';
 import { openai } from '@ai-sdk/openai';
 import { createDb } from '../../db';
 import { DriverRpcDO } from './rpc';
+import type { Message } from 'ai';
 import { eq } from 'drizzle-orm';
 import { Effect } from 'effect';
 
@@ -1836,7 +1837,12 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
     this.registerThinkingMCP();
   }
 
-  private getDataStreamResponse(onFinish: StreamTextOnFinishCallback<{}>) {
+  private getDataStreamResponse(
+    onFinish: StreamTextOnFinishCallback<{}>,
+    currentThreadId: string,
+    currentFolder: string,
+    currentFilter: string,
+  ) {
     const dataStreamResponse = createDataStreamResponse({
       execute: async (dataStream) => {
         if (this.name === 'general') return;
@@ -1874,7 +1880,11 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
           onError: (error) => {
             console.error('Error in streamText', error);
           },
-          system: await getPrompt(getPromptName(connectionId, EPrompts.Chat), AiChatPrompt()),
+          system: await getPrompt(getPromptName(connectionId, EPrompts.Chat), AiChatPrompt(), {
+            currentThreadId,
+            currentFolder,
+            currentFilter,
+          }),
         });
 
         result.mergeIntoDataStream(dataStream);
@@ -1940,7 +1950,14 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
 
           const { body } = data.init;
 
-          const { messages } = JSON.parse(body as string);
+          const { messages, threadId, currentFolder, currentFilter } = JSON.parse(
+            body as string,
+          ) as {
+            threadId: string;
+            currentFolder: string;
+            currentFilter: string;
+            messages: Message[];
+          };
           this.broadcastChatMessage(
             {
               type: OutgoingMessageType.ChatMessages,
@@ -1954,15 +1971,20 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
           //   const abortSignal = this.getAbortSignal(chatMessageId);
 
           return this.tryCatchChat(async () => {
-            const response = await this.onChatMessage(async ({ response }) => {
-              const finalMessages = appendResponseMessages({
-                messages,
-                responseMessages: response.messages,
-              });
+            const response = await this.onChatMessageWithContext(
+              async ({ response }) => {
+                const finalMessages = appendResponseMessages({
+                  messages,
+                  responseMessages: response.messages,
+                });
 
-              await this.persistMessages(finalMessages, [connection.id]);
-              this.removeAbortController(chatMessageId);
-            });
+                await this.persistMessages(finalMessages, [connection.id]);
+                this.removeAbortController(chatMessageId);
+              },
+              threadId,
+              currentFolder,
+              currentFilter,
+            );
 
             if (response) {
               await this.reply(data.id, response);
@@ -2072,7 +2094,12 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
     this.chatMessageAbortControllers.clear();
   }
 
-  async onChatMessage(onFinish: StreamTextOnFinishCallback<{}>) {
-    return this.getDataStreamResponse(onFinish);
+  async onChatMessageWithContext(
+    onFinish: StreamTextOnFinishCallback<{}>,
+    currentThreadId: string,
+    currentFolder: string,
+    currentFilter: string,
+  ) {
+    return this.getDataStreamResponse(onFinish, currentThreadId, currentFolder, currentFilter);
   }
 }

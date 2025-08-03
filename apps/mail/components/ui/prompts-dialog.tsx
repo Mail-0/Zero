@@ -48,7 +48,7 @@ const initialValues: Record<EPrompts, string> = {
 };
 
 const fallbackPrompts = {
-  [EPrompts.Chat]: AiChatPrompt('', '', ''),
+  [EPrompts.Chat]: AiChatPrompt(),
   [EPrompts.Compose]: StyledEmailAssistantSystemPrompt(),
   [EPrompts.SummarizeThread]: SummarizeThread,
   [EPrompts.ReSummarizeThread]: ReSummarizeThread,
