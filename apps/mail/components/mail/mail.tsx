@@ -1,12 +1,3 @@
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogDescription,
-//   DialogFooter,
-//   DialogHeader,
-//   DialogTitle,
-//   DialogTrigger,
-// } from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuItem,
@@ -18,88 +9,31 @@ import { Bell, Lightning, Mail, ScanEye, Tag, User, X, Search } from '../icons/i
 import { useCategorySettings, useDefaultCategoryId } from '@/hooks/use-categories';
 import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useCommandPalette } from '../context/command-palette-context';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Check, ChevronDown, RefreshCcw } from 'lucide-react';
-
 import { ThreadDisplay } from '@/components/mail/thread-display';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useActiveConnection } from '@/hooks/use-connections';
-// import { useMutation, useQuery } from '@tanstack/react-query';
-// import { useTRPC } from '@/providers/query-provider';
-
+import { Check, ChevronDown, RefreshCcw } from 'lucide-react';
 import { useMediaQuery } from '../../hooks/use-media-query';
-
 import useSearchLabels from '@/hooks/use-labels-search';
 import * as CustomIcons from '@/components/icons/icons';
 import { isMac } from '@/lib/hotkeys/use-hotkey-utils';
 import { MailList } from '@/components/mail/mail-list';
 import { useHotkeysContext } from 'react-hotkeys-hook';
-// import SelectAllCheckbox from './select-all-checkbox';
 import { useNavigate, useParams } from 'react-router';
 import { useMail } from '@/components/mail/use-mail';
 import { SidebarToggle } from '../ui/sidebar-toggle';
 import { PricingDialog } from '../ui/pricing-dialog';
-// import { Textarea } from '@/components/ui/textarea';
-// import { useBrainState } from '@/hooks/use-summary';
 import { clearBulkSelectionAtom } from './use-mail';
 import AISidebar from '@/components/ui/ai-sidebar';
 import { useThreads } from '@/hooks/use-threads';
-// import { useBilling } from '@/hooks/use-billing';
 import AIToggleButton from '../ai-toggle-button';
 import { useIsMobile } from '@/hooks/use-mobile';
-// import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { useLabels } from '@/hooks/use-labels';
 import { useSession } from '@/lib/auth-client';
-// import { ScrollArea } from '../ui/scroll-area';
-// import { Label } from '@/components/ui/label';
-// import { Input } from '@/components/ui/input';
-
-import { cn } from '@/lib/utils';
-
 import { m } from '@/paraglide/messages';
 import { useQueryState } from 'nuqs';
+import { cn } from '@/lib/utils';
 import { useAtom } from 'jotai';
-// import { toast } from 'sonner';
-
-// interface ITag {
-//   id: string;
-//   name: string;
-//   usecase: string;
-//   text: string;
-// }
-
-export const defaultLabels = [
-  {
-    name: 'to respond',
-    usecase: 'emails you need to respond to. NOT sales, marketing, or promotions.',
-  },
-  {
-    name: 'FYI',
-    usecase:
-      'emails that are not important, but you should know about. NOT sales, marketing, or promotions.',
-  },
-  {
-    name: 'comment',
-    usecase:
-      'Team chats in tools like Google Docs, Slack, etc. NOT marketing, sales, or promotions.',
-  },
-  {
-    name: 'notification',
-    usecase: 'Automated updates from services you use. NOT sales, marketing, or promotions.',
-  },
-  {
-    name: 'promotion',
-    usecase: 'Sales, marketing, cold emails, special offers or promotions. NOT to respond to.',
-  },
-  {
-    name: 'meeting',
-    usecase: 'Calendar events, invites, etc. NOT sales, marketing, or promotions.',
-  },
-  {
-    name: 'billing',
-    usecase: 'Billing notifications. NOT sales, marketing, or promotions.',
-  },
-];
 
 // const AutoLabelingSettings = () => {
 //   const trpc = useTRPC();
@@ -461,7 +395,7 @@ export function MailLayout() {
   return (
     <TooltipProvider delayDuration={0}>
       <PricingDialog />
-      <div className="rounded-inherit relative z-5 flex p-0 md:mr-0.5 md:mt-1">
+      <div className="rounded-inherit z-5 relative flex p-0 md:mr-0.5 md:mt-1">
         <ResizablePanelGroup
           direction="horizontal"
           autoSaveId="mail-panel-layout"
@@ -481,11 +415,11 @@ export function MailLayout() {
             <div className="w-full md:h-[calc(100dvh-10px)]">
               <div
                 className={cn(
-                  'sticky top-0 z-15 flex items-center justify-between gap-1.5 p-2 pb-0 transition-colors',
+                  'z-15 sticky top-0 flex items-center justify-between gap-1.5 p-2 pb-0 transition-colors',
                 )}
               >
                 <div className="w-full">
-                  <div className="grid grid-cols-12 gap-2 mt-1">
+                  <div className="mt-1 grid grid-cols-12 gap-2">
                     <SidebarToggle className="col-span-1 h-fit px-2" />
                     {mail.bulkSelected.length === 0 ? (
                       <div className="col-span-10 flex gap-2">
@@ -528,16 +462,16 @@ export function MailLayout() {
                                 Clear
                               </Button>
                             )}
-                            <kbd className="bg-muted text-md pointer-events-none mr-0.5 hidden h-7 select-none flex-row items-center gap-1 rounded-md border-none px-2 font-medium leading-[0]! opacity-100 sm:flex dark:bg-[#262626] dark:text-[#929292]">
+                            <kbd className="bg-muted text-md leading-[0]! pointer-events-none mr-0.5 hidden h-7 select-none flex-row items-center gap-1 rounded-md border-none px-2 font-medium opacity-100 sm:flex dark:bg-[#262626] dark:text-[#929292]">
                               <span
                                 className={cn(
-                                  'h-min leading-[0.2]!',
+                                  'leading-[0.2]! h-min',
                                   isMac ? 'mt-px text-lg' : 'text-sm',
                                 )}
                               >
                                 {isMac ? '⌘' : 'Ctrl'}{' '}
                               </span>
-                              <span className="h-min text-sm leading-[0.2]!"> K</span>
+                              <span className="leading-[0.2]! h-min text-sm"> K</span>
                             </kbd>
                           </span>
                         </Button>
@@ -582,11 +516,11 @@ export function MailLayout() {
               <div
                 className={cn(
                   `${category === 'Important' ? 'bg-[#F59E0D]' : category === 'All Mail' ? 'bg-[#006FFE]' : category === 'Personal' ? 'bg-[#39ae4a]' : category === 'Updates' ? 'bg-[#8B5CF6]' : category === 'Promotions' ? 'bg-[#F43F5E]' : category === 'Unread' ? 'bg-[#FF4800]' : 'bg-[#F59E0D]'}`,
-                  'relative z-5 h-0.5 w-full transition-opacity',
+                  'z-5 relative h-0.5 w-full transition-opacity',
                   isFetching ? 'opacity-100' : 'opacity-0',
                 )}
               />
-              <div className="relative z-1 h-[calc(100dvh-(2px+2px))] overflow-hidden pt-0 md:h-[calc(100dvh-4rem)]">
+              <div className="z-1 relative h-[calc(100dvh-(2px+2px))] overflow-hidden pt-0 md:h-[calc(100dvh-4rem)]">
                 <MailList />
               </div>
             </div>
@@ -738,7 +672,7 @@ interface CategoryDropdownProps {
 }
 
 function CategoryDropdown({ isMultiSelectMode }: CategoryDropdownProps) {
-  const { systemLabels } = useLabels();
+  const categorySettings = useCategorySettings();
   const { setLabels, labels } = useSearchLabels();
   const params = useParams<{ folder: string }>();
   const folder = params?.folder ?? 'inbox';
@@ -746,14 +680,34 @@ function CategoryDropdown({ isMultiSelectMode }: CategoryDropdownProps) {
 
   if (folder !== 'inbox' || isMultiSelectMode) return null;
 
-  const handleLabelChange = (labelId: string) => {
-    const index = labels.indexOf(labelId);
-    if (index !== -1) {
-      const newLabels = [...labels];
-      newLabels.splice(index, 1);
-      setLabels(newLabels);
+  const handleLabelChange = (searchValue: string) => {
+    const trimmed = searchValue.trim();
+    if (!trimmed) {
+      setLabels([]);
+      return;
+    }
+
+    const parsedLabels = trimmed
+      .split(',')
+      .map((label) => label.trim())
+      .filter((label) => label.length > 0);
+
+    if (parsedLabels.length === 0) {
+      setLabels([]);
+      return;
+    }
+
+    const currentLabelsSet = new Set(labels);
+    const parsedLabelsSet = new Set(parsedLabels);
+
+    const allLabelsSelected = parsedLabels.every((label) => currentLabelsSet.has(label));
+
+    if (allLabelsSelected) {
+      const updatedLabels = labels.filter((label) => !parsedLabelsSet.has(label));
+      setLabels(updatedLabels);
     } else {
-      setLabels([...labels, labelId]);
+      const newLabelsSet = new Set([...labels, ...parsedLabels]);
+      setLabels(Array.from(newLabelsSet));
     }
   };
 
@@ -769,7 +723,11 @@ function CategoryDropdown({ isMultiSelectMode }: CategoryDropdownProps) {
           aria-expanded={isOpen}
           aria-haspopup="menu"
         >
-          <span className="text-xs font-medium">Categories</span>
+          <span className="text-xs font-medium">
+            {labels.length > 0
+              ? `${labels.length} View${labels.length > 1 ? 's' : ''}`
+              : m['navigation.settings.categories']()}
+          </span>
           <ChevronDown
             className={`black:text-white text-muted-foreground h-2 w-2 transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
           />
@@ -781,20 +739,25 @@ function CategoryDropdown({ isMultiSelectMode }: CategoryDropdownProps) {
         role="menu"
         aria-label="Label filter options"
       >
-        {systemLabels.map((label) => (
+        {categorySettings.map((category) => (
           <DropdownMenuItem
-            key={label.id}
+            key={category.id}
             className="flex cursor-pointer items-center gap-2 hover:bg-white/10"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              handleLabelChange(label.id);
+              handleLabelChange(category.searchValue);
             }}
             role="menuitemcheckbox"
-            aria-checked={labels.includes(label.id)}
+            aria-checked={labels.includes(category.id)}
           >
-            <span className="text-muted-foreground capitalize">{label.name.toLowerCase()}</span>
-            {labels.includes(label.id) && <Check className="ml-auto h-3 w-3" />}
+            <span className="text-muted-foreground capitalize">{category.name.toLowerCase()}</span>
+            {/* Special case: empty searchValue means "All Mail" - shows everything */}
+            {(category.searchValue === ''
+              ? labels.length === 0
+              : category.searchValue.split(',').some((val) => labels.includes(val))) && (
+              <Check className="ml-auto h-3 w-3" />
+            )}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

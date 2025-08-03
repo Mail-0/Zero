@@ -53,11 +53,11 @@ import type { WSMessage } from 'partyserver';
 import { tools as authTools } from './tools';
 import { processToolCalls } from './utils';
 import { openai } from '@ai-sdk/openai';
+import { Effect, pipe } from 'effect';
 import { createDb } from '../../db';
 import { DriverRpcDO } from './rpc';
 import type { Message } from 'ai';
 import { eq } from 'drizzle-orm';
-import { Effect } from 'effect';
 
 const decoder = new TextDecoder();
 
@@ -1407,6 +1407,158 @@ export class ZeroDriver extends Agent<ZeroEnv> {
     return folderName;
   }
 
+  private queryThreads(params: {
+    labelIds?: string[];
+    folder?: string;
+    q?: string;
+    pageToken?: string;
+    maxResults: number;
+  }) {
+    return Effect.sync(() => {
+      const { labelIds = [], folder, q, pageToken, maxResults } = params;
+
+      console.log('[queryThreads] params:', { labelIds, folder, q, pageToken, maxResults });
+
+      if (!folder && labelIds.length === 0 && !q && !pageToken) {
+        console.log('[queryThreads] Case: all threads');
+        return this.sql`
+          SELECT id, latest_received_on
+          FROM threads
+          ORDER BY latest_received_on DESC
+          LIMIT ${maxResults}
+        `;
+      }
+
+      if (folder && labelIds.length === 0 && !q && !pageToken) {
+        const folderLabel = folder.toUpperCase();
+        console.log('[queryThreads] Case: folder only', { folderLabel });
+        return this.sql`
+          SELECT id, latest_received_on
+          FROM threads
+          WHERE EXISTS (
+            SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${folderLabel}
+          )
+          ORDER BY latest_received_on DESC
+          LIMIT ${maxResults}
+        `;
+      }
+
+      if (labelIds.length === 1 && !folder && !q && !pageToken) {
+        const labelId = labelIds[0];
+        console.log('[queryThreads] Case: single label only', { labelId });
+        return this.sql`
+          SELECT id, latest_received_on
+          FROM threads
+          WHERE EXISTS (
+            SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${labelId}
+          )
+          ORDER BY latest_received_on DESC
+          LIMIT ${maxResults}
+        `;
+      }
+
+      // Handle folder + labelIds combination (supports pagination)
+      if (folder && labelIds.length > 0 && !q) {
+        const folderLabel = folder.toUpperCase();
+        
+        // De-duplicate labelIds and remove folder label if it's already included
+        // Cap labelIds length to prevent resource exhaustion
+        const maxLabelIds = 5;
+        const uniqueLabelIds = [...new Set(labelIds
+          .filter(id => id.toUpperCase() !== folderLabel)
+          .slice(0, maxLabelIds)
+        )];
+        
+        console.log('[queryThreads] Case: folder + labelIds', { 
+          folderLabel, 
+          originalLabelIds: labelIds, 
+          uniqueLabelIds,
+          pageToken 
+        });
+        
+        if (uniqueLabelIds.length === 0) {
+          // Only folder filter needed, handle separately
+          return this.sql`
+            SELECT id, latest_received_on
+            FROM threads
+            WHERE EXISTS (
+              SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${folderLabel}
+            ) AND latest_received_on < COALESCE(${pageToken || null}, 9223372036854775807)
+            ORDER BY latest_received_on DESC
+            LIMIT ${maxResults}
+          `;
+        }
+        
+        // Use improved JSON-based approach that handles any number of labelIds
+        const labelsJson = JSON.stringify(uniqueLabelIds);
+        return this.sql`
+          SELECT id, latest_received_on
+          FROM threads
+          WHERE latest_received_on < COALESCE(${pageToken || null}, 9223372036854775807)
+            AND EXISTS (
+              SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${folderLabel}
+            ) AND (
+              SELECT COUNT(DISTINCT required.value)
+              FROM json_each(${labelsJson}) AS required
+              WHERE EXISTS (
+                SELECT 1 FROM json_each(latest_label_ids) lbl
+                WHERE lbl.value = required.value
+              )
+            ) = ${uniqueLabelIds.length}
+          ORDER BY latest_received_on DESC
+          LIMIT ${maxResults}
+        `;
+      }
+
+      if (folder && labelIds.length === 0 && !q && pageToken) {
+        const folderLabel = folder.toUpperCase();
+        console.log('[queryThreads] Case: folder + pageToken', { folderLabel, pageToken });
+        return this.sql`
+          SELECT id, latest_received_on
+          FROM threads
+          WHERE EXISTS (
+            SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${folderLabel}
+          ) AND latest_received_on < ${pageToken}
+          ORDER BY latest_received_on DESC
+          LIMIT ${maxResults}
+        `;
+      }
+
+      if (labelIds.length === 1 && !folder && !q && pageToken) {
+        const labelId = labelIds[0];
+        console.log('[queryThreads] Case: single label + pageToken', { labelId, pageToken });
+        return this.sql`
+          SELECT id, latest_received_on
+          FROM threads
+          WHERE EXISTS (
+            SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${labelId}
+          ) AND latest_received_on < ${pageToken}
+          ORDER BY latest_received_on DESC
+          LIMIT ${maxResults}
+        `;
+      }
+
+      if (pageToken) {
+        console.log('[queryThreads] Case: pageToken fallback', { pageToken });
+        return this.sql`
+          SELECT id, latest_received_on
+          FROM threads
+          WHERE latest_received_on < ${pageToken}
+          ORDER BY latest_received_on DESC
+          LIMIT ${maxResults}
+        `;
+      }
+
+      console.log('[queryThreads] Default case: all threads');
+      return this.sql`
+        SELECT id, latest_received_on
+        FROM threads
+        ORDER BY latest_received_on DESC
+        LIMIT ${maxResults}
+      `;
+    });
+  }
+
   async getThreadsFromDB(params: {
     labelIds?: string[];
     folder?: string;
@@ -1414,174 +1566,47 @@ export class ZeroDriver extends Agent<ZeroEnv> {
     maxResults?: number;
     pageToken?: string;
   }): Promise<IGetThreadsResponse> {
-    const { labelIds = [], q, maxResults = 50, pageToken } = params;
-    let folder = params.folder ?? 'inbox';
+    const { maxResults = 50 } = params;
+    const normalizedParams = {
+      ...params,
+      folder: params.folder ? this.normalizeFolderName(params.folder) : undefined,
+      maxResults,
+    };
 
-    try {
-      folder = this.normalizeFolderName(folder);
-      // TODO: Sometimes the DO storage is resetting
-      //   const folderThreadCount = (await this.count()).find((c) => c.label === folder)?.count;
-      //   const currentThreadCount = await this.getThreadCount();
+    const program = pipe(
+      this.queryThreads(normalizedParams),
+      Effect.map((result) => {
+        if (result?.length) {
+          const threads = result.map((row) => ({
+            id: String(row.id),
+            historyId: null,
+          }));
 
-      //   if (folderThreadCount && folderThreadCount > currentThreadCount && folder) {
-      //     this.ctx.waitUntil(this.syncThreads(folder));
-      //   }
+          // Use latest_received_on for pagination cursor
+          const nextPageToken =
+            threads.length === maxResults && result.length > 0
+              ? String(result[result.length - 1].latest_received_on)
+              : null;
 
-      // Build WHERE conditions
-      const whereConditions: string[] = [];
-
-      // Add folder condition (maps to specific label)
-      if (folder) {
-        const folderLabel = folder.toUpperCase();
-        whereConditions.push(`EXISTS (
-            SELECT 1 FROM json_each(latest_label_ids) WHERE value = '${folderLabel}'
-          )`);
-      }
-
-      // Add label conditions (OR logic for multiple labels)
-      if (labelIds.length > 0) {
-        if (labelIds.length === 1) {
-          whereConditions.push(`EXISTS (
-              SELECT 1 FROM json_each(latest_label_ids) WHERE value = '${labelIds[0]}'
-            )`);
-        } else {
-          // Multiple labels with OR logic
-          const multiLabelCondition = labelIds
-            .map(
-              (labelId) =>
-                `EXISTS (SELECT 1 FROM json_each(latest_label_ids) WHERE value = '${labelId}')`,
-            )
-            .join(' OR ');
-          whereConditions.push(`(${multiLabelCondition})`);
+          return {
+            threads,
+            nextPageToken,
+          };
         }
-      }
-
-      //   // Add search query condition
-      if (q) {
-        const searchTerm = q.replace(/'/g, "''"); // Escape single quotes
-        whereConditions.push(`(
-            latest_subject LIKE '%${searchTerm}%' OR
-            latest_sender LIKE '%${searchTerm}%'
-          )`);
-      }
-
-      // Add cursor condition
-      if (pageToken) {
-        whereConditions.push(`latest_received_on < '${pageToken}'`);
-      }
-
-      // Execute query based on conditions
-      let result;
-
-      if (whereConditions.length === 0) {
-        // No conditions
-        result = this.sql`
-            SELECT id, latest_received_on
-            FROM threads
-            ORDER BY latest_received_on DESC
-            LIMIT ${maxResults}
-          `;
-      } else if (whereConditions.length === 1) {
-        // Single condition
-        const condition = whereConditions[0];
-        if (condition.includes('latest_received_on <')) {
-          const cursorValue = pageToken!;
-          result = this.sql`
-              SELECT id, latest_received_on
-              FROM threads
-              WHERE latest_received_on < ${cursorValue}
-              ORDER BY latest_received_on DESC
-              LIMIT ${maxResults}
-            `;
-        } else if (folder) {
-          // Folder condition
-          const folderLabel = folder.toUpperCase();
-          result = this.sql`
-              SELECT id, latest_received_on
-              FROM threads
-              WHERE EXISTS (
-                SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${folderLabel}
-              )
-              ORDER BY latest_received_on DESC
-              LIMIT ${maxResults}
-            `;
-        } else {
-          // Single label condition
-          const labelId = labelIds[0];
-          result = this.sql`
-              SELECT id, latest_received_on
-              FROM threads
-              WHERE EXISTS (
-                SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${labelId}
-              )
-              ORDER BY latest_received_on DESC
-              LIMIT ${maxResults}
-            `;
-        }
-      } else {
-        // Multiple conditions - handle combinations
-        if (folder && labelIds.length === 0 && pageToken) {
-          // Folder + cursor
-          const folderLabel = folder.toUpperCase();
-          result = this.sql`
-              SELECT id, latest_received_on
-              FROM threads
-              WHERE EXISTS (
-                SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${folderLabel}
-              ) AND latest_received_on < ${pageToken}
-              ORDER BY latest_received_on DESC
-              LIMIT ${maxResults}
-            `;
-        } else if (labelIds.length === 1 && pageToken && !folder) {
-          // Single label + cursor
-          const labelId = labelIds[0];
-          result = this.sql`
-              SELECT id, latest_received_on
-              FROM threads
-              WHERE EXISTS (
-                SELECT 1 FROM json_each(latest_label_ids) WHERE value = ${labelId}
-              ) AND latest_received_on < ${pageToken}
-              ORDER BY latest_received_on DESC
-              LIMIT ${maxResults}
-            `;
-        } else {
-          // For now, fallback to just cursor if complex combinations
-          const cursorValue = pageToken || '';
-          result = this.sql`
-              SELECT id, latest_received_on
-              FROM threads
-              WHERE latest_received_on < ${cursorValue}
-              ORDER BY latest_received_on DESC
-              LIMIT ${maxResults}
-            `;
-        }
-      }
-
-      if (result?.length) {
-        const threads = result.map((row) => ({
-          id: String(row.id),
-          historyId: null,
-        }));
-
-        // Use latest_received_on for pagination cursor
-        const nextPageToken =
-          threads.length === maxResults && result.length > 0
-            ? String(result[result.length - 1].latest_received_on)
-            : null;
-
         return {
-          threads,
-          nextPageToken,
+          threads: [],
+          nextPageToken: '',
         };
-      }
-      return {
-        threads: [],
-        nextPageToken: '',
-      };
-    } catch (error) {
-      console.error('Failed to get threads from database:', error);
-      throw error;
-    }
+      }),
+      Effect.catchAll((error) =>
+        Effect.sync(() => {
+          console.error('Failed to get threads from database:', error);
+          throw error;
+        }),
+      ),
+    );
+
+    return await Effect.runPromise(program);
   }
 
   async modifyThreadLabelsByName(

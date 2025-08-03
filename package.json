@@ -8,6 +8,7 @@
     "prepare": "husky",
     "nizzy": "tsx ./packages/cli/src/cli.ts",
     "postinstall": "pnpm nizzy sync",
+    "precommit": "pnpm dlx oxlint@latest --deny-warnings",
     "dev": "turbo run dev",
     "build": "turbo run build",
     "build:frontend": "pnpm run --filter=@zero/mail build",
