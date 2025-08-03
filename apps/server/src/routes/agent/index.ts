@@ -2002,14 +2002,6 @@ export class ZeroAgent extends AIChatAgent<ZeroEnv> {
           this.cancelChatRequest(data.id);
           break;
         }
-        case IncomingMessageType.ThreadIdUpdate: {
-          console.log('ThreadIdUpdate', data);
-          this.connectionThreadIds.set(connection.id, data.threadId);
-          console.log(
-            `[ZeroAgent] Updated threadId for connection ${connection.id}: ${data.threadId}`,
-          );
-          break;
-        }
         // case IncomingMessageType.Mail_List: {
         //   const result = await this.getThreadsFromDB({
         //     labelIds: data.labelIds,

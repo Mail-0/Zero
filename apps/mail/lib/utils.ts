@@ -203,13 +203,6 @@ export const truncateFileName = (name: string, maxLength = 15) => {
   return `${name.slice(0, maxLength)}...`;
 };
 
-export type FilterSuggestion = {
-  filter: string;
-  description: string;
-  icon: React.ReactNode;
-  prefix: string;
-};
-
 export const extractFilterValue = (filter: string): string => {
   if (!filter || !filter.includes(':')) return '';
 

@@ -92,16 +92,26 @@ export const mailRouter = router({
       let threadsResponse: IGetThreadsResponse;
 
       // Apply folder-to-label mapping when no search query is provided
-      const folderLabelId = getFolderLabelId(folder);
-      const effectiveLabelIds = q ? labelIds : [...labelIds, folderLabelId].filter(Boolean);
+      //   const folderLabelId = getFolderLabelId(folder);
+      const effectiveLabelIds = labelIds;
 
-      threadsResponse = await agent.rawListThreads({
-        folder,
-        query: q,
-        maxResults,
-        labelIds: effectiveLabelIds,
-        pageToken: cursor,
-      });
+      if (q) {
+        threadsResponse = await agent.rawListThreads({
+          query: q,
+          maxResults,
+          labelIds: effectiveLabelIds,
+          pageToken: cursor,
+          folder,
+        });
+      } else {
+        threadsResponse = await agent.listThreads({
+          folder,
+          // query: q,
+          maxResults,
+          labelIds: effectiveLabelIds,
+          pageToken: cursor,
+        });
+      }
 
       if (folder === FOLDERS.SNOOZED) {
         const nowTs = Date.now();
