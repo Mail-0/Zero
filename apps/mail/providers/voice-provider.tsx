@@ -19,22 +19,22 @@ interface VoiceContextType {
   sendContext: (context: any) => void;
 }
 
-const toolNames = [
-  'listEmails',
-  'getEmail',
-  'sendEmail',
-  'markAsRead',
-  'markAsUnread',
-  'archiveEmails',
-  'deleteEmails',
-  'deleteEmail',
-  'createLabel',
-  'applyLabel',
-  'removeLabel',
-  'searchEmails',
-  'webSearch',
-  'summarizeEmail',
-] as const;
+// const toolNames = [
+//   'listEmails',
+//   'getEmail',
+//   'sendEmail',
+//   'markAsRead',
+//   'markAsUnread',
+//   'archiveEmails',
+//   'deleteEmails',
+//   'deleteEmail',
+//   'createLabel',
+//   'applyLabel',
+//   'removeLabel',
+//   'searchEmails',
+//   'webSearch',
+//   'summarizeEmail',
+// ] as const;
 
 const VoiceContext = createContext<VoiceContextType | undefined>(undefined);
 
