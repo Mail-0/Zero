@@ -498,18 +498,22 @@ export function ThreadContextMenu({
     };
     
     try {
-      await toast.promise(createLabel(labelData), {
+      const promise = createLabel(labelData).then(async (result) => {
+        await refetchLabels();
+        return result;
+      });
+      
+      toast.promise(promise, {
         loading: m['common.labels.savingLabel'](),
         success: m['common.labels.saveLabelSuccess'](),
         error: m['common.labels.failedToSavingLabel'](),
       });
       
-      await refetchLabels();
+      await promise;
+      setCreateLabelOpen(false);
     } catch (error) {
       console.error('Failed to create label:', error);
-    } finally {
-      setCreateLabelOpen(false);
-    } 
+    }
   };
 
   const otherActions: EmailAction[] = useMemo(

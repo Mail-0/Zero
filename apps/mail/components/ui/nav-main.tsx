@@ -172,13 +172,22 @@ export function NavMain({ items }: NavMainProps) {
   );
 
   const onSubmit = async (data: LabelType) => {
-    await toast.promise(createLabel(data), {
-      loading: 'Creating label...',
-      success: 'Label created successfully',
-      error: 'Failed to create label',
-    }).unwrap();
-    
-    await refetch();
+    try {
+      const promise = createLabel(data).then(async (result) => {
+        await refetch();
+        return result;
+      });
+      
+      toast.promise(promise, {
+        loading: 'Creating label...',
+        success: 'Label created successfully',
+        error: 'Failed to create label',
+      });
+      
+      await promise;
+    } catch (error) {
+      console.error('Failed to create label:', error);
+    }
   };
 
   return (
