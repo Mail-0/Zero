@@ -1,4 +1,4 @@
-import { keyboardShortcuts } from '@/config/shortcuts';
+import { enhancedKeyboardShortcuts } from '@/config/shortcuts';
 import { useShortcuts } from './use-hotkey-utils';
 import { useQueryState } from 'nuqs';
 
@@ -14,7 +14,7 @@ export function ComposeHotkeys() {
     },
   };
 
-  const composeShortcuts = keyboardShortcuts.filter((shortcut) => shortcut.scope === scope);
+  const composeShortcuts = enhancedKeyboardShortcuts.filter((shortcut) => shortcut.scope === scope);
 
   useShortcuts(composeShortcuts, handlers, { scope });
 

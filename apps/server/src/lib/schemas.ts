@@ -131,6 +131,7 @@ export const userSettingsSchema = z.object({
   undoSendEnabled: z.boolean().default(false),
   imageCompression: z.enum(['low', 'medium', 'original']).default('medium'),
   autoRead: z.boolean().default(true),
+  animations: z.boolean().default(false),
 });
 
 export type UserSettings = z.infer<typeof userSettingsSchema>;
@@ -150,4 +151,5 @@ export const defaultUserSettings: UserSettings = {
   categories: defaultMailCategories,
   undoSendEnabled: false,
   imageCompression: 'medium',
+  animations: false,
 };

@@ -254,7 +254,7 @@
           "match": {
             "countPlural=0": "Not ekle",
             "countPlural=one": "# not",
-            "countPlural=other": "# notlar"
+            "countPlural=other": "# not"
           }
         }
       ],
@@ -316,8 +316,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "cevaplar",
-            "countPlural=one": "# cevap",
-            "countPlural=other": "# cevaplar"
+            "countPlural=one": "# yanıt",
+            "countPlural=other": "# yanıt"
           }
         }
       ],
@@ -370,7 +370,8 @@
       "failedToMute": "Sessize alınamadı",
       "failedToUnmute": "Ses açılamadı",
       "archived": "Arşivlendi",
-      "failedToArchive": "Arşivlenemedi"
+      "failedToArchive": "Arşivlenemedi",
+      "openInNewTab": "Yeni sekmede aç"
     },
     "units": {
       "mb": "{amount} MB"
@@ -404,7 +405,8 @@
       "livesupport": "Canlı Destek",
       "feedback": "Geribildirim",
       "settings": "Ayarlar",
-      "voice": "Sesli Asistan"
+      "voice": "Sesli Asistan",
+      "snoozed": "Ertelendi"
     },
     "settings": {
       "general": "Genel",
@@ -450,7 +452,9 @@
         "selectDefaultEmail": "Varsayılan e-postayı seç",
         "defaultEmailDescription": "Bu e-posta, yeni e-postalar oluştururken varsayılan 'Kimden' adresi olarak kullanılacaktır",
         "autoRead": "Otomatik Okuma",
-        "autoReadDescription": "E-postalara tıkladığınızda otomatik olarak okundu olarak işaretlenir."
+        "autoReadDescription": "E-postalara tıkladığınızda otomatik olarak okundu olarak işaretlenir.",
+        "animations": "Animasyonlar",
+        "animationsDescription": "E-postalar arasında geçiş yaparken akıcı animasyonları etkinleştir"
       },
       "connections": {
         "title": "E-posta Bağlantıları",

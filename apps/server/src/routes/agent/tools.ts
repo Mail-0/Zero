@@ -1,12 +1,12 @@
-import { toZodToolSet, executeOrAuthorizeZodTool } from '@arcadeai/arcadejs/lib';
-import { generateText, streamText, tool, type DataStreamWriter } from 'ai';
+import { getCurrentDateContext, GmailSearchAssistantSystemPrompt } from '../../lib/prompts';
 import { composeEmail } from '../../trpc/routes/ai/compose';
-import type { MailManager } from '../../lib/driver/types';
+import { getZeroAgent } from '../../lib/server-utils';
 import { perplexity } from '@ai-sdk/perplexity';
-import { Arcade } from '@arcadeai/arcadejs';
 import { colors } from '../../lib/prompts';
-import { env } from 'cloudflare:workers';
+import { openai } from '@ai-sdk/openai';
+import { generateText, tool } from 'ai';
 import { Tools } from '../../types';
+import { env } from '../../env';
 import { z } from 'zod';
 
 type ModelTypes = 'summarize' | 'general' | 'chat' | 'vectorize';
@@ -40,78 +40,120 @@ export const getEmbeddingVector = async (
   }
 };
 
-const askZeroMailbox = (connectionId: string) =>
-  tool({
-    description: 'Ask Zero a question about the mailbox',
-    parameters: z.object({
-      question: z.string().describe('The question to ask Zero'),
-      topK: z.number().describe('The number of results to return').max(9).min(1).default(3),
-    }),
-    execute: async ({ question, topK = 3 }) => {
-      const embedding = await getEmbeddingVector(question, 'vectorize-load');
-      if (!embedding) {
-        return { error: 'Failed to get embedding' };
-      }
-      const threadResults = await env.VECTORIZE.query(embedding, {
-        topK,
-        returnMetadata: 'all',
-        filter: {
-          connection: connectionId,
-        },
-      });
+// const askZeroMailbox = (connectionId: string) =>
+//   tool({
+//     description: 'Ask Zero a question about the mailbox',
+//     parameters: z.object({
+//       question: z.string().describe('The question to ask Zero'),
+//       topK: z.number().describe('The number of results to return').max(9).min(1).default(3),
+//     }),
+//     execute: async ({ question, topK = 3 }) => {
+//       const embedding = await getEmbeddingVector(question, 'vectorize-load');
+//       if (!embedding) {
+//         return { error: 'Failed to get embedding' };
+//       }
+//       const threadResults = await env.VECTORIZE.query(embedding, {
+//         topK,
+//         returnMetadata: 'all',
+//         filter: {
+//           connection: connectionId,
+//         },
+//       });
 
-      if (!threadResults.matches.length) {
-        return {
-          response: [],
-          success: false,
-        };
-      }
-      return {
-        response: threadResults.matches.map((e) => e.metadata?.['summary'] ?? 'no content'),
-        success: true,
-      };
-    },
-  });
+//       if (!threadResults.matches.length) {
+//         return {
+//           response: [],
+//           success: false,
+//         };
+//       }
+//       return {
+//         response: threadResults.matches.map((e) => e.metadata?.['summary'] ?? 'no content'),
+//         success: true,
+//       };
+//     },
+//   });
 
-const askZeroThread = (connectionId: string) =>
-  tool({
-    description: 'Ask Zero a question about a specific thread',
-    parameters: z.object({
-      threadId: z.string().describe('The ID of the thread to ask Zero about'),
-      question: z.string().describe('The question to ask Zero'),
-    }),
-    execute: async ({ threadId, question }) => {
-      const response = await env.VECTORIZE.getByIds([threadId]);
-      if (!response.length) return { response: "I don't know, no threads found", success: false };
-      const embedding = await getEmbeddingVector(question, 'vectorize-load');
-      if (!embedding) {
-        return { error: 'Failed to get embedding' };
-      }
-      const threadResults = await env.VECTORIZE.query(embedding, {
-        topK: 1,
-        returnMetadata: 'all',
-        filter: {
-          thread: threadId,
-          connection: connectionId,
-        },
-      });
-      const topThread = threadResults.matches[0];
-      if (!topThread) return { response: "I don't know, no threads found", success: false };
-      return {
-        response: topThread.metadata?.['summary'] ?? 'no content',
-        success: true,
-      };
-    },
-  });
+// const askZeroThread = (connectionId: string) =>
+//   tool({
+//     description: 'Ask Zero a question about a specific thread',
+//     parameters: z.object({
+//       threadId: z.string().describe('The ID of the thread to ask Zero about'),
+//       question: z.string().describe('The question to ask Zero'),
+//     }),
+//     execute: async ({ threadId, question }) => {
+//       const response = await env.VECTORIZE.getByIds([threadId]);
+//       if (!response.length) return { response: "I don't know, no threads found", success: false };
+//       const embedding = await getEmbeddingVector(question, 'vectorize-load');
+//       if (!embedding) {
+//         return { error: 'Failed to get embedding' };
+//       }
+//       const threadResults = await env.VECTORIZE.query(embedding, {
+//         topK: 1,
+//         returnMetadata: 'all',
+//         filter: {
+//           thread: threadId,
+//           connection: connectionId,
+//         },
+//       });
+//       const topThread = threadResults.matches[0];
+//       if (!topThread) return { response: "I don't know, no threads found", success: false };
+//       return {
+//         response: topThread.metadata?.['summary'] ?? 'no content',
+//         success: true,
+//       };
+//     },
+//   });
 
-const getEmail = (driver: MailManager) =>
+/**
+ * ⚠️  IMPORTANT
+ * Do NOT return the full thread here – it bloats the conversation state and
+ * may hit the 128 MB cap in Cloudflare Workers. We only hand back a lightweight
+ * tag that the front-end can interpret.
+ *
+ * The tag format must be exactly: <thread id="{id}"/>
+ */
+const getEmail = () =>
   tool({
-    description: 'Get a specific email thread by ID',
+    description: 'Return a placeholder tag for a specific email thread by ID',
     parameters: z.object({
       id: z.string().describe('The ID of the email thread to retrieve'),
     }),
     execute: async ({ id }) => {
-      return await driver.get(id);
+      /* nothing to fetch server-side any more */
+      return `<thread id="${id}"/>`;
+    },
+  });
+
+const getThreadSummary = (connectionId: string) =>
+  tool({
+    description: 'Get the summary of a specific email thread',
+    parameters: z.object({
+      id: z.string().describe('The ID of the email thread to get the summary of'),
+    }),
+    execute: async ({ id }) => {
+      const response = await env.VECTORIZE.getByIds([id]);
+      const driver = await getZeroAgent(connectionId);
+      const thread = await driver.getThread(id);
+      if (response.length && response?.[0]?.metadata?.['summary'] && thread?.latest?.subject) {
+        const result = response[0].metadata as { summary: string; connection: string };
+        if (result.connection !== connectionId) {
+          return null;
+        }
+        const shortResponse = await env.AI.run('@cf/facebook/bart-large-cnn', {
+          input_text: result.summary,
+        });
+        return {
+          short: shortResponse.summary,
+          subject: thread.latest?.subject,
+          sender: thread.latest?.sender,
+          date: thread.latest?.receivedOn,
+        };
+      }
+      return {
+        subject: thread.latest?.subject,
+        sender: thread.latest?.sender,
+        date: thread.latest?.receivedOn,
+      };
     },
   });
 
@@ -146,46 +188,51 @@ const composeEmailTool = (connectionId: string) =>
     },
   });
 
-const listEmails = (driver: MailManager) =>
-  tool({
-    description: 'List emails in a specific folder',
-    parameters: z.object({
-      folder: z.string().describe('The folder to list emails from'),
-      query: z.string().optional().describe('The query to filter emails'),
-      maxResults: z.number().optional().describe('The maximum number of results to return'),
-      labelIds: z.array(z.string()).optional().describe('The labels to filter emails'),
-      pageToken: z.string().optional().describe('The page token to continue listing emails'),
-    }),
-    execute: async (params) => {
-      return await driver.list(params);
-    },
-  });
+// const listEmails = (connectionId: string) =>
+//   tool({
+//     description: 'List emails in a specific folder',
+//     parameters: z.object({
+//       folder: z.string().describe('The folder to list emails from').default('inbox'),
+//       maxResults: z
+//         .number()
+//         .optional()
+//         .describe('The maximum number of results to return')
+//         .default(5),
+//       labelIds: z.array(z.string()).optional().describe('The labels to filter emails'),
+//       pageToken: z.string().optional().describe('The page token to continue listing emails'),
+//     }),
+//     execute: async (params) => {
+//       return await agent.list(params);
+//     },
+//   });
 
-const markAsRead = (driver: MailManager) =>
+const markAsRead = (connectionId: string) =>
   tool({
     description: 'Mark emails as read',
     parameters: z.object({
       threadIds: z.array(z.string()).describe('The IDs of the threads to mark as read'),
     }),
     execute: async ({ threadIds }) => {
+      const driver = await getZeroAgent(connectionId);
       await driver.markAsRead(threadIds);
       return { threadIds, success: true };
     },
   });
 
-const markAsUnread = (driver: MailManager) =>
+const markAsUnread = (connectionId: string) =>
   tool({
     description: 'Mark emails as unread',
     parameters: z.object({
       threadIds: z.array(z.string()).describe('The IDs of the threads to mark as unread'),
     }),
     execute: async ({ threadIds }) => {
+      const driver = await getZeroAgent(connectionId);
       await driver.markAsUnread(threadIds);
       return { threadIds, success: true };
     },
   });
 
-const modifyLabels = (driver: MailManager) =>
+const modifyLabels = (connectionId: string) =>
   tool({
     description: 'Modify labels on emails',
     parameters: z.object({
@@ -196,21 +243,23 @@ const modifyLabels = (driver: MailManager) =>
       }),
     }),
     execute: async ({ threadIds, options }) => {
-      await driver.modifyLabels(threadIds, options);
+      const driver = await getZeroAgent(connectionId);
+      await driver.modifyLabels(threadIds, options.addLabels, options.removeLabels);
       return { threadIds, options, success: true };
     },
   });
 
-const getUserLabels = (driver: MailManager) =>
+const getUserLabels = (connectionId: string) =>
   tool({
     description: 'Get all user labels',
     parameters: z.object({}),
     execute: async () => {
+      const driver = await getZeroAgent(connectionId);
       return await driver.getUserLabels();
     },
   });
 
-const sendEmail = (driver: MailManager) =>
+const sendEmail = (connectionId: string) =>
   tool({
     description: 'Send a new email',
     parameters: z.object({
@@ -244,6 +293,7 @@ const sendEmail = (driver: MailManager) =>
     }),
     execute: async (data) => {
       try {
+        const driver = await getZeroAgent(connectionId);
         const { draftId, ...mail } = data;
 
         if (draftId) {
@@ -270,7 +320,7 @@ const sendEmail = (driver: MailManager) =>
     },
   });
 
-const createLabel = (driver: MailManager) =>
+const createLabel = (connectionId: string) =>
   tool({
     description: 'Create a new label with custom colors, if it does nto exist already',
     parameters: z.object({
@@ -289,60 +339,95 @@ const createLabel = (driver: MailManager) =>
         }),
     }),
     execute: async ({ name, backgroundColor, textColor }) => {
+      const driver = await getZeroAgent(connectionId);
       await driver.createLabel({ name, color: { backgroundColor, textColor } });
       return { name, backgroundColor, textColor, success: true };
     },
   });
 
-const bulkDelete = (driver: MailManager) =>
+const bulkDelete = (connectionId: string) =>
   tool({
     description: 'Move multiple emails to trash by adding the TRASH label',
     parameters: z.object({
       threadIds: z.array(z.string()).describe('Array of email IDs to move to trash'),
     }),
     execute: async ({ threadIds }) => {
-      await driver.modifyLabels(threadIds, { addLabels: ['TRASH'], removeLabels: [] });
+      const driver = await getZeroAgent(connectionId);
+      await driver.modifyLabels(threadIds, ['TRASH'], []);
       return { threadIds, success: true };
     },
   });
 
-const bulkArchive = (driver: MailManager) =>
+const bulkArchive = (connectionId: string) =>
   tool({
     description: 'Move multiple emails to the archive by removing the INBOX label',
     parameters: z.object({
       threadIds: z.array(z.string()).describe('Array of email IDs to move to archive'),
     }),
     execute: async ({ threadIds }) => {
-      await driver.modifyLabels(threadIds, { addLabels: [], removeLabels: ['INBOX'] });
+      const driver = await getZeroAgent(connectionId);
+      await driver.modifyLabels(threadIds, [], ['INBOX']);
       return { threadIds, success: true };
     },
   });
 
-const deleteLabel = (driver: MailManager) =>
+const deleteLabel = (connectionId: string) =>
   tool({
     description: "Delete a label from the user's account",
     parameters: z.object({
       id: z.string().describe('The ID of the label to delete'),
     }),
     execute: async ({ id }) => {
+      const driver = await getZeroAgent(connectionId);
       await driver.deleteLabel(id);
       return { id, success: true };
     },
   });
 
-const getGoogleTools = async (connectionId: string) => {
-  const arcade = new Arcade();
-  const googleToolkit = await arcade.tools.list({ toolkit: 'google', limit: 30 });
-  const googleTools = toZodToolSet({
-    tools: googleToolkit.items,
-    client: arcade,
-    userId: connectionId, // Your app's internal ID for the user (an email, UUID, etc). It's used internally to identify your user in Arcade
-    executeFactory: executeOrAuthorizeZodTool, // Checks if tool is authorized and executes it, or returns authorization URL if needed
-  });
-  return googleTools;
-};
+const buildGmailSearchQuery = () =>
+  tool({
+    description: 'Build a Gmail search query',
+    parameters: z.object({
+      query: z.string().describe('The search query to build, provided in natural language'),
+    }),
+    execute: async (params) => {
+      console.log('[DEBUG] buildGmailSearchQuery', params);
 
-export const webSearch = (dataStream: DataStreamWriter) =>
+      const result = await generateText({
+        model: openai(env.OPENAI_MODEL || 'gpt-4o'),
+        system: GmailSearchAssistantSystemPrompt(),
+        prompt: params.query,
+      });
+      return {
+        content: [
+          {
+            type: 'text',
+            text: result.text,
+          },
+        ],
+      };
+    },
+  });
+
+const getCurrentDate = () =>
+  tool({
+    description: 'Get the current date',
+    parameters: z.object({}).default({}),
+    execute: async () => {
+      console.log('[DEBUG] getCurrentDate');
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: getCurrentDateContext(),
+          },
+        ],
+      };
+    },
+  });
+
+export const webSearch = () =>
   tool({
     description: 'Search the web for information using Perplexity AI',
     parameters: z.object({
@@ -350,7 +435,7 @@ export const webSearch = (dataStream: DataStreamWriter) =>
     }),
     execute: async ({ query }) => {
       try {
-        const response = streamText({
+        const response = await generateText({
           model: perplexity('sonar'),
           messages: [
             { role: 'system', content: 'Be precise and concise.' },
@@ -361,9 +446,7 @@ export const webSearch = (dataStream: DataStreamWriter) =>
           maxTokens: 1024,
         });
 
-        response.mergeIntoDataStream(dataStream);
-
-        return { type: 'streaming_response', query };
+        return response.text;
       } catch (error) {
         console.error('Error searching the web:', error);
         throw new Error('Failed to search the web');
@@ -371,27 +454,46 @@ export const webSearch = (dataStream: DataStreamWriter) =>
     },
   });
 
-export const tools = async (
-  driver: MailManager,
-  connectionId: string,
-  dataStream: DataStreamWriter,
-) => {
-  return {
-    [Tools.GetThread]: getEmail(driver),
+export const tools = async (connectionId: string, ragEffect: boolean = false) => {
+  const _tools = {
+    [Tools.GetThread]: getEmail(),
+    [Tools.GetThreadSummary]: getThreadSummary(connectionId),
     [Tools.ComposeEmail]: composeEmailTool(connectionId),
-    [Tools.ListThreads]: listEmails(driver),
-    [Tools.MarkThreadsRead]: markAsRead(driver),
-    [Tools.MarkThreadsUnread]: markAsUnread(driver),
-    [Tools.ModifyLabels]: modifyLabels(driver),
-    [Tools.GetUserLabels]: getUserLabels(driver),
-    [Tools.SendEmail]: sendEmail(driver),
-    [Tools.CreateLabel]: createLabel(driver),
-    [Tools.BulkDelete]: bulkDelete(driver),
-    [Tools.BulkArchive]: bulkArchive(driver),
-    [Tools.DeleteLabel]: deleteLabel(driver),
-    // [Tools.AskZeroMailbox]: askZeroMailbox(connectionId),
-    // [Tools.AskZeroThread]: askZeroThread(connectionId),
-    [Tools.WebSearch]: webSearch(dataStream),
-    // ...(await getGoogleTools(connectionId)),
+    [Tools.MarkThreadsRead]: markAsRead(connectionId),
+    [Tools.MarkThreadsUnread]: markAsUnread(connectionId),
+    [Tools.ModifyLabels]: modifyLabels(connectionId),
+    [Tools.GetUserLabels]: getUserLabels(connectionId),
+    [Tools.SendEmail]: sendEmail(connectionId),
+    [Tools.CreateLabel]: createLabel(connectionId),
+    [Tools.BulkDelete]: bulkDelete(connectionId),
+    [Tools.BulkArchive]: bulkArchive(connectionId),
+    [Tools.DeleteLabel]: deleteLabel(connectionId),
+    [Tools.BuildGmailSearchQuery]: buildGmailSearchQuery(),
+    [Tools.GetCurrentDate]: getCurrentDate(),
+    [Tools.InboxRag]: tool({
+      description:
+        'Search the inbox for emails using natural language. Returns only an array of threadIds.',
+      parameters: z.object({
+        query: z.string().describe('The query to search the inbox for'),
+        maxResults: z.number().describe('The maximum number of results to return').default(10),
+        folder: z.string().describe('The folder to search the inbox for').default('inbox'),
+      }),
+      execute: async ({ query, maxResults, folder }) => {
+        const agent = await getZeroAgent(connectionId);
+        const res = await agent.searchThreads({ query, maxResults, folder });
+        return res.threadIds;
+      },
+    }),
+  };
+  if (ragEffect) return _tools;
+  return {
+    ..._tools,
+    [Tools.InboxRag]: tool({
+      description:
+        'Search the inbox for emails using natural language. Returns only an array of threadIds.',
+      parameters: z.object({
+        query: z.string().describe('The query to search the inbox for'),
+      }),
+    }),
   };
 };

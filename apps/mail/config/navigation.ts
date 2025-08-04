@@ -4,11 +4,7 @@ import {
   ExclamationCircle,
   Folder,
   Inbox,
-  MessageSquare,
-  NotesList,
-  PaperPlane,
   SettingsGear,
-  Sparkles,
   Stars,
   Tabs,
   Users,
@@ -17,6 +13,7 @@ import {
   Sheet,
   Plane2,
   LockIcon,
+  Clock,
 } from '@/components/icons/icons';
 import { MessageSquareIcon } from 'lucide-react';
 import { m } from '@/paraglide/messages';
@@ -84,6 +81,13 @@ export const navigationConfig: Record<string, NavConfig> = {
             url: '/mail/archive',
             icon: Archive,
             shortcut: 'g + a',
+          },
+          {
+            id: 'snoozed',
+            title: m['navigation.sidebar.snoozed'](),
+            url: '/mail/snoozed',
+            icon: Clock,
+            shortcut: 'g + z',
           },
           {
             id: 'spam',
@@ -169,11 +173,11 @@ export const navigationConfig: Record<string, NavConfig> = {
             url: '/settings/labels',
             icon: Sheet,
           },
-          {
-            title: m['navigation.settings.categories'](),
-            url: '/settings/categories',
-            icon: Tabs,
-          },
+          //   {
+          //     title: m['navigation.settings.categories'](),
+          //     url: '/settings/categories',
+          //     icon: Tabs,
+          //   },
           {
             title: m['navigation.settings.signatures'](),
             url: '/settings/signatures',

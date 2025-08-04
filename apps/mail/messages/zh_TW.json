@@ -253,8 +253,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "添加筆記",
-            "countPlural=one": "# 則筆記",
-            "countPlural=other": "# 則筆記"
+            "countPlural=one": "# 筆記",
+            "countPlural=other": "# 筆記"
           }
         }
       ],
@@ -370,7 +370,8 @@
       "failedToMute": "靜音失敗",
       "failedToUnmute": "取消靜音失敗",
       "archived": "已封存",
-      "failedToArchive": "封存失敗"
+      "failedToArchive": "封存失敗",
+      "openInNewTab": "在新分頁中開啟"
     },
     "units": {
       "mb": "{amount} MB"
@@ -404,7 +405,8 @@
       "livesupport": "即時支援",
       "feedback": "意見反饋",
       "settings": "設定",
-      "voice": "語音助理"
+      "voice": "語音助理",
+      "snoozed": "已延後"
     },
     "settings": {
       "general": "一般",
@@ -450,7 +452,9 @@
         "selectDefaultEmail": "選擇預設電子郵件",
         "defaultEmailDescription": "此電子郵件將作為撰寫新郵件時的預設「寄件者」地址",
         "autoRead": "自動標記為已讀",
-        "autoReadDescription": "當您點擊電子郵件時，會自動將其標記為已讀。"
+        "autoReadDescription": "當您點擊電子郵件時，會自動將其標記為已讀。",
+        "animations": "動畫效果",
+        "animationsDescription": "啟用在切換電子郵件時的平滑動畫效果"
       },
       "connections": {
         "title": "電子郵件連接",

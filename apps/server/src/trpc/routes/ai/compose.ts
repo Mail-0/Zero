@@ -2,16 +2,17 @@ import {
   getWritingStyleMatrixForConnectionId,
   type WritingStyleMatrix,
 } from '../../../services/writing-style-service';
+import { escapeXml } from '../../../thread-workflow-utils/workflow-utils';
 import { StyledEmailAssistantSystemPrompt } from '../../../lib/prompts';
-import { getPrompt } from '../../../lib/brain';
-import { EPrompts } from '../../../types';
 import { webSearch } from '../../../routes/agent/tools';
 import { activeConnectionProcedure } from '../../trpc';
+import { getPrompt } from '../../../lib/brain';
 import { stripHtml } from 'string-strip-html';
+import { EPrompts } from '../../../types';
+import { env } from '../../../env';
 import { openai } from '@ai-sdk/openai';
 import { generateText } from 'ai';
 import { z } from 'zod';
-import { env } from 'cloudflare:workers';
 
 type ComposeEmailInput = {
   prompt: string;
@@ -37,8 +38,8 @@ export async function composeEmail(input: ComposeEmailInput) {
   });
 
   const systemPrompt = await getPrompt(
-    `${connectionId}-${EPrompts.Compose}`, 
-    StyledEmailAssistantSystemPrompt()
+    `${connectionId}-${EPrompts.Compose}`,
+    StyledEmailAssistantSystemPrompt(),
   );
   const userPrompt = EmailAssistantPrompt({
     currentSubject: emailSubject,
@@ -104,7 +105,7 @@ export async function composeEmail(input: ComposeEmailInput) {
     presencePenalty: 0.1,
     maxRetries: 1,
     tools: {
-      webSearch,
+      webSearch: webSearch(),
     },
   });
 
@@ -190,14 +191,6 @@ const MessagePrompt = ({
 
   return parts.join('\n');
 };
-
-const escapeXml = (s: string) =>
-  s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
 
 const EmailAssistantPrompt = ({
   currentSubject,

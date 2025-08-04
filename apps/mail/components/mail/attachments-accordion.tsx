@@ -33,7 +33,7 @@ const AttachmentsAccordion = ({ attachments, setSelectedAttachment }: Props) => 
                 return (
                   <div
                     key={attachment.attachmentId}
-                    className="w-48 flex-shrink-0 overflow-hidden rounded-md border transition-shadow hover:shadow-md"
+                    className="w-48 shrink-0 overflow-hidden rounded-md border transition-shadow hover:shadow-md"
                   >
                     <button
                       className="w-full text-left"
@@ -72,7 +72,7 @@ const AttachmentsAccordion = ({ attachments, setSelectedAttachment }: Props) => 
                           >
                             {attachment.filename}
                           </span>
-                          <span className="text-muted-foreground flex-shrink-0 text-xs">
+                          <span className="text-muted-foreground shrink-0 text-xs">
                             {formatFileSize(attachment.size)}
                           </span>
                         </div>

@@ -316,8 +316,8 @@
           "selectors": ["countPlural"],
           "match": {
             "countPlural=0": "odpovědí",
-            "countPlural=one": "#odpověď",
-            "countPlural=other": "#odpovědí"
+            "countPlural=one": "# odpověď",
+            "countPlural=other": "# odpovědí"
           }
         }
       ],
@@ -370,7 +370,8 @@
       "failedToMute": "Ztlumení se nezdařilo",
       "failedToUnmute": "Zrušení ztlumení se nezdařilo",
       "archived": "Archivováno",
-      "failedToArchive": "Archivace se nezdařila"
+      "failedToArchive": "Archivace se nezdařila",
+      "openInNewTab": "Otevřít v nové záložce"
     },
     "units": {
       "mb": "{amount} MB"
@@ -404,7 +405,8 @@
       "livesupport": "Živá podpora",
       "feedback": "Zpětná vazba",
       "settings": "Nastavení",
-      "voice": "Hlasový asistent"
+      "voice": "Hlasový asistent",
+      "snoozed": "Odložené"
     },
     "settings": {
       "general": "Obecné",
@@ -450,7 +452,9 @@
         "selectDefaultEmail": "Vybrat výchozí e-mail",
         "defaultEmailDescription": "Tento e-mail bude použit jako výchozí adresa 'Od' při psaní nových e-mailů",
         "autoRead": "Automatické přečtení",
-        "autoReadDescription": "Automaticky označit e-maily jako přečtené při kliknutí na ně."
+        "autoReadDescription": "Automaticky označit e-maily jako přečtené při kliknutí na ně.",
+        "animations": "Animace",
+        "animationsDescription": "Povolit plynulé animace při přepínání mezi e-maily"
       },
       "connections": {
         "title": "Propojení emailu",

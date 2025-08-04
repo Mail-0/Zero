@@ -1,4 +1,5 @@
 export enum Tools {
+  GetThreadSummary = 'getThreadSummary',
   GetThread = 'getThread',
   ComposeEmail = 'composeEmail',
   ListThreads = 'listThreads',
@@ -15,4 +16,5 @@ export enum Tools {
   AskZeroMailbox = 'askZeroMailbox',
   AskZeroThread = 'askZeroThread',
   WebSearch = 'webSearch',
+  InboxRag = 'inboxRag',
 }

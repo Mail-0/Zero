@@ -370,7 +370,8 @@
       "failedToMute": "Stummschaltung fehlgeschlagen",
       "failedToUnmute": "Aufhebung der Stummschaltung fehlgeschlagen",
       "archived": "Archiviert",
-      "failedToArchive": "Archivierung fehlgeschlagen"
+      "failedToArchive": "Archivierung fehlgeschlagen",
+      "openInNewTab": "In neuem Tab öffnen"
     },
     "units": {
       "mb": "{amount} MB"
@@ -404,7 +405,8 @@
       "livesupport": "Live-Support",
       "feedback": "Rückmeldung",
       "settings": "Einstellungen",
-      "voice": "Sprachassistent"
+      "voice": "Sprachassistent",
+      "snoozed": "Zurückgestellt"
     },
     "settings": {
       "general": "Allgemein",
@@ -450,7 +452,9 @@
         "selectDefaultEmail": "Standard-E-Mail auswählen",
         "defaultEmailDescription": "Diese E-Mail wird als Standard-Absenderadresse beim Verfassen neuer E-Mails verwendet",
         "autoRead": "Auto-Lesen",
-        "autoReadDescription": "E-Mails automatisch als gelesen markieren, wenn du sie anklickst."
+        "autoReadDescription": "E-Mails automatisch als gelesen markieren, wenn du sie anklickst.",
+        "animations": "Animationen",
+        "animationsDescription": "Aktiviere sanfte Animationen beim Wechseln zwischen E-Mails"
       },
       "connections": {
         "title": "E-Mail Verbindungen",

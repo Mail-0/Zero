@@ -15,7 +15,7 @@ import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AlertTriangle } from 'lucide-react';
-import { useNavigate } from 'react-router';
+
 import { useForm } from 'react-hook-form';
 import { m } from '@/paraglide/messages';
 import { clear } from 'idb-keyval';
@@ -33,7 +33,7 @@ const formSchema = z.object({
 
 function DeleteAccountDialog() {
   const [isOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate();
+  
   const trpc = useTRPC();
   const { refetch } = useSession();
   const { mutateAsync: deleteAccount, isPending } = useMutation(trpc.user.delete.mutationOptions());

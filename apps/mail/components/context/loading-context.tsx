@@ -22,7 +22,7 @@ export function LoadingProvider({ children }: { children: ReactNode }) {
     <LoadingContext.Provider value={{ isLoading, loadingMessage, setLoading }}>
       {children}
       {isLoading && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-panelLight dark:bg-panelDark flex flex-col items-center gap-4 rounded-xl border p-6 shadow-xl">
             <Spinner size={32} />
             <div className="text-center">

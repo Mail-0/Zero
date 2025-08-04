@@ -1,5 +1,5 @@
 import { LinkedIn, Twitter, Discord } from '../icons/icons';
-import { motion, useInView } from 'motion/react';
+import { motion } from 'motion/react';
 import { Button } from '../ui/button';
 import { Link } from 'react-router';
 import { useRef } from 'react';
@@ -28,7 +28,7 @@ export default function Footer() {
   return (
     <div className="bg-panelDark m-4 hidden flex-col items-center justify-center rounded-xl md:flex">
       <div>
-        {/* <div className="h-[527px] w-screen bg-gradient-to-b from-violet-600 via-orange-400 to-slate-950 blur-2xl" /> */}
+        {/* <div className="h-[527px] w-screen bg-linear-to-b from-violet-600 via-orange-400 to-slate-950 blur-2xl" /> */}
         <div>
           <img
             src="/gradient.svg"
@@ -49,7 +49,7 @@ export default function Footer() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="lg:to-panelDark inline-block text-center text-2xl font-bold text-white sm:text-4xl md:text-5xl lg:bg-gradient-to-b lg:from-[#84878D] lg:via-[#84878D] lg:bg-clip-text lg:text-8xl lg:text-transparent"
+                  className="lg:to-panelDark inline-block text-center text-2xl font-bold text-white sm:text-4xl md:text-5xl lg:bg-linear-to-b lg:from-[#84878D] lg:via-[#84878D] lg:bg-clip-text lg:text-8xl lg:text-transparent"
                 >
                   <span>Experience the Future of </span> <br />
                   Email Today
@@ -121,26 +121,26 @@ export default function Footer() {
             </div>
           </div>
           <div className="flex flex-1 items-start justify-end gap-10 opacity-0 md:opacity-100">
-          <div className="inline-flex flex-col items-start justify-start gap-5">
+            <div className="inline-flex flex-col items-start justify-start gap-5">
               <div className="justify-start self-stretch text-sm font-normal text-white/40">
                 Resources
               </div>
               <div className="flex flex-col items-start justify-start gap-4 self-stretch">
-                <a target="_blank" href="https://trust.inc/zero" className="w-full">
+                <a
+                  target="_blank"
+                  rel="noreferrer"
+                  href="https://trust.inc/zero"
+                  className="w-full"
+                >
                   <div className="justify-start self-stretch text-base font-normal leading-none text-white opacity-80 transition-opacity hover:opacity-100">
                     SOC2
                   </div>
                 </a>
-                <a
-                  href="/privacy"
-                  className="w-full"
-                  target="_blank"
-                >
+                <a href="/privacy" className="w-full" target="_blank">
                   <div className="justify-start self-stretch text-base leading-none text-white opacity-80 transition-opacity hover:opacity-100">
                     Privacy Policy
                   </div>
                 </a>
-                
               </div>
             </div>
             <div className="inline-flex flex-col items-start justify-start gap-5">
@@ -152,6 +152,7 @@ export default function Footer() {
                   href="https://x.com/nizzyabi/status/1918064165530550286"
                   className="w-full"
                   target="_blank"
+                  rel="noreferrer"
                 >
                   <div className="justify-start self-stretch text-base leading-none text-white opacity-80 transition-opacity hover:opacity-100">
                     Chat with Zero
@@ -161,6 +162,7 @@ export default function Footer() {
                   href="https://x.com/nizzyabi/status/1918051282881069229"
                   className="w-full"
                   target="_blank"
+                  rel="noreferrer"
                 >
                   <div className="justify-start self-stretch text-base leading-none text-white opacity-80 transition-opacity hover:opacity-100">
                     Zero AI
@@ -170,6 +172,7 @@ export default function Footer() {
                   href="https://x.com/nizzyabi/status/1919292505260249486"
                   className="w-full"
                   target="_blank"
+                  rel="noreferrer"
                 >
                   <div className="justify-start self-stretch text-base leading-none text-white opacity-80 transition-opacity hover:opacity-100">
                     Shortcuts
@@ -192,14 +195,18 @@ export default function Footer() {
                     About
                   </div>
                 </a>
-                <a target="_blank" href="https://github.com/Mail-0/Zero" className="w-full">
+                <a
+                  target="_blank"
+                  rel="noreferrer"
+                  href="https://github.com/Mail-0/Zero"
+                  className="w-full"
+                >
                   <div className="justify-start self-stretch text-base font-normal leading-none text-white opacity-80 transition-opacity hover:opacity-100">
                     Github
                   </div>
                 </a>
               </div>
             </div>
-            
           </div>
         </div>
         <div className="h-0.5 self-stretch bg-white/20" />

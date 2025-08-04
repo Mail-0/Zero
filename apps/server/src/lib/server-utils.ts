@@ -1,22 +1,43 @@
-import { OutgoingMessageType, type OutgoingMessage } from '../routes/chat';
-import type { IGetThreadResponse } from './driver/types';
 import { getContext } from 'hono/context-storage';
 import { connection } from '../db/schema';
 import type { HonoContext } from '../ctx';
-import { env } from 'cloudflare:workers';
+import { createClient } from 'dormroom';
 import { createDriver } from './driver';
+import { eq } from 'drizzle-orm';
+import { createDb } from '../db';
+import { env } from '../env';
 
-export const getZeroDB = (userId: string) => {
+export const getZeroDB = async (userId: string) => {
   const stub = env.ZERO_DB.get(env.ZERO_DB.idFromName(userId));
-  const rpcTarget = stub.setMetaData(userId);
+  const rpcTarget = await stub.setMetaData(userId);
   return rpcTarget;
 };
 
+export const getZeroClient = async (connectionId: string, executionCtx: ExecutionContext) => {
+  const agent = createClient({
+    doNamespace: env.ZERO_DRIVER,
+    ctx: executionCtx,
+    configs: [{ name: connectionId }],
+  }).stub;
+
+  await agent.setName(connectionId);
+  await agent.setupAuth();
+
+  executionCtx.waitUntil(agent.syncFolders());
+
+  return agent;
+};
+
 export const getZeroAgent = async (connectionId: string) => {
-  const stub = env.ZERO_AGENT.get(env.ZERO_AGENT.idFromName(connectionId));
+  const stub = env.ZERO_DRIVER.get(env.ZERO_DRIVER.idFromName(connectionId));
   const rpcTarget = await stub.setMetaData(connectionId);
-  await rpcTarget.setupAuth(connectionId);
+  await rpcTarget.setupAuth();
   return rpcTarget;
+};
+
+export const getZeroSocketAgent = async (connectionId: string) => {
+  const stub = env.ZERO_AGENT.get(env.ZERO_AGENT.idFromName(connectionId));
+  return stub;
 };
 
 export const getActiveConnection = async () => {
@@ -24,7 +45,7 @@ export const getActiveConnection = async () => {
   const { sessionUser } = c.var;
   if (!sessionUser) throw new Error('Session Not Found');
 
-  const db = getZeroDB(sessionUser.id);
+  const db = await getZeroDB(sessionUser.id);
 
   const userData = await db.findUser();
 
@@ -57,36 +78,6 @@ export const connectionToDriver = (activeConnection: typeof connection.$inferSel
   });
 };
 
-export const notifyUser = async ({
-  connectionId,
-  result,
-  threadId,
-}: {
-  connectionId: string;
-  result: IGetThreadResponse;
-  threadId: string;
-}) => {
-  const mailbox = await getZeroAgent(connectionId);
-
-  try {
-    await mailbox.broadcast(
-      JSON.stringify({
-        type: OutgoingMessageType.Mail_Get,
-        threadId,
-        result,
-      } as OutgoingMessage),
-    );
-  } catch (error) {
-    console.error(`[notifyUser] Failed to broadcast message`, {
-      connectionId,
-      threadId,
-      result,
-      error,
-    });
-    throw error;
-  }
-};
-
 export const verifyToken = async (token: string) => {
   const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${token}`, {
     method: 'GET',
@@ -101,4 +92,16 @@ export const verifyToken = async (token: string) => {
 
   const data = (await response.json()) as any;
   return !!data;
+};
+
+export const resetConnection = async (connectionId: string) => {
+  const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
+  await db
+    .update(connection)
+    .set({
+      accessToken: null,
+      refreshToken: null,
+    })
+    .where(eq(connection.id, connectionId));
+  await conn.end();
 };

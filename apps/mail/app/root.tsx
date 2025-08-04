@@ -5,24 +5,24 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  useLoaderData,
   useNavigate,
-  type LoaderFunctionArgs,
   type MetaFunction,
 } from 'react-router';
+import { Analytics as DubAnalytics } from '@dub/analytics/react';
 import { ServerProviders } from '@/providers/server-providers';
 import { ClientProviders } from '@/providers/client-providers';
 import { createTRPCClient, httpBatchLink } from '@trpc/client';
 import { useEffect, type PropsWithChildren } from 'react';
-import { AlertCircle, Loader2 } from 'lucide-react';
 import type { AppRouter } from '@zero/server/trpc';
 import { Button } from '@/components/ui/button';
 import { getLocale } from '@/paraglide/runtime';
 import { siteConfig } from '@/lib/site-config';
 import { signOut } from '@/lib/auth-client';
 import type { Route } from './+types/root';
+import { AlertCircle } from 'lucide-react';
 import { m } from '@/paraglide/messages';
 import { ArrowLeft } from 'lucide-react';
+import * as Sentry from '@sentry/react';
 import superjson from 'superjson';
 import './globals.css';
 
@@ -53,18 +53,7 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-export async function loader({ request }: LoaderFunctionArgs) {
-  const trpc = getServerTrpc(request);
-  const defaultConnection = await trpc.connections.getDefault
-    .query()
-    .then((res) => (res?.id as string) ?? null)
-    .catch(() => null);
-  return { connectionId: defaultConnection };
-}
-
 export function Layout({ children }: PropsWithChildren) {
-  const { connectionId } = useLoaderData<typeof loader>();
-
   return (
     <html lang={getLocale()} suppressHydrationWarning>
       <head>
@@ -80,8 +69,13 @@ export function Layout({ children }: PropsWithChildren) {
         <Links />
       </head>
       <body className="antialiased">
-        <ServerProviders connectionId={connectionId}>
+        <ServerProviders connectionId={null}>
           <ClientProviders>{children}</ClientProviders>
+          <DubAnalytics
+            domainsConfig={{
+              refer: 'mail0.com',
+            }}
+          />
         </ServerProviders>
         <ScrollRestoration />
         <Scripts />
@@ -90,13 +84,13 @@ export function Layout({ children }: PropsWithChildren) {
   );
 }
 
-export function HydrateFallback() {
-  return (
-    <div className="flex h-screen w-full items-center justify-center">
-      <Loader2 className="h-10 w-10 animate-spin" />
-    </div>
-  );
-}
+// export function HydrateFallback() {
+//   return (
+//     <div className="flex h-screen w-full items-center justify-center">
+//       <Loader2 className="h-10 w-10 animate-spin" />
+//     </div>
+//   );
+// }
 
 export default function App() {
   return <Outlet />;
@@ -122,6 +116,35 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   useEffect(() => {
     console.error(error);
     console.error({ message, details, stack });
+
+    // Report error to Sentry
+    if (isRouteErrorResponse(error)) {
+      Sentry.captureException(new Error(`Route Error ${error.status}: ${error.statusText}`), {
+        tags: {
+          type: 'route_error',
+          status: error.status,
+        },
+        extra: {
+          statusText: error.statusText,
+          data: error.data,
+        },
+      });
+    } else if (error instanceof Error) {
+      Sentry.captureException(error, {
+        tags: {
+          type: 'app_error',
+        },
+      });
+    } else {
+      Sentry.captureException(new Error('Unknown error occurred'), {
+        tags: {
+          type: 'unknown_error',
+        },
+        extra: {
+          error: error,
+        },
+      });
+    }
   }, [error, message, details, stack]);
 
   return (

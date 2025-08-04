@@ -830,6 +830,7 @@ checksums:
     common/mail/failedToUnmute: 9a9c946ac9980a7845122a5c3bae8f13
     common/mail/archived: cf5127ecfd7e43a35466a1ba5fe16450
     common/mail/failedToArchive: e844b73a518542027803b7ff97e82b89
+    common/mail/openInNewTab: 6844e4922a7a40a7ee25c10ea109cdeb
     common/units/mb: ed9c3b369a1ac40741b182458b69143a
     common/labels/color: 9d53d1d120e8b8954bcae9a322573748
     common/labels/labelName: 682eade7443c047bc680664f821c9e0d
@@ -856,6 +857,7 @@ checksums:
     navigation/sidebar/feedback: 6fac88806e0c269a30777b283988c61c
     navigation/sidebar/settings: 8df6777277469c1fd88cc18dde2f1cc3
     navigation/sidebar/voice: 81a94ad8770dca9c3cbb5a88329b6a6f
+    navigation/sidebar/snoozed: f5f799302325bcc21586e34ea81dd086
     navigation/settings/general: b891e8f15579fc5d97bcaf3637f5ae59
     navigation/settings/connections: e03a59f742f7b798488a69760bf8a603
     navigation/settings/security: 4b34923fef858a2b9a4a914c3e822889
@@ -891,6 +893,8 @@ checksums:
     pages/settings/general/defaultEmailDescription: 0ebf26fceccb4cad99f4b2a20cbcfab0
     pages/settings/general/autoRead: 959803ec8269e00d8407c6c189269640
     pages/settings/general/autoReadDescription: 10de6d8f3040b36a0c4b369172dfe2f7
+    pages/settings/general/animations: d2b12468cc840da8ae0ea961fcb5706c
+    pages/settings/general/animationsDescription: 68d690ede69519e938bcca1fdce79e51
     pages/settings/connections/title: d7bc733cc82ab74c649a4816373a2295
     pages/settings/connections/description: f05d355994f9fe0e089ce2c54d0de381
     pages/settings/connections/disconnectTitle: efecc2354d665e68492fe985af575508

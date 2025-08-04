@@ -254,7 +254,7 @@
           "match": {
             "countPlural=0": "إضافة ملاحظات",
             "countPlural=one": "ملاحظة واحدة",
-            "countPlural=other": "# ملاحظة"
+            "countPlural=other": "# ملاحظات"
           }
         }
       ],
@@ -317,7 +317,7 @@
           "match": {
             "countPlural=0": "ردود",
             "countPlural=one": "رد واحد",
-            "countPlural=other": "# رد"
+            "countPlural=other": "# ردود"
           }
         }
       ],
@@ -370,7 +370,8 @@
       "failedToMute": "فشل الكتم",
       "failedToUnmute": "فشل إلغاء الكتم",
       "archived": "تمت الأرشفة",
-      "failedToArchive": "فشلت الأرشفة"
+      "failedToArchive": "فشلت الأرشفة",
+      "openInNewTab": "فتح في علامة تبويب جديدة"
     },
     "units": {
       "mb": "{amount} ميجابايت"
@@ -404,7 +405,8 @@
       "livesupport": "الدعم المباشر",
       "feedback": "الملاحظات",
       "settings": "الإعدادات",
-      "voice": "المساعد الصوتي"
+      "voice": "المساعد الصوتي",
+      "snoozed": "مؤجل"
     },
     "settings": {
       "general": "عام",
@@ -450,7 +452,9 @@
         "selectDefaultEmail": "اختر البريد الإلكتروني الافتراضي",
         "defaultEmailDescription": "سيتم استخدام هذا البريد الإلكتروني كعنوان \"من\" الافتراضي عند إنشاء رسائل إلكترونية جديدة",
         "autoRead": "قراءة تلقائية",
-        "autoReadDescription": "وضع علامة على رسائل البريد الإلكتروني كمقروءة تلقائيًا عند النقر عليها."
+        "autoReadDescription": "وضع علامة على رسائل البريد الإلكتروني كمقروءة تلقائيًا عند النقر عليها.",
+        "animations": "الرسوم المتحركة",
+        "animationsDescription": "تمكين الرسوم المتحركة السلسة عند التبديل بين رسائل البريد الإلكتروني"
       },
       "connections": {
         "title": "اتصالات البريد الإلكتروني",

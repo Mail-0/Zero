@@ -2,13 +2,12 @@ import { createRateLimiterMiddleware, privateProcedure, publicProcedure, router 
 import { defaultUserSettings, userSettingsSchema, type UserSettings } from '../../lib/schemas';
 import { getZeroDB } from '../../lib/server-utils';
 import { Ratelimit } from '@upstash/ratelimit';
-import { env } from 'cloudflare:workers';
 
 export const settingsRouter = router({
   get: publicProcedure
     .use(
       createRateLimiterMiddleware({
-        limiter: Ratelimit.slidingWindow(60, '1m'),
+        limiter: Ratelimit.slidingWindow(120, '1m'),
         generatePrefix: ({ sessionUser }) => `ratelimit:get-settings-${sessionUser?.id}`,
       }),
     )
@@ -16,7 +15,7 @@ export const settingsRouter = router({
       if (!ctx.sessionUser) return { settings: defaultUserSettings };
 
       const { sessionUser } = ctx;
-      const db = getZeroDB(sessionUser.id);
+      const db = await getZeroDB(sessionUser.id);
       const result: any = await db.findUserSettings();
 
       // Returning null here when there are no settings so we can use the default settings with timezone from the browser
@@ -34,7 +33,7 @@ export const settingsRouter = router({
 
   save: privateProcedure.input(userSettingsSchema.partial()).mutation(async ({ ctx, input }) => {
     const { sessionUser } = ctx;
-    const db = getZeroDB(sessionUser.id);
+    const db = await getZeroDB(sessionUser.id);
     const existingSettings: any = await db.findUserSettings();
 
     if (existingSettings) {

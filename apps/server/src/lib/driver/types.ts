@@ -9,6 +9,7 @@ export interface IGetThreadResponse {
   hasUnread: boolean;
   totalReplies: number;
   labels: { id: string; name: string }[];
+  isLatestDraft?: boolean;
 }
 
 export const IGetThreadResponseSchema = z.object({
@@ -19,13 +20,13 @@ export const IGetThreadResponseSchema = z.object({
   labels: z.array(z.object({ id: z.string(), name: z.string() })),
 });
 
-export interface ParsedDraft<T = unknown> {
+export interface ParsedDraft {
   id: string;
   to?: string[];
   subject?: string;
   content?: string;
   rawMessage?: {
-    internalDate?: string;
+    internalDate?: string | null;
   };
   cc?: string[];
   bcc?: string[];
@@ -51,6 +52,16 @@ export type ManagerConfig = {
 
 export interface MailManager {
   config: ManagerConfig;
+  getMessageAttachments(id: string): Promise<
+    {
+      filename: string;
+      mimeType: string;
+      size: number;
+      attachmentId: string;
+      headers: { name: string; value: string }[];
+      body: string;
+    }[]
+  >;
   get(id: string): Promise<IGetThreadResponse>;
   create(data: IOutgoingMessage): Promise<{ id?: string | null }>;
   sendDraft(id: string, data: IOutgoingMessage): Promise<void>;
@@ -105,3 +116,19 @@ export interface MailManager {
   revokeToken(token: string): Promise<boolean>;
   deleteAllSpam(): Promise<DeleteAllSpamResponse>;
 }
+
+export interface IGetThreadsResponse {
+  threads: { id: string; historyId: string | null; $raw?: unknown }[];
+  nextPageToken: string | null;
+}
+
+export const IGetThreadsResponseSchema = z.object({
+  threads: z.array(
+    z.object({
+      id: z.string(),
+      historyId: z.string().nullable(),
+      $raw: z.unknown().optional(),
+    }),
+  ),
+  nextPageToken: z.string().nullable(),
+});

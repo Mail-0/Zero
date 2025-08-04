@@ -1,7 +1,6 @@
 import {
   NavigationMenu,
   NavigationMenuItem,
-  NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
   NavigationMenuContent,
@@ -111,8 +110,8 @@ export function Navigation() {
   return (
     <>
       {/* Desktop Navigation - Hidden on mobile */}
-      <header className="fixed left-[50%] z-50 hidden w-full max-w-3xl translate-x-[-50%] items-center justify-center px-4 pt-6 md:flex">
-        <nav className="border-input/50 flex w-full max-w-3xl items-center justify-between gap-2 rounded-xl border-t bg-[#1E1E1E] p-2 px-4">
+      <header className="fixed left-[50%] z-50 hidden w-full max-w-4xl translate-x-[-50%] items-center justify-center px-4 pt-6 lg:flex">
+        <nav className="border-input/50 flex w-full max-w-4xl items-center justify-between gap-2 rounded-xl border-t bg-[#1E1E1E] p-3 px-6">
           <div className="flex items-center gap-6">
             <Link to="/" className="relative bottom-1 cursor-pointer">
               <img src="white-icon.svg" alt="Zero Email" width={22} height={22} />
@@ -162,6 +161,13 @@ export function Navigation() {
                     </Button>
                   </a>
                 </NavigationMenuItem>
+                <NavigationMenuItem className="bg-transparent text-white">
+                  <a href="/privacy">
+                    <Button variant="ghost" className="h-9 bg-transparent ml-1">
+                      Privacy
+                    </Button>
+                  </a>
+                </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
           </div>
@@ -180,7 +186,7 @@ export function Navigation() {
                 <span className="ml-1 hidden lg:inline">GitHub</span>
               </div>
               <div className="flex items-center gap-1 text-sm">
-                <Star className="relative top-[1px] size-4 fill-gray-400 transition-all duration-300 group-hover:fill-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" />
+                <Star className="relative top-px size-4 fill-gray-400 transition-all duration-300 group-hover:fill-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" />
                 <AnimatedNumber value={stars} className="font-medium text-white" />
               </div>
             </a>
@@ -209,7 +215,7 @@ export function Navigation() {
       </header>
 
       {/* Mobile Navigation Sheet */}
-      <div className="md:hidden">
+      <div className="lg:hidden">
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="fixed left-4 top-6 z-50">
@@ -242,8 +248,11 @@ export function Navigation() {
                 <Link to="/" className="mt-2" onClick={() => setOpen(false)}>
                   Home
                 </Link>
-                <Link to="/pricing" className="mt-2">
+                <Link to="/pricing" className="mt-2" onClick={() => setOpen(false)}>
                   Pricing
+                </Link>
+                <Link to="/privacy" className="mt-2" onClick={() => setOpen(false)}>
+                  Privacy
                 </Link>
                 {aboutLinks.map((link) => (
                   <a key={link.title} href={link.href} className="block font-medium">
@@ -251,7 +260,12 @@ export function Navigation() {
                   </a>
                 ))}
               </div>
-              <a target="_blank" href="https://cal.com/team/0" className="font-medium">
+              <a
+                target="_blank"
+                rel="noreferrer"
+                href="https://cal.com/team/0"
+                className="font-medium"
+              >
                 Contact Us
               </a>
             </div>

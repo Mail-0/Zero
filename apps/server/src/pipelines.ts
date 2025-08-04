@@ -12,1151 +12,1234 @@
  * limitations under the License.
  */
 import {
-  ReSummarizeThread,
-  SummarizeMessage,
-  SummarizeThread,
-  ThreadLabels,
-} from './lib/brain.fallback.prompts';
-import { defaultLabels, EPrompts, EProviders, type ParsedMessage, type Sender } from './types';
-import { WorkflowEntrypoint, WorkflowStep, type WorkflowEvent } from 'cloudflare:workers';
-import { connectionToDriver, notifyUser } from './lib/server-utils';
+  createDefaultWorkflows,
+  type WorkflowContext,
+} from './thread-workflow-utils/workflow-engine';
+import { getServiceAccount } from './lib/factories/google-subscription.factory';
+import { DurableObject } from 'cloudflare:workers';
+import { bulkDeleteKeys } from './lib/bulk-delete';
+import { getZeroAgent } from './lib/server-utils';
 import { type gmail_v1 } from '@googleapis/gmail';
-import { env } from 'cloudflare:workers';
+import { Effect, Console, Logger } from 'effect';
 import { connection } from './db/schema';
-import * as cheerio from 'cheerio';
+import { EProviders } from './types';
+import type { ZeroEnv } from './env';
+import { EPrompts } from './types';
 import { eq } from 'drizzle-orm';
 import { createDb } from './db';
-import { z } from 'zod';
 
-const showLogs = true;
+// Configure pretty logger to stderr
+export const loggerLayer = Logger.add(Logger.prettyLogger({ stderr: true }));
 
-const log = (message: string, ...args: any[]) => {
-  if (showLogs) {
-    console.log(message, ...args);
-    return message;
-  }
-  return 'no message';
+const isValidUUID = (str: string): boolean => {
+  const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return regex.test(str);
 };
 
-type VectorizeVectorMetadata = 'connection' | 'thread' | 'summary';
-
-type IThreadSummaryMetadata = Record<VectorizeVectorMetadata, VectorizeVectorMetadata>;
-
-export class MainWorkflow extends WorkflowEntrypoint<Env, Params> {
-  async run(
-    event: Readonly<WorkflowEvent<Params<'providerId' | 'historyId' | 'subscriptionName'>>>,
-    step: WorkflowStep,
-  ) {
-    log('[MAIN_WORKFLOW] Starting workflow with payload:', event.payload);
-    try {
-      const { providerId, historyId, subscriptionName } = event.payload;
-
-      if (!env.GOOGLE_S_ACCOUNT) {
-        throw new Error('GOOGLE_S_ACCOUNT environment variable is not set');
-      }
-
-      const serviceAccount = JSON.parse(env.GOOGLE_S_ACCOUNT);
-      const connectionId = await step.do(
-        `[MAIN_WORKFLOW] Validate Arguments ${providerId} ${subscriptionName} ${historyId}`,
-        async () => {
-          log('[MAIN_WORKFLOW] Validating arguments');
-          const regex = new RegExp(
-            `projects/${serviceAccount.project_id}/subscriptions/notifications__([a-z0-9-]+)`,
-          );
-          const match = subscriptionName.toString().match(regex);
-          if (!match) {
-            log('[MAIN_WORKFLOW] Invalid subscription name:', subscriptionName);
-            throw new Error(`Invalid subscription name ${subscriptionName}`);
-          }
-          const [, connectionId] = match;
-          log('[MAIN_WORKFLOW] Extracted connectionId:', connectionId);
-          return connectionId;
-        },
-      );
-      const status = await env.subscribed_accounts.get(`${connectionId}__${providerId}`);
-      if (!status || status === 'pending') {
-        log('[MAIN_WORKFLOW] Connection id is missing or not enabled %s', connectionId);
-        return 'Connection is not enabled';
-      }
-      if (!isValidUUID(connectionId)) {
-        log('[MAIN_WORKFLOW] Invalid connection id format:', connectionId);
-        return 'Invalid connection id';
-      }
-      const previousHistoryId = await env.gmail_history_id.get(connectionId);
-      if (providerId === EProviders.google) {
-        log('[MAIN_WORKFLOW] Processing Google provider workflow');
-        await step.do(
-          `[MAIN_WORKFLOW] Send to Zero Workflow ${connectionId} ${historyId}`,
-          async () => {
-            log('[MAIN_WORKFLOW] Previous history ID:', previousHistoryId);
-            if (previousHistoryId) {
-              log('[MAIN_WORKFLOW] Creating workflow instance with previous history');
-              const instance = await env.ZERO_WORKFLOW.create({
-                params: {
-                  connectionId,
-                  historyId: previousHistoryId,
-                  nextHistoryId: historyId,
-                },
-              });
-              log('[MAIN_WORKFLOW] Created instance:', {
-                id: instance.id,
-                status: await instance.status(),
-              });
-            } else {
-              log('[MAIN_WORKFLOW] Creating workflow instance with current history');
-              //   const existingInstance = await env.ZERO_WORKFLOW.get(
-              //     `${connectionId}__${historyId}`,
-              //   ).catch(() => null);
-              //   if (existingInstance && (await existingInstance.status()).status === 'running') {
-              //     log('[MAIN_WORKFLOW] History already processing:', existingInstance.id);
-              //     return;
-              //   }
-              const instance = await env.ZERO_WORKFLOW.create({
-                // id: `${connectionId}__${historyId}`,
-                params: {
-                  connectionId,
-                  historyId: historyId,
-                  nextHistoryId: historyId,
-                },
-              });
-              log('[MAIN_WORKFLOW] Created instance:', {
-                id: instance.id,
-                status: await instance.status(),
-              });
-            }
-          },
-        );
-      } else {
-        log('[MAIN_WORKFLOW] Unsupported provider:', providerId);
-        throw new Error(`Unsupported provider: ${providerId}`);
-      }
-      log('[MAIN_WORKFLOW] Workflow completed successfully');
-    } catch (error) {
-      log('[MAIN_WORKFLOW] Error in workflow:', error);
-      log('[MAIN_WORKFLOW] Error details:', {
-        providerId: event.payload.providerId,
-        historyId: event.payload.historyId,
-        subscriptionName: event.payload.subscriptionName,
-        errorMessage: error instanceof Error ? error.message : String(error),
-        errorStack: error instanceof Error ? error.stack : undefined,
+const validateArguments = (
+  params: MainWorkflowParams,
+  serviceAccount: { project_id: string },
+): Effect.Effect<string, MainWorkflowError> =>
+  Effect.gen(function* () {
+    yield* Console.log('[MAIN_WORKFLOW] Validating arguments');
+    const regex = new RegExp(
+      `projects/${serviceAccount.project_id}/subscriptions/notifications__([a-z0-9-]+)`,
+    );
+    const match = params.subscriptionName.toString().match(regex);
+    if (!match) {
+      yield* Console.log('[MAIN_WORKFLOW] Invalid subscription name:', params.subscriptionName);
+      return yield* Effect.fail({
+        _tag: 'InvalidSubscriptionName' as const,
+        subscriptionName: params.subscriptionName,
       });
-      throw error;
     }
+    const [, connectionId] = match;
+    yield* Console.log('[MAIN_WORKFLOW] Extracted connectionId:', connectionId);
+    return connectionId;
+  });
+
+// Helper function for validateArguments without Effect.ts
+const validateArgumentsWithoutEffect = (
+  params: MainWorkflowParams,
+  serviceAccount: { project_id: string },
+): string => {
+  console.log('[MAIN_WORKFLOW] Validating arguments');
+  const regex = new RegExp(
+    `projects/${serviceAccount.project_id}/subscriptions/notifications__([a-z0-9-]+)`,
+  );
+  const match = params.subscriptionName.toString().match(regex);
+  if (!match) {
+    console.log('[MAIN_WORKFLOW] Invalid subscription name:', params.subscriptionName);
+    throw {
+      _tag: 'InvalidSubscriptionName' as const,
+      subscriptionName: params.subscriptionName,
+    };
   }
-}
-
-export class ZeroWorkflow extends WorkflowEntrypoint<Env, Params> {
-  async run(
-    event: Readonly<WorkflowEvent<Params<'connectionId' | 'historyId' | 'nextHistoryId'>>>,
-    step: WorkflowStep,
-  ) {
-    log('[ZERO_WORKFLOW] Starting workflow with payload:', event.payload);
-    try {
-      const { connectionId, historyId, nextHistoryId } = event.payload;
-
-      const historyProcessingKey = `history_${connectionId}__${historyId}`;
-      const isProcessing = await env.gmail_processing_threads.get(historyProcessingKey);
-      if (isProcessing === 'true') {
-        return log('[ZERO_WORKFLOW] History already being processed:', {
-          connectionId,
-          historyId,
-          processingStatus: isProcessing,
-        });
-      }
-
-      await env.gmail_processing_threads.put(historyProcessingKey, 'true', { expirationTtl: 3600 });
-      log('[ZERO_WORKFLOW] Set processing flag for history:', historyProcessingKey);
-
-      const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
-
-      const foundConnection = await step.do(
-        `[ZERO_WORKFLOW] Find Connection ${connectionId}`,
-        async () => {
-          log('[ZERO_WORKFLOW] Finding connection:', connectionId);
-          const [foundConnection] = await db
-            .select()
-            .from(connection)
-            .where(eq(connection.id, connectionId.toString()));
-          if (!foundConnection) throw new Error(`Connection not found ${connectionId}`);
-          if (!foundConnection.accessToken || !foundConnection.refreshToken)
-            throw new Error(`Connection is not authorized ${connectionId}`);
-          log('[ZERO_WORKFLOW] Found connection:', foundConnection.id);
-          return foundConnection;
-        },
-      );
-
-      const driver = connectionToDriver(foundConnection);
-      if (foundConnection.providerId === EProviders.google) {
-        log('[ZERO_WORKFLOW] Processing Google provider workflow');
-        const history = await step.do(
-          `[ZERO_WORKFLOW] Get Gmail History ${foundConnection.id} ${historyId}`,
-          async () => {
-            try {
-              log('[ZERO_WORKFLOW] Getting Gmail history with ID:', historyId);
-              const { history } = await driver.listHistory<gmail_v1.Schema$History>(
-                historyId.toString(),
-              );
-              if (!history.length) throw new Error(`No history found ${historyId} ${connectionId}`);
-              log('[ZERO_WORKFLOW] Found history entries:', history.length);
-              return history;
-            } catch (error) {
-              log('[ZERO_WORKFLOW] Failed to get Gmail history:', {
-                historyId,
-                connectionId: foundConnection.id,
-                error: error instanceof Error ? error.message : String(error),
-              });
-              throw error;
-            }
-          },
-        );
-        await step.do(
-          `[ZERO_WORKFLOW] Update next history id ${foundConnection.id} ${nextHistoryId}`,
-          async () => {
-            log('[ZERO_WORKFLOW] Updating next history ID:', nextHistoryId);
-            await env.gmail_history_id.put(connectionId.toString(), nextHistoryId.toString());
-          },
-        );
-        const threadsAdded = await step.do(
-          `[ZERO_WORKFLOW] Get new Threads ${connectionId}`,
-          async () => {
-            log('[ZERO_WORKFLOW] Finding threads with changed messages');
-            const historiesWithChangedMessages = history.filter(
-              (history) => history.messagesAdded?.length,
-            );
-            const threadsAdded = [
-              ...new Set(
-                historiesWithChangedMessages.flatMap((history) =>
-                  history
-                    .messagesAdded!.map((message) => message.message?.threadId)
-                    .filter((threadId): threadId is string => threadId !== undefined),
-                ),
-              ),
-            ];
-            log('[ZERO_WORKFLOW] Found new threads:', threadsAdded.length);
-            return threadsAdded;
-          },
-        );
-
-        const threadsAddLabels = await step.do(
-          `[ZERO_WORKFLOW] Get Threads with new labels ${connectionId}`,
-          async () => {
-            log('[ZERO_WORKFLOW] Finding threads with new labels');
-            const historiesWithNewLabels = history.filter((history) => history.labelsAdded?.length);
-            const threadsWithLabelsAdded = [
-              ...new Set(
-                historiesWithNewLabels.flatMap((history) =>
-                  history
-                    .labelsAdded!.filter((label) => label.message?.threadId)
-                    .map((label) => label.message!.threadId)
-                    .filter((threadId): threadId is string => threadId !== undefined),
-                ),
-              ),
-            ];
-            log('[ZERO_WORKFLOW] Found threads with new labels:', threadsWithLabelsAdded.length);
-            return threadsWithLabelsAdded;
-          },
-        );
-
-        const threadsRemoveLabels = await step.do(
-          `[ZERO_WORKFLOW] Get Threads with removed labels ${connectionId}`,
-          async () => {
-            log('[ZERO_WORKFLOW] Finding threads with removed labels');
-            const historiesWithRemovedLabels = history.filter(
-              (history) => history.labelsRemoved?.length,
-            );
-            const threadsWithLabelsRemoved = [
-              ...new Set(
-                historiesWithRemovedLabels.flatMap((history) =>
-                  history
-                    .labelsRemoved!.filter((label) => label.message?.threadId)
-                    .map((label) => label.message!.threadId)
-                    .filter((threadId): threadId is string => threadId !== undefined),
-                ),
-              ),
-            ];
-            log(
-              '[ZERO_WORKFLOW] Found threads with removed labels:',
-              threadsWithLabelsRemoved.length,
-            );
-            return threadsWithLabelsRemoved;
-          },
-        );
-
-        // const lastPage = await step.do(
-        //   `[ZERO_WORKFLOW] Get last page ${connectionId}`,
-        //   async () => {
-        //     log('[ZERO_WORKFLOW] Getting last page of threads');
-        //     const lastThreads = await driver.list({
-        //       folder: 'inbox',
-        //       query: 'NOT is:spam',
-        //       maxResults: 10,
-        //     });
-        //     log('[ZERO_WORKFLOW] Found threads in last page:', lastThreads.threads.length);
-        //     return lastThreads.threads.map((thread) => thread.id);
-        //   },
-        // );
-
-        const threadsToProcess = await step.do(
-          `[ZERO_WORKFLOW] Get threads to process ${connectionId}`,
-          async () => {
-            log('[ZERO_WORKFLOW] Combining threads to process');
-            const threadsToProcess = [
-              ...new Set([
-                ...threadsAdded,
-                // ...lastPage,
-                ...threadsAddLabels,
-                ...threadsRemoveLabels,
-              ]),
-            ];
-            log('[ZERO_WORKFLOW] Total threads to process:', threadsToProcess.length);
-            return threadsToProcess;
-          },
-        );
-
-        await step.do(
-          `[ZERO_WORKFLOW] Send Thread Workflow Instances ${connectionId}`,
-          async () => {
-            const maxConcurrentThreads = 5;
-            const delayBetweenBatches = 2000;
-
-            for (let i = 0; i < threadsToProcess.length; i += maxConcurrentThreads) {
-              const batch = threadsToProcess.slice(i, i + maxConcurrentThreads);
-
-              await Promise.all(
-                batch.map(async (threadId) => {
-                  try {
-                    const isProcessing = await env.gmail_processing_threads.get(
-                      threadId.toString(),
-                    );
-                    if (isProcessing) {
-                      log('[ZERO_WORKFLOW] Thread already processing:', isProcessing, threadId);
-                      return;
-                    }
-                    await env.gmail_processing_threads.put(threadId.toString(), 'true', {
-                      expirationTtl: 1800,
-                    });
-                    // const existingInstance = await env.THREAD_WORKFLOW.get(
-                    //   `${threadId.toString()}__${connectionId.toString()}`,
-                    // ).catch(() => null);
-                    // if (
-                    //   existingInstance &&
-                    //   (await existingInstance.status()).status === 'running'
-                    // ) {
-                    //   log('[ZERO_WORKFLOW] Thread already processing:', isProcessing, threadId);
-                    //   await env.gmail_processing_threads.delete(threadId.toString());
-                    //   return;
-                    // }
-                    const instance = await env.THREAD_WORKFLOW.create({
-                      //   id: `${threadId.toString()}__${connectionId.toString()}`,
-                      params: { connectionId, threadId, providerId: foundConnection.providerId },
-                    });
-                    log('[ZERO_WORKFLOW] Created instance:', {
-                      id: instance.id,
-                      status: await instance.status(),
-                    });
-                  } catch (error) {
-                    log('[ZERO_WORKFLOW] Failed to process thread:', {
-                      threadId,
-                      connectionId,
-                      error: error instanceof Error ? error.message : String(error),
-                    });
-
-                    try {
-                      await env.gmail_processing_threads.delete(threadId.toString());
-                    } catch (cleanupError) {
-                      log('[ZERO_WORKFLOW] Failed to cleanup processing flag:', {
-                        threadId,
-                        error:
-                          cleanupError instanceof Error
-                            ? cleanupError.message
-                            : String(cleanupError),
-                      });
-                    }
-                  }
-                }),
-              );
-
-              if (i + maxConcurrentThreads < threadsToProcess.length) {
-                log('[ZERO_WORKFLOW] Sleeping between batches:', delayBetweenBatches);
-                await step.sleep(
-                  `[ZERO_WORKFLOW] Sleeping between batches ${i} ${threadsToProcess.length}`,
-                  delayBetweenBatches,
-                );
-              }
-            }
-          },
-        );
-      } else {
-        log('[ZERO_WORKFLOW] Unsupported provider:', foundConnection.providerId);
-        throw new Error(`Unsupported provider: ${foundConnection.providerId}`);
-      }
-
-      try {
-        await env.gmail_processing_threads.delete(historyProcessingKey);
-        log('[ZERO_WORKFLOW] Cleared processing flag for history:', historyProcessingKey);
-      } catch (cleanupError) {
-        log('[ZERO_WORKFLOW] Failed to clear history processing flag:', {
-          historyProcessingKey,
-          error: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
-        });
-      }
-
-      this.ctx.waitUntil(conn.end());
-    } catch (error) {
-      const historyProcessingKey = `history_${event.payload.connectionId}__${event.payload.historyId}`;
-      try {
-        await env.gmail_processing_threads.delete(historyProcessingKey);
-        log(
-          '[ZERO_WORKFLOW] Cleared processing flag for history after error:',
-          historyProcessingKey,
-        );
-      } catch (cleanupError) {
-        log('[ZERO_WORKFLOW] Failed to clear history processing flag after error:', {
-          historyProcessingKey,
-          error: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
-        });
-      }
-
-      log('[ZERO_WORKFLOW] Error in workflow:', error);
-      log('[ZERO_WORKFLOW] Error details:', {
-        connectionId: event.payload.connectionId,
-        historyId: event.payload.historyId,
-        nextHistoryId: event.payload.nextHistoryId,
-        errorMessage: error instanceof Error ? error.message : String(error),
-        errorStack: error instanceof Error ? error.stack : undefined,
-      });
-      throw error;
-    }
-  }
-}
-export class ThreadWorkflow extends WorkflowEntrypoint<Env, Params> {
-  async run(
-    event: Readonly<WorkflowEvent<Params<'connectionId' | 'threadId' | 'providerId'>>>,
-    step: WorkflowStep,
-  ) {
-    log('[THREAD_WORKFLOW] Starting workflow with payload:', event.payload);
-    try {
-      const { connectionId, threadId, providerId } = event.payload;
-      if (providerId === EProviders.google) {
-        log('[THREAD_WORKFLOW] Processing Google provider workflow');
-        const { db, conn } = createDb(env.HYPERDRIVE.connectionString);
-
-        const foundConnection = await step.do(
-          `[THREAD_WORKFLOW] Find Connection ${connectionId}`,
-          async () => {
-            log('[THREAD_WORKFLOW] Finding connection:', connectionId);
-            const [foundConnection] = await db
-              .select()
-              .from(connection)
-              .where(eq(connection.id, connectionId.toString()));
-            if (!foundConnection) throw new Error(`Connection not found ${connectionId}`);
-            if (!foundConnection.accessToken || !foundConnection.refreshToken)
-              throw new Error(`Connection is not authorized ${connectionId}`);
-            log('[THREAD_WORKFLOW] Found connection:', foundConnection.id);
-            return foundConnection;
-          },
-        );
-        const driver = connectionToDriver(foundConnection);
-        const thread = await step.do(
-          `[THREAD_WORKFLOW] Get Thread ${threadId} ${connectionId}`,
-          async () => {
-            log('[THREAD_WORKFLOW] Getting thread:', threadId);
-            const thread = await driver.get(threadId.toString());
-            await notifyUser({
-              connectionId: connectionId.toString(),
-              result: thread,
-              threadId: threadId.toString(),
-            });
-            log('[THREAD_WORKFLOW] Found thread with messages:', thread.messages.length);
-            return thread;
-          },
-        );
-
-        if (!thread.messages || thread.messages.length === 0) {
-          log('[THREAD_WORKFLOW] Thread has no messages, skipping processing');
-          return;
-        }
-
-        const messagesToVectorize = await step.do(
-          `[THREAD_WORKFLOW] Get Thread Messages ${threadId} ${connectionId}`,
-          async () => {
-            log('[THREAD_WORKFLOW] Finding messages to vectorize');
-            log('[THREAD_WORKFLOW] Getting message IDs from thread');
-            const messageIds = thread.messages.map((message) => message.id);
-            log('[THREAD_WORKFLOW] Found message IDs:', messageIds);
-
-            log('[THREAD_WORKFLOW] Fetching existing vectorized messages');
-            const existingMessages = await env.VECTORIZE_MESSAGE.getByIds(messageIds);
-            log('[THREAD_WORKFLOW] Found existing messages:', existingMessages.length);
-
-            const existingMessageIds = new Set(existingMessages.map((message) => message.id));
-            log('[THREAD_WORKFLOW] Existing message IDs:', Array.from(existingMessageIds));
-
-            const messagesToVectorize = thread.messages.filter(
-              (message) => !existingMessageIds.has(message.id),
-            );
-            log('[THREAD_WORKFLOW] Messages to vectorize:', messagesToVectorize.length);
-
-            return messagesToVectorize;
-          },
-        );
-
-        if (messagesToVectorize.length === 0) {
-          log('[THREAD_WORKFLOW] No messages to vectorize, skipping vectorization');
-        } else {
-          const finalEmbeddings: VectorizeVector[] = await step.do(
-            `[THREAD_WORKFLOW] Vectorize Messages ${threadId} ${connectionId}`,
-            async () => {
-              log(
-                '[THREAD_WORKFLOW] Starting message vectorization for',
-                messagesToVectorize.length,
-                'messages',
-              );
-
-              const maxConcurrentMessages = 3;
-              const results: VectorizeVector[] = [];
-
-              for (let i = 0; i < messagesToVectorize.length; i += maxConcurrentMessages) {
-                const batch = messagesToVectorize.slice(i, i + maxConcurrentMessages);
-                const batchResults = await Promise.all(
-                  batch.map(async (message) => {
-                    return step.do(
-                      `[THREAD_WORKFLOW] Vectorize Message ${message.id} ${threadId}`,
-                      async () => {
-                        try {
-                          log('[THREAD_WORKFLOW] Converting message to XML:', message.id);
-                          const prompt = await messageToXML(message);
-                          if (!prompt) {
-                            log('[THREAD_WORKFLOW] Message has no prompt, skipping:', message.id);
-                            return null;
-                          }
-                          log('[THREAD_WORKFLOW] Got XML prompt for message:', message.id);
-
-                          const SummarizeMessagePrompt = await step.do(
-                            `[THREAD_WORKFLOW] Get Summarize Message Prompt ${message.id} ${threadId}`,
-                            async () => {
-                              log(
-                                '[THREAD_WORKFLOW] Getting summarize prompt for connection:',
-                                message.connectionId ?? '',
-                              );
-                              return await getPrompt(
-                                getPromptName(
-                                  message.connectionId ?? '',
-                                  EPrompts.SummarizeMessage,
-                                ),
-                                SummarizeMessage,
-                              );
-                            },
-                          );
-                          log('[THREAD_WORKFLOW] Got summarize prompt for message:', message.id);
-
-                          const summary: string = await step.do(
-                            `[THREAD_WORKFLOW] Summarize Message ${message.id} ${threadId}`,
-                            async () => {
-                              try {
-                                log(
-                                  '[THREAD_WORKFLOW] Generating summary for message:',
-                                  message.id,
-                                );
-                                const messages = [
-                                  { role: 'system', content: SummarizeMessagePrompt },
-                                  {
-                                    role: 'user',
-                                    content: prompt,
-                                  },
-                                ];
-                                const response: any = await env.AI.run(
-                                  '@cf/meta/llama-4-scout-17b-16e-instruct',
-                                  {
-                                    messages,
-                                  },
-                                );
-                                log(
-                                  `[THREAD_WORKFLOW] Summary generated for message ${message.id}:`,
-                                  response,
-                                );
-                                const summary =
-                                  'response' in response ? response.response : response;
-                                if (!summary || typeof summary !== 'string') {
-                                  throw new Error(
-                                    `Invalid summary response for message ${message.id}`,
-                                  );
-                                }
-                                return summary;
-                              } catch (error) {
-                                log('[THREAD_WORKFLOW] Failed to generate summary for message:', {
-                                  messageId: message.id,
-                                  error: error instanceof Error ? error.message : String(error),
-                                });
-                                throw error;
-                              }
-                            },
-                          );
-
-                          const embeddingVector = await step.do(
-                            `[THREAD_WORKFLOW] Get Message Embedding Vector ${message.id} ${threadId}`,
-                            async () => {
-                              try {
-                                log(
-                                  '[THREAD_WORKFLOW] Getting embedding vector for message:',
-                                  message.id,
-                                );
-                                const embeddingVector = await getEmbeddingVector(summary);
-                                log(
-                                  '[THREAD_WORKFLOW] Got embedding vector for message:',
-                                  message.id,
-                                );
-                                return embeddingVector;
-                              } catch (error) {
-                                log(
-                                  '[THREAD_WORKFLOW] Failed to get embedding vector for message:',
-                                  {
-                                    messageId: message.id,
-                                    error: error instanceof Error ? error.message : String(error),
-                                  },
-                                );
-                                throw error;
-                              }
-                            },
-                          );
-
-                          if (!embeddingVector)
-                            throw new Error(`Message Embedding vector is null ${message.id}`);
-
-                          return {
-                            id: message.id,
-                            metadata: {
-                              connection: message.connectionId ?? '',
-                              thread: message.threadId ?? '',
-                              summary,
-                            },
-                            values: embeddingVector,
-                          } satisfies VectorizeVector;
-                        } catch (error) {
-                          log('[THREAD_WORKFLOW] Failed to vectorize message:', {
-                            messageId: message.id,
-                            error: error instanceof Error ? error.message : String(error),
-                          });
-                          return null;
-                        }
-                      },
-                    );
-                  }),
-                );
-
-                const validResults = batchResults.filter(
-                  (result): result is NonNullable<typeof result> => result !== null,
-                );
-                results.push(...validResults);
-
-                if (i + maxConcurrentMessages < messagesToVectorize.length) {
-                  log('[THREAD_WORKFLOW] Sleeping between message batches');
-                  await step.sleep('[THREAD_WORKFLOW]', 1000);
-                }
-              }
-
-              return results;
-            },
-          );
-          log('[THREAD_WORKFLOW] Generated embeddings for all messages');
-
-          if (finalEmbeddings.length > 0) {
-            await step.do(
-              `[THREAD_WORKFLOW] Thread Messages Vectors ${threadId} ${connectionId} ${finalEmbeddings.length}`,
-              async () => {
-                try {
-                  log('[THREAD_WORKFLOW] Upserting message vectors:', finalEmbeddings.length);
-                  await env.VECTORIZE_MESSAGE.upsert(finalEmbeddings);
-                  log('[THREAD_WORKFLOW] Successfully upserted message vectors');
-                } catch (error) {
-                  log('[THREAD_WORKFLOW] Failed to upsert message vectors:', {
-                    threadId,
-                    vectorCount: finalEmbeddings.length,
-                    error: error instanceof Error ? error.message : String(error),
-                  });
-                  throw error;
-                }
-              },
-            );
-          }
-        }
-
-        const existingThreadSummary = await step.do(
-          `[THREAD_WORKFLOW] Get Thread Summary ${threadId} ${connectionId}`,
-          async () => {
-            log('[THREAD_WORKFLOW] Getting existing thread summary for:', threadId);
-            const threadSummary = await env.VECTORIZE.getByIds([threadId.toString()]);
-            if (!threadSummary.length) {
-              log('[THREAD_WORKFLOW] No existing thread summary found');
-              return null;
-            }
-            log('[THREAD_WORKFLOW] Found existing thread summary');
-            return threadSummary[0].metadata as IThreadSummaryMetadata;
-          },
-        );
-
-        const finalSummary = await step.do(
-          `[THREAD_WORKFLOW] Get Final Summary ${threadId} ${connectionId}`,
-          async () => {
-            log('[THREAD_WORKFLOW] Generating final thread summary');
-            if (existingThreadSummary) {
-              log('[THREAD_WORKFLOW] Using existing summary as context');
-              return await summarizeThread(
-                connectionId.toString(),
-                thread.messages,
-                existingThreadSummary.summary,
-              );
-            } else {
-              log('[THREAD_WORKFLOW] Generating new summary without context');
-              return await summarizeThread(connectionId.toString(), thread.messages);
-            }
-          },
-        );
-
-        const userAccountLabels = await step.do(
-          `[THREAD_WORKFLOW] Get user-account labels ${connectionId}`,
-          async () => {
-            try {
-              const userAccountLabels = await driver.getUserLabels();
-              return userAccountLabels;
-            } catch (error) {
-              log('[THREAD_WORKFLOW] Failed to get user account labels:', {
-                connectionId,
-                error: error instanceof Error ? error.message : String(error),
-              });
-              throw error;
-            }
-          },
-        );
-
-        if (finalSummary) {
-          log('[THREAD_WORKFLOW] Got final summary, processing labels');
-          const userLabels = await step.do(
-            `[THREAD_WORKFLOW] Get user-defined labels ${connectionId}`,
-            async () => {
-              log('[THREAD_WORKFLOW] Getting user labels for connection:', connectionId);
-              let userLabels: { name: string; usecase: string }[] = [];
-              const connectionLabels = await env.connection_labels.get(connectionId.toString());
-              if (connectionLabels) {
-                try {
-                  log('[THREAD_WORKFLOW] Parsing existing connection labels');
-                  const parsed = JSON.parse(connectionLabels);
-                  if (
-                    Array.isArray(parsed) &&
-                    parsed.every(
-                      (label) => typeof label === 'object' && label.name && label.usecase,
-                    )
-                  ) {
-                    userLabels = parsed;
-                  } else {
-                    throw new Error('Invalid label format');
-                  }
-                } catch {
-                  log('[THREAD_WORKFLOW] Failed to parse labels, using defaults');
-                  await env.connection_labels.put(
-                    connectionId.toString(),
-                    JSON.stringify(defaultLabels),
-                  );
-                  userLabels = defaultLabels;
-                }
-              } else {
-                log('[THREAD_WORKFLOW] No labels found, using defaults');
-                await env.connection_labels.put(
-                  connectionId.toString(),
-                  JSON.stringify(defaultLabels),
-                );
-                userLabels = defaultLabels;
-              }
-              return userLabels.length ? userLabels : defaultLabels;
-            },
-          );
-
-          const generatedLabels = await step.do(
-            `[THREAD_WORKFLOW] Generate Thread Labels ${threadId} ${connectionId} ${thread.messages.length}`,
-            async () => {
-              try {
-                log('[THREAD_WORKFLOW] Generating labels for thread:', threadId);
-                const labelsResponse: any = await env.AI.run(
-                  '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
-                  {
-                    messages: [
-                      { role: 'system', content: ThreadLabels(userLabels, thread.labels) },
-                      { role: 'user', content: finalSummary },
-                    ],
-                  },
-                );
-                if (labelsResponse?.response?.replaceAll('!', '').trim()?.length) {
-                  log('[THREAD_WORKFLOW] Labels generated:', labelsResponse.response);
-                  const labels: string[] = labelsResponse?.response
-                    ?.split(',')
-                    .map((e: string) => e.trim())
-                    .filter((e: string) => e.length > 0)
-                    .filter((e: string) =>
-                      userLabels.find((label) => label.name.toLowerCase() === e.toLowerCase()),
-                    );
-                  return labels;
-                } else {
-                  log('[THREAD_WORKFLOW] No labels generated');
-                  return [];
-                }
-              } catch (error) {
-                log('[THREAD_WORKFLOW] Failed to generate labels for thread:', {
-                  threadId,
-                  error: error instanceof Error ? error.message : String(error),
-                });
-                return [];
-              }
-            },
-          );
-
-          if (generatedLabels && generatedLabels.length > 0) {
-            await step.do(
-              `[THREAD_WORKFLOW] Modify Thread Labels ${threadId} ${connectionId}`,
-              async () => {
-                log('[THREAD_WORKFLOW] Modifying thread labels:', generatedLabels);
-                const validLabelIds = generatedLabels
-                  .map((name) => userAccountLabels.find((e) => e.name === name)?.id)
-                  .filter((id): id is string => id !== undefined && id !== '');
-
-                if (validLabelIds.length > 0) {
-                  await driver.modifyLabels([threadId.toString()], {
-                    addLabels: validLabelIds,
-                    removeLabels: [],
-                  });
-                }
-                log('[THREAD_WORKFLOW] Successfully modified thread labels');
-              },
-            );
-          }
-
-          const embeddingVector = await step.do(
-            `[THREAD_WORKFLOW] Get Thread Embedding Vector ${threadId} ${connectionId}`,
-            async () => {
-              log('[THREAD_WORKFLOW] Getting thread embedding vector');
-              const embeddingVector = await getEmbeddingVector(finalSummary);
-              log('[THREAD_WORKFLOW] Got thread embedding vector');
-              return embeddingVector;
-            },
-          );
-
-          if (!embeddingVector) {
-            log('[THREAD_WORKFLOW] Thread Embedding vector is null, skipping vector upsert');
-            return;
-          }
-
-          try {
-            log('[THREAD_WORKFLOW] Upserting thread vector');
-            await env.VECTORIZE.upsert([
-              {
-                id: threadId.toString(),
-                metadata: {
-                  connection: connectionId.toString(),
-                  thread: threadId.toString(),
-                  summary: finalSummary,
-                },
-                values: embeddingVector,
-              },
-            ]);
-            log('[THREAD_WORKFLOW] Successfully upserted thread vector');
-          } catch (error) {
-            log('[THREAD_WORKFLOW] Failed to upsert thread vector:', {
-              threadId,
-              connectionId,
-              error: error instanceof Error ? error.message : String(error),
-            });
-            throw error;
-          }
-        } else {
-          log(
-            '[THREAD_WORKFLOW] No summary generated for thread',
-            threadId,
-            thread.messages.length,
-          );
-        }
-
-        this.ctx.waitUntil(conn.end());
-      } else {
-        log('[THREAD_WORKFLOW] Unsupported provider:', providerId);
-        throw new Error(`Unsupported provider: ${providerId}`);
-      }
-    } catch (error) {
-      log('[THREAD_WORKFLOW] Error in workflow:', error);
-      log('[THREAD_WORKFLOW] Error details:', {
-        connectionId: event.payload.connectionId,
-        threadId: event.payload.threadId,
-        providerId: event.payload.providerId,
-        errorMessage: error instanceof Error ? error.message : String(error),
-        errorStack: error instanceof Error ? error.stack : undefined,
-      });
-      throw error;
-    }
-  }
-}
-
-export async function htmlToText(decodedBody: string): Promise<string> {
-  try {
-    if (!decodedBody || typeof decodedBody !== 'string') {
-      return '';
-    }
-    const $ = cheerio.load(decodedBody);
-    $('script').remove();
-    $('style').remove();
-    return $('body')
-      .text()
-      .replace(/\r?\n|\r/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-  } catch (error) {
-    log('Error extracting text from HTML:', error);
-    return '';
-  }
-}
-
-const escapeXml = (text: string): string => {
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
+  const [, connectionId] = match;
+  console.log('[MAIN_WORKFLOW] Extracted connectionId:', connectionId);
+  return connectionId;
 };
 
-const messageToXML = async (message: ParsedMessage) => {
-  try {
-    if (!message.decodedBody) return null;
-    const body = await htmlToText(message.decodedBody || '');
-    log('[MESSAGE_TO_XML] Body', body);
-    if (!body || body.length < 10) {
-      log('Skipping message with body length < 10', body);
-      return null;
-    }
-
-    const safeSenderName = escapeXml(message.sender?.name || 'Unknown');
-    const safeSubject = escapeXml(message.subject || '');
-    const safeDate = escapeXml(message.receivedOn || '');
-
-    const toElements = (message.to || [])
-      .map((r) => `<to>${escapeXml(r?.email || '')}</to>`)
-      .join('');
-    const ccElements = (message.cc || [])
-      .map((r) => `<cc>${escapeXml(r?.email || '')}</cc>`)
-      .join('');
-
-    return `
-        <message>
-          <from>${safeSenderName}</from>
-          ${toElements}
-          ${ccElements}
-          <date>${safeDate}</date>
-          <subject>${safeSubject}</subject>
-          <body>${escapeXml(body)}</body>
-        </message>
-        `;
-  } catch (error) {
-    log('[MESSAGE_TO_XML] Failed to convert message to XML:', {
-      messageId: message.id,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return null;
-  }
-};
-
+// Helper function for generating prompt names
 export const getPromptName = (connectionId: string, prompt: EPrompts) => {
   return `${connectionId}-${prompt}`;
 };
 
-export const getPrompt = async (promptName: string, fallback: string) => {
-  try {
-    if (!promptName || typeof promptName !== 'string') {
-      log('[GET_PROMPT] Invalid prompt name:', promptName);
-      return fallback;
-    }
-
-    const existingPrompt = await env.prompts_storage.get(promptName);
-    if (!existingPrompt) {
-      await env.prompts_storage.put(promptName, fallback);
-      return fallback;
-    }
-    return existingPrompt;
-  } catch (error) {
-    log('[GET_PROMPT] Failed to get prompt:', {
-      promptName,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return fallback;
-  }
+export type ZeroWorkflowParams = {
+  connectionId: string;
+  historyId: string;
+  nextHistoryId: string;
 };
 
-export const getEmbeddingVector = async (text: string) => {
-  try {
-    if (!text || typeof text !== 'string' || text.trim().length === 0) {
-      log('[getEmbeddingVector] Empty or invalid text provided');
-      return null;
-    }
+export type ThreadWorkflowParams = {
+  connectionId: string;
+  threadId: string;
+  providerId: string;
+};
 
-    const embeddingResponse = await env.AI.run(
-      '@cf/baai/bge-large-en-v1.5',
-      { text: text.trim() },
-      {
-        gateway: {
-          id: 'vectorize-save',
-        },
-      },
+export type MainWorkflowParams = {
+  providerId: string;
+  historyId: string;
+  subscriptionName: string;
+};
+
+export enum EWorkflowType {
+  MAIN = 'main',
+  THREAD = 'thread',
+  ZERO = 'zero',
+}
+
+export type WorkflowParams =
+  | { workflowType: 'main'; params: MainWorkflowParams }
+  | { workflowType: 'thread'; params: ThreadWorkflowParams }
+  | { workflowType: 'zero'; params: ZeroWorkflowParams };
+
+export type MainWorkflowError =
+  | { _tag: 'MissingEnvironmentVariable'; variable: string }
+  | { _tag: 'InvalidSubscriptionName'; subscriptionName: string }
+  | { _tag: 'InvalidConnectionId'; connectionId: string }
+  | { _tag: 'UnsupportedProvider'; providerId: string }
+  | { _tag: 'WorkflowCreationFailed'; error: unknown };
+
+export type ZeroWorkflowError =
+  | { _tag: 'HistoryAlreadyProcessing'; connectionId: string; historyId: string }
+  | { _tag: 'ConnectionNotFound'; connectionId: string }
+  | { _tag: 'ConnectionNotAuthorized'; connectionId: string }
+  | { _tag: 'HistoryNotFound'; historyId: string; connectionId: string }
+  | { _tag: 'UnsupportedProvider'; providerId: string }
+  | { _tag: 'DatabaseError'; error: unknown }
+  | { _tag: 'GmailApiError'; error: unknown }
+  | { _tag: 'WorkflowCreationFailed'; error: unknown }
+  | { _tag: 'LabelModificationFailed'; error: unknown; threadId: string };
+
+export type ThreadWorkflowError =
+  | { _tag: 'ConnectionNotFound'; connectionId: string }
+  | { _tag: 'ConnectionNotAuthorized'; connectionId: string }
+  | { _tag: 'ThreadNotFound'; threadId: string }
+  | { _tag: 'UnsupportedProvider'; providerId: string }
+  | { _tag: 'DatabaseError'; error: unknown }
+  | { _tag: 'GmailApiError'; error: unknown }
+  | { _tag: 'VectorizationError'; error: unknown }
+  | { _tag: 'WorkflowCreationFailed'; error: unknown };
+
+export type UnsupportedWorkflowError = { _tag: 'UnsupportedWorkflow'; workflowType: never };
+
+export type WorkflowError =
+  | MainWorkflowError
+  | ZeroWorkflowError
+  | ThreadWorkflowError
+  | UnsupportedWorkflowError;
+
+export class WorkflowRunner extends DurableObject<ZeroEnv> {
+  constructor(state: DurableObjectState, env: ZeroEnv) {
+    super(state, env);
+  }
+
+  /**
+   * This function runs the main workflow. The main workflow is responsible for processing incoming messages from a Pub/Sub subscription and passing them to the appropriate pipeline.
+   * It validates the subscription name and extracts the connection ID.
+   * @param params
+   * @returns
+   */
+  public runMainWorkflow(params: MainWorkflowParams) {
+    return Effect.gen(this, function* () {
+      yield* Console.log('[MAIN_WORKFLOW] Starting workflow with payload:', params);
+
+      const { providerId, historyId } = params;
+
+      const serviceAccount = getServiceAccount();
+
+      const connectionId = yield* validateArguments(params, serviceAccount);
+
+      if (!isValidUUID(connectionId)) {
+        yield* Console.log('[MAIN_WORKFLOW] Invalid connection id format:', connectionId);
+        return yield* Effect.fail({
+          _tag: 'InvalidConnectionId' as const,
+          connectionId,
+        });
+      }
+
+      const previousHistoryId = yield* Effect.tryPromise({
+        try: () => this.env.gmail_history_id.get(connectionId),
+        catch: () => ({
+          _tag: 'WorkflowCreationFailed' as const,
+          error: 'Failed to get history ID',
+        }),
+      }).pipe(Effect.orElse(() => Effect.succeed(null)));
+
+      if (providerId === EProviders.google) {
+        yield* Console.log('[MAIN_WORKFLOW] Processing Google provider workflow');
+        yield* Console.log('[MAIN_WORKFLOW] Previous history ID:', previousHistoryId);
+
+        const zeroWorkflowParams = {
+          connectionId,
+          historyId: previousHistoryId || historyId,
+          nextHistoryId: historyId,
+        };
+
+        const result = yield* Effect.tryPromise({
+          try: () => this.runZeroWorkflow(zeroWorkflowParams),
+          catch: (error) => ({ _tag: 'WorkflowCreationFailed' as const, error }),
+        });
+
+        yield* Console.log('[MAIN_WORKFLOW] Zero workflow result:', result);
+      } else {
+        yield* Console.log('[MAIN_WORKFLOW] Unsupported provider:', providerId);
+        return yield* Effect.fail({
+          _tag: 'UnsupportedProvider' as const,
+          providerId,
+        });
+      }
+
+      yield* Console.log('[MAIN_WORKFLOW] Workflow completed successfully');
+      return 'Workflow completed successfully';
+    }).pipe(
+      Effect.tapError((error) => Console.log('[MAIN_WORKFLOW] Error in workflow:', error)),
+      Effect.provide(loggerLayer),
+      Effect.runPromise,
     );
-    const embeddingVector = (embeddingResponse as any).data?.[0];
-    return embeddingVector ?? null;
-  } catch (error) {
-    log('[getEmbeddingVector] failed', error);
-    return null;
-  }
-};
-
-const isValidUUID = (string: string) => {
-  if (!string || typeof string !== 'string') return false;
-  return z.string().uuid().safeParse(string).success;
-};
-
-const getParticipants = (messages: ParsedMessage[]) => {
-  if (!messages || !Array.isArray(messages) || messages.length === 0) {
-    return [];
   }
 
-  const result = new Map<Sender['email'], Sender['name'] | ''>();
-  const setIfUnset = (sender: Sender) => {
-    if (sender?.email && !result.has(sender.email)) {
-      result.set(sender.email, sender.name || '');
-    }
-  };
+  public runZeroWorkflow(params: ZeroWorkflowParams) {
+    return Effect.gen(this, function* () {
+      yield* Console.log('[ZERO_WORKFLOW] Starting workflow with payload:', params);
+      const { connectionId, historyId, nextHistoryId } = params;
 
-  for (const msg of messages) {
-    if (msg?.sender) {
-      setIfUnset(msg.sender);
-    }
-    if (msg?.cc && Array.isArray(msg.cc)) {
-      for (const ccParticipant of msg.cc) {
-        if (ccParticipant) setIfUnset(ccParticipant);
-      }
-    }
-    if (msg?.to && Array.isArray(msg.to)) {
-      for (const toParticipant of msg.to) {
-        if (toParticipant) setIfUnset(toParticipant);
-      }
-    }
-  }
-  return Array.from(result.entries());
-};
+      const historyProcessingKey = `history_${connectionId}__${historyId}`;
+      const keysToDelete: string[] = [];
 
-const threadToXML = async (messages: ParsedMessage[], existingSummary?: string) => {
-  if (!messages || !Array.isArray(messages) || messages.length === 0) {
-    throw new Error('No messages provided for thread XML generation');
-  }
-
-  const firstMessage = messages[0];
-  if (!firstMessage) {
-    throw new Error('First message is null or undefined');
-  }
-
-  const { subject = '', title = '' } = firstMessage;
-  const participants = getParticipants(messages);
-  const messagesXML = await Promise.all(messages.map(messageToXML));
-  const validMessagesXML = messagesXML.filter((xml): xml is string => xml !== null);
-
-  if (existingSummary) {
-    return `<thread>
-            <title>${escapeXml(title)}</title>
-            <subject>${escapeXml(subject)}</subject>
-            <participants>
-              ${participants.map(([email, name]) => {
-                return `<participant>${escapeXml(name || email)} ${name ? `< ${escapeXml(email)} >` : ''}</participant>`;
-              })}
-            </participants>
-            <existing_summary>
-              ${escapeXml(existingSummary)}
-            </existing_summary>
-            <new_messages>
-                ${validMessagesXML.map((e) => e + '\n')}
-            </new_messages>
-        </thread>`;
-  }
-  return `<thread>
-          <title>${escapeXml(title)}</title>
-          <subject>${escapeXml(subject)}</subject>
-          <participants>
-            ${participants.map(([email, name]) => {
-              return `<participant>${escapeXml(name || email)} < ${escapeXml(email)} ></participant>`;
-            })}
-          </participants>
-          <messages>
-              ${validMessagesXML.map((e) => e + '\n')}
-          </messages>
-      </thread>`;
-};
-
-const summarizeThread = async (
-  connectionId: string,
-  messages: ParsedMessage[],
-  existingSummary?: string,
-): Promise<string | null> => {
-  try {
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      log('[SUMMARIZE_THREAD] No messages provided for summarization');
-      return null;
-    }
-
-    if (!connectionId || typeof connectionId !== 'string') {
-      log('[SUMMARIZE_THREAD] Invalid connection ID provided');
-      return null;
-    }
-
-    const prompt = await threadToXML(messages, existingSummary);
-    if (!prompt) {
-      log('[SUMMARIZE_THREAD] Failed to generate thread XML');
-      return null;
-    }
-
-    if (existingSummary) {
-      const ReSummarizeThreadPrompt = await getPrompt(
-        getPromptName(connectionId, EPrompts.ReSummarizeThread),
-        ReSummarizeThread,
-      );
-      const promptMessages = [
-        { role: 'system', content: ReSummarizeThreadPrompt },
-        {
-          role: 'user',
-          content: prompt,
+      // Atomic lock acquisition to prevent race conditions
+      const lockAcquired = yield* Effect.tryPromise({
+        try: async () => {
+          const response = await this.env.gmail_processing_threads.put(
+            historyProcessingKey,
+            'true',
+            {
+              expirationTtl: 3600,
+            },
+          );
+          return response !== null; // null means key already existed
         },
-      ];
-      const response: any = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
-        messages: promptMessages,
+        catch: (error) => ({ _tag: 'WorkflowCreationFailed' as const, error }),
       });
-      const summary = response?.response;
-      return typeof summary === 'string' ? summary : null;
-    } else {
-      const SummarizeThreadPrompt = await getPrompt(
-        getPromptName(connectionId, EPrompts.SummarizeThread),
-        SummarizeThread,
+
+      if (!lockAcquired) {
+        yield* Console.log('[ZERO_WORKFLOW] History already being processed:', {
+          connectionId,
+          historyId,
+        });
+        return yield* Effect.fail({
+          _tag: 'HistoryAlreadyProcessing' as const,
+          connectionId,
+          historyId,
+        });
+      }
+
+      yield* Console.log(
+        '[ZERO_WORKFLOW] Acquired processing lock for history:',
+        historyProcessingKey,
       );
-      const promptMessages = [
-        { role: 'system', content: SummarizeThreadPrompt },
-        {
-          role: 'user',
-          content: prompt,
+
+      const { db, conn } = createDb(this.env.HYPERDRIVE.connectionString);
+
+      const foundConnection = yield* Effect.tryPromise({
+        try: async () => {
+          console.log('[ZERO_WORKFLOW] Finding connection:', connectionId);
+          const [foundConnection] = await db
+            .select()
+            .from(connection)
+            .where(eq(connection.id, connectionId.toString()));
+          await conn.end();
+          if (!foundConnection) {
+            throw new Error(`Connection not found ${connectionId}`);
+          }
+          if (!foundConnection.accessToken || !foundConnection.refreshToken) {
+            throw new Error(`Connection is not authorized ${connectionId}`);
+          }
+          console.log('[ZERO_WORKFLOW] Found connection:', foundConnection.id);
+          return foundConnection;
         },
-      ];
-      const response: any = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
-        messages: promptMessages,
+        catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
       });
-      const summary = response?.response;
-      return typeof summary === 'string' ? summary : null;
-    }
-  } catch (error) {
-    log('[SUMMARIZE_THREAD] Failed to summarize thread:', {
-      connectionId,
-      messageCount: messages?.length || 0,
-      hasExistingSummary: !!existingSummary,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return null;
+
+      yield* Effect.tryPromise({
+        try: async () => conn.end(),
+        catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
+      });
+
+      const agent = yield* Effect.tryPromise({
+        try: async () => await getZeroAgent(foundConnection.id),
+        catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
+      });
+
+      if (foundConnection.providerId === EProviders.google) {
+        yield* Console.log('[ZERO_WORKFLOW] Processing Google provider workflow');
+
+        const history = yield* Effect.tryPromise({
+          try: async () => {
+            console.log('[ZERO_WORKFLOW] Getting Gmail history with ID:', historyId);
+            const { history } = (await agent.listHistory(historyId.toString())) as {
+              history: gmail_v1.Schema$History[];
+            };
+            console.log('[ZERO_WORKFLOW] Found history entries:', history);
+            return history;
+          },
+          catch: (error) => ({ _tag: 'GmailApiError' as const, error }),
+        });
+
+        yield* Effect.tryPromise({
+          try: () => {
+            console.log('[ZERO_WORKFLOW] Updating next history ID:', nextHistoryId);
+            return this.env.gmail_history_id.put(connectionId.toString(), nextHistoryId.toString());
+          },
+          catch: (error) => ({ _tag: 'WorkflowCreationFailed' as const, error }),
+        });
+
+        if (!history.length) {
+          yield* Console.log('[ZERO_WORKFLOW] No history found, skipping');
+          // Add the history processing key to cleanup list
+          keysToDelete.push(historyProcessingKey);
+          return 'No history found';
+        }
+
+        // Extract thread IDs from history and track label changes
+        const threadsAdded = new Set<string>();
+        const threadLabelChanges = new Map<
+          string,
+          { addLabels: Set<string>; removeLabels: Set<string> }
+        >();
+
+        // Optimal single-pass functional processing
+        const processLabelChange = (
+          labelChange: { message?: gmail_v1.Schema$Message; labelIds?: string[] | null },
+          isAddition: boolean,
+        ) => {
+          const threadId = labelChange.message?.threadId;
+          if (!threadId || !labelChange.labelIds?.length) return;
+
+          let changes = threadLabelChanges.get(threadId);
+          if (!changes) {
+            changes = { addLabels: new Set<string>(), removeLabels: new Set<string>() };
+            threadLabelChanges.set(threadId, changes);
+          }
+
+          const targetSet = isAddition ? changes.addLabels : changes.removeLabels;
+          labelChange.labelIds.forEach((labelId) => targetSet.add(labelId));
+        };
+
+        history.forEach((historyItem) => {
+          // Extract thread IDs from messages
+          historyItem.messagesAdded?.forEach((msg) => {
+            if (msg.message?.labelIds?.includes('DRAFT')) return;
+            if (msg.message?.labelIds?.includes('SPAM')) return;
+            if (msg.message?.threadId) {
+              threadsAdded.add(msg.message.threadId);
+            }
+          });
+
+          // Process label changes using shared helper
+          historyItem.labelsAdded?.forEach((labelAdded) => processLabelChange(labelAdded, true));
+          historyItem.labelsRemoved?.forEach((labelRemoved) =>
+            processLabelChange(labelRemoved, false),
+          );
+        });
+
+        yield* Console.log(
+          '[ZERO_WORKFLOW] Found unique thread IDs:',
+          Array.from(threadLabelChanges.keys()),
+          Array.from(threadsAdded),
+        );
+
+        if (threadsAdded.size > 0) {
+          const threadWorkflowParams = Array.from(threadsAdded);
+
+          // Sync threads with proper error handling - use allSuccesses to collect successful syncs
+          const syncResults = yield* Effect.allSuccesses(
+            threadWorkflowParams.map((threadId) =>
+              Effect.tryPromise({
+                try: async () => {
+                  const result = await agent.syncThread({ threadId });
+                  console.log(`[ZERO_WORKFLOW] Successfully synced thread ${threadId}`);
+                  return { threadId, result };
+                },
+                catch: (error) => {
+                  console.error(`[ZERO_WORKFLOW] Failed to sync thread ${threadId}:`, error);
+                  // Let this effect fail so allSuccesses will exclude it
+                  throw new Error(
+                    `Failed to sync thread ${threadId}: ${error instanceof Error ? error.message : String(error)}`,
+                  );
+                },
+              }),
+            ),
+            { concurrency: 6 }, // Limit concurrency to avoid rate limits
+          );
+
+          const syncedCount = syncResults.filter((result) => result.result.success).length;
+          const failedCount = threadWorkflowParams.length - syncedCount;
+
+          if (failedCount > 0) {
+            yield* Console.log(
+              `[ZERO_WORKFLOW] Warning: ${failedCount}/${threadWorkflowParams.length} thread syncs failed. Successfully synced: ${syncedCount}`,
+            );
+            // Continue with processing - sync failures shouldn't stop the entire workflow
+            // The thread processing will continue with whatever data is available
+          } else {
+            yield* Console.log(`[ZERO_WORKFLOW] Successfully synced all ${syncedCount} threads`);
+          }
+
+          yield* Console.log('[ZERO_WORKFLOW] Synced threads:', syncResults);
+
+          // Run thread workflow for each successfully synced thread
+          if (syncedCount > 0) {
+            yield* Effect.tryPromise({
+              try: () => agent.reloadFolder('inbox'),
+              catch: (error) => ({ _tag: 'GmailApiError' as const, error }),
+            }).pipe(
+              Effect.tap(() => Console.log('[ZERO_WORKFLOW] Successfully reloaded inbox folder')),
+              Effect.orElse(() =>
+                Effect.gen(function* () {
+                  yield* Console.log('[ZERO_WORKFLOW] Failed to reload inbox folder');
+                  return undefined;
+                }),
+              ),
+            );
+
+            yield* Console.log(
+              `[ZERO_WORKFLOW] Running thread workflows for ${syncedCount} synced threads`,
+            );
+
+            const threadWorkflowResults = yield* Effect.allSuccesses(
+              syncResults.map(({ threadId }) =>
+                this.runThreadWorkflow({
+                  connectionId,
+                  threadId,
+                  providerId: foundConnection.providerId,
+                }).pipe(
+                  Effect.tap(() =>
+                    Console.log(`[ZERO_WORKFLOW] Successfully ran thread workflow for ${threadId}`),
+                  ),
+                  Effect.tapError((error) =>
+                    Console.log(
+                      `[ZERO_WORKFLOW] Failed to run thread workflow for ${threadId}:`,
+                      error,
+                    ),
+                  ),
+                ),
+              ),
+              { concurrency: 6 }, // Limit concurrency to avoid overwhelming the system
+            );
+
+            const threadWorkflowSuccessCount = threadWorkflowResults.length;
+            const threadWorkflowFailedCount = syncedCount - threadWorkflowSuccessCount;
+
+            if (threadWorkflowFailedCount > 0) {
+              yield* Console.log(
+                `[ZERO_WORKFLOW] Warning: ${threadWorkflowFailedCount}/${syncedCount} thread workflows failed. Successfully processed: ${threadWorkflowSuccessCount}`,
+              );
+            } else {
+              yield* Console.log(
+                `[ZERO_WORKFLOW] Successfully ran all ${threadWorkflowSuccessCount} thread workflows`,
+              );
+            }
+          }
+        }
+
+        // Process label changes for threads
+        if (threadLabelChanges.size > 0) {
+          yield* Console.log(
+            `[ZERO_WORKFLOW] Processing label changes for ${threadLabelChanges.size} threads`,
+          );
+
+          // Process each thread's label changes
+          for (const [threadId, changes] of threadLabelChanges) {
+            const addLabels = Array.from(changes.addLabels);
+            const removeLabels = Array.from(changes.removeLabels);
+
+            // Only call if there are actual changes to make
+            if (addLabels.length > 0 || removeLabels.length > 0) {
+              yield* Console.log(
+                `[ZERO_WORKFLOW] Modifying labels for thread ${threadId}: +${addLabels.length} -${removeLabels.length}`,
+              );
+              yield* Effect.tryPromise({
+                try: () => agent.modifyThreadLabelsInDB(threadId, addLabels, removeLabels),
+                catch: (error) => ({ _tag: 'LabelModificationFailed' as const, error, threadId }),
+              }).pipe(
+                Effect.orElse(() =>
+                  Effect.gen(function* () {
+                    yield* Console.log(
+                      `[ZERO_WORKFLOW] Failed to modify labels for thread ${threadId}`,
+                    );
+                    return undefined;
+                  }),
+                ),
+              );
+            }
+          }
+
+          yield* Console.log('[ZERO_WORKFLOW] Completed label modifications');
+        } else {
+          yield* Console.log('[ZERO_WORKFLOW] No threads with label changes to process');
+        }
+
+        // Add history processing key to cleanup list
+        keysToDelete.push(historyProcessingKey);
+
+        // Bulk delete all collected keys
+        if (keysToDelete.length > 0) {
+          yield* Effect.tryPromise({
+            try: async () => {
+              console.log('[ZERO_WORKFLOW] Bulk deleting keys:', keysToDelete);
+              const result = await bulkDeleteKeys(keysToDelete);
+              console.log('[ZERO_WORKFLOW] Bulk delete result:', result);
+              return result;
+            },
+            catch: (error) => ({ _tag: 'WorkflowCreationFailed' as const, error }),
+          }).pipe(
+            Effect.orElse(() => Effect.succeed({ successful: 0, failed: keysToDelete.length })),
+          );
+        }
+
+        yield* Console.log('[ZERO_WORKFLOW] Processing complete');
+        return 'Zero workflow completed successfully';
+      } else {
+        yield* Console.log('[ZERO_WORKFLOW] Unsupported provider:', foundConnection.providerId);
+        return yield* Effect.fail({
+          _tag: 'UnsupportedProvider' as const,
+          providerId: foundConnection.providerId,
+        });
+      }
+    }).pipe(
+      Effect.tapError((error) => Console.log('[ZERO_WORKFLOW] Error in workflow:', error)),
+      Effect.catchAll((error) => {
+        // Clean up processing flag on error using bulk delete
+        return Effect.tryPromise({
+          try: async () => {
+            const errorCleanupKey = `history_${params.connectionId}__${params.historyId}`;
+            console.log(
+              '[ZERO_WORKFLOW] Clearing processing flag for history after error:',
+              errorCleanupKey,
+            );
+            const result = await bulkDeleteKeys([errorCleanupKey]);
+            console.log('[ZERO_WORKFLOW] Error cleanup result:', result);
+            return result;
+          },
+          catch: () => ({
+            _tag: 'WorkflowCreationFailed' as const,
+            error: 'Failed to cleanup processing flag',
+          }),
+        }).pipe(
+          Effect.orElse(() => Effect.succeed({ successful: 0, failed: 1 })),
+          Effect.flatMap(() => Effect.fail(error)),
+        );
+      }),
+      Effect.provide(loggerLayer),
+      Effect.runPromise,
+    );
   }
-};
+
+  public runThreadWorkflow(params: ThreadWorkflowParams) {
+    return Effect.gen(this, function* () {
+      yield* Console.log('[THREAD_WORKFLOW] Starting workflow with payload:', params);
+      const { connectionId, threadId, providerId } = params;
+      const keysToDelete: string[] = [];
+
+      if (providerId === EProviders.google) {
+        yield* Console.log('[THREAD_WORKFLOW] Processing Google provider workflow');
+        const { db, conn } = createDb(this.env.HYPERDRIVE.connectionString);
+
+        const foundConnection = yield* Effect.tryPromise({
+          try: async () => {
+            console.log('[THREAD_WORKFLOW] Finding connection:', connectionId);
+            const [foundConnection] = await db
+              .select()
+              .from(connection)
+              .where(eq(connection.id, connectionId.toString()));
+            if (!foundConnection) {
+              throw new Error(`Connection not found ${connectionId}`);
+            }
+            if (!foundConnection.accessToken || !foundConnection.refreshToken) {
+              throw new Error(`Connection is not authorized ${connectionId}`);
+            }
+            console.log('[THREAD_WORKFLOW] Found connection:', foundConnection.id);
+            return foundConnection;
+          },
+          catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
+        });
+
+        yield* Effect.tryPromise({
+          try: async () => conn.end(),
+          catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
+        });
+
+        const agent = yield* Effect.tryPromise({
+          try: async () => await getZeroAgent(foundConnection.id),
+          catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
+        });
+
+        const thread = yield* Effect.tryPromise({
+          try: async () => {
+            console.log('[THREAD_WORKFLOW] Getting thread:', threadId);
+            const thread = await agent.getThread(threadId.toString());
+            console.log('[THREAD_WORKFLOW] Found thread with messages:', thread.messages.length);
+            return thread;
+          },
+          catch: (error) => ({ _tag: 'GmailApiError' as const, error }),
+        });
+
+        if (!thread.messages || thread.messages.length === 0) {
+          yield* Console.log('[THREAD_WORKFLOW] Thread has no messages, skipping processing');
+          // Add thread processing key to cleanup list
+          keysToDelete.push(threadId.toString());
+          return 'Thread has no messages';
+        }
+
+        // Initialize workflow engine with default workflows
+        const workflowEngine = createDefaultWorkflows();
+
+        // Create workflow context
+        const workflowContext: WorkflowContext = {
+          connectionId: connectionId.toString(),
+          threadId: threadId.toString(),
+          thread,
+          foundConnection,
+          results: new Map<string, any>(),
+        };
+
+        // Execute configured workflows using the workflow engine
+        const workflowResults = yield* Effect.tryPromise({
+          try: async () => {
+            // Execute all workflows registered in the engine
+            const workflowNames = workflowEngine.getWorkflowNames();
+
+            const { results, errors } = await workflowEngine.executeWorkflowChain(
+              workflowNames,
+              workflowContext,
+            );
+
+            return { results, errors };
+          },
+          catch: (error) => ({ _tag: 'WorkflowCreationFailed' as const, error }),
+        });
+
+        // Clear workflow context after execution
+        workflowEngine.clearContext(workflowContext);
+
+        // Log workflow results
+        const successfulSteps = Array.from(workflowResults.results.keys());
+        const failedSteps = Array.from(workflowResults.errors.keys());
+
+        if (successfulSteps.length > 0) {
+          yield* Console.log('[THREAD_WORKFLOW] Successfully executed steps:', successfulSteps);
+        }
+
+        if (failedSteps.length > 0) {
+          yield* Console.log('[THREAD_WORKFLOW] Failed steps:', failedSteps);
+          // Log errors efficiently using forEach to avoid nested iteration
+          workflowResults.errors.forEach((error, stepId) => {
+            console.log(`[THREAD_WORKFLOW] Error in step ${stepId}:`, error.message);
+          });
+        }
+
+        // Add thread processing key to cleanup list
+        keysToDelete.push(threadId.toString());
+
+        // Bulk delete all collected keys
+        if (keysToDelete.length > 0) {
+          yield* Effect.tryPromise({
+            try: async () => {
+              console.log('[THREAD_WORKFLOW] Bulk deleting keys:', keysToDelete);
+              const result = await bulkDeleteKeys(keysToDelete);
+              console.log('[THREAD_WORKFLOW] Bulk delete result:', result);
+              return result;
+            },
+            catch: (error) => ({ _tag: 'DatabaseError' as const, error }),
+          }).pipe(
+            Effect.orElse(() => Effect.succeed({ successful: 0, failed: keysToDelete.length })),
+          );
+        }
+
+        yield* Console.log('[THREAD_WORKFLOW] Thread processing complete');
+        return 'Thread workflow completed successfully';
+      } else {
+        yield* Console.log('[THREAD_WORKFLOW] Unsupported provider:', providerId);
+        return yield* Effect.fail({
+          _tag: 'UnsupportedProvider' as const,
+          providerId,
+        });
+      }
+    }).pipe(
+      Effect.tapError((error) => Console.log('[THREAD_WORKFLOW] Error in workflow:', error)),
+      Effect.catchAll((error) => {
+        // Clean up thread processing flag on error using bulk delete
+        return Effect.tryPromise({
+          try: async () => {
+            console.log(
+              '[THREAD_WORKFLOW] Clearing processing flag for thread after error:',
+              params.threadId,
+            );
+            const result = await bulkDeleteKeys([params.threadId.toString()]);
+            console.log('[THREAD_WORKFLOW] Error cleanup result:', result);
+            return result;
+          },
+          catch: () => ({
+            _tag: 'DatabaseError' as const,
+            error: 'Failed to cleanup thread processing flag',
+          }),
+        }).pipe(
+          Effect.orElse(() => Effect.succeed({ successful: 0, failed: 1 })),
+          Effect.flatMap(() => Effect.fail(error)),
+        );
+      }),
+      Effect.provide(loggerLayer),
+    );
+  }
+
+  /** Testing workflows without Effect */
+  public runThreadWorkflowWithoutEffect(params: ThreadWorkflowParams): Promise<string> {
+    return this.runThreadWorkflowWithoutEffectImpl(params);
+  }
+
+  private async runThreadWorkflowWithoutEffectImpl(params: ThreadWorkflowParams): Promise<string> {
+    try {
+      console.log('[THREAD_WORKFLOW] Starting workflow with payload:', params);
+      const { connectionId, threadId, providerId } = params;
+      const keysToDelete: string[] = [];
+
+      if (providerId === EProviders.google) {
+        console.log('[THREAD_WORKFLOW] Processing Google provider workflow');
+        const { db, conn } = createDb(this.env.HYPERDRIVE.connectionString);
+
+        let foundConnection;
+        try {
+          console.log('[THREAD_WORKFLOW] Finding connection:', connectionId);
+          const [connectionRecord] = await db
+            .select()
+            .from(connection)
+            .where(eq(connection.id, connectionId.toString()));
+
+          if (!connectionRecord) {
+            throw new Error(`Connection not found ${connectionId}`);
+          }
+          if (!connectionRecord.accessToken || !connectionRecord.refreshToken) {
+            throw new Error(`Connection is not authorized ${connectionId}`);
+          }
+          console.log('[THREAD_WORKFLOW] Found connection:', connectionRecord.id);
+          foundConnection = connectionRecord;
+        } catch (error) {
+          console.error('[THREAD_WORKFLOW] Database error:', error);
+          throw { _tag: 'DatabaseError' as const, error };
+        } finally {
+          try {
+            await conn.end();
+          } catch (error) {
+            console.error('[THREAD_WORKFLOW] Failed to close connection:', error);
+          }
+        }
+
+        let agent;
+        try {
+          agent = await getZeroAgent(foundConnection.id);
+        } catch (error) {
+          console.error('[THREAD_WORKFLOW] Failed to get agent:', error);
+          throw { _tag: 'DatabaseError' as const, error };
+        }
+
+        let thread;
+        try {
+          console.log('[THREAD_WORKFLOW] Getting thread:', threadId);
+          thread = await agent.getThread(threadId.toString());
+          console.log('[THREAD_WORKFLOW] Found thread with messages:', thread.messages.length);
+        } catch (error) {
+          console.error('[THREAD_WORKFLOW] Gmail API error:', error);
+          throw { _tag: 'GmailApiError' as const, error };
+        }
+
+        if (!thread.messages || thread.messages.length === 0) {
+          console.log('[THREAD_WORKFLOW] Thread has no messages, skipping processing');
+          keysToDelete.push(threadId.toString());
+          return 'Thread has no messages';
+        }
+
+        const workflowEngine = createDefaultWorkflows();
+
+        const workflowContext: WorkflowContext = {
+          connectionId: connectionId.toString(),
+          threadId: threadId.toString(),
+          thread,
+          foundConnection,
+          results: new Map<string, any>(),
+        };
+
+        let workflowResults;
+        try {
+          const allResults = new Map<string, any>();
+          const allErrors = new Map<string, Error>();
+
+          const workflowNames = workflowEngine.getWorkflowNames();
+
+          for (const workflowName of workflowNames) {
+            console.log(`[THREAD_WORKFLOW] Executing workflow: ${workflowName}`);
+
+            try {
+              const { results, errors } = await workflowEngine.executeWorkflow(
+                workflowName,
+                workflowContext,
+              );
+
+              results.forEach((value, key) => allResults.set(key, value));
+              errors.forEach((value, key) => allErrors.set(key, value));
+
+              console.log(`[THREAD_WORKFLOW] Completed workflow: ${workflowName}`);
+            } catch (error) {
+              console.error(`[THREAD_WORKFLOW] Failed to execute workflow ${workflowName}:`, error);
+              const errorObj = error instanceof Error ? error : new Error(String(error));
+              allErrors.set(workflowName, errorObj);
+            }
+          }
+
+          workflowResults = { results: allResults, errors: allErrors };
+        } catch (error) {
+          console.error('[THREAD_WORKFLOW] Workflow creation failed:', error);
+          throw { _tag: 'WorkflowCreationFailed' as const, error };
+        }
+
+        workflowEngine.clearContext(workflowContext);
+
+        const successfulSteps = Array.from(workflowResults.results.keys());
+        const failedSteps = Array.from(workflowResults.errors.keys());
+
+        if (successfulSteps.length > 0) {
+          console.log('[THREAD_WORKFLOW] Successfully executed steps:', successfulSteps);
+        }
+
+        if (failedSteps.length > 0) {
+          console.log('[THREAD_WORKFLOW] Failed steps:', failedSteps);
+          workflowResults.errors.forEach((error, stepId) => {
+            console.log(`[THREAD_WORKFLOW] Error in step ${stepId}:`, error.message);
+          });
+        }
+
+        keysToDelete.push(threadId.toString());
+
+        if (keysToDelete.length > 0) {
+          try {
+            console.log('[THREAD_WORKFLOW] Bulk deleting keys:', keysToDelete);
+            const result = await bulkDeleteKeys(keysToDelete);
+            console.log('[THREAD_WORKFLOW] Bulk delete result:', result);
+          } catch (error) {
+            console.error('[THREAD_WORKFLOW] Failed to bulk delete keys:', error);
+          }
+        }
+
+        console.log('[THREAD_WORKFLOW] Thread processing complete');
+        return 'Thread workflow completed successfully';
+      } else {
+        console.log('[THREAD_WORKFLOW] Unsupported provider:', providerId);
+        throw { _tag: 'UnsupportedProvider' as const, providerId };
+      }
+    } catch (error) {
+      console.error('[THREAD_WORKFLOW] Error in workflow:', error);
+
+      try {
+        console.log(
+          '[THREAD_WORKFLOW] Clearing processing flag for thread after error:',
+          params.threadId,
+        );
+        const result = await bulkDeleteKeys([params.threadId.toString()]);
+        console.log('[THREAD_WORKFLOW] Error cleanup result:', result);
+      } catch (cleanupError) {
+        console.error('[THREAD_WORKFLOW] Failed to cleanup thread processing flag:', cleanupError);
+      }
+
+      throw error;
+    }
+  }
+
+  public runMainWorkflowWithoutEffect(params: MainWorkflowParams): Promise<string> {
+    return this.runMainWorkflowWithoutEffectImpl(params);
+  }
+
+  private async runMainWorkflowWithoutEffectImpl(params: MainWorkflowParams): Promise<string> {
+    try {
+      console.log('[MAIN_WORKFLOW] Starting workflow with payload:', params);
+
+      const { providerId, historyId } = params;
+
+      const serviceAccount = getServiceAccount();
+
+      let connectionId;
+      try {
+        connectionId = validateArgumentsWithoutEffect(params, serviceAccount);
+      } catch (error) {
+        console.error('[MAIN_WORKFLOW] Validation error:', error);
+        throw error;
+      }
+
+      if (!isValidUUID(connectionId)) {
+        console.log('[MAIN_WORKFLOW] Invalid connection id format:', connectionId);
+        throw {
+          _tag: 'InvalidConnectionId' as const,
+          connectionId,
+        };
+      }
+
+      let previousHistoryId;
+      try {
+        previousHistoryId = await this.env.gmail_history_id.get(connectionId);
+      } catch (error) {
+        console.error('[MAIN_WORKFLOW] Failed to get history ID:', error);
+        previousHistoryId = null;
+      }
+
+      if (providerId === EProviders.google) {
+        console.log('[MAIN_WORKFLOW] Processing Google provider workflow');
+        console.log('[MAIN_WORKFLOW] Previous history ID:', previousHistoryId);
+
+        const zeroWorkflowParams = {
+          connectionId,
+          historyId: previousHistoryId || historyId,
+          nextHistoryId: historyId,
+        };
+
+        let result;
+        try {
+          result = await this.runZeroWorkflowWithoutEffect(zeroWorkflowParams);
+        } catch (error) {
+          console.error('[MAIN_WORKFLOW] Failed to run zero workflow:', error);
+          throw { _tag: 'WorkflowCreationFailed' as const, error };
+        }
+
+        console.log('[MAIN_WORKFLOW] Zero workflow result:', result);
+      } else {
+        console.log('[MAIN_WORKFLOW] Unsupported provider:', providerId);
+        throw {
+          _tag: 'UnsupportedProvider' as const,
+          providerId,
+        };
+      }
+
+      console.log('[MAIN_WORKFLOW] Workflow completed successfully');
+      return 'Workflow completed successfully';
+    } catch (error) {
+      console.error('[MAIN_WORKFLOW] Error in workflow:', error);
+      throw error;
+    }
+  }
+
+  public runZeroWorkflowWithoutEffect(params: ZeroWorkflowParams): Promise<string> {
+    return this.runZeroWorkflowWithoutEffectImpl(params);
+  }
+
+  private async runZeroWorkflowWithoutEffectImpl(params: ZeroWorkflowParams): Promise<string> {
+    try {
+      console.log('[ZERO_WORKFLOW] Starting workflow with payload:', params);
+      const { connectionId, historyId, nextHistoryId } = params;
+
+      const historyProcessingKey = `history_${connectionId}__${historyId}`;
+      const keysToDelete: string[] = [];
+
+      let lockAcquired;
+      try {
+        const response = await this.env.gmail_processing_threads.put(historyProcessingKey, 'true', {
+          expirationTtl: 3600,
+        });
+        lockAcquired = response !== null;
+      } catch (error) {
+        console.error('[ZERO_WORKFLOW] Failed to acquire lock:', error);
+        throw { _tag: 'WorkflowCreationFailed' as const, error };
+      }
+
+      if (!lockAcquired) {
+        console.log('[ZERO_WORKFLOW] History already being processed:', {
+          connectionId,
+          historyId,
+        });
+        throw {
+          _tag: 'HistoryAlreadyProcessing' as const,
+          connectionId,
+          historyId,
+        };
+      }
+
+      console.log('[ZERO_WORKFLOW] Acquired processing lock for history:', historyProcessingKey);
+
+      const { db, conn } = createDb(this.env.HYPERDRIVE.connectionString);
+
+      let foundConnection;
+      try {
+        console.log('[ZERO_WORKFLOW] Finding connection:', connectionId);
+        const [connectionRecord] = await db
+          .select()
+          .from(connection)
+          .where(eq(connection.id, connectionId.toString()));
+
+        if (!connectionRecord) {
+          throw new Error(`Connection not found ${connectionId}`);
+        }
+        if (!connectionRecord.accessToken || !connectionRecord.refreshToken) {
+          throw new Error(`Connection is not authorized ${connectionId}`);
+        }
+        console.log('[ZERO_WORKFLOW] Found connection:', connectionRecord.id);
+        foundConnection = connectionRecord;
+      } catch (error) {
+        console.error('[ZERO_WORKFLOW] Database error:', error);
+        throw { _tag: 'DatabaseError' as const, error };
+      } finally {
+        try {
+          await conn.end();
+        } catch (error) {
+          console.error('[ZERO_WORKFLOW] Failed to close connection:', error);
+        }
+      }
+
+      let agent;
+      try {
+        agent = await getZeroAgent(foundConnection.id);
+      } catch (error) {
+        console.error('[ZERO_WORKFLOW] Failed to get agent:', error);
+        throw { _tag: 'DatabaseError' as const, error };
+      }
+
+      if (foundConnection.providerId === EProviders.google) {
+        console.log('[ZERO_WORKFLOW] Processing Google provider workflow');
+
+        let history;
+        try {
+          console.log('[ZERO_WORKFLOW] Getting Gmail history with ID:', historyId);
+          const { history: historyData } = (await agent.listHistory(historyId.toString())) as {
+            history: gmail_v1.Schema$History[];
+          };
+          console.log(
+            '[ZERO_WORKFLOW] Found history entries:',
+            JSON.stringify(historyData, null, 2),
+          );
+          history = historyData;
+        } catch (error) {
+          console.error('[ZERO_WORKFLOW] Gmail API error:', error);
+          throw { _tag: 'GmailApiError' as const, error };
+        }
+
+        try {
+          console.log('[ZERO_WORKFLOW] Updating next history ID:', nextHistoryId);
+          await this.env.gmail_history_id.put(connectionId.toString(), nextHistoryId.toString());
+        } catch (error) {
+          console.error('[ZERO_WORKFLOW] Failed to update history ID:', error);
+          throw { _tag: 'WorkflowCreationFailed' as const, error };
+        }
+
+        if (!history.length) {
+          console.log('[ZERO_WORKFLOW] No history found, skipping');
+          keysToDelete.push(historyProcessingKey);
+          return 'No history found';
+        }
+
+        const threadsAdded = new Set<string>();
+        const threadLabelChanges = new Map<
+          string,
+          { addLabels: Set<string>; removeLabels: Set<string> }
+        >();
+
+        const processLabelChange = (
+          labelChange: { message?: gmail_v1.Schema$Message; labelIds?: string[] | null },
+          isAddition: boolean,
+        ) => {
+          const threadId = labelChange.message?.threadId;
+          if (!threadId || !labelChange.labelIds?.length) return;
+
+          let changes = threadLabelChanges.get(threadId);
+          if (!changes) {
+            changes = { addLabels: new Set<string>(), removeLabels: new Set<string>() };
+            threadLabelChanges.set(threadId, changes);
+          }
+
+          const targetSet = isAddition ? changes.addLabels : changes.removeLabels;
+          labelChange.labelIds.forEach((labelId) => targetSet.add(labelId));
+        };
+
+        history.forEach((historyItem) => {
+          historyItem.messagesAdded?.forEach((msg) => {
+            if (msg.message?.labelIds?.includes('DRAFT')) return;
+            if (msg.message?.labelIds?.includes('SPAM')) return;
+            if (msg.message?.threadId) {
+              threadsAdded.add(msg.message.threadId);
+            }
+          });
+
+          historyItem.labelsAdded?.forEach((labelAdded) => processLabelChange(labelAdded, true));
+          historyItem.labelsRemoved?.forEach((labelRemoved) =>
+            processLabelChange(labelRemoved, false),
+          );
+        });
+
+        console.log(
+          '[ZERO_WORKFLOW] Found unique thread IDs:',
+          Array.from(threadLabelChanges.keys()),
+          Array.from(threadsAdded),
+        );
+
+        if (threadsAdded.size > 0) {
+          const threadWorkflowParams = Array.from(threadsAdded);
+
+          const syncResults: Array<{ threadId: string; result: any }> = [];
+          const syncErrors: Array<{ threadId: string; error: Error }> = [];
+
+          for (const threadId of threadWorkflowParams) {
+            try {
+              const result = await agent.syncThread({ threadId });
+              console.log(`[ZERO_WORKFLOW] Successfully synced thread ${threadId}`);
+              syncResults.push({ threadId, result });
+            } catch (error) {
+              console.error(`[ZERO_WORKFLOW] Failed to sync thread ${threadId}:`, error);
+              const errorObj = error instanceof Error ? error : new Error(String(error));
+              syncErrors.push({ threadId, error: errorObj });
+            }
+          }
+
+          const syncedCount = syncResults.length;
+          const failedCount = threadWorkflowParams.length - syncedCount;
+
+          if (failedCount > 0) {
+            console.log(
+              `[ZERO_WORKFLOW] Warning: ${failedCount}/${threadWorkflowParams.length} thread syncs failed. Successfully synced: ${syncedCount}`,
+            );
+          } else {
+            console.log(`[ZERO_WORKFLOW] Successfully synced all ${syncedCount} threads`);
+          }
+
+          console.log('[ZERO_WORKFLOW] Synced threads:', syncResults);
+
+          if (syncedCount > 0) {
+            try {
+              await agent.reloadFolder('inbox');
+              console.log('[ZERO_WORKFLOW] Successfully reloaded inbox folder');
+            } catch {
+              console.log('[ZERO_WORKFLOW] Failed to reload inbox folder');
+            }
+
+            console.log(
+              `[ZERO_WORKFLOW] Running thread workflows for ${syncedCount} synced threads`,
+            );
+
+            const threadWorkflowResults: Array<{ threadId: string; result: string }> = [];
+            const threadWorkflowErrors: Array<{ threadId: string; error: Error }> = [];
+
+            for (const { threadId } of syncResults) {
+              try {
+                const result = await this.runThreadWorkflowWithoutEffect({
+                  connectionId,
+                  threadId,
+                  providerId: foundConnection.providerId,
+                });
+                console.log(`[ZERO_WORKFLOW] Successfully ran thread workflow for ${threadId}`);
+                threadWorkflowResults.push({ threadId, result });
+              } catch (error) {
+                console.log(
+                  `[ZERO_WORKFLOW] Failed to run thread workflow for ${threadId}:`,
+                  error,
+                );
+                const errorObj = error instanceof Error ? error : new Error(String(error));
+                threadWorkflowErrors.push({ threadId, error: errorObj });
+              }
+            }
+
+            const threadWorkflowSuccessCount = threadWorkflowResults.length;
+            const threadWorkflowFailedCount = syncedCount - threadWorkflowSuccessCount;
+
+            if (threadWorkflowFailedCount > 0) {
+              console.log(
+                `[ZERO_WORKFLOW] Warning: ${threadWorkflowFailedCount}/${syncedCount} thread workflows failed. Successfully processed: ${threadWorkflowSuccessCount}`,
+              );
+            } else {
+              console.log(
+                `[ZERO_WORKFLOW] Successfully ran all ${threadWorkflowSuccessCount} thread workflows`,
+              );
+            }
+          }
+        }
+
+        if (threadLabelChanges.size > 0) {
+          console.log(
+            `[ZERO_WORKFLOW] Processing label changes for ${threadLabelChanges.size} threads`,
+          );
+
+          for (const [threadId, changes] of threadLabelChanges) {
+            const addLabels = Array.from(changes.addLabels);
+            const removeLabels = Array.from(changes.removeLabels);
+
+            if (addLabels.length > 0 || removeLabels.length > 0) {
+              console.log(
+                `[ZERO_WORKFLOW] Modifying labels for thread ${threadId}: +${addLabels.length} -${removeLabels.length}`,
+              );
+              try {
+                await agent.modifyThreadLabelsInDB(threadId, addLabels, removeLabels);
+              } catch {
+                console.log(`[ZERO_WORKFLOW] Failed to modify labels for thread ${threadId}`);
+              }
+            }
+          }
+
+          console.log('[ZERO_WORKFLOW] Completed label modifications');
+        } else {
+          console.log('[ZERO_WORKFLOW] No threads with label changes to process');
+        }
+
+        keysToDelete.push(historyProcessingKey);
+
+        if (keysToDelete.length > 0) {
+          try {
+            console.log('[ZERO_WORKFLOW] Bulk deleting keys:', keysToDelete);
+            const result = await bulkDeleteKeys(keysToDelete);
+            console.log('[ZERO_WORKFLOW] Bulk delete result:', result);
+          } catch (error) {
+            console.error('[ZERO_WORKFLOW] Failed to bulk delete keys:', error);
+          }
+        }
+
+        console.log('[ZERO_WORKFLOW] Processing complete');
+        return 'Zero workflow completed successfully';
+      } else {
+        console.log('[ZERO_WORKFLOW] Unsupported provider:', foundConnection.providerId);
+        throw {
+          _tag: 'UnsupportedProvider' as const,
+          providerId: foundConnection.providerId,
+        };
+      }
+    } catch (error) {
+      console.error('[ZERO_WORKFLOW] Error in workflow:', error);
+
+      try {
+        const errorCleanupKey = `history_${params.connectionId}__${params.historyId}`;
+        console.log(
+          '[ZERO_WORKFLOW] Clearing processing flag for history after error:',
+          errorCleanupKey,
+        );
+        const result = await bulkDeleteKeys([errorCleanupKey]);
+        console.log('[ZERO_WORKFLOW] Error cleanup result:', result);
+      } catch (cleanupError) {
+        console.error('[ZERO_WORKFLOW] Failed to cleanup processing flag:', cleanupError);
+      }
+
+      throw error;
+    }
+  }
+}

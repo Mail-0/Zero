@@ -14,22 +14,20 @@ import {
   Trash,
   X,
 } from '../icons/icons';
-import { EmptyStateIcon } from '../icons/empty-state-svg';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { EmptyStateIcon } from '../icons/empty-state-svg';
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useOptimisticThreadState } from '@/components/mail/optimistic-thread-state';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { useOptimisticActions } from '@/hooks/use-optimistic-actions';
 import { focusedIndexAtom } from '@/hooks/use-mail-navigation';
-import { backgroundQueueAtom } from '@/store/backgroundQueue';
+
 import { type ThreadDestination } from '@/lib/thread-actions';
 import { handleUnsubscribe } from '@/lib/email-utils.client';
 import { useThread, useThreads } from '@/hooks/use-threads';
@@ -38,21 +36,25 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import type { ParsedMessage, Attachment } from '@/types';
 import { MailDisplaySkeleton } from './mail-skeleton';
 import { useTRPC } from '@/providers/query-provider';
+import { useMutation } from '@tanstack/react-query';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { cleanHtml } from '@/lib/email-utils';
 import { Button } from '@/components/ui/button';
-import { useStats } from '@/hooks/use-stats';
+import { cleanHtml } from '@/lib/email-utils';
+import { useParams } from 'react-router';
+
 import ReplyCompose from './reply-composer';
-import { m } from '@/paraglide/messages';
 import { NotesPanel } from './note-panel';
 import { cn, FOLDERS } from '@/lib/utils';
+import { m } from '@/paraglide/messages';
 import MailDisplay from './mail-display';
-import { useTheme } from 'next-themes';
+
 import { Inbox } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { format } from 'date-fns';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
+import { AnimatePresence, motion } from 'motion/react';
+import { useAnimations } from '@/hooks/use-animations';
 
 const formatFileSize = (size: number) => {
   const sizeInMB = (size / (1024 * 1024)).toFixed(2);
@@ -62,14 +64,6 @@ const formatFileSize = (size: number) => {
 const cleanNameDisplay = (name?: string) => {
   if (!name) return '';
   return name.replace(/["<>]/g, '');
-};
-
-// HTML escaping function to prevent XSS attacks
-const escapeHtml = (text: string): string => {
-  if (!text) return text;
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
 };
 
 interface ThreadDisplayProps {
@@ -165,38 +159,38 @@ function ThreadActionButton({
     </TooltipProvider>
   );
 }
-
+const isFullscreen = false;
 export function ThreadDisplay() {
   const isMobile = useIsMobile();
-  const { toggleOpen: toggleAISidebar, open: isSidebarOpen } = useAISidebar();
+  const { toggleOpen: toggleAISidebar } = useAISidebar();
   const params = useParams<{ folder: string }>();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+
   const folder = params?.folder ?? 'inbox';
   const [id, setThreadId] = useQueryState('threadId');
-  const { data: emailData, isLoading, refetch: refetchThread, latestDraft } = useThread(id ?? null);
-  const [{ refetch: mutateThreads }, items] = useThreads();
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const { data: emailData, isLoading, refetch: refetchThread } = useThread(id ?? null);
+  const [, items] = useThreads();
   const [isStarred, setIsStarred] = useState(false);
   const [isImportant, setIsImportant] = useState(false);
+  
+  const [navigationDirection, setNavigationDirection] = useState<'previous' | 'next' | null>(null);
+  
+  const animationsEnabled = useAnimations();
 
   // Collect all attachments from all messages in the thread
   const allThreadAttachments = useMemo(() => {
     if (!emailData?.messages) return [];
     return emailData.messages.reduce<Attachment[]>((acc, message) => {
       if (message.attachments && message.attachments.length > 0) {
-        return [...acc, ...message.attachments];
+        acc.push(...message.attachments);
       }
       return acc;
     }, []);
   }, [emailData?.messages]);
 
-  const { refetch: refetchStats } = useStats();
   const [mode, setMode] = useQueryState('mode');
-  const [, setBackgroundQueue] = useAtom(backgroundQueueAtom);
   const [activeReplyId, setActiveReplyId] = useQueryState('activeReplyId');
   const [, setDraftId] = useQueryState('draftId');
-  const { resolvedTheme } = useTheme();
+
   const [focusedIndex, setFocusedIndex] = useAtom(focusedIndexAtom);
   const trpc = useTRPC();
   const { mutateAsync: toggleImportant } = useMutation(trpc.mail.toggleImportant.mutationOptions());
@@ -216,6 +210,9 @@ export function ThreadDisplay() {
         setDraftId(null);
         setThreadId(prevThread.id);
         setFocusedIndex(focusedIndex - 1);
+        if (animationsEnabled) {
+          setNavigationDirection('previous');
+        }
       }
     }
   }, [
@@ -227,6 +224,7 @@ export function ThreadDisplay() {
     setMode,
     setActiveReplyId,
     setDraftId,
+    animationsEnabled,
   ]);
 
   const handleNext = useCallback(() => {
@@ -242,6 +240,9 @@ export function ThreadDisplay() {
         setDraftId(null);
         setThreadId(nextThread.id);
         setFocusedIndex(focusedIndex + 1);
+        if (animationsEnabled) {
+          setNavigationDirection('next');
+        }
       }
     }
   }, [
@@ -253,6 +254,7 @@ export function ThreadDisplay() {
     setMode,
     setActiveReplyId,
     setDraftId,
+    animationsEnabled,
   ]);
 
   const handleUnsubscribeProcess = () => {
@@ -624,7 +626,7 @@ export function ThreadDisplay() {
                   <h2 class="attachments-title">Attachments (${message.attachments.length})</h2>
                   ${message.attachments
                     .map(
-                      (attachment, index) => `
+                      (attachment) => `
                     <div class="attachment-item">
                       <span class="attachment-name">${attachment.filename}</span>
                       ${formatFileSize(attachment.size) ? ` - <span class="attachment-size">${formatFileSize(attachment.size)}</span>` : ''}
@@ -679,7 +681,7 @@ export function ThreadDisplay() {
       };
     } catch (error) {
       console.error('Error printing thread:', error);
-      alert('Failed to print thread. Please try again.');
+      toast.error('Failed to print thread. Please try again.');
     }
   };
 
@@ -736,6 +738,10 @@ export function ThreadDisplay() {
     }
   }, [mode, activeReplyId]);
 
+  const handleAnimationComplete = useCallback(() => {
+    setNavigationDirection(null);
+  }, [setNavigationDirection]);
+
   return (
     <div
       className={cn(
@@ -755,7 +761,7 @@ export function ThreadDisplay() {
           <div className="flex h-full items-center justify-center">
             <div className="flex flex-col items-center justify-center gap-2 text-center">
               <EmptyStateIcon width={200} height={200} />
-              <div className="mt-5">
+              <div className="mt-4">
                 <p className="text-lg">It's empty here</p>
                 <p className="text-md text-muted-foreground dark:text-white/50">
                   Choose an email to view details
@@ -799,7 +805,7 @@ export function ThreadDisplay() {
           <>
             <div
               className={cn(
-                'flex flex-shrink-0 items-center px-1 pb-1 md:px-3 md:pb-[11px] md:pt-[12px]',
+                'flex shrink-0 items-center px-1 pb-[10px] md:px-3 md:pb-[11px] md:pt-[12px]',
                 isMobile && 'bg-panelLight dark:bg-panelDark sticky top-0 z-10 mt-2',
               )}
             >
@@ -883,7 +889,7 @@ export function ThreadDisplay() {
                 >
                   <Reply className="fill-muted-foreground dark:fill-[#9B9B9B]" />
                   <div className="flex items-center justify-center gap-2.5 pl-0.5 pr-1">
-                    <div className="justify-start text-sm leading-none text-black dark:text-white">
+                    <div className="justify-start whitespace-nowrap text-sm leading-none text-black dark:text-white">
                       {m['common.threadDisplay.replyAll']()}
                     </div>
                   </div>
@@ -1004,45 +1010,52 @@ export function ThreadDisplay() {
               </div>
             </div>
             <div className={cn('flex min-h-0 flex-1 flex-col', isMobile && 'h-full')}>
-              <ScrollArea
-                className={cn('flex-1', isMobile ? 'h-[calc(100%-1px)]' : 'h-full')}
-                type="auto"
-              >
-                <div className="pb-4">
-                  {(emailData.messages || []).map((message, index) => {
-                    const isLastMessage = index === emailData.messages.length - 1;
-                    const isReplyingToThisMessage = mode && activeReplyId === message.id;
+              {animationsEnabled ? (
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={id} 
+                    initial={{
+                      opacity: 0,
+                      x: navigationDirection === 'previous' ? -25 : navigationDirection === 'next' ? 25 : 0,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      x: 0,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      x: navigationDirection === 'previous' ? 25 : navigationDirection === 'next' ? -25 : 0,
+                    }}
+                    transition={{
+                      duration: 0.08, 
+                      ease: [0.4, 0, 0.2, 1],
+                    }}
+                    onAnimationComplete={handleAnimationComplete}
+                    className="h-full w-full"
+                  >
+                    <MessageList
+                      messages={emailData.messages}
+                      isFullscreen={isFullscreen}
+                      totalReplies={emailData?.totalReplies}
+                      allThreadAttachments={allThreadAttachments}
+                      mode={mode || undefined}
+                      activeReplyId={activeReplyId || undefined}
+                      isMobile={isMobile}
+                    />
+                  </motion.div>
+                </AnimatePresence>
+              ) : (
+                <MessageList
+                  messages={emailData.messages}
+                  isFullscreen={isFullscreen}
+                  totalReplies={emailData?.totalReplies}
+                  allThreadAttachments={allThreadAttachments}
+                  mode={mode || undefined}
+                  activeReplyId={activeReplyId || undefined}
+                  isMobile={isMobile}
+                />
+              )}
 
-                    return (
-                      <div
-                        key={message.id}
-                        className={cn(
-                          'transition-all duration-200',
-                          index > 0 && 'border-border border-t',
-                        )}
-                      >
-                        <MailDisplay
-                          emailData={message}
-                          isFullscreen={isFullscreen}
-                          isMuted={false}
-                          isLoading={false}
-                          index={index}
-                          totalEmails={emailData?.totalReplies}
-                          threadAttachments={index === 0 ? allThreadAttachments : undefined}
-                        />
-                        {/* Inline Reply Compose for non-last messages */}
-                        {isReplyingToThisMessage && !isLastMessage && (
-                          <div className="px-4 py-2" id={`reply-composer-${message.id}`}>
-                            <ReplyCompose messageId={message.id} />
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </ScrollArea>
-
-              {/* Sticky Reply Compose at Bottom - Only for last message */}
               {mode &&
                 activeReplyId &&
                 activeReplyId === emailData.messages[emailData.messages.length - 1]?.id && (
@@ -1060,3 +1073,60 @@ export function ThreadDisplay() {
     </div>
   );
 }
+
+interface MessageListProps {
+  messages: ParsedMessage[];
+  isFullscreen: boolean;
+  totalReplies?: number;
+  allThreadAttachments?: Attachment[];
+  mode?: string;
+  activeReplyId?: string;
+  isMobile: boolean;
+}
+
+const MessageList = ({ 
+  messages, 
+  isFullscreen, 
+  totalReplies, 
+  allThreadAttachments, 
+  mode, 
+  activeReplyId,
+  isMobile 
+}: MessageListProps) => (
+  <ScrollArea
+    className={cn('flex-1', isMobile ? 'h-[calc(100%-1px)]' : 'h-full')}
+    type="auto"
+  >
+    <div className="pb-4">
+      {(messages || []).map((message, index) => {
+        const isLastMessage = index === messages.length - 1;
+        const isReplyingToThisMessage = mode && activeReplyId === message.id;
+
+        return (
+          <div
+            key={message.id}
+            className={cn(
+              'transition-all duration-200',
+              index > 0 && 'border-border border-t',
+            )}
+          >
+            <MailDisplay
+              emailData={message}
+              isFullscreen={isFullscreen}
+              isMuted={false}
+              isLoading={false}
+              index={index}
+              totalEmails={totalReplies}
+              threadAttachments={index === 0 ? allThreadAttachments : undefined}
+            />
+            {isReplyingToThisMessage && !isLastMessage && (
+              <div className="px-4 py-2" id={`reply-composer-${message.id}`}>
+                <ReplyCompose messageId={message.id} />
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  </ScrollArea>
+);

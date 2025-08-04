@@ -134,7 +134,7 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
 
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-between bg-[#111111]">
-      <div className="animate-in slide-in-from-bottom-4 mx-auto flex max-w-[600px] flex-grow items-center justify-center space-y-8 px-4 duration-500 sm:px-12 md:px-0">
+      <div className="animate-in slide-in-from-bottom-4 mx-auto flex max-w-[600px] grow items-center justify-center space-y-8 px-4 duration-500 sm:px-12 md:px-0">
         <div className="w-full space-y-4">
           <p className="text-center text-4xl font-bold text-white md:text-5xl">Login to Zero</p>
 
@@ -203,7 +203,7 @@ function LoginClientContent({ providers, isProd }: LoginClientProps) {
                       <div
                         className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedProviders[provider.id] ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}
                       >
-                        <div className="bg-black/[0.03] p-4 font-mono text-sm dark:bg-white/[0.03]">
+                        <div className="bg-black/3 p-4 font-mono text-sm dark:bg-white/3">
                           {provider.envVarStatus.map((envVar) => (
                             <div
                               key={envVar.name}

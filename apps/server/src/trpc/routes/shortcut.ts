@@ -13,7 +13,7 @@ export const shortcutRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { sessionUser } = ctx;
       const { shortcuts } = input;
-      const db = getZeroDB(sessionUser.id);
+      const db = await getZeroDB(sessionUser.id);
       await db.insertUserHotkeys(shortcuts as any);
     }),
 });

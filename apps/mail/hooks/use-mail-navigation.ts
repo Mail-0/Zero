@@ -1,5 +1,5 @@
-import { useCommandPalette } from '@/components/context/command-palette-context';
-import { useCallback, useEffect, useState, useRef } from 'react';
+
+import { useCallback, useEffect, useRef } from 'react';
 import { useOptimisticActions } from './use-optimistic-actions';
 import { useMail } from '@/components/mail/use-mail';
 import { useHotkeys } from 'react-hotkeys-hook';

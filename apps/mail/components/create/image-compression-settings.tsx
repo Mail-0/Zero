@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Settings, Image, FileImage, Zap } from 'lucide-react';
 import type { ImageQuality } from '@/lib/image-compression';
-import { Button } from '@/components/ui/button';
+
 import { Label } from '@/components/ui/label';
 import { m } from '@/paraglide/messages';
 

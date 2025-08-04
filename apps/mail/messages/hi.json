@@ -370,7 +370,8 @@
       "failedToMute": "म्यूट करने में विफल",
       "failedToUnmute": "अनम्यूट करने में विफल",
       "archived": "आर्काइव किया गया",
-      "failedToArchive": "आर्काइव करने में विफल"
+      "failedToArchive": "आर्काइव करने में विफल",
+      "openInNewTab": "नए टैब में खोलें"
     },
     "units": {
       "mb": "{amount} MB"
@@ -404,7 +405,8 @@
       "livesupport": "लाइव सपोर्ट",
       "feedback": "प्रतिक्रिया",
       "settings": "सेटिंग्स",
-      "voice": "वॉइस असिस्टेंट"
+      "voice": "वॉइस असिस्टेंट",
+      "snoozed": "स्नूज़ किए गए"
     },
     "settings": {
       "general": "सामान्य",
@@ -450,7 +452,9 @@
         "selectDefaultEmail": "डिफ़ॉल्ट ईमेल चुनें",
         "defaultEmailDescription": "नए ईमेल लिखते समय यह ईमेल डिफ़ॉल्ट 'प्रेषक' पते के रूप में उपयोग किया जाएगा",
         "autoRead": "ऑटो रीड",
-        "autoReadDescription": "जब आप ईमेल पर क्लिक करते हैं तो उन्हें स्वचालित रूप से पढ़ा हुआ चिह्नित करें।"
+        "autoReadDescription": "जब आप ईमेल पर क्लिक करते हैं तो उन्हें स्वचालित रूप से पढ़ा हुआ चिह्नित करें।",
+        "animations": "एनिमेशन",
+        "animationsDescription": "ईमेल के बीच स्विच करते समय सुचारू एनिमेशन सक्षम करें"
       },
       "connections": {
         "title": "ईमेल कनेक्शन्स",

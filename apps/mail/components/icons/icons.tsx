@@ -308,7 +308,7 @@ export const Inbox = ({ className }: { className?: string }) => (
   </svg>
 );
 
-export const PaperPlane = ({ className }: { className?: string }) => (
+export const PaperPlane = () => (
   <svg
     width="24"
     height="24"
@@ -1625,6 +1625,8 @@ export const Clock = ({ className }: { className?: string }) => (
       fillRule="evenodd"
       clipRule="evenodd"
       d="M0 7C0 3.13401 3.13401 0 7 0C10.866 0 14 3.13401 14 7C14 10.866 10.866 14 7 14C3.13401 14 0 10.866 0 7ZM7.75 2.75C7.75 2.33579 7.41421 2 7 2C6.58579 2 6.25 2.33579 6.25 2.75V7C6.25 7.41421 6.58579 7.75 7 7.75H10.25C10.6642 7.75 11 7.41421 11 7C11 6.58579 10.6642 6.25 10.25 6.25H7.75V2.75Z"
+      fill="var(--icon-color)"
+      fillOpacity="0.5"
     />
   </svg>
 );
@@ -1641,6 +1643,7 @@ export const Check = ({ className }: { className?: string }) => (
     <path
       id="Union"
       d="M6.40907 0.569119C6.58341 0.30762 6.93661 0.236654 7.19813 0.410916C7.45962 0.585241 7.53057 0.938456 7.35634 1.19998L3.56239 6.89138C3.46781 7.03326 3.31411 7.12556 3.14442 7.14236C2.97475 7.15915 2.806 7.09886 2.68544 6.9783L0.409072 4.70193C0.18694 4.47978 0.187156 4.11953 0.409072 3.89724C0.63133 3.67499 0.991493 3.675 1.21376 3.89724L2.99989 5.6824L6.40907 0.569119Z"
+      fill="currentColor"
     />
   </svg>
 );

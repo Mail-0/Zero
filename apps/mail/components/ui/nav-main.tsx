@@ -1,15 +1,16 @@
 import { SidebarGroup, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from './sidebar';
 import { Collapsible, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { useActiveConnection, useConnections } from '@/hooks/use-connections';
+import { useCommandPalette } from '../context/command-palette-context.jsx';
 import { LabelDialog } from '@/components/labels/label-dialog';
+import { useActiveConnection } from '@/hooks/use-connections';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Link, useLocation, useNavigate } from 'react-router';
 import Intercom, { show } from '@intercom/messenger-js-sdk';
 import { MessageSquare, OldPhone } from '../icons/icons';
 import { useSidebar } from '../context/sidebar-context';
 import { useTRPC } from '@/providers/query-provider';
 import { type NavItem } from '@/config/navigation';
 import type { Label as LabelType } from '@/types';
+import { Link, useLocation } from 'react-router';
 import { m } from '../../paraglide/messages.js';
 import { Button } from '@/components/ui/button';
 import { useLabels } from '@/hooks/use-labels';
@@ -55,9 +56,7 @@ export function NavMain({ items }: NavMainProps) {
   const pathname = location.pathname;
   const searchParams = new URLSearchParams();
   const [category] = useQueryState('category');
-  const { data: connections } = useConnections();
-  const { data: stats } = useStats();
-  const { data: activeConnection } = useActiveConnection();
+
   const trpc = useTRPC();
   const { data: intercomToken } = useQuery(trpc.user.getIntercomToken.queryOptions());
 
@@ -72,7 +71,7 @@ export function NavMain({ items }: NavMainProps) {
 
   const { mutateAsync: createLabel } = useMutation(trpc.labels.create.mutationOptions());
 
-  const { data, refetch } = useLabels();
+  const { userLabels, refetch } = useLabels();
 
   const { state } = useSidebar();
 
@@ -177,6 +176,7 @@ export function NavMain({ items }: NavMainProps) {
       loading: 'Creating label...',
       success: 'Label created successfully',
       error: 'Failed to create label',
+      finally: () => {refetch()},
     });
   };
 
@@ -254,14 +254,11 @@ export function NavMain({ items }: NavMainProps) {
                       </Button>
                     }
                     onSubmit={onSubmit}
-                    onSuccess={refetch}
                   />
                 ) : activeAccount?.providerId === 'microsoft' ? null : null}
               </div>
 
-              {activeAccount ? (
-                <SidebarLabels data={data ?? []} activeAccount={activeAccount} stats={stats} />
-              ) : null}
+              {activeAccount ? <SidebarLabels data={userLabels ?? []} /> : null}
             </SidebarMenuItem>
           </Collapsible>
         )}
@@ -273,6 +270,7 @@ export function NavMain({ items }: NavMainProps) {
 function NavItem(item: NavItemProps & { href: string }) {
   const iconRef = useRef<IconRefType>(null);
   const { data: stats } = useStats();
+  const { clearAllFilters } = useCommandPalette();
 
   const { state, setOpenMobile } = useSidebar();
 
@@ -283,7 +281,7 @@ function NavItem(item: NavItemProps & { href: string }) {
         className="flex cursor-not-allowed items-center opacity-50"
       >
         {item.icon && <item.icon ref={iconRef} className="relative mr-2.5 h-3 w-3.5" />}
-        <p className="relative bottom-[1px] mt-0.5 truncate text-[13px]">{item.title}</p>
+        <p className="relative bottom-px mt-0.5 truncate text-[13px]">{item.title}</p>
       </SidebarMenuButton>
     );
   }
@@ -292,6 +290,7 @@ function NavItem(item: NavItemProps & { href: string }) {
     if (item.onClick) {
       item.onClick(e as React.MouseEvent<HTMLAnchorElement>);
     }
+    clearAllFilters();
     setOpenMobile(false);
   };
 
@@ -309,11 +308,10 @@ function NavItem(item: NavItemProps & { href: string }) {
         >
           <Link target={item.target} to={item.href}>
             {item.icon && <item.icon ref={iconRef} className="mr-2 shrink-0" />}
-            <p className="relative bottom-[1px] mt-0.5 min-w-0 flex-1 truncate text-[13px]">
+            <p className="relative bottom-px mt-0.5 min-w-0 flex-1 truncate text-[13px]">
               {item.title}
             </p>
             {stats &&
-              item.id?.toLowerCase() !== 'sent' &&
               stats.some((stat) => stat.label?.toLowerCase() === item.id?.toLowerCase()) && (
                 <Badge className="text-muted-foreground ml-auto shrink-0 rounded-full border-none bg-transparent">
                   {stats

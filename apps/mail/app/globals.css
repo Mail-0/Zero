@@ -1,39 +1,272 @@
-@import '@fontsource-variable/geist';
-@import '@fontsource-variable/geist-mono';
+@import '@fontsource-variable/geist' layer(base);
+@import '@fontsource-variable/geist-mono' layer(base);
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/*
+  Automatic source detection should suffice, but for more control, check
+  the docs on Detecting classes in source files, namely `source(none)`:
+  https://tailwindcss.com/docs/detecting-classes-in-source-files
+*/
+@import 'tailwindcss';
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+/* Plugins */
+@plugin "tailwindcss-animate";
+@plugin "tailwind-scrollbar" {
+  nocompatible: true;
+  preferredStrategy: "pseudoelements";
+}
+
+/* Custom variant for dark mode */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  /* Typography */
+  --font-geist-sans: 'Geist Variable', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-geist-mono: 'Geist Mono Variable', 'Geist Mono', ui-monospace, SFMono-Regular, 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+
+  /* Theme colors (light mode: default) */
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(240 10% 3.9%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(240 10% 3.9%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(240 10% 3.9%);
+  --primary: hsl(240 5.9% 10%);
+  --primary-foreground: hsl(0 0% 98%);
+  --secondary: hsl(240 4.8% 95.9%);
+  --secondary-foreground: hsl(240 5.9% 10%);
+  --muted: hsl(240 4.8% 95.9%);
+  --muted-foreground: hsl(240 3.8% 46.1%);
+  --accent: hsl(240 4.8% 95.9%);
+  --accent-foreground: hsl(240 5.9% 10%);
+  --destructive: hsl(0 84.2% 60.2%);
+  --destructive-foreground: hsl(0 0% 98%);
+  --border: hsl(240 5.9% 90%);
+  --input: hsl(240 5.9% 90%);
+  --ring: hsl(240 10% 3.9%);
+  --chart-1: hsl(12 76% 61%);
+  --chart-2: hsl(173 58% 39%);
+  --chart-3: hsl(197 37% 24%);
+  --chart-4: hsl(43 74% 66%);
+  --chart-5: hsl(27 87% 67%);
+  --sidebar-background: hsl(0 0% 98%);
+  --sidebar-foreground: hsl(240 5.3% 26.1%);
+  --sidebar-primary: hsl(240 5.9% 10%);
+  --sidebar-primary-foreground: hsl(0 0% 98%);
+  --sidebar-accent: hsl(240 4.8% 95.9%);
+  --sidebar-accent-foreground: hsl(240 5.9% 10%);
+  --sidebar-border: hsl(220 13% 91%);
+  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+  --panel: hsl(0 0% 100%);
+  --icon-color: currentColor;
+
+  /* Radius */
+  --radius: 0.5rem;
+
+  /* Static colors */
+  --darkBackground: #141414;
+  --lightBackground: #FFFFFF;
+  --offsetDark: #0A0A0A;
+  --offsetLight: #F5F5F5;
+  --panelDark: #1A1A1A;
+  --panelLight: #FFFFFF;
+  --iconDark: #898989;
+  --iconLight: #6D6D6D;
+  --logout: #D93036;
+  --mainBlue: #437DFB;
+  --subtleWhite: #EAEAEA;
+  --subtleBlack: #1F1F1F;
+  --skyBlue: #0066FF;
+  --shinyGray: #A1A1A1;
+}
+
+.dark {
+  /* Theme colors (dark mode) */
+  --background: hsl(240 3.9% 7%);
+  --foreground: hsl(0 0% 98%);
+  --card: hsl(240 5.9% 10%);
+  --card-foreground: hsl(0 0% 98%);
+  --popover: hsl(240 3.4% 8%);
+  --popover-foreground: hsl(0 0% 99%);
+  --primary: hsl(0 0% 98%);
+  --primary-foreground: hsl(240 5.9% 10%);
+  --secondary: hsl(240 3.7% 15.9%);
+  --secondary-foreground: hsl(0 0% 98%);
+  --muted: hsl(240 3.7% 15.9%);
+  --muted-foreground: hsl(240 5% 64.9%);
+  --accent: hsl(240 3.7% 15.9%);
+  --accent-foreground: hsl(0 0% 98%);
+  --destructive: hsl(0 62.8% 30.6%);
+  --destructive-foreground: hsl(0 0% 98%);
+  --border: hsl(240 3.7% 20%);
+  --input: hsl(240 3.7% 15.9%);
+  --ring: hsl(240 4.9% 83.9%);
+  --chart-1: hsl(220 70% 50%);
+  --chart-2: hsl(160 60% 45%);
+  --chart-3: hsl(30 80% 55%);
+  --chart-4: hsl(280 65% 60%);
+  --chart-5: hsl(340 75% 55%);
+  --sidebar-background: hsl(240 3.9% 7%);
+  --sidebar-foreground: hsl(240 4.8% 96.9%);
+  --sidebar-primary: hsl(224.3 76.3% 48%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(240 3.7% 15.9%);
+  --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
+  --sidebar-border: hsl(240 3.7% 15.9%);
+  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+  --panel: hsl(240 3.7% 10.2%);
+}
+
+@theme inline {
+  /* Theme colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  
+  /* Chart colors */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  
+  /* Static colors */
+  --color-darkBackground: var(--darkBackground);
+  --color-lightBackground: var(--lightBackground);
+  --color-offsetDark: var(--offsetDark);
+  --color-offsetLight: var(--offsetLight);
+  --color-panelDark: var(--panelDark);
+  --color-panelLight: var(--panelLight);
+  --color-iconDark: var(--iconDark);
+  --color-iconLight: var(--iconLight);
+  --color-logout: var(--logout);
+  --color-mainBlue: var(--mainBlue);
+  --color-subtleWhite: var(--subtleWhite);
+  --color-subtleBlack: var(--subtleBlack);
+  --color-skyBlue: var(--skyBlue);
+  --color-shinyGray: var(--shinyGray);
+  
+  /* sidebar colors */
+  --color-sidebar: var(--sidebar-background);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  
+  /* Border radius */
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  /* Typography */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Animations */
+  @keyframes fade-up {
+    0% { transform: translateY(10px); }
+    100% { transform: translateY(0); }
   }
-  .horizontal-fade-mask {
-    @apply overflow-x-auto;
-    position: relative;
+  @keyframes moveUp {
+    0% { transform: translateY(90px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
   }
+  @keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  @keyframes accordion-down {
+    from { height: 0; }
+    to { height: var(--radix-accordion-content-height); }
+  }
+  @keyframes accordion-up {
+    from { height: var(--radix-accordion-content-height); }
+    to { height: 0; }
+  }
+  @keyframes gauge_fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes gauge_fill {
+    from { stroke-dashoffset: 332; opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes shine {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+  @keyframes shine-slow {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  --animate-fade-up: fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-move-up: moveUp 3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-fade-in: fadeIn 3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-gauge_fadeIn: gauge_fadeIn 1s ease forwards;
+  --animate-gauge-fill: gauge_fill 1s ease forwards;
+  --animate-shine: shine 3s linear infinite;
+  --animate-shine-slow: shine-slow 8s linear infinite;
+  --animate-blink: blink 0.8s ease-in-out infinite;
+}
+
+
+/* Add scrollbar styling */
+@utility style-scrollbar {
+  @apply scrollbar scrollbar-w-0 scrollbar-thumb-accent/40 scrollbar-track-transparent hover:scrollbar-thumb-accent scrollbar-thumb-rounded-full;
+}
+
+@utility horizontal-fade-mask {
+  @apply overflow-x-auto;
+  position: relative;
   @supports (mask-image: linear-gradient(to right, transparent, black)) or
     (-webkit-mask-image: linear-gradient(to right, transparent, black)) {
-    .horizontal-fade-mask::before,
-    .horizontal-fade-mask::after {
+    &::before {
       content: '';
       position: absolute;
       top: 0;
       height: 100%;
       width: 15%;
       pointer-events: none;
-      background: hsl(var(--panel));
+      background: var(--panel);
       z-index: 1;
-    }
-
-    .horizontal-fade-mask::before {
       left: 0;
       -webkit-mask-image: linear-gradient(to right, white, transparent);
       mask-image: linear-gradient(to right, white, transparent);
     }
-
-    .horizontal-fade-mask::after {
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      height: 100%;
+      width: 15%;
+      pointer-events: none;
+      background: var(--panel);
+      z-index: 1;
       right: 0;
       -webkit-mask-image: linear-gradient(to left, white, transparent);
       mask-image: linear-gradient(to left, white, transparent);
@@ -42,115 +275,21 @@
 }
 
 @layer base {
-  :root {
-    --font-geist-sans:
-      'Geist Variable', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui,
-      sans-serif;
-    --font-geist-mono:
-      'Geist Mono Variable', 'Geist Mono', ui-monospace, SFMono-Regular, 'SF Mono', Consolas,
-      'Liberation Mono', Menlo, monospace;
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 10% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-    --icon-color: currentColor;
-    --panel: 0 0% 100%;
-  }
-
-  .dark {
-    --background: 1;
-    --foreground: 0 0% 98%;
-    --card: 240 5.9% 10%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 3.4% 8%;
-    --popover-foreground: 0 0% 99%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 20%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 240 3.9% 7%;
-    --sidebar-foreground: 240 4.8% 96.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-    --icon-color: currentColor;
-    --panel: 240 3.7% 10.2%;
-  }
-}
-
-@layer base {
   * {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
-    font-family:
-      'Geist Variable',
-      'Geist',
-      -apple-system,
-      BlinkMacSystemFont,
-      'Segoe UI',
-      system-ui,
-      sans-serif;
-    overscroll-behavior: none;
-    @apply style-scrollbar;
+    @apply bg-background text-foreground font-sans overscroll-none style-scrollbar;
   }
 }
 
 .skeleton {
   * {
-    pointer-events: none !important;
+    @apply pointer-events-none!;
   }
 
   *[class^='text-'] {
-    color: transparent;
-    @apply bg-foreground/20 animate-pulse select-none rounded-md;
+    @apply text-transparent bg-foreground/20 animate-pulse select-none rounded-md;
   }
 
   .skeleton-bg {
@@ -163,27 +302,27 @@
 }
 
 .ProseMirror {
-  outline: none;
+  @apply outline-none;
 }
 
 .cm-editor,
 .cm-gutters {
-  @apply bg-background outline-none selection:bg-zinc-900 dark:bg-zinc-800 !important;
+  @apply bg-background! outline-none! selection:bg-zinc-900! dark:bg-zinc-800!;
 }
 
 .ͼo.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground,
 .ͼo.cm-selectionBackground,
 .ͼo.cm-content::selection {
-  @apply bg-zinc-200 dark:bg-zinc-900 !important;
+  @apply bg-zinc-200! dark:bg-zinc-900!;
 }
 
 .cm-activeLine,
 .cm-activeLineGutter {
-  @apply bg-transparent !important;
+  @apply bg-transparent!;
 }
 
 .cm-activeLine {
-  @apply rounded-r-sm !important;
+  @apply rounded-r-sm!;
 }
 
 .cm-lineNumbers {
@@ -195,7 +334,7 @@
 }
 
 .cm-lineNumbers .cm-activeLineGutter {
-  @apply rounded-l-sm !important;
+  @apply rounded-l-sm!;
 }
 
 .suggestion-highlight {
@@ -204,7 +343,7 @@
 
 .dark [data-hide-on-theme='dark'],
 .light [data-hide-on-theme='light'] {
-  display: none;
+  @apply hidden;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -221,19 +360,6 @@
     to {
       clip-path: inset(0 0 0 0);
     }
-  }
-}
-
-/* Compose gradient styles */
-@keyframes gradient-flow {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
   }
 }
 
@@ -328,50 +454,9 @@
 }
 
 .compose-gradient-inner {
-  background-color: hsl(var(--background));
+  background-color: var(--background);
   border-radius: 0.5rem;
   padding: 0.5rem;
-}
-
-/* Animation keyframes */
-@keyframes shine {
-  from {
-    background-position: 0% 0;
-  }
-  to {
-    background-position: -200% 0;
-  }
-}
-
-@keyframes shine-slow {
-  from {
-    background-position: 0% 0;
-  }
-  to {
-    background-position: -200% 0;
-  }
-}
-
-@keyframes blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0;
-  }
-}
-
-.animate-shine {
-  animation: shine 3s linear infinite;
-}
-
-.animate-shine-slow {
-  animation: shine-slow 8s linear infinite;
-}
-
-.animate-blink {
-  animation: blink 0.8s ease-in-out infinite;
 }
 
 .tiptap p {
@@ -387,9 +472,4 @@
 .no-scrollbar {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
-}
-
-/* Add scrollbar styling */
-.style-scrollbar {
-  @apply scrollbar scrollbar-w-0 scrollbar-thumb-accent/40 scrollbar-track-transparent hover:scrollbar-thumb-accent scrollbar-thumb-rounded-full;
 }

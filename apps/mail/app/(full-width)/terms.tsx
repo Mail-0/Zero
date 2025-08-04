@@ -5,15 +5,15 @@ import { Navigation } from '@/components/navigation';
 import { Button } from '@/components/ui/button';
 import Footer from '@/components/home/footer';
 import { createSectionId } from '@/lib/utils';
-import { useNavigate } from 'react-router';
-import { toast } from 'sonner';
+
+
 import React from 'react';
 
 const LAST_UPDATED = 'February 13, 2025';
 
 export default function TermsOfService() {
   const { copiedValue: copiedSection, copyToClipboard } = useCopyToClipboard();
-  const navigate = useNavigate();
+  
 
   const handleCopyLink = (sectionId: string) => {
     const url = `${window.location.origin}${window.location.pathname}#${sectionId}`;
@@ -23,7 +23,7 @@ export default function TermsOfService() {
   return (
     <div className="relative flex min-h-screen w-full flex-col overflow-auto bg-white dark:bg-[#111111]">
       <Navigation />
-      <div className="relative z-10 flex flex-grow flex-col">
+      <div className="relative z-10 flex grow flex-col">
         {/* Back Button */}
         <div className="absolute right-4 top-6 md:left-8 md:top-8 md:right-auto">
           <a href="/">

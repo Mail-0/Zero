@@ -110,7 +110,7 @@ export default function AppearancePage() {
                   <FormField
                     control={form.control}
                     name="colorTheme"
-                    render={({ field }) => (
+                    render={() => (
                       <FormItem>
                         <FormLabel>{m['pages.settings.appearance.theme']()}</FormLabel>
                         <FormControl>

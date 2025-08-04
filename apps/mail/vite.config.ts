@@ -2,8 +2,9 @@ import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import { cloudflare } from '@cloudflare/vite-plugin';
 import { reactRouter } from '@react-router/dev/vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import oxlintPlugin from 'vite-plugin-oxlint';
 import babel from 'vite-plugin-babel';
-import tailwindcss from 'tailwindcss';
+import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from 'vite';
 import dedent from 'dedent';
 
@@ -13,6 +14,7 @@ const ReactCompilerConfig = {
 
 export default defineConfig({
   plugins: [
+    oxlintPlugin(),
     reactRouter(),
     cloudflare(),
     babel({
@@ -23,6 +25,7 @@ export default defineConfig({
       },
     }),
     tsconfigPaths(),
+    tailwindcss(),
     {
       name: 'add-headers',
       applyToEnvironment: (env) => env.name === 'client',
@@ -52,16 +55,14 @@ export default defineConfig({
       clientFiles: ['./app/**/*', './components/**/*'],
     },
   },
-  css: {
-    postcss: {
-      plugins: [tailwindcss()],
-    },
-  },
   //   ssr: {
   //     optimizeDeps: {
   //       include: ['novel', '@tiptap/extension-placeholder'],
   //     },
   //   },
+  esbuild: {
+    pure: ['console.log'],
+  },
   build: {
     sourcemap: false,
   },

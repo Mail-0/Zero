@@ -370,7 +370,8 @@
       "failedToMute": "静音失败",
       "failedToUnmute": "取消静音失败",
       "archived": "已归档",
-      "failedToArchive": "归档失败"
+      "failedToArchive": "归档失败",
+      "openInNewTab": "在新标签页中打开"
     },
     "units": {
       "mb": "{amount} MB"
@@ -404,7 +405,8 @@
       "livesupport": "在线支持",
       "feedback": "反馈",
       "settings": "设置",
-      "voice": "语音助手"
+      "voice": "语音助手",
+      "snoozed": "已延后"
     },
     "settings": {
       "general": "常规",
@@ -450,7 +452,9 @@
         "selectDefaultEmail": "选择默认邮箱",
         "defaultEmailDescription": "此邮箱将作为撰写新邮件时的默认\"发件人\"地址",
         "autoRead": "自动阅读",
-        "autoReadDescription": "点击邮件时自动将其标记为已读。"
+        "autoReadDescription": "点击邮件时自动将其标记为已读。",
+        "animations": "动画效果",
+        "animationsDescription": "启用在切换邮件时的平滑动画效果"
       },
       "connections": {
         "title": "邮箱连接",

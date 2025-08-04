@@ -11,46 +11,6 @@ import { Markdown } from 'tiptap-markdown';
 import { isObjectType } from 'remeda';
 import { cn } from '@/lib/utils';
 
-const PreventNavigateOnDragOver = (handleFiles: (files: File[]) => void | Promise<void>) => {
-  return Extension.create({
-    name: 'preventNavigateOnDrop',
-    addProseMirrorPlugins: () => {
-      return [
-        new Plugin({
-          key: new PluginKey('preventNavigateOnDrop'),
-          props: {
-            handleDOMEvents: {
-              dragover: (_view, event) => {
-                if (event.dataTransfer?.types?.includes('Files')) {
-                  event.preventDefault();
-
-                  return true;
-                }
-
-                return false;
-              },
-              drop: (_view, event) => {
-                const fileList = event.dataTransfer?.files;
-                if (fileList && fileList.length) {
-                  event.preventDefault();
-                  event.stopPropagation();
-
-                  const files = Array.from(fileList);
-                  void handleFiles(files);
-
-                  return true;
-                }
-
-                return false;
-              },
-            },
-          },
-        }),
-      ];
-    },
-  });
-};
-
 const CustomModEnter = (onModEnter: KeyboardShortcutCommand) => {
   return Extension.create({
     name: 'handleModEnter',
@@ -150,7 +110,6 @@ const useComposeEditor = ({
   isReadOnly,
   placeholder,
   onChange,
-  onAttachmentsChange,
   onLengthChange,
   onBlur,
   onFocus,

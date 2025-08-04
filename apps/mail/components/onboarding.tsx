@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 
 const steps = [
@@ -84,7 +84,7 @@ export function OnboardingDialog({
                   (step, index) =>
                     step.video && (
                       <div
-                        key={index}
+                        key={step.title}
                         className={`absolute inset-0 transition-opacity duration-300 ${
                           index === currentStep ? 'opacity-100' : 'opacity-0'
                         }`}
@@ -128,7 +128,7 @@ export function OnboardingDialog({
               <div className="flex gap-1">
                 {steps.map((_, index) => (
                   <div
-                    key={index}
+                    key={_.title}
                     className={`h-1 w-4 rounded-full md:w-10 ${
                       index === currentStep ? 'bg-primary' : 'bg-muted'
                     }`}

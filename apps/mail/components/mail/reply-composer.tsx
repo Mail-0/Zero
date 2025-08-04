@@ -10,10 +10,10 @@ import { useThread } from '@/hooks/use-threads';
 import { useSession } from '@/lib/auth-client';
 import { serializeFiles } from '@/lib/schemas';
 import { useDraft } from '@/hooks/use-drafts';
-import { useEffect, useState } from 'react';
 import { m } from '@/paraglide/messages';
 import type { Sender } from '@/types';
 import { useQueryState } from 'nuqs';
+import { useEffect } from 'react';
 import posthog from 'posthog-js';
 import { toast } from 'sonner';
 
@@ -36,13 +36,13 @@ const isQueuedSendResult = (value: unknown): value is QueuedSendEmailResult => {
 export default function ReplyCompose({ messageId }: ReplyComposeProps) {
   const [mode, setMode] = useQueryState('mode');
   const { enableScope, disableScope } = useHotkeysContext();
-  const { data: aliases, isLoading: isLoadingAliases } = useEmailAliases();
+  const { data: aliases } = useEmailAliases();
 
   const [draftId, setDraftId] = useQueryState('draftId');
   const [threadId] = useQueryState('threadId');
   const [, setActiveReplyId] = useQueryState('activeReplyId');
   const { data: emailData, refetch, latestDraft } = useThread(threadId);
-  const { data: draft, isLoading: isDraftLoading } = useDraft(draftId ?? null);
+  const { data: draft } = useDraft(draftId ?? null);
   const trpc = useTRPC();
   const { mutateAsync: sendEmail } = useMutation(trpc.mail.send.mutationOptions());
   const { mutateAsync: unsendEmail } = useMutation(trpc.mail.unsend.mutationOptions());
@@ -62,12 +62,6 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
     const senderEmail = replyToMessage.sender.email.toLowerCase();
 
     // Set subject based on mode
-    const subject =
-      mode === 'forward'
-        ? `Fwd: ${replyToMessage.subject || ''}`
-        : replyToMessage.subject?.startsWith('Re:')
-          ? replyToMessage.subject
-          : `Re: ${replyToMessage.subject || ''}`;
 
     if (mode === 'reply') {
       // Reply to sender
@@ -187,14 +181,14 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
               new Date(replyToMessage.receivedOn || '').toLocaleString(),
               { ...replyToMessage.sender, subject: replyToMessage.subject },
               toRecipients,
-              replyToMessage.decodedBody,
+              //   replyToMessage.decodedBody,
             )
           : constructReplyBody(
               data.message + zeroSignature,
               new Date(replyToMessage.receivedOn || '').toLocaleString(),
               replyToMessage.sender,
               toRecipients,
-              replyToMessage.decodedBody,
+              //   replyToMessage.decodedBody,
             );
 
       const result = await sendEmail({
@@ -205,6 +199,7 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
         message: emailBody,
         attachments: await serializeFiles(data.attachments),
         fromEmail: fromEmail,
+        draftId: draftId ?? undefined,
         headers: {
           'In-Reply-To': replyToMessage?.messageId ?? '',
           References: [
@@ -284,22 +279,22 @@ export default function ReplyCompose({ messageId }: ReplyComposeProps) {
   if (!mode || !emailData) return null;
 
   return (
-    <div className="w-full rounded-xl">
+    <div className="w-full rounded-2xl overflow-visible border">
       <EmailComposer
         editorClassName="min-h-[50px]"
-        className="w-full !max-w-none border pb-1"
+        className="w-full max-w-none! pb-1 overflow-visible"
         onSendEmail={handleSendEmail}
         onClose={async () => {
-          await setMode(null);
-          await setDraftId(null);
-          await setActiveReplyId(null);
+          setMode(null);
+          setDraftId(null);
+          setActiveReplyId(null);
         }}
         initialMessage={draft?.content ?? latestDraft?.decodedBody}
         initialTo={ensureEmailArray(draft?.to)}
         initialCc={ensureEmailArray(draft?.cc)}
         initialBcc={ensureEmailArray(draft?.bcc)}
         initialSubject={draft?.subject}
-        autofocus={false}
+        autofocus={true}
         settingsLoading={settingsLoading}
         replyingTo={replyToMessage?.sender.email}
       />

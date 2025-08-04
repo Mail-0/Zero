@@ -370,7 +370,8 @@
       "failedToMute": "Échec de la coupure du son",
       "failedToUnmute": "Échec de la réactivation du son",
       "archived": "Archivé",
-      "failedToArchive": "Échec de l'archivage"
+      "failedToArchive": "Échec de l'archivage",
+      "openInNewTab": "Ouvrir dans un nouvel onglet"
     },
     "units": {
       "mb": "{amount} Mo"
@@ -404,7 +405,8 @@
       "livesupport": "Support en direct",
       "feedback": "Vos commentaires",
       "settings": "Paramètres",
-      "voice": "Assistant vocal"
+      "voice": "Assistant vocal",
+      "snoozed": "En sommeil"
     },
     "settings": {
       "general": "Général",
@@ -450,7 +452,9 @@
         "selectDefaultEmail": "Sélectionner l'e-mail par défaut",
         "defaultEmailDescription": "Cette adresse e-mail sera utilisée comme adresse d'expédition par défaut lors de la rédaction de nouveaux e-mails",
         "autoRead": "Lecture automatique",
-        "autoReadDescription": "Marquer automatiquement les emails comme lus lorsque vous cliquez dessus."
+        "autoReadDescription": "Marquer automatiquement les emails comme lus lorsque vous cliquez dessus.",
+        "animations": "Animations",
+        "animationsDescription": "Activer les animations fluides lors du passage d'un e-mail à l'autre"
       },
       "connections": {
         "title": "Connexions de courriels",

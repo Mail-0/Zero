@@ -254,7 +254,7 @@
           "match": {
             "countPlural=0": "Добавьте заметки",
             "countPlural=one": "# заметка",
-            "countPlural=other": "# заметки"
+            "countPlural=other": "# заметок"
           }
         }
       ],
@@ -317,7 +317,7 @@
           "match": {
             "countPlural=0": "ответы",
             "countPlural=one": "# ответ",
-            "countPlural=other": "# ответы"
+            "countPlural=other": "# ответов"
           }
         }
       ],
@@ -370,7 +370,8 @@
       "failedToMute": "Не удалось заглушить",
       "failedToUnmute": "Не удалось включить звук",
       "archived": "В архиве",
-      "failedToArchive": "Не удалось архивировать"
+      "failedToArchive": "Не удалось архивировать",
+      "openInNewTab": "Открыть в новой вкладке"
     },
     "units": {
       "mb": "{amount} МБ"
@@ -404,7 +405,8 @@
       "livesupport": "Поддержка в реальном времени",
       "feedback": "Отзывы",
       "settings": "Настройки",
-      "voice": "Голосовой помощник"
+      "voice": "Голосовой помощник",
+      "snoozed": "Отложенные"
     },
     "settings": {
       "general": "Общие",
@@ -450,7 +452,9 @@
         "selectDefaultEmail": "Выберите адрес электронной почты по умолчанию",
         "defaultEmailDescription": "Этот адрес будет использоваться в качестве адреса отправителя по умолчанию при создании новых писем",
         "autoRead": "Автоматическое чтение",
-        "autoReadDescription": "Автоматически помечать электронные письма как прочитанные при их открытии."
+        "autoReadDescription": "Автоматически помечать электронные письма как прочитанные при их открытии.",
+        "animations": "Анимации",
+        "animationsDescription": "Включить плавные анимации при переключении между письмами"
       },
       "connections": {
         "title": "Подключения",

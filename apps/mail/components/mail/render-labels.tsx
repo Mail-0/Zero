@@ -1,5 +1,4 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { useSearchValue } from '@/hooks/use-search-value';
 import type { Label } from '@/types';
 import { cn } from '@/lib/utils';
@@ -56,7 +55,7 @@ export const RenderLabels = ({ count = 1, labels }: { count?: number; labels: La
               +{hiddenLabels.length}
             </button>
           </TooltipTrigger>
-          <TooltipContent className="z-[99] flex gap-1 px-1 py-1" side="top" align="end">
+          <TooltipContent className="z-99 flex gap-1 px-1 py-1" side="top" align="end">
             {hiddenLabels.map((label) => (
               <button
                 key={label.id}

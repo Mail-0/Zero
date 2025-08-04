@@ -1,77 +1,12 @@
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  NavigationMenuContent,
-  ListItem,
-} from '@/components/ui/navigation-menu';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { PixelatedBackground } from '@/components/home/pixelated-bg';
 import PricingCard from '@/components/pricing/pricing-card';
 import Comparision from '@/components/pricing/comparision';
-import { signIn, useSession } from '@/lib/auth-client';
-import { Separator } from '@/components/ui/separator';
+
 import { Navigation } from '@/components/navigation';
-import { useBilling } from '@/hooks/use-billing';
-import { Link, useNavigate } from 'react-router';
-import { Button } from '@/components/ui/button';
+
 import Footer from '@/components/home/footer';
-import { useState, useMemo } from 'react';
-import { Menu } from 'lucide-react';
-import { toast } from 'sonner';
-
-const resources = [
-  {
-    title: 'GitHub',
-    href: 'https://github.com/Mail-0/Zero',
-    description: 'Check out our open-source projects and contributions.',
-    platform: 'github' as const,
-  },
-  {
-    title: 'Twitter',
-    href: 'https://x.com/mail0dotcom',
-    description: 'Follow us for the latest updates and announcements.',
-    platform: 'twitter' as const,
-  },
-  {
-    title: 'LinkedIn',
-    href: 'https://www.linkedin.com/company/mail0/',
-    description: 'Connect with us professionally and stay updated.',
-    platform: 'linkedin' as const,
-  },
-  {
-    title: 'Discord',
-    href: 'https://discord.gg/mail0',
-    description: 'Join our community and chat with the team.',
-    platform: 'discord' as const,
-  },
-];
-
-const aboutLinks = [
-  {
-    title: 'About',
-    href: '/about',
-    description: 'Learn more about Zero and our mission.',
-  },
-  {
-    title: 'Privacy',
-    href: '/privacy',
-    description: 'Read our privacy policy and data handling practices.',
-  },
-  {
-    title: 'Terms of Service',
-    href: '/terms',
-    description: 'Review our terms of service and usage guidelines.',
-  },
-];
 
 export default function PricingPage() {
-  const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
-  const { data: session } = useSession();
-
   return (
     <main className="relative flex min-h-screen flex-1 flex-col overflow-x-hidden bg-[#0F0F0F]">
       <PixelatedBackground

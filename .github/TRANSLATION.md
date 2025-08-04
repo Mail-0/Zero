@@ -31,7 +31,7 @@ Here's an example of our i18n.json configuration:
   },
   "buckets": {
     "json": {
-      "include": ["apps/mail/locales/[locale].json"]
+      "include": ["apps/mail/messages/[locale].json"]
     }
   }
 }

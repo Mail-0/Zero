@@ -1,6 +1,6 @@
 import config from "@zero/tsconfig/base";
 import { fileURLToPath } from "url";
-import { resolve } from "path";
+
 
 // @ts-ignore
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
