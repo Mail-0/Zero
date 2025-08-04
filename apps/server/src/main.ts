@@ -853,6 +853,8 @@ export default class Entry extends WorkerEntrypoint<ZeroEnv> {
               console.log(`Email ${messageId} sent successfully`);
             } catch (error) {
               console.error(`Failed to send scheduled email ${messageId}:`, error);
+              await statusKV.delete(messageId);
+              await payloadKV.delete(messageId);
             }
           }),
         );

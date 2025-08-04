@@ -466,7 +466,7 @@ export const mailRouter = router({
                 connectionId: activeConnection.id,
                 sendAt: targetTime,
               }),
-              { expirationTtl: Math.ceil(rawDelaySeconds + 3600) }, // TTL slightly longer than needed
+              { expirationTtl: Math.min(Math.ceil(rawDelaySeconds + 3600), 31556952) },
             );
           } catch (error) {
             console.error(`Failed to write long-term schedule to KV for message ${messageId}`, error);
