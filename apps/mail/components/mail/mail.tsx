@@ -30,6 +30,7 @@ import AIToggleButton from '../ai-toggle-button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/lib/auth-client';
+import { useDoState } from './use-do-state';
 import { m } from '@/paraglide/messages';
 import { useQueryState } from 'nuqs';
 import { cn } from '@/lib/utils';
@@ -325,6 +326,7 @@ export function MailLayout() {
   const { data: activeConnection } = useActiveConnection();
   const { activeFilters, clearAllFilters } = useCommandPalette();
   const [, setIsCommandPaletteOpen] = useQueryState('isCommandPaletteOpen');
+  const [{ isSyncing, syncingFolders, storageSize }] = useDoState();
 
   useEffect(() => {
     if (prevFolderRef.current !== folder && mail.bulkSelected.length > 0) {
@@ -394,6 +396,15 @@ export function MailLayout() {
 
   return (
     <TooltipProvider delayDuration={0}>
+      <div className="fixed right-1 top-1 z-10 flex w-full justify-end">
+        <p className="w-fit rounded bg-purple-800 p-1 text-xs">
+          {isSyncing ? 'Syncing your emails...' : 'Synced your emails'}
+        </p>
+        {storageSize && <p className="w-fit rounded bg-purple-800 p-1 text-xs">{storageSize}</p>}
+        {syncingFolders.length > 0 && (
+          <p className="w-fit rounded bg-purple-800 p-1 text-xs">{syncingFolders.join(', ')}</p>
+        )}
+      </div>
       <PricingDialog />
       <div className="rounded-inherit z-5 relative flex p-0 md:mr-0.5 md:mt-1">
         <ResizablePanelGroup

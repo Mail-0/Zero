@@ -60,8 +60,6 @@ import type { Message } from 'ai';
 import { eq } from 'drizzle-orm';
 
 const decoder = new TextDecoder();
-
-const shouldDropTables = false;
 const maxCount = 20;
 const shouldLoop = env.THREAD_SYNC_LOOP !== 'false';
 
@@ -312,11 +310,16 @@ export class ZeroDriver extends Agent<ZeroEnv> {
   private agent: DurableObjectStub<ZeroAgent> | null = null;
   constructor(ctx: DurableObjectState, env: ZeroEnv) {
     super(ctx, env);
-    if (shouldDropTables) this.dropTables();
   }
 
   getDatabaseSize() {
     return this.ctx.storage.sql.databaseSize;
+  }
+
+  isSyncing(): string[] {
+    return Array.from(this.foldersInSync.entries())
+      .filter(([, syncing]) => syncing)
+      .map(([folder]) => folder);
   }
 
   getAllSubjects() {
@@ -844,12 +847,6 @@ export class ZeroDriver extends Agent<ZeroEnv> {
     }
   }
 
-  async dropTables() {
-    console.log('Dropping tables');
-    return this.sql`
-        DROP TABLE IF EXISTS threads;`;
-  }
-
   async deleteThread(id: string) {
     void this.sql`
       DELETE FROM threads WHERE thread_id = ${id};
@@ -1063,6 +1060,15 @@ export class ZeroDriver extends Agent<ZeroEnv> {
     return count[0]['COUNT(*)'] as number;
   }
 
+  async sendDoState() {
+    return this.agent?.broadcastChatMessage({
+      type: OutgoingMessageType.Do_State,
+      isSyncing: this.isSyncing().length > 0,
+      syncingFolders: this.isSyncing(),
+      storageSize: this.getDatabaseSize(),
+    });
+  }
+
   async syncThreads(folder: string): Promise<FolderSyncResult> {
     // Skip sync for aggregate instances - they should only mirror primary operations
     if (this.name.includes('aggregate')) {
@@ -1095,6 +1101,7 @@ export class ZeroDriver extends Agent<ZeroEnv> {
 
     if (this.foldersInSync.has(folder)) {
       console.log(`[syncThreads] Sync already in progress for folder ${folder}, skipping...`);
+      await this.sendDoState();
       return {
         synced: 0,
         message: 'Sync already in progress',
@@ -1144,7 +1151,6 @@ export class ZeroDriver extends Agent<ZeroEnv> {
         // Sync single thread function
         const syncSingleThread = (threadId: string) =>
           Effect.gen(this, function* () {
-            yield* Effect.sleep(150); // Rate limiting delay
             const syncResult = yield* Effect.tryPromise(() => this.syncThread({ threadId })).pipe(
               Effect.tap(() =>
                 Effect.sync(() =>
@@ -1174,12 +1180,10 @@ export class ZeroDriver extends Agent<ZeroEnv> {
         // Main sync program
         let pageToken: string | null = null;
         let hasMore = true;
+        let firstPageProcessed = false;
 
         while (hasMore) {
           result.pagesProcessed++;
-
-          // Rate limiting delay between pages
-          yield* Effect.sleep(1000);
 
           console.log(
             `[syncThreads] Processing page ${result.pagesProcessed} for folder ${folder}`,
@@ -1230,6 +1234,12 @@ export class ZeroDriver extends Agent<ZeroEnv> {
           result.synced += listResult.threads.length;
           pageToken = listResult.nextPageToken;
           hasMore = pageToken !== null && shouldLoop;
+
+          // Send state update after first page is processed to give accurate feedback
+          if (!firstPageProcessed) {
+            firstPageProcessed = true;
+            yield* Effect.tryPromise(() => this.sendDoState());
+          }
         }
 
         // Broadcast completion if agent exists
@@ -1259,6 +1269,7 @@ export class ZeroDriver extends Agent<ZeroEnv> {
         }
 
         this.foldersInSync.delete(folder);
+        yield* Effect.tryPromise(() => this.sendDoState());
 
         console.log(`[syncThreads] Completed sync for folder: ${folder}`, {
           synced: result.synced,
@@ -1285,6 +1296,7 @@ export class ZeroDriver extends Agent<ZeroEnv> {
             broadcastSent: false,
           });
         }),
+        Effect.tap(() => this.sendDoState()),
       ),
     );
   }
@@ -1460,22 +1472,23 @@ export class ZeroDriver extends Agent<ZeroEnv> {
       // Handle folder + labelIds combination (supports pagination)
       if (folder && labelIds.length > 0 && !q) {
         const folderLabel = folder.toUpperCase();
-        
+
         // De-duplicate labelIds and remove folder label if it's already included
         // Cap labelIds length to prevent resource exhaustion
         const maxLabelIds = 5;
-        const uniqueLabelIds = [...new Set(labelIds
-          .filter(id => id.toUpperCase() !== folderLabel)
-          .slice(0, maxLabelIds)
-        )];
-        
-        console.log('[queryThreads] Case: folder + labelIds', { 
-          folderLabel, 
-          originalLabelIds: labelIds, 
+        const uniqueLabelIds = [
+          ...new Set(
+            labelIds.filter((id) => id.toUpperCase() !== folderLabel).slice(0, maxLabelIds),
+          ),
+        ];
+
+        console.log('[queryThreads] Case: folder + labelIds', {
+          folderLabel,
+          originalLabelIds: labelIds,
           uniqueLabelIds,
-          pageToken 
+          pageToken,
         });
-        
+
         if (uniqueLabelIds.length === 0) {
           // Only folder filter needed, handle separately
           return this.sql`
@@ -1488,7 +1501,7 @@ export class ZeroDriver extends Agent<ZeroEnv> {
             LIMIT ${maxResults}
           `;
         }
-        
+
         // Use improved JSON-based approach that handles any number of labelIds
         const labelsJson = JSON.stringify(uniqueLabelIds);
         return this.sql`
@@ -1566,6 +1579,7 @@ export class ZeroDriver extends Agent<ZeroEnv> {
     maxResults?: number;
     pageToken?: string;
   }): Promise<IGetThreadsResponse> {
+    this.ctx.waitUntil(this.syncFolders());
     const { maxResults = 50 } = params;
     const normalizedParams = {
       ...params,
@@ -1832,7 +1846,6 @@ export class ZeroDriver extends Agent<ZeroEnv> {
 
 export class ZeroAgent extends AIChatAgent<ZeroEnv> {
   private chatMessageAbortControllers: Map<string, AbortController> = new Map();
-  private connectionThreadIds: Map<string, string | null> = new Map();
 
   async registerZeroMCP() {
     await this.mcp.connect(this.env.VITE_PUBLIC_BACKEND_URL + '/sse', {

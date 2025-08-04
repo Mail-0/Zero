@@ -4,6 +4,7 @@ import useSearchLabels from '@/hooks/use-labels-search';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTRPC } from '@/providers/query-provider';
 import { usePartySocket } from 'partysocket/react';
+import { useDoState } from './mail/use-do-state';
 
 // 10 seconds is appropriate for real-time notifications
 
@@ -15,6 +16,7 @@ export enum IncomingMessageType {
   Mail_List = 'zero_mail_list_threads',
   Mail_Get = 'zero_mail_get_thread',
   User_Topics = 'zero_user_topics',
+  Do_State = 'zero_do_state',
 }
 
 export enum OutgoingMessageType {
@@ -31,6 +33,7 @@ export const NotificationProvider = () => {
   const { data: activeConnection } = useActiveConnection();
   const [searchValue] = useSearchValue();
   const { labels } = useSearchLabels();
+  const [, setDoState] = useDoState();
 
   usePartySocket({
     party: 'zero-agent',
@@ -59,6 +62,9 @@ export const NotificationProvider = () => {
           queryClient.invalidateQueries({
             queryKey: trpc.labels.list.queryKey(),
           });
+        } else if (type === IncomingMessageType.Do_State) {
+          const { isSyncing, syncingFolders, storageSize } = JSON.parse(message.data);
+          setDoState({ isSyncing, syncingFolders, storageSize });
         }
       } catch (error) {
         console.error('error parsing party message', error);

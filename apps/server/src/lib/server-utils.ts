@@ -23,8 +23,6 @@ export const getZeroClient = async (connectionId: string, executionCtx: Executio
   await agent.setName(connectionId);
   await agent.setupAuth();
 
-  executionCtx.waitUntil(agent.syncFolders());
-
   return agent;
 };
 
